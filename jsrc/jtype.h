@@ -583,11 +583,12 @@ typedef I SI;
 
 // Flags in the AR field of symbol tables
 #define ARNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
-#define ARNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
+#define ARNAMEADDEDX LPERMANENTX  // 2 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
+#define ARNAMEADDED (1LL<<ARNAMEADDEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
+#define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid)
+#define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original symbol table when it is in use
-#define ARLCLONEDX NMSHAREDX  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
-#define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
@@ -695,9 +696,10 @@ typedef struct {
 // In all local symbol tables, the first 'hashchain' has the chain numbers for y/x; they are the first symbols in those chains, always permanent
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
-#define LCACHED         (I)2      // this value is cached in some nameref
+#define LPERMANENTX  1
+#define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
 #define LINFO           (I)4            /* locale info                     */
-#define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
+#define LCACHED         (I)8      // this value is cached in some nameref
 #define LWASABANDONEDX  4
 #define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
                                     // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
@@ -757,16 +759,16 @@ typedef struct{
 
 // values in flag:
 #define NMLOC           1       // direct   locale abc_lm_   only one of NMLOC/NMILOC/NMIMPLOC is set
+#define NMSHAREDX    2
+#define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
 #define NMILOC          2       // indirect locale abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
-#define NMDOT           4       // one of the names m. n. u. v. x. y.      */
+#define NMDOT           128       // one of the names m. n. u. v. x. y.      */
 #define NMXY            8       // x/y, which must have NAMEBYVALUE set
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
 #define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
 #define NMCACHEDSYMX    6
 #define NMCACHEDSYM     (1<<NMCACHEDSYMX)      // This NM is storing a symbol index, not a pointer to a reference
-#define NMSHAREDX    7
-#define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
 
 
 typedef struct {I a,e,i,x;} P;

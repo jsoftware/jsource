@@ -62,7 +62,7 @@ NB. Flag is changed,cachable,LINFO,PERM,WASABANDONED,hasname,hasvalue
  f =. 2{"1 p
  NB. pfst =. 2<:4|f                                   NB. symbol is in pfst, may have no value
  li=. 4<:8|f                                   NB. locale info
- perm=. 8<:16|f                                NB. permanent
+ perm=. 2<:4|f                                NB. permanent
  assert. i -: 0{"1 p                           NB. index
  assert. b +. li +. ((1{"1 p)e.oktypes) +. (perm *. 0 = 1{"1 p)          NB. internal type
  assert. li <: (s e.<'**local**')+.0 32 e.~ 1{"1 p   NB. search path of locales - 0 if local symbol table

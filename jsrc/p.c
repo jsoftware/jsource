@@ -342,7 +342,7 @@ static A virthook(J jtip, A f, A g){
 // name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush or NVR free
 static I namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){F1PREFIP;
  if(((I)jtinplace&JTFROMEXEC))R 1;
- A fndst=UNLXAV0(locbuckets); if(unlikely((at&VERB)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
+ A fndst=UNLXAV0((LX *)((I)locbuckets&-8)); if(unlikely((at&VERB)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
  LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  LX nextsymx=*asymx;  // symbol number pointed to by asymx, possibly w/permanent indicator
  while(sympv+SYMNEXT(nextsymx)!=s){asymx=&(sympv+SYMNEXT(nextsymx))->next; nextsymx=*asymx;}
@@ -491,9 +491,10 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
   // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
   LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
-  // Move rank flags from locsyms to locbuckets low bits.  NOTE that locbuckets is always on an 8-byte boundary, even in 32-bit code
-
+  // Move rank flags from locsyms to locbuckets low bits.  NOTE that locbuckets is always on an 8-byte boundary, even in 32-bit code.  Flag bits are 1-2
+  locbuckets=(LX *)((I)locbuckets+(AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED)));
   UI4 stack0pt=PTMARK;  // will hold the EDGE+AVN value, which doesn't change much and is stored late   someday combine this with mes (64-bit only)
+  // One of the bits of locbuckets gets moved to a register here, so we know register pressure isn't great
   while(1){  // till no more matches possible...
 
     // no executable fragment, pull from the queue.  If we pull ')', there is no way we can execute
@@ -524,22 +525,22 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
       // To save some overhead, we inline this and do the analysis in a different order here
       // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
       // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
-      I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
-      L *sympv=JT(jt,sympv);
-      if(likely((SGNIF(locstflags,ARLCLONEDX)|(NAV(y)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+// obsolete       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
+      L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution
+      if(likely((SGNIF(locbuckets,ARLCLONEDX)|(NAV(y)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it
       }else if(likely(NAV(y)->bucket!=0)){I bx;
        if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
-        s = locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
+        s = ((LX *)((I)locbuckets&-8))[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
         if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
         if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it
        }else{
         // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
         // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-        if(likely(!(locstflags&ARNAMEADDED)))goto rdglob;
+        if(likely(!((I)locbuckets&ARNAMEADDED)))goto rdglob;
         // from here on it is rare to find a name - usually they're globals defined elsewhere
-        LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
+        LX lx = ((LX *)((I)locbuckets&-8))[NAV(y)->bucket];  // index of first block if any
         I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
         if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
         // Now lx is the index of the first name that might match.  Do the compares
@@ -582,8 +583,8 @@ rdglob: ;  // here when we tried the buckets and failed
            AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = sv;   // record the place where the value was protected, so we can free it when this sentence completes
           }  // if NJA/virtual, leave NVR alone
          }
-        }else goto undefname;
-       }else goto undefname;
+        }else goto undefname;  // no val
+       }else goto undefname;  // no sym
        at|=VERB;  // indicate that the symbol was not in the local table
       }
       // end of looking at local/global symbol tables
@@ -699,10 +700,10 @@ endname: ;
       if((UI)(pline>>VJTFLGOK1X)>(UI)PTISNOTASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){L *s;   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
        if(likely((AT(stack[0].a))&ASGNLOCAL)){
         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
-        if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[mes-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+        if(likely((SGNIF(locbuckets,ARLCLONEDX)|(NAV(queue[mes-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
          s=JT(jt,sympv)+(I)NAV(queue[mes-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
         }else{s=jtprobeislocal(jt,queue[mes-1]);}
-       }else s=jtprobeisquiet(jt,queue[mes-1],UNLXAV0(locbuckets));  // global assignment, get slot address
+       }else s=jtprobeisquiet(jt,queue[mes-1],UNLXAV0((LX *)((I)locbuckets&-8)));  // global assignment, get slot address
        // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos

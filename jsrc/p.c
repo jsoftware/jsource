@@ -117,29 +117,49 @@ PT cases[] = {
 // Distinguish PSN from PS by not having PSN in stack[3] support line 0 (OK since it must be preceded by NAME and thus will run line 7)
 // Put something distictive into LPAR that can be used to create line 8
 static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold ASGNNAME.  
-[LASTNOUNX-LASTNOUNX] = 0xBE7CC1DF,  // PN
-[ASGNX-LASTNOUNX] = 0x7F8000C9,  // PS
-[MARKX-LASTNOUNX] = 0x7F0000C9,  // PM
-[NAMEX-LASTNOUNX] = 0x800000C9,  // PNM
-[SYMBX-LASTNOUNX] = 0x7F8000C8,  // PS+NAME
+// obsolete [LASTNOUNX-LASTNOUNX] = 0xBE7CC1DF,  // PN
+// obsolete [ASGNX-LASTNOUNX] = 0x7F8000C9,  // PS
+// obsolete [MARKX-LASTNOUNX] = 0x7F0000C9,  // PM
+// obsolete [NAMEX-LASTNOUNX] = 0x800000C9,  // PNM
+// obsolete [SYMBX-LASTNOUNX] = 0x7F8000C8,  // PS+NAME
+// obsolete // gap [CONWX-LASTNOUNX]
+// obsolete [LPARX-LASTNOUNX] = 0x7F000001,  // PL
+// obsolete [VERBX-LASTNOUNX] = 0x3E7BE6F9,  // PV
+// obsolete [// obsolete ADVX-LASTNOUNX] = 0x3E40C8C9,  // PA
+// obsolete [CONJX-LASTNOUNX] = 0x0040D0C9,  // PC
+// obsolete [RPARX-LASTNOUNX] = 0x000000C9  // PR
+// obsolete // 0x7F8000C8  // PSN
+[LASTNOUNX-LASTNOUNX] = 0xDFC17CBE,  // PN
+[ASGNX-LASTNOUNX] = 0xC900807F,  // PS
+[MARKX-LASTNOUNX] = 0xC900007F,  // PM
+[NAMEX-LASTNOUNX] = 0xC9000080,  // PNM
+[SYMBX-LASTNOUNX] = 0xC800807F,  // PS+NAME
 // gap [CONWX-LASTNOUNX]
-[LPARX-LASTNOUNX] = 0x7F000001,  // PL
-[VERBX-LASTNOUNX] = 0x3E7BE6F9,  // PV
-[ADVX-LASTNOUNX] = 0x3E40C8C9,  // PA
-[CONJX-LASTNOUNX] = 0x0040D0C9,  // PC
-[RPARX-LASTNOUNX] = 0x000000C9  // PR
-// 0x7F8000C8  // PSN
+[LPARX-LASTNOUNX] = 0x0100007F,  // PL
+[VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
+[ADVX-LASTNOUNX] = 0xC9C8403E,  // PA
+[CONJX-LASTNOUNX] = 0xC9D04000,  // PC
+[RPARX-LASTNOUNX] = 0xC9000000  // PR
 };
 
 
 // tests for pt types
-#define PTMARK 0x7F0000C9
-#define PTASGNNAME 0x7F8000C8
-#define PTISCAVN(pt) (pt&0x4000)
+// obsolete #define PTMARK 0x7F0000C9
+// obsolete #define PTASGNNAME 0x7F8000C8
+// obsolete #define PTISCAVN(pt) (pt&0x4000)
+// obsolete #define PTISM(s)  ((s).pt==PTMARK)
+// obsolete #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
+// obsolete #define PTISASGN(pt)  ((pt)&0x800000)
+// obsolete #define PTISNOTASGNNAME(s)  (((s).pt&0x1))
+#define PTMARK 0xC900007F
+// obsolete #define PTASGNNAME 0xC800807F
+#define PTISCAVN(pt) ((pt)&0x400000)
+#define PTISRPAR(pt) (((pt)&0x7fff)==0)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
-#define PTISASGN(pt)  ((pt)&0x800000)   // this bit is NAMEX - we use that
-#define PTISNOTASGNNAME(s)  (((s).pt&0x1))
+#define PTISASGN(pt)  (((pt)&0x8000)<<(NAMEX-15))   // we compare against the NAMEX bit
+#define PTISNOTASGNNAME(s)  (((s).pt>>24)&1)
+#define PTLPARFLG 0x8000000  // this bit is clear in pt only if NOT LPAR
 // obsolete #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
 // obsolete #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}  // here when we know it's CAVN (not assignment)
@@ -667,8 +687,9 @@ endname: ;
     // First, create the bitmask of parser lines that are eligible to execute
 // obsolete     I pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt);  // bit 8 is set ONLY for LPAR
 // obsolete     I pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24) & (I)((C*)&stack[1].pt)[2] & (I)((C*)&stack[2].pt)[1]  & (I)((C*)&stack[3].pt)[0] );  // bit 8 is set ONLY for LPAR
-    I pmask=(I)((C*)&stack[1].pt)[2] & (I)((C*)&stack[2].pt)[1]  & (I)((C*)&stack[3].pt)[0];  // bit 8 is set ONLY for LPAR
-    pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24)&pmask);
+    I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2]  & (I)((C*)&stack[3].pt)[3];  // bit 8 is set ONLY for LPAR
+// obsolete     pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24)&pmask);
+    pmask=(pmask|PTLPARFLG)&(stack0pt^PTLPARFLG);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
     if(!pmask)break;  // If all 0, nothing is dispatchable, go push next word
     A stk1a=stack[1].a, stk2a=stack[2].a;  // fetch these as early as possible
 
@@ -697,7 +718,7 @@ endname: ;
       // could avoid having the $: stack by having $: look into the execution stack to find the verb that is being executed.  But overall it is faster to pay the expense of the $:
       // stack in exchange for being able to fill the time before & after the misprediction
       // Work on inplacing.  See if the primitive being executed is inplaceable
-      pline|=(fsflag>>(pline>>1))&VJTFLGOK1;  // insert VJTFLGOK1 flag if inplaceable
+      pline|=(fsflag>>(pline>>1))&VJTFLGOK1;  // insert VJTFLGOK1 flag if the selected valence is inplaceable
       // If it is an inplaceable assignment to a known name that has a value, remember the name and the value
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
       // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -821,13 +842,13 @@ RECURSIVERESULTSCHECK
      // Here for lines 5-8 (fork/hook/assign/parens), which branch to a canned routine
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
      // We avoid the indirect branch, which is very expensive
-     if(likely(pline>6)){  // with PPPP, fork/hook should not be in the performance path,
+     if(likely(pline>6)){  // with PPPP, fork/hook should not be in the performance path
       if(pline==7){
        stack0pt=stack[2].pt;  // Bottom of stack will be modified, so refresh the type for it
        stack=jtis(jt,stack); // assignment
        EPZ(stack)  // fail if error
-      }else{  // paren
-       if(likely(PTISCAVN(stack[1].pt)>stack[2].pt)){  // must be [1]=CAVN and [2]=RPAR
+      }else{  // paren, for which pline may be anything
+       if(likely(PTISCAVN(stack[1].pt)&&PTISRPAR(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR
         stack0pt=stack[1].pt; stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
         stack+=2;  // advance stack pointer to result
        }else{jsignal(EVSYNTAX); FP}  // error if contents of ( not valid

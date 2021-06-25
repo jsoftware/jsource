@@ -92,7 +92,17 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: ["l64.zip", "version.txt"]
+      artifacts: "l64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Release JE (version)
+     if: matrix.os == 'ubuntu-18.04'
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "version.txt"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true

@@ -24,8 +24,6 @@ jobs:
   steps:
    - name: Check Git repository
      uses: actions/checkout@v2
-     with:
-      submodules: recursive
 
    - name: Setup Environment (Linux)
      if: matrix.os == 'ubuntu-18.04'

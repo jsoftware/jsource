@@ -3,8 +3,8 @@
 mkdir j64
 copy script\ver.ijs j64
 
-copy script\jversion.h jsource\jsrc
-cd jsource\makemsvc\jconsole
+copy script\jversion.h jsrc
+cd makemsvc\jconsole
 nmake -f makefile.win CC=clang-cl x64=1 clean
 nmake -f makefile.win CC=clang-cl x64=1
 cd ..

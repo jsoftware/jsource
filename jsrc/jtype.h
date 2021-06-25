@@ -330,7 +330,7 @@ typedef I SI;
 #define SYMBX 24
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
 #define SYMBSIZE sizeof(LX)
-#define CONWX 25
+#define CONWX 25       // parsing uses the fact that CONWX is LASTNOUNX+5
 #define CONW            ((I)1L<<CONWX)    /* CW control word                 */
 #define CONWSIZE sizeof(CW)
 #define ADVX 26

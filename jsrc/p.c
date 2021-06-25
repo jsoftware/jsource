@@ -142,8 +142,9 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 #define PTISNOTASGNNAME(s)  (((s).pt&0x1))
 #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
-#define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}
+#define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}  // here when we know it's CAVN (not assignment)
 #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt)|((t>>(CONWX-2))&(CONWX-(LASTNOUNX+1))); z=ptcol[pt+1];}  // clear flag bit if ASGN to name, by fetching from unused CONW hole, which is 4 above ASGN
+ // CONWX-2 moves CONW to its position in the table, which is at CONWX-(LASTNOUNX+1)
 
 static PSTK* jtpfork(J jt,PSTK *stack){
  A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
@@ -512,7 +513,9 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
 // obsolete     I at=AT(y = queue[mes>>2]);   // fetch the next word from queue; pop the queue; extract the type, save as at
-     I at=AT(nexty); y=nexty;  // loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one
+     I at=AT(nexty);  // loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one
+     L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution.  This is a quiet time to load.  Loading outside the loop causes a spill.
+     y=nexty;
      nexty = queue[(US)mes-1];    // fetch the next word from queue; pop the queue; extract the type, save as at.
       // The last fetch of nexty fetches from queue[-1].  This will not segfault, and we never come back to fetch from inside that bogus block.
      stack[0].t = (US)(mes+1);  // install the original token number for the word
@@ -526,12 +529,11 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
       // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
       // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
 // obsolete       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
-      L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution
-      if(likely((SGNIF(locbuckets,ARLCLONEDX)|(NAV(y)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+      if((SGNIF(locbuckets,ARLCLONEDX)|(NAV(y)->symx-1))>=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it
       }else if(likely(NAV(y)->bucket!=0)){I bx;
-       if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
+       if(0 <= (bx = ~NAV(y)->bucketx)){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
         s = ((LX *)((I)locbuckets&-8))[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
         if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
         if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it
@@ -551,12 +553,12 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
          IFCMPNAME(NAV(s->name),nm,m,hsh,{if(unlikely((sv=s->val)==0))goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
          lx = s->next;
         }
-        // Here there was a value in the local symbol table
+        // Here there was a value in the local symbol table.  Skip to use it
        }
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
        // If the name has a cached reference, use it
-       if(likely(NAV(y)->cachedref!=0)){  // if the user doesn't care enough to turn on caching, performance must not be that important
+       if(NAV(y)->cachedref!=0){  // if the user doesn't care enough to turn on caching, performance must not be that important
         // Note: this cannot be a NAMEABANDON, because such a name is never stacked where it can have the cachedref filled in
         A cachead=NAV(y)->cachedref; // use the cached address
         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((sympv[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted

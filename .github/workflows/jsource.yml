@@ -1,0 +1,140 @@
+name: JE
+
+on:
+ - push
+
+# trigger workflow on file change
+#on:
+# push:
+#  paths:
+#   - 'version.txt'
+
+jobs:
+ jengine:
+  name: JE
+  runs-on: ${{ matrix.os }}
+
+  strategy:
+   matrix:
+    os: [ubuntu-18.04, macos-10.15, windows-2019]
+    #os: [ubuntu-18.04]
+    #os: [macos-10.15]
+    #os: [windows-2019]
+
+  steps:
+   - name: Check Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (Linux)
+     if: matrix.os == 'ubuntu-18.04'
+     run: |
+      sudo apt-get install -y libedit-dev libncursesw5-dev
+
+   - name: Setup Environment (Windows)
+     if: matrix.os == 'windows-2019'
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64
+
+   - name: Build JE (Linux)
+     if: matrix.os == 'ubuntu-18.04'
+     env:
+      CC: clang
+      USE_SLEEF: 1
+     run: script/buildga.sh linux
+
+   - name: Build JE (macOS)
+     if: matrix.os == 'macos-10.15'
+     env:
+      CC: clang
+      USE_SLEEF: 1
+     run: script/buildga.sh darwin
+
+   - name: Build JE (Windows)
+     if: matrix.os == 'windows-2019'
+     shell: cmd
+     run: script\buildga.cmd
+
+   - name: Test JE (Linux)
+     if: matrix.os == 'ubuntu-18.04'
+     run: script/testga.sh linux
+
+   - name: Test JE (maxOS)
+     if: matrix.os == 'macos-10.15'
+     run: script/testga.sh darwin
+
+   - name: Test JE (Windows)
+     if: matrix.os == 'windows-2019'
+     shell: cmd
+     run: script\testga.cmd
+
+   - name: Compress Files (Linux)
+     if: matrix.os == 'ubuntu-18.04'
+     run: |
+      rm j64/ver.ijs
+      zip -r l64.zip j64
+
+   - name: Compress Files (macOS)
+     if: matrix.os == 'macos-10.15'
+     run: |
+      rm j64/ver.ijs
+      zip -r m64.zip j64
+
+   - name: Compress Files (Windows)
+     if: matrix.os == 'windows-2019'
+     shell: pwsh
+     run: |
+      del j64\ver.ijs
+      Compress-Archive j64 w64.zip
+
+   - name: Release JE (Linux)
+     if: matrix.os == 'ubuntu-18.04'
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "l64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Release JE (version)
+     if: matrix.os == 'ubuntu-18.04'
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "version.txt"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Release JE (macOS)
+     if: matrix.os == 'macos-10.15'
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "m64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Release JE (Windows)
+     if: matrix.os == 'windows-2019'
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+ webhook:
+  name: Run Webhook
+  runs-on: ubuntu-18.04
+  needs: jengine
+  steps:
+   - name: update server
+     uses: distributhor/workflow-webhook@v2
+     env:
+      webhook_url: ${{ secrets.WEBHOOK_URL }}
+      webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+      data: '{ "id": "jebuild" }'

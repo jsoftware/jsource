@@ -319,7 +319,9 @@ typedef I SI;
 
 #define LASTNOUNX XZX    // index of last noun bit
 
-// ASGN see below
+#define ASGNX 21
+#define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
+#define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 #define MARKX 22
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
@@ -330,9 +332,10 @@ typedef I SI;
 #define SYMBX 24
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
 #define SYMBSIZE sizeof(LX)
-#define CONWX 25       // parsing uses the fact that CONWX is LASTNOUNX+5
+#define CONWX 25       // parsing uses the fact that CONWX is ASGNX+4
 #define CONW            ((I)1L<<CONWX)    /* CW control word                 */
 #define CONWSIZE sizeof(CW)
+// NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type except ASGN
 #define ADVX 26
 #define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
 #define ADVSIZE sizeof(V)
@@ -353,14 +356,11 @@ typedef I SI;
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
 
-#define ASGNX 21
-#define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
-#define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ** ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCALX      SYMBX     // set for =. (but not when assigning to locative)    aliases with SYMB
 #define ASGNLOCAL       ((I)1L<<ASGNLOCALX)     // set for =. (but not when assigning to locative)    aliases with SYMB
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
-// NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type (such as NAME, NOUN)
+// NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type except ASGN
 // ** NOUN types can have the following informational bits set
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 #define SPARSEX 31  // NOTE this extends to the sign bit

@@ -121,8 +121,8 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 [ASGNX-LASTNOUNX] = 0x7F8000C9,  // PS
 [MARKX-LASTNOUNX] = 0x7F0000C9,  // PM
 [NAMEX-LASTNOUNX] = 0x800000C9,  // PNM
-// gap [SYMBX-LASTNOUNX] = 0xBE7CC1DF,  // (PN+CONW, should not occur)
-[CONWX-LASTNOUNX] = 0x7F8000C8,  // PS+NAME
+[SYMBX-LASTNOUNX] = 0x7F8000C8,  // PS+NAME
+// gap [CONWX-LASTNOUNX]
 [LPARX-LASTNOUNX] = 0x7F000001,  // PL
 [VERBX-LASTNOUNX] = 0x3E7BE6F9,  // PV
 [ADVX-LASTNOUNX] = 0x3E40C8C9,  // PA
@@ -142,11 +142,11 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 #define PTISNOTASGNNAME(s)  (((s).pt&0x1))
 // obsolete #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
-#define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}  // here when we know it's CAVN (not assignment)
-// #define PTFROMTYPE(z,t) {I pt=CTTZ(t); I nt=(t)&CONW?LASTNOUNX+CONWX:LASTNOUNX; pt=(t)&(CONW|((1LL<<LASTNOUNX)-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
-#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt)|((t>>(CONWX-2))&(CONWX-(LASTNOUNX+1))); z=ptcol[pt+1];}  // clear flag bit if ASGN to name, by fetching from unused CONW hole, which is 4 above ASGN
- // CONWX-2 moves CONW to its position in the table, which is at CONWX-(LASTNOUNX+1)=4
-// #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=(t)&CONW?LASTNOUNX+CONWX:LASTNOUNX; pt=(t)&(CONW|((1LL<<LASTNOUNX)-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused CONW hole, which is 4 above ASGN
+// obsolete #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}  // here when we know it's CAVN (not assignment)
+#define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
+// obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt)|((t>>(CONWX-2))&(CONWX-(LASTNOUNX+1))); z=ptcol[pt+1];}  // clear flag bit if ASGN to name, by fetching from unused CONW hole, which is 4 above ASGN
+// obsolete  // CONWX-2 moves CONW to its position in the table, which is at CONWX-(LASTNOUNX+1)=4
+#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=LASTNOUNX; nt=(t)&CONW?SYMBX:nt; pt=(t)&(CONW|((1LL<<(LASTNOUNX+1))-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused SYMB hole
 
 static PSTK* jtpfork(J jt,PSTK *stack){
  A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
@@ -485,9 +485,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
 
   A nexty = queue[nwds-1];   // unroll the fetch loop
 
-  // We have the initial stack pointer.  Grow the stack down from there
-  stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
-
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
   I ecam = nwds+(3LL<<CONJX);  // mash m and es into 1 register:  bit 29-30 es delayline, 21-22 AR flags from symtab, low 16 m
   // debugging if(jt->parsercalls==0xdd)
@@ -496,7 +493,11 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
   LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
   // Move rank flags from locsyms to locbuckets low bits.  NOTE that locbuckets is always on an 8-byte boundary, even in 32-bit code.  Flag bits are 1-2
   ecam += (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<20;  // insert clone/added flags into portmanteau vbl
+
+  // We have the initial stack pointer.  Grow the stack down from there
   UI4 stack0pt=PTMARK;  // will hold the EDGE+AVN value, which doesn't change much and is stored late   someday combine this with ecam (64-bit only)
+  stack[0].pt = stack[1].pt = stack[2].pt = stack0pt;  // install initial ending marks.  word numbers and value pointers are unused
+
   // One of the bits of locbuckets gets moved to a register here, so we know register pressure isn't great
   while(1){  // till no more matches possible...
 

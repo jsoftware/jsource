@@ -21,6 +21,6 @@ nmake -f makefile.win CC=clang-cl x64=1 clean
 nmake -f makefile.win CC=clang-cl x64=1
 cd ..
 
-copy jconsole\jconsole.exe ..\..\j64
-copy jdll\*.dll ..\..\j64
-copy tsdll\tsdll.dll ..\..\j64
+copy jconsole\jconsole.exe ..\j64
+copy jdll\*.dll ..\j64
+copy tsdll\tsdll.dll ..\j64

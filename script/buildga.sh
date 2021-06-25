@@ -14,7 +14,6 @@ fi
 
 cp script/jversion.h jsrc
 s "s/windows/$1/" jsrc/jversion.h
-cat jsrc/jversion.h
 cd make2
 ./clean.sh
 
@@ -26,7 +25,7 @@ j64x=j64avx ./build_libj.sh
 ./clean.sh
 j64x=j64avx2 ./build_libj.sh
 
-cd ../..
+cd ..
 D=j64
 mkdir -p $D
 cp bin/$1/j64/* $D

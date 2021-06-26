@@ -584,7 +584,7 @@ typedef I SI;
 // Flags in the AR field of symbol tables
 #define ARNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 #define ARNAMEADDEDX LPERMANENTX  // 2 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
-#define ARNAMEADDED (1LL<<ARNAMEADDEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
+#define ARNAMEADDED (1LL<<ARNAMEADDEDX)
 #define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol

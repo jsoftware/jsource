@@ -153,13 +153,15 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 // obsolete #define PTISNOTASGNNAME(s)  (((s).pt&0x1))
 #define PTMARK 0xC900007F
 // obsolete #define PTASGNNAME 0xC800807F
-#define PTISCAVN(pt) ((pt)&0x400000)
+#define PTISCAVNX 22
+#define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
 #define PTISRPAR(pt) (((pt)&0x7fff)==0)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
 #define PTISASGN(pt)  (((pt)&0x8000)<<(NAMEX-15))   // we compare against the NAMEX bit
 #define PTISNOTASGNNAME(pt)  (((pt)>>24)&1)
-#define PTLPARFLG 0x8000000  // this bit is clear in pt only if NOT LPAR
+#define PTNOTLPARX 27  // this bit is set for NOT LPAR 
+#define PTLPARFLG 0x8000000  // this bit is set in pt only if NOT LPAR
 // obsolete #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
 // obsolete #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}  // here when we know it's CAVN (not assignment)
@@ -506,7 +508,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
   A nexty = queue[nwds-1];   // unroll the fetch loop
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
-  UI pt0ecam = nwds+(3LL<<CONJX);  // mash into 1 register:  bit 32-63 stack0pt, bit 28-30 es delayline, 21-22 AR flags from symtab, low 17 m
+  UI pt0ecam = nwds+(3LL<<CONJX);  // mash into 1 register:  bit 32-63 stack0pt, bit 27,29-30 (VERB,CONJ,RPAR) es delayline, 21-22 AR flags from symtab, low 17 m
+  // The es delayline is 27|29,30.  Bit 30 means '2 more', either of 27/29 means 'one more'.  Bit 27 is set by the action routine to stack one extra after an AVN and is cleared by the stacking
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
@@ -668,6 +671,7 @@ endname: ;
 // obsolete       // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
 // obsolete       I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
      pt0ecam|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 00= no more, 01=1 more, 1x=2 more
+     pt0ecam&=~VERB|-(at&ADV+VERB+NOUN);  // if the action routine left VERB set, it means we should stack another word of we stack an AVN
 // obsolete      }
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
@@ -680,9 +684,9 @@ endname: ;
       if(pt0ecam&1){stack[0].pt=PTMARK; SETSTACK0PT(PTMARK) break;}  // m is <0 and odd; must be -1.  realize the virtual mark and use it.  a and pt will not be needed.  e and ca flags immaterial
       EP       // m=-2.  there's nothing more to pull, parse is over.  This is the normal end-of-parse
     }
-    if(!(pt0ecam&(3LL<<CONJX)))break;  // exit stack phase when no more to do, leaving es=0
+    if(!(pt0ecam&(VERB|(3LL<<CONJX))))break;  // exit stack phase when no more to do, leaving es=0
 // obsolete     --mes;  // decr es count if not 0
-    pt0ecam=(pt0ecam&~(3LL<<CONJX))|((pt0ecam>>1)&(1LL<<CONJX));  // decr es count if not 0
+    pt0ecam=(pt0ecam&~(VERB|(3LL<<CONJX)))|((pt0ecam>>1)&(1LL<<CONJX));  // bits 30/29/27: 1xx->010 others->000
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue.
 
@@ -819,11 +823,12 @@ RECURSIVERESULTSCHECK
       audittstack(jt);
 #endif
       }
-      // Most of the executed fragements are executed right here.  If token 0 is AVN, we know that it is impossible for the new stack to be executable (we have just put a noun
-      // in the first position, and if that produced an executable it would have been executed earlier.
-      // Also, if token 0 is EDGE but not LPAR and the pline is 0 or 2, that similarly can't execute (if LPAR and line 0/2, the only possible exec is () )
-      // we save a pass through the matcher in those cases.  But it doesn't seem to help
-// ineffective?       if(PTISCAVN(stack0pt))break;
+      // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
+      // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
+      // 2. pline=0 or 2, token 0 is EDGE but not LPAR: similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
+      // we save a pass through the matcher in those cases.  The 8 cycles are worth saving, but more than that it makes the branch prediction tighter
+      I iscavn=PTISCAVN(GETSTACK0PT);  // 0x400000 if CAVN (which implies AVN here)
+      if(((iscavn>>=(PTISCAVNX-2))&pline)|((GETSTACK0PT>>PTNOTLPARX)&~pline&1)){pt0ecam|=iscavn<<(VERBX-2); break;}  // cavn or ~( & ~line1; set 'stack two if AVN' flag if stack0 was AVN
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually

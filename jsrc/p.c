@@ -866,6 +866,7 @@ RECURSIVERESULTSCHECK
        SETSTACK0PT(stack[2].pt);  // Bottom of stack will be modified, so refresh the type for it
        stack=jtis(jt,stack); // assignment
        EPZ(stack)  // fail if error
+       break;  // it impossible for the stack to be executable.  In fact, if the second word is not ), it can't be executable even after a stacking
       }else{  // paren, for which pline may be anything
        if(likely(PTISCAVN(stack[1].pt)&&PTISRPAR(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR
         SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it

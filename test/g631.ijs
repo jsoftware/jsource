@@ -108,8 +108,8 @@ NB. Pristinity and inplacing in u&.>
 
 NB. Verify pristine results produced where appropriate
 NB. Tools for 13!:83:
-isprist =: ([: * 16b200000 (17 b.) 1&{)
-ispristorunbox =: ([: * 16b200000 (17 b.) 1&{) +. 32 ~: [: (17 b. -) 3&{
+isprist =: ([: * 16b1000000 (17 b.) 1&{)
+ispristorunbox =: ([: * 16b1000000 (17 b.) 1&{) +. 32 ~: [: (17 b. -) 3&{
 isvirt =: [: * 16b20000 (17 b.) 1&{
 isro =: [: * 16b1 (17 b.) 1&{
 countis =: 4&{

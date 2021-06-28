@@ -319,27 +319,27 @@ typedef I SI;
 
 #define LASTNOUNX XZX    // index of last noun bit
 
-#define ASGNX 21
+#define ASGNX 24
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 #define MARKX 22
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
-#define NAMEX 23
-#define NAME            ((I)1L<<NAMEX)    /* NM name                         */
-#define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
-// NOTE: VERB, SYMB, and LPAR are used as flags in names
-#define SYMBX 24
-#define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
-#define SYMBSIZE sizeof(LX)
-#define CONWX 25       // parsing uses the fact that CONWX is ASGNX+4
-#define CONW            ((I)1L<<CONWX)    /* CW control word                 */
-#define CONWSIZE sizeof(CW)
-// NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type except ASGN
-#define ADVX 26
+#define ADVX 23
 #define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
 #define ADVSIZE sizeof(V)
 // NOTE: LPAR is set in an ADV value to indicate that the value is nameless, see below
+#define NAMEX 21
+#define NAME            ((I)1L<<NAMEX)    /* NM name                         */
+#define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
+// NOTE: VERB, SYMB, and LPAR are used as flags in names
+#define SYMBX 25
+#define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
+#define SYMBSIZE sizeof(LX)
+#define CONWX 26
+#define CONW            ((I)1L<<CONWX)    /* CW control word                 */
+#define CONWSIZE sizeof(CW)
+// NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type except ASGN
 #define VERBX 27
 #define VERB            ((I)1L<<VERBX)      /* V  verb                         */
 #define VERBSIZE sizeof(V)  // Note: size of ACV in bp() is INTSIZE because the allocation in fdef() is of INTs
@@ -517,9 +517,9 @@ typedef I SI;
 // Note: bits 8-9 are used to hold AM flags merged in symbis
 #define AFNVRFLAGX      8
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
-#define AFUNIFORMITEMSX 22     // matches MARK
+#define AFUNIFORMITEMSX MARKX     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AS[0]
-#define AFVIRTUALX      17      // matches C2TX
+#define AFVIRTUALX      C2TX      // matches C2TX
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
@@ -534,22 +534,22 @@ typedef I SI;
                                  // UNINCORPORABLE blocks created by partitioning modifers to track cells may be inplaceable, and a virtual block whose backer
                                  // has been abandoned may be marked inplaceable as well.
                                  // NOTE: AFVIRTUALX must be higher than any RECURSIBLENOUN type (for test in result.h)
-#define AFUNINCORPABLEX 16      // matches SBTX
+#define AFUNINCORPABLEX SBTX      // matches SBTX
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
-#define AFVIRTUALBOXEDX 19   // matches XDX
+#define AFVIRTUALBOXEDX XDX   // matches XDX
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
-#define AFPRISTINEX      21  // matches ASGN
+#define AFPRISTINEX      ASGNX  // matches ASGN
 #define AFPRISTINE  ((I)1<<AFPRISTINEX)  // meaningful only for BOX type.  This block's contents were made entirely of DIRECT inplaceable or PERMANENT values, and thus can be
    // inplaced by &.> .  If any of the contents are taken out, the PRISTINE flag must be cleared, unless the block is never going to be used again (i. e. is inplaceable).
    // When a VIRTUAL block is created, it inherits the PRISTINE status of its backer; if the block is modified or a value escapes by address, PRISTINE status is cleared in the backer.
    // If a PRISTINE virtual block is realized, the backer must become non-PRISTINE (because its contents are escaping).
    // If a PRISTINE block is incorporated, it must lose PRISTINE status because it is no longer possible to know whether contents may have been fetched while the
    // block was incorporated.
-#define AFDPARENX 25     // matches CONW
+#define AFDPARENX CONWX     // matches CONW
 #define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
-#define AFUPPERTRIX 30      // matches RPAR
+#define AFUPPERTRIX RPARX      // matches RPAR
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 

@@ -31,7 +31,7 @@
 #define ZZFLAGHASUNBOX (((I)1)<<ZZFLAGHASUNBOXX)
 #define ZZFLAGHASBOXX (ZZFLAGHASUNBOXX+1)  // result contains a nonempty box (must be one bit above FLAGHASUNBOX)
 #define ZZFLAGHASBOX (((I)1)<<ZZFLAGHASBOXX)
-// next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP
+// next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP, and spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define ZZFLAGCOUNTITEMSX 7  // RA should count the items and verify they are homogeneous (the next primitive is ;)
 #define ZZFLAGCOUNTITEMS (((I)1)<<ZZFLAGCOUNTITEMSX)
 // next flag must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP1 to ATOPOPEN1
@@ -47,7 +47,7 @@
 #define ZZFLAGVIRTAINPLACEX 11 // set if the virtual block for a can be inplaced, based on the iterator context and inplaceability of the input, but ignoring whether the verb inplaces
 #define ZZFLAGVIRTAINPLACE (((I)1)<<ZZFLAGVIRTAINPLACEX)
 
-#define ZZFLAGPRISTINEX AFPRISTINEX  // 21 set if the result is PRISTINE, i. e. boxed and made up entirely of DIRECT inplaceable results
+#define ZZFLAGPRISTINEX AFPRISTINEX  // set if the result is PRISTINE, i. e. boxed and made up entirely of DIRECT inplaceable results
 #define ZZFLAGPRISTINE AFPRISTINE
 
 

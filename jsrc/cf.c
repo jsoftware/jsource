@@ -5,8 +5,6 @@
 
 #include "j.h"
 
-#define TC1(t)          ((0x20034>>(((t)>>(ADVX-1))&(CONJ+ADV+VERB>>(ADVX-1))))&3)   // C x V A (N) -> 16 x 4 2 0 -> 2 x 3 1 0    10 xx xx xx xx xx 11 01 00   C A V N -> 2 1 3 0
-#define BD(ft,gt)       (4*TC1(ft)+TC1(gt))
 #define TDECL           V*sv=FAV(self);A fs=sv->fgh[0],gs=sv->fgh[1],hs=sv->fgh[2]
 
 
@@ -305,50 +303,53 @@ static DF2(jthklvl2){
 
 F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
  ARGCHK2(a,w);
- switch(BD(AT(a),AT(w))){
-  default:            ASSERT(0,EVSYNTAX);
-  case BD(VERB,VERB):
-   // This is the (V V) case, producing a verb
-   u=FAV(a); c=u->id; f1=jthook1cell; f2=jthook2cell;
-   v=FAV(w); d=v->id; e=ID(v->fgh[0]);
-   // Set flag to use: ASGSAFE if both operands are safe; and FLGOK init to OK as for hook, but change as needed to match f1,f2
-   flag=((u->flag&v->flag)&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2);  // start with in-place enabled, as befits hook1/hook2
-   if(d==CCOMMA)switch(c){   // all of this except for ($,) is handled by virtual blocks
-    case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
-   }else if(d==CBOX){
-    if(c==CRAZE){f2=jtlink; linktype=ACINPLACE;  // (;<)
-    }else if(c==CCOMMA){f2=jtlink; linktype=ACINPLACE+1;  // (,<)
-    }
-   }else if(d==CLDOT){   // (compare L.)
-    I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;
-    if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
-   }else{
-    switch(c){
-    case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){  // (f/. i.@#)  or @: & &:
-                   if(CBOX==ID(u->fgh[0])){f1=jtkeybox; flag &=~VJTFLGOK1;} // (</. i.@#)
-                   else if(u->valencefns[1]==jtkeyheadtally){f1=jtkeyheadtally; flag &=~VJTFLGOK1;} // ((#,{.)/. i.@#) or  (({.,#)/. i.@#)
-                  } break;
-    case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){f1=jthkiota; flag &=~VJTFLGOK1;} break;  // (# i.@#))
-    case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->fgh[1])&&CSTAR==ID(FAV(v->fgh[1])->fgh[0])){f1=jthkodom; flag &=~VJTFLGOK1;} break;  // (#: i.@(*/))
-    case CIOTA:   
-    case CICO:    if(BOTHEQ8(d,(e&~1),CSLASH,CMIN)){f1=jthkindexofmaxmin; flag &=~VJTFLGOK1;} break;  // >./ <./
-    case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VJTFLGOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VJTFLGOK2;}
-    }
+ if(AT(a)&AT(w)&VERB){
+// obsolete   case BD(VERB,VERB):
+  // This is the (V V) case, producing a verb
+  u=FAV(a); c=u->id; f1=jthook1cell; f2=jthook2cell;
+  v=FAV(w); d=v->id; e=ID(v->fgh[0]);
+  // Set flag to use: ASGSAFE if both operands are safe; and FLGOK init to OK as for hook, but change as needed to match f1,f2
+  flag=((u->flag&v->flag)&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2);  // start with in-place enabled, as befits hook1/hook2
+  if(d==CCOMMA)switch(c){   // all of this except for ($,) is handled by virtual blocks
+   case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
+  }else if(d==CBOX){
+   if(c==CRAZE){f2=jtlink; linktype=ACINPLACE;  // (;<)
+   }else if(c==CCOMMA){f2=jtlink; linktype=ACINPLACE+1;  // (,<)
    }
-   // Return the derived verb
-   A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
-   FAV(z)->localuse.lu1.linkvb=linktype; R z;  // if it's a form of ;, install the form
-  // All other cases produce an adverb
-  case BD(ADV, ADV ): f1=taa; break;
-  case BD(NOUN,CONJ):
-  case BD(VERB,CONJ):
-   f1=tvc; id=FAV(w)->id;
-   if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
-   break;
-  case BD(CONJ,NOUN):
-  case BD(CONJ,VERB):
-   f1=tcv; id=FAV(a)->id;
-   if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
- }
+  }else if(d==CLDOT){   // (compare L.)
+   I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;
+   if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
+  }else{
+   switch(c){
+   case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){  // (f/. i.@#)  or @: & &:
+                  if(CBOX==ID(u->fgh[0])){f1=jtkeybox; flag &=~VJTFLGOK1;} // (</. i.@#)
+                  else if(u->valencefns[1]==jtkeyheadtally){f1=jtkeyheadtally; flag &=~VJTFLGOK1;} // ((#,{.)/. i.@#) or  (({.,#)/. i.@#)
+                 } break;
+   case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){f1=jthkiota; flag &=~VJTFLGOK1;} break;  // (# i.@#))
+   case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->fgh[1])&&CSTAR==ID(FAV(v->fgh[1])->fgh[0])){f1=jthkodom; flag &=~VJTFLGOK1;} break;  // (#: i.@(*/))
+   case CIOTA:   
+   case CICO:    if(BOTHEQ8(d,(e&~1),CSLASH,CMIN)){f1=jthkindexofmaxmin; flag &=~VJTFLGOK1;} break;  // >./ <./
+   case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VJTFLGOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VJTFLGOK2;}
+   }
+  }
+  // Return the derived verb
+  A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
+  FAV(z)->localuse.lu1.linkvb=linktype; R z;  // if it's a form of ;, install the form
+ // All other cases produce an adverb
+ }else if(AT(a)&AT(w)&ADV){
+// obsolete   case BD(ADV, ADV ):
+  f1=taa;
+ }else if(AT(a)&NOUN+VERB&&AT(w)&CONJ){
+// obsolete   case BD(NOUN,CONJ):
+// obsolete   case BD(VERB,CONJ):
+  f1=tvc; id=FAV(w)->id;
+  if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
+ }else if(AT(w)&NOUN+VERB&&AT(a)&CONJ){
+// obsolete   case BD(CONJ,NOUN):
+// obsolete   case BD(CONJ,VERB):
+  f1=tcv; id=FAV(a)->id;
+  if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
+ }else{ASSERT(0,EVSYNTAX);}
+
  R fdef(0,CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);
 }

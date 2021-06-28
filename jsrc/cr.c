@@ -18,11 +18,11 @@
 #define STATEAWNOTEMPTYX 18  // set if a and w args both have atoms
 #define STATEAWNOTEMPTY ((I)1<<STATEAWNOTEMPTYX)
 // These bits start where they do to avoid overlap with AFPRISTINE.  Also, they are above where rank significance is
-#define STATEOUTERREPEATAX 22
+#define STATEOUTERREPEATAX (AFPRISTINEX+1)
 #define STATEOUTERREPEATA (((I)1)<<STATEOUTERREPEATAX)
-#define STATEINNERREPEATWX 23
+#define STATEINNERREPEATWX (AFPRISTINEX+2)
 #define STATEINNERREPEATW (((I)1)<<STATEINNERREPEATWX)
-#define STATEINNERREPEATAX 24
+#define STATEINNERREPEATAX (AFPRISTINEX+3)
 #define STATEINNERREPEATA (((I)1)<<STATEINNERREPEATAX)
 // There must be NO higher bits than STATEINNERREPEATA, because we shift down and OR into flags
 

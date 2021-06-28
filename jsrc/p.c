@@ -859,7 +859,7 @@ RECURSIVERESULTSCHECK
       PTFROMTYPE(stack[1].pt,AT(y)) stack[1].t=restok; stack[1].a=y;   // save result, move token#, recalc parsetype
      }
     }else{
-     // Here for lines 5-8 (fork/hook/assign/parens), which branch to a canned routine
+     // Here for lines 5-? (fork/hook/assign/parens), which branch to a canned routine
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
      // We avoid the indirect branch, which is very expensive
      if(pline>6){  // assign/paren

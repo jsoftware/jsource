@@ -12,7 +12,7 @@
 #define ZZFLAGARRAYW (((I)1)<<ZZFLAGARRAYWX)
 #define ZZFLAGARRAYAX 15  // w has multiple cells and must advance between iterations
 #define ZZFLAGARRAYA (((I)1)<<ZZFLAGARRAYAX)
-#define ZZFLAGISDYADX 22 // set if dyad call - MUST BE THE HIGHEST BIT - 21 is PRISTINE
+#define ZZFLAGISDYADX (AFPRISTINEX+1) // set if dyad call - MUST BE THE HIGHEST BIT - above PRISTINE
 #define ZZFLAGISDYAD (((I)1)<<ZZFLAGISDYADX)
 
 

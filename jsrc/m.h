@@ -42,7 +42,7 @@
 
 // bp(type) returns the number of bytes in an atom of the type
 #define bp(i) (typesizes[CTTZ(i)+(REPSGN(i)&8)])  // the 8 is for sparse args
-// bplg(type) works for NOUN types and returns the lg of the size - not for sparse args
+// bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
 #if BW==64
 #define bplg(i) (((I)0x008bb6db408dc6c0>>3*CTTZ(i))&(I)7)  // 010 001 011   101 101 101 101 101 101 000 000   100 011 011 100 011 011 000 000 = 0 1000 1011 1011 0110 1101 1011   0100 0000 1000 1101 1100 0110 1100 0000
 // bpnoun is like bp but for NOUN types, and not sparse

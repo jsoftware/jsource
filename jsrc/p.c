@@ -546,7 +546,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
     // pull one value from the queue
     --stack;  // back up to new stack frame, where we will store the new word
 
-    if(likely((pt0ecam&0xffff)!=0)){A y;     // if there is another valid token...
+    if(likely((US)pt0ecam!=0)){A y;     // if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
 // obsolete     I at=AT(y = queue[mes>>2]);   // fetch the next word from queue; pop the queue; extract the type, save as at
@@ -674,21 +674,22 @@ endname: ;
 // obsolete       // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
 // obsolete       // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
 // obsolete       I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
-     --pt0ecam;  //  decrement token# for the word we just processed
-     pt0ecam|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 00= no more, 01=1 more, 1x=2 more
+     I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
+     pt0ecam|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 000= no more, other 0xx=1 more, 1xx=2 more
      pt0ecam&=~VERB|-(at&ADV+VERB+NOUN);  // if the action routine left VERB set, it means we should stack another word of we stack an AVN
 // obsolete      }
+     --pt0ecam;  //  decrement token# for the word we just processed
      tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
      // Put it onto the stack along with a code indicating part of speech and the token number of the word
-     PTFROMTYPEASGN(at,at); stack[0].pt=at; SETSTACK0PT(at)   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.
-     // at has been destroyed
-         // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
+     SETSTACK0PT(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.
+         // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type
      stack[0].a = y;   // finish setting the stack entry, with the new word
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
-      if(!(pt0ecam&0x10000)){pt0ecam|=0x10000; stack[0].pt=PTMARK; SETSTACK0PT(PTMARK) break;}  // first time m=0.  realize the virtual mark and use it.  a and pt will not be needed.  e and ca flags immaterial
-      EP       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse
+      if(!(pt0ecam&0x10000)){pt0ecam|=0x10000; SETSTACK0PT(PTMARK) break;}  // first time m=0.  realize the virtual mark and use it.  a and pt will not be needed.  e and ca flags immaterial
+// obsolete  stack[0].pt=PTMARK;
+      EP       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
       // never fall through here
     }
     if(!(tmpes&(VERB|(3LL<<CONJX))))break;  // exit stack phase when no more to do, leaving es=0
@@ -866,7 +867,9 @@ RECURSIVERESULTSCHECK
        SETSTACK0PT(stack[2].pt);  // Bottom of stack will be modified, so refresh the type for it
        stack=jtis(jt,stack); // assignment
        EPZ(stack)  // fail if error
-       break;  // it impossible for the stack to be executable.  In fact, if the second word is not ), it can't be executable even after a stacking
+       // it impossible for the stack to be executable.  In fact, if the second word is not ), it can't be executable even after a stacking
+       if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment
+       break;
       }else{  // paren, for which pline may be anything
        if(likely(PTISCAVN(stack[1].pt)&&PTISRPAR(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR
         SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
@@ -931,7 +934,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
      auditmemchains();  // trap here while we still have the parseline
 #endif
 
-  // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2]) into the return
+  // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2].t) into the return
   R (A)((I)z+SGNTO0US(stack[2].t));  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted

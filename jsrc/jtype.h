@@ -973,13 +973,14 @@ typedef struct {
 #define VXOPCALL        (I)0x200000      /* : defn derived fn call          */
 #define VTRY1           (I)0x400000      /* monad contains try.             */
 #define VTRY2           (I)0x800000      /* dyad  contains try.  must be just above VTRY1           */
-#define VDDOP           (I)0x1000000     /* 24 derived from a derived operator */
-#define VJTFLGOK1X    25    // 25 monad can handle flags in jt
+// bits VJTFLGOK1-VASGSAFE are wired into a flag reg in parser
+#define VJTFLGOK1X    24    // 25 monad can handle flags in jt
 #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
-#define VJTFLGOK2X    26    // 26 dyad can  handle flags in jt
+#define VJTFLGOK2X    25    // 26 dyad can  handle flags in jt
 #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
-#define VASGSAFEX     27
+#define VASGSAFEX     26
 #define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path
+#define VDDOP           ((I)(1L<<27))     /* derived from a derived operator */
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb
 #define VFUSEDOK2  ((I)(1L<<30))    // this block can be executed by passing in another block (containing rank) whose fgh[0] points to the native block for this primitive

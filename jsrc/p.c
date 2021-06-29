@@ -153,15 +153,15 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 // obsolete #define PTISNOTASGNNAME(s)  (((s).pt&0x1))
 #define PTMARK 0xC900007F
 // obsolete #define PTASGNNAME 0xC800807F
-#define PTISCAVNX 22
+#define PTISCAVNX 22  // this flag used in a register here
 #define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
 #define PTISRPAR(pt) (((pt)&0x7fff)==0)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
 #define PTISASGN(pt)  (((pt)&0x8000)<<(NAMEX-15))   // we compare against the NAMEX bit
 #define PTISNOTASGNNAME(pt)  (((pt)>>24)&1)
-#define PTNOTLPARX 27  // this bit is set for NOT LPAR 
-#define PTLPARFLG 0x8000000  // this bit is set in pt only if NOT LPAR
+#define PTNOTLPARX 27  // this bit is set for NOT LPAR    used in a register here
+#define PTNOTLPAR (1LL<<PTNOTLPARX)  // this bit is set in pt only if NOT LPAR
 // obsolete #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
 // obsolete #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}  // here when we know it's CAVN (not assignment)
@@ -512,9 +512,13 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
-  UI pt0ecam = nwds+((nopull4?0b0100LL:0b1000LL)<<(VERBX+1));  // mash into 1 register:  bit 32-63 stack0pt, bit 28-31 (from VERBX+1) es delayline, 17-18 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
+  UI pt0ecam = nwds+((nopull4?0b0100LL:0b1000LL)<<(VERBX+1));
+  // mash into 1 register:  bit 32-63 stack0pt, bit 28-31 (from VERBX+1) es delayline, 24-26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags
+  //  22 PTISCAVNX set if parse should pull another stack if CAVN stacked 27 PTNOTLPARX set if dyad should avoid testing for executable fragment
+  //  20-21 savearea for pline when 0-3
+  //  17-18 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
 #define LOCSYMFLGX (17-ARNAMEADDEDX)
-#define PMASKX (LOCSYMFLGX+ARLCLONEDX)  // 8 bits of pmask
+#define PLINESAVEX 20  // 2 bits of pline
   // The es delayline is 28-31.  Bit 31 means '2 more', either of 29-30 means 'one more'.  Bit 28 is set by the action routine to stack one extra after an AVN and is cleared by the stacking
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
@@ -715,9 +719,10 @@ endname: ;
 // obsolete     I pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24) & (I)((C*)&stack[1].pt)[2] & (I)((C*)&stack[2].pt)[1]  & (I)((C*)&stack[3].pt)[0] );  // bit 8 is set ONLY for LPAR
     I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2]  & (I)((C*)&stack[3].pt)[3];  // bit 8 is set ONLY for LPAR
 // obsolete     pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24)&pmask);
-    pmask=(pmask|PTLPARFLG)&(GETSTACK0PT^PTLPARFLG);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
+    pmask=(pmask|PTNOTLPAR)&(GETSTACK0PT^PTNOTLPAR);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
     if(!pmask)break;  // If all 0, nothing is dispatchable, go push next word
-    A stk1a=stack[1].a, stk2a=stack[2].a;  // fetch these as early as possible
+// obsolete     A stk1a=stack[1].a, stk2a=stack[2].a;  // fetch these as early as possible
+    A fs=stack[2-(pmask&1)].a;  // the executed self block - fetch as early as possible - stk[2] except for line 0
 
     // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
     // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
@@ -731,7 +736,7 @@ endname: ;
     jt->parserstackframe.parsercurrtok = stack[((I)0x056A9>>(pline*2))&3].t;   // in order 9-0: 0 0 1 1 1 2 2 2 2 1->00 00 01 01 01 10 10 10 10 01->0000 0101 0110 1010 1001
     if(pmask&0x1F){
      // Here for lines 0-4, which execute the entity pointed to by fs
-     A fs=stk2a; fs=pmask&1?stk1a:fs;  // pointer to the A block for the entity about to be executed
+// obsolete      A fs=stk2a; fs=pmask&1?stk1a:fs;  // pointer to the A block for the entity about to be executed
 // obsolete      I fsflag=FAV(fs)->flag;  // fetch flags early - we usually need them
      PSTK *stackfs=stack+2-(pmask&1);  // stackpointer for the executing word: 1 2 2 2 2
 //     AF actionfn=FAV(fs)->valencefns[(pline&2)>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
@@ -740,22 +745,25 @@ endname: ;
      if(pline<3){A y;  // lines 0 1 2, verb execution
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
 // obsolete       pline|=(fsflag>>(pline>>1))&VJTFLGOK1;  // insert VJTFLGOK1 flag if the selected valence is inplaceable
-      I dyad=pline>>1;
-      pline|=FAV(fs)->flag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into pline to save reg
+// obsolete       I dyad=pline>>1;
+// obsolete       pline|=FAV(fs)->flag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into pline to save reg
+      pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTISCAVN(~0LL)+PTNOTLPAR+(3LL<<PLINESAVEX)); pt0ecam|=FAV(fs)->flag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg
       // If it is an inplaceable assignment to a known name that has a value, remember the name and the value
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
       // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
       // this may be over two verbs
-      if((UI)(((pline>>dyad)>>VJTFLGOK1X)&1)>(UI)PTISNOTASGNNAME(GETSTACK0PT))if(likely(PTISM(stackfs[2]))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+      if((UI)(((pt0ecam>>(pline>>1))>>VJTFLGOK1X)&1)>(UI)PTISNOTASGNNAME(GETSTACK0PT))if(likely(PTISM(stackfs[2]))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+       pt0ecam|=pline<<PLINESAVEX;  // lose pline over the subroutine calls to try to prevent a register spill
        if(likely((AT(stack[0].a))&ASGNLOCAL)){
         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
         if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
          s=JT(jt,sympv)+(I)NAV(nexty)->symx;  // get address of symbol in primary table.  There may be no value; that's OK
         }else{s=jtprobeislocal(jt,nexty);}
        }else s=jtprobeisquiet(jt,nexty,UNLXAV0(locbuckets));  // global assignment, get slot address
+       pline=(pt0ecam>>PLINESAVEX)&3;  // restore after call
        // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
-       s=((pline&(FAV(stk1a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos
+       s=((pt0ecam&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos
        // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
        // a relocation of the symbol table) is marked as not ASGSAFE
        jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
@@ -764,9 +772,9 @@ endname: ;
        s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
       }
       jt->sf=fs;  // set new recursion point for $:
-      I plflg=pline;  // save the flags
-      pline&=3;  // remove inplaceable flag bit
-      jt=(J)(intptr_t)((I)jt+(REPSGN(SGNIF(plflg,VJTFLGOK1X+(pline>>1)))&(pline|1)));   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
+// obsolete       I plflg=pline;  // save the flags
+// obsolete       pline&=3;  // remove inplaceable flag bit
+      jt=(J)(intptr_t)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pline>>1)))&(pline|1)));   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
       // jt has been corrupted, now holding inplacing info
       // There is no need to set the token number in the result, since it must be a noun and will never be executed
       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
@@ -843,7 +851,7 @@ RECURSIVERESULTSCHECK
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
-      A arg1=stk1a;   // 1st arg, monad or left dyad
+      A arg1=stack[1].a;   // 1st arg, monad or left dyad
       A arg2=stack[pline-1].a;   // 2nd arg, fs or right dyad
       UI4 restok=stack[1].t;  // save token # to use for result
       stack[pline-2]=stack[0]; // close up the stack

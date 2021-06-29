@@ -319,20 +319,23 @@ typedef I SI;
 
 #define LASTNOUNX XZX    // index of last noun bit
 
-#define ASGNX 24
-#define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
-#define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
-#define MARKX 22
+// upper flags may be used, except for RPAR and CONJ (used as stack count in parser), LPAR and ASGN (used in parser to calculate initial stack count), CONW (always means ASGNTONAME in parser)
+// if ADV is used, some tests may need to change
+#define NAMEX 21
+#define NAME            ((I)1L<<NAMEX)    /* NM name                         */
+#define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
+// NOTE: VERB, SYMB, and MARK are used as flags in names, see below
+#define MARKX 22  // don't try to move this! it ripples through and breaks JTflags
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
 #define ADVX 23
 #define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
 #define ADVSIZE sizeof(V)
-// NOTE: LPAR is set in an ADV value to indicate that the value is nameless, see below
-#define NAMEX 21
-#define NAME            ((I)1L<<NAMEX)    /* NM name                         */
-#define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
-// NOTE: VERB, SYMB, and LPAR are used as flags in names
+// NOTE: SYMB is set in an ADV value to indicate that the value is nameless, see below
+#define ASGNX 24
+#define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
+#define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
+// BOTE: SYMB and CONW are used as flags in ASGN, see below
 #define SYMBX 25
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
 #define SYMBSIZE sizeof(LX)
@@ -344,6 +347,7 @@ typedef I SI;
 #define VERB            ((I)1L<<VERBX)      /* V  verb                         */
 #define VERBSIZE sizeof(V)  // Note: size of ACV in bp() is INTSIZE because the allocation in fdef() is of INTs
 // NOTE: VERB must be above all NOUN bits because of CONJCASE.  Must be >ADV because of AVN testing in parser
+// es delayline is parser expects VERBX <= 27
 #define LPARX 28
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 // note: LPAR used as flag to cvt() see below; also as modifier to ADV type
@@ -366,8 +370,8 @@ typedef I SI;
 #define SPARSEX 31  // NOTE this extends to the sign bit
 #define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
 // ** NAME type can have the following information flags set
-#define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
-#define NAMEABANDONX LPARX
+#define NAMEBYVALUE     ((I)1L<<MARKX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Must not be the same as NAMELESSMOD
+#define NAMEABANDONX SYMBX
 #define NAMEABANDON            ((I)1L<<NAMEABANDONX)     // name is name::, which will be deassigned after the value is stacked.  NAMEBYVALUE must also be set
 // in the parser VERB is set in a NAME type to indicate use of global symbol table
 // ** BOX type can have the following informational flags set
@@ -380,7 +384,7 @@ typedef I SI;
 #define XCVTXNUMCVX     CONJX
 #define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
 // ** ADV type can have the following information flag set
-#define NAMELESSMODX    LPARX
+#define NAMELESSMODX    SYMBX
 #define NAMELESSMOD     ((I)1<<NAMELESSMODX)  // set in a modifier to indicate that the value contains no names.  Such values are pushed onto the stack by value to save parsing overhead.
                              // namelessness is detected only when a modifier is assigned, and is supported only for ADV types because of coding details.  It would be nice to support it
                              // for CONJ too, but a nameless conj would be either primitive or explicit, and users shouldn't cover primitives.  This feature is mostly for every/each/inv

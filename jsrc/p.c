@@ -168,7 +168,7 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
 // obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt)|((t>>(CONWX-2))&(CONWX-(LASTNOUNX+1))); z=ptcol[pt+1];}  // clear flag bit if ASGN to name, by fetching from unused CONW hole, which is 4 above ASGN
 // obsolete  // CONWX-2 moves CONW to its position in the table, which is at CONWX-(LASTNOUNX+1)=4
-#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=LASTNOUNX; nt=(t)&CONW?SYMBX:nt; pt=(t)&(CONW|((1LL<<(LASTNOUNX+1))-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused SYMB hole
+#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=LASTNOUNX; nt=(t)&CONW?SYMBX:nt; pt=(t)&(CONW|((1LL<<(LASTNOUNX+1))-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused SYMB hole (use SYMB rather than CONW because of odd code generation)
 
 static PSTK* jtpfork(J jt,PSTK *stack){
  A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
@@ -201,7 +201,7 @@ static PSTK* jtis(J jt,PSTK *stack){
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
   A symtab=jt->locsyms; if(unlikely((SGNIF(asgt,ASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
-  if(unlikely((AT(n)&BOXMULTIASSIGN)!=0)){
+  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
    if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
    else{
@@ -463,32 +463,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
  jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)nwds;  // addr & length of words being parsed
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
-  // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
-  A savfs=jt->sf;  // push $: stack
-
-  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
-  // never look at a stack location until we have moved from the queue to that position.
-  // Each word gets two stack locations: first is the word itself, second the original word number+1
-  // to use if there is an error on the word
-  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
-  // The stack grows down
-  if(unlikely((uintptr_t)jt->parserstackframe.parserstkend1-(uintptr_t)jt->parserstackframe.parserstkbgn < (nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK))){A y;
-   ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
-   I allo = MAX((nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-   GATV0(y,B01,allo,1);
-   jt->parserstackframe.parserstkbgn=(PSTK*)AV(y);   // save start of data area
-   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
-   jt->parserstackframe.parserstkend1=(PSTK*)((uintptr_t)jt->parserstackframe.parserstkbgn+allo);  // point to the end+1 of the allocation
-   // We could worry about hysteresis to avoid reallocation of every call
-  }
-  stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
-
-  ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
-// obsolete   US nvrotop=jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
-  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
-
-  // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we move in a mark.
-
   // As names are dereferenced, they are added to the nvr queue.  To save time in the loop, we now
   // make sure there is enough room in the nvr queue to handle all the names we will encounter in
   // this sentence.  For simplicity's sake, we just assume the worst, that every word is a name, and
@@ -505,13 +479,43 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
    if(unlikely((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))){NOUNROLL do{RZ(extnvr());}while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra));}
   }
 
-  queue+=nwds-1; A nexty=*queue--;   // Advance queueptr to last token.  It always points to the next value to fetch.  Then unroll the fetch loop one time
+  queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
 
-  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
-  UI pt0ecam = nwds+(3LL<<CONJX);  // mash into 1 register:  bit 32-63 stack0pt, bit 27,29-30 (VERB,CONJ,RPAR) es delayline, 17-18 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
+  // If words -1 & -2 exist, we can pull 4 words initially unless word 2 is ASGN or word 1 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
+  // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch
+  I nopull4=0; if(likely(nwds>2))nopull4=(AT(queue[-1])|AT(queue[-2]))&ASGN+LPAR;
+ 
+  // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
+  A savfs=jt->sf;  // push $: stack
+  A nexty=*queue--;  // unroll the fetch loop one time
+
+  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
+  // never look at a stack location until we have moved from the queue to that position.
+  // Each word gets two stack locations: first is the word itself, second the original word number+1
+  // to use if there is an error on the word
+  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
+  // The stack grows down
+  if(unlikely((uintptr_t)jt->parserstackframe.parserstkend1-(uintptr_t)jt->parserstackframe.parserstkbgn < (nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK))){A y;
+   ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
+   I allo = MAX((nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+   GATV0(y,B01,allo,1);
+   jt->parserstackframe.parserstkbgn=(PSTK*)AV(y);   // save start of data area
+   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
+   jt->parserstackframe.parserstkend1=(PSTK*)((uintptr_t)jt->parserstackframe.parserstkbgn+allo);  // point to the end+1 of the allocation
+   // We could worry about hysteresis to avoid reallocation of every call
+  }
+// obsolete   US nvrotop=jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
+  ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
+  stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
+  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
+
+  // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
+
+  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
+  UI pt0ecam = nwds+((nopull4?0b0100LL:0b1000LL)<<(VERBX+1));  // mash into 1 register:  bit 32-63 stack0pt, bit 28-31 (from VERBX+1) es delayline, 17-18 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
 #define LOCSYMFLGX (17-ARNAMEADDEDX)
 #define PMASKX (LOCSYMFLGX+ARLCLONEDX)  // 8 bits of pmask
-  // The es delayline is 27|29,30.  Bit 30 means '2 more', either of 27/29 means 'one more'.  Bit 27 is set by the action routine to stack one extra after an AVN and is cleared by the stacking
+  // The es delayline is 28-31.  Bit 31 means '2 more', either of 29-30 means 'one more'.  Bit 28 is set by the action routine to stack one extra after an AVN and is cleared by the stacking
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
@@ -542,7 +546,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
 
     // pt0ecam is settling from pt0 and will not be ready for several cycles.  Avoid using it in addresses
 
-   do{I tmpes;
+   do{UI tmpes;I at;
     // pull one value from the queue
     --stack;  // back up to new stack frame, where we will store the new word
 
@@ -550,7 +554,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
 // obsolete     I at=AT(y = queue[mes>>2]);   // fetch the next word from queue; pop the queue; extract the type, save as at
-     I at=AT(nexty);  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
+     at=AT(nexty);  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
      y=nexty; nexty = *queue--;    // fetch the next word from queue;
      L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution.  But the value spills, so we fetch it here where we have time to fill
       // The last fetch of nexty fetches from queue[-1].  This will not segfault, and we never come back to fetch from inside that bogus block.
@@ -676,7 +680,7 @@ endname: ;
 // obsolete       I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
      I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
      pt0ecam|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 000= no more, other 0xx=1 more, 1xx=2 more
-     pt0ecam&=~VERB|-(at&ADV+VERB+NOUN);  // if the action routine left VERB set, it means we should stack another word of we stack an AVN
+     pt0ecam&=~(VERB<<1)|-(at&ADV+VERB+NOUN);  // if the action routine left VERB+1 set, it means we should stack another word of we stack an AVN
 // obsolete      }
      --pt0ecam;  //  decrement token# for the word we just processed
      tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part
@@ -692,9 +696,10 @@ endname: ;
       EP       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
       // never fall through here
     }
-    if(!(tmpes&(VERB|(3LL<<CONJX))))break;  // exit stack phase when no more to do, leaving es=0
+    if(!(tmpes&(0b1111LL<<(VERBX+1))))break;  // exit stack phase when no more to do, leaving es=0
 // obsolete     --mes;  // decr es count if not 0
-    pt0ecam=(pt0ecam&~(VERB|(3LL<<CONJX)))|((tmpes>>1)&(1LL<<CONJX));  // bits 30/29/27: 1xx->010 others->000
+    pt0ecam=(pt0ecam&~(0b1111LL<<(VERBX+1)))|((tmpes>>1)&(0b0110LL<<(VERBX+1))&(~(at&ADV)<<(VERBX+1+2-ADVX)));  // bits 31-28: 1xxx->0100 01xx->0010 others->0000.  But if ADV, change request for 3 to request for 2.  Still worth it
+      // because we will be waiting for pt0 and the extra work can be done while it is settling
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue.
 
@@ -834,7 +839,7 @@ RECURSIVERESULTSCHECK
       // 2. pline=0 or 2, token 0 is EDGE but not LPAR: similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
       // we save a pass through the matcher in those cases.  The 8 cycles are worth saving, but more than that it makes the branch prediction tighter
       I iscavn=PTISCAVN(GETSTACK0PT);  // 0x400000 if CAVN (which implies AVN here)
-      if(((iscavn>>=(PTISCAVNX-2))&pline)|((GETSTACK0PT>>PTNOTLPARX)&~pline&1)){pt0ecam|=iscavn<<(VERBX-2); break;}  // cavn or ~( & ~line1; set 'stack two if AVN' flag if stack0 was AVN
+      if(((iscavn>>=(PTISCAVNX-2))&pline)|((GETSTACK0PT>>PTNOTLPARX)&~pline&1)){pt0ecam|=iscavn<<((VERBX+1)-2); break;}  // cavn or ~( & ~line1; set 'stack two if AVN' flag if stack0 was AVN
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually

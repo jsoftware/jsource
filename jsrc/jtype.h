@@ -974,9 +974,9 @@ typedef struct {
 #define VTRY1           (I)0x400000      /* monad contains try.             */
 #define VTRY2           (I)0x800000      /* dyad  contains try.  must be just above VTRY1           */
 // bits VJTFLGOK1-VASGSAFE are wired into a flag reg in parser
-#define VJTFLGOK1X    24    // 25 monad can handle flags in jt
+#define VJTFLGOK1X    24    // monad can handle flags in jt
 #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
-#define VJTFLGOK2X    25    // 26 dyad can  handle flags in jt
+#define VJTFLGOK2X    25    // dyad can  handle flags in jt
 #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
 #define VASGSAFEX     26
 #define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path

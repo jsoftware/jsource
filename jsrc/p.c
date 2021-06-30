@@ -844,10 +844,12 @@ RECURSIVERESULTSCHECK
       }
       // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
       // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
-      // 2. pline=0 or 2, token 0 is EDGE but not LPAR: similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
+      // 2. pline=0 or 2, token 0 not LPAR (might be EDGE): similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
+      // Since if pline is 0 token 0 must be EDGE, this is equivalent to pline!=1 and word 0 not LPAR
       // we save a pass through the matcher in those cases.  The 8 cycles are worth saving, but more than that it makes the branch prediction tighter
+      // further, if word 0 is (C)AVN, we can pull 2 tokens if the next token is AVN: we have a flag for that
       I iscavn=PTISCAVN(GETSTACK0PT);  // 0x400000 if CAVN (which implies AVN here)
-      if(((iscavn>>=(PTISCAVNX-2))&pline)|((GETSTACK0PT>>PTNOTLPARX)&~pline&1)){pt0ecam|=iscavn<<((VERBX+1)-2); break;}  // cavn or ~( & ~line1; set 'stack two if AVN' flag if stack0 was AVN
+      if((GETSTACK0PT>>PTNOTLPARX)&~pline&1){pt0ecam|=iscavn<<((VERBX+1)-PTISCAVNX); break;}  // cavn or ~( & ~line1; set 'stack two if AVN' flag if stack0 was AVN
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually

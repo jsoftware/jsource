@@ -772,6 +772,14 @@ endname: ;
        s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
       }
       jt->sf=fs;  // set new recursion point for $:
+      // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
+      // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
+      // 2. pline=0 or 2, token 0 not LPAR (might be EDGE): similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
+      // Since if pline is 0 token 0 must be EDGE, this is equivalent to pline!=1 and word 0 not LPAR
+      // we save a pass through the matcher in those cases.  The 8 cycles are worth saving, but more than that it makes the branch prediction tighter
+      // further, if word 0 is (C)AVN, we can pull 2 tokens if the next token is AVN: we have a flag for that
+      pt0ecam|=PTISCAVN(GETSTACK0PT)<<((VERBX+1)-PTISCAVNX);  // 0x400000 if CAVN (which implies AVN here); set flag in VERBX+1
+      pt0ecam|=GETSTACK0PT&((~pline&1)<<PTNOTLPARX);  // ~line1 and ~{
 // obsolete       I plflg=pline;  // save the flags
 // obsolete       pline&=3;  // remove inplaceable flag bit
       jt=(J)(intptr_t)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pline>>1)))&(pline|1)));   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
@@ -842,14 +850,8 @@ RECURSIVERESULTSCHECK
       audittstack(jt);
 #endif
       }
-      // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
-      // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
-      // 2. pline=0 or 2, token 0 not LPAR (might be EDGE): similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
-      // Since if pline is 0 token 0 must be EDGE, this is equivalent to pline!=1 and word 0 not LPAR
-      // we save a pass through the matcher in those cases.  The 8 cycles are worth saving, but more than that it makes the branch prediction tighter
-      // further, if word 0 is (C)AVN, we can pull 2 tokens if the next token is AVN: we have a flag for that
-      I iscavn=PTISCAVN(GETSTACK0PT);  // 0x400000 if CAVN (which implies AVN here)
-      if((GETSTACK0PT>>PTNOTLPARX)&~pline&1){pt0ecam|=iscavn<<((VERBX+1)-PTISCAVNX); break;}  // cavn or ~( & ~line1; set 'stack two if AVN' flag if stack0 was AVN
+      if(pt0ecam&PTNOTLPAR)break;  // if we can bypass fragment check, do.  'Pull another if AVN' is set
+      pt0ecam&=~(VERB<<1);  // if no bypass, clear the 'Pull another' flag
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually

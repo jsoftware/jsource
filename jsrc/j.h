@@ -1086,7 +1086,14 @@ EPILOG(z); \
 #define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? AS(w)[0] : 1L)
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-#define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len)))if(likely((len)<5||!memcmpne((name)->s,string,len)))stmt  // if name matches hash and string, execute stmt.  len 5 or less, hash is enough
+// obsolete #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len)))if(likely((len)<5||!memcmpne((name)->s,string,len)))stmt  // if name matches hash and string, execute stmt.  len 5 or less, hash is enough
+// compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched
+#define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \
+         if((len)<5)stmt  /*  len 5 or less, hash is enough */ \
+         else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL for(;lzz;c0+=((lzz-1)&(SZI-1))+1,c1+=((lzz-1)&(SZI-1))+1,lzz=(lzz-1)&-SZI)if(((*(I*)c0^*(I*)c1)<<((-lzz&(SZI-1))<<LGBB))!=0)break; \
+          if(likely(lzz==0))stmt \
+         } \
+        }
 
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable and non-pristine

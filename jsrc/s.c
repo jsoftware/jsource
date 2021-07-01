@@ -220,7 +220,7 @@ L*jtprobe(J jt,C*string,UI4 hash,A g){
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
 // If the value is empty, return 0 for not found
-// This code is copied in p.c
+// This code is copied in p.c   scaf
 L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
@@ -496,7 +496,7 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
 // here will persist until the locale is deleted (it has a name and no value).  Normally the symbol created here will be the target
 // of its assignment - possibly only eventually after execution of a verb - and it will be used then.  We go ahead and create the
 // symbol rather than failing the lookup because it does save a lookup in the eventual call to symbis.
-L* jtprobeisquiet(J jt,A a,A locsyms){A g;  // locsyms is used in the call, but is not needed in the function
+L* jtprobeisquiet(J jt,A a){A g;
  I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
  else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal

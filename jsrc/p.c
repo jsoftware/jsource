@@ -191,7 +191,7 @@ RECURSIVERESULTSCHECK
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
-// return sets stack[0] to -1 if this is a final assignment
+// return sets stack[0].t to -1 if this is a final assignment
 static PSTK* jtis(J jt,PSTK *stack){
  I asgt=AT(stack[1].a); A v=stack[2].a, n=stack[0].a;  // value and name
  J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
@@ -365,8 +365,8 @@ static A virthook(J jtip, A f, A g){
 #endif
 
 // name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush or NVR free
-static I namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){F1PREFIP;
- if(((I)jtinplace&JTFROMEXEC))R 1;
+static A namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){F1PREFIP;
+ if(((I)jtinplace&JTFROMEXEC))R sv;
  A fndst=UNLXAV0(locbuckets); if(unlikely((at&VERB)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
  LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  LX nextsymx=*asymx;  // symbol number pointed to by asymx, possibly w/permanent indicator
@@ -389,7 +389,7 @@ static I namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){F1PREFI
   // value is on NVR stack.  We cannot free it here or even at the end of the sentence.  Mark a deferred free. but if there is already a deferred free, just fa()
   if(AM(sv)&AMFREED){fa(sv)}else{AMNVROR(sv,AMFREED)}
  }
- R 1;  // always good return.  Any error comes from tpush, where it is fatal
+ R sv;  // always return sv to help register allocation.  Any error comes from tpush, where it is fatal
 }
 
 #define FP goto failparse;   // indicate parse failure and exit
@@ -487,7 +487,12 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
  
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
+#if 1   // try to unroll at not y
+#define nexty *queue
+  I nextat=AT(*queue);  // unroll fetch of at
+#else
   A nexty=*queue--;  // unroll the fetch loop one time
+#endif
 
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
   // never look at a stack location until we have moved from the queue to that position.
@@ -514,18 +519,17 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
   UI pt0ecam = nwds+((nopull4?0b0100LL:0b1000LL)<<(VERBX+1));
   // mash into 1 register:  bit 32-63 stack0pt, bit 28-31 (from VERBX+1) es delayline, 24-26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags
-  //  22 PTISCAVNX set if parse should pull another stack if CAVN stacked 27 PTNOTLPARX set if dyad should avoid testing for executable fragment
-  //  20-21 savearea for pline when 0-3
-  //  17-18 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
-#define LOCSYMFLGX (17-ARNAMEADDEDX)
+  //  22 PTISCAVNX set if parse should pull another stack if CAVN stacked, 27 PTNOTLPARX set if dyad should avoid testing for executable fragment
+  //  (exec) 20-21 savearea for pline when 0-3  (stack) 17,20 flags from at, 21 flag to indicate global symbol table used
+  //  18-19 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
+#define LOCSYMFLGX (18-ARNAMEADDEDX)
 #define PLINESAVEX 20  // 2 bits of pline
   // The es delayline is 28-31.  Bit 31 means '2 more', either of 29-30 means 'one more'.  Bit 28 is set by the action routine to stack one extra after an AVN and is cleared by the stacking
+  pt0ecam += (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
-  LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
-  // Move rank flags from locsyms to locbuckets low bits.  NOTE that locbuckets is always on an 8-byte boundary, even in 32-bit code.  Flag bits are 1-2
-  pt0ecam += (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl
+// obsolete   LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
 
   // We have the initial stack pointer.  Grow the stack down from there
 #if SY_64
@@ -547,7 +551,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
     // es holds the number of extra pulls required.
 
     // pt0ecam is settling from pt0 and will not be ready for several cycles.  Avoid using it in addresses
-
+   
+   {L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution.
    do{UI tmpes;I at;
     // pull one value from the queue
     --stack;  // back up to new stack frame, where we will store the new word
@@ -556,9 +561,14 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
 // obsolete     I at=AT(y = queue[mes>>2]);   // fetch the next word from queue; pop the queue; extract the type, save as at
+#if 1   // try to unroll at not y
+     at=nextat;  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
+     y=*queue; queue+=REPSGN(1LL-(US)pt0ecam); nextat=AT(*queue);    // fetch the next word from queue
+#else
      at=AT(nexty);  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
-     L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution.  We fetch here to avoid spills
+L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution.
      y=nexty; nexty = *queue--;    // fetch the next word from queue
+#endif
       // The last fetch of nexty fetches from queue[-1].  This will not segfault, and we never come back to fetch from inside that bogus block.
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
 // obsolete      if(at&NAME){
@@ -567,14 +577,16 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
-      // To save some overhead, we inline this and do the analysis in a different order here
-      // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
-      // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
+      // We call the subroutine because inlining it uses too many registers
+      // The important performance case is local names with symbol numbers.  Pull that out & do it without the call overhead
 // obsolete       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
       if((((I)NAV(y)->symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
       }else if(likely(NAV(y)->bucket!=0)){I bx;
+#if 0  // obsolete
+      // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
+       LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse, but we rarely need it
        if(0 <= (bx = ~NAV(y)->bucketx)){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
         s=locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
         if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
@@ -597,6 +609,10 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
         }
         // Here there was a value in the local symbol table.  Skip to use it
        }
+#else
+       if((s=probelocal(y,jt->locsyms))==0)goto rdglob;  // see if there is a local symbol.  We know we have buckets - should we tell the subroutine?  Also, could pass in the ARNAMEADDED flag   scaf
+       if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.
+#endif
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
        // If the name has a cached reference, use it
@@ -647,8 +663,8 @@ rdglob: ;  // here when we tried the buckets and failed
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
        if((svt|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name, or name::
-        if(unlikely(at&NAMEABANDON))namecoco(jtinplace, y, at, locbuckets, s, sv, JT(jt,sympv));  // if name::, go delete the name, leaving the value to be deleted later
-        y=sv; at=svt;
+        if(unlikely(at&NAMEABANDON)){at=AT(y=namecoco(jtinplace, y, at, LXAV0(jt->locsyms), s, sv, JT(jt,sympv)));}  // if name::, go delete the name, leaving the value to be deleted later
+        else{y=sv; at=svt;}
        }else if(unlikely(svt&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
         if(NAV(y)->flag&NMCACHED){
@@ -680,11 +696,11 @@ endname: ;
 // obsolete       // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
 // obsolete       // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
 // obsolete       I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
+     --pt0ecam;  //  decrement token# for the word we just processed
      I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
      pt0ecam|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 000= no more, other 0xx=1 more, 1xx=2 more
      pt0ecam&=~(VERB<<1)|-(at&ADV+VERB+NOUN);  // if the action routine left VERB+1 set, it means we should stack another word of we stack an AVN
 // obsolete      }
-     --pt0ecam;  //  decrement token# for the word we just processed
      tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
@@ -703,6 +719,7 @@ endname: ;
     pt0ecam=(pt0ecam&~(0b1111LL<<(VERBX+1)))|((tmpes>>1)&(0b0110LL<<(VERBX+1))&(~(at&ADV)<<(VERBX+1+2-ADVX)));  // bits 31-28: 1xxx->0100 01xx->0010 others->0000.  But if ADV, change request for 3 to request for 2.  Still worth it
       // because we will be waiting for pt0 and the extra work can be done while it is settling
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
+   }
    // words have been pulled from queue.
 
   // Now execute fragments as long as there is one to execute
@@ -761,13 +778,13 @@ endname: ;
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        jt->sf=fs;  // set new recursion point for $:
-       if((UI)((pt0ecam>>(pline>>1))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT))if(likely(PTISM(stack[4-(pmask&1)]))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+       if((UI)((fsflag>>(pline>>1))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT))if(likely(PTISM(stack[4-(pmask&1)]))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
         if(likely((AT(stack[0].a))&ASGNLOCAL)){
          // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
          if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
           s=JT(jt,sympv)+(I)NAV(nexty)->symx;  // get address of symbol in primary table.  There may be no value; that's OK
          }else{s=jtprobeislocal(jt,nexty);}
-        }else s=jtprobeisquiet(jt,nexty,UNLXAV0(locbuckets));  // global assignment, get slot address
+        }else s=probeisquiet(nexty);  // global assignment, get slot address
         pline=(pt0ecam>>PLINESAVEX)&3;  // restore after call
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;

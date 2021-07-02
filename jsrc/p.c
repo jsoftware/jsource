@@ -159,7 +159,7 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 #define PTISRPAR0(pt) ((pt)&0x7fff)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
-#define PTISASGN(pt)  (((pt)&0x8000)<<(NAMEX-15))   // we compare against the NAMEX bit
+#define PTNAMEIFASGN(pt)  ((pt)<<(NAMEX-15))   // we compare against the NAMEX bit
 #define PTISNOTASGNNAME(pt)  ((pt)&0x1000000)
 #define PTNOTLPARX 27  // this bit is set for NOT LPAR    used in a register here
 #define PTNOTLPAR (1LL<<PTNOTLPARX)  // this bit is set in pt only if NOT LPAR
@@ -365,9 +365,12 @@ static A virthook(J jtip, A f, A g){
 #endif
 
 // name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush or NVR free
-static A namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){F1PREFIP;
+#define USEDGLOBALX 21
+#define USEDGLOBAL (1LL<<USEDGLOBALX)
+static A namecoco(J jt, A y, I pt0ecam, L *s, A sv){F1PREFIP;
  if(((I)jtinplace&JTFROMEXEC))R sv;
- A fndst=UNLXAV0(locbuckets); if(unlikely((at&VERB)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
+ LX *locbuckets=LXAV0(jt->locsyms); L *sympv=JT(jt,sympv);
+ A fndst=UNLXAV0(locbuckets); if(unlikely((pt0ecam&USEDGLOBAL)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
  LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  LX nextsymx=*asymx;  // symbol number pointed to by asymx, possibly w/permanent indicator
  while(sympv+SYMNEXT(nextsymx)!=s){asymx=&(sympv+SYMNEXT(nextsymx))->next; nextsymx=*asymx;}
@@ -520,10 +523,13 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
   UI pt0ecam = nwds+((nopull4?0b0100LL:0b1000LL)<<(VERBX+1));
   // mash into 1 register:  bit 32-63 stack0pt, bit 28-31 (from VERBX+1) es delayline, 24-26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags
   //  22 PTISCAVNX set if parse should pull another stack if CAVN stacked, 27 PTNOTLPARX set if dyad should avoid testing for executable fragment
-  //  (exec) 20-21 savearea for pline when 0-3  (stack) 17,20 flags from at, 21 flag to indicate global symbol table used
+  //  (exec) 20-21 savearea for pline when 0-3  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
   //  18-19 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
 #define LOCSYMFLGX (18-ARNAMEADDEDX)
 #define PLINESAVEX 20  // 2 bits of pline
+// above #define USEDGLOBALX 21
+// above #define USEDGLOBAL (1LL<<USEDGLOBALX)
+#define NAMEFLAGSX 20
   // The es delayline is 28-31.  Bit 31 means '2 more', either of 29-30 means 'one more'.  Bit 28 is set by the action routine to stack one extra after an AVN and is cleared by the stacking
   pt0ecam += (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl
   // debugging if(jt->parsercalls==0xdd)
@@ -552,7 +558,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
 
     // pt0ecam is settling from pt0 and will not be ready for several cycles.  Avoid using it in addresses
    
-   {L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution.
    do{UI tmpes;I at;
     // pull one value from the queue
     --stack;  // back up to new stack frame, where we will store the new word
@@ -563,7 +568,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
 // obsolete     I at=AT(y = queue[mes>>2]);   // fetch the next word from queue; pop the queue; extract the type, save as at
 #if 1   // try to unroll at not y
      at=nextat;  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
-     y=*queue; queue+=REPSGN(1LL-(US)pt0ecam); nextat=AT(*queue);    // fetch the next word from queue
+     y=*queue; queue+=REPSGN(1LL-(US)pt0ecam); nextat=AT(*queue);    // fetch the next AT from unroll - the word itself follows shortly
 #else
      at=AT(nexty);  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
 L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during stacking of a single execution.
@@ -573,18 +578,22 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
 // obsolete      if(at&NAME){
 // obsolete       if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
-     if((at&NAME)>PTISASGN(GETSTACK0PT)){L *s;A sv;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
+     if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;A sv;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
+      // Now we have to wait for y and ->symx.  Transfer flags out of y into pt0ecam so that at is not needed over subroutine calls
+      pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))); pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
       // We call the subroutine because inlining it uses too many registers
       // The important performance case is local names with symbol numbers.  Pull that out & do it without the call overhead
 // obsolete       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
+      L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       if((((I)NAV(y)->symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
-      }else if(likely(NAV(y)->bucket!=0)){I bx;
+      }else if(NAV(y)->bucket!=0){  // scaf should fetch symx/bucket together
 #if 0  // obsolete
+I bx;
       // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
        LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse, but we rarely need it
        if(0 <= (bx = ~NAV(y)->bucketx)){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
@@ -610,6 +619,7 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
         // Here there was a value in the local symbol table.  Skip to use it
        }
 #else
+       if((NAV(y)->bucketx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search
        if((s=probelocal(y,jt->locsyms))==0)goto rdglob;  // see if there is a local symbol.  We know we have buckets - should we tell the subroutine?  Also, could pass in the ARNAMEADDED flag   scaf
        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.
 #endif
@@ -645,7 +655,8 @@ rdglob: ;  // here when we tried the buckets and failed
          }
         }else goto undefname;  // no val
        }else goto undefname;  // no sym
-       at|=VERB;  // indicate that the symbol was not in the local table
+// obsolete        at|=VERB;
+       pt0ecam|=USEDGLOBAL;  // indicate that the symbol was not in the local table
       }
       // end of looking at local/global symbol tables
       // s has the symbol for the name.  at&VERB is set if the name was found in a global table
@@ -662,8 +673,8 @@ rdglob: ;  // here when we tried the buckets and failed
        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-       if((svt|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name, or name::
-        if(unlikely(at&NAMEABANDON)){at=AT(y=namecoco(jtinplace, y, at, LXAV0(jt->locsyms), s, sv, JT(jt,sympv)));}  // if name::, go delete the name, leaving the value to be deleted later
+       if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(svt&NOUN)){   // use value if noun or special name, or name::
+        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){at=AT(y=namecoco(jtinplace, y, pt0ecam, s, sv));}  // if name::, go delete the name, leaving the value to be deleted later
         else{y=sv; at=svt;}
        }else if(unlikely(svt&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
@@ -680,7 +691,7 @@ rdglob: ;  // here when we tried the buckets and failed
       } else {
 undefname:
         // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
-        if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
+        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
         y = namerefacv(y, s);    // this will create a ref to undefined name as verb [:
         EPZ(y)
           // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
@@ -719,7 +730,6 @@ endname: ;
     pt0ecam=(pt0ecam&~(0b1111LL<<(VERBX+1)))|((tmpes>>1)&(0b0110LL<<(VERBX+1))&(~(at&ADV)<<(VERBX+1+2-ADVX)));  // bits 31-28: 1xxx->0100 01xx->0010 others->0000.  But if ADV, change request for 3 to request for 2.  Still worth it
       // because we will be waiting for pt0 and the extra work can be done while it is settling
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
-   }
    // words have been pulled from queue.
 
   // Now execute fragments as long as there is one to execute
@@ -992,7 +1002,9 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
       A sv;  // pointer to value block for the name
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
       if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
-       if(unlikely(at&NAMEABANDON))namecoco(jtinplace, y, at, LXAV0(jt->locsyms), s, sv, JT(jt,sympv));  // if name::, go delete the name, leaving the value to be deleted later
+       if(unlikely(at&NAMEABANDON)){
+        namecoco(jtinplace, y, (syrdforlocale(y)==jt->locsyms)<<USEDGLOBALX, s, sv);  // if name::, go delete the name, leaving the value to be deleted later
+       }
        y=sv;
       } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.
     } else {

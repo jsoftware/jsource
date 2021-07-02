@@ -239,6 +239,7 @@ typedef I SI;
 #define UI4AV(x)        ((UI4*)((C*)(x)+AK(x)))  /* unsigned 32-bit int      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
+#define NAVV(x)         ((volatile NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1 - used for internal tables that need alignment or need AS[0])
@@ -753,8 +754,13 @@ typedef struct{
 //   (for locale names in SYMLINFO of a numbered locale) the locale number
  A cachedref; // (only for cachable NAME blocks): the nameref for this name entry, if it is not a noun.  The cached ref may or may not have the LX of the symbol for the name
 //         if flag&NMCACHEDSYM is set, the value here is the index of a symbol with the value to use for the name - it could be from a NAMELESS modifier
- LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
- I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
+ union {
+  UI symxbucket;  // two fields fetched together
+  struct {
+   LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
+   I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
+  } sb;
+ } sb;
 //   0 if chain index not known or name is a locative
  UI4 hash;  // hash for non-locale part of name
  UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)

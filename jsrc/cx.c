@@ -364,7 +364,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
       // Clear all local bucket info in the definition, since it doesn't match the symbol table now
       // This will affect the current definition and all future executions of this definition.  We allow it because
       // it's for debug only.  The symbol table itself persists
-      DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
+      DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->sb.sb.bucket=0;});
      }
     thisframe->dcredef=0;
    }
@@ -818,15 +818,15 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
     }
     // Remember the exact location of the symbol.  It will not move as long as this symbol table is alive.  We can
     // use it only when we are in this primary symbol table
-    NAV(tv)->symx=k;  // keep index of the allocated symbol
+    NAV(tv)->sb.sb.symx=k;  // keep index of the allocated symbol
     compcount=~compcount;  // negative bucket indicates found symbol
     break;
    }
   }
-  NAV(tv)->bucket=bucket;  // fill in the bucket in the (possibly modified) name
+  NAV(tv)->sb.sb.bucket=bucket;  // fill in the bucket in the (possibly modified) name
   NAV(tv)->bucketx=compcount;
  }
- if(!dobuckets)NAV(tv)->bucket=0;  // remove bucket if this name not allowed to have them
+ if(!dobuckets)NAV(tv)->sb.sb.bucket=0;  // remove bucket if this name not allowed to have them
  R tv;
 }
 

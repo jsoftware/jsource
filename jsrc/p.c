@@ -556,7 +556,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
     // pull 2 words following the first one.
     // es holds the number of extra pulls required.
 
-    // pt0ecam is settling from pt0 and will not be ready for several cycles.  Avoid using it in addresses
+    // pt0ecam is settling from pt0 but it will be ready soon
    
    do{UI tmpes;I at;
     // pull one value from the queue
@@ -579,7 +579,7 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
 // obsolete      if(at&NAME){
 // obsolete       if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
      if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;A sv;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
-      // Now we have to wait for y and ->symx.  Transfer flags out of y into pt0ecam so that at is not needed over subroutine calls
+      // Now we have to wait for y and ->sb.sb.symx.  Transfer flags out of y into pt0ecam so that at is not needed over subroutine calls
       pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))); pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -587,17 +587,24 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
       // We call the subroutine because inlining it uses too many registers
       // The important performance case is local names with symbol numbers.  Pull that out & do it without the call overhead
 // obsolete       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
+      I4 symx, buck;
+#if SY_64
+      I sb=NAVV(y)->sb.symxbucket; symx=sb; buck=sb>>32;  // fetch 2 values together if possible
+#else
+      symx=NAV(y)->sb.sb.symx; buck=NAV(y)->sb.sb.bucket;
+#endif
+      I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
       L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
-      if((((I)NAV(y)->symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
-       s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
+      if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
+       s=sympv+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table
        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
-      }else if(NAV(y)->bucket!=0){  // scaf should fetch symx/bucket together
+      }else if(buck!=0){  // scaf should fetch symx/bucket together
 #if 0  // obsolete
 I bx;
       // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
        LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse, but we rarely need it
        if(0 <= (bx = ~NAV(y)->bucketx)){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
-        s=locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
+        s=locbuckets[NAV(y)->sb.sb.bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
         if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
         if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it
        }else{
@@ -605,7 +612,7 @@ I bx;
         // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
         if(likely(!(pt0ecam&(ARNAMEADDED<<LOCSYMFLGX))))goto rdglob;
         // from here on it is rare to find a name - usually they're globals defined elsewhere
-        LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
+        LX lx = locbuckets[NAV(y)->sb.sb.bucket];  // index of first block if any
         I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
         if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
         // Now lx is the index of the first name that might match.  Do the compares
@@ -619,7 +626,7 @@ I bx;
         // Here there was a value in the local symbol table.  Skip to use it
        }
 #else
-       if((NAV(y)->bucketx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search
+       if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search
        if((s=probelocal(y,jt->locsyms))==0)goto rdglob;  // see if there is a local symbol.  We know we have buckets - should we tell the subroutine?  Also, could pass in the ARNAMEADDED flag   scaf
        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.
 #endif
@@ -680,7 +687,7 @@ rdglob: ;  // here when we tried the buckets and failed
         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
         if(NAV(y)->flag&NMCACHED){
          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
-         NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
+         NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
         y=sv; at=svt;
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
@@ -791,8 +798,8 @@ endname: ;
        if((UI)((fsflag>>(pline>>1))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT))if(likely(PTISM(stack[4-(pmask&1)]))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
         if(likely((AT(stack[0].a))&ASGNLOCAL)){
          // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
-         if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
-          s=JT(jt,sympv)+(I)NAV(nexty)->symx;  // get address of symbol in primary table.  There may be no value; that's OK
+         if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->sb.sb.symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+          s=JT(jt,sympv)+(I)NAV(nexty)->sb.sb.symx;  // get address of symbol in primary table.  There may be no value; that's OK
          }else{s=jtprobeislocal(jt,nexty);}
         }else s=probeisquiet(nexty);  // global assignment, get slot address
         pline=(pt0ecam>>PLINESAVEX)&3;  // restore after call

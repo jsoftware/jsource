@@ -788,7 +788,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   // If it is a nameref, clear the bucket info.  Explanation in nameref()
-  if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->bucket=0;
+  if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->sb.sb.bucket=0;
   //  Recur on each component
   raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);

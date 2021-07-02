@@ -224,7 +224,7 @@ L*jtprobe(J jt,C*string,UI4 hash,A g){
 L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
- if(likely((b = u->bucket)!=0)){
+ if(likely((b = u->sb.sb.bucket)!=0)){
   L *sympv=JT(jt,sympv);  // base of symbol array
   // we don't check for primary symbol index because that is normally picked up in parsea
   if(0 > (bx = ~u->bucketx)){
@@ -259,8 +259,8 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=JT(jt,sympv);
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
  // if this is a looked-up assignment in a primary symbol table, use the stored symbol#
- if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(u->symx-1))>=0)){R sympv+(I)u->symx;
- }else if((likely((b = u->bucket)!=0))){
+ if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(u->sb.sb.symx-1))>=0)){R sympv+(I)u->sb.sb.symx;
+ }else if((likely((b = u->sb.sb.bucket)!=0))){
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
    // positive bucketx (now negative); that means skip that many items and then do name search
@@ -412,7 +412,7 @@ L*jtsyrdnobuckets(J jt,A a){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(!NAV(a)->bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R e;}  // return if found locally from name
+  if(unlikely(!NAV(a)->sb.sb.bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R e;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
  R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g

@@ -102,7 +102,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
      // if the value was abandoned to an explicit definition, we took usecount 8..1  -> 1 ; revert that.  Can't change an ACPERMANENT!
      // otherwise decrement the usecount
      SYMVALFA(jtsympv[k]);
-     jtsympv[k].val=0;  // clear value - don't clear name
+     jtsympv[k].val=0;jtsympv[k].valtype=0;  // clear value - don't clear name
     }
     k=nextk;
    }while(k);
@@ -116,7 +116,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
      k=SYMNEXT(k);  // remove address flagging
      I nextk=jtsympv[k].next;  // unroll loop once
      aprev=&jtsympv[k].next;  // save last item we processed here
-     fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].valtype=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      k=nextk;
     }while(k);
     // make the non-PERMANENTs the base of the free pool & chain previous pool from them
@@ -189,7 +189,7 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){
       *asymx=sym->next;   // cached: just unhook from chain.  can't be permanent
       R sym;
      }else{
-      SYMVALFA(*sym); sym->val=0;   // decr usecount in value; remove value from symbol
+      SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
       if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=sympv[0].next; sympv[0].next=delblockx;}  // add to symbol free list
      }
      R 0;
@@ -554,7 +554,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   if(likely(x!=w)){
    // if the value we are assigning is an ADV, and it contains no name references, mark the value as NAMELESS to speed up later parsing.
    // NOTE that the value may be in use elsewhere; may even be a primitive.. Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
-   if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
+   if(unlikely((wt&ADV)!=0))AT(w)=wt|=(I)nameless(w)<<NAMELESSMODX;
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
@@ -570,7 +570,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
     ra(w);  // if zap not allowed, just ra() the whole thing
     if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
    }
-   e->val=w;   // install the new value
+   e->val=w; e->valtype=ATYPETOVALTYPE(wt);  // install the new value
 
    // We have raised the usecount of w.  Now dispose of x
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.

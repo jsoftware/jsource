@@ -685,7 +685,8 @@ typedef struct {I e,p;X x;} DX;
 typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
  A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned
- US flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
+ C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
+ C valtype;  // if a value is set, this holds the type (bits ADV-CONJ) with CONW set if the value is a noun.  0 if no value or value not CAVN
  S sn;  // script index the name was defined in.  Not used for LINFO
  LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT
 } L;  // name must come first because of the way we use validitymask[11]
@@ -716,6 +717,11 @@ typedef struct {
 #define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
+
+// in valtype
+#define VALTYPEMASK (ADV+ASGN+SYMB+CONW+VERB+CONJ)  // gap for LPAR, which PTISCAVN uses.  Always 0 in stored value because no type ever sets it except LPAR itself
+#define ATYPETOVALTYPE(t) ((((t)&VALTYPEMASK)|((-(t&NOUN))&CONW))>>ADVX)  // convert t from AT form to type stored in valtype
+#define VALTYPETOATYPE(t) (((t)<<ADVX)+(((t)>>(CONWX-ADVX))&1))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains

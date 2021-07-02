@@ -542,7 +542,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
     if(likely(!(jtsympv[k].flag&LCACHED))){
      SYMVALFA(jtsympv[k]);    // free value
-     jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
     }else{*asymx=SYMNEXT(jtsympv[k].next);}  // for cached value, remove from list to be freed.  It becomes unmoored.
     k=nextk;  // advance to next block in chain
@@ -1187,7 +1187,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
     // Free the name
     fr(LOCNAME(w));
     // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
-    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
     jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  JT(jt,sympv)[0] is the base of the free chain
    }
   }

@@ -92,7 +92,7 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line){
    ASSERT(!(indexl->flag&LREADONLY),EVRO)  // it had better not be readonly now
    fa(indexl->val);  // if there is an incumbent value, discard it
    A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1;  // -1 is the iteration number if there are no iterations
-   ACINITZAP(xx); indexl->val=xx;  // raise usecount, install as value of xyz_index
+   ACINITZAP(xx); indexl->val=xx; indexl->valtype=ATYPETOVALTYPE(INT); // raise usecount, install as value of xyz_index
    indexl->flag|=LREADONLY;  // in the loop, the user may not modify xyz_index
   }else{cv->itemsym=cv->indexsym=0;}  // if not for_xyz., indicate with 0 indexes
  }
@@ -113,15 +113,15 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // We must keep ABACK in case we create a virtual block from xyz.
   // We store the block in 2 places: cv and symp.val.  We ra() once for each place
   // If there is an incumbent value, discard it
-  A *aval=&JT(jt,sympv)[cv->itemsym].val; A val=*aval;  // stored reference address; incumbent value there
-  fa(val); *aval=0;  // free the incumbent if any, clear val in symbol in case of error
+  L *asym=&JT(jt,sympv)[cv->itemsym]; A val=asym->val;  // stored reference address; incumbent value there
+  fa(val); asym->val=0; asym->valtype=0;   // free the incumbent if any, clear val in symbol in case of error
   // Calculate the item size and save it
   I isz; I r=AR(t)-1; r=r<0?0:r; PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
   // Allocate a sorta-virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
   A svb; GA(svb,tt,isz,r,AS(t)+1); // one item
   AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINITZAP(svb); ACINIT(svb,2); AFLAGINIT(svb,(tt&RECURSIBLE)|AFVIRTUAL); ABACK(svb)=t;  // We DO NOT raise the backer because this is sorta-virtual
   // Install the virtual block as xyz, and remember its address
-  cv->item=*aval=svb;  // save in 2 places, commensurate with AC of 2
+  cv->item=asym->val=svb; asym->valtype=ATYPETOVALTYPE(tt);  // save in 2 places, commensurate with AC of 2
  }
  R 1;
 }    /* for. do. end. initializations */
@@ -136,8 +136,8 @@ static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
    A svb=cv->item;  // the sorta-virtual block for the item
    if(unlikely(JT(jt,sympv)[cv->itemsym].val==svb)){A newb;
     fa(svb);   // remove svb from itemsym.val.  Safe, because it can't be the last free
-    if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); JT(jt,sympv)[cv->itemsym].val=newb;  // realize stored value, raise, make recursive, store in symbol table
-    }else{JT(jt,sympv)[cv->itemsym].val=0;}  // after error, we needn't bother with a value
+    if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); JT(jt,sympv)[cv->itemsym].val=newb; JT(jt,sympv)[cv->itemsym].valtype=ATYPETOVALTYPE(AT(newb)); // realize stored value, raise, make recursive, store in symbol table
+    }else{JT(jt,sympv)[cv->itemsym].val=0; JT(jt,sympv)[cv->itemsym].valtype=0;}  // after error, we needn't bother with a value
    }
    // Decrement the usecount to account for being removed from cv - this is the final free of the svb
    fr(svb);  // MUST NOT USE fa() so that we don't recur and free svb's current contents in cv->t
@@ -300,7 +300,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     ra(w);  // not abandoned: raise the block
     if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
    }
-   ybuckptr->val=w; ybuckptr->sn=jt->currslistx;  // finish the assignment
+   ybuckptr->val=w; ybuckptr->valtype=ATYPETOVALTYPE(AT(w)); ybuckptr->sn=jt->currslistx;  // finish the assignment
   }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
@@ -309,7 +309,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
    }else{ra(a); if((likely(!(AFLAG(a)&AFVIRTUAL+AFNJA)))){AMNVRCINI(a)}}
-   xbuckptr->val=a; xbuckptr->sn=jt->currslistx;
+   xbuckptr->val=a; xbuckptr->valtype=ATYPETOVALTYPE(AT(a)); xbuckptr->sn=jt->currslistx;
   }
   // Do the other assignments, which occur less frequently, with symbis
   if(unlikely(((I)u|(I)v)!=0)){

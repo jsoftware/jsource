@@ -721,7 +721,7 @@ typedef struct {
 // in valtype
 #define VALTYPEMASK (ADV+ASGN+SYMB+CONW+VERB+CONJ)  // gap for LPAR, which PTISCAVN uses.  Always 0 in stored value because no type ever sets it except LPAR itself
 #define ATYPETOVALTYPE(t) ((((t)&VALTYPEMASK)|((-(t&NOUN))&CONW))>>ADVX)  // convert t from AT form to type stored in valtype
-#define VALTYPETOATYPE(t) (((t)<<ADVX)+(((t)>>(CONWX-ADVX))&1))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
+#define VALTYPETOATYPE(t) ((((t)&~(CONW>>ADVX))<<ADVX)+(((t)>>(CONWX-ADVX))&1))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains

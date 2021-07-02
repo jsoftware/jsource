@@ -579,9 +579,10 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
 #endif
 // obsolete      if(at&NAME){
 // obsolete       if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
-     if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;A sv;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
+     if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
       // Now we have to wait for y and ->sb.sb.symx.  Transfer flags out of y into pt0ecam so that at is not needed over subroutine calls
       pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))); pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
+      SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
@@ -599,7 +600,9 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
       if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table
 if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
-       if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
+// obsolete       if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
+       if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
+       SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
       }else if(buck!=0){  // buckets but no symbol - must be global or recursive symtab
 #if 0  // obsolete
 I bx;
@@ -631,7 +634,9 @@ I bx;
        if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search
        if((s=probelocal(y,jt->locsyms))==0)goto rdglob;  // see if there is a local symbol.  We know we have buckets - should we tell the subroutine?  Also, could pass in the ARNAMEADDED flag   scaf
 if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
-       if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.
+// obsolete        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.
+       if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.
+       SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
 #endif
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
@@ -653,7 +658,9 @@ rdglob: ;  // here when we tried the buckets and failed
         // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
        if(likely(s!=0)){
 if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
-        if(likely((sv=s->val)!=0)){
+// obsolete         if(likely((sv=s->val)!=0)){
+        if(likely(s->valtype!=0)){A sv=s->val;  // if value has not been assigned, ignore it.
+         SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
          if(AT(sv)&NOUN){ 
           // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
           // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
@@ -673,11 +680,11 @@ if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
       // s has the symbol for the name.  at&VERB is set if the name was found in a global table
       // since we have called subroutines, we don't use sympv, refetching it instead
 // obsolete       if(likely(s!=0)){   // if symbol was defined...
-      if(likely(1)){   // if symbol was defined...
-if(ATYPETOVALTYPE(AT(sv))!=s->valtype)SEGFAULT;  // scaf
+      if(likely(1)){A sv=s->val;   // if symbol was defined...
+// obsolete if(ATYPETOVALTYPE(AT(sv))!=s->valtype)SEGFAULT;  // scaf
 // obsolete        A sv = s->val;  // pointer to value block for the name
 // obsolete       EPZ(sv)  // symbol table entry, but no value.  Should not occur
-       I svt=AT(sv);
+       I svt=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));
          // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
        // The name is defined.  If it's a noun, use its value (the common & fast case)
        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
@@ -731,7 +738,7 @@ endname: ;
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
      // Put it onto the stack along with a code indicating part of speech and the token number of the word
-     SETSTACK0PT(it&~(VALTYPEMASK<<PTTYPEFLAGX)) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  Only parts have to be valid; we use the rest as flags
+     SETSTACK0PT(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type
      stack[0].a = y;   // finish setting the stack entry, with the new word
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished

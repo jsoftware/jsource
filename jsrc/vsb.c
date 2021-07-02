@@ -346,7 +346,7 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
 // hash using c0 on original data
  h=(c0&SBC4?hic4:c0&SBC2?hic2:hic)(n,us);
 
- hn=AN(HASHTABLE);                        /* size of hast table           */
+ hn=AN(HASHTABLE);                        /* size of hash table           */
  hi=INITHASH(h);                               /* index into hash table        */
  while(1){
   ui=IAV1(HASHTABLE)[hi];                    /* index into unique symbols    */

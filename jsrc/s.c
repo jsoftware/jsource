@@ -220,6 +220,31 @@ L*jtprobe(J jt,C*string,UI4 hash,A g){
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
 // If the value is empty, return 0 for not found
+// We know that there are buckets and that we should search them
+L *probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[bucket#], bx is index within bucket
+ // There is always a local symbol table, but it may be empty
+ ARGCHK1(a);u=NAV(a);  // u->NM block
+  if(0 > (bx = ~bx)){
+   // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
+   // we know we have tested for NAMEADDED; the normal path here is probably a failed search for a global.  recursive tables also come here
+   I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
+   if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
+   // Now lx is the index of the first name that might match.  Do the compares
+   NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+sympv;  // symbol entry
+    IFCMPNAME(NAV(l->name),s,m,hsh,R l->val?l : 0;)
+    lx = l->next;
+   }
+   R 0;  // no match.
+  } else {
+   L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
+   // negative bucketx (now positive); skip that many items, and then you're at the right place
+   if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
+   R l->val?l:0;
+  }
+}
+
+// a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
+// If the value is empty, return 0 for not found
 // This code is copied in p.c   scaf
 L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
@@ -235,14 +260,14 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
    if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
    // Now lx is the index of the first name that might match.  Do the compares
-   NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+JT(jt,sympv);  // symbol entry
+   NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+sympv;  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,hsh,R l->val?l : 0;)
     lx = l->next;
    }
    R 0;  // no match.
   } else {
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
-   L* l = lx+JT(jt,sympv);  // fetch hashchain headptr, point to L for first symbol
+   L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
    if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
    R l->val?l:0;

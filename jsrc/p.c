@@ -369,7 +369,7 @@ static A virthook(J jtip, A f, A g){
 // name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush or NVR free
 #define USEDGLOBALX 21
 #define USEDGLOBAL (1LL<<USEDGLOBALX)
-static A namecoco(J jt, A y, I pt0ecam, L *s, A sv){F1PREFIP;
+static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
  if(((I)jtinplace&JTFROMEXEC))R sv;
  LX *locbuckets=LXAV0(jt->locsyms); L *sympv=JT(jt,sympv);
  A fndst=UNLXAV0(locbuckets); if(unlikely((pt0ecam&USEDGLOBAL)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
@@ -589,12 +589,13 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
-      // We call the subroutine because inlining it uses too many registers
       // The important performance case is local names with symbol numbers.  Pull that out & do it without the call overhead
+      // Registers are very tight here.  y must necessarily survive over a subroutine call, but NO OTHER VARIABLES do.  If we have anything to
+      // pass over a subroutine call, we have to store it pt0ecam or some other saved name
 // obsolete       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
       I4 symx, buck;
 #if SY_64
-      I sb=NAVV(y)->sb.symxbucket; symx=sb; buck=sb>>32;  // fetch 2 values together if possible
+      I sb=NAVV(y)->sb.symxbucket; symx=sb; buck=sb>>32;  // fetch 2 values together if possible.  y is not ready until now
 #else
       symx=NAV(y)->sb.sb.symx; buck=NAV(y)->sb.sb.bucket;
 #endif
@@ -605,7 +606,7 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
 // obsolete       if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
-      }else if(buck!=0){  // buckets but no symbol - must be global or recursive symtab
+      }else if(likely(buck!=0)){  // buckets but no symbol - must be global or recursive symtab - but not synthetic name
 #if 0  // obsolete
 I bx;
       // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
@@ -633,8 +634,9 @@ I bx;
         // Here there was a value in the local symbol table.  Skip to use it
        }
 #else
-       if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search
-       if((s=probelocal(y,jt->locsyms))==0)goto rdglob;  // see if there is a local symbol.  We know we have buckets - should we tell the subroutine?  Also, could pass in the ARNAMEADDED flag   scaf
+       if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
+// obsolete        if((s=probelocal(y,jt->locsyms))==0)goto rdglob;  // see if there is a local symbol.  We know we have buckets - should we tell the subroutine?  Also, could pass in the ARNAMEADDED flag   scaf
+       if((s=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0)goto rdglob;  // see if there is a local symbol, using the buckets
 // obsolete        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.
        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
@@ -662,7 +664,7 @@ rdglob: ;  // here when we tried the buckets and failed
         if(likely(s->valtype!=0)){  // if value has not been assigned, ignore it.
          SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
 // obsolete          if(AT(sv)&NOUN){A sv=s->val;
-         if(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX))){A sv=s->val;
+         if(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX))){A sv=s->val;   // this is testing for saved NOUN type
           // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
           // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
           // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
@@ -692,10 +694,14 @@ rdglob: ;  // here when we tried the buckets and failed
        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
+#if SY_64  // unfortunately the compiler can't figure out that these tests are to the same register
+       if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|((CONW>>(ADVX-PTTYPEFLAGX))<<32))){   // use value if noun or special name, or name::
+#else
        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX)))){   // use value if noun or special name, or name::  This would be faster if the compiler knew to use a single test inst
-        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, y, pt0ecam, s, s->val);}  // if name::, go delete the name, leaving the value to be deleted later
+#endif
+        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, y, pt0ecam, s);}  // if name::, go delete the name, leaving the value to be deleted later
         else y=s->val;
-        at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));
+        at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));  // convert saved s->valtype to AT type (calling all nouns boolean)
        }else if(unlikely(GETSTACK0PT&(NAMELESSMOD>>(ADVX-PTTYPEFLAGX)) && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
         if(NAV(y)->flag&NMCACHED){
@@ -811,8 +817,14 @@ endname: ;
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
+       // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
+       AF actionfn=FAVV(fs)->valencefns[pline>>1];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
        jt->sf=fs;  // set new recursion point for $:
-       if((UI)((fsflag>>(pline>>1))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT))if(likely(PTISM(stack[4-(pmask&1)]))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+       if(unlikely((UI)((fsflag>>(pline>>1))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(PTISM(stack[4-(pmask&1)]))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+        // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
+        // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
+        // To try to help things we bring computation forward, but that blocks pt0ecam which slows down misprediction detection.  We hope for a fast frontend
+        pt0ecam&=(FAV(stack[1].a)->flag|((~pline)<<(VASGSAFEX-0)))|~VASGSAFE;  // if executing line 1, make sure stack[1] is also ASGSAFE
         if(likely((AT(stack[0].a))&ASGNLOCAL)){
          // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
          if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->sb.sb.symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
@@ -822,19 +834,18 @@ endname: ;
         pline=(pt0ecam>>PLINESAVEX)&3;  // restore after call
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
-        s=((pt0ecam&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos  scaf move this earlier?  they run eventually
+// obsolete         s=((pt0ecam&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos  scaf move this earlier?  they run eventually
+        s=pt0ecam&VASGSAFE?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos  scaf move this earlier?  they run eventually
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
         jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
         // to save time in the verbs (which execute more often than this parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
         s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
-        fs=jt->sf;  // restore this register after call
+// obsolete         fs=jt->sf;  // restore this register after call
        }
 // obsolete       I plflg=pline;  // save the flags
 // obsolete       pline&=3;  // remove inplaceable flag bit
-       jt=(J)(intptr_t)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pline>>1)))&(pline|1)));   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb.  pt0ecam is still settling; that's OK
-       // jt has been corrupted, now holding inplacing info
        // There is no need to set the token number in the result, since it must be a noun and will never be executed
        // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
        A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
@@ -844,8 +855,6 @@ endname: ;
        stack[(pline&1)+1]=stack[pline&1];    // overwrite the verb with the previous cell - 0->1  1->2  0->1(NOP)
        stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 (1 2)
-       // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
-       AF actionfn=FAVV(fs)->valencefns[pline>>1];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
        // When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
        // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
        // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
@@ -853,12 +862,13 @@ endname: ;
        // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
        // This calculation should run to completion while the expected misprediction is being processed
        A *tpopw=AZAPLOC(arg2); tpopw=(A*)((I)tpopw&REPSGN(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  // point to pointer to arg2 (if it is inplace) - only if dyad
-       A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopw=(pt0ecam&(2LL<<PLINESAVEX))?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
+       A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
 // obsolete       A *tpopa=AZAPLOC(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:ZAPLOC0; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
-       y=(*actionfn)(jt,arg1,arg2,fs);
+// obsolete        jt=(J)(intptr_t)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pline>>1)))&(pline|1)));
+       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pline>>1)))&(pline|1))),arg1,arg2,jt->sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb  jt->sf to free fs earlier; we are about to break the pipeline
        // expect pipeline break
-       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
-       // jt is OK again
+// obsolete        jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
+// obsolete        // jt is OK again
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
@@ -1031,7 +1041,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
       if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
        if(unlikely(at&NAMEABANDON)){
-        namecoco(jtinplace, y, (syrdforlocale(y)==jt->locsyms)<<USEDGLOBALX, s, sv);  // if name::, go delete the name, leaving the value to be deleted later
+        namecoco(jtinplace, y, (syrdforlocale(y)==jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
        }
        y=sv;
       } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.

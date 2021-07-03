@@ -777,6 +777,7 @@ extern L*       jtprobeis(J, A, A);
 extern L*       jtprobeislocal(J,A);
 extern L*       jtprobeisquiet(J, A);
 extern L*       jtprobelocal(J,A,A);
+extern L*       probelocalbuckets(L*,A,LX,I);
 extern I        jtprod(J, I, I*);
 extern I        jtqcompare(J,Q,Q);
 extern I        jtra(AD* RESTRICT,I);

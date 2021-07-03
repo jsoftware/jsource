@@ -998,7 +998,7 @@ NB. The generated testcases:
 
 NB. dyad forks
 3 : 0 ''   NB. These values generated on 64-bit system
-P =. <. 2 ^ IF64 { 31 62  NB. PERMANENT
+P =. <. 2 ^ IF64 { 30 62  NB. PERMANENT
 I =. >: +: - P  NB. INPLACE
 assert. ((<P;0),(<01),<(<I),(<P;1),(<3),<P;0) -: 1 (0 (9!:63) 9!:63) 0
 assert. ((<P;0),(<01),<(<I),(<P;1),(<01),<P;0) -: (1 (0 (9!:63) 9!:63) ]) 0

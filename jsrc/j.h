@@ -876,7 +876,8 @@ if(opt&0x2){hx=w; \
 }else{J jtf; \
  if(opt&0xc){ \
   /* h@][.  Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
-  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)))!=0) + ((FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf f@][ flag must come from f */\
+  /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
+  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + ((FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf f@][ flag must come from f */\
   RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs)); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \

@@ -492,7 +492,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
  
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
-#if 1   // try to unroll at not y
+#if 1   // obsolete try to unroll at not y
 #define nexty *queue
   I nextat=AT(*queue);  // unroll fetch of at
 #else
@@ -579,10 +579,13 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
 #endif
 // obsolete      if(at&NAME){
 // obsolete       if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
-     if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
+
+     // We have the type of the next word, and its value is on the way.  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
+     if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is == the flag for assignment
       // Now we have to wait for y and ->sb.sb.symx.  Transfer flags out of y into pt0ecam so that at is not needed over subroutine calls
-      pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))); pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
+      pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX)));
       SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
+      pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
@@ -599,7 +602,6 @@ L *sympv=JT(jt,sympv);  // symbol root can change during parse, but not during s
       L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table
-if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
 // obsolete       if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
@@ -633,7 +635,6 @@ I bx;
 #else
        if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search
        if((s=probelocal(y,jt->locsyms))==0)goto rdglob;  // see if there is a local symbol.  We know we have buckets - should we tell the subroutine?  Also, could pass in the ARNAMEADDED flag   scaf
-if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
 // obsolete        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it.
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.
        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
@@ -657,11 +658,11 @@ rdglob: ;  // here when we tried the buckets and failed
         // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
         // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
        if(likely(s!=0)){
-if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
 // obsolete         if(likely((sv=s->val)!=0)){
-        if(likely(s->valtype!=0)){A sv=s->val;  // if value has not been assigned, ignore it.
+        if(likely(s->valtype!=0)){  // if value has not been assigned, ignore it.
          SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
-         if(AT(sv)&NOUN){ 
+// obsolete          if(AT(sv)&NOUN){A sv=s->val;
+         if(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX))){A sv=s->val;
           // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
           // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
           // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
@@ -680,11 +681,10 @@ if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
       // s has the symbol for the name.  at&VERB is set if the name was found in a global table
       // since we have called subroutines, we don't use sympv, refetching it instead
 // obsolete       if(likely(s!=0)){   // if symbol was defined...
-      if(likely(1)){A sv=s->val;   // if symbol was defined...
+      if(likely(1)){   // if symbol was defined...
 // obsolete if(ATYPETOVALTYPE(AT(sv))!=s->valtype)SEGFAULT;  // scaf
 // obsolete        A sv = s->val;  // pointer to value block for the name
 // obsolete       EPZ(sv)  // symbol table entry, but no value.  Should not occur
-       I svt=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));
          // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
        // The name is defined.  If it's a noun, use its value (the common & fast case)
        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
@@ -692,16 +692,17 @@ if(s->val==0&&s->valtype!=0)SEGFAULT;  // scaf
        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-       if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(svt&NOUN)){   // use value if noun or special name, or name::
-        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){at=AT(y=namecoco(jtinplace, y, pt0ecam, s, sv));}  // if name::, go delete the name, leaving the value to be deleted later
-        else{y=sv; at=svt;}
-       }else if(unlikely(svt&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
+       if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX)))){   // use value if noun or special name, or name::  This would be faster if the compiler knew to use a single test inst
+        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, y, pt0ecam, s, s->val);}  // if name::, go delete the name, leaving the value to be deleted later
+        else y=s->val;
+        at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));
+       }else if(unlikely(GETSTACK0PT&(NAMELESSMOD>>(ADVX-PTTYPEFLAGX)) && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
         if(NAV(y)->flag&NMCACHED){
          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
          NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
-        y=sv; at=svt;
+        y=s->val; at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
         y = namerefacv(y, s);   // Replace other acv with reference
         EPZ(y)

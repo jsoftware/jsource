@@ -729,7 +729,7 @@ endname: ;
 // obsolete       I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
      stack[-1].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
-     queue+=REPSGN(-(I)(US)pt0ecam); nextat=AT(*queue);    // fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
+     queue+=REPSGN(-(I)(US)pt0ecam); nextat=AT(*(volatile A*)queue);    // fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
      --stack;  // back up to new stack frame, where we will store the new word
      I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
      pt0ecam|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 000= no more, other 0xx=1 more, 1xx=2 more
@@ -822,7 +822,7 @@ endname: ;
         pline=(pt0ecam>>PLINESAVEX)&3;  // restore after call
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
-        s=((pt0ecam&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos
+        s=((pt0ecam&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos  scaf move this earlier?  they run eventually
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
         jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
@@ -937,14 +937,18 @@ RECURSIVERESULTSCHECK
       // We avoid the indirect branch, which is very expensive
       if(pline>6){  // assign/paren
        if(pline==7){   // assign
-        SETSTACK0PT(stack[2].pt);  // Bottom of stack will be modified, so refresh the type for it
+// obsolete         SETSTACK0PT(stack[2].pt);  // Bottom of stack will be modified, so refresh the type for it
+        // no need to update stack0pt because we always stack a new word after this
         stack=jtis(jt,stack); // assignment
         EPZ(stack)  // fail if error
-        // it impossible for the stack to be executable.  In fact, if the second word is not ), it can't be executable even after a stacking
+        // it impossible for the stack to be executable.
         if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment
-        break;
+        // In fact, if the upcoming word is not (, it can't be executable even after a stacking; so we can set the flag to pop after AVN
+        // We could do more: if stack[0] is not ADV, and the next 2 words are (not LPAR)/(not EDGE), we can stack 3.  The check takes too long.
+        pt0ecam|=VERB<<1;   // if not pull a second token if AVN
+        break;  // go pull the next word
        }else{  // paren, for which pline may be anything
-        if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR
+        if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
          SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
          stack+=2;  // advance stack pointer to result
         }else{jsignal(EVSYNTAX); FP}  // error if contents of ( not valid

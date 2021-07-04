@@ -1087,7 +1087,6 @@ EPILOG(z); \
 #define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? AS(w)[0] : 1L)
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-// obsolete #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len)))if(likely((len)<5||!memcmpne((name)->s,string,len)))stmt  // if name matches hash and string, execute stmt.  len 5 or less, hash is enough
 // compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched
 #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \
          if((len)<5)stmt  /*  len 5 or less, hash is enough */ \

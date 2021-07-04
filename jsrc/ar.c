@@ -82,28 +82,6 @@ static void vdone(I m,I n,B*x,B*z,B pc){
 #endif
 
 // no errors possible here
-#if 0  // obsolete
-  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
-#define RBFXLOOP(T,pfx)  \
- {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
-  q=d/sizeof(T);                  \
-  for(j=0;j<m;++j){               \
-   yy=xx; xx-=q; z0=zz; DQ(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy););    \
-   DQ(n-2,       zz=z0; DQ(q, --xx;       --zz; *zz=pfx(*xx,*zz);););  \
- }}  /* non-commutative */
-
-  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
-#define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
- AHDRP(f,B,B){B*y=0;I j,q;                         \
-  if(d==1){vdo; R EVOK;}    /* if arg is byte list, do it */                            \
-  x+=m*d*n; z+=m*d;                           \
-          \
-  if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
-  else if(0==d%sizeof(UINT))RBFXLOOP(UINT,ipfx)    \
-  else if(0==d%sizeof(US  ))RBFXLOOP(US,  spfx)    \
-  else                      RBFXODDSIZE(pfx,bpfx)  \
- R EVOK;}  /* non-commutative */
-#else
   // this version, which processes by column and doesn't write out intermediates, will be better unless the arg is huge and blows out of cache.  Solution to that would be to block the computation.
   // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 #define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
@@ -118,7 +96,6 @@ AHDRP(f,B,B){  \
  ) \
  R EVOK; \
 }  /* non-commutative */
-#endif
 
 REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
@@ -190,22 +167,6 @@ AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
 }}}  /* +/"r w on boolean w, originally by Roger Moore */
 #endif
 
-#if 0   // obsolete
-#define REDUCEOVF(f,Tz,Tx,fr1,fvv,frn)  \
- AHDRR(f,I,I){I er=EVOK;I i,* RESTRICT xx,*y,* RESTRICT zz;                          \
-  if(d==1){xx=x; zz=z; DQ(m, z=zz++; x=xx; fr1(n,z,x); xx += n;); R er;}        \
-  if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=*x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));} R er;}   \
-  zz=z+=m*d; xx=x+=m*d*n;                                  \
-  xx-=d; zz-=d;                                                 \
-  for(i=0;i<m;++i,xx-=d,zz-=d){                                 \
-   y=xx;   x=xx-=d; z=zz; fvv(d,z,x,y);                    \
-   DQ(n-2, x=xx-=d; z=zz; frn(d,z,x);  );                  \
- }R er;}
-REDUCEOVF( plusinsI, I, I,  PLUSR, PLUSVV, PLUSRV) 
-REDUCEOVF(minusinsI, I, I, MINUSR,MINUSVV,MINUSRV) 
-REDUCEOVF(tymesinsI, I, I, TYMESR,TYMESVV,TYMESRV)
-
-#else
 #define PLUSI1(x) if(unlikely(__builtin_add_overflow((x),t,&t)))R EWOV;
 #define MINUSI1(x) if(unlikely(__builtin_sub_overflow((x),t,&t)))R EWOV;
 #define TYMESI1(x) if(unlikely(__builtin_mul_overflow((x),t,&t)))R EWOV;
@@ -233,7 +194,6 @@ REDUCEOVF( plusinsI, 0, PLUSI1)
 REDUCEOVF(minusinsI, 0, MINUSI1) 
 REDUCEOVF(tymesinsI, 1, TYMESI1)
 
-#endif
 
 REDUCCPFX( plusinsO, D, I,  PLUSO)
 REDUCCPFX(minusinsO, D, I, MINUSO) 

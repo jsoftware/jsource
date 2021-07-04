@@ -332,7 +332,6 @@ do{
   zzcellp=zzcelllen*(zzncells-1);  // init output offset in zz to end+1 of 
   zzboxp+=zzncells-1;     // move zzboxp to end of block
 #endif
-// obsolete   AM(zz)=0;   // in case we count items in AM, init the count to 0.  This means this block cannot be flagged as inplaceable until the AM field has been reinstated by EPILOG processing 
  }
 }while(1);  // go back to store the first result
 
@@ -348,9 +347,6 @@ do{
  // result as a nonrecursive block.  In fact, we must avoid EPILOG because that would increment the usecount of the contents and apply the death warrant; then
  // when the block was finally freed the backer would leak, because the check for the backer is applied only in tpop
 
-// obsolete // NOTE: AM(zz) still holds the item count for WILLBEOPENED results, even though AC shows inplaceable.  This must not escape into a general result!  But it won't
-// obsolete  // because we know we are going to open result next.  In fact, AM was set to 0 for all blocks, so it is essential that we EPILOG the result of this block to set AM right.
-// obsolete  // Alternatively we could zap zz when it is created
  // if ZZFLAGCOUNTITEMS is still set, we got through assembly with all boxed homogeneous. Mark the result.
  // Any bypass path to here must clear ZZFLAGCOUNTITEMS.  Same with WILLBEOPENED, which turns into AFVIRTUALBOXED
  if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){

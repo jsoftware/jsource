@@ -83,22 +83,6 @@ SUFFIXBFX(   gesfxB, GE,  IGE,  SGE,  BGE,  *x>=v   )
 SUFFIXBFX(  norsfxB, NOR, INOR, SNOR, BNOR, (*x|v)^1)
 SUFFIXBFX( nandsfxB, NAND,INAND,SNAND,BNAND,(*x&v)^1)
 
-#if 0   // obsolete
-#define SUFFIXOVF(f,Tz,Tx,fs1,fvv)  \
- AHDRS(f,I,I){C er=0;I i,*xx,*y,*zz;                      \
-  xx=x+=m*d*n; zz=z+=m*d*n;                              \
-  if(d==1){                                                 \
-   if(1==n)DQ(m, *--z=*--x;)                                \
-   else    DQ(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x);)        \
-  }else{for(i=0;i<m;++i){                                   \
-   DQ(d, *--zz=*--xx;);                                     \
-   DQ(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y););     \
- }}R EVOK;}
-
-SUFFIXOVF( plussfxI, I, I,  PLUSS, PLUSVV)
-SUFFIXOVF(minussfxI, I, I, MINUSS,MINUSVV)
-SUFFIXOVF(tymessfxI, I, I, TYMESS,TYMESVV)
-#else
 #define PLUSS1(x) if(unlikely(__builtin_add_overflow((x),t,&t)))R EWOV;
 #define MINUSS1(x) if(unlikely(__builtin_sub_overflow((x),t,&t)))R EWOV;
 #define TYMESS1(x) if(unlikely(__builtin_mul_overflow((x),t,&t)))R EWOV;
@@ -126,8 +110,6 @@ SUFFIXOVF(tymessfxI, I, I, TYMESS,TYMESVV)
 SUFFIXOVF( plussfxI, 0, PLUSS1) 
 SUFFIXOVF(minussfxI, 0, MINUSS1) 
 SUFFIXOVF(tymessfxI, 1, TYMESS1)
-
-#endif
 
 SUFFICPFX( plussfxO, D, I, PLUS  )
 SUFFICPFX(minussfxO, D, I, MINUS )

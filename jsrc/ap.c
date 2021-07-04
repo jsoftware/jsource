@@ -243,32 +243,6 @@ AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,0xd);R EVOK;}
 AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,0x5);R EVOK;}
 AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,0xa);R EVOK;}
 
-#if 0  // obsolete
-#define PREFIXOVF(f,Tz,Tx,fp1,fvv)  \
- AHDRP(f,I,I){I i,*xx=x,* y,*zz=z;                      \
-  if(d==1){                                                         \
-   if(1==n)DQ(m, *z++=*x++;)                                        \
-   else {I c=d*n;    DQ(m, fp1(n,z,x); z=zz+=c; x=xx+=c;) }               \
-  }else{for(i=0;i<m;++i){                                           \
-   y=z; DQ(d, *z++=*x++;); zz=z; xx=x;                              \
-   DQ(n-1, fvv(d,z,y,x); x=xx+=d; y=zz; z=zz+=d;);             \
- }}R EVOK;}
-
-
-PREFIXOVF( pluspfxI, I, I,  PLUSP, PLUSVV)
-PREFIXOVF(tymespfxI, I, I, TYMESP,TYMESVV)
-
-AHDRP(minuspfxI,I,I){C er=0;I i,j,n1=n-1,*xx=x,*y,*zz=z;
- if(1==d){
-  if(1==n)DQ(m, *z++=*x++;)
-  else    DQ(m, MINUSP(n,z,x); z=zz+=d*n; x=xx+=d*n;);
- }else for(i=0;i<m;++i){                               
-  y=z; DQ(d, *z++=*x++;); zz=z; xx=x; j=0;
-  DQ(n1, MINUSVV(d,z,y,x); x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;
-          PLUSVV(d,z,y,x); x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;);
-}R EVOK;}
-
-#else
 #define PLUSP1(x) if(unlikely(__builtin_add_overflow((x),t,&t)))R EWOV;
 #define MINUSP1(x) if(parity^=1){if(unlikely(__builtin_add_overflow(t,(x),&t)))R EWOV;}else if(unlikely(__builtin_sub_overflow(t,(x),&t)))R EWOV;
 #define TYMESP1(x) if(unlikely(__builtin_mul_overflow((x),t,&t)))R EWOV;
@@ -297,7 +271,8 @@ AHDRP(minuspfxI,I,I){C er=0;I i,j,n1=n-1,*xx=x,*y,*zz=z;
 PREFIXOVF( pluspfxI, 0, PLUSP1) 
 PREFIXOVF(minuspfxI, 0, MINUSP1) 
 PREFIXOVF(tymespfxI, 1, TYMESP1)
-#endif
+
+
 PREFICPFX( pluspfxO, D, I,  PLUS   )
 PREFICPFX(tymespfxO, D, I,  TYMES  )
 PREFICALT(minuspfxO, D, I,  MINUSPA)

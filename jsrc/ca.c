@@ -77,39 +77,10 @@ static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jt
 
 
 // u@v and u@:v
-#if 0 // obsolete
-// TODO: no  need for protw checking?
-DF1(on1cell){F1PREFIP;DECLFG;A z;PROLOG(0113);
-PUSHZOMB; ARGCHK1D(w); A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));
-A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,gs));  /* inplace g.  Copy WILLOPEN from f to WILLBEOPENED for g  jtinplace is set for g */
-ARGCHK1D(gx)
-/* inplace gx unless it is protected */
-POPZOMB;
-jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((I )(gx!=protw)*JTINPLACEW)); 
-jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt;
-z=(f1)(jtinplace,gx,fs);
-RZ(z);
-EPILOG(z);
-}
-#else
 FORK1(on1cell,0x160)
-#endif
 DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}  // pass inplaceability through
 
-#if 0 // obsolete
-DF2(jtupon2cell){F2PREFIP;DECLFG;A z;PROLOG(0114);
-PUSHZOMB; ARGCHK2D(a,w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx;
-RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),a,w,gs));  /* inplace g */
-ARGCHK1D(gx)
-/* inplace gx unless it is protected */
-POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW)); 
-jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt;
-RZ(z=(f1)(jtinplace,gx,fs));
-EPILOG(z);
-}
-#else
 FORK2(jtupon2cell,0x1c0)
-#endif
 DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}  // pass inplaceability through
 
 // special case for rank 0.  Transfer to loop.  
@@ -128,21 +99,7 @@ static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
 
 
 // x u&v y
-#if 0  // obsolete
-// We don't bother passing WILLOPEN from u into v, since it's rarely used.  We do pass WILLOPEN into u.
-static DF2(on2cell){F2PREFIP;DECLFG;A z;PROLOG(0023);
- A ga;A gw;PUSHZOMB;
- /* here for execution on a single cell */
- A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA));
- /* take inplaceability of each monad from the corresponding dyad argument */
- RZ(gw=(g1)(JTIPWonly,w,gs));
- RZ(ga=(g1)(JTIPAtoW,a,gs));  /* Move bit 1 to bit 0, clear bit 1 */
- POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(I )(ga!=prota)*JTINPLACEA+(I )(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt;
- RZ(z=(f2)(jtinplace,ga,gw,fs));
-EPILOG(z);}
-#else
 FORK2(on2cell,0x148)
-#endif
 
 static DF2(on2){PREF2(on2cell); R on2cell(jt,a,w,self);}
 

@@ -80,17 +80,19 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGID): SSSTORE(SSRDI(a)+SSRDD(w),z,FL,D) R z;
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDI): SSSTORE(SSRDD(a)+SSRDI(w),z,FL,D) R z;
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBI): 
-  {B av = SSRDB(a); I wv = SSRDI(w); I zv = (I)((UI)av+(UI)wv);
-  if(zv>=wv)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
-  R z;}
+  {B av = SSRDB(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_add_overflow(av,wv,&zv)))SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+// obsolete  I zv = (I)((UI)av+(UI)wv);  if(zv>=wv)SSSTORENV(zv,z,INT,I) else 
+// obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGIB):
-  {I av = SSRDI(a); B wv = SSRDB(w); I zv = (I)((UI)av + (UI)wv);
-  if (zv>=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
-  R z;}
+  {I av = SSRDI(a); B wv = SSRDB(w); I zv; if(unlikely(__builtin_add_overflow(av,wv,&zv)))SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+// obsolete  I zv = (I)((UI)av + (UI)wv);
+// obsolete   if (zv>=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
+// obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGII):
-  {I av = SSRDI(a); I wv = SSRDI(w); I zv = (I)((UI)av + (UI)wv);
-  if (XANDY((zv^av),(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
-  R z;}
+  {I av = SSRDI(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_add_overflow(av,wv,&zv)))SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+// obsolete  I zv = (I)((UI)av + (UI)wv);
+// obsolete   if (XANDY((zv^av),(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
+// obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDD):
   {NAN0; SSSTORENVFL(SSRDD(a)+SSRDD(w),z,FL,D) NAN1; R z;}
 
@@ -101,17 +103,20 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGID): SSSTORE(SSRDI(a)-SSRDD(w),z,FL,D) R z;
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDI): SSSTORE(SSRDD(a)-SSRDI(w),z,FL,D) R z;
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBI): 
-  {B av = SSRDB(a); I wv = SSRDI(w); I zv = (I)((UI)av - (UI)wv);
-  if((wv&zv)>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
-  R z;}
+  {B av = SSRDB(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_sub_overflow(av,wv,&zv)))SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+// obsolete  I zv = (I)((UI)av - (UI)wv);
+// obsolete   if((wv&zv)>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
+// obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGIB):
-  {I av = SSRDI(a); I wv = (I)SSRDB(w); I zv = (I)((UI)av - (UI)wv);
-  if (zv<=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
-  R z;}
+  {I av = SSRDI(a); I wv = (I)SSRDB(w); I zv; if(unlikely(__builtin_sub_overflow(av,wv,&zv)))SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+// obsolete  I zv = (I)((UI)av - (UI)wv);
+// obsolete   if (zv<=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
+// obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGII):
-  {I av = SSRDI(a); I wv = SSRDI(w); I zv = (I)((UI)av - (UI)wv);
-  if (XANDY((zv^av),~(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
-  R z;}
+  {I av = SSRDI(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_sub_overflow(av,wv,&zv)))SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+// obsolete  I zv = (I)((UI)av - (UI)wv);
+// obsolete   if (XANDY((zv^av),~(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
+// obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDD):
   {NAN0; SSSTORENVFL(SSRDD(a)-SSRDD(w),z,FL,D) NAN1;  R z;}
 

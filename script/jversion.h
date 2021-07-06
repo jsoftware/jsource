@@ -1,5 +1,0 @@
-#define jversion   "903"
-#define jplatform  "windows"
-#define jtype      "beta-l"
-#define jlicense   "commercial"
-#define jbuilder   "www.jsoftware.com"

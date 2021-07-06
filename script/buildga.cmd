@@ -3,7 +3,11 @@
 mkdir j64
 copy script\ver.ijs j64
 
-copy script\jversion.h jsrc
+copy version.txt jsrc\jversion.h
+echo #define jplatform "windows" >> jsrc\jversion.h
+echo #define jlicense  "commercial" >> jsrc\jversion.h
+echo #define jbuilder  "www.jsoftware.com" >> jsrc\jversion.h
+
 cd makemsvc\jconsole
 nmake -f makefile.win CC=clang-cl x64=1 clean
 nmake -f makefile.win CC=clang-cl x64=1

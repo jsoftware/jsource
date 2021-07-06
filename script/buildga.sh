@@ -4,7 +4,7 @@
 #
 # argument is linux|darwin
 
-if [ $1 == "linux" ]; then
+if [ "$1" == "linux" ]; then
   ext="so"
   s() { sed -i "$@"; }
 else
@@ -12,8 +12,11 @@ else
   s() { sed -i "" "$@"; }
 fi
 
-cp script/jversion.h jsrc
-s "s/windows/$1/" jsrc/jversion.h
+cp version.txt jsrc/jversion.h
+echo "#define jplatform \"$1\"" >> jsrc/jversion.h
+echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
+echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
+
 cd make2
 ./clean.sh
 

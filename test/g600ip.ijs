@@ -503,7 +503,7 @@ p1''   NB. Fails on the second call
 
 
 
-4!:55 ;:'adot1 adot2 sdot0 allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy p1 p2 p3 pred'
+4!:55 ;:'adot1 adot2 asrank sdot0 allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy p1 p2 p3 pred'
 4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'
 4!:55 ;:'svix sviy svxy testinplace testinplacer tr tx ty vb xs xyzs ys IMIN IMAX'
 randfini''

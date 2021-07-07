@@ -23,6 +23,8 @@ NB. erase local a
 'syntax error' -: ex '(@'
 'syntax error' -: ex ']a =. (1 + 2'
 
+a =: +: 2 &
+'4&' -: 5!:5 <'a'
 
 NB. test nvr management: many names on a line, and multiple identical nvrs
 a =: 1

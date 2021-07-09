@@ -753,7 +753,7 @@ endname: ;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
         jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
-        // to save time in the verbs (which execute more often than this parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
+        // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
         s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
        }

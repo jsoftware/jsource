@@ -394,7 +394,7 @@ static void auditsimverify0(A w){
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
  if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
-  if(AT(w)&BOX){
+  if((AT(w)&BOX+SPARSE)>0){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; otherwise wv[] is a direct pointer
@@ -422,7 +422,7 @@ static void auditsimdelete(A w){I delct;
   auditsimdelete(wb);  // delete backer of virtual block, recursibly
  }
  if(delct==ACUC(w)&&!(AFLAG(w)&AFVIRTUAL)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
-  if(AT(w)&BOX){
+  if((AT(w)&BOX+SPARSE)>0){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
@@ -445,7 +445,7 @@ static void auditsimreset(A w){I delct;
   if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DQ(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimreset(*v); ++v;)}  // reset children
  }
  if(delct==ACUC(w)&&!(AFLAG(w)&AFVIRTUAL)&&(UCISRECUR(w))){  // if so, recursive reset
-  if(AT(w)&BOX){
+  if((AT(w)&BOX+SPARSE)>0){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
@@ -768,7 +768,7 @@ static A raonlys(AD * RESTRICT w) { RZQ(w);
 // This routine handles the recursion for ra().  ra() itself does the top level, this routine handles the contents
 I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
  // we use if rather than switch because the first leg is most likely and the first two legs get almost everything
- if(t&BOX){AD* np;
+ if((t&BOX+SPARSE)>0){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
@@ -803,7 +803,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 
 // This handles the recursive part of fa(), freeing the contents of wd
 I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
- if(t&BOX){AD* np;
+ if((t&BOX+SPARSE)>0){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
@@ -849,7 +849,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 // tpush, the macro parent of this routine, calls here only if a nonrecursive block is pushed.  This never happens for
 // non-sparse nouns, because they always go through ra() somewhere before the tpush().  Pushing is mostly in gc() and on allocation in ga().
 A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
- if(t&BOX){
+ if((t&BOX+SPARSE)>0){
 // THIS CODE IS NEVER EXECUTED
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
@@ -958,6 +958,8 @@ void jttpop(J jt,A *old){A *endingtpushp;
      if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
       // NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & are deleted here
      else fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
+      // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
+      // we make sure no such block is created in sprz()
     }else ACSET(np,c)
    }
    np=np0;  // Advance to next block

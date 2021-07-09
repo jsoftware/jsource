@@ -38,6 +38,7 @@ static B*jtspredge(J jt,A y,I f,I*zm){A q;B*b;I c,m,n,*v;
 static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u,*v,zt;P*ep,*zp,*zq;
  RZ(z0&&y&&e);
  ASSERT(AN(e),EVDOMAIN);
+ if(AN(z0)&&!(AT(z0)&SPARSABLE))R z0;  // no backdoor to sparse boxes.  If non-sparsable type, leave dense
  if(ISSPARSE(AT(e))){ep=PAV(e); ASSERT(all1(eq(SPA(ep,e),SPA(ep,x))),EVSPARSE); q=SPA(ep,e);}
  else{RZ(q=reshape(mtv,e)); ASSERT(all1(eq(q,e)),EVSPARSE);}
  if(!AS(z0)[0]){

@@ -343,7 +343,7 @@ F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
   case 2:
    if(AR(a)){j=v[1]; ASSERT(q&&(1==j||2==j),EVDOMAIN); R 1==j?axbytes(q,w):axtally(q,w);}
    if(q)R reaxis(q,w); else if(b)R rat(SPA(p,a)); else{ASSERT(ISDENSETYPE(t,SPARSABLE),EVDOMAIN); R IX(AR(w));}
-  case 3:  R q?rezero(q,w):rat(SPA(p,e));  // ? there rat()s don't protect anything?  SPA is as permanent as w
+  case 3:  R q?rezero(q,w):rat(SPA(p,e));  // ? these rat()s don't protect anything?  SPA is as permanent as w
   case 4:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,i)); 
   case 5:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,x));
   case 7:  ASSERT(!q,EVDOMAIN); R sc(SETIC(SPA(p,i),j));

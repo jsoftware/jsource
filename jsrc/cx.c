@@ -297,6 +297,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
     ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
    }else{
+    // not abandoned; but it could be VIRTUAL and even UNINCORPABLE!  We know that those blocks have valid usecounts inited to 1, so if we
+    // keep the usecount right the block will never be freed except when it goes out of scope in the originator
     ra(w);  // not abandoned: raise the block
     if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
    }

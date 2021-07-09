@@ -8,14 +8,13 @@
 #include "ve.h"
 #include "vcomp.h"
 
-#define SSRDB(w) (*(B *)CAV(w))
-#define SSRDI(w) (*(I *)CAV(w))
-#define SSRDS(w) (*(SB*)CAV(w))
-#define SSRDC(w) (*(UC*)CAV(w))
-#define SSRDW(w) (*(US*)CAV(w))
-#define SSRDU(w) (*(C4*)CAV(w))
-#define SSRDD(w) (*(D *)CAV(w))
-
+// obsolete #define (B)wiv ((B)w##iv)
+// obsolete #define wiv w##iv
+// obsolete #define SSRDS(w) ((SB)w##iv)
+// obsolete #define SSRDC(w) ((C)w##iv)
+// obsolete #define SSRDW(w) ((US)w##iv)
+// obsolete #define SSRDU(w) ((C$)w##iv)
+// obsolete #define wdv w##dv
 #define SSINGENC(a,w) (3*(a>>INTX)+(w>>INTX))
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
@@ -27,9 +26,9 @@
 #define SSINGDI SSINGENC(FL,INT)
 #define SSINGDD SSINGENC(FL,FL)
 
-#define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
+#define SSSTORENV(v,z,t,type) {*((type *)zv) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
 #define SSSTORE(v,z,t,type) SSSTORENV(v,z,t,type)  // we don't use MODBLOCKTYPE any more
-#define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
+#define SSSTORENVFL(v,z,t,type) {*((type *)zv) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
 // Return int version of d, with error if loss of significance
 static I intforD(J jt, D d){D q;I z;
@@ -52,8 +51,10 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  {
   // Calculate inplaceability for a and w.  Result must be 0 or 1
   // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE  No inplace if on NVR stack (AM is NVR and count>0)
-  I aipok = ((((AC(a)-1)|((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO) & ~(AM(a)&SGNTO0((AMNVRCT-1)-AM(a)));
-  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ~(AM(w)&SGNTO0((AMNVRCT-1)-AM(w)));
+  // UNINCORPABLE may not be set because we aren't looking at the type here and if the value is B01 we might overstore.  It might be worthwhile to accept UNINCORP if
+  // len=8.
+  I aipok = (((/* obsolete (AC(a)-1)|*/((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO) & ~(AM(a)&SGNTO0((AMNVRCT-1)-AM(a)));
+  I wipok = (((/* obsolete (AC(w)-1)|*/((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ~(AM(w)&SGNTO0((AMNVRCT-1)-AM(w)));
   // find or allocate the result area
   z=0;
   if(likely(awr==0)){  // both atoms
@@ -69,274 +70,290 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
    z=aipok>((I)(awr>>RANKTX)^fa)?a:z; z=wipok>((I)(awr&RANKTMSK)^fa)?w:z; if(!z)GATV1(z,FL,1,fa);  // accept ip only if rank also matches; if we allocate, fill in the shape with 1s
   }
  }
-
- I wiv,ziv;D adv,wdv,zdv;
+#if 0
+ z=0; ac= wc=
+ if(likely(rank 0)){
+  if(!comparison){
+   if(unlikely((((I)(((UI)a^(UI)zombieval)>>1)-((I)jtinplace&JTINPLACEA))|((I)(((UI)w^(UI)zombieval)>>1)-((I)jtinplace&JTINPLACEW)))<0){
+    if(likely(((AFLAG(zombieval)>>AFUNINCORPABLEX) | (AM(zombieval)&SGNTO0((AMNVRCT-1)-AM(zombieval))))&1)){
+     z=zombieval; goto gotit;
+    }
+   }
+   
+   allocate scalar FL
+  }
+ }else{
+ }
+gotit:;
+#endif
+ // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
+ aiv=IAV(a)[0]; I wiv=IAV(w)[0],ziv; D adv=DAV(a)[0],wdv=DAV(w)[0],zdv; void *zv=z?voidAV(z):0;  // fetch args before the case breaks the pipe   scaf no conditional - make it always use canned result
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
  switch(caseno){
  default: ASSERTSYS(0,"ssing");
- case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV(SSRDB(a)+SSRDB(w),z,INT,I) R z;  // NV because B01 is never virtual inplace
- case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV(SSRDB(a)+SSRDD(w),z,FL,D) R z;
- case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDB): SSSTORENV(SSRDD(a)+SSRDB(w),z,FL,D) R z;
- case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGID): SSSTORE(SSRDI(a)+SSRDD(w),z,FL,D) R z;
- case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDI): SSSTORE(SSRDD(a)+SSRDI(w),z,FL,D) R z;
+ case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
+ case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv+wdv,z,FL,D) R z;
+ case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDB): SSSTORENV(adv+(B)wiv,z,FL,D) R z;
+ case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGID): SSSTORE(aiv+wdv,z,FL,D) R z;
+ case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDI): SSSTORE(adv+wiv,z,FL,D) R z;
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBI): 
-  {B av = SSRDB(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_add_overflow(av,wv,&zv)))SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+  {if(unlikely(__builtin_add_overflow((B)aiv,wiv,&ziv)))SSSTORE((D)(B)aiv+(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
 // obsolete  I zv = (I)((UI)av+(UI)wv);  if(zv>=wv)SSSTORENV(zv,z,INT,I) else 
 // obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGIB):
-  {I av = SSRDI(a); B wv = SSRDB(w); I zv; if(unlikely(__builtin_add_overflow(av,wv,&zv)))SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+  {if(unlikely(__builtin_add_overflow(aiv,(B)wiv,&ziv)))SSSTORE((D)aiv+(D)(B)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
 // obsolete  I zv = (I)((UI)av + (UI)wv);
 // obsolete   if (zv>=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
 // obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGII):
-  {I av = SSRDI(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_add_overflow(av,wv,&zv)))SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+  {if(unlikely(__builtin_add_overflow(aiv,wiv,&ziv)))SSSTORE((D)aiv+(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
 // obsolete  I zv = (I)((UI)av + (UI)wv);
 // obsolete   if (XANDY((zv^av),(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
 // obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDD):
-  {NAN0; SSSTORENVFL(SSRDD(a)+SSRDD(w),z,FL,D) NAN1; R z;}
+  {NAN0; SSSTORENVFL(adv+wdv,z,FL,D) NAN1; R z;}
 
 
- case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBB): SSSTORENV(SSRDB(a)-SSRDB(w),z,INT,I) R z;
- case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBD): SSSTORENV(SSRDB(a)-SSRDD(w),z,FL,D) R z;
- case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDB): SSSTORENV(SSRDD(a)-SSRDB(w),z,FL,D) R z;
- case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGID): SSSTORE(SSRDI(a)-SSRDD(w),z,FL,D) R z;
- case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDI): SSSTORE(SSRDD(a)-SSRDI(w),z,FL,D) R z;
+ case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv-(B)wiv,z,INT,I) R z;
+ case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv-wdv,z,FL,D) R z;
+ case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDB): SSSTORENV(adv-(B)wiv,z,FL,D) R z;
+ case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGID): SSSTORE(aiv-wdv,z,FL,D) R z;
+ case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDI): SSSTORE(adv-wiv,z,FL,D) R z;
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBI): 
-  {B av = SSRDB(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_sub_overflow(av,wv,&zv)))SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+  {if(unlikely(__builtin_sub_overflow((B)aiv,wiv,&ziv)))SSSTORE((D)(B)aiv-(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
 // obsolete  I zv = (I)((UI)av - (UI)wv);
 // obsolete   if((wv&zv)>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
 // obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGIB):
-  {I av = SSRDI(a); I wv = (I)SSRDB(w); I zv; if(unlikely(__builtin_sub_overflow(av,wv,&zv)))SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+  {if(unlikely(__builtin_sub_overflow(aiv,(B)wiv,&ziv)))SSSTORE((D)aiv-(D)(B)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
 // obsolete  I zv = (I)((UI)av - (UI)wv);
 // obsolete   if (zv<=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
 // obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGII):
-  {I av = SSRDI(a); I wv = SSRDI(w); I zv; if(unlikely(__builtin_sub_overflow(av,wv,&zv)))SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I) R z;}
+  {if(unlikely(__builtin_sub_overflow(aiv,wiv,&ziv)))SSSTORE((D)aiv-(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
 // obsolete  I zv = (I)((UI)av - (UI)wv);
 // obsolete   if (XANDY((zv^av),~(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
 // obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDD):
-  {NAN0; SSSTORENVFL(SSRDD(a)-SSRDD(w),z,FL,D) NAN1;  R z;}
+  {NAN0; SSSTORENVFL(adv-wdv,z,FL,D) NAN1;  R z;}
 
 
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBB): SSSTORENV(SSRDB(a)&SSRDB(w),z,B01,B) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBD): SSSTORENV(MIN(SSRDB(a),SSRDD(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGDB): SSSTORENV(MIN(SSRDD(a),SSRDB(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGID): SSSTORE(MIN(SSRDI(a),SSRDD(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGDI): SSSTORE(MIN(SSRDD(a),SSRDI(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBI): SSSTORENV(MIN(SSRDB(a),SSRDI(w)),z,INT,I) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGIB): SSSTORENV(MIN(SSRDI(a),SSRDB(w)),z,INT,I) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGII): SSSTORENV(MIN(SSRDI(a),SSRDI(w)),z,INT,I) R z;
- case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGDD): SSSTORENVFL(MIN(SSRDD(a),SSRDD(w)),z,FL,D) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv&(B)wiv,z,B01,B) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBD): SSSTORENV(MIN((B)aiv,wdv),z,FL,D) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGDB): SSSTORENV(MIN(adv,(B)wiv),z,FL,D) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGID): SSSTORE(MIN(aiv,wdv),z,FL,D) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGDI): SSSTORE(MIN(adv,wiv),z,FL,D) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBI): SSSTORENV(MIN((B)aiv,wiv),z,INT,I) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGIB): SSSTORENV(MIN(aiv,(B)wiv),z,INT,I) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGII): SSSTORENV(MIN(aiv,wiv),z,INT,I) R z;
+ case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGDD): SSSTORENVFL(MIN(adv,wdv),z,FL,D) R z;
 
 
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGBB): SSSTORENV(SSRDB(a)|SSRDB(w),z,B01,B) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGBD): SSSTORENV(MAX(SSRDB(a),SSRDD(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGDB): SSSTORENV(MAX(SSRDD(a),SSRDB(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGID): SSSTORE(MAX(SSRDI(a),SSRDD(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGDI): SSSTORE(MAX(SSRDD(a),SSRDI(w)),z,FL,D) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGBI): SSSTORENV(MAX(SSRDB(a),SSRDI(w)),z,INT,I) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGIB): SSSTORENV(MAX(SSRDI(a),SSRDB(w)),z,INT,I) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGII): SSSTORENV(MAX(SSRDI(a),SSRDI(w)),z,INT,I) R z;
- case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGDD): SSSTORENVFL(MAX(SSRDD(a),SSRDD(w)),z,FL,D) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv|(B)wiv,z,B01,B) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGBD): SSSTORENV(MAX((B)aiv,wdv),z,FL,D) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGDB): SSSTORENV(MAX(adv,(B)wiv),z,FL,D) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGID): SSSTORE(MAX(aiv,wdv),z,FL,D) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGDI): SSSTORE(MAX(adv,wiv),z,FL,D) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGBI): SSSTORENV(MAX((B)aiv,wiv),z,INT,I) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGIB): SSSTORENV(MAX(aiv,(B)wiv),z,INT,I) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGII): SSSTORENV(MAX(aiv,wiv),z,INT,I) R z;
+ case SSINGCASE(VA2CMAX-VA2CBW1111,SSINGDD): SSSTORENVFL(MAX(adv,wdv),z,FL,D) R z;
 
 
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBB): SSSTORENV(SSRDB(a)&SSRDB(w),z,B01,B) R z;
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBD): SSSTORENV(SSRDB(a)?SSRDD(w):0.0,z,FL,D) R z;
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDB): SSSTORENV(SSRDB(w)?SSRDD(a):0.0,z,FL,D) R z;
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGID): {I av=SSRDI(a); SSSTORE(av?av*SSRDD(w):0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDI): {I wv=SSRDI(w); SSSTORE(wv?wv*SSRDD(a):0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBI): SSSTORENV(SSRDB(a)?SSRDI(w):0,z,INT,I) R z;
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGIB): SSSTORENV(SSRDB(w)?SSRDI(a):0,z,INT,I) R z;
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGII): {I av=SSRDI(a), wv=SSRDI(w), zv;
-   DPMULDDECLS DPMULD(av,wv,zv,SSSTORE((D)av*(D)wv,z,FL,D))  // overflow
-   else SSSTORENV(zv,z,INT,I)  // normal
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv&(B)wiv,z,B01,B) R z;
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv?wdv:0.0,z,FL,D) R z;
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDB): SSSTORENV((B)wiv?adv:0.0,z,FL,D) R z;
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGID): {I av=aiv; SSSTORE(av?av*wdv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDI): {I wv=wiv; SSSTORE(wv?wv*adv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBI): SSSTORENV((B)aiv?wiv:0,z,INT,I) R z;
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGIB): SSSTORENV((B)wiv?aiv:0,z,INT,I) R z;
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGII): {
+   DPMULDDECLS DPMULD(aiv,wiv,ziv,SSSTORE((D)aiv*(D)wiv,z,FL,D))  // overflow
+   else SSSTORENV(ziv,z,INT,I)  // normal
    R z;}
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDD): {D av=SSRDD(a), wv=SSRDD(w);
-   SSSTORENVFL(TYMES(av,wv),z,FL,D) R z;}
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDD): {
+   SSSTORENVFL(TYMES(adv,wdv),z,FL,D) R z;}
 
 
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGBB): {B av=SSRDB(a); B wv=SSRDB(w); SSSTORENV(wv?av:av?inf:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGBD): {B av=SSRDB(a); D wv=SSRDD(w); SSSTORENV((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDB): {D av=SSRDD(a); B wv=SSRDB(w); SSSTORENV((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGID): {I av=SSRDI(a); D wv=SSRDD(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDI): {D av=SSRDD(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGBI): {B av=SSRDB(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGIB): {I av=SSRDI(a); B wv=SSRDB(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGII): {I av=SSRDI(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDD): {NAN0; SSSTORENVFL(DIV(SSRDD(a),(D)SSRDD(w)),z,FL,D) NAN1; R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGBB): {SSSTORENV((B)wiv?(B)aiv:(B)aiv?inf:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGBD): {SSSTORENV(((B)aiv||wdv)?(B)aiv/wdv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDB): {SSSTORENV((adv||(B)wiv)?adv/(B)wiv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGID): {SSSTORE((aiv||wdv)?aiv/wdv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDI): {SSSTORE((adv||wiv)?adv/wiv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGBI): {SSSTORE(((B)aiv||wiv)?(B)aiv/(D)wiv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGIB): {SSSTORE((aiv||(B)wiv)?aiv/(D)(B)wiv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGII): {SSSTORE((aiv||wiv)?aiv/(D)wiv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDD): {NAN0; SSSTORENVFL(DIV(adv,(D)wdv),z,FL,D) NAN1; R z;}
 
 
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGBB): {SSSTORENV(SSRDB(a)|SSRDB(w),z,B01,B) R z;}
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGBD): {adv=SSRDB(a); wdv=SSRDD(w); goto gcdflresult;}
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGDB): {adv=SSRDD(a); wdv=SSRDB(w); goto gcdflresult;}
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGID): {adv=(D)SSRDI(a); wdv=SSRDD(w); goto gcdflresult;}
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGDI): {adv=SSRDD(a); wdv=(D)SSRDI(w); goto gcdflresult;}
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGBI): aiv=SSRDB(a); wiv=SSRDI(w); goto gcdintresult;
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGIB): aiv=SSRDI(a); wiv=SSRDB(w); goto gcdintresult;
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGII): aiv=SSRDI(a); wiv=SSRDI(w); goto gcdintresult;
- case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGDD): {adv=SSRDD(a); wdv=SSRDD(w); goto gcdflresult;}
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGBB): {SSSTORENV((B)aiv|(B)wiv,z,B01,B) R z;}
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGBD): {adv=(D)(B)aiv; goto gcdflresult;}
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGDB): {wdv=(D)(B)wiv; goto gcdflresult;}
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGID): {adv=(D)aiv; goto gcdflresult;}
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGDI): {wdv=(D)wiv; goto gcdflresult;}
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGBI): aiv=(B)aiv; goto gcdintresult;
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGIB): wiv=(B)wiv; goto gcdintresult;
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGII): goto gcdintresult;
+ case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGDD): {goto gcdflresult;}
 
 
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGBB): {SSSTORENV(SSRDB(a)&SSRDB(w),z,B01,B) R z;}
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGBD): {adv=SSRDB(a); wdv=SSRDD(w); goto lcmflresult;}
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGDB): {adv=SSRDD(a); wdv=SSRDB(w); goto lcmflresult;}
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGID): {adv=(D)SSRDI(a); wdv=SSRDD(w); goto lcmflresult;}
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGDI): {adv=SSRDD(a); wdv=(D)SSRDI(w); goto lcmflresult;}
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGBI): aiv=SSRDB(a); wiv=SSRDI(w); goto lcmintresult;
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGIB): aiv=SSRDI(a); wiv=SSRDB(w); goto lcmintresult;
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGII): aiv=SSRDI(a); wiv=SSRDI(w); goto lcmintresult;
- case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGDD): {adv=SSRDD(a); wdv=SSRDD(w); goto lcmflresult;}
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGBB): {SSSTORENV((B)aiv&(B)wiv,z,B01,B) R z;}
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGBD): {adv=(B)aiv; goto lcmflresult;}
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGDB): {wdv=(B)wiv; goto lcmflresult;}
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGID): {adv=aiv; goto lcmflresult;}
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGDI): {wdv=wiv; goto lcmflresult;}
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGBI): aiv=(B)aiv; goto lcmintresult;
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGIB): wiv=(B)wiv; goto lcmintresult;
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGII): goto lcmintresult;
+ case SSINGCASE(VA2CSTARDOT-VA2CBW1111,SSINGDD): {goto lcmflresult;}
 
 
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGBB): aiv = SSRDB(a); wiv = SSRDB(w); goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGBD): wdv=SSRDD(w); aiv = SSRDB(a); ASSERT(wdv==0.0 || TEQ(wdv,1.0),EVDOMAIN); wiv=(I)wdv; goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGDB): adv=SSRDD(a); wiv = SSRDB(w); ASSERT(adv==0.0 || TEQ(adv,1.0),EVDOMAIN); aiv=(I)adv; goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGID): wdv=SSRDD(w); aiv = SSRDI(a); ASSERT(!(aiv&-2) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGDI): adv=SSRDD(a); wiv = SSRDI(w); ASSERT(!(wiv&-2) && (adv==0.0 || TEQ(adv,1.0)),EVDOMAIN); aiv=(I)adv; goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGBI): aiv = SSRDB(a); wiv = SSRDI(w); ASSERT(!(wiv&-2),EVDOMAIN); goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGIB): aiv=SSRDI(a); wiv=SSRDB(w); ASSERT(!(aiv&-2),EVDOMAIN); goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGII): aiv=SSRDI(a); wiv=SSRDI(w); ASSERT(!((aiv|wiv)&-2),EVDOMAIN); goto nandresult;
- case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w); ASSERT((adv==0.0 || TEQ(adv,1.0)) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; aiv=(I)adv; goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGBB): aiv=(B)aiv; wiv=(B)wiv; goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGBD): aiv=(B)aiv; ASSERT(wdv==0.0 || TEQ(wdv,1.0),EVDOMAIN); wiv=(I)wdv; goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGDB): wiv=(B)wiv; ASSERT(adv==0.0 || TEQ(adv,1.0),EVDOMAIN); aiv=(I)adv; goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGID): ASSERT(!(aiv&-2) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGDI): ASSERT(!(wiv&-2) && (adv==0.0 || TEQ(adv,1.0)),EVDOMAIN); aiv=(I)adv; goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGBI): aiv=(B)aiv; ASSERT(!(wiv&-2),EVDOMAIN); goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGIB): wiv=(B)wiv; ASSERT(!(aiv&-2),EVDOMAIN); goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGII): ASSERT(!((aiv|wiv)&-2),EVDOMAIN); goto nandresult;
+ case SSINGCASE(VA2CSTARCO-VA2CBW1111,SSINGDD): ASSERT((adv==0.0 || TEQ(adv,1.0)) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; aiv=(I)adv; goto nandresult;
 
 
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGBB): aiv = SSRDB(a); wiv = SSRDB(w); goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGBD): wdv=SSRDD(w); aiv = SSRDB(a); ASSERT(wdv==0.0 || TEQ(wdv,1.0),EVDOMAIN); wiv=(I)wdv; goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGDB): adv=SSRDD(a); wiv = SSRDB(w); ASSERT(adv==0.0 || TEQ(adv,1.0),EVDOMAIN); aiv=(I)adv; goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGID): wdv=SSRDD(w); aiv = SSRDI(a); ASSERT(!(aiv&-2) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGDI): adv=SSRDD(a); wiv = SSRDI(w); ASSERT(!(wiv&-2) && (adv==0.0 || TEQ(adv,1.0)),EVDOMAIN); aiv=(I)adv; goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGBI): aiv = SSRDB(a); wiv = SSRDI(w); ASSERT(!(wiv&-2),EVDOMAIN); goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGIB): aiv=SSRDI(a); wiv=SSRDB(w); ASSERT(!(aiv&-2),EVDOMAIN); goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGII): aiv=SSRDI(a); wiv=SSRDI(w); ASSERT(!((aiv|wiv)&-2),EVDOMAIN); goto norresult;
- case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w); ASSERT((adv==0.0 || TEQ(adv,1.0)) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; aiv=(I)adv; goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGBB): aiv=(B)aiv; wiv=(B)wiv; goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGBD): aiv=(B)aiv; ASSERT(wdv==0.0 || TEQ(wdv,1.0),EVDOMAIN); wiv=(I)wdv; goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGDB): wiv=(B)wiv; ASSERT(adv==0.0 || TEQ(adv,1.0),EVDOMAIN); aiv=(I)adv; goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGID): ASSERT(!(aiv&-2) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGDI): ASSERT(!(wiv&-2) && (adv==0.0 || TEQ(adv,1.0)),EVDOMAIN); aiv=(I)adv; goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGBI): aiv=(B)aiv; ASSERT(!(wiv&-2),EVDOMAIN); goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGIB): wiv=(B)wiv; ASSERT(!(aiv&-2),EVDOMAIN); goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGII): ASSERT(!((aiv|wiv)&-2),EVDOMAIN); goto norresult;
+ case SSINGCASE(VA2CPLUSCO-VA2CBW1111,SSINGDD): ASSERT((adv==0.0 || TEQ(adv,1.0)) && (wdv==0.0 || TEQ(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; aiv=(I)adv; goto norresult;
 
 
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGBB): SSSTORENV(SSRDB(a)<=SSRDB(w),z,B01,B) R z;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGBD): adv=SSRDB(a); wdv=SSRDD(w);  goto outofresult;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDB): adv=SSRDD(a); wdv=SSRDB(w);  goto outofresult;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGID): adv=(D)SSRDI(a); wdv=SSRDD(w);  goto outofresult;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDI): adv=SSRDD(a); wdv=(D)SSRDI(w);  goto outofresult;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGBI): adv=(D)SSRDB(a); wdv=(D)SSRDI(w); goto outofresultcvti;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGIB): adv=(D)SSRDI(a); wdv=(D)SSRDB(w); goto outofresultcvti;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGII): adv=(D)SSRDI(a); wdv=(D)SSRDI(w); goto outofresultcvti;
- case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w);  goto outofresult;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv<=(B)wiv,z,B01,B) R z;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGBD): adv=(B)aiv; goto outofresult;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDB): wdv=(B)wiv;  goto outofresult;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGID): adv=(D)aiv; goto outofresult;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDI): wdv=(D)wiv;  goto outofresult;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGBI): adv=(D)(B)aiv; wdv=(D)wiv; goto outofresultcvti;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGIB): adv=(D)aiv; wdv=(D)(B)wiv; goto outofresultcvti;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGII): adv=(D)aiv; wdv=(D)wiv; goto outofresultcvti;
+ case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDD): goto outofresult;
 
 
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBB): SSSTORENV((I)SSRDB(a)|(I)!SSRDB(w),z,B01,B) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBD): SSSTORE(SSRDB(a)?1.0:(zdv=SSRDD(w))<0?inf:zdv==0?1:0,z,FL,D) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDB): SSSTORE(SSRDB(w)?SSRDD(a):1.0,z,FL,D) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGID): RE(zdv=pospow((D)SSRDI(a),SSRDD(w))) SSSTORE(zdv,z,FL,D) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDI): RE(zdv=intpow(SSRDD(a),SSRDI(w))) SSSTORE(zdv,z,FL,D) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBI): SSSTORE(SSRDB(a)?1.0:(zdv=(D)SSRDI(w))<0?inf:zdv==0?1:0,z,FL,D) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGIB): SSSTORE(SSRDB(w)?SSRDI(a):1,z,INT,I) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGII): RE(zdv=intpow((D)SSRDI(a),SSRDI(w))) SSSTORE(zdv,z,FL,D) R z;
- case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDD): RE(zdv=pospow(SSRDD(a),SSRDD(w))) SSSTORENVFL(zdv,z,FL,D) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBB): SSSTORENV((I)(B)aiv|(I)!(B)wiv,z,B01,B) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBD): SSSTORE((B)aiv?1.0:(zdv=wdv)<0?inf:zdv==0?1:0,z,FL,D) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDB): SSSTORE((B)wiv?adv:1.0,z,FL,D) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGID): RE(zdv=pospow((D)aiv,wdv)) SSSTORE(zdv,z,FL,D) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDI): RE(zdv=intpow(adv,wiv)) SSSTORE(zdv,z,FL,D) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBI): SSSTORE((B)aiv?1.0:(zdv=(D)wiv)<0?inf:zdv==0?1:0,z,FL,D) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGIB): SSSTORE((B)wiv?aiv:1,z,INT,I) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGII): RE(zdv=intpow((D)aiv,wiv)) SSSTORE(zdv,z,FL,D) R z;
+ case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDD): RE(zdv=pospow(adv,wdv)) SSSTORENVFL(zdv,z,FL,D) R z;
 
 
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGBB): aiv=SSRDB(a); wiv=SSRDB(w); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGBD): aiv=SSRDB(a); wiv=intforD(jt,SSRDD(w)); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDB): aiv=intforD(jt,SSRDD(a)); wiv=SSRDB(w); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGID): aiv=SSRDI(a); wiv=intforD(jt,SSRDD(w)); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDI): aiv=intforD(jt,SSRDD(a)); wiv=SSRDI(w); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGBI): aiv=SSRDB(a); wiv=SSRDI(w); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGIB): aiv=SSRDI(a); wiv=SSRDB(w); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGII): aiv=SSRDI(a); wiv=SSRDI(w); goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDD): aiv=intforD(jt,SSRDD(a)); wiv=intforD(jt,SSRDD(w)); goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGBB): aiv=(B)aiv; wiv=(B)wiv; goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGBD): aiv=(B)aiv; wiv=intforD(jt,wdv); goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDB): aiv=intforD(jt,adv); wiv=(B)wiv; goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGID): wiv=intforD(jt,wdv); goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDI): aiv=intforD(jt,adv); goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGBI): aiv=(B)aiv; goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGIB): wiv=(B)wiv; goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGII): goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDD): aiv=intforD(jt,adv); wiv=intforD(jt,wdv); goto bitwiseresult;
 
 
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBB): ziv=SSRDB(a)<SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBD): ziv=TLT(SSRDB(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGDB): ziv=TLT(SSRDD(a),SSRDB(w)); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGID): ziv=TLT((D)SSRDI(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGDI): ziv=TLT(SSRDD(a),(D)SSRDI(w)); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBI): ziv=SSRDB(a)<SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGIB): ziv=SSRDI(a)<SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGII): ziv=SSRDI(a)<SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CLT-VA2CBW1111,SSINGDD): ziv=TLT(SSRDD(a),SSRDD(w)); goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBB): ziv=(B)aiv<(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBD): ziv=TLT((B)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGDB): ziv=TLT(adv,(B)wiv); goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGID): ziv=TLT((D)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGDI): ziv=TLT(adv,(D)wiv); goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBI): ziv=(B)aiv<wiv; goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGIB): ziv=aiv<(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGII): ziv=aiv<wiv; goto compareresult;
+ case SSINGCASE(VA2CLT-VA2CBW1111,SSINGDD): ziv=TLT(adv,wdv); goto compareresult;
 
 
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBB): ziv=SSRDB(a)>SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBD): ziv=TGT(SSRDB(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDB): ziv=TGT(SSRDD(a),SSRDB(w)); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGID): ziv=TGT((D)SSRDI(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDI): ziv=TGT(SSRDD(a),(D)SSRDI(w)); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBI): ziv=SSRDB(a)>SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGIB): ziv=SSRDI(a)>SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGII): ziv=SSRDI(a)>SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDD): ziv=TGT(SSRDD(a),SSRDD(w)); goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBB): ziv=(B)aiv>(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBD): ziv=TGT((B)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDB): ziv=TGT(adv,(B)wiv); goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGID): ziv=TGT((D)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDI): ziv=TGT(adv,(D)wiv); goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBI): ziv=(B)aiv>wiv; goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGIB): ziv=aiv>(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGII): ziv=aiv>wiv; goto compareresult;
+ case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDD): ziv=TGT(adv,wdv); goto compareresult;
 
 
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBB): ziv=SSRDB(a)<=SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBD): ziv=TLE(SSRDB(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGDB): ziv=TLE(SSRDD(a),SSRDB(w)); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGID): ziv=TLE((D)SSRDI(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGDI): ziv=TLE(SSRDD(a),(D)SSRDI(w)); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBI): ziv=SSRDB(a)<=SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGIB): ziv=SSRDI(a)<=SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGII): ziv=SSRDI(a)<=SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CLE-VA2CBW1111,SSINGDD): ziv=TLE(SSRDD(a),SSRDD(w)); goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBB): ziv=(B)aiv<=(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBD): ziv=TLE((B)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGDB): ziv=TLE(adv,(B)wiv); goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGID): ziv=TLE((D)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGDI): ziv=TLE(adv,(D)wiv); goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBI): ziv=(B)aiv<=wiv; goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGIB): ziv=aiv<=(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGII): ziv=aiv<=wiv; goto compareresult;
+ case SSINGCASE(VA2CLE-VA2CBW1111,SSINGDD): ziv=TLE(adv,wdv); goto compareresult;
 
 
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBB): ziv=SSRDB(a)>=SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBD): ziv=TGE(SSRDB(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDB): ziv=TGE(SSRDD(a),SSRDB(w)); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGID): ziv=TGE((D)SSRDI(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDI): ziv=TGE(SSRDD(a),(D)SSRDI(w)); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBI): ziv=SSRDB(a)>=SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGIB): ziv=SSRDI(a)>=SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGII): ziv=SSRDI(a)>=SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDD): ziv=TGE(SSRDD(a),SSRDD(w)); goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBB): ziv=(B)aiv>=(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBD): ziv=TGE((B)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDB): ziv=TGE(adv,(B)wiv); goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGID): ziv=TGE((D)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDI): ziv=TGE(adv,(D)wiv); goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBI): ziv=(B)aiv>=wiv; goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGIB): ziv=aiv>=(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGII): ziv=aiv>=wiv; goto compareresult;
+ case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDD): ziv=TGE(adv,wdv); goto compareresult;
 
 
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBB): ziv=SSRDB(a)!=SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBD): ziv=TNE(SSRDB(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDB): ziv=TNE(SSRDD(a),SSRDB(w)); goto compareresult; 
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGID): ziv=TNE((D)SSRDI(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDI): ziv=TNE(SSRDD(a),(D)SSRDI(w)); goto compareresult;
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBI): ziv=SSRDB(a)!=SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGIB): ziv=SSRDI(a)!=SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGII): ziv=SSRDI(a)!=SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDD): ziv=TNE(SSRDD(a),SSRDD(w)); goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBB): ziv=(B)aiv!=(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBD): ziv=TNE((B)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDB): ziv=TNE(adv,(B)wiv); goto compareresult; 
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGID): ziv=TNE((D)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDI): ziv=TNE(adv,(D)wiv); goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBI): ziv=(B)aiv!=wiv; goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGIB): ziv=aiv!=(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGII): ziv=aiv!=wiv; goto compareresult;
+ case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDD): ziv=TNE(adv,wdv); goto compareresult;
 
 
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBB): ziv=SSRDB(a)==SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBD): ziv=TEQ(SSRDB(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDB): ziv=TEQ(SSRDD(a),SSRDB(w)); goto compareresult; 
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGID): ziv=TEQ((D)SSRDI(a),SSRDD(w)); goto compareresult;
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDI): ziv=TEQ(SSRDD(a),(D)SSRDI(w)); goto compareresult;
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBI): ziv=SSRDB(a)==SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGIB): ziv=SSRDI(a)==SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGII): ziv=SSRDI(a)==SSRDI(w); goto compareresult;
- case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDD): ziv=TEQ(SSRDD(a),SSRDD(w)); goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBB): ziv=(B)aiv==(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBD): ziv=TEQ((B)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDB): ziv=TEQ(adv,(B)wiv); goto compareresult; 
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGID): ziv=TEQ((D)aiv,wdv); goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDI): ziv=TEQ(adv,(D)wiv); goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBI): ziv=(B)aiv==wiv; goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGIB): ziv=aiv==(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGII): ziv=aiv==wiv; goto compareresult;
+ case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDD): ziv=TEQ(adv,wdv); goto compareresult;
 
 
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBB): adv=SSRDB(a); wdv=SSRDB(w); goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBD): adv=SSRDB(a); wdv=SSRDD(w); goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGDB): adv=SSRDD(a); wdv=SSRDB(w); goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGID): adv=(D)SSRDI(a); wdv=SSRDD(w);  goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGDI): adv=SSRDD(a); wdv=(D)SSRDI(w);  goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBI): adv=(D)SSRDB(a); wdv=(D)SSRDI(w); goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGIB): adv=(D)SSRDI(a); wdv=(D)SSRDB(w); goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGII): adv=(D)SSRDI(a); wdv=(D)SSRDI(w); goto circleresult;
- case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w);  goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBB): adv=(B)aiv; wdv=(B)wiv; goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBD): adv=(B)aiv; goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGDB): wdv=(B)wiv; goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGID): adv=(D)aiv; goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGDI): wdv=(D)wiv;  goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBI): adv=(D)(B)aiv; wdv=(D)wiv; goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGIB): adv=(D)aiv; wdv=(D)(B)wiv; goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGII): adv=(D)aiv; wdv=(D)wiv; goto circleresult;
+ case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGDD): goto circleresult;
 
 
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBB): ziv=SSRDB(a)<SSRDB(w); goto compareresult;
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGIB): aiv=SSRDI(a); wiv=(I)SSRDB(w); goto intresidue;
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBI): aiv=(I)SSRDB(a); wiv=SSRDI(w); goto intresidue;
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGII): aiv=SSRDI(a); wiv=SSRDI(w);
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBB): ziv=(B)aiv<(B)wiv; goto compareresult;
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGIB): wiv=(I)(B)wiv; goto intresidue;
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBI): aiv=(I)(B)aiv; goto intresidue;
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGII): 
   intresidue: ;
    ziv=((aiv&-aiv)+(aiv<=0)==0)?wiv&(aiv-1):remii(aiv,wiv);  // if positive power of 2, just AND; otherwise divide
    SSSTORE(ziv,z,INT,I); R z;
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGID): aiv=SSRDI(a); wdv=SSRDD(w);
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGID): 
    ziv=jtremid(jt,aiv,wdv); if(!jt->jerr){SSSTORE(ziv,z,INT,I);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
 
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBD): adv=(D)SSRDB(a); wdv=SSRDD(w); goto floatresidue;
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDB): adv=SSRDD(a); wdv=(D)SSRDB(w); goto floatresidue;
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDI): adv=SSRDD(a); wdv=(D)SSRDI(w);  goto floatresidue;
- case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w);
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBD): adv=(D)(B)aiv; goto floatresidue;
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDB): wdv=(D)(B)wiv; goto floatresidue;
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDI): wdv=(D)wiv;  goto floatresidue;
+ case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDD): 
   floatresidue: ;
    zdv=jtremdd(jt,adv,wdv); if(!jt->jerr){SSSTORE(zdv,z,FL,D);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
 

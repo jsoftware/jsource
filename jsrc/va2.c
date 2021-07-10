@@ -1248,24 +1248,35 @@ DF2(jtatomic2){A z;
  self=realself?realself:self;  // if this is a rank block, move to the primitive.  u b. or any atomic primitive has f clear
  F2PREFIP;ARGCHK2(a,w);
  RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
- UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);
+ UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);  // awm1 is 0 for singleton, - for empty
  selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
+ // find frame
+ I af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
+ I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
  // check for singletons
  if(!(awm1|((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01+INT+FL))))){
+  ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf;   // set af to max len of frame, ar to max cell rank
+#if 1 // obsolete
+  z=jtssingleton(jt,a,w,(af+ar)+((I)FAV(self)->lc<<RANKTX)+(((I)jtinplace&3)<<24)+((3*(AT(a)>>INTX)+(AT(w)>>INTX))<<26));  // create portmanteau parm reg
+#else
   z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
+#endif
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation.  We must, because jt->jerr is set with the retry code
- }
+  af=0;  // in case we fall through, neuter the agreement test below
+  // we do not do the selfranks adjustment on this leg, because it's very rare & we don't want to have
+  // to keep the registers over the subroutine call
+ }else{
+  // not singleton: carry on with normal setup
+  // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup
+  selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
+  af=af<wf?af:wf;  // set af to short frame for agreement test
+ } 
+ 
  // while it's convenient, check for empty result
  jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));
- // find frame
- I af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
- I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
- // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup
- selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
- af=af<wf?af:wf;   // now af is short frame
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
  // Run the full dyad, retrying if a retryable error is returned
 #if SY_64

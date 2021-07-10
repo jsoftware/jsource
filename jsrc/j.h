@@ -599,7 +599,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
-#define NAMETRACK 0  // turn on to define trackinfo in unquote, xdefn, line
+#define NAMETRACK 1  //   scaf  // turn on to define trackinfo in unquote, xdefn, line
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
@@ -940,6 +940,11 @@ EPILOG(z); \
 // Size-of-block calculations.  VSZ when size is constant or variable.  Byte counts are (total length including header)-1
 // Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI-1 for islast (which includes B01), rather than adding 1
 // NOTE: sizeof(NM) is rounded up to a word multiple; offsetof() would be better.  But since it overallocates only for names of >20 characters, we keep it as is
+// NOTE: we overfetch from all blocks we allocate.  We assume that there is at least 32 bytes of fetchable data at the end of the block.
+//  * for AVX loops, we use maskload/maskstore.  We do not modify anything past the valid area but we need them to be mapped to avoid microprogram check
+//  * for boolean operations, we are entitled to fetch an I from the start of any valid atom.  When creating result blocks we may write as much as an I into the address of any valid atom
+//  * for singleton operations, we fetch a D from the address of the argument; it must be mapped
+// to guarantee validity we allocate a tail area for everything we allocate, and insist that mapped files do the same.
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+5)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1

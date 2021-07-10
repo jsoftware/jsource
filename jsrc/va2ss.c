@@ -26,7 +26,7 @@
 #define SSINGDI SSINGENC(FL,INT)
 #define SSINGDD SSINGENC(FL,FL)
 
-#define SSSTORENV(v,z,t,type) {*((type *)zv) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
+#define SSSTORENV(v,z,t,type) {AT(z)=(t); *((type *)zv) = (v); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
 #define SSSTORE(v,z,t,type) SSSTORENV(v,z,t,type)  // we don't use MODBLOCKTYPE any more
 #define SSSTORENVFL(v,z,t,type) {*((type *)zv) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
@@ -41,6 +41,29 @@ static I intforD(J jt, D d){D q;I z;
 }
 
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
+#if 1
+// do singleton operation. ipcaserank bits 0-15=rank of result, 16-23=self->lc code for the operation (with comparisons flagged), 24-25=inplace bits, 26-29 types code
+A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;   // scaf adv, wdv go into xmm6-7.  they do not need to be saved.
+ z=0; I ac=AC(a); I wc=AC(w);
+ // see if we can inplace an assignment.  That is always a good idea, though rare
+ if(unlikely(((B)(a==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX)))&(B)1)+((B)(w==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))&(B)1))){
+  if(likely((((AFLAG(jt->asginfo.zombieval)>>AFUNINCORPABLEX) | (AM(jt->asginfo.zombieval)&SGNTO0((AMNVRCT-1)-AM(jt->asginfo.zombieval))))&1))==0){
+   z=jt->asginfo.zombieval; if(likely((RANKT)ipcaserank==AR(z)))goto getzv;
+  }
+ }
+ // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
+ // a potential gain is the result can itself be inplaced, but it is a certain loser when deciding where the result is
+ if((ipcaserank&0x80ffff)==0x800000)goto nozv;  // comparison rank 0 - leave z=0
+ // see if the block is inplaceable in the ordinary way
+ z=(ac&SGNIF(ipcaserank,24+JTINPLACEAX))<0?a:z; z=(wc&SGNIF(ipcaserank,24+JTINPLACEWX))<0?w:z;  // block is contextually inplaceable
+ if(z&&!(AFLAG(z)&AFUNINCORPABLE+AFRO))if(likely((RANKT)ipcaserank==AR(z)))goto getzv;  // not disallowed and correct rasnk, take it
+ // no inplacing, allocate the result, usually an atom
+ if(likely((RANKT)ipcaserank==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,(RANKT)ipcaserank); zv=voidAVn(z,(RANKT)ipcaserank);}
+ goto nozv;
+getzv:;  // here when we are operating inplace on z
+ zv=voidAV(z);  // get addr of value
+nozv:;  // here when we have zv or don't need it
+#else
 A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
  // Get the address of an inplaceable assignment, if any
@@ -52,7 +75,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
   // Calculate inplaceability for a and w.  Result must be 0 or 1
   // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE  No inplace if on NVR stack (AM is NVR and count>0)
   // UNINCORPABLE may not be set because we aren't looking at the type here and if the value is B01 we might overstore.  It might be worthwhile to accept UNINCORP if
-  // len=8.
+  // len=8.  We must test AFRO if we did not test it for zombieval
   I aipok = (((/* obsolete (AC(a)-1)|*/((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO) & ~(AM(a)&SGNTO0((AMNVRCT-1)-AM(a)));
   I wipok = (((/* obsolete (AC(w)-1)|*/((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ~(AM(w)&SGNTO0((AMNVRCT-1)-AM(w)));
   // find or allocate the result area
@@ -70,26 +93,14 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
    z=aipok>((I)(awr>>RANKTX)^fa)?a:z; z=wipok>((I)(awr&RANKTMSK)^fa)?w:z; if(!z)GATV1(z,FL,1,fa);  // accept ip only if rank also matches; if we allocate, fill in the shape with 1s
   }
  }
-#if 0
- z=0; ac= wc=
- if(likely(rank 0)){
-  if(!comparison){
-   if(unlikely((((I)(((UI)a^(UI)zombieval)>>1)-((I)jtinplace&JTINPLACEA))|((I)(((UI)w^(UI)zombieval)>>1)-((I)jtinplace&JTINPLACEW)))<0){
-    if(likely(((AFLAG(zombieval)>>AFUNINCORPABLEX) | (AM(zombieval)&SGNTO0((AMNVRCT-1)-AM(zombieval))))&1)){
-     z=zombieval; goto gotit;
-    }
-   }
-   
-   allocate scalar FL
-  }
- }else{
- }
-gotit:;
 #endif
+ // z is 0 ONLY for comparisons with no rank.
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
- aiv=IAV(a)[0]; I wiv=IAV(w)[0],ziv; D adv=DAV(a)[0],wdv=DAV(w)[0],zdv; void *zv=z?voidAV(z):0;  // fetch args before the case breaks the pipe   scaf no conditional - make it always use canned result
+ aiv=IAV(a)[0]; I wiv=IAV(w)[0],ziv; D adv=DAV(a)[0],wdv=DAV(w)[0],zdv;
+   // fetch args before the case breaks the pipe
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
- switch(caseno){
+ I caseno=((ipcaserank>>RANKTX)&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;
+ switch(SSINGCASE(caseno,ipcaserank>>26)){
  default: ASSERTSYS(0,"ssing");
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv+wdv,z,FL,D) R z;
@@ -391,12 +402,16 @@ gotit:;
 
  bitwiseresult:
  RE(0);  // if error on D arg, make sure we abort
+#if 1  // obsolete 
+ ziv=((ipcaserank>>RANKTX)&0x7f)-VA2CBW0000;  // mask describing operation
+#else 
  ziv=FAV(self)->lc-VA2CBW0000;  // mask describing operation
+#endif
  ziv=((aiv&wiv)&REPSGN(SGNIF(ziv,0)))|((aiv&~wiv)&REPSGN(SGNIF(ziv,1)))|((~aiv&wiv)&REPSGN(SGNIF(ziv,2)))|((~aiv&~wiv)&REPSGN(SGNIF(ziv,3)));
  SSSTORE(ziv,z,INT,I) R z;
 
  compareresult:
- if(!z)R num(ziv);  // Don't store into num[].  Could perhaps do this without the branch, but it seems too lengthy
+ if(likely(!z))R num(ziv);  // Don't store into num[].  Only fallthrough is for nonzero rank
  SSSTORE((B)ziv,z,B01,B) R z;  // OK to store into allocated/inplace area.
 
  circleresult: ;

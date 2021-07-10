@@ -263,6 +263,8 @@ typedef I SI;
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
 #define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
+#define voidAV0(x)       ((void*)((C*)(x)+AKXR(0)))  // unknown, but scalar
+#define voidAVn(x,n)     ((void*)((C*)(x)+AKXR(n)))  // unknown, but rank is known
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
 
 #if C_LE

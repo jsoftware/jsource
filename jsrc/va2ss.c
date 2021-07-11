@@ -30,6 +30,10 @@
 #define SSSTORE(v,z,t,type) SSSTORENV(v,z,t,type)  // we don't use MODBLOCKTYPE any more
 #define SSSTORENVFL(v,z,t,type) {*((type *)zv) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
+#define EXECNAN(exp) {zdv=(exp); if(unlikely(zdv!=zdv))ASSERT(adv!=adv||wdv!=wdv,EVNAN)}  // execute exp, error if NaN result
+#define EXECNANH(exp) {NAN0; zdv=(exp); NAN1;}  // same but use composite detection in hardware
+
+
 // Return int version of d, with error if loss of significance
 static I intforD(J jt, D d){D q;I z;
  q=jround(d); z=(I)q;
@@ -122,7 +126,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 // obsolete   if (XANDY((zv^av),(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
 // obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDD):
-  {NAN0; SSSTORENVFL(adv+wdv,z,FL,D) NAN1; R z;}
+  {EXECNAN(adv+wdv); SSSTORENVFL(zdv,z,FL,D) R z;}
 
 
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv-(B)wiv,z,INT,I) R z;
@@ -146,7 +150,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 // obsolete   if (XANDY((zv^av),~(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
 // obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDD):
-  {NAN0; SSSTORENVFL(adv-wdv,z,FL,D) NAN1;  R z;}
+  {EXECNAN(adv-wdv); SSSTORENVFL(zdv,z,FL,D) R z;}
 
 
  case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv&(B)wiv,z,B01,B) R z;
@@ -194,7 +198,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGBI): {SSSTORE(((B)aiv||wiv)?(B)aiv/(D)wiv:0.0,z,FL,D) R z;}
  case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGIB): {SSSTORE((aiv||(B)wiv)?aiv/(D)(B)wiv:0.0,z,FL,D) R z;}
  case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGII): {SSSTORE((aiv||wiv)?aiv/(D)wiv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDD): {NAN0; SSSTORENVFL(DIV(adv,(D)wdv),z,FL,D) NAN1; R z;}
+ case SSINGCASE(VA2CDIV-VA2CBW1111,SSINGDD): {EXECNAN(DIV(adv,wdv)); SSSTORENVFL(zdv,z,FL,D) R z;}
 
 
  case SSINGCASE(VA2CPLUSDOT-VA2CBW1111,SSINGBB): {SSSTORENV((B)aiv|(B)wiv,z,B01,B) R z;}
@@ -393,11 +397,11 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  SSSTORE((B)(1^(aiv|wiv)),z,B01,B) R z;
 
  outofresult:
- NAN0; zdv=bindd(adv,wdv); NAN1;
+ EXECNANH(bindd(adv,wdv)); if(unlikely(zdv==0))if(jt->jerr!=0)R 0;  // NaN error picked up in the routine sets result=0
  SSSTORE(zdv,z,FL,D) R z;  // Return the value if valid
 
  outofresultcvti:
- NAN0; zdv=bindd(adv,wdv); NAN1;
+ EXECNANH(bindd(adv,wdv)); if(unlikely(zdv==0))if(jt->jerr!=0)R 0;
  if(zdv>=(D)IMIN&&zdv<=(D)IMAX){SSSTORE((I)zdv,z,INT,I)}else{SSSTORE(zdv,z,FL,D)} R z;  // Return the value if valid, as integer if possible
 
  bitwiseresult:

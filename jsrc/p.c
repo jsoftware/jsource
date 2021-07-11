@@ -27,13 +27,27 @@ totl
 
 parsing only
 namelkp =: 3 : 0
-totl =. 0.
+totl =. 0. [ a =. 2. [ ab =. 3.
 for. y do.
- totl =. totl + 1. + 2. + 3.
- totl =. * totl
- totl =. totl - 2
+ totl =. totl + +: 1. - +: a * ab + 1.
+ totl =. * totl - ab + - a
+ totl =. totl - 2.
 end.
 totl
+)
+(10) 6!:2 'namelkp i. 1e6'
+namelkp =: 3 : 0
+for. y do.
+y
+end.
+0
+)
+(10) 6!:2 'namelkp i. 1e6'
+
+namelkp =: 3 : 0
+for. y do.
+end.
+0
 )
 (10) 6!:2 'namelkp i. 1e6'
 
@@ -436,7 +450,7 @@ A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra 
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 // JT flag is used to indicate execution from ". - we can't honor name:: then, or perhaps some assignments
-A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
+A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
@@ -568,7 +582,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
       I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
       L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
-       s=sympv+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table
+       s=sympv+(I)symx;  // get address of symbol in primary table
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
       }else if(likely(buck!=0)){  // buckets but no symbol - must be global or recursive symtab - but not synthetic name
@@ -645,12 +659,12 @@ rdglob: ;  // here when we tried the buckets and failed
        }
       } else {
 undefname:
-        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
-        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
-        y = namerefacv(y, s);    // this will create a ref to undefined name as verb [:
-        EPZ(y)
-          // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
-        at=AT(y);  // refresh the type with the type of the resolved name
+       // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
+       if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
+       y = namerefacv(y, s);    // this will create a ref to undefined name as verb [:
+       EPZ(y)
+         // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
+       at=AT(y);  // refresh the type with the type of the resolved name
       }
 endname: ;
      }
@@ -696,19 +710,19 @@ endname: ;
     // First, create the bitmask of parser lines that are eligible to execute
     I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2]  & (I)((C*)&stack[3].pt)[3];  // bit 8 is set ONLY for LPAR
     pmask=(pmask|PTNOTLPAR)&(GETSTACK0PT^PTNOTLPAR);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
-    if(likely(pmask)){  // If all 0, nothing is dispatchable, go push next word
-     A fs=stack[2-(pmask&1)].a;  // the executed self block, valid for lines 0-4 - fetch as early as possible - stk[2] except for line 0
+    if(pmask){  // If all 0, nothing is dispatchable, go push next word
+     A fs=((volatile PSTK *)stack)[2-(pmask&1)].a;  // the executed self block, valid for lines 0-4 - fetch as early as possible - stk[2] except for line 0
 
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
      // We also have a couple of branches before the indirect branch, and we try to similarly get some computation going before them
-     I pline=CTTZ(pmask);  // Get the # of the highest-priority line
+     I pline=CTTZ(pmask);  // Get the # of the highest-priority line   scaf delete this, just mask to 1 bit
      // Save the stackpointer in case there are calls to parse in the names we execute
      jt->parserstackframe.parserstkend1=stack;
      // Fill in the token# (in case of error) based on the line# we are running
      jt->parserstackframe.parsercurrtok = stack[((I)0x056A9>>(pline*2))&3].t;   // in order 9-0: 0 0 1 1 1 2 2 2 2 1->00 00 01 01 01 10 10 10 10 01->0000 0101 0110 1010 1001
-     if(likely(pmask&0x1F)){
+     if(pmask&0x1F){
       // Here for lines 0-4, which execute the entity pointed to by fs
       // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
@@ -734,7 +748,6 @@ endname: ;
        // this may be over two verbs
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
        jt->sf=fs;  // set new recursion point for $:
-       AF actionfn=FAVV(fs)->valencefns[pline>>1];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
        if(unlikely((UI)((pt0ecam>>(pline>>1))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!(pt0ecam&NOTFINALEXEC))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
         // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
         // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
@@ -759,6 +772,7 @@ endname: ;
        }
        // There is no need to set the token number in the result, since it must be a noun and will never be executed
        // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
+       AF actionfn=FAVV(fs)->valencefns[pline>>1];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
        A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        A arg1=stack[((pline+1)+((pline>>1)+1))&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
        stack[(pline&1)+1]=stack[pline&1];    // overwrite the verb with the previous cell - 0->1  1->2  0->1(NOP)
@@ -772,7 +786,8 @@ endname: ;
        // This calculation should run to completion while the expected misprediction is being processed
        A *tpopw=AZAPLOC(arg2); tpopw=(A*)((I)tpopw&REPSGN(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  // point to pointer to arg2 (if it is inplace) - only if dyad
        A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
-       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pline>>1)))&(pline|1))),arg1,arg2,jt->sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb  jt->sf to free fs earlier; we are about to break the pipeline
+       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pline>>1)))&(pline|1))),arg1,arg2,fs);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
+         // could use jt->sf to free fs earlier; we are about to break the pipeline.  But when we don't break we lose time waiting for jt->fs to settle
        // expect pipeline break
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
@@ -948,20 +963,24 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
    // No ASSERT - must get to the end to pop stack
    jt->parserstackframe.parsercurrtok=0;  // error token if error found
    I at=AT(y = queue[0]);  // fetch the word
-   if((at&NAME)!=0) {L *s;
-    if(likely((s=syrd(y,jt->locsyms))!=0)) {     // Resolve the name.
-      A sv;  // pointer to value block for the name
-      RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
-      if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
-       if(unlikely(at&NAMEABANDON)){
-        namecoco(jtinplace, y, (syrdforlocale(y)==jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
-       }
-       y=sv;
-      } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.
+   if((at&NAME)!=0) {L *s;A sv;  // pointer to value block for the name
+    if(likely((((I)NAV(y)->sb.sb.symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
+     s=JT(jt,sympv)+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table
+     if(likely((sv=s->val)!=0))goto got1val;  // if value has not been assigned, ignore it.  Could just treat as undef
+    }
+    if(likely((s=syrd(y,jt->locsyms))!=0)){     // Resolve the name.
+     RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
+got1val:;
+     if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
+      if(unlikely(at&NAMEABANDON)){
+       namecoco(jtinplace, y, (syrdforlocale(y)==jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
+      }
+      y=sv;
+     } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.
     } else {
-      // undefined name.
-      if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
-      else y = namerefacv(y, s);    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error
+     // undefined name.
+     if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
+     else y = namerefacv(y, s);    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error
     }
    }
    if(likely(y!=0))if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error

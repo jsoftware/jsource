@@ -1,0 +1,28 @@
+vpath % ../../../../jsrc
+
+ifndef jplatform
+jplatform=linux
+endif
+ifndef j64x
+j64x=j64
+endif
+
+ODIR=../../../../bin/$(jplatform)/$(j64x)
+
+.SUFFIXES: .o
+
+OBJS=  \
+ tsdll.o
+
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+$(ODIR)/$(TARGET) : $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+
+all: $(ODIR)/$(TARGET)
+
+clean:
+	rm -f $(OBJS)
+
+.PHONY: all clean

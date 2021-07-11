@@ -1,0 +1,42 @@
+how to build/test j32/j64/j64avx/j64avx2 for linux/darwin/raspberry/...
+
+**************************************************************************
+# commands are assumed to run in make2 folder
+
+# make sure shell scripts are executable
+chmod +x *.sh
+
+# ensure proper jsrc/jversion.h (default jversion-x.h template)
+
+# !!! make2 build commands will be confused if there are *.o files in jsrc
+# !!! makefiles do not have h file dependencies !!!
+# after h file changes, run ./clean.sh to rm all *.o files for clean build
+./clean.sh
+
+# general format for build_... commands 
+# don't miss the ./ part when typing commands
+jplatform=(..) j64x=(..) ./build_libj.sh
+
+where 
+jplatform : linux darwin raspberry  (default host)
+j64x : j64 j64avx j64avx2 j32  (default host or j64avx)
+
+# binaries generated inside the bin folder under jsource
+
+# eg. build j64 binaries
+jplatform=linux j64x=j64 ./build_libj.sh
+
+# linux and j64 is the default on 64-bit linux, so this is fine
+./build_libj.sh
+
+# the easiest way to build all binaries
+# this will run ./clean.sh and can detect the host platform
+./build_all.sh
+
+# test
+# cp jconsole libj.so libtsdll.so to the folder jlibrary/bin
+# cd the jlibrary/bin folder and run 
+./jconsole ../../test/tsu.ijs
+
+# and follow instructions there
+

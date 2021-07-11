@@ -1,0 +1,185 @@
+vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
+
+ifndef jplatform
+jplatform=linux
+endif
+ifndef j64x
+j64x=j64
+endif
+
+ODIR=../../../../bin/$(jplatform)/$(j64x)
+
+.SUFFIXES: .o
+
+OBJS=  \
+ a.o \
+ ab.o \
+ aes-c.o \
+ aes-sse2.o \
+ af.o \
+ ai.o \
+ am.o \
+ am1.o \
+ amn.o \
+ ao.o \
+ ap.o \
+ ar.o \
+ as.o \
+ au.o \
+ gemm_c-ref.o \
+ gemm_int-aarch64.o \
+ gemm_int-avx.o \
+ gemm_int-sse2.o \
+ gemm_vec-ref.o \
+ c.o \
+ ca.o \
+ cc.o \
+ cd.o \
+ cf.o \
+ cg.o \
+ ch.o \
+ cip.o \
+ cl.o \
+ cp.o \
+ cpdtsp.o \
+ cpuinfo.o \
+ cr.o \
+ crs.o \
+ ct.o \
+ cu.o \
+ cv.o \
+ cx.o \
+ d.o \
+ dc.o \
+ dss.o \
+ dstop.o \
+ dsusp.o \
+ dtoa.o \
+ f.o \
+ f2.o \
+ fbu.o \
+ gemm.o \
+ i.o \
+ io.o \
+ j.o \
+ jdlllic.o \
+ k.o \
+ m.o \
+ mbx.o \
+ p.o \
+ pv.o \
+ px.o \
+ r.o \
+ rl.o \
+ rt.o \
+ s.o \
+ sc.o \
+ sl.o \
+ sn.o \
+ t.o \
+ u.o \
+ v.o \
+ v0.o \
+ v1.o \
+ v2.o \
+ va1.o \
+ va1ss.o \
+ va2.o \
+ va2s.o \
+ va2ss.o \
+ vamultsp.o \
+ vb.o \
+ vbang.o \
+ vbit.o \
+ vcant.o \
+ vcat.o \
+ vcatsp.o \
+ vchar.o \
+ vcomp.o \
+ vcompsc.o \
+ vd.o \
+ vdx.o \
+ ve.o \
+ vf.o \
+ vfft.o \
+ vfrom.o \
+ vfromsp.o \
+ vg.o \
+ vgauss.o \
+ vgcomp.o \
+ vgranking.o \
+ vgsort.o \
+ vgsp.o \
+ vi.o \
+ viavx.o \
+ viix.o \
+ visp.o \
+ vm.o \
+ vo.o \
+ vp.o \
+ vq.o \
+ vrand.o \
+ vrep.o \
+ vs.o \
+ vsb.o \
+ vt.o \
+ vu.o \
+ vx.o \
+ vz.o \
+ w.o \
+ wc.o \
+ wn.o \
+ ws.o \
+ x.o \
+ x15.o \
+ xa.o \
+ xaes.o \
+ xb.o \
+ xc.o \
+ xcrc.o \
+ xd.o \
+ xf.o \
+ xfmt.o \
+ xh.o \
+ xi.o \
+ xl.o \
+ xo.o \
+ xs.o \
+ xsha.o \
+ xt.o \
+ xu.o \
+ keccak1600.o \
+ md4_dgst.o \
+ md4_one.o \
+ md5_dgst.o \
+ md5_one.o \
+ openssl-util.o \
+ sha1_one.o \
+ sha256.o \
+ sha3.o \
+ sha512.o
+
+%.o: %.cpp
+	$(CXX) -c $(CPPFLAGS) -o$@ $^
+
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI) $(CFLAGS_AESARM)
+
+%.o: %.S
+	$(CC) $(GASM_FLAGS) -c -o $@ $<
+
+$(OBJS_FMA) : CFLAGS_FMA := -mfma
+$(OBJS_AESNI) : CFLAGS_AESNI := -maes
+$(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
+	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
+
+$(LIBJRES): jdll.rc
+	$(WINDRES) -o$@ $^
+
+all: $(ODIR)/$(TARGET)
+
+clean:
+	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
+
+.PHONY: all clean

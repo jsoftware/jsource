@@ -1243,31 +1243,46 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // Rank can be passed in via jt->ranks, or in the rank for self.  jt->ranks has priority.
 // This entry point supports inplacing
 DF2(jtatomic2){A z;
+ F2PREFIP;ARGCHK2(a,w);
+ UI ar=AR(a), wr=AR(w); I at=AT(a), wt=AT(w); I af;
+ if((ar+wr+((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))))==0){af=0; goto forcess;}  // if args are both atoms, verb rank is immaterial - run as singleton
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
  RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
- self=realself?realself:self;  // if this is a rank block, move to the primitive.  u b. or any atomic primitive has f clear
- F2PREFIP;ARGCHK2(a,w);
+ self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
  RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
- UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);  // awm1 is 0 for singleton, - for empty
+ UI awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);  // awm1 is 0 for singleton, - for empty
  selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
  // find frame
- I af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
+ af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
  I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
  // check for singletons
- if(!(awm1|((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01+INT+FL))))){
-  ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf;   // set af to max len of frame, ar to max cell rank
+ if(!(awm1|((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))))){
+  ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf; af+=ar;   // set af to max len of frame, ar to max cell rank; then af=max framelen + max rank = resultrank
+forcess:;  // branch point for rank-0 singletons from above
 #if 1 // obsolete
-  z=jtssingleton(jt,a,w,(af+ar)+((I)FAV(self)->lc<<RANKTX)+(((I)jtinplace&3)<<24)+((3*(AT(a)>>INTX)+(AT(w)>>INTX))<<26));  // create portmanteau parm reg
+  z=jtssingleton(jt,a,w,af+((I)FAV(self)->lc<<RANKTX)+(((I)jtinplace&3)<<24)+((3*(at>>INTX)+(wt>>INTX))<<26));  // create portmanteau parm reg
 #else
   z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
 #endif
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
+  awr=(AR(a)<<RANKTX)+AR(w);   // recover ranks
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation.  We must, because jt->jerr is set with the retry code
-  af=0;  // in case we fall through, neuter the agreement test below
+  awm1=af=0;  // when we fall through, neuter the agreement test below, and indicate 'not empty result'
   // we do not do the selfranks adjustment on this leg, because it's very rare & we don't want to have
   // to keep the registers over the subroutine call
+
+  // Recalc values created in the main line.  This is very rare so use minimal registers.  self has been destroyed if ranks were not 0, so self & selfranks survive the call then
+  if(awr==0){
+   // atomic args. self is at its initial value; realself and selfranks have not been created
+   realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
+   selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
+   jtranks=jt->ranks;  // fetch IRS ranks if any
+   self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
+   selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
+   // af, awm1, self, awr, and selfranks are needed in the retry
+  }
  }else{
   // not singleton: carry on with normal setup
   // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup

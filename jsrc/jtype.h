@@ -929,7 +929,7 @@ typedef struct {
  RANK2T lrr;  // combining dyad ranks: (left<<RANKTX)|right
  RANKT mr;  // combining monad rank
  C id;  // pseudochar for the function encoded here
- C lc;  // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
+ C lc;  // lc is a local-use byte.  Used in atomic verbs to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
 } V;  // two cachelines exactly in 64-bit (16 Is); 20 I4s in 32-bit
 // The AN and AR fields of functions are not used
 

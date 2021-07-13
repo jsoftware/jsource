@@ -794,7 +794,8 @@ endname: ;
        // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
        // This calculation should run to completion while the expected misprediction is being processed
        A *tpopw=AZAPLOC(arg2); tpopw=(A*)((I)tpopw&REPSGN(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  // point to pointer to arg2 (if it is inplace) - only if dyad
-       A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopw=(pmask&4)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
+       A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; // obsolete  tpopw=(pmask&4)?tpopw:ZAPLOC0; // monad: w fs  dyad: a w   if monad, change to w w  
+        // tpopw may point to fs, but who cares?
        y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pmask>>2)))&((pmask>>1)|1))),arg1,arg2,fs);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
          // could use jt->sf to free fs earlier; we are about to break the pipeline.  But when we don't break we lose time waiting for jt->fs to settle
        // expect pipeline break
@@ -820,15 +821,16 @@ RECURSIVERESULTSCHECK
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc BEFORE the call
        {
-// to free y early, use this.  Doesn't seem to help       tpopa=y==*tpopa?tpopw:tpopa;
+       tpopa=y==*tpopa?ZAPLOC0:tpopa;  // this allows us to lose y over the subroutine call to jtra, at the expense of unsettling tpopa scaf
        if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
         I c=(UI)AC(arg1)>>(arg1==y);  // get inplaceability; set off if the arg is the result
         if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
          *tpopw=0; tpopw=tpopa; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
+         // Regrettably, fanapop has a call to jtra followed by a call to jtmf, which causes the arg to be required over the call to jtra.   Combining the functions would save a register
         }else tpopw=tpopa;
        }else tpopw=tpopa;
        if(arg1=*tpopw){  // if arg1==arg2 this will never load a value requiring action
-        I c=(UI)AC(arg1)>>(arg1==y);   // can remove y here, see above
+        I c=(UI)AC(arg1)/*tpopa above >>(arg1==y)*/;   // can remove y here, see above
         if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
          *tpopw=0; fanapop(arg1,AFLAG(arg1));
         }

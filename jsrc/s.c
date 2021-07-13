@@ -284,7 +284,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=JT(jt,sympv);
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
  // if this is a looked-up assignment in a primary symbol table, use the stored symbol#
- if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(u->sb.sb.symx-1))>=0)){R sympv+(I)u->sb.sb.symx;
+ if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(u->sb.sb.symx-1))>=0)){R sympv+(I)u->sb.sb.symx;  // scaf on 64bit fetch symx and buckx together
  }else if((likely((b = u->sb.sb.bucket)!=0))){
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
@@ -543,7 +543,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
   A asgloc=jtglobal; asgloc=(I)g&ASGNLOCAL?jtlocal:asgloc; g=e?asgloc:g;  // if assignsym, set g based on local/global assignment
   // not locative assignment, check for global assignment to a locally-defined name
-  if(unlikely(g==jtglobal))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)
+  if(unlikely(g==jtglobal))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // scaf look for uncloned local sym first
  }
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g

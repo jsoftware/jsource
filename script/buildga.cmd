@@ -2,6 +2,7 @@
 
 mkdir j64
 copy script\ver.ijs j64
+copy openmp\obj\windows\libomp.dll j64
 
 copy version.txt jsrc\jversion.h
 echo #define jplatform "windows" >> jsrc\jversion.h

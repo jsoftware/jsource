@@ -945,7 +945,8 @@ void jttpop(J jt,A *old){A *endingtpushp;
 // stats jt->totalpops++;
    if(np){
 // stats jt->nonnullpops++;
-    I c=AC(np);  // fetch usecount
+    I c=AC(np);  // fetch usecount.  scaf Should unroll this loop again for fetch of count?  Need stats on how often there is non0 here
+    I flg=AFLAG(np);  // fetch flags, just in case
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box.  Might be 0; that's no crime
 #endif
@@ -953,11 +954,10 @@ void jttpop(J jt,A *old){A *endingtpushp;
     // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
     // Otherwise just decrement the count
     if(likely(--c<=0)){
-     I flg=AFLAG(np);  // fetch flags
      // The block is going to be destroyed.  See if there are further ramifications
-     if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
+     if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
+     else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
       // NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & are deleted here
-     else fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
       // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
       // we make sure no such block is created in sprz()
     }else ACSET(np,c)

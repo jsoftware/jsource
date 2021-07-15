@@ -1255,16 +1255,22 @@ DF2(jtatomic2){A z;
  // find frame
  af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
  I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
- // check for singletons
- if(!(awm1|((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))))){
+ // check for non-atomic singletons, which are rare
+ if(awm1|((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL)))){
+  // not singleton: carry on with normal setup
+  // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup
+  selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
+  af=af<wf?af:wf;  // set af to short frame for agreement test
+ }else{
+  // singleton.  we need the rank of the result
   ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf; af+=ar;   // set af to max len of frame, ar to max cell rank; then af=max framelen + max rank = resultrank
-forcess:;  // branch point for rank-0 singletons from above
+forcess:;  // branch point for rank-0 singletons from above, always with atomic result
 #if 1 // obsolete
   z=jtssingleton(jt,a,w,af+((I)FAV(self)->lc<<RANKTX)+(((I)jtinplace&3)<<24)+((3*(at>>INTX)+(wt>>INTX))<<26));  // create portmanteau parm reg
 #else
   z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
 #endif
-  if(likely(z!=0)){RETF(z);}  // normal case is good return
+  if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   awr=(AR(a)<<RANKTX)+AR(w);   // recover ranks
@@ -1273,7 +1279,7 @@ forcess:;  // branch point for rank-0 singletons from above
   // we do not do the selfranks adjustment on this leg, because it's very rare & we don't want to have
   // to keep the registers over the subroutine call
 
-  // Recalc values created in the main line.  This is very rare so use minimal registers.  self has been destroyed if ranks were not 0, so self & selfranks survive the call then
+  // Recalc values created in the main line.  This is very rare so use minimal registers.  self has been destroyed if ranks were not 0; self & selfranks survive the call then
   if(awr==0){
    // atomic args. self is at its initial value; realself and selfranks have not been created
    realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
@@ -1281,13 +1287,8 @@ forcess:;  // branch point for rank-0 singletons from above
    jtranks=jt->ranks;  // fetch IRS ranks if any
    self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
    selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
-   // af, awm1, self, awr, and selfranks are needed in the retry
   }
- }else{
-  // not singleton: carry on with normal setup
-  // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup
-  selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
-  af=af<wf?af:wf;  // set af to short frame for agreement test
+  // af, awm1, self, awr, and selfranks are needed in the retry
  } 
  
  // while it's convenient, check for empty result

@@ -823,7 +823,7 @@ RECURSIVERESULTSCHECK
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc BEFORE the call
        {
-       tpopa=y==*tpopa?ZAPLOC0:tpopa;  // this allows us to lose y over the subroutine call to jtra, at the expense of unsettling tpopa scaf
+       tpopa=y==*tpopa?ZAPLOC0:tpopa;  // this allows us to lose y over the subroutine call to jtra, at the expense of unsettling tpopa scaf 
        if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
         I c=(UI)AC(arg1)>>(arg1==y);  // get inplaceability; set off if the arg is the result
         if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable

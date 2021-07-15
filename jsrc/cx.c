@@ -424,7 +424,7 @@ tblockcase:
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely((cwgroup&0xff)==CASSERT)){
     if(JT(jt,assert)){parseline(t); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nG0ysfctdl<<(BW-2),callframe); t=t!=0?mtv:t; // if assert., signal post-execution error if result not all 1s.
-       // An assert is an entire T-block and must clear t afterward lest it be freed before it is checked by an empty while. .  But we can't set t=0 without looking like an error.  So we use a safe permanent value, mtv.  
+       // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while. .  But we can't set t=0 without looking like an error.  So we use a safe permanent value, mtv.  
     }else{++i; break;}  // if ignored assert, go to NSI
    }else{parseline(t);}
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on

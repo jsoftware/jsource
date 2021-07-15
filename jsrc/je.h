@@ -832,7 +832,7 @@ extern A        jtssingleton(J,A,A,I);
 #else
 extern A        jtssingleton(J,A,A,A,RANK2T,RANK2T);
 #endif
-extern A        jtssingleton1(J,A,A);
+extern A        jtssingleton1(J,A,I);
 extern A        jtstcreate(J,C,I,I,C*);
 extern F        jtstdf(J,A);
 extern A        jtstfind(J,I,C*,I);

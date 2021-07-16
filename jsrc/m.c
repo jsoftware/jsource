@@ -842,6 +842,66 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  R 0;
 }
 
+// This optionally deletes wd, after deleting its contents.  t is the recursion mask: if t contains a bit set for a recursive
+// type, the contents of that type are processed.
+// Calls are from two sources.
+// 1. fa().  In this case there must have been an earlier ra(), and thus we know that the block is
+// recursive if it is RECURSIBLE.  The t argument is AT(wd).
+// 1a. If the block is sparse, it is TRAVERSIBLE but not RECURSIBLE.  In this case we are called for any usecount,
+// to call the descendants.  This is an old-style nonrecursive block.  We must check the usecount of this block and free
+// it only if it is going to 0.  When we are called the usecount has not been modified and we must decrement it.
+// 1b (normal). If the block is DIRECT or RECURSIBLE, we are called only when the usecount is going to 0.  We recur
+// on descendants, and then free wd itself.  There is a special case for NAME blocks, described below, in which wd
+// is not freed.
+// 2. tpop processing, either in tpop itself or in early frees of unused arguments.  We are called only when the usecount
+// is going to 0.  In this case we do not know
+// that the block has been made recursive.  Also, we must NOT traverse nonrecursive traversible arguments, because each component of one
+// is separately on the tpop stack.  However, we DO traverse a recursible block when its count goes to 0: making the block
+// recursive created the need to traverse, and that must be honored.  Ex: create - ra - fa - tpop.  The t argument is
+// AFLAG(wd), from which we can see the type and recursive status
+void jtfamf(J jt,AD* RESTRICT wd,I t){
+ if(t&TRAVERSIBLE){I n=AN(wd);
+  if((t&BOX+SPARSE)>0){AD* np;
+   // boxed.  Loop through each box, recurring if called for.
+   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
+   np=*wv;  // prefetch first box
+   NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
+    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+#ifdef PREFETCH
+    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
+#endif
+    fana(np);  // free the contents
+    np=np0;  // advance to next box
+   };
+   fana(np);  // free the contents
+  } else if(t&NAME){A ref;
+   if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
+    // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
+    // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
+    // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we return without freeing the reference
+    if(AC(ref)<=1){FAV(ref)->fgh[0]=0; rc=0;  // cachedref going away - clear the pointer to prevent refree
+    }else{  // cachedref survives - modify its NM block to break the loop
+     NAV(wd)->cachedref=0; ACSET(wd,1) rc=1; // clear ref to leave name only, set count so it will free when reference is freed, prevent free of wd
+    }
+    fana(ref);  // free, now that nm is unlooped
+    if(rc)R;  // avoid free if that is called for
+   }
+  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
+   // ACV.
+   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
+  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+   // single-level indirect forms.  handle each block
+   DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
+  } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
+   fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
+   // for sparse, decrement the usecount
+   I c=AC(wd); if(--c>0){AC(wd)=c; R;}  // if sparse block not going away, just decr the usecount
+  }
+ }
+ jtmf(jt,wd);
+}
+
 
 // Push wd onto the pop stack, and its descendants, possibly recurring on the descendants
 // Result is new value of jt->tnextpushp, or 0 if error

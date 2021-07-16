@@ -498,7 +498,7 @@ typedef I SI;
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
 #define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0; ACIPNO(x);}else ra(x);}
-#define ACX(a)          {AC(a)=ACPERMANENT;}
+#define ACX(a)          {AC(a)=ACPERMANENT; AFLAG(a)|=AT(a)&RECURSIBLE;}
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace

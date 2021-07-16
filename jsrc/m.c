@@ -858,23 +858,24 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 // that the block has been made recursive.  Also, we must NOT traverse nonrecursive traversible arguments, because each component of one
 // is separately on the tpop stack.  However, we DO traverse a recursible block when its count goes to 0: making the block
 // recursive created the need to traverse, and that must be honored.  Ex: create - ra - fa - tpop.  The t argument is
-// AFLAG(wd), from which we can see the type and recursive status
+// AFLAG(wd)&RECURSIBLE, from which we can see the type and recursive status
 void jtfamf(J jt,AD* RESTRICT wd,I t){
  if(t&TRAVERSIBLE){I n=AN(wd);
   if((t&BOX+SPARSE)>0){AD* np;
    // boxed.  Loop through each box, recurring if called for.
    A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
-   np=*wv;  // prefetch first box
-   NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
-    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+   if(likely(n!=0)){  // skip everything if no boxes
+    np=*wv;  // prefetch first box
+    NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
+     np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
-    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
+     PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
+     fana(np);  // free the contents
+     np=np0;  // advance to next box
+    };
     fana(np);  // free the contents
-    np=np0;  // advance to next box
-   };
-   fana(np);  // free the contents
+   }
   } else if(t&NAME){A ref;
    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
     // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change

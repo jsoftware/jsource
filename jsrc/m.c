@@ -561,8 +561,8 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  if(likely(freeroot!=0)){*freetailchn=jtsympv[0].next;jtsympv[0].next=freeroot;}  // put all blocks freed here onto the free chain
 }
 
-// free the symbol table (i. e. locale) w.  AR(w) has been loaded
-void jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined and that will make jtmf() save several more registers
+// free the symbol table (i. e. locale) w.  AR(w) has been loaded.  We return w so caller doesn't have to save it
+A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined and that will make jtmf() save several more registers
  if(likely(arw&ARLOCALTABLE)){
   // local tables have no path or name, and are not listed in any index.  Just delete the local names
   freesymb(jt,w);   // delete all the names/values
@@ -589,6 +589,7 @@ void jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlin
   }
  }
  // continue to free the table itself
+ R w;
 }
 
 // overview of the usecount routines
@@ -1270,7 +1271,7 @@ printf("%p-\n",w);
 // obsolete  I hrh = AFHRH(w);   // the size/offset indicator
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(unlikely(AT(w)==SYMB)){jtfreesymtab(jt,w,AR(w));}  // == since high bit may be used as flag 
+ if(unlikely(AT(w)==SYMB)){w=jtfreesymtab(jt,w,AR(w));}  // == since high bit may be used as flag 
  // ** this is a recursion point - mustn't load any names into registers before here **
 #if MEMAUDIT&1
  if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT;  // pool number must be valid
@@ -1285,6 +1286,7 @@ printf("%p-\n",w);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
+  jt->bytes -= allocsize;  // keep track of total allocatio
   mfreeb = jt->mfree[blockx].ballo;   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
@@ -1299,15 +1301,18 @@ printf("%p-\n",w);
 #endif
 #if ALIGNTOCACHE
   allocsize+=TAILPAD+CACHELINESIZE;  // the actual allocation had a tail pad and boundary
+  jt->malloctotal-=allocsize;
+  jt->mfreegenallo = mfreeb-allocsize;  // account for all the bytes returned to the OS
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else
   allocsize+=TAILPAD;  // the actual allocation had a tail pad
-  FREECHK(w);  // free the block
-#endif
   jt->malloctotal-=allocsize;
   jt->mfreegenallo = mfreeb-allocsize;  // account for all the bytes returned to the OS
+  jt->bytes -= allocsize;  // keep track of total allocatio
+  FREECHK(w);  // free the block
+#endif
  }
- if(unlikely(mfreeb&MFREEBCOUNTING)){jt->bytes -= allocsize;}  // keep track of total allocation only if asked to
+// obsolete  if(unlikely(mfreeb&MFREEBCOUNTING)){jt->bytes -= allocsize;}  // keep track of total allocation only if asked to
 }
 
 // allocate header with rank r; if r==1, move the item count to be the shape also

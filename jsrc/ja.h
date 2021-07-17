@@ -348,7 +348,8 @@
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 #define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
 // obsolete #define faaction(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(Zc==0&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT; /*scaf*/if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))jtfa(jt,(x),tt); if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
-#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(Zc<=1&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT; /*scaf*/if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
+#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
+// obsolete if(Zc<=1&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT; /*scaf*/
 // obsolete #define faactionrescindable(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(Zc==0&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT; /*scaf*/if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))if(unlikely(jtfa(jt,(x),tt)!=0))Zc=0; if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 #define fa(x) fajt(jt,(x))

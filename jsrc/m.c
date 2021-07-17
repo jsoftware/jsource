@@ -561,6 +561,35 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  if(likely(freeroot!=0)){*freetailchn=jtsympv[0].next;jtsympv[0].next=freeroot;}  // put all blocks freed here onto the free chain
 }
 
+// free the symbol table (i. e. locale) w.  AR(w) has been loaded
+void jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined and that will make jtmf() save several more registers
+ if(likely(arw&ARLOCALTABLE)){
+  // local tables have no path or name, and are not listed in any index.  Just delete the local names
+  freesymb(jt,w);   // delete all the names/values
+ }else{
+  // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
+  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
+  LX k,* RESTRICT wv=LXAV0(w);
+  L *jtsympv=JT(jt,sympv);
+  if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...
+   // Remove the locale from its global table, depending on whether it is named or numbered
+   NM *locname=NAV(LOCNAME(w));  // NM block for name
+   if(likely(!(arw&ARNAMED))){
+    // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
+    jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+   } else {
+    // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
+    ACINIT(w,2) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc));  // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
+   }
+   // Free the name
+   fr(LOCNAME(w));
+   // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
+   jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+   jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  JT(jt,sympv)[0] is the base of the free chain
+  }
+ }
+ // continue to free the table itself
+}
 
 // overview of the usecount routines
 //
@@ -1240,42 +1269,15 @@ printf("%p-\n",w);
 #endif
 // obsolete  I hrh = AFHRH(w);   // the size/offset indicator
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
- I allocsize;  // size of full allocation for this block
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(unlikely(AT(w)==SYMB)){  // == since high bit may be used as flag 
-  if(likely(AR(w)&ARLOCALTABLE)){
-   // local tables have no path or name, and are not listed in any index.  Just delete the local names
-   freesymb(jt,w);   // delete all the names/values
-  }else{
-   // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
-   // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
-   LX k,* RESTRICT wv=LXAV0(w);
-   L *jtsympv=JT(jt,sympv);
-   if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...
-    // Remove the locale from its global table, depending on whether it is named or numbered
-    NM *locname=NAV(LOCNAME(w));  // NM block for name
-    if(likely(!(AR(w)&ARNAMED))){
-     // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
-     jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
-    } else {
-     // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
-     ACINIT(w,2) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc));  // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
-    }
-    // Free the name
-    fr(LOCNAME(w));
-    // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
-    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-    jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  JT(jt,sympv)[0] is the base of the free chain
-   }
-  }
-  // continue to free the table itself
- }
+ if(unlikely(AT(w)==SYMB)){jtfreesymtab(jt,w,AR(w));}  // == since high bit may be used as flag 
  // ** this is a recursion point - mustn't load any names into registers before here **
 #if MEMAUDIT&1
  if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT;  // pool number must be valid
 #if MEMAUDIT&17
 #endif
 #endif
+ I allocsize;  // size of full allocation for this block
 // obsolete  if(FHRHBINISPOOL(blockx)){   // allocated from subpool
 // obsolete   allocsize = FHRHPOOLBINSIZE(blockx);
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool

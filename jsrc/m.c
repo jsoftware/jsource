@@ -15,6 +15,11 @@
 #include "j.h"
 
 #define LEAKSNIFF 0
+#define SHOWALLALLOC 0 // to display log of allo/free
+/*  to analyze
+;@:(<@({.~  2 | #)/.)~ (#~ ('0000' -: 4&{.)@>) {.@;:;._2 wd 'clippaste'
+*/
+
 
 #define ALIGNTOCACHE 1   // set to 1 to align each block to cache-line boundary.  Will reduce cache usage for headers
 #define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last byte doesn't run off into unallocated memory
@@ -801,6 +806,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
  R 1;
 }
 
+#if 0 // obsolete 
 // This handles the recursive part of fa(), freeing the contents of wd
 I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if((t&BOX+SPARSE)>0){AD* np;
@@ -841,7 +847,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  } 
  R 0;
 }
-
+#endif
 // This optionally deletes wd, after deleting its contents.  t is the recursion mask: if t contains a bit set for a recursive
 // type, the contents of that type are processed.
 // Calls are from two sources.
@@ -1166,6 +1172,9 @@ if((I)jt&3)SEGFAULT;
   if(unlikely(((mfreeb&MFREEBCOUNTING)!=0))){
    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
   }
+#if SHOWALLALLOC
+printf("%p+\n",z);
+#endif
   R z;
  }else{jsignal(EVBREAK); R 0;}  // If there was a break event, take it
 }
@@ -1224,6 +1233,9 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
 #endif
 
 // audit free list {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}}
+#if SHOWALLALLOC
+printf("%p-\n",w);
+#endif
  I hrh = AFHRH(w);   // the size/offset indicator
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
  I allocsize;  // size of full allocation for this block

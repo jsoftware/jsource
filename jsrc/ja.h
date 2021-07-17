@@ -354,7 +354,7 @@
 #define fa(x) fajt(jt,(x))
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x),)
-// Within jtfa when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.
+// Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.
 // obsolete #define fana(x)                     {if(likely((x)!=0))faactionrescindable(jt,(x),)}
 #define fana(x)                     {if(likely((x)!=0))faaction(jt,(x),)}
 // Within tpop, no need to check ACISPERM; usecount has gone to 0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag

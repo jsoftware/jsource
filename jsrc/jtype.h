@@ -394,7 +394,7 @@ typedef I SI;
                              // for CONJ too, but a nameless conj would be either primitive or explicit, and users shouldn't cover primitives.  This feature is mostly for every/each/inv
 
 
-
+#if 0 // obsolete 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg
 // MARK is represented by type of all 0
@@ -408,7 +408,7 @@ typedef I SI;
 // NAME   100v    v=NAMEBYVALUE
 // RPAR   0011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
 // LPAR   1011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
-
+#endif
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT)
 #define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)|SPARSE)  // AND must be >0

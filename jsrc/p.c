@@ -828,7 +828,6 @@ RECURSIVERESULTSCHECK
         I c=(UI)AC(arg1)>>(arg1==y);  // get inplaceability; set off if the arg is the result
         if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
          *tpopw=0; tpopw=tpopa; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
-         // Regrettably, fanapop has a call to jtra followed by a call to jtmf, which causes the arg to be required over the call to jtra.   Combining the functions would save a register
         }else tpopw=tpopa;
        }else tpopw=tpopa;
        if(arg1=*tpopw){  // if arg1==arg2 this will never load a value requiring action

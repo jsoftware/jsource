@@ -516,14 +516,14 @@ ldestroy k
 'locale error' -: ex 'a__k=: i.12'
 4!:55 <'k'
 y=: spnow ''
-(200*1+IF64) > |x-y
+(257*1+IF64) > |x-y  NB. the numbered hashtable may grow; this will handle the first doubling
 
 x=: spnow ''
 k=: lcreate"1 i.20 0
 ldestroy k
 4!:55 <'k'
 y=: spnow ''
-(200*1+IF64) > |x-y
+(513*1+IF64) > |x-y  NB. the numbered hashtable may grow; this will handle the first doubling
 
 1 -: ldestroy <'NoNoSuchLocale'
 

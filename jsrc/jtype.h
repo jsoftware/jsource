@@ -604,6 +604,9 @@ typedef I SI;
 #define FIXALOCSONLY 8  // to fixa: replace only u/v (IMPLOC)
 #define FIXASTOPATINV 16  // to fixa: stop afixing a branch when it gets to a an explicit obverse
 
+// AH field of all blocks
+#define AFHRH(a) ((a)->h)    // the workarea
+
 
 typedef struct {
  union{

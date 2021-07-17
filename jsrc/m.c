@@ -30,7 +30,6 @@
 #define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
 
 // Format of h, the 16-bit workarea for free and allocated blocks in main memory.  This is used for in-memory headers for NJS blocks, but not for NJA blocks all on disk
-#define AFHRH(a) ((a)->h)    // the workarea
 #define AFCHAIN(a) ((a)->kchain.chain)  // the chain field, when the block is not allocated
 #define AFPROXYCHAIN(a) ((a)->tproxy.proxychain)  // chain field for base proxies during garbage collection
 #define FHRHROOTX 15
@@ -40,12 +39,15 @@
 // the lower bits encode the size of the block, by the position of the lowest 1 bit, and in the upper bits either (1) the full size of the block for large allocations
 // (2) the offset of the block from the root, for pool allocations.  The following macros define the field
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
-#define FHRHBINISPOOL(b) ((b)<=(PLIML-PMINL))      // true is this is a pool allo, false if system (b is pool bin #)
+// obsolete #define FHRHBINISPOOL(b) ((b)<=(PLIML-PMINL))      // true is this is a pool allo, false if system (b is pool bin #)
+#define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system (h is mask from block)
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))
 #define ALLOJBIN(j) ((j)-PMINL)   // convert j (=lg2(size)) to pool bin#
-#define FHRHPOOLBINSIZE(b) (PMIN<<(b))        // convert bin# to size for pool bin#
+// obsolete #define FHRHPOOLBINSIZE(b) (PMIN<<(b))        // convert bin# to size for pool bin#
+#define FHRHPOOLBINSIZE(h) (LOWESTBIT(h)<<PMINL)        // convert hmask to size for pool bin#
 #define FHRHSYSSIZE(h) (((I)1)<<((h)>>(PLIML-PMINL+2)))        // convert h to size for system alloc
-#define FHRHSIZE(h) ((FHRHBINISPOOL(FHRHPOOLBIN(h)) ? FHRHPOOLBINSIZE(FHRHPOOLBIN(h)) : FHRHSYSSIZE(h)))
+// obsolete #define FHRHSIZE(h) ((FHRHBINISPOOL(FHRHPOOLBIN(h)) ? FHRHPOOLBINSIZE(FHRHPOOLBIN(h)) : FHRHSYSSIZE(h)))
+#define FHRHSIZE(h) ((FHRHBINISPOOL(h) ? FHRHPOOLBINSIZE(h) : FHRHSYSSIZE(h)))
 #define FHRHSYSJHDR(j) ((2*(j)+1)<<(PLIML-PMINL+1))        // convert j (=lg(size)) to h format for a system allo
 #define FHRHBININCR(b) ((I)2<<(b))      // when garbage-collecting bin b, add this much to the root for each free block encountered.  This is also the amount by which the h values of successive blocks in an allocation differ
 #define FHRHBLOCKOFFSETMASK(b) (FHRHROOTFREE - FHRHBININCR(b))  // for blocks in pool b, mask to use to extract offset to root
@@ -906,7 +908,7 @@ void jtfamf(J jt,AD* RESTRICT wd,I t){
    I c=AC(wd); if(--c>0){AC(wd)=c; R;}  // if sparse block not going away, just decr the usecount
   }
  }
- jtmf(jt,wd);
+ mf(wd);
 }
 
 
@@ -1213,7 +1215,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 }
 
 // free a block.  The usecount must make it freeable
-void jtmf(J jt,A w){I mfreeb;
+void jtmf(J jt,A w,I hrh){I mfreeb;
 #if MEMAUDIT&16
 auditmemchains();
 #endif
@@ -1236,7 +1238,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
 #if SHOWALLALLOC
 printf("%p-\n",w);
 #endif
- I hrh = AFHRH(w);   // the size/offset indicator
+// obsolete  I hrh = AFHRH(w);   // the size/offset indicator
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
  I allocsize;  // size of full allocation for this block
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
@@ -1274,8 +1276,10 @@ printf("%p-\n",w);
 #if MEMAUDIT&17
 #endif
 #endif
- if(FHRHBINISPOOL(blockx)){   // allocated from subpool
-  allocsize = FHRHPOOLBINSIZE(blockx);
+// obsolete  if(FHRHBINISPOOL(blockx)){   // allocated from subpool
+// obsolete   allocsize = FHRHPOOLBINSIZE(blockx);
+ if(FHRHBINISPOOL(hrh)){   // allocated from subpool
+  allocsize = FHRHPOOLBINSIZE(hrh);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif

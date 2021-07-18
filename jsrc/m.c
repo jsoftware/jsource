@@ -881,7 +881,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 }
 #endif
 // This optionally deletes wd, after deleting its contents.  t is the recursion mask: if t contains a bit set for a recursive
-// type, the contents of that type are processed.
+// type, the contents of that type are processed.  We come here only if there is a traversible block to check
 // Calls are from two sources.
 // 1. fa().  In this case there must have been an earlier ra(), and thus we know that the block is
 // recursive if it is RECURSIBLE.  The t argument is AT(wd).
@@ -897,8 +897,8 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 // is separately on the tpop stack.  However, we DO traverse a recursible block when its count goes to 0: making the block
 // recursive created the need to traverse, and that must be honored.  Ex: create - ra - fa - tpop.  The t argument is
 // AFLAG(wd)&RECURSIBLE, from which we can see the type and recursive status
-void jtfamf(J jt,AD* RESTRICT wd,I t){
- if(t&TRAVERSIBLE){I n=AN(wd);
+void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
+// obsolete  if(t&TRAVERSIBLE){
   if((t&BOX+SPARSE)>0){AD* np;
    // boxed.  Loop through each box, recurring if called for.
    A* RESTRICT wv=AAV(wd);  // pointer to box pointers
@@ -929,18 +929,24 @@ void jtfamf(J jt,AD* RESTRICT wd,I t){
   } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
    // ACV.
    fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
+  // SYMB must free as a monolith, with the symbols returned when the hashtables are
+  }else if(t&SYMB){wd=jtfreesymtab(jt,wd,AR(wd));  // SYMB is used as a flag; we test here AFTER NAME and ADV which are lower bits
   } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
    // single-level indirect forms.  handle each block
    DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
-  } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
+  }else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
    fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
    // for sparse, decrement the usecount
    I c=AC(wd); if(--c>0){AC(wd)=c; R;}  // if sparse block not going away, just decr the usecount
   }
- }
+// obsolete  }
  mf(wd);
 }
-
+// Entry point to free after optional traversal.  clang gets this just right: if not TRAVERSIBLE, it inlines jtmf and pushes/pops no registers.
+void jtfamf(J jt,AD* RESTRICT wd,I t){
+ if(!(t&TRAVERSIBLE)){mf(wd); R;}
+ jtfamftrav(jt,wd,t);
+}
 
 // Push wd onto the pop stack, and its descendants, possibly recurring on the descendants
 // Result is new value of jt->tnextpushp, or 0 if error
@@ -1270,9 +1276,6 @@ printf("%p-\n",w);
 #endif
 // obsolete  I hrh = AFHRH(w);   // the size/offset indicator
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
- // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(unlikely(AT(w)==SYMB)){w=jtfreesymtab(jt,w,AR(w));}  // == since high bit may be used as flag 
- // ** this is a recursion point - mustn't load any names into registers before here **
 #if MEMAUDIT&1
  if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT;  // pool number must be valid
 #if MEMAUDIT&17

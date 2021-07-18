@@ -1112,7 +1112,10 @@ A jtmkwris(J jt, AD * RESTRICT w) { ARGCHK1(w); makewritable(w); R w; }  // subr
 static I lfsr = 1;  // holds varying memory pattern
 #endif
 
-A jtgafallopool(J jt,I blockx,I n){
+// call tp, but return the value passed in as z.  Used to save a register in caller
+__attribute__((noinline)) A jttgz(J jt,A *tp, A z){RZ(tp=tg(tp)); jt->tnextpushp=tp; R z;}
+
+__attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  A u,chn; US hrh;
 #if ALIGNPOOLTOCACHE   // with smaller headers, always align pool allo to cache bdy
  // align the buffer list on a cache-line boundary
@@ -1141,11 +1144,12 @@ A jtgafallopool(J jt,I blockx,I n){
  if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
  }
+ A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  R z;
 }
 
 // allocate from OS and fill in h field.  n is full size to allocate, padded for all reasons
-A jtgafalloos(J jt,I blockx,I n){A z;
+__attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 #if ALIGNTOCACHE
  // Allocate the block, and start it on a cache-line boundary
  I *v;
@@ -1161,6 +1165,7 @@ A jtgafalloos(J jt,I blockx,I n){A z;
  }
  I nt=jt->malloctotal+=n;
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
+ A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  R z;
 }
 
@@ -1193,6 +1198,10 @@ if((I)jt&3)SEGFAULT;
     if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
      jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
     }
+    // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
+    // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
+    // We require each other allocation ruutine to copy this, so that they don't need registers saved either
+    A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // advance to next slot, allocating a new block as needed
 #if MEMAUDIT&1
     if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
     if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
@@ -1212,7 +1221,6 @@ if((I)jt&3)SEGFAULT;
 #endif
   AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
    // we do not attempt to combine the AFLAG write into a 64-bit operation
-  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(tp=tg(tp)); jt->tnextpushp=tp; // advance to next slot, allocating a new block as needed
 #if LEAKSNIFF
   if(leakcode>0){  // positive starts logging; set to negative at end to clear out the parser allocations etc
    if(leaknbufs*2 >= AN(leakblock)){

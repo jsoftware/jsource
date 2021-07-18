@@ -21,7 +21,8 @@
 */
 
 
-#define ALIGNTOCACHE 1   // set to 1 to align each block to cache-line boundary.  Will reduce cache usage for headers
+#define ALIGNTOCACHE 1   // set to 1 to align each OS-allocated block block to cache-line boundary.  Will reduce cache usage for headers
+#define ALIGNPOOLTOCACHE 1   // set to 1 to align each pool block to cache-line boundary.  Will reduce cache usage for headers
 #define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last byte doesn't run off into unallocated memory
 
 #define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
@@ -1111,9 +1112,61 @@ A jtmkwris(J jt, AD * RESTRICT w) { ARGCHK1(w); makewritable(w); R w; }  // subr
 static I lfsr = 1;  // holds varying memory pattern
 #endif
 
+A jtgafallopool(J jt,I blockx,I n){
+ A u,chn; US hrh;
+#if ALIGNPOOLTOCACHE   // with smaller headers, always align pool allo to cache bdy
+ // align the buffer list on a cache-line boundary
+ I *v; ASSERT(v=MALLOC(PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE),EVWSFULL);
+ A z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+ ((I**)z)[-1] = v;   // save address of entire allocation in the word before the aligned section
+#else
+ // allocate without alignment
+ ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
+#endif
+ I nt=jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
+ jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // ...add them to the total bytes allocated drom OS
+ {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
+ // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
+ // we visit them in back-to-front order so the first-allocated headers are in cache
+#if MEMAUDIT&17 && BW==64
+ u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
+ DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);   // chain blocks to each other; set chain of last block to 0
+ AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
+#else
+ u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
+ AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
+#endif
+ jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
+// obsolete  jt->mfree[-PMINL+1+blockx].ballo-=PSIZE;
+ if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
+  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+ }
+ R z;
+}
+
+// allocate from OS and fill in h field.  n is full size to allocate, padded for all reasons
+A jtgafalloos(J jt,I blockx,I n){A z;
+#if ALIGNTOCACHE
+ // Allocate the block, and start it on a cache-line boundary
+ I *v;
+ ASSERT(v=MALLOC(n),EVWSFULL);
+ z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+ ((I**)z)[-1] = v;    // save address of original allocation
+#else
+ ASSERT(z=MALLOC(n),EVWSFULL);
+#endif
+ AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
+ if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
+  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+ }
+ I nt=jt->malloctotal+=n;
+ {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
+ R z;
+}
+
 // static auditmodulus = 0;
 // blockx is bit# of MSB in (length-1), i. e. lg2(bufsize)-1
-RESTRICTF A jtgaf(J jt,I blockx){A z;I mfreeb;I n=(I)2<<blockx;  // n=size of allocated block
+RESTRICTF A jtgaf(J jt,I blockx){A z;
 // audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
 // use 6!:5 to start audit I i,j;MS *x; if(JT(jt,peekdata)){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
@@ -1127,75 +1180,39 @@ if((I)jt&3)SEGFAULT;
  jt->memhisto[blockx+1]++;  // record the request, at its size
 #endif
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
+ I n=(I)2<<blockx;  // n=size of allocated block
  if(likely(2>*JT(jt,adbreakr))){  // this is JBREAK0, done this way so predicted fallthrough will be true
-  A *pushp=jt->tnextpushp;  // start reads for tpush
+// obsolete   A *pushp=;  // start reads for tpush
 
-  if(blockx<PLIML){ 
+  if(blockx<PLIML){
    // small block: allocate from pool
-   mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
+// obsolete    mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
 
    if(likely(z!=0)){         // allocate from a chain of free blocks
     jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
+    if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
+     jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+    }
 #if MEMAUDIT&1
     if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
     if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
 #endif
-   }else{A u,chn; US hrh; I nt=jt->malloctotal;                   // small block, but chain is empty.  Alloc PSIZE and split it into blocks
-#if 1 || ALIGNTOCACHE   // with smaller headers, always align pool allo to cache bdy
-    // align the buffer list on a cache-line boundary
-    I *v;
-    ASSERT(v=MALLOC(PSIZE+TAILPAD+CACHELINESIZE),EVWSFULL);
-    z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
-    ((I**)z)[-1] = v;   // save address of entire allocation in the word before the aligned section
-    nt += PSIZE+TAILPAD+CACHELINESIZE;  // add to total allocated
-    jt->mfreegenallo+=PSIZE+TAILPAD+CACHELINESIZE;   // ...add them to the total bytes allocated
-#else
-    // allocate without alignment
-    ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
-    nt += PSIZE+TAILPAD;  // add to total allocated
-    jt->mfreegenallo+=PSIZE+TAILPAD;   // ...add them to the total bytes allocated
-#endif
-    {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
-    // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
-    // we visit them in back-to-front order so the first-allocated headers are in cache
-#if MEMAUDIT&17 && BW==64
-    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
-    DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);   // chain blocks to each other; set chain of last block to 0
-    AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
-#else
-    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
-    AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
-#endif
-    jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
-    mfreeb-=PSIZE;     // We are adding a bunch of free blocks now...
+   }else{ // small block, but chain is empty.  Alloc PSIZE and split it into blocks
+    RZ(z=jtgafallopool(jt,blockx,n));
    }
-   jt->mfree[-PMINL+1+blockx].ballo=mfreeb+=n;
-  } else { I nt=jt->malloctotal;  // here for non-pool allocs...
-   mfreeb=jt->mfreegenallo;    // bytes in large allocations, including flag for whether we are keeping track of hwmk
-#if ALIGNTOCACHE
-   // Allocate the block, and start it on a cache-line boundary
-   I *v;
-   n+=TAILPAD+CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
-   ASSERT(v=MALLOC(n),EVWSFULL);
-   z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
-   ((I**)z)[-1] = v;    // save address of original allocation
-#else
-   // Allocate without alignment
-   n+=TAILPAD;  // add to the allocation for the fixed tail
-   ASSERT(z=MALLOC(n),EVWSFULL);
-#endif
-   nt += n;
-   {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
-   AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
-   jt->mfreegenallo=mfreeb+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
+// obsolete    jt->mfree[-PMINL+1+blockx].ballo=mfreeb+=n;
+  } else {      // here for non-pool allocs...
+// obsolete    mfreeb=jt->mfreegenallo;    // bytes in large allocations, including flag for whether we are keeping track of hwmk
+   n+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
+// obsolete    jt->mfreegenallo+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
+   RZ(z=jtgafalloos(jt,blockx,n));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
   }
 #if MEMAUDIT&8
   DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
 #endif
-  AFLAGINIT(z,0) AZAPLOC(z)=pushp; ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
-   // we do not attempt to combine the AFLAG write into a 64-bit operation, because as of 2017 Intel processors
-   // will properly store-forward any read that is to the same boundary as the write, and we always read the same way we write
-  *pushp++=z; if(!((I)pushp&(NTSTACKBLOCK-1)))RZ(pushp=tg(pushp)); jt->tnextpushp=pushp;  // advance to next slot, allocating a new block as needed
+  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
+   // we do not attempt to combine the AFLAG write into a 64-bit operation
+  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(tp=tg(tp)); jt->tnextpushp=tp; // advance to next slot, allocating a new block as needed
 #if LEAKSNIFF
   if(leakcode>0){  // positive starts logging; set to negative at end to clear out the parser allocations etc
    if(leaknbufs*2 >= AN(leakblock)){
@@ -1207,9 +1224,9 @@ if((I)jt&3)SEGFAULT;
   }
 #endif
   // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles
-  if(unlikely(((mfreeb&MFREEBCOUNTING)!=0))){
-   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
-  }
+// obsolete   if(unlikely(((mfreeb&MFREEBCOUNTING)!=0))){
+// obsolete    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+// obsolete   }
 #if SHOWALLALLOC
 printf("%p+\n",z);
 #endif

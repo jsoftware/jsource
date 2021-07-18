@@ -1217,7 +1217,7 @@
 // Internal version, used when the local name pushp is known to hold jt->tnextpushp
 #define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if((unlikely((tt^AFLAG(x))&TRAVERSIBLE)!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
-#define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
+#define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));}else jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))
 #define trep(x)                     jttrep(jt,(x))

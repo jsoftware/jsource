@@ -420,9 +420,11 @@ typedef I SI;
 #define LAST0           (B01+LIT+C2T+C4T+NAME)
 #define SPARSABLE       (B01+INT+FL+CMPX+LIT)  // types that can be made sparse
 // Don't traverse for ra/fa unless one of these bits is set
-#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SPARSE)
+#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB|SPARSE)
 // Allow recursive usecount in one of these types
-#define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME)  // sparse box not allowed
+#define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB)  // sparse box not allowed
+// SYMB is TRAVERSIBLE so that fa() will call to free the symbols, and RECURSIBLE so that fanapop will pass the type-flag.  To ensure that a SYMB is always freed when
+// its count goes to 0, we must ensure that it is always born recursive
 #define RECURSIBLENOUN  (RECURSIBLE&NOUN)
 #define SGN1IFSPARSETYPE(t,dt) ((t)&-((t)&(dt)))  // sign 1 if t is sparse and one of dt
 #define SGN0IFDENSETYPE(t,dt) ((t)|(((t)&(dt))-1))  // sign 0 if t is dense and one of dt

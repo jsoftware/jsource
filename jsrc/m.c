@@ -1286,7 +1286,7 @@ printf("%p-\n",w);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
-  jt->bytes -= allocsize;  // keep track of total allocatio
+  jt->bytes -= allocsize;  // keep track of total allocation
   mfreeb = jt->mfree[blockx].ballo;   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
@@ -1299,16 +1299,13 @@ printf("%p-\n",w);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
-#if ALIGNTOCACHE
-  allocsize+=TAILPAD+CACHELINESIZE;  // the actual allocation had a tail pad and boundary
+  allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
+  jt->bytes -= allocsize;  // keep track of total allocation
   jt->malloctotal-=allocsize;
-  jt->mfreegenallo = mfreeb-allocsize;  // account for all the bytes returned to the OS
+  jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
+#if ALIGNTOCACHE
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else
-  allocsize+=TAILPAD;  // the actual allocation had a tail pad
-  jt->malloctotal-=allocsize;
-  jt->mfreegenallo = mfreeb-allocsize;  // account for all the bytes returned to the OS
-  jt->bytes -= allocsize;  // keep track of total allocatio
   FREECHK(w);  // free the block
 #endif
  }

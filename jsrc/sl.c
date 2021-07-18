@@ -182,7 +182,7 @@ A jtindexnl(J jt,I n) {A z=(A)IAV0(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
- GATV0(g,SYMB,(p+1)&-2,0);   // have odd number of hashchains, excluding LINFO
+ GATV0(g,SYMB,(p+1)&-2,0); AFLAGORLOCAL(g,SYMB)   // have odd number of hashchains, excluding LINFO.  All SYMB tables a born recursive
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
@@ -220,7 +220,7 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
  I p; FULLHASHSIZE(400,SYMBSIZE,1,SYMLINFOSIZE,p);
- GATV0(q,SYMB,p,0); INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc
+ GATV0(q,SYMB,p,0); AFLAGORLOCAL(q,SYMB) INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc.  All SYMBs are recursive (though this one, which will never be freed, needn't be)
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
  // init z locale
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains

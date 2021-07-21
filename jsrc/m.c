@@ -954,8 +954,13 @@ void jtfamf(J jt,AD* RESTRICT wd,I t){
 // Note: wd CANNOT be virtual
 // tpush, the macro parent of this routine, calls here only if a nonrecursive block is pushed.  This never happens for
 // non-sparse nouns, because they always go through ra() somewhere before the tpush().  Pushing is mostly in gc() and on allocation in ga().
+// It appears that non-nouns never come here either, so this is only for sparse
 A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
- if((t&BOX+SPARSE)>0){
+ if(likely(ISSPARSE(t))){P* RESTRICT v=PAV(wd);
+  if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,x))tpushi(SPA(v,x)); if(SPA(v,i))tpushi(SPA(v,i));
+ }
+#if 0 // obsolete
+else if(SEGFAULT,(t&BOX+SPARSE)>0){  // scaf
 // THIS CODE IS NEVER EXECUTED
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
@@ -979,9 +984,8 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)tpushi(*v); ++v;);
- } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
-  if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,x))tpushi(SPA(v,x)); if(SPA(v,i))tpushi(SPA(v,i));
  }
+#endif
  R pushp;
 }
 
@@ -1186,60 +1190,59 @@ if((I)jt&3)SEGFAULT;
 #endif
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
  I n=(I)2<<blockx;  // n=size of allocated block
- if(likely(2>*JT(jt,adbreakr))){  // this is JBREAK0, done this way so predicted fallthrough will be true
+ ASSERT(2>*JT(jt,adbreakr),EVBREAK)  // this is JBREAK0.  Fails if break pressed twice
 // obsolete   A *pushp=;  // start reads for tpush
 
-  if(blockx<PLIML){
-   // small block: allocate from pool
+ if(blockx<PLIML){
+  // small block: allocate from pool
 // obsolete    mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
 
-   if(likely(z!=0)){         // allocate from a chain of free blocks
-    jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
-    if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
-     jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
-    }
-    // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
-    // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
-    // We require each other allocation ruutine to copy this, so that they don't need registers saved either
-    A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // advance to next slot, allocating a new block as needed
+  if(likely(z!=0)){         // allocate from a chain of free blocks
+   jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
+   // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
+   if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
+    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+   }
+   // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
+   // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
+   // We require each other allocation routine to copy this, so that they don't need registers saved either
+   A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // advance to next slot, allocating a new block as needed
 #if MEMAUDIT&1
-    if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
-    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
+   if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
+   if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
 #endif
-   }else{ // small block, but chain is empty.  Alloc PSIZE and split it into blocks
-    RZ(z=jtgafallopool(jt,blockx,n));
-   }
+  }else{ // small block, but chain is empty.  Alloc PSIZE and split it into blocks
+   RZ(z=jtgafallopool(jt,blockx,n));
+  }
 // obsolete    jt->mfree[-PMINL+1+blockx].ballo=mfreeb+=n;
-  } else {      // here for non-pool allocs...
+ } else {      // here for non-pool allocs...
 // obsolete    mfreeb=jt->mfreegenallo;    // bytes in large allocations, including flag for whether we are keeping track of hwmk
-   n+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
+  n+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
 // obsolete    jt->mfreegenallo+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
-   RZ(z=jtgafalloos(jt,blockx,n));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
-  }
+  RZ(z=jtgafalloos(jt,blockx,n));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
+ }
 #if MEMAUDIT&8
-  DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
+ DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
 #endif
-  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
-   // we do not attempt to combine the AFLAG write into a 64-bit operation
+ AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
+  // we do not attempt to combine the AFLAG write into a 64-bit operation
 #if LEAKSNIFF
-  if(leakcode>0){  // positive starts logging; set to negative at end to clear out the parser allocations etc
-   if(leaknbufs*2 >= AN(leakblock)){
-   }else{
-    I* lv = IAV(leakblock);
-    lv[2*leaknbufs] = (I)z; lv[2*leaknbufs+1] = leakcode;  // install address , code
-    leaknbufs++;  // account for new value
-   }
+ if(leakcode>0){  // positive starts logging; set to negative at end to clear out the parser allocations etc
+  if(leaknbufs*2 >= AN(leakblock)){
+  }else{
+   I* lv = IAV(leakblock);
+   lv[2*leaknbufs] = (I)z; lv[2*leaknbufs+1] = leakcode;  // install address , code
+   leaknbufs++;  // account for new value
   }
+ }
 #endif
-  // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles
 // obsolete   if(unlikely(((mfreeb&MFREEBCOUNTING)!=0))){
 // obsolete    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
 // obsolete   }
 #if SHOWALLALLOC
 printf("%p+\n",z);
 #endif
-  R z;
- }else{jsignal(EVBREAK); R 0;}  // If there was a break event, take it
+ R z;
 }
 
 // bytes is total #bytes needed including headers, -1
@@ -1262,7 +1265,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 #else
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
 #endif
- RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
+ RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
  I akx=AKXR(rank);   // Get offset to data
  AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK

@@ -1206,16 +1206,20 @@
 #define tpoly(x)                    jttpoly(jt,(x))
 #define tpop(x)                     jttpop(jt,(x))
 // if tg() fails, tpush leaves nextpushx unchanged
-// Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
+// Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount BUT NOTE: we have ensured that EPILOG always does ra() on z,
+//  which means that the only nonrecursive blocks that are tpush()ed are nonrecursiblw; and those are all sparse.  Thus, we recur on sparse arguments only
 // We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
 // NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
-#define tpushcommon(x,tmask,suffix) {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); \
-                              if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(((tt^AFLAG(x))&(tmask))!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
-#define tpush(x)              tpushcommon(x,TRAVERSIBLE,if(MEMAUDIT&2)audittstack(jt);)
-#define tpushna(x)            tpushcommon(x,TRAVERSIBLE,)   // suppress audit
+// obsolete #define tpushcommon(x,tmask,suffix) {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); \
+// obsolete                               if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(((tt^AFLAG(x))&(tmask))!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
+#define tpushcommon(x,cksparse,suffix) {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); \
+                              if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(cksparse&&ISSPARSE(tt)))RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
+#define tpush(x)              tpushcommon(x,1,if(MEMAUDIT&2)audittstack(jt);)
+#define tpushna(x)            tpushcommon(x,1,)   // suppress audit
 #define tpushnr(x)            tpushcommon(x,0,if(MEMAUDIT&2)audittstack(jt);)   // suppress recursion
 // Internal version, used when the local name pushp is known to hold jt->tnextpushp
-#define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if((unlikely((tt^AFLAG(x))&TRAVERSIBLE)!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
+// obsolete #define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if((unlikely((tt^AFLAG(x))&TRAVERSIBLE)!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
+#define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(ISSPARSE(tt)))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
 #define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
 #define trc(x)                      jttrc(jt,(x))     

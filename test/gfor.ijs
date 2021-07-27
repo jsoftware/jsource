@@ -364,6 +364,74 @@ in
 1: ": f <"0 i.10
 1: ": f i.10
 
+NB. No memory loss
+f =: {{
+totl =. 1
+for. y do.
+  totl =. >: totl
+end.
+totl
+}}
+3000 > 7!:2 'f a' [ a =. i. 10000
+
+f =: {{
+totl =. 1
+for. i. y do.
+  totl =. >: totl
+end.
+totl
+}}
+(18000*SZI) > 7!:2 'f 10000'
+
+f =: {{
+totl =. 1
+for_i. i. y do.
+  totl =. >: totl
+end.
+totl
+}}
+(18000*SZI) > 7!:2 'f 10000'
+
+f =: {{
+totl =. 1
+for. i. y do.
+  for. i. 10 do.
+    totl =. >: totl
+  end.
+end.
+totl
+}}
+(18000*SZI) > 7!:2 'f 10000'
+
+f =: {{
+totl =. 1
+for_i. i. y do.
+  for. i. 10 do.
+    totl =. >: totl
+  end.
+end.
+totl
+}}
+(18000*SZI) > 7!:2 'f 10000'
+
+f =: {{
+totl =. 1
+for. i. y do.
+  for_i. i. 10 do.
+    totl =. >: totl
+  end.
+end.
+totl
+}}
+(18000*SZI) > 7!:2 'f 10000'
+
+f0 =: 3 : 'for. y do. y end. y'
+f1 =: 3 : 'for. y do. f0 8 end.'
+5000 > 7!:2 'f1 a' [ a =. i. 100
+g0 =: 7!:0''
+1: f1 a
+1000 > (7!:0 '') - g0
+
 
 
 

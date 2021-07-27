@@ -632,9 +632,9 @@ docase:
   ra(locsym);  // protect local symtable - not contents
   if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  See sbove for tpop
   NOUNROLL while(cv!=(CDATA*)IAV1(cd)-1){unstackcv(cv,0); --cv;}  // clean up any remnants left on the for/select stack
-  fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
+ if(unlikely(cd!=0)){fa(cd);}  // have to delete explicitly, because we protected the block with ACINITZAP
  // locsym may have been freed now
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet

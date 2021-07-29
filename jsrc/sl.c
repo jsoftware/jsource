@@ -182,7 +182,7 @@ A jtindexnl(J jt,I n) {A z=(A)IAV0(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
- GATV0(g,SYMB,(p+1)&-2,0); AFLAGORLOCAL(g,SYMB)   // have odd number of hashchains, excluding LINFO.  All SYMB tables a born recursive
+ GATV0(g,SYMB,(p+1)&-2,0); AFLAGORLOCAL(g,SYMB)   // have odd number of hashchains, excluding LINFO.  All SYMB tables are born recursive
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO

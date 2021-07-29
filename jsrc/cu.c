@@ -38,7 +38,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(wt&BOX);
  // Get input pointer
- I virtblockw[NORMAH];  // space for a virtual block of rank 0
+ fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
@@ -161,7 +161,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  AFLAGINIT(z,(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX)  // if WILLBEOPENED is NOT set, make the result a recursive box
  A virtw;
  // Get input pointer
- I virtblockw[NORMAH];  // space for a virtual block of rank 0
+ fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){
   virtw=*(wv=AAV(w));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1)&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents.  Never if arg repeated, only if recursive
@@ -172,7 +172,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  }
  // repeat for a
  A virta;
- I virtblocka[NORMAH];
+ fauxblockINT(virtblocka,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&(BOX<<1))!=0)){
   virta=*(av=AAV(a));
   if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT&-(AFLAG(a)&RECURSIBLE);

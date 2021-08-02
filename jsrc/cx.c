@@ -148,6 +148,7 @@ static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
 }
 
 // call here when we find that xyz_index has been aliased.  We remove it, free it, and replace it with a new block.  Return 0 if error
+// We do not have to change the valtype field, since it never changes
 static A swapitervbl(J jt,A old,A *valloc){
  fa(old);  // discard the old value
  GAT0(old,INT,1,0);
@@ -501,22 +502,29 @@ docase:
    }
    ++cv->j;  // step to first (or next) iteration
    if(likely(cv->indexsym!=0)){
+    // for_xyz.  Manage the loop variables
     L *sympv=JT(jt,sympv);  // base of symbol array
     A *aval=&sympv[cv->indexsym].val;  // address of iteration-count slot
     A iterct=*aval;  // A block for iteration count
     if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,aval));  // if value is now aliased, swap it out before we change it
     IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
-    aval=&sympv[cv->itemsym].val;  // switch aval to address of item slot
+    L *itemsym=&sympv[cv->itemsym];
+// obsolete     aval=.val;  // switch aval to address of item slot
     if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // if z might be the result, protect it over the free
     if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
     // if xyz has been reassigned, fa the incumbent and reinstate the sorta-virtual block, advanced to the next item
      AK(cv->item)+=cv->itemsiz;  // advance to next item
-     if(unlikely(*aval!=cv->item)){A val=*aval; fa(val) val=cv->item; ra(val) *aval=val;}  // discard & free incumbent, switch to sorta-virtual, raise it
+     if(unlikely(itemsym->val!=cv->item)){
+      // discard & free incumbent, switch to sorta-virtual, raise it
+      A val=itemsym->val; fa(val) val=cv->item; ra(val) itemsym->val=val;
+      itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
+     }
      ++i; continue;   // advance to next line and process it
     }
     // ending the iteration.  set xyz to i.0
-    {A val=*aval; fa(val)}  // discard & free incumbent, probably the sorta-virtual block
-    *aval=mtv;  // after last iteration, set xyz to mtv, which is permanent
+    {A val=itemsym->val; fa(val)}  // discard & free incumbent, probably the sorta-virtual block
+    itemsym->val=mtv;  // after last iteration, set xyz to mtv, which is permanent
+    itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
    }else if(likely(cv->j<cv->niter)){++i; continue;}  // advance to next line and process it
    // if there are no more iterations, fall through...
   case CENDSEL:

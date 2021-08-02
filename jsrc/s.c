@@ -577,9 +577,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // Normal case of non-memory-mapped assignment.
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
-   // if the value we are assigning is an ADV, and it contains no name references, mark the value as NAMELESS to speed up later parsing.
-   // NOTE that the value may be in use elsewhere; may even be a primitive.. Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
-   if(unlikely((wt&ADV)!=0))AT(w)=wt|=(I)nameless(w)<<NAMELESSMODX;
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
@@ -596,6 +593,10 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
     if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
    }
    e->val=w; e->valtype=ATYPETOVALTYPE(wt);  // install the new value
+   // if the value we are assigning is an ADV, and it contains no name references, and the name is not a locative, mark the value as NAMELESS to speed up later parsing.
+   // NOTE that the value may be in use elsewhere; may even be a primitive.  Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
+   if(unlikely((wt&ADV)!=0))if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))e->valtype=VALTYPENAMELESSADV;
+// obsolete {AT(w)=wt|=(I)nameless(w)<<NAMELESSMODX;}
 
    // We have raised the usecount of w.  Now dispose of x
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.

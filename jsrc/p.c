@@ -145,11 +145,16 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 [CONJX-LASTNOUNX] = 0xC9D04000,  // PC
 [RPARX-LASTNOUNX] = 0xC9000000  // PR
 };
+// NM assigned
+// ADV NAMELESS nonlocative (detected at assignment, in name only)
+// ASGN local
+// name::
+// name.
 
 
 // tests for pt types
-// in pt0ecam, bits 16-21 and 23 of pt0 are used to hold the type flags read from the symbol, when names are processed
-#define PTTYPEFLAGX 16  // VALTYPEMASK<<PTTYPEFLAGX is filled in the the type of the resolved name
+// obsolete // in pt0ecam, bits 16-21 and 23 of pt0 are used to hold the type flags read from the symbol, when names are processed
+// obsolete #define PTTYPEFLAGX 16  // VALTYPEMASK<<PTTYPEFLAGX is filled in the the type of the resolved name
 #define PTISCAVNX 22  // this flag used in a register here
 #define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
 #define PTISRPAR0(pt) ((pt)&0x7fff)
@@ -510,7 +515,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   UI pt0ecam = nwds+((nopull4?0b010LL:0b100LL)<<CONJX);
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word, 
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if next stack word is NOT MARK 
-  //  25 ASGNLOCAL (aka SYMB) from AT(stack[0]), passed from stack to exec in case we have an assignment
+  //  (passed from stack to exec) 25 ASGNLOCAL (aka SYMB) from AT(stack[0]),  in case we have an assignment
+  //  (name resolution) 23-26  holds valtype code, (bit# of type-LASTNOUNX)+1 or 0 if no value  1=N 4=A 8=V 10=C
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
   //  18-19 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
   // bit 22,23 free
@@ -520,7 +526,9 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 // above #define USEDGLOBAL (1LL<<USEDGLOBALX)
 #define NOTFINALEXECX 17
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
-#define NAMEFLAGSX 20
+#define NAMEFLAGSX 17  // 17 and 20
+#define VALTYPEX 23  // 4-bit field to save valtype
+#define VALTYPE (0xfLL<<VALTYPEX)
   pt0ecam += (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
@@ -550,7 +558,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
     // pt0ecam is settling from pt0 but it will be ready soon
    
-   do{UI tmpes;I at;A y;
+   do{UI tmpes;I at;A y;I tx;  // tx is the type number, as analyzed by enqueue
      y=*(volatile A*)queue;   // fetch as early as possible
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
       // to give it priority.  likelys at the end of the line 0-2 code are key
@@ -563,10 +571,12 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
      // We have the type of the next word, and its value is on the way.  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
      if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is == the flag for assignment
+      
       // Now we have to wait for y and ->sb.sb.symx.  Transfer flags out of y into pt0ecam so that at is not needed over subroutine calls
-      pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX)));
-      SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
+      pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))+VALTYPE);
+// obsolete       SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
       pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
+      y=(A)((I)y&(~QCMASK));  // back y up to the NAME block
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
@@ -584,12 +594,14 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
       if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)symx;  // get address of symbol in primary table
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
-       SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
+// obsolete        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
+       pt0ecam|=s->valtype<<VALTYPEX;  // save the type
       }else if(likely(buck!=0)){  // buckets but no symbol - must be global or recursive symtab - but not synthetic name
        if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        if((s=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0)goto rdglob;  // see if there is a local symbol, using the buckets
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.
-       SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
+// obsolete        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
+       pt0ecam|=s->valtype<<VALTYPEX;  // save the type
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
        // If the name has a cached reference, use it
@@ -610,8 +622,10 @@ rdglob: ;  // here when we tried the buckets and failed
         // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
        if(likely(s!=0)){
         if(likely(s->valtype!=0)){  // if value has not been assigned, ignore it.
-         SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
-         if(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX))){A sv=s->val;   // this is testing for saved NOUN type
+// obsolete          SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
+         pt0ecam|=s->valtype<<VALTYPEX;  // save the type
+// obsolete          if(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX))){A sv=s->val;   // this is testing for saved NOUN type
+         if(s->valtype==1){A sv=s->val;   // this is testing for saved NOUN type
           // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
           // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
           // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
@@ -637,21 +651,26 @@ rdglob: ;  // here when we tried the buckets and failed
        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-#if SY_64  // unfortunately the compiler can't figure out that these tests are to the same register
-       if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|((CONW>>(ADVX-PTTYPEFLAGX))<<32))){   // use value if noun or special name, or name::
-#else
-       if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX)))){   // use value if noun or special name, or name::  This would be faster if the compiler knew to use a single test inst
-#endif
+// obsolete #if SY_64  // unfortunately the compiler can't figure out that these tests are to the same register
+// obsolete        if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|((CONW>>(ADVX-PTTYPEFLAGX))<<32))){   // use value if noun or special name, or name::
+// obsolete #else
+// obsolete        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX)))){   // use value if noun or special name, or name::  This would be faster if the compiler knew to use a single test inst
+// obsolete #endif
+       if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|(0x1<<VALTYPEX))){   // use value if noun or special name, or name::
         if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, y, pt0ecam, s);}  // if name::, go delete the name, leaving the value to be deleted later
         else y=s->val;
-        at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));  // convert saved s->valtype to AT type (calling all nouns boolean)
-       }else if(unlikely(GETSTACK0PT&(NAMELESSMOD>>(ADVX-PTTYPEFLAGX)) && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
+// obsolete          at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));  // convert saved s->valtype to AT type (calling all nouns boolean)
+        at=VALTYPETOATYPE((pt0ecam&VALTYPE)>>VALTYPEX);  // convert saved s->valtype to AT type (calling all nouns boolean)
+// obsolete        }else if(unlikely(GETSTACK0PT&(NAMELESSMOD>>(ADVX-PTTYPEFLAGX)) && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
+// obsolete        }else if(unlikely(AT(s->val)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
+       }else if(unlikely((pt0ecam&VALTYPE)==(VALTYPENAMELESSADV<<VALTYPEX))){
         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
         if(NAV(y)->flag&NMCACHED){
          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
          NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
-        y=s->val; at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));
+        y=s->val; at=ADV;  // it must be a nameless adverb, until we support nameless conjunctions
+// obsolete  at=VALTYPETOATYPE((pt0ecam&VALTYPE)>>VALTYPEX);
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
         y = namerefacv(y, s);   // Replace other acv with reference
         EPZ(y)
@@ -667,6 +686,9 @@ undefname:
        at=AT(y);  // refresh the type with the type of the resolved name
       }
 endname: ;
+     }else{
+      tx=(I)y&15;  // get the type number to fetch
+      y=(A)((I)y&(~QCMASK));  // back y up to the start of the data block
      }
      // names have been resolved
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.

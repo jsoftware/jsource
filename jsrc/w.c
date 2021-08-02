@@ -181,6 +181,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
   // be modified by each use.  The trouble happens only if the definition is not assigned (if it's assigned all the usecounts
   // are incremented).  But just do it for all words in sentences
   ACIPNO(*x);  // mark the stored word not inplaceable
+  // install type flags into the bottom 4 bits of the address of the word
   u+=2;   // advance to next word
  }
 

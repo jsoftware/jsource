@@ -373,8 +373,8 @@ typedef I SI;
 #define SPARSEX 31  // NOTE this extends to the sign bit
 #define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
 // ** NAME type can have the following information flags set
-#define NAMEBYVALUEX    MARKX     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Must not be the same as NAMELESSMOD
-#define NAMEBYVALUE     ((I)1L<<NAMEBYVALUEX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Must not be the same as NAMELESSMOD
+#define NAMEBYVALUEX    MARKX     // set if the name is one of x x. m m. etc that is always passed by value, never by name
+#define NAMEBYVALUE     ((I)1L<<NAMEBYVALUEX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name
 #define NAMEABANDONX SYMBX
 #define NAMEABANDON            ((I)1L<<NAMEABANDONX)     // name is name::, which will be deassigned after the value is stacked.  NAMEBYVALUE must also be set
 // in the parser VERB is set in a NAME type to indicate use of global symbol table
@@ -387,11 +387,11 @@ typedef I SI;
 #define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
 #define XCVTXNUMCVX     CONJX
 #define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
-// ** ADV type can have the following information flag set
-#define NAMELESSMODX    SYMBX
-#define NAMELESSMOD     ((I)1<<NAMELESSMODX)  // set in a modifier to indicate that the value contains no names.  Such values are pushed onto the stack by value to save parsing overhead.
-                             // namelessness is detected only when a modifier is assigned, and is supported only for ADV types because of coding details.  It would be nice to support it
-                             // for CONJ too, but a nameless conj would be either primitive or explicit, and users shouldn't cover primitives.  This feature is mostly for every/each/inv
+// obsolete // ** ADV type can have the following information flag set
+// obsolete #define NAMELESSMODX    SYMBX
+// obsolete #define NAMELESSMOD     ((I)1<<NAMELESSMODX)  // set in a modifier to indicate that the value contains no names.  Such values are pushed onto the stack by value to save parsing overhead.
+// obsolete                              // namelessness is detected only when a modifier is assigned, and is supported only for ADV types because of coding details.  It would be nice to support it
+// obsolete                              // for CONJ too, but a nameless conj would be either primitive or explicit, and users shouldn't cover primitives.  This feature is mostly for every/each/inv
 
 
 #if 0 // obsolete 
@@ -679,6 +679,14 @@ typedef struct {I e,p;X x;} DX;
 /*        least significant digit first                                    */
 /*        decimal point after last digit                                   */
 
+// LSB codes in enqueued words.  Set by enqueue(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
+#define QCMASK 0x1fLL   // all the LSB flags
+#define QCNOUN 0x01LL
+#define QCADV 0x04LL
+#define QCVERB 0x08ll
+#define QCCONJ 0x0aLL
+
+
 #define SYMLINFO 0  // index of LINFO entry
 #define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT root symbol chains, but instead are LINFO entries
 // The MSB of LX values is used to indicate that the NEXT value is NOT permanent.  We do this so that we can visit all PERMANENT entries without ever
@@ -693,7 +701,7 @@ typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
  A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned
  C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
- C valtype;  // if a value is set, this holds the type (bits ADV-CONJ) with CONW set if the value is a noun.  0 if no value or value not CAVN
+ C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value or value not CAVN
  S sn;  // script index the name was defined in.  Not used for LINFO
  LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT
 } L;  // name must come first because of the way we use validitymask[11]
@@ -726,9 +734,12 @@ typedef struct {
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
 // in valtype
-#define VALTYPEMASK (ADV+ASGN+SYMB+CONW+VERB+CONJ)  // gap for LPAR, which PTISCAVN uses.  Always 0 in stored value because no type ever sets it except LPAR itself
-#define ATYPETOVALTYPE(t) ((((t)&VALTYPEMASK)|((-(t&NOUN))&CONW))>>ADVX)  // convert t from AT form to type stored in valtype
-#define VALTYPETOATYPE(t) ((((t)&~(CONW>>ADVX))<<ADVX)+(((t)>>(CONWX-ADVX))&1))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
+// obsolete #define VALTYPEMASK (ADV+ASGN+SYMB+CONW+VERB+CONJ)  // gap for LPAR, which PTISCAVN uses.  Always 0 in stored value because no type ever sets it except LPAR itself
+// obsolete #define ATYPETOVALTYPE(t) ((((t)&VALTYPEMASK)|((-(t&NOUN))&CONW))>>ADVX)  // convert t from AT form to type stored in valtype
+// obsolete #define VALTYPETOATYPE(t) ((((t)&~(CONW>>ADVX))<<ADVX)+(((t)>>(CONWX-ADVX))&1))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
+#define ATYPETOVALTYPE(t) (((t)&NOUN)?1:CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 8=VERB 10=CONJ  0 means 'no value'
+#define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
+#define VALTYPENAMELESSADV 0x0eLL  // set in nameless & non-locative adv, to suppress reference creation.  Would like to make this a unique bit for test
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains

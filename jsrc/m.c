@@ -20,7 +20,7 @@
 ;@:(<@({.~  2 | #)/.)~ (#~ ('0000' -: 4&{.)@>) {.@;:;._2 wd 'clippaste'
 */
 
-
+//NOTE: alignment to cache is now required because of LSB flags in enqueue()
 #define ALIGNTOCACHE 1   // set to 1 to align each OS-allocated block block to cache-line boundary.  Will reduce cache usage for headers
 #define ALIGNPOOLTOCACHE 1   // set to 1 to align each pool block to cache-line boundary.  Will reduce cache usage for headers
 #define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last byte doesn't run off into unallocated memory
@@ -819,7 +819,7 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
 #if AUDITEXECRESULTS
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
-   if(np)ra(np);  // increment the box, possibly turning it to recursive
+   if((np=(A)((I)np&(~QCMASK)))!=0)ra(np);  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
    np=np0;  // advance to next box
   };
   if(np)ra(np);  // handle last one
@@ -910,7 +910,8 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
-     fana(np);  // free the contents
+     if((np=(A)((I)np&(~QCMASK)))!=0){fanano0(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
+// obsolete fana(np);  // free the contents
      np=np0;  // advance to next box
     };
     fana(np);  // free the contents

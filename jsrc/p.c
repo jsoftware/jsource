@@ -487,7 +487,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
 #define nexty QCWORD(*queue)  // we can't keep nexty and at both
-  I nextat=AT(QCWORD(*queue));  // unroll fetch of at
+// obsolete   I nextat=AT(QCWORD(*queue));  // unroll fetch of at
 
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
   // never look at a stack location until we have moved from the queue to that position.
@@ -559,11 +559,11 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
    
    do{UI tmpes;A y;I tx;  // tx is the type number, as analyzed by enqueue
      y=*(volatile A*)queue;   // fetch as early as possible
-if(QCTYPE(y)==0)SEGFAULT;  // scaf
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
       // to give it priority.  likelys at the end of the line 0-2 code are key
 
     if(likely((US)pt0ecam!=0)){     // if there is another valid token...
+if(QCTYPE(y)==0)SEGFAULT;  // scaf
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
 // obsolete      at=nextat;  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
@@ -703,7 +703,8 @@ endname: ;
      --stack;  // back up to new stack frame, where we will store the new word
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
-     queue+=REPSGN(-(I)(US)pt0ecam); nextat=AT(QCWORD(*(volatile A*)queue));    // scaf queue-- fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
+     queue--;  // OK to fetch queue[-1]
+// obsolete  nextat=AT(QCWORD(*(volatile A*)queue));    // scaf queue-- fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
      stack[0].a = y;   // finish setting the stack entry, with the new word
 // obsolete     I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more, 01x=2 more.  
@@ -747,7 +748,9 @@ endname: ;
     pmask1&=GETSTACK0PT; pmask&=pmask1;      // combine.  At this point all regs are full and if we extend pmask1 any farther it will spill
     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
     pt0ecam&=~(CONJ+VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
-    pt0ecam|=-(nextat&ADV+NAME+VERB+NOUN)&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull)
+// obsolete     pt0ecam|=-(nextat&ADV+NAME+VERB+NOUN)&CONJ;  // save next-is-(C)AVN status in CONJ (which will become the request for a 2nd pull)
+    pt0ecam|=(((CONJ>>QCADV)|(CONJ>>QCVERB)|(CONJ>>QCNOUN)|(CONJ>>QCISLKPNAME)|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE))|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
+      <<(QCTYPE(*queue)))&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull)
 // obsolete     pmask=(pmask|PTNOTLPAR)&(GETSTACK0PT^PTNOTLPAR);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
 // obsolete //    A fs=fsa[0].a;  // 
     PSTK *fsa=&stack[2-(pmask1&1)];  // pointer to stack slot the CAV to be executed, for lines 0-4

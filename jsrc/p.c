@@ -167,21 +167,6 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
 // obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=LASTNOUNX; nt=(t)&CONW?SYMBX:nt; pt=(t)&(CONW|((1LL<<(LASTNOUNX+1))-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused SYMB hole (use SYMB rather than CONW because of odd code generation)
 
-static PSTK* jtpfork(J jt,PSTK *stack){
- A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
-RECURSIVERESULTSCHECK
- RZ(y);  // if error, return 0 stackpointer
- stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
- stack[2]=stack[0]; R stack+2;  // close up stack & return
-}
-
-static PSTK* jtphook(J jt,PSTK *stack){
- A y=hook(stack[1].a,stack[2].a);  // create the hook
-RECURSIVERESULTSCHECK
- RZ(y);  // if error, return 0 stackpointer
- PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result.  Must store new type because this line takes adverb hooks also
- stack[1]=stack[0]; R stack+1;  // close up stack & return
-}
 
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
@@ -504,6 +489,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
    jt->parserstackframe.parserstkend1=(PSTK*)((uintptr_t)jt->parserstackframe.parserstkbgn+allo);  // point to the end+1 of the allocation
    // We could worry about hysteresis to avoid reallocation of every call
   }
+  A y;  // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call
+
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
   jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
@@ -557,7 +544,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
     // pt0ecam is settling from pt0 but it will be ready soon
    
-   do{UI tmpes;A y;I tx;  // tx is the type number, as analyzed by enqueue
+   do{UI tmpes;I tx;  // tx is the type number, as analyzed by enqueue
      y=*(volatile A*)queue;   // fetch as early as possible
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
       // to give it priority.  likelys at the end of the line 0-2 code are key
@@ -940,8 +927,22 @@ RECURSIVERESULTSCHECK
        break;  // go pull the next word
 // obsolete        }
       }else{
-       if(pmask&0b100000)stack=jtpfork(jt,stack); else stack=jtphook(jt,stack);  // bottom of stack unchanged
-       EPZ(stack)  // fail if error
+       if(pmask&0b100000){
+// obsolete         stack=jtpfork(jt,stack);  // bottom of stack unchanged
+        y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
+        RECURSIVERESULTSCHECK
+        EPZ(y);  // if error, return 0 stackpointer
+        stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
+        stack[2]=stack[0]; stack+=2;  // close up stack
+       }else{
+// obsolete         stack=jtphook(jt,stack);  // bottom of stack unchanged
+        y=hook(stack[1].a,stack[2].a);  // create the hook
+        RECURSIVERESULTSCHECK
+        EPZ(y);  // if error, return 0 stackpointer
+        PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result.  Must store new type because this line takes adverb hooks also
+        stack[1]=stack[0]; stack+=1;  // close up stack
+       }
+// obsolete        EPZ(stack)  // fail if error
       }
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still have the parseline

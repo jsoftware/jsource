@@ -690,7 +690,11 @@ typedef struct {I e,p;X x;} DX;
 #define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10
 #define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // name followed by copula
-#define QCASGNLOCAL ((SYMBX-LASTNOUNX)+1) // =. preceded by nonlocative name
+// the last AT type is RPAR, which is 11 (30-20+1)
+// assignments occupy 12-15, with 4 variants
+#define QCASGN 0x0c // copula.  QCASGNISLOCAL and QCASGNISTONAME are modifiers
+#define QCASGNISLOCAL 0x1 // =. preceded by nonlocative name
+#define QCASGNISTONAME 0x2  // copula is preceded by name
 #define QCISLKPNAME 0x10LL   // name requires lookup (i. e. not assigned)
 #define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
 #define QCNAMEABANDON 0x08 // combining flag - name has :: - set only if not assigned

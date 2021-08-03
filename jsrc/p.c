@@ -132,25 +132,24 @@ PT cases[] = {
 // Put something distictive into LPAR that can be used to create line 8
 #define PTNOUN 0xDFC17CBE
 #define PTMARK 0xC900007F
-static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold ASGNNAME.  
+static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [LASTNOUNX-LASTNOUNX] = PTNOUN,  // PN
-[ASGNX-LASTNOUNX] = 0xC900807F,  // PS
-[MARKX-LASTNOUNX] = PTMARK,  // PM
 [NAMEX-LASTNOUNX] = 0xC9000080,  // PNM
-[SYMBX-LASTNOUNX] = 0xC800807F,  // PS+NAME
-// gap [CONWX-LASTNOUNX]
-[LPARX-LASTNOUNX] = 0x0100007F,  // PL
-[VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
+[MARKX-LASTNOUNX] = PTMARK,  // PM
 [ADVX-LASTNOUNX] = 0xC9C8403E,  // PA
+// gap[ASGNX-LASTNOUNX] = 0xC900807F,  // PS
+// gap [SYMBX-LASTNOUNX] = 0xC800807F,  // PS+NAME
+// gap [CONWX-LASTNOUNX]
+[VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
+[LPARX-LASTNOUNX] = 0x0100007F,  // PL
 [CONJX-LASTNOUNX] = 0xC9D04000,  // PC
-[RPARX-LASTNOUNX] = 0xC9000000  // PR
+[RPARX-LASTNOUNX] = 0xC9000000,  // PR
+// the LOCAL bit is passed in through the flags but does not affect the parsing type.  Parsing type distinguishes name/nonname for assignsym purposes
+[QCASGN-1] = 0xC900807F,
+[QCASGN+QCASGNISLOCAL-1] = 0xC900807F,
+[QCASGN+QCASGNISTONAME-1] = 0xC800807F,
+[QCASGN+QCASGNISLOCAL+QCASGNISTONAME-1] = 0xC800807F
 };
-// NM assigned
-// ADV NAMELESS nonlocative (detected at assignment, in name only)
-// ASGN local
-// name::
-// name.
-
 
 // tests for pt types
 // obsolete // in pt0ecam, bits 16-21 and 23 of pt0 are used to hold the type flags read from the symbol, when names are processed
@@ -166,7 +165,7 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 #define PTNOTLPAR (1LL<<PTNOTLPARX)  // this bit is set in pt only if NOT LPAR
 // converting type field to pt, store in z
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
-#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=LASTNOUNX; nt=(t)&CONW?SYMBX:nt; pt=(t)&(CONW|((1LL<<(LASTNOUNX+1))-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused SYMB hole (use SYMB rather than CONW because of odd code generation)
+// obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=LASTNOUNX; nt=(t)&CONW?SYMBX:nt; pt=(t)&(CONW|((1LL<<(LASTNOUNX+1))-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused SYMB hole (use SYMB rather than CONW because of odd code generation)
 
 static PSTK* jtpfork(J jt,PSTK *stack){
  A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
@@ -558,7 +557,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
     // pt0ecam is settling from pt0 but it will be ready soon
    
-   do{UI tmpes;I at;A y;I tx;  // tx is the type number, as analyzed by enqueue
+   do{UI tmpes;A y;I tx;  // tx is the type number, as analyzed by enqueue
      y=*(volatile A*)queue;   // fetch as early as possible
 if(QCTYPE(y)==0)SEGFAULT;  // scaf
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
@@ -567,10 +566,10 @@ if(QCTYPE(y)==0)SEGFAULT;  // scaf
     if(likely((US)pt0ecam!=0)){     // if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
-     at=nextat;  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
+// obsolete      at=nextat;  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
      // pull one value from the queue
 
-     // We have the type of the next word, and its value is on the way.  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
+     // We have the value/typeclass of the next word.  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
 // obsolete      if(!(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME)){
      if(!((I)y&QCISLKPNAME)){
       // not a name requiring lookup; split type from pointer
@@ -613,7 +612,8 @@ if(QCTYPE(y)==0)SEGFAULT;  // scaf
         // Note: this cannot be a NAMEABANDON, because such a name is never stacked where it can have the cachedref filled in
         A cachead=NAV(y)->cachedref; // use the cached address
         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((sympv[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
-        y=cachead; at=AT(y); goto endname; // take its type, proceed
+        y=cachead; tx=ATYPETOVALTYPE(AT(y)); goto endname; // take its type, proceed
+// obsolete  at=AT(y);
        }
 rdglob: ;  // here when we tried the buckets and failed
        jt->parserstackframe.parsercurrtok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
@@ -664,7 +664,8 @@ rdglob: ;  // here when we tried the buckets and failed
         if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, y, pt0ecam, s);}  // if name::, go delete the name, leaving the value to be deleted later
         else y=s->val;
 // obsolete          at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));  // convert saved s->valtype to AT type (calling all nouns boolean)
-        at=VALTYPETOATYPE((pt0ecam&VALTYPE)>>VALTYPEX);  // convert saved s->valtype to AT type (calling all nouns boolean)
+// obsolete         at=VALTYPETOATYPE((pt0ecam&VALTYPE)>>VALTYPEX);  // convert saved s->valtype to AT type (calling all nouns boolean)
+        tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
 // obsolete        }else if(unlikely(GETSTACK0PT&(NAMELESSMOD>>(ADVX-PTTYPEFLAGX)) && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
 // obsolete        }else if(unlikely(AT(s->val)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
        }else if(unlikely((pt0ecam&VALTYPE)==(VALTYPENAMELESSADV<<VALTYPEX))){
@@ -673,21 +674,23 @@ rdglob: ;  // here when we tried the buckets and failed
          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
          NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
-        y=s->val; at=ADV;  // it must be a nameless adverb, until we support nameless conjunctions
+        y=s->val; tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
+// obsolete  at=ADV;  // it must be a nameless adverb, until we support nameless conjunctions
 // obsolete  at=VALTYPETOATYPE((pt0ecam&VALTYPE)>>VALTYPEX);
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
         y = namerefacv(y, s);   // Replace other acv with reference
         EPZ(y)
-        at=AT(y);  // refresh the type with the type of the resolved name
+        tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
+// obsolete         at=AT(y);
        }
       } else {
 undefname:
        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
        y = namerefacv(y, s);    // this will create a ref to undefined name as verb [:
-       EPZ(y)
-         // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
-       at=AT(y);  // refresh the type with the type of the resolved name
+       EPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
+       tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
+// obsolete        at=AT(y);
       }
 endname: ;
      }
@@ -696,20 +699,25 @@ endname: ;
      // Look to see if it is ) or a conjunction,
      // which allow 2 or 1 more pulls from the queue without checking for an executable fragment.
      // Also, dyad executions sometimes allow two pulls if the first one is AVN.
-     stack[-1].t = (US)pt0ecam;  // install the original token number for the word
-     --pt0ecam;  //  decrement token# for the word we just processed
-     queue+=REPSGN(-(I)(US)pt0ecam); nextat=AT(QCWORD(*(volatile A*)queue));    // fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
+     I it=ptcol[tx-1];   // convert type to internal code
      --stack;  // back up to new stack frame, where we will store the new word
-     I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
-     pt0ecam&=(I)(UI4)~ASGNLOCAL;  // clear the local-assignment flag, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
-     pt0ecam|=at&((3LL<<CONJX)|ASGNLOCAL);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 000= no more, other 0xx=1 more, 1xx=2 more.  Also bring in LOCAL flag for when we execute an assignment
-// obsolete      pt0ecam&=~(VERB<<1)|-(at&ADV+VERB+NOUN);  // if the action routine left VERB+1 set, it means we should stack another word of we stack an AVN
+     stack[0].t = (US)pt0ecam;  // install the original token number for the word
+     --pt0ecam;  //  decrement token# for the word we just processed
+     queue+=REPSGN(-(I)(US)pt0ecam); nextat=AT(QCWORD(*(volatile A*)queue));    // scaf queue-- fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
+     stack[0].a = y;   // finish setting the stack entry, with the new word
+// obsolete     I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
+     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more, 01x=2 more.  
      tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part
+     pt0ecam&=(I)(UI4)~((0b111LL<<CONJX)|ASGNLOCAL);  // clear the local-assignment flag, the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
+     // we have to move some state into pt0ecam: the number of pulls (2 if RPAR, 1 if CONJ, 0 otherwise), and the ASGNLOCAL bit
+     // the number of pulls is initialized by the execution routine but we may extend it here
+     pt0ecam|=(tx&QCASGNISLOCAL)<<ASGNLOCALX;   /// install local flag
+// obsolete      pt0ecam|=at&((3LL<<CONJX)|ASGNLOCAL);  // calculate pull count es  OR it in: 000= no more, other 0xx=1 more, 1xx=2 more.  Also bring in LOCAL flag for when we execute an assignment
+// obsolete      pt0ecam&=~(VERB<<1)|-(at&ADV+VERB+NOUN);  // if the action routine left VERB+1 set, it means we should stack another word of we stack an AVN
 
      // Put new word onto the stack along with a code indicating part of speech and the token number of the word
      SETSTACK0PT(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type
-     stack[0].a = y;   // finish setting the stack entry, with the new word
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
      if(!(pt0ecam&0x10000)){pt0ecam|=0x10000; SETSTACK0PT(PTMARK) break;}  // first time m=0.  realize the virtual mark and use it.  a and pt will not be needed.  e and ca flags immaterial
@@ -718,7 +726,8 @@ endname: ;
     }
     // *** here is where we exit stacking to do execution ***
     if(!(tmpes&(0b111LL<<CONJX)))break;  // exit stack phase when no more to do, leaving es=0
-    pt0ecam=(pt0ecam&~(0b111LL<<CONJX))|((tmpes>>1)&(0b011LL<<CONJX)&~((at&ADV)<<(CONJX+1-ADVX)));  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 3 to request for 2.  Still worth it
+// obsolete     pt0ecam=(pt0ecam&~(0b111LL<<CONJX))|((tmpes>>1)&(0b011LL<<CONJX)&~((at&ADV)<<(CONJX+1-ADVX)));  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 3 to request for 2.  Still worth it
+    pt0ecam|=((tmpes>>1)&((tx==QCADV?1:3)<<CONJX));  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 3 to request for 2.  Still worth it
       // because we will be waiting for pt0 and the extra work can be done while it is settling
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue.

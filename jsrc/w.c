@@ -183,8 +183,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
   ACIPNO(*x);  // mark the stored word not inplaceable
   // install type flags into the bottom 4 bits of the address of the word.  All names are defaulted to assigned names
   I qct=ATYPETOVALTYPE(AT(*x));  // get type of the current word
-  if(AT(*x)&ASGN){  // assignments require repair to previous word
-   qct=AT(*x)&ASGNLOCAL?QCASGNLOCAL:qct;  // also need flagging possible local assignment
+  if(qct==((ASGNX-LASTNOUNX)+1)){  // non-assignments require repair to previous word
+   qct=QCASGN+((AT(*x)&(ASGNLOCAL|ASGNTONAME))>>ASGNLOCALX);  // assignments must copy the ASGN modifiers to the type
   }else{
    // non-assignment: if previous word is a NAME, switch it to lookup type
    if((i&& AT(QCWORD(x[-1]))&NAME))x[-1]=QCINSTALLTYPE(QCWORD(x[-1]),QCISLKPNAME+((AT(QCWORD(x[-1]))>>NAMEBYVALUEX)&(QCNAMEBYVALUE|QCNAMEABANDON)));

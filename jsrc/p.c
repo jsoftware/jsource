@@ -471,7 +471,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
  
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
-#define nexty QCWORD(*queue)  // we can't keep nexty and at both
+// obsolete #define nexty QCWORD(*queue)  // we can't keep nexty and at both
 // obsolete   I nextat=AT(QCWORD(*queue));  // unroll fetch of at
 
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
@@ -490,6 +490,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
    // We could worry about hysteresis to avoid reallocation of every call
   }
   A y;  // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call
+  y=*queue;  // unroll y once
+A expy=y;  // scaf
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
@@ -545,12 +547,12 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
     // pt0ecam is settling from pt0 but it will be ready soon
    
    do{UI tmpes;I tx;  // tx is the type number, as analyzed by enqueue
-     y=*(volatile A*)queue;   // fetch as early as possible
+if(expy!=y)SEGFAULT;  // scaf
+// obsolete      y=*(volatile A*)queue;   // fetch as early as possible
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
       // to give it priority.  likelys at the end of the line 0-2 code are key
 
     if(likely((US)pt0ecam!=0)){     // if there is another valid token...
-if(QCTYPE(y)==0)SEGFAULT;  // scaf
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
 // obsolete      at=nextat;  // get type of next word.  loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one - pity; we have to wait for AT
@@ -692,7 +694,9 @@ endname: ;
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // OK to fetch queue[-1]
 // obsolete  nextat=AT(QCWORD(*(volatile A*)queue));    // scaf queue-- fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
-     stack[0].a = y;   // finish setting the stack entry, with the new word
+     stack[0].a = y;   // finish setting the stack entry, with the new word     y=*(volatile A*)queue;   // fetch as early as possible
+     y=*(volatile A*)queue;   // fetch next value as early as possible
+expy=y;  // scaf
 // obsolete     I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more, 01x=2 more.  
      tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part
@@ -737,7 +741,7 @@ endname: ;
     pt0ecam&=~(CONJ+VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
 // obsolete     pt0ecam|=-(nextat&ADV+NAME+VERB+NOUN)&CONJ;  // save next-is-(C)AVN status in CONJ (which will become the request for a 2nd pull)
     pt0ecam|=(((CONJ>>QCADV)|(CONJ>>QCVERB)|(CONJ>>QCNOUN)|(CONJ>>QCISLKPNAME)|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE))|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
-      <<(QCTYPE(*queue)))&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull)
+      <<(QCTYPE(y)))&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull)
 // obsolete     pmask=(pmask|PTNOTLPAR)&(GETSTACK0PT^PTNOTLPAR);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
 // obsolete //    A fs=fsa[0].a;  // 
     PSTK *fsa=&stack[2-(pmask1&1)];  // pointer to stack slot the CAV to be executed, for lines 0-4
@@ -761,7 +765,7 @@ endname: ;
       // Here for lines 0-4, which execute the entity pointed to by fs
       // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
-      if(pmask&7){A y;  // lines 0 1 2, verb execution
+      if(pmask&7){  // lines 0 1 2, verb execution
        // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
        // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
        // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
@@ -784,6 +788,7 @@ endname: ;
  // obsolete         I savpt0ecam=pt0ecam;  // the flags we need to check are ready.  Save them while we set others.  This copy will not survive the subroutine calls
  // obsolete         pt0ecam&=(FAVV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1)))|~VASGSAFE;  // if executing line 1, make sure stack[1] is also ASGSAFE
         if(fsflag&VASGSAFE&&(!(pmask&2)||FAVV(stack[1].a)->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
+         A nexty=QCWORD(*(volatile A*)queue);  // refetch next-word (=name) address to save regs
  // obsolete        if(likely((AT(stack[0].a))&ASGNLOCAL)){
          if(likely(pt0ecam&ASGNLOCAL)){
           // local assignment.  First check for primary symbol.  We expect this to succeed
@@ -862,6 +867,8 @@ RECURSIVERESULTSCHECK
        audittstack(jt);
 #endif
        }
+       y=*(volatile A*)queue;  // refetch next-word to save regs
+
        // Handle early exits: AVN on line (0)12 or (not LPAR on line 02 and finalexec).
        // If line 02 and the current word is (C)AVN and the next is also, stack 2
        // the likelys on the next 2 lines are required to get the compiler to avoid spilling queue or nextat
@@ -889,20 +896,21 @@ RECURSIVERESULTSCHECK
        UI4 restok=stack[1].t;  // save token # to use for result
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
-       A y=(*actionfn)(jt,arg1,arg2,fs);
+       A yy=(*actionfn)(jt,arg1,arg2,fs);
+       y=*(volatile A*)queue;  // refetch next-word to save regs
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
 #endif
-       EPZ(y);  // fail parse if error
+       EPZ(yy);  // fail parse if error
 #if AUDITEXECRESULTS
-       auditblock(jt,y,1,1);
+       auditblock(jt,yy,1,1);
 #endif
 #if MEMAUDIT&0x2
-       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
+       if(AC(yy)==0 || (AC(yy)<0 && AC(yy)!=ACINPLACE+ACUC1))SEGFAULT; 
        audittstack(jt);
 #endif
-       PTFROMTYPE(stack[1].pt,AT(y)) stack[1].t=restok; stack[1].a=y;   // save result, move token#, recalc parsetype
+       PTFROMTYPE(stack[1].pt,AT(yy)) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
       }
      }else{
       // Here for lines 5-7 (fork/hook/assign), which branch to a canned routine
@@ -923,23 +931,26 @@ RECURSIVERESULTSCHECK
        // At this point pt0ecam&CONJ is set to (nextat is CAVN).  For comp ease we use this instead of checking for LPAR and ASGN.  This means that for a =: b =: c we will miss after assigning b.
 // obsolete         pt0ecam|=(~nextat&LPAR)<<(CONJX-LPARX);   // request to pull a second token if not (
 // obsolete         if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(queue[-1])&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&~(nextat<<(CONJX+1-ASGNX))&(CONJ<<1);}  // we start with CONJ set to 'next is not LPAR'
+       y=*(volatile A*)queue;  // refetch next-word to save regs
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word
 // obsolete        }
       }else{
        if(pmask&0b100000){
 // obsolete         stack=jtpfork(jt,stack);  // bottom of stack unchanged
-        y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
+        A yy=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
+        y=*(volatile A*)queue;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
-        EPZ(y);  // if error, return 0 stackpointer
-        stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
+        EPZ(yy);  // if error, return 0 stackpointer
+        stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
 // obsolete         stack=jtphook(jt,stack);  // bottom of stack unchanged
-        y=hook(stack[1].a,stack[2].a);  // create the hook
+        A yy=hook(stack[1].a,stack[2].a);  // create the hook
+        y=*(volatile A*)queue;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
-        EPZ(y);  // if error, return 0 stackpointer
-        PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result.  Must store new type because this line takes adverb hooks also
+        EPZ(yy);  // if error, return 0 stackpointer
+        PTFROMTYPE(stack[2].pt,AT(yy)) stack[2].t = stack[1].t; stack[2].a = yy;  // take err tok from f; save result.  Must store new type because this line takes adverb hooks also
         stack[1]=stack[0]; stack+=1;  // close up stack
        }
 // obsolete        EPZ(stack)  // fail if error
@@ -959,7 +970,7 @@ RECURSIVERESULTSCHECK
     // and will predict that way, which is wrong.
     }else{
      // LPAR misses the main parse table, which is just as well because it would miss later branches anyway.  We pick it up here so as not to add
-     // a couple of cycles to the main parse test
+     // a couple of cycles to the main parse test.  Whether we stack of execute, y is still set with the next word+type
      if(!(GETSTACK0PT&PTNOTLPAR)){  // ( with no other line.  Better be ( CAVN )
       if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
        SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it

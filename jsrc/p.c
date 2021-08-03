@@ -473,7 +473,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
    if (likely(nwds < 128))maxnvrlen = (UI4)nwds;   // if short enough, assume they're all names
    else {
     maxnvrlen = 0;
-    DQ(nwds, maxnvrlen+=(AT(queue[i])>>NAMEX)&1;)
+    DQ(nwds, maxnvrlen+=(AT(QCWORD(queue[i]))>>NAMEX)&1;)
    }
    // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
    if(unlikely((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))){NOUNROLL do{RZ(extnvr());}while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra));}
@@ -483,12 +483,12 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
   // If words -1 & -2 exist, we can pull 4 words initially unless word 2 is ASGN or word 1 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch
-  I nopull4=0; if(likely(nwds>2))nopull4=(AT(queue[-1])|AT(queue[-2]))&ASGN+LPAR;
+  I nopull4=0; if(likely(nwds>2))nopull4=(AT(QCWORD(queue[-1]))|AT(QCWORD(queue[-2])))&ASGN+LPAR;
  
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
-#define nexty *queue  // we can't keep nexty and at both
-  I nextat=AT(*queue);  // unroll fetch of at
+#define nexty QCWORD(*queue)  // we can't keep nexty and at both
+  I nextat=AT(QCWORD(*queue));  // unroll fetch of at
 
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
   // never look at a stack location until we have moved from the queue to that position.
@@ -576,7 +576,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
       pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))+VALTYPE);
 // obsolete       SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
       pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
-      y=(A)((I)y&(~QCMASK));  // back y up to the NAME block
+      y=QCWORD(y);  // back y up to the NAME block
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
@@ -625,7 +625,7 @@ rdglob: ;  // here when we tried the buckets and failed
 // obsolete          SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
          pt0ecam|=s->valtype<<VALTYPEX;  // save the type
 // obsolete          if(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX))){A sv=s->val;   // this is testing for saved NOUN type
-         if(s->valtype==1){A sv=s->val;   // this is testing for saved NOUN type
+         if(s->valtype==QCNOUN){A sv=s->val;   // this is testing for saved NOUN type
           // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
           // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
           // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
@@ -656,7 +656,7 @@ rdglob: ;  // here when we tried the buckets and failed
 // obsolete #else
 // obsolete        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX)))){   // use value if noun or special name, or name::  This would be faster if the compiler knew to use a single test inst
 // obsolete #endif
-       if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|(0x1<<VALTYPEX))){   // use value if noun or special name, or name::
+       if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|(QCNOUN<<VALTYPEX))){   // use value if noun or special name, or name::
         if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, y, pt0ecam, s);}  // if name::, go delete the name, leaving the value to be deleted later
         else y=s->val;
 // obsolete          at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));  // convert saved s->valtype to AT type (calling all nouns boolean)
@@ -687,8 +687,8 @@ undefname:
       }
 endname: ;
      }else{
-      tx=(I)y&15;  // get the type number to fetch
-      y=(A)((I)y&(~QCMASK));  // back y up to the start of the data block
+      tx=QCTYPE(y);  // get the type number to fetch
+      y=QCWORD(y);  // back y up to the start of the data block
      }
      // names have been resolved
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
@@ -697,7 +697,7 @@ endname: ;
      // Also, dyad executions sometimes allow two pulls if the first one is AVN.
      stack[-1].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
-     queue+=REPSGN(-(I)(US)pt0ecam); nextat=AT(*(volatile A*)queue);    // fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
+     queue+=REPSGN(-(I)(US)pt0ecam); nextat=AT(QCWORD(*(volatile A*)queue));    // fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
      --stack;  // back up to new stack frame, where we will store the new word
      I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
      pt0ecam&=(I)(UI4)~ASGNLOCAL;  // clear the local-assignment flag, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
@@ -923,7 +923,7 @@ RECURSIVERESULTSCHECK
        // At this point pt0ecam&CONJ is set to (nextat is CAVN).  For comp ease we use this instead of checking for LPAR and ASGN.  This means that for a =: b =: c we will miss after assigning b.
 // obsolete         pt0ecam|=(~nextat&LPAR)<<(CONJX-LPARX);   // request to pull a second token if not (
 // obsolete         if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(queue[-1])&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&~(nextat<<(CONJX+1-ASGNX))&(CONJ<<1);}  // we start with CONJ set to 'next is not LPAR'
-       if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(queue[-1])&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
+       if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word
 // obsolete        }
       }else{
@@ -1007,7 +1007,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
    // overhead, because it happens enough to notice.
    // No ASSERT - must get to the end to pop stack
    jt->parserstackframe.parsercurrtok=0;  // error token if error found
-   I at=AT(y = queue[0]);  // fetch the word
+   I at=AT(y = QCWORD(queue[0]));  // fetch the word
    if((at&NAME)!=0) {L *s;A sv;  // pointer to value block for the name
     if(likely((((I)NAV(y)->sb.sb.symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      s=JT(jt,sympv)+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table

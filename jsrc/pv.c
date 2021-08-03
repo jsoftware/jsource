@@ -31,7 +31,7 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
  GATV0(z,BOX,WTA*(5+n),2); s=AS(z); *s++=5+n; *s=WTA;
  x=(TA*)AV(z);
  x->a=mark; x->t=0; ++x;
- DQ(n, x->a=t=*y++; x->t=0; ++x; if(AT(t)&NAME&&NAV(t)->flag&NMDOT&&NAV(t)->s[0]=='x')tmonad=0;);
+ DQ(n, x->a=t=QCWORD(*y++); x->t=0; ++x; if(AT(t)&NAME&&NAV(t)->flag&NMDOT&&NAV(t)->s[0]=='x')tmonad=0;);
  x->a=mark; x->t=0; ++x;
  x->a=mark; x->t=0; ++x;
  x->a=mark; x->t=0; ++x;

@@ -129,7 +129,7 @@ static void jtseeparse(J jt,DC d){A*v;I m;
  m=d->dcix-1;         /* index of active token when error found */
  I nflag=0;
  I m1=jt->etxn;  // starting index of sentence text
- DO(d->dcn, if(i==m)eputs("    "); nflag=disp(v[i],nflag););  // display tokens with spaces before error
+ DO(d->dcn, if(i==m)eputs("    "); nflag=disp(QCWORD(v[i]),nflag););  // display tokens with spaces before error
  if(jt->etxn<NETX){  // if we overran the buffer, don't reformat it.  Reformatting requires splitting to words
   // We displayed the sentence.  See if it contains (9 :'string'); if so, replace with {{ string }}
   fauxblock(fauxw); A z=(A)&fauxw;
@@ -144,7 +144,7 @@ static void jtseeparse(J jt,DC d){A*v;I m;
 A jtunparse(J jt,A w,I nflag){A*v,z;
  ARGCHK1(w);
  jt->etxn=0;
- v=AAV(w); DO(AN(w), nflag=disp(v[i],nflag);); z=str(jt->etxn,jt->etx);
+ v=AAV(w); DO(AN(w), nflag=disp(QCWORD(v[i]),nflag);); z=str(jt->etxn,jt->etx);
  jt->etxn=0;
  R z;
 }

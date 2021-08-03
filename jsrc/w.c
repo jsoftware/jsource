@@ -119,13 +119,13 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
  R z;
 }
 
-#define TNAME(i)    (NAME&AT(v[i]))
-#define TASGN(i)    (ASGN&AT(v[i]))
+#define TNAME(i)    (NAME&AT(QCWORD(v[i])))
+#define TASGN(i)    (ASGN&AT(QCWORD(v[i])))
 //#define TVERB(i,c)  (y=v[i], c      ==ID(y))  // true if this word is the given verb
-#define TVERB(i,c)  (v[i]==ds(c))  // true if this word is the given verb
+#define TVERB(i,c)  (QCWORD(v[i])==ds(c))  // true if this word is the given verb
 #define TRBRACE(i)  TVERB(i,CRBRACE)  // true if given word is }
-#define TAIA(i,j)   (TASGN(1) && TNAME(j) && AN(v[i])==AN(v[j]) && TNAME(i) && \
-                        !memcmpne(NAV(v[i])->s,NAV(v[j])->s,AN(v[i])))
+#define TAIA(i,j)   (TASGN(1) && TNAME(j) && AN(QCWORD(v[i]))==AN(QCWORD(v[j)]) && TNAME(i) && \
+                        !memcmpne(NAV(QCWORD(v[i]))->s,NAV(QCWORD(v[j]))->s,AN(QCWORD(v[i]))))
   // true if the two words are names, word 1 is assignment, and the names are equal
 
 // Convert text sentence to a sequence of words to be the queue for parsing
@@ -152,8 +152,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    if((-env & SGNIF(AT(y),ASGNX))<0) {
     // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
     // In environment 0 (tacit translator), leave as simple assignment
-    if(e==CASGN && (env==1 || (i && AT(x[-1])&NAME && (NAV(x[-1])->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
-    if(i&& AT(x[-1])&NAME){y= y==asgnforceglo?asgnforcegloname:y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
+    if(e==CASGN && (env==1 || (i && AT(QCWORD(x[-1]))&NAME && (NAV(QCWORD(x[-1]))->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
+    if(i&& AT(QCWORD(x[-1]))&NAME){y= y==asgnforceglo?asgnforcegloname:y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
    }
    if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}}  // The inflected names are the old-fashioned x. y. etc.  They must be cloned lest we modify the shared copy
    *x=y;   // install the value
@@ -182,6 +182,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
   // are incremented).  But just do it for all words in sentences
   ACIPNO(*x);  // mark the stored word not inplaceable
   // install type flags into the bottom 4 bits of the address of the word
+*x=(A)((I)*x+0x15);  // scaf
   u+=2;   // advance to next word
  }
 
@@ -204,10 +205,10 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     // (_3) the name pqr, (_2) the position if any of abc in the right-hand list (-1 if absent), (_1) the parsed queue before this replacement
     GAT0(z1,BOX,4,1); x=AAV(z1);   // Allocate the sentence, point to its data
     GATV0(y,BOX,m+3,1); yv=AAV(y);   // Allocate the argument
-    c=-1; k=AN(v[0]); s=NAV(v[0])->s;   // get length and address of abc
-    j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)==k&&!memcmpne(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
-    yv[m]=v[2]; RZ(yv[m+1]=incorp(sc(c))); yv[m+2]=incorp(z);    // add the 3 ending elements
-    x[0]=v[0]; x[1]=v[1]; x[2]=ds(CCASEV); x[3]=incorp(y);  // build the sentence
+    c=-1; k=AN(QCWORD(v[0])); s=NAV(QCWORD(v[0]))->s;   // get length and address of abc
+    j=4; DO(m, yv[i]=p=QCWORD(v[j]); j+=2; if(AN(p)==k&&!memcmpne(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
+    yv[m]=QCWORD(v[2]); RZ(yv[m+1]=incorp(sc(c))); yv[m+2]=incorp(z);    // add the 3 ending elements
+    x[0]=v[0]; x[1]=v[1]; x[2]=QCINSTALLTYPE(ds(CCASEV),QCVERB); x[3]=QCINSTALLTYPE(incorp(y),QCNOUN);  // build the sentence
     RETF(z1);  // that's what we'll execute
    }
   }

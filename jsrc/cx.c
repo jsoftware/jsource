@@ -695,7 +695,7 @@ static I jtxop(J jt,A w){I i,k;
  I in=AN(w);
  // Loop over each word, starting at beginning where the references are more likely
  for(i=0;i<in;++i) {
-  A w=wv[i];  // w is box containing a queue value.  If it's a name, we inspect it
+  A w=QCWORD(wv[i]);  // w is box containing a queue value.  If it's a name, we inspect it
   if(AT(w)&NAME){
    // Get length/string pointer
    I n=AN(w); C *s=NAV(w)->s;
@@ -798,7 +798,7 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  R y;
 }    /* boxed sentences into monad/dyad */
 
-// If *t is a local name, replace it with a pointer to a shared copy, namely the block in the symbol-name already
+// If *t is a local name, replace it with a pointer to a shared copy, namely the block in the symbol-name already.  Install QC opointers in tv
 // Also install bucket info into a local name (but leave the hashes calculated for others)
 // in any case, if dobuckets is 0, remove the bucket field (NOT bucketx).  Clearing the bucket field will prevent
 // a name's escaping and being used in another context with invalid bucket info.  bucketx must survive in case it holds
@@ -807,7 +807,8 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
 // all the chains have had the non-PERMANENT flag cleared in the pointers
 // recur is set if *t is part of a recursive noun.
 static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I recur){LX k;
- A tv=*t;  // the actual NAME block
+ A tv=QCWORD(*t);  // the actual NAME block
+ I tqc=QCTYPE(*t);  // the name type
  L *sympv=JT(jt,sympv);  // base of symbol table
  if(!(NAV(tv)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table - and bucketx contains a hash/# for NMLOC/NMILOC
   I4 compcount=0;  // number of comparisons before match
@@ -823,13 +824,15 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
     // suppress this step if the type is ornamented, i. e. if it is name:: - then we need a flagged copy
     A oldtv=tv;
     if(likely(!(AT(tv)&NAMEABANDON))){  // not name::
-     *t=tv=sympv[k].name;  // use shared copy
+// obsolete      *t=
+     tv=sympv[k].name;  // use shared copy
      if(recur){ras(tv); fa(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old
      NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared
     }
     // Remember the exact location of the symbol.  It will not move as long as this symbol table is alive.  We can
     // use it only when we are in this primary symbol table
     NAV(tv)->sb.sb.symx=k;  // keep index of the allocated symbol
+    tqc|=QCNAMEHASLOC;  // indicate that a symtab slot has been reserved
     compcount=~compcount;  // negative bucket indicates found symbol
     break;
    }
@@ -838,7 +841,7 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
   NAV(tv)->bucketx=compcount;
  }
  if(!dobuckets)NAV(tv)->sb.sb.bucket=0;  // remove bucket if this name not allowed to have them
- R tv;
+ R (A)((I)tv|tqc);  // return combined pointer/type
 }
 
 EVERYFS(onmself,jtonm,0,0,VFLAGNONE)  // create self to pass into every
@@ -864,7 +867,7 @@ EVERYFS(onmself,jtonm,0,0,VFLAGNONE)  // create self to pass into every
 
 // l is the A block for all the words/queues used in the definition
 // c is the table of control-word info used in the definition
-// type is the m operand to m : n, indicating part of speech to be produce
+// type is the m operand to m : n, indicating part of speech to be produced
 // dyad is 1 if this is the dyadic definition
 // flags is the flag field for the verb we are creating; indicates whether uvmn are to be defined
 //
@@ -882,19 +885,19 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
  for(j=1;j<ln;++j) {   // start at 1 because we look at previous word
-  t=lv[j-1];  // t is the previous word
+  t=QCWORD(lv[j-1]);  // t is the previous word
   // look for 'names' =./=: .  If found (and the names do not begin with `), replace the string with a special form: a list of boxes where each box contains a name.
   // This form can appear only in compiled definitions
-  if(AT(lv[j])&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
+  if(AT(QCWORD(lv[j]))&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
    A neww=words(t);
    if(AN(neww)){  // ignore blank string
     A newt=every(neww,(A)&onmself);  // convert every word to a NAME block
-    if(newt){t=lv[j-1]=incorp(newt); AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later
+    if(newt){lv[j-1]=QCINSTALLTYPE(t=incorp(newt),QCNOUN); AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later
    }
   }
 
-  if((AT(lv[j])&ASGN+ASGNLOCAL)==(ASGN+ASGNLOCAL)) {  // local assignment
-   if(AT(lv[j])&ASGNTONAME){    // preceded by name?
+  if((AT(QCWORD(lv[j]))&ASGN+ASGNLOCAL)==(ASGN+ASGNLOCAL)) {  // local assignment
+   if(AT(QCWORD(lv[j]))&ASGNTONAME){    // preceded by name?
     // Lookup the name, which will create the symbol-table entry for it
     // name:: causes a little trouble.  The name carries with it the :: flag, but we will eventually replace all refs with the srade ref from
     // this table.  That means we have to remove the :: flag from the stored value, lest every reference appear flagged just because the last one was.
@@ -927,10 +930,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
  for(j=0;j<cn;++j) {   // look at each control word
   if(cwv[j].ig.indiv.type==CFOR){  // for.
-   I cwlen = AN(lv[cwv[j].ig.indiv.sentx]);
+   I cwlen = AN(QCWORD(lv[cwv[j].ig.indiv.sentx]));
    if(cwlen>4){  // for_xyz.
     // for_xyz. found.  Lookup xyz and xyz_index
-    A xyzname = str(cwlen+1,CAV(lv[cwv[j].ig.indiv.sentx])+4);  // +1 is -5 for_. +6 _index
+    A xyzname = str(cwlen+1,CAV(QCWORD(lv[cwv[j].ig.indiv.sentx]))+4);  // +1 is -5 for_. +6 _index
     RZ(probeis(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
     MC(CAV(xyzname)+cwlen-5,"_index",6L);    // append _index to name
     RZ(probeis(nfs(cwlen+1,CAV(xyzname)),pfst));  // create xyz_index
@@ -978,13 +981,13 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // incorrect bucket information, don't have any (this is easier than trying to remove it from the returned
  // result).  The definition will still benefit from the preallocation of the symbol table.
  for(j=0;j<ln;++j) {
-  if(AT(t=lv[j])&NAME) {
-   t=jtcalclocalbuckets(jt,&lv[j],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,0);  // install bucket info into name
+  if(AT(t=QCWORD(lv[j]))&NAME) {
+   t=QCWORD(lv[j]=jtcalclocalbuckets(jt,&lv[j],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,0));  // install bucket info into name
    // if the name is not shared, it is not a simple local name.
    // If it is also not indirect, x., or u., it is eligible for caching - if that is enabled
    if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC|NMSHARED)))NAV(t)->flag|=NMCACHED;
   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
-   A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,&tv[i],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,AFLAG(t)&BOX);)  // calculate details about the boxed names
+   A *tv=AAV(t); DO(AN(t), tv[i]=QCWORD(jtcalclocalbuckets(jt,&tv[i],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,AFLAG(t)&BOX));)  // calculate details about the boxed names.  Remove flags in strings
   }
  }
  R actst;
@@ -1006,25 +1009,25 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
    // loop till we have found all the parens
    while(1){
     // Look forward for )
-    while(startx<endx && !(AT(lvv[startx])&RPAR))++startx; if(startx==endx)break;  // find ), exit loop if none, finished
+    while(startx<endx && !(AT(QCWORD(lvv[startx]))&RPAR))++startx; if(startx==endx)break;  // find ), exit loop if none, finished
     // Scan backward looking for (, to get length, and checking for disqualifying entities
     I rparx=startx; // remember where the ) is
-    while(--startx>=0 && !(AT(lvv[startx])==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
-     if(AT(lvv[startx])&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
-     if(AT(lvv[startx])&VERB && FAV(lvv[startx])->flag2&VF2IMPLOC)break;  // u. v. not allowed: they are half-names
-     if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what
-     if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CCOLON && !(AT(lvv[startx-1])&VERB))break;  // : allowed only in u : v form
+    while(--startx>=0 && !(AT(QCWORD(lvv[startx]))==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
+     if(AT(QCWORD(lvv[startx]))&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
+     if(AT(QCWORD(lvv[startx]))&VERB && FAV(QCWORD(lvv[startx]))->flag2&VF2IMPLOC)break;  // u. v. not allowed: they are half-names
+     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what
+     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(AT(QCWORD(lvv[startx-1]))&VERB))break;  // : allowed only in u : v form
     }
-    if(startx>=0 && (AT(lvv[startx])==LPAR)){
+    if(startx>=0 && (AT(QCWORD(lvv[startx]))==LPAR)){
      // The ) was matched and the () can be processed.
      // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs
-     I doublep = (rparx+1<endx) && (AT(lvv[rparx+1])==RPAR) && (startx>0) && (AT(lvv[startx-1])==LPAR);  // is (( ))?
+     I doublep = (rparx+1<endx) && (AT(QCWORD(lvv[rparx+1]))==RPAR) && (startx>0) && (AT(QCWORD(lvv[startx-1]))==LPAR);  // is (( ))?
      if(doublep){--startx, ++rparx;  // (( )), expand the look to include outer ()
      }else{
       // Not (( )).  We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
       // copy the fragment between () to a temp buffer, replacing any verb with [:
       if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
-      DO(rparx-startx-1, fragv[i]=AT(lvv[startx+i+1])&VERB?ds(CCAP):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
+      DO(rparx-startx-1, fragv[i]=AT(QCWORD(lvv[startx+i+1]))&VERB?ds(CCAP):QCWORD(lvv[startx+i+1]);)  // copy the fragment, not including (), with verbs replaced
       // parse the temp for error, which will usually be an attempt to execute a verb
       parsea(fragv,rparx-startx-1);
      }
@@ -1032,7 +1035,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
       // no error: parse the actual () block
       A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1)); INCORP(pfrag); AFLAGORLOCAL(pfrag,doublep<<AFDPARENX);  // if this came from (( )), mark such in the value
       // Replace the () block with its parse, close up the sentence, zero the ending area
-      lvv[startx]=pfrag; DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];) DP(rparx-startx, lvv[endx+i]=0;) 
+      lvv[startx]=QCINSTALLTYPE(pfrag,ATYPETOVALTYPE(AT(pfrag))); DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];) DP(rparx-startx, lvv[endx+i]=0;) 
       // Adjust the end pointer and the ) position
       cwv[j].ig.indiv.sentn=endx-=rparx-startx; rparx=startx;  // back up to account for discarded tokens; resume as if the parse result was at ) position
      }else{RESETERR} // skipping because of error; clear error indic

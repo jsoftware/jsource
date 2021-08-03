@@ -569,7 +569,7 @@ if(expy!=y)SEGFAULT;  // scaf
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
       // The important performance case is local names with symbol numbers.  Pull that out & do it without the call overhead
-      // Registers are very tight here.  y must necessarily survive over a subroutine call, but NO OTHER VARIABLES do.  If we have anything to
+      // Registers are very tight here.  Nothing survives over a subroutine call - refetch y if necessary  If we have anything to
       // pass over a subroutine call, we have to store it pt0ecam or some other saved name
       I4 symx, buck;
 #if SY_64
@@ -590,8 +590,8 @@ if(expy!=y)SEGFAULT;  // scaf
        pt0ecam|=s->valtype<<VALTYPEX;  // save the type
       }else if(likely(buck!=0)){  // buckets but no symbol - must be global or recursive symtab - but not synthetic name
        if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
-       if((s=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0)goto rdglob;  // see if there is a local symbol, using the buckets
-       if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.
+       if((s=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
+       if(unlikely(s->valtype==0)){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // if value has not been assigned, ignore it.
 // obsolete        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
        pt0ecam|=s->valtype<<VALTYPEX;  // save the type
       }else{
@@ -607,6 +607,7 @@ if(expy!=y)SEGFAULT;  // scaf
 rdglob: ;  // here when we tried the buckets and failed
        jt->parserstackframe.parsercurrtok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
        s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
+   // y must not be referenced after this call
         // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
         // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the global value of the base pointer
         // Stack a named value only once.  This is needed only for names whose VALUE is put onto the stack (i. e. a noun); if we stack a REFERENCE
@@ -650,7 +651,7 @@ rdglob: ;  // here when we tried the buckets and failed
 // obsolete        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|(GETSTACK0PT&(CONW>>(ADVX-PTTYPEFLAGX)))){   // use value if noun or special name, or name::  This would be faster if the compiler knew to use a single test inst
 // obsolete #endif
        if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|(QCNOUN<<VALTYPEX))){   // use value if noun or special name, or name::
-        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, y, pt0ecam, s);}  // if name::, go delete the name, leaving the value to be deleted later
+        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, QCWORD(*(volatile A*)queue), pt0ecam, s);}  // if name::, go delete the name, leaving the value to be deleted later
         else y=s->val;
 // obsolete          at=VALTYPETOATYPE((GETSTACK0PT>>PTTYPEFLAGX)&(VALTYPEMASK>>ADVX));  // convert saved s->valtype to AT type (calling all nouns boolean)
 // obsolete         at=VALTYPETOATYPE((pt0ecam&VALTYPE)>>VALTYPEX);  // convert saved s->valtype to AT type (calling all nouns boolean)
@@ -659,15 +660,16 @@ rdglob: ;  // here when we tried the buckets and failed
 // obsolete        }else if(unlikely(AT(s->val)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
        }else if(unlikely((pt0ecam&VALTYPE)==(VALTYPENAMELESSADV<<VALTYPEX))){
         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
-        if(NAV(y)->flag&NMCACHED){
+        A origy=QCWORD(*(volatile A*)queue);  // refetch y
+        if(NAV(origy)->flag&NMCACHED){
          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
-         NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
+         NAV(origy)->cachedref=(A)(s-JT(jt,sympv)); NAV(origy)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(origy)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
         y=s->val; tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
 // obsolete  at=ADV;  // it must be a nameless adverb, until we support nameless conjunctions
 // obsolete  at=VALTYPETOATYPE((pt0ecam&VALTYPE)>>VALTYPEX);
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
-        y = namerefacv(y, s);   // Replace other acv with reference
+        y = namerefacv(QCWORD(*(volatile A*)queue), s);   // Replace other acv with reference
         EPZ(y)
         tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
 // obsolete         at=AT(y);
@@ -676,7 +678,7 @@ rdglob: ;  // here when we tried the buckets and failed
 undefname:
        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
-       y = namerefacv(y, s);    // this will create a ref to undefined name as verb [:
+       y = namerefacv(QCWORD(*(volatile A*)queue), s);    // this will create a ref to undefined name as verb [:
        EPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
        tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
 // obsolete        at=AT(y);

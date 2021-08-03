@@ -272,7 +272,7 @@ static D jtspfor1(J jt, A w){D tot=0.0;
   case XNUMX: case BOXX:
    if(!ISSPARSE(AT(w))){
     if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
-     {DO(AN(w), if(wv[i])tot+=spfor1(wv[i]););}
+     {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(wv[i])););}
     }
     break;
    }

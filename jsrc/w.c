@@ -152,7 +152,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    if((-env & SGNIF(AT(y),ASGNX))<0) {
     // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
     // In environment 0 (tacit translator), leave as simple assignment
-    if(e==CASGN && (env==1 || (i && AT(QCWORD(x[-1]))&NAME && (NAV(QCWORD(x[-1]))->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
+    if(e==CASGN && (env==1 || (i && AT(QCWORD(x[-1]))&NAME && (NAV(QCWORD(x[-1]))->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.
     if(i&& AT(QCWORD(x[-1]))&NAME){y= y==asgnforceglo?asgnforcegloname:y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
    }
    if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}}  // The inflected names are the old-fashioned x. y. etc.  They must be cloned lest we modify the shared copy
@@ -181,8 +181,17 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
   // be modified by each use.  The trouble happens only if the definition is not assigned (if it's assigned all the usecounts
   // are incremented).  But just do it for all words in sentences
   ACIPNO(*x);  // mark the stored word not inplaceable
-  // install type flags into the bottom 4 bits of the address of the word
-*x=(A)((I)*x+0x15);  // scaf
+  // install type flags into the bottom 4 bits of the address of the word.  All names are defaulted to assigned names
+  I qct=ATYPETOVALTYPE(AT(*x));  // get type of the current word
+  if(AT(*x)&ASGN){  // assignments require repair to previous word
+   qct=AT(*x)&ASGNLOCAL?QCASGNLOCAL:qct;  // also need flagging possible local assignment
+  }else{
+   // non-assignment: if previous word is a NAME, switch it to lookup type
+   if((i&& AT(QCWORD(x[-1]))&NAME))x[-1]=QCINSTALLTYPE(QCWORD(x[-1]),QCISLKPNAME+((AT(QCWORD(x[-1]))>>NAMEBYVALUEX)&(QCNAMEBYVALUE|QCNAMEABANDON)));
+   // if current word is last word and is a name, switch it to lookup type
+   if((i==n-1 && qct==QCNAMEASSIGNED))qct=QCISLKPNAME+((AT(*x)>>NAMEBYVALUEX)&(QCNAMEBYVALUE|QCNAMEABANDON));
+  }
+  *x=QCINSTALLTYPE(*x,qct);  // insert the type-code for the word
   u+=2;   // advance to next word
  }
 
@@ -191,7 +200,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
 
  // The game here is to make tests that fail as quickly as possible, so that this overhead
  // falls lightly on most sentences
- if (6 <= n) {
+ if ((n&REPSGN(SGNIF(n,0))) >= 7) {  // odd len, at least 7 words
   if(TRBRACE(3) && TVERB(n-2,CLAMIN) && TNAME(0) && TASGN(1) && TNAME(2)){A p,*yv,z1;I c,j,k,m;  // if we match }~, can't match this
    // abc=: pqr}x,...y,:z  (must be odd # words, but that's not worth checking)
    // Verify the form is present: alternating names and commas

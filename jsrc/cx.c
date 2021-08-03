@@ -832,7 +832,6 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
     // Remember the exact location of the symbol.  It will not move as long as this symbol table is alive.  We can
     // use it only when we are in this primary symbol table
     NAV(tv)->sb.sb.symx=k;  // keep index of the allocated symbol
-    tqc|=QCNAMEHASLOC;  // indicate that a symtab slot has been reserved
     compcount=~compcount;  // negative bucket indicates found symbol
     break;
    }
@@ -1027,7 +1026,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
       // Not (( )).  We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
       // copy the fragment between () to a temp buffer, replacing any verb with [:
       if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
-      DO(rparx-startx-1, fragv[i]=AT(QCWORD(lvv[startx+i+1]))&VERB?ds(CCAP):QCWORD(lvv[startx+i+1]);)  // copy the fragment, not including (), with verbs replaced
+      DO(rparx-startx-1, fragv[i]=AT(QCWORD(lvv[startx+i+1]))&VERB?QCINSTALLTYPE(ds(CCAP),QCVERB):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
       // parse the temp for error, which will usually be an attempt to execute a verb
       parsea(fragv,rparx-startx-1);
      }

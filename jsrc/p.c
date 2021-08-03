@@ -560,6 +560,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
    
    do{UI tmpes;I at;A y;I tx;  // tx is the type number, as analyzed by enqueue
      y=*(volatile A*)queue;   // fetch as early as possible
+if(QCTYPE(y)==0)SEGFAULT;  // scaf
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
       // to give it priority.  likelys at the end of the line 0-2 code are key
 
@@ -570,13 +571,12 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
      // pull one value from the queue
 
      // We have the type of the next word, and its value is on the way.  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
-     if(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is == the flag for assignment
-      
-      // Now we have to wait for y and ->sb.sb.symx.  Transfer flags out of y into pt0ecam so that at is not needed over subroutine calls
-      pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))+VALTYPE);
-// obsolete       SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
-      pt0ecam|=(at&(NAMEBYVALUE+NAMEABANDON))>>(NAMEBYVALUEX-NAMEFLAGSX);
-      y=QCWORD(y);  // back y up to the NAME block
+// obsolete      if(!(at&PTNAMEIFASGN(~GETSTACK0PT)&NAME)){
+     if(!((I)y&QCISLKPNAME)){
+      // not a name requiring lookup; split type from pointer
+      tx=QCTYPE(y);  // get the type number to fetch
+      y=QCWORD(y);  // back y up to the start of the data block
+     }else{L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is == the flag for assignment
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
@@ -585,11 +585,15 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
       // pass over a subroutine call, we have to store it pt0ecam or some other saved name
       I4 symx, buck;
 #if SY_64
-      I sb=NAVV(y)->sb.symxbucket; symx=sb; buck=sb>>32;  // fetch 2 values together if possible.  y is not ready until now
+      I sb=NAVV(QCWORD(y))->sb.symxbucket; symx=sb; buck=sb>>32;  // fetch 2 values together if possible.  y is not ready until now
 #else
       symx=NAV(y)->sb.sb.symx; buck=NAV(y)->sb.sb.bucket;
 #endif
-      I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
+      I bx=NAVV(QCWORD(y))->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
+      pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))+VALTYPE);
+// obsolete       SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
+      pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
+      y=QCWORD(y);  // back y up to the NAME block
       L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)symx;  // get address of symbol in primary table
@@ -686,9 +690,6 @@ undefname:
        at=AT(y);  // refresh the type with the type of the resolved name
       }
 endname: ;
-     }else{
-      tx=QCTYPE(y);  // get the type number to fetch
-      y=QCWORD(y);  // back y up to the start of the data block
      }
      // names have been resolved
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.

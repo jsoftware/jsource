@@ -685,15 +685,15 @@ typedef struct {I e,p;X x;} DX;
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
 // the CAVN types are selected for comp ease in the typeval field of an assigned value, which might also hold VALTYPENAMELESSADV
-#define QCNOUN 0x01LL  // this bit must not be set in any other CAVN type
-#define QCNOUN 0x01LL  // this bit must not be set in any other CAVN type
-#define QCADV 0x04LL
-#define QCVERB 0x08ll
-#define QCCONJ 0x0aLL
+#define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any other CAVN type
+#define QCADV  ((ADVX-LASTNOUNX)+1) // 4
+#define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
+#define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10
+#define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // name followed by copula
+#define QCASGNLOCAL ((SYMBX-LASTNOUNX)+1) // =. preceded by nonlocative name
 #define QCISLKPNAME 0x10LL   // name requires lookup (i. e. not assigned)
-#define QCNAMEASSIGNED 0x0c // name is followed by copula
-#define QCNAMEHASLOC 0x01   // combining flag - name has local symbol-table slot assigned (if we are using the permanent table) - can be set in ANY name
-#define QCNAMEABANDON  0x02 // combining flag - name has :: - set only if not assigned
+#define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
+#define QCNAMEABANDON 0x08 // combining flag - name has :: - set only if not assigned
 
 
 #define SYMLINFO 0  // index of LINFO entry

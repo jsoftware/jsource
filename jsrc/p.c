@@ -443,7 +443,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
-  // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
+
+ // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
  jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)nwds;  // addr & length of words being parsed
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
@@ -465,9 +466,10 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
 
-  // If words -1 & -2 exist, we can pull 4 words initially unless word 2 is ASGN or word 1 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
+  // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch
-  I nopull4=0; if(likely(nwds>2))nopull4=(AT(QCWORD(queue[-1]))|AT(QCWORD(queue[-2])))&ASGN+LPAR;
+// obsolete   I nopull4=0; if(likely(nwds>2))nopull4=(AT(QCWORD(queue[-1]))|AT(QCWORD(queue[-2])))&ASGN+LPAR;
+  I pull4=0; if(likely(nwds>2))pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;
  
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
@@ -490,8 +492,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
    // We could worry about hysteresis to avoid reallocation of every call
   }
   A y;  // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call
-  y=*queue;  // unroll y once
-A expy=y;  // scaf
+  y=*(volatile A*)queue;  // unroll y once
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
@@ -500,7 +501,7 @@ A expy=y;  // scaf
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
-  UI pt0ecam = nwds+((nopull4?0b010LL:0b100LL)<<CONJX);
+  UI pt0ecam = nwds+((0b11LL<<CONJX)<<pull4);
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word, 
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if next stack word is NOT MARK 
   //  (passed from stack to exec) 25 ASGNLOCAL (aka SYMB) from AT(stack[0]),  in case we have an assignment
@@ -546,8 +547,7 @@ A expy=y;  // scaf
 
     // pt0ecam is settling from pt0 but it will be ready soon
    
-   do{UI tmpes;I tx;  // tx is the type number, as analyzed by enqueue
-if(expy!=y)SEGFAULT;  // scaf
+   do{UI4 tmpes;I tx;  // tx is the type number, as analyzed by enqueue
 // obsolete      y=*(volatile A*)queue;   // fetch as early as possible
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
       // to give it priority.  likelys at the end of the line 0-2 code are key
@@ -577,13 +577,14 @@ if(expy!=y)SEGFAULT;  // scaf
 #else
       symx=NAV(y)->sb.sb.symx; buck=NAV(y)->sb.sb.bucket;
 #endif
+      L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       I bx=NAVV(QCWORD(y))->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
       pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))+VALTYPE);
 // obsolete       SETSTACK0PT(GETSTACK0PT&~(VALTYPEMASK>>(ADVX-PTTYPEFLAGX)))  // clear where we are going to store valtype
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       y=QCWORD(y);  // back y up to the NAME block
-      L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
-      if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
+// obsolete       if((((I)symx-1)|SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX))>=0){  // if we are using primary table and there is a symbol stored there...
+      if((symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using primary table and there is a symbol stored there...
        s=sympv+(I)symx;  // get address of symbol in primary table
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
 // obsolete        SETSTACK0PT(GETSTACK0PT|(s->valtype<<PTTYPEFLAGX))  // save the type
@@ -671,7 +672,8 @@ rdglob: ;  // here when we tried the buckets and failed
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
         y = namerefacv(QCWORD(*(volatile A*)queue), s);   // Replace other acv with reference
         EPZ(y)
-        tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
+// obsolete         tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
+        tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
 // obsolete         at=AT(y);
        }
       } else {
@@ -680,7 +682,8 @@ undefname:
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
        y = namerefacv(QCWORD(*(volatile A*)queue), s);    // this will create a ref to undefined name as verb [:
        EPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
-       tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
+// obsolete        tx=ATYPETOVALTYPE(AT(y));  // refresh the type with the type of the resolved name
+       tx=ATYPETOVALTYPE(VERB);  // refresh the type with the type of the resolved name
 // obsolete        at=AT(y);
       }
 endname: ;
@@ -698,14 +701,13 @@ endname: ;
 // obsolete  nextat=AT(QCWORD(*(volatile A*)queue));    // scaf queue-- fetch the next AT from unroll - the word itself follows shortly.  we can fetch queue[-1], but not AT(queue[-1)
      stack[0].a = y;   // finish setting the stack entry, with the new word     y=*(volatile A*)queue;   // fetch as early as possible
      y=*(volatile A*)queue;   // fetch next value as early as possible
-expy=y;  // scaf
 // obsolete     I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more, 01x=2 more.  
      tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX)|ASGNLOCAL);  // clear the local-assignment flag, the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
      // we have to move some state into pt0ecam: the number of pulls (2 if RPAR, 1 if CONJ, 0 otherwise), and the ASGNLOCAL bit
      // the number of pulls is initialized by the execution routine but we may extend it here
-     pt0ecam|=(tx&QCASGNISLOCAL)<<ASGNLOCALX;   /// install local flag
+     pt0ecam|=(tx&QCASGNISLOCAL)<<ASGNLOCALX;   /// install local flag, used only for named assignment
 // obsolete      pt0ecam|=at&((3LL<<CONJX)|ASGNLOCAL);  // calculate pull count es  OR it in: 000= no more, other 0xx=1 more, 1xx=2 more.  Also bring in LOCAL flag for when we execute an assignment
 // obsolete      pt0ecam&=~(VERB<<1)|-(at&ADV+VERB+NOUN);  // if the action routine left VERB+1 set, it means we should stack another word of we stack an AVN
 
@@ -721,12 +723,18 @@ expy=y;  // scaf
     // *** here is where we exit stacking to do execution ***
     if(!(tmpes&(0b111LL<<CONJX)))break;  // exit stack phase when no more to do, leaving es=0
 // obsolete     pt0ecam=(pt0ecam&~(0b111LL<<CONJX))|((tmpes>>1)&(0b011LL<<CONJX)&~((at&ADV)<<(CONJX+1-ADVX)));  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 3 to request for 2.  Still worth it
-    pt0ecam|=((tmpes>>1)&((tx==QCADV?1:3)<<CONJX));  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 3 to request for 2.  Still worth it
+// obsolete     pt0ecam|=((tmpes>>=1)&((tx==QCADV?1:3)<<CONJX));  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 3 to request for 2.  Still worth it
+    pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 2 to request for 1.  QCADV+1 is an unused code
       // because we will be waiting for pt0 and the extra work can be done while it is settling
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue.
 
-  // Now execute fragments as long as there is one to execute
+   pt0ecam|=(((CONJ>>QCADV)|(CONJ>>QCVERB)|(CONJ>>QCNOUN)|(CONJ>>QCISLKPNAME)|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE))|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
+      <<(QCTYPE(y)))&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull).
+
+#define NEXTY ((volatile A *)queue)[0]
+
+  // Now execute fragments as long as there is one to execute.
    while(1) {
     // This is where we execute the action routine.  We give it the stack frame; it is responsible
     // for finding its arguments on the stack, storing the result (if no error) over the last
@@ -734,22 +742,20 @@ expy=y;  // scaf
     // and finally returning the new front-of-stack pointer
 
     // First, create the bitmask of parser lines that are eligible to execute
-    I pmask1=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 0-2 are enough to detect a match on line 0
-    I pmask=(I)((C*)&stack[3].pt)[3];   // this detects  matches on lines 0-7.  LPAR is unchecked
-// obsolete //    A fs1=atomic_load((_Atomic(A)*)&stack[1].a), fs=atomic_load((_Atomic(A)*)&stack[2].a);  // Read both possibilities to reduce latency
-    A fs1=*(volatile A *)&stack[1].a, fs=*(volatile A *)&stack[2].a;  // Read both possibilities to reduce latency
-    pmask1&=GETSTACK0PT; pmask&=pmask1;      // combine.  At this point all regs are full and if we extend pmask1 any farther it will spill
+    I pmask=GETSTACK0PT&(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 0-2 are enough to detect a match on line 0
     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
-    pt0ecam&=~(CONJ+VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
+    pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
 // obsolete     pt0ecam|=-(nextat&ADV+NAME+VERB+NOUN)&CONJ;  // save next-is-(C)AVN status in CONJ (which will become the request for a 2nd pull)
-    pt0ecam|=(((CONJ>>QCADV)|(CONJ>>QCVERB)|(CONJ>>QCNOUN)|(CONJ>>QCISLKPNAME)|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE))|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
-      <<(QCTYPE(y)))&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull)
+    A fs1=*(volatile A *)&stack[1].a, fs=*(volatile A *)&stack[2].a; fs=pmask&1?fs1:fs; // Read both possibilities to reduce latency, choose 1
+    PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot the CAV to be executed, for lines 0-4
+    pmask&=(I)((C*)&stack[3].pt)[3];   // this detects  matches on lines 0-7.  LPAR is unchecked
+// obsolete //    A fs1=atomic_load((_Atomic(A)*)&stack[1].a), fs=atomic_load((_Atomic(A)*)&stack[2].a);  // Read both possibilities to reduce latency
+// obsolete     pmask&=pmask1;      // combine.  At this point all regs are full and if we extend pmask1 any farther it will spill
 // obsolete     pmask=(pmask|PTNOTLPAR)&(GETSTACK0PT^PTNOTLPAR);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
 // obsolete //    A fs=fsa[0].a;  // 
-    PSTK *fsa=&stack[2-(pmask1&1)];  // pointer to stack slot the CAV to be executed, for lines 0-4
-    pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after thie result of this exec
-    fs=pmask1&1?fs1:fs;
+    
     if(pmask){  // If all 0, nothing is dispatchable, go push next word
+     pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after thie result of this exec.   Wait till we know not (
 // obsolete      A fs=((volatile PSTK *)stack)[2-(pmask&1)].a;  // the executed self block, valid for lines 0-4 - fetch as early as possible - stk[2] except for line 0
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
@@ -787,17 +793,18 @@ expy=y;  // scaf
        if(unlikely((UI)((fsflag>>(pmask>>2))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!(pt0ecam&NOTFINALEXEC))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
         // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
         // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
- // obsolete         I savpt0ecam=pt0ecam;  // the flags we need to check are ready.  Save them while we set others.  This copy will not survive the subroutine calls
- // obsolete         pt0ecam&=(FAVV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1)))|~VASGSAFE;  // if executing line 1, make sure stack[1] is also ASGSAFE
-        if(fsflag&VASGSAFE&&(!(pmask&2)||FAVV(stack[1].a)->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
-         A nexty=QCWORD(*(volatile A*)queue);  // refetch next-word (=name) address to save regs
- // obsolete        if(likely((AT(stack[0].a))&ASGNLOCAL)){
+// obsolete         I savpt0ecam=pt0ecam;  // the flags we need to check are ready.  Save them while we set others.  This copy will not survive the subroutine calls
+// obsolete         pt0ecam&=(FAVV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1)))|~VASGSAFE;  // if executing line 1, make sure stack[1] is also ASGSAFE
+        if(pt0ecam&VASGSAFE&&(!(pt0ecam&(2<<PLINESAVEX))||FAVV(stack[1].a)->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
+// obsolete          A nexty=QCWORD(*(volatile A*)queue);  // refetch next-word (=name) address to save regs
+// obsolete        if(likely((AT(stack[0].a))&ASGNLOCAL)){
          if(likely(pt0ecam&ASGNLOCAL)){
           // local assignment.  First check for primary symbol.  We expect this to succeed
-          if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->sb.sb.symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
-           s=JT(jt,sympv)+(I)NAV(nexty)->sb.sb.symx;  // get address of symbol in primary table.  There may be no value; that's OK
-          }else{s=jtprobeislocal(jt,nexty);}
-         }else s=probeisquiet(nexty);  // global assignment, get slot address
+// obsolete           if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->sb.sb.symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+          if((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->sb.sb.symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0){
+           s=JT(jt,sympv)+(I)s;  // get address of symbol in primary table.  There may be no value; that's OK
+          }else{s=jtprobeislocal(jt,QCWORD(*(volatile A*)queue));}
+         }else s=probeisquiet(QCWORD(*(volatile A*)queue));  // global assignment, get slot address
          // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete         s=pt0ecam&VASGSAFE?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos  scaf move this earlier?  they run eventually
          // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
@@ -807,7 +814,7 @@ expy=y;  // scaf
          // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
          s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
          // These instructions take a while to execute; they will probably be running when the pipeline breaks
-         pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after call
+         pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
         }
        }
        // There is no need to set the token number in the result, since it must be a noun and will never be executed
@@ -869,7 +876,7 @@ RECURSIVERESULTSCHECK
        audittstack(jt);
 #endif
        }
-       y=*(volatile A*)queue;  // refetch next-word to save regs
+       y=NEXTY;  // refetch next-word to save regs
 
        // Handle early exits: AVN on line (0)12 or (not LPAR on line 02 and finalexec).
        // If line 02 and the current word is (C)AVN and the next is also, stack 2
@@ -878,7 +885,7 @@ RECURSIVERESULTSCHECK
 // obsolete        if(((pt0ecam&PTNOTLPAR+(1LL<<PLINESAVEX))==PTNOTLPAR)){
         if(likely(STACK0PTISCAVN>=(pt0ecam&NOTFINALEXEC+(1LL<<(PLINESAVEX+1))))){   // test is AVN or (NOTFINAL and pmask[1] both 0)
          // not ( and (AVN or !line1 & finalexec)): OK to skip the executable check
-         pt0ecam&=(((GETSTACK0PT<<(CONJX-PTISCAVNX))&~(pt0ecam<<(CONJX-(PLINESAVEX+1))))|~CONJ);  // Optionally stack one more.  CONJ is now set to (next is CAVN).  Stack 2 if also (curr is CAVN) and (line 02)
+         pt0ecam&=(((GETSTACK0PT<<(CONJX-PTISCAVNX))&~(pt0ecam<<(CONJX-(PLINESAVEX+1))))|~CONJ);  // Optionally stack one more.  CONJ comes in as (next is CAVN).  Stack 2 if also (curr is CAVN) and (line 02)
          break;  // Go stack.
         }
 // obsolete        pt0ecam&=~(VERB<<1);  // if no bypass, clear the 'Pull another' flag
@@ -887,7 +894,7 @@ RECURSIVERESULTSCHECK
         if(PTISRPAR0(stack[2].pt)==0){stack[2]=stack[1]; stack[2].t=stack[0].t; SETSTACK0PT(PTNOUN); stack+=2;}  // ( CAVN ).  Handle it
        }
        // If EDGE on line 1, we must rescan for EDGE V V N
-       pt0ecam&=~CONJ;  // if we are not going to stack right away, clear the request for 2d stack
+// obsolete        pt0ecam&=~CONJ;  // if we are not going to stack right away, clear the request for 2d stack
       }else{
        // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
        pmask>>=3; // 1 for adj, 2 for conj
@@ -899,7 +906,7 @@ RECURSIVERESULTSCHECK
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
        A yy=(*actionfn)(jt,arg1,arg2,fs);
-       y=*(volatile A*)queue;  // refetch next-word to save regs
+       y=NEXTY;  // refetch next-word to save regs
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
@@ -933,7 +940,7 @@ RECURSIVERESULTSCHECK
        // At this point pt0ecam&CONJ is set to (nextat is CAVN).  For comp ease we use this instead of checking for LPAR and ASGN.  This means that for a =: b =: c we will miss after assigning b.
 // obsolete         pt0ecam|=(~nextat&LPAR)<<(CONJX-LPARX);   // request to pull a second token if not (
 // obsolete         if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(queue[-1])&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&~(nextat<<(CONJX+1-ASGNX))&(CONJ<<1);}  // we start with CONJ set to 'next is not LPAR'
-       y=*(volatile A*)queue;  // refetch next-word to save regs
+       y=NEXTY;  // refetch next-word to save regs
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word
 // obsolete        }
@@ -941,7 +948,7 @@ RECURSIVERESULTSCHECK
        if(pmask&0b100000){
 // obsolete         stack=jtpfork(jt,stack);  // bottom of stack unchanged
         A yy=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
-        y=*(volatile A*)queue;  // refetch next-word to save regs
+        y=NEXTY;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
         EPZ(yy);  // if error, return 0 stackpointer
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
@@ -949,7 +956,7 @@ RECURSIVERESULTSCHECK
        }else{
 // obsolete         stack=jtphook(jt,stack);  // bottom of stack unchanged
         A yy=hook(stack[1].a,stack[2].a);  // create the hook
-        y=*(volatile A*)queue;  // refetch next-word to save regs
+        y=NEXTY;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
         EPZ(yy);  // if error, return 0 stackpointer
         PTFROMTYPE(stack[2].pt,AT(yy)) stack[2].t = stack[1].t; stack[2].a = yy;  // take err tok from f; save result.  Must store new type because this line takes adverb hooks also
@@ -972,7 +979,7 @@ RECURSIVERESULTSCHECK
     // and will predict that way, which is wrong.
     }else{
      // LPAR misses the main parse table, which is just as well because it would miss later branches anyway.  We pick it up here so as not to add
-     // a couple of cycles to the main parse test.  Whether we stack of execute, y is still set with the next word+type
+     // a couple of cycles to the main parse test.  Whether we stack or execute, y is still set with the next word+type
      if(!(GETSTACK0PT&PTNOTLPAR)){  // ( with no other line.  Better be ( CAVN )
       if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
        SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it

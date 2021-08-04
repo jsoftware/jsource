@@ -680,6 +680,7 @@ typedef struct {I e,p;X x;} DX;
 /*        decimal point after last digit                                   */
 
 // LSB codes in enqueued words.  Set by enqueue(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
+// type of 0000 is unused; 1-11 are the type bits in order
 #define QCMASK 0x1fLL   // all the LSB flags
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
@@ -688,6 +689,7 @@ typedef struct {I e,p;X x;} DX;
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any other CAVN type
 #define QCADV  ((ADVX-LASTNOUNX)+1) // 4
 #define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
+#define QCLPAR  ((LPARX-LASTNOUNX)+1)  // 9
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10
 #define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // name followed by copula
 // the last AT type is RPAR, which is 11 (30-20+1)

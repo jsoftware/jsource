@@ -636,8 +636,13 @@ extern unsigned int __cdecl _clearfp (void);
 
 // macros for bit testing
 #define SGNIF(v,bitno) ((I)(v)<<(BW-1-(bitno)))  // Sets sign bit if the numbered bit is set
+#define SGNIF4(v,bitno) ((I4)(v)<<(32-1-(bitno)))  // Sets sign bit if the numbered bit is set, in an I4
 #define SGNONLYIF(v,bitno) (((v)>>(bitno))<<(BW-1))  // Sets sign bit if the numbered bit is set, clears all other bits
 #define SGNIFNOT(v,bitno) (~SGNIF((v),(bitno)))  // Clears sign bit if the numbered bit is set
+#define REPSGN(x) ((x)>>(BW-1))  // replicate sign bit of x to entire word (assuming x is signed type - if unsigned, just move sign to bit 0)
+#define REPSGN4(x) ((I4)(x)>>(32-1))  // replicate sign bit of x to entire I4 - x is forced to I4
+#define SGNTO0(x) ((UI)(x)>>(BW-1))  // move sign bit to bit 0, clear other bits
+#define SGNTO0US(x) ((US)(x)>>(16-1))  // move sign bit to bit 0, clear other bits
 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
@@ -1616,9 +1621,6 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #else
 #define R0 R 0;
 #endif
-#define REPSGN(x) ((x)>>(BW-1))  // replicate sign bit of x to entire word (assuming x is signed type - if unsigned, just move sign to bit 0)
-#define SGNTO0(x) ((UI)(x)>>(BW-1))  // move sign bit to bit 0, clear other bits
-#define SGNTO0US(x) ((US)(x)>>(16-1))  // move sign bit to bit 0, clear other bits
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}

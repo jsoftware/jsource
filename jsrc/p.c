@@ -742,20 +742,23 @@ endname: ;
     // and finally returning the new front-of-stack pointer
 
     // First, create the bitmask of parser lines that are eligible to execute
-    I pmask=GETSTACK0PT&(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 0-2 are enough to detect a match on line 0
+    I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 0-2 are enough to detect a match on line 0
+    I pbyte3=(I)((C*)&stack[3].pt)[3];  // fetch early
+    A fs1=*(volatile A *)&stack[1].a, fs=*(volatile A *)&stack[2].a; // Read both possibilities to reduce latency
+    pmask&=GETSTACK0PT;  // finish 1st 3 columns, whiich are enough to decide bit 0
+    fs=pmask&1?fs1:fs;  // choose correct values of fs
+    PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4
     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
     pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
 // obsolete     pt0ecam|=-(nextat&ADV+NAME+VERB+NOUN)&CONJ;  // save next-is-(C)AVN status in CONJ (which will become the request for a 2nd pull)
-    A fs1=*(volatile A *)&stack[1].a, fs=*(volatile A *)&stack[2].a; fs=pmask&1?fs1:fs; // Read both possibilities to reduce latency, choose 1
-    PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot the CAV to be executed, for lines 0-4
-    pmask&=(I)((C*)&stack[3].pt)[3];   // this detects  matches on lines 0-7.  LPAR is unchecked
+    pmask&=pbyte3;   // this detects  matches on lines 0-7.  LPAR is unchecked
 // obsolete //    A fs1=atomic_load((_Atomic(A)*)&stack[1].a), fs=atomic_load((_Atomic(A)*)&stack[2].a);  // Read both possibilities to reduce latency
 // obsolete     pmask&=pmask1;      // combine.  At this point all regs are full and if we extend pmask1 any farther it will spill
 // obsolete     pmask=(pmask|PTNOTLPAR)&(GETSTACK0PT^PTNOTLPAR);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
 // obsolete //    A fs=fsa[0].a;  // 
     
     if(pmask){  // If all 0, nothing is dispatchable, go push next word
-     pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after thie result of this exec.   Wait till we know not (
+     pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after thie result of this exec.   Wait till we know not fail, so we don't have to wait for (
 // obsolete      A fs=((volatile PSTK *)stack)[2-(pmask&1)].a;  // the executed self block, valid for lines 0-4 - fetch as early as possible - stk[2] except for line 0
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
@@ -767,7 +770,6 @@ endname: ;
      // Fill in the token# (in case of error) based on the line# we are running
      if(pmask&0x1F){
       I fsflag=FAVV(fs)->flag;  // fetch flags early - we always need them in lines 0-2
-      pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  This ties up the reg while flags settle, but it's mostly used for predictions
       pmask=LOWESTBIT(pmask);   // leave only one bit
       jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
       // Here for lines 0-4, which execute the entity pointed to by fs
@@ -784,13 +786,14 @@ endname: ;
 // obsolete        pt0ecam|=PTISCAVN(GETSTACK0PT)<<((VERBX+1)-PTISCAVNX);  // 0x400000 if CAVN (which implies AVN here); move flag to VERBX+1    This line & the next may not be necessary (moving within same reg)
 // obsolete        pt0ecam|=GETSTACK0PT&PTNOTLPAR;  // not ( - we could do this later but here pt0ecam is tied up till fsflag settles
        pt0ecam|=pmask<<PLINESAVEX;  // lose pline over the subroutine calls to try to prevent a register spill
+       pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  This ties up the reg while flags settle, but it's mostly used for predictions
        // If it is an inplaceable assignment to a known name that has a value, remember the name and the value
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
        jt->sf=fs;  // set new recursion point for $:
-       if(unlikely((UI)((fsflag>>(pmask>>2))&VJTFLGOK1)>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!(pt0ecam&NOTFINALEXEC))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+       if(unlikely((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!(pt0ecam&NOTFINALEXEC))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
         // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
         // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
 // obsolete         I savpt0ecam=pt0ecam;  // the flags we need to check are ready.  Save them while we set others.  This copy will not survive the subroutine calls
@@ -899,7 +902,7 @@ RECURSIVERESULTSCHECK
        // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
        pmask>>=3; // 1 for adj, 2 for conj
        AF actionfn=FAVV(fs)->valencefns[pmask-1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
-       jt->parserstackframe.parsercurrtok = stack[2].t;   // in order 9-0: 0 0 1 1 1 2 2 2 2 1->00 00 01 01 01 10 10 10 10 01->0000 0101 0110 1010 1001
+// obsolete        jt->parserstackframe.parsercurrtok = stack[2].t;   // in order 9-0: 0 0 1 1 1 2 2 2 2 1->00 00 01 01 01 10 10 10 10 01->0000 0101 0110 1010 1001
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
        A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
        UI4 restok=stack[1].t;  // save token # to use for result

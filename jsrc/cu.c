@@ -34,7 +34,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  GATV(z,BOX,natoms,wr,AS(w));
  if(!natoms)R z;  // exit if no result atoms
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
- A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was inplaceable pristine, contents can be inplaced
+ A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was recursive inplaceable pristine, contents can be inplaced
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(wt&BOX);
  // Get input pointer
@@ -65,7 +65,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    ACIPYES(virtw);  // make the block inplaceable
    // If we are setting the usecount to inplaceable, that must be a change, because we do that only on contents of boxes.  If the block is inplaceable, the system requires that AM point to a tpop-stack entry
    // that will free the block, and code may simulate a free by clearing that entry.  We can't be sure that the original tpush entry is still valid, but we do know that our w block is recursive and inplaceable, so we can use
-   // any pointer to the block - for example *wv - as a zappable location
+   // any pointer to the block - for example *wv - as a zappable location.  If the block weren't recursive this wouldn't work
    AZAPLOC(virtw)=wv;  // point to a zappable entry
   }
   if(unlikely((x=CALL1IP(f1,virtw,fs))==0)){ // run the user's verb

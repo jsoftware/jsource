@@ -15,7 +15,7 @@
 
 /* parsing benchmark
 
-parsing & name lookup
+parsing & name lookup + loop index
 9!:5 :: 0: 1
 namelkp =: 3 : 0
 totl =. 0.
@@ -36,6 +36,8 @@ end.
 totl
 )
 (10) 6!:2 'namelkp i. 1e6'
+
+parsing+loop
 namelkp =: 3 : 0
 for. y do.
 y
@@ -742,23 +744,25 @@ endname: ;
     // and finally returning the new front-of-stack pointer
 
     // First, create the bitmask of parser lines that are eligible to execute
+    // register pressure is severe
     I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 0-2 are enough to detect a match on line 0
-    I pbyte3=(I)((C*)&stack[3].pt)[3];  // fetch early
-    A fs1=*(volatile A *)&stack[1].a, fs=*(volatile A *)&stack[2].a; // Read both possibilities to reduce latency
+    pmask&=(I)((C*)&stack[3].pt)[3];  // fetch early
+    pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
     pmask&=GETSTACK0PT;  // finish 1st 3 columns, whiich are enough to decide bit 0
-    fs=pmask&1?fs1:fs;  // choose correct values of fs
+// scaf   A fs=*(volatile A *)&stack[2].a; {A fs1=*(volatile A *)&stack[1].a;// Read both possibilities to reduce latency
+ // scaf   jt->shapesink[0]=(I)(fs=pmask&1?fs1:fs);} // choose correct values of fs
     PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4
     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
-    pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
 // obsolete     pt0ecam|=-(nextat&ADV+NAME+VERB+NOUN)&CONJ;  // save next-is-(C)AVN status in CONJ (which will become the request for a 2nd pull)
-    pmask&=pbyte3;   // this detects  matches on lines 0-7.  LPAR is unchecked
 // obsolete //    A fs1=atomic_load((_Atomic(A)*)&stack[1].a), fs=atomic_load((_Atomic(A)*)&stack[2].a);  // Read both possibilities to reduce latency
 // obsolete     pmask&=pmask1;      // combine.  At this point all regs are full and if we extend pmask1 any farther it will spill
 // obsolete     pmask=(pmask|PTNOTLPAR)&(GETSTACK0PT^PTNOTLPAR);  // low 8 bits are lines0-7; LPAR is at some higher noncontiguous location
 // obsolete //    A fs=fsa[0].a;  // 
     
     if(pmask){  // If all 0, nothing is dispatchable, go push next word
+     A fs=fsa->a;  // the action to be executed if lines 0-4
      pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after thie result of this exec.   Wait till we know not fail, so we don't have to wait for (
+     jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
 // obsolete      A fs=((volatile PSTK *)stack)[2-(pmask&1)].a;  // the executed self block, valid for lines 0-4 - fetch as early as possible - stk[2] except for line 0
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
@@ -771,7 +775,6 @@ endname: ;
      if(pmask&0x1F){
       I fsflag=FAVV(fs)->flag;  // fetch flags early - we always need them in lines 0-2
       pmask=LOWESTBIT(pmask);   // leave only one bit
-      jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
       // Here for lines 0-4, which execute the entity pointed to by fs
       // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
@@ -793,7 +796,7 @@ endname: ;
        // this may be over two verbs
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
        jt->sf=fs;  // set new recursion point for $:
-       if(unlikely((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!(pt0ecam&NOTFINALEXEC))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+       if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!(pt0ecam&NOTFINALEXEC))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
         // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
         // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
 // obsolete         I savpt0ecam=pt0ecam;  // the flags we need to check are ready.  Save them while we set others.  This copy will not survive the subroutine calls
@@ -804,7 +807,7 @@ endname: ;
          if(likely(pt0ecam&ASGNLOCAL)){
           // local assignment.  First check for primary symbol.  We expect this to succeed
 // obsolete           if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->sb.sb.symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
-          if((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->sb.sb.symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0){
+          if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->sb.sb.symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
            s=JT(jt,sympv)+(I)s;  // get address of symbol in primary table.  There may be no value; that's OK
           }else{s=jtprobeislocal(jt,QCWORD(*(volatile A*)queue));}
          }else s=probeisquiet(QCWORD(*(volatile A*)queue));  // global assignment, get slot address
@@ -819,6 +822,7 @@ endname: ;
          // These instructions take a while to execute; they will probably be running when the pipeline breaks
          pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
         }
+// obsolete         fs=jt->sf;
        }
        // There is no need to set the token number in the result, since it must be a noun and will never be executed
        // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates

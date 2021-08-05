@@ -224,7 +224,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
 // not checked state |= (-state) & (I)jtinplace & JTCOUNTITEMS; // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
- // Allocate virtual block for the running x argument.  UNINCORPABLE.  Should be inplaceable, but we don't yet
+ // Allocate virtual block for the running x argument.  UNINCORPABLE.
  fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);
  // z will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, z will be in a virtual block to begin with (usually)
@@ -235,10 +235,12 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  AN(z)=k; AN(a)=k;
  k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
  AK(z)+=(n-1)*k; AK(a)+=(n-1)*k; MCISH(AS(z),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // a points to tail; it will be decremented before first use
- // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or fs is &.>)
+ // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or (fs is &.> and w is recursive))
  // We include contextual inplaceability (from jtinplace) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
  // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtinplace itself
- state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))&AC(w))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+ // We have to include the recursive check to make sure that we don't create a virtual pristine block (which is always recursive) out of a nonrecursive w, because
+ // nonrecursive contents cannot be zapped inside every2
+ state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-((f2!=jtevery2self)|((AFLAG(w)&RECURSIBLE)==0)))&AC(w))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
  ACINIT(z,ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX)))   // first cell is inplaceable if second is

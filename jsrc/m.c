@@ -1223,7 +1223,7 @@ if((I)jt&3)SEGFAULT;
   RZ(z=jtgafalloos(jt,blockx,n));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
  }
 #if MEMAUDIT&8
- DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
+ DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=2&&i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word or zaploc
 #endif
  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
   // we do not attempt to combine the AFLAG write into a 64-bit operation

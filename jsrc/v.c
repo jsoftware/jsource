@@ -30,8 +30,8 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
   }
   // Not self-virtual.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
-  // If rank 0 were the only thing stopping us from inplacing, we could inherit pristinity
-  if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; RETF(z);}
+  // Transfer pristinity from w to z, if w is abandoned.  Taking the virtual block will clear prist from w
+  if(!(AFLAG(w)&(AFNJA))){I wprist=PRISTFROMW(w); RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; AFLAGORLOCAL(z,wprist) RETF(z);}
 
   // If we have to allocate a new block, do so.  In that rare case, revoke pristinity of w
   GA(z,AT(w),AN(w),1+f,0); MCISH(AS(z),AS(w),f) AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape (don't overfetch AS(w)

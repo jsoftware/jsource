@@ -212,16 +212,16 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 , ckprist 0 1 1 1 ] 5
 , ckprist 2 1 0 0 ] 4 5
 ,"1 ckprist 0 1 1 1 ] 4 5
-,"0 ckprist 1 0 0 0 ] 4 5
+,"0 ckprist 1 1 0 0 ] 4 5
 '(<"0 i. 5)' , ckprist 0 1 0 ] 5
 '(<i. 1000)' , ckprist 0 1 0 ] _1
 ,~ ckprist 0 0 0 ] 5  NB. not pristine when duplicating self
 '(<"0 i. 2 5)' , ckprist 0 1 0 ] 5
 '(<"0 i. 2 6)' , ckprist 0 0 0 ] 5
 ,. ckprist 0 1 1 1 ] 4 5
-,. ckprist 1 0 0 0 ] 5
+,. ckprist 1 1 0 0 ] 5
 ,."2 ckprist 0 1 1 1 ] 3 4 5
-,."1 ckprist 1 0 0 0 ] 4 5
+,."1 ckprist 1 1 0 0 ] 4 5
 '<"0 i. 5' ,. ckprist 0 0 0 0 ] 5  NB. with frame we don't track pristinity - we could
 '<{. i. 1' ,. ckprist 0 1 0 0 ] _1  NB. no frame
 '<"0 i. 5' ,: ckprist 0 0 0 0 ] 5

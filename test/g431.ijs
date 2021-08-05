@@ -213,7 +213,9 @@ zzz =: 0 + z =: i. QKTEST{1e7 1e5
 ((QKTEST{9999999 99999), 0) -: {: (2 2"_)/\. z
 zzz -: z
 
-
+NB. Failed because # result was nonrecursive but /\. made the virtual block recursive, which led to erroneous free inside every2
+('b,c';'c') -: (([,',',])&.>)/\. 0 1 1 # 'a';'b';'c'
+(2 2 $ ('a',":)&.> 2 3 4 5) -: (('a',])&.>)"1 ]  0 1 1 # ":&.> i. 3 2
 
 NB. f\."r y -------------------------------------------------------------
 

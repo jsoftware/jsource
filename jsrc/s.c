@@ -245,7 +245,6 @@ L *probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[bu
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
 // If the value is empty, return 0 for not found
-// This code is copied in p.c   scaf
 L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block

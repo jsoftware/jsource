@@ -749,8 +749,8 @@ endname: ;
     pmask&=(I)((C*)&stack[3].pt)[3];  // fetch early
     pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
     pmask&=GETSTACK0PT;  // finish 1st 3 columns, whiich are enough to decide bit 0
-// scaf   A fs=*(volatile A *)&stack[2].a; {A fs1=*(volatile A *)&stack[1].a;// Read both possibilities to reduce latency
- // scaf   jt->shapesink[0]=(I)(fs=pmask&1?fs1:fs);} // choose correct values of fs
+// too many regs   A fs=*(volatile A *)&stack[2].a; {A fs1=*(volatile A *)&stack[1].a;// Read both possibilities to reduce latency
+// even when forced to calculate   jt->shapesink[0]=(I)(fs=pmask&1?fs1:fs);} // choose correct values of fs
     PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4
     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
 // obsolete     pt0ecam|=-(nextat&ADV+NAME+VERB+NOUN)&CONJ;  // save next-is-(C)AVN status in CONJ (which will become the request for a 2nd pull)

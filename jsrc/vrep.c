@@ -90,6 +90,44 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
+#if ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
+  C *avv=CAV(a)+n; n=m-n;   // prime the pipeline for top of loop.
+  __m256i i127=_mm256_set1_epi8(127);
+  while(n>0){    // where we load bits 32 at a time
+   // Load up to 64 bits starting at avv.  We will write to wvv
+   // Loop till we find a nonzero.  Advance wvv to point to the first nonzero
+#define BSIZE 32
+   __m256i chars; I bitstack; C *avv0;  // place to read in booleans and packed bits
+   for(avv0=avv;n>BSIZE;avv+=BSIZE, n-=BSIZE){  // as long as we can guarantee a remnant
+    chars=_mm256_loadu_si256((__m256i*)avv);  // read a batch
+    if(!_mm256_testz_si256(chars,chars)){  // exit if nonzero found.  Cannot be spurious
+     // advance avv, wvv, and n so that they are lined up to the first nonzero valur
+     I low1=CTTZ(_mm256_movemask_epi8(_mm256_add_epi8(chars,i127)));  // offset to first 1.  All data must be valid boolean, and there is a nonzero
+     avv+=low1; n-=low1;
+     break;
+    }
+   }  // stop when *avv holds a nonzero or end
+   wvv+=k*(avv-avv0);  // advance wvv to match avv and n
+   // load (up to) 64 bitstack starting at the designated start-point.  Make any excess bits 0
+ __m256i chars2, bitendmask;
+   if(n>BSIZE){
+    bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(_mm256_loadu_si256((__m256i*)avv),i127));
+    if(n>=BSIZE*2){
+     bitstack|=(I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(_mm256_loadu_si256((__m256i*)(avv+BSIZE)),i127))<<BSIZE;
+    }else{
+     // must do masked fetch and clear invalid bits
+     bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+((-n>>LGSZI)&(NPAR-1))));
+     bitstack|=(I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(_mm256_maskload_epi64((I*)(avv+BSIZE),bitendmask),i127))<<BSIZE;
+     bitstack&=~(-1LL<<n);  // leave n valid bits
+    }
+   }else{
+    // must do masked fetch and clear invalid bits
+    bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+((-n>>LGSZI)&(NPAR-1))));
+    bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(_mm256_maskload_epi64((I*)avv,bitendmask),i127));
+    bitstack&=~(-1LL<<n);  // leave n valid bits
+   }
+   avv+=2*BSIZE;  // we have moved 2 batches of bits into bitstack
+#else
   UI *avv=(UI*)(CAV(a)+n); n=m-n; n+=((n&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop.  Extend n only if needed to get all bits, and only by a full word
   while(n>0){    // where we load bits SZI at a time
    // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
@@ -100,12 +138,14 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
    bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
    // Now handle the last batch, by removing initial extension if any, discarding garbage bits at the end, and then shifting the lead bit down to bit 0
    if(n>=BW+SZI)bits=*avv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
+#endif
+#define REPEATLOOP1(t,x) if(bitstack==0){zvv+=sizeof(t)*x; break;} *(t*)(zvv+sizeof(t)*x)=((t*)wvv)[CTTZI(bitstack)]; bitstack&=bitstack-1;
+#define REPEATLOOP(t) NOUNROLL while(1){REPEATLOOP1(t,0) REPEATLOOP1(t,1) REPEATLOOP1(t,2) REPEATLOOP1(t,3) zvv+=sizeof(t)*4;} break;
    switch(k){  // copy the words
-   case sizeof(UI): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
-   case sizeof(C): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(C*)zvv=((C*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
-   case sizeof(US): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(US*)zvv=((US*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(UI): REPEATLOOP(UI) case sizeof(C): REPEATLOOP(C)  case sizeof(US): REPEATLOOP(US) 
+// obsolete    case sizeof(UI): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #if BW==64
-   case sizeof(UI4): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(UI4): REPEATLOOP(UI4) 
 #endif
    default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
    }
@@ -116,7 +156,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   wvv=(C*)wvv+(k*n);  // in case we loop back, back wvv to start of next input area, taking away the part of the last BW section we didn't use
   n=0;  // no bias for cells after the first
  } 
-
  R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 

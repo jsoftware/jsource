@@ -1,2 +1,2 @@
 #define jversion  "903"
-#define jtype     "beta-l"
+#define jtype     "beta-m"

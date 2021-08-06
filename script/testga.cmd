@@ -1,8 +1,9 @@
 @rem test windows on github actions
 
-cd j64
-dir
+dir j64
 
-jconsole -lib j.dll -jprofile ver.ijs
-jconsole -lib javx.dll -jprofile ver.ijs
-jconsole -lib javx2.dll -jprofile ver.ijs
+j64\jconsole -lib j.dll -jprofile ver.ijs
+j64\jconsole -lib javx.dll -jprofile ver.ijs
+j64\jconsole -lib javx2.dll -jprofile ver.ijs
+
+j64\jconsole -lib javx.dll testga.ijs

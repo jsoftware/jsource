@@ -12,6 +12,9 @@ else
   s() { sed -i "" "$@"; }
 fi
 
+cp script/testga.ijs .
+cp script/ver.ijs .
+
 cp version.txt jsrc/jversion.h
 echo "#define jplatform \"$1\"" >> jsrc/jversion.h
 echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
@@ -34,6 +37,5 @@ mkdir -p $D
 cp bin/$1/j64/* $D
 cp bin/$1/j64avx/libj.$ext $D/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext $D/libjavx2.$ext
-cp script/ver.ijs $D
 chmod 644 $D/*
 chmod 755 $D/jconsole

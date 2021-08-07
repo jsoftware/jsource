@@ -1,12 +1,8 @@
 
-testpath=: (1!:43''),'/test/'
+testpath=: 'test/'
 
 os=. (('Linux';'Darwin') i. <UNAME) pick ;:'linux darwin win'
 testres=: 'test',os,'.txt'
-
-testpath fwrites testres
-
-exit ''
 
 0!:0 <testpath,'tsu.ijs'
 

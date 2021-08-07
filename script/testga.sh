@@ -14,9 +14,11 @@ ls -l j64
 j64/jconsole -lib libj.$ext -jprofile ver.ijs
 j64/jconsole -lib libjavx.$ext -jprofile ver.ijs
 
-# this failed on macOS - perhaps running avx2 not yet supported?
-#if [ $1 == "linux" ]; then
+# avx2 calls failed on macOS - perhaps running avx2 not yet supported?
+if [ $1 == "linux" ]; then
   j64/jconsole -lib libjavx2.$ext -jprofile ver.ijs
-#fi
+  j64/jconsole -lib libjavx2.$ext testga.ijs
+else
+  j64/jconsole -lib libjavx.$ext testga.ijs
+fi
 
-j64/jconsole -lib libjavx.$ext testga.ijs

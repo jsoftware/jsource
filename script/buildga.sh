@@ -17,7 +17,7 @@ cp script/testga.ijs .
 cp script/ver.ijs .
 
 mkdir -p j64
-copy bin/profile.ijs j64
+cp bin/profile.ijs j64
 
 cp version.txt jsrc/jversion.h
 echo "#define jplatform \"$1\"" >> jsrc/jversion.h

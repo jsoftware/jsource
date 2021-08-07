@@ -1,5 +1,5 @@
 
-testpath=: 'test/'
+testpath=: (1!:43''),'/test/'
 
 os=. (('Linux';'Darwin') i. <UNAME) pick ;:'linux darwin win'
 testres=: 'test',os,'.txt'

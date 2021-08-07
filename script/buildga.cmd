@@ -1,6 +1,6 @@
 @rem build windows on github actions
 
-xcopy /I jlibrary\* .
+xcopy /I /S jlibrary\*
 copy script\testga.ijs
 copy script\ver.ijs
 

@@ -133,7 +133,7 @@ jobs:
      uses: actions/upload-artifact@v2
      with:
        name: dist
-       path: testmac.txt
+       path: testdarwin.txt
 
    - name: Copy Test (Windows)
      if: matrix.os == 'windows-2019'
@@ -148,11 +148,12 @@ jobs:
   needs: jengine
   steps:
    - name: Get Test Results
-     if: matrix.os == 'ubuntu-18.04'
      uses: actions/download-artifact@v2
      with:
        name: dist
-       run: cat testlinux.txt testmac.txt testwin.txt > tests.txt
+
+   - name: Merge Test Results
+     run: cat testlinux.txt testdarwin.txt testwin.txt > tests.txt
 
    - name: Copy Tests to Build
      uses: ncipollo/release-action@v1

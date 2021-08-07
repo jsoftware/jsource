@@ -70,22 +70,16 @@ jobs:
 
    - name: Compress Files (Linux)
      if: matrix.os == 'ubuntu-18.04'
-     run: |
-      rm j64/ver.ijs
-      zip -r l64.zip j64
+     run: zip -r l64.zip j64
 
    - name: Compress Files (macOS)
      if: matrix.os == 'macos-10.15'
-     run: |
-      rm j64/ver.ijs
-      zip -r m64.zip j64
+     run: zip -r m64.zip j64
 
    - name: Compress Files (Windows)
      if: matrix.os == 'windows-2019'
      shell: pwsh
-     run: |
-      del j64\ver.ijs
-      Compress-Archive j64 w64.zip
+     run: Compress-Archive j64 w64.zip
 
    - name: Release JE (Linux)
      if: matrix.os == 'ubuntu-18.04'
@@ -127,10 +121,52 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
+   - name: Copy Test (Linux)
+     if: matrix.os == 'ubuntu-18.04'
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testlinux.txt
+
+   - name: Copy Test (macOS)
+     if: matrix.os == 'macos-10.15'
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testmac.txt
+
+   - name: Copy Test (Windows)
+     if: matrix.os == 'windows-2019'
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testwin.txt
+
+ tests:
+  name: Test Results
+  runs-on: ubuntu-18.04
+  needs: jengine
+  steps:
+   - name: Get Test Results
+     if: matrix.os == 'ubuntu-18.04'
+     uses: actions/download-artifact@v2
+     with:
+       name: dist
+       run: cat testlinux.txt testmac.txt testwin.txt > tests.txt
+
+   - name: Copy Tests to Build
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "tests.txt"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
  webhook:
   name: Run Webhook
   runs-on: ubuntu-18.04
-  needs: jengine
+  needs: tests
   steps:
    - name: update server
      uses: distributhor/workflow-webhook@v2

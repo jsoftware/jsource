@@ -18,7 +18,7 @@ else.
   msg=. msg,LF,'test fails:'
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
-msg fwrites testres
+msg fappends testres
 )
 
 exit ''

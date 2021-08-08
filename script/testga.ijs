@@ -1,4 +1,6 @@
 
+(9!:14'') 1!:2 [2
+
 testpath=: (1!:43''),'/test/'
 
 os=. (('Linux';'Darwin') i. <UNAME) pick ;:'linux darwin win'
@@ -16,7 +18,7 @@ else.
   msg=. msg,LF,'test fails:'
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
-msg fwrites testres
+msg fappends testres
 )
 
 exit ''

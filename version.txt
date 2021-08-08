@@ -1,2 +1,5 @@
+// set version info for github build
+// any change to this file triggers copy build to jsoftware server
+// make a trivial change to this comment to rebuild and copy with the same #defines
 #define jversion  "903"
 #define jtype     "beta-m"

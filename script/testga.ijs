@@ -1,4 +1,6 @@
 
+(9!:14'') 1!:2 [2
+
 testpath=: (1!:43''),'/test/'
 
 os=. (('Linux';'Darwin') i. <UNAME) pick ;:'linux darwin win'

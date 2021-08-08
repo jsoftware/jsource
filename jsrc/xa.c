@@ -289,6 +289,8 @@ F1(jtcpufeature){
  else if(!strcasecmp(CAV(w),"SHA_NI"  )) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_SHA_NI ));
  else if(!strcasecmp(CAV(w),"FMA"     )) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_FMA ));
  else if(!strcasecmp(CAV(w),"RDSEED"  )) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_RDSEED ));
+ else if(!strcasecmp(CAV(w),"BMI1"  )) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_BMI1 ));
+ else if(!strcasecmp(CAV(w),"BMI2"  )) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_BMI2 ));
  else R sc(0);
 #else
  R sc(0);
@@ -347,6 +349,8 @@ F2(jtcpufeature2){I k;
  else if(!strcasecmp(CAV(w),"SHA_NI"  )) g_cpuFeatures |= CPU_X86_FEATURE_SHA_NI ;
  else if(!strcasecmp(CAV(w),"FMA"     )) g_cpuFeatures |= CPU_X86_FEATURE_FMA ;
  else if(!strcasecmp(CAV(w),"RDSEED"  )) g_cpuFeatures |= CPU_X86_FEATURE_RDSEED ;
+ else if(!strcasecmp(CAV(w),"BMI1"  )) g_cpuFeatures |= CPU_X86_FEATURE_BMI1 ;
+ else if(!strcasecmp(CAV(w),"BMI2"  )) g_cpuFeatures |= CPU_X86_FEATURE_BMI2 ;
 #endif
  } else {
 #if defined(__aarch64__)
@@ -391,6 +395,8 @@ F2(jtcpufeature2){I k;
  else if(!strcasecmp(CAV(w),"SHA_NI"  )) g_cpuFeatures &= ~CPU_X86_FEATURE_SHA_NI ;
  else if(!strcasecmp(CAV(w),"FMA"     )) g_cpuFeatures &= ~CPU_X86_FEATURE_FMA ;
  else if(!strcasecmp(CAV(w),"RDSEED"  )) g_cpuFeatures &= ~CPU_X86_FEATURE_RDSEED ;
+ else if(!strcasecmp(CAV(w),"BMI1"  )) g_cpuFeatures &= ~CPU_X86_FEATURE_BMI1 ;
+ else if(!strcasecmp(CAV(w),"BMI2"  )) g_cpuFeatures &= ~CPU_X86_FEATURE_BMI2 ;
 #endif
 }
 OPENSSL_setcap();

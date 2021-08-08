@@ -82,6 +82,8 @@ enum {
   CPU_X86_FEATURE_SHA_NI = (1 << 9),
   CPU_X86_FEATURE_FMA    = (1 << 10),
   CPU_X86_FEATURE_RDSEED = (1 << 11),
+  CPU_X86_FEATURE_BMI1 = (1 << 12),
+  CPU_X86_FEATURE_BMI2 = (1 << 13),
 };
 
 #endif

@@ -320,6 +320,12 @@ void cpuInit(void)
     if ((regs[1] & (1 << 18)) != 0) {
       g_cpuFeatures |= CPU_X86_FEATURE_RDSEED;
     }
+    if ((regs[1] & (1 << 3)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_BMI1;
+    }
+    if ((regs[1] & (1 << 8)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_BMI2;
+    }
   } else {
     OPENSSL_ia32cap_P[2] = 0;
     OPENSSL_ia32cap_P[3] = 0;

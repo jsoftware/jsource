@@ -97,9 +97,11 @@ typedef AD *A;
 // following bit is used in sort/grade to indicate sort direction
 #define JTDESCENDX      2   // direction of sort
 #define JTDESCEND       (((I)1)<<JTDESCENDX)
-// following bit is used as input to jtsymbis only
+// following 2 bits used as input to jtsymbis only
 #define JTFINALASGNX    0   // turn this on in jt to indicate that the assignment is final and does not have to worry about protecting the input value
 #define JTFINALASGN     (((I)1)<<JTFINALASGNX)
+#define JTAISASSIGNSYMX 1   // the a value is jt->assignsym and does not need to be looked up
+#define JTAISASSIGNSYM     (((I)1)<<JTAISASSIGNSYMX)
 // following bits are used in thorn for boxes
 #define JTTHORNYX       2  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: horiz
 #define JTTHORNY    (((I)3)<<JTTHORNYX)
@@ -327,7 +329,7 @@ typedef I SI;
 #define NAMEX 21
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
 #define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
-// NOTE: VERB, SYMB, and MARK are used as flags in names, see below
+// NOTE: SYMB, and MARK are used as flags in names, see below
 #define MARKX 22  // don't try to move this! it ripples through and breaks JTflags
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)

@@ -961,7 +961,7 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
   if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,x))tpushi(SPA(v,x)); if(SPA(v,i))tpushi(SPA(v,i));
  }
 #if 0 // obsolete
-else if(SEGFAULT,(t&BOX+SPARSE)>0){  // scaf
+else if(SEGFAULT,(t&BOX+SPARSE)>0){
 // THIS CODE IS NEVER EXECUTED
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers

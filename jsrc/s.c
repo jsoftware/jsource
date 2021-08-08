@@ -528,8 +528,9 @@ L* jtprobeisquiet(J jt,A a){A g;
 }
 
 static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
-// assign symbol: assign name a in symbol table g to the value w (but g is special if jt->asginfo.assignsym is nonnull, and is ignored if a is a locative)
+// assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
 // Result points to the symbol-table block for the assignment
+// flags set if jt: bit 0=this is a final assignment; bit 1=jt->asginfo.assignsym is nonzero, use it
 L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  ARGCHK2(a,w);
  I anmf=NAV(a)->flag; RZ(g)  // fetch flags for the name
@@ -540,14 +541,14 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // Find the symbol table to use, creating one if none found.  Unfortunately assignsym doesn't give us the symbol table
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
  }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
-  A asgloc=jtglobal; asgloc=(I)g&ASGNLOCAL?jtlocal:asgloc; g=e?asgloc:g;  // if assignsym, set g based on local/global assignment
+// obsolete   A asgloc=jtglobal; asgloc=(I)g&ASGNLOCAL?jtlocal:asgloc; g=e?asgloc:g;  // if assignsym, set g based on local/global assignment
   // not locative assignment, check for global assignment to a locally-defined name
-  if(unlikely(g==jtglobal))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // scaf look for uncloned local sym first
+  if(unlikely(g==jtglobal))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
  }
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g
- if(e){
-  // we are writing to the slot passed in jt->assignsym
+ if((I)jtinplace&JTAISASSIGNSYM){
+  // we are writing to the slot passed in jt->assignsym.  This slot may be empty!  We found it when we did a probe while checking for assignment-in-place
   CLEARZOMBIE   // clear until next use
  }else{
  // we don't have e, look it up & check NAMED
@@ -557,8 +558,8 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
  }
- // if we are writing to a non-local table, update the table's Bloom filter
- if(unlikely((anmf&ARLOCALTABLE)==0))BLOOMOR(g,BLOOMMASK(NAV(a)->hash));
+ // if we are writing to a non-local table, update the table's Bloom filter.  No need to do this is we are rewriting a name previously written
+ if(unlikely((anmf&ARLOCALTABLE)==0)){BLOOMOR(g,BLOOMMASK(NAV(a)->hash));}
 
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
  if(unlikely(e->flag&(LCACHED|LREADONLY))){  // exception cases

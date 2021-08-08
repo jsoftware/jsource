@@ -132,39 +132,44 @@ PT cases[] = {
 // Remove bits 8-9
 // Distinguish PSN from PS by not having PSN in stack[3] support line 0 (OK since it must be preceded by NAME and thus will run line 7)
 // Put something distictive into LPAR that can be used to create line 8
+// We distinguish local and global assignments by having local assignments enable line 6 (hook) which must be rejected in jthook
 #define PTNOUN 0xDFC17CBE
 #define PTMARK 0xC900007F
 static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [LASTNOUNX-LASTNOUNX] = PTNOUN,  // PN
-[NAMEX-LASTNOUNX] = 0xC9000080,  // PNM
+[NAMEX-LASTNOUNX] = 0xC9200080,  // PNM assigned: high 16 bits immaterial because this MUST match line 7 which will delete it
 [MARKX-LASTNOUNX] = PTMARK,  // PM
 [ADVX-LASTNOUNX] = 0xC9C8403E,  // PA
-// gap[ASGNX-LASTNOUNX] = 0xC900807F,  // PS
-// gap [SYMBX-LASTNOUNX] = 0xC800807F,  // PS+NAME
+// gap[ASGNX-LASTNOUNX]
+// gap [SYMBX-LASTNOUNX]
 // gap [CONWX-LASTNOUNX]
 [VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
 [LPARX-LASTNOUNX] = 0x0100007F,  // PL
 [CONJX-LASTNOUNX] = 0xC9D04000,  // PC
 [RPARX-LASTNOUNX] = 0xC9000000,  // PR
-// the LOCAL bit is passed in through the flags but does not affect the parsing type.  Parsing type distinguishes name/nonname for assignsym purposes
+// the LOCAL and ASGNTONAME flags are passed into PT
 [QCASGN-1] = 0xC900807F,
-[QCASGN+QCASGNISLOCAL-1] = 0xC900807F,
+[QCASGN+QCASGNISLOCAL-1] = 0xC940807F,
 [QCASGN+QCASGNISTONAME-1] = 0xC800807F,
-[QCASGN+QCASGNISLOCAL+QCASGNISTONAME-1] = 0xC800807F
+[QCASGN+QCASGNISLOCAL+QCASGNISTONAME-1] = 0xC840807F
 };
 
 // tests for pt types
 // obsolete // in pt0ecam, bits 16-21 and 23 of pt0 are used to hold the type flags read from the symbol, when names are processed
 // obsolete #define PTTYPEFLAGX 16  // VALTYPEMASK<<PTTYPEFLAGX is filled in the the type of the resolved name
-#define PTISCAVNX 22  // this flag used in a register here
+#define PTISCAVNX 23  // this flag used in a register here
 #define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
 #define PTISRPAR0(pt) ((pt)&0x7fff)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
 #define PTNAMEIFASGN(pt)  ((pt)<<(NAMEX-15))   // we compare against the NAMEX bit
 #define PTISNOTASGNNAME(pt)  ((pt)&0x1000000)
+#define PTASGNLOCALX 22  // set in the type-code for local assignment
+#define PTASGNLOCAL (1LL<<PTASGNLOCALX)
 #define PTNOTLPARX 27  // this bit is set for NOT LPAR    used in a register here
 #define PTNOTLPAR (1LL<<PTNOTLPARX)  // this bit is set in pt only if NOT LPAR
+#define PTNAME0X 21  // when pt[0] is known to be NAME or NOUN, this bit is set if NAME
+#define PTNAME0 (1LL<<PTNAME0X)
 // converting type field to pt, store in z
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
 // obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); I nt=LASTNOUNX; nt=(t)&CONW?SYMBX:nt; pt=(t)&(CONW|((1LL<<(LASTNOUNX+1))-1))?nt:pt; z=ptcol[pt-LASTNOUNX];}  // clear flag bit if ASGN to name, by fetching from unused SYMB hole (use SYMB rather than CONW because of odd code generation)
@@ -174,16 +179,20 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
-// return sets stack[0].t to -1 if this is a final assignment    scaf should pass in m to use for detecting final assignment
-static PSTK* jtis(J jt,PSTK *stack){
- I asgt=AT(stack[1].a); A v=stack[2].a, n=stack[0].a;  // assignment type, value and name
- J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
- stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; set token#=-1 to suppress display.  If not, make harmless store to slot 1
- if(likely(jt->asginfo.assignsym!=0)){jtsymbis(jtinplace,n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
+// return sets stack[0].t to -1 if this is a final assignment
+// pt0 i the PT code for the left-hand side, m is the token number to be assigned next (0 if the next thing is MASK)
+// jt has flag set for final assignment (passed into symbis), to which we add a flag for assignsym 
+static PSTK* jtis(J jt,PSTK *stack,UI4 pt0){F1PREFIP;
+// obsolete  I asgt=AT(stack[1].a);
+ I pt1=stack[1].pt;  A v=stack[2].a, n=stack[0].a;  // assignment type, value and name
+// obsolete  J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
+// obsolete  stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; set token#=-1 to suppress display.  If not, make harmless store to slot 1
+ stack[1+((I)jtinplace&JTFINALASGN)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
+ // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
+ // depending on which type of assignment (but if there is no local symbol table, always use the global)
+ A symtab=jt->locsyms; if(unlikely((SGNIF(pt1,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
+ if(likely((I)jt->asginfo.assignsym|(pt0&PTNAME0))){jtsymbis((J)((I)jtinplace+(jt->asginfo.assignsym?JTAISASSIGNSYM:0)),n,v,symtab);}   // Assign to the known name.
  else {B ger=0;C *s;
-  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
-  // depending on which type of assignment (but if there is no local symbol table, always use the global)
-  A symtab=jt->locsyms; if(unlikely((SGNIF(asgt,ASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
   if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
    if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
@@ -206,8 +215,8 @@ static PSTK* jtis(J jt,PSTK *stack){
     if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
    }
   }
-  // if simple assignment to a name (normal case), do it
-  if(likely((NAME&AT(n))!=0)){
+  // if simple assignment to a name (normal case), do it.  To get here it must have been a length-1 list of names
+  if(unlikely((NAME&AT(n))!=0)){
 #if FORCEVIRTUALINPUTS
    // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
    // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
@@ -506,7 +515,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   UI pt0ecam = nwds+((0b11LL<<CONJX)<<pull4);
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word, 
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if next stack word is NOT MARK 
-  //  (passed from stack to exec) 25 ASGNLOCAL (aka SYMB) from AT(stack[0]),  in case we have an assignment
+// obsolete   //  (passed from stack to exec) 25 ASGNLOCAL (aka SYMB) from AT(stack[0]),  in case we have an assignment
   //  (name resolution) 23-26  holds valtype code, (bit# of type-LASTNOUNX)+1 or 0 if no value  1=N 4=A 8=V 10=C
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
   //  18-19 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
@@ -704,12 +713,12 @@ endname: ;
      stack[0].a = y;   // finish setting the stack entry, with the new word     y=*(volatile A*)queue;   // fetch as early as possible
      y=*(volatile A*)queue;   // fetch next value as early as possible
 // obsolete     I it; PTFROMTYPEASGN(it,at);   // convert type to internal code
-     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more, 01x=2 more.  
-     tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part
-     pt0ecam&=(I)(UI4)~((0b111LL<<CONJX)|ASGNLOCAL);  // clear the local-assignment flag, the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
-     // we have to move some state into pt0ecam: the number of pulls (2 if RPAR, 1 if CONJ, 0 otherwise), and the ASGNLOCAL bit
+     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  
+     tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part (the pull queue)
+     pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
+     // we have to move some state into pt0ecam: the number of pulls (2 if RPAR, 1 if CONJ, 0 otherwise)
      // the number of pulls is initialized by the execution routine but we may extend it here
-     pt0ecam|=(tx&QCASGNISLOCAL)<<ASGNLOCALX;   /// install local flag, used only for named assignment
+// obsolete      pt0ecam|=(tx&QCASGNISLOCAL)<<ASGNLOCALX;   /// install local flag, used only for named assignment
 // obsolete      pt0ecam|=at&((3LL<<CONJX)|ASGNLOCAL);  // calculate pull count es  OR it in: 000= no more, other 0xx=1 more, 1xx=2 more.  Also bring in LOCAL flag for when we execute an assignment
 // obsolete      pt0ecam&=~(VERB<<1)|-(at&ADV+VERB+NOUN);  // if the action routine left VERB+1 set, it means we should stack another word of we stack an AVN
 
@@ -804,7 +813,7 @@ endname: ;
         if(pt0ecam&VASGSAFE&&(!(pt0ecam&(2<<PLINESAVEX))||FAVV(stack[1].a)->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
 // obsolete          A nexty=QCWORD(*(volatile A*)queue);  // refetch next-word (=name) address to save regs
 // obsolete        if(likely((AT(stack[0].a))&ASGNLOCAL)){
-         if(likely(pt0ecam&ASGNLOCAL)){
+         if(likely(GETSTACK0PT&PTASGNLOCAL)){
           // local assignment.  First check for primary symbol.  We expect this to succeed
 // obsolete           if(likely((SGNIF(pt0ecam,LOCSYMFLGX+ARLCLONEDX)|((I)NAV(nexty)->sb.sb.symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
           if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->sb.sb.symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
@@ -936,7 +945,7 @@ RECURSIVERESULTSCHECK
       if(pmask&0b10000000){  // assign - can't be fork/hook
 // obsolete        if(pmask==0b10000000){   // assign
         // no need to update stack0pt because we always stack a new word after this
-       stack=jtis(jt,stack); // perform assignment
+       stack=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),stack,GETSTACK0PT); // perform assignment; set JTFINALASGN if this is final assignment
        EPZ(stack)  // fail if error
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment

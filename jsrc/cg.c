@@ -165,6 +165,9 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  I vr=AR(vres);  // rank of selectors
  if(vr!=0){
   // The verb is not applied at maximum rank.  Do the full processing
+  // grade the results of v and then sort them into order
+  // for each unique value, collect the cells for that value and apply the verb to them (could use f/. code?)
+  // reorder the results
   ASSERT(mr>=vr,EVRANK);  // cell must not be bigger than the whole
   ASSERTAGREE(AS(vres),AS(w),MIN(vr,wr));  // shapes must match
   if(ZZFLAGWORD&ZZFLAGISDYAD)ASSERTAGREE(AS(vres),AS(a),MIN(vr,ar));   // if dyad, check both
@@ -269,13 +272,15 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     AK(virtw)+=AN(virtw)*wk;  // advance over bytes just processed (but don't move if argument is an atom)
     AK(virta)+=AN(virta)*ak;  // for a too
    }while(blkstart<graden);  // loop till we have processed all results
+
+   // We have executed v on all the cells.  Put the results into the right order
    I nblkscreated=zzboxp-AAV(zz);
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
     // final resting place
     // get the size of each item
     I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
-    // allocate result area (inplace if possible)  scaf
+    // allocate result area (could be inplace; but the waste of memory in sort/from is more important)
     GA(z,AT(AAV(zz)[0]),ncells*itemk,AR(AAV(zz)[0]),AS(AAV(zz)[0])); AS(z)[0]=ncells; // one cell per input item
     C *zv=CAV(z);  // pointer to output block
     // for each (actual) result block

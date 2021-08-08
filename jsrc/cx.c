@@ -1050,7 +1050,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
 // a is a local symbol table, possibly in use
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values, without inspecting any non-PERMANENT ones
 // The rank-flag of the table is 'not modified'
-// static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
+// static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;   scaf?
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z); AR(z)|=ARLCLONED;  // allocate the clone; zv->clone hashchains; set flag to indicate cloned
  // Copy the first hashchain, which has the x/v hashes

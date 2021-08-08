@@ -266,7 +266,7 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
  }else if(AT(w)&NOUN+VERB&&AT(a)&CONJ){
   f1=tcv; id=FAV(a)->id;
   if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
- }else{ASSERT(0,EVSYNTAX);}
+ }else{ASSERT(0,EVSYNTAX);}  // Note: EDGE CAVN ASGN (always an error) passes through here
 
  R fdef(0,CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);
 }

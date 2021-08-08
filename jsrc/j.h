@@ -538,7 +538,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ISFU            (((I)1)<<ISFUX)  // i.!.1 - sequential file update
 
 #if C_AVX   // _mm_round_pd requires sse4.1, mm256 needs avx
-#define jceil(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)))   // scaf kludge
+#define jceil(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)))   // ugly but clang understands
 #define jfloor(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_NEG_INF |_MM_FROUND_NO_EXC)))
 #define jround(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC)))
 #else
@@ -882,7 +882,8 @@ if(opt&0x2){hx=w; \
  if(opt&0xc){ \
   /* h@][.  Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
-  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + ((FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf f@][ flag must come from f */\
+  /* the flags in gh@][ are passed through from gh */ \
+  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + ((FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
   RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs)); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \

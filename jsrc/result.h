@@ -351,9 +351,8 @@ do{
  // Any bypass path to here must clear ZZFLAGCOUNTITEMS.  Same with WILLBEOPENED, which turns into AFVIRTUALBOXED
  if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){
   AFLAGORLOCAL(zz,(ZZFLAGWORD&(ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS))<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX))
-  if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
-   if(AR(zz)==0)SEGFAULT; AS(zz)[0]=zzcounteditems;
-  } RETF(zz);  // no need to check for inhomogeneous results     scaf
+  if(ZZFLAGWORD&ZZFLAGCOUNTITEMS)AS(zz)[0]=zzcounteditems;  // Store the # items into shape[0] of result
+  RETF(zz);
  }
 
  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail

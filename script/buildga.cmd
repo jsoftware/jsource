@@ -1,7 +1,11 @@
 @rem build windows on github actions
 
+xcopy /I /S jlibrary\*
+copy script\testga.ijs
+copy script\ver.ijs
+
 mkdir j64
-copy script\ver.ijs j64
+copy bin\profile.ijs j64
 copy openmp\obj\windows\libomp.dll j64
 
 copy version.txt jsrc\jversion.h

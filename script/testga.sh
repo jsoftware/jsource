@@ -10,12 +10,15 @@ else
   ext="dylib"
 fi
 
-cd j64
-ls -l
-./jconsole -lib libj.$ext -jprofile ver.ijs
-./jconsole -lib libjavx.$ext -jprofile ver.ijs
+ls -l j64
+j64/jconsole -lib libj.$ext -jprofile ver.ijs
+j64/jconsole -lib libjavx.$ext -jprofile ver.ijs
 
-# this failed on macOS - perhaps running avx2 not yet supported?
+# avx2 calls failed on macOS - perhaps running avx2 not yet supported?
 if [ $1 == "linux" ]; then
-  ./jconsole -lib libjavx2.$ext -jprofile ver.ijs
+  j64/jconsole -lib libjavx2.$ext -jprofile ver.ijs
+  j64/jconsole -lib libjavx2.$ext testga.ijs
+else
+  j64/jconsole -lib libjavx.$ext testga.ijs
 fi
+

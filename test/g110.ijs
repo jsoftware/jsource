@@ -224,6 +224,9 @@ NB. tests for correct generation of AVX2 instructions.  Verifies that the compil
 (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]1 1') < 1.25 *  6!:2 '9!:66]1 0'  NB. verify blsr used
 (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]2 0'  NB. verify shlx used
 
+NB. Force error for testing purposes
+0
+
 4!:55 ;:'dr eq exp f qct rk s sgn t test testa testb testc times x y'
 
 

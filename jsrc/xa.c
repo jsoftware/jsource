@@ -450,3 +450,52 @@ F1(jtaudittdisab){
 #endif
 }
 
+// 9!:66 check compiler genberated code for feature level
+F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
+ RZ(w=vib(w));  // inputs must be integer
+ I ttype=IAV(w)[0];  // test type
+ I featon=IAV(w)[1];  // 0=run code that does not use the feature, 1=use feature.  The code using the feature will be faster is the feature is present, otherwise slower
+ ASSERT((featon&-2)==0,EVDOMAIN);
+ switch(2*ttype+featon){
+ default: ASSERT(0,EVDOMAIN);  // invalid feature
+ case 2*0+0: ;  // andn, not used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   v1&=v2; v2&=(v1+SGNTO0(v1));
+  }
+  break;
+ case 2*0+1: ;  // andn, used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   v1&=~v2; v2&=~(v1+SGNTO0(v1));
+  }
+  break;
+ case 2*1+0: ;  // bsrl, not used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   v1+=SGNTO0(v2); v2+=SGNTO0(v1);
+  }
+  break;
+ case 2*1+1: ;  // bsrl, used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   v1+=LOWESTBIT(v2); v2+=LOWESTBIT(v1);
+  }
+  break;
+ case 2*2+0: ;  // shlx, used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   I v3=v1+v2; v2=v3+v1; v1=v2+v3;
+  }
+  break;
+ case 2*2+1: ;  // shlx, used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   I v3=v1<<v2; v2=v3<<v1; v1=v2<<v3;
+  }
+  break;
+ }
+ temp=v2-v1; forcetomemory(&temp);  // make sure code executes
+ R mtv;
+}
+

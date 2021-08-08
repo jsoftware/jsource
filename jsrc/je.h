@@ -747,6 +747,7 @@ extern void     jtjsignal3(J,I,A,I);
 extern A        jtleakblockread(J,A);
 extern A        jtleakblockreset(J,A);
 extern F1(jtshowinplacing1);
+extern F1(jtcheckcompfeatures);
 extern F2(jtshowinplacing2);
 extern B        jtlocdestroy(J,A);
 extern I        jtmaxtype(J,I,I);

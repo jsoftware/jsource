@@ -90,7 +90,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
-#if ((C_AVX&&SY_64) || EMU_AVX)
+#if ((C_AVX2&&SY_64) || EMU_AVX)
   C *avv=CAV(a)+n; n=m-n;   // prime the pipeline for top of loop.
   __m256i i127=_mm256_set1_epi8(127);
   __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits

@@ -6,10 +6,8 @@
 
 if [ "$1" == "linux" ]; then
   ext="so"
-  s() { sed -i "$@"; }
 else
   ext="dylib"
-  s() { sed -i "" "$@"; }
 fi
 
 cp -R jlibrary/* .

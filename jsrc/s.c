@@ -279,16 +279,23 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table (which must exist)
 // If not found, one is created
-L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=JT(jt,sympv);
+L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=JT(jt,sympv);
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
  // if this is a looked-up assignment in a primary symbol table, use the stored symbol#
- if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(u->sb.sb.symx-1))>=0)){R sympv+(I)u->sb.sb.symx;  // scaf on 64bit fetch symx and buckx together
- }else if((likely((b = u->sb.sb.bucket)!=0))){
+ I4 symx, b;
+#if SY_64
+ I sb=u->sb.symxbucket; symx=sb; b=sb>>32;  // fetch 2 values together if possible
+#else
+ symx=u->sb.sb.symx; b=u->sb.sb.bucket;
+#endif
+ if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)){R sympv+(I)symx;
+ }else if((likely(b!=0))){
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
    // positive bucketx (now negative); that means skip that many items and then do name search
    // Even if we know there have been no names assigned we have to spin to the end of the chain
+   // We don't unroll these loops because there is usually one symbol ber bucket
    I m=u->m; C* s=u->s; UI4 hsh=u->hash;  // length/addr of name from name block, and hash
    LX tx = lx;  // tx will hold the address of the last item in the chain, in case we have to add a new symbol
    L* l;
@@ -547,7 +554,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  }
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g
- if((I)jtinplace&JTAISASSIGNSYM){
+ if((I)jtinplace&JTASSIGNSYMNON0){
   // we are writing to the slot passed in jt->assignsym.  This slot may be empty!  We found it when we did a probe while checking for assignment-in-place
   CLEARZOMBIE   // clear until next use
  }else{
@@ -558,7 +565,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
  }
- // if we are writing to a non-local table, update the table's Bloom filter.  No need to do this is we are rewriting a name previously written
+ // if we are writing to a non-local table, update the table's Bloom filter.
  if(unlikely((anmf&ARLOCALTABLE)==0)){BLOOMOR(g,BLOOMMASK(NAV(a)->hash));}
 
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack

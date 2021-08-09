@@ -252,7 +252,7 @@ static SF(jtsorti1){F1PREFJT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 #define SORTQNAME sortiq1
 #define SORTQTYPE I
 #define SORTQSCOPE
-#define SORTQSET256 _mm256_set_epi64x  // scaf shouldn't use set
+#define SORTQSET256 _mm256_set_epi64x
 #define SORTQTYPE256 __m256i
 #define SORTQCASTTOPD _mm256_castsi256_pd
 #define SORTQCMP256 _mm256_cmpgt_epi64

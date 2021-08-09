@@ -180,18 +180,18 @@ static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(se
 
 // assignment, single or multiple
 // return sets stack[0].t to -1 if this is a final assignment
-// pt0 i the PT code for the left-hand side, m is the token number to be assigned next (0 if the next thing is MASK)
+// pt0 i the PT code for the left-hand side, pt0 is the PT code for the assignment, m is the token number to be assigned next (0 if the next thing is MASK)
 // jt has flag set for final assignment (passed into symbis), to which we add a flag for assignsym 
-static PSTK* jtis(J jt,PSTK *stack,UI4 pt0){F1PREFIP;
+static PSTK* jtis(J jt,PSTK *stack,UI4 pt0, I pt1){F1PREFIP;
 // obsolete  I asgt=AT(stack[1].a);
- I pt1=stack[1].pt;  A v=stack[2].a, n=stack[0].a;  // assignment type, value and name
+ A v=stack[2].a, n=stack[0].a; L *assym=jt->asginfo.assignsym;  // assignment value and name.  Preload assignsym
 // obsolete  J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
 // obsolete  stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; set token#=-1 to suppress display.  If not, make harmless store to slot 1
  stack[1+((I)jtinplace&JTFINALASGN)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
  // depending on which type of assignment (but if there is no local symbol table, always use the global)
  A symtab=jt->locsyms; if(unlikely((SGNIF(pt1,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
- if(likely((I)jt->asginfo.assignsym|(pt0&PTNAME0))){jtsymbis((J)((I)jtinplace+(jt->asginfo.assignsym?JTAISASSIGNSYM:0)),n,v,symtab);}   // Assign to the known name.
+ if(likely(pt0&PTNAME0)){jtsymbis((J)((I)jtinplace+(assym?JTASSIGNSYMNON0:0)),n,v,symtab);}   // Assign to the known name.
  else {B ger=0;C *s;
   if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -945,10 +945,10 @@ RECURSIVERESULTSCHECK
       if(pmask&0b10000000){  // assign - can't be fork/hook
 // obsolete        if(pmask==0b10000000){   // assign
         // no need to update stack0pt because we always stack a new word after this
-       stack=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),stack,GETSTACK0PT); // perform assignment; set JTFINALASGN if this is final assignment
+       stack=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment
        EPZ(stack)  // fail if error
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
-       if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment
+       if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result)
        // here we are dealing with the uncommon case of non-final assignment.  If the next word is not LPAR, we can fetch another word after.
        // if the 2d-next word exists, and it is (C)AVN, and the current top-of-stack is not ADV, and the next word is not ASGN, we can pull a third word.  (Only ADV can become executable in stack[2]
        // if it was not executable next to ASGN).  We go to the trouble (1) because the case is the usual one and we are saving a little time; (2) by eliminating

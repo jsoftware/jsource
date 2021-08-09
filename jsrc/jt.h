@@ -131,7 +131,7 @@ typedef struct rngdata {
  C fillv0len;   // length of fill installed in fillv0
 // 3 bytes free
 // end of cacheline 3
- I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around migrated
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
  I malloctotal;    // net total of malloc/free performed in m.c only

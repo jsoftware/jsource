@@ -7,6 +7,7 @@
 #include "j.h"
 #include "ve.h"
 #include "vcomp.h"
+#include <fenv.h>
 
 // obsolete #define (B)wiv ((B)w##iv)
 // obsolete #define wiv w##iv
@@ -35,7 +36,7 @@
 
 
 // Return int version of d, with error if loss of significance
-static I intforD(J jt, D d){D q;I z;
+static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many ymm regs that the caller has to save them too
  q=jround(d); z=(I)q;
  ASSERT(d==q || FFIEQ(d,q),EVDOMAIN);
  // too-large values don't convert, handle separately
@@ -47,7 +48,7 @@ static I intforD(J jt, D d){D q;I z;
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 #if 1
 // do singleton operation. ipcaserank bits 0-15=rank of result, 16-23=self->lc code for the operation (with comparisons flagged), 24-25=inplace bits, 26-29 types code
-A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;   // scaf adv, wdv go into xmm6-7.  they do not need to be saved.
+A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  z=0; I ac=AC(a); I wc=AC(w);
  // see if we can inplace an assignment.  That is always a good idea, though rare
  if(unlikely(((B)(a==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX)))&(B)1)+((B)(w==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))&(B)1))){
@@ -67,7 +68,7 @@ A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;   // scaf adv, wd
 getzv:;  // here when we are operating inplace on z
  zv=voidAV(z);  // get addr of value
 nozv:;  // here when we have zv or don't need it
-#else
+#else  // obsolete 
 A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
  // Get the address of an inplaceable assignment, if any
@@ -151,7 +152,6 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 // obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDD):
   {EXECNAN(adv-wdv); SSSTORENVFL(zdv,z,FL,D) R z;}
-
 
  case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv&(B)wiv,z,B01,B) R z;
  case SSINGCASE(VA2CMIN-VA2CBW1111,SSINGBD): SSSTORENV(MIN((B)aiv,wdv),z,FL,D) R z;
@@ -255,7 +255,6 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGII): adv=(D)aiv; wdv=(D)wiv; goto outofresultcvti;
  case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDD): goto outofresult;
 
-
  case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBB): SSSTORENV((I)(B)aiv|(I)!(B)wiv,z,B01,B) R z;
  case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBD): SSSTORE((B)aiv?1.0:(zdv=wdv)<0?inf:zdv==0?1:0,z,FL,D) R z;
  case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDB): SSSTORE((B)wiv?adv:1.0,z,FL,D) R z;
@@ -275,7 +274,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGBI): aiv=(B)aiv; goto bitwiseresult;
  case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGIB): wiv=(B)wiv; goto bitwiseresult;
  case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGII): goto bitwiseresult;
- case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDD): aiv=intforD(jt,adv); wiv=intforD(jt,wdv); goto bitwiseresult;
+ case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDD): ((D*)jt->shapesink)[0]=wdv; aiv=intforD(jt,adv); wiv=intforD(jt,((D*)jt->shapesink)[0]); goto bitwiseresult;  // hide wdv so it doesn't get allocated to reg requiring save/restore
 
 
  case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBB): ziv=(B)aiv<(B)wiv; goto compareresult;
@@ -371,7 +370,6 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDD): 
   floatresidue: ;
    zdv=jtremdd(jt,adv,wdv); if(!jt->jerr){SSSTORE(zdv,z,FL,D);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
-
  }
  // The only thing left is exit processing for the different functions
  gcdintresult:
@@ -397,12 +395,20 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  SSSTORE((B)(1^(aiv|wiv)),z,B01,B) R z;
 
  outofresult:
- EXECNANH(bindd(adv,wdv)); if(unlikely(zdv==0))if(jt->jerr!=0)R 0;  // NaN error picked up in the routine sets result=0
- SSSTORE(zdv,z,FL,D) R z;  // Return the value if valid
+  // Kludge.  The calls to NAN0 and NAN1 (_clearfp or fetestexcept) are not known to the compiler, which assumes they clear ymm0-5.
+  // This forces the compiler to allocate adv/wdv to ymm6-7, which in turns means they have to be saved over this routine.  Ecch.
+  // To prevent this, we force them out to a new memory variable and refer to those copies.  And, we finish our use of zdv before the call
+  // to NAN1
+  {((D*)jt->shapesink)[0]=adv, ((D*)jt->shapesink)[1]=wdv; NAN0; zdv=bindd(((D*)jt->shapesink)[0],((D*)jt->shapesink)[1]); }
+  SSSTORE(zdv,z,FL,D)
+  if(unlikely(zdv==0))if(jt->jerr!=0)R 0; NAN1;   // NaN error picked up in the routine sets result=0
+  R z;  // Return the value if valid
 
  outofresultcvti:
- EXECNANH(bindd(adv,wdv)); if(unlikely(zdv==0))if(jt->jerr!=0)R 0;
- if(zdv>=(D)IMIN&&zdv<=(D)IMAX){SSSTORE((I)zdv,z,INT,I)}else{SSSTORE(zdv,z,FL,D)} R z;  // Return the value if valid, as integer if possible
+  {((D*)jt->shapesink)[0]=adv, ((D*)jt->shapesink)[1]=wdv; NAN0; zdv=bindd(((D*)jt->shapesink)[0],((D*)jt->shapesink)[1]); }
+  if(zdv>=(D)IMIN&&zdv<=(D)IMAX){SSSTORE((I)zdv,z,INT,I)}else{SSSTORE(zdv,z,FL,D)}
+  if(unlikely(zdv==0))if(jt->jerr!=0)R 0; NAN1;   // NaN error picked up in the routine sets result=0
+  R z;  // Return the value if valid, as integer if possible
 
  bitwiseresult:
  RE(0);  // if error on D arg, make sure we abort
@@ -422,7 +428,6 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  D cirvals[3]={adv,wdv};  // put ops into memory
  I rc=cirDD(1,1,cirvals,cirvals+1,cirvals+2,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // run the routine
  if(rc==EVOK){SSSTORE(cirvals[2],z,FL,D);}else{jsignal(rc); z=0;} R z;  // Don't change the input block if there is an error.  If there is, post it to the return area
-
 }
 
 

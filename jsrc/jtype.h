@@ -100,8 +100,8 @@ typedef AD *A;
 // following 2 bits used as input to jtsymbis only
 #define JTFINALASGNX    0   // turn this on in jt to indicate that the assignment is final and does not have to worry about protecting the input value
 #define JTFINALASGN     (((I)1)<<JTFINALASGNX)
-#define JTAISASSIGNSYMX 1   // the a value is jt->assignsym and does not need to be looked up
-#define JTAISASSIGNSYM     (((I)1)<<JTAISASSIGNSYMX)
+#define JTASSIGNSYMNON0X 1   // the a value is jt->assignsym and does not need to be looked up
+#define JTASSIGNSYMNON0     (((I)1)<<JTASSIGNSYMNON0X)
 // following bits are used in thorn for boxes
 #define JTTHORNYX       2  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: horiz
 #define JTTHORNY    (((I)3)<<JTTHORNYX)

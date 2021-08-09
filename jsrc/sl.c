@@ -413,7 +413,7 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=AAV(w)[0]; n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
- if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){   // scaf this is disastrous if the named locale is on the stack
+ if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
   g=v->val;
   if(LOCPATH(g)){

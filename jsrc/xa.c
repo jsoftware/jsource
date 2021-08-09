@@ -500,6 +500,30 @@ F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
    I v3=v1<<v2; v2=v3<<v1; v1=v2<<v3;
   }
   break;
+ case 2*3+0: ;  // tzcnt, not used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   v1+=v1*v1;
+  }
+  break;
+ case 2*3+1: ;  // tzcnt, used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   v1+=CTTZI(v1);
+  }
+  break;
+ case 2*4+0: ;  // lzcnt, not used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   v1+=v1*v1;
+  }
+  break;
+ case 2*4+1: ;  // tzcnt, used
+  v1=(I)w, v2=AN(w);  // two unpredictable values
+  NOUNROLL for(i=100000000; i; --i){
+   I temp; CTLZI(v1,temp); v1=v1+(63^temp);
+  }
+  break;
  }
  temp=v2-v1; forcetomemory(&temp);  // make sure code executes
  R mtv;

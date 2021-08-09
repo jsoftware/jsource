@@ -158,7 +158,6 @@
 #define cfrx(x,y)                   jtcfrx(jt,(x),(y))
 #define cfrz(x,y)                   jtcfrz(jt,(x),(y))
 #define charmap(x,y,z)              jtcharmap(jt,(x),(y),(z))
-// obsolete #define checkmf()                   jtcheckmf(jt)
 #define checksi()                   jtchecksi(jt)
 #define cirx(x0,x1,x2,x3)           jtcirx(jt,(x0),(x1),(x2),(x3)) 
 #define clonelocalsyms(x)           jtclonelocalsyms(jt,(x))
@@ -347,19 +346,14 @@
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 #define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
-// obsolete #define faaction(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(Zc==0&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT; /*scaf*/if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))jtfa(jt,(x),tt); if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
-// obsolete if(Zc<=1&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT; /*scaf*/
-// obsolete #define faactionrescindable(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(Zc==0&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT; /*scaf*/if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))if(unlikely(jtfa(jt,(x),tt)!=0))Zc=0; if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 #define fa(x) fajt(jt,(x))
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x),)
 // Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.
-// obsolete #define fana(x)                     {if(likely((x)!=0))faactionrescindable(jt,(x),)}
 #define fana(x)                     {if(likely((x)!=0))faaction(jt,(x),)}
 // Within tpop, no need to check ACISPERM; usecount has gone to 0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
-// obsolete #define fanapop(x,flg)              {if(unlikely(((flg)&RECURSIBLE)!=0))jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
 #define fanapop(x,flg)              jtfamf(jt,(x),(flg)&RECURSIBLE);
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
@@ -1210,15 +1204,12 @@
 //  which means that the only nonrecursive blocks that are tpush()ed are nonrecursiblw; and those are all sparse.  Thus, we recur on sparse arguments only
 // We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
 // NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
-// obsolete #define tpushcommon(x,tmask,suffix) {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); \
-// obsolete                               if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(((tt^AFLAG(x))&(tmask))!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
 #define tpushcommon(x,cksparse,suffix) {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); \
                               if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(cksparse&&ISSPARSE(tt)))RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
 #define tpush(x)              tpushcommon(x,1,if(MEMAUDIT&2)audittstack(jt);)
 #define tpushna(x)            tpushcommon(x,1,)   // suppress audit
 #define tpushnr(x)            tpushcommon(x,0,if(MEMAUDIT&2)audittstack(jt);)   // suppress recursion
 // Internal version, used when the local name pushp is known to hold jt->tnextpushp
-// obsolete #define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if((unlikely((tt^AFLAG(x))&TRAVERSIBLE)!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 #define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(ISSPARSE(tt)))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
 #define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}

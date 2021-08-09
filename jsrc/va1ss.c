@@ -8,13 +8,7 @@
 #include "vcomp.h"
 
 // Support for Speedy Singletons
-// obsolete #define SSRDB(w) (*(B *)CAV(w))
-// obsolete #define SSRDI(w) (*(I *)CAV(w))
-// obsolete #define SSRDD(w) (*(D *)CAV(w))
 
-// obsolete #define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
-// obsolete #define SSSTORE(v,z,t,type) SSSTORENV(v,z,t,type)  // we don't use MODBLOCKTYPE any more
-// obsolete #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 #define SSSTORENV(v,z,t,type) {AT(z)=(t); *((type *)zv) = (v); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
 #define SSSTORE(v,z,t,type) SSSTORENV(v,z,t,type)  // we don't use MODBLOCKTYPE any more
 #define SSSTORENVFL(v,z,t,type) {*((type *)zv) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
@@ -24,8 +18,6 @@
 A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
  F2PREFIP;
  I ar=AR(w);
-// obsolete  I wiv=FAV(self)->lc;   // temp, but start as function #
-// obsolete  wiv = SSINGCASE(wiv-VA2CMIN,SSINGENC(AT(w)));
  // Calculate inplaceability
  // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE.  No inplace if on NVR stack (AM is NVR and count>0)
  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ((AM(w)&SGNTO0(AM(w)-AMNVRCT))^1);

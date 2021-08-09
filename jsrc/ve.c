@@ -310,7 +310,6 @@ I jtremid(J jt,I a,D b){D r;I k;
 
 APFX(remID, I,I,D, remid,,HDR1JERR)
 
-// obsolete I remii(I a,I b){I r; R (a!=REPSGN(a))?(r=b%a,0<a?r+(a&REPSGN(r)):r+(a&REPSGN(-r))):a?0:b;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
 I remii(I a,I b){I r; R (a!=REPSGN(a))?(r=b%a,0<a?r+(a&REPSGN(r)):r+(a&REPSGN(-r))):b&~a;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
 
 AHDR2(remII,I,I,I){I u,v;

@@ -389,28 +389,8 @@ typedef I SI;
 #define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
 #define XCVTXNUMCVX     CONJX
 #define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
-// obsolete // ** ADV type can have the following information flag set
-// obsolete #define NAMELESSMODX    SYMBX
-// obsolete #define NAMELESSMOD     ((I)1<<NAMELESSMODX)  // set in a modifier to indicate that the value contains no names.  Such values are pushed onto the stack by value to save parsing overhead.
-// obsolete                              // namelessness is detected only when a modifier is assigned, and is supported only for ADV types because of coding details.  It would be nice to support it
-// obsolete                              // for CONJ too, but a nameless conj would be either primitive or explicit, and users shouldn't cover primitives.  This feature is mostly for every/each/inv
 
 
-#if 0 // obsolete 
-// Planned coding to save bits in type
-// Uses bits 24-27 eg
-// MARK is represented by type of all 0
-// Other types are in bits 24-27:
-// CONJ   0001
-// ADV    0101
-// VERB   1101
-// ASGN   xy10    x=ASGNLOCAL y=ASGNTONAME
-// CONW   0100    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
-// SYMB   1100
-// NAME   100v    v=NAMEBYVALUE
-// RPAR   0011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
-// LPAR   1011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
-#endif
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT)
 #define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)|SPARSE)  // AND must be >0
@@ -508,12 +488,12 @@ typedef I SI;
 // same, but s is an expression that is neg if it's OK to inplace
 #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
-// define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
+// define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
 #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || /* inplaceable value that will probably fit */ \
   ( (((((AN(a)+AN(w))^AN(a))-AN(a))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
-    (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) &&  \
-    (!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* scaf why upperstack on virt extension?  & virt exten when ac<=1*/ \
+    (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && /* asg-in-place or virt extension */ \
+    (virtreqd||!(AM(a)&(-(AM(a)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* name not already on stack (not required for virt extension) */ \
   )  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
@@ -751,9 +731,6 @@ typedef struct {
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
 // in valtype
-// obsolete #define VALTYPEMASK (ADV+ASGN+SYMB+CONW+VERB+CONJ)  // gap for LPAR, which PTISCAVN uses.  Always 0 in stored value because no type ever sets it except LPAR itself
-// obsolete #define ATYPETOVALTYPE(t) ((((t)&VALTYPEMASK)|((-(t&NOUN))&CONW))>>ADVX)  // convert t from AT form to type stored in valtype
-// obsolete #define VALTYPETOATYPE(t) ((((t)&~(CONW>>ADVX))<<ADVX)+(((t)>>(CONWX-ADVX))&1))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 #define ATYPETOVALTYPE(t) (((t)&NOUN)?1:CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 8=VERB 10=CONJ  0 means 'no value'
 #define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 #define VALTYPENAMELESSADV 0x0eLL  // set in nameless & non-locative adv, to suppress reference creation.  Would like to make this a unique bit for test

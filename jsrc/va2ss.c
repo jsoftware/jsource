@@ -9,13 +9,6 @@
 #include "vcomp.h"
 #include <fenv.h>
 
-// obsolete #define (B)wiv ((B)w##iv)
-// obsolete #define wiv w##iv
-// obsolete #define SSRDS(w) ((SB)w##iv)
-// obsolete #define SSRDC(w) ((C)w##iv)
-// obsolete #define SSRDW(w) ((US)w##iv)
-// obsolete #define SSRDU(w) ((C$)w##iv)
-// obsolete #define wdv w##dv
 #define SSINGENC(a,w) (3*(a>>INTX)+(w>>INTX))
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
@@ -46,7 +39,6 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 }
 
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
-#if 1
 // do singleton operation. ipcaserank bits 0-15=rank of result, 16-23=self->lc code for the operation (with comparisons flagged), 24-25=inplace bits, 26-29 types code
 A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  z=0; I ac=AC(a); I wc=AC(w);
@@ -68,37 +60,6 @@ A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
 getzv:;  // here when we are operating inplace on z
  zv=voidAV(z);  // get addr of value
 nozv:;  // here when we have zv or don't need it
-#else  // obsolete 
-A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
- F2PREFIP;
- // Get the address of an inplaceable assignment, if any
- I aiv=FAV(self)->lc;   // temp, but start as function #
- I caseno=(aiv&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;
- caseno=SSINGCASE(caseno,SSINGENC(AT(a),AT(w)));  // start calculating case early
- // Allocate the result area
- {
-  // Calculate inplaceability for a and w.  Result must be 0 or 1
-  // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE  No inplace if on NVR stack (AM is NVR and count>0)
-  // UNINCORPABLE may not be set because we aren't looking at the type here and if the value is B01 we might overstore.  It might be worthwhile to accept UNINCORP if
-  // len=8.  We must test AFRO if we did not test it for zombieval
-  I aipok = (((/* obsolete (AC(a)-1)|*/((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO) & ~(AM(a)&SGNTO0((AMNVRCT-1)-AM(a)));
-  I wipok = (((/* obsolete (AC(w)-1)|*/((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ~(AM(w)&SGNTO0((AMNVRCT-1)-AM(w)));
-  // find or allocate the result area
-  z=0;
-  if(likely(awr==0)){  // both atoms
-   // The usual case: both singletons are atoms.  Verb rank is immaterial.  Pick any inplaceable input, or allocate a FL atom if none
-   // For comparison operations don't allocate, just return from num().  Leave z=0 to indicate this case
-   if((aipok|wipok)+(aiv&0x80)){z=aipok?a:z; z=wipok?w:z;}else GAT0(z,FL,1,0);  // top  bit of lc means 'comparison'
-  }else{
-   // The nouns have rank, and thus there may be frames.  Calculate the rank of the result, and then see if we can inplace an argument of the needed rank
-   I4 fa=(awr>>RANKTX)-(ranks>>RANKTX); fa=fa<0?0:fa;  // framelen of a - will become larger frame, and then desired rank
-   I4 fw=(awr&RANKTMSK)-(ranks&RANKTMSK); fw=fw<0?0:fw;  // framelen of w
-   I4 ca=(awr>>RANKTX)-fa; I4 cw=(awr&RANKTMSK)-fw; ca=ca<cw?cw:ca;  // ca=larger cell-rank
-   fa=fa<fw?fw:fa; fa+=ca;  // fa=larger framelen, and then desired rank
-   z=aipok>((I)(awr>>RANKTX)^fa)?a:z; z=wipok>((I)(awr&RANKTMSK)^fa)?w:z; if(!z)GATV1(z,FL,1,fa);  // accept ip only if rank also matches; if we allocate, fill in the shape with 1s
-  }
- }
-#endif
  // z is 0 ONLY for comparisons with no rank.
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  aiv=IAV(a)[0]; I wiv=IAV(w)[0],ziv; D adv=DAV(a)[0],wdv=DAV(w)[0],zdv;
@@ -114,18 +75,10 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDI): SSSTORE(adv+wiv,z,FL,D) R z;
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBI): 
   {if(unlikely(__builtin_add_overflow((B)aiv,wiv,&ziv)))SSSTORE((D)(B)aiv+(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
-// obsolete  I zv = (I)((UI)av+(UI)wv);  if(zv>=wv)SSSTORENV(zv,z,INT,I) else 
-// obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGIB):
   {if(unlikely(__builtin_add_overflow(aiv,(B)wiv,&ziv)))SSSTORE((D)aiv+(D)(B)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
-// obsolete  I zv = (I)((UI)av + (UI)wv);
-// obsolete   if (zv>=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
-// obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGII):
   {if(unlikely(__builtin_add_overflow(aiv,wiv,&ziv)))SSSTORE((D)aiv+(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
-// obsolete  I zv = (I)((UI)av + (UI)wv);
-// obsolete   if (XANDY((zv^av),(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
-// obsolete   R z;}
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDD):
   {EXECNAN(adv+wdv); SSSTORENVFL(zdv,z,FL,D) R z;}
 
@@ -137,19 +90,10 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDI): SSSTORE(adv-wiv,z,FL,D) R z;
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGBI): 
   {if(unlikely(__builtin_sub_overflow((B)aiv,wiv,&ziv)))SSSTORE((D)(B)aiv-(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
-// obsolete  I zv = (I)((UI)av - (UI)wv);
-// obsolete   if((wv&zv)>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
-// obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGIB):
   {if(unlikely(__builtin_sub_overflow(aiv,(B)wiv,&ziv)))SSSTORE((D)aiv-(D)(B)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
-// obsolete  I zv = (I)((UI)av - (UI)wv);
-// obsolete   if (zv<=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
-// obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGII):
   {if(unlikely(__builtin_sub_overflow(aiv,wiv,&ziv)))SSSTORE((D)aiv-(D)wiv,z,FL,D) else SSSTORENV(ziv,z,INT,I) R z;}
-// obsolete  I zv = (I)((UI)av - (UI)wv);
-// obsolete   if (XANDY((zv^av),~(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
-// obsolete   R z;}
  case SSINGCASE(VA2CMINUS-VA2CBW1111,SSINGDD):
   {EXECNAN(adv-wdv); SSSTORENVFL(zdv,z,FL,D) R z;}
 
@@ -412,11 +356,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 
  bitwiseresult:
  RE(0);  // if error on D arg, make sure we abort
-#if 1  // obsolete 
  ziv=((ipcaserank>>RANKTX)&0x7f)-VA2CBW0000;  // mask describing operation
-#else 
- ziv=FAV(self)->lc-VA2CBW0000;  // mask describing operation
-#endif
  ziv=((aiv&wiv)&REPSGN(SGNIF(ziv,0)))|((aiv&~wiv)&REPSGN(SGNIF(ziv,1)))|((~aiv&wiv)&REPSGN(SGNIF(ziv,2)))|((~aiv&~wiv)&REPSGN(SGNIF(ziv,3)));
  SSSTORE(ziv,z,INT,I) R z;
 

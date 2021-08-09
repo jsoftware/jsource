@@ -509,7 +509,6 @@ docase:
     if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,aval));  // if value is now aliased, swap it out before we change it
     IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
     L *itemsym=&sympv[cv->itemsym];
-// obsolete     aval=.val;  // switch aval to address of item slot
     if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // if z might be the result, protect it over the free
     if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
     // if xyz has been reassigned, fa the incumbent and reinstate the sorta-virtual block, advanced to the next item
@@ -824,7 +823,6 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
     // suppress this step if the type is ornamented, i. e. if it is name:: - then we need a flagged copy
     A oldtv=tv;
     if(likely(!(AT(tv)&NAMEABANDON))){  // not name::
-// obsolete      *t=
      tv=sympv[k].name;  // use shared copy
      if(recur){ras(tv); fa(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old
      NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared
@@ -1050,7 +1048,6 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
 // a is a local symbol table, possibly in use
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values, without inspecting any non-PERMANENT ones
 // The rank-flag of the table is 'not modified'
-// obsolete static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z); AR(z)|=ARLCLONED;  // allocate the clone; zv->clone hashchains; set flag to indicate cloned
  // Copy the first hashchain, which has the x/v hashes

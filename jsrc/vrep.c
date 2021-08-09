@@ -140,7 +140,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #define REPEATLOOP(t) NOUNROLL while(1){REPEATLOOP1(t,0) REPEATLOOP1(t,1) REPEATLOOP1(t,2) REPEATLOOP1(t,3) zvv+=sizeof(t)*4;} break;
    switch(k){  // copy the words
    case sizeof(UI): REPEATLOOP(UI) case sizeof(C): REPEATLOOP(C)  case sizeof(US): REPEATLOOP(US) 
-// obsolete    case sizeof(UI): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #if BW==64
    case sizeof(UI4): REPEATLOOP(UI4) 
 #endif

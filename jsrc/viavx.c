@@ -2058,7 +2058,8 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
-   if(p<=(SMALLHASHMAX-1) && booladj==0 && ((mode&IREVERSED)?c:m)<65535){  // range must fit into address; hash index+1 must fit into the 16-bit entry   scaf combine
+// obsolete   if(p<=(SMALLHASHMAX-1) && booladj==0 && ((mode&IREVERSED)?c:m)<65535){  // range must fit into address; hash index+1 must fit into the 16-bit entry
+    if((((I)p-(I)SMALLHASHMAX) & ((I)booladj-1) & ((I)((mode&IREVERSED)?c:m)-65535))<0){  // range must fit into address; hash index+1 must fit into the 16-bit entry
       // (the +1 is in case we do reversed hash where we invalidate by writing m+1; shouldn't have small hash if m=65535, but take no chances)
     // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
     // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
@@ -2097,7 +2098,8 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     }
     I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
          // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
-    if(unlikely((mode&IPHCALC)||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes))){  // scaf combine
+// obsolete     if(unlikely((mode&IPHCALC)||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes))){
+    if(unlikely(!(h=jt->idothash1) || ((SGNIF(mode,IPHCALCX)|(IHAV(h)->datasize-psizeinbytes))<0))){   // no old table, or we have to create one for prehash, or old table not big enough
      // if we have to reallocate, free the old one
      if(unlikely((REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)h)!=0)){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
      // allocate the new one and fill it in
@@ -2129,10 +2131,10 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
  case IIDOT: case IFORKEY:
  case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
  case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
- case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;}  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet   scaf yes we do
+ case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p)+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=MIN(m,p)+1; break;}  // +1 because we speculatively overwrite.
  case ILESS: case IINTER:   GA(z,AT(w),AN(w),MAX(1,wr),ws); break;
  case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
- case INUBI:   GATV0(z,INT,m+1,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet scaf yes we do
+ case INUBI:   GATV0(z,INT,MIN(m,p)+1,1); break;  // +1 because we speculatively overwrite
  // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
  case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;

@@ -163,7 +163,6 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   // the very common case u@] and u@[.  Take ASGSAFE and inplaceability from u.  No IRS.
   // We must copy forwarded flags from f to f@][.  These are BOXATOP and WILLOPEN/USESITEMCOUNT.  BOXATOP is copied from the monad into both valences; WILLOPEN/USESITEMCOUNT are copied from the
   // monad into the monad and (A if @[, W if @])
-// obsolete   flag2 |= c==CBOX?(VF2BOXATOP1|VF2BOXATOP2):0;   // if <@][, note that
   flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
   R fdef(flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
  }
@@ -249,7 +248,6 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
   // the very common case u@:] and u@:[.  Take ASGSAFE and inplaceability from u.  No IRS.  Vector the monad straight to u; vector the dyad to our routine that shuffles args and inplace bits
   // We must copy forwarded flags from f to f@][.  These are BOXATOP and WILLOPEN/USESITEMCOUNT.  BOXATOP is copied from the monad into both valences; WILLOPEN/USESITEMCOUNT are copied from the
   // monad into the monad and (A if @[, W if @])
-// obsolete   flag2 |= c==CBOX?(VF2BOXATOP1|VF2BOXATOP2):0;  // <@][
   flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
   R fdef(flag2,CATCO,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
  }

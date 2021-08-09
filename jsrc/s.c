@@ -548,7 +548,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // Find the symbol table to use, creating one if none found.  Unfortunately assignsym doesn't give us the symbol table
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
  }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
-// obsolete   A asgloc=jtglobal; asgloc=(I)g&ASGNLOCAL?jtlocal:asgloc; g=e?asgloc:g;  // if assignsym, set g based on local/global assignment
   // not locative assignment, check for global assignment to a locally-defined name
   if(unlikely(g==jtglobal))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
  }
@@ -603,7 +602,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
    // if the value we are assigning is an ADV, and it contains no name references, and the name is not a locative, mark the value as NAMELESS to speed up later parsing.
    // NOTE that the value may be in use elsewhere; may even be a primitive.  Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
    if(unlikely((wt&ADV)!=0))if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))e->valtype=VALTYPENAMELESSADV;
-// obsolete {AT(w)=wt|=(I)nameless(w)<<NAMELESSMODX;}
 
    // We have raised the usecount of w.  Now dispose of x
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.

@@ -6,20 +6,6 @@
 #include "j.h"
 
 
-/* obsolete 
-static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
- ARGCHK2(w,ind);
- RZ(ind=pind(IC(w),ind));
- r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); c=aii(w);
- ASSERT(!(t&SPARSE),EVNONCE);
- ASSERT(r==AR(ind),EVRANK);
- ASSERT(!ICMP(s,AS(ind),r),EVLENGTH);
- GA(z,t,c,r,s); x=CAV(z); v=CAV(w); u=AV(ind); k=bpnoun(t);
- DO(c, MC(x+k*i,v+k*(i+c*u[i]),k););
- EPILOG(z);
-}
-*/
-
 #define MCASE(t,k)  ((t)+4*(k))
 #define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(BETWEENO(j,0,m),EVINDEX);}
 

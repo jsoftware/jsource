@@ -40,14 +40,11 @@
 // the lower bits encode the size of the block, by the position of the lowest 1 bit, and in the upper bits either (1) the full size of the block for large allocations
 // (2) the offset of the block from the root, for pool allocations.  The following macros define the field
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
-// obsolete #define FHRHBINISPOOL(b) ((b)<=(PLIML-PMINL))      // true is this is a pool allo, false if system (b is pool bin #)
 #define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system (h is mask from block)
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))
 #define ALLOJBIN(j) ((j)-PMINL)   // convert j (=lg2(size)) to pool bin#
-// obsolete #define FHRHPOOLBINSIZE(b) (PMIN<<(b))        // convert bin# to size for pool bin#
 #define FHRHPOOLBINSIZE(h) (LOWESTBIT(h)<<PMINL)        // convert hmask to size for pool bin#
 #define FHRHSYSSIZE(h) (((I)1)<<((h)>>(PLIML-PMINL+2)))        // convert h to size for system alloc
-// obsolete #define FHRHSIZE(h) ((FHRHBINISPOOL(FHRHPOOLBIN(h)) ? FHRHPOOLBINSIZE(FHRHPOOLBIN(h)) : FHRHSYSSIZE(h)))
 #define FHRHSIZE(h) ((FHRHBINISPOOL(h) ? FHRHPOOLBINSIZE(h) : FHRHSYSSIZE(h)))
 #define FHRHSYSJHDR(j) ((2*(j)+1)<<(PLIML-PMINL+1))        // convert j (=lg(size)) to h format for a system allo
 #define FHRHBININCR(b) ((I)2<<(b))      // when garbage-collecting bin b, add this much to the root for each free block encountered.  This is also the amount by which the h values of successive blocks in an allocation differ
@@ -839,48 +836,6 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
  R 1;
 }
 
-#if 0 // obsolete 
-// This handles the recursive part of fa(), freeing the contents of wd
-I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
- if((t&BOX+SPARSE)>0){AD* np;
-  // boxed.  Loop through each box, recurring if called for.
-  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
-  np=*wv;  // prefetch first box
-  NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
-   np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
-#ifdef PREFETCH
-   PREFETCH((C*)np0);   // prefetch the next box while ra() is running
-#endif
-   fana(np);  // free the contents
-   np=np0;  // advance to next box
-  };
-  fana(np);  // free the contents
- } else if(t&NAME){A ref;
-  if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
-   // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
-   // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
-   // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we return nonzero so
-   // that the parent block will not be freed by the caller.  We set its usecount to 1 and wait for it to be freed when the reference is freed
-   if(AC(ref)<=1){FAV(ref)->fgh[0]=0; rc=0;  // cachedref going away - clear the pointer to prevent refree
-   }else{  // cachedref survives - modify its NM block to break the loop
-    NAV(wd)->cachedref=0; ACSET(wd,1) rc=1; // clear ref to leave name only, set count so it will free when reference is freed, prevent free of wd in caller
-   }
-   fana(ref);  // free, now that nm is unlooped
-   R rc;
-  }
- } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
-  // ACV.
-  fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
- } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
-  // single-level indirect forms.  handle each block
-  DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
- } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
-  fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
- } 
- R 0;
-}
-#endif
 // This optionally deletes wd, after deleting its contents.  t is the recursion mask: if t contains a bit set for a recursive
 // type, the contents of that type are processed.  We come here only if there is a traversible block to check
 // Calls are from two sources.
@@ -899,7 +854,6 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 // recursive created the need to traverse, and that must be honored.  Ex: create - ra - fa - tpop.  The t argument is
 // AFLAG(wd)&RECURSIBLE, from which we can see the type and recursive status
 void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
-// obsolete  if(t&TRAVERSIBLE){
   if((t&BOX+SPARSE)>0){AD* np;
    // boxed.  Loop through each box, recurring if called for.
    A* RESTRICT wv=AAV(wd);  // pointer to box pointers
@@ -911,7 +865,6 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
      if((np=QCWORD(np))!=0){fanano0(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
-// obsolete fana(np);  // free the contents
      np=np0;  // advance to next box
     };
     if((np=QCWORD(np))!=0){fanano0(np);}  // last box
@@ -941,7 +894,6 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    // for sparse, decrement the usecount
    I c=AC(wd); if(--c>0){AC(wd)=c; R;}  // if sparse block not going away, just decr the usecount
   }
-// obsolete  }
  mf(wd);
 }
 // Entry point to free after optional traversal.  clang gets this just right: if not TRAVERSIBLE, it inlines jtmf and pushes/pops no registers.
@@ -960,33 +912,6 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
  if(likely(ISSPARSE(t))){P* RESTRICT v=PAV(wd);
   if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,x))tpushi(SPA(v,x)); if(SPA(v,i))tpushi(SPA(v,i));
  }
-#if 0 // obsolete
-else if(SEGFAULT,(t&BOX+SPARSE)>0){
-// THIS CODE IS NEVER EXECUTED
-  // boxed.  Loop through each box, recurring if called for.
-  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  NOUNROLL while(n--){
-   A np=*wv; ++wv;   // point to block for box
-   if(np){     // it can be 0 if there was error
-    I tp=AT(np); I flg=AFLAG(np); // fetch type
-    *pushp++=np;  // put the box on the stack, advance to next output slot
-      // Don't bother to prefetch, since we do so little with the fetched word
-    if(!((I)pushp&(NTSTACKBLOCK-1))){
-     // pushx has crossed the block boundary.  Allocate a new block.
-     RZ(pushp=tg(pushp));    // If error, abort with values set; if not, pushp points after the chain field
-    } // if the buffer ran out, allocate another, save its address
-    if(!ACISPERM(AC(np))&&(tp^flg)&TRAVERSIBLE){RZ(pushp=jttpush(jt,np,tp,pushp)); }  // if NOT recursive usecount, recur, and restore stack pointers after recursion
-   }
-  }
-
- } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
-  // ACV.  Recur on each component
-  if(v->fgh[0])tpushi(v->fgh[0]); if(v->fgh[1])tpushi(v->fgh[1]); if(v->fgh[2])tpushi(v->fgh[2]);
- } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
-  // single-level indirect forms.  handle each block
-  DQ(t&RAT?2*n:n, if(*v)tpushi(*v); ++v;);
- }
-#endif
  R pushp;
 }
 
@@ -1036,6 +961,7 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
 // pop stack,  ending when we have freed the entry with tnextpushp==old.  tnextpushp is left pointing to an empty slot
 // return value is pushp
 // If the block has recursive usecount, decrement usecount in children if we free it
+// stats I totalpops=0, nonnullpops=0, frees=0;
 void jttpop(J jt,A *old){A *endingtpushp;
  // pushp points to an empty cell.  old points to the last cell to be freed.  decrement pushp to point to the cell to free (or to the chain).  decr old to match
  A *pushp=jt->tnextpushp;
@@ -1053,10 +979,10 @@ void jttpop(J jt,A *old){A *endingtpushp;
    // It is OK to prefetch the next box even on the last pass, because the next pointer IS a pointer to a valid box, or a chain pointer
    // to the previous free block (or 0 at end), all of which is OK to read and then prefetch from
    np0=*pushp;   // point to block for next pass through loop
-// stats jt->totalpops++;
+// stats totalpops++;
    if(np){
-// stats jt->nonnullpops++;
-    I c=AC(np);  // fetch usecount.  scaf Should unroll this loop again for fetch of count?  Need stats on how often there is non0 here
+// stats nonnullpops++;
+    I c=AC(np);  // fetch usecount.
     I flg=AFLAG(np);  // fetch flags, just in case
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box.  Might be 0; that's no crime
@@ -1064,7 +990,8 @@ void jttpop(J jt,A *old){A *endingtpushp;
     // We never tpush a PERMANENT block so we needn't check for it.
     // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
     // Otherwise just decrement the count
-    if(likely(--c<=0)){
+    if(--c<=0){
+// stats ++frees;
      // The block is going to be destroyed.  See if there are further ramifications
      if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
      else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
@@ -1145,7 +1072,6 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
 #endif
  jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
-// obsolete  jt->mfree[-PMINL+1+blockx].ballo-=PSIZE;
  if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
  }
@@ -1192,11 +1118,9 @@ if((I)jt&3)SEGFAULT;
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
  I n=(I)2<<blockx;  // n=size of allocated block
  ASSERT(2>*JT(jt,adbreakr),EVBREAK)  // this is JBREAK0.  Fails if break pressed twice
-// obsolete   A *pushp=;  // start reads for tpush
 
  if(blockx<PLIML){
   // small block: allocate from pool
-// obsolete    mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
 
   if(likely(z!=0)){         // allocate from a chain of free blocks
    jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
@@ -1215,11 +1139,8 @@ if((I)jt&3)SEGFAULT;
   }else{ // small block, but chain is empty.  Alloc PSIZE and split it into blocks
    RZ(z=jtgafallopool(jt,blockx,n));
   }
-// obsolete    jt->mfree[-PMINL+1+blockx].ballo=mfreeb+=n;
  } else {      // here for non-pool allocs...
-// obsolete    mfreeb=jt->mfreegenallo;    // bytes in large allocations, including flag for whether we are keeping track of hwmk
   n+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
-// obsolete    jt->mfreegenallo+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
   RZ(z=jtgafalloos(jt,blockx,n));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
  }
 #if MEMAUDIT&8
@@ -1237,9 +1158,6 @@ if((I)jt&3)SEGFAULT;
   }
  }
 #endif
-// obsolete   if(unlikely(((mfreeb&MFREEBCOUNTING)!=0))){
-// obsolete    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
-// obsolete   }
 #if SHOWALLALLOC
 printf("%p+\n",z);
 #endif
@@ -1303,7 +1221,6 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
 #if SHOWALLALLOC
 printf("%p-\n",w);
 #endif
-// obsolete  I hrh = AFHRH(w);   // the size/offset indicator
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
 #if MEMAUDIT&1
  if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT;  // pool number must be valid
@@ -1311,8 +1228,6 @@ printf("%p-\n",w);
 #endif
 #endif
  I allocsize;  // size of full allocation for this block
-// obsolete  if(FHRHBINISPOOL(blockx)){   // allocated from subpool
-// obsolete   allocsize = FHRHPOOLBINSIZE(blockx);
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   allocsize = FHRHPOOLBINSIZE(hrh);
 #if MEMAUDIT&4
@@ -1341,7 +1256,6 @@ printf("%p-\n",w);
   FREECHK(w);  // free the block
 #endif
  }
-// obsolete  if(unlikely(mfreeb&MFREEBCOUNTING)){jt->bytes -= allocsize;}  // keep track of total allocation only if asked to
 }
 
 // allocate header with rank r; if r==1, move the item count to be the shape also

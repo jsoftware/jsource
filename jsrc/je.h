@@ -650,7 +650,6 @@ extern B        jtboxatop(J,A);
 extern B        jtcdinit(JS,I);
 extern A        jtcelloffset(J,AD * RESTRICT,AD * RESTRICT);
 extern A        jtcharmap(J,A,A,A);
-// obsolete extern B        jtcheckmf(J);
 extern B        jtchecksi(J);
 extern A        jtclonelocalsyms(J,A);
 extern A        jtclonevirtual(J,A);
@@ -695,7 +694,6 @@ extern void jtexpostvirtual(J,A,A,I);
 extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
 extern A        jtextnvr(J);
-// obsolete extern I        jtfa(J,AD * RESTRICT,I);
 extern void     jtfamf(J,AD * RESTRICT,I);
 extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
 #if !USECSTACK
@@ -829,11 +827,7 @@ extern B        jtspfree(J);
 extern B        jtspmult(J,A*,A,A,C,I,I,I,I);
 extern A        jtsprank1(J,A,A,I,AF);
 extern A        jtsprank2(J,A,A,A,I,I,AF);
-#if 1  // obsolete 
 extern A        jtssingleton(J,A,A,I);
-#else
-extern A        jtssingleton(J,A,A,A,RANK2T,RANK2T);
-#endif
 extern A        jtssingleton1(J,A,I);
 extern A        jtstcreate(J,C,I,I,C*);
 extern F        jtstdf(J,A);

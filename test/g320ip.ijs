@@ -312,6 +312,21 @@ a -: <"0 i. 1e5
 NB. Not extended
 a =: i. 100000x
 2000 < 7!:2 '_5 {. a , _1'
+NB. Even if name is on the stack
+a =: i. 1e6
+f10=:{{ _5 {. a , 6 }}
+999996 999997 999998 999999 6 -: f10 a
+a =: i. 1e6
+1e6 -: # ([ f10) a
+20000 > 7!:2 'f10 5 [ a'
+NB. asgn-in-place not allowed if name is on the stack
+a =: i. 1e6
+f10=:{{ _5 {. a =: a , 6 }}
+999996 999997 999998 999999 6 -: f10 a
+a =: i. 1e6
+1e6 -: # ([ f10) a
+20000 < 7!:2 'f10 5 [ a'
+
 
 NB. Verify forms for indexing
 a =: i. 1e6

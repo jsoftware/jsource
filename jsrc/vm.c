@@ -384,6 +384,5 @@ F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,rect(SPA(wp,x)));
   R z;
-// obsolete  }else R df2(z,w,num(0),qq(ds(CCOMMA),zeroionei(0)));  // scaf use IRS
- }else R IRS2(w,num(0),0,0,0,jtover,z);  // scaf use IRS
+ }else R IRS2(w,num(0),0,0,0,jtover,z);
 }

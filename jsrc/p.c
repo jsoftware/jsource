@@ -180,12 +180,12 @@ static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(se
 // pt0 i the PT code for the left-hand side, pt0 is the PT code for the assignment, m is the token number to be assigned next (0 if the next thing is MASK)
 // jt has flag set for final assignment (passed into symbis), to which we add a flag for assignsym 
 static PSTK* jtis(J jt,PSTK *stack,UI4 pt0, I pt1){F1PREFIP;
- A v=stack[2].a, n=stack[0].a; L *assym=jt->asginfo.assignsym;  // assignment value and name.  Preload assignsym
+ A v=stack[2].a, n=stack[0].a;  // assignment value and name.
  stack[1+((I)jtinplace&JTFINALASGN)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
  // depending on which type of assignment (but if there is no local symbol table, always use the global)
  A symtab=jt->locsyms; if(unlikely((SGNIF(pt1,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
- if(likely(pt0&PTNAME0)){jtsymbis((J)((I)jtinplace+(assym?JTASSIGNSYMNON0:0)),n,v,symtab);}   // Assign to the known name.
+ if(likely(pt0&PTNAME0)){jtsymbis(jtinplace,n,v,symtab);}   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
  else {B ger=0;C *s;
   if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -504,7 +504,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
   UI pt0ecam = nwds+((0b11LL<<CONJX)<<pull4);
-  // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word, 
+  // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
+  //  bit 28 set when jt->assignsym is non0, cleared after the assignment has been performed
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if next stack word is NOT MARK 
   //  (name resolution) 23-26  holds valtype code, (bit# of type-LASTNOUNX)+1 or 0 if no value  1=N 4=A 8=V 10=C
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
@@ -514,6 +515,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 #define PLINESAVEX 20  // 3 bits of pline
 // above #define USEDGLOBALX 21
 // above #define USEDGLOBAL (1LL<<USEDGLOBALX)
+// if ASGNSAFE perfect #define ASSIGNSYMNON0X 28  // set when we have NON0 in jt->assignsym.  Remains set till the corresponding assignment
+// if ASGNSAFE perfect #define ASSIGNSYMNON0 (1LL<<ASSIGNSYMNON0X)
 #define NOTFINALEXECX 17
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define NAMEFLAGSX 17  // 17 and 20
@@ -767,6 +770,7 @@ endname: ;
          // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
          // a relocation of the symbol table) is marked as not ASGSAFE
          jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
+// if ASGNSAFE perfect         pt0ecam|=(s!=0)<<ASSIGNSYMNON0X;  // remember if it's nonzero
          // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
          // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
          s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
@@ -881,7 +885,10 @@ RECURSIVERESULTSCHECK
       jt->parserstackframe.parsercurrtok = stack[1].t;   // 1 for hook/fork/assign; N/C for paren which can't fail
       if(pmask&0b10000000){  // assign - can't be fork/hook
         // no need to update stack0pt because we always stack a new word after this
-       stack=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment
+// if ASGNSAFE perfect        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((pt0ecam>>(ASSIGNSYMNON0X-JTASSIGNSYMNON0X))&JTASSIGNSYMNON0)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment
+       stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((jt->asginfo.assignsym!=0)<<JTASSIGNSYMNON0X)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment; set ASSIGNSYMNON0 appropriately
+       CLEARZOMBIE   // in case assignsym was set, clear it until next use
+// if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
        EPZ(stack)  // fail if error
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result)
@@ -892,7 +899,7 @@ RECURSIVERESULTSCHECK
        // At this point pt0ecam&CONJ is set to (nextat is CAVN).  For comp ease we use this instead of checking for LPAR and ASGN.  This means that for a =: b =: c we will miss after assigning b.
        y=NEXTY;  // refetch next-word to save regs
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
-       break;  // go pull the next word
+       break;  // go pull the next word(s)
       }else{
        if(pmask&0b100000){
         A yy=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork

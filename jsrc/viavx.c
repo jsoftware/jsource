@@ -2058,7 +2058,6 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
-// obsolete   if(p<=(SMALLHASHMAX-1) && booladj==0 && ((mode&IREVERSED)?c:m)<65535){  // range must fit into address; hash index+1 must fit into the 16-bit entry
     if((((I)p-(I)SMALLHASHMAX) & ((I)booladj-1) & ((I)((mode&IREVERSED)?c:m)-65535))<0){  // range must fit into address; hash index+1 must fit into the 16-bit entry
       // (the +1 is in case we do reversed hash where we invalidate by writing m+1; shouldn't have small hash if m=65535, but take no chances)
     // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
@@ -2098,7 +2097,6 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     }
     I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
          // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
-// obsolete     if(unlikely((mode&IPHCALC)||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes))){
     if(unlikely(!(h=jt->idothash1) || ((SGNIF(mode,IPHCALCX)|(IHAV(h)->datasize-psizeinbytes))<0))){   // no old table, or we have to create one for prehash, or old table not big enough
      // if we have to reallocate, free the old one
      if(unlikely((REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)h)!=0)){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error

@@ -553,10 +553,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  }
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g
- if((I)jtinplace&JTASSIGNSYMNON0){
-  // we are writing to the slot passed in jt->assignsym.  This slot may be empty!  We found it when we did a probe while checking for assignment-in-place
-  CLEARZOMBIE   // clear until next use
- }else{
+ if(!((I)jtinplace&JTASSIGNSYMNON0)){
  // we don't have e, look it up & check NAMED
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   // If the new value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.

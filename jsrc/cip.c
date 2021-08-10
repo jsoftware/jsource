@@ -968,7 +968,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
  ana=!!AR(a); wc=AR(w)?n:0; q=(n-1)>>LGSZI; r=(-n)&(SZI-1);  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords to proc, r=#bytes of last one NOT to proc
  // Set c0 & c1 to classify the g operation
 #if !SY_64
- switch(B01&AT(w)?d:0){  // scaf use shift
+ switch(B01&AT(w)?d:0){
   case CEQ:                             c0=IPBXNW; c1=IPBXW;  break;
   case CNE:                             c0=IPBXW;  c1=IPBXNW; break;
   case CPLUSDOT: case CMAX:             c0=IPBXW;  c1=IPBX1;  break;

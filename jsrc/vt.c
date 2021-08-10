@@ -194,10 +194,11 @@ F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK so that we can pass rank into other code
- if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items - which means it's safe to calculate the size of a cell
+ if(unlikely(!wcr)){RETF(RETARG(w))  // {."0, a NOP
+ }else if(likely(AS(w)[wf]!=0)){  // if cell is atom, or cell has items - which means it's safe to calculate the size of a cell
   if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, not sparse, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
    // just one cell (no frame).  Create a virtual block for it, at offset 0
-   I wn=AN(w); wcr--; wcr=(wcr<0)?wr:wcr;  // wn=#atoms of w, wcr=rank of cell being created
+   wcr--; wcr=(wcr<0)?wr:wcr;  // wcr=rank of cell being created
    A z; RZ(z=virtualip(w,0,wcr));  // allocate the cell.  Now fill in shape & #atoms
     // if w is empty we have to worry about overflow when calculating #atoms
    I zn; PROD(zn,wcr,AS(w)+1) MCISH(AS(z),AS(w)+1,wcr) AN(z)=zn;  // Since z and w may be the same, the copy destroys AS(w).  So calc zn first.  copy shape of CELL of w into z
@@ -207,7 +208,7 @@ F1(jthead){I wcr,wf,wr;
    // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
    RETF(jtfrom(jtinplace,zeroionei(0),w));  // could call jtfromi directly for non-sparse w
   }
- }else{RETF(ISSPARSE(AT(w))?irs2(num(0),take(num( 1),w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
+ }else{RETF(ISSPARSE(AT(w))?irs2(num(0),take(num( 1),w),0L,0L,wcr,jtfrom):rsh0(w));  // sparse or cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }
  // pristinity from the called verb
 }
@@ -216,7 +217,23 @@ F1(jttail){I wcr,wf,wr;
  F1PREFIP;
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
- R !wcr||AS(w)[wf]?jtfrom(jtinplace,num(-1),w) :  // if cells are atoms, or if the cells are nonempty arrays, result is last cell(s) scaf should generate virtual block here for speed
-     ISSPARSE(AT(w))?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w);
+ if(unlikely(!wcr)){RETF(RETARG(w))  // {:"0, a NOP
+ }else if(likely(AS(w)[wf]!=0)){  // if cell is atom, or cell has items - which means it's safe to calculate the size of a cell
+  if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, not sparse, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
+   // just one cell (no frame).  Create a virtual block for it, at offset of the last item
+   wcr--; wcr=(wcr<0)?wr:wcr;  // wcr=rank of cell being created
+   I zn; PROD(zn,wcr,AS(w)+1)
+   A z; RZ(z=virtualip(w,(AS(w)[wf]-1)*zn,wcr));  // allocate the cell.  Now fill in shape & #atoms
+    // if w is empty we have to worry about overflow when calculating #atoms
+   MCISH(AS(z),AS(w)+1,wcr) AN(z)=zn;  // Since z and w may be the same, the copy destroys AS(w).  So calc zn first.  copy shape of CELL of w into z
+   RETF(z);
+  }else{
+   // frame not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
+   // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
+   RETF(jtfrom(jtinplace,num(-1),w));  // could call jtfromi directly for non-sparse w
+  }
+// obsolete  R !wcr||AS(w)[wf]?jtfrom(jtinplace,num(-1),w) :  // if cells are atoms, or if there are cells, result is last cell(s)
+ }else{RETF(ISSPARSE(AT(w))?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w));  // sparse or cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
+ }
  // pristinity from other verbs
 }

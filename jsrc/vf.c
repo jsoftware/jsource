@@ -22,7 +22,7 @@ F2(jtsetfv){A q=jt->fill;I t;
 }
 
 // Allocate a block for an atom of fill with type same as w, and move in the fill value.  Used to create a fill-cell
-F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA(z,wt,1,0,0);
+F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA00(z,wt,1,0);
 #if SY_64
  IAV0(z)[0]=*(I*)&jt->fillv0[0]; if(unlikely(wt&CMPX+RAT))IAV0(z)[1]=*(I*)&jt->fillv0[SZI];  // first word always fits; maybe not the second
 #else
@@ -264,7 +264,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
  k=bpnoun(t); p=k*m; q=k*n;
  DPMULDE(c,m,zn);
- GA(z,t,zn,r+wf,0); s=AS(z); MCISH(s,ws,wf); MCISH(s+wf,u,r);
+ GA00(z,t,zn,r+wf); s=AS(z); MCISH(s,ws,wf); MCISH(s+wf,u,r);
  if(!zn)R z;
  zv=CAV(z); wv=CAV(w); 
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats

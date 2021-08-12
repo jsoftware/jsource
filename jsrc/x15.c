@@ -1030,7 +1030,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    xv=convert0(t,cv0,wt,u); xt=t; u+=wk;  // convert to required type ???
    boxatomsgn=-star&(xr-1)&SGNIF(xt,BOXX);  // neg if boxed atom used as pointer
    CDASSERT(xv!=0,per);   // abort if conversion failed
-   if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bpnoun(t)); *zv=incorp(y);}  // must never install inplaceable block; move value into a box
+   if(zbx){GA00(y,t,1,0); MC(AV(y),xv,bpnoun(t)); *zv=incorp(y);}  // must never install inplaceable block; move value into a box
   }
   // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
   // if wt&BOX only, x is an A-block for arg i
@@ -1222,7 +1222,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 
  DO(cipcount, convertdown(cipv[i],cipn[i],cipt[i]););  /* convert I to s and int and d to f as required */
  // allocate the result area and point to it
- if(zbx){GA(x,cc->zt,1,0,0); xv=AV(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable.  xv points to where the function will store its result: in zv or in a fresh box
+ if(zbx){GA00(x,cc->zt,1,0); xv=AV(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable.  xv points to where the function will store its result: in zv or in a fresh box
  // get the address of the function
  if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp!=0,DEBADFN);}else fp=cc->fp;
 

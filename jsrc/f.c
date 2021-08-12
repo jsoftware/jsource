@@ -490,7 +490,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  // set p=total # lines: number of lines in each 2-cell, plus the added blanks (unless there are no lines to display)
  DPMULDE(m,q,p) p+=k*!!q; DPMULDE(p,c,zn);  // zn=total # atoms
  // Allocate the result table, set shape to (p,c); x->data area
- GA(z,t,zn,2,0); AS(z)[0]=p; AS(z)[1]=c; x=CAV(z);
+ GA00(z,t,zn,2); AS(z)[0]=p; AS(z)[1]=c; x=CAV(z);
  // If the result has gaps, fill the entire result area with fills
  // (this could be better: just copy the gap, as part of ENGAP; check k above in case of leading unit axes)
  I klg=bplg(t);

@@ -232,7 +232,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     // allocate the result area(s)
     GA(z,zt,nfrets*cellatoms,AR(w),AS(w)); AS(z)[0]=nfrets; if(AN(z)==0)R z;  // avoid calls with empty args
     if(unlikely(keyslashfn==3)){
-     GA(freq,zt&FL?FL:INT,nfrets,1,0);  // allocate place for divisor - INT if result may be XNUM/RAT
+     GA10(freq,zt&FL?FL:INT,nfrets);  // allocate place for divisor - INT if result may be XNUM/RAT
     }
     // loop through the index, copying the first value and operating on the others
     I indexx, indexn;  // index into the ai data, length of ai data
@@ -310,7 +310,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     // allocate the result area(s)
     GA(z,zt,nparts*cellatoms,AR(w),AS(w)); AS(z)[0]=nparts; if(AN(z)==0)R z;  // avoid calls with empty args
     if(unlikely(keyslashfn==3)){
-     GA(freq,zt&FL?FL:INT,nparts,1,0);  // allocate place for divisor - INT if result may be XNUM/RAT
+     GA10(freq,zt&FL?FL:INT,nparts);  // allocate place for divisor - INT if result may be XNUM/RAT
     }
     // pass through the inputs again, accumulating the result.  First time we encounter a partition, initialize its pointer and the result cell
     // loop through the index, copying the first value and operating on the others
@@ -743,7 +743,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
    // count tally and partition
    I *av=IAV(a); DQ(n, I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=of+1; nparts+=SGNTO0(of); av=(I*)((I)av+k);)   // count partitions and set pointers there to 0
    // allocate result area
-   GA(z,MAX(wt&~VERB,INT),nparts*2,2,0); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
+   GA00(z,MAX(wt&~VERB,INT),nparts*2,2); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
    // pass the input again, copying out the values.  Use branches to avoid the long carried dependency
    I i=0; av=IAV(a);   // item index and input scan pointer
    if(wt&INT){
@@ -761,7 +761,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
    I nparts=AM(ai);  // before we possibly clone it, extract # frets found
    makewritable(ai);  // we modify the size+index info
    // allocate the result area
-   GA(z,MAX(wt&~VERB,INT),nparts*2,2,0); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
+   GA00(z,MAX(wt&~VERB,INT),nparts*2,2); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
    // pass through the table, writing out every value that starts a new partition.  The partition size is encoded in the value
    I i=0; I *av=IAV(ai);   // item index and input scan pointer
    if(wt&INT){

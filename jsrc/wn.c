@@ -228,7 +228,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  bcvtmask|=(tt&CMPX+LIT)==CMPX?8:0; // flag to force complex if we have j but not b
  f=jtnumd; t=FL;  f=tt&INT?jtnumi:f; t=tt&INT?INT:t;  f=tt&CMPX+LIT?jtnumbpx:f; t=tt&CMPX+LIT?CMPX:t;  f=tt&XNUM?jtnumx:f; t=tt&XNUM?XNUM:t;  f=tt&RAT?jtnumq:f; t=tt&RAT?RAT:t;  // routine to use, and type of result
  k=bpnoun(t);   // size in bytes of 1 result value
- GA(z,t,m,1!=m,0); v=CAV(z);
+ GA0(z,t,m,1!=m); v=CAV(z);
  if(t==INT){  // if we think the values are ints, see if they really are
   DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){t=FL; break;} v+=k;);  // read all values, stopping if a value overflows
   if(t!=INT){f=jtnumd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input with enough space for floats

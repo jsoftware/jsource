@@ -34,7 +34,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   if(!(AFLAG(w)&(AFNJA))){I wprist=PRISTFROMW(w); RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; AFLAGORLOCAL(z,wprist) RETF(z);}
 
   // If we have to allocate a new block, do so.  In that rare case, revoke pristinity of w
-  GA(z,AT(w),AN(w),1+f,0); MCISH(AS(z),AS(w),f) AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape (don't overfetch AS(w)
+  GA00(z,AT(w),AN(w),1+f); MCISH(AS(z),AS(w),f) AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape (don't overfetch AS(w)
   MC(AV(z),AV(w),AN(w)<<bplg(AT(w)));
   PRISTCLRF(w)
   RETF(z); // if dense, move the data and relocate it as needed

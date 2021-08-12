@@ -1211,11 +1211,7 @@ RESTRICTF A jtga0(J jt,I type,I atoms,I rank){A z;
 #else
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
 #endif
-#if SY_64
  bytes|=!!(type&DIRECT);   // use LSB of bytes as a request to fill with nulls
-#else
- rank|=!!(type&DIRECT)<<RANKTX;   // tuck the type (enough to detect DIRECT) away in rank
-#endif
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
@@ -1344,7 +1340,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
  m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1);
  t=AT(w); I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t); k=c*bpt;
- GA(z,t,2*AN(w)+(AN(w)?0:c),AR(w),0);  // ensure we allocate SOMETHING to make progress
+ GA00(z,t,2*AN(w)+(AN(w)?0:c),AR(w));  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy
  MC(AV(z),AV(w),AN(w)*bpt);                 /* copy old contents      */
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
@@ -1355,7 +1351,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
 }
 
 A jtexta(J jt,I t,I r,I c,I m){A z;I m1; 
- GA(z,t,m*c,r,0); 
+ GA00(z,t,m*c,r); 
  I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
  if(!((t&DIRECT)>0))mvc(k*AN(z),AV(z),1,MEMSET00);

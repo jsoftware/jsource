@@ -237,7 +237,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   // But if the cell is empty, we can't rely on # atoms to verify the shape, and then we have to reallocate
   if((((AR(zz)-zzwf)^zzcr) | (natomsresultcell^natomszzcell) | !natomsresultcell)){
    // The overall result-cell differs in shape or type from the cells of zz.  We must allocate a new result area.
-   GA(zztemp,zft,natomsresult,zzwf+zzcr,0);  // allocate result area, and point to shape
+   GA00(zztemp,zft,natomsresult,zzwf+zzcr);  // allocate result area, and point to shape
    MCISH(AS(zztemp),AS(zz),zzwf); MCISH(AS(zztemp)+zzwf,zzcs,zzcr);   // move in frame and shape
 
    // since zztemp is becoming the new result area, it should become inplace recursive if the type is recursible, and zz needs to
@@ -382,7 +382,7 @@ static B jtopes2(J jt,A*zx,A*zy,B*b,A a,A e,A q,I wcr){A x;B*c;I dt,k,r,*s,t;P*p
   DO(r, if(b[k+i]!=c[i]){RZ(q=reaxis(ifb(r,k+b),q)); break;});
  }else{
   if(k){
-   GA(x,t,AN(q),wcr,0); s=AS(x); DQ(k, *s++=1;); MCISH(s,AS(q),r); 
+   GA00(x,t,AN(q),wcr); s=AS(x); DQ(k, *s++=1;); MCISH(s,AS(q),r); 
    MC(AV(x),AV(q),AN(q)<<bplg(t)); q=x;
   }
   RZ(q=sparseit(t&dt?q:cvt(dt,q),a,e));
@@ -493,7 +493,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  }
  // u->shape of cell, m=#atoms in cell.  Allocate result area & copy in shape (= frame followed by result-cell shape)
  DPMULDE(n,m,zn);  // Get total # results atoms now that we know result-cell size
- GA(z,t,zn,r+AR(w),0); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape
+ GA00(z,t,zn,r+AR(w)); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape
  x=CAV(z);  // x=output pointer, init to 1st cell
   // fill is (or may be) needed: create fill area, and convert cell-shape to cell-size vector needed by copyresultcell
  fillv0(t);  // create 16 bytes of fill.
@@ -616,7 +616,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
   // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 
-  GA(z,t,m,r,0);  // allocate the result area
+  GA0(z,t,m,r);  // allocate the result area (rank 1)
   zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying
   for(i=0;i<n;++i){
@@ -643,7 +643,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  if(!AR(w))R ope(w);
  n=AN(w); wv=AAV(w);  y=wv[0]; SETIC(y,p); t=AT(y); k=bpnoun(t);  // k is size of an atom
  DO(n, I l; y=wv[i]; r=AR(y); ASSERT(p==SETIC(y,l),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:AS(y)[1];);
- GA(z,t,p*c,2,0); s=AS(z); s[0]=p; s[1]=c;  // p is # items in each input box, thus # rows in result; c is # atoms in each row
+ GA00(z,t,p*c,2); s=AS(z); s[0]=p; s[1]=c;  // p is # items in each input box, thus # rows in result; c is # atoms in each row
  if(t&BOX){
   // boxed contents.  Make the result recursive; since each input box is going into exactly one slot in the result, we get the usecounts right if we
   // raise the usecount in the contents of w

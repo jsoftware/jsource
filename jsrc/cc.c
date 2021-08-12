@@ -44,7 +44,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
  if(!n){  /* empty result; figure out result type */
   z=CALL1(f1,w,fs);
   if(z==0)z=zeroionei(0);  // use zero as fill result if error
-  GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
+  GA00(zz,AT(z),n,m+AR(z)); I *zzs=AS(zz); I *zs=AS(z); 
   MCISH(zzs,as,m) MCISH(zzs+m,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
  }
@@ -273,12 +273,12 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    EACHC(MC(zc,v1,d*k);  zc+=ke;);                                           \
    R z;                                                                      \
   case CBOX:                                                                 \
-   GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                         \
+   GA10(z,m?BOX:B01,m); za=AAV(z);                                         \
    EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=incorp(y););             \
    R z;                                                                      \
   case CAT: case CATCO: case CAMP: case CAMPCO:                              \
    if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),((id1&~1)==CBEHEAD))){           \
-    GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                        \
+    GA10(z,m?BOX:B01,m); za=AAV(z);                                        \
     EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=incorp(y););               \
     R z;                                                                     \
    }                                                                         \
@@ -1028,7 +1028,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // see how many atoms are needed in the strip.  There needs to be enough for one top, plus all the bottoms, plus destination stride for each horizontal move
   I stripn = (hsz*(vsz-vlrc+vlrc*rs[0])+hdsc*rs[1])*cellatoms;  // total number of atoms in the strip
   // Allocate the area we will use for the strip
-  GA(strip,wt,stripn,0,0);  // allocate strip - rank immaterial
+  GA00(strip,wt,stripn,0);  // allocate strip - rank immaterial
   // Allocate the virtual block we will use to address subarrays
   fauxvirtual(virtw,virtwfaux,strip,wr,ACUC1);
   // NOTE: if we use a virtual block, it will ra() the (initially empty) strip which will make it recursive.  Then, when indirect elements are moved in (without ra()), they are subject

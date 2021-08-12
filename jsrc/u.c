@@ -451,7 +451,7 @@ F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
 A jtsc(J jt,I k)     {A z; if((k^REPSGN(k))<=NUMMAX){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // always return I
 A jtscib(J jt,I k)   {A z; if((k^REPSGN(k))<=NUMMAX)R num(k); GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // return b if 0 or 1, else I
-A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); IAV(z)[0]=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
+A jtsc4(J jt,I t,I v){A z; GA00(z,t,1,0); IAV(z)[0]=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
 A jtscb(J jt,B b)    {R num(b);}   // A block for boolean
 A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); CAV(z)[0]=c;     RETF(z);}  // create scalar character
 A jtscf(J jt,D x)    {A z; GAT0(z,FL,  1,0); DAV(z)[0]=x;     RETF(z);}   // scalar float
@@ -474,7 +474,7 @@ A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); IAV(z)[0]=k; RETF(z);}
 
 // return A-block for list of type t, length n, and values *v
 // MUST NOT return virtual or fixed block, because we often modify the returned area
-A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z);}
+A jtvec(J jt,I t,I n,void*v){A z; GA10(z,t,n); MC(AV(z),v,n<<bplg(t)); RETF(z);}
 
 // return A-block for list of type t, length n, and values *v
 // with special handling to coerce boolean type.  We do not overfetch.
@@ -484,7 +484,7 @@ A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z)
 #endif
 #if (C_AVX2&&SY_64) || EMU_AVX2
 A jtvecb01(J jt,I t,I n,void*v){A z;
- GA(z,t,n,1,0);   // allocate buffer
+ GA10(z,t,n);   // allocate buffer
  if(t&B01){C*p=(C*)AV(z),*q=v;
   // for booleans, enforce valid boolean result: convert any nonzero to 0x01
   __m256i zeros=_mm256_setzero_si256();
@@ -508,7 +508,7 @@ A jtvecb01(J jt,I t,I n,void*v){A z;
  RETF(z);
 }
 #elif __SSE2__
-A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
+A jtvecb01(J jt,I t,I n,void*v){A z; GA10(z,t,n);if(t&B01){C*p=(C*)AV(z),*q=v; 
 __m128i zeros=_mm_setzero_si128();
 __m128i ones=_mm_set1_epi8(1);
 __m128i ffs=_mm_set1_epi8(0xffu);
@@ -532,7 +532,7 @@ while (n0 >= 16) {
 while(n0--)*p++=!!(*q++);
 }else MC(AV(z),v,n<<bplg(t)); RETF(z);}
 #else
-A jtvecb01(J jt,I t,I n,void*v){A z; I i; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
+A jtvecb01(J jt,I t,I n,void*v){A z; I i; GA10(z,t,n);if(t&B01){C*p=(C*)AV(z),*q=v; 
 #if defined(__clang__)
 #pragma clang loop vectorize(enable) interleave_count(4)
 #endif

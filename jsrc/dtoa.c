@@ -3389,7 +3389,7 @@ d2a_Malloc
  A z;
  J jt=(J)di->jt;
 
- GA(z, LIT, n, 1, 0);
+ GA10(z,LIT,n);
  if(!z || jt->jerr) longjmp(di->_env, 1);
  return  AV(z);
  }

@@ -21,8 +21,8 @@ static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,
  wr=AR(w); ws=AS(w); wr1=wr-1>=0?wr-1:0; PRODX(n,wr1,ws+1,1) *pn=n; DPMULDE(m,n,mn);  // n=#atoms in item of w; mn = #atoms in result
  I t=AS(w)[0]; p=wr?t:1; t=AS(a)[ar1]; p=ar?t:p; *pp=p;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==ws[0],EVLENGTH);
- GA(z,zt,mn,ar1+wr1,0);   // allocate result area
- MCISH(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
+ GA00(z,zt,mn,ar1+wr1);   // allocate result area
+ MCISH(AS(z),as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
  MCISH(AS(z)+ar1,1+ws,wr1);
  R z;
 }    /* argument validation & result for an inner product */

@@ -32,8 +32,8 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
    DO(n, u=av; b=1; DO(si,                         if(memcmpne(u,v,s)){b=0; break;} u+=s; v+=r;); v=v0+=k; zv[i]=b;);
    zv+=c; v=v0=wv+=r;
  }else{
-  GA(ya,t,sj,1,0); au=CAV(ya);
-  GA(yw,t,sj,1,0); wu=CAV(yw);
+  GA10(ya,t,sj); au=CAV(ya);
+  GA10(yw,t,sj); wu=CAV(yw);
   for(i=0;i<m;++i){
    DO(n, u=av; b=1; DO(si, MC(au,u,s); MC(wu,v,s); if(!equ(ya,yw)  ){b=0; break;} u+=s; v+=r;); v=v0+=k; zv[i]=b;);
    zv+=c; v=v0=wv+=r;
@@ -49,7 +49,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  GATV0(z,B01,wn,AR(w)?1:0); zv=BAV(z); 
  if((-an&(an-wn))<0)mvc(wn-n,zv+n,1,MEMSET00); else mvc(wn,zv,1,MEMSET00);
  if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)DO(n, zv[i]=!memcmpne(av,wv,s); wv+=k;)
- else{GA(y,t,an,AR(a),0); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
+ else{GA0(y,t,an,AR(a)); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
  RETF(z);
 }    /* E. on vector arguments */
 

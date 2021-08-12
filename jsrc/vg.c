@@ -767,7 +767,7 @@ F2(jtdgrade2){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2
    p1=tv[(I)(qv[i]*n)]; --i; i=(i<0)?NRANDS-1:i; if(p0>p1){q=p0; p0=p1; p1=q;}       /* create pivots p0, p1 selected from input, with p0 <= p1  */             \
    {m0=m1=0; v=tv; DQ(n, m0+=*v<p0; m1+=*v<p1; ++v;);}  /* count m0: # < p0; and m1: # < p1  */         \
    {I l=0,h=m0; l=j>=m0?m0:l; h=j>=m0?m1:h; l=j>=m1?m1:l; h=j>=m1?n:h; m=h-l;}   /* calc size of partition holding the result */\
-   if(t)u=v=tv; else{GA(t,wt,m+1,1,0); u=tv=(T*)AV(t); v=wv;}  /* allow for 1 overstore */                            \
+   if(t)u=v=tv; else{GA10(t,wt,m+1); u=tv=(T*)AV(t); v=wv;}  /* allow for 1 overstore */                            \
    if     (j<m0){       DQ(n, *u=*v; u+=*v<p0; ++v;);}                   \
    else if(j<m1 ){DQ(n, *u=*v; u+=(p0<=*v)&(*v<p1); ++v;); j-=m0;}                   \
    else if(m1   ){DQ(n, *u=*v; u+=p1<=*v; ++v;); j-=m1;}                   \

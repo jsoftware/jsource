@@ -716,7 +716,7 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
   fauxblockINT(afaux,4,1); fauxINT(z,afaux,r,1) s=IAV1(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);  // allocate and copy shape
   R reshape(z,w);  // return the reshaped w
  }
- GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);   // allocate result, set x=output pointer y=input pointer
+ GA00(z,wt,d*p*c,r); x=CAV(z); y=CAV(w);   // allocate result, set x=output pointer y=input pointer
  s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);   // install shape
  I katom=(I)1<<bplg(wt); k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){

@@ -482,7 +482,7 @@ static B jtrngga(J jt,I i,struct rngparms*vv){
    case DXI: t=INT; n=DXN; f=jtdx_init; break;
    case MRI: t=FL;  n=MRN; f=jtmr_init; break;
   }
-  GA(x,t,n,1,0); ACINITZAP(x); vv[i].rngV=jt->rngdata->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
+  GA10(x,t,n); ACINITZAP(x); vv[i].rngV=jt->rngdata->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
   f(jt,jt->rngdata->rngparms[i].rngS); jt->rngdata->rngparms[i].rngI=jt->rngdata->rngi;
  }
  R 1;

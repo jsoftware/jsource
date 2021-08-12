@@ -741,7 +741,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+scellf  // address of start of cell shape
 #endif
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
-  }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr,0); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(fr>>RANKTX)&RANKTMSK); MCISH(AS(z)+((fr>>RANKTX)&RANKTMSK),scell,(fr&RANKTMSK)-((fr>>RANKTX)&RANKTMSK));} 
+  }else{GA00(z,rtype((I)jtinplace),zn,(RANKT)fr); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(fr>>RANKTX)&RANKTMSK); MCISH(AS(z)+((fr>>RANKTX)&RANKTMSK),scell,(fr&RANKTMSK)-((fr>>RANKTX)&RANKTMSK));} 
 //                                                 frame loc     shape of long frame             len of long frame           cellshape loc              cellshape     longer cellen 
   // fr free
   if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
@@ -1088,7 +1088,7 @@ DF2(jtsumattymes1){
   ASSERTAGREE(as,ws,commonf)  // verify common frame
   PROD(nfri,af,longs+commonf); PROD(nfro,commonf,longs);   // number of outer loops, number of repeats
   I zn = ndpo*ndpi*nfro; DPMULDE(zn,nfri,zn);  // no error possible till we extend the shape
-  GA(z,FL>>(it&B01),zn,af+commonf+wcr-1,0); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
+  GA00(z,FL>>(it&B01),zn,af+commonf+wcr-1); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
   // install the shape
   MCISH(zs,longs,af+commonf); MCISH(zs+af+commonf,ws+wr-wcr,wcr-1);
  }
@@ -1216,7 +1216,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
   if(TYPESNE(t,wt))RZ(w=cvt(t|(adocv.cv&VARGCVTMSKF),w));
  }
  ak=b?m:zn; wk=b?zn:m; ak=an<nn?0:ak; wk=wn<nn?0:wk; ak<<=bplg(AT(a));wk<<=bplg(AT(w));
- GA(y,yt,zn,1,0);  // allocate one item for result of g
+ GA10(y,yt,zn);  // allocate one item for result of g
  GA(z,zt,zn,r-1,1+s);  // allocate main output area for final result from f/
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
  A z1;B p=0;C*yv,*zu,*zv;  // general f/@:g for atomic f,g.  Do not run g on entire y; instead run one cell at a time

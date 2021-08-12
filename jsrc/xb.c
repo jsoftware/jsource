@@ -273,7 +273,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);
  p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
- if(likely(!ISSPARSE(t))){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
+ if(likely(!ISSPARSE(t))){GA00(z,t,n,r)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
  j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
  ASSERT(j==n,EVLENGTH);
@@ -350,7 +350,7 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  p=ABS(j); p+=(I )(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));}
  else   {m=n>>p; zt=INT; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
- GA(z,zt,m,1,0); v=AV(z); x=AV(w); 
+ GA10(z,zt,m); v=AV(z); x=AV(w); 
  switch(j){
   default: ASSERT(0,EVDOMAIN);
   case -4: y1=(UI4*)x;    DQ(m, *v++=    *y1++;); {RETF(z);}
@@ -372,7 +372,7 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  p=2==j||-2==j?LGSZD:2;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),FL))RZ(w=cvt(FL,w));}
  else   {m=n>>p; zt=FL; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
- GA(z,zt,m,1,0); v=DAV(z); x=DAV(w);
+ GA10(z,zt,m); v=DAV(z); x=DAV(w);
  switch(j){
   default: ASSERT(0,EVDOMAIN);
   case -2: MC(v,x,n); {RETF(z);}

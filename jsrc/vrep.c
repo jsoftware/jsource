@@ -62,7 +62,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  if(!ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
-  GA(z,AT(w),zn,AR(w),0); MCISH(AS(z),AS(w),AR(w)) // allocate result
+  GA00(z,AT(w),zn,AR(w)); MCISH(AS(z),AS(w),AR(w)) // allocate result
   zvv=voidAV(z);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later
@@ -230,7 +230,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  }
  DPMULDE(p,n,q);  // q=length of result item  axis.  +/a copies, each of length n
  DPMULDE(p,AN(w),zn);
- GA(z,AT(w),zn,AR(w)+!wcr,0); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=q;
+ GA00(z,AT(w),zn,AR(w)+!wcr); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=q;
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);
  PROD(c,wf+(I )(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
@@ -307,7 +307,7 @@ F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
  if(((-wcr)&(ar-1)&(-(AT(a)&(B01|INT))))<0){I aval = BIV0(a);  // no fast support for float; take all of INT, or 1 bit of B01
   if(!(aval&-2LL)){  // 0 or 1
    if(aval==1)R RETARG(w);   // 1 # y, return y
-   if(!ISSPARSE(AT(w))){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
+   if(!ISSPARSE(AT(w))){GA00(z,AT(w),0,AR(w)); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
  if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,DUMMYSELF,MIN(1,acr),wcr,acr,wcr,jtrepeat); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity; loop if multiple cells of a

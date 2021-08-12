@@ -159,7 +159,7 @@ AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
  }}else{A t;UI*tv;
   dw=(d+SZI-1)>>LGSZI; p=dw*SZI; mvc(m*d*SZI,z,1,MEMSET00);
   q=n/255; r=n%255;
-  GA(t,INT,dw,1,0); if(!t)R;
+  GA10(t,INT,dw); if(!t)R;
   tu=UAV(t); tv=(UI*)tu; v=(UI*)x;
   for(i=0;i<m;++i,z+=d){
    DO(q, mvc(p,tv,1,MEMSET00); DO(255, DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];));
@@ -634,7 +634,7 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
   if(!qv)u+=yc;
  }
  if(yr){++m; pv[yr1]=1; mm=MAX(mm,yr1-j);}
- if(qv){j=mm*aii(x); GA(xx,AT(x),j,1,0); xxv=CAV(xx);}
+ if(qv){j=mm*aii(x); GA10(xx,AT(x),j); xxv=CAV(xx);}
  switch(id){
   case CPLUS: case CPLUSDOT: j=!equ(e,num(0)); break;
   case CSTAR: case CSTARDOT: j=!equ(e,num(1));  break;
@@ -683,7 +683,7 @@ static A jtredsps(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,a1,e,sn
   vv=qv?yv+yc**v:yv; DO(yc-1, *yu++=vv[dv[i]];);
   if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} I rc=((AHDRRFN*)ado)(xc,n,1L,qv?xxv:xv,zv,jt); if(255&rc)jsignal(rc); RE(0);}
   else   if(zk==xk)MC(zv,qv?xv+xk**v:xv,xk);
-  else   {if(!x1)GA(x1,xt,xc,1,0); MC(AV(x1),qv?xv+xk**v:xv,xk); RZ(y=cvt(zt,x1)); MC(zv,AV(y),zk);}
+  else   {if(!x1)GA10(x1,xt,xc); MC(AV(x1),qv?xv+xk**v:xv,xk); RZ(y=cvt(zt,x1)); MC(zv,AV(y),zk);}
   zv+=zk; if(qv)v+=n; else{xv+=n*xk; yv+=n*yc;}
  }
  if(sn)RZ(redspse(id,wm,xt,e,zx,sn,&e,&zx));

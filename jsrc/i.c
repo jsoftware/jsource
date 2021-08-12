@@ -86,7 +86,7 @@ B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
 }
 
 static B jtevinit(JS jjt,I nthreads){A q,*v;JJ jt=MTHREAD(jjt);
- GA(q,BOX,1+NEVM,1,0); v=AAV(q);
+ GA10(q,BOX,1+NEVM); v=AAV(q);
  DO(AN(q), v[i]=mtv;);
  v[EVALLOC  ]=INCORPNA(cstr("allocation error"           ));
  v[EVASSERT ]=INCORPNA(cstr("assertion failure"          ));

@@ -616,7 +616,7 @@ C* _stdcall JGetLocale(JS jt){
 
 A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;
  SETJTJM(jjt,jjt,jt)  // the name 'jt' is used by ga() for the shared pointer
- RZ(z=ga(t, n, r, s));
+ GA(z,t, n, r, s);
  ACINIT(z,ACUC1)  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
 }
@@ -771,8 +771,8 @@ int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  return z;
 }
 
-static int setterm(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
-{JJ jm=MTHREAD(jt);   // use master thread
+static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
+{JJ jt=MTHREAD(jtt);   // use master thread
  A a;
  I k=1,i,n;
  char gn[256];
@@ -813,11 +813,11 @@ static int setterm(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  if(strlen(name) >= sizeof(gn)) return EVILNAME;
  if(valid(name, gn)) return EVILNAME; 
  for(i=0; i<*jrank; ++i) k *= ((I*)(*jshape))[i];
- a = jtga(jm,*jtype, k, *jrank, (I*)*jshape);
- if(!a) return EVWSFULL;
+ GAE(a,*jtype, k, *jrank, (I*)*jshape,R EVWSFULL);
+// obsolete  if(!a) return EVWSFULL;
  MC(AV(a), (void*)*jdata, n*k);
- jtjset(jm,gn, a);
- return jm->jerr;
+ jtjset(jt,gn, a);
+ return jt->jerr;
 }
 
 int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)

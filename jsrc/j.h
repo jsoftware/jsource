@@ -1038,10 +1038,14 @@ EPILOG(z); \
 // in this version one value is always written to shape
 #define GACOPYSHAPE(name,type,atoms,rank,shaape)  {I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; I _r=1-(rank); NOUNROLL do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
 #endif
-#define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); *_d=1; I _r=1-(rank); NOUNROLL do{_d+=SGNTO0(_r); *_d=1;}while(++_r<0);} // copy all 1s to shape
+#define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); UI _r=(rank); NOUNROLL do{*_d++=1;}while(--_r);} // copy all 1s to shape - rank must not be 0
 #define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
+// scaf get atoms and type out of post-call part of ga if possible.  Worry about DIRECT and LAST0; pass in through rank if possible
+#define GA0(v,t,n,r) {HISTOCALL RZ(v=jtga0(jt,t,(I)(n),(I)(r))) AR(v)=(r); AK(v)=AKXR(r); AT(v)=(t); AN(v)=(n); *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 - never for sparse blocks
+#define GA10(v,t,n,r) {HISTOCALL RZ(v=jtga0(jt,t,(I)(n),(I)(r))) AR(v)=(r); AK(v)=AKXR(r); AT(v)=(t); AN(v)=(n); AS(v)[0]=(n);}  // used when shape=0 and rank is 1
+#define GA00(v,t,n,r) {HISTOCALL RZ(v=jtga0(jt,t,(I)(n),(I)(r))) AR(v)=(r); AK(v)=AKXR(r); AT(v)=(t); AN(v)=(n);}  // used when shape=0 and will always be filled in by user even if rank 1
 // GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \

@@ -42,7 +42,7 @@ static A jtvasp0(J jt,A a,A w,VF ado,I cv,I t,I zt){A e,x,xx,y,z,ze,zx;B b;I n;P
   if(TYPESNE(t,AT(x))){RZ(x=cvt(t,x)); RZ(e=cvt(t,e));} 
   if(TYPESNE(t,AT(y))) RZ(y=cvt(t,y));
  }
- GA(ze,zt,1,0,    0    ); I rc;     ASSERT(EVOK==(rc=((AHDR2FN*)ado)((I)1,(I)1,b?AV(e):AV(y),b?AV(y):AV(e),AV(ze),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc);
+ GA(ze,zt,1,0,0); I rc;     ASSERT(EVOK==(rc=((AHDR2FN*)ado)((I)1,(I)1,b?AV(e):AV(y),b?AV(y):AV(e),AV(ze),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc);
  GA(zx,zt,n,AR(x),AS(x)); if(n)ASSERT(EVOK==(rc=((AHDR2FN*)ado)(n^(b-1),(I)1,b?AV(x):AV(y),b?AV(y):AV(x),AV(zx),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc);  // was !b
  if(cv&VRI+VRD){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
  GASPARSE(z,STYPE(AT(zx)),1,AR(xx),AS(xx)); zp=PAV(z);

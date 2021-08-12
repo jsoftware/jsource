@@ -1174,6 +1174,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  R jtgaf(jt,(I)j);
 }
 
+// stats obsolete I scafnga=0, scafngashape=0;
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
@@ -1190,10 +1191,38 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
  AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.  The value of an atomic box would come before the cleared region, but we pick that up here when the shape is cleared
- if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+// obsolete  if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+ if(!((type&DIRECT)>0)){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
  GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if ISSPARSE(t)  */  // copy shape by hand since short
   // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
    // All non-DIRECT types have items that are multiples of I, so no need to round the length
+// stats  obsolete ++scafnga; scafngashape+=shaape!=0;
+ R z;
+}
+
+// like jtga, but don't copy shape, and don't store AT, AN, AR, AK (so that type and atoms don't have to survive over call).  Never called for SPARSE type
+RESTRICTF A jtga0(J jt,I type,I atoms,I rank){A z;
+ // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
+ // trailing NUL (because boolean-op code needs it)
+ I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
+ I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0)&-2;  // We never use GA for NAME types, so we don't need to check for it
+#if SY_64
+ ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)
+#else
+ ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
+#endif
+#if SY_64
+ bytes|=!!(type&DIRECT);   // use LSB of bytes as a request to fill with nulls
+#else
+ rank|=!!(type&DIRECT)<<RANKTX;   // tuck the type (enough to detect DIRECT) away in rank
+#endif
+ RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
+ // Clear data for non-DIRECT types in case of error
+ // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
+// obsolete  if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+ if(bytes&1){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+   // All non-DIRECT types have items that are multiples of I, so no need to round the length
+// stats  obsolete ++scafnga; scafngashape+=shaape!=0;
  R z;
 }
 

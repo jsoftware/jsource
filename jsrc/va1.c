@@ -114,7 +114,7 @@ static A jtva1(J,A,A);
 static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P*wp,*zp;
  t=atype(cv); zt=rtype(cv);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&TYPESNE(t,AT(e));
- if(c)RZ(e=cvt(t,e));          GA(ze,zt,1,0,    0    ); oprc=((AHDR1FN*)ado)(jt,1L,AV(ze),AV(e));
+ if(c)RZ(e=cvt(t,e));          GA(ze,zt,1,0,0); oprc=((AHDR1FN*)ado)(jt,1L,AV(ze),AV(e));
  if(c)RZ(e=cvt(t,x)); n=AN(x); if(oprc==EVOK){GA(zx,zt,n,AR(x),AS(x)); if(n){oprc=((AHDR1FN*)ado)(jt,n, AV(zx),AV(x));}}
  // sparse does not do inplace repair.  Always retry, and never inplace.
  oprc=oprc<0?EWOV:oprc;  //   If a restart is required, turn the result to EWOV (must be floor/ceil)

@@ -229,7 +229,7 @@ F1(jttail){I wcr,wf,wr;
    RETF(z);
   }else{
    // frame not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
-   // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
+   // left rank is garbage, but since num(-1) is an atom it doesn't matter
    RETF(jtfrom(jtinplace,num(-1),w));  // could call jtfromi directly for non-sparse w
   }
 // obsolete  R !wcr||AS(w)[wf]?jtfrom(jtinplace,num(-1),w) :  // if cells are atoms, or if there are cells, result is last cell(s)

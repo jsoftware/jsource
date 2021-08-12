@@ -159,7 +159,7 @@ AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
  }}else{A t;UI*tv;
   dw=(d+SZI-1)>>LGSZI; p=dw*SZI; mvc(m*d*SZI,z,1,MEMSET00);
   q=n/255; r=n%255;
-  t=ga(INT,dw,1,0); if(!t)R;
+  GA(t,INT,dw,1,0); if(!t)R;
   tu=UAV(t); tv=(UI*)tu; v=(UI*)x;
   for(i=0;i<m;++i,z+=d){
    DO(q, mvc(p,tv,1,MEMSET00); DO(255, DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];));

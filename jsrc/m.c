@@ -1178,8 +1178,9 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
- I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
- I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
+// obsolete  I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
+// obsolete  I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
+ I bytes; if(likely(type&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
 #if SY_64
  ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)
 #else
@@ -1204,20 +1205,21 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 RESTRICTF A jtga0(J jt,I type,I atoms,I rank){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
- I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
- I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0)&-2;  // We never use GA for NAME types, so we don't need to check for it
+// obsolete  I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
+// obsolete  I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0)&-2;  // We never use GA for NAME types, so we don't need to check for it
+ I bytes; if(likely(type&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
+  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
  ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)
 #else
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
 #endif
- bytes|=!!(type&DIRECT);   // use LSB of bytes as a request to fill with nulls
+// doesn't work  type&=DIRECT; type=-type; type=REPSGN(type); type&=bytes;    this should free bytes so that type can be put into unsaved reg.  But clang11 doesn't even though r10 and r11 are unused
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
+ if(type&DIRECT)mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);
 // obsolete  if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
- if(bytes&1){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
-   // All non-DIRECT types have items that are multiples of I, so no need to round the length
 // stats  obsolete ++scafnga; scafngashape+=shaape!=0;
  R z;
 }

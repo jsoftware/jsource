@@ -45,11 +45,16 @@
 // bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
 #if BW==64
 #define bplg(i) (((I)0x008bb6db408dc6c0>>3*CTTZ(i))&(I)7)  // 010 001 011   101 101 101 101 101 101 000 000   100 011 011 100 011 011 000 000 = 0 1000 1011 1011 0110 1101 1011   0100 0000 1000 1101 1100 0110 1100 0000
+// bplgnonnoun is like bplg but we know that the value is not a noun
+#define bpnonnoun(i) ((((RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+(INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+(INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+(LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+(CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
+ (SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+(ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+(INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+(MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+(NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
+ >>(5*(CTTZ(i)-(LASTNOUNX+1))))&31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   8 8 8 8 12 4 8 8 8 (1) 
 // bpnoun is like bp but for NOUN types, and not sparse
 #define bpnoun(i) ((I)1<<bplg(i))
 #else
 #define bpnoun(i) (I)bp(i)
 #define bplg(i) CTTZ(bpnoun(i))
+#define bplgnonnoun(i) CTTZ(bpnoun(i))
 #endif
 
 

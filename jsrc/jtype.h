@@ -592,7 +592,7 @@ typedef I SI;
 #define AFHRH(a) ((a)->h)    // the workarea
 
 
-typedef struct {
+typedef struct {  // we could consider align(4) to save space - would require change to bpnonnoun 
  union{
   struct {
    C type;  // control-word number from w.h

@@ -78,7 +78,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  RZ(b=bfi(r,a,0));
  if(y==mark){
   GAT0(y,INT,0L,2L); v=AS(y); v[0]=0; v[1]=an;
-  GA(x,et,0L,1+r-an,0L); v=AS(x); v[0]=0; DO(r, if(b[i])*++v=sv[i];);
+  GA00(x,et,0L,1+r-an); v=AS(x); v[0]=0; DO(r, if(b[i])*++v=sv[i];);
  }else{A q,x1,y1;C*xu,*xv;I i,j,k,m,n,*qv,*u,*yu,*yv;
   ASSERT(2==AR(y),EVRANK);
   ASSERT(an==AS(y)[1],EVLENGTH);

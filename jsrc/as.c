@@ -379,7 +379,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
   r=AR(p); PROD(c,AR(p)-1,AS(p)+1) t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
-  MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
+  MC(zv,AV(s),kc);                     // first cell is {.s, i. e. all but the first infix
   rc=(1<d)?((AHDR2FN*)adocv.f)((I)1,c*(d-1),AV(p),kc+CAV(s),zv+kc,jt):EVOK; rc=rc<0?EWOVIP+EWOVIPMULII:rc;  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
   // If there was overflow on the ado, we have to redo the operation as a float.

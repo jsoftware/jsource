@@ -616,7 +616,7 @@ C* _stdcall JGetLocale(JS jt){
 
 A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;
  SETJTJM(jjt,jjt,jt)  // the name 'jt' is used by ga() for the shared pointer
- GA(z,t, n, r, s);
+ GA(z,t,n,r,s);
  ACINIT(z,ACUC1)  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
 }

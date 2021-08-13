@@ -2129,8 +2129,8 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
  case IIDOT: case IFORKEY:
  case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
  case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
- case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p)+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=MIN(m,p)+1; break;}  // +1 because we speculatively overwrite.
- case ILESS: case IINTER:   GA(z,AT(w),AN(w),MAX(1,wr),ws); break;
+ case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p)+1) GA(z,t,q,MAX(1,wr),ws); /* obsolete AS(z)[0]=MIN(m,p)+1;*/ break;}  // +1 because we speculatively overwrite.
+ case ILESS: case IINTER:   ws=wr==0?&AN(w):ws; GA(z,AT(w),AN(w),MAX(1,wr),ws); break;  // if wr is an atom, use 1 for the shape
  case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
  case INUBI:   GATV0(z,INT,MIN(m,p)+1,1); break;  // +1 because we speculatively overwrite
  // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
@@ -2143,6 +2143,8 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
  case ISUMEPS:
                GAT0(z,INT,1,0); break;
  }
+
+ // ************* ws has been destroyed *******************
 
  // Create result for empty/inhomogeneous arguments, & return
  if(unlikely(fnx<-2)){  // if something empty (-3) or inhomo (-4), create the result immediately
@@ -2240,13 +2242,13 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  // allocate enough space for the result, depending on the type of the operation
  switch(mode&IIOPMSK){
   // Some types that do not produce correct results if the result of e. has rank >1.  We give nonce error if that happens
-  default: GATV(z,INT,c,    f1, ws); break;
-  case ILESS: case IINTER: GA(z,t,AN(w),MAX(1,wr),ws); break;
-  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,    f1, ws); break;
-  case IEPS: GATV(z,B01,c,    f1, ws); break;
-  case IANYEPS: case IALLEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,B01,1,    0); break;
-  case II0EPS:  case II1EPS: case IJ0EPS:  case IJ1EPS: if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,    0); break;
-  case ISUMEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,INT,1,    0); break;
+  default: GATV(z,INT,c,f1,ws); break;
+  case ILESS: case IINTER: GA(z,t,AN(w),MAX(1,wr),wr==0?&AN(w):ws); break;
+  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,f1,ws); break;
+  case IEPS: GATV(z,B01,c,f1,ws); break;
+  case IANYEPS: case IALLEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,B01,1,0); break;
+  case II0EPS:  case II1EPS: case IJ0EPS:  case IJ1EPS: if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
+  case ISUMEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,INT,1,0); break;
  }
  // save info used by the routines
  // noavx jt->hin=AN(hi); jt->hiv=AV(hi);
@@ -2368,7 +2370,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=AS(xy)[0];
  m=j=-1; DQ(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
- GASPARSE(z,B01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
+ GASPARSE0(z,B01,1,2); v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));
  SPB(p,e,num(0));

@@ -316,7 +316,7 @@ do{
   // Get # atoms to allocate
   DPMULDE(natoms,zzncells,natoms)
   // Allocate the result
-  GA(zz,zzt,natoms,zzframelen+zzr,0L); I * RESTRICT zzs=AS(zz);  // rank is aframelen+wframelen+resultrank
+  GA00(zz,zzt,natoms,zzframelen+zzr); I * RESTRICT zzs=AS(zz);  // rank is aframelen+wframelen+resultrank
   // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
   AFLAGORLOCAL(zz,(zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1))  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
   // Install result frame by running user's routine.  zzs must be left pointing to the cell-shape

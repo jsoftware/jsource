@@ -573,7 +573,7 @@ static A jtredsp1a(J jt,C id,A z,A e,I n,I r,I*s){A t;B b,p=0;D d=1;
 static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P*wp;
  ARGCHK1(w);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=AS(w)[0];
- GA(z,zt,1,0,0);
+ GA00(z,zt,1,0);
  if(n){I rc=((AHDRRFN*)ado)(1L,n,1L,AV(x),AV(z),jt); if(255&rc)jsignal(rc); RE(0); if(m==n)R z;}
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
@@ -589,7 +589,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
  while(1){  // Loop to handle restart on overflow
   VARPS adocv; varps(adocv,f,AT(x),0);
   ASSERT(adocv.f,EVNONCE);
-  GA(z,rtype(adocv.cv),1,0,0);
+  GA00(z,rtype(adocv.cv),1,0);
   if(n){rc=((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);}  // mustn't adocv on empty
   rc&=255; if(rc)jsignal(rc); if(rc<EWOV){if(rc)R0; R redsp1a(FAV(FAV(f)->fgh[0])->id,z,SPA(wp,e),n,AR(w),AS(w));}  // since f has an insert fn, its id must be OK
  }

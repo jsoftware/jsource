@@ -85,7 +85,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
   m=AS(ay)[0]; u=AV(ay); av=CAV(ax); am=aii(ax); ak=k*am;
   n=AS(wy)[0]; v=AV(wy); wv=CAV(wx); wm=aii(wx); wk=k*wm; mn=m+n; xk=k*(am+wm);
   GATVR(y,INT,mn*c,      2,     AS(ay)); yv= AV(y); AS(y)[0]=mn;                 
-  GA(x,t,  mn*(am+wm),AR(ax),AS(ax)); xv=CAV(x); AS(x)[0]=mn; AS(x)[1]=*zs; mvc(k*AN(x),xv,k,AV(ze));
+  GA(x,t,mn*(am+wm),AR(ax),AS(ax)); xv=CAV(x); AS(x)[0]=mn; AS(x)[1]=*zs; mvc(k*AN(x),xv,k,AV(ze));
   while(i<m||j<n){I cmp;
    if     (i==m)cmp= 1; 
    else if(j==n)cmp=-1;

@@ -94,7 +94,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  wev=CAV(we); wxv=CAV(wx); wk=xc<<bplg(AT(wx));
  d=zcount(ay,wy,ab,wb);
  GA(zx,zt, d*xc,AR(ax),AS(ax)); AS(zx)[0]=d; zxv=CAV(zx); zk=xc<<bplg(zt);
- GATVR(zy,INT,d*yc,2,     AS(ay)); AS(zy)[0]=d; zyv= AV(zy);
+ GATVR(zy,INT,d*yc,2,AS(ay)); AS(zy)[0]=d; zyv= AV(zy);
  i=j=d=0; u=AV(ay); v=AV(wy);
  while(m>i&&n>j){
   c=0; DO(yc, if(c=u[i]-v[i])break;);

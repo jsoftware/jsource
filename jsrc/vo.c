@@ -325,7 +325,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
     if(zzboxp!=box0 && (zzboxp-=startatend, *zzboxp))*tempp=*zzboxp;
     else{A zzz;  // we have to box the value from zz
      zzcell-=zzcelllen;  // back up to next cell in zz
-     GA(zzz,zzt,0,zzwf,AS(zz)+zzwf); AN(zzz)=natomszzcell; AK(zzz)=zzcell-(C*)zzz;  // allocate empty header; fill in length; point to data in zz
+     GA(zzz,zzt,0,zzwf,AS(zz)+zzwf); AN(zzz)=natomszzcell; AK(zzz)=zzcell-(C*)zzz;  // allocate empty header (which might fit in 1 cacheline); fill in length; point to data in zz
        // All these blocks are single-use so we keep them nonrecursible and don't bother to mark them virtual or incur the overhead thereof.  Could use gah
      *tempp=zzz;
     }
@@ -398,14 +398,14 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
      p,*s,*v,wcr,wr,xc,xk,yc,*yv,*zs;P*zp;
  n=AN(w); wr=AR(w); wv=AAV(w); wcr=AN(cs); dt=DTYPE(zt); dk=bpnoun(dt);
  RZ(opes1(&b,&a,&e,&m,cs,w)); an=AN(a); av=AV(a);
- GASPARSE(z,zt,1,wr+wcr,(I*)0); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
+ GASPARSE0(z,zt,1,wr+wcr); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
  zp=PAV(z); c=wcr-an; yc=wr+an;
  SPB(zp,e,cvt(dt,e)); e = SPA(zp,e);  // in case of reassignment by SPB
  GATV0(t,INT,yc, 1L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
  GATV0(sh,INT,1+c,1L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
  RE(xc=prod(c,1+s)); xk=xc*dk;
  GATV0(d,INT,wr,1); dv=AV(d); mvc(wr*SZI,dv,1,MEMSET00);
- DPMULDE(m,xc,i) GA(x,dt, i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
+ DPMULDE(m,xc,i) GA(x,dt,i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
  DPMULDE(m,yc,i) GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); mvc(SZI*i,yv,1,MEMSET00);
  for(i=p=0;i<n;++i){
   RZ(opes2(&x1,&y1,b,a,e,wv[i],wcr)); v=AS(y1); m1=v[0]; k=v[1];

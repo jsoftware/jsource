@@ -273,7 +273,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);
  p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
- if(likely(!ISSPARSE(t))){GA00(z,t,n,r)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
+ if(likely(!ISSPARSE(t))){GA00(z,t,n,r)}else{GASPARSE0(z,t,n,r)} s=AS(z);
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
  j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
  ASSERT(j==n,EVLENGTH);

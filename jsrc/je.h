@@ -706,7 +706,7 @@ extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtfxeachv(J,I,A);
-extern RESTRICTF A jtga(J,I,I,I,I*);
+// obsolete extern RESTRICTF A jtga(J,I,I,I,I*);
 extern RESTRICTF A jtga0(J,I,I,I);
 extern RESTRICTF A jtgaf(J,I);
 extern RESTRICTF A jtgafv(J,I);

@@ -238,7 +238,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  EPILOG(z);
 }
 
-
+// m = #lists, n = length of each list, c=#values in result 1-cell.  If c=1, remove the trailing axis
 #define EXEC2F(f,f1,t,T) \
  A f(J jt,A a,A w,I n,I m,I c){A z;B b;C d,*u,*uu,*x,*y;I i,j,k,mc,r;T a0,*zv;  \
   i=0; mc=m*c; u=CAV(w); y=u+n; j=c; uu=u+AN(w); if(mc)*(uu-1)=' ';         \

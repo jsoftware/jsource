@@ -590,7 +590,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -1040,13 +1040,19 @@ EPILOG(z); \
 #define GACOPYSHAPE(name,type,atoms,rank,shaape)  {I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; I _r=1-(rank); NOUNROLL do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
 #endif
 #define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); UI _r=(rank); NOUNROLL do{*_d++=1;}while(--_r);} // copy all 1s to shape - rank must not be 0
-#define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
+
 // GAE executes the given expression when there is an error
-#define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
-// scaf get atoms and type out of post-call part of ga if possible.  Worry about DIRECT and LAST0; pass in through rank if possible
-#define GA0(v,t,n,r) {HISTOCALL RZ(v=jtga0(jt,t,(I)(n),(I)(r))) AR(v)=(r); AK(v)=AKXR(r); AT(v)=(t); AN(v)=(n); *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 - never for sparse blocks
-#define GA10(v,t,n) {HISTOCALL RZ(v=jtga0(jt,t,(I)(n),(I)1)) AR(v)=1; AK(v)=AKXR(1); AT(v)=(t); AN(v)=(n); AS(v)[0]=(n);}  // used when shape=0 and rank is 1
-#define GA00(v,t,n,r) {HISTOCALL RZ(v=jtga0(jt,t,(I)(n),(I)(r))) AR(v)=(r); AK(v)=AKXR(r); AT(v)=(t); AN(v)=(n);}  // used when shape=0 and is never 1 or will always be filled in by user even if rank 1
+// obsolete #define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
+#define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,t,(I)(n),(I)(r)))))erraction; AR(v)=(r); AK(v)=AKXR(r); AT(v)=(t); AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
+// obsolete #define GAE(v,t,n,r,s,erraction)   {GAE0(v,t,n,r,erraction) MCISH(AS(v),(I*)(s),(r)) if((r)==1 && AS(v)[0]!=(n))SEGFAULT;}  // error action
+#define GAE(v,t,n,r,s,erraction)   {GAE0(v,t,n,r,erraction) MCISH(AS(v),(I*)(s),(r))}  // error action
+// obsolete #define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
+#define GA00(v,t,n,r) {GAE0(v,t,n,r,R 0)}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1.  Default error action is to exit
+// obsolete #define GA(v,t,n,r,s)   {GA00(v,t,n,r) MCISH(AS(v),(I*)(s),(r)) if((r)==1 && AS(v)[0]!=(n))SEGFAULT;}
+#define GA(v,t,n,r,s)   {GA00(v,t,n,r) MCISH(AS(v),(I*)(s),(r))}
+#define GA0(v,t,n,r) {GA00(v,t,n,r) *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 and must fill in with AN if so - never for sparse blocks
+#define GA10(v,t,n) {GA00(v,t,n,1) AS(v)[0]=(n);}  // used when shape=0 and rank is 1
+
 // GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
@@ -1079,7 +1085,7 @@ EPILOG(z); \
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(!(((type)&DIRECT)>0)){if(SY_64){AS(name)[0]=0; mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,1,MEMSET00);}}   /* overclears the data but never over buffer bdy */ \
+  if(!(((type)&DIRECT)>0)){AS(name)[0]=0; mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}   /* overclears the data but never over buffer bdy */ \
   shapecopier(name,type,atoms,rank,shaape)   \
      \
  }else{erraction;} \
@@ -1092,7 +1098,8 @@ EPILOG(z); \
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
 #define GATV0E(name,type,atoms,rank,erraction) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape not written unless rank==1, with error branch
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set correctly
-#define GASPARSE(n,t,a,r,s) {GA(n,BOX,(sizeof(P)/sizeof(A)),r,s); AN(n)=1; AT(n)=(t)|SPARSE; if((r)==1){if(s)AS(n)[0]=(s)[0];} ACINIT(n,ACUC1);}
+#define GASPARSE(n,t,a,r,s) {GA(n,BOX,(sizeof(P)/sizeof(A)),r,s); AN(n)=1; AT(n)=(t)|SPARSE; if((r)==1){if(s)AS(n)[0]=(s)[0];} ACINIT(n,ACUC1);}  // scaf remove r test
+#define GASPARSE0(n,t,a,r) {GATV0(n,BOX,(sizeof(P)/sizeof(A)),r); AN(n)=1; AT(n)=(t)|SPARSE; ACINIT(n,ACUC1);}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 // Item count given frame and rank: AS(f) unless r is 0; then 1 
@@ -1251,7 +1258,7 @@ EPILOG(z); \
 // Copy shapes.  Optimized for length <5, subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the testing
 // len is # words in shape
-#if 1 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
+#if 1 && ((C_AVX&&SY_64) || EMU_AVX)
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
   if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \

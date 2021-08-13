@@ -29,7 +29,7 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
  RZ(j1=indexof(p,ind)); jv=AV(j1);
  c=0; DO(n, if(s>jv[i])c+=qv[jv[i]];); i=aii(x); xk=i<<bplg(AT(x)); d=AN(a1);
  GATV0(y1,INT,  c*d,2); v=AS(y1); v[0]=c; v[1]=d; yv= AV(y1); yu= AV(y);
- GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c;                xv=CAV(x1); xu=CAV(x);
+ GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c; xv=CAV(x1); xu=CAV(x);
  for(i=0;i<n;++i){
   k=jv[i]; 
   if(s>k){
@@ -81,7 +81,7 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
  wr=AR(w); ws=AS(w); 
  r=AR(ind)-1; v=AS(ind); h=v[r]; n=AN(ind)/h;
  RZ(q=odom(2L,r,v)); iv=AV(q)-r;
- GASPARSE(z,AT(w),1,wr+r-h,(I*)0); u=AS(z); ICPY(u,ws,wf); ICPY(u+wf,v,r); ICPY(u+wf+r,ws+wf+h,wr-wf-h);
+ GASPARSE0(z,AT(w),1,wr+r-h); u=AS(z); ICPY(u,ws,wf); ICPY(u+wf,v,r); ICPY(u+wf+r,ws+wf+h,wr-wf-h);
  zp=PAV(z); wp=PAV(w); 
  SPB(zp,e,ca(SPA(wp,e))); x=SPA(wp,x); y=SPA(wp,i); 
  a=SPA(wp,a); an=AN(a); SPB(zp,a,aaxis(w,wf,a,r,h,&pp,&qq,&rr));
@@ -101,7 +101,7 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
  c=0; DO(n, if(s>jv[i])c+=qv[jv[i]];); 
  i=aii(x); j=AN(SPA(zp,a)); xk=i<<bplg(AT(x));
  GATV0(y1,INT,  c*j,2); v=AS(y1); v[0]=c; v[1]=j; yv= AV(y1); yu= AV(y);
- GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c;                xv=CAV(x1); xu=CAV(x);
+ GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c; xv=CAV(x1); xu=CAV(x);
  for(i=0;i<n;++i){
   k=jv[i]; iv+=r;
   if(s>k){

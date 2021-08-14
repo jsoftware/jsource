@@ -307,15 +307,15 @@ do{
   // Get the type to allocate
   I natoms=AN(z);  // number of atoms per result cell
   I zzt=AT(z); I zzr=AR(z); zzt=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
-  // If result is sparse, allocate 0 atoms; later, change the allocation to something that will never match a result (viz a list with negative shape)
-  zzr=(ISSPARSE(zzt))?1:zzr; natoms=ISSPARSE(zzt)?0:natoms;
   zzcelllen=natoms<<bplg(zzt);  // number of bytes in one cell.
   JMCSETMASK(zzendmask,zzcelllen,ZZSTARTATEND)   // set mask for JMCR
 
   // # cells in result is passed in as zzncells
   // Get # atoms to allocate
   DPMULDE(natoms,zzncells,natoms)
-  // Allocate the result
+  // Allocate the result.  If zzt is sparse we are just allocating 0 atoms in a nonrecursive block and the type is immaterial, because we are going to ensure that nothing is
+  // ever copied into zzt.  BUT we must remove the sparse signbits from upper type so that the rank is not decremented when GA00 combines the rank and type, because we use the rank as a workarea
+  if(unlikely(ISSPARSE(zzt))){zzr=1; natoms=0; zzt=(UI4)zzt;}  // If result is sparse, allocate 0 atoms; later, change the allocation to something that will never match a result (viz a list with negative shape).  Leave 1 bit of SPARSE for test below
   GA00(zz,zzt,natoms,zzframelen+zzr); I * RESTRICT zzs=AS(zz);  // rank is aframelen+wframelen+resultrank
   // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
   AFLAGORLOCAL(zz,(zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1))  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged

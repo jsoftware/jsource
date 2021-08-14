@@ -1193,7 +1193,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.  The value of an atomic box would come before the cleared region, but we pick that up here when the shape is cleared
 // obsolete  if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
- if(!((type&DIRECT)>0)){AS(z)[0]=0; mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+ if(!((type&DIRECT)>0)){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),1,MEMSET00);}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
  GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if ISSPARSE(t)  */  // copy shape by hand since short
   // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
    // All non-DIRECT types have items that are multiples of I, so no need to round the length
@@ -1202,29 +1202,40 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 }
 #endif
 
+#if SY_64
 // stats obsolete I scafnga=0, scafngashape=0;
-// like jtga, but don't copy shape, and don't store AT, AN, AR, AK (so that type and atoms don't have to survive over call).  Never called for SPARSE type
-RESTRICTF A jtga0(J jt,I type,I atoms,I rank){A z;
+// like jtga, but don't copy shape,   Never called for SPARSE type
+// We pack rank+type into one reg to save registers (it also halps the LIMIT test).  With this, the compiler should be able to save/restore
+// only 2 regs (ranktype and bytes) but the prodigal compiler saves 3.  We accept this to be able to save AK AR AT here, so that the caller doesn't have to preserve them over the call.
+// We don't store AN, because that would take another push/pop and we hope the caller needs to preserve it anyway.
+RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
 // obsolete  I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
 // obsolete  I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0)&-2;  // We never use GA for NAME types, so we don't need to check for it
- I bytes; if(likely(type&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
-  // We never use GA for NAME types, so we don't need to check for it
-#if SY_64
- ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)
-#else
- ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
-#endif
-// doesn't work  type&=DIRECT; type=-type; type=REPSGN(type); type&=bytes;    this should free bytes so that type can be put into unsaved reg.  But clang11 doesn't even though r10 and r11 are unused
- RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
+ I bytes; if(likely(ranktype&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,ranktype>>32,bplg(ranktype),ranktype&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,ranktype>>32,bpnonnoun(ranktype),ranktype&LAST0,0);
+    // We never use GA for NAME types, so we don't need to check for it
+ ASSERT(((atoms|ranktype)>>(32+RANKTX))==0,EVLIMIT)
+ RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC AFLAG AM
+ AT(z)=(I4)ranktype; I rank=(UI)ranktype>>32; AR(z)=rank; AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
- if(!((type&DIRECT)>0)){AS(z)[0]=0; mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}
-// obsolete  if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+ if(unlikely(!(((I4)ranktype&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-32)&-32,&AS(z)[1],1,MEMSET00);}  // unlikely is important!  compiler strains then to use one less temp reg
+// obsolete  if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
 // stats  obsolete ++scafnga; scafngashape+=shaape!=0;
  R z;
 }
+#else
+RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
+ I bytes; if(likely(type&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
+ ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
+ RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
+ AT(z)=type; AR(z)=rank; AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
+ if(unlikely(!((type&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),1,MEMSET00);}
+ R z;
+}
+#endif
+
 
 // free a block.  The usecount must make it freeable
 void jtmf(J jt,A w,I hrh){I mfreeb;

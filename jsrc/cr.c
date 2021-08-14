@@ -190,7 +190,6 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 #define ZZINSTALLFRAME(optr) MCISHd(optr,AS(w),AR(w))
   do{
    RZ(z=CALL1IP(f1,virtw,fs));
-
 #define ZZBODY  // assemble results
 #include "result.h"
 

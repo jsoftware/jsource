@@ -564,7 +564,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define L2CACHESIZE (((I)1)<<18)
 #define L3CACHESIZE (((I)1)<<22)
 
-#define TOOMANYATOMS 0xFFFFFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
+#define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
 // Tuning options for cip.c
 #if C_AVX2 && defined(_WIN32)
@@ -1043,15 +1043,19 @@ EPILOG(z); \
 
 // GAE executes the given expression when there is an error
 // obsolete #define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
-#define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,t,(I)(n),(I)(r)))))erraction; AR(v)=(r); AK(v)=AKXR(r); AT(v)=(t); AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
+#if SY_64
+#define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,((I)(r)<<32)+(t),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
+#else
+#define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,(I)(t),(I)(r),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
+#endif
 // obsolete #define GAE(v,t,n,r,s,erraction)   {GAE0(v,t,n,r,erraction) MCISH(AS(v),(I*)(s),(r)) if((r)==1 && AS(v)[0]!=(n))SEGFAULT;}  // error action
 #define GAE(v,t,n,r,s,erraction)   {GAE0(v,t,n,r,erraction) MCISH(AS(v),(I*)(s),(r))}  // error action
 // obsolete #define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
-#define GA00(v,t,n,r) {GAE0(v,t,n,r,R 0)}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1.  Default error action is to exit
+#define GA00(v,t,n,r) {GAE0(v,t,n,r,R 0)}  // used when rank will always be filled in by user.  Default error action is to exit
 // obsolete #define GA(v,t,n,r,s)   {GA00(v,t,n,r) MCISH(AS(v),(I*)(s),(r)) if((r)==1 && AS(v)[0]!=(n))SEGFAULT;}
-#define GA(v,t,n,r,s)   {GA00(v,t,n,r) MCISH(AS(v),(I*)(s),(r))}
+#define GA(v,t,n,r,s)   {GA00(v,t,n,r) MCISH(AS(v),(I*)(s),(r))}   // s points to shape
 #define GA0(v,t,n,r) {GA00(v,t,n,r) *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 and must fill in with AN if so - never for sparse blocks
-#define GA10(v,t,n) {GA00(v,t,n,1) AS(v)[0]=(n);}  // used when shape=0 and rank is 1
+#define GA10(v,t,n) {GA00(v,t,n,1) AS(v)[0]=(n);}  // used when rank is known to be 1
 
 // GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
@@ -1064,7 +1068,7 @@ EPILOG(z); \
  if(likely(name!=0)){   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- if(!(((type)&DIRECT))>0){if(SY_64){if(rank==0)AS(name)[0]=0; if((bytes-32)&-32)mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,1,MEMSET00);}}  \
+ if(!(((type)&DIRECT))>0){if(rank==0)AS(name)[0]=0; if((bytes-(offsetof(AD,s[1])-32))&-32)mvc((bytes-(offsetof(AD,s[1])-32))&-32,&AS(name)[1],1,MEMSET00);}  \
  shapecopier(name,type,atoms,rank,shaape)   \
     \
  }else{erraction;} \
@@ -1078,14 +1082,14 @@ EPILOG(z); \
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
 #define GATVS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
- if(SY_64){ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)} \
+ if(SY_64){ASSERT((((I)(atoms)>>(TOOMANYATOMSX-RANKTX))|(I)(rank))<=RMAX,EVLIMIT)} \
  else{ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)} \
  HISTOCALL \
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(!(((type)&DIRECT)>0)){AS(name)[0]=0; mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}   /* overclears the data but never over buffer bdy */ \
+  if(!(((type)&DIRECT)>0)){AS(name)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,&AS(name)[1],1,MEMSET00);}   /* overclears the data but never over buffer bdy */ \
   shapecopier(name,type,atoms,rank,shaape)   \
      \
  }else{erraction;} \

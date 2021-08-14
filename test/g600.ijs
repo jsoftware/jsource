@@ -184,22 +184,22 @@ f=: 4 : 0
 (t -: , x <@;"1 0 y) , (5 5$"1 x) -: x f"1 0 y [ t=: '' [ mm=: ?*/$x
 (t -: , x <@;"1   y) , x          -: x f"1   y [ t=: '' [ mm=: ?  #x
 
-
+testlen =: 10000  NB. following is slow during memaudit
 NB. Verify all kinds of changes of shape and precision.  This is testing assembly, which is common to monad & dyad
 ops =: (0$0);(0$'a');(0$4);(0$1.5);(0$1j1);(0$a:);(0$5x);(0$4r6);(0$u:'a');(0$10 u:'a')
 ops =: ops , (0 1$0);(1 0$'a');(0 2$4);(2 0$1.5);(0 1 3$a:);(3 2 0$5x);(1 0 4$4r6);(4 0 5$u:'a');(0 5 0$10 u:'a')
 ops =: ops , (0);(1$'a');(2$4);(2 1$1.5);(2$1j1);(3$a:);(3 1$5x);(2$4r6);(1 2 3$u:'a');(3$10 u:'a')
-y =: <@(ops {~ (#ops) ?@$~ ])"0 ] 2 + 1000000 ?@$ 3
+y =: <@(ops {~ (#ops) ?@$~ ])"0 ] 2 + (10*testlen) ?@$ 3
 (> etx -: >"+ etx)@> y
 NB. Test with different shapes/types of nonempty
 ops =: (0);('a');(4);(1.5);(1j1);(a:);(5x);(4r6);(u:'a');(10 u:'a')
-y =: <@(((ops {::~ ?@(#ops)) $~ 10 ?@$~ >:@?)&.>@(#&4)"0) ] 1 + 100000 ?@$ 3
+y =: <@(((ops {::~ ?@(#ops)) $~ 10 ?@$~ >:@?)&.>@(#&4)"0) ] 1 + testlen ?@$ 3
 (> etx -: >"+ etx)@> y
 NB. Test precision changes in long operation
 ops =: (0);(4);(1.5);(1j1);(5x);(4r6)
-((>@([ , 99999 # ])) -: (* i. 100000) (4 : 'x {:: y')"0 _  ,)"0/~ ops
+((>@([ , (<: testlen) # ])) -: (* i. testlen) (4 : 'x {:: y')"0 _  ,)"0/~ ops
 ops =: ('a');(u:'a');(10 u:'a')
-((>@([ , 99999 # ])) -: (* i. 100000) (4 : 'x {:: y')"0 _  ,)"0/~ ops
+((>@([ , (<: testlen) # ])) -: (* i. testlen) (4 : 'x {:: y')"0 _  ,)"0/~ ops
 
 NB. Check virtual block based on INCORPABLE block, which must have inplacing turned off
 (0 10 ,. 2 9$1) -: (}.-}:)"1 (0,.i.2 10)
@@ -1015,6 +1015,6 @@ f =: ^
 
 
 4!:55 ;:'a adot1 adot2 sdot0 agree appcyc asm b boxr c c1 c2 cells crank cs cshape cycinit dr er f fr frame '
-4!:55 ;:'ger glob lag minus mm mrk msh prevmod ops pfx rag rank rk savger s1 svy t x xx y '
+4!:55 ;:'ger glob lag minus mm mrk msh prevmod ops pfx rag rank rk savger s1 svy t testlen x xx y '
 randfini''
 

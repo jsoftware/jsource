@@ -707,7 +707,11 @@ extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtfxeachv(J,I,A);
 // obsolete extern RESTRICTF A jtga(J,I,I,I,I*);
+#if SY_64
+extern RESTRICTF A jtga0(J,I,I);
+#else
 extern RESTRICTF A jtga0(J,I,I,I);
+#endif
 extern RESTRICTF A jtgaf(J,I);
 extern RESTRICTF A jtgafv(J,I);
 extern A        jtgadv(J,A,C);

@@ -54,7 +54,7 @@
 #else
 #define bpnoun(i) (I)bp(i)
 #define bplg(i) CTTZ(bpnoun(i))
-#define bplgnonnoun(i) CTTZ(bpnoun(i))
+#define bpnonnoun(i) (I)bp(i)
 #endif
 
 

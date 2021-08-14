@@ -340,7 +340,7 @@
 #define exprndID(x,y)               jtexprndID(jt,(x),(y))  
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
-#define extnvr()                    jtextnvr(jt)
+#define extnvr(x)                    jtextnvr(jt,(x))
 // Handle top level of fa(), which decrements use count and decides whether recursion is needed.  We recur if the contents are traversible and
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)

@@ -436,7 +436,7 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
-A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra;}
+L* NOINLINE jtextnvr(J jt,L *s){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra?s:0;}
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
@@ -453,21 +453,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
  jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)nwds;  // addr & length of words being parsed
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
-  // As names are dereferenced, they are added to the nvr queue.  To save time in the loop, we now
-  // make sure there is enough room in the nvr queue to handle all the names we will encounter in
-  // this sentence.  For simplicity's sake, we just assume the worst, that every word is a name, and
-  // make sure there is that much space.  BUT if there were an enormous tacit sentence, that would be
-  // very inefficient.  So, if the sentence is too long, we go through and count the number of names,
-  // rather than using a poor upper bound.
-  {UI4 maxnvrlen;
-   if (likely(nwds < 128))maxnvrlen = (UI4)nwds;   // if short enough, assume they're all names
-   else {
-    maxnvrlen = 0;
-    DQ(nwds, maxnvrlen+=(AT(QCWORD(queue[i]))>>NAMEX)&1;)
-   }
-   // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
-   if(unlikely((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))){NOUNROLL do{RZ(extnvr());}while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra));}
-  }
 
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
 
@@ -496,19 +481,20 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
-  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
+  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.
 
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
   UI pt0ecam = nwds+((0b11LL<<CONJX)<<pull4);
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  bit 28 set when jt->assignsym is non0, cleared after the assignment has been performed
-  //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if next stack word is NOT MARK 
+  //  bit 28 set when jt->assignsym is non0, cleared after the assignment has been performed 
+  //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  holds valtype code, (bit# of type-LASTNOUNX)+1 or 0 if no value  1=N 4=A 8=V 10=C
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
-  //  18-19 AR flags from symtab, 16 set if virtual last token has been processed, 0-15 m (word# in sentence)
-  // bit 22,23 free
+  //  18-19 AR flags from symtab
+  //  16 set if value has been added to NVR stack
+  //  0-15 m (word# in sentence)
 #define LOCSYMFLGX (18-ARNAMEADDEDX)
 #define PLINESAVEX 20  // 3 bits of pline
 // above #define USEDGLOBALX 21
@@ -520,6 +506,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 #define NAMEFLAGSX 17  // 17 and 20
 #define VALTYPEX 23  // 4-bit field to save valtype
 #define VALTYPE (0xfLL<<VALTYPEX)
+#define NVRSTACKEDX 16
+#define NVRSTACKED (1LL<<NVRSTACKEDX)
   pt0ecam += (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
@@ -555,8 +543,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
     if(likely((US)pt0ecam!=0)){     // if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
-     // value.  m has the index of the word we just moved
-     // pull one value from the queue
+     // value.  m has the index of the word we just moved.  y = *queue
 
      // We have the value/typeclass of the next word.  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
      if(!((I)y&QCISLKPNAME)){
@@ -618,6 +605,21 @@ rdglob: ;  // here when we tried the buckets and failed
           // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
           if(likely(!(AFLAG(sv)&AFNJA+AFVIRTUAL)))if(likely((AM(sv)&AMNV)!=0)){
            // NOTE that if the name was deleted in another task s->val will be invalid and we will crash
+           // If this is the first NVR for this sentence, we have to initialize an NVR stack
+           if(!(pt0ecam&NVRSTACKED)){
+            // As names are dereferenced, they are added to the nvr queue.   The queue doubles in size when needed. For simplicity's sake, we just assume the worst, that every word is a name, and
+            // make sure there is that much space.  BUT if there were an enormous tacit sentence, that would be very inefficient.  So, if the sentence is too long, we go through and count the number of names,
+            // rather than using a poor upper bound.
+            UI4 maxnvrlen;
+            if (likely((US)pt0ecam < 128))maxnvrlen = (US)pt0ecam;   // if short enough, assume they're all names
+            else {
+             maxnvrlen = 1;  // count the name we are stacking now
+             DPNOUNROLL((US)pt0ecam-1, maxnvrlen+=((I)queue[i]&QCISLKPNAME)!=0;)
+            }
+            // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
+            if(unlikely((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))){NOUNROLL do{EPZ(s=extnvr(s));}while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra)); sv=s->val; }  // save s inside the subroutine to avoid register spill; restore sv after call
+            pt0ecam|=NVRSTACKED;  // remember we have been here
+           }
            AMNVRINCR(sv)  // add 1 to the NVR count, now that we are stacking
            AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = sv;   // record the place where the value was protected, so we can free it when this sentence completes
           }  // if NJA/virtual, leave NVR alone
@@ -630,8 +632,7 @@ rdglob: ;  // here when we tried the buckets and failed
       // end of looking at local/global symbol tables
       // s has the symbol for the name.  pt0ecam&USEDGLOBAL is set if the name was found in a global table.  The type from valtype is in spare bits of GETSTACK0PT
       // since we have called subroutines, we don't use sympv, refetching it instead
-      if(likely(1)){   // if symbol was defined...
-         // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
+      if(likely(1)){
        // The name is defined.  If it's a noun, use its value (the common & fast case)
        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
        // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
@@ -655,9 +656,10 @@ rdglob: ;  // here when we tried the buckets and failed
         EPZ(y)
         tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
        }
-      } else {
+      }else{
 undefname:
        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
+       // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
        y = namerefacv(QCWORD(*(volatile A*)queue), s);    // this will create a ref to undefined name as verb [:
        EPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
@@ -688,7 +690,7 @@ endname: ;
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
-     if(!(pt0ecam&0x10000)){pt0ecam|=0x10000; SETSTACK0PT(PTMARK) break;}  // first time m=0.  realize the virtual mark and use it.  a and pt will not be needed.  e and ca flags immaterial
+     if(GETSTACK0PT!=PTMARK){SETSTACK0PT(PTMARK) break;}  // first time m=0.  realize the virtual mark and use it.  e and ca flags immaterial
      EP       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
      // never fall through here
     }
@@ -958,20 +960,22 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   audittstack(jt);
 #endif
 
-  // Now that the sentence has completed, take care of some cleanup.  Names that were reassigned after
-  // their value was moved onto the stack had the decrementing of the use count deferred: we decrement
-  // them now.  There may be references to these names in the result (if we are returning a verb/adv/conj),
-  // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
-  // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
-  // We apply the final free only when the NVR count goes to 0, to make sure we hold off till the last stacked reference has been seen off
-  v=AAV1(jt->nvra)+jt->parserstackframe.nvrotop;  // point to our region of the nvr area
-  UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
-  DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, A vv = *v;I am;
-   // if the NVR count is 1 before we decrement, we have hit the last stacked use & we free the block.
-   // if we are performing (or finally deferring) the FINAL free, the value must be a complete zombie and cannot be active anywhere; otherwise we must clear it.  We clear it always
-   if(likely((AMNVRDECR(vv,am))<2*AMNVRCT)){if(am&AMFREED){AMNVRAND(vv,~AMFREED) if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}}
-   ++v;);   // schedule deferred frees.
-    // na so that we don't audit, since audit will relook at this NVR stack
+  if(unlikely(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop!=0)){  // if we never put anything on the NVR stack we don't need to free it
+   // Now that the sentence has completed, take care of some cleanup.  Names that were reassigned after
+   // their value was moved onto the stack had the decrementing of the use count deferred: we decrement
+   // them now.  There may be references to these names in the result (if we are returning a verb/adv/conj),
+   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
+   // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
+   // We apply the final free only when the NVR count goes to 0, to make sure we hold off till the last stacked reference has been seen off
+   v=AAV1(jt->nvra)+jt->parserstackframe.nvrotop;  // point to our region of the nvr area
+   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
+   DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, A vv = *v;I am;
+    // if the NVR count is 1 before we decrement, we have hit the last stacked use & we free the block.
+    // if we are performing (or finally deferring) the FINAL free, the value must be a complete zombie and cannot be active anywhere; otherwise we must clear it.  We clear it always
+    if(likely((AMNVRDECR(vv,am))<2*AMNVRCT)){if(am&AMFREED){AMNVRAND(vv,~AMFREED) if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}}
+    ++v;);   // schedule deferred frees.
+     // na so that we don't audit, since audit will relook at this NVR stack
+  }
 
   // Still can't return till frame-stack popped
   jt->parserstackframe = oframe;

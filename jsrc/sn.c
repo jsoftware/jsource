@@ -245,7 +245,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
      // Here the free must be deferred.
      if(unlikely((am&-AMNVRCT)==0)){  // deferral needed, but NVR stack empty.  push then
       A nvra=jt->nvra;
-      if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
+      if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra))){RZ(extnvr((L*)1)); nvra=jt->nvra;}  // Extend nvr stack if necessary.  copied from parser
       AAV1(nvra)[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
      }
      // if the block was on the NVR stack and not freed, we have marked it freed and we will just wait for the eventual deletion

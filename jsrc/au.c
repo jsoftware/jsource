@@ -28,18 +28,18 @@ F1(jtfdepadv){ARGCHK1(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 #endif
 
 
-DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(FAV(self)->valencefns[0],  w,jt->sf=self); jt->sf=s; RETF(z);}
+DF1(jtdfs1){F1PREFIP;A s=jt->parserstackframe.sf,z; RZ(self); z=CALL1IP(FAV(self)->valencefns[0],  w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
-A s=jt->sf,z; 
+A s=jt->parserstackframe.sf,z; 
 RZ(self); 
-z=CALL2IP(FAV(self)->valencefns[1],a,w,jt->sf=self); jt->sf=s; 
+z=CALL2IP(FAV(self)->valencefns[1],a,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; 
 RETF(z);}    
      /* for monads and dyads that can possibly involve $: */
 
 
 // $: itself
-F1(jtself1){A z; FDEPINC(d=fdep(jt->sf)); STACKCHKOFL df1(z,  w,jt->sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
-F2(jtself2){A z; FDEPINC(d=fdep(jt->sf)); STACKCHKOFL df2(z,a,w,jt->sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
+F1(jtself1){A z; FDEPINC(d=fdep(jt->parserstackframe.sf)); STACKCHKOFL df1(z,  w,jt->parserstackframe.sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
+F2(jtself2){A z; FDEPINC(d=fdep(jt->parserstackframe.sf)); STACKCHKOFL df2(z,a,w,jt->parserstackframe.sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
 
 A jtac1(J jt,AF f){R fdef(0,0,VERB, f,0L, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 A jtac2(J jt,AF f){R fdef(0,0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}

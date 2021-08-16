@@ -1103,7 +1103,7 @@ EPILOG(z); \
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
 #define GATV0E(name,type,atoms,rank,erraction) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape not written unless rank==1, with error branch
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set correctly
-#define GASPARSE(n,t,a,r,s) {GA(n,BOX,(sizeof(P)/sizeof(A)),r,s); AN(n)=1; AT(n)=(t)|SPARSE; if((r)==1){if(s)AS(n)[0]=(s)[0];} ACINIT(n,ACUC1);}  // scaf remove r test
+#define GASPARSE(n,t,a,r,s) {GA(n,BOX,(sizeof(P)/sizeof(A)),r,s); AN(n)=1; AT(n)=(t)|SPARSE; if((r)==1){if(s)AS(n)[0]=(s)[0];} ACINIT(n,ACUC1);}
 #define GASPARSE0(n,t,a,r) {GATV0(n,BOX,(sizeof(P)/sizeof(A)),r); AN(n)=1; AT(n)=(t)|SPARSE; ACINIT(n,ACUC1);}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)

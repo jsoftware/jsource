@@ -85,7 +85,7 @@ typedef struct rngdata {
  } asginfo;
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
 // end of cacheline 0
- A sf;               /* for $: clear for task                                         */
+ A filler;            // UNUSED
  S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task
  S ntasks;     // number of futures allowed, 0 if none
  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task

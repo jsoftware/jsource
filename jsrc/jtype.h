@@ -1093,8 +1093,8 @@ typedef struct {
  typedef struct{
   PSTK* parserstkbgn;     // &start of parser stack
   PSTK* parserstkend1;    // &end+1 of parser stack
-  A    *parserqueue;   // for error purposes: words of the sentence being parsed
-  US   parserqueuelen;  // number of words in queue
+  A    sf;   // $: stack in the parser (other users of $: have their own stacks)
+  US   filler;
   US   parsercurrtok;   // the token number of the word to flag if there is an error
   US  nvrtop;           /* top of nvr stack; # valid entries               */
   US  nvrotop;          // previous top of nvr stack

@@ -138,7 +138,7 @@ valgone: ;
   // possible before the branch.  Check the generated code on any change of compiler.
   if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
-  A s=jt->sf; jt->sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;  // keep all flags in jtinplace
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
  } else {
@@ -150,7 +150,7 @@ valgone: ;
    z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,flgd0cp&3?0:stabent);  // if debugging, go do that.  save last sym lookup as debug parm if it is valid (not cached or pseudoname)
   }else{
    if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
-   A s=jt->sf; jt->sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;
+   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
   }
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cp&8?VAL2:VAL1);  // record the return from call

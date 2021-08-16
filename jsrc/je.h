@@ -622,6 +622,7 @@ extern void     copyTT(void *, void *, I, I,I);
 #else
 extern void     jtcopyTT(J, void *, void *, I, I,I);
 #endif
+extern I        infererrtok(J);
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);
 extern B        jtadd2(J,F,F,C*);

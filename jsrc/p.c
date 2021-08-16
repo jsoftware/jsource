@@ -177,40 +177,41 @@ static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(se
 
 // assignment, single or multiple
 // return sets stack[0].t to -1 if this is a final assignment
-// pt0 i the PT code for the left-hand side, pt0 is the PT code for the assignment, m is the token number to be assigned next (0 if the next thing is MASK)
+// pt0 i the PT code for the left-hand side, pt0 is the PT code for the assigptnment, m is the token number to be assigned next (0 if the next thing is MASK)
 // jt has flag set for final assignment (passed into symbis), to which we add a flag for assignsym 
-static PSTK* jtis(J jt,PSTK *stack,UI4 pt0, I pt1){F1PREFIP;
- A v=stack[2].a, n=stack[0].a;  // assignment value and name.
- stack[1+((I)jtinplace&JTFINALASGN)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
- // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
- // depending on which type of assignment (but if there is no local symbol table, always use the global)
- A symtab=jt->locsyms; if(unlikely((SGNIF(pt1,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
- if(likely(pt0&PTNAME0)){jtsymbis(jtinplace,n,v,symtab);}   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
- else {B ger=0;C *s;
-  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
-   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
-   if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
-   else{
-    // True multiple assignment
-    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
-    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],vv[i],symtab);)}  // v is boxed list
-    else {A *nv=AAV(n); DO(AN(n), jtsymbis(jtinplace,nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
-    goto retstack;
-   }
+// The return must be 0 for bad, anything else for good
+static A NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
+// obsolete  A v=stack[2].a, n=stack[0].a;  // assignment value and name.
+// obsolete  stack[1+((I)jtinplace&JTFINALASGN)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
+// obsolete  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
+// obsolete  // depending on which type of assignment (but if there is no local symbol table, always use the global)
+// obsolete  A symtab=jt->locsyms; if(unlikely((SGNIF(pt1,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
+// obsolete  if(likely(pt0&PTNAME0)){jtsymbis(jtinplace,n,v,symtab);}   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
+ B ger=0;C *s;
+ if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
+  // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
+  if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
+  else{
+   // True multiple assignment
+   ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
+   if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],vv[i],symtab);)}  // v is boxed list
+   else {A *nv=AAV(n); DO(AN(n), jtsymbis(jtinplace,nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
+   goto retstack;
   }
-  // single assignment or variable assignment
-  if(unlikely((SGNIF(AT(n),LITX)&(AR(n)-2))<0)){
-   // lhs is ASCII characters, atom or list.  Convert it to words
-   s=CAV(n); ger=CGRAVEC==s[0];   // s->1st character; remember if it is `
-   RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
-   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment with no values, if there is something to be assigned
-   if(1==AN(n)){
-    // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
-    if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
-   }
+ }
+ // single assignment or variable assignment
+ if(unlikely((SGNIF(AT(n),LITX)&(AR(n)-2))<0)){
+  // lhs is ASCII characters, atom or list.  Convert it to words
+  s=CAV(n); ger=CGRAVEC==s[0];   // s->1st character; remember if it is `
+  RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
+  ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment with no values, if there is something to be assigned
+  if(1==AN(n)){
+   // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
+   if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
   }
-  // if simple assignment to a name (normal case), do it.  To get here it must have been a length-1 list of names
-  if(unlikely((NAME&AT(n))!=0)){
+ }
+ // if simple assignment to a name (normal case), do it.  To get here it must have been a length-1 list of names
+ if(unlikely((NAME&AT(n))!=0)){
 #if FORCEVIRTUALINPUTS
    // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
    // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
@@ -218,26 +219,25 @@ static PSTK* jtis(J jt,PSTK *stack,UI4 pt0, I pt1){F1PREFIP;
    // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
    stack[2].a=
 #endif
-   jtsymbis(jtinplace,n,v,symtab);
-  }else{
-   // computed name(s)
-   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
-   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
-   if(!AR(n))jtsymbis(jtinplace,onm(n),v,symtab);
-   else {
-    // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
-    // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
-    // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
-    // if not AR assignment, just open each box of rhs and assign
-    ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN);
-    // create faux fs to pass args to the multiple-assignment function, in AM and valencefns
-    PRIM asgfs; ABACK((A)&asgfs)=symtab; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
-    I rr=AR(v)-1; rr&=~REPSGN(rr); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf);
-   }
+  jtsymbis(jtinplace,n,v,symtab);
+ }else{
+  // computed name(s)
+  ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
+  // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
+  if(!AR(n))jtsymbis(jtinplace,onm(n),v,symtab);
+  else {
+   // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
+   // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
+   // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
+   // if not AR assignment, just open each box of rhs and assign
+   ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN);
+   // create faux fs to pass args to the multiple-assignment function, in AM and valencefns
+   PRIM asgfs; ABACK((A)&asgfs)=symtab; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
+   I rr=AR(v)-1; rr&=~REPSGN(rr); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf);
   }
  }
 retstack:  // return, but 0 if error
- stack+=2; if(unlikely(jt->jerr))stack=0; R stack;  // the result is the same value that was assigned
+ if(unlikely(jt->jerr))R 0; R (A)1;
 }
 
 
@@ -438,9 +438,24 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
 L* NOINLINE jtextnvr(J jt,L *s){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra?s:0;}
 
+#if 0  // for this to work we would have to rearrange the stack AFTER execution
+// Given that we took an error executing the block starting at jt->parserstackframe.parserstkend1, figure out what the error-token number should be
+I infererrtok(J jt){
+ // if the sentence had only one token, that token is the error token
+ if(jt->parserstackframe.parserqueuelen==1)R 1;  // lust one token, return it
+ // reparse the fragment to get the line# that was executed
+ I pmask=(I)((C*)&jt->parserstackframe.parserstkend1[0].pt)[0] & (I)((C*)&jt->parserstackframe.parserstkend1[1].pt)[1] &(I)((C*)&jt->parserstackframe.parserstkend1[2].pt)[2] &(I)((C*)&jt->parserstackframe.parserstkend1[3].pt)[3];  // parse
+ // see if ( was executable
+ pmask|=jt->parserstackframe.parserstkend1[0].pt&PTNOTLPAR?0:0x100;  // ( any any any is line 8
+ // Get the number that was executed.  Take the token# from entry (9-0): 2 1 1 1 1 2 2 2 2 1 (line 9 is no match, must be ending syntax error)
+ R jt->parserstackframe.parserstkend1[((0x21e>>CTTZI(pmask|0x200))&1)+1].t;  // return failing token#
+}
+#endif
+
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
+#define PSTACKRSV 1  // number of stack frames used for holding sentence error info
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 // JT flag is used to indicate execution from ". - we can't honor name:: then, or perhaps some assignments
@@ -451,44 +466,29 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
  // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
- jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)nwds;  // addr & length of words being parsed
- if(likely(nwds>1)) {  // normal case where there is a fragment to parse
-
-  queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
-
-  // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
-  // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch
-  I pull4=0; if(likely(nwds>2))pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;
- 
-  // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
-  A savfs=jt->sf;  // push $: stack
 
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
   // never look at a stack location until we have moved from the queue to that position.
   // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
   // The stack grows down
-  if(unlikely((uintptr_t)jt->parserstackframe.parserstkend1-(uintptr_t)jt->parserstackframe.parserstkbgn < (nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK))){A y;
+  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current stack entry
+  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
    ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
-   I allo = MAX((nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+   I allo = MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
    GATV0(y,B01,allo,1);
-   jt->parserstackframe.parserstkbgn=(PSTK*)AV(y);   // save start of data area
+   currstk=(PSTK*)CAV(y);   // save start of data area, leaving space for all the marks
    // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
-   jt->parserstackframe.parserstkend1=(PSTK*)((uintptr_t)jt->parserstackframe.parserstkbgn+allo);  // point to the end+1 of the allocation
+   jt->parserstackframe.parserstkend1=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation
    // We could worry about hysteresis to avoid reallocation of every call
   }
-  A y;  // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call
-  y=*(volatile A*)queue;  // unroll y once
 
-  ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
-  stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
-  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.
+ // the first element of the parser stack is where we save unchanging error info for the sentence
+ currstk->a=(A)queue; currstk->t=(US)nwds;  // addr & length of words being parsed
+ jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the error info, creating an upward-growing stack at the bottom of the area jt->parserstackframe.parserstkbgn[-1] has the error info
 
-  // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
-
-  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
-  UI pt0ecam = nwds+((0b11LL<<CONJX)<<pull4);
+ if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  bit 28 set when jt->assignsym is non0, cleared after the assignment has been performed 
+  //  bit 28 if final assignment executed
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  holds valtype code, (bit# of type-LASTNOUNX)+1 or 0 if no value  1=N 4=A 8=V 10=C
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
@@ -501,6 +501,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 // above #define USEDGLOBAL (1LL<<USEDGLOBALX)
 // if ASGNSAFE perfect #define ASSIGNSYMNON0X 28  // set when we have NON0 in jt->assignsym.  Remains set till the corresponding assignment
 // if ASGNSAFE perfect #define ASSIGNSYMNON0 (1LL<<ASSIGNSYMNON0X)
+#define FINALASSIGNX 28  // set if final assignment executed
+#define FINALASSIGN ((I)1<<FINALASSIGNX)
 #define NOTFINALEXECX 17
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define NAMEFLAGSX 17  // 17 and 20
@@ -508,12 +510,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 #define VALTYPE (0xfLL<<VALTYPEX)
 #define NVRSTACKEDX 16
 #define NVRSTACKED (1LL<<NVRSTACKEDX)
-  pt0ecam += (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl
-  // debugging if(jt->parsercalls==0xdd)
-  // debugging  jt->parsercalls=0xdd;
-  // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
-
-  // We have the initial stack pointer.  Grow the stack down from there
+  // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
 #if SY_64
 #define SETSTACK0PT(v) pt0ecam=(UI4)pt0ecam, pt0ecam|=(I)(v)<<32;
 #define GETSTACK0PT (pt0ecam>>32)
@@ -524,8 +521,36 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 #define GETSTACK0PT stack0pt
 #define STACK0PTISCAVN PTISCAVN(stack0pt)
 #endif
-  // STACK0PT contains only enough info to decode from position 0.  Upper bytes are used as flags for position 0, and bits 16-23 are used in name resolution to hold the valtype of the name
-  SETSTACK0PT(PTMARK);  // will hold the EDGE+AVN value, which doesn't change much and is stored late
+  UI pt0ecam = (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl.  locsyms cannot change during this execution
+
+  queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
+
+  // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
+  // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch
+  I pull4=0; pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;
+// obsolete   if(likely(nwds>2))
+
+  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
+  pt0ecam += nwds+((0b11LL<<CONJX)<<pull4);
+// debug if(jt->parsercalls==0x9d0)
+// debug jt->parsercalls=0x9d0;
+
+
+  A y;  // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call
+  y=*(volatile A*)queue;  // unroll y once
+
+// obsolete   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
+// obsolete   A savfs=jt->parserstackframe.sf;  // push $: stack
+// obsolete 
+  ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
+  stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
+  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.
+
+  // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
+  // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
+
+  // We have the initial stack pointer.  Grow the stack down from there
+// obsolete   SETSTACK0PT(PTMARK);  // will hold the EDGE+AVN value, which doesn't change much and is stored late
   stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
   while(1){  // till no more matches possible...
 
@@ -755,7 +780,7 @@ endname: ;
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
-       jt->sf=fs;  // set new recursion point for $:
+       jt->parserstackframe.sf=fs;  // set new recursion point for $:
        if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!(pt0ecam&NOTFINALEXEC))){L *s;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
         // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
         // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
@@ -784,7 +809,7 @@ endname: ;
        AF actionfn=FAVV(fs)->valencefns[pmask>>2];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
        A arg2=stack[(pmask>>1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        A arg1=stack[(pmask&3)+1].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
-       stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)
+       stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
        stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
        // When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
@@ -797,7 +822,7 @@ endname: ;
        A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0;  // monad: w fs  dyad: a w   if monad, change to w w  
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
        y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pmask>>2)))&((pmask>>1)|1))),arg1,arg2,fs);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
-         // could use jt->sf to free fs earlier; we are about to break the pipeline.  But when we don't break we lose time waiting for jt->fs to settle
+         // could use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  But when we don't break we lose time waiting for jt->fs to settle
        // expect pipeline break
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
@@ -882,16 +907,28 @@ RECURSIVERESULTSCHECK
       // Here for lines 5-7 (fork/hook/assign), which branch to a canned routine
       // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
       // We avoid the indirect branch, which is very expensive
-      jt->parserstackframe.parsercurrtok = stack[1].t;   // 1 for hook/fork/assign; N/C for paren which can't fail
+      jt->parserstackframe.parsercurrtok = stack[1].t;   // 1 for hook/fork/assign
       if(pmask&0b10000000){  // assign - can't be fork/hook
-        // no need to update stack0pt because we always stack a new word after this
-// if ASGNSAFE perfect        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((pt0ecam>>(ASSIGNSYMNON0X-JTASSIGNSYMNON0X))&JTASSIGNSYMNON0)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment
-       stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((jt->asginfo.assignsym!=0)<<JTASSIGNSYMNON0X)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment; set ASSIGNSYMNON0 appropriately
+// obsolete        stack[1+((US)pt0ecam==0)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
+       // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
+       // depending on which type of assignment (but if there is no local symbol table, always use the global)
+       A symtab=jt->locsyms; if(unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
+       L *rc;
+       if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
+       else rc=(L*)jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
 // if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
-       EPZ(stack)  // fail if error
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
-       if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result)
+       EPZ(rc)  // fail if error
+       if(likely((US)pt0ecam==0)){pt0ecam|=FINALASSIGN; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
+       stack+=2;  // if we have to keep going, advance stack to the assigned value
+// obsolete         // no need to update stack0pt because we always stack a new word after this
+// obsolete // if ASGNSAFE perfect        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((pt0ecam>>(ASSIGNSYMNON0X-JTASSIGNSYMNON0X))&JTASSIGNSYMNON0)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment
+// obsolete        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((jt->asginfo.assignsym!=0)<<JTASSIGNSYMNON0X)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment; set ASSIGNSYMNON0 appropriately
+// obsolete        CLEARZOMBIE   // in case assignsym was set, clear it until next use
+// obsolete // if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
+// obsolete        EPZ(stack)  // fail if error
+// obsolete        if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result)
        // here we are dealing with the uncommon case of non-final assignment.  If the next word is not LPAR, we can fetch another word after.
        // if the 2d-next word exists, and it is (C)AVN, and the current top-of-stack is not ADV, and the next word is not ASGN, we can pull a third word.  (Only ADV can become executable in stack[2]
        // if it was not executable next to ASGN).  We go to the trouble (1) because the case is the usual one and we are saving a little time; (2) by eliminating
@@ -937,7 +974,7 @@ RECURSIVERESULTSCHECK
       if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
        SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
        stack+=2;  // advance stack pointer to result
-      }else{jsignal(EVSYNTAX); FP}  // error if contents of ( not valid
+      }else{jt->parserstackframe.parsercurrtok = stack[1].t; jsignal(EVSYNTAX); FP}  // error if contents of ( not valid
       // we fall through to rescan after ( )
      }else{pt0ecam&=~CONJ;  break;}   // parse failed, return to stack next word.  Must clear 'stack 2' flag
     }  // end 'there was a fragment'
@@ -982,13 +1019,14 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
 #if MEMAUDIT&0x2
   audittstack(jt);
 #endif
-  jt->sf=savfs;  // pop $: stack
+// obsolete   jt->parserstackframe.sf=savfs;  // pop $: stack
 #if MEMAUDIT&0x20
      auditmemchains();  // trap here while we still have the parseline
 #endif
 
   // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2].t) into the return
-  R (A)((I)z+SGNTO0US(stack[2].t));  // this is the return point from normal parsing
+// obsolete   R (A)((I)z+SGNTO0US(stack[2].t));  // this is the return point from normal parsing
+  R (A)((I)z+((pt0ecam>>FINALASSIGNX)&1));  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it

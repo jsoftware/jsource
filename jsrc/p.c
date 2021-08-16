@@ -382,8 +382,8 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
 }
 
 #define FP goto failparse;   // indicate parse failure and exit
-#define EP goto exitparse;   // exit parser, preserving current status
-#define EPZ(x) if(unlikely(!(x))){FP}   // exit parser if x==0
+#define EP(x) {pt0ecam=(x); goto exitparse;}   // exit parser with success; x = 1 if final assignment
+#define FPZ(x) if(unlikely(!(x))){FP}   // exit parser w/failure if x==0
 
 #if 0  // keep for commentary
 // An in-place operation requires an inplaceable argument, which is marked as AC<0,
@@ -467,20 +467,20 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
  // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
 
-  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
-  // never look at a stack location until we have moved from the queue to that position.
-  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
-  // The stack grows down
-  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current stack entry
-  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
-   ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
-   I allo = MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-   GATV0(y,B01,allo,1);
-   currstk=(PSTK*)CAV(y);   // save start of data area, leaving space for all the marks
-   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
-   jt->parserstackframe.parserstkend1=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation
-   // We could worry about hysteresis to avoid reallocation of every call
-  }
+ // allocate the stack.  No need to initialize it, except for the marks at the end, because we
+ // never look at a stack location until we have moved from the queue to that position.
+ // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
+ // The stack grows down
+ PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current stack entry
+ if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
+  ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
+  I allo = MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+  GATV0(y,B01,allo,1);
+  currstk=(PSTK*)CAV(y);   // save start of data area, leaving space for all the marks
+  // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
+  jt->parserstackframe.parserstkend1=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation
+  // We could worry about hysteresis to avoid reallocation of every call
+ }
 
  // the first element of the parser stack is where we save unchanging error info for the sentence
  currstk->a=(A)queue; currstk->t=(US)nwds;  // addr & length of words being parsed
@@ -488,7 +488,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  bit 28 if final assignment executed
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  holds valtype code, (bit# of type-LASTNOUNX)+1 or 0 if no value  1=N 4=A 8=V 10=C
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
@@ -501,8 +500,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 // above #define USEDGLOBAL (1LL<<USEDGLOBALX)
 // if ASGNSAFE perfect #define ASSIGNSYMNON0X 28  // set when we have NON0 in jt->assignsym.  Remains set till the corresponding assignment
 // if ASGNSAFE perfect #define ASSIGNSYMNON0 (1LL<<ASSIGNSYMNON0X)
-#define FINALASSIGNX 28  // set if final assignment executed
-#define FINALASSIGN ((I)1<<FINALASSIGNX)
 #define NOTFINALEXECX 17
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define NAMEFLAGSX 17  // 17 and 20
@@ -562,11 +559,11 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
     // pt0ecam is settling from pt0 but it will be ready soon
    
-   do{UI4 tmpes;I tx;  // tx is the type number, as analyzed by enqueue
+   do{
       // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
       // to give it priority.  likelys at the end of the line 0-2 code are key
 
-    if(likely((US)pt0ecam!=0)){     // if there is another valid token...
+    if(likely((US)pt0ecam!=0)){I tx;  // tx is the type number, as analyzed by enqueue      if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved.  y = *queue
 
@@ -642,7 +639,7 @@ rdglob: ;  // here when we tried the buckets and failed
              DPNOUNROLL((US)pt0ecam-1, maxnvrlen+=((I)queue[i]&QCISLKPNAME)!=0;)
             }
             // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
-            if(unlikely((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))){NOUNROLL do{EPZ(s=extnvr(s));}while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra)); sv=s->val; }  // save s inside the subroutine to avoid register spill; restore sv after call
+            if(unlikely((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))){NOUNROLL do{FPZ(s=extnvr(s));}while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra)); sv=s->val; }  // save s inside the subroutine to avoid register spill; restore sv after call
             pt0ecam|=NVRSTACKED;  // remember we have been here
            }
            AMNVRINCR(sv)  // add 1 to the NVR count, now that we are stacking
@@ -678,7 +675,7 @@ rdglob: ;  // here when we tried the buckets and failed
         y=s->val; tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
         y = namerefacv(QCWORD(*(volatile A*)queue), s);   // Replace other acv with reference
-        EPZ(y)
+        FPZ(y)
         tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
        }
       }else{
@@ -687,7 +684,7 @@ undefname:
        // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
        y = namerefacv(QCWORD(*(volatile A*)queue), s);    // this will create a ref to undefined name as verb [:
-       EPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
+       FPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
        tx=ATYPETOVALTYPE(VERB);  // refresh the type with the type of the resolved name
       }
 endname: ;
@@ -702,27 +699,25 @@ endname: ;
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // OK to fetch queue[-1]
-     stack[0].a = y;   // finish setting the stack entry, with the new word     y=*(volatile A*)queue;   // fetch as early as possible
+     stack[0].a = y;   // finish setting the stack entry, with the new word
      y=*(volatile A*)queue;   // fetch next value as early as possible
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  
-     tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part (the pull queue)
+     UI4 tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
-     // we have to move some state into pt0ecam: the number of pulls (2 if RPAR, 1 if CONJ, 0 otherwise)
-     // the number of pulls is initialized by the execution routine but we may extend it here
-
      // Put new word onto the stack along with a code indicating part of speech and the token number of the word
      SETSTACK0PT(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type
+     // *** here is where we exit stacking to do execution ***
+     if(!(tmpes&(0b111LL<<CONJX)))break;  // exit stack phase when no more to do, leaving es=0
+     // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shiting it down and shortening it if we pulled ADV
+     pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 2 more to request for 1 more by clearing bit 30.
+         // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
      if(GETSTACK0PT!=PTMARK){SETSTACK0PT(PTMARK) break;}  // first time m=0.  realize the virtual mark and use it.  e and ca flags immaterial
-     EP       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
+     EP(0)       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
      // never fall through here
     }
-    // *** here is where we exit stacking to do execution ***
-    if(!(tmpes&(0b111LL<<CONJX)))break;  // exit stack phase when no more to do, leaving es=0
-    pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 2 more to request for 1 more by clearing bit 30.
-         // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND awat bit 0
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue.
 
@@ -828,7 +823,7 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
 #endif
-       EPZ(y);  // fail parse if error
+       FPZ(y);  // fail parse if error
 #if AUDITEXECRESULTS
        auditblock(jt,y,1,1);
 #endif
@@ -893,7 +888,7 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
 #endif
-       EPZ(yy);  // fail parse if error
+       FPZ(yy);  // fail parse if error
 #if AUDITEXECRESULTS
        auditblock(jt,yy,1,1);
 #endif
@@ -919,15 +914,15 @@ RECURSIVERESULTSCHECK
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
 // if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
-       EPZ(rc)  // fail if error
-       if(likely((US)pt0ecam==0)){pt0ecam|=FINALASSIGN; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
+       FPZ(rc)  // fail if error
+       if(likely((US)pt0ecam==0))EP(1)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
        stack+=2;  // if we have to keep going, advance stack to the assigned value
 // obsolete         // no need to update stack0pt because we always stack a new word after this
 // obsolete // if ASGNSAFE perfect        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((pt0ecam>>(ASSIGNSYMNON0X-JTASSIGNSYMNON0X))&JTASSIGNSYMNON0)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment
 // obsolete        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((jt->asginfo.assignsym!=0)<<JTASSIGNSYMNON0X)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment; set ASSIGNSYMNON0 appropriately
 // obsolete        CLEARZOMBIE   // in case assignsym was set, clear it until next use
 // obsolete // if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
-// obsolete        EPZ(stack)  // fail if error
+// obsolete        FPZ(stack)  // fail if error
 // obsolete        if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result)
        // here we are dealing with the uncommon case of non-final assignment.  If the next word is not LPAR, we can fetch another word after.
        // if the 2d-next word exists, and it is (C)AVN, and the current top-of-stack is not ADV, and the next word is not ASGN, we can pull a third word.  (Only ADV can become executable in stack[2]
@@ -942,14 +937,14 @@ RECURSIVERESULTSCHECK
         A yy=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
         y=NEXTY;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
-        EPZ(yy);  // if error, return 0 stackpointer
+        FPZ(yy);  // if error, return 0 stackpointer
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
         A yy=hook(stack[1].a,stack[2].a);  // create the hook
         y=NEXTY;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
-        EPZ(yy);  // if error, return 0 stackpointer
+        FPZ(yy);  // if error, return 0 stackpointer
         PTFROMTYPE(stack[2].pt,AT(yy)) stack[2].t = stack[1].t; stack[2].a = yy;  // take err tok from f; save result.  Must store new type because this line takes adverb hooks also
         stack[1]=stack[0]; stack+=1;  // close up stack
        }
@@ -980,18 +975,21 @@ RECURSIVERESULTSCHECK
     }  // end 'there was a fragment'
    } // end of loop executing fragments
    
-  }  // break with stack==0 on error; main exit is when queue is empty (m<0)
+  }  // break with stack==0 on error to failparse; main exit is when queue is empty (m<0), to exitparse
+
+  // *** pt0ecam has been repurposed to 1 for final assignment, 0 0therwise
  exitparse:
    // Prepare the result
-
-  if(likely(stack!=0)){  // if no error yet...
+  if(1){  // no error on this branch
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
-   // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
+   // stack[1] is the initial mark (not necessarily written out), stack[2] is the result, and stack[3] had better be the first ending mark
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error
-   if(unlikely(!(PTOKEND(stack[2],stack[3])))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
+// obsolete    if(unlikely(!(PTOKEND(stack[2],stack[3])))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
+   if(unlikely(stack[3].pt!=PTMARK||!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 CAVN left (0 should not occur)
   }else{
-failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
-   CLEARZOMBIE z=0; stack=PSTK2NOTFINALASGN;  // set stack to something that IS NOT a final assignment
+failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
+   CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
+// obsolete  stack=PSTK2NOTFINALASGN;  // set stack to something that IS NOT a final assignment
   }
 #if MEMAUDIT&0x2
   audittstack(jt);
@@ -1026,7 +1024,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
 
   // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2].t) into the return
 // obsolete   R (A)((I)z+SGNTO0US(stack[2].t));  // this is the return point from normal parsing
-  R (A)((I)z+((pt0ecam>>FINALASSIGNX)&1));  // this is the return point from normal parsing
+  R (A)((I)z+pt0ecam);  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it

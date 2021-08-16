@@ -670,6 +670,7 @@ typedef struct {I e,p;X x;} DX;
 // the CAVN types are selected for comp ease in the typeval field of an assigned value, which might also hold VALTYPENAMELESSADV
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any other CAVN type
 #define QCADV  ((ADVX-LASTNOUNX)+1) // 4
+// note: code point 5 must be left unused so we don't mess up clearing the pull queue
 #define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
 #define QCLPAR  ((LPARX-LASTNOUNX)+1)  // 9
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10

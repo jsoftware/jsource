@@ -544,7 +544,11 @@ for(i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 #endif
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
-F1(jtvi){ARGCHK1(w); R ISDENSETYPE(AT(w),INT)?w:cvt(INT,w);}
+F1(jtvi){ARGCHK1(w);
+ if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
+ if((AT(w)&SPARSE+B01)>AR(w))R zeroionei(BAV(w)[0]);   // non-sparse Boolean atom, take atomic integer
+ R cvt(INT,w);
+}
 
 // Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX
 F1(jtvib){A z;D d,e,*wv;I i,n,*zv;

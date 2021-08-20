@@ -305,6 +305,8 @@ F2(jtforeign){I p,q;
   case XC(128,7): R CDERIV(CIBEAM, 0,            jtaes2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(128,8): R CDERIV(CIBEAM, jtqhash12,    jtqhash12,    VASGSAFE|VJTFLGOK1|VJTFLGOK2,RMAX,RMAX,RMAX);  
 //  case XC(128,110): R CDERIV(CIBEAM, jttest1,    0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(128,9): R CDERIV(CIBEAM, jtmvmsparse,         0,     VASGSAFE,RMAX,   RMAX,RMAX);
+
 
 //  default:        R foreignextra(a,w);
   default:        ASSERT(0,EVDOMAIN);  // any unknown combination is a domain error right away

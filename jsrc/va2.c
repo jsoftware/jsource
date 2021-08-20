@@ -852,10 +852,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
         ti * RESTRICT wv1=wv+dplen; wv1=j==1?wv:wv1; \
         oneprod2  \
         if(j>1){--j; _mm_storeu_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storeu_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100)); wv+=dplen; zv +=2;} \
-        else{_mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storel_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100));  zv+=1;} \
+        else{*(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc000),0x0); *(I*)(zv+ndpi)=_mm256_extract_epi64(_mm256_castpd_si256(acc100),0x0);  zv+=1;} \
        }else{ \
         oneprod1  \
-        _mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); \
+        *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc000),0x0); \
         zv+=1; \
        } \
        if(!--j)break; \
@@ -868,6 +868,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     } \
    ) \
   }
+// obsolete         else{_mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storel_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100));  zv+=1;}
 
 #define SUMATLOOP(ti,to,oneprod) \
   {ti * RESTRICT av=avp,* RESTRICT wv=wvp; to * RESTRICT zv=zvp; \
@@ -990,8 +991,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  acc3=MUL_ACC(acc3,_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask)); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
  acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \
  acc0=_mm256_add_pd(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
- _mm_storel_pd(zv++,_mm256_castpd256_pd128 (acc0));/* store the single result */
-
+ *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++zv;
+// obsolete  _mm_storel_pd(zv++,_mm256_castpd256_pd128 (acc0));/* store the single result */
 #else
 #define ONEPRODD D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;
 #endif
@@ -1154,7 +1155,8 @@ DF2(jtsumattymes1){
       acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));
       acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
 #endif
-      _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0)); // store the single result
+// obsolete       _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0)); // store the single result
+      *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++zv;
       if(!--j)break; av=av0;  // repeat a if needed
      }
     }

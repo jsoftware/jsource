@@ -956,7 +956,8 @@ EPILOG(z); \
 #define ALLOBYTESVSZLG(atoms,rank,sizelg,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + ((atoms)<<(sizelg))))  )  // this version when we have power-of-2 size
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+5)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
-#define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : *(volatile I*)0)   // lg2(#bytes to allocate)-1.  n is #bytes-1
+// obsolete #define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : *(volatile I*)0)   // lg2(#bytes to allocate)-1.  n is #bytes-1
+#define ALLOBLOCK(n) MAX(PMINL-1,(31-__builtin_clzl((UI4)(n))))    // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // Support for int-to-float, in parallel.  Input is u, 64-bit int with a type of float; result is 64-bit floats.  Define DECLS first.
@@ -1030,10 +1031,10 @@ EPILOG(z); \
 #define GACOPYSHAPER(name,type,atoms,rank,shaape) if((rank)>0)AS(name)[0]=(shaape)[0]; if((rank)>1)AS(name)[1]=(shaape)[1]; if((rank)>2)AS(name)[2]=(shaape)[2];
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
-// General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
-#define GACOPYSHAPEG(name,type,atoms,rank,shaape) \
- {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=(rank); cp=_r<1?0:cp; cp=_r==1?(atoms):cp; _s=_r<=1?_d:_s; *_d=cp; ++_d; ++_s; if(likely(_r<3)){*_d=*_s;}else{MC(_d,_s,(_r-1)<<LGSZI);}}
-// Use when shape is known to be present but rank is not SDT.  One value is always written to shape
+// obsolete // General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
+// obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape) \
+// obsolete  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=(rank); cp=_r<1?0:cp; cp=_r==1?(atoms):cp; _s=_r<=1?_d:_s; *_d=cp; ++_d; ++_s; if(likely(_r<3)){*_d=*_s;}else{MC(_d,_s,(_r-1)<<LGSZI);}}
+// Use when shape is known to be present but rank is not SDT.
 #if (C_AVX&&SY_64) || EMU_AVX
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
 #else

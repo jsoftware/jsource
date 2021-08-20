@@ -223,8 +223,9 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
   acc0=prim(acc0,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
   acc0=prim(acc0,acc1); acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
   acc0=prim(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
-  _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
+  *(I*)z=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++z;  /* store the single result from 0 */ \
  )
+// obsolete   _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
 
 // f/ on rank>1, going down columns to save bandwidth
 #define redprim256rk2(prim,identity) \

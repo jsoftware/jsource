@@ -66,7 +66,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
   // Also m: #wcr-cells in w 
   PROD(m,wf,ws); zn=k*m;  DPMULDE(an,zn,zn);
-// correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
   if(((zn-2)|(wr-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual block for a list.  User should use ;.0 for that  NJAwhy
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I index0 = av[0]; index0+=REPSGN(index0)&p;  // index of first item
@@ -93,65 +92,150 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  // from here on we are moving items
  wk=k*p;   // stride between cells of w
  wv=CAV(w); zv=CAV(z); SETJ(*av);
-  switch(k){
-  case sizeof(I):
+ switch(k){
+ case sizeof(I):
 #if C_AVX2
-  // moving I/D.  Use GATHER instruction.  Future hardware can exploit that.
-  {__m256i endmask; /* length mask for the last word */ 
-   _mm256_zeroupperx(VOIDARG)
-   __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
-   I * RESTRICT v=(I*)wv; I* RESTRICT x=(I*)zv;  // input and output pointers
-   if(an==1){  // special case of atom {"1 y
-    if(m==1){  // the atom { list case is pretty common
-     *x=v[j];  // just move the one value
-    }else{
-     __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_loadu_si256((__m256i*)&iotavec[-IOTAVECBEGIN]));  // each lane accesses a different cell
-     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
-     v+=j;  // advance base pointer to the column we are fetching
-     wstride=_mm256_slli_epi64(wstride,LGNPAR);  // repurpose wstride to be stride between groups of 4 cells
-     DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, _mm256_i64gather_epi64(v,lanestride,SZI)); lanestride=_mm256_add_epi64(lanestride,wstride);  x+=NPAR;)
-     /* runout, using mask */ 
-     _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(wstride,v,lanestride,endmask,SZI));   // must use a different reg for source and index, lest VS2013 create an illegal instruction
+ // moving I/D.  Use GATHER instruction.  Future hardware can exploit that.
+ {__m256i endmask=_mm256_setzero_si256(); /* length mask for the last word */ 
+  _mm256_zeroupperx(VOIDARG)
+  __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
+  __m256i ones=_mm256_cmpgt_epi64(wstride,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
+  __m256i temp=_mm256_setzero_si256();  // mask to use for gather into all bytes
+  I * RESTRICT v=(I*)wv; I* RESTRICT x=(I*)zv;  // input and output pointers
+  if(an==1){  // special case of atom {"1 y
+   if(m==1){  // the atom { list case is pretty common
+    *x=v[j];  // just move the one value
+   }else{
+    __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_loadu_si256((__m256i*)&iotavec[-IOTAVECBEGIN]));  // each lane accesses a different cell
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+    v+=j;  // advance base pointer to the column we are fetching
+    wstride=_mm256_slli_epi64(wstride,LGNPAR);  // repurpose wstride to be stride between groups of 4 cells
+    DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,lanestride,ones,SZI)); lanestride=_mm256_add_epi64(lanestride,wstride);  x+=NPAR;)
+    /* runout, using mask */ 
+    _mm256_maskstore_epi64(x, endmask, temp=_mm256_mask_i64gather_epi64(temp,v,lanestride,endmask,SZI));   // must use a different reg for source and index, lest VS2013 create an illegal instruction
+   }
+  }else{  // Normal case: a list of indexes for each cell
+   UI i=m; // loop counter for number of items to process
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+   __m256i anynegindex=_mm256_setzero_si256();  // accumulate sign bits of the indexes
+   // Load the first 16 indexes and v-values into registers
+   __m256i indexes0, indexes1, indexes2, indexesn;  // indexesn, the last, may be partial
+   if(an>NPAR){
+    indexes0=_mm256_loadu_si256((__m256i*)av);   // fetch a block of indexes
+    indexes0=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes0),_mm256_castsi256_pd(_mm256_add_epi64(indexes0,wstride)),_mm256_castsi256_pd(indexes0)));  // get indexes, add axis len if neg
+    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    if(an>2*NPAR){
+     indexes1=_mm256_loadu_si256((__m256i*)(av+NPAR));   // fetch a block of indexes
+     indexes1=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes1),_mm256_castsi256_pd(_mm256_add_epi64(indexes1,wstride)),_mm256_castsi256_pd(indexes1)));  // get indexes, add axis len if neg
+     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes1,_mm256_sub_epi64(indexes1,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     if(an>3*NPAR){
+      indexes2=_mm256_loadu_si256((__m256i*)(av+2*NPAR));   // fetch a block of indexes
+      indexes2=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes2),_mm256_castsi256_pd(_mm256_add_epi64(indexes2,wstride)),_mm256_castsi256_pd(indexes2)));  // get indexes, add axis len if neg
+      ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes2,_mm256_sub_epi64(indexes2,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     }
     }
-   }else{  // Normal case: a list of indexes for each cell
-    I *avv; // input pointer
-    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
-    DQ(m, avv=av;  // init input pointer to start of a
-      DQ((an-1)>>LGNPAR,
-        __m256i indexes=_mm256_loadu_si256((__m256i*)avv);  // fetch a block of indexes
-        indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg
-        ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-        _mm256_storeu_si256((__m256i*)x, _mm256_i64gather_epi64(v,indexes,SZI)); avv+=NPAR;  x+=NPAR;
-        )
-        // runout using mask
-      __m256i indexes=_mm256_maskload_epi64(avv,endmask);  // fetch a block of indexes
-      indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg.  unfetched indexes are 0
+   }
+   if(an<=4*NPAR){
+    indexesn=_mm256_maskload_epi64(av+((an-1)&-NPAR),endmask);   // fetch last block of indexes
+    indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
+    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    // Now do the gather/writes
+    if(an<=NPAR){
+     do{_mm256_maskstore_epi64(x, endmask, temp=_mm256_mask_i64gather_epi64(temp,v,indexesn,endmask,SZI)); v+=p; x+=an;}while(--i);
+    }else if(an<=2*NPAR){
+     do{_mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexes0,ones,SZI));
+        _mm256_maskstore_epi64(x+NPAR, endmask, temp=_mm256_mask_i64gather_epi64(temp,v,indexesn,endmask,SZI)); v+=p; x+=an;}while(--i);
+    }else if(an<=3*NPAR){
+     do{_mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexes0,ones,SZI));
+        _mm256_storeu_si256((__m256i*)(x+NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexes1,ones,SZI));
+        _mm256_maskstore_epi64(x+2*NPAR, endmask, temp=_mm256_mask_i64gather_epi64(temp,v,indexesn,endmask,SZI)); v+=p; x+=an;}while(--i);
+    }else{
+      do{_mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexes0,ones,SZI));
+        _mm256_storeu_si256((__m256i*)(x+NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexes1,ones,SZI));
+        _mm256_storeu_si256((__m256i*)(x+2*NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexes2,ones,SZI));
+        _mm256_maskstore_epi64(x+3*NPAR, endmask, temp=_mm256_mask_i64gather_epi64(temp,v,indexesn,endmask,SZI)); v+=p; x+=an;}while(--i);
+    }
+   }else{
+    indexesn=_mm256_loadu_si256((__m256i*)(av+3*NPAR));   // fetch last block of indexes
+    indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
+    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    do{
+     // 17+indexes.  We must read the tail repeatedly
+     // this first execution audits the indexes and converts negatives
+     _mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexes0,ones,SZI));  // process the indexes saved in registers
+     _mm256_storeu_si256((__m256i*)(x+NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexes1,ones,SZI));
+     _mm256_storeu_si256((__m256i*)(x+2*NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexes2,ones,SZI));
+     _mm256_storeu_si256((__m256i*)(x+3*NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexesn,ones,SZI));
+     I *RESTRICT avv=av+4*NPAR; x+=4*NPAR;  // init input pointer to start of indexes not loaded into registers, advance output pointer over the prefix
+     __m256i indexes;
+     if(an>5*NPAR){
+      indexes=_mm256_loadu_si256((__m256i*)avv); avv+=NPAR;  // fetch a block of indexes
+      DQNOUNROLL((an-5*NPAR-1)>>LGNPAR,
+       __m256i indexesx=indexes;  // fetch a block of indexes
+       indexes=_mm256_loadu_si256((__m256i*)avv); avv+=NPAR;  // fetch a block of indexes
+       anynegindex=_mm256_or_si256(anynegindex,indexesx); indexesx=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesx),_mm256_castsi256_pd(_mm256_add_epi64(indexesx,wstride)),_mm256_castsi256_pd(indexesx)));  // get indexes, add axis len if neg
+       ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesx,_mm256_sub_epi64(indexesx,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+       _mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexesx,ones,SZI)); x+=NPAR;
+      )
+      anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg
       ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-      _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(wstride,v,indexes,endmask,SZI)); x+=((an-1)&(NPAR-1))+1;   // must use a different reg for source and index, lest VS2013 create an illegal instruction
-      v+=p;  // advance to next input cell
-      ;)
+      _mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexes,ones,SZI)); x+=NPAR;
+     }
+     // runout using mask
+     indexes=_mm256_maskload_epi64(avv,endmask);  // fetch a block of indexes
+     anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg.  unfetched indexes are 0
+     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     _mm256_maskstore_epi64(x, endmask, temp=_mm256_mask_i64gather_epi64(temp,v,indexes,endmask,SZI)); x+=((an-1)&(NPAR-1))+1;   // must use a different reg for source and index, lest VS2013 create an illegal instruction
+     v+=p;  // advance to next input cell
+     --i;
+     if(_mm256_testz_pd(_mm256_castsi256_pd(anynegindex),_mm256_castsi256_pd(anynegindex)))break;
+    }while(i);
+    while(i){
+     // this second version comes into play if there were no negative indexes.  If there are negatives we end up auditing them repeatedly, too bad.
+     _mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexes0,ones,SZI));  // process the indexes saved in registers
+     _mm256_storeu_si256((__m256i*)(x+NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexes1,ones,SZI));
+     _mm256_storeu_si256((__m256i*)(x+2*NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexes2,ones,SZI));
+     _mm256_storeu_si256((__m256i*)(x+3*NPAR), temp=_mm256_mask_i64gather_epi64(temp,v,indexesn,ones,SZI));
+     I *RESTRICT avv=av+4*NPAR; x+=4*NPAR;  // init input pointer to start of indexes not loaded into registers, advance output pointer over the prefix
+     __m256i indexes;
+     if(an>5*NPAR){
+      indexes=_mm256_loadu_si256((__m256i*)avv); avv+=NPAR;  // fetch a block of indexes
+      DQNOUNROLL((an-5*NPAR-1)>>LGNPAR,
+       __m256i indexesx=indexes;  // fetch a block of indexes
+       indexes=_mm256_loadu_si256((__m256i*)avv); avv+=NPAR;  // fetch a block of indexes
+       _mm256_storeu_si256((__m256i*)x, temp=_mm256_mask_i64gather_epi64(temp,v,indexesx,ones,SZI)); x+=NPAR;
+      )
+      _mm256_storeu_si256((__m256i*)x,temp=_mm256_mask_i64gather_epi64(temp,v,indexes,ones,SZI)); x+=NPAR;
+     }
+     // runout using mask
+     indexes=_mm256_maskload_epi64(avv,endmask);  // fetch a block of indexes
+     _mm256_maskstore_epi64(x, endmask, temp=_mm256_mask_i64gather_epi64(temp,v,indexes,endmask,SZI)); x+=((an-1)&(NPAR-1))+1;   // must use a different reg for source and index, lest VS2013 create an illegal instruction
+     v+=p;  // advance to next input cell
+     --i;
+    }
    }
   }
+ }
 #else
-   IFROMLOOP(I);
+ IFROMLOOP(I);
 #endif
-   break;
-  case sizeof(C): IFROMLOOP(C); break; 
-  case sizeof(S): IFROMLOOP(S); break;  
+  break;
+ case sizeof(C): IFROMLOOP(C); break; 
+ case sizeof(S): IFROMLOOP(S); break;  
 #if SY_64
-  case sizeof(int):IFROMLOOP(int); break;
+ case sizeof(int):IFROMLOOP(int); break;
 #endif
-  default:
+ default:
   // cells are not simple types.  We can safely move full words, since there is always extra buffer space at the end of any type that is not a word-multiple
-   {C* RESTRICT u,* RESTRICT v=(C*)wv,* RESTRICT x=(C*)zv;
-    pq=p*k;
-    JMCDECL(endmask) JMCSETMASK(endmask,k,0) 
-    if(1==an){v+=j*k; DQ(m,                     u=v;     JMCR(x,u,k,0,endmask) x+=k; v+=pq;);}
-    else              DQ(m, DO(an, SETJ(av[i]); u=v+j*k; JMCR(x,u,k,0,endmask) x+=k;); v+=pq;)
-   }
-   break;
+  {C* RESTRICT u,* RESTRICT v=(C*)wv,* RESTRICT x=(C*)zv;
+   pq=p*k;
+   JMCDECL(endmask) JMCSETMASK(endmask,k,0) 
+   if(1==an){v+=j*k; DQ(m,                     u=v;     JMCR(x,u,k,0,endmask) x+=k; v+=pq;);}
+   else              DQ(m, DO(an, SETJ(av[i]); u=v+j*k; JMCR(x,u,k,0,endmask) x+=k;); v+=pq;)
   }
-  RETF(z);
+  break;
+ }
+ RETF(z);
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -559,4 +643,169 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
  PRISTCLRF(w)
  RETF(z);   // Mark the box as non-inplaceable, as above
+}
+
+// 128!:9 matrix times sparse vector with early exit
+// y is (boolean exitvec, shape m);(I, int list of nonzero indexes in v, shape p);(V, float list of nonzero values in v, shape p);(M, shape m,n)
+// Result is exitcode (boolean atom) ; product (I {"1 M) +/@:*"1 V (float list shape m)
+// if (0>:i{product)+:(i{exitvec) for any i, exitcode is set to 1 and the product may be incomplete.  Otherwise exitcode is 0
+// Ex: 'rc col' =. (128!:40) goodbk;(ax ];.0 Am);(ax ];.0 Av);Qk
+// Rank is infinite
+F1(jtmvmsparse){PROLOG(832);
+#if C_AVX2
+ ASSERT(AR(w)==1,EVRANK);
+ ASSERT(AN(w),EVLENGTH);  // audit overall w
+ ASSERT(AT(w)&BOX,EVDOMAIN);
+ // check ranks
+ ASSERT(AR(AAV(w)[0])<=1,EVRANK);  // exitvec
+ ASSERT(AR(AAV(w)[1])==1,EVRANK);  // I
+ ASSERT(AR(AAV(w)[2])==1,EVRANK);  // V
+ ASSERT(AR(AAV(w)[3])==2,EVRANK);  // M
+ // check agreement
+ ASSERT(AN(AAV(w)[1])==AN(AAV(w)[2]),EVLENGTH);   // I and V agree
+ ASSERT(AR(AAV(w)[0])==0||AS(AAV(w)[3])[0]==AN(AAV(w)[0]),EVLENGTH);  // exitvec and M agree
+ I n=AS(AAV(w)[3])[1];  // n=#cols in M
+ I zn=AS(AAV(w)[3])[0];  // result is one atom per row of M
+ I an=AN(AAV(w)[1]);  // an=#atoms in the sparse vector
+ if(unlikely(an==0)){R link(num(0),reshape(sc(zn),zeroionei(0)));}   // empty a, each product is 0
+ // convert types as needed; set ?v=pointer to data area for ?
+ A exitcode=AAV(w)[0]; if(unlikely(!ISDENSETYPE(AT(exitcode),B01)))RZ(exitcode=cvt(B01,exitcode)); B *bv=BAV(exitcode);
+ if(AR(AAV(w)[0])==0)bv=(B*)(I)BAV(exitcode)[0];  // if exitcode is an atom, put its value into bv
+ A indexvec=AAV(w)[1]; if(unlikely(!ISDENSETYPE(AT(indexvec),INT)))RZ(indexvec=cvt(INT,indexvec)); I *iv=IAV(indexvec);
+ A vvector=AAV(w)[2]; if(unlikely(!ISDENSETYPE(AT(vvector),FL)))RZ(vvector=cvt(FL,vvector)); D *vv=DAV(vvector);
+ A mtx=AAV(w)[3]; if(unlikely(!ISDENSETYPE(AT(mtx),FL)))RZ(mtx=cvt(FL,mtx)); D *mv=DAV(mtx);
+ // allocate the result area
+ A z; GATV0(z,FL,zn,1); D *zv=DAV(z), *zv0=zv;
+ // abort if empty input
+ if(unlikely(zn==0))R link(num(0),z);  // exit fast if M empty
+ // perform the operation
+ __m256i endmask=_mm256_setzero_si256(); /* length mask for the last word */ 
+ _mm256_zeroupperx(VOIDARG)
+ __m256i wstride=_mm256_set1_epi64x(n);  // stride between cells in atoms - used for index check
+ __m256i ones=_mm256_cmpgt_epi64(wstride,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
+ __m256d temp=_mm256_setzero_pd();  // mask to use for gather into all bytes
+ __m256d dotprod;  // place where product is assembled
+ UI i=AS(mtx)[0]; // loop counter for number of items to process
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+ __m256i anynegindex=_mm256_setzero_si256();  // accumulate sign bits of the indexes
+ // Load the first 16 indexes and v-values into registers
+ __m256i indexes0, indexes1, indexes2, indexesn;  // indexes, the last may be partial
+ __m256d vvals0,vvals1,vvals2,vvalsn;  // the sparse vector, the last may be partial
+ if(an>NPAR){
+  indexes0=_mm256_loadu_si256((__m256i*)iv);   // fetch a block of indexes
+  vvals0=_mm256_loadu_pd(vv);   // fetch a block of indexes
+  indexes0=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes0),_mm256_castsi256_pd(_mm256_add_epi64(indexes0,wstride)),_mm256_castsi256_pd(indexes0)));  // get indexes, add axis len if neg
+  ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+  if(an>2*NPAR){
+   indexes1=_mm256_loadu_si256((__m256i*)(iv+NPAR));   // fetch a block of indexes
+   vvals1=_mm256_loadu_pd(vv+NPAR);   // fetch a block of indexes
+   indexes1=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes1),_mm256_castsi256_pd(_mm256_add_epi64(indexes1,wstride)),_mm256_castsi256_pd(indexes1)));  // get indexes, add axis len if neg
+   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes1,_mm256_sub_epi64(indexes1,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+   if(an>3*NPAR){
+    indexes2=_mm256_loadu_si256((__m256i*)(iv+2*NPAR));   // fetch a block of indexes
+    vvals2=_mm256_loadu_pd(vv+2*NPAR);   // fetch a block of indexes
+    indexes2=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes2),_mm256_castsi256_pd(_mm256_add_epi64(indexes2,wstride)),_mm256_castsi256_pd(indexes2)));  // get indexes, add axis len if neg
+    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes2,_mm256_sub_epi64(indexes2,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+   }
+  }
+ }
+ if(an<=4*NPAR){
+  indexesn=_mm256_maskload_epi64(iv+((an-1)&-NPAR),endmask);   // fetch last block of indexes
+  vvalsn=_mm256_maskload_pd(vv+((an-1)&-NPAR),endmask);   // fetch a block of indexes
+  indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
+  ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+  // Now do the operation
+#define FINISHDOTPROD dotprod=_mm256_add_pd(dotprod,_mm256_permute2f128_pd(dotprod,dotprod,0x01)); dotprod=_mm256_add_pd(dotprod,_mm256_permute_pd(dotprod,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+  *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(dotprod),0x0); /* store the single result from 0 */ \
+  if((I)_mm256_extract_epi64(_mm256_castpd_si256(dotprod),0x0)>0){if(bv==0||((UI)bv>1&&bv[zv-zv0]==0))goto gt0result;} \
+  ++zv; mv+=n; 
+
+  if(an<=NPAR){
+   do{dotprod=_mm256_mul_pd(vvalsn,temp=_mm256_mask_i64gather_pd(temp,mv,indexesn,_mm256_castsi256_pd(endmask),SZI));
+      FINISHDOTPROD}while(--i);
+  }else if(an<=2*NPAR){
+   do{dotprod=_mm256_mul_pd(vvals0,temp=_mm256_mask_i64gather_pd(temp,mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+      dotprod=_mm256_fmadd_pd(vvalsn, temp=_mm256_mask_i64gather_pd(temp,mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
+      FINISHDOTPROD}while(--i);
+  }else if(an<=3*NPAR){
+   do{dotprod=_mm256_mul_pd(vvals0,temp=_mm256_mask_i64gather_pd(temp,mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+      dotprod=_mm256_fmadd_pd(vvals1, temp=_mm256_mask_i64gather_pd(temp,mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
+      dotprod=_mm256_fmadd_pd(vvalsn, temp=_mm256_mask_i64gather_pd(temp,mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
+      FINISHDOTPROD}while(--i);
+  }else{
+   do{dotprod=_mm256_mul_pd(vvals0,temp=_mm256_mask_i64gather_pd(temp,mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+      dotprod=_mm256_fmadd_pd(vvals1, temp=_mm256_mask_i64gather_pd(temp,mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
+      dotprod=_mm256_fmadd_pd(vvals2, temp=_mm256_mask_i64gather_pd(temp,mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
+      dotprod=_mm256_fmadd_pd(vvalsn, temp=_mm256_mask_i64gather_pd(temp,mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
+      FINISHDOTPROD}while(--i);
+  }
+ }else{
+  indexesn=_mm256_loadu_si256((__m256i*)(iv+3*NPAR));   // fetch last block of indexes
+  vvalsn=_mm256_loadu_pd(vv+3*NPAR);   // fetch a block of indexes
+  indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
+  ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+  do{
+   // 17+indexes.  We must read the tail repeatedly
+   // this first execution audits the indexes and converts negatives
+   dotprod=_mm256_mul_pd(vvals0,temp=_mm256_mask_i64gather_pd(temp,mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+   dotprod=_mm256_fmadd_pd(vvals1, temp=_mm256_mask_i64gather_pd(temp,mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
+   dotprod=_mm256_fmadd_pd(vvals2, temp=_mm256_mask_i64gather_pd(temp,mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
+   dotprod=_mm256_fmadd_pd(vvalsn, temp=_mm256_mask_i64gather_pd(temp,mv,indexesn,_mm256_castsi256_pd(ones),SZI),dotprod);
+   I *RESTRICT ivv=iv+4*NPAR; D *RESTRICT vvv=vv+4*NPAR;     // init input pointer to start of indexes not loaded into registers
+   __m256i indexes; __m256d vvals;
+   if(an>5*NPAR){
+    indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
+    vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
+    DQNOUNROLL((an-5*NPAR-1)>>LGNPAR,
+     __m256i indexesx=indexes; __m256d vvalsx=vvals;  // loop unroll
+     indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
+     vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
+     anynegindex=_mm256_or_si256(anynegindex,indexesx); indexesx=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesx),_mm256_castsi256_pd(_mm256_add_epi64(indexesx,wstride)),_mm256_castsi256_pd(indexesx)));  // get indexes, add axis len if neg
+     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesx,_mm256_sub_epi64(indexesx,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     dotprod=_mm256_fmadd_pd(vvalsx, temp=_mm256_mask_i64gather_pd(temp,mv,indexesx,_mm256_castsi256_pd(ones),SZI),dotprod);
+    )
+    anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg
+    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    dotprod=_mm256_fmadd_pd(vvals, temp=_mm256_mask_i64gather_pd(temp,mv,indexes,_mm256_castsi256_pd(ones),SZI),dotprod);
+   }
+   // runout using mask
+   indexes=_mm256_maskload_epi64(ivv,endmask);  // fetch a block of indexes
+   vvals=_mm256_maskload_pd(vvv,endmask);   // fetch a block of indexes
+   anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg.  unfetched indexes are 0
+   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+   dotprod=_mm256_fmadd_pd(vvals, temp=_mm256_mask_i64gather_pd(temp,mv,indexes,_mm256_castsi256_pd(endmask),SZI),dotprod);
+   FINISHDOTPROD --i;
+   if(_mm256_testz_pd(_mm256_castsi256_pd(anynegindex),_mm256_castsi256_pd(anynegindex)))break;
+  }while(i);
+  while(i){
+   // this second version comes into play if there were no negative indexes.  If there are negatives we end up auditing them repeatedly, too bad.
+   dotprod=_mm256_mul_pd(vvals0,temp=_mm256_mask_i64gather_pd(temp,mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+   dotprod=_mm256_fmadd_pd(vvals1, temp=_mm256_mask_i64gather_pd(temp,mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
+   dotprod=_mm256_fmadd_pd(vvals2, temp=_mm256_mask_i64gather_pd(temp,mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
+   dotprod=_mm256_fmadd_pd(vvalsn, temp=_mm256_mask_i64gather_pd(temp,mv,indexesn,_mm256_castsi256_pd(ones),SZI),dotprod);
+   I *RESTRICT ivv=iv+4*NPAR; D *RESTRICT vvv=vv+4*NPAR;     // init input pointer to start of indexes not loaded into registers, advance output pointer over the prefix
+   __m256i indexes; __m256d vvals;
+   if(an>5*NPAR){
+    indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
+    vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
+    DQNOUNROLL((an-5*NPAR-1)>>LGNPAR,
+     __m256i indexesx=indexes; __m256d vvalsx=vvals;  // 
+     indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
+     vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
+     dotprod=_mm256_fmadd_pd(vvalsx, temp=_mm256_mask_i64gather_pd(temp,mv,indexesx,_mm256_castsi256_pd(ones),SZI),dotprod);
+    )
+    dotprod=_mm256_fmadd_pd(vvals, temp=_mm256_mask_i64gather_pd(temp,mv,indexes,_mm256_castsi256_pd(ones),SZI),dotprod);
+   }
+   // runout using mask
+   indexes=_mm256_maskload_epi64(ivv,endmask);  // fetch a block of indexes
+   vvals=_mm256_maskload_pd(vvv,endmask);   // fetch a block of indexes
+   dotprod=_mm256_fmadd_pd(vvals, temp=_mm256_mask_i64gather_pd(temp,mv,indexes,_mm256_castsi256_pd(endmask),SZI),dotprod);
+   FINISHDOTPROD --i;
+  }
+ }
+ EPILOG(link(num(0),z));
+gt0result: R link(num(1),mtv);  // if we get a > 0 element that is not disabled, abort
+#else
+ ASSERT(0,EVNONCE);  // this requires fast gather to make any sense
+#endif
 }

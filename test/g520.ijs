@@ -732,6 +732,10 @@ from =: 4 : 'x{y'
 (<"1 ?3 7 6 2$4 5) ({"2 -: from"2) x
 (<"1 ?3 7 6 1$4  ) ({"2 -: from"2) x
 
+NB. different langths of {"1
+(100?@$75) (?@$&100@[ ({"1 -: from"1) ])"0 _ o._1e6+?12 100$2e6
+(100?@$75) ((_10 + ?@$&100@[) ({"1 -: from"1) ])"0 _ o._1e6+?12 100$2e6
+
 (0 4$'') -: (i.0 4){"1 'abc'
 
 NB. for '' { i. 0 3 bug fix (,3) -: $ '' {"2 i. 3 0 3
@@ -984,6 +988,33 @@ abcdefghijabcdefghijabcdefghij0000 -: 7
 abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
+NB. 128!:9  g;i;v;M ---------------------------------------------------------
+{{)v
+M =. 0. + =/~ i. 6
+assert. (0;2 3 0 0 0 0) -: (128!:9) 1;0 1;2 3;M 
+assert. (0;2 _3 0 0 0 0) -: (128!:9) 1;0 1;2 _3;M 
+assert. (1;'') -: (128!:9) 0;0 1;2 _3;M 
+assert. (0;_2 _3 0 0 0 0) -: (128!:9) 1;0 1;_2. _3;M 
+assert. (0;0 0 0 0 0 0) -: (128!:9) 1;($0);($0);M 
+assert. (0;0$0) -: (128!:9) 1;0 1;_2. _3;i. 0 6 
+NB. Test every different length.  Different size of M are not so important
+for_l. >:  i. 50 do.
+  for_j. 4$0 do.
+    'r c' =. $M =. _0.5 + ((?16),l+?20)?@$ 0
+    ix =. l ? c  NB. indexes
+    v =. l ?@$ 0  NB. vector values
+    g =. 0 (?r)}^:(r>0) r$1  NB. allow one test-enabled value
+    ref =. (ix{"1 M) +/@:*"1 v
+    abort =. 0 e. g +. ref<:0
+    if. abort do. ref=.'' end.
+abr   =: abort;ref
+    assert. (abort;ref) -:!.1e_11 (128!:9) err   =: g;ix;v;M
+  end.
+end.
+1
+}}^:(1 e. 'avx2' E. 9!:14'') 1
+
+
  
 4!:55 ;:'a adot1 adot2 sdot0 b catalog copy count f fr from i j '
 4!:55 ;:'jot k l n p prod q r s v x y '
@@ -995,6 +1026,5 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 4!:55 <'abcdefghijabcdefghijabcdefghij001'
 4!:55 <'abcdefghijabcdefghijabcdefghij0000'
 4!:55 <'abcdefghijabcdefghijabcdefghij0001'
-
 randfini''
 

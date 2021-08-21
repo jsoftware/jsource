@@ -141,6 +141,7 @@ if (CTTZZ(0x140000000LL) != 30)*(I *)3 = 103;   // Create program check if error
 // verify that (I)x >> does sign-extension.  jtmult relies on that
 if(((-1) >> 1) != -1)*(I *)4 = 104;
 #endif
+
  INITJT(jjt,asgzomblevel) = 1;  // allow premature change to zombie names, but not data-dependent errors
  INITJT(jjt,assert) = 1;
  MC(INITJT(jjt,bx),"+++++++++|-",sizeof(INITJT(jjt,bx)));
@@ -173,6 +174,8 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
   jt->fdepn=NFDEP;
 #endif
   jt->xmode=XMEXACT;
+ // create an initial stack, so that stack[-1] can be used for saving error messages
+  jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return
  }
  R 1;
 }

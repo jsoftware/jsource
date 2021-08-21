@@ -479,10 +479,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   currstk=(PSTK*)CAV(y);   // save start of data area, leaving space for all the marks
   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
   jt->parserstackframe.parserstkend1=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation
-  // Handle initialization problem.  The stack has to be valid AFTER the return from parser, in case there is an error during the display of the result.
-  // So, if this is the first allocation (from the first call from JDo), reach into oframe and set a stack address that will be valid for that display.
-  // This is a bit kludgy but earier than initializing a valid stack
-  if(unlikely(jt->parserstackframe.parserstkbgn==0))oframe.parserstkbgn=currstk+PSTACKRSV;  // ensure valid error stack after final return
  }  // We could worry about hysteresis to avoid reallocation of every call
 
  // the first element of the parser stack is where we save unchanging error info for the sentence

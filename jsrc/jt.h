@@ -157,6 +157,7 @@ typedef struct rngdata {
  I dlllasterror;     /* DLL stuff                                       */
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
+ PSTK initparserstack[1];  // stack used for messages when we don't have a real one
 
 // debugging info
  DC sitop;            /* pointer to top of SI stack                                 */

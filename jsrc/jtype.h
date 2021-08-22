@@ -1018,6 +1018,9 @@ typedef struct {
 #define VF2BOXATOP1     ((I)(((I)1)<<VF2BOXATOP1X))
 #define VF2BOXATOP2X      2   // This verb is one of  <@f   <@:f   f&.>  f&.:>
 #define VF2BOXATOP2     ((I)(((I)1)<<VF2BOXATOP2X))
+// next 2 flags must be adjacent as we carry from one to the other
+#define VF2WILLOPEN1PROPX  3   // If WILLBEOPENED is set in jt coming into this verb, it should be passed through to the execution of the verb producing y.  Monadic case.  Cannot be set if WILLOPEN is set.
+#define VF2WILLOPEN1PROP       ((I)(((I)1)<<VF2WILLOPEN1PROPX))
 // next flag must be same as JTWILLBEOPENED
 #define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
@@ -1034,6 +1037,7 @@ typedef struct {
 #define VF2ATOPOPEN2W     ((I)(((I)1)<<VF2ATOPOPEN2WX))
 #define VF2ATOPOPEN2AX    10   // This verb is one of  &> &.>
 #define VF2ATOPOPEN2A     ((I)(((I)1)<<VF2ATOPOPEN2AX))
+
 #define VF2RANKATOP1X     11   // set if this verb starts out with rank loop and thus can be subsumed into a higher rank loop
 #define VF2RANKATOP1     ((I)(((I)1)<<VF2RANKATOP1X)) 
 #define VF2RANKATOP2X     12   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
@@ -1042,14 +1046,18 @@ typedef struct {
 #define VF2RANKONLY1     ((I)(((I)1)<<VF2RANKONLY1X)) 
 #define VF2RANKONLY2X     14
 #define VF2RANKONLY2     ((I)(((I)1)<<VF2RANKONLY2X))
-// Next 4 flags must be spaced so they can shift down to WILLOPEN1 and COUNTITEMS1
-#define VF2WILLOPEN2WX      15   // This verb will open y as its first act.  Monad case only
+// Next 6 flags must be spaced so they can shift down to VF2WILLOPEN1PROP, WILLOPEN1, and COUNTITEMS1
+#define VF2WILLOPEN2WPROPX  15   // If WILLBEOPENED is set in jt coming into this verb, it should be passed through to the execution of the verb producing y.  Dyadic case.  Cannot be set if WILLOPEN is set.
+#define VF2WILLOPEN2WPROP     ((I)(((I)1)<<VF2WILLOPEN2WPROPX))
+#define VF2WILLOPEN2WX      16   // This verb will open y as its first act  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN2W       ((I)(((I)1)<<VF2WILLOPEN2WX))
-#define VF2WILLOPEN2AX      16   // This verb will open x as its first act.  Monad case only
+#define VF2WILLOPEN2APROPX  17   // If WILLBEOPENED is set in jt coming into this verb, it should be passed through to the execution of the verb producing x.  Dyadic case.  Cannot be set if WILLOPEN is set.
+#define VF2WILLOPEN2APROP     ((I)(((I)1)<<VF2WILLOPEN2APROPX))
+#define VF2WILLOPEN2AX      18   // This verb will open x as its first act.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN2A       ((I)(((I)1)<<VF2WILLOPEN2AX))
-#define VF2USESITEMCOUNT2WX 18   // This verb can make use of an item count stored in y.  Monad case only
+#define VF2USESITEMCOUNT2WX 19   // This verb can make use of an item count stored in y.  This becomes the WILLBEOPENED flag in jt
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
-#define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in y.  Monad case only
+#define VF2USESITEMCOUNT2AX 21   // This verb can make use of an item count stored in y.  This becomes the WILLBEOPENED flag in jt
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 #define VF2IMPLOCX 20   // This verb is one of u. v.
 #define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))

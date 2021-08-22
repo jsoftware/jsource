@@ -792,7 +792,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 // opt is a bitmask of variants
 // bit0=h is ][
-// bit4=f is ][ bit5=NVV bit6=f not executed
+// bit4=f is ][ bit5=NVV/@:/&: bit6=f not executed
 // bit8 is 1 when h is not given (@: &: hook)
 // hook is 110
 // @: &: is 160
@@ -810,12 +810,13 @@ if(opt&0x100){ \
  if(!(opt&0x70)){fs=FAV(self)->fgh[0];} \
 } \
 A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
-w = PTROP(w,+,(I)jtinplace&JTINPLACEW); \
+w = PTROP(w,+,(I)jtinplace&JTINPLACEW); /* if w inplaceable, change the pointer to fail compares below */ \
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT (from the apropriate valence of g).  Inplace h if f is x@] */ \
 A hx; \
 if(opt&0x1){hx=w; \
 }else{J jtf; \
- jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + ((FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+ I wof = FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X);  /* shift all willopen flags into position */ \
+ jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + ((wof + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  /* carry PROP into WILLOPEN if incoming WILLOPEN  scaf*/ \
  RZ(hx=(fghfn)(jtf,PTR(w),hs)); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
@@ -827,7 +828,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
  }else if(opt&0x10){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
  }else{J jtf; \
   fghfn=FAVV(fs)->valencefns[0]; \
-  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf */ \
   RZ(fx=(fghfn)(jtf,PTR(w),fs)); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \
@@ -1908,6 +1909,16 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // set the Z flag if the result is 0.  The optimizer sometimes turns a switch into tests rather than a branch
 // table, and it expects TZCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
 #define CTTZNOFLAG(w) (CTTZ(w)&31)
+
+// parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
+// the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
+#if SY_64
+#define PEXT(s,m) _pext_u64(s,m)
+#define PDEP(s,m) _pdep_u64(s,m)
+#else
+#define PEXT(s,m) _pext_u32(s,m)
+#define PDEP(s,m) _pdep_u32(s,m)
+#endif
 
 #ifndef offsetof
 #ifdef __GNUC__

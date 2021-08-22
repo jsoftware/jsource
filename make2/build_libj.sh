@@ -270,7 +270,7 @@ linux_j64avx2) # linux intel 64bit avx2
 TARGET=libj.so
 CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
-CFLAGS_SIMD=" -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
@@ -339,7 +339,7 @@ darwin_j64avx2) # darwin intel 64bit
 TARGET=libj.dylib
 CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
-CFLAGS_SIMD=" -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
@@ -445,7 +445,7 @@ fi
 TARGET=j.dll
 CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
 LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
-CFLAGS_SIMD=" -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 if [ $jolecom -eq 1 ] ; then
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" ../../../../dllsrc/jdll.def "

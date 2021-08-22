@@ -415,6 +415,7 @@ VA va[]={
   {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD}, 
   {(VF)cirZZ,VCVTIP+VZ+VZZ+VRD}, {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD+VDD}, {0,0}},
   &rpsnull},
+
 };
 
 A jtcvz(J jt,I cv,A w){I t;

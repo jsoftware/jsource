@@ -210,7 +210,7 @@ AIFX(minusBB, I,B,B, -     )    /* minusBI */
   APFX(  divBI, D,B,I, DIVI,,R EVOK;) 
 APFX(  divIB, D,I,B, DIVI ,,R EVOK;)
    APFX(  divII, D,I,I, DIVI,,R EVOK;)    
-AIFX( plusBB, I,B,B, +     )    /* plusBI */   
+AIFX( plusBB, I,B,B, +     )    /* plusBI */
 #endif
 
 // II multiply, in double precision.  Always return error code so we can clean up

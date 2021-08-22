@@ -150,18 +150,18 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   ado=p->f; cv=p->cv;
  }else{
   I m=REPSGN((wt&XNUM+RAT)-1);   // -1 if not XNUM/RAT
-  switch(VA1CASE(jt->jerr,FAV(self)->lc-VA2CMIN)){
+  switch(VA1CASE(jt->jerr,FAV(self)->lc-VA1ORIGIN)){
    default:     R 0;  // unknown type - error must have come from previous verb
    // all these cases are needed because sparse code may fail over to them
-   case VA1CASE(EWOV,  VA2CMIN-VA2CMIN): cv=VD;       ado=floorD;               break;
-   case VA1CASE(EWOV,  VA2CMAX-VA2CMIN): cv=VD;       ado=ceilD;                break;
-   case VA1CASE(EWOV,  VA2CSTILE-VA2CMIN): cv=VD+VDD;   ado=absD;                 break;
-   case VA1CASE(EWIRR, VA1CROOT-VA2CMIN): cv=VD+VDD;   ado=sqrtD;                break;
-   case VA1CASE(EWIRR, VA2CEXP-VA2CMIN): cv=VD+VDD;   ado=expD;                 break;
-   case VA1CASE(EWIRR, VA2CBANG-VA2CMIN): cv=VD+VDD;   ado=factD;                break;
-   case VA1CASE(EWIRR, VA1CLOG-VA2CMIN): cv=VD+(VDD&m); ado=m?(VA1F)logD:(VA1F)logXD; break;
-   case VA1CASE(EWIMAG,VA1CROOT-VA2CMIN): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
-   case VA1CASE(EWIMAG,VA1CLOG-VA2CMIN): cv=VZ+(VZZ&m); ado=m?(VA1F)logZ:wt&XNUM?(VA1F)logXZ:(VA1F)logQZ; break;   // singleton code fails over to this too
+   case VA1CASE(EWOV,  VA1CMIN-VA1ORIGIN): cv=VD;       ado=floorD;               break;
+   case VA1CASE(EWOV,  VA1CMAX-VA1ORIGIN): cv=VD;       ado=ceilD;                break;
+   case VA1CASE(EWOV,  VA1CSTILE-VA1ORIGIN): cv=VD+VDD;   ado=absD;                 break;
+   case VA1CASE(EWIRR, VA1CROOT-VA1ORIGIN): cv=VD+VDD;   ado=sqrtD;                break;
+   case VA1CASE(EWIRR, VA1CEXP-VA1ORIGIN): cv=VD+VDD;   ado=expD;                 break;
+   case VA1CASE(EWIRR, VA1CBANG-VA1ORIGIN): cv=VD+VDD;   ado=factD;                break;
+   case VA1CASE(EWIRR, VA1CLOG-VA1ORIGIN): cv=VD+(VDD&m); ado=m?(VA1F)logD:(VA1F)logXD; break;
+   case VA1CASE(EWIMAG,VA1CROOT-VA1ORIGIN): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
+   case VA1CASE(EWIMAG,VA1CLOG-VA1ORIGIN): cv=VZ+(VZZ&m); ado=m?(VA1F)logZ:wt&XNUM?(VA1F)logXZ:(VA1F)logQZ; break;   // singleton code fails over to this too
   }
   RESETERR;
  }
@@ -209,7 +209,7 @@ DF1(jtatomic1){A z;
  I awm1=AN(w)-1;
  // check for singletons
  if(!(awm1|(AT(w)&((NOUN|SPARSE)&~(B01+INT+FL))))){  // len=1 andbool/int/float
-  z=jtssingleton1(jtinplace,w,3*(FAV(self)->lc-VA2CMIN)+(AT(w)>>INTX));
+  z=jtssingleton1(jtinplace,w,3*(FAV(self)->lc-VA1ORIGIN)+(AT(w)>>INTX));
   if(z||jt->jerr<=NEVM){RETF(z);}  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
@@ -226,7 +226,7 @@ DF1(jtatomic1){A z;
 
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
 
-// special code for x ((< |[!.0]) * ]) y, implemented as if !.0
+// special code for x ((> |[!.0]) * ]) y, implemented as if !.0
 #if (C_AVX&&SY_64) || EMU_AVX
 DF2(jtdeadband){A zz;
  F2PREFIP;ARGCHK2(a,w);
@@ -242,7 +242,7 @@ DF2(jtdeadband){A zz;
  __m256d threshold; threshold=_mm256_set1_pd(DAV(a)[0]);  // install threshold
 
  ,
-  u=_mm256_and_pd(_mm256_cmp_pd(threshold,_mm256_and_pd(absmsk,u),_CMP_LT_OQ),u);  // abs value, compare, set to 0 if < threshold
+  u=_mm256_and_pd(_mm256_cmp_pd(threshold,_mm256_and_pd(absmsk,u),_CMP_GT_OQ),u);  // abs value, compare, set to 0 if < threshold
  ,
  )
  RETF(zz);

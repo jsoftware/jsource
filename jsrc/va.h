@@ -181,6 +181,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define AHDRS(f,Tz,Tx)          I f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 
 // value in vaptr[]
+// first part: verbs that are atomic only in the dyad
 #define VA2CBW0000 1
 #define VA2CBW0001 2
 #define VA2CBW0010 3
@@ -197,35 +198,39 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define VA2CBW1101 14
 #define VA2CBW1110 15
 #define VA2CBW1111 16
-#define VA2CNE 17 // 35
+#define VA2CNE 17
 #define VA2CDIV 18
-#define VA2CPLUSCO 19 // 32
-#define VA2CPLUSDOT 20 // 31
+#define VA2CPLUSCO 19
+#define VA2CPLUSDOT 20
 #define VA2CMINUS 21
 #define VA2CLT 22
 #define VA2CEQ 23
 #define VA2CGT 24
-#define VA2CSTARDOT 25 // 33
-#define VA2CSTARCO 26 // 34
-#define VA2CGE 27 // 30
+#define VA2CSTARDOT 25
+#define VA2CSTARCO 26
+#define VA2CGE 27
 #define VA2CLE 28
+// shared part: verbs that are atomic in monad and dyad
 // the following are in the same order in va1
-#define VA2CMIN 29 // 27
-#define VA2CMAX 30 // 29
-#define VA2CPLUS 31 // 20
-#define VA2CSTAR 32 // 19
-#define VA2CEXP 33 // 25
-#define VA2CSTILE 34 // 26
-#define VA2CBANG 35 // 17
+#define VA2CMIN 29
+#define VA2CMAX 30
+#define VA2CPLUS 31
+#define VA2CSTAR 32
+#define VA2CEXP 33
+#define VA2CSTILE 34
+#define VA2CBANG 35
 #define VA2CCIRCLE 36
-#define VA1CMIN 29 // 27
-#define VA1CMAX 30 // 29
-#define VA1CPLUS 31 // 20
-#define VA1CSTAR 32 // 19
-#define VA1CEXP 33 // 25
-#define VA1CSTILE 34 // 26
-#define VA1CBANG 35 // 17
+// end of the dyads
+#define VA1ORIGIN 29 // the start of the monadic section
+#define VA1CMIN 29
+#define VA1CMAX 30
+#define VA1CPLUS 31
+#define VA1CSTAR 32
+#define VA1CEXP 33
+#define VA1CSTILE 34
+#define VA1CBANG 35
 #define VA1CCIRCLE 36
+// last part: verbs atomic only on the monad
 #define VA1CROOT 37
 #define VA1CLOG 38
 

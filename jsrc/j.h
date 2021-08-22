@@ -804,7 +804,7 @@ if(opt&0x100){ \
  hs=FAV(self)->fgh[1]; fghfn=FAVV(hs)->valencefns[0]; \
  gs=FAV(self)->fgh[0]; \
 }else{ \
- /* h is given, fetch for fork.  hfn is in localuse */ \
+ /* h is given, fetch for fork. */ \
  hs=FAV(self)->fgh[2]; fghfn=FAVV(hs)->valencefns[0];  \
  gs=FAV(self)->fgh[1]; \
  if(!(opt&0x70)){fs=FAV(self)->fgh[0];} \
@@ -957,7 +957,7 @@ EPILOG(z); \
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+5)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
 #define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : *(volatile I*)0)   // lg2(#bytes to allocate)-1.  n is #bytes-1
-// #define ALLOBLOCK(n) MAX(PMINL-1,(31-__builtin_clzl((UI4)(n))))    // lg2(#bytes to allocate)-1.  n is #bytes-1
+// gives errors in some versions #define ALLOBLOCK(n) MAX(PMINL-1,(31-__builtin_clzl((UI4)(n))))    // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // Support for int-to-float, in parallel.  Input is u, 64-bit int with a type of float; result is 64-bit floats.  Define DECLS first.

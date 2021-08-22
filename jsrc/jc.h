@@ -131,7 +131,7 @@
 #define CLT        (C)0x28 // <   must be paired with <:
 #define CBOX       (C)0x28 // <
 #define CLE        (C)0x29 // <:
-#define CGE        (C)0x2a // >:
+#define CGE        (C)0x2a // >:   must be paired with >
 #define COPE       (C)0x2b // >
 #define CGT        (C)0x2b // >
 #define CEBAR      (C)0x2c  // E.  must pair with e.
@@ -197,6 +197,8 @@
 #define CROOT      (C)0x62  // %:
 #define CBANG      (C)0x63  // !
 #define CBDOT      (C)0x64  // b.
+// obsolete #define CDEFUZZ    (C)0x65  // ((> |) * ])   code is not used in id (fork is), but we reserve a slot for an atomic ds
+// obsolete #define CCKFUZZ    (C)0x66  // (> |)  code is not used (hook is); we use the slot to give a display and to allow the monad to function
 
 #define CGRAVE     (C)0x67 // `
 #define CINF       (C)0x68  //  infinity

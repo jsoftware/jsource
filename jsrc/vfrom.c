@@ -809,3 +809,5 @@ gt0result: R link(num(1),mtv);  // if we get a > 0 element that is not disabled,
  ASSERT(0,EVNONCE);  // this requires fast gather to make any sense
 #endif
 }
+
+

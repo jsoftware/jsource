@@ -780,7 +780,7 @@ F2(jtqq){AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only
   // nonnegative rank can be accomodated; otherwise, use processor for IRS (there is one for nonnegative, one for negative rank); if not IRS, there are processors for:
   // rank 0; nonneg ranks where fs is NOT a rank operator; general case
-  if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=av->valencefns[1]; lc=av->lc;}  // transfer the fn-address and fn-code from the atomic to the fuxed block
+  if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=av->valencefns[1]; lc=av->lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
   else if(av->flag&VIRS2){f2=(hv[1]|hv[2])>=0?rank2i:rank2in;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f/@:g"1 1 where f and g are known atomic

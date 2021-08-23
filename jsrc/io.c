@@ -634,7 +634,7 @@ void jsto(JS jt,I type,C*s){C e;I ex;
   // we execute the sentence:  type output_jfe_ s    in the master thread
   fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1
   DISABLEATTN
-  AAV1(tok)[0]=num(type); AAV1(tok)[1]=jtnfs(jm,11,"output_jfe_"); AAV1(tok)[2]=jtcstr(jm,s);  // the sentence to execute, tokenized.  Better not fail!
+  AAV1(tok)[0]=PTROP(num(type),|,QCNOUN); AAV1(tok)[1]=PTROP(jtnfs(jm,11,"output_jfe_"),|,QCISLKPNAME); AAV1(tok)[2]=PTROP(jtcstr(jm,s),|,QCNOUN);  // the sentence to execute, tokenized and with flag-types installed.  Better not fail!
   e=jm->jerr; ex=jm->etxn;   // save error state before running the output sentence
   jm->jerr=0; jm->etxn=0;
   jtparse(jm,tok);  // run sentence, with no interrupts.  ignore errors.

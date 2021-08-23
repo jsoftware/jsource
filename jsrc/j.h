@@ -815,8 +815,8 @@ w = PTROP(w,+,(I)jtinplace&JTINPLACEW); /* if w inplaceable, change the pointer 
 A hx; \
 if(opt&0x1){hx=w; \
 }else{J jtf; \
- I wof = FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X);  /* shift all willopen flags into position */ \
- jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + ((wof + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  /* carry PROP into WILLOPEN if incoming WILLOPEN  scaf*/ \
+ I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
+ jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
  RZ(hx=(fghfn)(jtf,PTR(w),hs)); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
@@ -828,7 +828,8 @@ if(!(opt&0x40)){  /* f produces a result */ \
  }else if(opt&0x10){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
  }else{J jtf; \
   fghfn=FAVV(fs)->valencefns[0]; \
-  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf */ \
+  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
+  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf */ \
   RZ(fx=(fghfn)(jtf,PTR(w),fs)); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \
@@ -875,21 +876,22 @@ if(opt&0x100){ \
 } \
 A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
 A *tpopa=AZAPLOC(a); tpopa=(A*)((I)tpopa&REPSGN(SGNIF(jtinplace,JTINPLACEAX)&AC(a)&((AFLAG(a)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0;  /* point to pointer to a (if it is inplace) */ \
-w = PTROP(w,+,(I)jtinplace&JTINPLACEW); a = PTROP(a,+,(I)jtinplace&JTINPLACEA); \
+w = PTROP(w,+,(I)jtinplace&JTINPLACEW); a = PTROP(a,+,(I)jtinplace&JTINPLACEA);  /* if arg inplaceable, change the pointer to fail compares below */\
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; \
 if(opt&0x2){hx=w; \
 }else if(opt&0x1){hx=PTROP(a,-,((I)a&JTINPLACEA)>>JTINPLACEAX); \
 }else{J jtf; \
+ I wof = (FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, propagate willopen */ \
  if(opt&0xc){ \
   /* h@][.  Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
   /* the flags in gh@][ are passed through from gh */ \
-  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + ((FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
   RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs)); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \
-  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + ((FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
   RZ(hx=(fghfn)(jtf,PTR(a),PTR(w),hs)); \
   hx=PTROP(hx,+,(I)((hx!=w)&(hx!=a))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  } \
@@ -904,15 +906,16 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
  }else if(opt&0x10){fx=PTR(a); hx=PTROP(hx,+,((I)a&JTINPLACEA)); \
  }else{J jtf; \
   if(!(opt&0x100)){if(opt&0xc0){fghfn=FAVV(fs)->valencefns[0];}else{fghfn=FAVV(fs)->valencefns[1];}}  /* if not fork, leave f=h */ \
+  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, propagate willopen */ \
   if(opt&0xc0){ \
    /* f@][.  Before we execute, free the argument we don't need (unless it equals the other argument or hx) */ \
-   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
    if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){*tpopw=0; if(likely(c&1)){fanapop(w,AFLAG(w));}else{AC(w)=c-1;}}}} \
    else{if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){*tpopa=0; if(likely(c&1)){fanapop(a,AFLAG(a));}else{AC(a)=c-1;}}}} \
    RZ(fx=(fghfn)(jtf,PTR(opt&0x40?a:w),fs)); \
    hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   }else{ \
-   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
    RZ(fx=(fghfn)(jtf,PTR(a),PTR(w),fs)); \
    hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   } \

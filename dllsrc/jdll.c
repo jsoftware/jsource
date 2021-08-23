@@ -332,7 +332,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
       len=WideCharToMultiByte(CP_UTF8,0,bstr,(int)SysStringLen(bstr),0,0,0,0);
 		else
 			len=SysStringByteLen(bstr);
-		RE(GAT0(a,LIT, len, 1));
+		GAT0(a,LIT, len, 1);
 		if(uniflag)
 			toutf8n(bstr, (C*)AV(a), len);
 		else
@@ -461,48 +461,48 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_UI1:
-		RE(GAT0(a,LIT, 1, 0));
+		GAT0(a,LIT, 1, 0);
 		*CAV(a) = OPTREF(v,bVal);
 		break;
 
 	case VT_UI2:
-		RE(GAT0(a,C2T, 1, 0));
+		GAT0(a,C2T, 1, 0);
 		*USAV(a) = (US)OPTREF(v,iVal);
 		break;
 
 	case VT_UI4:
-		RE(GAT0(a,C4T, 1, 0));
+		GAT0(a,C4T, 1, 0);
 		*C4AV(a) = (C4)OPTREF(v,lVal);
 		break;
 
 	case VT_BOOL:
-		RE(GAT0(a,B01, 1, 0));
+		GAT0(a,B01, 1, 0);
 		// array case above explains this messy phrase:
 		*BAV(a) = OPTREF(v,boolVal)!=VARIANT_FALSE;
 		break;
 
 	case VT_I2:
-		RE(GAT0(a,INT, 1, 0));
+		GAT0(a,INT, 1, 0);
 		*IAV(a) = OPTREF(v,iVal);
 		break;
 
 	case VT_I4:
-		RE(GAT0(a,INT, 1, 0));
+		GAT0(a,INT, 1, 0);
 		*IAV(a) = OPTREF(v,lVal);
 		break;
 
 	case VT_I8:
-		RE(GAT0(a,INT, 1, 0));
+		GAT0(a,INT, 1, 0);
 		*IAV(a) = (I)OPTREF(v,llVal);
 		break;
 
 	case VT_R4:
-		RE(GAT0(a,FL, 1, 0));
+		GAT0(a,FL, 1, 0);
 		*DAV(a) = OPTREF(v,fltVal);
 		break;
 
 	case VT_R8:
-		RE(GAT0(a,FL, 1, 0));
+		GAT0(a,FL, 1, 0);
 		*DAV(a) = OPTREF(v,dblVal);
 		break;
 

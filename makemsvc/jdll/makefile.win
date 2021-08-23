@@ -1,5 +1,5 @@
 !if "1"=="$(JAVX2)"
-FAVX2= /DC_AVX=1 /DC_AVX2=1 /arch:AVX2 -DHAVE_AVX2=1 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt
+FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell
 !else
 !if "1"=="$(JAVX)"
 FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1

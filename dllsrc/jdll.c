@@ -369,7 +369,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 			ASSERT(psa->cDims==1 && pb[0].cElements==1, EVDOMAIN);
 			r = 0;
 		}
-		RE(GAT(a,BOX, k, r, (I*)&shape));
+		GAT(a,BOX, k, r, (I*)&shape);
 		ASSERT(S_OK==SafeArrayAccessData(psa, (void **)&pv),EVFACE);
 		boxes = AAV(a);
 		while(k--)
@@ -387,7 +387,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 	}
 	case VT_BOOL | VT_ARRAY:
-		RE(GAT(a,B01, k, r, (I*)&shape));
+		GAT(a,B01, k, r, (I*)&shape);
 		pboolsrc = (VARIANT_BOOL*)psa->pvData;
 		pboolsnk = BAV(a);
 		// J bool returned from VB boolean, a -1 and 0 mess.
@@ -401,22 +401,22 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_UI1 | VT_ARRAY:
-		RE(GAT(a,LIT, k, r, (I*)&shape));
+		GAT(a,LIT, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(char));
 		break;
 
 	case VT_UI2 | VT_ARRAY:
-		RE(GAT(a,C2T, k, r, (I*)&shape));
+		GAT(a,C2T, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(short));
 		break;
 
 	case VT_UI4 | VT_ARRAY:
-		RE(GAT(a,C4T, k, r, (I*)&shape));
+		GAT(a,C4T, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(int));
 		break;
 
 	case VT_I2 | VT_ARRAY:
-		RE(GAT(a,INT, k, r, (I*)&shape));
+		GAT(a,INT, k, r, (I*)&shape);
 		pshortsrc = (short*)psa->pvData;
 		pintsnk = AV(a);
 		while(k--)
@@ -424,7 +424,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_I4 | VT_ARRAY:
-		RE(GAT(a,INT, k, r, (I*)&shape));
+		GAT(a,INT, k, r, (I*)&shape);
 #if SY_64
 		pint32src = (int*)psa->pvData;
 		pintsnk = AV(a);
@@ -436,7 +436,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_I8 | VT_ARRAY:
-		RE(GAT(a,INT, k, r, (I*)&shape));
+		GAT(a,INT, k, r, (I*)&shape);
 #if SY_64
 		memcpy(AV(a), psa->pvData, k * sizeof(I));
 #else
@@ -448,7 +448,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_R4 | VT_ARRAY:
-		RE(GAT(a,FL, k, r, (I*)&shape));
+		GAT(a,FL, k, r, (I*)&shape);
 		pfloatsrc = (float*)psa->pvData;
 		pdoublesnk = (double*)AV(a);
 		while(k--)
@@ -456,7 +456,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_R8 | VT_ARRAY:
-		RE(GAT(a,FL, k, r, (I*)&shape));
+		GAT(a,FL, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(double));
 		break;
 

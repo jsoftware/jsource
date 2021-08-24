@@ -18,12 +18,12 @@ nmake -f makefile.win CC=clang-cl x64=1 clean
 nmake -f makefile.win CC=clang-cl x64=1
 cd ..
 cd jdll
-nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=1
-nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=1
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 clean
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0
 cd ..
 cd tsdll
 nmake -f makefile.win CC=clang-cl x64=1 clean

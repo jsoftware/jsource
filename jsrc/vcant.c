@@ -99,7 +99,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
 #endif
  default:        CANTA(C, MC(u,v,cellsizeb); u+=cellsizeb;); break;
  }     
- RETF(z);  // should EPILOG?
+ RETF(z);
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; A z;
@@ -179,7 +179,7 @@ F1(jtcant1){I r; A z;
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
  // But if we are returning the input block unchanged, leave pristinity unchanged
  if(z!=w){PRISTXFERF(z,w)}
- RETF(z);
+ RETF(z);  // This verb propagates WILLOPEN and must not perform EPILOG
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;

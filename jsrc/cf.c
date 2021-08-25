@@ -67,17 +67,27 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  }else{
   // not nvv
   fv=FAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
+
+  // create the inherited flags
   if(fi!=CCAP){
    // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
    flag=((fv->flag|hv->flag)&(VJTFLGOK1|VJTFLGOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
-   // if g has WILLOPEN, indicate WILLBEOPENED in f/h
+   // work out open/raze status.  But for now we'll skip it, because it would apply only if both tines of the fork were the same.  Unlikely unless one is ][
+  }else{
+   // capped fork  inplace if h can handle it, ASGSAFE if gh are safe
+   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
+   // Copy the open/raze status from v into u@:v
+   flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+   // If v propagates OPEN status, copy from av
+   flag2|=((hv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLOPEN1X)))<<(VF2WILLOPEN1X-VF2WILLOPEN1PROPX);
+   // if u and v both propagate, the compound does so also
+   flag2|=((hv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLOPEN1PROPX)));
+// obsolete    // Copy the open/raze status from v into u@v
+// obsolete    flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
   }
   switch(fi){
   case CCAP:
-   // capped fork.  inplace if h can handle it, ASGSAFE if gh are safe
-   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
-   // Copy the open/raze status from v into u@v
-   flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+   // capped fork.
    if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
    f1=on1cell; f2=jtupon2cell;
    if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $

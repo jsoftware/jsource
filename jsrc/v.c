@@ -37,7 +37,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   GA00(z,AT(w),AN(w),1+f); MCISH(AS(z),AS(w),f) AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape (don't overfetch AS(w)
   MC(AV(z),AV(w),AN(w)<<bplg(AT(w)));
   PRISTCLRF(w)
-  RETF(z); // if dense, move the data and relocate it as needed
+  RETF(z);   // This verb propagates WILLOPEN and must not perform EPILOG
  }
  // the rest handles sparse matrix enfile
  RESETRANK;   // clear IRS for calls made here

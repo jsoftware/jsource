@@ -140,6 +140,10 @@ DF2(atcomp){A z;AF f;
 // VF2WILLOPEN indicates that monad V's first action will be opening its argument.  Knowing that the next verb in a sequence WILLOPEN, RA can produce a boxed result
 // more efficiently: it need not make the result recursive, it can include a virtual block as contents without realizing them, and it can avoid EPILOG
 //
+// VF2WILLOPENPROP indicates that monad V's can accept a nonrecursive argument containing boxes, and it will not raise the usecount of the argument or any of its
+// contents, including by executing EPILOG on them, if JTWILLBEOPENED was set on input to the verb.  Such a verb can propagate WILLOPEN status from its input to
+// its output: the verb does not itself guarantee opening, but it does guarantee that if the caller promises to open, the verb will not stand in the way.
+//
 // VF2USESITEMCOUNT indicates that monad V's first action is RAZE; thus, WILLOPEN will also be set.  If the next verb in a sequence is USESITEMCOUNT,
 // RA can perform the first step of raze processing (counting the items and checking shapes) as the items are calculated.  This will save a pass over
 // tzhe items, which is valuable if the result is larger than cache.
@@ -163,7 +167,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   // the very common case u@] and u@[.  Take ASGSAFE and inplaceability from u.  No IRS.
   // We must copy forwarded flags from f to f@][.  These are BOXATOP and WILLOPEN/USESITEMCOUNT.  BOXATOP is copied from the monad into both valences; WILLOPEN/USESITEMCOUNT are copied from the
   // monad into the monad and (A if @[, W if @])
-  flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
+  flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
   R fdef(flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
@@ -225,11 +229,14 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  if(unlikely(d==COPE))if(!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
  if(unlikely(d==CCOMMA))if(av->valencefns[0]==jtisitems)f1=jtisnotempty;  // *@#@,
 
- // Copy the open/raze status from v into u@v
+ // Copy the open/raze status from v into u@v (PROP/ITEMCOUNT valid only if v has infinite rank, because otherwise there might be result assembly;
+ // but v will never have those flags set if it doesn't have infinite rank)
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+ // If v propagates OPEN status, copy from av
+ flag2|=((wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1X)))<<(VF2WILLOPEN1X-VF2WILLOPEN1PROPX);
+ // if u and v both propagate, the compound does so also
+ flag2|=((wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1PROPX)));
 
- // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
- // 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop
  if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==RMAX?on1cell:f1; f1=wv->mr==0?jton10:f1;}
@@ -248,7 +255,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
   // the very common case u@:] and u@:[.  Take ASGSAFE and inplaceability from u.  No IRS.  Vector the monad straight to u; vector the dyad to our routine that shuffles args and inplace bits
   // We must copy forwarded flags from f to f@][.  These are BOXATOP and WILLOPEN/USESITEMCOUNT.  BOXATOP is copied from the monad into both valences; WILLOPEN/USESITEMCOUNT are copied from the
   // monad into the monad and (A if @[, W if @])
-  flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
+  flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
   R fdef(flag2,CATCO,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
@@ -311,6 +318,10 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
 
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+ // If v propagates OPEN status, copy from av
+ flag2|=((wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1X)))<<(VF2WILLOPEN1X-VF2WILLOPEN1PROPX);
+ // if u and v both propagate, the compound does so also
+ flag2|=(wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1PROPX));
 
  A z=fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
  RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;

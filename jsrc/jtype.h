@@ -1020,9 +1020,10 @@ typedef struct {
 #define VF2BOXATOP2     ((I)(((I)1)<<VF2BOXATOP2X))
 // next 2 flags must be adjacent as we carry from one to the other
 #define VF2WILLOPEN1PROPX  3   // If WILLBEOPENED is set in jt coming into this verb, it should be passed through to the execution of the verb producing y.  Monadic case.  Cannot be set if WILLOPEN is set.
+                           // Setting this warrants that this verb will not raise the usecount of y or any of its contents even if they are passed through to the result.
 #define VF2WILLOPEN1PROP       ((I)(((I)1)<<VF2WILLOPEN1PROPX))
 // next flag must be same as JTWILLBEOPENED
-#define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only.  This becomes the WILLBEOPENED flag in jt
+#define VF2WILLOPEN1X      4   // This verb will open y as its first act, or will discard y.  No boxed value iin y can appear in the result.  Monad case only.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
 // 6 free

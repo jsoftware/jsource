@@ -163,7 +163,8 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
   // allocate virtual block.  May use inplace w
   RZ(s = virtualip(w,offset,wr));    // allocate block
   // fill in shape.  s and w may be the same block, so ws is destroyed
-  I* RESTRICT ss=AS(s); ss[0]=remlen; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
+  I* RESTRICT ss=AS(s); ss[0]=remlen; MCISH(ss+1,ws+1,MAX(wr-1,0));
+// obsolete  DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
   AN(s)=remlen*wcellsize;  // install # atoms
   // virtual block does not affect pristinity
   RETF(s);

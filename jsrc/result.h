@@ -237,7 +237,8 @@ do{
 #endif
       // Allocate the boxed-result area.  Every result that doesn't match zz will be stored here, and we leave zeros for the places that DID match zz,
       // so that we can tell which result-cells come from zz and which from zzbox.
-      // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.
+      // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.  Also, if WILLBEOPENED is set we may put
+      // virtual blocks into the result; and virtuals are freed only by tpop and shouldn't have their usecounts messed with
       GATV0(zzbox,BOX,nboxes,0);   // rank/shape immaterial
       zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
 #if ZZSTARTATEND

@@ -184,7 +184,7 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
   }else{C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););}  // one-ended copy, not in place
   break;
  }
- RETF(z);
+ RETF(z);  // This verb propagates WILLOPEN and must not perform EPILOG
 }    /* |."r w */
 
 

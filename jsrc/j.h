@@ -848,7 +848,8 @@ if(opt&0x40){ \
 }else{ \
  RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
 } \
-EPILOG(z); \
+/* EPILOG to free up oddments from f and g, but not if we may be returning a virtual block */ \
+if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 
 // opt is a bitmask of variants
@@ -937,7 +938,8 @@ if((opt&0xc0)==0xc0){ \
 }else{ \
  RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
 } \
-EPILOG(z); \
+/* EPILOG to free up oddments from f and g, but not if we may be returning a virtual block */ \
+if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 

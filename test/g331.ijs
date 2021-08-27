@@ -1196,9 +1196,12 @@ NB. Failover on sign
 l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + (((5 + ?10),2 1) ?@$ #r) [ r =. i. 20 20
 l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + (((5 + ?10),2 1) ?@$ #r) [ r =. 0.5 + i. 10 10 
 
+a =: b =: ''
+4!:55 ;:'data intervals'
+a1=:b1=:''
+a1=:7!:0''
 data =: i. 1e6
 intervals =: 3 2 1 $ 0 1000   3000 6000   10000 100000
-a =: b =: ''
 a =: 7!:0''
 10000 > 7!:2 'intervals +/;.0 data'
 100000 < 7!:2 '+/@> intervals <;.0 data'
@@ -1206,9 +1209,12 @@ a =: 7!:0''
 10000 > 7!:2 'intervals ([: +/&.> <;.0) data'  NB. capped fork too
 b =: 7!:0''
 512 > | a - b  NB. Make sure virtual blocks freed
+4!:55 ;:'data intervals'
+b1 =: 7!:0''
+512 > | a1 - b1  NB. Make sure virtual blocks freed
 
 
-4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 data f f1 f2 f3 f4 f5'
+4!:55 ;:'a a1 adot1 adot2 sdot0 b b1 bb c cut3 cutm3 data f f1 f2 f3 f4 f5'
 4!:55 ;:'i1 i2 intervals l m P p q r size t test testw w x y'
 4!:55 ;: 'a c'
 randfini''

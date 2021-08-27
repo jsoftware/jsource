@@ -588,3 +588,11 @@ F1(jtvs){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT))w=cvt(L
 // Convert w to utf8 string, verify it is a list or atom
 F1(jtvslit){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT)){w=AT(w)&(C2T+C4T)?toutf8(w):cvt(LIT,w);} R w;}    
      /* verify string */
+
+// w is a boxed noun whose contents may include virtual blocks.  Realize any such virtual blocks.
+// The blocks are realized in place in w, which is OK because only nonrecursive nouns can contains virtual blocks.
+A jtrealizeboxedvirtuals(J jt,A w){
+A *a=AAV(w);   // address of boxed value
+DQ(AN(w), if(*a)realizeifvirtual(*a); ++a;);
+R (A)1;
+}

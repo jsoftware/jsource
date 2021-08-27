@@ -71,7 +71,7 @@ F1(jttable){A z,zz;I r,wr;
  R r?z:IRSIP1(z,0L,0L,jtravel,zz);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
 
-// ]"n, dyadic - also ["n, implemented as ] with ranks switched
+// ]"n, dyadic - also ["n, implemented as ] with args switched
 // length error has already been detected, in irs
 static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  ARGCHK2(a,w);
@@ -86,6 +86,7 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  RESETRANK; RETF(reitem(vec(INT,af-wf,AS(a)),lamin1(w)));  // could use virtual block, but this case is so rare...
 } 
 
+// ][.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
 F2(jtleft2 ){F2PREFIP;RANK2T jtr=jt->ranks; if(jtr==(RANK2T)~0)RETARG(a); RETF(lr2((jtr<<RMAXX)|(jtr>>RMAXX),w,a));}  // swap a & w, and their ranks
 F2(jtright2){F2PREFIP;RANK2T jtr=jt->ranks; if(jtr==(RANK2T)~0)RETARG(w); RETF(lr2(jtr,a,w));}
 

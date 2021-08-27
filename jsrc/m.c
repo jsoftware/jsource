@@ -667,6 +667,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }
 }  
 
+#if 0 // not used
 // convert a block, recently allocated in the caller, to virtual.  The caller got the shape right; we just have to fill in all the other fields, including the data pointer.
 // User still has to fill in AN and AS
 void jtexpostvirtual(J jt,A z,A w,I offset){
@@ -680,6 +681,7 @@ AFLAGINIT(z,AFVIRTUAL|(AFLAG(w)&AFPRISTINE)|(AT(z)&TRAVERSIBLE))  // flags: recu
 ABACK(z)=w;   // set the pointer to the base: w or its base
 ra(w);   // ensure that the backer is not deleted while it is a backer.
 }
+#endif
 
 // realize a virtual block (error if not virtual)
 // allocate a new block, copy the data to it.  result is address of new block; can be 0 if allocation failure
@@ -816,10 +818,10 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
 #if AUDITEXECRESULTS
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
-   if((np=QCWORD(np))!=0)ra(np);  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
+   if((np=QCWORD(np))!=0){if(AFLAG(np)&AFVIRTUAL)SEGFAULT;/*scaf*/  ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
    np=np0;  // advance to next box
   };
-  if(np=QCWORD(np))ra(np);  // handle last one
+  if(np=QCWORD(np)){if(AFLAG(np)&AFVIRTUAL)SEGFAULT;/*scaf*/ ra(np);}  // handle last one
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   // If it is a nameref, clear the bucket info.  Explanation in nameref()
@@ -864,10 +866,10 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
-     if((np=QCWORD(np))!=0){fanano0(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
+     if((np=QCWORD(np))!=0){if(AFLAG(np)&AFVIRTUAL)SEGFAULT;/*scaf*/ fanano0(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
      np=np0;  // advance to next box
     };
-    if((np=QCWORD(np))!=0){fanano0(np);}  // last box
+    if((np=QCWORD(np))!=0){if(AFLAG(np)&AFVIRTUAL)SEGFAULT;/*scaf*/ fanano0(np);}  // last box
    }
   } else if(t&NAME){A ref;
    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference

@@ -33,6 +33,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
   // If the input is DIRECT and abandoned, mark the result as PRISTINE
   // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
+// scaf don't realize (in INCORPNC) or make recursive if WILLOPEN
   I aband=SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
   GAT0(z,BOX,1,0); AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX))) INCORPNC(w); AAV(z)[0]=w;
   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
@@ -68,6 +69,9 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
 F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinplace,w);} R w;}
 
 // x ; y, with options for x (,<) y   x (;<) y   x ,&< y
+// This verb propagates WILLOPEN, so it must not raise usecounts EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
+// As a result of this we support both recursive and nonrecursive y inputs.  If y is unboxed, we create a recursive block if WILLOPEN is
+// not set, or a recursive block if WILLOPEN is set
 DF2(jtlink){
 F2PREFIP;ARGCHK2(a,w);
 #if FORCEVIRTUALINPUTS
@@ -86,65 +90,73 @@ F2PREFIP;ARGCHK2(a,w);
 #endif
  ASSERT(!ISSPARSE(AT(a)|AT(w)),EVNONCE);   // can't box sparse values
  I optype=FAV(self)->localuse.lu1.linkvb;  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
- realizeifvirtual(w); realizeifvirtual(a);  // it's going into an array, so realize it
+ optype|=((I)jtinplace&JTWILLBEOPENED)<<(BOXX-JTWILLBEOPENEDX);  // fold in BOX flag that tells us to allow virtual boxed results
+ if(likely(!(optype&BOX))){realizeifvirtual(w);}  // it's going into an array, so realize it unless virtual results allowed
  // if (,<) and a is not boxed singleton atom/list, revert
- if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtinplace,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing
+ if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtinplace,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing - WILLOPEN is impossible
  I unboxempty=SGNIFNOT(AT(w),BOXX)|(AN(w)-1)|optype;  // sign set if unboxed or empty, or the operation is (,<) or ,&< or (;<) which will always box w
  I aband=(a!=w)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned.  Must not accept a==w as it could lead to w containing itself
  if((unboxempty|((AN(w)|AR(w))-2))<0){A neww;   // unboxed/empty or force-boxed w, or AN(w)<2 and AR(w)<2
-  // if w is unboxed/empty or is a singleton rank<2, allocate a recursive vector of 8 boxes, point AK to the next-last, and put w there as the new w.
+  // if w is unboxed/empty or is a singleton rank<2, allocate a  vector of 8 boxes, point AK to the next-last, and put w there as the new w.  Vector is recursive unless WILLBEOPENED
   GAT0(neww,BOX,8,1);  // allocate 8 boxes
-  AN(neww)=AS(neww)[0]=1; AFLAGORLOCAL(neww,BOX); AK(neww)+=6*SZI;   // Make neww a singleton list, recursive, with AK pointing to the next-last atom
+  AN(neww)=AS(neww)[0]=1; AFLAGORLOCAL(neww,~optype&BOX); AK(neww)+=6*SZI;   // Make neww a singleton list, recursive unless WILLBEOPENED, with AK pointing to the next-last atom
   // If w was abandoned, zap it, else ra
   if(unboxempty<0){
-   // w was unboxed or empty.  Put it directly into neww, then ra or zap it.  If DIRECT abandoned, make result PRISTINE
+   // w was unboxed or empty.  Put it directly into neww, then ra or zap it if recursive.  If DIRECT abandoned, make result PRISTINE
    AFLAGORLOCAL(neww,(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX))  // starts PRISTINE if abandoned DIRECT
-   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
-   INCORPNC(w); AAV(neww)[0]=w;   // mark w as inside neww
+   if(likely(!(optype&BOX))){raczap(w,aband!=0,c&=~ACINPLACE; INCORPNC(w);)}  // INCORPNC+this=INCORPRA, but using zap when abandoned
+   AAV(neww)[0]=w;   // install w as first box
   }else{
-   // w was boxed, & a known singleton.  Put the single value into neww, then ra or zap.  neww is PRISTINE if w is abandoned pristine
+   // w was boxed, & a known singleton.  Put the single value into neww, then ra or zap if neww recursive.  neww is PRISTINE if w is abandoned pristine
    // We don't have access to the tpush stack, but if w is abandoned recursive we can use the slot in w as a surrogate location to zap - maybe could even if nonrecursive?
    AFLAGORLOCAL(neww,AFLAG(w)&((aband)<<AFPRISTINEX)) AFLAGPRISTNO(w) // transfer pristinity from abandoned w to neww; clear in w since contents escaping
-   AAV(neww)[0]=AAV(w)[0]; if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}  // zappable if abandoned recursive
+   AAV(neww)[0]=AAV(w)[0];   // install w as first box
+   if(likely(!(optype&BOX)))if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}  // if neww recursize, ra.  zappable if abandoned recursive
   }
   aband=1;  // We can always start adding to the lists created here, UNLESS a and w were the same - 
   w=neww;  // switch to new list
  }
  // now w has been boxed if needed & includes the new w value
 
- if(likely(((aband-AR(w))|SGNIFNOT(AFLAG(w),BOXX))>=0)){   // if w is recursive abandoned rank 1: (rank can't be 0, since we would have replaced it above)
-  // w was recursive abandoned.  We will store back-to-front, on the assumption that ; usually happens in bunches and w probably came from ;
-  // if new w has no space before the end, allocate a bigger block and move w to the end of it
+ if(likely(aband>=AR(w))){   // if w is abandoned rank 1: (rank can't be 0, since we would have replaced it above)
+  // w was abandoned.  We will store back-to-front, on the assumption that ; usually happens in bunches and w probably came from ;
+  // if new w has no space before the beginning, allocate a bigger block and move w to the end of it
   if(unlikely(AK(w)==AKXR(1))){A neww;   // no space at the beginning of w
    I neededn=AN(w)+4+8; CTLZI(neededn,neededn); neededn=(2LL<<neededn)-8;  // number of atoms needed in larger block: room for at least 4 more, rounded up to power of 2 after header
    GATV0(neww,BOX,neededn,1); AN(neww)=AS(neww)[0]=AN(w); AK(neww)+=(neededn-(AN(w)+4))*SZI;  // allocate and position AK to put AN(w) atoms at end, with several spaces extra in case user wants to append in place
    MC(AAV(neww),AAV(w),AN(w)*SZI);  // copy the atoms from old to new
-   AFLAGINIT(neww,AFLAG(w)) AFLAGANDLOCAL(w,~RECURSIBLE)  // Transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive
+   AFLAGINIT(neww,AFLAG(w)) AFLAGANDLOCAL(w,~RECURSIBLE)  // If w recursive: transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive.  If w nonrecursive, so is neww and they are independent
    w=neww;  // start adding to the new block
   }
   aband=SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX)&&(a!=w);  // bit 0 = 1 if a is abandoned and is not the same as x
   if(unlikely(optype&1)){  // if verb is (,<) we deal with contents of a
-   // if verb is (,<), a must be a boxed singleton.  move the contents of a into w, then ra/zap as above
+   // if verb is (,<), a must be a boxed singleton.  move the contents of a into w, then ra/zap as above if w recursive.  This doesn't propagate WILLOPEN so boxed virtuals in a are impossible
    // a was boxed, & a known singleton.  Put the single value into w, then ra or zap.  w loses pristinity unless a is abandoned pristine
-   // We don't have access to the tpush stack, but if a is abandoned recursive we can use the slot in a as a surrogate location to zap - maybe could even if nonrecursive?
+   // We don't have access to the tpush stack, but if a is abandoned recursive we can use the slot in a as a surrogate location to zap
    AFLAGANDLOCAL(w,(AFLAG(a)&((aband)<<AFPRISTINEX))|~AFPRISTINE) AFLAGPRISTNO(a) // transfer pristinity from abandoned a to w; clear in a since contents escaping
     // it would be OK to leave a pristine if it was abandoned, because we know a is a singleton and we are zapping it; that would allow early release of a.  But we're scared.
    A acontents=AAV(a)[0];  // save contents in case we zap it
-   if((AFLAG(a)&(aband<<BOXX))!=0){AAV(a)[0]=0;}else{ra(AAV(a)[0]);}  // zappable if abandoned recursive
+   // It is still possible that a is virtual, for example if it came from {. 2 1 $ a: or a virtual argument cell.  
+// obsolete    if(likely(AFLAG(w)&BOX))if((AFLAG(a)&(aband<<BOXX))!=0){AAV(a)[0]=0;}else{ra(AAV(a)[0]);}  // Incr usecount if w is recursive; zappable if abandoned recursive and nonvirtual
+   if(likely(AFLAG(w)&BOX))if((AFLAG(a)&AFVIRTUAL)<(AFLAG(a)&(aband<<BOXX))){AAV(a)[0]=0;}else{ra(AAV(a)[0]);}  // Incr usecount if w is recursive; zappable if abandoned recursive and nonvirtual
    a=acontents;  // move to the contents of a, which we will install into w.  It is already incorped and has the usecount right to go into a recursive block
   }else{  // not (,<), i. e.  ;  (;<)  ,&<   all of which box a
    // Store a into w & return.  If a was abandoned recursive or direct, zap it, else ra.  If a is DIRECT abandoned, allow w to stay PRISTINE
+   if(unlikely(AT(a)&BOX&&AAV(a)[0]&&ISSPARSE(AAV(a)[0])))RZ(a=sparseres(a));  // resolve boxed sparse value
    AFLAGANDLOCAL(w,((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE)  // stays PRISTINE if abandoned DIRECT
-   raczap(a,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
-   INCORPNC(a);   // mark a incorped
+   // if w is recursive, or WILLOPEN is not set, realize any virtual a.  Virtual a allowed only in WILLOPEN nonrecursive result
+   if(likely((AFLAG(w)|~optype)&BOX))realizeifvirtual(a)
+   if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0,c&=~ACINPLACE;) INCORPNC(a);} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
   }
   // a has the new value to add at the front of the list
   AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; AAV(w)[0]=a;  // install a at front, add to counts
   RETF(w);  // return the augmented result
  }
  // else fall through to handle general case
- if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}
- R jtover(jtinplace,jtbox(JTIPAtoW,a),w);  // box empty or unboxed w, join to boxed a
+ // if WILLBEOPENED, any virtual boxes in w must be realized
+ if(unlikely(optype&AT(w)&~AFLAG(w)&BOX))RZ(realizeboxedvirtuals(w));  // realize virtuals, in place.  Required only if WILLOPEN is set, and w is nonrecursive boxed.  Result 0 is error
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}   // box empty or unboxed w
+ RETF(jtover(jtinplace,jtbox(JTIPAtoW,a),w));  // join to boxed a
 }
 
 // Calculate the value to use for rf arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)

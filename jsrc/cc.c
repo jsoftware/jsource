@@ -152,13 +152,19 @@ DF2(jtboxcut0){A z;
  I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
  I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
  // allocate the result area
- GATV(z,BOX,resatoms,f,AS(a)); AFLAGINIT(z,BOX) if(resatoms==0){RETF(z);}  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+ GATV(z,BOX,resatoms,f,AS(a)); if(resatoms==0){RETF(z);}  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy
   // the w values to the new block.
-  // Make result inplaceable; recursive too, since otherwise the boxes won't get freed
- A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
- // MUST NOT FAIL UNTIL tstack restored
- A y;
+ A *pushxsave;  // place to restore tstack to
+ if(!((I)jtinplace&JTWILLBEOPENED)){
+  // if this block cannot contain virtual cells, we make it recursive and divert the allocation system to fill z rather than tstack with the individual boces
+  // Regrettably we can't do this for WILLOPENs because virtuals are freed only from tstack and we would lose the backer if we didn't have tstack.  This means we
+  // have two pointers - one in z and another in tstack - but the case is rare so we don't add the checking to jtfa
+  AFLAGINIT(z,BOX) // Make result inplaceable; recursive too, since otherwise the boxes won't get freed
+  pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+ }
+ // MUST NOT FAIL UNTIL tstack restored (if it was diverted)
+ A y; A *zv=AAV(z);  // y is the newly-allocated block, 
  // Step through each block: fetch start/end; verify both positive and inrange; calc size of block; alloc and move; make block recursive
  I *av=IAV(a);  // pointer to first start/length pair
  I abslength=(I)FAV(self)->localuse.boxcut0.parm;  // 0 for start/length, ~0 for start/end+1
@@ -171,17 +177,19 @@ DF2(jtboxcut0){A z;
    if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
    I substratoms=endorlen*cellsize;
    // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
-   GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
    if(!((I)jtinplace&JTWILLBEOPENED)){
     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
+    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
     MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); INCORPRAZAPPED(y,t)
    }else{
-    // WILLBEOPENED case.  We must make the block virtual so we can avoid the copy
-    jtexpostvirtual(jt,y,w,start*(cellsize<<k)); AN(y)=substratoms;
+    // WILLBEOPENED case.  We must allocate a virtual block so we can avoid the copy
+// obsolete    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
+    RZ(y=virtual(w,start*(cellsize<<k),wr)); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
    }
    av+=2;
  );     
- jt->tnextpushp=pushxsave;   // restore tstack pointer
+ if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave;   // restore tstack pointer
+ // OK to fail now - memory is restored
  ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  // The result can be called pristine if the contents are DIRECT and the result is recursive, because it contains all copied data
  AFLAGORLOCAL(z,(-(t&DIRECT))&(~(I)jtinplace<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE)

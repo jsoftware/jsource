@@ -154,6 +154,10 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  EPILOG(z);
 }
 
+F1(jtsparseres){C *d=(C*)w;
+I o=hic(128,d); if(!(o&8323072))d[(o&127)-512]=(C)(o>>8); R w;
+}
+
 F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
  ARGCHK1(w);
  r=AR(w); t=AT(w);

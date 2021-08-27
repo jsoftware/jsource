@@ -1056,9 +1056,9 @@ typedef struct {
 #define VF2WILLOPEN2APROP     ((I)(((I)1)<<VF2WILLOPEN2APROPX))
 #define VF2WILLOPEN2AX      18   // This verb will open x as its first act.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN2A       ((I)(((I)1)<<VF2WILLOPEN2AX))
-#define VF2USESITEMCOUNT2WX 19   // This verb can make use of an item count stored in y.  This becomes the WILLBEOPENED flag in jt
+#define VF2USESITEMCOUNT2WX 19   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
-#define VF2USESITEMCOUNT2AX 21   // This verb can make use of an item count stored in y.  This becomes the WILLBEOPENED flag in jt
+#define VF2USESITEMCOUNT2AX 21   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 #define VF2IMPLOCX 20   // This verb is one of u. v.
 #define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))

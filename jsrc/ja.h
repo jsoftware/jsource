@@ -895,6 +895,7 @@
 #define rdns(x)                     jtrdns(jt,(x))   
 #define rdot1(x)                    jtrdot1(jt,(x))   
 #define realize(x)                  jtrealize(jt,(x))
+#define realizeboxedvirtuals(x)     jtrealizeboxedvirtuals(jt,(x))
 #define realizeifvirtual(x)         {if(unlikely((AFLAG(x)&AFVIRTUAL)!=0))RZ((x)=realize(x));}
 #define realizeifvirtualB(x)        {if(unlikely((AFLAG(x)&AFVIRTUAL)!=0))BZ((x)=realize(x));} // for use in cx, where errors not allowed
 #define rifv(x)                     realizeifvirtual(x)
@@ -1059,6 +1060,7 @@
 #define sparseit(x,y,z)             jtsparseit(jt,(x),(y),(z))
 #define sparsen1(x)                 jtsparsen1(jt,(x))
 #define sparsep1(x)                 jtsparsep1(jt,(x))
+#define sparseres(x)                (jtsparseres((J)x,(A)jt),x)
 #define spbytesinuse()              jtspbytesinuse(jt)
 #define spstarttracking()           jtspstarttracking(jt)
 #define spendtracking()             jtspendtracking(jt)

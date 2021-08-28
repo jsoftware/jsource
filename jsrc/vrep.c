@@ -92,7 +92,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
 #if ((C_AVX2&&SY_64) || EMU_AVX)
   C *avv=CAV(a)+n; n=m-n;   // prime the pipeline for top of loop.
-  __m256i i127=_mm256_set1_epi8(127);
+  __m256i i1=_mm256_set1_epi8(1);
   __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits
 #define BSIZE 32  // # bytes in a block
   __m256i bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+((-n>>LGSZI)&(NPAR-1))));  // since alignment never changes, we can predict the validity for the last block
@@ -114,12 +114,12 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
    I bitstack;  // the bits packed together
    if(n>=2*BSIZE){
     // n>=64, bitpipe0 has the bits to process (and if n>=128 bitpipe1 is in flight).
-    bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(bitpipe00,i127))
-            |((I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(bitpipe01,i127))<<BSIZE);
+    bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe00,i1))
+            |((I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe01,i1))<<BSIZE);
    }else{
     // n<64: we have to read the bits under mask to stay in bounds.  Read the last block, which requires mask
-    bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(_mm256_maskload_epi64((I*)(avv+((n-1)&BSIZE)),bitendmask),i127));
-    if(n>BSIZE){bitstack=(bitstack<<BSIZE)|(I)(UI4)_mm256_movemask_epi8(_mm256_add_epi8(_mm256_loadu_si256((__m256i*)(avv)),i127));}  // if there is a first block, read it too
+    bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_maskload_epi64((I*)(avv+((n-1)&BSIZE)),bitendmask),i1));
+    if(n>BSIZE){bitstack=(bitstack<<BSIZE)|(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv)),i1));}  // if there is a first block, read it too
     // mask off invalid bits
     bitstack&=~(-1LL<<n);  // leave n valid bits
    }

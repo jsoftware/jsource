@@ -923,19 +923,19 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*
    case IIMODREFLEX+IIMODFULL+IIDOT: \
    case IIMODREFLEX+IIDOT: \
      {I zi=hh->currentindexofst, zi0=zi, zie=zi+asct;  I * RESTRICT zv=AV(z)+l*asct-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
-      while(zi!=zie){I vv = hu[mwv[zi]]; if(vv<zi0)vv=zi; hu[mwv[zi]]=(Ttype)vv; zv[zi]=vv-zi0;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
+      while(zi!=zie){I vv = hu[mwv[zi]]; vv=(vv<zi0)?zi:vv; hu[mwv[zi]]=(Ttype)vv; zv[zi]=vv-zi0;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
    case IIMODBASE0+IIMODREFLEX+IIMODFULL+IIDOT: \
    case IIMODBASE0+IIMODREFLEX+IIDOT: \
      {I zi=0;  I * RESTRICT zv=AV(z)+l*asct; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
-      while(zi!=asct){I vv = hu[wv[zi]]; if(vv==asct)vv=zi; hu[wv[zi]]=(Ttype)vv; zv[zi]=vv;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
+      while(zi!=asct){I vv = hu[wv[zi]]; vv=(vv==asct)?zi:vv; hu[wv[zi]]=(Ttype)vv; zv[zi]=vv;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
    case IIMODREFLEX+IIMODFULL+IICO: \
    case IIMODREFLEX+IICO: \
      {I zi=hh->currentindexofst, zi0=zi, zie=zi+asct;  I * RESTRICT zv=AV(z)+l*asct-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
-      do{--zie; I vv = hu[mwv[zie]]; if(vv<zi0)vv=zie; hu[mwv[zie]]=(Ttype)vv; zv[zie]=vv-zi0;}while(zie!=zi); } break; /* same in reverse */ \
+      do{--zie; I vv = hu[mwv[zie]]; vv=(vv<zi0)?zie:vv; hu[mwv[zie]]=(Ttype)vv; zv[zie]=vv-zi0;}while(zie!=zi); } break; /* same in reverse */ \
    case IIMODBASE0+IIMODREFLEX+IIMODFULL+IICO: \
    case IIMODBASE0+IIMODREFLEX+IICO: \
      {I zie=asct-1;  I * RESTRICT zv=AV(z)+l*asct; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
-      do{I vv = hu[wv[zie]]; if(vv==asct)vv=zie; hu[wv[zie]]=(Ttype)vv; zv[zie]=vv; --zie; }while(zie>=0); } break; /* same in reverse */ \
+      do{I vv = hu[wv[zie]]; vv=(vv==asct)?zie:vv; hu[wv[zie]]=(Ttype)vv; zv[zie]=vv; --zie; }while(zie>=0); } break; /* same in reverse */ \
  \
     /* NUB types use Boolean masks but do not depend on FULL, since they cannot miss.  But they must support PACK. */ \
    case IIMODFULL+INUBSV: \

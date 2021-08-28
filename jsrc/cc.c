@@ -587,7 +587,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  }
  AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 
- // Time to find the frets.  If we are acting on behalf of Key /., freat are already in the single buffer
+ // Time to find the frets.  If we are acting on behalf of Key /., frets are already in the single buffer
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
   pfx=(I)FAV(self)->localuse.lu1.gercut.cutn; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
@@ -614,6 +614,60 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   // The type of a is always one we can handle here - other types have been converted to B01.  B01 types look for 1, others look for fret value.  Select routine based on length/tolerance/byte-boolean
   I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL
   switch(rtnx){
+#if ((C_AVX2&&SY_64) || EMU_AVX)
+  case 4:
+   fret=&Ivalidboolean;  // point to fret, 01 for boolean.  fall through to...
+  case 0: ;
+   // n has number of bytes to process
+   C *avv=(C*)av;
+   d=1-pfx; // If first fret is in position 0, that's length 0 for prefix, length 1 for suffix
+   // prime the pipeline for top of loop.
+   __m256i fretbyte=_mm256_set1_epi8(*(C*)fret);
+   __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits
+#define BSIZE 32  // # bytes in a block
+   __m256i bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+((-n>>LGSZI)&(NPAR-1))));  // since alignment never changes, we can predict the validity for the last block
+   if(n>=2*BSIZE){bitpipe10=_mm256_loadu_si256((__m256i*)(avv)); bitpipe11=_mm256_loadu_si256((__m256i*)(avv+BSIZE));}  // if there is a first FULL batch, prefetch it
+   while(n>0){    // n is # bytes left to process
+    // We process 64 bytes at a time, always reading ahead one block.  If there are >=64 items to do, bitpipe1 has the next set to process, from *avv
+    // In case there are few 1s, we fast-skip over blocks of 0s.  Because the processing is so fast, we don't change alignment ever.
+    I n0=n;  // remember where we started
+    while(1){
+     bitpipe00=bitpipe10; bitpipe01=bitpipe11;  // Move the next bits (if any) into pipe0
+     if(n<=2*BSIZE)break;  // exit if there is no further batch.  n will never hit 0.  We may process an empty stack
+     if(n>=4*BSIZE){bitpipe10=_mm256_loadu_si256((__m256i*)(avv+2*BSIZE)); bitpipe11=_mm256_loadu_si256((__m256i*)(avv+3*BSIZE));}  // if there is another FULL batch, prefetch it
+     if(!_mm256_testz_si256(_mm256_or_si256(bitpipe00,bitpipe01),_mm256_or_si256(bitpipe00,bitpipe01)))break;  // exit if nonzero found.  Cannot be spurious
+     // We hit 64 0s.  Advance over them
+     d+=BW; avv+=2*BSIZE; n-=2*BSIZE;
+    }
+    // Move the bits into bitstack
+    I bitstack;  // the bits packed together
+    if(n>=2*BSIZE){
+     // n>=64, bitpipe0 has the bits to process (and if n>=128 bitpipe1 is in flight).
+     bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe00,fretbyte))
+             |((I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe01,fretbyte))<<BSIZE);
+    }else{
+     // n<64: we have to read the bits under mask to stay in bounds.  Read the last block, which requires mask
+     bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_maskload_epi64((I*)(avv+((n-1)&BSIZE)),bitendmask),fretbyte));
+     if(n>BSIZE){bitstack=(bitstack<<BSIZE)|(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv)),fretbyte));}  // if there is a first block, read it too
+     // mask off invalid bits
+     bitstack&=~(-1LL<<n);  // leave n valid bits
+    }
+    // process the bits in bitstack, creating a fret for each nonzero
+    while(bitstack){
+     {I bitfound=CTTZI(bitstack); d+=bitfound;   // d=length of new partition; prevend=location of new partition
+     if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(UI4*)pd=(UI4)d; pd+=SZUI4; m-=SZUI4;}  /* write out encoded length; keep track of # long fields emitted */
+     d=-bitfound;  // save the position of the found bit.  Do this before the subroutine, so bitfound doesn't need to be saved
+     if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=(C*)CUTFRETEND(pd0); pd=CUTFRETFRETS(pd0);}  /* if we filled the current buffer, get a new one */
+     }
+     bitstack&=bitstack-1;
+    }
+    d+=BW;  // trailing zeros add to d, but the count wraps around.  Net, add the batch to d
+    avv+=2*BSIZE; n-=2*BSIZE;  //  we have moved 2 batches of bits into bitstack.  decr count left
+   }
+   // end with d=length of last partition, 
+   d+=n-1;  // n is nonpositive.  This removes from d the nonexistent bits of the batch.  the -1 is for compatibility with other branches, which end with the length of the last partition 1 short, corrected for below.  This changes d back to length of fret
+   break;
+#else
   case 0: // single bytes.  This is like the B01 case below but we cleverly detect noncomparing words by word-wide methods, and then convert the equality test into B01 format a word at a time
    {
     // In this loop d is the length of the fret
@@ -649,14 +703,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     d+=n-1;  // n is nonpositive.  This removes from d the nonexistent bits of the batch.  the -1 is for compatibility with other branches, which end with the length of the last partition 1 short, corrected for below.  This changes d back to length of fret
    }
    break;
-  case 1: // 2 bytes
-   FRETLOOPSGL(US) break;
-  case 2: // 4 bytes
-   FRETLOOPSGL(UI4) break;
-#if BW==64
-  case 3: // 8 bytes
-   FRETLOOPSGL(UI) break;
-#endif
   case 4: // single-byte Boolean, looking for 1s
    {
     // In this loop d is the length of the fret
@@ -688,6 +734,15 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     d+=n-1;  // n is nonpositive.  This removes from d the nonexistent bits of the batch.  the -1 is for compatibility with other branches, which end with the length of the last partition 1 short, corrected for below.  This changes d back to length of fret
    }
    break;
+#endif
+  case 1: // 2 bytes
+   FRETLOOPSGL(US) break;
+  case 2: // 4 bytes
+   FRETLOOPSGL(UI4) break;
+#if BW==64
+  case 3: // 8 bytes
+   FRETLOOPSGL(UI) break;
+#endif
   case 5: // float (tolerant)
    FRETLOOPSGLD break;
   }

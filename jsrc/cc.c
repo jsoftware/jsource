@@ -630,7 +630,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
    while(n>0){    // n is # bytes left to process
     // We process 64 bytes at a time, always reading ahead one block.  If there are >=64 items to do, bitpipe1 has the next set to process, from *avv
     // In case there are few 1s, we fast-skip over blocks of 0s.  Because the processing is so fast, we don't change alignment ever.
-    I n0=n;  // remember where we started
     while(1){
      bitpipe00=bitpipe10; bitpipe01=bitpipe11;  // Move the next bits (if any) into pipe0
      if(n<=2*BSIZE)break;  // exit if there is no further batch.  n will never hit 0.  We may process an empty stack
@@ -664,7 +663,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     d+=BW;  // trailing zeros add to d, but the count wraps around.  Net, add the batch to d
     avv+=2*BSIZE; n-=2*BSIZE;  //  we have moved 2 batches of bits into bitstack.  decr count left
    }
-   // end with d=length of last partition, 
+   // end with d=length of last partition
    d+=n-1;  // n is nonpositive.  This removes from d the nonexistent bits of the batch.  the -1 is for compatibility with other branches, which end with the length of the last partition 1 short, corrected for below.  This changes d back to length of fret
    break;
 #else

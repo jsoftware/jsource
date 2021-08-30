@@ -205,10 +205,10 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  /* prim/ vectors */ \
  __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
- DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
-  UI n2=DUFFLPCT(n-1,2);  /* # turns through duff loop */ \
+ DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg; \
+  UI n2=DUFFLPCT(n-1,3);  /* # turns through duff loop */ \
   if(n2>0){ \
-   UI backoff=DUFFBACKOFF(n-1,2); \
+   UI backoff=DUFFBACKOFF(n-1,3); \
    x+=(backoff+1)*NPAR; \
    switch(backoff){ \
    do{ \
@@ -216,12 +216,17 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
    case -2: acc1=prim(acc1,_mm256_loadu_pd(x+1*NPAR)); \
    case -3: acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); \
    case -4: acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); \
-   x+=4*NPAR; \
+   case -5: acc4=prim(acc4,_mm256_loadu_pd(x+4*NPAR)); \
+   case -6: acc5=prim(acc5,_mm256_loadu_pd(x+5*NPAR)); \
+   case -7: acc6=prim(acc6,_mm256_loadu_pd(x+6*NPAR)); \
+   case -8: acc7=prim(acc7,_mm256_loadu_pd(x+7*NPAR)); \
+   x+=(1LL<<3)*NPAR; \
    }while(--n2!=0); \
    } \
   } \
   acc0=prim(acc0,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
-  acc0=prim(acc0,acc1); acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
+  acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); acc0=prim(acc0,acc4); \
+  acc2=prim(acc2,acc3); acc0=prim(acc0,acc1); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
   acc0=prim(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
   *(I*)z=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++z;  /* store the single result from 0 */ \
  )
@@ -233,32 +238,42 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  _mm256_zeroupperx(VOIDARG) \
  __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
- I xstride1=d*SZD; I xstride3=3*xstride1; \
+ I xstride1=d*SZD; I xstride3=3*xstride1; I xstride5=5*xstride1; I xstride7=xstride5+2*xstride1; \
  DQ(m, D *x0; \
   DQ((d-1)>>LGNPAR, \
-   x0=(D*)((C*)x-((-n)&3)*xstride1); UI n0=(n+3)>>2; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
-   switch(n&3){ \
+   x0=(D*)((C*)x-((-n)&((1LL<<3)-1))*xstride1); UI n0=(n+(1LL<<3)-1)>>3; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg;  \
+   switch(n&((1LL<<3)-1)){ \
    do{ \
     case 0: acc0=prim(acc0,_mm256_loadu_pd(x0)); \
-    case 3: acc1=prim(acc1,_mm256_loadu_pd((D*)((C*)x0+xstride1))); \
-    case 2: acc2=prim(acc2,_mm256_loadu_pd((D*)((C*)x0+2*xstride1))); \
-    case 1: acc3=prim(acc3,_mm256_loadu_pd((D*)((C*)x0+xstride3))); \
-     x0=(D*)((C*)x0+4*xstride1); \
+    case 7: acc1=prim(acc1,_mm256_loadu_pd((D*)((C*)x0+xstride1))); \
+    case 6: acc2=prim(acc2,_mm256_loadu_pd((D*)((C*)x0+2*xstride1))); \
+    case 5: acc3=prim(acc3,_mm256_loadu_pd((D*)((C*)x0+xstride3))); \
+    case 4: acc4=prim(acc4,_mm256_loadu_pd((D*)((C*)x0+4*xstride1))); \
+    case 3: acc5=prim(acc5,_mm256_loadu_pd((D*)((C*)x0+xstride5))); \
+    case 2: acc6=prim(acc6,_mm256_loadu_pd((D*)((C*)x0+2*xstride3))); \
+    case 1: acc7=prim(acc7,_mm256_loadu_pd((D*)((C*)x0+xstride7))); \
+     x0=(D*)((C*)x0+(1LL<<3)*xstride1); \
    }while(--n0); \
    } \
+   acc0=prim(acc0,acc4);  acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); \
    acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_storeu_pd(z,acc0); \
    x+=NPAR; z+=NPAR; \
   ) \
-  x0=(D*)((C*)x-((-n)&3)*xstride1);  UI n0=(n+3)>>2; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
-  switch(n&3){ \
+  x0=(D*)((C*)x-((-n)&((1LL<<3)-1))*xstride1); UI n0=(n+(1LL<<3)-1)>>3; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg;  \
+  switch(n&((1LL<<3)-1)){ \
   do{ \
    case 0: acc0=prim(acc0,_mm256_maskload_pd(x0,endmask)); \
-   case 3: acc1=prim(acc1,_mm256_maskload_pd((D*)((C*)x0+xstride1),endmask)); \
-   case 2: acc2=prim(acc2,_mm256_maskload_pd((D*)((C*)x0+2*xstride1),endmask)); \
-   case 1: acc3=prim(acc3,_mm256_maskload_pd((D*)((C*)x0+xstride3),endmask)); \
-    x0=(D*)((C*)x0+4*xstride1); \
+   case 7: acc1=prim(acc1,_mm256_maskload_pd((D*)((C*)x0+xstride1),endmask)); \
+   case 6: acc2=prim(acc2,_mm256_maskload_pd((D*)((C*)x0+2*xstride1),endmask)); \
+   case 5: acc3=prim(acc3,_mm256_maskload_pd((D*)((C*)x0+xstride3),endmask)); \
+   case 4: acc4=prim(acc4,_mm256_maskload_pd((D*)((C*)x0+4*xstride1),endmask)); \
+   case 3: acc5=prim(acc5,_mm256_maskload_pd((D*)((C*)x0+xstride5),endmask)); \
+   case 2: acc6=prim(acc6,_mm256_maskload_pd((D*)((C*)x0+2*xstride3),endmask)); \
+   case 1: acc7=prim(acc7,_mm256_maskload_pd((D*)((C*)x0+xstride7),endmask)); \
+    x0=(D*)((C*)x0+(1LL<<3)*xstride1); \
   }while(--n0); \
   } \
+  acc0=prim(acc0,acc4);  acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); \
   acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_maskstore_pd(z,endmask,acc0); \
   x=x0-((d-1)&-NPAR); z+=((d-1)&(NPAR-1))+1; \
  )
@@ -267,7 +282,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   NAN0;
-  // latency of add is 4, so use 4 accumulators
+  // latency of add is 4, so use 8 accumulators for 2 reads per cycle
   if(d==1){
 #if (C_AVX&&SY_64) || EMU_AVX
    redprim256rk1(_mm256_add_pd,dzero)

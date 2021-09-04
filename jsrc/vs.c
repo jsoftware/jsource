@@ -152,11 +152,9 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  SPB(p,i,y);
  SPB(p,x,b?reshape(sc(cm),num(1)):repeat(c,x));
  EPILOG(z);
-}
-
-F1(jtsparseres){C *d=(C*)w;
-I o=hic(128,d); if(!(o&8323072))d[(o&127)-512]=(C)(o>>8); R w;
-}
+}                                                                                                                                                                                                                                                                                                 ZZ(
+ 
+F1(jtspres){ARGCHK1(w) ASSERT(0,EVNONCE); R w;}                                                                                                                                                                                                                                                                                       )
 
 F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
  ARGCHK1(w);

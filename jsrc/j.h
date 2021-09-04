@@ -1980,6 +1980,7 @@ extern JS gjt; // global for JPF (procs without jt)
 #endif
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
+#define ZZ(x)
 
 /* workaround clang branch prediction side effect */
 #if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 3)))

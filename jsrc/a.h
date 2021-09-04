@@ -37,7 +37,8 @@
 
 
 #define ADERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),w,0L,0L,(flag),(I)(m),(I)(l),(I)(r))
-#define CDERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))
+#define CDERIVF(id,f1,f2,flag,flag2,m,l,r)  fdef(flag2,id,VERB,(AF)(f1),(AF)(f2),a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))
+#define CDERIV(id,f1,f2,flag,m,l,r)  CDERIVF(id,f1,f2,flag,0,m,l,r)
 
 #define ASSERTVV(a,w)   ARGCHK2(a,w); ASSERT(VERB&AT(a)&AT(w),EVDOMAIN)
 #define ASSERTVVn(a,w)  ARGCHK2(a,w); ASSERT(VERB&AT(a),EVDOMAIN)

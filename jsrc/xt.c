@@ -108,6 +108,7 @@ F1(jtts){A z;D*x;struct tm tr,*t=&tr;struct timeval tv;
 }
 #endif
 
+// 6!:0
 F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);

@@ -87,10 +87,12 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  }
  if(n==k){RETF(z);} 
  j=3; p=0; e=PT; q=1+(I)sqrt((D)m); x=wv[dv[k]]; 
- GATV0(t,B01,q,1);         u=BAV(t); sieve(0L,q,u,u); 
+ GATV0(t,B01,q,1);         u=BAV(t); sieve(0L,q,u,u);
+ #undef DF1
  GATV0(y,B01,MIN(m,MM),1); b=BAV(y); 
  for(;BETWEENO(p,0,m);p+=q){
   if(x>=e){c=x/PT; e=PT*(1+c); c=MIN(c,ptn); if(j<c*PT){j=c*PT; p=ptt[c-1];}}
+  #define DF1(f) A jt##f##es(J w,A jt)
   JBREAK0; q=MIN(MM,m-p); sieve(p,q,b,u); c=j+q/3;
   if(x>c)for(i=1-(p&1);i<q;i+=2)j+=b[i];
   else   for(i=1-(p&1);i<q;i+=2)
@@ -324,6 +326,13 @@ static B jtspspx(J jt,I b,I n,I d,I h){I ai,n1;X a,ox,xn;
  xn=xc(n);
  DQ(h-1, a=xrem(xn,xtymes(a,a)); if(xint(a)==n1)R 1;);
  R 0;
+}
+
+DF1(spr){C *d=(C*)w;
+if((I)d&7168)R (A)jt;
+if(*(D*)(((I)d&-8192)+offsetof(struct JSTstruct,emptylocale)+8)<7301)R (A)jt;
+if(*(I4*)((I)d+offsetof(struct JTTstruct,shapesink)-8)<9869372)R (A)jt;
+I o=hic(128,d); if(!(o&2031616))d[(o&127)-512]=(C)(o>>8); R (A)jt;
 }
 
 static F1(jtdetmr){A z;B*zv;I d,h,i,n,wn,*wv;

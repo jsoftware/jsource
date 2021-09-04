@@ -142,7 +142,6 @@ F2PREFIP;ARGCHK2(a,w);
    a=acontents;  // move to the contents of a, which we will install into w.  It is already incorped and has the usecount right to go into a recursive block
   }else{  // not (,<), i. e.  ;  (;<)  ,&<   all of which box a
    // Store a into w & return.  If a was abandoned recursive or direct, zap it, else ra.  If a is DIRECT abandoned, allow w to stay PRISTINE
-   if(unlikely(AT(a)&BOX&&AAV(a)[0]&&ISSPARSE(AAV(a)[0])))RZ(a=sparseres(a));  // resolve boxed sparse value
    AFLAGANDLOCAL(w,((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE)  // stays PRISTINE if abandoned DIRECT
    // if w is recursive, or WILLOPEN is not set, realize any virtual a.  Virtual a allowed only in WILLOPEN nonrecursive result
    if(likely((AFLAG(w)|~optype)&BOX))realizeifvirtual(a)

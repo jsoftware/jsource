@@ -69,9 +69,9 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
 F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinplace,w);} R w;}
 
 // x ; y, with options for x (,<) y   x (;<) y   x ,&< y
-// This verb propagates WILLOPEN, so it must not raise usecounts EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
+// This verb propagates WILLOPEN, so it must not raise usecounts or EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
 // As a result of this we support both recursive and nonrecursive y inputs.  If y is unboxed, we create a recursive block if WILLOPEN is
-// not set, or a recursive block if WILLOPEN is set
+// not set, or a nonrecursive block if WILLOPEN is set
 DF2(jtlink){
 F2PREFIP;ARGCHK2(a,w);
 #if FORCEVIRTUALINPUTS
@@ -145,7 +145,8 @@ F2PREFIP;ARGCHK2(a,w);
    AFLAGANDLOCAL(w,((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE)  // stays PRISTINE if abandoned DIRECT
    // if w is recursive, or WILLOPEN is not set, realize any virtual a.  Virtual a allowed only in WILLOPEN nonrecursive result
    if(likely((AFLAG(w)|~optype)&BOX))realizeifvirtual(a)
-   if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0,c&=~ACINPLACE;) INCORPNC(a);} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
+   if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0,c&=~ACINPLACE;)}else{ACIPNO(a)} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
+   AFLAGPRISTNO(a)   // since a is incorporated, it can't be PRISTINE
   }
   // a has the new value to add at the front of the list
   AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; AAV(w)[0]=a;  // install a at front, add to counts

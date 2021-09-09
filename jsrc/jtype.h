@@ -352,7 +352,7 @@ typedef I SI;
 #define VERB            ((I)1L<<VERBX)      /* V  verb                         */
 #define VERBSIZE sizeof(V)  // Note: size of ACV in bp() is INTSIZE because the allocation in fdef() is of INTs
 // NOTE: VERB must be above all NOUN bits because of CONJCASE.  Must be >ADV because of AVN testing in parser
-// es delayline is parser expects VERBX <= 27
+// es delayline in parser expects VERBX <= 27
 #define LPARX 28
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 // note: LPAR used as flag to cvt() see below; also as modifier to ADV type

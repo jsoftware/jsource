@@ -388,6 +388,10 @@ IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$s:@<"0 'chthonic
 16b20 = 1 { 13!:83 (>:  i. 3) ; (i. 4)
 3 4 -: # S:0 (< >:  i. 3) (,<) (>: i. 4)
 
+1: ": }: (0, 2);(0;0);a=. 0;0   NB. crashed when (0,2) was left inplaceable
+4 -: (3!:0) > _3 }. (0, 2);(0;0);a=. 0;0
+
+
 4!:55 ;:'a adot1 adot2 sdot0 boxed f link maxr mt raze t templ x y'
 randfini''
 

@@ -320,6 +320,11 @@ static __emu_inline __emu__m256d __emu_mm256_permute4x64_pd(__emu__m256d a, cons
     return A.emu__m256d;
 }
 
+static __emu_inline __emu__m256d __emu_mm256_fnmadd_pd(__emu__m256d a, __emu__m256d b, __emu__m256d c)
+{
+    return _mm256_sub_pd(c,_mm256_mul_pd(a,b));
+}
+
 static __emu_inline __emu__m256d __emu_mm256_fmadd_pd(__emu__m256d a, __emu__m256d b, __emu__m256d c)
 {
     return _mm256_add_pd(_mm256_mul_pd(a,b),c);
@@ -462,6 +467,7 @@ static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #undef _mm256_cmpgt_epi64
 #undef _mm256_cmpgt_epi8
 #undef _mm256_cvtepu8_epi64
+#undef _mm256_fnmadd_pd
 #undef _mm256_fmadd_pd
 #undef _mm256_fmadd_ps
 #undef _mm256_fmsub_pd
@@ -505,6 +511,7 @@ static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #define _mm256_cmpgt_epi64 __emu_mm256_cmpgt_epi64
 #define _mm256_cmpgt_epi8 __emu_mm256_cmpgt_epi8
 #define _mm256_cvtepu8_epi64 __emu_mm256_cvtepu8_epi64
+#define _mm256_fnmadd_pd __emu_mm256_fnmadd_pd
 #define _mm256_fmadd_pd __emu_mm256_fmadd_pd
 #define _mm256_fmadd_ps __emu_mm256_fmadd_ps
 #define _mm256_fmsub_pd __emu_mm256_fmsub_pd

@@ -1012,6 +1012,14 @@ __emu_mm256_test_impl( _mm, z,   si256, si128, __emu__m256i );
 __emu_mm256_test_impl( _mm, c,   si256, si128, __emu__m256i );
 __emu_mm256_test_impl( _mm, nzc, si256, si128, __emu__m256i );
 
+__emu_mm256_test_impl( __emu_mm, z,   pd, pd, __emu__m256d );
+__emu_mm256_test_impl( __emu_mm, c,   pd, pd, __emu__m256d );
+__emu_mm256_test_impl( __emu_mm, nzc, pd, pd, __emu__m256d );
+
+__emu_mm256_test_impl( __emu_mm, z,   ps, ps, __emu__m256 );
+__emu_mm256_test_impl( __emu_mm, c,   ps, ps, __emu__m256 );
+__emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
+
 #endif
 
 #if defined(_WIN32) || ( !defined(__clang__) && defined( __GNUC__ ) && ( __GNUC__ == 4 ) && (__GNUC_MINOR__ < 4 ) )
@@ -1549,7 +1557,15 @@ static __emu_inline __emu__m256d __emu_mm256_permute4x64_pd(__emu__m256d a, cons
     return A;
 }
 
-static __emu_inline __emu__m256d __emu_mm256_fmadd_pd(__emu__m256 a, __emu__m256 b, __emu__m256 c)
+static __emu_inline __emu__m256d __emu_mm256_fnmadd_pd(__emu__m256d a, __emu__m256d b, __emu__m256d c)
+{
+    __emu__m256d A;
+    A.__emu_m128[ 0 ] = _mm_sub_pd(c.__emu_m128[ 0 ],_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]));
+    A.__emu_m128[ 1 ] = _mm_sub_pd(c.__emu_m128[ 1 ],_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]));
+    return A;
+}
+
+static __emu_inline __emu__m256d __emu_mm256_fmadd_pd(__emu__m256d a, __emu__m256d b, __emu__m256d c)
 {
     __emu__m256d A;
     A.__emu_m128[ 0 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
@@ -1833,13 +1849,15 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_testz_pd __emu_mm256_testz_pd
 #define _mm256_testc_pd __emu_mm256_testc_pd
 #define _mm256_testnzc_pd __emu_mm256_testnzc_pd
-#define _mm_testz_pd __emu_mm_testz_pd
-#define _mm_testc_pd __emu_mm_testc_pd
-#define _mm_testnzc_pd __emu_mm_testnzc_pd
 
 #define _mm256_testz_ps __emu_mm256_testz_ps
 #define _mm256_testc_ps __emu_mm256_testc_ps
 #define _mm256_testnzc_ps __emu_mm256_testnzc_ps
+
+#define _mm_testz_pd __emu_mm_testz_pd
+#define _mm_testc_pd __emu_mm_testc_pd
+#define _mm_testnzc_pd __emu_mm_testnzc_pd
+
 #define _mm_testz_ps __emu_mm_testz_ps
 #define _mm_testc_ps __emu_mm_testc_ps
 #define _mm_testnzc_ps __emu_mm_testnzc_ps
@@ -1925,6 +1943,7 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_blend_epi32 __emu_mm256_blend_epi32_REF
 #define _mm256_extract_epi64 __emu_mm256_extract_epi64
 
+#define _mm256_fnmadd_pd __emu_mm256_fnmadd_pd
 #define _mm256_fmadd_pd __emu_mm256_fmadd_pd
 #define _mm256_fmadd_ps __emu_mm256_fmadd_ps
 #define _mm256_fmsub_pd __emu_mm256_fmsub_pd

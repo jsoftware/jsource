@@ -911,6 +911,15 @@ FORCE_INLINE int _mm256_movemask_ps(__m256 a)
                 (vgetq_lane_u8(res_m256i.vect_u8[1], 0) << 4) | (vgetq_lane_u8(res_m256i.vect_u8[1], 8) << 6));
 }
 
+FORCE_INLINE int _mm256_testz_pd(__m256d a, __m256d b)
+{
+    __m256i res_m256i;
+    res_m256i.vect_s64[0] = vandq_s64(vreinterpretq_s64_f64(a.vect_f64[0]), vreinterpretq_s64_f64(b.vect_f64[0]));
+    res_m256i.vect_s64[1] = vandq_s64(vreinterpretq_s64_f64(a.vect_f64[1]), vreinterpretq_s64_f64(b.vect_f64[1]));
+    int64x2_t tmp = vorrq_s64(res_m256i.vect_s64[0], res_m256i.vect_s64[1]);
+    return !(vgetq_lane_s64(tmp, 0) | vgetq_lane_s64(tmp, 1));
+}
+
 FORCE_INLINE int _mm256_testz_si256(__m256i a, __m256i b)
 {
     __m256i res_m256i;
@@ -2886,6 +2895,14 @@ FORCE_INLINE __m256d _mm256_fmadd_pd(__m256d a, __m256d b, __m256d c)
     __m256d res;
     res.vect_f64[0] = vfmaq_f64(c.vect_f64[0], a.vect_f64[0], b.vect_f64[0]);  // *NOTE* argument swap
     res.vect_f64[1] = vfmaq_f64(c.vect_f64[1], a.vect_f64[1], b.vect_f64[1]);  // *NOTE* argument swap
+    return res;
+}
+
+FORCE_INLINE __m256d _mm256_fnmadd_pd(__m256d a, __m256d b, __m256d c)
+{
+    __m256d res;
+    res.vect_f64[0] = vmlsq_f64(c.vect_f64[0], a.vect_f64[0], b.vect_f64[0]);  // *NOTE* argument swap
+    res.vect_f64[1] = vmlsq_f64(c.vect_f64[1], a.vect_f64[1], b.vect_f64[1]);  // *NOTE* argument swap
     return res;
 }
 

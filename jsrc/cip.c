@@ -1189,20 +1189,15 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
       // we are scanning qwords looking for a mismatch, where the bits don't equal 'polarity'.  Switch the polarity so we are always looking for 0
       NOUNROLL while((bitstack=(*lbv++|*ubv--)^polarity)==0){lensofar+=BW; if((bitsleft-=BW)<=0){lensofar+=bitsleft; goto finrle;}};  //  read until we hit end or a desired bit.  If end, skip to end of loop
       // we found a word with a mismatch.  Scan it.  lensofar is the number of matches we have found, bitsinstack is #valid bits in stack
-      bitsinstack=BW; bitsinstack=bitsleft<BW?bitsleft:bitsinstack;  // init # valid bits in bitstack
+      bitsinstack=BW; bitsinstack=bitsleft<BW?bitsleft:bitsinstack; bitsleft-=bitsinstack;  // init # valid bits in bitstack, never more than bitsleft; predecrement bitstack to len AFTER this bitstack is processed
       while(1){  // build the run of non-polarity
        I runlen=CTTZI(bitstack); runlen=bitstack==0?bitsinstack:runlen;  // Find the lowest 1 bit
 // obsolete printf("\nbitstack=0x%llx runlen=%lld bitsinstack=%lld bitsleft=%lld lensofar=%lld polarity=0x%llx",bitstack,runlen,bitsinstack,bitsleft,lensofar,polarity);  // scaf
-       if((bitsinstack-=runlen)<=0){
-        // current bitstack is exhausted.
-        runlen+=bitsinstack;  // recover the original bitsinstack, which is the actual # bits we can use
-        lensofar+=runlen;  // presumptively add the bits to the run
-        if((bitsleft-=runlen)>0)break;  // if there are more bits in the next word, go get it
-        lensofar+=bitsleft; goto finrle;   // if there are no more bits, add the actual valid # to the current run & exit, outing that run
-       }
+       lensofar+=runlen;  // presumptively add the bits to the run
+       if((bitsinstack-=runlen)<=0){lensofar+=bitsinstack; if(bitsleft<=0)goto finrle; break;}  // bitstack exhausted: add valid bits to run.  If there are no more bits, exit, otherwise continue in next word
        // we found the end of a run inside the bitstring.  Out the run, change polarity, continue look
-       *runv++=lensofar+=runlen; lensofar=0;  // write out run, clear length of new run
-       bitstack>>=runlen; bitsleft-=runlen; bitstack=~bitstack; polarity=~polarity;   // remove the old bits; change polarity to turn the 0s to 1s
+       *runv++=lensofar; lensofar=0;  // write out run, clear length of new run
+       bitstack>>=runlen; bitstack=~bitstack; polarity=~polarity;   // remove the old bits; change polarity to turn the 0s to 1s
       }
      }
 finrle: ;

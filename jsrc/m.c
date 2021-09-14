@@ -646,7 +646,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   A wback=ABACK(w); A *wzaploc=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AZAPLOC(w) in case it is to be zapped
   AT(z)=t;
   ACINIT(z,wip+ACUC1)   // transfer inplaceability from original block
-  AR(z)=(RANKT)r;
+  ARINIT(z,(RANKT)r);
   if((wip&((wf&(AFVIRTUAL|AFUNINCORPABLE))-1))<0){
     // w (the old block) is abandoned and is not UNINCORPABLE.  It must still have an entry on the tpop stack.  Rather than incrementing its
     // usecount, we can simply remove its tpop entry.  We must also mark the block as uninplaceable, since it is a backer now (might not be necessary,
@@ -1217,9 +1217,9 @@ RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
 // obsolete  I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0)&-2;  // We never use GA for NAME types, so we don't need to check for it
  I bytes; if(likely(ranktype&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,ranktype>>32,bplg(ranktype),ranktype&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,ranktype>>32,bpnonnoun(ranktype),ranktype&LAST0,0);
     // We never use GA for NAME types, so we don't need to check for it
- ASSERT(((atoms|ranktype)>>(32+RANKTX))==0,EVLIMIT)
+ ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC AFLAG AM
- AT(z)=(I4)ranktype; I rank=(UI)ranktype>>32; AR(z)=rank; AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
+ AT(z)=(I4)ranktype; I rank=(UI)ranktype>>32; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
  if(unlikely(!(((I4)ranktype&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-32)&-32,&AS(z)[1],1,MEMSET00);}  // unlikely is important!  compiler strains then to use one less temp reg
@@ -1232,7 +1232,7 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  I bytes; if(likely(type&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
- AT(z)=type; AR(z)=rank; AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
+ AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
  if(unlikely(!((type&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),1,MEMSET00);}
  R z;
 }
@@ -1308,7 +1308,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  RZ(z=gafv(SZI*(NORMAH+r)-1));
  AT(z)=0;
  if(w){
-  AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
+  AT(z)=AT(w); AN(z)=AN(w); ARINIT(z,(RANKT)r); AK(z)=CAV(w)-(C*)z;
   if(1==r)AS(z)[0]=AN(w);
  }
  R z;

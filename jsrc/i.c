@@ -218,6 +218,7 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
  fpsetmask(0);
 #endif
  INITJT(jjt,tssbase)=tod();  // starting time for all threads
+// only crashing on startup INITJT(jjt,peekdata)=1;  // wake up auditing
  // Initialize subsystems in order.  Each initializes all threads, if there are thread variables
  RZ(jtbufferinit(jjt,MAXTHREADS)); // init the buffers pointed to by jjt
  RZ(jtmeminit(jjt,MAXTHREADS));

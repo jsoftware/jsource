@@ -58,13 +58,16 @@ typedef FILE*              F;
 typedef long double        LD;
 
 // This is the main structure for J entities
-typedef US                 RANKT;
-#define RANKTX             16   // # bits in a RANKT
+typedef UC                 RANKT;
+#define RANKTX             8   // # bits in a RANKT
 #define RANKTMSK           (((I)1<<RANKTX)-1)
 #define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
-typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
-#define RANK2TX            32   // # bits in a RANK2T
-#define RANK2TMSK           0xFFFFFFFFU
+typedef US                 RANK2T;  // 2 ranks, (l<<16)|r
+#define RANK2TX            16   // # bits in a RANK2T
+#define RANK2TMSK           0xFFFFU
+#define LGRMAX             6  // lg2(RMAX+1)
+#define RMAX               (((I)1<<LGRMAX)-1)   // max rank, leaving 2 bits for flags
+
 typedef I                  FLAGT;
 typedef I4                LX;  // index of an L block in JT(jt,sympv)
 
@@ -158,6 +161,7 @@ struct AD {
  I n;  // # atoms - always 1 for sparse arrays
 #if C_LE
  RANKT r;  // rank
+ UC filler;
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
  US origin;
@@ -169,6 +173,7 @@ struct AD {
  US origin;
 #endif
  US h;   // reserved for allocator.  Not used for AFNJA memory
+ UC filler;
  RANKT r;  // rank
 #endif
  I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
@@ -208,6 +213,7 @@ typedef I SI;
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
 #define AR(x)           ((x)->r)        /* Rank                            */
+#define ARINIT(x,v)     *(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */
 #define SMMAH           7L   // number of header words in old-fashioned SMM alloc
 #define NORMAH          7L   // number of header words in new system
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.

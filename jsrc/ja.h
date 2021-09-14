@@ -872,7 +872,7 @@
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))
 #if SY_64
-#define REX2R(lr,rr,lcr,rcr)        (((I)(lr)<<RANKTX)+(I)(rr)+((((I)(lcr)<<RANKTX)+(I)(rcr))<<2*RANKTX))
+#define REX2R(lr,rr,lcr,rcr)        (((I)(lr)<<RANKTX)+(I)(rr)+((((I)(lcr)<<RANKTX)+(I)(rcr))<<RANK2TX))
 #else
 #define REX2R(lr,rr,lcr,rcr)        (((I)(lr)<<RANKTX)+(I)(rr)),(((I)(lcr)<<RANKTX)+(I)(rcr))
 #endif

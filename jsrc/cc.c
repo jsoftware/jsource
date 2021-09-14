@@ -626,14 +626,14 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
    __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits
 #define BSIZE 32  // # bytes in a block
    __m256i bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+((-n>>LGSZI)&(NPAR-1))));  // since alignment never changes, we can predict the validity for the last block
-   if(n>=2*BSIZE){bitpipe10=_mm256_loadu_si256((__m256i*)(avv)); bitpipe11=_mm256_loadu_si256((__m256i*)(avv+BSIZE));}  // if there is a first FULL batch, prefetch it
+   if(n>=2*BSIZE){bitpipe10=_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv)),fretbyte); bitpipe11=_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv+BSIZE)),fretbyte);}  // if there is a first FULL batch, prefetch it
    while(n>0){    // n is # bytes left to process
     // We process 64 bytes at a time, always reading ahead one block.  If there are >=64 items to do, bitpipe1 has the next set to process, from *avv
     // In case there are few 1s, we fast-skip over blocks of 0s.  Because the processing is so fast, we don't change alignment ever.
     while(1){
      bitpipe00=bitpipe10; bitpipe01=bitpipe11;  // Move the next bits (if any) into pipe0
      if(n<=2*BSIZE)break;  // exit if there is no further batch.  n will never hit 0.  We may process an empty stack
-     if(n>=4*BSIZE){bitpipe10=_mm256_loadu_si256((__m256i*)(avv+2*BSIZE)); bitpipe11=_mm256_loadu_si256((__m256i*)(avv+3*BSIZE));}  // if there is another FULL batch, prefetch it
+     if(n>=4*BSIZE){bitpipe10=_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv+2*BSIZE)),fretbyte); bitpipe11=_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv+3*BSIZE)),fretbyte);}  // if there is another FULL batch, prefetch it
      if(!_mm256_testz_si256(_mm256_or_si256(bitpipe00,bitpipe01),_mm256_or_si256(bitpipe00,bitpipe01)))break;  // exit if nonzero found.  Cannot be spurious
      // We hit 64 0s.  Advance over them
      d+=BW; avv+=2*BSIZE; n-=2*BSIZE;
@@ -642,8 +642,8 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     I bitstack;  // the bits packed together
     if(n>=2*BSIZE){
      // n>=64, bitpipe0 has the bits to process (and if n>=128 bitpipe1 is in flight).
-     bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe00,fretbyte))
-             |((I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe01,fretbyte))<<BSIZE);
+     bitstack=(I)(UI4)_mm256_movemask_epi8(bitpipe00)
+             |((I)(UI4)_mm256_movemask_epi8(bitpipe01)<<BSIZE);
     }else{
      // n<64: we have to read the bits under mask to stay in bounds.  Read the last block, which requires mask
      bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_maskload_epi64((I*)(avv+((n-1)&BSIZE)),bitendmask),fretbyte));

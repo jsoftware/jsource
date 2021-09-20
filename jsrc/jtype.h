@@ -60,10 +60,12 @@ typedef long double        LD;
 // This is the main structure for J entities
 typedef UC                 RANKT;
 #define RANKTX             8   // # bits in a RANKT
+#define LGRANKTX           3  // lg2(RANKTX)
 #define RANKTMSK           (((I)1<<RANKTX)-1)
 #define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
 typedef US                 RANK2T;  // 2 ranks, (l<<16)|r
 #define RANK2TX            16   // # bits in a RANK2T
+#define LGRANK2TX          4  // lg2(RANK2TX)
 #define RANK2TMSK           0xFFFFU
 #define LGRMAX             6  // lg2(RMAX+1)
 #define RMAX               (((I)1<<LGRMAX)-1)   // max rank, leaving 2 bits for flags
@@ -545,7 +547,7 @@ typedef I SI;
    // If a PRISTINE block is incorporated, it must lose PRISTINE status because it is no longer possible to know whether contents may have been fetched while the
    // block was incorporated.
 #define AFDPARENX CONWX     // matches CONW
-#define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) and must use linear rep for its display
+#define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) or noun () and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
 #define AFUPPERTRIX RPARX      // matches RPAR
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix

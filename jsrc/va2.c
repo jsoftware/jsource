@@ -560,10 +560,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // When this was written with 6 names it barely fit in registers, so I rewrote it with 4 names.  Compiler's ideas about handling allranks fill spare register
     acr=0; af=allranks>>2*RANKTX;  // allranks = anr/wnr/avr/wvr (nr=noun rank)  wcr will hold verbrank
     wcr=(RANK2T)allranks; af|=RANKTMSK; af-=wcr; af=((I)af<0)?acr:af; af&=~RANKTMSK;  // af is 0/0/anr/wnr -> 0/0/anr/ffff -> 0/0/afr/x -> clamp at 0 -> 0/0/afr/0
-    wf=allranks>>2*RANKTX; wcr&=RANKTMSK; wf&=RANKTMSK; wf-=wcr; wf=((I)wf<0)?acr:wf;    // wf is 0/0/anr/wnr -> 0/0/0/anr ->  0/0/0/afr -> clamp at 0
-    acr=allranks>>2*RANKTX; acr-=af; acr-=wf;  // acr = 0/0/acr/wcr  (nr-fr=cr)
-    wcr=acr; wcr&=RANKTMSK; wf<<=2*RANKTX; wcr|=wf;   // wcr = wfr/0/wcr  final value
-    acr>>=RANKTX; af<<=RANKTX; acr|=af;  // acr = afr/0/acr    final value  scaf combine acr/wcr
+    wf=allranks>>=2*RANKTX; wcr&=RANKTMSK; wf&=RANKTMSK; wf-=wcr; wf=((I)wf<0)?acr:wf;    // wf is 0/0/anr/wnr -> 0/0/0/anr ->  0/0/0/afr -> clamp at 0
+    acr=allranks; acr-=af; acr-=wf;  // acr = 0/0/acr/wcr  (nr-fr=cr)
+    wcr=acr; wcr&=RANKTMSK; wf<<=RANKTX; wcr|=wf;   // wcr = wfr/wcr  final value
+    acr>>=RANKTX; acr|=af;  // acr = afr/acr    final value
+    // allranks is noun 0/0/anr/wnr
    }
 #else
    I af,wf;
@@ -575,10 +576,15 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     jtinplace = (J)((I)jtinplace+aadocv->cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits) aadocv free
 #if 1 // obsolete SY_64
 // obsolete     jtinplace = (J)((I)jtinplace+((acr+((I)1<<(2*RANKTX))-wcr)&(VIPWFLONG|VIPWCRLONG)));  // set flag for 'w has longer cell-rank' and 'w has longer frame (wrt verb)'.  The 1 is a carry blocker
-    jtinplace = (J)((I)jtinplace+((RANKT)wcr>(RANKT)acr?VIPWCRLONG:0));  // set flag for 'w has longer cell-rank'
-    jtinplace = (J)((I)jtinplace+((wcr&~RANKTMSK)>acr?VIPWFLONG:0));  // set flag for 'w has longer frame (wrt verb)'
-    PRODRNK(ak,acr, AS(a)+(acr>>(2*RANKTX))); PRODRNK(wk,wcr,AS(w)+(wcr>>(2*RANKTX)));   // left/right #atoms/cell  length is assigned first af free   scaf use extract?
-       // note: the prod above can never fail, because it gives the actual # cells of an existing noun
+// obsolete     jtinplace = (J)((I)jtinplace+((RANKT)wcr>(RANKT)acr?VIPWCRLONG:0));  // set flag for 'w has longer cell-rank'
+// obsolete     jtinplace = (J)((I)jtinplace+((wcr&~RANKTMSK)>acr?VIPWFLONG:0));  // set flag for 'w has longer frame (wrt verb)'
+
+    jtinplace = (J)((I)jtinplace+(((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1))))&(((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1)))))<<(VIPWCRLONGX-(RANKTX-1))));  // set flag for 'w has longer cell-rank' and 'w has longer frame (wrt verb)'
+    wcr+=acr<<2*RANKTX;  // afr/acr/wfr/wcr
+
+
+    PRODRNK(ak,acr, AS(a)+(wcr>>(3*RANKTX))); PRODRNK(wk,wcr,AS(w)+PEXT(wcr,RANKTMSK<<RANKTX));   // left/right #atoms/cell  length is assigned first
+       // note: the prod above can never fail, because it gives the actual # cells of an existing noun  acr free
 #else
     jtinplace = (J)((I)jtinplace+((af-wf)&VIPWFLONG));  // set flag for 'w has longer frame (wrt verb)'
     jtinplace = (J)((I)jtinplace+((acr-wcr)&VIPWCRLONG));  // set flag for 'w has longer cell-rank'
@@ -597,14 +603,15 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     aawwzk[4]=zn<<bplg(rtype((I)jtinplace));  // calc result-cell size and move it out of registers
     ak<<=bplg(AT(a)); wk<<=bplg(AT(w));  // convert cell sizes to bytes
     aawwzk[0]=ak; aawwzk[2]=wk; ak=((I)jtinplace&VIPWFLONG)?0:ak; wk=((I)jtinplace&VIPWFLONG)?wk:0; aawwzk[1]=ak; aawwzk[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
-    I shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shortr=frame(short cell)/0/cellrank(short cell)  fr=frame(long cell)/0/cellrank(long cell)
-    shortr&=RANKTMSK;  // cellrank(short cell)
+// obsolete     I shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
+    I shortr=wcr>>(((I)jtinplace&VIPWCRLONG)>>(VIPWCRLONGX-LGRANK2TX)); fr=wcr>>((((I)jtinplace&VIPWCRLONG)>>(VIPWCRLONGX-LGRANK2TX))^RANK2TX); // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
+    shortr&=RANKTMSK; fr&=RANK2TMSK; // cellrank(short cell)
 #if 1 // obsolete SY_64
 // obsolete     shortr*=0x20000ffff;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  200000000+10000+ffffffffffffffff
     shortr*=((I)1<<2*RANKTX)+((I)1<<RANKTX)-1;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  100000000+10000+ffffffffffffffff
-    shortr+=fr;  // frame(long cell)+cellrank(short cell)/cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
-                 //  offset to excess frame, for calc n  / length for agreement / length for calc n,(# intracell repeats) - final value
-    acr>>=2*RANKTX; wcr>>=2*RANKTX;  // NOW ACR/WCR HAVE BEEN REPURPOSED TO MEAN AF/WF; acr/wcr gone
+    shortr+=fr;  // cellrank(short cell)/frame(long cell)+cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
+                 //  length for agreement / offset to excess frame, for calc n  / length for calc n,(# intracell repeats) - final value
+// obsolete     acr>>=RANKTX; wcr>>=RANKTX;  // NOW ACR/WCR HAVE BEEN REPURPOSED TO MEAN AF/WF; acr/wcr gone
 #else
     // upper component of shortr must be saved in savshortr
     UI savshortr = shortr+(fr>>RANKTX); shortr*=0xffff;
@@ -613,23 +620,27 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     acr>>=RANKTX; wcr>>=RANKTX;  // NOW ACR/WCR HAVE BEEN REPURPOSED TO MEAN AF/WF; acr/wcr gone
     // on 32-bit systems, the top 2 fields have to go into names scellf and f
 #endif
-    // fr is now frame/0/rank of long cell
+    // fr is now frame/rank of long cell
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
-    I f=((I)jtinplace&VIPWFLONG)?wcr:acr;    // f=short frame/long frame/long frame
+    UI f=((wcr&(RANKTMSK<<RANKTX))*((1LL<<RANKTX)+(1LL<<3*RANKTX)+(1LL<<6*RANKTX))) + (wcr>>3*RANKTX)*(1+(1LL<<3*RANKTX)+(1LL<<6*RANKTX));  // frames: w/a/0/w/a/w/0/a
+    f>>=(((I)jtinplace&VIPWFLONG)>>(VIPWFLONGX-(LGRANKTX+2)));  // /long frame/short frame/0/long frame
+    f&=(1LL<<4*RANKTX)-1; f+=wcr<<4*RANKTX;  // afr/acr/wfr/wcr/long frame/short frame/0/long frame   wcr free
+// obsolete     I f=((I)jtinplace&VIPWFLONG)?wcr:acr;    // f=aframe/wframe/short frame/long frame/long frame
 #if 1 // obsolete SY_64
 // obsolete     fr*=0x8001; fr&=(0xffff000000007fffU);  // encode start of cell-shape in the argument where the longer cell-shape resides  frame(long cell)/0/0/cellrank(long cell)
 // obsolete     f*=0xffffffff00010001; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;  // cry/-longframe/longframe/longframe   frame(long cell)+cry/-longframe/longframe/longframe+cellrank(long cell) 0 + ffffffff00000000 + 10000 + 1
-    fr*=(1LL<<(RANKTX))+1; fr&=(RMAX<<3*RANKTX)+RMAX;  // encode start of cell-shape in the argument where the longer cell-shape resides  frame(long cell)/0/0/cellrank(long cell)  scaf extract
-    f*=-((I)1<<2*RANKTX)+((I)1<<RANKTX)+1; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;  // cry/-longframe/longframe/longframe   frame(long cell)+cry/-longframe/longframe/longframe+cellrank(long cell) 0 + ffffffff00000000 + 10000 + 1
-        //   frame(long cell)/shortframe/longframe/longframe+cellrank(long cell) - final value   f free
-    // register pressure is excruciating here.  Only one register allowed, and no 64-bit immediates
-    f=fr&RANKTMSK; f^=RANKTMSK; allranks>>=2*RANKTX; allranks^=f; f<<=RANKTX; allranks^= f;  // now allranks has 2 bytes, with 00 indicating OK to inplace  i. e. argrank^f+fr  f free
-    allranks+=(VIPOKRNKA-1)-((1LL<<(2*RANKTX))-1)+(1LL<<RANKTX); // 0x00010000  set VIPOKRNKA  (by carry into 0) if a byte of allranks is 00
-    allranks&=~((VIPOKRNKW<<1)-(1LL<<RANKTX)); allranks+=(VIPOKRNKW-(1LL<<RANKTX))+1;  // 0x3fff0001  set VIPOKRNKW (by carry into 0) if w byte of allranks is 00
-    allranks>>=(VIPOKRNKAX-VIPOKAX); allranks&=~VIPOKW; allranks+=VIPOKW>>1; allranks|=~(VIPOKA+VIPOKW); jtinplace=(J)((I)jtinplace&allranks);  // close up gap betw RNKA and RNKW  allranks free  scaf use decode inst
-    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, (shortr>>RANKTX)&RANKTMSK)  // offset to each cellshape, and cellrank(short cell) acr wcr free but were actually spilled earlier
-    PRODRNK(n,shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(shortr>>=(2*RANKTX)));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
+// obsolete     fr*=(1LL<<(2*RANKTX))+1; fr&=(RMAX<<3*RANKTX)+RMAX;  // encode start of cell-shape in the argument where the longer cell-shape resides  frame(long cell)/0/0/cellrank(long cell)  scaf extract
+// obsolete     f*=-((I)1<<2*RANKTX)+((I)1<<RANKTX)+1; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;  // cry/-longframe/longframe/longframe   frame(long cell)+cry/-longframe/longframe/longframe+cellrank(long cell) 0 + ffffffff00000000 + 10000 + 1
+    fr+=f;    //   fr=afr/acr/wfr/wcr/longframe/shortframe/frame(long cell)/longframe+cellrank(long cell)
+// obsolete     // register pressure is excruciating here.  Only one register allowed, and no 64-bit immediates
+// obsolete     f=fr&RANKTMSK; f^=RANKTMSK; allranks>>=2*RANKTX; allranks^=f; f<<=RANKTX; allranks^= f;  // now allranks has 2 bytes, with 00 indicating OK to inplace  i. e. argrank^f+fr  f free
+// obsolete     allranks+=(VIPOKRNKA-1)-((1LL<<(2*RANKTX))-1)+(1LL<<RANKTX); // 0x00010000  set VIPOKRNKA  (by carry into 0) if a byte of allranks is 00
+// obsolete     allranks&=~((VIPOKRNKW<<1)-(1LL<<RANKTX)); allranks+=(VIPOKRNKW-(1LL<<RANKTX))+1;  // 0x3fff0001  set VIPOKRNKW (by carry into 0) if w byte of allranks is 00
+// obsolete     allranks>>=(VIPOKRNKAX-VIPOKAX); allranks&=~VIPOKW; allranks+=VIPOKW>>1; allranks|=~(VIPOKA+VIPOKW); jtinplace=(J)((I)jtinplace&allranks);  // close up gap betw RNKA and RNKW  allranks free  scaf use decode inst
+    f=fr&RANKTMSK; allranks|=(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)); allranks-=f; f<<=RANKTX; allranks-=f;  // set sign bit of rank if = long frame + long cell (can't be any bigger) f free
+    ASSERTAGREE(AS(a)+(fr>>7*RANKTX), AS(w)+PEXT(fr,RANKTMSK<<5*RANKTX), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free but were actually spilled earlier
+    PRODRNK(n,shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(shortr=PEXT(shortr,RANKTMSK<<RANKTX)));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
 #else
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
     scellf=(fr>>RANKTX);  // offset is long shape of start of inner cell    frame(long cell)
@@ -647,15 +658,16 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
     n^=REPSGN((1-n)&SGNIF((I)jtinplace,VIPWCRLONGX));  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
-    nf=((I)jtinplace>>VIPOKWX)&3;  // extract inplaceability from operation and ranks   scaf extract
+// obsolete     nf=((I)jtinplace>>VIPOKWX)&3;  // extract inplaceability from operation and ranks   scaf extract
+    nf=((I)jtinplace>>VIPOKWX)&PEXT(allranks,(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)));  // extract inplaceability from ranks   allranks free
     nf=a==w?0:nf;  // not inplaceable if args identical
     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtinplace.  This is a long dependency chain through nf but it will overlap the PRODs coming up
     jtinplace = (J)((I)jtinplace&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free
 #if 1 // obsolete SY_64
-    f=(fr>>(2*RANKTX))&RANKTMSK;  // recover (shorter frame len) from upper fx
-    PRODRNK(nf,((fr>>RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
+    f=PEXT(fr,RANKTMSK<<(2*RANKTX));  // recover (shorter frame len) from upper fx
+    PRODRNK(nf,((fr>>3*RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
-    PRODRNK(mf,fr>>(2*RANKTX),AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
+    PRODRNK(mf,f,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
 #else
     PRODRNK(nf,((fr>>RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
@@ -682,7 +694,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     }
    }else{
 #if 1 // obsolete SY_64
-    I af=acr>>(2*RANKTX), wf=wcr>>(2*RANKTX); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
+    I af=acr>>(RANKTX), wf=wcr>>(RANKTX); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
 #endif
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af; fr+=(f<<RANKTX)+f; aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;
    }
@@ -743,12 +755,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(w),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
   }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(a),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
 #if 1 // obsolete SY_64
-#define scell AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>(3*RANKTX))  // address of start of cell shape     shape of long cell+frame(long cell)
+#define scell AS((I)jtinplace&VIPWCRLONG?w:a)+PEXT(fr,RANKTMSK<<(RANKTX))  // address of start of cell shape     shape of long cell+frame(long cell)
 #else
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+scellf  // address of start of cell shape
 #endif
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
-  }else{GA00(z,rtype((I)jtinplace),zn,(RANKT)fr); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(fr>>RANKTX)&RANKTMSK); MCISH(AS(z)+((fr>>RANKTX)&RANKTMSK),scell,(fr&RANKTMSK)-((fr>>RANKTX)&RANKTMSK));} 
+  }else{GA00(z,rtype((I)jtinplace),zn,(RANKT)fr); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),PEXT(fr,RANKTMSK<<3*RANKTX)); MCISH(AS(z)+PEXT(fr,RANKTMSK<<3*RANKTX),scell,(fr&RANKTMSK)-PEXT(fr,RANKTMSK<<3*RANKTX));} 
 //                                                 frame loc     shape of long frame             len of long frame           cellshape loc              cellshape     longer cellen 
   // fr free
   if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all

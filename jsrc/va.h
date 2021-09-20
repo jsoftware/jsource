@@ -12,6 +12,8 @@
 #define VII             (INT<<VARGX)         /* convert arguments to I              */
 #define VDD             (FL<<VARGX)          /* convert arguments to D              */
 #define VZZ             (CMPX<<VARGX)        /* convert arguments to Z              */
+#define VIPWCRLONGX     9  // internal use in va2, overlaps BOX
+#define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
 #define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM           */
 #define VQQ             (RAT<<VARGX)         /* convert arguments to RAT            */
 #define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ)  // mask for argument requested type
@@ -26,8 +28,8 @@
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
 #define VRD             (0x800<<VRESX)// convert result to D if possible - unused code point
 #define VRI             (0x8000<<VRESX)// convert result to I if possible - unused code point
-// bits VRESX+ 1 5 10 12 16 are free
-#define VIPWFLONGX     (SY_64?63:17)  // (must be >RANKTX) internal use in va2.  We use sign bit where possible
+// bits VRESX+ 1 10 12 16 are free
+#define VIPWFLONGX     17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX
 #define VIPWFLONG      ((I)1<<VIPWFLONGX)
 #define VIPOKWX         20      // This routine can put its result over W
 #define VIPOKW          ((I)1<<VIPOKWX)
@@ -43,8 +45,6 @@
 #define VXEQ            (Vxx|VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|VXCHASVTYPE|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|VXCHASVTYPE|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
-#define VIPWCRLONGX     31  // internal use in va2, must be sign bit
-#define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
 // bit 31 must not be used - it may be a sign bit, which has a meaning
 #define VARGCVTMSKF     (VXCHASVTYPE|VXCVTYPEMSK)  // mask for type to pass into XCVT, includes XNUM override
 #define VFRCEXMT        (VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM

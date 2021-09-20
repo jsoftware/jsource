@@ -198,12 +198,13 @@ F1(jtdbstackz){A y,z;
  R df1(z,y,cut(ds(CLEFT),num(-2)));
 }    /* 13!:18  SI stack as result */
 
-
+// here for errors not from explicit definition
+// explicit errors also come here, so stop here to see the point at which error was detected
 static void jtjsigstr(J jt,I e,I n,C*s){
  if(jt->jerr){jt->curname=0; R;}   // clear error-name indicator
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
  if(e!=EVSTOP)moveparseinfotosi(jt); jt->etxn=0;  // before we display, move error info from parse variables to si; but if STOP, it's already installed
- dhead(0,0L);
+ dhead(0,0L);  // | left-header for the error line
  if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}
  ep(n,s);
  if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}
@@ -221,6 +222,7 @@ void jtjsigd(J jt,C*s){C buf[100],*d="domain error: ";I m,n,p;
  jsigstr(EVDOMAIN,m+p,buf);
 }
 
+// here for errors coming from explicit definition
 void jtjsignal(J jt,I e){A x;
  if(EVATTN==e||EVBREAK==e||e==EVINPRUPT) *JT(jt,adbreak)=0;
 // template for debug break point

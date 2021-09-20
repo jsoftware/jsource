@@ -215,6 +215,10 @@ b =. 7!:0''
 assert. 1e6 1e6 -: (# a::) , , # a   NB. deleted, stack deferred
 assert. b > 2e6+7!:0''
 assert. 'value error' -: ". etx 'a + 5'
+a =. 1
+assert. a::
+this1 =: 1
+assert. this1::
 1
 )
 

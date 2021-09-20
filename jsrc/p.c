@@ -1043,7 +1043,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
 got1val:;
      if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
       if(unlikely(at&NAMEABANDON)){
-       namecoco(jtinplace, y, (syrdforlocale(y)==jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
+       sv=namecoco(jtinplace, y, (syrdforlocale(y)!=jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
       }
       y=sv;
      } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.

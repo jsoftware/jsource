@@ -162,9 +162,9 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    if((p&~CA)==0){
     // starts with alpha; must be a name.
     if(unlikely(b)){
-     // Inflection is illegal except for trailing ::
-     if(!(wl>2&&wi[wl-2]==CESC2&&wi[wl-1]==CESC2)){jsignal3(EVSPELL,w,wi-s); R 0;}  // error if not *::
-     wl-=2;  // remove :: from name; leave b set to indicate inflection
+     // Inflection is illegal except for trailing _: in name_:
+     if(!(wl>2&&wi[wl-2]=='_'&&wi[wl-1]==CESC2)){jsignal3(EVSPELL,w,wi-s); R 0;}  // error if not *_:
+     wl-=2;  // remove _: from name; leave b set to indicate inflection
     }
     ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));  // error if invalid name; create name block and install it in result
     if(unlikely((env==2)&&(NAV(*x)->flag&NMXY))){AT(*x)|=NAMEBYVALUE;}     // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition

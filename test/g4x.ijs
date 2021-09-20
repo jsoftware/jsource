@@ -179,51 +179,54 @@ b =. 7!:0''
 b > 2e6+7!:0''
 )
 
-NB. name::
+NB. name_:
 a =: i. 1e6
 b =: 7!:0''
-1e6 -: # a::
+1e6 -: # a_:
 b > 2e6+7!:0''
 'value error' -: ". etx 'a + 5'
 a =: i. 1e6
 b =: 7!:0''
-1e6 -: ". '# a::'  NB. not deleted
+1e6 -: ". '# a_:'  NB. not deleted
 b < 1e6+7!:0''
 1e6 -: # a
 a =: i. 1e6
 b =: 7!:0''
-1e6 1e6 -: (# a::) , # a   NB. deleted, stack deferred
+1e6 1e6 -: (# a_:) , # a   NB. deleted, stack deferred
 b > 2e6+7!:0''
 'value error' -: ". etx 'a + 5'
 1 -: 3 : 0 ''
 a =. i. 1e6
 b =. 7!:0''
-assert. 1e6 -: # a::
+assert. 1e6 -: # a_:
 assert. b > 2e6+7!:0''
 assert. 'value error' -: ". etx 'a + 5'
 a =. i. 1e6
 b =. 7!:0''
-assert. 1e6 -: ". '# a::'  NB. not deleted
+assert. 1e6 -: ". '# a_:'  NB. not deleted inside ".
 assert. b < 1e6+7!:0''
 assert. 1e6 -: # a
 a =. i. 1e6
 b =. 7!:0''
-NB. 1e6 1e6 -: (# a::) , # a   NB. crashes
-assert. 2e6 -: # a:: , a   NB. deleted, stack deferred
+NB. 1e6 1e6 -: (# a_:) , # a   NB. crashes
+assert. 2e6 -: # a_: , a   NB. deleted, stack deferred
 a =. i. 1e6
 b =. 7!:0''
-assert. 1e6 1e6 -: (# a::) , , # a   NB. deleted, stack deferred
+assert. 1e6 1e6 -: (# a_:) , , # a   NB. deleted, stack deferred
 assert. b > 2e6+7!:0''
 assert. 'value error' -: ". etx 'a + 5'
 a =. 1
-assert. a::
+assert. a_:
 this1 =: 1
-assert. this1::
+assert. this1_:
 this1 =: 1
-this1::
+this1_:
 )
-20 -: ([ i."0@i.) {{ y:: }} 20
-
+20 -: ([ i."0@i.) {{ y_: }} 20
+a =: 5
+'|domain error|   a:    +a_:' -: ". eftx 'a: + a_:'
+4!:55 <'a'
+'|value error|   a:+    a_:' -: ". eftx 'a: + a_:'
 
 NB. 4!: -----------------------------------------------------------------
 

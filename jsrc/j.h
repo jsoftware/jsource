@@ -657,24 +657,25 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
 #if 1 && ((C_AVX&&SY_64) || EMU_AVX)
-// We would like to use these AVX versions because they generate fewest instructions.  Unfortunately, they
-// modify ymm upper bits, which causes us to issue VZEROUPPER, which in turn causes us to save/restore all of ymm.
-// It's still worth it for all the register pressure it saves
+// We would like to use these AVX versions because they generate fewest instructions.
+// Avoid call to memcmp to save registers
 #define ASSERTAGREE(x,y,l) \
  {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
    endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
    ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); /* result is 1 if all match */ \
-  }else{ASSERT(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
+  }else{NOUNROLL do{--aai; ASSERT(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
  }
+// obsolete   }else{ASSERT(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)}
 // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
  {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
    endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
    r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
-  }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
+  }else{NOUNROLL do{--aai; r=0; if(((I*)aaa)[aai]!=((I*)aab)[aai]){r=1; break;}}while(aai);} \
  }
+// obsolete   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;}
 #else
 #define ASSERTAGREE(x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -1558,15 +1559,15 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PRISTXFERF2(z,a,w) AFLAGORLOCAL(z,AFLAG(a)&AFLAG(w)&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) \
                            PRISTCLRF(a) PRISTCLRF(w)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
-// assign length first so we can sneak some computation into ain in va2
-#define PROD(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; \
-if(likely(_i<3)){_zzt+=_i; z=(I)&oneone; _zzt=_i>=1?_zzt:(I*)z; z=_i>1?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(_i,_zzt+2);} }
+// assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
+#define PRODCOMMON(z,length,ain,type) {I _i=(length); I * RESTRICT _zzt=(ain); \
+if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+#define PROD(z,length,ain) PRODCOMMON(z,length,ain,)
 // This version ignores bits of length above the low RANKTX bits
-#define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
-  if(likely((RANKT)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((RANKT)_i,_zzt);} }
-// the 3REG version is perfect - too perfect, because the compiler saves a reg and decides to spill acr rather than aaa/aab which are used only in a predictable test
-#define PRODRNK3REG(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; z=(US)_i; \
-if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(z,_zzt+2);} }
+#define PRODRNK(z,length,ain) PRODCOMMON(z,length,ain,(RANKT))
+// obsolete  {I _i=(length); I * RESTRICT _zzt=(ain); \
+// obsolete if(likely((RANKT)_i<3)){_zzt+=_i; z=(I)&oneone; _zzt=(RANKT)_i>=1?_zzt:(I*)z; z=(RANKT)_i>1?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(_i,_zzt+2);} }
+// obsolete   if(likely((RANKT)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((RANKT)_i,_zzt);} }
 
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value
 // PRODX takes the product of init and v[0..n-1], generating error if overflow, but waiting till the end so no error if there is a 0 in the product
@@ -1920,8 +1921,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define PEXT(s,m) _pext_u64(s,m)
 #define PDEP(s,m) _pdep_u64(s,m)
 #else
-#define PEXT(s,m) _pext_u32(s,m)
-#define PDEP(s,m) _pdep_u32(s,m)
+// #define PEXT(s,m) _pext_u32(s,m)
+// #define PDEP(s,m) _pdep_u32(s,m)
 #endif
 
 #ifndef offsetof

@@ -63,7 +63,8 @@ typedef UC                 RANKT;
 #define LGRANKTX           3  // lg2(RANKTX)
 #define RANKTMSK           (((I)1<<RANKTX)-1)
 #define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
-typedef US                 RANK2T;  // 2 ranks, (l<<16)|r
+typedef US                 RANK2T;  // 2 ranks, (l<<8)|r
+typedef UI4                RANK4T;  // 4 ranks
 #define RANK2TX            16   // # bits in a RANK2T
 #define LGRANK2TX          4  // lg2(RANK2TX)
 #define RANK2TMSK           0xFFFFU

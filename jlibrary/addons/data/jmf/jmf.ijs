@@ -258,7 +258,7 @@ fn=. jpath fn
 msize=. <. msize
 ts=. HS+msize
 if. IFUNIX do.
-  if. ('Darwin'-:UNAME) *. 'arm64'-:9!:56'cpu' do.
+  if. ('Darwin'-:UNAME) *. 'arm64'-:3 :'try.9!:56''cpu''catch.''''end.' '' do.
   fh=. 0 pick c_open_va fn; (OR O_RDWR, O_CREAT, O_TRUNC); (6#<00) ,< 8b666
   else.
   fh=. 0 pick c_open fn; (OR O_RDWR, O_CREAT, O_TRUNC); 8b666
@@ -305,7 +305,7 @@ ts=. 1!:4 <fn
 if. IFUNIX do.
   'Unix sharename must be same as filename' assert (sn-:'')+.sn-:fn
   'FO FMP FMM'=. ro{mtflags
-  if. ('Darwin'-:UNAME) *. 'arm64'-:9!:56'cpu' do.
+  if. ('Darwin'-:UNAME) *. 'arm64'-:3 :'try.9!:56''cpu''catch.''''end.' '' do.
   fh=. >0 { c_open_va fn;FO;(6#<00),<0
   else.
   fh=. >0 { c_open fn;FO;0
@@ -364,7 +364,7 @@ m=. mapsub name;fn;sn;ro
 'fh mh fad had ts'=. (MAPFH,MAPMH,MAPADDRESS,MAPHEADER,MAPFSIZE){m
 
 if. ro*.0=type do.
-  had=. allochdr 127
+  had=. allochdr 63
   d=. memr fad,0,HSN,JINT
   d=. (sfu HS+-/ufs fad,had),aa,2}.d
   d=. 1 HADCN} d
@@ -380,7 +380,7 @@ elseif. 0=type do.
   end.
   (,t+1) setHADC had
 elseif. 1 do.
-  had=. allochdr 127
+  had=. allochdr 63
   'JBOXED (non-jmf) not supported' assert JBOXED~:type
   bx=. JBOXED=type
   hs=. +/hsize [ asize=. JSIZES {~ JTYPES i. type

@@ -1095,6 +1095,7 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
  I wn=AS(w)[0];  // n=size of square matrix
  // Allocate the result (possibly inplace)
  A z; GA(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R z;  // if empty result, return fast.  Now nr must be >0
+ I resultoffset=CAV(z)-CAV(w);  // distance between result & input data areas
  I nr=(wn+BLKSZ-1)>>LGBLKSZ;  // nr=total # blocks on a side (including partial ones)
 #define CORNERBLOCK(rc) (cb+(rc)*(nr+1))  // address of corner cblock in row&col rc
 #define LBLOCK(r,c) (cb+(r)*nr+(c))  // address of L cblock for row r col c (0<=c<r)
@@ -1140,14 +1141,17 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
   D (*llv)[BLKSZ][BLKSZ]=LBLOCK(nr-1-r,0), (*luv)[BLKSZ][BLKSZ]=UBLOCK(0,nr-1-r), (*prechv)[BLKSZ][BLKSZ]=luv-(nr+1);  // start point of dot-products, startpoint of next dot-product
   UI *lbv0=LBIT(nr-1-r,0), *ubv0=UBIT(0,nr-1-r);  // point to the bit vectors for the corner position.  These pointers are advanced after we finish each block, to handle the dot-product for the next block
   I r0;  // index of corner-, L- or U-block being processed: -r for corner, -r+1..0 for U, 1..r for L
+  D *nextfetchaddr=wclv;  // the address of the block being fetched into nexta0..3
   for(r0=-r;r0<=r;++r0){
    // move the next A block into the accumulators a00..a03
    a00=nexta0; a01=nexta1; a02=nexta2; a03=nexta3;
+   D *currfetchaddr=nextfetchaddr;  // the source address of the block being processed now.  We will store back into the same relative position in the result
    // unroll fetching the FOLLOWING block of A.  This has to be there for the dot-product for the next block
    // This is the only time we fetch from A, so it will probably miss to L3.  No matter, because we have a whole block of processing before we get back around
    if(r0<r){  // if we are not processing the last block
     // advance to following block and fetch it
     wluv+=wlustride;  // advance to beginning of next block
+    nextfetchaddr=wluv;  // remember addr being fetched
 // obsolete printf("fetching A from index %lld: ",wluv-DAV(w)); DO(4, I j=i; DO(4, printf(" %f",wluv[j*wn+i]);) printf("  ");) printf("\n");  // scaf
     // Since the corner block was handled first, the block we are fetching can go out on only one side.  We fill with zeros
     if(unlikely(r0==-1)){  // fetching the LAST block in the U row
@@ -1304,23 +1308,23 @@ finrle: ;
     _mm256_storeu_pd(&scv0[0][0][0],a00); _mm256_storeu_pd(&scv0[0][1][0],a01); _mm256_storeu_pd(&scv0[0][2][0],a02); _mm256_storeu_pd(&scv0[0][3][0],a03);  // Store the 4x4 in the corner
 // obsolete printf("writing corner block %lld:",scv0-cb); DO(4, I j=i; DO(4, printf(" %f",scv0[0][j][i]);) printf("  ");) printf("\n");  // scaf
 
-    // Now calculate uinv, the inverse of the remaining U matrix.  Do this by backsubstitution up the line
-    a03=_mm256_blend_pd(_mm256_setzero_pd(),recips,0b1000);
-    _mm256_storeu_pd(&uinv[3][0],a03);  // row 3 is 0 0 0 I33=1/U33.
-    a02=_mm256_blend_pd(_mm256_blend_pd(_mm256_mul_pd(_mm256_permute_pd(recips,0b0001),_mm256_fnmadd_pd(a02,recips,_mm256_setzero_pd())),recips,0b0100),_mm256_setzero_pd(),0b0011);             // U22*I23+U23*I33=0, so I23=(-U23*I33)/U22
-    _mm256_storeu_pd(&uinv[2][0],a02);  // row 2 is 0 0 I22=1/U22 I23
+    // Now calculate uinv, the inverse of the remaining U matrix.  Do this by backsubstitution up the line.  Leave register a00-a03 holding the block result
+    a13=_mm256_blend_pd(_mm256_setzero_pd(),recips,0b1000);
+    _mm256_storeu_pd(&uinv[3][0],a13);  // row 3 is 0 0 0 I33=1/U33.
+    a12=_mm256_blend_pd(_mm256_blend_pd(_mm256_mul_pd(_mm256_permute_pd(recips,0b0001),_mm256_fnmadd_pd(a02,recips,_mm256_setzero_pd())),recips,0b0100),_mm256_setzero_pd(),0b0011);             // U22*I23+U23*I33=0, so I23=(-U23*I33)/U22
+    _mm256_storeu_pd(&uinv[2][0],a12);  // row 2 is 0 0 I22=1/U22 I23
       //  U11*I12+U12*I22=0   U11*I13+U12*I23+U13*I33=0 
-    a01=_mm256_blend_pd(_mm256_blend_pd(_mm256_mul_pd(_mm256_permute4x64_pd(recips,0b01010101),_mm256_fnmadd_pd(a03,a01,_mm256_fnmadd_pd(a02,_mm256_permute_pd(a01,0b0011),_mm256_setzero_pd()))),recips,0b0010),_mm256_setzero_pd(),0b0001);
-    _mm256_storeu_pd(&uinv[1][0],a01);  // row 1 is 0 I11=1/U11 I12 I23
+    a11=_mm256_blend_pd(_mm256_blend_pd(_mm256_mul_pd(_mm256_permute4x64_pd(recips,0b01010101),_mm256_fnmadd_pd(a13,a01,_mm256_fnmadd_pd(a12,_mm256_permute_pd(a01,0b0011),_mm256_setzero_pd()))),recips,0b0010),_mm256_setzero_pd(),0b0001);
+    _mm256_storeu_pd(&uinv[1][0],a11);  // row 1 is 0 I11=1/U11 I12 I23
       // U00*I01+U01*I11=0    U00*I02+U01*I12+U02*I22=0    U00*I03+U01*I13+U02*I23+U03*I33=0
-    a00=_mm256_blend_pd(_mm256_mul_pd(_mm256_permute4x64_pd(recips,0b00000000),_mm256_fnmadd_pd(a03,a00,_mm256_fnmadd_pd(a02,_mm256_permute_pd(a00,0b0011),_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(a00,0b01010101),_mm256_setzero_pd())))),recips,0b0001);
-    _mm256_storeu_pd(&uinv[0][0],a00);  // row 0 is I00=1/U00 I01 I02 I03
+    a10=_mm256_blend_pd(_mm256_mul_pd(_mm256_permute4x64_pd(recips,0b00000000),_mm256_fnmadd_pd(a13,a00,_mm256_fnmadd_pd(a12,_mm256_permute_pd(a00,0b0011),_mm256_fnmadd_pd(a11,_mm256_permute4x64_pd(a00,0b01010101),_mm256_setzero_pd())))),recips,0b0001);
+    _mm256_storeu_pd(&uinv[0][0],a10);  // row 0 is I00=1/U00 I01 I02 I03
 
     // block created; advance input pointers.  Output pointer still set to initial value
     luv=prechv; prechv-=(nr+1);  // repeat L row; advance U column
     ubv0-=((nr+63)>>6)+2;  // back up to bitvector for next column
     // the bitmask for a corner block is never used
-   }else{
+   }else{  // U or L block, not corner
     D (*scvi)[BLKSZ][BLKSZ]=scv;  // save output address before update
     UI *bma; I bmx;  // address and bit# of the bitmap address to store all-0 status into
     // We build the result in place in a00..a03
@@ -1370,22 +1374,37 @@ finrle: ;
 
 // obsolete printf("writing %c block %lld:",r0<=0?'U':'L',scvi-cb); DO(4, I j=i; DO(4, printf(" %f",scvi[0][j][i]);) printf("  ");) printf("\n");  // scaf
    }
+   // write the block result to the overall result area.  We do this now because it's going to be a cache miss and we want to dribble out the data during the processing.  Also, the data is in registers now so we don't have to read it
+   // the output area has the same relative offset in the output as the read area in the input
+   D *resultaddr=(D*)((C*)currfetchaddr+resultoffset);  // place to store result
+   if(r>0){
+    // not the bottom-right corner.
+    if(r0==0){     // last block of U - truncated on the right
+     _mm256_maskstore_pd(resultaddr,endmask,a00); _mm256_maskstore_pd(resultaddr+wn,endmask,a01); _mm256_maskstore_pd(resultaddr+2*wn,endmask,a02); _mm256_maskstore_pd(resultaddr+3*wn,endmask,a03);
+    }else if(r0==r){     // last block of L - truncated at bottom
+     _mm256_storeu_pd(resultaddr,a00); if(((wn-1)&(BLKSZ-1))>0){_mm256_storeu_pd(resultaddr+wn,a01); if(((wn-1)&(BLKSZ-1))>1){_mm256_storeu_pd(resultaddr+2*wn,a02); if(((wn-1)&(BLKSZ-1))>2){_mm256_storeu_pd(resultaddr+3*wn,a03); }}}
+    }else{     // normal full block
+     _mm256_storeu_pd(resultaddr,a00);  _mm256_storeu_pd(resultaddr+wn,a01);  _mm256_storeu_pd(resultaddr+2*wn,a02);  _mm256_storeu_pd(resultaddr+3*wn,a03); 
+    }
+   }else{  // bottom-right corner
+    _mm256_maskstore_pd(resultaddr,endmask,a00); if(((wn-1)&(BLKSZ-1))>0){_mm256_maskstore_pd(resultaddr+wn,endmask,a01); if(((wn-1)&(BLKSZ-1))>1){_mm256_maskstore_pd(resultaddr+2*wn,endmask,a02); if(((wn-1)&(BLKSZ-1))>2){_mm256_maskstore_pd(resultaddr+3*wn,endmask,a03); }}}
+   }
   }
   wclv+=BLKSZ*(wn+1);  // move input pointer to corner block of next ring
   scv0+=nr+1; suv0-=nr;  // advance storage pointers to next ring.
  }
- // move the result from cblock ordering to the desired ordering.  Left-to-right, top-to-bottom in the output area, a 4x4 at a time
- D *zv0=DAV(z); D (*lcv0)[BLKSZ][BLKSZ]=cb; D (*uv0)[BLKSZ][BLKSZ]=UBLOCK(0,1);  // lcv0 points to first block in current row of lc, advances east; uv0 points to first block in current row of u, advances northwest
-#define COPYCB(z,x) _mm256_storeu_pd((z),_mm256_loadu_pd(&(x)[0][0][0])); _mm256_storeu_pd((z)+wn,_mm256_loadu_pd(&(x)[0][1][0])); _mm256_storeu_pd((z)+2*wn,_mm256_loadu_pd(&(x)[0][2][0])); _mm256_storeu_pd((z)+3*wn,_mm256_loadu_pd(&(x)[0][3][0]));
-#define COPYCBR(z,x) _mm256_maskstore_pd((z),endmask,_mm256_loadu_pd(&(x)[0][0][0])); _mm256_maskstore_pd((z)+wn,endmask,_mm256_loadu_pd(&(x)[0][1][0])); _mm256_maskstore_pd((z)+2*wn,endmask,_mm256_loadu_pd(&(x)[0][2][0])); _mm256_maskstore_pd((z)+3*wn,endmask,_mm256_loadu_pd(&(x)[0][3][0]));
-#define COPYCBB(z,x,m) _mm256_storeu_pd((z),_mm256_loadu_pd(&(x)[0][0][0])); if((m)>0){_mm256_storeu_pd((z)+wn,_mm256_loadu_pd(&(x)[0][1][0]));  if((m)>1){_mm256_storeu_pd((z)+2*wn,_mm256_loadu_pd(&(x)[0][2][0]));  if((m)>2){_mm256_storeu_pd((z)+3*wn,_mm256_loadu_pd(&(x)[0][3][0]));}}}
-#define COPYCBBR(z,x,m) _mm256_maskstore_pd((z),endmask,_mm256_loadu_pd(&(x)[0][0][0]));  if((m)>0){_mm256_maskstore_pd((z)+wn,endmask,_mm256_loadu_pd(&(x)[0][1][0]));  if((m)>1){_mm256_maskstore_pd((z)+2*wn,endmask,_mm256_loadu_pd(&(x)[0][2][0]));  if((m)>2){_mm256_maskstore_pd((z)+3*wn,endmask,_mm256_loadu_pd(&(x)[0][3][0]));}}}
- DO(nr-1, I j=i; D *zv=zv0; D (*cv)[BLKSZ][BLKSZ]=lcv0; DQ(j+1, COPYCB(zv,cv); zv+=BLKSZ; ++cv;) cv=uv0; DQ(nr-1-(j+1), COPYCB(zv,cv) zv+=BLKSZ; cv-=nr+1;)  // first the full blocks
-  COPYCBR(zv,cv)  // copy the possibly-partial block
-  zv0+=wn<<LGBLKSZ; lcv0+=nr; uv0-=nr;  // advance to next output row 
- )
- // Now the last row of cbs, which has 1-4 rows ending with the last corner block
- DQ(nr-1, COPYCBB(zv0,lcv0,(wn-1)&(BLKSZ-1)); zv0+=BLKSZ; ++lcv0;) COPYCBBR(zv0,lcv0,(wn-1)&(BLKSZ-1));
+// obsolete  // move the result from cblock ordering to the desired ordering.  Left-to-right, top-to-bottom in the output area, a 4x4 at a time
+// obsolete  D *zv0=DAV(z); D (*lcv0)[BLKSZ][BLKSZ]=cb; D (*uv0)[BLKSZ][BLKSZ]=UBLOCK(0,1);  // lcv0 points to first block in current row of lc, advances east; uv0 points to first block in current row of u, advances northwest
+// obsolete #define COPYCB(z,x) _mm256_storeu_pd((z),_mm256_loadu_pd(&(x)[0][0][0])); _mm256_storeu_pd((z)+wn,_mm256_loadu_pd(&(x)[0][1][0])); _mm256_storeu_pd((z)+2*wn,_mm256_loadu_pd(&(x)[0][2][0])); _mm256_storeu_pd((z)+3*wn,_mm256_loadu_pd(&(x)[0][3][0]));
+// obsolete #define COPYCBR(z,x) _mm256_maskstore_pd((z),endmask,_mm256_loadu_pd(&(x)[0][0][0])); _mm256_maskstore_pd((z)+wn,endmask,_mm256_loadu_pd(&(x)[0][1][0])); _mm256_maskstore_pd((z)+2*wn,endmask,_mm256_loadu_pd(&(x)[0][2][0])); _mm256_maskstore_pd((z)+3*wn,endmask,_mm256_loadu_pd(&(x)[0][3][0]));
+// obsolete #define COPYCBB(z,x,m) _mm256_storeu_pd((z),_mm256_loadu_pd(&(x)[0][0][0])); if((m)>0){_mm256_storeu_pd((z)+wn,_mm256_loadu_pd(&(x)[0][1][0]));  if((m)>1){_mm256_storeu_pd((z)+2*wn,_mm256_loadu_pd(&(x)[0][2][0]));  if((m)>2){_mm256_storeu_pd((z)+3*wn,_mm256_loadu_pd(&(x)[0][3][0]));}}}
+// obsolete #define COPYCBBR(z,x,m) _mm256_maskstore_pd((z),endmask,_mm256_loadu_pd(&(x)[0][0][0]));  if((m)>0){_mm256_maskstore_pd((z)+wn,endmask,_mm256_loadu_pd(&(x)[0][1][0]));  if((m)>1){_mm256_maskstore_pd((z)+2*wn,endmask,_mm256_loadu_pd(&(x)[0][2][0]));  if((m)>2){_mm256_maskstore_pd((z)+3*wn,endmask,_mm256_loadu_pd(&(x)[0][3][0]));}}}
+// obsolete  DO(nr-1, I j=i; D *zv=zv0; D (*cv)[BLKSZ][BLKSZ]=lcv0; DQ(j+1, COPYCB(zv,cv); zv+=BLKSZ; ++cv;) cv=uv0; DQ(nr-1-(j+1), COPYCB(zv,cv) zv+=BLKSZ; cv-=nr+1;)  // first the full blocks
+// obsolete   COPYCBR(zv,cv)  // copy the possibly-partial block
+// obsolete   zv0+=wn<<LGBLKSZ; lcv0+=nr; uv0-=nr;  // advance to next output row 
+// obsolete  )
+// obsolete  // Now the last row of cbs, which has 1-4 rows ending with the last corner block
+// obsolete  DQ(nr-1, COPYCBB(zv0,lcv0,(wn-1)&(BLKSZ-1)); zv0+=BLKSZ; ++lcv0;) COPYCBBR(zv0,lcv0,(wn-1)&(BLKSZ-1));
 // obsolete printf("number of dot-product blocks=%lld, number of evals=%lld\n",ndots,neval);  // scaf
  EPILOG(z);
 #else

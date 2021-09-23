@@ -133,7 +133,6 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
 fi
 
 USE_BOXEDSPARSE="${USE_BOXEDSPARSE:=0}"
-fi
 if [ $USE_BOXEDSPARSE -eq 1 ] ; then
 common="$common -DBOXEDSPARSE"
 fi

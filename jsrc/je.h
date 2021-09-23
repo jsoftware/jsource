@@ -467,7 +467,7 @@ extern F2(jtgrade1p);
 extern F2(jtgrade2);
 extern F2(jthexrep2);
 extern F2(jthgeom);
-extern F2(jthook);
+extern A jthook(J,A,A,A);
 extern F2(jti1ebar);
 extern F2(jtic2);
 extern F2(jticap2);

@@ -107,7 +107,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  }
  switch(id){
   case CHOOK: case CADVF:  // yv must have been set
-   ASSERT(2==n,EVLENGTH); R hook(fx(yv[0]),fx(yv[1]));
+   ASSERT(2==n,EVLENGTH); R hook(fx(yv[0]),fx(yv[1]),mark);
   case CFORK:
    ASSERT(3==n,EVLENGTH);   // yv must have been set
    RZ(f=fx(yv[0])); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);

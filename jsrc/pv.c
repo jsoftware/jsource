@@ -152,7 +152,7 @@ TACT(jtvconj){TA z={0,0}; if(CHK2)df2(z.a,stack[b].a,stack[e].a,stack[e-1].a); R
 
 TACT(jtvfolk){TA z={0,0}; if(CHK3)z.a=folknohfn(stack[b].a,stack[1+b].a,stack[e].a); R z;}
 
-TACT(jtvhook){TA z={0,0}; if(CHK2)z.a=hook(stack[b].a,stack[e].a); R z;}
+TACT(jtvhook){TA z={0,0}; if(CHK2)z.a=hook(stack[b].a,stack[e].a,mark); R z;}
 
 TACT(jtvpunc){R stack[e-1];}
 

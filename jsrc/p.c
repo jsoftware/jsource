@@ -941,12 +941,15 @@ RECURSIVERESULTSCHECK
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
-        A yy=hook(stack[1].a,stack[2].a);  // create the hook
+        // hook and non-fork tridents
+        A h=stack[3].a;
+        I trident=PTISCAVN(stack[3].pt)?3:2; h=PTISCAVN(stack[3].pt)?h:mark;  // beginning of stack after execution; a is invalid in end-of-stack
+        A yy=hook(stack[1].a,stack[2].a,h);  // create the hook
         y=NEXTY;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
         FPZ(yy);  // if error, return 0 stackpointer
-        PTFROMTYPE(stack[2].pt,AT(yy)) stack[2].t = stack[1].t; stack[2].a = yy;  // take err tok from f; save result.  Must store new type because this line takes adverb hooks also
-        stack[1]=stack[0]; stack+=1;  // close up stack
+        PTFROMTYPE(stack[trident].pt,AT(yy)) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
+        stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
        }
       }
 #if MEMAUDIT&0x10

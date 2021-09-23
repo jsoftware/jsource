@@ -184,7 +184,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    f=amp(mag(x),ds(CPLUS));
    g=1==AN(x)?ds(CPOUND):atop(amp(tally(x),ds(CTAKE)),ds(CDOLLAR));
    h=!yv[1]?f:atop(!yv[0]?ds(CMINUS):amp(negate(signum(x)),ds(CSTAR)),f);
-   R obverse(hook(swap(ds(CTAKE)),atop(h,g)),w);
+   R obverse(hook(swap(ds(CTAKE)),atop(h,g),mark),w);
   case CDOMINO:
    if(!(2==AR(x)&&AS(x)[0]==AS(x)[1]))break;
    ff=eval("+/ .*");
@@ -197,7 +197,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    }
    break;
   case CQQ:
-   if(ng&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ));
+   if(ng&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),mark);
    break;
   case CBSLASH:
    if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT

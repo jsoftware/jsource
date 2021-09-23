@@ -1,12 +1,14 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp.ijs'
 NB. $. ------------------------------------------------------------------
 
+bsp=: #@<@$. :: 0: 0 1    NB. support boxed sparse array
+
 s=: $. x=: 7 3 5 ?@$ 5
 t=: $. y=: 7 3 5 ?@$ 5
 
 (s=t) -: x=y
     
-'nonce error' -: < etx s
+bsp{:: 1 ;~ 'nonce error' -: < etx s
 (s<t) -: x<y
 
 (<.s) -: <.x
@@ -96,7 +98,7 @@ NB.  :: CADVERSE,CONJ, 0L,      adverse,
 (s,:t) -: x,:y
 
 (;s) -: ;x
-'nonce error' -: s ; etx t
+bsp{:: 1 ;~ 'nonce error' -: s ; etx t
 
 NB.  ;. CCUT,    CONJ, 0L,      cut,    
 NB.  ;: CWORDS,  VERB, words,   0L,  
@@ -138,7 +140,7 @@ NB.  [: CCAP,    VERB, 0L,      0L,
 (]s) -: ]x
 (s]t) -: x]y
 
-'nonce error' -: { etx s
+NB. 'nonce error' -: { etx s     NB. crash
 (i{s) -: i{x [ i=: <"1 ?(2 3,#$s)$$s 
 
 ({.s) -: {.x
@@ -185,7 +187,7 @@ NB.  d. CDDOT,   CONJ, 0L,      ddot,
 NB.  D. CDCAP,   CONJ, 0L,      dcap,   
 NB.  D: CDCAPCO, CONJ, 0L,      dcapco, 
 
-'nonce error' -: e. etx t
+bsp{:: 1 ;~ 'nonce error' -: e. etx t     NB. non-unique sparse elements
 
 NB.  E. CEBAR,   VERB, 0L,      ebar,   
 NB.  f. CFIX,    ADV,  fix,     0L,     
@@ -232,6 +234,6 @@ sa=. 1 (0 0 ; 1 1)} 1 $. 2 2 ; 0 01 ; 00
 (2 2$1 0 0 1) -: $.^:_1 sa
 (<"1 ]2 2$1 0 0 1) -: <@($.^:_1)"1 sa
 
-4!:55 ;:'i s sa t x y'
+4!:55 ;:'bsp i s sa t x y'
 
 

@@ -27,7 +27,9 @@ F1(jtlevel1){ARGCHK1(w); R sc(level(w));}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
+#ifndef BOXEDSPARSE
  ASSERT(!ISSPARSE(wt),EVNONCE);
+#endif
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
@@ -88,7 +90,9 @@ F2PREFIP;ARGCHK2(a,w);
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
+#ifndef BOXEDSPARSE
  ASSERT(!ISSPARSE(AT(a)|AT(w)),EVNONCE);   // can't box sparse values
+#endif
  I optype=FAV(self)->localuse.lu1.linkvb;  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
  optype|=((I)jtinplace&JTWILLBEOPENED)<<(BOXX-JTWILLBEOPENEDX);  // fold in BOX flag that tells us to allow virtual boxed results
  if(likely(!(optype&BOX))){realizeifvirtual(w);}  // it's going into an array, so realize it unless virtual results allowed

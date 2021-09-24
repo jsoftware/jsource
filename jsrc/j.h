@@ -1917,7 +1917,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 
 // parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
-#if SY_64
+#if (C_AVX2&&SY_64)
 #define PEXT(s,m) _pext_u64(s,m)
 #define PDEP(s,m) _pdep_u64(s,m)
 #else

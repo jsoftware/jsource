@@ -31,17 +31,20 @@ ifeq (1,${DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 endif
+ifeq (1,${USE_BOXEDSPARSE})
+FBOXEDSPARSE = /DBOXEDSPARSE
+endif
 
 ifeq (1,${x64})
 CF1= -maes -msse3 -fno-strict-aliasing -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FOPENMP} ${FSLEEF} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
+CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 ASMFLAGS= /Cx
 else
 CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FSLEEF} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
+CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 endif

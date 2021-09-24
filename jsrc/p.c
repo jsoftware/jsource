@@ -830,7 +830,9 @@ RECURSIVERESULTSCHECK
        if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
        audittstack(jt);
 #endif
+#ifndef BOXEDSPARSE
        if(unlikely(AT(y)&BOX&&AN(y)&&AAV(y)[0]&&ISSPARSE(AT(AAV(y)[0]))))RZ(y=spres(y));  // resolve boxed sparse value
+#endif
        stack[1+((pt0ecam>>(PLINESAVEX+1))&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
        // free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
        // We free them right here, and zap their tpop entry to avoid an extra free later.

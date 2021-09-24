@@ -135,13 +135,13 @@ ar  =: 5!:1
 
 noun=.3 4
 cn =. ar <'noun' 
-verb=.+
+verb=.+:
 cv =. ar <'verb'
 
 f=:+%
 (<(,'2');<+ ` %) -: ar <'f'
 'domain error' -: ex '(<''2'';<3 4         ) fx'            
-'syntax error' -: ex '(<''2'';<cv,cn       ) fx'            
+6 8 -: (<'2';<cv,cn) fx            
 'syntax error' -: ex '(<''2'';<cn,cv       ) fx'            
 'syntax error' -: ex '(<''2'';<cn,cn       ) fx'            
 'domain error' -: ex '(<''2''              ) fx'            

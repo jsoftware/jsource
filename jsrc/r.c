@@ -106,9 +106,11 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
   ASSERT(BOX&AT(y),EVDOMAIN);
  }
  switch(id){
-  case CHOOK: case CADVF:  // yv must have been set
+  case CHOOK:
+   ASSERT(2==n,EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF.  fall through...
+  case CADVF:  // yv must have been set
    // invisible bident/trident except for N/V V V fork
-   ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 or 3
+   ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF
    A h3=(n==3)?fx(yv[2]):mark;  // if 3d parm not given, use mark
    R hook(fx(yv[0]),fx(yv[1]),h3);
   case CFORK:

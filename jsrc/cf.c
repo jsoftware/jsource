@@ -209,6 +209,7 @@ static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
 static DF1(taaa){TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
 static DF2(tvvc){TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
 static DF2(tcVCc){TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
+static DF2(taav){TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
 static DF2(tcaa){TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
 static DF1(tNVca){TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
 static DF2(tNVcc){TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
@@ -258,6 +259,7 @@ static struct {
 } tridents[64] = {
  [TYPE3(NOUN,VERB,NOUN)]={0, NOUN},
  [TYPE3(ADV,ADV,ADV)]={taaa, ADV},
+ [TYPE3(ADV,ADV,VERB)]={taav, CONJ},
  [TYPE3(VERB,VERB,CONJ)]={tvvc, CONJ},
  [TYPE3(ADV,VERB,VERB)]={taVCNV, ADV},
  [TYPE3(CONJ,VERB,VERB)]={tcVCNV, CONJ},
@@ -269,11 +271,11 @@ static struct {
  [TYPE3(VERB,CONJ,VERB)]={0, VERB},
  [TYPE3(NOUN,CONJ,ADV)]={tNVca, ADV},
  [TYPE3(VERB,CONJ,ADV)]={tNVca, ADV},
- [TYPE3(NOUN,CONJ,CONJ)]={tNVcc, ADV},
- [TYPE3(VERB,CONJ,CONJ)]={tNVcc, ADV},
+ [TYPE3(NOUN,CONJ,CONJ)]={tNVcc, CONJ},
+ [TYPE3(VERB,CONJ,CONJ)]={tNVcc, CONJ},
  [TYPE3(ADV,CONJ,NOUN)]={taVCNV, ADV},
  [TYPE3(ADV,CONJ,VERB)]={taVCNV, ADV},
- [TYPE3(ADV,CONJ,ADV)]={taca, ADV},
+ [TYPE3(ADV,CONJ,ADV)]={taca, CONJ},
  [TYPE3(ADV,CONJ,CONJ)]={tacc, CONJ},
  [TYPE3(CONJ,CONJ,VERB)]={tcVCNV, CONJ},
  [TYPE3(CONJ,CONJ,NOUN)]={tcVCNV, CONJ},
@@ -327,7 +329,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
     if(AT(a)&NOUN+VERB){
      f1=tvc; id=FAV(w)->id;
      if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
-    }else if(AT(a)&ADV){f1=tac; pos=CONJ;}  // A C, producing conj
+    }else if(AT(a)&ADV)f1=tac;   // A C, producing adv
    }else if(AT(w)&NOUN+VERB&&AT(a)&CONJ){
     f1=tcv; id=FAV(a)->id;
     if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
@@ -335,7 +337,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    else if(AT(a)&VERB)R df1(z,w,a);  // must be V N - execute it
    ASSERT(f1,EVSYNTAX);  // Check for legal combination Note: EDGE CAVN ASGN (always an error) passes through here
 
-   R fdef(0,CADVF, pos, f1,0L, a,w,0L, flag, 0L,0L,0L);
+   R fdef(0,CADVF, pos, f1,f1, a,w,0L, flag, 0L,0L,0L);
   }
  }else{A z;
   // we might enter here with an executable: N/V V V fork  or N/V C N/V, as a result of executing an invisible modifier
@@ -345,7 +347,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   AF rtn=tridents[rtnx].fn;  // action routine
   I t=tridents[rtnx].type;  // type: ADV/CONJ
   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
-  if(rtnx==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
+  if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
   R fdef(0,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L);  // only one of the rtns is ever used
  }
 }

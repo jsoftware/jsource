@@ -1071,6 +1071,31 @@ F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
  R fdef(0,CDOT,VERB, jtdet,f2, a,w,h, 0L, 2L,RMAX,RMAX);
 }
 
+// general LU decomp using generic arithmetic
+F1(jtludecompg){F1PREFIP;PROLOG(823);
+ // Audit input
+ // convert to float or rational type; always make a new copy
+ // create needed indexing blocks
+   // atom holding the iteration number 0..n-2
+   // vector used for {, with indexes iteration..n-1
+   // 2-D vector to fetch/write a column (iteration..n-1;iteration)
+   // 2-D vector to fetch/write a row (iteration;iteration..n-1)
+   // 2-D vector to access the lower-right corner block
+   // 2-atom lists to exchange pivot rows
+   // atom to hold the pivot value
+ // initialize permutation array to index vector
+ // for each ring
+  // fetch current column
+  // find index of largest absolute value; save the value as pivot
+  // swap the permutation array, and swap the rows of the matrix, and the values read for current column
+  // divide the current column by the pivot
+  // shorten the fetch vectors by 1 from the front
+  // store the current column into the array
+  // subtract (current column */ (}.first row)) from lower-right block
+ // return result
+ R 0;
+}
+
 
 // 128!:10 LU decomposition for square real arrays LU=A
 F1(jtludecomp){F1PREFIP;PROLOG(823);

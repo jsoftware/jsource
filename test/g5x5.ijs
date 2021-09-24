@@ -536,7 +536,125 @@ test2 <'c'
 test2 <'test1'
 test2 <'test2'
 
+NB. trains
 
+testeq=: 2 : 0
+ (ar <'u') -: ar(<'v')
+ u2 =. (ar <'u') 5!:0
+ (ar <'u') -: ar(<'u2')
+ v2 =. (ar <'v') 5!:0
+ (ar <'v') -: ar(<'v2')
+)
+
+a =: +-&
+test2 <'a'     
+(+-3&>) testeq (3 a >)
+
+a =: /*-
+test2 <'a'     
+(+/*-) testeq (+ a)
+
+a =: &*-
+test2 <'a'     
+(>&3/*-) testeq (> a 3)
+
+a =: &*@
+test2 <'a'     
+(>&- * >@-) testeq (> a -)
+8 = 3 ([.+].) 5
+
+a =: /\*
+test2 <'a'     
+(+/-\*) testeq (+ a -)
+
+a =: /\/.
+test2 <'a'     
+(+/\/.) testeq (+ a)
+
+a =: &/\
+test2 <'a'     
+(+&-/\) testeq (+ a -)
+
+a =: 3&/
+test2 <'a'     
+(3&(+/)) testeq (+ a)
+
+a =: 3&@
+test2 <'a'     
+(3&(+@-)) testeq (+ a -)
+
+a =: +&/
+test2 <'a'     
+(+@(-/)) testeq (- a)
+
+a =: +&@
+test2 <'a'     
+(+&(*@-)) testeq (* a -)
+
+a =: /&3
+test2 <'a'     
+(+/&3) testeq (+ a)
+
+a =: /&*
+test2 <'a'     
+(+/&*) testeq (+ a)
+
+a =: /@\
+test2 <'a'     
+(+/@(-\)) testeq (+ a -)
+
+a =: /@&
+test2 <'a'     
+(+/&(+&3)) testeq (+ a 3)
+
+a =: @&2
+test2 <'a'     
+(+@-&2) testeq (+ a -)
+
+a =: @&*
+test2 <'a'     
+(+@-&*) testeq (+ a -)
+
+a =: @&/
+test2 <'a'     
+(+@-&(-/)) testeq (+ a -)
+
+a =: &:&@
+test2 <'a'     
+(+&:-&(+@-)) testeq (+ a -)
+3 = 3 ([. [. ].) -
+
+a =: 4&
+test2 <'a'     
+(4&+) testeq (+ a)
+
+a =: -&
+test2 <'a'     
+(-&+) testeq (+ a)
+
+a =: /-
+test2 <'a'     
+(+/-) testeq (+ a)
+
+a =: /\
+test2 <'a'     
+(+/\) testeq (+ a)
+
+a =: /&
+test2 <'a'     
+(+/&+) testeq (+ a)
+
+a =: &3
+test2 <'a'     
+(+&3) testeq (+ a)
+
+a =: &-
+test2 <'a'     
+(+&-) testeq (+ a)
+
+a =: &/
+test2 <'a'     
+(+&5/) testeq (+ a 5)
 
 
 NB. 5!:5 on "real" examples ---------------------------------------------
@@ -771,7 +889,7 @@ f=: (<(<,':'),<(<(,'0');1),<(,'0');1 0$'') (1 : 'u u`:6`:6 y')
 4!:55 ;:'nopar num oarg ob oind omask osub outfix pad paren '
 4!:55 ;:'pfx prefix pstr qstr quote rc rep right root '
 4!:55 ;:'s sd seg shape shl shr slist suffix symb '
-4!:55 ;:'t take test test1 test2 tr trcase tree trg trgl trgr trtil trx '
+4!:55 ;:'t take test test1 test2 testeq tr trcase tree trg trgl trgr trtil trx '
 4!:55 ;:'value vbox vchar x '
 randfini''
 

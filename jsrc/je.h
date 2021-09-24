@@ -427,6 +427,7 @@ extern F2(jtdbstepout2);
 extern F2(jtdbstepover2);
 extern F2(jtdeal);
 extern F2(jtdealx);
+extern F2(jtdex);
 extern F2(jtdgrade2);
 extern F2(jtdomainerr2);
 extern F2(jtdot);
@@ -491,6 +492,7 @@ extern F2(jtless);
 #if C_CRC32C && SY_64
 extern DF2(jtintersect);
 #endif
+extern F2(jtlev);
 extern DF2(jtlink);
 extern F2(jtloccre2);
 extern F2(jtlock2);

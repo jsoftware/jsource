@@ -87,10 +87,14 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
 } 
 
 // ][.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
-F2(jtleft2 ){F2PREFIP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETARG(a); RETF(lr2((jtr<<RANKTX)|(jtr>>RANKTX),w,a));}  // swap a & w, and their ranks
-F2(jtright2){F2PREFIP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETARG(w); RETF(lr2(jtr,a,w));}
+F2(jtleft2 ){F2PREFIP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(a)); RETF(lr2((jtr<<RANKTX)|(jtr>>RANKTX),w,a));}  // swap a & w, and their ranks
+F2(jtright2){F2PREFIP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(w)); RETF(lr2(jtr,a,w));}
 
-F1(jtright1){RETF(w);}
+F1(jtright1){RETF(RETARG(w));}
+// lev, dex, and ident - identity adverb/conjunction  (ident uses the same code as lev)
+F2(jtlev){RETF(RETARG(a));}  F2(jtdex){RETF(RETARG(w));}
+
+
 
 // i. y
 F1(jtiota){A z;I m,n,*v;

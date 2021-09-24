@@ -12,7 +12,7 @@ static C spellintab2[128-0x20][3] = {
 ['='-0x20]={CEQ,CASGN,CGASGN},      ['<'-0x20]={CLT,CFLOOR,CLE},        ['>'-0x20]={CGT,CCEIL,CGE},         ['_'-0x20]={CINF,0,CFCONS},          ['+'-0x20]={CPLUS,CPLUSDOT,CPLUSCO},  ['*'-0x20]={CSTAR,CSTARDOT,CSTARCO},  
 ['-'-0x20]={CMINUS,CNOT,CMATCH},       ['%'-0x20]={CDIV,CDOMINO,CROOT},     ['^'-0x20]={CEXP,CLOG,CPOWOP},       ['$'-0x20]={CDOLLAR,CSPARSE,CSELF},     ['~'-0x20]={CTILDE,CNUB,CNE},          ['|'-0x20]={CSTILE,CREV,CCANT},        
 ['.'-0x20]={CDOT,0,0},        [':'-0x20]={CCOLON,COBVERSE,CADVERSE}, [','-0x20]={CCOMMA,CCOMDOT,CLAMIN},    [';'-0x20]={CSEMICO,CCUT,CWORDS},       ['#'-0x20]={CPOUND,CBASE,CABASE},      ['@'-0x20]={CAT,CATDOT,CATCO},      
-['/'-0x20]={CSLASH,CSLDOT,CGRADE},     ['\\'-0x20]={CBSLASH,CBSDOT,CDGRADE},['['-0x20]={CLEFT,0,CCAP},         [']'-0x20]={CRIGHT,0,0},         ['{'-0x20]={CLBRACE,CTAKE,CTAIL},       ['}'-0x20]={CRBRACE,CDROP,CCTAIL},      
+['/'-0x20]={CSLASH,CSLDOT,CGRADE},     ['\\'-0x20]={CBSLASH,CBSDOT,CDGRADE},['['-0x20]={CLEFT,CLEV,CCAP},      [']'-0x20]={CRIGHT,CDEX,CIDENT},         ['{'-0x20]={CLBRACE,CTAKE,CTAIL},       ['}'-0x20]={CRBRACE,CDROP,CCTAIL},      
 ['`'-0x20]={CGRAVE,CGRDOT,CGRCO},      ['\"'-0x20]={CQQ,CEXEC,CTHORN},      ['&'-0x20]={CAMP,CUNDER,CAMPCO},     ['!'-0x20]={CBANG,CFIT,CIBEAM},       ['?'-0x20]={CQUERY,CQRYDOT,CQRYCO},
 ['('-0x20]={CLPAR,0,0},    [')'-0x20]={CRPAR,0,0},    
 
@@ -66,7 +66,8 @@ static US spellouttab[256] = {
 [CADVERSE]=(UC)':'+CO0,       [CCOMDOT ]=(UC)','+DOT0,       [CLAMIN  ]=(UC)','+CO0,       [CCUT    ]=(UC)';'+DOT0,       
 [CWORDS  ]=(UC)';'+CO0,       [CBASE   ]=(UC)'#'+DOT0,       [CABASE  ]=(UC)'#'+CO0,       [CFIT    ]=(UC)'!'+DOT0,       
 [CIBEAM  ]=(UC)'!'+CO0,       [CSLDOT  ]=(UC)'/'+DOT0,       [CGRADE  ]=(UC)'/'+CO0,       [CBSDOT  ]=(UC)'\\'+DOT0,       
-[CDGRADE ]=(UC)'\\'+CO0,      [CCAP    ]=(UC)'['+CO0,
+[CDGRADE ]=(UC)'\\'+CO0,      [CLEV    ]=(UC)'['+DOT0,       [CCAP    ]=(UC)'['+CO0,
+[CDEX    ]=(UC)']'+DOT0,       [CIDENT ]=(UC)']'+CO0,
 [CHEAD   ]=(UC)'{'+DOT0,       [CTAIL   ]=(UC)'{'+CO0,       
 [CBEHEAD ]=(UC)'}'+DOT0,       [CCTAIL  ]=(UC)'}'+CO0,       [CEXEC   ]=(UC)'"'+DOT0,       
 [CTHORN  ]=(UC)'"'+CO0,       [CGRDOT  ]=(UC)'`'+DOT0,       [CGRCO   ]=(UC)'`'+CO0,       [CATDOT  ]=(UC)'@'+DOT0,       

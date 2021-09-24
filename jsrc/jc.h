@@ -228,6 +228,9 @@
 #define CGASGN     (C)0x81       /* 129 201 81 =:                           */
 #define CLPAR      (C)0x82  // (
 #define CRPAR      (C)0x83  // )
+#define CLEV       (C)0x84  // [.
+#define CDEX       (C)0x85  // ].
+#define CIDENT     (C)0x86  // ]:
 
 
 // 135 free

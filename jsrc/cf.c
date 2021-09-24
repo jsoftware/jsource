@@ -199,11 +199,12 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  R z;
 }
 
-// Handlers for to  handle w (aa), w (vc), w (cv)
-static DF1(taa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(z,t,gs);}
-static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  /* also nc */
-static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  /* also cn */
+// Handlers for trains
+static DF1(taa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(z,t,gs);}  // adv A A
+static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
+static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
 
+static DF1(taaa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); df1(z,t,fs); ASSERT(!z||AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,gs);}  // adv A A A
 
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  ARGCHK1(w);
@@ -272,19 +273,27 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
    FAV(z)->localuse.lu1.linkvb=linktype; R z;  // if it's a form of ;, install the form
   // All other cases produce an adverb
-  }else if(AT(a)&AT(w)&ADV){
-   f1=taa;
-  }else if(AT(a)&NOUN+VERB&&AT(w)&CONJ){
-   f1=tvc; id=FAV(w)->id;
-   if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
-  }else if(AT(w)&NOUN+VERB&&AT(a)&CONJ){
-   f1=tcv; id=FAV(a)->id;
-   if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
-  }else{ASSERT(0,EVSYNTAX);}  // Note: EDGE CAVN ASGN (always an error) passes through here
+  }else{
+   if(AT(a)&AT(w)&ADV){
+    f1=taa;
+   }else if(AT(a)&NOUN+VERB&&AT(w)&CONJ){
+    f1=tvc; id=FAV(w)->id;
+    if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
+   }else if(AT(w)&NOUN+VERB&&AT(a)&CONJ){
+    f1=tcv; id=FAV(a)->id;
+    if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
+   }else{ASSERT(0,EVSYNTAX);}  // Note: EDGE CAVN ASGN (always an error) passes through here
 
-  R fdef(0,CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);
- }else{
+   R fdef(0,CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);
+  }
+ }else{I pos;  // part of speech generated
   // here for all tridents except N/V V V forks
-  ASSERT(0,EVSYNTAX);
+#define TYPETEST(t) ((((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ((((t)&CONJ+ADV+VERB)|(1LL<<31))>>ADVX)))&3)  // type class: noun adv conj vecb
+#define TYPE3(t0,t1,t2) (TYPETEST(t0)+4*TYPETEST(t1)+16*TYPETEST(t2))
+  switch(TYPE3(AT(a),AT(w),AT(h))){
+  case TYPE3(ADV,ADV,ADV): f1=taaa; pos=ADV; break;
+  default: ASSERT(0,EVSYNTAX);
+  }
+  R fdef(0,CADVF, pos, f1,f2, a,w,h, flag, 0L,0L,0L);
  }
 }

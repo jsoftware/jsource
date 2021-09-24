@@ -84,7 +84,7 @@ static void jtdspell(J jt,C id,A w,I nflag){C c,s[5];
    eputs(s+!(c==CESC1||c==CESC2||(nflag&1)&&((ctype[(UC)c]&~CA)==0)));
   }
   if(g)nflag=disp(g,2);  // display right side if any
-  if(h)nflag=disp(h,2);  // display end of fork if any
+  if(h)nflag=disp(h,2);  // display end of fork/trident if any
   if(parenhere)eputc(')');
  }
 }

@@ -144,7 +144,7 @@
 #define CSLASH     (C)0x31  // /
 #define CHOOK      (C)0x32  // '2' - used in AR for hook  is paired with ADVF 2 distant
 #define CFORK      (C)0x33  // '3' - used in AR for fork is paired with CCAP 3 distant
-#define CADVF      (C)0x34  // '4' - used in AR for bonded conjunction AC or CA
+#define CADVF      (C)0x34  // '4' - used in AR for any train
 #define CCAP       (C)0x35  // [: - block HOOK-CCAP must be togather
 #define CAMPCO     (C)0x36  // &:  must be paired with &
 #define CAMP       (C)0x37  // &  must be CFORK^4

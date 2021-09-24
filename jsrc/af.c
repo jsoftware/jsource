@@ -99,7 +99,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
   }
   else{f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);}  // v : v, similarly
  case CADVF:
-  f=REFIXA(3,f); g=REFIXA(3,g); R hook(f,g,mark);
+  f=REFIXA(3,f); g=REFIXA(3,g); if(h)h=REFIXA(3,h); else h=mark; R hook(f,g,h);
  case CHOOK:
   f=REFIXA(2,f); g=REFIXA(1,g); R hook(f,g,mark);
  case CFORK:

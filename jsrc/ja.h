@@ -233,8 +233,8 @@
 #define detr(x)                     jtdetr(jt,(x))
 #define detxm(x,y)                  jtdetxm(jt,(x),(y))
 #define detz(x)                     jtdetz(jt,(x))
-#define df1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])(jt,(x),r):r))
-#define df2(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jt,(x),(y),r):r))
+#define df1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])(jt,(x),r):r))  // y is self; if not 0, execute self on x.  Put result into r, set r 0 if self=0.  r must not = x.  self is evaluated only once
+#define df2(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jt,(x),(y),r):r))  // z is self; if not 0, execute self on x and y.  Put result into r, set r 0 if self=0.  r must not = x or y.  self is evaluated only once
 #define df1ip(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])(jtinplace,(x),r):r))
 #define df2ip(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jtinplace,(x),(y),r):r))
 #define dfc(x,y)                    jtdfc(jt,(x),(y))

@@ -289,14 +289,14 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
  ARGCHK2(a,w);
  n=AN(a); av=AAV(a);  
  v=VAV(w); id=v->id;
- b=id==CCOLON&&VXOP&v->flag;
+ b=id==CCOLON&&VXOP&v->flag;  // b if operator, which is spaced as if a hook/fork: u body [v]
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1]; A hs=v->fgh[2];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
 // ?t tells whether () is needed around the f/g/h component
- if(1<=n){f=av[0]; t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's hook fork && or noun left end of nvv or n (op)
- if(2<=n){g=av[1]; t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CFORK):lp(g);}
- if(3<=n){h=av[2]; t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK          :lp(h);}
- switch(!b?id:2==n?CHOOK:CFORK){
+ if(1<=n){f=av[0]; t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
+ if(2<=n){g=av[1]; t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):(BETWEENC(id,CHOOK,CADVF)&&BETWEENC(c,CHOOK,CADVF))||lp(g);}  // g: paren any invisible modifier
+ if(3<=n){h=av[2]; t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK:BETWEENC(id,CHOOK,CADVF)&&!b?BETWEENC(c,CHOOK,CADVF):lp(h);}  // h: in verb fork, paren hook; in trident, paren any train
+ switch(!(b||BETWEENC(id,CHOOK,CADVF))?id:2==n?CHOOK:CFORK){  // if operator or invisible, ignore the type and space based on length
   case CADVF:
   case CHOOK:
    GAT0(y,BOX,3,1); u=AAV(y);
@@ -352,7 +352,7 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  hs=v->fgh[2]; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R lrr(hs);   // pseudo-named entity created during debug of operator.  The defn is in h
- m=(I )!!fs+(I )(gs&&id!=CBOX)+(I )(id==CFORK)+(I )(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
+ m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
  if(!m)R lsymb(id,w);  // if none, it's a primitive, out it
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);  // x : boxed - must be explicit defn

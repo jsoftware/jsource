@@ -15,25 +15,25 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  // If noun, return the value of the noun.
  if(AT(w)&NOUN)R w;  // no quotes needed
- // Non-nouns and NMDOT names carry on
+ // Non-nouns and NMDOT names carry on.  Any modifiers must be primitive
  v=FAV(w); id=v->id; fl=v->flag;
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R drr(hs);
- xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
- b=BETWEENC(id,CHOOK,CADVF); c=id==CFORK; b&=1^c;  // HOOK ADVF, and FORK
- m=!!fs+(gs||ex);
- if(!m)R spella(w);
- if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep
- if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));
- if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));
- if(ex)RZ(dg=unparsem(num(0),w));
- m+=!b&&!xop||hs&&xop;
+ xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;  // xop=explicit operator, for which f=u, [h=v], g=the definition;  ex=explicit non-operator, for which f=defn type, g=text, h=processed text 
+ b=BETWEENC(id,CHOOK,CADVF); c=id==CFORK||(id==CADVF&&hs!=mark); b&=1^c;  // c if invisible trident (FORK or ADVF); b = invisible bident (HOOK or ADVF)
+ m=!!fs+(gs||ex);   // m=# components of combination: test fs and gs, but in explicit definition the definition is in h, so we take that as surrogate g
+ if(!m)R spella(w);  // if no components, it must be a primitive, out it
+ m+=!b&&!xop||hs&&xop;   // if operator, add component for v if conjunction; if not operator, add component UNLESS w is an invisible bident: for w itself or for h
+ if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep, which is the result
+ if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
+ if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
+ if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
  GATV0(z,BOX,m,1); x=AAV(z);
- RZ(x[0]=incorp(df));
- RZ(x[1]=incorp(b||c||xop?dg:fl&VDDOP?(hv=AV(hs),link(sc(hv[0]),link(spellout(id),sc(hv[1])))):spellout(id)));
- if(2<m)RZ(x[2]=incorp(c||xop?drr(hs):dg));
+ RZ(x[0]=incorp(df));  // always out f first
+ RZ(x[1]=incorp(b||c||xop?dg:fl&VDDOP?(hv=AV(hs),link(sc(hv[0]),link(spellout(id),sc(hv[1])))):spellout(id)));  // if invisible or operator, out dg, which is g or the explicit body; otherwise out the primitive w
+ if(2<m)RZ(x[2]=incorp(c||xop?drr(hs):dg));  // if there is a 3d box, out it from h if operator or trident; otherwise from g
  EPILOG(z);
 }
 
@@ -50,7 +50,7 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   if(VXOPCALL&v->flag)R aro(hs);
   xop=1&&VXOP&v->flag;
   ex=hs&&id==CCOLON&&!xop;
-  m=id==CFORK?3:!!fs+(ex||xop&&hs||!xop&&gs);
+  m=BETWEENC(id,CFORK,CADVF)&&hs?3:!!fs+(ex||xop&&hs||!xop&&gs);  // number of components: if invisible, 2 or 3; otherwise count f g h
   if(!m)R spella(w);
   if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  }
@@ -107,7 +107,10 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  }
  switch(id){
   case CHOOK: case CADVF:  // yv must have been set
-   ASSERT(2==n,EVLENGTH); R hook(fx(yv[0]),fx(yv[1]),mark);
+   // invisible bident/trident except for N/V V V fork
+   ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 or 3
+   A h3=(n==3)?fx(yv[2]):mark;  // if 3d parm not given, use mark
+   R hook(fx(yv[0]),fx(yv[1]),h3);
   case CFORK:
    ASSERT(3==n,EVLENGTH);   // yv must have been set
    RZ(f=fx(yv[0])); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);

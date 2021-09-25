@@ -202,9 +202,9 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
 // Handlers for trains
 static DF1(taAV){TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,mark);}  // adv A A/V
 static DF2(tca){TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,mark);}  // conj C A
-static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
+static DF1(tNVc){TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
 static DF1(tac){TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
-static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
+static DF1(tcNV){TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
 
 static DF1(taaa){TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
 static DF2(tvvc){TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
@@ -253,11 +253,30 @@ static DF2(jthklvl2){
 
 #define TYPETEST(t) ((((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ((((t)&CONJ+ADV+VERB)|(1LL<<31))>>ADVX)))&3)  // type class: noun adv conj vecb
 #define TYPE3(t0,t1,t2) (TYPETEST(t0)+4*TYPETEST(t1)+16*TYPETEST(t2))
+#define TYPE2(t0,t1) (TYPETEST(t0)+4*TYPETEST(t1))
+static struct {
+ AF fn;  // the function to call
+ I type;  // the part of speech it produces
+} bidents[16] = {
+ [TYPE2(VERB,NOUN)]={0, NOUN},
+ [TYPE2(NOUN,ADV)]={0 , VERB},
+ [TYPE2(NOUN,CONJ)]={tNVc, ADV},
+ [TYPE2(VERB,ADV)]={0, VERB},
+ [TYPE2(VERB,CONJ)]={tNVc, ADV},
+ [TYPE2(ADV,VERB)]={taAV, ADV},
+ [TYPE2(ADV,ADV)]={taAV, ADV},
+ [TYPE2(ADV,CONJ)]={tac, ADV},  // adverbial hook
+ [TYPE2(CONJ,NOUN)]={tcNV, ADV},
+ [TYPE2(CONJ,VERB)]={tcNV, ADV},
+ [TYPE2(CONJ,ADV)]={tca, CONJ},
+};
 static struct {
  AF fn;  // the function to call
  I type;  // the part of speech it produces
 } tridents[64] = {
  [TYPE3(NOUN,VERB,NOUN)]={0, NOUN},
+ [TYPE3(VERB,VERB,VERB)]={0, MARK},    // MARK means fork
+ [TYPE3(NOUN,VERB,VERB)]={0, MARK},
  [TYPE3(ADV,ADV,ADV)]={taaa, ADV},
  [TYPE3(ADV,ADV,VERB)]={taav, CONJ},
  [TYPE3(VERB,VERB,CONJ)]={tvvc, CONJ},
@@ -320,7 +339,9 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
    FAV(z)->localuse.lu1.linkvb=linktype; R z;  // if it's a form of ;, install the form
   // All other cases produce a modifier unless they are immediately executable (V N or N/V A)
-  }else{I pos=ADV;A z;  // part of speech to generate
+  }else{A z;
+#if 0  // obsolete
+I pos=ADV;A z;  // part of speech to generate
    if(AT(w)&ADV){
     if(AT(a)&ADV)f1=taAV;  // A A
     else if(AT(a)&CONJ){f1=tca; pos=CONJ;}  // C A, producing conj
@@ -336,18 +357,33 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    }else if(AT(w)&VERB&&AT(a)&ADV)f1=taAV;  // A V
    else if(AT(a)&VERB)R df1(z,w,a);  // must be V N - execute it
    ASSERT(f1,EVSYNTAX);  // Check for legal combination Note: EDGE CAVN ASGN (always an error) passes through here
+   R fdef(0,CADVF, t, f1,f1, a,w,0L, flag, 0L,0L,0L);
+#else
+  // we might enter here with an executable: V N or N/V A, as a result of executing an invisible modifier.  V V was handled above
+  I rtnx=TYPE2(AT(a),AT(w));  // the combination being parsed
+  AF rtn=bidents[rtnx].fn;  // action routine
+  I t=bidents[rtnx].type;  // type: ADV/CONJ
+  ASSERT(t,EVSYNTAX);  // error if unimplemented combination
+  if(rtn==0)R df1(z,t==VERB?a:w,t==VERB?w:a);  // V N, N/V A: we must execute immediately rather than returning a modifier for the trident.  VERB means N/V A
+  // special processing: gerund@. gerund` gerund`:   `gerund ^:gerund   must be flagged
+  if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
+  if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
+  R fdef(0,CADVF, t, rtn,rtn, a,w,0, flag, 0L,0L,0L);  // only one of the rtns is ever used.  h=0 to indicate bident
+#endif
 
-   R fdef(0,CADVF, pos, f1,f1, a,w,0L, flag, 0L,0L,0L);
   }
  }else{A z;
-  // we might enter here with an executable: N/V V V fork  or N/V C N/V, as a result of executing an invisible modifier
-  if(AT(w)&AT(h)&VERB && AT(a)&NOUN+VERB)R folk(a,w,h);  // the one way to create a verb
-  // here for all tridents except N/V V V forks
+  // we might enter here with an executable: N/V V V fork  or N/V C N/V  or N V N, as a result of executing an invisible modifier
+  // here for all tridents except original forks
   I rtnx=TYPE3(AT(a),AT(w),AT(h));  // the combination being parsed
   AF rtn=tridents[rtnx].fn;  // action routine
   I t=tridents[rtnx].type;  // type: ADV/CONJ
   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
+  if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
+  // special processing: gerund@. gerund` gerund`:   `gerund ^:gerund   must be flagged
+  if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
+  if(BOX&AT(h)&&AT(w)&CONJ&&(FAV(w)->id==CGRAVE||FAV(w)->id==CPOWOP&&1<AN(h))&&gerexact(h))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
   R fdef(0,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L);  // only one of the rtns is ever used
  }
 }

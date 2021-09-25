@@ -705,6 +705,7 @@ extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
 #if !USECSTACK
 extern I        jtfdep(J,A);
 #endif
+extern A        jtfindnameinscript(J,C *,C *,I);
 extern void     jtfillv0(J,I);        /* "fill" name conflict on Mac             */
 extern A        jtfindnl(J,I);
 extern I        jtfnum(J,A);

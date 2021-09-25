@@ -1073,27 +1073,15 @@ F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
 
 // general LU decomp using generic arithmetic
 F1(jtludecompg){F1PREFIP;PROLOG(823);
- // Audit input
- // convert to float or rational type; always make a new copy
- // create needed indexing blocks
-   // atom holding the iteration number 0..n-2
-   // vector used for {, with indexes iteration..n-1
-   // 2-D vector to fetch/write a column (iteration..n-1;iteration)
-   // 2-D vector to fetch/write a row (iteration;iteration..n-1)
-   // 2-D vector to access the lower-right corner block
-   // 2-atom lists to exchange pivot rows
-   // atom to hold the pivot value
- // initialize permutation array to index vector
- // for each ring
-  // fetch current column
-  // find index of largest absolute value; save the value as pivot
-  // swap the permutation array, and swap the rows of the matrix, and the values read for current column
-  // divide the current column by the pivot
-  // shorten the fetch vectors by 1 from the front
-  // store the current column into the array
-  // subtract (current column */ (}.first row)) from lower-right block
- // return result
- R 0;
+ F1RANK(2,jtludecompg,DUMMYSELF)  // if rank > 2, call rank loop
+ ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
+ ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
+ A luvb; ASSERT(luvb=jtfindnameinscript(jt,"~addons/dev/lu/lu.ijs","Lu_j_",VERB),EVNONCE)   // error if undefined or not verb
+ // Apply Lu_j_ to the input argument
+ A z=unquote(w,luvb,luvb);  // monadic call to unquote
+ // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
+ if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
+ R z;
 }
 
 
@@ -1114,8 +1102,8 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
  B lookfor0blocks;  // set if we think it's worthwhile to check for sparse array
  F1RANK(2,jtludecomp,DUMMYSELF)  // if rank > 2, call rank loop
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
- ASSERT(AS(w)[0]==AS(w)[1],EVDOMAIN);  // matrix must be square
- ASSERT((AT(w)&SPARSE+B01+INT+FL)>0,EVDOMAIN)  // must be real float type
+ ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
+ if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w);  // if not real float type, use general version
  if(unlikely(!(AT(w)&FL)))RZ(w=cvt(FL,w));
  I wn=AS(w)[0];  // n=size of square matrix
  // Allocate the result (possibly inplace)
@@ -1432,8 +1420,8 @@ finrle: ;
 // obsolete  DQ(nr-1, COPYCBB(zv0,lcv0,(wn-1)&(BLKSZ-1)); zv0+=BLKSZ; ++lcv0;) COPYCBBR(zv0,lcv0,(wn-1)&(BLKSZ-1));
 // obsolete printf("number of dot-product blocks=%lld, number of evals=%lld\n",ndots,neval);  // scaf
  EPILOG(z);
-#else
-ASSERT(0,EVNONCE)
 #endif
+ // here if fast FP code not supported, either because we don't have AVX or the input is not float.  Fall back to general version
+ R jtludecompg(jt,w);
 }
 

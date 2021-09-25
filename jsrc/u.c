@@ -596,3 +596,16 @@ A *a=AAV(w);   // address of boxed value
 DQ(AN(w), if(*a)realizeifvirtual(*a); ++a;);
 R (A)1;
 }
+
+// set up to call name in script.  Result is nameref to the name, which must have the part of speech pos.  Return 0 if not found
+A jtfindnameinscript(J jt,C *script, C *name, I pos){
+ A target; UI step;
+ for(step=0;step<2;++step){
+  switch(step){  // try the startup, from the bottom up
+  case 1: ; C buf[100]; eval(strcat(strcat(strcpy(buf,"load'"),script),"'"));  // load script and fall through
+  case 0: if((target=nameref(nfs(strlen(name),name),jt->locsyms))&&LOWESTBIT(AT(target))&pos)R target;  // there is always a ref, but it may be to [:
+  }
+  RESETERR;  // if we loop back, clear errors
+ }
+ R 0;  // not found or wrong part of speech - error
+}

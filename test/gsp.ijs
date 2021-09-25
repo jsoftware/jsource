@@ -140,7 +140,7 @@ NB.  [: CCAP,    VERB, 0L,      0L,
 (]s) -: ]x
 (s]t) -: x]y
 
-NB. 'nonce error' -: { etx s     NB. crash
+bsp{:: 1 ;~ 'nonce error' -: {^:(-.bsp) etx s     NB. crash
 (i{s) -: i{x [ i=: <"1 ?(2 3,#$s)$$s 
 
 ({.s) -: {.x

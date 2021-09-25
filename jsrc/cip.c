@@ -1080,12 +1080,15 @@ F1(jtludecompg){F1PREFIP;PROLOG(823);
  // Apply Lu_j_ to the input argument
  A z=unquote(w,luvb,luvb);  // monadic call to unquote
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
- if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
+ // scaf
+if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
  R z;
 }
 
 
 // 128!:10 LU decomposition for square real arrays LU=A
+// returns permutation ; L+U-I (Doolittle form)
+// the ith element of the permutation is the original row of row i of LU
 F1(jtludecomp){F1PREFIP;PROLOG(823);
 #if C_AVX2 || EMU_AVX2
  // We operate on 4x4 blocks of A, which we transform into 4x4 blocks of LU.  The ravel of each LU block is stored for cache ease,
@@ -1107,7 +1110,7 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
  if(unlikely(!(AT(w)&FL)))RZ(w=cvt(FL,w));
  I wn=AS(w)[0];  // n=size of square matrix
  // Allocate the result (possibly inplace)
- A z; GA(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R z;  // if empty result, return fast.  Now nr must be >0
+ A z; GA(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R link(mtv,z);  // if empty result, return fast.  Now nr must be >0
  I resultoffset=CAV(z)-CAV(w);  // distance between result & input data areas
  I nr=(wn+BLKSZ-1)>>LGBLKSZ;  // nr=total # blocks on a side (including partial ones)
 #define CORNERBLOCK(rc) (cb+(rc)*(nr+1))  // address of corner cblock in row&col rc
@@ -1419,7 +1422,7 @@ finrle: ;
 // obsolete  // Now the last row of cbs, which has 1-4 rows ending with the last corner block
 // obsolete  DQ(nr-1, COPYCBB(zv0,lcv0,(wn-1)&(BLKSZ-1)); zv0+=BLKSZ; ++lcv0;) COPYCBBR(zv0,lcv0,(wn-1)&(BLKSZ-1));
 // obsolete printf("number of dot-product blocks=%lld, number of evals=%lld\n",ndots,neval);  // scaf
- EPILOG(z);
+ EPILOG(link(IX(wn),z));
 #endif
  // here if fast FP code not supported, either because we don't have AVX or the input is not float.  Fall back to general version
  R jtludecompg(jt,w);

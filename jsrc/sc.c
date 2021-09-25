@@ -7,7 +7,7 @@
 
 // This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs).  self is the name reference
 //
-// This routine called a 'named' function, which was created by name~ or the equivalent for a stacked verb.
+// This routine calls a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
 DF2(jtunquote){A z;I flgd0cp;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad

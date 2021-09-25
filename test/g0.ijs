@@ -292,6 +292,12 @@ g =: 3: 4: 5:
 1 = 3!:0 1: 'a'
 4 = 3!:0 2: 'a'
 
+f =: ++&
+(;:'++&') -: 5!:2 <'f'
+f =: ///
+(;:'///') -: 5!:2 <'f'
+f =: &&&
+(;:'&&&') -: 5!:2 <'f'
 
 4!:55 ;:'ar dr eight eq f five four fx g lr '
 4!:55 ;:'mac nine one rk seven six test three tr two x z zero '

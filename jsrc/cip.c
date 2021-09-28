@@ -1080,8 +1080,7 @@ F1(jtludecompg){F1PREFIP;PROLOG(823);
  // Apply Lu_j_ to the input argument
  A z=unquote(w,luvb,luvb);  // monadic call to unquote
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
- // scaf
-if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
+ if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
  R z;
 }
 

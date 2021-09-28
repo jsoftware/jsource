@@ -829,7 +829,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
  }else{J jtf; \
   fghfn=FAVV(fs)->valencefns[0]; \
   I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
-  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf */ \
+  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
   RZ(fx=(fghfn)(jtf,PTR(w),fs)); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \

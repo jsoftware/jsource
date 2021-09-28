@@ -546,6 +546,10 @@ testeq=: 2 : 0
  (ar <'v') -: ar(<'v2')
 )
 
+a=: [.].
+test2 <'a'     
+(+-) testeq (+ a -)
+
 a =: +-&
 test2 <'a'     
 (+-3&>) testeq (3 a >)
@@ -655,6 +659,22 @@ test2 <'a'
 a =: &/
 test2 <'a'     
 (+&5/) testeq (+ a 5)
+
+NB. Verify that all trains produce an equivalent result after going through 5!:5
+
+NB. y is a character string representing a possibly-invalid train
+testlr=: {{
+a =: y
+try.
+ 0!:0 'asdf=.',;y
+catch.
+ 1
+end.
+0!:0 'newy=.',5!:5 <'asdf'
+assert. (ar <'newy') -: ar <'asdf'
+1
+}}"1
+(1 2 3 4 5 6) (testlr @:({."1))"0 _ ({~   [: (#: i.@:(*/)) 6 # #) ;: '+ [. 3 ]: ( )'
 
 
 NB. 5!:5 on "real" examples ---------------------------------------------
@@ -889,7 +909,7 @@ f=: (<(<,':'),<(<(,'0');1),<(,'0');1 0$'') (1 : 'u u`:6`:6 y')
 4!:55 ;:'nopar num oarg ob oind omask osub outfix pad paren '
 4!:55 ;:'pfx prefix pstr qstr quote rc rep right root '
 4!:55 ;:'s sd seg shape shl shr slist suffix symb '
-4!:55 ;:'t take test test1 test2 testeq tr trcase tree trg trgl trgr trtil trx '
+4!:55 ;:'t take test test1 test2 testeq testlr tr trcase tree trg trgl trgr trtil trx '
 4!:55 ;:'value vbox vchar x '
 randfini''
 

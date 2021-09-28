@@ -24,13 +24,14 @@ static DF1X(jtlrr);
 #define parfn ((I)jtinplace&JTPARENS?jtlcpb:jtlcpa)
 #define tiefn ((I)jtinplace&JTPARENS?jtltieb:jtltiea)
 
-static B jtlp(J jt,A w){F1PREFIP;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
+// w is the displayable string for an entity.  esult is 1 if it needs parens if next to anything else; or -1 if a primitive that never needs parens
+static I jtlp(J jt,A w){F1PREFIP;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  ARGCHK1(w);
  n=AN(w); v=CAV(w); c=*v; d=v[n-1];
- if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R 0;
- if(C9==ctype[(UC)c])DQ(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)
- else if(c==q)   DQ(n-1, c=*v++; p^=(c==q); if(b=(p^1)&(c!=q)){break;})
- else if(c=='(') DQ(n-1, c=*v++; j+=c=='('?1:c==')'?-1:0; if(b=!j)break;)
+ if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R -1;  // if a primitive or name, it doesn't need parens
+ if(C9==ctype[(UC)c])DQ(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)  // numeric field: parens if contains nonnumeric char or space followed by non-(digit/sign)
+ else if(c==q)   DQ(n-1, c=*v++; p^=(c==q); if(b=(p^1)&(c!=q)){break;})  // quoted string: paren if there is any non-quote after the matching quote
+ else if(c=='(') DQ(n-1, c=*v++; j+=c=='('?1:c==')'?-1:0; if(b=!j)break;)  // (: paren if there is a character after matching )
  R b;
 }    /* 1 iff put parens around w */
 
@@ -56,7 +57,7 @@ static A jtlcpb(J jt,B b,A w){F1PREFIP;A z=w;B p;C c,*v,*wv,*zv;I n;
  R z;
 }
 
-static A jtlcpx(J jt,A w){F1PREFIP;ARGCHK1(w); R parfn(jtinplace,lp(w),w);}
+static A jtlcpx(J jt,A w){F1PREFIP;ARGCHK1(w); R parfn(jtinplace,lp(w)>0,w);}
 
 // display a list of boxes as if they come from a gerund.  Normal ()
 static F1X(jtltiea){F1PREFIP;A t,*v,*wv,x,y;B b;C c;I n;
@@ -64,7 +65,7 @@ static F1X(jtltiea){F1PREFIP;A t,*v,*wv,x,y;B b;C c;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=parfn(jtinplace,b,x)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtinplace,b,x)););
  R raze(y);
 }
 
@@ -75,7 +76,7 @@ static F1X(jtltieb){F1PREFIP;A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  GATV0(y,BOX,n+n,1); v=AAV(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
  DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=parfn(jtinplace,b,x)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtinplace,b,x)););
  R raze(y);
 }
 
@@ -97,7 +98,7 @@ static F1X(jtlchar){F1PREFIP;A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
   // string ends with an entire a. sequence
   if(!j)R cstr("a.");  // if that's all there is, use a.
   RZ(y=lchar(1==j?scc(*v):str(j,v)));  // recur on the rest of the string to get its lr
-  R lp(y)?over(cstr("a.,~"),y):over(y,cstr(",a."));  // use rest,a. or a.,~rest depending on () needs
+  R lp(y)>0?over(cstr("a.,~"),y):over(y,cstr(",a."));  // use rest,a. or a.,~rest depending on () needs
  }
  if(r1&&m==n&&(y=icap(ne(w,ds(CALP))))&&m>AN(y)){  // if 256-byte string, see where it differs from a.
   if(1==AN(y))RZ(y=head(y));
@@ -293,25 +294,28 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1]; A hs=v->fgh[2];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
 // ?t tells whether () is needed around the f/g/h component
- if(1<=n){f=av[0]; t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
- if(2<=n){g=av[1]; t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):(BETWEENC(id,CHOOK,CADVF)&&BETWEENC(c,CHOOK,CADVF))||lp(g);}  // g: paren any invisible modifier
- if(3<=n){h=av[2]; t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK:BETWEENC(id,CHOOK,CADVF)&&!b?BETWEENC(c,CHOOK,CADVF):lp(h);}  // h: in verb fork, paren hook; in trident, paren any train
+ if(1<=n){f=av[0]; t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||id==CFORK)&&NOUN&AT(t)&&(lp(f)>0);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
+ if(2<=n){g=av[1]; t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):((BETWEENC(id,CHOOK,CADVF))|lp(g))>0;}  // g: paren any invisible modifier
+ if(3<=n){h=av[2]; t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK:((BETWEENC(id,CHOOK,CADVF)&&!b)|lp(h))>0;}  // h: in verb fork, paren hook; in trident, paren any train
  switch(!(b||BETWEENC(id,CHOOK,CADVF))?id:2==n?CHOOK:CFORK){  // if operator or invisible, ignore the type and space based on length
   case CADVF:
   case CHOOK:
    GAT0(y,BOX,3,1); u=AAV(y);
    u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
+// obsolete    if(!(AT(gs)&NOUN)&&(FAV(gs)->fgh[0]==0&&FAV(gs)->fgh[1]==0))gt=0;  // never parenthesize a primitive or noun
    u[2]=g=parfn(jtinplace,gt||b,       g);
-   u[1]=str(' '==cf(g)||id==CADVF&&!laa(f,g)&&!(lp(f)&&lp(g))?0L:1L," ");
+   u[1]=str(' '==cf(g)||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
    RE(0); R raze(y);
   case CFORK:
    GAT0(y,BOX,5,1); u=AAV(y);
    RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
+// obsolete  if(!(AT(gs)&NOUN)&&(FAV(gs)->fgh[0]==0&&FAV(gs)->fgh[1]==0))gt=0;  // never parenthesize a primitive or noun
    RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==cf(g)?0L:1L," "));
+// obsolete   if(!(AT(hs)&NOUN)&&(FAV(hs)->fgh[0]==0&&FAV(hs)->fgh[1]==0))ht=0;  // never parenthesize a primitive or noun
    RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
    R raze(y);
   default:
-   t0=parfn(jtinplace,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&lp(f),f);
+   t0=parfn(jtinplace,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&(lp(f)>0),f);
    t1=lsymb(id,w);
    y=over(t0,laa(t0,t1)?over(chrspace,t1):t1);
    if(1==n)R y;

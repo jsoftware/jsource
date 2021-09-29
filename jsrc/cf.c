@@ -105,7 +105,7 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
     if(CQQ==FAV(p)->id&&CLEFT==ID(q)&&(CLT==ID(FAV(p)->fgh[0])&&FAV(p)->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    }
    break;
- // special code for x ((>[!.0] |) * ]) y, implemented as if !.0, also if >:
+ // special code for x ((<[!.0] |) * ]) y, implemented as if !.0, also if <:
  #if (C_AVX&&SY_64) || EMU_AVX
   case CHOOK:    // (< |[!.0]) * ]  or  ] * (< |[!.0])
    if(BOTHEQ8(gi,hi,CSTAR,CRIGHT) || BOTHEQ8(gi,fi,CSTAR,CRIGHT)){        
@@ -113,7 +113,7 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
     p=hka->fgh[0]; q=hka->fgh[1];
     if(FAV(q)->id==CSTILE){
      I d=FAV(p)->id; d=d==CFIT&&FAV(p)->localuse.lu1.cct==1.0?FAV(FAV(p)->fgh[0])->id:d;  // left side of hook, optionally with !.0
-     if((d&~1)==CGE)f2=jtdeadband;  // accept > or >:
+     if((d&~1)==CLT)f2=jtdeadband;  // accept < or <:
     }
    }
    break;

@@ -226,7 +226,7 @@ DF1(jtatomic1){A z;
 
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
 
-// special code for x ((> |[!.0]) * ]) y, implemented as if !.0
+// special code for x ((<[!.0] |) * ]) y, implemented as if !.0
 #if (C_AVX&&SY_64) || EMU_AVX
 DF2(jtdeadband){A zz;
  F2PREFIP;ARGCHK2(a,w);
@@ -242,7 +242,7 @@ DF2(jtdeadband){A zz;
  __m256d threshold; threshold=_mm256_set1_pd(DAV(a)[0]);  // install threshold
 
  ,
-  u=_mm256_and_pd(_mm256_cmp_pd(threshold,_mm256_and_pd(absmsk,u),_CMP_GT_OQ),u);  // abs value, compare, set to 0 if < threshold
+  u=_mm256_and_pd(_mm256_cmp_pd(threshold,_mm256_and_pd(absmsk,u),_CMP_LT_OQ),u);  // abs value, compare, set to 0 if < threshold
  ,
  )
  RETF(zz);

@@ -1170,6 +1170,8 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
 // DD is found, we call jgets() to get the next line, taking as many lines as needed to leave with a valid line.
 // The string for a DD will contain a trailing LF plus one LF for each LF found inside the DD.
 //
+// Bits 0-1 of env are as for enqueue()
+//
 // Bit 2 of env suppresses the call to jgets().  It will be set if it is known that there is no way to get more
 // input, for example if the string comes from (". y) or from an event.  If an unterminated DD is found when bit 2 is set,
 // the call fails with control error

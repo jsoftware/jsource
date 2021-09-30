@@ -645,10 +645,11 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  RETF(z);   // Mark the box as non-inplaceable, as above
 }
 
-// 128!:9 matrix times sparse vector with early exit
+// 128!:9 matrix times sparse vector with optional early exit
 // y is (boolean exitvec, shape m);(I, int list of nonzero indexes in v, shape p);(V, float list of nonzero values in v, shape p);(M, shape m,n)
 // Result is exitcode (boolean atom) ; product (I {"1 M) +/@:*"1 V (float list shape m)
 // if (0>:i{product)+:(i{exitvec) for any i, exitcode is set to 1 and the product may be incomplete.  Otherwise exitcode is 0
+// therefore, exitvec of 1 means 'no exit, calculate all products'
 // Ex: 'rc col' =. (128!:40) goodbk;(ax ];.0 Am);(ax ];.0 Av);Qk
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
@@ -684,7 +685,7 @@ F1(jtmvmsparse){PROLOG(832);
  __m256i wstride=_mm256_set1_epi64x(n);  // stride between cells in atoms - used for index check
  __m256i ones=_mm256_cmpgt_epi64(wstride,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
  __m256d temp=_mm256_setzero_pd();  // mask to use for gather into all bytes
- __m256d dotprod;  // place where product is assembled
+ __m256d dotprod;  // place where product is assembled.
  UI i=AS(mtx)[0]; // loop counter for number of items to process
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
  __m256i anynegindex=_mm256_setzero_si256();  // accumulate sign bits of the indexes
@@ -714,7 +715,7 @@ F1(jtmvmsparse){PROLOG(832);
   vvalsn=_mm256_maskload_pd(vv+((an-1)&-NPAR),endmask);   // fetch a block of indexes
   indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-  // Now do the operation
+  // Now do the operation.  With <16 elements it doesn't help to use dual accumulators
 #define FINISHDOTPROD dotprod=_mm256_add_pd(dotprod,_mm256_permute2f128_pd(dotprod,dotprod,0x01)); dotprod=_mm256_add_pd(dotprod,_mm256_permute_pd(dotprod,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
   *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(dotprod),0x0); /* store the single result from 0 */ \
   if((I)_mm256_extract_epi64(_mm256_castpd_si256(dotprod),0x0)>0){if(bv==0||((UI)bv>1&&bv[zv-zv0]==0))goto gt0result;} \
@@ -745,7 +746,7 @@ F1(jtmvmsparse){PROLOG(832);
   indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
   do{
-   // 17+indexes.  We must read the tail repeatedly
+   // 17+indexes.  We must read the tail repeatedly.  It might gain a bit to have two accumulators but we don't yet.
    // this first execution audits the indexes and converts negatives
    dotprod=_mm256_mul_pd(vvals0,temp=_mm256_mask_i64gather_pd(temp,mv,indexes0,_mm256_castsi256_pd(ones),SZI));
    dotprod=_mm256_fmadd_pd(vvals1, temp=_mm256_mask_i64gather_pd(temp,mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);

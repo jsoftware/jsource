@@ -337,7 +337,7 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
  if(n-1==0){ \
   /* vector-to-vector, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
-  PRMALIGN(zzop,3,fz,m) \
+  PRMALIGN(zzop,3,fz,m)  /* this changes m */ \
   PRMDUFF(zzop,3,fz,m,32+16+8) \
   PRMMASK(zzop,3,fz) /* runout, using mask */ \
  }else{ \
@@ -349,7 +349,7 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
     }else{ \
      LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
      I n0=n; \
-     PRMALIGN(zzop,1,fz,n0) \
+     PRMALIGN(zzop,1,fz,n0) /* changes n0 */\
      PRMDUFF(zzop,1,fz,n0,32+16) \
      PRMMASK(zzop,1,fz) /* runout, using mask */ \
      PRMINCR(1,fz,((n0-1)&(NPAR-1))+1)  \
@@ -364,7 +364,7 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
     }else { \
      LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
      I n0=n; \
-     PRMALIGN(zzop,2,fz,n0) \
+     PRMALIGN(zzop,2,fz,n0) /* changes n0 */ \
      PRMDUFF(zzop,2,fz,n0,32+8) \
      PRMMASK(zzop,2,fz) /* runout, using mask */ \
      PRMINCR(2,fz,((n0-1)&(NPAR-1))+1)  \

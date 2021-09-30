@@ -309,7 +309,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
 
-// Execution of x u} y.  Call u to get the indices, then
+// Execution of x u} y.  Call (x u y) to get the indices, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
 static DF2(amccv2){F2PREFIP;DECLF; 
  ARGCHK2(a,w); 

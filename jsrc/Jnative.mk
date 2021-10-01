@@ -21,10 +21,10 @@ ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_ARM_MODE := thumb
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -fno-strict-aliasing -march=x86-64 -msse4.2 -mpopcnt -fno-stack-protector
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -fno-strict-aliasing -march=i686 -mssse3 -mfpmath=sse -fno-stack-protector
 endif
 
 LOCAL_SRC_FILES := andjnative.c jeload.c

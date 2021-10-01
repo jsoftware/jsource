@@ -202,14 +202,16 @@ static int javaWd(JNIEnv *env, jclass jcls, int type, A w, A *pz, const char*loc
       len= (*env)->GetArrayLength(env, array);
       if (itype==LIT) {
         if (ishape[0]==-1) {
-          *pz=jega(LIT,len,1,0);
+          ishape[0]=len;
+          *pz=jega(LIT,len,1,ishape);
         } else {
           *pz=jega(LIT,len,2,ishape);
         }
         (*env)->GetByteArrayRegion(env, array, 0, len, (jbyte*)CAV(*pz));
       } else if (itype==INT) {
         if (ishape[0]==-1) {
-          *pz=jega(INT,len,1,0);
+          ishape[0]=len;
+          *pz=jega(INT,len,1,ishape);
         } else {
           *pz=jega(INT,len,2,ishape);
         }

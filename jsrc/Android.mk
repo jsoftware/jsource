@@ -25,12 +25,12 @@ ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_SSE2 -DHAVE_SSSE3=1 -DHAVE_SSE42=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
+  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_SSE2 -DHAVE_SSSE3=1 -DHAVE_SSE42=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -msse4.2 -mpopcnt -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -DSLEEF=1 -DENABLE_SSE2 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
+  LOCAL_CFLAGS := -DSLEEF=1 -DENABLE_SSE2 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=i686 -mssse3 -mfpmath=sse -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif

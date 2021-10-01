@@ -108,14 +108,14 @@ F2PREFIP;ARGCHK2(a,w);
   if(unboxempty<0){
    // w was unboxed or empty.  Put it directly into neww, then ra or zap it if recursive.  If DIRECT abandoned, make result PRISTINE
    AFLAGORLOCAL(neww,(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX))  // starts PRISTINE if abandoned DIRECT
-   if(likely(!(optype&BOX))){raczap(w,aband!=0,c&=~ACINPLACE; INCORPNC(w);)}  // INCORPNC+this=INCORPRA, but using zap when abandoned
+   if(likely(!(optype&BOX))){raczap(w,aband!=0,c&=~ACINPLACE; INCORPNC(w);)}else{ACIPNO(w);}  // INCORPNC+this=INCORPRA, but using zap when abandoned.  If not recursive, must be non-inplace
    AAV(neww)[0]=w;   // install w as first box
   }else{
    // w was boxed, & a known singleton.  Put the single value into neww, then ra or zap if neww recursive.  neww is PRISTINE if w is abandoned pristine
    // We don't have access to the tpush stack, but if w is abandoned recursive we can use the slot in w as a surrogate location to zap - maybe could even if nonrecursive?
    AFLAGORLOCAL(neww,AFLAG(w)&((aband)<<AFPRISTINEX)) AFLAGPRISTNO(w) // transfer pristinity from abandoned w to neww; clear in w since contents escaping
    AAV(neww)[0]=AAV(w)[0];   // install w as first box
-   if(likely(!(optype&BOX)))if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}  // if neww recursize, ra.  zappable if abandoned recursive
+   if(likely(!(optype&BOX))){if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}}else{ACIPNO(w);}  // if neww recursize, ra.  zappable if abandoned recursive  If not recursive, must be non-inplace
   }
   aband=1;  // We can always start adding to the lists created here, UNLESS a and w were the same - 
   w=neww;  // switch to new list

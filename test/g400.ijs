@@ -649,7 +649,8 @@ NB. WILLOPEN propagated through ;~
 16000 > 7!:2 '(2: 0:&.> (b&(<;.1)) ;~ 250000&{.) a'
 1000000 < 7!:2 '(2: 0:&.> <"<"1@:(2 2 $ ,:) ;~ 250000&{.) a'  NB. Must realize w when not a list
 
-
+6 6 3 -: (>: 2 2 2) ([: */&:> >.&# {.!.1&.> ;) (>: 1 1)  NB. failed when >: 1 1 was taken into ; without turning off inplaceability
+6 6 3 -: (>: 2 2 2) ([: */&:> >.&# {.!.1&.> ;) (< >: 1 1)  NB. didn't fail, but same idea
 
 
 

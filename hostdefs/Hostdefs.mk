@@ -20,10 +20,10 @@ ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_ARM_MODE := arm
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -fPIC -O1 -fwrapv -Werror -fno-strict-aliasing -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -O1 -fwrapv -Werror -fno-strict-aliasing -msse4.2 -mpopcnt -fno-stack-protector
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -fPIC -O1 -fwrapv -Werror -fno-strict-aliasing -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -O1 -fwrapv -Werror -fno-strict-aliasing -mssse3 -mfpmath=sse -fno-stack-protector
 endif
 
 LOCAL_CFLAGS += -fPIE

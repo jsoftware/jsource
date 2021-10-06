@@ -97,6 +97,7 @@ C spellin(I n,C*s){
   inf=s[n-1]==CESC1?1:inf; inf=s[n-1]==CESC2?2:inf; inf&=1-n;  // no inflection=0, .=1, :=2, erroneous inflection=-1 
   R BETWEENO((C)inf|p,0x20,0x80)?spellintab2[p-0x20][inf]:0;  // if inflection error, or not ASCII graphic, return 0 (error)
  }
+ if(n>3)R 0;  // > 3 char is always an error now
  // 3-byte characters.  Rare, so handle individually.  Most likely these will be names that are being checked to see if they are primitives
  if(p!='_'){
   // translate the base char to a table index.  Not worth the cache misses to have a full table.  This table fits in 1/2 cache line

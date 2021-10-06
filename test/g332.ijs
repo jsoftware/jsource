@@ -241,6 +241,8 @@ NB. ;: various errors ---------------------------------------------------
 'spelling error' -: ex '_10:'
 'spelling error' -: ex 'l.'
 'spelling error' -: ex 'l.'
+'spelling error' -: ex '&.::'
+'spelling error' -: ex '....'
 
 'ill-formed number' -: ex '123abc    '
 'ill-formed number' -: ex '__abc     '

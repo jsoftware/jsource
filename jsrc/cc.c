@@ -132,7 +132,7 @@ DF2(jtspecialatoprestart){
   R a==mark?on1(jt,w,self) : jtupon2(jt,a,w,self);  // figure out the default routine that should process the compound, and transfer to it  ```
 }
 
-// x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _2 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
+// x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _1 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
 // We go for minimum overhead in the box allocation and copy
 DF2(jtboxcut0){A z;
  F2PREFIP;ARGCHK2(a,w);
@@ -171,10 +171,10 @@ DF2(jtboxcut0){A z;
  wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
  DQ(resatoms,
    I start=av[0]; I endorlen=av[1];
-   if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
+   if(!(BETWEENO(start,0,wi))){if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
    endorlen+=start&abslength;  // convert len to end+1 form
    endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
-   if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
+   if(endorlen<0){if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
    I substratoms=endorlen*cellsize;
    // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
    if(!((I)jtinplace&JTWILLBEOPENED)){
@@ -184,7 +184,7 @@ DF2(jtboxcut0){A z;
    }else{
     // WILLBEOPENED case.  We must allocate a virtual block so we can avoid the copy
 // obsolete    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
-    RZ(y=virtual(w,start*(cellsize<<k),wr)); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
+    RZ(y=virtual(w,start*cellsize,wr)); ACIPNO(y); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
    }
    av+=2;
  );     

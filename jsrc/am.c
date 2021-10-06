@@ -145,6 +145,66 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  C* RESTRICT av0=CAV(a); I k=bpnoun(t); C * RESTRICT avn=av0+(AN(a)*k);
  // Extract the number of axes included in each cell offset; get the cell size
  I cellsize; PROD(cellsize,AR(w)-cellframelen,AS(w)+cellframelen);  // number of atoms per index in ind
+#if 0
+JMCDECL(endmask) JMCSETMASK(endmask,avbytes,1)
+... flags=((-n0)&0x7)...;
+
+
+#define CP11(t)  /* each index copies a different cell to the result */ \
+do{ \
+ case (CTTZI(sizeof(t))-1)*8+0: ((t*)base)[scan0[0]]=((t*)av)[0]; case (CTTZI(sizeof(t))-1)*8+1: ((t*)base)[scan0[1]=((t*)av)[1];  /* copy cells */ \
+ case (CTTZI(sizeof(t))-1)*8+2: ((t*)base)[scan0[2]]=((t*)av)[2]; case (CTTZI(sizeof(t))-1)*8+3: ((t*)base)[scan0[3]=((t*)av)[3]; \
+ case (CTTZI(sizeof(t))-1)*8+4: ((t*)base)[scan0[4]]=((t*)av)[4]; case (CTTZI(sizeof(t))-1)*8+5: ((t*)base)[scan0[7]=((t*)av)[5]; \
+ case (CTTZI(sizeof(t))-1)*8+6: ((t*)base)[scan0[6]]=((t*)av)[6]; case (CTTZI(sizeof(t))-1)*8+7: ((t*)base)[scan0[1]=((t*)av)[7]; \
+ scan0+=8; av=(C*)((t*)av+8);  /* advance pointers */ \
+while(--i0);
+#define CP11v case 0b1000000: NOUNROLL DQ(n0, JMCR(base+abytes**scan0++,av,cellsize,1,endmask)) av+=abytes;
+#define CP1n(t)  /* each index copies the same cell to the result */ \
+do{ \
+ case (4+CTTZI(sizeof(t))-1)*8+0: ((t*)base)[scan0[0]]=((t*)av)[0]; case (4+CTTZI(sizeof(t))-1)*8+1: ((t*)base)[scan0[1]=((t*)av)[0];  /* copy cells */ \
+ case (4+CTTZI(sizeof(t))-1)*8+2: ((t*)base)[scan0[2]]=((t*)av)[0]; case (4+CTTZI(sizeof(t))-1)*8+3: ((t*)base)[scan0[3]=((t*)av)[0]; \
+ case (4+CTTZI(sizeof(t))-1)*8+4: ((t*)base)[scan0[4]]=((t*)av)[0]; case (4+CTTZI(sizeof(t))-1)*8+5: ((t*)base)[scan0[7]=((t*)av)[0]; \
+ case (4+CTTZI(sizeof(t))-1)*8+6: ((t*)base)[scan0[6]]=((t*)av)[0]; case (4+CTTZI(sizeof(t))-1)*8+7: ((t*)base)[scan0[1]=((t*)av)[0]; \
+ scan0+=8;   /* advance pointers */ \
+while(--i0);
+#define CP1nv case 0b1001000:  NOUNROLL DQ(n0, JMCR(base+abytes**scan0++,av,cellsize,1,endmask))
+#define CPn1v case 0b1010000:   /* each index replicates the same cell to fill result */ \
+case l: \
+i0=n0;  /* no duff loop */  \
+do{ \
+ mvc(cellsize,base+*scan0++*cellsize,abytes,av); \
+while(--i0);
+
+ // scatter-copy the data
+ while(1){
+  // loop  over each combination of the last 2 axes
+  n1=1;  // # iterations left on last 2 axes
+  I *scan1=axes[r].indexes; scan1=flags&INFULL1?iotavec:scan1;  // point to indexes (or 0 is axis in full)
+  C *base=axes[r-1].base+axes[r].size**scan1++;  // address of _1-cell being filled in result
+  if(--n1==0)goto skippre;
+  do{
+   C *basepre=flags&INFULL1?base+axes[r+1].size:axes[r].base+axes[r+1].size**scan1++;  // prefetch next address of _1-cell being filled in result
+skippre:;
+   // move one _1-cell using the indexes
+   UI i0=n0;  /* number of duff loops for last axis */ \
+   I *scan0=axes[r+1].indexes-(flags&0x7);  // pointer to first 0-cell index, biased by duff adj
+   av-=cell0size*(flags>>...)...;  // bias output pointer too, but not if it is repeated
+   switch(flags&0x3f){
+   CP11(B) break; CP11(US) break; CP11(UI4) break; CP1n(B) break; CP1n(US) break; CP1n(UI4) break;
+#if SY_64
+   CP11(UI) break; CP1n(UI) break;
+#endif
+   CP11v break; CP1nv break; CPn1v break;
+   default:SEGFAULT;
+   }
+   base=basepre;  // use pprefetch
+  }while(--n1>0);
+  if(n1==0)goto skippre;  // finish up last block if any
+  // We have finished a cell in the last 2 axes.  Advance to next cell if any
+
+
+ }
+#endif
  I *iv=AV(ind);  // start of the cell-index array
  if(UCISRECUR(z)){
   cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower
@@ -225,7 +285,7 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
 // Convert ind to a list of cell offsets.  Error if inhomogeneous cells.
 // Result *cellframelen gives the number of axes of w that have been boiled down to indices in the result
 static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr,*ws;D rkblk[16];
- wr=AR(w); ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and nonempty
+ wr=AR(w); ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
  if(!wr){x=from(ind,zeroionei(0)); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
  if((b&-AR(ind))<0){   // array of boxed indexes
   RZ(j=aindex(ind,w,0L)); j=(A)((I)j&~1LL);  // see if the boxes are homogeneous, or erroneous

@@ -652,7 +652,7 @@ NB. WILLOPEN propagated through ;~
 6 6 3 -: (>: 2 2 2) ([: */&:> >.&# {.!.1&.> ;) (>: 1 1)  NB. failed when >: 1 1 was taken into ; without turning off inplaceability
 6 6 3 -: (>: 2 2 2) ([: */&:> >.&# {.!.1&.> ;) (< >: 1 1)  NB. didn't fail, but same idea
 
-
+'' -: 0 0 >@(,."1@[ <;.0 ]) ''  NB. <;.0 blew up on WILLOPEN
 
 NB. Now hook
 16000 > 7!:2 '1 2 3 4 (0:&.> b&(<;.1)) a'

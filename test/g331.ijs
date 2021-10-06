@@ -1198,6 +1198,27 @@ NB. Failover on sign
 l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + (((5 + ?10),2 1) ?@$ #r) [ r =. i. 20 20
 l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + (((5 + ?10),2 1) ?@$ #r) [ r =. 0.5 + i. 10 10 
 
+data =: i. 1e6
+intervals =: 3 2 1 $ 0 1000   3000 6000   10000 100000
+(+/@> intervals <;.0 data) -: intervals (+/@> @: (<;.0)) data
+(+/@> intervals <"<;.0 data) -: intervals (+/@> @: (<;.0)) data
+intervals =: 3 2 1 $ 1000 0   0 1   0 20
+(+/@> intervals <;.0 data) -: intervals (+/@> @: (<;.0)) data
+(+/@> intervals <"<;.0 data) -: intervals (+/@> @: (<;.0)) data
+intervals =: 3 2 1 $ 1000 0   0 1   999990 10
+(+/@> intervals <;.0 data) -: intervals (+/@> @: (<;.0)) data
+(+/@> intervals <"<;.0 data) -: intervals (+/@> @: (<;.0)) data
+f1 =: {{
+assert. (+/@> x <"<;.0 y) -: x (+/@> @: (<;.0)) y
+assert. (+/@> x <;.0 y) -: x (+/@> @: (<;.0)) y
+1
+}}&>
+(((i. 50+?20)(,"0 1)2 1) (<@(?@$)"1) 5000 1000) f1 <i. (10000+?20)
+(((i. 50+?20)(,"0 1)2 1) (<@(?@$)"1) 5000 1000) f1 <o. i. (10000+?20)
+(((i. 50+?20)(,"0 1)2 1) (<@(?@$)"1) 5000 1000) f1 <r. i. (10000+?20)
+(((i. 50+?20)(,"0 1)2 1) (<@(?@$)"1) 5000 1000) f1 <x: i. (10000+?20)
+(((i. 50+?20)(,"0 1)2 1) (<@(?@$)"1) 5000 1000) f1 <0 = 2 | i. (10000+?20)
+
 a =: b =: ''
 4!:55 ;:'data intervals'
 a1=:b1=:''
@@ -1210,10 +1231,10 @@ a =: 7!:0''
 10000 > 7!:2 'intervals (+/@> @: (<;.0)) data'  NB. verify WILLBEOPENED causes virtuals
 10000 > 7!:2 'intervals ([: +/&.> <;.0) data'  NB. capped fork too
 b =: 7!:0''
-512 > | a - b  NB. Make sure virtual blocks freed
+512 > 0 >. a - b  NB. Make sure virtual blocks freed
 4!:55 ;:'data intervals'
 b1 =: 7!:0''
-512 > | a1 - b1  NB. Make sure virtual blocks freed
+512 > 0 >. a1 - b1  NB. Make sure virtual blocks freed
 
 
 4!:55 ;:'a a1 adot1 adot2 sdot0 b b1 bb c cut3 cutm3 data f f1 f2 f3 f4 f5'

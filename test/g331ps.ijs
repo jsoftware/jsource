@@ -1,8 +1,6 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g331ps.ijs'
 NB. special code for [: ; <@(f/\);.n and [: ; <@(f/\.);.n ---------------
 
-bsp=: #@<@$. :: 0: 0 1    NB. support boxed sparse array
-
 test=: 1 : 0
  :
  f=: u
@@ -133,6 +131,6 @@ x=: 1 (0)}0=1019 ?@$ 4
 2 3 2 2 -: ;@:(<@(,:"0);._1) 1 2 3 1 2 1 2
 (,. 2 3 2 2) -: ;@:(<@:(,:"0);._1) 1 2 3 1 2 1 2
 
-4!:55 ;:'bsp f n P test testb testbw testi testn testov x y'
+4!:55 ;:'f n P test testb testbw testi testn testov x y'
 
 

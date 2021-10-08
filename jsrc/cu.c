@@ -121,7 +121,9 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
 #endif
   }
+#ifndef BOXEDSPARSE
   ASSERT(!ISSPARSE(AT(x)),EVNONCE);
+#endif
   // Store result & advance to next cell
   *zv++=x;
   if(unlikely(!--natoms))break;  // break to avoid fetching over the end of the input

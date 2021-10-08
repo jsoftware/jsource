@@ -41,6 +41,9 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
  } else {
   // <"r
+#ifdef BOXEDSPARSE
+ ASSERT(!ISSPARSE(wt),EVNONCE);    // <"r not implemented
+#endif
   ws=AS(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(wt); wv=CAV(w);

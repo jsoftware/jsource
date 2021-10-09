@@ -22,6 +22,10 @@ if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
+elif [ "`uname`" = "OpenBSD" ]; then
+#jplatform="${jplatform:=openbsd}" # TODO
+jplatform="${jplatform:=linux}"
+make=gmake
 else
 jplatform="${jplatform:=linux}"
 fi
@@ -35,6 +39,8 @@ else
 j64x="${j64x:=j32}"
 fi
 
-jplatform=$jplatform j64x=$j64x ./build_jconsole.sh
-jplatform=$jplatform j64x=$j64x ./build_libj.sh
-jplatform=$jplatform j64x=$j64x ./build_tsdll.sh
+make="${make:=make}"
+
+make=$make jplatform=$jplatform j64x=$j64x ./build_jconsole.sh
+make=$make jplatform=$jplatform j64x=$j64x ./build_libj.sh
+make=$make jplatform=$jplatform j64x=$j64x ./build_tsdll.sh

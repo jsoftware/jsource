@@ -203,5 +203,5 @@ mkdir -p obj/$jplatform/$j64x/
 cp makefile-jconsole obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x
 cd obj/$jplatform/$j64x/
-make -f makefile-jconsole
+$make -f makefile-jconsole
 cd -

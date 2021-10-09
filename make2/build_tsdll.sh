@@ -194,5 +194,5 @@ mkdir -p obj/$jplatform/$j64x/
 cp makefile-tsdll obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET jplatform j64x
 cd obj/$jplatform/$j64x/
-make -f makefile-tsdll
+$make -f makefile-tsdll
 cd -

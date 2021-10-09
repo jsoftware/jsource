@@ -313,6 +313,18 @@ FLAGS_SLEEF=" -DENABLE_ADVSIMD "
 FLAGS_BASE64=" -DHAVE_NEON64=1 "
 ;;
 
+openbsd_j64arm)
+TARGET=libj.so
+CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
+LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+OBJS_AESARM=" aes-arm.o "
+SRC_ASM="${SRC_ASM_RASPI}"
+GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_ADVSIMD "
+#FLAGS_BASE64=" -DHAVE_NEON64=1 " # TODO
+FLAGS_BASE64=""
+;;
+
 darwin_j32) # darwin x86
 TARGET=libj.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"

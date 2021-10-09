@@ -146,6 +146,10 @@ raspberry_j64)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
+openbsd_j64arm)
+CFLAGS="$common -march=armv8-a+crc -DRASPI"
+LDFLAGS=" $LDTHREAD"
+;;
 darwin_j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "

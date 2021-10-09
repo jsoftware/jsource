@@ -152,6 +152,12 @@ CFLAGS="$common -march=armv8-a+crc -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
+openbsd_j64arm)
+TARGET=libtsdll.so
+CFLAGS="$common -march=armv8-a+crc -DRASPI "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
 darwin_j32) # darwin x86
 TARGET=libtsdll.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"

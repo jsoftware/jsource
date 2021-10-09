@@ -23,8 +23,7 @@ jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
 elif [ "`uname`" = "OpenBSD" ]; then
-#jplatform="${jplatform:=openbsd}" # TODO
-jplatform="${jplatform:=linux}"
+jplatform="${jplatform:=openbsd}"
 make=gmake
 else
 jplatform="${jplatform:=linux}"

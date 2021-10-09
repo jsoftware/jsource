@@ -92,6 +92,7 @@ define one of the following in the build as required
 #define SYS_NETBSD          1048576L        /* GCC                         */
 #define SYS_SUNSOL2         2097152L        /* GCC                         */
 #define SYS_MACOSX          4194304L        /* GCC (CC)                    */
+#define SYS_OPENBSD         8388608L        /* GCC                         */
 
 #define SY_WIN32            0    /* any windows intel Visual Studio        */
 #define SY_WINCE            0    /* any windows ce versions                */
@@ -104,7 +105,8 @@ define one of the following in the build as required
 #define SYS_UNIX            (SYS_ATT3B1 + SYS_DEC5500 + SYS_IBMRS6000 + \
                              SYS_MIPS + SYS_NEXT + SYS_SGI + SYS_SUN3 + \
                              SYS_SUN4 + SYS_VAX + SYS_LINUX + SYS_MACOSX + \
-                             SYS_FREEBSD + SYS_NETBSD + SYS_SUNSOL2 + SYS_HPUX)
+                             SYS_FREEBSD + SYS_NETBSD + SYS_OPENBSD + \
+                             SYS_SUNSOL2 + SYS_HPUX)
 
 #if defined(__FreeBSD__)
 #define SYS SYS_FREEBSD
@@ -112,6 +114,10 @@ define one of the following in the build as required
 
 #if defined(__NetBSD__)
 #define SYS SYS_NETBSD
+#endif
+
+#if defined(__OpenBSD__)
+#define SYS SYS_OPENBSD
 #endif
 
 #if defined(sparc) && ! defined(__svr4__)

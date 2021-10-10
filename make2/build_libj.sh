@@ -325,6 +325,43 @@ FLAGS_SLEEF=" -DENABLE_ADVSIMD "
 FLAGS_BASE64=""
 ;;
 
+openbsd_j64) # openbsd intel 64bit nonavx
+TARGET=libj.so
+CFLAGS="$common -msse3 "
+LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_openbsd}"
+GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_SSE2 "
+FLAGS_BASE64=""
+;;
+
+openbsd_j64avx) # openbsd intel 64bit avx
+TARGET=libj.so
+CFLAGS="$common -DC_AVX=1 "
+LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+CFLAGS_SIMD=" -mavx "
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_openbsd}"
+GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX "
+FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
+;;
+
+openbsd_j64avx2) # openbsd intel 64bit avx2
+TARGET=libj.so
+CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
+LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_openbsd}"
+GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX2 "
+FLAGS_BASE64=" -DHAVE_AVX2=1 "
+;;
+
 darwin_j32) # darwin x86
 TARGET=libj.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"

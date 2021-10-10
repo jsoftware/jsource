@@ -150,6 +150,18 @@ openbsd_j64arm)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" $LDTHREAD"
 ;;
+openbsd_j64)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
+openbsd_j64avx)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
+openbsd_j64avx2)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
 darwin_j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "

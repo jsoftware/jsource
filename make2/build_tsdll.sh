@@ -158,6 +158,24 @@ CFLAGS="$common -march=armv8-a+crc -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
 ;;
 
+openbsd_j64) # openbsd intel 64bit nonavx
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
+openbsd_j64avx) # openbsd intel 64bit avx
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
+openbsd_j64avx2) # openbsd intel 64bit avx
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
 darwin_j32) # darwin x86
 TARGET=libtsdll.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"

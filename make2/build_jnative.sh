@@ -147,6 +147,21 @@ TARGET=libjnative.so
 CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
+openbsd_j64)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+openbsd_j64avx)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+openbsd_j64avx2)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
 darwin_j32)
 TARGET=libjnative.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "

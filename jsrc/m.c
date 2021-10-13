@@ -866,10 +866,10 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
-     if((np=QCWORD(np))!=0){fanano0(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
+     if((np=QCWORD(np))!=0){if(AFLAG(np)&AFVIRTUAL)SEGFAULT; fanano0(np);}  // free it  scaf
      np=np0;  // advance to next box
     };
-    if((np=QCWORD(np))!=0){fanano0(np);}  // last box
+    if((np=QCWORD(np))!=0){if(AFLAG(np)&AFVIRTUAL)SEGFAULT; fanano0(np);}  // last box scaf
    }
   } else if(t&NAME){A ref;
    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference

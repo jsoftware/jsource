@@ -22,7 +22,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R drr(hs);
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;  // xop=explicit operator, for which f=u, [h=v], g=the definition;  ex=explicit non-operator, for which f=defn type, g=text, h=processed text 
- b=BETWEENC(id,CHOOK,CADVF); c=id==CFORK||(id==CADVF&&hs!=mark); b&=1^c;  // c if invisible trident (FORK or ADVF); b = invisible bident (HOOK or ADVF)
+ b=BETWEENC(id,CHOOK,CADVF); c=id==CFORK||(id==CADVF&&hs!=0); b&=1^c;  // c if invisible trident (FORK or ADVF); b = invisible bident (HOOK or ADVF)
  m=!!fs+(gs||ex);   // m=# components of combination: test fs and gs, but in explicit definition the definition is in h, so we take that as surrogate g
  if(!m)R spella(w);  // if no components, it must be a primitive, out it
  m+=!b&&!xop||hs&&xop;   // if operator, add component for v if conjunction; if not operator, add component UNLESS w is an invisible bident: for w itself or for h

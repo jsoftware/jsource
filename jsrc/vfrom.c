@@ -380,7 +380,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
 #define AUDITPOSINDEX(x,lim) if(!BETWEENO((x),0,(lim))){if((x)<0)break; ASSERT(0,EVINDEX);}
 // a is list of boxes, w is array, wf is frame of operation, *ind will hold the result
 // if the opened boxes have contents that are all lists with the same item shape (treating atoms as same as singleton lists), create an array of all the indexes; return that array
-// return 0 if error, 1 if the boxes were hot homogeneous.
+// return 0 if error, 1 if the boxes were not homogeneous.
 A jtaindex(J jt,A a,A w,I wf){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  ARGCHK2(a,w);
  an=AN(a);

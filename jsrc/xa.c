@@ -216,14 +216,53 @@ F1(jtsysq){I j;
  R sc(j);
 }
 
+// 9!:52
 F1(jtasgzombq){ASSERTMTV(w); R sc(JT(jt,asgzomblevel));}
 
+// 9!:53
 F1(jtasgzombs){I k; 
  RE(k=i0(w)); 
  ASSERT(BETWEENC(k,0,2),EVDOMAIN);
  JT(jt,asgzomblevel)=(C)k;
  R mtm;
 }
+
+// display deprecation message mno with text mtxt, if enabled
+// return 0 to signal error, 1 to continue
+I jtdeprecmsg(J jt, I mno, C *mtxt){
+ if(jt->deprecct==0)R 1;  // msgs disabled, continue
+ A okmsg; RZ(okmsg=indexof(jt->deprecex,sc(mno))); if(BAV0(okmsg)[0]==0)R 1;  // this msg excluded, continue
+ // code to write output line copied from jtpr1
+ // extract the output type buried in jt
+ jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console
+ ASSERT(jt->deprecct>0,EVNONCE);  // if fail on warning, do so
+ --jt->deprecct;  // decrment # of messages to allow
+ R 1;  // return  no error
+}
+
+// 9!:55  Set deprecation msg status  count;halt;exclusions
+F1(jtdeprecxs){A ct, excl;
+ ARGCHK1(w);
+ if(!(AT(w)&BOX)){ct=w; excl=mtv;
+ }else{
+  ASSERT(AR(w)<=1,EVRANK);  // must be atom or list
+  ASSERT(((AN(w)-1)&~1)==0,EVLENGTH); // must be 1-2 boxes
+  ct=AAV(w)[0]; excl=AN(w)>1?AAV(w)[1]:mtv;  // extract count and exclusion list
+ }
+ I cti;  // integer value of count
+ RE(cti=i0(ct));  // ct must be integral atomic
+ RZ(excl=vi(excl));  // excl mst be integral
+ ASSERT(AR(excl)<2,EVRANK);  // and atomic or list
+ // install values
+ jt->deprecct=cti; ra(excl); fa(jt->deprecex); jt->deprecex=excl;
+ R mtm;
+}
+
+//9!:54
+F1(jtdeprecxq){
+ RETF(link(sc(jt->deprecct),jt->deprecex?jt->deprecex:mtv));  // return  current status
+}
+
 
 // 9!:56  undocumented
 // query/override cpu feature

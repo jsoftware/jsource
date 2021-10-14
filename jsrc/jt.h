@@ -147,20 +147,22 @@ typedef struct rngdata {
  C* fillv;            /* fill value                                      */
  C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG
-// end of cacheline 5
 
 // seldom-used fields
  I malloctotalhwmk;  // highest value since most recent 7!:1
+// end of cacheline 5
  A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
- I getlasterror;     /* DLL stuff                                       */
- I dlllasterror;     /* DLL stuff                                       */
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
+ I deprecct;  // number of deprecation  errors to display, -1 to emsg
+ A deprecex;  // list of INTs of messages not to display
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
 
 // debugging info
  DC sitop;            /* pointer to top of SI stack                                 */
+ I getlasterror;     /* DLL stuff                                       */
+ I dlllasterror;     /* DLL stuff                                       */
 //  end of cacheline 6
 // stats I totalpops;
 // stats I nonnullpops;

@@ -564,9 +564,10 @@ F2(jtfrom){I at;A z;
 F2(jtsfrom){
  if(!ISSPARSE((AT(w)))){
   // Not sparse.  Verify the indexes are numeric and not empty
-  if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is unusual & unimportant & we'll ignore it
+// obsolete   if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is unusual & unimportant & we'll ignore it
+  if(((AN(a)-1)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is a numeric array
    // Check indexes for validity; if valid, turn each row into a cell offset
-   if(ind=celloffset(w,a)){
+   if(ind=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,a)){
     // Fetch the cells and return.  ind is now an array of cell indexes.  View w as an array of those cells
     // We could do this with ifrom, but it validates the input and checks for virtual, neither of which is germane here.  Also, we would have
     // to reshape w into an array of cells.  Easier just to copy the data right here

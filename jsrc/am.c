@@ -309,19 +309,24 @@ endamend:;
 
 // Convert list/table of indexes to a list of cell offsets (the number of the atom starting the cell)
 // w has rank > 0.  Result has shape }:$ind
-// This is used by ind} and <"1@[ { ]  which have different specs when ind is a list.  Here we follow the spec for m}, in which
-// a list ind is treated like a table with rows of length 1
+// This is used by ind} and <"1@[ { ]  which have different specs when ind is a list.  We use a flag in jt:
+// we follow the spec for m}, in which a list ind is treated like a table with rows of length 1, unless JTCELLOFFROM
+// is set, in which case we treat ind as a 1-row table
 // The indexes are audited for validity and negative values
 // This is like pind/aindex1 followed by pdt, but done in registers and without worrying about checks for overflow, since the result
 // if valid will fit into an integer.  If there are no negative indexes, this method is just a teeny bit faster, because pind/aindex1 do one quick loop at full memory
 // speed to validate the input, and pdt works well for a large number of short vectors - in particular it avoids the carried dependency between axes that
 // Horner's Rule creates.  This version keeps things in registers and has less setup time; and it is much better if there are negative indexes.
-A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
+A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z=0;F1PREFIP;
  ARGCHK1(w);
- if(AR(ind)<2){RZ(z=pind(AS(w)[0],ind));  // (m}only) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
+ if(AR(ind)<2){
+  // rank of w is 0 or 1.  Treat as list of first-axis values (as is suitable for m}) unless FROM is specified and rank=1; then treat as list of successive axes
+  if(!((I)jtinplace&AR(ind)&JTCELLOFFROM))RZ(z=pind(AS(w)[0],ind));  // (m}only) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
+  // if FROM, leave z=0 and fall through to treat as table
  }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
- }else{
-  // rank of ind>1, and rows of ind are longer than 1. process each row to a cell offset
+ }
+ if(likely(z==0)){  // if not handled already...
+  // rank of ind>1 (or = if CELLOFFFROM), and rows of ind are longer than 1. process each row to a cell offset
   I naxes = AS(ind)[AR(ind)-1];
   I nzcells; PROD(nzcells,AR(ind)-1,AS(ind));
   if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // w is now an INT vector, possibly the input argument
@@ -374,7 +379,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
   // later this can use the code for table m
  }
  if(b>=0){
-  // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a cell index)
+  // Numeric/empty m.  Each 1-cell is a list of indexes (if m is a list, each atom is a cell index)
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
  }else{  // a single box.
@@ -415,7 +420,31 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  AD * RESTRICT ind=VAV(self)->fgh[0];  // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  if(likely(!ISSPARSE(AT(w)|AT(ind)))){
-  I cellframelen; ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
+  // non-sparse.  The fast cases are: (1) numeric m; (2) single box m.  numeric m turns into a single list of validated indexes; single box m turns into
+  // a list of boxes, one  for each index.  multiple-box m is converted to a list of indexes, possibly very inefficiently.  If we end up with a list of indexes,
+  // we also need to know the frame of the cells
+  I cellframelen;
+#if 0
+ wr=AR(w); ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
+ if(!wr){x=from(ind,zeroionei(0)); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
+  if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
+   // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table, convert to cell indexes.  If rank>2, error
+  }else{
+   if(unlikely(AN(ind)!=1))ind=jstd(w,ind,&cellframelen);  // get ind and framelen for the complex indexes
+   else{
+    // ind is a single box.
+    ind=AAV(ind)[0];  // discard ind, move to its contents
+    if(AT(ind)&BOX{
+     // contents are boxed.  They have selectors for sequential axes.  Put them into a multidimensional ind struct.  In this struct a pointer of 0 means
+     // an axis taken in full
+    }else{
+     // contents are numeric.  They must be a single list of successive axes; convert to a single cell index
+    }
+   }
+  }
+#else
+ ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
+#endif
   z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
   // We modified w which is now not pristine.
   PRISTCLRF(w)

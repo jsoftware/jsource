@@ -131,6 +131,7 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
 // u`:m
 F2(jtevger){A hs;I k;
  ARGCHK2(a,w);
+ STACKCHKOFL  // because this is an execution, we must check the stack to avoid self-executions
  RE(k=i0(w)); 
  if(k==GTRAIN)R exg(a);
  RZ(hs=fxeachv(RMAX,a));

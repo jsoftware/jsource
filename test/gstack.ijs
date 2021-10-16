@@ -96,6 +96,18 @@ end.
 )
 f 10000
 
+NB. test for self-repplicating gerund
+{{ J=. ((<@:((":0) ,&:< ]) , ])([.].))(`:6)
+ CRASH=. 5!:1@<'J'
+try.
+(CRASH ((<@:((,'0') ,&:< ]) , ]) ([.].))) (`:6)
+0
+catch.
+17=13!:11''  NB. should be stack error
+end.
+}} ''
+
+
 4!:55 ;:'c f f5 f6 g t p'
 
 

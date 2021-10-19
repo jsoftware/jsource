@@ -112,6 +112,7 @@ isprist =: ([: * 16b1000000 (17 b.) 1&{)
 ispristorunbox =: ([: * 16b1000000 (17 b.) 1&{) +. 32 ~: [: (17 b. -) 3&{
 isvirt =: [: * 16b20000 (17 b.) 1&{
 isro =: [: * 16b1 (17 b.) 1&{
+isip =: 0 > 4&{
 countis =: 4&{
 (isro,-.@isprist) 13!:83 i. 20  NB. Short vec is readonly
 (-.@isprist) 13!:83 < i. 20  NB. not prist when boxed
@@ -400,5 +401,11 @@ a =: 7!:0 ''
 a > _1000 + 7!:0 ''
 
 (,<,<0) -: ((}: , 0: each@:{:) each) @: (00"_ each each) ,<,<,<97   NB. used to free block prematurely
+
+NB. READONLY result of explicit defn is not inplaceable
+(isro *. -.@isip) 13!:83 {{ i. y }} 7
+isip 13!:83 {{ i. y }} 1e6
+1: 00 * {{ i. y }} 7
+0 1 2 3 4 5 6 7 8 9 -: i.10
 
 4!:55 ;:'a ckprist countis e exx_z_ gname isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '

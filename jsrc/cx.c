@@ -655,8 +655,8 @@ docase:
  // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  If the usecount is inplaceable 1,
  // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
  // Note that we know we are not returning a virtual block here, so it is OK to write to AM
- // BUT: SPARSE value must NEVER be inplaceable, because the children aren't handled correctly during assignment
- if(likely(z!=0))if(likely((_ttop!=jt->tnextpushp)==AC(z))){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere
+ // BUT: SPARSE value must NEVER be inplaceable, because the children aren't handled correctly during assignment; and READONLY values must never be inplaceable
+ if(likely(z!=0))if(likely(((_ttop!=jt->tnextpushp)==AC(z))&(~AFLAG(z)>>AFROX))){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere
  RETF(z);
 }
 

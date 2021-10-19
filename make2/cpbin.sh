@@ -23,6 +23,18 @@ cp ../bin/${jplatform}/j64/libtsdll.so ../jlibrary/bin/. || true
 cp ../bin/${jplatform}/j32/libj.so ../jlibrary/bin32/. || true
 cp ../bin/${jplatform}/j64/libj.so ../jlibrary/bin/. || true
 
+elif [ "`uname -m`" = "arm64" ]; then
+
+cp ../bin/${jplatform}/j64arm/jconsole ../jlibrary/bin/. || true
+cp ../bin/${jplatform}/j64arm/libtsdll.dylib ../jlibrary/bin/. || true
+cp ../bin/${jplatform}/j64arm/libj.dylib ../jlibrary/bin/. || true
+
+if [ -f "../bin/${jplatform}/j64/jconsole" ]; then
+cp ../bin/${jplatform}/j64/jconsole ../jlibrary/bin32/. || true
+cp ../bin/${jplatform}/j64/libtsdll.dylib ../jlibrary/bin32/. || true
+cp ../bin/${jplatform}/j64/libj.dylib ../jlibrary/bin32/. || true
+fi
+
 else
 
 cp ../bin/${jplatform}/j32/jconsole ../jlibrary/bin32/. || true

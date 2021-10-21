@@ -41,6 +41,7 @@ static JGetAType jgeta;
 static JSetAType jseta;
 char path[PLEN];
 char pathdll[PLEN];
+static char pathdllpx[PLEN];
 static char jdllver[20];
 static int FHS=0;
 #ifdef ANDROID
@@ -235,10 +236,13 @@ void jepath(char* arg,char* lib)
 #ifdef ANDROID
  if(stat(pathdll,&st))strcpy(pathdll,tmp);
 #endif
-#if !defined(_WIN32) && !defined(__MACH__) && !defined(ANDROID)
- char pathdllpx[10];
- strncpy(pathdllpx,pathdll,10); pathdllpx[9]=0;
- if(stat(pathdll,&st)&&!strcmp(pathdllpx,"/usr/bin/")) FHS=1;
+#if !defined(_WIN32) && !defined(ANDROID)
+ if(stat(pathdll,&st)){
+ FHS=1; strcpy(pathdllpx,pathdll);
+ if(!strncmp(pathdll,"/usr/bin/",strlen("/usr/bin/")))pathdllpx[strlen("/usr/bin/")]=0;
+ else if(!strncmp(pathdll,"/usr/local/bin/",strlen("/usr/local/bin/")))pathdllpx[strlen("/usr/local/bin/")]=0;
+ else if(!strncmp(pathdll,"/opt/homebrew/bin/",strlen("/opt/homebrew/bin/")))pathdllpx[strlen("/opt/homebrew/bin/")]=0;
+ else {FHS=0; pathdllpx[0]=0;}
  if (FHS) {
   char _jdllver[20];
   strcpy(_jdllver,jversion);
@@ -248,6 +252,7 @@ void jepath(char* arg,char* lib)
   strcpy(pathdll,JDLLNAME);
   strcat(pathdll,".");
   strcat(pathdll,jdllver);
+ }
  }
 #endif
  if(*lib)
@@ -293,7 +298,9 @@ int jefirst(int type,char* arg)
   if (!FHS)
 		strcat(input,"(3 : '0!:0 y')<BINPATH,'");
   else {
-		strcat(input,"(3 : '0!:0 y')<'/etc/j/");
+		if(!strcmp(pathdllpx,"/usr/local/bin/"))strcat(input,"(3 : '0!:0 y')<'/usr/local/etc/j/");
+		else if(!strcmp(pathdllpx,"/opt/homebrew/bin/"))strcat(input,"(3 : '0!:0 y')<'/opt/homebrew/etc/j/");
+		else strcat(input,"(3 : '0!:0 y')<'/etc/j/");
 		strcat(input,jdllver);
 	}
 #endif
@@ -326,8 +333,11 @@ int jefirst(int type,char* arg)
 	strcat(input,"[AndroidPackage_z_=:'");
 	strcat(input,AndroidPackage);
 	strcat(input,"'");
-#elif defined(RASPI)
+#endif
+#if defined(RASPI)
 	strcat(input,"[IFRASPI_z_=:1");
+#else
+	strcat(input,"[IFRASPI_z_=:0");
 #endif
 #if defined(_WIN32)
 	strcat(input,"[UNAME_z_=:'Win'");
@@ -336,6 +346,8 @@ int jefirst(int type,char* arg)
 #elif !defined(ANDROID)
 	strcat(input,"[UNAME_z_=:'Linux'");
 #endif
+	if(FHS) strcat(input,"[FHS_z_=:1");
+	else strcat(input,"[FHS_z_=:0");
 #if 0
 	sprintf(buf,"(" FMTI ")",(I)(intptr_t)hjdll);
 	strcat(input,"[HLIBJ_z_=:");

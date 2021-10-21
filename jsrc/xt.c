@@ -53,9 +53,9 @@ F1(jtsphwmk){
 }
 
 F1(jtspit){A z;I k; 
- F1RANK(1,jtspit,DUMMYSELF); 
+ F1RANK(1,jtspit,DUMMYSELF);
  jt->bytesmax=k=spstarttracking();  // start keeping track of bytesmax
- FDEPINC(1); z=exec1(w); FDEPDEC(1);
+ FDEPINC(1); A *old=jt->tnextpushp; z=exec1(w); tpop(old); FDEPDEC(1);  // pop tstack so that a returned arg is taken off & usecount decremented
  spendtracking();  // end tracking, even if there was an error
  RZ(z);
  R sc(jt->bytesmax-k);
@@ -174,6 +174,7 @@ __int64 GetMachineCycleCount()
 
 F1(jttss){ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 
+// 6!:2 dyad
 F2(jttsit2){A z;D t;I n;
  F2RANK(0,1,jttsit2,DUMMYSELF);
  RE(n=i0(a));
@@ -186,6 +187,7 @@ F2(jttsit2){A z;D t;I n;
  R scf(n?t/(n*pf):0);
 }
 
+// 6!:2 monad
 F1(jttsit1){R tsit2(num(1),w);}
 
 #ifdef _WIN32

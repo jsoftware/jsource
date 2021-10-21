@@ -136,6 +136,10 @@ l1 =: (9999#1),0
 l0 =: 0 (0}) l1
 THRESHOLD +. ((1000) 6!:2 'l0 # i. 10000') (> 1.25&*)&(-&((1000) 6!:2 'i. 10000')) ((1000) 6!:2 'l1 # i. 10000')  NB. occasionally miscompares
 
+NB. verify that 7!:2 clears tpop stack
+f1 =: 1e6$0
+*./ 3000 > (7!:2 , 7!:2) 'f1 =: 1 (2 3 4)} f1'
+
 10000 > 7!:2 '1 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy
 10000 > 7!:2 '01 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy
 10000 > 7!:2 'l1 # l0' [ l1 =: 1 #~ # l0 =: i. 100 100   NB. Verify (all 1) # y does not copy

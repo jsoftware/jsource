@@ -1540,13 +1540,15 @@ if. UNAME-:'Win' do.
 else.
   if. -.ferase DLL do. log'upgrade failed - ferase libj.so.old - exit all J sessions and try again' return. end.
   if. -.DLL frename NEW do. log'upgrade failed - rename libj.so.new to libj.so' return. end.
-  if. FHS*.UNAME-:'Linux' do.
-    2!:0 'chmod 644 "',DLL,'"'
-    2!:0 'chown root:root "',DLL,'"'
-    2!:0 'ldconfig'
+  if. FHS*.IFUNIX do.
+    2!:0 'chmod 755 "',DLL,'"'
+    if. 'root'-: user=. 2!:5'user' do.
+      2!:0 'chown ',user,':',user,' "',DLL,'"'
+      2!:0^:('Linux'-:UNAME) 'ldconfig'
+    end.
   end.
 end.
-'upgrade installed - shutdown, restart, and check JVERSION'
+'upgrade installed - exit, restart J, and check JVERSION'
 )
 je_get=: 3 : 0
 'jxxx br plat bits name'=. y
@@ -1561,16 +1563,16 @@ i=. ('Win';'Darwin')i.<UNAME
 plat=. ;i{'windows';'darwin';IFRASPI{::'linux';'raspberry'
 name=. ;i{'j.dll';'libj.dylib';'libj.so'
 bname=. '~bin/',name
-if. FHS*.UNAME-:'Linux' do.
+if. FHS*.IFUNIX do.
   v=. ({.~i.&'/')}.9!:14''
   sub=. '.',({.v),'.',}.v
-  if. fexist '/etc/redhat-release' do.
-    d1=. IF64{::'/usr/lib/';'/usr/lib64/'
-  else.
-    if. IFRASPI do.
-      d1=. IF64{::'/usr/lib/arm-linux-gnueabihf/';'/usr/lib/aarch64-linux-gnu/'
-    elseif. do.
-      d1=. IF64{::'/usr/lib/i386-linux-gnu/';'/usr/lib/x86_64-linux-gnu/'
+  if. 'Darwin'-:UNAME do.
+    d1=. (({.~ i:&'/')BINPATH),'/lib/'
+  elseif. IFRASPI do.
+    d1=. (({.~ i:&'/')BINPATH),IF64{::'/lib/arm-linux-gnueabihf/';'/lib/aarch64-linux-gnu/'
+  elseif. do.
+    if. -.fexist d1=. (({.~ i:&'/')BINPATH),IF64{::'/lib/i386-linux-gnu/';'/lib/x86_64-linux-gnu/' do.
+      d1=. (({.~ i:&'/')BINPATH),IF64{::'/lib/';'/lib64/'
     end.
   end.
   bname=. d1,name,sub
@@ -1614,12 +1616,14 @@ if. '/usr/share/j/' -: 13{. jpath'~install' do. msg=. 'jqt' end.
 smoutput 'Exit and restart J using ',msg
 )
 qt_ldd_test=: 3 : 0
-if. '/usr/share/j/' -: 13{. jpath'~install' do.
-  d=. <;._2 hostcmd_jpacman_ 'ldd /usr/bin/jqt-9.03'
-  d=. d,<;._2 hostcmd_jpacman_ 'ldd ',y,'/libjqt.so.9.03'
+ldd=. ('Darwin'-:UNAME){::'ldd';'otool -L'
+suffix=. ('Darwin'-:UNAME){::'so';'dylib'
+if. FHS*.IFUNIX do.
+  d=. <;._2 hostcmd_jpacman_ ldd,' ',BINPATH,'/jqt-9.03'
+  d=. d,<;._2 hostcmd_jpacman_ ldd,' ',y,'/libjqt.',suffix,'.9.03'
 else.
-  d=. <;._2 hostcmd_jpacman_ 'ldd ',jpath'~bin/jqt'
-  d=. d,<;._2 hostcmd_jpacman_ 'ldd ',jpath'~bin/libjqt.so'
+  d=. <;._2 hostcmd_jpacman_ ldd,' ',jpath'~bin/jqt'
+  d=. d,<;._2 hostcmd_jpacman_ ldd,' ',jpath'~bin/libjqt.',suffix
 end.
 b=. d#~;+./each (<'not found') E. each d
 if. #b do.
@@ -1639,56 +1643,53 @@ if. 'Linux'-:UNAME do.
   elseif. do.
     z=. 'jqt-',((y-:'slim') pick 'linux';'slim'),'-',(IF64 pick 'x86';'x64'),'.tar.gz'
   end.
-  z1=. 'libjqt.so'
+  z1=. 'libjqt.',suffix=. 'so'
 elseif. IFWIN do.
   z=. 'jqt-win',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
-  z1=. 'jqt.dll'
+  z1=. 'jqt.',suffix=. 'dll'
 elseif. do.
   z=. 'jqt-mac',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
-  z1=. 'libjqt.dylib'
+  z1=. 'libjqt.',suffix=. 'dylib'
 end.
 'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j903/qtide/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
 d=. jpath '~bin'
-fhs=. '/usr/share/j/' -: 13{. jpath'~install'
 if. IFWIN do.
   unzip_jpacman_ p;d
 else.
-  if. 'Linux'-:UNAME do.
-    if. fhs do.
-      if. fexist '/etc/redhat-release' do.
-        d1=. IF64{::'/usr/lib/.';'/usr/lib64/.'
-      else.
-        if. IFRASPI do.
-          d1=. IF64{::'/usr/lib/arm-linux-gnueabihf/.';'/usr/lib/aarch64-linux-gnu/.'
-        elseif. do.
-          d1=. IF64{::'/usr/lib/i386-linux-gnu/.';'/usr/lib/x86_64-linux-gnu/.'
-        end.
+  if. FHS do.
+    if. 'Darwin'-:UNAME do.
+      d1=. (({.~ i:&'/')BINPATH),'/lib/'
+    elseif. IFRASPI do.
+      d1=. (({.~ i:&'/')BINPATH),IF64{::'/lib/arm-linux-gnueabihf/';'/lib/aarch64-linux-gnu/'
+    elseif. do.
+      if. -.fexist d1=. (({.~ i:&'/')BINPATH),IF64{::'/lib/i386-linux-gnu/';'/lib/x86_64-linux-gnu/' do.
+        d1=. (({.~ i:&'/')BINPATH),IF64{::'/lib/';'/lib64/'
       end.
-      echo 'install libjqt.so to ',d1
-      hostcmd_jpacman_ 'rm -f /usr/bin/jqt'
-      echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-9.03 && cp libjqt.so ',d1,'/libjqt.so.9.03 && chmod 755 ',d1,'/libjqt.so.9.03 && ldconfig'
-      hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-9.03 && cp libjqt.so ',d1,'/libjqt.so.9.03 && chmod 755 ',d1,'/libjqt.so.9.03 && ldconfig'
-      echo 'update-alternatives --install /usr/bin/jqt jqt /usr/bin/jqt-9.03 903'
-      hostcmd_jpacman_ 'update-alternatives --install /usr/bin/jqt jqt /usr/bin/jqt-9.03 903'
-    else.
-      hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
+    end.
+    echo 'install libjqt.',suffix,' to ',d1
+    hostcmd_jpacman_ 'rm -f ',BINPATH,'/jqt'
+    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.03 && cp libjqt.',suffix,' ',d1,'/libjqt.',suffix,'.9.03 && chmod 755 ',d1,'/libjqt.',suffix,'.9.03', ('Linux'-:UNAME)#' && ldconfig'
+    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.03 && cp libjqt.',suffix,' ',d1,'/libjqt.',suffix,'.9.03 && chmod 755 ',d1,'/libjqt.',suffix,'.9.03', ('Linux'-:UNAME)#' && ldconfig'
+    if. 'Linux'-:UNAME do.
+      echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.03 903'
+      hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.03 903'
     end.
   else.
-    hostcmd_jpacman_ 'unzip -o ',(dquote p),' -d ',dquote d
+    hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
   end.
 end.
 ferase p
-if. #1!:0 fhs{::(jpath '~bin/',z1);'/usr/bin/jqt' do.
+if. #1!:0 FHS{::(BINPATH,'/',z1);BINPATH,'/jqt' do.
   m=. 'Finished install of ',bin
 else.
   m=. 'Unable to install ',bin,LF
-  m=. m,'check that you have write permission for: ',LF,fhs{::(jpath '~bin');'/usr/bin'
+  m=. m,'check that you have write permission for: ',LF,BINPATH
 end.
 smoutput m
-if. 'Linux'-:UNAME do.
+if. IFUNIX do.
   qt_ldd_test d1
   smoutput 'If libjqt cannot be loaded, see this guide for installing the Qt library'
   smoutput 'https://code.jsoftware.com/wiki/Guides/Linux_Installation'

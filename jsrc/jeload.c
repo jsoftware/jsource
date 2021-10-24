@@ -41,7 +41,9 @@ static JGetAType jgeta;
 static JSetAType jseta;
 char path[PLEN];
 char pathdll[PLEN];
-static char pathdllpx[PLEN];
+static char pathetcpx[PLEN];
+static char pathexec0[PLEN];
+static char pathexec[PLEN];
 static char jdllver[20];
 static int FHS=0;
 #ifdef ANDROID
@@ -193,11 +195,13 @@ void jepath(char* arg,char* lib)
  n=readlink("/proc/self/exe",arg2,sizeof(arg2));
  if(-1==n) strcpy(arg2,arg); else arg2[n]=0;
 #endif
+ strcpy(pathexec0,arg2);
  // fprintf(stderr,"arg2 %s\n",arg2);
  // arg2 is path (abs or relative) to executable or soft link
  n=readlink(arg2,arg3,sz);
  if(-1==n) strcpy(arg3,arg2); else arg3[n]=0;
  // fprintf(stderr,"arg3 %s\n",arg3);
+ strcpy(pathexec,arg3);
  if('/'==*arg3)
   strcpy(path,arg3);
  else
@@ -237,12 +241,18 @@ void jepath(char* arg,char* lib)
  if(stat(pathdll,&st))strcpy(pathdll,tmp);
 #endif
 #if !defined(_WIN32) && !defined(ANDROID)
- if(stat(pathdll,&st)){
- FHS=1; strcpy(pathdllpx,pathdll);
- if(!strncmp(pathdll,"/usr/bin/",strlen("/usr/bin/")))pathdllpx[strlen("/usr/bin/")]=0;
- else if(!strncmp(pathdll,"/usr/local/bin/",strlen("/usr/local/bin/")))pathdllpx[strlen("/usr/local/bin/")]=0;
- else if(!strncmp(pathdll,"/opt/homebrew/bin/",strlen("/opt/homebrew/bin/")))pathdllpx[strlen("/opt/homebrew/bin/")]=0;
- else {FHS=0; pathdllpx[0]=0;}
+ if(stat(pathdll,&st)||strncmp(pathexec0,"/usr/bin/",9)||strncmp(pathexec0,"/usr/local/bin/",15)||strncmp(pathexec0,"/opt/homebrew/bin/",18)){
+ char pathpx[PLEN];
+ if('/'==*pathexec){
+ if(!strncmp(pathexec,"/opt/homebrew/bin/",strlen("/opt/homebrew/bin/"))){FHS=1; strcat(pathetcpx,"/opt/homebrew");}
+ else if(!strncmp(pathexec,"/usr/local/bin/",strlen("/usr/local/bin/"))){FHS=1; strcat(pathetcpx,"/usr/local");}
+ else if(!strncmp(pathexec,"/usr/bin/",strlen("/usr/bin/"))){FHS=1; pathetcpx[0]=0; }
+ }else{
+ strcpy(pathpx,"/opt/homebrew/bin/"); strcat(pathpx,pathexec); if(!stat(pathpx,&st)){FHS=1; strcat(pathetcpx,"/opt/homebrew"); }
+ else {strcpy(pathpx,"/usr/local/bin/"); strcat(pathpx,pathexec); if(!stat(pathpx,&st)){FHS=1; strcat(pathetcpx,"/usr/local"); }
+ else {strcpy(pathpx,"/usr/bin/"); strcat(pathpx,pathexec); if(!stat(pathpx,&st)){FHS=1; pathetcpx[0]=0; }
+ }}
+ }
  if (FHS) {
   char _jdllver[20];
   strcpy(_jdllver,jversion);
@@ -298,9 +308,9 @@ int jefirst(int type,char* arg)
   if (!FHS)
 		strcat(input,"(3 : '0!:0 y')<BINPATH,'");
   else {
-		if(!strcmp(pathdllpx,"/usr/local/bin/"))strcat(input,"(3 : '0!:0 y')<'/usr/local/etc/j/");
-		else if(!strcmp(pathdllpx,"/opt/homebrew/bin/"))strcat(input,"(3 : '0!:0 y')<'/opt/homebrew/etc/j/");
-		else strcat(input,"(3 : '0!:0 y')<'/etc/j/");
+		strcat(input,"(3 : '0!:0 y')<'");
+		strcat(input,pathetcpx);
+		strcat(input,"/etc/j/");
 		strcat(input,jdllver);
 	}
 #endif
@@ -354,6 +364,7 @@ int jefirst(int type,char* arg)
 	strcat(input,buf);
 #endif
 	strcat(input,"[BINPATH_z_=:'");
+	if(!FHS){
 	p=path;
 	q=input+strlen(input);
 	while(*p)
@@ -362,6 +373,10 @@ int jefirst(int type,char* arg)
 		*q++=*p++;
 	}
 	*q=0;
+	} else {
+	if(0==*pathetcpx) strcat(input,"/usr/bin");
+	else {strcat(input,pathetcpx); strcat(input,"/bin"); }
+	}
 	strcat(input,"'");
 
 	strcat(input,"[LIBFILE_z_=:'");

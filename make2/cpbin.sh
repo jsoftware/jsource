@@ -2,6 +2,21 @@
 
 # copy binaries in bin/ to jlibrary/bin
 
+function cop(){
+# $1 src
+# $2 srclib
+# $3 dest
+# $4 destlib
+# MUST rename/remove object first; overwrite cause cache error
+if [ -f "../bin/${jplatform}/$1/$2" ]; then
+if [ -f "../jlibrary/$3/$4" ]; then
+mv "../jlibrary/$3/$4" "../jlibrary/$3/$4.old"
+fi
+echo \# cp "../bin/${jplatform}/$1/$2" "../jlibrary/$3/$4"
+cp "../bin/${jplatform}/$1/$2" "../jlibrary/$3/$4"
+fi
+}
+
 cd "`dirname "$0"`"
 
 if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1 ]; then
@@ -12,73 +27,72 @@ else
 jplatform="${jplatform:=linux}"
 fi
 
-if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1 ]; then
+echo \# jplatform $jplatform
 
-cp ../bin/${jplatform}/j32/jconsole ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/jconsole ../jlibrary/bin/. || true
+if [ $jplatform = "darwin" ]; then
 
-cp ../bin/${jplatform}/j32/libtsdll.so ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libtsdll.so ../jlibrary/bin/. || true
-
-cp ../bin/${jplatform}/j32/libj.so ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libj.so ../jlibrary/bin/. || true
-
-elif [ "`uname -m`" = "arm64" ]; then
-
-# bin for arm64 binaries
-# MUST rename/remove object first; overwrite cause cache error
-if [ -f "../bin/${jplatform}/j64arm/jconsole" ]; then
-mv ../jlibrary/bin/jconsole ../jlibrary/bin/jconsole.old || true
-mv ../jlibrary/bin/libtsdll.dylib ../jlibrary/bin/libtsdll.dylib.old || true
-mv ../jlibrary/bin/libj.dylib ../jlibrary/bin/libj.dylib.old || true
-cp ../bin/${jplatform}/j64arm/jconsole ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64arm/libtsdll.dylib ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64arm/libj.dylib ../jlibrary/bin/. || true
+# macos 64-bit
+if [ -f "../bin/${jplatform}/j64/jconsole" ] && [ -f "../bin/${jplatform}/j64arm/jconsole" ]; then
+# fat binary
+if [ -f "../jlibrary/bin/jconsole" ]; then
+mv "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole.old"
+fi
+echo \# lipo "../bin/${jplatform}/j64/jconsole" "../bin//${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
+lipo "../bin/${jplatform}/j64/jconsole" "../bin//${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
+elif [ -f "../bin/${jplatform}/j64/jconsole" ]; then
+cop j64 jconsole bin jconsole
+elif [ -f "../bin/${jplatform}/j64arm/jconsole" ]; then
+cop j64arm jconsole bin jconsole
 fi
 
-# bin32 for x86_64 binaries
-if [ -f "../bin/${jplatform}/j64/jconsole" ]; then
-mv ../jlibrary/bin32/jconsole ../jlibrary/bin32/jconsole.old || true
-mv ../jlibrary/bin32/libtsdll.dylib ../jlibrary/bin32/libtsdll.dylib.old || true
-mv ../jlibrary/bin32/libj.dylib ../jlibrary/bin32/libj.dylib.old || true
-cp ../bin/${jplatform}/j64/jconsole ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libtsdll.dylib ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libj.dylib ../jlibrary/bin32/. || true
+if [ -f "../jlibrary/bin/jconsole" ]; then
+if [ -f "../jlibrary/bin/jconsole-mac" ]; then
+mv "../jlibrary/bin/jconsole-mac" "../jlibrary/bin/jconsole-mac.old"
 fi
+echo \# cp "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole-mac" 
+cp "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole-mac" 
+fi
+
+cop j64 libtsdll.dylib bin libtsdll.dylib
+if [ -f "../bin/${jplatform}/j64/libj.dylib" ] && [ -f "../bin/${jplatform}/j64arm/libj.dylib" ]; then
+# fat binary
+if [ -f "../jlibrary/bin/libj.dylib" ]; then
+mv "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj.dylib.old"
+fi
+echo \# lipo "../bin/${jplatform}/j64/libj.dylib" "../bin//${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
+lipo "../bin/${jplatform}/j64/libj.dylib" "../bin//${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
+elif [ -f "../bin/${jplatform}/j64/libj.dylib" ]; then
+cop j64 libj.dylib bin libj.dylib
+elif [ -f "../bin/${jplatform}/j64arm/libj.dylib" ]; then
+cop j64arm libj.dylib bin libj.dylib
+fi
+
+if [ -f "../jlibrary/bin/libj.dylib" ]; then
+if [ -f "../jlibrary/bin/libj-nonavx.dylib" ]; then
+mv "../jlibrary/bin/libj-nonavx.dylib" "../jlibrary/bin/libj-nonavx.dylib.old"
+fi
+echo \# cp "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj-nonavx.dylib"
+cp "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj-nonavx.dylib"
+fi
+
+cop j64avx libj.dylib bin libjavx.dylib
+cop j64avx2 libj.dylib bin libjavx2.dylib
 
 else
 
-cp ../bin/${jplatform}/j32/jconsole ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/jconsole ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64avx/jconsole ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64avx2/jconsole ../jlibrary/bin/. || true
+# linux/raspberry 64-bit
+cop j64 jconsole bin jconsole
+cop j64 jconsole bin jconsole-lx
+cop j64 libtsdll.so bin libtsdll.so
+cop j64 libj.so bin libj.so
+cop j64 libj.so bin libj-nonavx.so
+cop j64avx libj.so bin libjavx.so
+cop j64avx2 libj.so bin libjavx2.so
 
-if [ "`uname`" = "Darwin" ]; then
-
-cp ../bin/${jplatform}/j32/libtsdll.dylib ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libtsdll.dylib ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64avx/libtsdll.dylib ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64avx2/libtsdll.dylib ../jlibrary/bin/. || true
-
-cp ../bin/${jplatform}/j32/libj.dylib ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libj.dylib ../jlibrary/bin/libj-nonavx.dylib || true
-cp ../bin/${jplatform}/j64avx/libj.dylib ../jlibrary/bin/libjavx.dylib || true
-cp ../bin/${jplatform}/j64avx2/libj.dylib ../jlibrary/bin/libjavx2.dylib || true
-cp ../bin/${jplatform}/j64avx2/libj.dylib ../jlibrary/bin/. || true
-
-else
-
-cp ../bin/${jplatform}/j32/libtsdll.so ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libtsdll.so ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64avx/libtsdll.so ../jlibrary/bin/. || true
-cp ../bin/${jplatform}/j64avx2/libtsdll.so ../jlibrary/bin/. || true
-
-cp ../bin/${jplatform}/j32/libj.so ../jlibrary/bin32/. || true
-cp ../bin/${jplatform}/j64/libj.so ../jlibrary/bin/libj-nonavx.so || true
-cp ../bin/${jplatform}/j64avx/libj.so ../jlibrary/bin/libjavx.so || true
-cp ../bin/${jplatform}/j64avx2/libj.so ../jlibrary/bin/libjavx2.so || true
-cp ../bin/${jplatform}/j64avx2/libj.so ../jlibrary/bin/. || true
+# linux/raspberry 32-bit
+cop j32 jconsole bin32 jconsole
+cop j32 libtsdll.so bin32 libtsdll.so
+cop j32 libj.so bin32 libj.so
 
 fi
 
-fi

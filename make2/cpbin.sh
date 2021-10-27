@@ -10,7 +10,7 @@ function cop(){
 # MUST rename/remove object first; overwrite cause cache error
 if [ -f "../bin/${jplatform}/$1/$2" ]; then
 if [ -f "../jlibrary/$3/$4" ]; then
-mv "../jlibrary/$3/$4" "../jlibrary/$3/$4.old"
+mv -f "../jlibrary/$3/$4" "../jlibrary/$3/$4.old"
 fi
 echo \# cp "../bin/${jplatform}/$1/$2" "../jlibrary/$3/$4"
 cp "../bin/${jplatform}/$1/$2" "../jlibrary/$3/$4"
@@ -35,7 +35,7 @@ if [ $jplatform = "darwin" ]; then
 if [ -f "../bin/${jplatform}/j64/jconsole" ] && [ -f "../bin/${jplatform}/j64arm/jconsole" ]; then
 # fat binary
 if [ -f "../jlibrary/bin/jconsole" ]; then
-mv "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole.old"
+mv -f "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole.old"
 fi
 echo \# lipo "../bin/${jplatform}/j64/jconsole" "../bin/${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
 lipo "../bin/${jplatform}/j64/jconsole" "../bin/${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
@@ -47,7 +47,7 @@ fi
 
 if [ -f "../jlibrary/bin/jconsole" ]; then
 if [ -f "../jlibrary/bin/jconsole-mac" ]; then
-mv "../jlibrary/bin/jconsole-mac" "../jlibrary/bin/jconsole-mac.old"
+mv -f "../jlibrary/bin/jconsole-mac" "../jlibrary/bin/jconsole-mac.old"
 fi
 echo \# cp "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole-mac" 
 cp "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole-mac" 
@@ -56,7 +56,7 @@ fi
 if [ -f "../bin/${jplatform}/j64/libtsdll.dylib" ] && [ -f "../bin/${jplatform}/j64arm/libtsdll.dylib" ]; then
 # fat binary
 if [ -f "../jlibrary/bin/libtsdll.dylib" ]; then
-mv "../jlibrary/bin/libtsdll.dylib" "../jlibrary/bin/libtsdll.dylib.old"
+mv -f "../jlibrary/bin/libtsdll.dylib" "../jlibrary/bin/libtsdll.dylib.old"
 fi
 echo \# lipo "../bin/${jplatform}/j64/libtsdll.dylib" "../bin/${jplatform}/j64arm/libtsdll.dylib" -create -output "../jlibrary/bin/libtsdll.dylib"
 lipo "../bin/${jplatform}/j64/libtsdll.dylib" "../bin/${jplatform}/j64arm/libtsdll.dylib" -create -output "../jlibrary/bin/libtsdll.dylib"
@@ -69,7 +69,7 @@ fi
 if [ -f "../bin/${jplatform}/j64/libj.dylib" ] && [ -f "../bin/${jplatform}/j64arm/libj.dylib" ]; then
 # fat binary
 if [ -f "../jlibrary/bin/libj.dylib" ]; then
-mv "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj.dylib.old"
+mv -f "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj.dylib.old"
 fi
 echo \# lipo "../bin/${jplatform}/j64/libj.dylib" "../bin/${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
 lipo "../bin/${jplatform}/j64/libj.dylib" "../bin/${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
@@ -81,7 +81,7 @@ fi
 
 if [ -f "../jlibrary/bin/libj.dylib" ]; then
 if [ -f "../jlibrary/bin/libj-nonavx.dylib" ]; then
-mv "../jlibrary/bin/libj-nonavx.dylib" "../jlibrary/bin/libj-nonavx.dylib.old"
+mv -f "../jlibrary/bin/libj-nonavx.dylib" "../jlibrary/bin/libj-nonavx.dylib.old"
 fi
 echo \# cp "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj-nonavx.dylib"
 cp "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj-nonavx.dylib"

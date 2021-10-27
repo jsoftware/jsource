@@ -37,8 +37,8 @@ if [ -f "../bin/${jplatform}/j64/jconsole" ] && [ -f "../bin/${jplatform}/j64arm
 if [ -f "../jlibrary/bin/jconsole" ]; then
 mv "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole.old"
 fi
-echo \# lipo "../bin/${jplatform}/j64/jconsole" "../bin//${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
-lipo "../bin/${jplatform}/j64/jconsole" "../bin//${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
+echo \# lipo "../bin/${jplatform}/j64/jconsole" "../bin/${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
+lipo "../bin/${jplatform}/j64/jconsole" "../bin/${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole"
 elif [ -f "../bin/${jplatform}/j64/jconsole" ]; then
 cop j64 jconsole bin jconsole
 elif [ -f "../bin/${jplatform}/j64arm/jconsole" ]; then
@@ -53,14 +53,26 @@ echo \# cp "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole-mac"
 cp "../jlibrary/bin/jconsole" "../jlibrary/bin/jconsole-mac" 
 fi
 
+if [ -f "../bin/${jplatform}/j64/libtsdll.dylib" ] && [ -f "../bin/${jplatform}/j64arm/libtsdll.dylib" ]; then
+# fat binary
+if [ -f "../jlibrary/bin/libtsdll.dylib" ]; then
+mv "../jlibrary/bin/libtsdll.dylib" "../jlibrary/bin/libtsdll.dylib.old"
+fi
+echo \# lipo "../bin/${jplatform}/j64/libtsdll.dylib" "../bin/${jplatform}/j64arm/libtsdll.dylib" -create -output "../jlibrary/bin/libtsdll.dylib"
+lipo "../bin/${jplatform}/j64/libtsdll.dylib" "../bin/${jplatform}/j64arm/libtsdll.dylib" -create -output "../jlibrary/bin/libtsdll.dylib"
+elif [ -f "../bin/${jplatform}/j64/libtsdll.dylib" ]; then
 cop j64 libtsdll.dylib bin libtsdll.dylib
+elif [ -f "../bin/${jplatform}/j64arm/libtsdll.dylib" ]; then
+cop j64arm libtsdll.dylib bin libtsdll.dylib
+fi
+
 if [ -f "../bin/${jplatform}/j64/libj.dylib" ] && [ -f "../bin/${jplatform}/j64arm/libj.dylib" ]; then
 # fat binary
 if [ -f "../jlibrary/bin/libj.dylib" ]; then
 mv "../jlibrary/bin/libj.dylib" "../jlibrary/bin/libj.dylib.old"
 fi
-echo \# lipo "../bin/${jplatform}/j64/libj.dylib" "../bin//${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
-lipo "../bin/${jplatform}/j64/libj.dylib" "../bin//${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
+echo \# lipo "../bin/${jplatform}/j64/libj.dylib" "../bin/${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
+lipo "../bin/${jplatform}/j64/libj.dylib" "../bin/${jplatform}/j64arm/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
 elif [ -f "../bin/${jplatform}/j64/libj.dylib" ]; then
 cop j64 libj.dylib bin libj.dylib
 elif [ -f "../bin/${jplatform}/j64arm/libj.dylib" ]; then

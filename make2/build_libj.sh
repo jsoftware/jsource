@@ -26,7 +26,7 @@ if [ "`uname -m`" = "x86_64" ]; then
 j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
-elif [ "`uname -m`" = "arm64" ]; then
+elif [ "`uname -m`" = "arm64" ] && [ -z "${jplatform##*darwin*}" ]; then
 j64x="${j64x:=j64arm}"
 else
 j64x="${j64x:=j32}"
@@ -37,11 +37,13 @@ fi
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
-if [ -z "${j64x##*arm*}" ]; then
-macmin="-target arm64-apple-macos11"
+if [ -z "${jplatform##*darwin*}" ]; then
+if [ -z "${j64x##*j64arm*}" ]; then
+macmin="-target arm64-apple-macos11 -mmacosx-version-min=11"
 NO_SHA_ASM="${NO_SHA_ASM:=1}"
 else
-macmin="-mmacosx-version-min=10.6"
+macmin="-target x86_64-apple-macos10.6 -mmacosx-version-min=10.6"
+fi
 fi
 
 if [ "x$CC" = x'' ] ; then
@@ -64,9 +66,15 @@ echo "compiler=$compiler"
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 if [ -z "${jplatform##*darwin*}" ]; then
-# assume libomp installed at /usr/local/opt/libomp
-OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include "
-LDOPENMP=" -L/usr/local/opt/libomp/lib -Wl,-rpath,/usr/local/opt/libomp/lib -lomp "
+if [ -z "${j64x##*j64arm*}" ]; then
+# assume libomp installed at /opt/homebrew/
+OPENMP=" -Xpreprocessor -fopenmp -I/opt/homebrew/include "
+LDOPENMP=" -L/opt/homebrew/lib -Wl,-rpath,/opt/homebrew/lib -lomp "
+else
+# assume libomp installed at /usr/local/
+OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/include "
+LDOPENMP=" -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lomp "
+fi
 else
 OPENMP=" -fopenmp "
 LDOPENMP=" -fopenmp "

@@ -1217,6 +1217,7 @@ RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
 // obsolete  I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0)&-2;  // We never use GA for NAME types, so we don't need to check for it
  I bytes; if(likely(ranktype&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,ranktype>>32,bplg(ranktype),ranktype&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,ranktype>>32,bpnonnoun(ranktype),ranktype&LAST0,0);
     // We never use GA for NAME types, so we don't need to check for it
+ ASSERTSYS(!ISSPARSE((I4)ranktype),"jtga0 Never called for SPARSE type");
  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC AFLAG AM
  AT(z)=(I4)ranktype; I rank=(UI)ranktype>>32; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call

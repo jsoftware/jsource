@@ -26,7 +26,7 @@ if [ "`uname -m`" = "x86_64" ]; then
 j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
-elif [ "`uname -m`" = "arm64" ]; then
+elif [ "`uname -m`" = "arm64" ] && [ -z "${jplatform##*darwin*}" ]; then
 j64x="${j64x:=j64arm}"
 else
 j64x="${j64x:=j32}"
@@ -37,10 +37,12 @@ fi
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
-if [ -z "${j64x##*arm*}" ]; then
-macmin="-target arm64-apple-macos11"
+if [ -z "${jplatform##*darwin*}" ]; then
+if [ -z "${j64x##*j64arm*}" ]; then
+macmin="-target arm64-apple-macos11 -mmacosx-version-min=11"
 else
-macmin="-mmacosx-version-min=10.6"
+macmin="-target x86_64-apple-macos10.6 -mmacosx-version-min=10.6"
+fi
 fi
 
 if [ "x$CC" = x'' ] ; then

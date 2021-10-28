@@ -8,7 +8,10 @@ t=: $. y=: 7 3 5 ?@$ 5
 
 (s=t) -: x=y
     
-bsp{:: 1 ;~ 'nonce error' -: < etx s
+(bsp{:: (< <0$. s) ;~ 'nonce error') -: < etx s
+'nonce error' -: <"0 etx $.1 1$1   NB. <"r not implemented
+'nonce error' -: <"1 etx $.2 2$1   NB. <"r not implemented
+
 (s<t) -: x<y
 
 (<.s) -: <.x
@@ -98,7 +101,7 @@ NB.  :: CADVERSE,CONJ, 0L,      adverse,
 (s,:t) -: x,:y
 
 (;s) -: ;x
-bsp{:: 1 ;~ 'nonce error' -: s ; etx t
+(bsp{:: (< (0$.s) ; 0$.t) ;~ 'nonce error') -: s ; etx t
 
 NB.  ;. CCUT,    CONJ, 0L,      cut,    
 NB.  ;: CWORDS,  VERB, words,   0L,  
@@ -140,7 +143,7 @@ NB.  [: CCAP,    VERB, 0L,      0L,
 (]s) -: ]x
 (s]t) -: x]y
 
-bsp{:: 1 ;~ 'nonce error' -: {^:(-.bsp) etx s     NB. crash
+'nonce error' -: { etx s
 (i{s) -: i{x [ i=: <"1 ?(2 3,#$s)$$s 
 
 ({.s) -: {.x
@@ -166,7 +169,7 @@ NB.  @. CATDOT,  CONJ, 0L,      agenda,
 NB.  @: CATCO,   CONJ, 0L,      atco,   
 NB.  &  CAMP,    CONJ, 0L,      amp,
 
-'nonce error' -:   $.&.> etx 1 2;3 4 5
+(bsp{:: (< 1 2;3 4 5) ;~ 'nonce error') -:   $.&.> etx 1 2;3 4 5
 'nonce error' -: 1 $.&.> etx 1 2;3 4 5
 
 NB.  &: CAMPCO,  CONJ, 0L,      ampco,  
@@ -187,7 +190,7 @@ NB.  d. CDDOT,   CONJ, 0L,      ddot,
 NB.  D. CDCAP,   CONJ, 0L,      dcap,   
 NB.  D: CDCAPCO, CONJ, 0L,      dcapco, 
 
-bsp{:: 1 ;~ 'nonce error' -: e. etx t     NB. non-unique sparse elements
+(bsp{:: 'non-unique sparse elements' ;~ 'nonce error') -: e. etx t     NB. WIP non-unique sparse elements
 
 NB.  E. CEBAR,   VERB, 0L,      ebar,   
 NB.  f. CFIX,    ADV,  fix,     0L,     
@@ -204,8 +207,8 @@ NB.  I. CICAP,   ADV,  icap,    0L,
 
 NB.  L. CLDOT,   VERB, level1,  0,
 
-'nonce error' -:   $. L: 0 etx 1 2 ;3 4 5  
-'nonce error' -: 1 $. L: 0 etx 1 2 ;3 4 5  
+(bsp{:: (< 1 2 ;3 4 5) ;~ 'nonce error') -:   $. L: 0 etx 1 2 ;3 4 5
+'nonce error' -: 1 $. L: 0 etx 1 2 ;3 4 5
 
 (o.s) -: o.x
 (1 o. s) -: 1 o. x

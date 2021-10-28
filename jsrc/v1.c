@@ -316,8 +316,13 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
+#ifndef BOXEDSPARSE
 #define EQA(a,w) \
  ((-(a!=w)&((AN(a)^AN(w))-1))>=0?(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
+#else
+#define EQA(a,w) \
+ (((!ISSPARSE(AT(a)|AT(w)))&&((-(a!=w)&((AN(a)^AN(w))-1))>=0))?(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
+#endif
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
@@ -373,6 +378,9 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  // If we're comparing functions, return that result
  t=at;  //  in case types identical, pick one
  if(t&FUNC)R (!eqf(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'
+#ifdef BOXEDSPARSE
+ if(unlikely(ISSPARSE(at|wt)))R num(1)==matchs(a,w);
+#endif
  // If the types mismatch, convert as needed to the common (unsafe) type calculated earlier
  if(at!=wt) {
   t=maxtypedne(at,wt);

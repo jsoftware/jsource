@@ -210,9 +210,8 @@ NB. Use b. to check for conversion to integer
 (-: 20 b.) i. 15
 (-: 20 b.) 0. + i. 15
 'domain error' -: (-: 20 b.) etx 0.5 + i. 15
-(-: 20 b.) <: 2 ^ IF64 { 31 63
-(-: 20 b.) - 2 ^ IF64 { 31 63
-(-: 20 b.) - <: 2 ^ IF64 { 31 63
+'domain error' -: (-: 20 b.) etx 0. + imax
+(-: 20 b.) _1024. + imax
 'domain error' -: (-: 20 b.) etx +/\ 2 ^  (, 0 >. -&40) IF64 { 31 63
 
 NB. v b. ----------------------------------------------------------------

@@ -219,15 +219,25 @@ A jtcstr(J jt,C*s){A z; RZ(z=mkwris(str((I)strlen(s),s))); CAV(z)[AN(z)]=0; R z;
 // Return 1 iff w is the evocation of a name.  w must be a FUNC
 B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 
-// Extract the integer value from w, return it.  Set error if non-integral or non-atomic
+// Extract the integer value from w, return it.  Set error if non-integral or non-atomic.  Values whose abs > IMAX are converted to IMAX/-IMAX
 I jti0(J jt,A w){ARGCHK1(w);
  if(likely(ISDENSETYPE(AT(w),INT+B01))){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly
- if(likely(ISDENSETYPE(AT(w),FL))){D d=DAV(w)[0]; D e=jround(d); I cval=(I)e;  // FL without call to cvt
-  // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
-  // infinities will always round to themselves
-  ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-  cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
-  ASSERT(!AR(w),EVRANK);
+ if(likely(ISDENSETYPE(AT(w),FL))){I cval;  // FL also "quickly"
+  D d=DAV(w)[0];  // fetch value
+  if(ABS(d)<-(D)IMIN){
+   D e=jround(d); cval=(I)e;  // FL without call to cvt
+   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
+   // infinities will always round to themselves
+   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
+// obsolete    d=wv[i]; e=jround(d); I cval=(I)e;
+// obsolete    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
+// obsolete    // infinities will always round to themselves
+// obsolete    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
+// obsolete    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
+  }else{
+   cval=d>0?IMAX:-IMAX;  // if beyond integral, treat as infinity
+  }
+/// obsolete   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
   R cval;  // too-large values don't convert, handle separately
  }
  if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK);
@@ -551,7 +561,7 @@ F1(jtvi){ARGCHK1(w);
 }
 
 // Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX
-F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
+F1(jtvib){A z;D *wv;I i,n,*zv;
  ARGCHK1(w);
  if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
  if(ISDENSETYPE(AT(w),B01)){if(!AR(w))R zeroionei(BAV(w)[0]); R cvt(INT,w);}
@@ -564,12 +574,22 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
   if(!ISDENSETYPE(AT(w),FL))RZ(w=cvt(FL,w));
   n=AN(w); wv=DAV(w);
   GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
-  for(i=0;i<n;++i){
-   d=wv[i]; e=jround(d); I cval=(I)e;
-   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
-   // infinities will always round to themselves
-   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
+  for(i=0;i<n;++i){I cval;
+   D d=DAV(w)[i];  // fetch value
+   if(ABS(d)<-(D)IMIN){
+    D e=jround(d); cval=(I)e;  // FL without call to cvt
+    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
+    // infinities will always round to themselves
+    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
+// obsolete    d=wv[i]; e=jround(d); I cval=(I)e;
+// obsolete    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
+// obsolete    // infinities will always round to themselves
+// obsolete    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
+// obsolete    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
+   }else{
+    cval=d>0?IMAX:-IMAX;  // if beyond integral, treat as infinity
+   }
+   zv[i]=cval;
    }
    break;
   case XNUM:

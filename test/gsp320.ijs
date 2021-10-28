@@ -29,8 +29,10 @@ h=: 4 : '(((97+d),"r 99) -: (97+s),"r 99) *. (99,"r 97+d) -: 99,"r 97+s=:(2;y)$.
 (i.1+#$d) g&>/c
 (i.1+#$d) h&>/c
 
-'limit error' -: 3                    , etx 1$. _1+2^IF64{31 63
-'limit error' -: (1$._1+2^IF64{31 63) , etx 3
+'limit error' -: 3, etx 1$. imax
+'domain error' -: 1$. etx >:imax
+
+'limit error' -: 3, etx~ 1$. imax
 
 f=: 4 : '(a ,"r        b) -: (s=: (2;x)$.a) ,"r        t=: (2;y)$.b'
 h=: 4 : '(a ,"r&(97&+) b) -: (s=: (2;y)$.a) ,"r&(97&+) t=: (2;y)$.b'

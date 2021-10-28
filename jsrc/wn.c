@@ -132,7 +132,7 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
  v=(Z*)vv;
  if(t=memchr(s,'b',n)){
   // base given
-  if(!(numbpx(t-s,s,&b)))R 0;
+  if(!(numbpx(t-s,s,&b)))R 0;  // convert the base and save it
   ++t; if(ne='-'==*t)++t;  // t->first nonsign digit
   m=k=n+s-t; if(u=memchr(t,'.',m))k=u-t;  // m=total # digits, k=# digits before decimal point
   if(!(m>(1&&u)))R 0;   // assert negative, or ((>1 digit)  or (1 digit) and (there is no decimal point)) i. e. there is at least one non-decimal-point

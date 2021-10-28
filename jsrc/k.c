@@ -12,10 +12,6 @@
 #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
 #define CVCASECHAR(a,b) ((3*(0x40000>>(a))+(0x40000>>(b)))&07)  // distinguish character cases - note last case is impossible (equal types)
 
-// FEQ/FIEQ are used in bcvt, where FUZZ may be set to 0 to ensure only exact values are demoted to lower precision
-#define FEQ(u,v,fuzz)    (ABS((u)-(v))<=fuzz*MAX(ABS(u),ABS(v)))
-#define FIEQ(u,v,fuzz)   (ABS((u)-(v))<=fuzz*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
-
 static KF1(jtC1fromC2){UC*x;US c,*v;
  v=USAV(w); x=(C*)yv;
  DQ(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
@@ -167,12 +163,15 @@ static KF1F(jtIfromD){D p,q,*v;I i,k=0,n,*x;
  n=AN(w); v=DAV(w); x=(I*)yv;
 #if SY_64
  for(i=0;i<n;++i){
-  p=v[i]; q=jround(p); I rq=(I)q;
-  if(!(p==q || FIEQ(p,q,fuzz)))R 0;  // must equal int, possibly out of range
-  // out-of-range values don't convert, handle separately
-  if(p<(D)IMIN){if(!(p>=IMIN*(1+fuzz)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
-  else if(p>=FLIMAX){if(!(p<=-(D)IMIN*(1+fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
-  *x++=rq;
+  p=v[i]; q=jround(p);
+//  obsolete  I rq=(I)q;
+  if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
+// obsolete   if(!(p==q || FIEQ(p,q,fuzz)))R 0;  // must equal int, possibly out of range
+// obsolete   // out-of-range values don't convert, handle separately
+// obsolete   if(p<(D)IMIN){if(!(p>=IMIN*(1+fuzz)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
+// obsolete   else if(p>=FLIMAX){if(!(p<=-(D)IMIN*(1+fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+// obsolete   *x++=rq;
+ *x++=(I)q;  // if tolerantly integral, store it
  }
 #else
  q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);

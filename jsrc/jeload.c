@@ -353,6 +353,8 @@ int jefirst(int type,char* arg)
 	strcat(input,"[UNAME_z_=:'Win'");
 #elif defined(__MACH__)
 	strcat(input,"[UNAME_z_=:'Darwin'");
+#elif defined(__OpenBSD__)
+	strcat(input,"[UNAME_z_=:'OpenBSD'");
 #elif !defined(ANDROID)
 	strcat(input,"[UNAME_z_=:'Linux'");
 #endif

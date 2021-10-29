@@ -140,7 +140,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   ASSERTAGREE(AS(a),AS(ind)+AR(ind)-compalen,compalen);  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
  }else{  // ind is axes
   compalen=MAX(0,AR(a)-(AR(w)-~cellframelen));  // #axes of a that are outside of the cell in w
-  DQ(compalen, ASSERT(AS(a)[i]==((struct axis*)ind)[(~cellframelen)-compalen+i].max,EVLENGTH))  //  note: always min 2 axes
+  DQ(compalen, ASSERT((UI)AS(a)[i]==((struct axis*)ind)[(~cellframelen)-compalen+i].max,EVLENGTH))  //  note: always min 2 axes
  }
  ASSERTAGREE(AS(a)+compalen,AS(w)+AR(w)-(AR(a)-compalen),AR(a)-compalen);  // the rest of the shape of m{y comes from shape of y
  if(unlikely(!AN(w)))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing

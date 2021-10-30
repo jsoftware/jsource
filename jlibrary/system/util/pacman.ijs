@@ -403,7 +403,7 @@ if. IFUNIX do.
     'file dir'=. y
     if. (i.0 0) -: tar 'x';file;dir do. e=. '' end.
   else.
-    e=. shellcmd 'tar ',((IFIOS+:UNAME-:'Android')#(('Darwin'-:UNAME){::'--no-same-owner --no-same-permissions';'-o -p')),' -xzf ',file,' -C ',dir
+    e=. shellcmd 'tar ',((IFIOS+:UNAME-:'Android')#((('Darwin'&-:+.'OpenBSD'&-:)UNAME){::'--no-same-owner --no-same-permissions';'-o -p')),' -xzf ',file,' -C ',dir
   end.
   if. ('/usr/'-:5{.dir-.'"') *. ('root'-:2!:5'USER') +. (<2!:5'HOME') e. 0;'/var/root';'/root';'';,'/' do.
     shellcmd ::0: 'find ',dir,' -type d -exec chmod a+rx {} \+'

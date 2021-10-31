@@ -210,7 +210,7 @@ NB. Use b. to check for conversion to integer
 (-: 20 b.) i. 15
 (-: 20 b.) 0. + i. 15
 'domain error' -: (-: 20 b.) etx 0.5 + i. 15
-'domain error' -: (-: 20 b.) etx 0. + imax
+'domain error' -: (-: 20 b.) etx 1. + imax NB. always overflows to float
 (-: 20 b.) _1024. + imax
 'domain error' -: (-: 20 b.) etx +/\ 2 ^  (, 0 >. -&40) IF64 { 31 63
 

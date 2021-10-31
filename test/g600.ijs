@@ -79,7 +79,7 @@ _ 1 _ -: $ rk
 1 2 3 -: +"1 2 3 rk
 3 3 3 -: +"3     rk
 3 2 3 -: +"2 3   rk
-_ _ _ -: +"1e20 1e30 1e40 rk
+_ _ _ -: +"1e2 1e3 1e4 rk
 
 1 -: 1:"0 '1'
 1 -: + "0 [1
@@ -96,6 +96,7 @@ f=: f
 'domain error' -: 2 3 4 (4 : 'x o. y')"0 etx 'abc'
 
 'domain error' -: ex '+"''abc'' '
+'domain error' -: ex '+"1e20 1e30 1e40 '
 'domain error' -: ex '+"(<4)    '
 'domain error' -: ex '+"3j4     '
 'domain error' -: ex '+"1.2     '

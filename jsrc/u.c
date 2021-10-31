@@ -560,7 +560,7 @@ F1(jtvi){ARGCHK1(w);
  R cvt(INT,w);
 }
 
-// Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX
+// Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX.  Non-infinities greater than integer precision give error
 F1(jtvib){A z;D *wv;I i,n,*zv;
  ARGCHK1(w);
  if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
@@ -587,6 +587,7 @@ F1(jtvib){A z;D *wv;I i,n,*zv;
 // obsolete    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
 // obsolete    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
    }else{
+    ASSERT(ABS(d)==inf,EVDOMAIN);  // if beyond int, must be infinite
     cval=d>0?IMAX:-IMAX;  // if beyond integral, treat as infinity
    }
    zv[i]=cval;

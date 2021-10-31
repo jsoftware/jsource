@@ -729,6 +729,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define DF1(f)          A f(JJ jt,    A w,A self)
 #define DF2(f)          A f(JJ jt,A a,A w,A self)
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
+#define DONOUNROLL(n,stm) {I i=0,_n=(n); NOUNROLL for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
 #define DPNOUNROLL(n,stm)       {I i=-(n);   NOUNROLL for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
 #define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}   // i runs from n-1 downto 0 (fastest when you don't need i)
@@ -771,7 +772,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define FFEQ(u,v)        (ABS((u)-(v))<=FUZZ*MAX(ABS(u),ABS(v)))
 #define FFIEQ(u,v)       (ABS((u)-(v))<=FUZZ*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
 // see if i is close enough to f that it can be used in place of f without loss of significance.  i is round(f).
-#define ISFTOIOK(f,i)    (ABS(f)<-(D)IMIN && ((f)==(i) || FFIEQ(f,i)))
+#if SY_64
+#define ISFTOIOK(f,i)    (ABS(f)<-(D)IMIN && ((f)==(i) || FFIEQ(f,i)))  // 64 bit: a float of IMIN does not equal integer IMIN
+#else
+#define ISFTOIOK(f,i)    ((f)==(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
+#endif
 #define ISFTOIOKFZ(f,i,fuzz) (ABS(f)<-(D)IMIN && ((f)==(i) || FIEQ(f,i,fuzz))) // same, but variable fuzz
 #define F1(f)           A f(JJ jt,    A w)  // whether in an interface routine or not, these must use the internal parameter type
 #define F2(f)           A f(JJ jt,A a,A w)
@@ -1163,7 +1168,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // This also guarantees that z has recursive usecount whenever x does, and that z is realized
 #define INSTALLBOX(x,xv,k,z) rifv(z); if(likely((UCISRECUR(x))!=0)){A zzZ=xv[k]; ra(z); fa(zzZ);} xv[k]=z  // we could be reinstalling the same value, so must ra before fa
 #define INSTALLBOXNF(x,xv,k,z) rifv(z); if(likely((UCISRECUR(x))!=0)){ra(z);} xv[k]=z   // Don't do the free - if we are installing into known 0 or known nonrecursive
-#define INSTALLBOXRECUR(xv,k,z) rifv(z); {I zzK=(k); {A zzZ=xv[zzK]; ra(z); fa(zzZ);} xv[zzK]=z;}  // Don't test - we know we are installing into a recursive block
+#define INSTALLBOXNVRECUR(xv,k,z) {I zzK=(k); {A zzZ=(xv)[zzK]; ra(z); fa(zzZ);} (xv)[zzK]=(z);}  // z is known non-virtual.  Don't test - we know we are installing into a recursive block
+#define INSTALLBOXRECUR(xv,k,z) rifv(z); INSTALLBOXNVRECUR(xv,k,z)  // Don't test - we know we are installing into a recursive block
 // Same thing for RAT type.  z is a Q, xv[k] is a Q
 #define INSTALLRAT(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[k]=z
 #define INSTALLRATNF(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){ra(z.n); ra(z.d);} xv[k]=z   // Don't do the free - if we are installing into known 0

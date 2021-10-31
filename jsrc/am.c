@@ -107,7 +107,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 #define AMFLAGRTNX 0
 #define AMFLAGRTN ((I)1<<AMFLAGRTNX)  // switch routine
 #define AMFLAGINFULL1X 8
-#define AMFLAGINFULL1 ((I)1<<)AMFLAGINFULL1X  // axis 1 is taken in full
+#define AMFLAGINFULL1 ((I)1<<AMFLAGINFULL1X)  // axis 1 is taken in full
 // obsolete #define AMFLAGREPEATX 9
 // obsolete #define AMFLAGREPEAT ((I)1<<AMFLAGREPEATX)  // axis 1 should reload av for each new cell
 #define AMFLAGDUFFWX 16
@@ -115,12 +115,13 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 #define AMFLAGDUFFAX 24
 #define AMFLAGDUFFA ((I)1<<AMFLAGDUFFAX)  // duff backoff for A, 0-7
  struct axis{
-  UI size;  // size in atoms (later, bytes) of a cell of this axis
+  UI size;  // First, the length of this axis in the result.  Later, size in bytes of a cell of this axis
   C *base;  //  pointer to cell of higher axis that this axis is indexing within
-  UI max;  // length of axis
+  UI max;  // number of indexes for this axis (if in full, total axis length)
   I *indexes;  // pointer to index array, or 0 is axis is taken in full
-  I scan;  // index number being worked on currently
-  I resetadder;  // #bytes to add to av when this axis rolls over (used to tell how to repeat a)
+  UI scan;  // index number being worked on currently
+  I resetadder;  // #bytes to add to av when this axis rolls over (used to tell how to repeat a).  For ind forms, always resets after last axis; for axis forms, resets after a rollover of the lowest
+                  // axis whose cell size is as big as a.  But if a single atom is repeated, always 0 to avoid destroying the value
  };
 // Handle a ind} w after indices have been converted to integer atoms, dense
 // cellframelen is the number of axes of w that were used in computing the cell indexes, complemented if ind is axes
@@ -140,7 +141,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   ASSERTAGREE(AS(a),AS(ind)+AR(ind)-compalen,compalen);  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
  }else{  // ind is axes
   compalen=MAX(0,AR(a)-(AR(w)-~cellframelen));  // #axes of a that are outside of the cell in w
-  DQ(compalen, ASSERT(AS(a)[i]==((struct axis*)ind)[(~cellframelen)-compalen+i].max,EVLENGTH))  //  note: always min 2 axes
+  DQ(compalen, ASSERT((UI)AS(a)[i]==((struct axis*)ind)[i-cellframelen-compalen].max,EVLENGTH))  //  note: always min 2 axes.  Axis i is in the axis struct at position i+1, so we use -len rather than ~len
  }
  ASSERTAGREE(AS(a)+compalen,AS(w)+AR(w)-(AR(a)-compalen),AR(a)-compalen);  // the rest of the shape of m{y comes from shape of y
  if(unlikely(!AN(w)))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
@@ -173,7 +174,8 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  C* RESTRICT av0=CAV(a); I lgk=bplg(t); C * RESTRICT avn=av0+(AN(a)<<lgk);
  // Extract the number of axes included in each cell offset; get the cell size
  I cellsize; PROD(cellsize,AR(w)-(REPSGN(cellframelen)^cellframelen),AS(w)+(REPSGN(cellframelen)^cellframelen));  // number of atoms per index in ind
-#if 0
+ if(unlikely(cellsize==0))RCA(w);  // nothing to move - exit so we can use UNTIL loops to move
+if(JT(jt,peekdata)){  // scaf
  // initialization
  // if ind is axes, it has already been set up
  // if not, we treat it as a 1xAN(ind) array
@@ -181,145 +183,170 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  C *av=av0;
  JMCDECL(endmask)
  I n0,n1;  // # of iterations of axis -1,-2
+ I *scan0, scan0reset;  // pointer to first index of last axis OR first index of ind; and the amount to add after an iteration to either continue or reset
  I *scan1;  // pointer to index of _2-cell being filled
  C *base;  // address of _1-cell being filled
+ I r;  // #axes, +1.  axes[r] is the last axis
  struct axis *axes, localaxes[3];  // pointer to all axes; block to use for local axes
+ I amflags;  // flags and routine number to call in loop
  if(cellframelen>=0){  // ind is an array of 'fetch' indices, of arbitrary rank, construed as a 1-or 2-d array
+  if(unlikely(AN(ind)==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
   // the atoms of ind address cells of the entire w, of size cellsize.  We arbitrarily treat these as a 2-d array where each row of ind
   // matches one full application of a.  a is then repeated over the rows of ind
   // n0 is the length of a 'row' of ind, n1 is the # rows
   PROD(n0,MAX(0,AR(a)-(AR(w)-cellframelen)),AS(ind)+AR(ind)-MAX(0,AR(a)-(AR(w)-cellframelen)))  // axes shared by a and ind
   PROD(n1,AR(ind)-MAX(0,AR(a)-(AR(w)-cellframelen)),AS(ind))  // frame of ind
+  if(unlikely(n0*n1==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
   // set size of _2-cell to 0 so that 'successive' cells stay on the array in full
   r=2;  // general ind is processed as if rank 2
   axes=localaxes;  // use the temp block for ind version
-  axes[r-1].size=0;  // keep base unchanged between _2-cells
+  scan0=IAV(ind);  // store pointer to the index list where we will use it - as indexes of last axis
   base=axes[0].base=CAV(z);  // the array in full is in play
   // scan1 is not used
- }else{  // 'ind' is actually orthogonal axes, filled in as atoms
+  scan0reset=0;  // index pointer rolls along between iterations of 'axis -2'
+  axes[0].resetadder=avnreset;  // reset a pointer between iterations of 'axis -2'
+  amflags=AMFLAGINFULL1;  // there are no indexes for axis 1, so we say it is 'taken in full' to avoid fetching indexes...
+  axes[r-1].size=0;  // ... and set size=0 to keep base unchanged between _2-cells
+ }else{  // 'ind' is actually orthogonal axes, filled in in terms of atoms
   axes=(struct axis *)ind;  // use the input block for all the axes
   // now that we have the size of an atom, convert the cell-sizes-in-atoms to bytes
   // set the reset value at the correct level (if any)
   r=~cellframelen;  // number of axes to process.  [0] is the array in full, [r] is the last zxis
-  n0=axes[r+1].max; n1=axes[r].max;  // # iterations left on last 2 axes
-  scan1=axes[r].indexes; scan1=flags&INFULL1?iotavec:scan1;  // point to indexes (or 0 is axis in full)
+  n0=axes[r].max; n1=axes[r-1].max;  // # iterations left on last 2 axes
+// obsolete   scan1=axes[r-1].indexes; amflags=(scan1==0)<<AMFLAGINFULL1X; scan1=scan1==0?iotavec:scan1;  // point to indexes for axis -2 (or 0 if axis in full).  Set flag if taken in full
+  scan0=axes[r].indexes; scan0reset=-n0;  // point to the indexes for the last axis (NEVER 0 meaning 'taken in full' which were discarded earlier); reset to start of indexes after each iteration
   base=axes[0].base=CAV(z);  // the array in full is in play
   // roll up cell sizes
-  prevsize=cellsize<<lgk;  //  size of cell of previous axis
-  DQ(r, I tsz=axes[i+1].size; axes[i+1].size=prevsize; prevsize*=tsz; if(prevsize==-avnreset){axes[i+1].resetaddr=anvreset; avnreset=0;) // size is size of 1 cell; if overall size is FIRST as big as a, reset after axis exhausted
+  I prevsize=cellsize<<lgk;  //  size of cell of previous axis, in bytes.  Init to size of cell of last axis
+  I axisressize=prevsize;  // size of full result at this axis: following axis result size*number of indexes at this axis.  When this is = size of a, we must wrap a
+  DQ(r, I tsz=axes[i+1].size; axes[i+1].size=prevsize; prevsize*=tsz; axisressize*=axes[i+1].max; if(axisressize==-avnreset){axes[i+1].resetadder=avnreset; avnreset=0;}) // size is size of 1 cell; if overall size is FIRST as big as a, reset after axis exhausted
+  if(unlikely(axisressize==0))RCA(w);  // if nothing to move, exit so we can use UNTIL loops.  Have to wait till here for error-checking
   axes[0].resetadder=axes[r].resetadder;  // move last-axis reset to known location for comp ease
-  // create the starting base values for all axes above the last 2.  base starts with the 'cell' for the array in full, which is the base of axis 0
-  DO(r-2,
+  // create the starting base values for all axes.  base starts with the 'cell' for the array in full, which is the base of axis 0
+  DO(r-1,
    axes[i+1].base=base;  // previous selected cell is the base of the next axis
-   I *andx=axes[rinc].indexes+axes[rinc].scan; andx=axes[rinc].indexes?andx:&axes[rinc].scan;  // point to next value; if indexes==0, taken in full, use the scan as the index
-   base+=*andx*axes[rinc].size;  // get address of cell being worked on, for the next axis
+   UI *andx=scan1=axes[i+1].indexes; andx=andx?andx:&axes[i+1].scan;  // point to next value; if indexes==0, taken in full, use the scan (=0) as the index
+   base+=*andx*axes[i+1].size;  // get address of cell being worked on, for the next axis
   )
+  // now base points to the base cell for axis -1, which includes the offset from the first index in axis -2.  scan1 has the address of the indexes for axis -2
+  amflags=(scan1==0)<<AMFLAGINFULL1X; ++scan1;  // Remember if axis -2 taken in full.  the calculation of base was a prefetch of the first index in axis -2.  Increment to the next position if any.  scan1 is unused if axis taken in full
  }
 
  // select routine to use based on argument size/type
- if(UCISRECUR(z)){
-  if(cellsize==AN(a)){amflags=0b101110;}  // one variable-sized cell will be repeated
-  else{amflags=0b101100+AMFLAGREPEAT;}  // var cell, but reuse it between rows
-  cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower
- }else if(cellsize<=AN(a)){
-  if(((LOWESTBIT(cellsize)-cellsize)|(SZI-(cellsize<<lgk)))>=0){  // if cellsize is power of 2 and total cell is <= 8 bytes
-   // the cell can be moved as a primitive type.  We will use a Duff loop.  Calculate the offets and index, which depppends on whether the cell is repeated
-   if(cellsize==AN(a)){  // one single cell will be repeated forever.  av is repurposed to hold the atom.  Duff loop is 4 long, and backs up w but not a
-    I backupct=(-cellsize)&0x3;  //  duff backup
-    amflags=0x20+CTLZI(cellsize<<lgk)*8+(backupct*(1+AMFLAGDUFFW))+AMFLAGINFULL1;  // routine is 0b1cc0dd; axis 1 in full, no repeat
-    av=(C*)IAV(a)[0];  // (possibly over)fetch the  one atom we will use
-    n0=(n0+3)>>2;  // convert n0 into # duff loops
-   }else{  // each cell gets a different atom, which must be fetched.  Duff loop is 8 long and backs up both a and w
-    I backupct=(-cellsize)&0x7;  //  duff backup
-    amflags=CTLZI(cellsize<<lgk)*8+(backupct*(1+AMFLAGDUFFW+AMFLAGDUFFA))+AMFLAGINFULL1;  // routine is 0b0ccddd; axis 1 in full, repeat
-    axes[0].resetadder=anvreset;  // cause av to reset after _1-cell
-    n0=(n0+7)>>3;  // convert n0 into # duff loops
-   }
-  }else{
-   // cell is not 1-, 2-, 4-, or 8-size. We will have to use move loops.  No duff
-   JMCSETMASK(endmask,avbytes,1)
-   if(cellsize==AN(a)){amflags=0b100110;  // one variable-sized cell will be repeated
+ // cellsize is now atoms; change it to bytes when we have the routine, EXCEPT for recursive types which stay as atoms
+ I abytes=AN(a)<<lgk;  // number of bytes in a
+ if(!UCISRECUR(z)){
+  // not replacement of indirect blocks
+  if(cellsize<=AN(a)){
+   // a is at least as big as a cell being replaced
+   if(((LOWESTBIT(cellsize)-cellsize)|(SZI-(cellsize<<lgk)))>=0){  // if cellsize is power of 2 and total cell is <= 8 bytes
+    // the cell can be moved as a primitive type.  We will use a Duff loop.  Calculate the offets and index, which depends on whether the cell is repeated
+    if(cellsize==AN(a)){  // one single cell will be repeated forever.  av is repurposed to hold the atom.  Duff loop is 4 long, and backs up w but not a
+     I backupct=(-n0)&0x3;  //  duff backup
+     amflags|=0x20+CTTZI(cellsize<<lgk)*8+(backupct*(1+AMFLAGDUFFW));  // routine is 0b1cc0dd;  no repeat
+     av=(C*)IAV(a)[0];  // (possibly over)fetch the one atom we will use.  scan0reset is immaterial
+     axes[0].resetadder=0;  // override so that av, which holds a value, never changes
+     n0=(n0+3)>>2;  // convert n0 into # duff loops
+    }else{  // each cell gets a different atom, which must be fetched.  Duff loop is 8 long and backs up both a and w
+     I backupct=(-n0)&0x7;  //  duff backup
+     amflags|=CTTZI(cellsize<<lgk)*8+(backupct*(1+AMFLAGDUFFW+AMFLAGDUFFA));  // routine is 0b0ccddd; repeat
+     n0=(n0+7)>>3;  // convert n0 into # duff loops
+    }
    }else{
-    amflags=0b100100;  // var cell, but reuse it between rows
-    axes[0].resetadder=anvreset;  // cause av to reset after _1-cell
+    // cell is not 1-, 2-, 4-, or 8-size. We will have to use move loops.  No duff
+    JMCSETMASK(endmask,abytes,1)
+    if(cellsize==AN(a)){amflags|=0b100110; axes[0].resetadder=0; // one odd-sized cell will be repeated
+    }else{
+     amflags|=0b100100;  // var cell, incrementing between _1-cells and reset as appropriate
+    }
    }
+  }else{  // a must be repeated to fill a replaced cell
+   amflags|=0b100101; axes[0].resetadder=0; // use repeating code, with no duff bias
   }
- }else{  // cell of m must be repeated
-  amflags=0b100101;  // use repeating code, with no duff bias
+  cellsize<<=lgk;  // convert cellsize to bytes for the rest of the processing
+ }else{
+  // replacing indirect blocks
+  // cases: multiple cells of a; single cell of a, copied; single cell of a, repeated
+  if(cellsize<AN(a)){amflags|=0b101100;}  // multiple cells of a, incremented after each copy
+  else if(cellsize>AN(a)){amflags|=0b101101; axes[0].resetadder=0;}  // single cell of a, repeated to fill result cell
+  else{amflags|=0b101110; axes[0].resetadder=0; if(abytes==SZI){av=(C*)*(A*)av; amflags|=0b101111;} }  // a is a single cell that is copied to each cell of result.  If the cell is one I, fetch it into av
+  cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower.  Leave cellsize as #indirect references
  }
 
 #define CP11(t)  /* each index copies a different cell to the result */ \
 do{ \
- case (CTTZI(sizeof(t))-1)*8+0: ((t*)base)[scan0[0]]=((t*)av)[0]; case (CTTZI(sizeof(t))-1)*8+1: ((t*)base)[scan0[1]=((t*)av)[1];  /* copy cells */ \
- case (CTTZI(sizeof(t))-1)*8+2: ((t*)base)[scan0[2]]=((t*)av)[2]; case (CTTZI(sizeof(t))-1)*8+3: ((t*)base)[scan0[3]=((t*)av)[3]; \
- case (CTTZI(sizeof(t))-1)*8+4: ((t*)base)[scan0[4]]=((t*)av)[4]; case (CTTZI(sizeof(t))-1)*8+5: ((t*)base)[scan0[7]=((t*)av)[5]; \
- case (CTTZI(sizeof(t))-1)*8+6: ((t*)base)[scan0[6]]=((t*)av)[6]; case (CTTZI(sizeof(t))-1)*8+7: ((t*)base)[scan0[1]=((t*)av)[7]; \
+ case (CTTZI(sizeof(t)))*8+0: ((t*)base)[scan0[0]]=((t*)av)[0]; case (CTTZI(sizeof(t)))*8+1: ((t*)base)[scan0[1]]=((t*)av)[1];  /* copy cells */ \
+ case (CTTZI(sizeof(t)))*8+2: ((t*)base)[scan0[2]]=((t*)av)[2]; case (CTTZI(sizeof(t)))*8+3: ((t*)base)[scan0[3]]=((t*)av)[3]; \
+ case (CTTZI(sizeof(t)))*8+4: ((t*)base)[scan0[4]]=((t*)av)[4]; case (CTTZI(sizeof(t)))*8+5: ((t*)base)[scan0[5]]=((t*)av)[5]; \
+ case (CTTZI(sizeof(t)))*8+6: ((t*)base)[scan0[6]]=((t*)av)[6]; case (CTTZI(sizeof(t)))*8+7: ((t*)base)[scan0[7]]=((t*)av)[7]; \
  scan0+=8; av=(C*)((t*)av+8);  /* advance pointers */ \
-while(--i0);
-#define CP11v case 0b100100: NOUNROLL DQ(n0, JMCR(base+abytes**scan0++,av,cellsize,1,endmask)) av+=abytes;
+}while(--i0);
+#define CP11v case 0b100100: DQNOUNROLL(n0, JMCR(base+cellsize**scan0++,av,cellsize,1,endmask) av+=cellsize;)  // copy 1 variable cell, advancing pointers to next input & output
 #define CP1n(t)  /* each index copies the same cell to the result */ \
 do{ \
- case (4+CTTZI(sizeof(t))-1)*8+0: ((t*)base)[scan0[0]]=(t)av; case (4+CTTZI(sizeof(t))-1)*8+1: ((t*)base)[scan0[1]=(t)av;  /* copy cells */ \
- case (4+CTTZI(sizeof(t))-1)*8+2: ((t*)base)[scan0[2]]=(t)av; case (4+CTTZI(sizeof(t))-1)*8+3: ((t*)base)[scan0[3]=(t)av; \
- case (4+CTTZI(sizeof(t))-1)*8+4: ((t*)base)[scan0[4]]=(t)av; case (4+CTTZI(sizeof(t))-1)*8+5: ((t*)base)[scan0[7]=(t)av; \
- case (4+CTTZI(sizeof(t))-1)*8+6: ((t*)base)[scan0[6]]=(t)av; case (4+CTTZI(sizeof(t))-1)*8+7: ((t*)base)[scan0[1]=(t)av; \
- scan0+=8;   /* advance pointers */ \
-while(--i0);
-#define CP1nv case 0b100110:  NOUNROLL DQ(n0, JMCR(base+abytes**scan0++,av,cellsize,1,endmask))
-#define CPn1v case 0b100101:   /* each index replicates the same cell to fill result */ \
+ case (4+CTTZI(sizeof(t)))*8+0: ((t*)base)[scan0[0]]=(t)av; case (4+CTTZI(sizeof(t)))*8+1: ((t*)base)[scan0[1]]=(t)av;  /* copy cells */ \
+ case (4+CTTZI(sizeof(t)))*8+2: ((t*)base)[scan0[2]]=(t)av; case (4+CTTZI(sizeof(t)))*8+3: ((t*)base)[scan0[3]]=(t)av; \
+ scan0+=4;  /* advance pointers - but av is the value and does not advance */ \
+}while(--i0);
+#define CP1nv case 0b100110:  DQNOUNROLL(n0, JMCR(base+cellsize**scan0++,av,cellsize,1,endmask))  // repeat 1 cell over each replaced cell; don't increment input address
+#define CPn1v case 0b100101:   /* each index replicates the same cell to fill result; don't increment input address */ \
 i0=n0;  /* no duff loop */  \
 do{ \
- I abytes=AN(a)*k;  // number of bytes in a \
- mvc(cell0size,base+*scan0++*cellsize,abytes,av); \
-while(--i0);
-#define CP11recur case 0b101100: { NOUNROLL C *avsav=av; DQ(n0, I ix0=*scan0++*cellsize; DQ(cellsize, INSTALLBOXRECUR(base,ix0,*av); ++ix0; ++av;) av=avsav;) }  // recursive install with repeat
-#define CP1nrecur case 0b101110: { NOUNROLL DQ(n0, I ix0=*scan0++*cellsize; DQ(cellsize, INSTALLBOXRECUR(base,ix0,*av); ++ix0; ++av;)) }  // recursive install
+ mvc(cellsize,base+*scan0++*cellsize,abytes,av); \
+}while(--i0);
+#define CP11recur case 0b101100: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,*(A*)av) ++ix0; av+=sizeof(A*);)) }  // install *av++
+#define CPn1recur case 0b101101: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; I cs=cellsize; do{A *avv=(A*)av; DQU(abytes>>LGSZI, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)}while(cellsize-=abytes>>LGSZI);) }  // repeatedly install *av to fill single cell, don't advance av
+#define CP1nrecur case 0b101110: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; A *avv=(A*)av; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)) }  // install *av, don't advance av
+#define CP1narecur case 0b101111: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,(A)av) ++ix0;)) }  // install av repeatedly without refetching
 
  // scatter-copy the data
  while(1){
-  // loop  over each combination of the last 2 axes
+  // loop over each combination of the last 2 axes
   if(--n1==0)goto skippre;
   do{
-   C *basepre=flags&AMFLAGINFULL1?base+axes[r-1].size:axes[r-1].base+axes[r-1].size**scan1++;  // prefetch next address of _1-cell being filled in result
+   C *basepre=amflags&AMFLAGINFULL1?base+axes[r-1].size:axes[r-1].base+axes[r-1].size**scan1++;  // prefetch next address of _1-cell being filled in result
 skippre:;
    // move one _1-cell using the indexes
    UI i0=n0;  /* number of duff loops for last axis */ \
-   I *scan0=axes[r].indexes-((amflags>>AMFLAGDUFFWX)&0x7);  // pointer to first 0-cell index, biased by duff adj
-   av-=cell0size*((amflags>>AMFLAGDUFFAX)&0x7);  // bias output pointer too, but not if it is repeated
-   switch(flags&0x3f){
+   scan0-=((amflags>>AMFLAGDUFFWX)&0x7);  // pointer to first 0-cell index, biased by duff adj
+   av-=cellsize*((amflags>>AMFLAGDUFFAX)&0x7);  // bias output pointer too, but not if it is repeated
+   switch(amflags&0x3f){
    CP11(B) break; CP11(US) break; CP11(UI4) break; CP1n(B) break; CP1n(US) break; CP1n(UI4) break;
 #if SY_64
    CP11(UI) break; CP1n(UI) break;
 #endif
-   CP11v break; CP1nv break; CPn1v break; CP11recur break;
+   CP11v break; CP1nv break; CPn1v break; CP11recur break; CP1nrecur break; CPn1recur break; CP1narecur break;
    default:SEGFAULT;
    }
    base=basepre;  // use prefetch
-   av+=axes[0].resetadder;  // if we repeat a after _1-cell, do so 
+   av+=axes[0].resetadder;  // if we repeat a after _1-cell, do so.  If av holds a value, this will always add 0
+   scan0+=scan0reset;  // if ind type, scan0 rolls along; otherwise reset after each repetition
   }while(--n1>0);
   if(n1==0)goto skippre;  // finish up last block if any
   // We have finished a cell in the last 2 axes.  Advance to next cell if any
-  rinc=r-2;  // odomoter pointer to the cell being incremented
+  I rinc=r-2;  // odomoter pointer to the cell being incremented
   while(1){
    if(rinc<=0)goto endamend;  // level 0 is the array in full.  It can't be incremented
    av+=axes[rinc+1].resetadder;  // if a resets for previous level, make that happen
    axes[rinc].scan++;  //  step to next position
-   if(axes[rinc].scan!=axes[rinc].max}break;  // stop odo if wheel didn't roll over
+   if(axes[rinc].scan!=axes[rinc].max)break;  // stop odo if wheel didn't roll over
    axes[rinc].scan=0;  // reset on rollover
    --rinc;  // back to previous wheel
   }
   // recalc base pointer for next block
+  base=axes[rinc-1].base;  // 
   do{
-   I *andx=axes[rinc].indexes+axes[rinc].scan; andx=axes[rinc].indexes?andx:&axes[rinc].scan;  // point to next value; if indexes==0, taken in full, use the scan as the index
-   axes[rinc].base=axes[rinc-1].base+*andx*axes[rinc].size;  // get address of cell being worked on
-  }while(++rinc<=r-2);  // for each wheel that moved
-  // init for loopback: next _2-cell
+   scan1=axes[rinc].indexes; UI *andx=scan1+axes[rinc].scan; andx=scan1?andx:&axes[rinc].scan;  // point to next value; if indexes==0, taken in full, use the scan as the index
+   axes[rinc].base=base+=*andx*axes[rinc].size;  // get address of cell being worked on, in 'base'
+  }while(++rinc<=r-1);  // for each wheel that moved, and then continuing to axis -2
+  // init for loopback: next _2-cell.  We finished with scan1 holding indexes for axis -2 and base holding the address of the first cell for axis -2
+  ++scan1;  // calculating base was a prefetch; advance to the next index if any.  Immaterial if axis 1 taken in full
   n1=axes[r-1].max;  // # iterations left on last 2 axes
-  scan1=axes[r-1].indexes; scan1=flags&AMFLAGINFULL1?iotavec:scan1;  // point to indexes (or 0 if axis in full)
-  base=axes[r-1].base+axes[r-1].size**scan1++;  // address of _2-cell being filled in result
+// obsolete   scan1=axes[r-1].indexes; scan1=amflags&AMFLAGINFULL1?iotavec:scan1;  // point to indexes (or 0 if axis in full)
+// obsolete   base=axes[r-1].base+axes[r-1].size**scan1++;  // address of _2-cell being filled in result
  }
 endamend:;
-#endif
+}else{
  I *iv=AV(ind);  // start of the cell-index array
  if(UCISRECUR(z)){
   cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower
@@ -344,6 +371,7 @@ endamend:;
    C* RESTRICT zv=CAV(z); DO(AN(ind), mvc(cellsize,zv+iv[i]*cellsize,abytes,av0); )  // scatter-copy the data, with repeat
   }
  }
+}
  RETF(z);
 }
 
@@ -360,9 +388,9 @@ endamend:;
 A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z=0;F1PREFIP;
  ARGCHK1(w);
  if(AR(ind)<2){
-  // rank of w is 0 or 1.  Treat as list of first-axis values (as is suitable for m}) unless FROM is specified and rank=1; then treat as list of successive axes
-  if(!((I)jtinplace&AR(ind)&JTCELLOFFROM))RZ(z=pind(AS(w)[0],ind));  // (m}only) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
-  // if FROM, leave z=0 and fall through to treat as table
+  // rank of ind is 0 or 1.  Treat as list of first-axis values (as is suitable for m}) unless FROM is specified and rank=1 and length>1; then treat as list of successive axes
+  if(!((I)jtinplace&(AN(ind)>1)&JTCELLOFFROM))RZ(z=pind(AS(w)[0],ind));  // (m}only, or length<2) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
+  // if FROM on list, leave z=0 and fall through to treat as table
  }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
  }
  if(likely(z==0)){  // if not handled already...
@@ -464,80 +492,93 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
   // a list of boxes, one  for each index.  multiple-box m is converted to a list of indexes, possibly very inefficiently.  If we end up with a list of indexes,
   // we also need to know the frame of the cells
   I cellframelen;
-#if 0
-  struct axis *axes, localaxes[4]; A alloaxes;  // put axes here usually
-  wr=AR(w); ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
-  if(!wr){x=from(ind,zeroionei(0)); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
   z=0;  // use z to hold reworked ind
+if(JT(jt,peekdata)){  // scaf
+  struct axis *axes, localaxes[4]; A alloaxes;  // put axes here usually
+  I wr=AR(w); I *ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
+  if(!wr){A x=from(ind,zeroionei(0)); cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
   if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table, convert to cell indexes.  If rank>2, error
    ASSERT(AR(ind)<3,EVRANK);  // rank must be < 3
+   cellframelen=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // #axes used: 1, if m is a list; otherwise {:$m
    RZ(z=jtcelloffset(jt,w,ind));  // create (or keep) list of cell indexes
   }else if(likely(AN(ind)==1)){
    // ind is a single box.
-   ind=AAV(ind)[0];  // discard ind, move to its contents
-   ASSERT(AN(ind)<=AR(w),EVLENGTH);  // can't have more selectors than axes
-   if(AT(ind)&BOX{
-    // contents are boxed.  They have selectors for sequential axes.  Put them into a multidimensional ind struct.  In this struct a pointer of 0 means
+   A ind0=AAV(ind)[0];  // discard ind, move to its contents
+   ASSERT(AN(ind0)<=AR(w),EVLENGTH);  // can't have more selectors than axes
+   if(AT(ind0)&BOX){
+    // contents are boxed.  They have selectors for sequential axes.  Put them into a multidimensional axis struct.  In this struct a pointer of 0 means
     // an axis taken in full
-    ASSERT(AR(ind)<2,EVRANK); ASSERT(AN(ind)<=AR(w),EVLENGTH);   // array of axes must have rank<2, and must not exceed #axes in w
-    
-    if(AN(ind)<2)
+    ASSERT(AR(ind0)<2,EVRANK); ASSERT(AN(ind0)<=AR(w),EVLENGTH);   // array of axes must have rank<2, and must not exceed #axes in w
+    if(AN(ind0)<2){
      // 0-1 boxes, turn it into an ind if it contains a list or a box
-     if(AN(ind)==0||AR(ind)>1)goto noaxes;  // go to general case if not a list of axis-0 indexes
-     if((-AN(ind)&SGNIF(AT(ind),BOXX))<0){   // notempty and boxed - complementary indexing
-      ASSERT(!AR(ind),EVINDEX);   // must be just one box
-      ind=AAV(ind)[0];
+     if(AN(ind0)==0||AR(ind0)>1)goto noaxes;  // go to general case if not a list of axis-0 indexes
+     if((-AN(ind0)&SGNIF(AT(ind0),BOXX))<0){   // notempty and boxed - complementary indexing
+      ASSERT(!AR(ind0),EVINDEX);   // must be just one box
+      ind0=AAV(ind0)[0];
       RZ(z=IX(AS(w)[0]));  // get full list of indexes
-      if(AN(ind))z=less(z,pind(AS(w)[0],ind));  // scaf could be faster
-     }else z=pind(AS(w)[0],ind);
+      if(AN(ind0))z=less(z,pind(AS(w)[0],ind0));  // scaf could be faster
+     }else z=pind(AS(w)[0],ind0);  // not boxed - get/keep index list for first axis
      cellframelen=1;  // in this path, the cells are _1-cells
-    }else{UI i;I indn=AN(ind); A *indv=AAV(ind);  // number of axes and pointer to first
-     // use/allocate the axes struct
-     if(likely(AN(ind)<=sizeof(localaxes)/sizeof(localaxes[0])axes=localaxes;}else{GATV0(alloaxes,INT,AN(ind)*sizeof(localaxes)/sizeof(I),0); axes=IAV0(alloaxes);}
-     // fill in the struct for each axis.  check indexes for validity (allocating a new block  if any are negative); handle complementaries, and azes taken in full
-     I prevsize; PROD(prevsize,AR(w)-indn,AS(w)+indn)   // # atoms in the next-smaller cell
-     for(i=indn-1;i;--i){  // for each axis, rolling up from the bottom
-      A ax=indv[i];  // point to the index block
-      axes[i].size=prevsize; prevsize*=AS(w)[i];  // store size of this cell, and get size of next-higher cell
+    }else{I i;I indn=AN(ind0); A *indv=AAV(ind0);  // number of axes and pointer to first
+     // At least 2 axes given.  use/allocate the axis struct
+     if(likely((UI)AN(ind0)<sizeof(localaxes)/sizeof(localaxes[0]))){axes=localaxes;}else{GATV0(alloaxes,INT,AN(ind0)*sizeof(localaxes)/sizeof(I),0); axes=(struct axis *)voidAV0(alloaxes);}  // < because we add a leading axis for the array itself
+     // fill in the struct for each axis.  check indexes for validity (allocating a new block  if any are negative); handle complementaries, and axes taken in full
+// obsolete      I prevsize; PROD(prevsize,AR(w)-indn,AS(w)+indn)   // # atoms in the next-smaller cell
+     A ax;  // holds the index block for the current axis.  At end of loop, holds the ind block for axis 0, after complementation
+     for(i=indn;i;--i){  // for each axis, rolling up from the bottom.  The input is i-1, the output axis is i (because we added the leading axis)
+      ax=indv[i-1];  // point to the index block
+      I axlen=AS(w)[i-1];  // length of axis
+      axes[i].size=axlen;  // save in axis struct
+// obsolete prevsize; prevsize*=axlen;  // store size of this cell, and get size of next-higher cell
       axes[i].scan=0;  // start at beginning of indexes
       axes[i].resetadder=0;  // init to no reset at end of axis
       // resolve complementary index
       if((-AN(ax)&SGNIF(AT(ax),BOXX))>=0){   // notempty and boxed - complementary indexing
-       // not complementary indexing: create valid integer index list
-       RZ(ax=pind(AS(w)[i],ax));
+       // not complementary indexing: create or keep valid integer index list
+       RZ(ax=pind(axlen,ax));
        axes[i].max=AN(ax);  // note how many are left
+       axes[i].indexes=IAV(ax);  // save pointer to the indexes
       }else{
        // here for complementary indexing
        ASSERT(!AR(ax),EVINDEX);   // must be just one box
        ax=AAV(ax)[0];  // open it
-       if(AN(ax){  // if not taken in full...
-        RZ(ax=less(IX(AS(w)[i]),pind(AS(w)[i],ax)));   // ...create index vector for axes and remove the bits in ax.  scaf could be faster
+       if(AN(ax)){  // if not taken in full...
+        RZ(ax=less(IX(axlen),pind(axlen,ax)));   // ...create index vector for axes and remove the bits in ax.  scaf could be faster
         axes[i].max=AN(ax);  // note how many are left
+        axes[i].indexes=IAV(ax);  // save pointer to the indexes
        }else{
-        // axis taken in full.  Tag with 0 pointer
-        axes[i].max=AS(w)[i];  // use all values
-        ax=0;  // but do so implicitly
+        // axis taken in full.  Tag with 0 pointer.  BUT the last axis cannot be taken in full: if we try, discard all trailing in-full axes
+        if(likely(i!=indn)){
+         // non-trailing axis
+         axes[i].max=axlen;  // use all values
+         axes[i].indexes=0;  // ...implicitly, with 0 pointer
+        }else{--indn; // trailing axis taken in full: delete it
+        }
        }
       }
-      axes[i].indexes=ax;  // save pointer to the indexes, or 0 if complementary
      }
-     // here we have succeeded in using the axes.  Indicate that fact by taking the two's comp of the framelen
-     cellframelen=~indn; z=(A)axes;
+     if(likely(indn>=2)){
+      // here we have succeeded in using the axes.  Indicate that fact by taking the two's comp of the framelen
+      cellframelen=~indn; z=(A)axes;
+     }else{
+      // rare case where so many trailing axes were deleted that we don't have 2 axes left.  Revert to ind form, where ax is known to have the ind for axis 0
+      if(indn==0)goto noaxes;  // no axes at all; treat as general case (could set cellframelen=0 and indexes=mtv)
+      cellframelen=1; z=ax;  // use resolved list of indexes of 1-cells
+     }
     }
    }else{
-    // contents are numeric.  They must be a single list of successive axes; convert to a single cell index
-    ASSERT(AR(ind)<2,EVRANK);  // numeric contents must be atom or list
-    RZ(z=jtcelloffset((J)((I)jt+JTCELLOFFROM,w,ind));
-    cellframelen=AR(ind);  // remember the size of the cells
+    // contents are not boxed.  They must be a single list/atom of successive axes; convert to a single cell index
+    ASSERT(AR(ind0)<2,EVRANK);  // numeric contents must be atom or list
+    cellframelen=AN(ind0);  // remember the size of the cells
+    if(cellframelen){RZ(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0));}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }
   }
 noaxes:;
-  if(unlikely(z==0))z=jstd(w,ind,&cellframelen);  // get ind and framelen for the complex indexes
-#else
-  ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
-#endif
-  z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
+}
+  if(unlikely(z==0))z=jstd(w,ind,&cellframelen);  // get ind and framelen for complex indexes
+// obsolete   ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
+  z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,cellframelen);  //  dense a if needed; dense amend
   // We modified w which is now not pristine.
   PRISTCLRF(w)
   EPILOG(z);

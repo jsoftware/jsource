@@ -19,10 +19,13 @@ if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
+elif [ "`uname`" = "OpenBSD" ]; then
+jplatform="${jplatform:=openbsd}"
+make=gmake
 else
 jplatform="${jplatform:=linux}"
 fi
-if [ "`uname -m`" = "x86_64" ]; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ]; then
 j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
@@ -192,6 +195,7 @@ echo no case for those parameters
 exit
 esac
 
+make="${make:=make}"
 echo "CFLAGS=$CFLAGS"
 
 mkdir -p ../bin/$jplatform/$j64x
@@ -199,5 +203,5 @@ mkdir -p obj/$jplatform/$j64x/
 cp makefile-jnative obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET jplatform j64x
 cd obj/$jplatform/$j64x/
-make -f makefile-jnative
+$make -f makefile-jnative
 cd -

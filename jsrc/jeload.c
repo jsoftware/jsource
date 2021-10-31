@@ -355,7 +355,7 @@ int jefirst(int type,char* arg)
 	strcat(input,"[UNAME_z_=:'Darwin'");
 #elif defined(__OpenBSD__)
 	strcat(input,"[UNAME_z_=:'OpenBSD'");
-#elif !defined(ANDROID)
+#elif defined(__linux__) && !defined(ANDROID)
 	strcat(input,"[UNAME_z_=:'Linux'");
 #endif
 	if(FHS) strcat(input,"[FHS_z_=:1");

@@ -19,10 +19,13 @@ if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
+elif [ "`uname`" = "OpenBSD" ]; then
+jplatform="${jplatform:=openbsd}"
+make=gmake
 else
 jplatform="${jplatform:=linux}"
 fi
-if [ "`uname -m`" = "x86_64" ]; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ]; then
 j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
@@ -541,6 +544,7 @@ OBJS_SLEEF=" \
 fi
 fi
 
+make="${make:=make}"
 echo "CFLAGS=$CFLAGS"
 
 if [ ! -f ../jsrc/jversion.h ] ; then

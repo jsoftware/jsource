@@ -13,7 +13,7 @@ void cpuInit(void)
 
 #elif defined(__aarch64__)||defined(_M_ARM64)
 
-#ifndef __APPLE__
+#if defined(__linux__)
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
 #include <arm_neon.h>
@@ -25,7 +25,7 @@ void cpuInit(void)
 {
   g_cpuFeatures = 0;
 
-#ifndef __APPLE__
+#if defined(__linux__)
   unsigned long hwcaps= getauxval(AT_HWCAP);
 
 #if defined(ANDROID)
@@ -99,8 +99,10 @@ void cpuInit(void)
   g_cpuFeatures |= ARM_HWCAP_SHA1;
   g_cpuFeatures |= ARM_HWCAP_SHA2;
   g_cpuFeatures |= ARM_HWCAP_CRC32;
-//  g_cpuFeatures |= ARM_HWCAP_ATOMICS;
-//  g_cpuFeatures |= ARM_HWCAP_FPHP;
+#if defined(TARGET_OS_OSX)
+  g_cpuFeatures |= ARM_HWCAP_ATOMICS;
+  g_cpuFeatures |= ARM_HWCAP_FPHP;
+#endif
 //  g_cpuFeatures |= ARM_HWCAP_ASIMDHP;
   g_cpuFeatures |= ARM_HWCAP_CPUID;
 //  g_cpuFeatures |= ARM_HWCAP_ASIMDRDM;
@@ -108,11 +110,15 @@ void cpuInit(void)
 //  g_cpuFeatures |= ARM_HWCAP_FCMA;
 //  g_cpuFeatures |= ARM_HWCAP_LRCPC;
 //  g_cpuFeatures |= ARM_HWCAP_DCPOP;
-//  g_cpuFeatures |= ARM_HWCAP_SHA3;
+#if defined(TARGET_OS_OSX)
+  g_cpuFeatures |= ARM_HWCAP_SHA3;
+#endif
 //  g_cpuFeatures |= ARM_HWCAP_SM3;
 //  g_cpuFeatures |= ARM_HWCAP_SM4;
 //  g_cpuFeatures |= ARM_HWCAP_ASIMDDP;
-//  g_cpuFeatures |= ARM_HWCAP_SHA512;
+#if defined(TARGET_OS_OSX)
+  g_cpuFeatures |= ARM_HWCAP_SHA512;
+#endif
 //  g_cpuFeatures |= ARM_HWCAP_SVE;
 //  g_cpuFeatures |= ARM_HWCAP_ASIMDFHM;
 //  g_cpuFeatures |= ARM_HWCAP_DIT;

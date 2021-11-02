@@ -140,10 +140,10 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  if(cellframelen>=0){  // ind is indexes
   compalen=MAX(0,AR(a)-(AR(w)-cellframelen));  // #axes of a that are outside of the cell in w
   ASSERTAGREE(AS(a),AS(ind)+AR(ind)-compalen,compalen);  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
- }else{  // ind is axes.  the cell-frame part of the shape of a must be a suffix of the cell-frame part of axes
+ }else{  // ind is axes.  The cell-frame part of the shape of a must be a suffix of the cell-frame part of axes
   I aaxis=compalen=MAX(0,AR(a)-(AR(w)-~cellframelen));  // #axes of a that are outside of the cell in w
   // scan through the frame of ind, backwards.  If an axis has max<0, that was a selector that contained an atom: it disappeared from the shape of m{y and we skip it here (while resetting its len to +1).
-  // compare the unskipped axes of ind with those of a.  Stop when a is exhausted.  If a has surples axes, that's an error
+  // compare the unskipped axes of ind with those of a.  Stop when a is exhausted.  If a has surplus axes, that's an error
   DQ(~cellframelen, if(((struct axis*)ind)[i+1].max<0)((struct axis*)ind)[i+1].max=1; else if(aaxis){ASSERT(((struct axis*)ind)[i+1].max==AS(a)[--aaxis],EVLENGTH)})
   ASSERT(aaxis==0,EVRANK);  // error if unmatched axes of a
 // obsolete   DQ(compalen, ASSERT((UI)AS(a)[i]==((struct axis*)ind)[i+~cellframelen].max,EVLENGTH))  //  note: always min 2 axes.  Axis i is in the axis struct at position i+1

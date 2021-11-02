@@ -26,8 +26,15 @@ j64x : j64 j64avx j64avx2 j64arm j32  (default host or j64avx)
 # eg. build j64 binaries
 jplatform=linux j64x=j64 ./build_libj.sh
 
-# apple m1 libj.dylib cross compilation
+# target apple m1
 jplatform=darwin j64x=j64arm ./build_libj.sh
+
+# target apple intel/m1
+jplatform=darwin j64x=j64 ./build_libj.sh
+
+# target apple intel
+jplatform=darwin j64x=j64avx ./build_libj.sh
+jplatform=darwin j64x=j64avx2 ./build_libj.sh
 
 # linux and j64 is the default on 64-bit linux, so this is fine
 ./build_libj.sh
@@ -36,8 +43,15 @@ jplatform=darwin j64x=j64arm ./build_libj.sh
 # this will run ./clean.sh and can detect the host platform
 ./build_all.sh
 
-# apple m1 cross compilation
+# target apple m1
 j64x=j64arm ./build_all.sh
+
+# target apple intel/m1
+j64x=j64 ./build_all.sh
+
+# target apple intel
+j64x=j64avx ./build_all.sh
+j64x=j64avx2 ./build_all.sh
 
 # test
 # copy binaries to jlibrary/bin folder 

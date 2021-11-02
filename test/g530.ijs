@@ -460,6 +460,53 @@ test1 2 u: 'abcdefghijklmno'
 test1 10 u: 'abcdefghijklmno'
 test1 s: ' now is the time for all good men'
 
+NB. complementary indexing and axes in full
+NB. x has an atom for each leading axis of y to be fetched from:
+NB. 0=atom 1=list 2=complementary 3=axis in full
+NB. we calculate a selector for the given x.  Then we amend with it, comparing against an exploded version
+NB. We do amends with each possible frame of replacement data
+test1 =: {{
+axes =. 0$a: [ exaxes =. 0$0  NB. axes, exploded axes
+for_i. x do.
+ ys =. i_index { $y  NB. length of selected axis
+ select. i
+ case. 0 do. exaxis =. axis =. ?ys
+ case. 1 do. exaxis =. axis =. (?ys) ? ys
+ case. 2 do. exaxis =. (i.ys) -. >axis =. < (?ys) ? ys
+ case. 3 do. exaxis =. i. ys [ axis =. a:
+ end.
+ axes =. axes , <axis [ exaxes =. exaxes ,"1 0/ exaxis
+end.
+NB. We have the selectors.
+selshape =. (}:$exaxes) , ({:$exaxes)}.$y  NB. shape of m{y
+NB. obsolete ax   =: axes
+NB. obsolete exax   =: exaxes
+ip =. 1 |. y  NB. inplaceable version
+for_i. i.#selshape do.
+ repldata =. (,y) {~ (i}.selshape)?@$ */@$ y
+NB. obsolete rd   =: repldata
+ assert. repldata ((<axes)} -: (<^:(1=#@$) exaxes)}) y
+ NB. Also execute inplace, to exercise usecount management
+ ip =. repldata (<axes)} ip
+end.
+1
+}}"1 _
+NB. x is number of leading axes to test
+test2 =: {{
+((#: i.@(*/)) x # 4) test1 y
+1
+}}"0 _
+0 1 2 3 4 5 test2 i. 4 3 4 5 7 6 3
+0 1 2 3 4 5 test2 0. + i. 4 3 4 5 7 6 4
+0 1 2 3  test2 0x + i. 4 3 4 5 3
+0 1 2 3  test2 1r2 + i. 4 3 4 5 3
+0 1 2 3 test2 <"0 i. 4 3 4 5 2
+0 1 2 3 4 5 test2 (4 3 4 5 7 6 1) $ a.
+0 1 2 3 4 5 test2 (4 3 4 5 7 6 2) $ a.
+0 1 2 3 4 5 test2 (4 3 4 5 7 6 3) $ a.
+0 1 2 3 4 5 test2 (4 3 4 5 7 6 4) $ a.
+0 1 2 3 4 5 test2 (4 3 4 5 7 6 5) $ a.
+
 NB. lists of boxes get opened and go through the list-of-numbers code
 
 _10 -: (,_10) (,<0$4)} 4
@@ -682,6 +729,12 @@ a =. (5,y) $ 'a'
 )
 test i. 517
 
+(,: 0 1 2 5) -: (,5) (,<0 3)} i. 1 4
+'rank error' -: (,5) (<0 3)} etx i. 1 4
+(0 1 2 0 4,:5 6 7 1 9) -:  (i. 2)    (<a:;3)} i. 2 5
+'length error' -:  (i. 2)    (<a:;,3)} etx  i. 2 5
+'index error' -: (i. 2 2)    (<<i. 2 2)} etx i. 2 11
+
 NB. Noun & other components of AR
 x =: 5
 'domain error' -: ex '((5!:1<''x'')`[`])}'
@@ -700,6 +753,6 @@ x =: "
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 x xx xyz y yy z z1 zz '
+4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 test2 x xx xyz y yy z z1 zz '
 4!:55 ;:'lim lm mody rx ry selshape tm tx ty' 
 randfini''

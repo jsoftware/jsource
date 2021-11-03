@@ -25,9 +25,37 @@ F1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
 A jtpind(J jt,I n,A w){A z;I j,*v;
  RE(n); ARGCHK1(w);
  RZ(z=ISDENSETYPE(AT(w),INT)?w:cvt(INT,w));  // z is now an INT vector, possibly the input argument
+
+#if C_AVX2 || EMU_AVX2
+ // this is a prototype for a Duff loop that only reads
+ if(unlikely(AN(z)==0))R z;
+ I *pv=IAV(z);  // pointer to input
+ __m256i endmask=_mm256_loadu_si256((__m256i*)(validitymask+((-AN(z))&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
+ __m256i u,eacc=_mm256_setzero_si256(),nacc=_mm256_setzero_si256(),maxvalid=_mm256_set1_epi64x(n-1);  // read into u; accumulate neg/errors; maximum valid value (maxvalid-u is neg if too high)
+ UI n2=DUFFLPCT(AN(z)-1,3);  // # turns through duff loop - each one 8x4 indexes
+ if(n2>0){
+  I backoff=DUFFBACKOFF(AN(z)-1,3);
+  pv += (backoff+1)*NPAR;
+#define INDLD(n) u=_mm256_loadu_si256((__m256i*)(pv+(n)*NPAR));
+#define INDCHK nacc=_mm256_or_si256(nacc,u); eacc=_mm256_or_si256(eacc,_mm256_sub_epi64(maxvalid,u));
+#define INDCASE(n) case ~(n): INDLD(n) INDCHK
+  switch(backoff){
+  do{
+  INDCASE(0) INDCASE(1) INDCASE(2) INDCASE(3) INDCASE(4) INDCASE(5) INDCASE(6) INDCASE(7) 
+  pv +=8*NPAR;
+  }while(--n2!=0);
+  }
+ }
+ // handle remnant
+ u=_mm256_maskload_epi64(pv,endmask); INDCHK
+ // if there is an error, we can abort.  If we saw a negative, it may be an error (if it was near IMIN)
+ ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(eacc))==0,EVINDEX);  // error if any index too high
+ if(likely(_mm256_movemask_pd(_mm256_castsi256_pd(nacc))==0))R z;  // all indexes positive, keep input buffer
+#else
  // Make a quick scan to see if all are positive, as they usually are
  for(j=AN(z), v=IAV(z);j;--j)if((UI)*v++>=(UI)n)break;
  if(j==0)R z;  // if all indices in range, keep the original vector
+#endif
  // There was an out-of-bounds or negative index.  We may have to modify the index vector.  Reallocate it if we didn't already
  if(z==w)RZ(z=ca(z));  // Create temp area if we don't have one already
  for(j=AN(z), v=IAV(z);j;--j){if((UI)*v>=(UI)n){*v+=n; ASSERT((UI)*v<(UI)n,EVINDEX);} ++v;}  // replace negative indexes

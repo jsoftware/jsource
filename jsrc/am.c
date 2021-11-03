@@ -287,21 +287,25 @@ do{ \
  case (CTTZI(sizeof(t)))*8+6: ((t*)base)[scan0[6]]=((t*)av)[6]; case (CTTZI(sizeof(t)))*8+7: ((t*)base)[scan0[7]]=((t*)av)[7]; \
  scan0+=8; av=(C*)((t*)av+8);  /* advance pointers */ \
 }while(--i0);
-#define CP11v case 0b100100: DQNOUNROLL(n0, JMCR(base+cellsize**scan0++,av,cellsize,1,endmask) av+=cellsize;)  // copy 1 odd-length cell, advancing pointers to next input & output
 #define CP1n(t)  /* each index copies the same cell to the result */ \
 do{ \
  case (4+CTTZI(sizeof(t)))*8+0: ((t*)base)[scan0[0]]=(t)av; case (4+CTTZI(sizeof(t)))*8+1: ((t*)base)[scan0[1]]=(t)av;  /* copy cells */ \
  case (4+CTTZI(sizeof(t)))*8+2: ((t*)base)[scan0[2]]=(t)av; case (4+CTTZI(sizeof(t)))*8+3: ((t*)base)[scan0[3]]=(t)av; \
  scan0+=4;  /* advance pointers - but av is the value and does not advance */ \
 }while(--i0);
-#define CP1nv case 0b100110:  DQNOUNROLL(n0, JMCR(base+cellsize**scan0++,av,cellsize,1,endmask))  // repeat 1 cell for each replaced cell; don't increment input address
-#define CPn1v case 0b100101:   /* each index replicates the same cell to fill result; don't increment input address */ \
-i0=n0;  /* no duff loop */  \
-do{mvc(cellsize,base+*scan0++*cellsize,abytes,av);}while(--i0);
+#define CP1xv(bytelen,inc) case 0b101110-(bytelen<<3)-(inc<<1): DQNOUNROLL(n0, JMCR(base+cellsize**scan0++,av,cellsize,bytelen,endmask) if(inc)av+=cellsize;)  // copy 1 odd-length cell, advancing pointers to next input & output
+// obsolete #define CP1nv(bytelen) case 0b101110-(bytelen<<3):  DQNOUNROLL(n0, JMCR(base+cellsize**scan0++,av,cellsize,bytelen,endmask))  // repeat 1 cell for each replaced cell; don't increment input address
+#define CPn1v case 0b100101: i0=n0;  /* no duff loop */ do{mvc(cellsize,base+*scan0++*cellsize,abytes,av);}while(--i0);  /* each index replicates the same cell to fill result; don't increment input address */
 #define CP11recur case 0b110100: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,*(A*)av) ++ix0; av+=sizeof(A*);)) }  // install *av++
 #define CPn1recur case 0b110101: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; I cs=cellsize; do{A *avv=(A*)av; DQU(abytes>>LGSZI, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)}while(cs-=abytes>>LGSZI);) }  // repeatedly install *av to fill single cell, don't advance av
 #define CP1nrecur case 0b110110: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; A *avv=(A*)av; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)) }  // install *av, don't advance av
 #define CP1narecur case 0b110111: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,(A)av) ++ix0;)) }  // install av repeatedly without refetching
+
+#define AMFLAGRTN ((I)1<<AMFLAGRTNX)  // switch routine: 0llddd: cells have length 1<<ll with duff offset ddd; 1ll0dd single cell of length 1<<ll, duff offset dd;
+                                 // 10b1xx non-atomic length cell, xx is 00=multiple cells of a, 01=single cell of a (length abytes)  in each result cell; 10=a is a single cell of length abytes=cellsize not repeated.  When xx is x0, b=1 means cellsize is a multiple of SZI
+                                 // 1101xx recursive types, xx is 00=multiple cells of a, 01=single cell of a (length abytes) repeated in each result cell; 1y=a is a single cell of length abytes=(cellsize<<lgk), with y=1 if abytes=SZI
+
+
 
  // scatter-copy the data
  while(1){
@@ -315,12 +319,13 @@ skippre:;
    scan0-=((amflags>>AMFLAGDUFFWX)&0x7);  // pointer to first 0-cell index, biased by duff adj
    av-=cellsize*((amflags>>AMFLAGDUFFAX)&0x7);  // bias output pointer too, but not if it is repeated
    switch(amflags&0x3f){
+   case 0b100111: case 0b101101:  case 0b101111: case 0b111100:  case 0b111101:  case 0b111110:  case 0b111111:   // unused cases
    CP11(B) break; CP11(US) break; CP11(UI4) break; CP1n(B) break; CP1n(US) break; CP1n(UI4) break;
 #if SY_64
    CP11(UI) break; CP1n(UI) break;
 #endif
-   CP11v break; CP1nv break; CPn1v break; CP11recur break; CP1nrecur break; CPn1recur break; CP1narecur break;
-   default:SEGFAULT;
+   CP1xv(1,0) break; CP1xv(1,1) break; CP1xv(0,0) break; CP1xv(0,1) break;
+   CPn1v break; CP11recur break; CP1nrecur break; CPn1recur break; CP1narecur break;
    }
    base=basepre;  // use prefetch
    av+=axes[0].resetadder;  // if we repeat a after _1-cell, do so.  If av holds a value, this will always add 0

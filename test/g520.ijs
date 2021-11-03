@@ -1007,8 +1007,7 @@ for_l. >:  i. 50 do.
     ref =. (ix{"1 M) +/@:*"1 v
     abort =. 0 e. g +. ref<:0
     if. abort do. ref=.'' end.
-abr   =: abort;ref
-    assert. (abort;ref) -:!.1e_11 (128!:9) err   =: g;ix;v;M
+    assert. (abort;ref) -:!.1e_11 (128!:9) g;ix;v;M
   end.
 end.
 1

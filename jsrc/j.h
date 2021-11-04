@@ -775,7 +775,7 @@ extern unsigned int __cdecl _clearfp (void);
 #if SY_64
 #define ISFTOIOK(f,i)    (ABS(f)<-(D)IMIN && ((f)==(i) || FFIEQ(f,i)))  // 64 bit: a float of IMIN does not equal integer IMIN
 #else
-#define ISFTOIOK(f,i)    ((f)==(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
+#define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
 #endif
 #define ISFTOIOKFZ(f,i,fuzz) (ABS(f)<-(D)IMIN && ((f)==(i) || FIEQ(f,i,fuzz))) // same, but variable fuzz
 #define F1(f)           A f(JJ jt,    A w)  // whether in an interface routine or not, these must use the internal parameter type

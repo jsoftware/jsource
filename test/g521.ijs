@@ -536,7 +536,7 @@ NB. x{.y with infinite left arguments -----------------------------------
 
 'domain error' -: 2.5 _ {. etx i.3 4
 
-'domain error'  -: (>IF64{(_,_1+2^31);_,_1+2^63){. etx i.3 4
+('domain error';'limit error') e.~ < (>IF64{(_,_1+2^31);_,_1+2^63){. etx i.3 4
 
 NB. inplaceable x}.y x{.y ------------------------------------------------------------------------
 

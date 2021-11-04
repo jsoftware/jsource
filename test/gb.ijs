@@ -213,6 +213,8 @@ NB. Use b. to check for conversion to integer
 'domain error' -: (-: 20 b.) etx 1. + imax NB. always overflows to float
 (-: 20 b.) _1024. + imax
 'domain error' -: (-: 20 b.) etx +/\ 2 ^  (, 0 >. -&40) IF64 { 31 63
+'domain error' -: (-: 20 b.) etx 2 # 1. + imax NB. always overflows to float
+(-: 20 b.) 2 # _1024. + imax
 
 NB. v b. ----------------------------------------------------------------
 

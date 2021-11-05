@@ -231,10 +231,10 @@ F1(jtasgzombs){I k;
 // return 0 to signal error, 1 to continue
 I jtdeprecmsg(J jt, I mno, C *mtxt){
  if(jt->deprecct==0)R 1;  // msgs disabled, continue
- A okmsg; RZ(okmsg=indexof(jt->deprecex,sc(mno))); if(BAV0(okmsg)[0]==0)R 1;  // this msg excluded, continue
+ A okmsg; RZ(okmsg=eps(sc(mno),jt->deprecex)); if(BAV(okmsg)[0]!=0)R 1;  // unless this msg excluded, continue
  // code to write output line copied from jtpr1
  // extract the output type buried in jt
- jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console
+ if(jt->deprecct!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
  ASSERT(jt->deprecct>0,EVNONCE);  // if fail on warning, do so
  --jt->deprecct;  // decrment # of messages to allow
  R 1;  // return  no error

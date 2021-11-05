@@ -87,6 +87,9 @@ DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}  // pass inplaceab
 // if there is only one cell, process it through on1, which understands this type
 static DF1(jton10){R jtrank1ex0(jt,w,self,on1cell);}  // pass inplaceability through
 static DF2(jtupon20){R jtrank2ex0(jt,a,w,self,jtupon2cell);}  // pass inplaceability through
+// these versions are called for f@atomic; they warn if executed on more than one atom
+static DF1(jton10atom){F1PREFIP; if(unlikely(AN(w)>1&&jt->deprecct!=0))RZ(jtdeprecmsg(jt,5,"(005) f@atomic executed on multiple cells; use f\"0@:atomic\n")); R jtrank1ex0(jt,w,self,on1cell);}  // pass inplaceability through
+static DF2(jtupon20atom){F2PREFIP; if(unlikely((AN(a)|AN(w))>1&&jt->deprecct!=0))RZ(jtdeprecmsg(jt,6,"(006) f@atomic executed on multiple cells; use f\"0@:atomic\n")); R jtrank2ex0(jt,a,w,self,jtupon2cell);}  // pass inplaceability through
 
 // special lightweight case for u@[ and u@].
 static DF1(onright1){F1PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])(jtinplace,w,FAV(self)->fgh[0]);}  // pass straight through.  All we do here is set self.  Leave inplaceability unchanged
@@ -238,9 +241,9 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  flag2|=((wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1PROPX)));
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop
- if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==RMAX?on1cell:f1; f1=wv->mr==0?jton10:f1;}
- if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2; f2=wv->lrr==0?jtupon20:f2;}
+ // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop; if v is atomic, switch to the loop that gives a msg if executed on non-atom
+ if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==0?jton10:f1; f1=wv->flag&VISATOMIC1?jton10atom:f1; f1=wv->mr==RMAX?on1cell:f1;}
+ if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==0?jtupon20:f2; f2=wv->flag&VISATOMIC2?jtupon20atom:f2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2;}
 
   A z=fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv));
   RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;

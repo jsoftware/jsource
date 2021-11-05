@@ -365,6 +365,55 @@ NB. 'rank error'   -: 9!:51 etx 3 4$'abc'
 NB. 
 NB. 9!:51 old
 
+NB. 9!:54 and 9!:55
+9!:55 (271828)   NB. suppress msg but test
+1: 0 ((2;2 3);<3 2;4)} i. 10 10  NB. multiple inhomogeneous selectors
+(271827;'') -: 9!:54''
+9!:55 (271828;1)   NB. suppress test
+1: 0 ((2;2 3);<3 2;4)} i. 10 10
+(271828;1) -: 9!:54''
+NB. used only to debug error stop 9!:55 (_1)   NB. allow error
+NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10 10
+
+9!:55 (271828)   NB. suppress msg but test
+1: 0 ((2 2);<3 3)} i. 10 10  NB. multiple homogeneous selectors
+(271827;'') -: 9!:54''
+9!:55 (271828;2)   NB. suppress test
+1: 0 ((2 2);<3 3)} i. 10 10
+(271828;2) -: 9!:54''
+
+9!:55 (271828)   NB. suppress msg but test
+1: 0 (<1;<i. 2 2)} i. 10 10  NB. axes containing table
+(271827;'') -: 9!:54''
+9!:55 (271828;3)   NB.
+1: 0 (<1;<i. 2 2)} i. 10 10 
+(271828;3) -: 9!:54''
+
+9!:55 (271828)   NB. suppress msg but test
+1: 0 (2})"1 i. 10 10  NB. amend with rank
+(271827;'') -: 9!:54''
+9!:55 (271828;4)   NB.
+1: 0 (2})"1 i. 10 10 
+(271828;4) -: 9!:54''
+
+9!:55 (271828)   NB. suppress msg but test
+1: *@+: 3 4  NB. f@atomic monad
+(271827;'') -: 9!:54''
+9!:55 (271828;5)   NB.
+1: *@+: 3 4
+(271828;5) -: 9!:54''
+
+9!:55 (271828)   NB. suppress msg but test
+1: 6 *@+ 3 4  NB. f@atomic dyad
+(271827;'') -: 9!:54''
+9!:55 (271828;6)   NB.
+1: 6 *@+ 3 4
+(271828;6) -: 9!:54''
+
+9!:55 (0)  NB. reset
+
+
+
 4!:55 ;:'a a12 a6 a9 b boxq boxs c dispq disps '
 4!:55 ;:'drop1 erase evmq evms initspace namedvb nub old p ppq pps promptq '
 4!:55 ;:'prompts q read rlq rls s t v '

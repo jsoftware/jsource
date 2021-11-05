@@ -110,7 +110,7 @@
 #define CUNDER     (C)0x14  // &.
 #define CCOMDOT    (C)0x15  // ,.
 #define CLEFT      (C)0x16  // [   must be paired with CRIGHT
-#define CRIGHT     (C)0x17  // }
+#define CRIGHT     (C)0x17  // ]
 #define CLAMIN     (C)0x18  // ,:
 #define CCOMMA     (C)0x19  //
 #define CSEMICO    (C)0x1a  //

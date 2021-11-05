@@ -473,11 +473,13 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
  if((b&-AR(ind))<0){   // array of boxed indexes
   RZ(j=aindex(ind,w,0L)); j=(A)((I)j&~1LL);  // see if the boxes are homogeneous, or erroneous
   if(!j){  // if not homogeneous...
+   if(unlikely(jt->deprecct!=0))RZ(jtdeprecmsg(jt,1,"(001) inhomogeneous multiple selectors in (x m} y): consider applying them separately\n"));
    RZ(x=MODIFIABLE(from(ind,increm(iota(shape(w)))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
    DQ(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
    *cellframelen=AR(w); R x;   // the indexes are what we want, and they include all the axes of w
   }
   // Homogeneous boxes.  j has them in a single table.  turn each row into an index
+  if(unlikely(jt->deprecct!=0))RZ(jtdeprecmsg(jt,2,"(002) homogeneous multiple selectors in (x m} y): consider using rank-2 m\n"));
   b=0; ind=j;  // use the code for numeric array
   // later this can use the code for table m
  }
@@ -551,17 +553,21 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
     ASSERT(AR(ind0)<2,EVRANK); ASSERT(AN(ind0)<=AR(w),EVLENGTH);   // array of axes must have rank<2, and must not exceed #axes in w
     if(AN(ind0)<2){
      // 0-1 selectors, turn it into an ind if it contains a list/atom or a box.  If it contains a table or higher, revert to general case
-     if(AN(ind0)==0||AR(ind0)>1)goto noaxes;  // go to general case if not a list of axis-0 indexes
-     // the single selector is a singleton box <indexes or <<compindexes
-     ind0=AAV(ind0)[0];  // advance ind0 to indexes or <compindexes
-     if(!(AT(ind0)&BOX))z=pind(AS(w)[0],ind0);  // not boxed - get/keep index list for first axis
-     else{  // <<compidexes
-      ASSERT(!AR(ind0),EVINDEX);   // must be just one atomic box
-      ind0=AAV(ind0)[0];  // advance ind0 to compindexes
-      RZ(z=IX(AS(w)[0]));  // get full list of indexes
-      if(AN(ind0))z=less(z,pind(AS(w)[0],ind0));  // scaf could be faster
+     if(AN(ind0)!=0){
+      // the single selector is a singleton box <indexes or <<compindexes
+      ind0=AAV(ind0)[0];  // advance ind0 to indexes or <compindexes
+      if(!(AT(ind0)&BOX))z=pind(AS(w)[0],ind0);  // not boxed - get/keep index list for first axis
+      else{  // <<compidexes
+       ASSERT(!AR(ind0),EVINDEX);   // must be just one atomic box
+       ind0=AAV(ind0)[0];  // advance ind0 to compindexes
+       RZ(z=IX(AS(w)[0]));  // get full list of indexes
+       if(AN(ind0))z=less(z,pind(AS(w)[0],ind0));  // scaf could be faster
+      }
+      cellframelen=1;  // in this path, the cells are _1-cells
+     }else{
+      // empty list of selectors, that means 'all taken in full' - one selection of the whole.
+      cellframelen=0; z=zeroionei(0);  // select everything
      }
-     cellframelen=1;  // in this path, the cells are _1-cells
     }else{I i;I indn=AN(ind0); A *indv=AAV(ind0);  // number of axes and pointer to first
      // At least 2 axes given.  use/allocate the axis struct
      if(likely((UI)AN(ind0)<sizeof(localaxes)/sizeof(localaxes[0]))){axes=localaxes;}else{GATV0(alloaxes,INT,AN(ind0)*sizeof(localaxes)/sizeof(I),0); axes=(struct axis *)voidAV0(alloaxes);}  // < because we add a leading axis for the array itself
@@ -581,7 +587,11 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
        // the selector may have any shape.  If it is not a list, it will affect the rank of m{y.  We will handle two cases: atom and list selector.
        // If the selector is an atom, we mark its max as -1 to indicate that the axis is to be skipped when checking frames
        RZ(ax=pind(axlen,ax));  // audit selectors
-       if(AR(ax)>1)goto noaxes;  // table in selectors: abort axis work
+       if(unlikely(AR(ax)>1)){
+        // one of the selectors is a table.  We have to go to general case
+        if(unlikely(jt->deprecct!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
+        goto noaxes;  // table in selectors: abort axis work
+       }
        axes[i].max=(AR(ax)-1)|AN(ax);  // note how many there are, or -1 if atom
        axes[i].indexes=IAV(ax);  // save pointer to the indexes
       }else{
@@ -608,8 +618,9 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
       cellframelen=~indn; z=(A)axes;
      }else{
       // rare case where so many trailing axes were deleted that we don't have 2 axes left.  Revert to ind form, where ax is known to have the ind for axis 0
-      if(indn==0)goto noaxes;  // no axes at all; treat as general case (could set cellframelen=0 and indexes=mtv)
-      cellframelen=1; z=ax;  // use resolved list of indexes of 1-cells
+      cellframelen=indn; z=indn?ax:zeroionei(0);  // set cell size, and axes if there are any; if no axes, just select array in full
+// obsolete       if(indn==0)goto noaxes;  // no axes at all; treat as general case (could set cellframelen=0 and indexes=mtv)
+// obsolete       cellframelen=1; z=ax;  // use resolved list of indexes of 1-cells
      }
     }
    }else{

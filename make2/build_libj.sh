@@ -129,6 +129,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
  -Wno-parentheses \
  -Wno-pass-failed \
  -Wno-pointer-sign \
+ -Wno-pointer-to-int-cast \
  -Wno-sometimes-uninitialized \
  -Wno-string-plus-int \
  -Wno-unknown-pragmas \

@@ -144,7 +144,6 @@ F2PREFIP;ARGCHK2(a,w);
     // it would be OK to leave a pristine if it was abandoned, because we know a is a singleton and we are zapping it; that would allow early release of a.  But we're scared.
    A acontents=AAV(a)[0];  // save contents in case we zap it
    // It is still possible that a is virtual, for example if it came from {. 2 1 $ a: or a virtual argument cell.  
-// obsolete    if(likely(AFLAG(w)&BOX))if((AFLAG(a)&(aband<<BOXX))!=0){AAV(a)[0]=0;}else{ra(AAV(a)[0]);}  // Incr usecount if w is recursive; zappable if abandoned recursive and nonvirtual
    if(likely(AFLAG(w)&BOX))if((AFLAG(a)&AFVIRTUAL)<(AFLAG(a)&(aband<<BOXX))){AAV(a)[0]=0;}else{ra(AAV(a)[0]);}  // Incr usecount if w is recursive; zappable if abandoned recursive and nonvirtual
    a=acontents;  // move to the contents of a, which we will install into w.  It is already incorped and has the usecount right to go into a recursive block
   }else{  // not (,<), i. e.  ;  (;<)  ,&<   all of which box a

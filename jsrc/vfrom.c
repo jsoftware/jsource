@@ -528,7 +528,6 @@ F2(jtfrom){I at;A z;
    if(likely(!SY_64||AT(a)&(B01|INT))){av=BIV0(a);  // INT index
    }else{  // FL index
     D af=DAV(a)[0], f=jround(af); av=(I)f;
-// obsolete     ASSERT(f==af || FFIEQ(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
     ASSERT(ISFTOIOK(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
    }
    I wr1=AR(w)-1;
@@ -566,7 +565,6 @@ F2(jtfrom){I at;A z;
 F2(jtsfrom){
  if(!ISSPARSE((AT(w)))){
   // Not sparse.  Verify the indexes are numeric and not empty
-// obsolete   if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is unusual & unimportant & we'll ignore it
   if(((AN(a)-1)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is a numeric array
    // Check indexes for validity; if valid, turn each row into a cell offset
    if(ind=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,a)){

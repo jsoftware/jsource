@@ -181,12 +181,6 @@ static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(se
 // jt has flag set for final assignment (passed into symbis), to which we add a flag for assignsym 
 // The return must be 0 for bad, anything else for good
 static A NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
-// obsolete  A v=stack[2].a, n=stack[0].a;  // assignment value and name.
-// obsolete  stack[1+((I)jtinplace&JTFINALASGN)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
-// obsolete  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
-// obsolete  // depending on which type of assignment (but if there is no local symbol table, always use the global)
-// obsolete  A symtab=jt->locsyms; if(unlikely((SGNIF(pt1,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
-// obsolete  if(likely(pt0&PTNAME0)){jtsymbis(jtinplace,n,v,symtab);}   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
  B ger=0;C *s;
  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -524,7 +518,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch
   I pull4=0; pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;
-// obsolete   if(likely(nwds>2))
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
   pt0ecam += nwds+((0b11LL<<CONJX)<<pull4);
@@ -535,9 +528,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   A y;  // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call
   y=*(volatile A*)queue;  // unroll y once
 
-// obsolete   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
-// obsolete   A savfs=jt->parserstackframe.sf;  // push $: stack
-// obsolete 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
   jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.
@@ -546,7 +536,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
 
   // We have the initial stack pointer.  Grow the stack down from there
-// obsolete   SETSTACK0PT(PTMARK);  // will hold the EDGE+AVN value, which doesn't change much and is stored late
   stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
   while(1){  // till no more matches possible...
 
@@ -906,7 +895,6 @@ RECURSIVERESULTSCHECK
       // We avoid the indirect branch, which is very expensive
       jt->parserstackframe.parsercurrtok = stack[1].t;   // 1 for hook/fork/assign
       if(pmask&0b10000000){  // assign - can't be fork/hook
-// obsolete        stack[1+((US)pt0ecam==0)].t=-1;  // if final assignment, set token# in slot 2=-1 to suppress display.  If not, make harmless store to slot 1
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; if(unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
@@ -919,13 +907,6 @@ RECURSIVERESULTSCHECK
        FPZ(rc)  // fail if error
        if(likely((US)pt0ecam==0))EP(1)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
        stack+=2;  // if we have to keep going, advance stack to the assigned value
-// obsolete         // no need to update stack0pt because we always stack a new word after this
-// obsolete // if ASGNSAFE perfect        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((pt0ecam>>(ASSIGNSYMNON0X-JTASSIGNSYMNON0X))&JTASSIGNSYMNON0)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment
-// obsolete        stack=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)|((jt->asginfo.assignsym!=0)<<JTASSIGNSYMNON0X)),stack,GETSTACK0PT,stack[1].pt); // perform assignment; set JTFINALASGN if this is final assignment; set ASSIGNSYMNON0 appropriately
-// obsolete        CLEARZOMBIE   // in case assignsym was set, clear it until next use
-// obsolete // if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
-// obsolete        FPZ(stack)  // fail if error
-// obsolete        if(likely((US)pt0ecam==0)){stack-=2; EP;}  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result)
        // here we are dealing with the uncommon case of non-final assignment.  If the next word is not LPAR, we can fetch another word after.
        // if the 2d-next word exists, and it is (C)AVN, and the current top-of-stack is not ADV, and the next word is not ASGN, we can pull a third word.  (Only ADV can become executable in stack[2]
        // if it was not executable next to ASGN).  We go to the trouble (1) because the case is the usual one and we are saving a little time; (2) by eliminating
@@ -989,12 +970,10 @@ RECURSIVERESULTSCHECK
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
    // stack[1] is the initial mark (not necessarily written out), stack[2] is the result, and stack[3] had better be the first ending mark
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error
-// obsolete    if(unlikely(!(PTOKEND(stack[2],stack[3])))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
    if(unlikely(stack[3].pt!=PTMARK||!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 CAVN left (0 should not occur)
   }else{
 failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
    CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
-// obsolete  stack=PSTK2NOTFINALASGN;  // set stack to something that IS NOT a final assignment
   }
 #if MEMAUDIT&0x2
   audittstack(jt);
@@ -1022,13 +1001,11 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
 #if MEMAUDIT&0x2
   audittstack(jt);
 #endif
-// obsolete   jt->parserstackframe.sf=savfs;  // pop $: stack
 #if MEMAUDIT&0x20
      auditmemchains();  // trap here while we still have the parseline
 #endif
 
   // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2].t) into the return
-// obsolete   R (A)((I)z+SGNTO0US(stack[2].t));  // this is the return point from normal parsing
   R (A)((I)z+pt0ecam);  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted

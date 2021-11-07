@@ -442,7 +442,6 @@
 #define fxchar(x,y)                 jtfxchar(jt,(x),(y))
 #define fxeach(x,y)                 jtfxeach(jt,(x),(y))
 #define fxeachv(x,y)                jtfxeachv(jt,(x),(y))
-// obsolete #define ga(x0,x1,x2,x3)             jtga(jt,(x0),(x1),(x2),(x3))
 #define gaf(x0)                     jtgaf(jt,(x0))
 #define gafv(x0)                    jtgafv(jt,(x0))
 #define gadv(x,y)                   jtgadv(jt,(x),(y))

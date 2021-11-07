@@ -2129,7 +2129,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
  case IIDOT: case IFORKEY:
  case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
  case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
- case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p)+1) GA(z,t,q,MAX(1,wr),ws); /* obsolete AS(z)[0]=MIN(m,p)+1;*/ break;}  // +1 because we speculatively overwrite.
+ case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p)+1) GA(z,t,q,MAX(1,wr),ws); break;}  // +1 because we speculatively overwrite.
  case ILESS: case IINTER:   ws=wr==0?&AN(w):ws; GA(z,AT(w),AN(w),MAX(1,wr),ws); break;  // if wr is an atom, use 1 for the shape
  case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
  case INUBI:   GATV0(z,INT,MIN(m,p)+1,1); break;  // +1 because we speculatively overwrite

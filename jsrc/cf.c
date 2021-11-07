@@ -82,8 +82,6 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
    flag2|=((hv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLOPEN1X)))<<(VF2WILLOPEN1X-VF2WILLOPEN1PROPX);
    // if u and v both propagate, the compound does so also
    flag2|=((hv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLOPEN1PROPX)));
-// obsolete    // Copy the open/raze status from v into u@v
-// obsolete    flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
   }
   switch(fi){
   case CCAP:
@@ -314,25 +312,6 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    FAV(z)->localuse.lu1.linkvb=linktype; R z;  // if it's a form of ;, install the form
   // All other cases produce a modifier unless they are immediately executable (V N or N/V A)
   }else{A z;
-#if 0  // obsolete
-I pos=ADV;A z;  // part of speech to generate
-   if(AT(w)&ADV){
-    if(AT(a)&ADV)f1=taAV;  // A A
-    else if(AT(a)&CONJ){f1=tca; pos=CONJ;}  // C A, producing conj
-    else if(AT(a)&NOUN+VERB)R df1(z,a,w);  // N/V A - execute it
-   }else if(AT(w)&CONJ){
-    if(AT(a)&NOUN+VERB){
-     f1=tvc; id=FAV(w)->id;
-     if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
-    }else if(AT(a)&ADV)f1=tac;   // A C, producing adv
-   }else if(AT(w)&NOUN+VERB&&AT(a)&CONJ){
-    f1=tcv; id=FAV(a)->id;
-    if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
-   }else if(AT(w)&VERB&&AT(a)&ADV)f1=taAV;  // A V
-   else if(AT(a)&VERB)R df1(z,w,a);  // must be V N - execute it
-   ASSERT(f1,EVSYNTAX);  // Check for legal combination Note: EDGE CAVN ASGN (always an error) passes through here
-   R fdef(0,CADVF, t, f1,f1, a,w,0L, flag, 0L,0L,0L);
-#else
   // we might enter here with an executable: V N or N/V A, as a result of executing an invisible modifier.  V V was handled above
   I rtnx=TYPE2(AT(a),AT(w));  // the combination being parsed
   AF rtn=bidents[rtnx].fn;  // action routine
@@ -343,7 +322,6 @@ I pos=ADV;A z;  // part of speech to generate
   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
   R fdef(0,CADVF, t, rtn,rtn, a,w,0, flag, 0L,0L,0L);  // only one of the rtns is ever used.  h=0 to indicate bident
-#endif
 
   }
  }else{A z;
@@ -355,9 +333,6 @@ I pos=ADV;A z;  // part of speech to generate
   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
- // obsolete   // special processing: gerund@. gerund` gerund`:   `gerund ^:gerund   must be flagged
- // obsolete   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
- // obsolete   if(BOX&AT(h)&&AT(w)&CONJ&&(FAV(w)->id==CGRAVE||FAV(w)->id==CPOWOP&&1<AN(h))&&gerexact(h))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
   R fdef(0,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L);  // only one of the rtns is ever used
  }
 }

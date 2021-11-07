@@ -164,13 +164,7 @@ static KF1F(jtIfromD){D p,q,*v;I i,k=0,n,*x;
 #if SY_64
  for(i=0;i<n;++i){
   p=v[i]; q=jround(p);
-//  obsolete  I rq=(I)q;
   if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
-// obsolete   if(!(p==q || FIEQ(p,q,fuzz)))R 0;  // must equal int, possibly out of range
-// obsolete   // out-of-range values don't convert, handle separately
-// obsolete   if(p<(D)IMIN){if(!(p>=IMIN*(1+fuzz)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
-// obsolete   else if(p>=FLIMAX){if(!(p<=-(D)IMIN*(1+fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
-// obsolete   *x++=rq;
  *x++=(I)q;  // if tolerantly integral, store it
  }
 #else

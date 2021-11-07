@@ -126,7 +126,6 @@ static A jtsusp(J jt){A z;
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }
   // Execute one sentence from the user
-// obsolete   if((inp=jgets("      "))==0){z=0; break;} z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   if((inp=jgets("      "))==0){z=0; break;} inp=jtddtokens(jt,inp,1+(AN(jt->locsyms)>1)); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   // If the result came from a suspension-ending command, get out of suspension
   if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1

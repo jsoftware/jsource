@@ -816,7 +816,6 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  if(valid(name, gn)) return EVILNAME; 
  for(i=0; i<*jrank; ++i) k *= ((I*)(*jshape))[i];
  GAE(a,*jtype, k, *jrank, (I*)*jshape,R EVWSFULL);
-// obsolete  if(!a) return EVWSFULL;
  MC(AV(a), (void*)*jdata, n*k);
  jtjset(jt,gn, a);
  return jt->jerr;

@@ -302,16 +302,13 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
   case CHOOK:
    GAT0(y,BOX,3,1); u=AAV(y);
    u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
-// obsolete    if(!(AT(gs)&NOUN)&&(FAV(gs)->fgh[0]==0&&FAV(gs)->fgh[1]==0))gt=0;  // never parenthesize a primitive or noun
    u[2]=g=parfn(jtinplace,gt||b,       g);
    u[1]=str(' '==cf(g)||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
    RE(0); R raze(y);
   case CFORK:
    GAT0(y,BOX,5,1); u=AAV(y);
    RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
-// obsolete  if(!(AT(gs)&NOUN)&&(FAV(gs)->fgh[0]==0&&FAV(gs)->fgh[1]==0))gt=0;  // never parenthesize a primitive or noun
    RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==cf(g)?0L:1L," "));
-// obsolete   if(!(AT(hs)&NOUN)&&(FAV(hs)->fgh[0]==0&&FAV(hs)->fgh[1]==0))ht=0;  // never parenthesize a primitive or noun
    RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
    R raze(y);
   default:

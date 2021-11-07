@@ -164,7 +164,6 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
   RZ(s = virtualip(w,offset,wr));    // allocate block
   // fill in shape.  s and w may be the same block, so ws is destroyed
   I* RESTRICT ss=AS(s); ss[0]=remlen; MCISH(ss+1,ws+1,MAX(wr-1,0));
-// obsolete  DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
   AN(s)=remlen*wcellsize;  // install # atoms
   // virtual block does not affect pristinity
   RETF(s);
@@ -233,7 +232,6 @@ F1(jttail){I wcr,wf,wr;
    // left rank is garbage, but since num(-1) is an atom it doesn't matter
    RETF(jtfrom(jtinplace,num(-1),w));  // could call jtfromi directly for non-sparse w
   }
-// obsolete  R !wcr||AS(w)[wf]?jtfrom(jtinplace,num(-1),w) :  // if cells are atoms, or if there are cells, result is last cell(s)
  }else{RETF(ISSPARSE(AT(w))?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w));  // sparse or cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }
  // pristinity from other verbs

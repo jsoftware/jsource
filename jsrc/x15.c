@@ -968,11 +968,7 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   case CDT(INTX,FLX ):
 #if SY_64
   p=*(D*)u; q=jround(p); I rq=(I)q;
-// obsolete   if(!(p==q || FFIEQ(p,q)))R 0;  // must equal int, possibly out of range.  Exact equality is common enough to test for
   if(!ISFTOIOK(p,q))R 0;  // must equal int, possibly out of range.  Exact equality is common enough to test for
-// obsolete    // out-of-range values don't convert, handle separately
-// obsolete    if(p<(D)IMIN){if(!(p>=IMIN*(1+FUZZ)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
-// obsolete    else if(p>=FLIMAX){if(!(p<=-(IMIN*(1+FUZZ))))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
   *v=rq;
 #else
    p=*(D*)u; q=jfloor(p);

@@ -699,7 +699,6 @@ extern DF1(jtevery);
 extern DF2(jtevery2);
 extern DF1(jteveryself);
 extern DF2(jtevery2self);
-// obsolete extern void jtexpostvirtual(J,A,A,I);
 extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
 extern L*       jtextnvr(J,L*);
@@ -716,7 +715,6 @@ extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtfxeachv(J,I,A);
-// obsolete extern RESTRICTF A jtga(J,I,I,I,I*);
 #if SY_64
 extern RESTRICTF A jtga0(J,I,I);
 #else

@@ -204,8 +204,6 @@ PRIM primtab[256] = {
  /*  F:: */  PRIMACV(CFCOCO,  CONJ, jtdomainerr1, jtfold,  0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  Z:  */  PRIMACV(CZCO,  VERB,  jtdomainerr1, jtfoldZ,  RMAX,   RMAX,   RMAX   ,VFLAGNONE,VF2NONE),
  // sequences supported as atomics.  The vaid is used only for ss and to reserve a slot in ds
-// obsolete  /*  (> |)  */  PRIMATOMIC2FGH(CCKFUZZ,CHOOK,     VERB, fork101,  0,ds(CGT),ds(CSTILE),0,     RMAX,RMAX,RMAX,VFUSEDOK2|VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE),
-// obsolete  /*  (> |) * ]  */  PRIMATOMIC2FGH(CDEFUZZ,CFORK,     VERB, fork101,  jtatomic2,ds(CCKFUZZ),ds(CSTAR),ds(CSTILE),     RMAX,RMAX,RMAX,VFUSEDOK2|VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE),
 
 };
 

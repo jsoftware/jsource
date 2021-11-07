@@ -31,11 +31,7 @@
 // Return int version of d, with error if loss of significance
 static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many ymm regs that the caller has to save them too
  q=jround(d); z=(I)q;
-// obsolete  ASSERT(d==q || FFIEQ(d,q),EVDOMAIN);
  ASSERT(ISFTOIOK(d,q),EVDOMAIN);
-// obsolete  // too-large values don't convert, handle separately
-// obsolete  if(d<(D)IMIN){ASSERT(d>=IMIN*(1+FUZZ),EVDOMAIN); z=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
-// obsolete  else if(d>=FLIMAX){ASSERT(d<=-(IMIN*(1+FUZZ)),EVDOMAIN); z=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
  R z;
 }
 

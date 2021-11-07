@@ -229,11 +229,6 @@ I jti0(J jt,A w){ARGCHK1(w);
    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
    // infinities will always round to themselves
    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-// obsolete    d=wv[i]; e=jround(d); I cval=(I)e;
-// obsolete    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
-// obsolete    // infinities will always round to themselves
-// obsolete    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-// obsolete    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
   }else{
    cval=d>0?IMAX:-IMAX;  // if beyond integral, treat as infinity
   }
@@ -581,11 +576,6 @@ F1(jtvib){A z;D *wv;I i,n,*zv;
     // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
     // infinities will always round to themselves
     ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-// obsolete    d=wv[i]; e=jround(d); I cval=(I)e;
-// obsolete    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
-// obsolete    // infinities will always round to themselves
-// obsolete    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-// obsolete    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
    }else{
     ASSERT(ABS(d)==inf,EVDOMAIN);  // if beyond int, must be infinite
     cval=d>0?IMAX:-IMAX;  // if beyond integral, treat as infinity

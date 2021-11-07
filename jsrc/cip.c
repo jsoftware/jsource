@@ -1099,7 +1099,6 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
  // Allocate area for the cacheblocks of L and U
 #define BLKSZ 4  // size of cache block
 #define LGBLKSZ 2  // lg(BLKSZ)
-// obsolete I ndots=0,neval=0;  // total #blocks, #skips  scaf
  I nzeroblocks=0;  // number of zero blocks created.  If negative, we have given up on zero blocks
  B lookfor0blocks;  // set if we think it's worthwhile to check for sparse array
  F1RANK(2,jtludecomp,DUMMYSELF)  // if rank > 2, call rank loop
@@ -1150,8 +1149,6 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
   // zero blocks.  Since each zero block zaps multiple dot-product blocks, it doesn't take many to be worthwhile
   lookfor0blocks=nzeroblocks*64>(nr-1-r)*(2*r+1);    // # blocks so far is (nr-1-r) * (2nr-1-2*(nr-1-r)).  If 1 in 64 is 0, look for it.  But never first time
   nzeroblocks|=(lookfor0blocks|((nr-1-r)!=10))-1;    // on the 10th ring, disable zero checks if we aren't using them
-// obsolete D scafa[4][4]; _mm256_storeu_pd(&scafa[0][0],nexta0); _mm256_storeu_pd(&scafa[1][0],nexta1); _mm256_storeu_pd(&scafa[2][0],nexta2); _mm256_storeu_pd(&scafa[3][0],nexta3);
-// obsolete printf("fetching corner A from index %lld: ",wclv-DAV(w)); DO(4, I j=i; DO(4, printf(" %f",scafa[j][i]);) printf("  ");) printf("\n");  // scaf
   D *wluv=wclv; I wlustride=BLKSZ;  // pointer to next input values in A, and offset to next.  We start going east
   D (*llv)[BLKSZ][BLKSZ]=LBLOCK(nr-1-r,0), (*luv)[BLKSZ][BLKSZ]=UBLOCK(0,nr-1-r), (*prechv)[BLKSZ][BLKSZ]=luv-(nr+1);  // start point of dot-products, startpoint of next dot-product
   UI *lbv0=LBIT(nr-1-r,0), *ubv0=UBIT(0,nr-1-r);  // point to the bit vectors for the corner position.  These pointers are advanced after we finish each block, to handle the dot-product for the next block
@@ -1167,7 +1164,6 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
     // advance to following block and fetch it
     wluv+=wlustride;  // advance to beginning of next block
     nextfetchaddr=wluv;  // remember addr being fetched
-// obsolete printf("fetching A from index %lld: ",wluv-DAV(w)); DO(4, I j=i; DO(4, printf(" %f",wluv[j*wn+i]);) printf("  ");) printf("\n");  // scaf
     // Since the corner block was handled first, the block we are fetching can go out on only one side.  We fill with zeros
     if(unlikely(r0==-1)){  // fetching the LAST block in the U row
      nexta0=_mm256_maskload_pd(wluv,endmask); nexta1=_mm256_maskload_pd(wluv+1*wn,endmask); nexta2=_mm256_maskload_pd(wluv+2*wn,endmask); nexta3=_mm256_maskload_pd(wluv+3*wn,endmask);
@@ -1191,18 +1187,10 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
     // Create & use sparse sections
     // we go through the sparse maps and convert the OR of the rows & columns into a sequence of (#non0,#0) pairs which we process later
     UI4 *runv=rleb;  // pointer to next run
-// obsolete I scafn0=0;  // # nonzero blocks
     if(lookfor0blocks){  // if we think it's worthwhile to skip over zero blocks... 
      UI *lbv=lbv0, *ubv=ubv0;  // point to the start of the bit vectors
      UI polarity=~0;  // 00.00 if we are looking for 0s, 11..11 if we are looking for 1s.  We start looking for skipped blocks (1s)
      I bitsleft=nr-1-r, lensofar=0, bitsinstack;  // number of bits left to process, length carried over from previous maskword
-// obsolete // scaf
-// obsolete D (*scafblk)[BLKSZ][BLKSZ];
-// obsolete DO(nr-1-r, scafblk=llv+i; I is0=1; DO(BLKSZ, I ii=i; DO(BLKSZ, if(scafblk[0][ii][i]!=0)is0=0;)) if(!(!!(lbv0[i>>6]&(1LL<<(i&63)))==is0))SEGFAULT;)
-// obsolete DO(nr-1-r, scafblk=luv+i; I is0=1; DO(BLKSZ, I ii=i; DO(BLKSZ, if(scafblk[0][ii][i]!=0)is0=0;)) if(!(!!(ubv0[-(i>>6)]&(1LL<<(i&63)))==is0))SEGFAULT;)
-// obsolete DO(nr-1-r, if(!(ubv0[-(i>>6)]&(1LL<<(i&63)))&&!(lbv0[i>>6]&(1LL<<(i&63)))){printf("non0: %lld ",i); ++scafn0;})
-// obsolete // scaf
-// obsolete printf("reading bitmaps: loc %lld=0x%llx, loc %lld=0x%llx\n",lbv-lb,*lbv,ubv-lb,*ubv);  // scaf
      UI bitstack;
      while(1){  // loop to build the run lengths
       // we are scanning qwords looking for a mismatch, where the bits don't equal 'polarity'.  Switch the polarity so we are always looking for 0
@@ -1211,7 +1199,6 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
       bitsinstack=BW; bitsinstack=bitsleft<BW?bitsleft:bitsinstack; bitsleft-=bitsinstack;  // init # valid bits in bitstack, never more than bitsleft; predecrement bitstack to len AFTER this bitstack is processed
       while(1){  // build the run of non-polarity
        I runlen=CTTZI(bitstack); runlen=bitstack==0?bitsinstack:runlen;  // Find the lowest 1 bit
-// obsolete printf("\nbitstack=0x%llx runlen=%lld bitsinstack=%lld bitsleft=%lld lensofar=%lld polarity=0x%llx",bitstack,runlen,bitsinstack,bitsleft,lensofar,polarity);  // scaf
        lensofar+=runlen;  // presumptively add the bits to the run
        if((bitsinstack-=runlen)<=0){lensofar+=bitsinstack; if(bitsleft<=0)goto finrle; break;}  // bitstack exhausted: add valid bits to run.  If there are no more bits, exit, otherwise continue in next word
        // we found the end of a run inside the bitstring.  Out the run, change polarity, continue look
@@ -1223,7 +1210,6 @@ finrle: ;
      *runv++=lensofar;  // out the last run
     }else{
      *runv++=0; *runv++=nr-1-r;  // go through all the blocks up to the current ring in one run, which is known not to be empty
-// obsolete scafn0=nr-1-r;
     }
     UI nruns=(runv-rleb)>>1;  // number of runs, which may have only the starting component or be empty
     runv=rleb;  // point to length of first run
@@ -1235,20 +1221,10 @@ finrle: ;
     // establish pointers & offsets for the args.  We increment only the L pointer & use indexes for the rest
     D *lvv=(D*)llv; I uofst=(D*)luv-lvv, pofst=(D*)prechv-lvv;  // the 2 args+prefetch: one pointer, 2 offsets
     a10=_mm256_setzero_pd(); a11=_mm256_setzero_pd(); a12=_mm256_setzero_pd(); a13=_mm256_setzero_pd(); // clear the uninitialized accumulators
-// obsolete nruns=1;  // scaf
-// obsolete printf("nbits=%lld nruns=%lld: ",nr-1-r,nruns); // scaf
-// obsolete ndots+=nr-1-r;  // scaf
     while(nruns){
-// obsolete printf("\nskip: %d ",*runv);  // scaf
      lvv+=*runv++*BLKSZ*BLKSZ;  // skip over the zeros.
-// obsolete scafn0-=*runv;
-// obsolete printf("\npros: %d\n",*runv);  // scaf
      UI4 ndp=*runv++;  // get the length of the run
-// obsolete neval+=ndp;  // scaf
-// obsolete printf(" %d",ndp); // scaf
-// obsolete ndp=nr-1-r; // scaf
      do{
-// obsolete printf("dot-product of blocks %lld and %lld\n",(D (*)[4][4])lvv-cb,(D (*)[4][4])(lvv+uofst)-cb);  // scaf
       __m256d tmp;  // where we save a row of U to multiply by 4 scalars from L
       tmp=_mm256_loadu_pd(lvv+uofst);  // read U00-U03
       a00=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[0]),tmp,a00); a01=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[4]),tmp,a01); a02=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[8]),tmp,a02); a03=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[12]),tmp,a03);
@@ -1262,11 +1238,8 @@ finrle: ;
       PREFETCH2(lvv+pofst+8);  // prefetch for the next loop
       lvv+=BLKSZ*BLKSZ;  // advance loop pointer/counter
      }while(--ndp);
-// obsolete printf("(%d)",*runv); // scaf
      --nruns;
     };
-// obsolete if(scafn0)SEGFAULT;
-// obsolete printf("\n");
    // ****************** end of O(n^3) part **************************
    // combine the accumulators into the 0 side
     a00=_mm256_add_pd(a00,a10); a01=_mm256_add_pd(a01,a11); a02=_mm256_add_pd(a02,a12); a03=_mm256_add_pd(a03,a13);  // this finishes the 16 dot-products
@@ -1290,27 +1263,19 @@ finrle: ;
    // When we calculate the corner block we also write out coefficients that will ne needed to calculate the other blocks of L and U.
    if(r0==-r){
     // corner block.  First row of U is set.  Alternate creating columns of L and rows of U
-// obsolete D scafa[4][4]; _mm256_storeu_pd(&scafa[0][0],a00); _mm256_storeu_pd(&scafa[1][0],a01); _mm256_storeu_pd(&scafa[2][0],a02); _mm256_storeu_pd(&scafa[3][0],a03);
-// obsolete printf("corner input for index %lld: ",scv0-cb); DO(4, I j=i; DO(4, printf(" %f",scafa[j][i]);) printf("  ");) printf("\n");  // scaf
    __m256d tmp;  // where we build inverse lines to write out
     recips=_mm256_div_pd(ones,a00);  // 1/U00 x x x
-// obsolete     tmp=_mm256_blend_pd(recips,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(recips,0b00000000),_mm256_setzero_pd()),0b1110);    // write out 1/U00 -U01/U00 -U02/U00 -U03/U00 for calculating L
-// obsolete     _mm256_storeu_pd(&uinv[0][0],tmp);
 
     a01=_mm256_blend_pd(a01,_mm256_mul_pd(a01,recips),0b0001);  // a01 is L10 A11 A12 A13
     _mm256_storeu_pd(&linv[0][0],a01);    // write out U10/U00 x x x for calculating U
     a01=_mm256_blend_pd(a01,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(a01,0b00000000),a01),0b1110);  // a01 is A1x-L10*A0x = L10 U11 U12 U13
     recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a01),0b0010);  // 1/U00 1/U11 x x
-// obsolete     tmp=_mm256_blend_pd(_mm256_blend_pd(recips,_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(recips,0b01010101),_mm256_setzero_pd()),0b1100),ones,0b0001);    //  write out 1 1/U11 -U12/U11 -U13/U11 for calculating L
-// obsolete     _mm256_storeu_pd(&uinv[1][0],tmp);
 
     a02=_mm256_blend_pd(a02,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(_mm256_mul_pd(a02,recips),0b00000000),a02),0b1110);  // a02 is A20 (A21..A23 - L20*U01..U03)
     a02=_mm256_blend_pd(a02,_mm256_mul_pd(a02,recips),0b0011);  // a02 is L20 L21 A22 A23
     _mm256_storeu_pd(&linv[1][0],a02);    // write out U20/U00 U21/U11 x x for calculating U
     a02=_mm256_blend_pd(a02,_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(a02,0b01010101),a02),0b1100);  // a02 is A2x-L20*A0x-L21*U1x = L20 L21 U22 U23
     recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a02),0b0100);  // 1/U00 1/U11 1/U22 x
-// obsolete     tmp=_mm256_blend_pd(_mm256_blend_pd(recips,_mm256_fnmadd_pd(a02,_mm256_permute4x64_pd(recips,0b10101010),_mm256_setzero_pd()),0b1000),ones,0b0011);    // write out 1 1 1/U22 -U23/U22 for calculating L
-// obsolete     _mm256_storeu_pd(&uinv[2][0],tmp);
 
     a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(_mm256_mul_pd(a03,recips),0b00000000),a03),0b1110);  // a03 is A30 (A31..A33 - L30*U01..U03)
     a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(_mm256_mul_pd(a03,recips),0b01010101),a03),0b1100);  // a03 is A30 (A31..A33 - L31*U11..U13)
@@ -1318,10 +1283,8 @@ finrle: ;
     _mm256_storeu_pd(&linv[2][0],a03);    // write out U30/U00 U31/U11 U32/U22 for calculating U
     a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a02,_mm256_permute4x64_pd(a03,0b010101010),a03),0b1000);  // a03 is A3x-L30*A0x-L31*U1x-L32*U3x = L30 L31 L32 U33
     recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a03),0b1000);  // 1/U00 1/U11 1/U22 1/U33
-// obsolete     _mm256_storeu_pd(&uinv[3][0],_mm256_div_pd(ones,_mm256_blend_pd(a03,ones,0b0111)));  // write out 1 1 1 1/U33 for calculating L
 
     _mm256_storeu_pd(&scv0[0][0][0],a00); _mm256_storeu_pd(&scv0[0][1][0],a01); _mm256_storeu_pd(&scv0[0][2][0],a02); _mm256_storeu_pd(&scv0[0][3][0],a03);  // Store the 4x4 in the corner
-// obsolete printf("writing corner block %lld:",scv0-cb); DO(4, I j=i; DO(4, printf(" %f",scv0[0][j][i]);) printf("  ");) printf("\n");  // scaf
 
     // Now calculate uinv, the inverse of the remaining U matrix.  Do this by backsubstitution up the line.  Leave register a00-a03 holding the block result
     a13=_mm256_blend_pd(_mm256_setzero_pd(),recips,0b1000);
@@ -1380,14 +1343,12 @@ finrle: ;
      // check for all-zero block, and update the sparse bitmap
      a10=_mm256_or_pd(a01,a00); a11=_mm256_or_pd(a02,a03); a10=_mm256_or_pd(a11,a10);  // OR of all values
      a10=_mm256_cmp_pd(a10,_mm256_setzero_pd(),_CMP_NEQ_OQ); I blkis0=_mm256_testz_pd(a10,a10)==1;  // see if block is all 0
-// obsolete printf("writing %lld to bitmask loc %lld mask 0x%llx\n",blkis0,bma-lb,1LL<<bmx);  // scaf
      *bma=((*bma)&~(1LL<<bmx))|(blkis0<<bmx);  //  set bit to (all values are not NE)
      nzeroblocks+=blkis0;  // increment count of zero blocks
     }
     // write the block to the result address from before update
     _mm256_storeu_pd(&scvi[0][0][0],a00); _mm256_storeu_pd(&scvi[0][1][0],a01); _mm256_storeu_pd(&scvi[0][2][0],a02); _mm256_storeu_pd(&scvi[0][3][0],a03);  // Store the 4x4 in the corner
 
-// obsolete printf("writing %c block %lld:",r0<=0?'U':'L',scvi-cb); DO(4, I j=i; DO(4, printf(" %f",scvi[0][j][i]);) printf("  ");) printf("\n");  // scaf
    }
    // write the block result to the overall result area.  We do this now because it's going to be a cache miss and we want to dribble out the data during the processing.  Also, the data is in registers now so we don't have to read it
    // the output area has the same relative offset in the output as the read area in the input
@@ -1408,19 +1369,6 @@ finrle: ;
   wclv+=BLKSZ*(wn+1);  // move input pointer to corner block of next ring
   scv0+=nr+1; suv0-=nr;  // advance storage pointers to next ring.
  }
-// obsolete  // move the result from cblock ordering to the desired ordering.  Left-to-right, top-to-bottom in the output area, a 4x4 at a time
-// obsolete  D *zv0=DAV(z); D (*lcv0)[BLKSZ][BLKSZ]=cb; D (*uv0)[BLKSZ][BLKSZ]=UBLOCK(0,1);  // lcv0 points to first block in current row of lc, advances east; uv0 points to first block in current row of u, advances northwest
-// obsolete #define COPYCB(z,x) _mm256_storeu_pd((z),_mm256_loadu_pd(&(x)[0][0][0])); _mm256_storeu_pd((z)+wn,_mm256_loadu_pd(&(x)[0][1][0])); _mm256_storeu_pd((z)+2*wn,_mm256_loadu_pd(&(x)[0][2][0])); _mm256_storeu_pd((z)+3*wn,_mm256_loadu_pd(&(x)[0][3][0]));
-// obsolete #define COPYCBR(z,x) _mm256_maskstore_pd((z),endmask,_mm256_loadu_pd(&(x)[0][0][0])); _mm256_maskstore_pd((z)+wn,endmask,_mm256_loadu_pd(&(x)[0][1][0])); _mm256_maskstore_pd((z)+2*wn,endmask,_mm256_loadu_pd(&(x)[0][2][0])); _mm256_maskstore_pd((z)+3*wn,endmask,_mm256_loadu_pd(&(x)[0][3][0]));
-// obsolete #define COPYCBB(z,x,m) _mm256_storeu_pd((z),_mm256_loadu_pd(&(x)[0][0][0])); if((m)>0){_mm256_storeu_pd((z)+wn,_mm256_loadu_pd(&(x)[0][1][0]));  if((m)>1){_mm256_storeu_pd((z)+2*wn,_mm256_loadu_pd(&(x)[0][2][0]));  if((m)>2){_mm256_storeu_pd((z)+3*wn,_mm256_loadu_pd(&(x)[0][3][0]));}}}
-// obsolete #define COPYCBBR(z,x,m) _mm256_maskstore_pd((z),endmask,_mm256_loadu_pd(&(x)[0][0][0]));  if((m)>0){_mm256_maskstore_pd((z)+wn,endmask,_mm256_loadu_pd(&(x)[0][1][0]));  if((m)>1){_mm256_maskstore_pd((z)+2*wn,endmask,_mm256_loadu_pd(&(x)[0][2][0]));  if((m)>2){_mm256_maskstore_pd((z)+3*wn,endmask,_mm256_loadu_pd(&(x)[0][3][0]));}}}
-// obsolete  DO(nr-1, I j=i; D *zv=zv0; D (*cv)[BLKSZ][BLKSZ]=lcv0; DQ(j+1, COPYCB(zv,cv); zv+=BLKSZ; ++cv;) cv=uv0; DQ(nr-1-(j+1), COPYCB(zv,cv) zv+=BLKSZ; cv-=nr+1;)  // first the full blocks
-// obsolete   COPYCBR(zv,cv)  // copy the possibly-partial block
-// obsolete   zv0+=wn<<LGBLKSZ; lcv0+=nr; uv0-=nr;  // advance to next output row 
-// obsolete  )
-// obsolete  // Now the last row of cbs, which has 1-4 rows ending with the last corner block
-// obsolete  DQ(nr-1, COPYCBB(zv0,lcv0,(wn-1)&(BLKSZ-1)); zv0+=BLKSZ; ++lcv0;) COPYCBBR(zv0,lcv0,(wn-1)&(BLKSZ-1));
-// obsolete printf("number of dot-product blocks=%lld, number of evals=%lld\n",ndots,neval);  // scaf
  EPILOG(link(IX(wn),z));
 #endif
  // here if fast FP code not supported, either because we don't have AVX or the input is not float.  Fall back to general version

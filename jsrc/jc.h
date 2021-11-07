@@ -197,8 +197,6 @@
 #define CROOT      (C)0x62  // %:
 #define CBANG      (C)0x63  // !
 #define CBDOT      (C)0x64  // b.
-// obsolete #define CDEFUZZ    (C)0x65  // ((> |) * ])   code is not used in id (fork is), but we reserve a slot for an atomic ds
-// obsolete #define CCKFUZZ    (C)0x66  // (> |)  code is not used (hook is); we use the slot to give a display and to allow the monad to function
 
 #define CGRAVE     (C)0x67 // `
 #define CINF       (C)0x68  //  infinity

@@ -504,24 +504,19 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
    }else{
     // d is not a power of 2
 #if SY_64
+    // Avoid integer division by calculating the reciprocal of d to 63-bit accuracy
     // We want to end up with a reciprocal with binary point at 62, and a corresponding shift count.  We will normalize the value to MSB in bit 62 (i. e. in (.5,1)) and divide it into 1.0.
     // Because d is not a power of 2, this divide will not overflow & will yield a 63-bit unsigned fraction.
     I norm; CTLZI(d,norm); norm=62-norm; I normd=d<<norm;
-// obsolete printf("d=%llx, norm=%lld, normd=%llx\n",d,norm,normd);
     // The following is a 128-bit/64-bit divide, which clang doesn't do right.  We end with a positive remainder. meaning the quotient is always biased <= the true quotient
     D quo=42535295865117307932921825928971026432./(D)normd; UI quo63=(I)quo; quo63=quo>=9223372036854773760.?IMAX:quo63; I corr=(((unsigned __int128)0x2000000000000000<<64)-(unsigned __int128)normd*quo63)>>32;
-// obsolete printf("quo=%e, quo63=%llx, corr=%llx,\n",quo,quo63,corr);
     quo63+=(I)((corr*4294967296.)/(D)normd); corr=(((unsigned __int128)0x2000000000000000<<64)-(unsigned __int128)normd*quo63);
-// obsolete printf("second quo63=%llx, corr=%llx,\n",quo63,corr);
-    while(corr<0){corr+=normd; --quo63;} while(corr>=normd){corr-=normd; ++quo63;}
-// obsolete printf("final quo63=%llx, corr=%llx,\n",quo63,corr);
-    // process each atom.  The long multiply is signed integer (binary point 0) * positive fraction (bp 62), leaving bp 62 in the product.  Rather than does a 128-bit shift of 62 bits,
-    // we just take the top 64, in effect zeroing the low 2 bits.
-    {I q,r,xs; DQ(wn, x=*--wv; q=((__int128)x*quo63+(quo63>>1))>>(125-norm); 
-// obsolete printf("x=%llx, q=%llx\n",x,q);
-// obsolete printf("r=%llx\n",r);
- r=x-q*d; /* while(r<0){printf("add to r\n"); r+=d; --q;} while(r>=d){printf("sub from r\n"); r-=d; ++q;} */ *--zv=r; *--zv=q;)} 
+    while(corr<0){corr+=normd; --quo63;} while(corr>=normd){corr-=normd; ++quo63;}  // correct quotient to have small positive remainder
+    // process each atom.  The long multiply is signed integer (binary point 0) * positive fraction (bp 62), leaving bp 62 in the product before normalizing for the original shift.  add 1/2 the multiplier to round
+    // the product, which will then always be the correct quotient
+    {I q,r,xs; DQ(wn, x=*--wv; q=((__int128)x*quo63+(quo63>>1))>>(125-norm); r=x-q*d; *--zv=r; *--zv=q;)} 
 #else
+    // use integer division
     {I q,r,xs; DQ(wn, x=*--wv; xs=REPSGN(x); q=(x-xs)/d+xs; r=x-q*d; *--zv=r; *--zv=q;)}  // remainder has same sign as dividend.  If neg, add 1, divide, sub 1 from quotient; then make remainder right
 #endif
    }

@@ -183,7 +183,6 @@ DF2(jtboxcut0){A z;
     MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); INCORPRAZAPPED(y,t)
    }else{
     // WILLBEOPENED case.  We must allocate a virtual block so we can avoid the copy
-// obsolete    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
     RZ(y=virtual(w,start*cellsize,wr)); ACIPNO(y); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
    }
    av+=2;

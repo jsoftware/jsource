@@ -445,7 +445,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */
-// obsolete #define RMAXX           16              // number of bits in rank
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 
@@ -666,7 +665,6 @@ extern unsigned int __cdecl _clearfp (void);
    ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); /* result is 1 if all match */ \
   }else{NOUNROLL do{--aai; ASSERT(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
  }
-// obsolete   }else{ASSERT(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)}
 // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
  {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
@@ -675,7 +673,6 @@ extern unsigned int __cdecl _clearfp (void);
    r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
   }else{NOUNROLL do{--aai; r=0; if(((I*)aaa)[aai]!=((I*)aab)[aai]){r=1; break;}}while(aai);} \
  }
-// obsolete   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;}
 #else
 #define ASSERTAGREE(x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -1048,9 +1045,6 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GACOPYSHAPER(name,type,atoms,rank,shaape) if((rank)>0)AS(name)[0]=(shaape)[0]; if((rank)>1)AS(name)[1]=(shaape)[1]; if((rank)>2)AS(name)[2]=(shaape)[2];
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
-// obsolete // General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
-// obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape) \
-// obsolete  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=(rank); cp=_r<1?0:cp; cp=_r==1?(atoms):cp; _s=_r<=1?_d:_s; *_d=cp; ++_d; ++_s; if(likely(_r<3)){*_d=*_s;}else{MC(_d,_s,(_r-1)<<LGSZI);}}
 // Use when shape is known to be present but rank is not SDT.
 #if (C_AVX&&SY_64) || EMU_AVX
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
@@ -1061,17 +1055,13 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); UI _r=(rank); NOUNROLL do{*_d++=1;}while(--_r);} // copy all 1s to shape - rank must not be 0
 
 // GAE executes the given expression when there is an error
-// obsolete #define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
 #if SY_64
 #define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,((I)(r)<<32)+(t),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
 #else
 #define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,(I)(t),(I)(r),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
 #endif
-// obsolete #define GAE(v,t,n,r,s,erraction)   {GAE0(v,t,n,r,erraction) MCISH(AS(v),(I*)(s),(r)) if((r)==1 && AS(v)[0]!=(n))SEGFAULT;}  // error action
 #define GAE(v,t,n,r,s,erraction)   {GAE0(v,t,n,r,erraction) MCISH(AS(v),(I*)(s),(r))}  // error action
-// obsolete #define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
 #define GA00(v,t,n,r) {GAE0(v,t,n,r,R 0)}  // used when rank will always be filled in by user.  Default error action is to exit
-// obsolete #define GA(v,t,n,r,s)   {GA00(v,t,n,r) MCISH(AS(v),(I*)(s),(r)) if((r)==1 && AS(v)[0]!=(n))SEGFAULT;}
 #define GA(v,t,n,r,s)   {GA00(v,t,n,r) MCISH(AS(v),(I*)(s),(r))}   // s points to shape
 #define GA0(v,t,n,r) {GA00(v,t,n,r) *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 and must fill in with AN if so - never for sparse blocks
 #define GA10(v,t,n) {GA00(v,t,n,1) AS(v)[0]=(n);}  // used when rank is known to be 1
@@ -1577,9 +1567,6 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define PROD(z,length,ain) PRODCOMMON(z,length,ain,)
 // This version ignores bits of length above the low RANKTX bits
 #define PRODRNK(z,length,ain) PRODCOMMON(z,length,ain,(RANKT))
-// obsolete  {I _i=(length); I * RESTRICT _zzt=(ain); \
-// obsolete if(likely((RANKT)_i<3)){_zzt+=_i; z=(I)&oneone; _zzt=(RANKT)_i>=1?_zzt:(I*)z; z=(RANKT)_i>1?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(_i,_zzt+2);} }
-// obsolete   if(likely((RANKT)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((RANKT)_i,_zzt);} }
 
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value
 // PRODX takes the product of init and v[0..n-1], generating error if overflow, but waiting till the end so no error if there is a 0 in the product

@@ -131,6 +131,7 @@ F1(jtjfread){A z;F f;
  RETF(z);
 }
 
+// 1!:2
 F2(jtjfwrite){B b;F f;
  F2RANK(RMAX,0,jtjfwrite,DUMMYSELF);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
@@ -144,6 +145,7 @@ F2(jtjfwrite){B b;F f;
  RNE(mtm);
 }
 
+// 1!:3
 F2(jtjfappend){B b;F f;
  F2RANK(RMAX,0,jtjfappend,DUMMYSELF);
  RE(f=stdf(w));
@@ -245,6 +247,7 @@ F1(jtjmkdir){A y,z;
 #endif
 }
 
+// 1!:55
 F1(jtjferase){A y,fn;US*s;I h;
  F1RANK(0,jtjferase,DUMMYSELF);
  RE(h=fnum(w));

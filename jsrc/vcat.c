@@ -138,17 +138,6 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 
-#if 1 // debugging
-#define LOGFILE "/home/chris/t9.txt"
-static int firsttime = 1;
-static char logarea[200];  // where messages are built
-static void writetolog(J jt,C *s){A z;
-RESETRANK;
-(firsttime?jtjfwrite:jtjfappend)(jt,str(strlen(s),s),box(str(strlen(LOGFILE),LOGFILE)));
-firsttime=0;
-}
-#endif
-
 // these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition
 static void moveawVV(J jt,C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){  // jt scaf etc
  JMCDECL(endmaska) JMCSETMASK(endmaska,ma,0)
@@ -158,10 +147,10 @@ static void moveawVV(J jt,C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrpt
    // fastest case: no replication, no scalars
   while(--c>=0){
    // copy one cell from a; advance z; advance a
-writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from 0x%p to 0x%p\n",ma,av,zv),logarea));  // scaf
+writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p; remaining: %lld\n",ma,av,zv,c),logarea));  // scaf
    JMCR(zv,av,ma,0,endmaska); zv+=ma; av+=ma;
    // repeat for w
-writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from 0x%p to 0x%p\n",mw,wv,zv),logarea));  // scaf
+writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p\n",mw,wv,zv),logarea));  // scaf
    JMCR(zv,wv,mw,0,endmaskw); zv+=mw; wv+=mw;
   }
  }else{
@@ -259,9 +248,15 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
  DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
-writetolog(jt,(sprintf(logarea,"About to GA zn=%lld, t=0x%llx\n",zn,t),logarea));
+writetolog(jt,(sprintf(logarea,"About to GA zn=%lld, t=0x%llx\n",zn,t),logarea));  // scaf
+logparm=1;  // scaf turn on logging in GA 
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field
-writetolog(jt,(sprintf(logarea,"Allocated block 0x%p\n",z),logarea));
+writetolog(jt,(sprintf(logarea,"Allocated block %p\n",z),logarea));  // scaf
+C *endzv=zv+(zn<<bplg(t))-1;  // scaf
+writetolog(jt,(sprintf(logarea,"Writing to end of array at %p\n",endzv),logarea));  // scaf
+*endzv=0;
+writetolog(jt,(sprintf(logarea,"Write successful\n"),logarea));  // scaf
+logparm=0;  // scaf turn off logging in GA 
  if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
  k=bpnoun(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)

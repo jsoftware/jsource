@@ -1025,6 +1025,14 @@ extern I Iimin;
 extern I Iimax;
 extern I fortesting;
 
+#if CRASHLOG // debugging
+extern int logfirsttime;
+extern int logparm;  // set to control logging inside m.c
+extern char logarea[200];  // where messages are built
+extern void writetolog(J,C *);
+#endif
+
+
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

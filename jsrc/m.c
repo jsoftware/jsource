@@ -72,6 +72,21 @@ static A leakblock;
 static I leaknbufs;
 #endif
 
+#if CRASHLOG // debugging
+#define LOGFILE "/home/chris/t9.txt"
+// obsolete #define LOGFILE "C:/My Documents/crashlog.txt"
+int logfirsttime = 1;
+int logparm=0;  // set to control logging inside m.c
+char logarea[200];  // where messages are built
+void writetolog(J jt,C *s){A z;
+RESETRANK;
+int svlogparm=logparm; logparm=0;
+(logfirsttime?jtjfwrite:jtjfappend)(jt,str(strlen(s),s),box(str(strlen(LOGFILE),LOGFILE)));
+logfirsttime=0; logparm=svlogparm;
+}
+#endif
+
+
 // Return the total length of the data area of y, i. e. the number of bytes from start-of-data to end-of-allocation
 // The allocation size depends on the type of allocation
 I allosize(A y) {
@@ -938,12 +953,11 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
   } else {A *v;   // no page to move to - better read one
    // We don't account for the NTSTACK blocks as part of memory space used, because it's so unpredictable and large as to be confusing
    if(!(v=MALLOC(NTSTACK+NTSTACKBLOCK))){  // Allocate block, with padding so we can have NTSTACK words on a block bdy AFTER the first word (which is a chain)
-    // Unable to allocate a new block.  This is catastrophic, because we have done ra for blocks that we
-    // will now not be able to tpop.  Memory is going to be lost.  The best we can do is prevent a crash.
-    // We will leave tstack as is, pointing to the last block, and set nextpushx to the last entry in it.
-    // This loses the last entry in the last block, and all the tpushes we couldn't perform.
-    // The return will go all the way back to the first caller and beyond, so we set the values in jt as best we can
-    jt->tnextpushp = --pushp;  // back up the push pointer to the last valid location
+    // Unable to allocate a new block.  We have stored the address of the most recent allocation at the end of the previous block.
+    // Leave pushp pointing AFTER that location: it may be unmapped memory, but that's OK, because we will always back the pointer before
+    // popping the stack, and popping the stack must be the next thing we do
+// obsolete     jt->tnextpushp = --pushp;  // back up the push pointer to the last valid location
+    jt->tnextpushp = pushp;  // set the push pointer so we can back out the last allocation
     ASSERT(0,EVWSFULL);   // fail
    }
    jt->malloctotal += NTSTACK+NTSTACKBLOCK;  // add to total allocated
@@ -966,6 +980,8 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
 // stats I totalpops=0, nonnullpops=0, frees=0;
 void jttpop(J jt,A *old){A *endingtpushp;
  // pushp points to an empty cell.  old points to the last cell to be freed.  decrement pushp to point to the cell to free (or to the chain).  decr old to match
+ // if jttg failed to allocate a new block, we will have left pushp pointing to the cell after the last valid cell.  This may be in unmapped memory, but
+ // that's OK, because we start by decrementing it to point to the last valid push
  A *pushp=jt->tnextpushp;
  jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping
  --pushp; --old;
@@ -1086,12 +1102,15 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 #if ALIGNTOCACHE
  // Allocate the block, and start it on a cache-line boundary
  I *v;
+if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC for 0x%llx\n",n),logarea));--logparm;}  // scaf
  ASSERT(v=MALLOC(n),EVWSFULL);
+if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC returned %p\n",v),logarea));-logparm;}  // scaf
  z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
  ((I**)z)[-1] = v;    // save address of original allocation
 #else
  ASSERT(z=MALLOC(n),EVWSFULL);
 #endif
+if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Aligned address is %p\n",z),logarea));-logparm;}  // scaf
  AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
  if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
@@ -1171,7 +1190,9 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
+if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Allocation request for 0x%llx bytes\n",bytes),logarea));--logparm;}  // scaf
  CTLZI((UI)bytes,j);  // 3 or 4 should return 2; 5 should return 3
+if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"log of size=%d\n",j),logarea));--logparm;}  // scaf
  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }

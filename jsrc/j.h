@@ -600,6 +600,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NAMETRACK 0  // turn on to define trackinfo in unquote, xdefn, line
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
+#define CRASHLOG 1   // scaf     // set to allow writing to logfile
 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 

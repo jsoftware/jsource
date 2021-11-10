@@ -138,7 +138,24 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 
-// these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition
+// these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition.  No fill.
+#if 0
+// here when ma=mw=SZI
+static void moveawVVI(J jt,C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){  // jt scaf etc
+ I arptct=arptreset-1; I wrptct=wrptreset-1;
+ if((arptct|wrptct)==0) {
+   // fastest case: no replication, no scalars
+   DQ(c, *(I*)zv)=((I*)av)[0]; *(I*)zv+1)=((I*)wv)[0]; zv+=2*SZI; av+=SZI; wv+=SZI;) 
+ }else{
+  while(--c>=0){
+   // copy one cell from a; advance z; advance a if not repeated
+   *(I*)zv=*(I*)av; zv+=SZI; --arptct; av+=REPSGN(arptct)&SZI; arptct+=REPSGN(arptct)&arptreset;
+   // repeat for w
+   *(I*)zv=*(I*)wv; zv+=SZI; --wrptct; wv+=REPSGN(wrptct)&SZI; wrptct+=REPSGN(wrptct)&wrptreset;
+  }
+ }
+}
+#endif
 static void moveawVV(J jt,C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){  // jt scaf etc
  JMCDECL(endmaska) JMCSETMASK(endmaska,ma,0)
  JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw,0)
@@ -148,10 +165,12 @@ static void moveawVV(J jt,C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrpt
   while(--c>=0){
    // copy one cell from a; advance z; advance a
 writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p; remaining: %lld\n",ma,av,zv,c),logarea));  // scaf
-if(c==17434){  // scaf
- DO(ma>>LGSZI, writetolog(jt,(sprintf(logarea,"Reading from %p",av+i),logarea)); I vv=av[i]; writetolog(jt,(sprintf(logarea,", writing to %p",zv+i),logarea)); zv[i]=vv; writetolog(jt,(sprintf(logarea," OK\n"),logarea));  )
+if(1){  // scaf
+ DO(ma>>LGSZI, writetolog(jt,(sprintf(logarea,"R %lld",i),logarea)); I vv=((I*)av)[i]; writetolog(jt,(sprintf(logarea,", W"),logarea)); *(I*)zv=vv; writetolog(jt,(sprintf(logarea," OK\n"),logarea));  )
 }
+writetolog(jt,(sprintf(logarea,"Recopy with JMCR"),logarea));  // scaf
    JMCR(zv,av,ma,0,endmaska); zv+=ma; av+=ma;
+writetolog(jt,(sprintf(logarea," OK\n"),logarea));  // scaf
    // repeat for w
 writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p\n",mw,wv,zv),logarea));  // scaf
    JMCR(zv,wv,mw,0,endmaskw); zv+=mw; wv+=mw;
@@ -253,7 +272,7 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
  DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
 writetolog(jt,(sprintf(logarea,"About to GA zn=%lld, t=0x%llx\n",zn,t),logarea));  // scaf
 logparm=1;  // scaf turn on logging in GA 
- GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field
+ GA(z,t,zn,f+r,s); if(unlikely(zn==0))RETF(z); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops
 writetolog(jt,(sprintf(logarea,"Allocated block %p\n",z),logarea));  // scaf
 C *endzv=zv+(zn<<bplg(t))-1;  // scaf
 writetolog(jt,(sprintf(logarea,"Writing to end of array at %p\n",endzv),logarea));  // scaf

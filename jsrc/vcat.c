@@ -148,6 +148,9 @@ static void moveawVV(J jt,C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrpt
   while(--c>=0){
    // copy one cell from a; advance z; advance a
 writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p; remaining: %lld\n",ma,av,zv,c),logarea));  // scaf
+if(c==17434){  // scaf
+ DO(ma>>LGSZI, writetolog(jt,(sprintf(logarea,"Reading from %p",av+i),logarea)); I vv=av[i]; writetolog(jt,(sprintf(logarea,", writing to %p",zv+i),logarea)); zv[i]=vv; writetolog(jt,(sprintf(logarea," OK\n"),logarea));  )
+}
    JMCR(zv,av,ma,0,endmaska); zv+=ma; av+=ma;
    // repeat for w
 writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p\n",mw,wv,zv),logarea));  // scaf

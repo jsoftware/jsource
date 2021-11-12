@@ -18,6 +18,7 @@
 #define EVASSERT        12
 #define EVOPENQ         13
 #define EVRANK          14
+#define EVEXIT          15  // set when 2!:55 has requested termination
 #define EVSPELL         16
 #define EVSTACK         17
 #define EVSTOP          18
@@ -66,4 +67,4 @@
 
 // Exigent errors are those errors that must not be ignored if they happen during execution on a fill-cell
 #define EMSK(x) (((I)1)<<((x)-1))
-#define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
+#define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVEXIT) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure

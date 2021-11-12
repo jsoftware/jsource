@@ -339,12 +339,13 @@ void breakclose(JS jt)
 }
 #endif
 
+// 2!:55 retcode
 F1(jtjoff){I x;
  ARGCHK1(w);
  x=i0(w);
- jt->jerr=0; jt->etxn=0; /* clear old errors */
+ jt->jerr=EVEXIT; jt->etxn=0; // clear old errors, replacing with the higher-priority EVEXIT
  if(IJT(jt,sesm))jsto(JJTOJ(jt), MTYOEXIT,(C*)x); else JFree(JJTOJ(jt));
-// let front-end to handle exit
+ // let front-end handle exit.
 // exit((int)x);
  R 0;
 }

@@ -394,10 +394,11 @@ dobblock:
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
+   }else if(jt->jerr==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status
    }else if((nG0ysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // error in debug mode
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-   }else if(EVTHROW==jt->jerr){
+   }else if(jt->jerr==EVTHROW){
     if(nG0ysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
    // for other error, go to the error location; if that's out of range, keep the error; if not,
    // it must be a try. block, so clear the error.  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
@@ -432,6 +433,7 @@ tblockcase:
     if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;  // exit if end of defn
     if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)+jt->uflags.us.cx.cx_us)!=0))break;  // break if T block extended
     goto docase;  // avoid indirect-branch overhead on the likely case, if. T do.
+   }else if(jt->jerr==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status
    }else if((nG0ysfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
    else if(EVTHROW==jt->jerr){if(nG0ysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
    else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; if(nG0ysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8); nG0ysfctdl^=4;}}}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use

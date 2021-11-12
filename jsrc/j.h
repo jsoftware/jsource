@@ -600,7 +600,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NAMETRACK 0  // turn on to define trackinfo in unquote, xdefn, line
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
-#define CRASHLOG 1   // scaf     // set to allow writing to logfile
+#define CRASHLOG 0     // set to allow writing to crashlog
 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
@@ -1575,7 +1575,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // This is written to be branchless for rank < 3
 #if SY_64
 // I have been unable to make clang produce a simple loop that doesn't end with a backward branch.  So I am going to handle ranks 0-2 here and call a subroutine for the rest
-#if 0
+#if 0  // obsolete 
 // This is what I would rather have
 #define PRODXcommon(z,n,v,init,lbl) \
   {DPMULDDECLS z=(init);\

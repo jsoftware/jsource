@@ -105,9 +105,9 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;FMT
  *y=0; R y-s;
 }
 
+#if 0  // obsolete 
 static F1(jtthbit){
 ASSERTSYS(0,"thbit");
-#if 0
 A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; 
@@ -120,8 +120,8 @@ A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
   x+=r1;
  }
  RETF(z);
-#endif
 }
+#endif
 
 static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  n=AN(w); r=AR(w); s=AS(w);
@@ -200,7 +200,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;
    DO(m, DO(c, ddv[i]=MAX(ddv[i],ev[j]-ewv[j]);j++;););
          DO(c, dv[i]+=ddv[i];);         // add col padding space
    p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
-#if 0
+#if 0  // obsolete 
    GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
    j=0;
    DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row

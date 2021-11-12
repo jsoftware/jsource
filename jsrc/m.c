@@ -682,7 +682,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }
 }  
 
-#if 0 // not used
+#if 0 // obsolete not used
 // convert a block, recently allocated in the caller, to virtual.  The caller got the shape right; we just have to fill in all the other fields, including the data pointer.
 // User still has to fill in AN and AS
 void jtexpostvirtual(J jt,A z,A w,I offset){
@@ -1102,15 +1102,15 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 #if ALIGNTOCACHE
  // Allocate the block, and start it on a cache-line boundary
  I *v;
-if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC for 0x%llx\n",n),logarea));--logparm;}  // scaf
+// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC for 0x%llx\n",n),logarea));--logparm;}  // scaf
  ASSERT(v=MALLOC(n),EVWSFULL);
-if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC returned %p\n",v),logarea));-logparm;}  // scaf
+// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC returned %p\n",v),logarea));-logparm;}  // scaf
  z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
  ((I**)z)[-1] = v;    // save address of original allocation
 #else
  ASSERT(z=MALLOC(n),EVWSFULL);
 #endif
-if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Aligned address is %p\n",z),logarea));-logparm;}  // scaf
+// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Aligned address is %p\n",z),logarea));-logparm;}  // scaf
  AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
  if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
@@ -1190,9 +1190,9 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
-if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Allocation request for 0x%llx bytes\n",bytes),logarea));--logparm;}  // scaf
+// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Allocation request for 0x%llx bytes\n",bytes),logarea));--logparm;}  // scaf
  CTLZI((UI)bytes,j);  // 3 or 4 should return 2; 5 should return 3
-if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"log of size=%d\n",j),logarea));--logparm;}  // scaf
+// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"log of size=%d\n",j),logarea));--logparm;}  // scaf
  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }

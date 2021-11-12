@@ -1444,7 +1444,7 @@ static IOF(jtiosfu){I i;
  I acn=ak>>LGSZI; I wcn=wk>>LGSZI; I * RESTRICT zv=IAV(z);
  I *RESTRICT av=IAV(a), *wv=IAV(w);
  for(;ac>0;av+=acn,wv+=wcn,--ac){  // loop for each cell of i."r
-#if 0
+#if 0  // obsolete 
   I ax=0; I curra=av[ax]; // index of current item of a, and its value
   for(i=wsct;i>0;--i){  // for each result atom in the cell
    // curra is the last value matched, and ax is its index

@@ -15,11 +15,12 @@ static DF2(obv2){PREF2(obv2cell); R obv2cell(jt,a,w,self);}
 F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VJTFLGOK1|VJTFLGOK2))),mr(a),lr(a),rr(a));}
 
 
-// Adverse.  Run f, and if that fails (and not with THROW), run g
+// Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun)
 static DF1(ad1){DECLFG;A z;
  ARGCHK1(w); 
  WITHDEBUGOFF(z=CALL1(f1,  w,fs);)
- if(EVTHROW==jt->jerr)R 0;
+ if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
+ if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught
  RESETERR;
  R z?z:AT(gs)&NOUN?gs:CALL1(g1,  w,gs);
 }
@@ -27,7 +28,8 @@ static DF1(ad1){DECLFG;A z;
 static DF2(ad2){DECLFG;A z;
  ARGCHK2(a,w); 
  WITHDEBUGOFF(z=CALL2(f2,a,w,fs);)
- if(EVTHROW==jt->jerr)R 0;
+ if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
+ if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught
  RESETERR; 
  R z?z:AT(gs)&NOUN?gs:CALL2(g2,a,w,gs);
 }

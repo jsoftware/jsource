@@ -450,7 +450,7 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 // repair routines for integer overflow, possibly in place
 static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 
-#if 0
+#if 0  // obsolete 
       // choose the non-in-place argument
       adocv.f=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
      case EWOVIPPLUSBI:
@@ -748,7 +748,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      DQ(mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);
-#if 0
+#if 0  // obsolete 
      adocv.f=(VF)tymesIIO;  // multiply-repair routine
       I wkm,wkn,akm,akn;
       wkm=awzk[1], akn=awzk[0]; wkn=REPSGN(nf); nf^=wkn;   // wkn=111..111 iff wk increments with n (and therefore ak with m).  Make nf positive

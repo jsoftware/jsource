@@ -66,7 +66,7 @@ test 'whilst. 1 do. 2 else. 3 end.'
 'spelling error' -: ex '3 : ''begin.'''
 
 
-NB. Direct definition
+NB. Direct definition {{ }} ----------------------------------------------------------------------
 NB. Note SP added after {{
 f0=. 3 : 0
 NB.
@@ -102,7 +102,14 @@ r =: {{ u
 }}
 'value error' -: ". etx '4 r'
 
-NB. Nameref caching
+NB. {{ }} in single-line defs
+f0 =. 3 : ' 5 {{ x + y }} y'
+'control error' -: ". etx '3 : '' 5 {{ x + y y'''
+'3 : ''5 {{ x + y }} y''' -: 5!:5 <'f0'
+0!:0 'f1 =. ',5!:5 <'f0'
+'3 : ''5 {{ x + y }} y''' -: 5!:5 <'f1'
+
+NB. Nameref caching  -------------------------------------------------------------------------------
 NB. names are cached
 4!:55 ;:'vb__ vb_z_'
 vb_z_ =: 5:

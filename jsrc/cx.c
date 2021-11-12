@@ -757,15 +757,20 @@ static F1(jtlineit){
  R 1<AR(w)?ravel(stitch(w,scc(CLF))):AN(w)&&CLF==cl(w)?w:over(w,scc(CLF));
 }
 
-// Convert ASCII w to boxed lines.  Create separate lists of boxes for monad and dyad
-// if preparsed is set, we know the lines have gone through wordil already & it is OK
-// to do it again.  This means we are processing 9 :  n
-static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
+// Convert ASCII w to boxed lines.  w is the argument to m : w and thus might be from 9 : w or might contain
+// 9 : w.  All we do here is look for non-embedded LF, i. e. LFs in the current line
+// We split into boxed lines on those LFs.  Any 9 : n strings will be processed during execution of this definition
+// If the input is a table, we don't look for anything, just box the lines
+// userm is the m from the m : string that originated this w.  If userm is not 9, this is a one-line definition and we have to
+// scan it for LF and {{ }}
+static A jtsent12c(J jt,A w,I userm){C*p,*q,*r,*s,*x;A z;
  ASSERT(!AN(w)||LIT&AT(w),EVDOMAIN);
  ASSERT(2>=AR(w),EVRANK);
  if(AR(w)>1)R IRS1(w,0L,1,jtbox,z);  // table, just box lines individually 
 
- // otherwise we have a single string.  Could be from 9 : string
+ // otherwise we have a single string.  Could be from 9 : string.  If not, scan it for {{ }}
+ if(userm!=9){RZ(w=ddtokens(w,0b1110))}  // scan for {{ }}.  Don't allow calling for another line, and return result as string
+ // 9 : string.  scan it for LF
  if(!(AN(w)&&DDSEP==cl(w)))RZ(w=over(w,scc(DDSEP)));  // add LF if missing
  // Lines are separated by DDSEP, and there may be DDSEP embedded in strings.  Convert the whole thing to words, which will
  // leave the embedded DDSEP embedded; then split on the individual DDSEP tokens
@@ -1083,14 +1088,17 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  RE(n=i0(a));  // m : n; set n=value of a argument
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(n)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
- if(!n){ra0(w); RCA(w);}  // noun - return it.  Give it recursive usecount
+ if(n==0){ra0(w); RCA(w);}  // noun - return it.  Give it recursive usecount
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
  if(10<n){ASSERT(AT(w)&LIT,EVDOMAIN) s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
  else{  // not tacit translator - preparse the body
-  // we want to get all forms to a common one: a list of boxed strings.  If we went through m : 0, we are in that form
-  // already.  Convert strings
-  if(!col0)if(BOX&AT(w)){RZ(w=sent12b(w))}else{RZ(w=sent12c(w))}  // convert to list of boxes
+  // we want to get all forms to a common one: boxed string(s) rank<2.  If we went through m : 0, we are in that form
+  // already.
+  if(!col0)if(BOX&AT(w)){RZ(w=sent12b(w))  // list of boxes - convert to character, no analysis
+  }else{  // character
+   RZ(w=jtsent12c(jt,w,n)) // if this is NOT 9 : w, cause a one-line definition to be scanned for {{ }}.  9 : strings have already been scanned
+  }
   // If there is a control line )x at the top of the definition, parse it now and discard it from m
   if(likely(AN(w)!=0))if(unlikely(AN(AAV(w)[0])&&CAV(AAV(w)[0])[0]==')')){
    // there is a control line.  parse it.  Cut to words
@@ -1175,7 +1183,7 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
 // Bits 0-1 of env are as for enqueue()
 //
 // Bit 2 of env suppresses the call to jgets().  It will be set if it is known that there is no way to get more
-// input, for example if the string comes from (". y) or from an event.  If an unterminated DD is found when bit 2 is set,
+// input, for example if the string comes from (". y), from an event, or from m : 'string'.  If an unterminated DD is found when bit 2 is set,
 // the call fails with control error
 //
 // Bit 3 of env is set if the caller wants the returned value as a string rather than as enqueued words

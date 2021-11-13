@@ -1440,6 +1440,20 @@ FORCE_INLINE __m256 _mm256_blendv_ps(__m256 a, __m256 b, __m256 mask)
     return result_m256;
 }
 
+FORCE_INLINE __m256 _mm256_blend_epi32(__m256i a, __m256i b, const int imm8)
+{
+    assert(imm8 >= 0 && imm8 <= 255);
+    __m256 result_m256;
+    uint32x4_t vect_mask = vld1q_u32(g_mask_epi32);
+    uint32x4_t vect_imm = vdupq_n_u32(imm8);
+    uint32x4_t flag[2];
+    flag[0] = vtstq_u32(vect_imm, vect_mask);
+    flag[1] = vtstq_u32(vshrq_n_u32(vect_imm, 4), vect_mask);
+    result_m256.vect_s32[0] = vbslq_s32(flag[0], b.vect_s32[0], a.vect_s32[0]);
+    result_m256.vect_s32[1] = vbslq_s32(flag[1], b.vect_s32[1], a.vect_s32[1]);
+    return result_m256;
+} 
+
 FORCE_INLINE __m256 _mm256_blend_ps(__m256 a, __m256 b, const int imm8)
 {
     assert(imm8 >= 0 && imm8 <= 255);

@@ -134,6 +134,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
  -Wno-string-plus-int \
  -Wno-unknown-pragmas \
  -Wno-unsequenced \
+ -Wno-unused-but-set-variable \
  -Wno-unused-function \
  -Wno-unused-parameter \
  -Wno-unused-value \

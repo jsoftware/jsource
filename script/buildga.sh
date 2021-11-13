@@ -6,8 +6,11 @@
 
 if [ "$1" == "linux" ]; then
   ext="so"
-else
+elif [ "$1" == "darwin" ]; then
   ext="dylib"
+else
+  echo "argument is linux|darwin"
+  exit 1
 fi
 
 cp -R jlibrary/* .
@@ -28,6 +31,12 @@ cd make2
 j64x=j64 ./build_jconsole.sh
 j64x=j64 ./build_tsdll.sh
 j64x=j64 ./build_libj.sh
+if [ "$1" == "darwin" ]; then
+./clean.sh
+j64x=j64arm ./build_jconsole.sh
+j64x=j64arm ./build_tsdll.sh
+j64x=j64arm ./build_libj.sh
+fi
 ./clean.sh
 j64x=j64avx ./build_libj.sh
 ./clean.sh
@@ -35,6 +44,11 @@ j64x=j64avx2 ./build_libj.sh
 
 cd ..
 cp bin/$1/j64/* j64
+if [ "$1" == "darwin" ]; then
+lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
+lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
+lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
+fi
 cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 chmod 644 j64/*

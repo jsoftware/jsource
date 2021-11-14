@@ -40,9 +40,9 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 
 if [ -z "${jplatform##*darwin*}" ]; then
 if [ -z "${j64x##*j64arm*}" ]; then
-macmin="-target arm64-apple-macos11 -mmacosx-version-min=11"
+macmin="-arch arm64 -mmacosx-version-min=11"
 else
-macmin="-target x86_64-apple-macos10.6 -mmacosx-version-min=10.6"
+macmin="-arch x86_64 -mmacosx-version-min=10.6"
 fi
 fi
 

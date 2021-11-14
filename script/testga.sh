@@ -9,8 +9,11 @@
 
 if [ $1 == "linux" ]; then
   ext="so"
-else
+elif [ "$1" == "darwin" ]; then
   ext="dylib"
+else
+  echo "argument is linux|darwin"
+  exit 1
 fi
 
 ls -l j64

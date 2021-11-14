@@ -8,9 +8,6 @@ if [ "$1" == "linux" ]; then
   ext="so"
 elif [ "$1" == "darwin" ]; then
   ext="dylib"
-  xcmin="12"
-  xcver=`xcodebuild -version|head -n1|cut -f2 -d" "|cut -f1 -d"."`
-  echo "xcver = $xcver"
 else
   echo "argument is linux|darwin"
   exit 1
@@ -34,12 +31,11 @@ cd make2
 j64x=j64 ./build_jconsole.sh
 j64x=j64 ./build_tsdll.sh
 j64x=j64 ./build_libj.sh
-if [ "$1" == "darwin" ] && [ "$xcver" -ge "$xcmin" ]; then
-echo "build arm64"
+if [ "$1" == "darwin" ]; then
 ./clean.sh
-j64x=j64arm ./build_jconsole.sh
-j64x=j64arm ./build_tsdll.sh
-j64x=j64arm ./build_libj.sh
+j64x=j64arm ./build_jconsole.sh || true
+j64x=j64arm ./build_tsdll.sh || true
+j64x=j64arm ./build_libj.sh || true
 fi
 ./clean.sh
 j64x=j64avx ./build_libj.sh
@@ -48,8 +44,7 @@ j64x=j64avx2 ./build_libj.sh
 
 cd ..
 cp bin/$1/j64/* j64
-if [ "$1" == "darwin" ] && [ "$xcver" -ge "$xcmin" ]; then
-echo "build fat binary"
+if [ "$1" == "darwin" ] && [ -f "bin/$1/j64arm/libj.$ext" ]; then
 lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
 lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext

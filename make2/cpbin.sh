@@ -2,7 +2,7 @@
 
 # copy binaries in bin/ to jlibrary/bin
 
-function cop(){
+cop(){
 # $1 src
 # $2 srclib
 # $3 dest

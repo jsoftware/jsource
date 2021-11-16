@@ -199,7 +199,7 @@ static A jtvfinal(J jt,A w,I tmonad,I tsubst,TA *ttab,I *ttabi,I ttabi0){I i;V*u
   if(NOUN&AT(v->fgh[2]?v->fgh[0]:CP))RZ(w=folknohfn(v->fgh[2]?v->fgh[0]:CP,v->fgh[2]?v->fgh[1]:v->fgh[1-1],v->fgh[2]?v->fgh[2]:v->fgh[2-1]));
  }
  RZ(w=tine(w));
- if(FAV(w)->id==CFORK&&FAV(FAV(w)->fgh[0])->id==CCAP){FAV(w)->fgh[0]=FAV(w)->fgh[1]; FAV(w)->fgh[1]=FAV(w)->fgh[2]; FAV(w)->fgh[2]=0;}
+ if(FAV(w)->id==CFORK&&AT(FAV(w)->fgh[0])&VERB&&FAV(FAV(w)->fgh[0])->id==CCAP){FAV(w)->fgh[0]=FAV(w)->fgh[1]; FAV(w)->fgh[1]=FAV(w)->fgh[2]; FAV(w)->fgh[2]=0;}
  R w;
 }    
 

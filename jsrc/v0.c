@@ -22,7 +22,7 @@
    DQ(j, *t=fplus(t[-1],ftymes(d,*t)); --t;);   \
    *v=ftymes(d,*v);                              \
   }                                              \
-  RE(z); EPILOG(z);                              \
+  RE(0); EPILOG(z);                              \
  }
 
 static CFR(jtcfrd,D,FL,  dplus,dtymes,dnegate)

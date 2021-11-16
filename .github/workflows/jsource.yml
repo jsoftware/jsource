@@ -16,9 +16,9 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-18.04, macos-10.15, windows-2019]
+    os: [ubuntu-18.04, macos-11, windows-2019]
     #os: [ubuntu-18.04]
-    #os: [macos-10.15]
+    #os: [macos-11]
     #os: [windows-2019]
 
   steps:
@@ -44,7 +44,7 @@ jobs:
      run: script/buildga.sh linux
 
    - name: Build JE (macOS)
-     if: matrix.os == 'macos-10.15'
+     if: matrix.os == 'macos-11'
      env:
       CC: clang
       USE_SLEEF: 1
@@ -60,7 +60,7 @@ jobs:
      run: script/testga.sh linux
 
    - name: Test JE (macOS)
-     if: matrix.os == 'macos-10.15'
+     if: matrix.os == 'macos-11'
      run: script/testga.sh darwin
 
    - name: Test JE (Windows)
@@ -73,7 +73,7 @@ jobs:
      run: zip -r l64.zip j64
 
    - name: Compress Files (macOS)
-     if: matrix.os == 'macos-10.15'
+     if: matrix.os == 'macos-11'
      run: zip -r m64.zip j64
 
    - name: Compress Files (Windows)
@@ -102,7 +102,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Release JE (macOS)
-     if: matrix.os == 'macos-10.15'
+     if: matrix.os == 'macos-11'
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -129,7 +129,7 @@ jobs:
        path: testlinux.txt
 
    - name: Copy Test (macOS)
-     if: matrix.os == 'macos-10.15'
+     if: matrix.os == 'macos-11'
      uses: actions/upload-artifact@v2
      with:
        name: dist

@@ -647,22 +647,30 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
 }
 
 // 128!:9 matrix times sparse vector with optional early exit
-// y is (boolean exitvec, shape m);(I, int list of nonzero indexes in v, shape p);(V, float list of nonzero values in v, shape p);(M, shape m,n)
+// y is (boolean exitvec, shape m);(I, int list of nonzero indexes in v, shape p);(V, float list of nonzero values in v, shape p);(M, shape m,n)[;tolerance, default 0]
 // Result is exitcode (boolean atom) ; product (I {"1 M) +/@:*"1 V (float list shape m)
-// if (0>:i{product)+:(i{exitvec) for any i, exitcode is set to 1 and the product may be incomplete.  Otherwise exitcode is 0
+// if (tolerance>:i{product)+:(i{exitvec) for any i, exitcode is set to 1 and the product may be incomplete.  Otherwise exitcode is 0
 // therefore, exitvec of 1 means 'no exit, calculate all products'
-// Ex: 'rc col' =. (128!:40) goodbk;(ax ];.0 Am);(ax ];.0 Av);Qk
+// Ex: 'rc col' =. (128!:40) goodbk;(ax ];.0 Am);(ax ];.0 Av);Qk;3e_16
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
 #if C_AVX2
  ASSERT(AR(w)==1,EVRANK);
- ASSERT(AN(w),EVLENGTH);  // audit overall w
+ ASSERT(BETWEENC(AN(w),4,5),EVLENGTH);  // audit overall w
  ASSERT(AT(w)&BOX,EVDOMAIN);
  // check ranks
  ASSERT(AR(AAV(w)[0])<=1,EVRANK);  // exitvec
  ASSERT(AR(AAV(w)[1])==1,EVRANK);  // I
  ASSERT(AR(AAV(w)[2])==1,EVRANK);  // V
  ASSERT(AR(AAV(w)[3])==2,EVRANK);  // M
+ D toler=0.0;  // default tolerance of 0
+ if(AN(w)>4){
+  // tolerance given: extract it, convert to float
+  A tol=AAV(w)[4];
+  ASSERT(AR(tol)==0,EVRANK);  // tolerance must be atomic
+  if(!(AT(tol)&FL))RZ(tol=cvt(FL,tol));  // force to float
+  toler=DAV(tol)[0];  // extract tolerance
+ }
  // check agreement
  ASSERT(AN(AAV(w)[1])==AN(AAV(w)[2]),EVLENGTH);   // I and V agree
  ASSERT(AR(AAV(w)[0])==0||AS(AAV(w)[3])[0]==AN(AAV(w)[0]),EVLENGTH);  // exitvec and M agree
@@ -718,8 +726,8 @@ F1(jtmvmsparse){PROLOG(832);
   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
   // Now do the operation.  With <16 elements it doesn't help to use dual accumulators
 #define FINISHDOTPROD dotprod=_mm256_add_pd(dotprod,_mm256_permute2f128_pd(dotprod,dotprod,0x01)); dotprod=_mm256_add_pd(dotprod,_mm256_permute_pd(dotprod,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
-  *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(dotprod),0x0); /* store the single result from 0 */ \
-  if((I)_mm256_extract_epi64(_mm256_castpd_si256(dotprod),0x0)>0){if(bv==0||((UI)bv>1&&bv[zv-zv0]==0))goto gt0result;} \
+  *zv=_mm256_cvtsd_f64(dotprod); /* store the single result from 0 */ \
+  if(_mm256_cvtsd_f64(dotprod)>toler){if(bv==0||((UI)bv>1&&bv[zv-zv0]==0))goto gt0result;} \
   ++zv; mv+=n; 
 
   if(an<=NPAR){

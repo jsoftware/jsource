@@ -993,6 +993,8 @@ NB. 128!:9  g;i;v;M ---------------------------------------------------------
 M =. 0. + =/~ i. 6
 assert. (0;2 3 0 0 0 0) -: (128!:9) 1;0 1;2 3;M 
 assert. (0;2 _3 0 0 0 0) -: (128!:9) 1;0 1;2 _3;M 
+assert. (0;1e_17 _1e_17 0 0 0 0) -: (128!:9) 0;0 1;1e_17 _1e_17;M;3e_17
+assert. (1;'') -: (128!:9) 0;0 1;4e_17 _4e_17;M;3e_17 
 assert. (1;'') -: (128!:9) 0;0 1;2 _3;M 
 assert. (0;_2 _3 0 0 0 0) -: (128!:9) 1;0 1;_2. _3;M 
 assert. (0;0 0 0 0 0 0) -: (128!:9) 1;($0);($0);M 
@@ -1004,10 +1006,11 @@ for_l. >:  i. 50 do.
     ix =. l ? c  NB. indexes
     v =. l ?@$ 0  NB. vector values
     g =. 0 (?r)}^:(r>0) r$1  NB. allow one test-enabled value
+    toler =. 0.001 * ?0
     ref =. (ix{"1 M) +/@:*"1 v
-    abort =. 0 e. g +. ref<:0
+    abort =. 0 e. g +. ref<:toler
     if. abort do. ref=.'' end.
-    assert. (abort;ref) -:!.1e_11 (128!:9) g;ix;v;M
+    assert. (abort;ref) -:!.1e_11 (128!:9) g;ix;v;M;toler
   end.
 end.
 1

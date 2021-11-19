@@ -74,7 +74,7 @@ static I leaknbufs;
 
 #if CRASHLOG // debugging
 #define LOGFILE "/home/chris/t9.txt"
-// obsolete #define LOGFILE "C:/My Documents/crashlog.txt"
+// #define LOGFILE "C:/My Documents/crashlog.txt"
 int logfirsttime = 1;
 int logparm=0;  // set to control logging inside m.c
 char logarea[200];  // where messages are built
@@ -682,22 +682,6 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }
 }  
 
-#if 0 // obsolete not used
-// convert a block, recently allocated in the caller, to virtual.  The caller got the shape right; we just have to fill in all the other fields, including the data pointer.
-// User still has to fill in AN and AS
-void jtexpostvirtual(J jt,A z,A w,I offset){
-ACINIT(z,ACUC1) AK(z)=(CAV(w)-(C*)z)+offset; // virtual, not inplaceable
-if(AFLAG(w)&AFVIRTUAL){
- // If w is virtual, me must disallow inplacing for it, since it may be at large in the execution and we are creating an alias to it
- ACIPNO(w);  // turn off inplacing
- w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
-}
-AFLAGINIT(z,AFVIRTUAL|(AFLAG(w)&AFPRISTINE)|(AT(z)&TRAVERSIBLE))  // flags: recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
-ABACK(z)=w;   // set the pointer to the base: w or its base
-ra(w);   // ensure that the backer is not deleted while it is a backer.
-}
-#endif
-
 // realize a virtual block (error if not virtual)
 // allocate a new block, copy the data to it.  result is address of new block; can be 0 if allocation failure
 // only non-sparse nouns can be virtual
@@ -881,10 +865,10 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
-     if((np=QCWORD(np))!=0){/* if(AFLAG(np)&AFVIRTUAL)SEGFAULT; scaf */ fanano0(np);}  // free it
+     if((np=QCWORD(np))!=0){fanano0(np);}  // free it
      np=np0;  // advance to next box
     };
-    if((np=QCWORD(np))!=0){/* if(AFLAG(np)&AFVIRTUAL)SEGFAULT; scaf */ fanano0(np);}  // last box
+    if((np=QCWORD(np))!=0){fanano0(np);}  // last box
    }
   } else if(t&NAME){A ref;
    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
@@ -956,7 +940,6 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
     // Unable to allocate a new block.  We have stored the address of the most recent allocation at the end of the previous block.
     // Leave pushp pointing AFTER that location: it may be unmapped memory, but that's OK, because we will always back the pointer before
     // popping the stack, and popping the stack must be the next thing we do
-// obsolete     jt->tnextpushp = --pushp;  // back up the push pointer to the last valid location
     jt->tnextpushp = pushp;  // set the push pointer so we can back out the last allocation
     ASSERT(0,EVWSFULL);   // fail
    }
@@ -1102,15 +1085,12 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 #if ALIGNTOCACHE
  // Allocate the block, and start it on a cache-line boundary
  I *v;
-// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC for 0x%llx\n",n),logarea));--logparm;}  // scaf
  ASSERT(v=MALLOC(n),EVWSFULL);
-// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"MALLOC returned %p\n",v),logarea));-logparm;}  // scaf
  z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
  ((I**)z)[-1] = v;    // save address of original allocation
 #else
  ASSERT(z=MALLOC(n),EVWSFULL);
 #endif
-// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Aligned address is %p\n",z),logarea));-logparm;}  // scaf
  AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
  if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
@@ -1190,15 +1170,13 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
-// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"Allocation request for 0x%llx bytes\n",bytes),logarea));--logparm;}  // scaf
  CTLZI((UI)bytes,j);  // 3 or 4 should return 2; 5 should return 3
-// obsolete if(logparm==1){++logparm;writetolog(jt,(sprintf(logarea,"log of size=%d\n",j),logarea));--logparm;}  // scaf
  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }
 
 #if SY_64
-// stats obsolete I scafnga=0, scafngashape=0;
+// stats I scafnga=0, scafngashape=0;
 // like jtga, but don't copy shape.   Never called for SPARSE type
 // We pack rank+type into one reg to save registers (it also halps the LIMIT test).  With this, the compiler should be able to save/restore
 // only 2 regs (ranktype and bytes) but the prodigal compiler saves 3.  We accept this to be able to save AK AR AT here, so that the caller doesn't have to preserve them over the call.
@@ -1214,7 +1192,7 @@ RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
  if(unlikely(!(((I4)ranktype&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-32)&-32,&AS(z)[1],1,MEMSET00);}  // unlikely is important!  compiler strains then to use one less temp reg
-// stats  obsolete ++scafnga; scafngashape+=shaape!=0;
+// stats  ++scafnga; scafngashape+=shaape!=0;
  R z;
 }
 #else

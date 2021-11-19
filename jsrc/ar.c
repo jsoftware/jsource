@@ -317,12 +317,6 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
     )
     x=x0-(d-1); 
    )
-#else  // obsolete 
-   z+=(m-1)*d; x+=(m*n-1)*d;
-   for(i=0;i<m;++i,z-=d){I rc;
-    y=x; x-=d; if(255&(rc=plusDD(1,d,x,y,z,jt)))R rc; x-=d;
-    DQ(n-2,    if(255&(rc=plusDD(1,d,x,z,z,jt)))R rc; x-=d; );
-   }
 #endif
   }
   R NANTEST?EVNAN:EVOK;

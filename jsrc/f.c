@@ -105,24 +105,6 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;FMT
  *y=0; R y-s;
 }
 
-#if 0  // obsolete 
-static F1(jtthbit){
-ASSERTSYS(0,"thbit");
-A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
- c=r?s[r-1]:1; m=n/c; p=2*c-1;
- GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; 
- x=UAV(w); y=CAV(z);
- q=c>>LGBB; r=c&(BB-1); r1=c&(BW-1)?(BW-(c&(BW-1)))>>LGBB:0;
- for(i=0;i<m;++i){
-  DQ(q-!r, MC(y,bitdisp+2*BB**x,2*BB  ); ++x; y+=2*BB  ;);
-  if(r)   {MC(y,bitdisp+2*BB**x,2*r -1); ++x; y+=2*r -1;}
-  else    {MC(y,bitdisp+2*BB**x,2*BB-1); ++x; y+=2*BB-1;}
-  x+=r1;
- }
- RETF(z);
-}
-#endif
-
 static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  n=AN(w); r=AR(w); s=AS(w);
   SHAPEN(w,r-1,c); m=n/c; p=2*c-1;
@@ -200,19 +182,6 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;
    DO(m, DO(c, ddv[i]=MAX(ddv[i],ev[j]-ewv[j]);j++;););
          DO(c, dv[i]+=ddv[i];);         // add col padding space
    p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
-#if 0  // obsolete 
-   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
-   j=0;
-   DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
-         DQ(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
-//                 `   utf8    col max - disp width  space
-               zv+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
-// sum of col padding space is over estimated
-// can be reduced by the minimum of p-((zv-zv1)-1) of all rows
-// change trailing padding space to NUL, all NUL will be removed in jtprx
-               if(i==c-1)mvc(p-((zv-zv1)-1),zv,1,MEMSET00);
-               j++;););
-#else
 // first pass to reduce padding space
    I q=IMAX,p0;
    j=0;
@@ -233,7 +202,6 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;
 // change trailing padding space to NUL, all NUL will be removed in jtprx
                if(i==c-1)mvc(p-((zv-zv1)-1),zv,1,MEMSET00);
                j++;););
-#endif
   }else{
    c=s[r-1]; m=n/c; RZ(d=apvwr(c,0L,0L)); dv=AV(d);
    DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),0); dv[i]=MAX(dv[i],p);););

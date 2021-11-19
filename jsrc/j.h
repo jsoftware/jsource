@@ -1575,28 +1575,6 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // This is written to be branchless for rank < 3
 #if SY_64
 // I have been unable to make clang produce a simple loop that doesn't end with a backward branch.  So I am going to handle ranks 0-2 here and call a subroutine for the rest
-#if 0  // obsolete 
-// This is what I would rather have
-#define PRODXcommon(z,n,v,init,lbl) \
-  {DPMULDDECLS z=(init);\
-   if(likely(z!=0)){I * RESTRICT mp=(v); I nn=(n); mp=nn>0?mp:iotavec-IOTAVECBEGIN+1;  DPMULDZ(z,*mp,z) \
-    if(likely(*mp!=0LL)){ \
-     --nn; \
-     LOOPBEGIN(lbl): ++mp; mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) if(unlikely(*mp==0LL))goto LOOPEND(lbl); --nn; if(unlikely(nn>0)){goto LOOPBEGIN(lbl);} \
-     LOOPEND(lbl): if(unlikely(z==0))ASSERT(nn>0,EVLIMIT) \
-    } \
-   } \
-  }
-#define PRODX(z,n,v,init) \
- {z=(init); I nn=(n); \
-  if(likely(nn<3)){DPMULDDECLS \
-   if(likely(z!=0)){I * RESTRICT mp=(v); mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) \
-    if(likely(*mp!=0LL)){ ++mp; mp=nn>1?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) if(likely(*mp!=0LL)){ASSERT(z!=0,EVLIMIT)} } \
-   } \
-  }else{DPMULDE(z,prod(nn,v),z) RE(0)} \
- }
-#define PRODX(z,n,v,init) PRODXcommon(z,n,v,init,__COUNTER__)
-#endif
 #define PRODX(z,n,v,init) \
  {I nn=(n); \
   if(likely(nn<3)){I temp=(init);  /* must use temp because init may depend on z */ \

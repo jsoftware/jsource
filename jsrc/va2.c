@@ -450,21 +450,6 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 // repair routines for integer overflow, possibly in place
 static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 
-#if 0  // obsolete 
-      // choose the non-in-place argument
-      adocv.f=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-     case EWOVIPPLUSBI:
-      adocv.f=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-     case EWOVIPPLUSIB:
-      adocv.f=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
-     case EWOVIPMINUSII:
-      adocv.f=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-     case EWOVIPMINUSBI:
-      adocv.f=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-     case EWOVIPMINUSIB:
-      adocv.f=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
-#endif
-
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)
@@ -748,19 +733,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      DQ(mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);
-#if 0  // obsolete 
-     adocv.f=(VF)tymesIIO;  // multiply-repair routine
-      I wkm,wkn,akm,akn;
-      wkm=awzk[1], akn=awzk[0]; wkn=REPSGN(nf); nf^=wkn;   // wkn=111..111 iff wk increments with n (and therefore ak with m).  Make nf positive
-      akm=akn&wkn; wkn&=wkm; wkm^=wkn; akn^=akm;  // if c, akm=ak/wkn=wk; else akn=ak/wkm=wk.  The other incr is 0
-      I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zzv,jt); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
-#else
       I i=mf; I jj=nf; 
       while(1){
        tymesIIO(n,m,(I*)av,(I*)wv,(D*)zzv,mulofloloc); if(!--i)break;
        mulofloloc-=m*(n^REPSGN(n)); zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];  // jj1 is -1 on the last inner iter, where we use outer incr
       }
-#endif
      }
     } else {   // not multiply repair, but something else to do inplace
      adocv.f = repairip[(rc-EWOVIP)&3];   // fetch ep from table

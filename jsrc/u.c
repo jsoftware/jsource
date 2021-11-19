@@ -232,7 +232,6 @@ I jti0(J jt,A w){ARGCHK1(w);
   }else{
    cval=d>0?IMAX:-IMAX;  // if beyond integral, treat as infinity
   }
-/// obsolete   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
   R cval;  // too-large values don't convert, handle separately
  }
  if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK);

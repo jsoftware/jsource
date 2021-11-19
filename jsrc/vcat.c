@@ -139,9 +139,8 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 
 // these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition.  No fill.
-#if 1  // obsolete
 // here when ma=mw=SZI
-static void moveawVVI(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){  // jt scaf etc
+static void moveawVVI(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  if((arptct|wrptct)==0) {
    // fastest case: no replication, no scalars
@@ -167,7 +166,6 @@ static void moveawVVI(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptrese
   }
  }
 }
-#endif
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
  JMCDECL(endmaska) JMCSETMASK(endmaska,ma,0)
  JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw,0)
@@ -176,17 +174,8 @@ static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
    // fastest case: no replication, no scalars
   while(--c>=0){
    // copy one cell from a; advance z; advance a
-// obsolete writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p; remaining: %lld\n",ma,av,zv,c),logarea));  // scaf
-// obsolete if(1){  // scaf
-// obsolete  DO(ma>>LGSZI, I *rdaddr=((I*)av)+i;
-// obsolete    writetolog(jt,(sprintf(logarea,"R %p",rdaddr),logarea)); I vv=*rdaddr; writetolog(jt,(sprintf(logarea,", W"),logarea)); *(I*)zv=vv; writetolog(jt,(sprintf(logarea," OK\n"),logarea));
-// obsolete    )
-// obsolete }
-// obsolete writetolog(jt,(sprintf(logarea,"Recopy with JMCR"),logarea));  // scaf
    JMCR(zv,av,ma,0,endmaska); zv+=ma; av+=ma;
-// obsolete writetolog(jt,(sprintf(logarea," OK\n"),logarea));  // scaf
    // repeat for w
-// obsolete writetolog(jt,(sprintf(logarea,"Copying 0x%llx bytes from %p to %p\n",mw,wv,zv),logarea));  // scaf
    JMCR(zv,wv,mw,0,endmaskw); zv+=mw; wv+=mw;
   }
  }else{
@@ -284,15 +273,7 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
  DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
-// obsolete writetolog(jt,(sprintf(logarea,"About to GA zn=%lld, t=0x%llx\n",zn,t),logarea));  // scaf
-// obsolete logparm=1;  // scaf turn on logging in GA 
  GA(z,t,zn,f+r,s); if(unlikely(zn==0))RETF(z); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops
-// obsolete writetolog(jt,(sprintf(logarea,"Allocated block %p\n",z),logarea));  // scaf
-// obsolete C *endzv=zv+(zn<<bplg(t))-1;  // scaf
-// obsolete writetolog(jt,(sprintf(logarea,"Writing to end of array at %p\n",endzv),logarea));  // scaf
-// obsolete *endzv=0;
-// obsolete writetolog(jt,(sprintf(logarea,"Write successful\n"),logarea));  // scaf
-// obsolete logparm=0;  // scaf turn off logging in GA 
  if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
  I klg=bplg(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)

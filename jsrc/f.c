@@ -299,7 +299,7 @@ static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,
 // 9 is vertical bar, 10 is horizontal bar
 
 // Install one row of boxing characters
-// cw is 1 if the data is LIT, 2 if C2T
+// cw is 1 if the data is LIT, 2 if C2T, 4 if C4T
 // k is index of boxing character to install at leftmost divider
 // n is #boxed values per row
 // x[i] is width of column i, including the boxing character
@@ -313,15 +313,7 @@ static void jtfram(J jt,I k,I n,I*x,C*v,I cw){C a,b=9==k,d,l,r;
  l=JT(jt,bx)[k]; a=b?' ':JT(jt,bx)[10]; d=b?l:JT(jt,bx)[1+k]; r=b?l:JT(jt,bx)[2+k];
  // Install first character; then, for each field, {(width-1) copies of a; then d overwriting last a}
  // then install r over the last d
- // Different version for each character size
- switch (cw){
- case 1:   // version for LIT output array
-  {*v++=l; DO(n,  mvc(x[i]-1,v,1,iotavec-IOTAVECBEGIN+a); v+=x[i]-1;*v++=d;);*--v=r;}break;
- case 2: // version for C2T output array
-  {US *u=(US*)v;I j; *u++=l; DO(n, for(j=x[i]-1;j>0;--j)*u++=a; *u++=d;); *--u=r;} break;
- case 4: // version for C4T output array
-  {C4 *u=(C4*)v;I j; *u++=l; DO(n, for(j=x[i]-1;j>0;--j)*u++=a; *u++=d;); *--u=r;} break;
- }
+ *v++=l; DO(cw-1, *v++=0;) DO(n,  mvc(x[i]*cw,v,cw,iotavec-IOTAVECBEGIN+a); v+=x[i]*cw; v[-cw]=d;); v[-cw]=r;
 }
 
 // Install boxing character in all result 2-cells

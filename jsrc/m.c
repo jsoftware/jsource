@@ -1176,7 +1176,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 }
 
 #if SY_64
-// stats I scafnga=0, scafngashape=0;
+// stats I statsnga=0, statsngashape=0;
 // like jtga, but don't copy shape.   Never called for SPARSE type
 // We pack rank+type into one reg to save registers (it also halps the LIMIT test).  With this, the compiler should be able to save/restore
 // only 2 regs (ranktype and bytes) but the prodigal compiler saves 3.  We accept this to be able to save AK AR AT here, so that the caller doesn't have to preserve them over the call.
@@ -1192,7 +1192,7 @@ RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
  if(unlikely(!(((I4)ranktype&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-32)&-32,&AS(z)[1],1,MEMSET00);}  // unlikely is important!  compiler strains then to use one less temp reg
-// stats  ++scafnga; scafngashape+=shaape!=0;
+// stats  ++statsnga; statsngashape+=shaape!=0;
  R z;
 }
 #else

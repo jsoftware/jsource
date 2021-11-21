@@ -428,7 +428,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
   // Numeric/empty m.  Each 1-cell is a list of indexes (if m is a list, each atom is a cell index)
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
- }else{  // a single box.
+ }else{  // a single box.  must contain heterogeneous boxes, or we would have handled it earlier
   ind=AAV(ind)[0]; n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
   ASSERT((-(n|(r^1))&((AT(ind)&BOX+NUMERIC)-1))>=0,EVINDEX);  // must be empty list or numeric or boxed
   if(((n-1)|SGNIF(AT(ind),BOXX))>=0)RZ(ind=IRS1(ind,0,0,jtbox,j));  // if numeric, box each atom
@@ -456,11 +456,6 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
  *cellframelen=n; R j;  // insert the number of axes used in each cell of j
 }    /* convert ind in a ind}w into integer atom-offsets */
 
-/* Reference count for w for amend in place */
-/* 1 jdo     tpop                           */
-/* 2 amendn2 EPILOG/gc                      */
-/* 1 jdo     tpop                           */
-
 // Execution of x m} y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
 static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  AD * RESTRICT ind=VAV(self)->fgh[0];  // ind=m, the indexes to be modified
@@ -476,7 +471,6 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
   if(unlikely(!wr)){RZ(z=from(ind,zeroionei(0))); cellframelen=0;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
   else if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table or higher, convert to cell indexes.
-// scaf treat scalar as special case, skip celloffset
    cellframelen=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // #axes used: 1, if m is a list; otherwise {:$m
    if(AR(ind)==0){  // scalar ind is common enough to test for
     if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // w is now an INT vector, possibly the input argument
@@ -498,9 +492,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
       if(!(AT(ind0)&BOX))z=pind(AS(w)[0],ind0);  // not boxed - get/keep index list for first axis
       else{  // <<compidexes
        ASSERT(!AR(ind0),EVINDEX);   // must be just one atomic box
-       ind0=AAV(ind0)[0];  // advance ind0 to compindexes
-       RZ(z=IX(AS(w)[0]));  // get full list of indexes
-       if(AN(ind0))z=less(z,pind(AS(w)[0],ind0));  // scaf could be faster
+       RZ(z=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(AS(w)[0]),num(1)),pind(AS(w)[0],AAV(ind0)[0]),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
       }
       cellframelen=1;  // in this path, the cells are _1-cells
      }else{
@@ -525,7 +517,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
        // If the selector is an atom, we mark its max as -1 to indicate that the axis is to be skipped when checking frames
        RZ(ax=pind(axlen,ax));  // audit selectors
        if(unlikely(AR(ax)>1)){
-        // one of the selectors is a table.  We have to go to general case
+        // one of the selectors has rank >1.  We have to go to general case
         if(unlikely(jt->deprecct!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
         goto noaxes;  // table in selectors: abort axis work
        }
@@ -536,7 +528,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
        ASSERT(!AR(ax),EVINDEX);   // must be just one box
        ax=AAV(ax)[0];  // open it
        if(AN(ax)){  // if not taken in full...
-        RZ(ax=less(IX(axlen),pind(axlen,ax)));   // ...create index vector for axes and remove the bits in ax.  scaf could be faster
+        RZ(ax=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(axlen),num(1)),pind(axlen,ax),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
         axes[i].max=AN(ax);  // note how many are left
         axes[i].indexes=IAV(ax);  // save pointer to the indexes
        }else{

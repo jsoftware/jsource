@@ -386,7 +386,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
   // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)
  }
  if((rc&255)>=EWOV){R ofxassoc(a,cvt(FL,w),self);}
- if(rc)jsignal(rc);  // if there was an error, signal it
+ if(rc&255)jsignal(rc);  // if there was an error, signal it
  R z;
 }    /* a f/\. w where f is an atomic associative fn */
 

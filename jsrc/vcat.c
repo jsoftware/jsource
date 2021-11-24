@@ -14,7 +14,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  at=AT(a); wt=AT(x);
  ASSERT(HOMO(at,wt),EVDOMAIN);
  t=maxtype(at,wt);
- ASSERT(t&(B01|INT|FL|CMPX),EVDOMAIN);  // verify supported sparse type
+ ASSERT(t&SPARSABLE,EVDOMAIN);  // verify supported sparse type
  if(TYPESNE(t,at))RZ(a=cvt(t,a));
  if(TYPESNE(t,wt)){RZ(x=cvt(t,x)); RZ(e=cvt(t,e));}
  j=k=0; DO(f, if(b[i])++j; else ++k;);
@@ -61,6 +61,11 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  if(r>ar)RZ(a=reshape(over(apv(r-ar,1L,0L),shape(a)),a)); as=AS(a);
  if(r>wr)RZ(w=reshape(over(apv(r-wr,1L,0L),shape(w)),w)); ws=AS(w);
  ASSERT(*as<IMAX-*ws,EVLIMIT);
+/* non-sparse array needs to know the final sparse data type for sparseit */
+ if((ISSPARSE(at)>ISSPARSE(wt))&&(at!=(t=maxtype(at,wt)))){
+ RZ(a=cvt(t,a));at=AT(a);}
+ else if((ISSPARSE(at)<ISSPARSE(wt))&&(wt!=(t=maxtype(at,wt)))){
+ RZ(w=cvt(t,w));wt=AT(w);}
  if(!ISSPARSE(at)){wp=PAV(w); RZ(a=sparseit(a,SPA(wp,a),SPA(wp,e)));}
  if(!ISSPARSE(wt)){ap=PAV(a); RZ(w=sparseit(w,SPA(ap,a),SPA(ap,e)));}
  ap=PAV(a); RZ(ab=bfi(r,SPA(ap,a),1)); ae=SPA(ap,e); at=AT(ae);
@@ -74,7 +79,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  *zs=*ws; DO(r, if(zs[i]>ws[i]){RZ(w=take(q,w)); break;});
  *zs=*as+*ws; t=maxtype(at,wt);
  ap=PAV(a); ay=SPA(ap,i); ax=SPA(ap,x); if(TYPESNE(t,at))RZ(ax=cvt(t,ax));
- wp=PAV(w); wy=SPA(wp,i); wx=SPA(wp,x); if(TYPESNE(t,at))RZ(wx=cvt(t,wx));
+ wp=PAV(w); wy=SPA(wp,i); wx=SPA(wp,x); if(TYPESNE(t,wt))RZ(wx=cvt(t,wx));   // TYPESNE((t,at) again ???
  GASPARSE(z,STYPE(t),1,r,zs); zp=PAV(z);
  SPB(zp,a,za); SPBV(zp,e,ze,ca(TYPESEQ(t,at)?ae:we));
  if(*zb){

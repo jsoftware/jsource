@@ -102,8 +102,11 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fno-stack-pr
  -Wno-int-to-pointer-cast \
  -Wno-maybe-uninitialized \
  -Wno-missing-field-initializers \
+ -Wno-overflow \
  -Wno-parentheses \
  -Wno-pointer-sign \
+ -Wno-pointer-to-int-cast \
+ -Wno-shift-count-overflow \
  -Wno-shift-negative-value \
  -Wno-sign-compare \
  -Wno-type-limits \

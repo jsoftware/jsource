@@ -388,7 +388,7 @@ static __emu_inline __m128 _mm_blend_ps_SSE2( __m128 a, __m128 b, const int mask
 /** \SSE4_1{SSE2,_mm_blendv_epi8} */
 static __emu_inline __m128 _mm_blendv_ps_SSE2( __m128 a, __m128 b, __m128 mask )
 {
-    __m128 A, B, Mask;
+    __m128i A, B, Mask;
     A = _mm_castps_si128(a);
     B = _mm_castps_si128(b);
     Mask = _mm_castps_si128(mask);
@@ -492,8 +492,7 @@ static __emu_inline __m128i _mm_cmpeq_epi64_REF( __m128i a, __m128i b )
 static __emu_inline __m128 _mm_movehdup_ps_SSE2(__m128 a)
 {
     __m128 A;
-    A = a;
-    A = _mm_shuffle_epi32( _mm_castps_si128(A), _MM_SHUFFLE( 3, 3, 1, 1) );
+    A = _mm_castsi128_ps(_mm_shuffle_epi32( _mm_castps_si128(a), _MM_SHUFFLE( 3, 3, 1, 1) ));
     return A;
 }
 
@@ -501,8 +500,7 @@ static __emu_inline __m128 _mm_movehdup_ps_SSE2(__m128 a)
 static __emu_inline __m128 _mm_moveldup_ps_SSE2(__m128 a)
 {
     __m128 A;
-    A = a;
-    A = _mm_shuffle_epi32( _mm_castps_si128(A), _MM_SHUFFLE( 2, 2, 0, 0) );
+    A = _mm_castsi128_ps(_mm_shuffle_epi32( _mm_castps_si128(a), _MM_SHUFFLE( 2, 2, 0, 0) ));
     return A;
 }
 

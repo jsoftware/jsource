@@ -292,7 +292,7 @@ static __emu_inline __emu__m256i __emu_mm256_permute2x128_si256 (__emu__m256i a,
  return A.emu__m256i;
 }
 
-#if defined(__clang__)
+#if defined(__clang__) || defined( __GNUC__ )
 #define __emu_mm256_permute4x64_epi64( a, control) \
 ({                                                              \
    _mm256_castpd_si256(_mm256_permute4x64_pd(_mm256_castsi256_pd(a),control)); \

@@ -474,7 +474,7 @@ docase:
    tryinit(tdv+tdi,i,cw);
    // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
    // if debugging is already off, it stays off
-   if(unlikely(jt->uflags.us.cx.cx_c.db))jt->uflags.us.cx.cx_c.db=(nG0ysfctdl&16)&&(UC)(tdv+tdi)->d?JT(jt,dbuser):0;
+   if(unlikely(jt->uflags.us.cx.cx_c.db))jt->uflags.us.cx.cx_c.db=(nG0ysfctdl&16)&&(UC)(tdv+tdi)->d?JT(jt,dbuser)&0x1:0;
    ++tdi; ++i; nG0ysfctdl|=4;  // bump tdi pointer, set flag
    break;
   case CCATCH: case CCATCHD: case CCATCHT:

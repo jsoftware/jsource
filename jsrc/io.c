@@ -281,6 +281,8 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   jtwri((JS)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(b,m,k+s);  // process & return the line
  }
+
+//scaf C scafmsg[1000];sprintf(scafmsg,"gets: keybd read called with parm=%d, state=%d\n",*p,jt->recurstate);if(JJTOJ(jt)->smoutput){((outputtype)(JJTOJ(jt)->smoutput))(JJTOJ(jt),MTYOFM,scafmsg);}  // scaf
  /* J calls for input in 3 cases:
     debug suspension for normal input
     n : 0 input lines up to terminating )
@@ -296,9 +298,11 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  }else{
   ASSERT(IJT(jt,sminput),EVBREAK); 
   jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
+//scaf sprintf(scafmsg,"gets: calling sminput to get string\n");if(JJTOJ(jt)->smoutput){((outputtype)(JJTOJ(jt)->smoutput))(JJTOJ(jt),MTYOFM,scafmsg);}  // scaf
   v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
  jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
+//scaf sprintf(scafmsg,"gets: keybd read returning string=%s\n",v);if(JJTOJ(jt)->smoutput){((outputtype)(JJTOJ(jt)->smoutput))(JJTOJ(jt),MTYOFM,scafmsg);}  // scaf
  R inpl(b,(I)strlen(v),v);  // return A block for string
 }
 
@@ -457,6 +461,8 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
 int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;
  SETJTJM(jt,jt,jm)
+  // Normal output.  Call the output routine
+//scaf  C scafmsg[1000]; sprintf(scafmsg,"JDo: state=%d, sentence=%s\n",jm->recurstate,lp); if(JT(jt,smoutput)){((outputtype)(JT(jt,smoutput)))(jt,MTYOFM,scafmsg);}
  if(unlikely(jm->recurstate>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
@@ -471,6 +477,7 @@ int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstack
 #endif
  ++jm->recurstate;  // advance, to BUSY or RECUR state
  r=(int)jdo(jt,lp);
+//scaf sprintf(scafmsg,"JDo: returning from call to jdo(), state=%d, retcode=%d\n",jm->recurstate,r); if(JT(jt,smoutput)){((outputtype)(JT(jt,smoutput)))(jt,MTYOFM,scafmsg);}
  if(unlikely(--jm->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state
   // return from recursive call.  Restore stackpointers
   jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion

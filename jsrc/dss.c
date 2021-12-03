@@ -39,7 +39,8 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
   case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;  // rerun stop line, stop in calling function
   case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb, resume previous fn, stop before executing there
  }
- // Return a suspension-ending value
+ // Return a suspension-ending value.  Kludge we also set a flag to process the step because the labs can't route the value correctly
+ JT(jt,dbuser)|=DBSUSSS;  // indicate single-step pending
  A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }
 

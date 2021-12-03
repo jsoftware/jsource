@@ -106,7 +106,8 @@ static A jtsusp(J jt){A z;
  A *old=jt->tnextpushp;  // fence must be after we have allocated our stack block
  // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
- if(d&&!(JT(jt,dbuser)&0x80))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
+ if(d&&!(JT(jt,dbuser)&DBSUSFROMSCRIPT))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
+ JT(jt,dbuser)&=~DBSUSCLEAR;  // when we start a new suspension, wait for a new clear
  // Make sure we have a decent amount of stack space left to run sentences in suspension
 #if USECSTACK
  jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
@@ -121,19 +122,23 @@ static A jtsusp(J jt){A z;
   jt->jerr=0;
   if(jt->iepdo&&JT(jt,iep)){
    // if there is an immex latent expression (9!:27), execute it before prompting
-   jt->iepdo=0; z=immex(JT(jt,iep));  // reset requesy flag; run sentence & force typeout
+   jt->iepdo=0; z=immex(JT(jt,iep));  // reset request flag; run sentence & force typeout
+   if(JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS)break;  // dbr 0/1 forces end of suspension, as does single-step request
    if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }
   // Execute one sentence from the user
   if((inp=jgets("      "))==0){z=0; break;} inp=jtddtokens(jt,inp,1+(AN(jt->locsyms)>1)); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   // If the result came from a suspension-ending command, get out of suspension
+  // Kludge: 13 : 0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doen't properly route the result of these to the
+  // suspension result and we would lose them.  Fortunately they have no arguments
+  if(JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
   if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1
   tpop(old);  // if we don't need the result for the caller here, free up the space
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info
  // Reset stack
- if(JT(jt,dbuser)){
+ if(JT(jt,dbuser)&DB1){
 #if USECSTACK
   jt->cstackmin+=CSTACKSIZE/10;
 #else
@@ -168,7 +173,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  // Process the end-of-suspension.  There are several different ending actions
  // The end block is a list of boxes, where the first box, an integer atom, contains the operation type
  I susact;   // requested action
- if(!z||AN(z)==0)susact=SUSCLEAR;  // if error in suspension, exit debug mode; empty arg is always 13!:0
+ if(!z||AN(z)==0||JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS){susact=JT(jt,dbuser)&DBSUSSS?SUSSS:SUSCLEAR; JT(jt,dbuser)&=~(DBSUSCLEAR+DBSUSSS);}  // if error in suspension, exit debug mode; empty arg or DBSUSCLEAR is always 13!:0
  else susact=IAV(AAV(z)[0])[0];  // (0;0) {:: z
  switch(susact){
  case SUSRUN:  // rerun, possibly with changed arguments for tacit verb
@@ -247,10 +252,10 @@ A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B s;DC d;V*sv;
  R z;
 }    /* function call, debug version */
 
-F1(jtdbq){ASSERTMTV(w); R sc(JT(jt,dbuser));}
+F1(jtdbq){ASSERTMTV(w); R sc(JT(jt,dbuser)&~DBSUSCLEAR);}
      /* 13!:17 debug flag */
 
-// Suspension-ending commands.  These commands return a list of boxed flagged with the AFDEBUGRESULT flag.  The first box is always an integer atom and gives the type
+// Suspension-ending commands.  These commands return a list of boxes flagged with the AFDEBUGRESULT flag.  The first box is always an integer atom and gives the type
 // of exit (run, step, clear, etc).  Other boxes give values for the run and ret types.  EXCEPTION: 13!:0 returns i. 0 0 for compatibility, but still flagged as AFDEBUGRESULT
 F1(jtdbc){UC k;
  ARGCHK1(w);
@@ -268,7 +273,7 @@ F1(jtdbc){UC k;
 #endif
   jt->fcalln=NFCALL/(k?2:1);
  }
-
+ JT(jt,dbuser)|=DBSUSCLEAR;  // come out of suspension, whether value given or not
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

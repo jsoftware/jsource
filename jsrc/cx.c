@@ -335,9 +335,11 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  I4 bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error - can force to memory
  I4 ti;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
  while(1){
+  // **************** top of main dispatch loop ********************
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(unlikely(jt->uflags.us.cx.cx_us!=0)){  // fast check to see if we have overhead functions to perform
+   // here to handle debug jump, perf monitor, or any other unusual cases
    if(!(nG0ysfctdl&(16+1))&&jt->uflags.us.cx.cx_c.db){
     // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  Don't do it if locked.
     // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
@@ -377,7 +379,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;
   // process the control word according to its type
   I cwgroup;
-  // **************** top of main dispatch loop ********************
+  // **************** switch by line type ********************
   switch(((cwgroup=cw[i].ig.group[0])&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
 
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
@@ -1022,7 +1024,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
      if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what
      if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(AT(QCWORD(lvv[startx-1]))&VERB))break;  // : allowed only in u : v form
     }
-    if(startx>=0 && (AT(QCWORD(lvv[startx]))==LPAR)){
+    if(startx>=0 && (startx+2<rparx) && (AT(QCWORD(lvv[startx]))==LPAR)){  // ( ... ) but not () or ( word )
      // The ) was matched and the () can be processed.
      // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs
      I doublep = (rparx+1<endx) && (AT(QCWORD(lvv[rparx+1]))==RPAR) && (startx>0) && (AT(QCWORD(lvv[startx-1]))==LPAR);  // is (( ))?
@@ -1037,7 +1039,8 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
      }
      if(likely(jt->jerr==0)){
       // no error: parse the actual () block
-      A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1)); makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep|!!(AT(pfrag)&NOUN))<<AFDPARENX);  // if this came from (( )) or is a noun, mark such in the value
+      // mark the block as PPPP if it will need extra parens: (( )) or noun or non-noun & not invisible modifier, which always has ( ) added
+      A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1)); makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
       // Replace the () block with its parse, close up the sentence, zero the ending area
       lvv[startx]=QCINSTALLTYPE(pfrag,ATYPETOVALTYPE(AT(pfrag))); DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];) DP(rparx-startx, lvv[endx+i]=0;) 
       // Adjust the end pointer and the ) position

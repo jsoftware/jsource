@@ -97,9 +97,11 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  // if this is a noun from a (( )) block, we have to take its linear rep, since it might not be displayable in 1 line
  if(AFLAG(w)&AFDPAREN&&AT(w)&NOUN){
   // linear rep may fail, or parts of it may fail; so we must reset errors.  We set etxn neg to indicate that the error line is frozen
-  eputc('('); I se=jt->jerr; jt->jerr=0; I sn=jt->etxn; jt->etxn=-sn; w=lrep(w); jt->jerr=se; jt->etxn=sn; RZ(w); ep(AN(w),CAV(w)); eputc(')');  // out the lin rep
+  eputc('('); eputc('('); I se=jt->jerr; jt->jerr=0; I sn=jt->etxn; jt->etxn=-sn; w=lrep(w); jt->jerr=se; jt->etxn=sn; RZ(w); ep(AN(w),CAV(w)); eputc(')'); eputc(')');  // out the lin rep
   R 0;  // new nflag - none since we added )
  }
+ // If this is a PPPP, enclose it in ()
+ if(AFLAG(w)&AFDPAREN)eputc('(');  // leading ( of PPPP
  if(b&&(nflag&1))eputc(' ');
  switch(CTTZ(AT(w))){
  case B01X:
@@ -118,8 +120,9 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  case RPARX: eputc(')');              break;
  case ASGNX: dspell(CAV(w)[0],w,(nflag&1));       break;
  case MARKX:                          break;
- default:   dspell(FAV(w)->id,w,(nflag&1)|2);     break;  // if non-primitive, it might have had parens when created
+ default:   dspell(FAV(w)->id,w,(nflag&1)|(AFLAG(w)&AFDPAREN?0:2));     break;  // force parens on non-primitive if not PPPP
  }
+ if(AFLAG(w)&AFDPAREN)eputc(')');  // trailing ) of PPPP
  R b;  // new nflag
 }
 

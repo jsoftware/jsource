@@ -442,11 +442,9 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 
-#if !SY_64 && defined(__GNUC__)
-#if !__has_builtin(__builtin_add_overflow)
+#if !SY_64 && defined(__GNUC__) && !defined(__clang__)
+#if __GNUC__ < 5
 #define __builtin_add_overflow(a,b,c) ({int64_t s=(int64_t)(a)+(int64_t)(b); *(c)=(long)s; (s<INT_MIN||s>INT_MAX);})
-#endif
-#if !__has_builtin(__builtin_sub_overflow)
 #define __builtin_sub_overflow(a,b,c) ({int64_t s=(int64_t)(a)-(int64_t)(b); *(c)=(long)s; (s<INT_MIN||s>INT_MAX);})
 #endif
 #endif

@@ -26,6 +26,7 @@ g =: ;: '&+&.+&:^.@'
 0 _1 1  -: +`-`* @. ] etx i.3   NB. was rank error
 (1 1 $ 0)  -: +`-`* @. ] etx i.1 1   NB. was rank error
 
+4!:55 ;:'c1 c2 c3'
 ack=: c1`c1`c2`c3 @. (#.@(,&*)) " 0
 c1 =: >:@]                     NB. 1+y
 c2 =: <:@[ ack 1:              NB. (x-1) ack 1

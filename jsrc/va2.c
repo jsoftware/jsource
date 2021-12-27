@@ -1198,7 +1198,7 @@ DF2(jtatomic2){A z;
   // singleton.  we need the rank of the result
   ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf; af+=ar;   // set af to max len of frame, ar to max cell rank; then af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result
-  z=jtssingleton(jt,a,w,af+((I)FAV(self)->lc<<RANKTX)+(((I)jtinplace&3)<<24)+((3*(at>>INTX)+(wt>>INTX))<<26));  // create portmanteau parm reg
+  z=jtssingleton(jt,a,w,af+((I)FAV(self)->lc<<RANKTX)|(((I)jtinplace&3)<<24)|((3*(at>>INTX)+(wt>>INTX))<<26));  // create portmanteau parm reg
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code

@@ -450,6 +450,15 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 
+#if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 5)))
+/* needed by clang newer versions, no matter double_trick is inline asm or not */
+#define NOOPTIMIZE __attribute__((optnone))
+#elif __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 3))
+#define NOOPTIMIZE __attribute__((optimize("O0")))
+#else
+#define NOOPTIMIZE
+#endif
+
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */

@@ -36,8 +36,13 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 }
 
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
+
+#if !(defined(__aarch32__)||defined(__arm__)||defined(_M_ARM))
+#undef NOOPTIMIZE
+#define NOOPTIMIZE
+#endif
 // do singleton operation. ipcaserank bits 0-15=rank of result, 16-23=self->lc code for the operation (with comparisons flagged), 24-25=inplace bits, 26-29 types code
-A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
+A NOOPTIMIZE jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  z=0; I ac=AC(a); I wc=AC(w);
  // see if we can inplace an assignment.  That is always a good idea, though rare
  if(unlikely(((B)(a==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX)))&(B)1)+((B)(w==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))&(B)1))){

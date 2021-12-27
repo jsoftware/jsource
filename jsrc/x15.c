@@ -584,15 +584,6 @@ static void double_trick(double*v, I n){I i=0;
                   d[56],d[57],d[58],d[59],d[60],d[61],d[62],d[63]);break;  \
 }
 
-#if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 5)))
-/* needed by clang newer versions, no matter double_trick is inline asm or not */
-#define NOOPTIMIZE __attribute__((optnone))
-#elif __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 3))
-#define NOOPTIMIZE __attribute__((optimize("O0")))
-#else
-#define NOOPTIMIZE
-#endif
-
 static I     NOOPTIMIZE stdcalli(STDCALLI fp,I*d,I cnt,DoF*dd,I dcnt){I r;
  SWITCHCALL;
  R r;

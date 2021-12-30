@@ -554,12 +554,10 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g
  if(!((I)jtinplace&JTASSIGNSYMNON0)){
- // we don't have e, look it up & check NAMED
+ // we don't have e, look it up
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  // If the new value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
-  // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
-  // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
-  if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
+// obsolete   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
+  if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
  }
  // if we are writing to a non-local table, update the table's Bloom filter.
  if(unlikely((anmf&ARLOCALTABLE)==0)){BLOOMOR(g,BLOOMMASK(NAV(a)->hash));}

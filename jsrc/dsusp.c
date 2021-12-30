@@ -211,7 +211,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
-// parsex: parse an explicit defn line when the debugger is running
+// parsex: parse an explicit defn line when the debugger/pm is running
 /* w  - line to be parsed                           */
 /* lk - 1 iff locked function; _1 to signal noun error at beginning of sentence */
 /* ci - current row of control matrix               */
@@ -220,17 +220,18 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
 
 A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
  movesentencetosi(jt,queue,m,0);  // install sentence-to-be-executed for stop purposes
- if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
- else                      {z=PARSERVALUE(parsea(queue,m));     }
+ if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);
+ }else{  // cx adds a stack entry for PARSE, needed to get anonymous operators right
+  z=PARSERVALUE(parsea(queue,m));
+ }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
  // executed 13!:0]0, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
  if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
  R z;
 }
 
-A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B s;DC d;V*sv;
+A jtdbunquote(J jt,A a,A w,A self,DC d){A t,z;B s;V*sv;
  sv=FAV(self); t=sv->fgh[0]; 
- RZ(d=deba(DCCALL,a,w,self)); d->dcn=(I)stabent;
  if(CCOLON==sv->id&&(sv->flag&VXOP||t&&NOUN&AT(t))){  // : and executable body: either OP (adv/conj now with noun operands) or m : n
   ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
  }else{                              /* tacit    */
@@ -248,7 +249,7 @@ A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B s;DC d;V*sv;
   }
  }
  if(d->dcss)ssnext(d,d->dcss);  // if we step over/into on the last line of a function, we must stop on the next line of the caller
- debz();
+// obsolete  debz();
  R z;
 }    /* function call, debug version */
 

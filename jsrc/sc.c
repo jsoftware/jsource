@@ -143,11 +143,17 @@ valgone: ;
   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
  } else {
   // Extra processing is required.  Check each option individually
+  DC d=0;  // pointer to debug stack frame, if one is allocated
+  if(jt->uflags.us.cx.cx_us){  // debug or pm
+   // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
+   RZ(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs)); d->dcn=(I)(flgd0cp&3?0:stabent);   // save last sym lookup as debug parm if it is valid (not cached or pseudoname)
+  }
+
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cp&8?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
   if(!(flgd0cp&1) && jt->uflags.us.uq.uq_c.bstkreqd && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
   if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
-   z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,flgd0cp&3?0:stabent);  // if debugging, go do that.  save last sym lookup as debug parm if it is valid (not cached or pseudoname)
+   z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,d);  // if debugging, go do that. 
   }else{
    if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
    A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
@@ -155,6 +161,7 @@ valgone: ;
   }
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cp&8?VAL2:VAL1);  // record the return from call
   if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
+  if(d)debz();  // release stack frame if allocated
  }
 #if !USECSTACK
  FDEPDEC(d);
@@ -279,7 +286,7 @@ F2(jtnamerefop){V*v;
 }    
 
 /* namerefop() is used by explicit defined operators when: */
-/* - debug is on                                           */
+// - debug is on or PM is on
 /* - operator arguments have been supplied                 */
 /* - function arguments have not yet been supplied         */
 // w is an anonymous entity that we want to give the name a to for debug purposes

@@ -283,7 +283,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
 
 
 
-// Run parser, creating a new debug frame.  Explicit defs, which make other tests first, then go through jtparsea
+// Run parser, creating a new debug frame.  Explicit defs, which make other tests first, go through jtparsea except during debug/pm
 // the result has bit 0 set if final assignment
 // JT flags indicate whether call comes from ".
 F1(jtparse){F1PREFIP;A z;

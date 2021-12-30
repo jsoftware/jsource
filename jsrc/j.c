@@ -57,7 +57,7 @@ I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1
 __attribute__((aligned(CACHELINESIZE))) I Bnum[22][8*(2-SY_64)] = {  // the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
 CBAIVAL(INT,0), CBAIVAL(INT,1),
 CBAIVAL(INT,-10), CBAIVAL(INT,-9), CBAIVAL(INT,-8), CBAIVAL(INT,-7), CBAIVAL(INT,-6), CBAIVAL(INT,-5), CBAIVAL(INT,-4), CBAIVAL(INT,-3), CBAIVAL(INT,-2), CBAIVAL(INT,-1), 
-CBAIVAL(B01,0), CBAIVAL(B01,1),
+CBAIVAL(B01,0), CBAIVAL(B01,1),  // these values must be padded with 0 so they can be used as an INT
 CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), CBAIVAL(INT,7), CBAIVAL(INT,8), CBAIVAL(INT,9)
 };
 

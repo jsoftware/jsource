@@ -89,7 +89,7 @@ s=: pmstats ''
 t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) pmunpack ''
 
 4 = type s
-(dbq'')+. 2 >: +/ 100 100 100 1 100 100 * | s - 0 0 200,(200<.3+2*n),(200<:3+2*n),0   NB. 3 not 4: the first EXIT record is not emitted.  Allow leeway in case we get into slow-name path
+(dbq'')+. 2 >: +/ 100 100 100 1 100 100 * | s - 0 0 200,(200<.3+2*n),(200<:3+2*n),0   NB. Verify # lines emitted, 5 per call.  3 not 4: the first EXIT record is not emitted.  Allow leeway in case we get into slow-name path
 
 f=: 4 : 0
  if. dbq'' do. 1 return. end.  NB. skip if Debug
@@ -193,6 +193,50 @@ m=: sp ''
 
 100 > (sp '') - m
 
+NB. Test monad/dyad
+
+f=:{{
+b=. x + y
+b * y
+}}
+
+1: 1 1 (6!:10) 2000$' '
+1: 6!:12 ] 1
+1: 1 f 2
+((4$0);(4$1);(4$2);_1 0 1 _2(;<);:'f base') -: 0 1 2 3 6 { 6!:11''
+
+
+f=:{{
+1 f y
+:
+b=. x + y
+}}
+
+1: 1 1 (6!:10) 2000$' '
+1: 6!:12 ] 1
+1: f 2
+((6$0);(6$1);1 1 2 2 2 1;_1 0 _1 0 _2 _2(;<);:'f base') -: 0 1 2 3 6 { 6!:11''
+
+
+
+
+NB. Test sampling in explicit operators
+xop=.{{
+y=.y+1
+u v y
+}}
+tv=.{{
+{{>: y}} y  NB. anonymous
++ xop - y
+1
+}}
+
+1: 1 1 (6!:10) 2000$' '
+1: 6!:12 ] 1
+tv"0 [ 5 6
+(0 0 1 0 2 2 2 2 2 2 0 0 0 0 1 0 2 2 2 2 2 2 0 0;(24#3);1 1 1 1 2 2 1 1 1 1 1 1 1 1 1 1 2 2 1 1 1 1 1 1;_1 0 0 1 _1 _2 _1 0 1 _2 2 _2 _1 0 0 1 _1 _2 _1 0 1 _2 2 _2(;<)'tv';'';'xop';'base') -: 0 1 2 3 6 { 6!:11''
+
+
 0 -: pmdata ''
 
 'domain error' -: pmdata etx 1 0 1
@@ -246,6 +290,6 @@ m=: sp ''
 
 4!:55 ;:'avg bhdr bpe dl f m n '
 4!:55 ;:'pmctr pmdata pmstats pmunpack qpc qpf '
-4!:55 ;:'s sp sum_z_ t time ts tss x xx '
+4!:55 ;:'s sp sum_z_ t time ts tss tv x xop xx '
 
 

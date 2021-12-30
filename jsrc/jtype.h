@@ -1005,7 +1005,8 @@ typedef struct {
 #define VCEIL           (I)0x4000       /* function is >.@g                */
 #define VMOD            (I)0x8000        /* function is m&|@g               */
 #define VLOCK           (I)0x10000        /* function is locked              */
-#define VNAMED          (I)0x20000       /* named explicit defn             */
+// bit 17 free
+// obsolete #define VNAMED          (I)0x20000       /* named explicit defn         */
 #define VFIX            (I)0x40000       /* f. applied                      */
 #define VXOPRX          19
 #define VXOPR           ((I)1<<VXOPRX)       /* : defn with u. and x.           */

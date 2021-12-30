@@ -358,19 +358,33 @@ void mvc(I m,void*z,I n,void*w){
    }
    if(unlikely((m&=-SZI)==0))R; --m;  // account for bytes moved; return if we have moved all; keep m as count-1
   }
-  /* store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */
+  // store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do
   UI n2=DUFFLPCT(m>>LGSZI,2);  /* # turns through duff loop */
   if(n2>0){
    UI backoff=DUFFBACKOFF(m>>LGSZI,2);
    z=(C*)z+(backoff+1)*NPAR*SZI;
-   switch(backoff){
-   do{ ;
-   case -1: _mm256_storeu_si256((__m256i*)z,wd);
-   case -2: _mm256_storeu_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
-   case -3: _mm256_storeu_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
-   case -4: _mm256_storeu_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
-   z=(C*)z+4*NPAR*SZI;
-   }while(--n2>0);
+   if(likely(m<L3CACHESIZE)){
+    // Normal case: not a huge copy
+    switch(backoff){
+    do{ ;
+    case -1: _mm256_storeu_si256((__m256i*)z,wd);
+    case -2: _mm256_storeu_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
+    case -3: _mm256_storeu_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
+    case -4: _mm256_storeu_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
+    z=(C*)z+4*NPAR*SZI;
+    }while(--n2>0);
+    }
+   }else{
+   // The copy length is bigger than L3 cache: use non-temporal stores to avoid excessive cache traffic
+    switch(backoff){
+    do{ ;
+    case -1: _mm256_stream_si256((__m256i*)z,wd);
+    case -2: _mm256_stream_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
+    case -3: _mm256_stream_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
+    case -4: _mm256_stream_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
+    z=(C*)z+4*NPAR*SZI;
+    }while(--n2>0);
+    }
    }
   }
   // copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc

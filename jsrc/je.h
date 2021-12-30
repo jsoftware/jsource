@@ -600,7 +600,7 @@ extern DF2(jtbitwisechar);
 extern DF2(jtcharfn2);
 extern DF2(jtdeadband);
 extern DF2(jtunquote);
-extern A jtdbunquote(J,A,A,A,L*);
+extern A jtdbunquote(J,A,A,A,DC);
 extern DF2(jtdfs2);
 extern DF2(jteachl);
 extern DF2(jteachr);

@@ -97,7 +97,7 @@ AHDR2(name,B,D,D){ \
  if(jt->cct!=1.0){ \
   cct=_mm256_broadcast_sd(&jt->cct); \
   if(n-1==0){ \
-   /* vector-to-vector, no repetitions */ \
+   /* vector op vector, no repetitions */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    DQ((m-1)>>LGNPAR, \
      u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
@@ -112,7 +112,8 @@ AHDR2(name,B,D,D){ \
    STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
   }else{ \
    if(n-1<0){n=~n; \
-    /* atom+vector */ \
+    /* atom op vector */ \
+    if(m==1 && *x==0.0)goto name##av0;  /* if comparing against 0, switch to intolerant */ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m, u=_mm256_broadcast_sd(x); ++x; \
       ctop=_mm256_mul_pd(u,cct); \
@@ -128,7 +129,8 @@ AHDR2(name,B,D,D){ \
       STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
       y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
    }else{ \
-    /* vector+atom */ \
+    /* vector op atom */ \
+    if(m==1 && *y==0.0)goto name##va0;  /* if comparing against 0, switch to intolerant */ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m, v=_mm256_broadcast_sd(y); ++y; \
       ctop=_mm256_mul_pd(v,cct); \
@@ -147,7 +149,7 @@ AHDR2(name,B,D,D){ \
   } \
  }else{ \
   if(n-1==0){ \
-   /* vector-to-vector, no repetitions */ \
+   /* vector op!.0 vector, no repetitions */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    DQ((m-1)>>LGNPAR, \
      u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
@@ -160,7 +162,7 @@ AHDR2(name,B,D,D){ \
    STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
   }else{ \
    if(n-1<0){n=~n; \
-    /* atom+vector */ \
+    name##av0: /* atom op!.0 vector */ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m,; u=_mm256_broadcast_sd(x); ++x; \
       DQ((n-1)>>LGNPAR, \
@@ -173,7 +175,7 @@ AHDR2(name,B,D,D){ \
       STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
       y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
    }else{ \
-    /* vector+atom */ \
+    name##va0: /* vector op!.0atom */ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m, v=_mm256_broadcast_sd(y); ++y; \
       DQ((n-1)>>LGNPAR, \

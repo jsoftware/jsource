@@ -219,6 +219,7 @@ typedef struct JSTstruct {
  C baselocale[4];    // will be "base"
  UI4 baselocalehash;   // name hash for base locale
  A zpath;    // path 'z', used for all initial paths
+ I cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores
 // end of cache line 1
  A sbu;              /* SB data for each unique symbol                  */
  A p4792;            // pointer to p: i. 4792, filled in on first use

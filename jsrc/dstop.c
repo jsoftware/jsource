@@ -42,8 +42,8 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  }
  // if no single-step stop, try looking the line up in the stops table
  if(i==d->dcstop){d->dcstop=-2; R 0;}     /* not stopping if already stopped at the same place */
- if(!(JT(jt,dbstops)))R 0; s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);
- a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1; 
+ if(!(JT(jt,dbstops)))R 0; s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);  // s->stop strings, nw=character form of line#
+ a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1;   // t->name we are looking for, n=its length, md=valence of call
  NOUNROLL while(s){
   NOUNROLL while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
   u=strchr(s,'*'); v=strchr(s,' '); if(!v)break;; 

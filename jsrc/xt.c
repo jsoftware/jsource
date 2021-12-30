@@ -272,7 +272,7 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
 // Add an entry to the Performance Monitor area
 // name and loc are A blocks for the name and current locale
 // lc is the line number being executed, or _1 for start function, _2 for end function
-// val is the PM counter
+// val is the valence
 void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
  u=(PM0*)CAV1(JT(jt,pma));  // u-> pm control area
  v=(PM*)(CAV1(JT(jt,pma))+sizeof(PM0))+u->i;  // v -> next PM slot to fill
@@ -282,8 +282,8 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
   // reset next pointer to 0 (if not trunc) or stay pegged at then end (if trunc).  Trunc comes from the original x to start_jpm_
  v->name=name; if(name)ras(name);  // move name/loc; incr use counts
  v->loc =loc;  if(loc )ras(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts, freeing
- v->val =val;  // Save the NSI data
- v->lc  =lc;
+ v->val =val;  // Save valence
+ v->lc  =lc;  // save line#/start/stop
  v->s=jt->bytesmax-u->s;
  u->s=jt->bytesmax=jt->bytes;
 #if SY_WIN32
@@ -293,7 +293,7 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
 #endif
 }
 
-// 6!:12
+// 6!:11
 F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
  ARGCHK1(w);
  ASSERT(JT(jt,pma),EVDOMAIN);

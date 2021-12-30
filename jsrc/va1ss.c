@@ -15,7 +15,12 @@
 
 #define SSINGENC(type) ((type)>>INTX)
 #define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
-A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
+
+#if !(defined(__aarch32__)||defined(__arm__)||defined(_M_ARM))
+#undef NOOPTIMIZE
+#define NOOPTIMIZE
+#endif
+A NOOPTIMIZE jtssingleton1(J jt, A w,I caseno){A z;void *zv;
  F2PREFIP;
  I ar=AR(w);
  // Calculate inplaceability

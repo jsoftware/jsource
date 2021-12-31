@@ -6,7 +6,8 @@
 #ifdef _WIN32
  #include <windows.h>
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
- #define JDLLNAME "j.dll"
+ #define JDLLNAME "j"
+ #define JDLLEXT ".dll"
  #define filesep '\\'
  #define filesepx "\\"
  #ifdef MMSC_VER
@@ -19,12 +20,13 @@
  #define _stdcall
  #define filesep '/'
  #define filesepx "/"
- #ifdef __MACH__
+ #define JDLLNAME "libj"
+ #ifdef __APPLE__
   extern int _NSGetExecutablePath(char*, int*);
-  #define JDLLNAME "libj.dylib"
+  #define JDLLEXT ".dylib"
  #else
   #include <sys/utsname.h>
-  #define JDLLNAME "libj.so"
+  #define JDLLEXT ".so"
  #endif
 #endif
 #include "j.h"
@@ -132,6 +134,7 @@ void jepath(char* arg,char* lib)
  strcpy(pathdll,path);
  strcat(pathdll,"/lib/");
  strcat(pathdll,JDLLNAME);
+ strcat(pathdll,JDLLEXT);
  if(stat(path,&st)){ /* android 5 or newer */
  strcpy(path,"/data/user/0/");
  strcat(path,AndroidPackage);
@@ -149,19 +152,19 @@ void jepath(char* arg,char* lib)
  int i;
  for(i=0;i<20;i++){
   if(i)
-   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s",AndroidPackage,i,arch,JDLLNAME);
+   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s.%s",AndroidPackage,i,arch,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/data/app/%s/lib/%s/%s",AndroidPackage,arch,JDLLNAME);
+   sprintf(pathdll,"/data/app/%s/lib/%s/%s.%s",AndroidPackage,arch,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
   if(i)
-   sprintf(pathdll,"/data/app-lib/%s-%d/%s",AndroidPackage,i,JDLLNAME);
+   sprintf(pathdll,"/data/app-lib/%s-%d/%s.%s",AndroidPackage,i,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/data/app-lib/%s/%s",AndroidPackage,JDLLNAME);
+   sprintf(pathdll,"/data/app-lib/%s/%s.%s",AndroidPackage,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
   if(i)
-   sprintf(pathdll,"/mnt/asec/%s-%d/lib/%s",AndroidPackage,i,JDLLNAME);
+   sprintf(pathdll,"/mnt/asec/%s-%d/lib/%s.%s",AndroidPackage,i,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/mnt/asec/%s/lib/%s",AndroidPackage,JDLLNAME);
+   sprintf(pathdll,"/mnt/asec/%s/lib/%s.%s",AndroidPackage,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
  }
  }
@@ -188,7 +191,7 @@ void jepath(char* arg,char* lib)
  // fprintf(stderr,"arg0 %s\n",arg);
  // try host dependent way to get path to executable
  // use arg if they fail (arg command in PATH won't work)
-#ifdef __MACH__ 
+#ifdef __APPLE__ 
  n=_NSGetExecutablePath(arg2,&len);
  if(0!=n) strcat(arg2,arg);
 #else
@@ -237,6 +240,7 @@ void jepath(char* arg,char* lib)
  strcpy(pathdll,path);
  strcat(pathdll,filesepx);
  strcat(pathdll,JDLLNAME);
+ strcat(pathdll,JDLLEXT);
 #ifdef ANDROID
  if(stat(pathdll,&st))strcpy(pathdll,tmp);
 #endif
@@ -260,8 +264,15 @@ void jepath(char* arg,char* lib)
   jdllver[1]='.';
   strcat(jdllver+2,_jdllver+1);
   strcpy(pathdll,JDLLNAME);
+#if defined(__APPLE__)
   strcat(pathdll,".");
   strcat(pathdll,jdllver);
+  strcat(pathdll,JDLLEXT);
+#else
+  strcat(pathdll,JDLLEXT);
+  strcat(pathdll,".");
+  strcat(pathdll,jdllver);
+#endif
  }
  }
 #endif
@@ -351,7 +362,7 @@ int jefirst(int type,char* arg)
 #endif
 #if defined(_WIN32)
 	strcat(input,"[UNAME_z_=:'Win'");
-#elif defined(__MACH__)
+#elif defined(__APPLE__)
 	strcat(input,"[UNAME_z_=:'Darwin'");
 #elif defined(__OpenBSD__)
  strcat(input,"[UNAME_z_=:'OpenBSD'");

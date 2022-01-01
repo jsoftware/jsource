@@ -8,7 +8,8 @@ testres=: 'test',os,'.txt'
 
 0!:0 <testpath,'tsu.ijs'
 
-RES=: RUN ddall -. < testpath
+NB. RES=: RUN ddall
+RES=: RUN ddall -. < testpath,'gstack.ijs'
 
 3 : 0''
 msg=. 9!:14''

@@ -37,12 +37,8 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 
-#if !(defined(__aarch32__)||defined(__arm__)||defined(_M_ARM))
-#undef NOOPTIMIZE
-#define NOOPTIMIZE
-#endif
 // do singleton operation. ipcaserank bits 0-15=rank of result, 16-23=self->lc code for the operation (with comparisons flagged), 24-25=inplace bits, 26-29 types code
-A NOOPTIMIZE jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
+A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  z=0; I ac=AC(a); I wc=AC(w);
  // see if we can inplace an assignment.  That is always a good idea, though rare
  if(unlikely(((B)(a==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX)))&(B)1)+((B)(w==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))&(B)1))){
@@ -64,7 +60,13 @@ getzv:;  // here when we are operating inplace on z
 nozv:;  // here when we have zv or don't need it
  // z is 0 ONLY for comparisons with no rank.
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
- aiv=IAV(a)[0]; I wiv=IAV(w)[0],ziv; D adv=DAV(a)[0],wdv=DAV(w)[0],zdv;
+ aiv=IAV(a)[0]; I wiv=IAV(w)[0],ziv;
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
+ volatile D adv=DAV(a)[0],wdv=DAV(w)[0];   // avoid bus error
+#else
+ D adv=DAV(a)[0],wdv=DAV(w)[0];
+#endif
+ D zdv;
    // fetch args before the case breaks the pipe
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
  I caseno=((ipcaserank>>RANKTX)&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;

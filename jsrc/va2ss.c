@@ -62,7 +62,11 @@ nozv:;  // here when we have zv or don't need it
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  aiv=IAV(a)[0]; I wiv=IAV(w)[0],ziv;
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
- volatile D adv=DAV(a)[0],wdv=DAV(w)[0];   // avoid bus error
+ D adv,wdv;
+ memcpy(&adv,DAV(a),4);
+ memcpy(4+(char*)&adv,4+(char*)DAV(a),4);   // avoid bus error
+ memcpy(&wdv,DAV(w),4);
+ memcpy(4+(char*)&wdv,4+(char*)DAV(w),4);   // avoid bus error
 #else
  D adv=DAV(a)[0],wdv=DAV(w)[0];
 #endif

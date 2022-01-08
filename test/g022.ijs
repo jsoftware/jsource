@@ -1,6 +1,8 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g022.ijs'
 NB. >:y -----------------------------------------------------------------
 
+1 2 -: >:@| 0 1   NB. smoke test, 32-bit arm crash on unaligned access of 8-byte double
+
 (>: -: 1&+) 1=?2 3 4$2
 (>: -: 1&+) _1e9+?2 3 4$2e9
 (>: -: 1&+) o._1e9+?2 3 4$2e9

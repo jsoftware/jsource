@@ -1108,7 +1108,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
 #define GATVS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
- if(SY_64){ASSERT((((I)(atoms)>>(SY_64?(TOOMANYATOMSX-RANKTX):0))|(I)(rank))<=RMAX,EVLIMIT)} \
+ if(SY_64){ASSERT((((I)(atoms)>>(SY_64?(TOOMANYATOMSX-RANKTX):0))|(I)(rank))<=RMAX,EVLIMIT)} /* SY_64? to avoid 32-bit compile error */\
  else{ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)} \
  HISTOCALL \
  name = jtgafv(jt, bytes);   \

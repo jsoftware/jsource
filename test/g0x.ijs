@@ -1,6 +1,9 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g0x.ijs'
 NB. 0!: -----------------------------------------------------------------
 
+'domain error' -: ". etx 'undefname!:4'
+'domain error' -: ". etx '4!:undefname!:'
+
 sc00 =: 0!:0
 
 lf      =: 10{a.

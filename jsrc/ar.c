@@ -588,20 +588,23 @@ static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m
 }    /* f/"r w for sparse vector w */
 
 DF1(jtredravel){A f,x,z;I n;P*wp;
- F1PREFIP;
+ F1PREFIP;PROLOG(0000);
  ARGCHK1(w);
  f=FAV(self)->fgh[0];  // f/
- if(likely(!ISSPARSE(AT(w))))R reduce(jtravel(jtinplace,w),f);
- // The rest is sparse
- wp=PAV(w); x=SPA(wp,x); n=AN(x);
- I rc=EVOK;
- while(1){  // Loop to handle restart on overflow
-  VARPS adocv; varps(adocv,f,AT(x),0);
-  ASSERT(adocv.f,EVNONCE);
-  GA00(z,rtype(adocv.cv),1,0);
-  if(n){rc=((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);}  // mustn't adocv on empty
-  rc&=255; if(rc)jsignal(rc); if(rc<EWOV){if(rc)R0; R redsp1a(FAV(FAV(f)->fgh[0])->id,z,SPA(wp,e),n,AR(w),AS(w));}  // since f has an insert fn, its id must be OK
+ if(likely(!ISSPARSE(AT(w)))){RZ(z=reduce(jtravel(jtinplace,w),f));
+ }else{
+  // The rest is sparse
+  wp=PAV(w); x=SPA(wp,x); n=AN(x);
+  I rc=EVOK;
+  while(1){  // Loop to handle restart on overflow
+   VARPS adocv; varps(adocv,f,AT(x),0);
+   ASSERT(adocv.f,EVNONCE);
+   GA00(z,rtype(adocv.cv),1,0);
+   if(n){rc=((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);}  // mustn't adocv on empty
+   rc&=255; if(rc)jsignal(rc); if(rc<EWOV){if(rc)R0; RZ(z=redsp1a(FAV(FAV(f)->fgh[0])->id,z,SPA(wp,e),n,AR(w),AS(w))); break;}  // since f has an insert fn, its id must be OK
+  }
  }
+ EPILOG(z);
 }  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;

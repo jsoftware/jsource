@@ -14,15 +14,15 @@ static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=in
 static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y,z;C c;
  fs=si->dcf;
  GATV0(q,BOX,si->dcx&&si->dcy?2:1,1); qv=AAV(q);  // allo place to store arg list
- if(si->dcx)*qv++=incorp(dfrep(si->dcx));   // fill in x if any
- if(si->dcy)*qv++=incorp(dfrep(si->dcy));  // fill in y if any
- *zv++=incorp(sfn(0,si->dca));                     /* 0 name                     */
- *zv++=incorp(sc(si->dcj));                        /* 1 error number             */
- *zv++=incorp(sc(lnumsi(si)));                     /* 2 line number              */
+ if(si->dcx)RZ(*qv++=incorp(dfrep(si->dcx)));   // fill in x if any
+ if(si->dcy)RZ(*qv++=incorp(dfrep(si->dcy)));  // fill in y if any
+ RZ(*zv++=incorp(sfn(0,si->dca)));                     /* 0 name                     */
+ RZ(*zv++=incorp(sc(si->dcj)));                        /* 1 error number             */
+ RZ(*zv++=incorp(sc(lnumsi(si))));                     /* 2 line number              */
  *zv++=num(ADV&AT(fs)?1:CONJ&AT(fs)?2:3);  /* 3 name class               */
- *zv++=incorp(lrep(fs));                           /* 4 linear rep.              */
+ RZ(*zv++=incorp(lrep(fs)));                           /* 4 linear rep.              */
  *zv++=0;                                  /* 5 script name, filled in later              */
- *zv++=incorp(q);                                  /* 6 argument list            */
+ RZ(*zv++=incorp(q));                                  /* 6 argument list            */
  if(si->dcloc){RZ(y=dloc(si->dcloc)); RZ(*zv++=incorp(grade2(y,ope(IRS1(y,0L,1L,jthead,z)))));}
  else         RZ(*zv++=incorp(iota(v2(0L,2L))));   /* 7 locals                   */  // empty so cannot be readonly
  c=si->dcsusp||s0&&DCPARSE==s0->dctype&&s0->dcsusp?'*':' ';

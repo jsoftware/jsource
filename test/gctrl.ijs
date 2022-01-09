@@ -67,7 +67,7 @@ test 'whilst. 1 do. 2 else. 3 end.'
 
 
 NB. Direct definition {{ }} ----------------------------------------------------------------------
-NB. Note SP added after {{
+NB. Note SP added after {{ and }}
 f0=. 3 : 0
 NB.
 ; {{
@@ -77,7 +77,7 @@ NB.
 (r =: '3 : 0' , LF , 0 : 0 , ')') -:5!:5<'f0'
 NB.
 ; {{   '<', (|. y), '>'
- }} &.> |. 'one'; 'two'; 'three'
+ }}  &.> |. 'one'; 'two'; 'three'
 )
 
 f0=. {{     NB. empty first line
@@ -105,9 +105,13 @@ r =: {{ u
 NB. {{ }} in single-line defs
 f0 =. 3 : ' 5 {{ x + y }} y'
 'control error' -: ". etx '3 : '' 5 {{ x + y y'''
-'3 : ''5 {{ x + y }} y''' -: 5!:5 <'f0'
+'3 : ''5 {{ x + y }}  y''' -: 5!:5 <'f0'
 0!:0 'f1 =. ',5!:5 <'f0'
-'3 : ''5 {{ x + y }} y''' -: 5!:5 <'f1'
+'3 : ''5 {{ x + y }}   y''' -: 5!:5 <'f1'
+
+NB. verb DD followed by noun DD
+(' ') -: {{y}} {{)n }}
+(' a') -: {{y}} {{)n }} , 'a'
 
 NB. Nameref caching  -------------------------------------------------------------------------------
 NB. names are cached

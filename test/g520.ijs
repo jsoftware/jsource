@@ -1,4 +1,85 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g520.ijs'
+
+NB. 128!:9  g;i;v;M ---------------------------------------------------------
+{{)v
+M =. 0. + =/~ i. 6
+assert. 1 0 0 0 0 0 -: (128!:9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M
+assert. 0 0 1 0 0 0 -: (128!:9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M
+assert. 1 2 0 0 0 0 -: (128!:9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M
+assert. 0 0 1 2 0 3 -: (128!:9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M
+NB. Test every different length.  Different size of M are not so important
+for_l. >:  i. 50 do.
+  for_j. 4$0 do.
+    'r c' =. $M =. _0.5 + (2 # l+?20)?@$ 0
+    ix =. l ? c  NB. indexes
+    v =. l ?@$ 0  NB. vector values
+    ref =. (ix{"1 M) +/@:*"1 v
+    assert. ref -:!.1e_11 (128!:9) (c);(,."1 (_2) ]\ 0 , #ix);ix;v;M
+  end.
+end.
+bk =. _2 1 3 1e_8
+M =. |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
+cons=.1e_11 1e_6 0.0 0 1. 1.0  NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby
+Frow=. _4 _3 _2 _1. 0.
+bkg=.i.#M
+NB. Test DIP mode - on identity cols
+assert. 0 0 1 4 12 _4 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 13 _4 -: (128!:9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 13 _4 -: (128!:9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 1 3 1 1 4 0 -: (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. dangerous pivot
+assert. 5 -: (128!:9) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. no columns
+bkg=.i.-#M
+assert. 0 0 1 4 14 _4 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 16 _4 -: (128!:9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 11 _4 -: (128!:9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 16 _4 -: (128!:9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 1 3 1 1 4 0 -: (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. dangerous pivot
+NB. row cutoff
+M =. |: _4 ]\ 0. 1 3 0  0 2 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
+assert. 0 0 1 4 14 _4 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 16 _4 -: (128!:9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 11 _4 -: (128!:9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 13 _4 -: (128!:9) 2 1 0 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+NB. col cutoff
+M=. 4 4 $ 1.  NB. every ele is valid
+bkg=.i.#M
+bk =. 1. 2 2 2  NB. the pivot is the first row
+Frow=. _1 _1.1 _1.5 _2 0  NB. improvements are _1 _1.1 _3 _4
+assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
+assert. 0 3 0 5 17 _2 -: (128!:9) 0 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
+assert. 0 3 0 4 13 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.2;bk;Frow
+assert. 0 3 0 4 13 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.24 1 1.2;bk;Frow
+assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 1 1.2;bk;Frow
+assert. 0 3 0 5 14 _2 -: (128!:9) 0 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 1 1.2;bk;Frow  NB. cut off in cols 1 2
+assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.51 1 1.2;bk;Frow  NB. col 1 fully evaluated
+assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 0.26 1.0;bk;Frow
+assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0.26 1.0;bk;Frow
+assert. 0 2 0 3 12 _1.5 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0.51 1.0;bk;Frow
+assert. 0 0 0 1 4 _1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0 1.2;bk;Frow  NB. stop after first col
+M=.4 4 $!.0 ] 1e_8 1 1 1  NB. first row is pivot; first col is dangerous
+assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0 1.2;bk;Frow  NB. don't stop on dangerous first col
+NB. bk thresh
+M=. 4 4 $ 1.
+bk=. 1e_1 1e_2 1 1
+assert. 2 0 0 4 4 0 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.5 0 1 1.0;bk;Frow
+assert. 2 0 0 4 8 0 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.05 0 1 1.0;bk;Frow
+assert. 0 3 1 4 16 _0.02 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.005 0 1 1.0;bk;Frow
+NB. unbounded
+M =. |: _3 ]\ 0. 0 0 1 1 1 0 0 0   NB. input by columns
+bk =. 1. 2 2  NB. the first row on each col is the pivot
+bkg=.i.#M
+Frow=. _1 _1.1 _1.5 0  NB. improvements
+assert. 3 0 -: (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
+assert. 3 2 -: (128!:9) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
+NB. stall
+bk =. 0. 0 0  NB. no improving pivots
+M =. |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns
+assert. 2 0 0 3 3 0 -: (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
+
+1
+}}^:(1 e. 'avx2' E. 9!:14'') 1
+
+
 NB. {y ------------------------------------------------------------------
 
 randuni''
@@ -987,72 +1068,6 @@ abcdefghijabcdefghijabcdefghij001 -: 6
 abcdefghijabcdefghijabcdefghij0000 -: 7
 abcdefghijabcdefghijabcdefghij0001 -: 8
 
-
-NB. 128!:9  g;i;v;M ---------------------------------------------------------
-{{)v
-M =. 0. + =/~ i. 6
-assert. 2 3 0 0 0 0 -: (128!:9) 1;0 1;2 3;M 
-assert. 0 0 1 0 0 0 -: (128!:9) 1;2;'';M 
-assert. 0 0 0 0 1 0 -: (128!:9) 1;4;'';M 
-assert. 2 _3 0 0 0 0 -: (128!:9) 1;0 1;2 _3;M 
-assert. _2 _3 0 0 0 0 -: (128!:9) 1;0 1;_2. _3;M 
-assert. 0 0 0 0 0 0 -: (128!:9) 1;($0);($0);M 
-assert. (0$0) -: (128!:9) 1;0 1;_2. _3;i. 0 6 
-NB. Test every different length.  Different size of M are not so important
-for_l. >:  i. 50 do.
-  for_j. 4$0 do.
-    'r c' =. $M =. _0.5 + ((?16),l+?20)?@$ 0
-    ix =. l ? c  NB. indexes
-    v =. l ?@$ 0  NB. vector values
-    ref =. (ix{"1 M) +/@:*"1 v
-    assert. ref -:!.1e_11 (128!:9) 1;ix;v;M
-  end.
-end.
-M =. 0. + =/~ i. 6
-NB. Test DIP mode - first on identity cols
-assert. _1. 2 -: (128!:9) (1.0$~#M);2;'';M;1e_11 1e_6;0.0;_1.  NB. good pivot
-assert. 1 -: (128!:9) (-1.0$~#M);2;'';M;1e_11 1e_6;0.0;_1.  NB. col>ColThresh bk<0 - abort
-assert. 2 -: (128!:9) (1.0$~#M);2;'';M;1e_11 1e_6;_1.0;_0.0001  NB. insuff improvement - abort
-assert. 3 -: (128!:9) (1.0$~#M);2;'';M;2. 2;0.0;_1.  NB. no pos pivots - unbounded
-assert. 4 -: (128!:9) (1.0$~#M);2;'';M;1e_11 2;0.0;_1.  NB. pos pivot but too small - reject as dangerous
-assert. 5 -: (128!:9) (0$1.0);2;'';(0. + =/~ i. 0);1e_11 2;0.0;_1.  NB. empty problem
-NB. Test DIP mode - first on identity cols
-M =. 0 5 4 3 2 1 {"1 (0.) + =/~ i. 6
-assert. T =: _1. 4 -: tt  =: (128!:9) (1.0$~#M);2;'';M;1e_11 1e_6;0.0;_1.  NB. good pivot
-assert. 1 -: (128!:9) (1. 1 1 1 _1 1);2;'';(1 (<2 1)} M);1e_11 1e_6;0.0;_1.  NB. col>ColThresh bk<0 - abort
-assert. _1 4 -: (128!:9) (1. _1 1 1 1 1);2;'';(1 (<2 1)} M);1e_11 1e_6;0.0;_1. 
-assert. 2 -: (128!:9) (1.0$~#M);2;'';M;1e_11 1e_6;_1.0;_0.0001  NB. insuff improvement - abort
-assert. 3 -: (128!:9) (1.0$~#M);2;'';M;2. 2;0.0;_1.  NB. no pos pivots - unbounded
-assert. 4 -: (128!:9) (1.0$~#M);2;'';M;1e_11 2;0.0;_1.  NB. pos pivot but too small - reject as dangerous
-assert. 5 -: (128!:9) (0$1.0);2;'';(0. + =/~ i. 0);1e_11 2;0.0;_1.  NB. empty problem
-NB. Now on products
-M =. 0. + =/~ i. 6
-assert. _1. 1 -: (128!:9) (1.0$~#M);0 1;0. 1;M;1e_11 1e_6;0.0;_1.  NB. good pivot
-assert. _1. 0 -: (128!:9) (1.0$~#M);0 1;1. 0;M;1e_11 1e_6;0.0;_1.  NB. good pivot
-assert. _0.5 2 -: (128!:9) (1.0$~#M);2 3;2. 1;M;1e_11 1e_6;0.0;_1.  NB. 2 good pivots
-assert. _0.5 3 -: (128!:9) (1.0$~#M);2 3;1. 2;M;1e_11 1e_6;0.0;_1.  NB. 2 good pivots
-assert. _1 2 -: (128!:9) (0 0 1. 2. 0 0);2 3;1. 1;M;1e_11 1e_6;0.0;_1.  NB. 2 good pivots ordered by bk
-assert. _1 3 -: (128!:9) (0 0 2. 1. 0 0);2 3;1. 1;M;1e_11 1e_6;0.0;_1.  NB. 2 good pivots ordered by bk
-assert. 1 -: (128!:9) (0 0 _1. 0 0 0);2 3;1e_8 0;M;1e_11 1e_6;0.0;_1.  NB. col>1e_11 bk<0 - abort
-assert. 1 -: (128!:9) (0 0 _1. 0 0 0);2 3;0 1e_8;M;1e_11 1e_6;0.0;_1.  NB. col>0 bk<0 - abort
-assert. 3 -: (128!:9) (0 0 _1. 0 0 0);2 3;1e_12 0;M;1e_11 1e_6;0.0;_1.  NB.  no pos pivots - unbounded
-assert. 3 -: (128!:9) (0 0 _1. 0 0 0);2 3;0 1e_12;M;1e_11 1e_6;0.0;_1.  NB.  no pos pivots - unbounded
-assert. 3 -: (128!:9) (0 0 _1. 0 0 0);2 3;0. 0.;M;1e_11 1e_6;0.0;_1.  NB. no pos pivots - unbounded
-assert. 2 -: (128!:9) (1.0$~#M);0 1;1. 1;M;1e_11 1e_6;_1.0;_0.0001  NB. insuff improvement - abort
-assert. 2 -: (128!:9) (1.0$~#M);0 1;1. 1;M;1e_11 1e_6;_1.0;_1.  NB. insuff improvement - abort
-assert. _1.1 0 -: (128!:9) (1.0$~#M);0 1;1. 1;M;1e_11 1e_6;_1.0;_1.1  NB. now suff improvement
-assert. _2 0 -: (128!:9) (1.0$~#M);0 1;0.5 0.5;M;1e_11 1e_6;_1.0;_1.  NB. pick best-improving pivot, from col value
-assert. _2 1 -: (128!:9) (1.0$~#M);0 1;0.4 0.5;M;1e_11 1e_6;_1.0;_1.  NB.
-assert. _2 0 -: (128!:9) (1.0$~#M);0 1;0.5 0.4;M;1e_11 1e_6;_1.0;_1.  NB.
-assert. _2 1 -: (128!:9) (1.1 1. 0 0 0 0);0 1;0.5 0.5;M;1e_11 1e_6;_1.0;_1.  NB. pick best-improving pivot, from bk value
-assert. _2 0 -: (128!:9) (1. 1.1 0 0 0 0);0 1;0.5 0.5;M;1e_11 1e_6;_1.0;_1.  NB.
-assert. _2 1 -: (128!:9) (1.0$~#M);0 1;1e_8 0.5;M;1e_11 1e_6;0.;_1.  NB. dangerous pivot col value not smallest ratio
-assert. _2 0 -: (128!:9) (1.0$~#M);0 1;0.5 1e_8;M;1e_11 1e_6;0.;_1.  NB.
-assert. 4 -: (128!:9) (1e_10 1 1 1 1 1);0 1;1e_8 0.5;M;1e_11 1e_6;0.;_1.  NB. dangerous pivot col value smallest ratio
-assert. 4 -: (128!:9) (1 1e_10 1 1 1 1);0 1;0.5 1e_8;M;1e_11 1e_6;0.;_1.  NB.
-assert. 5 -: (128!:9) (0$0.);0;(,0);(i.0 0);1e_11 2;0.0;_1.  NB. empty problem
-1
-}}^:(1 e. 'avx2' E. 9!:14'') 1
 
 
  

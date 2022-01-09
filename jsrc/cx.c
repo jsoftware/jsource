@@ -1218,16 +1218,15 @@ A jtddtokens(J jt,A w,I env){
  A wil; RZ(wil=wordil(w));  // get index to words
  C *wv=CAV(w); I nw=AS(wil)[0]; I (*wilv)[2]=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
  // scan for start of DD/end of DD.
- I firstddbgnx;  // index of first/last start of DD, and end of DD
+ I firstddbgnx;  // index of first/last start of DD
  I ddschbgnx=0; // place where we started looking for DD
  for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
- if(firstddbgnx>=nw){ASSERT(AM(wil)>=0,EVOPENQ) R env&8?w:enqueue(wil,w,env&3);}    //   If no DD chars found, and caller wants a string, return w fast
+   // search for {{; error if first thing found is }}; firstddbgnx is index of {{
+ if(firstddbgnx>=nw){ASSERT(AM(wil)>=0,EVOPENQ) R env&8?w:enqueue(wil,w,env&3);}    //   If no DD chars found, and caller wants a string, return w fast.  There may be a latent quote error to attend to
  // loop till all DDs found
  while(firstddbgnx<nw){
   // We know that firstddbgnx is DDBGN
-  // Move all the words before the DD into one long megaword - if there are any.  We mustn't disturb the DD itself
-  // Close up after the megaword with empties
-  I *fillv=&wilv[ddschbgnx][1]; DQ(2*(firstddbgnx-ddschbgnx)-1, *fillv++=wilv[firstddbgnx][0];)
+  I *fillv=&wilv[ddschbgnx][1]; DQ(2*(firstddbgnx-ddschbgnx)-1, *fillv++=wilv[firstddbgnx][0];)  // set each end-of-word pointer to end of [ddbgnx], and all start pointers except thwe first.  This preserves spacing from schbgn to firstddbgn
   I ddendx=-1, ddbgnx=firstddbgnx;  // end/start of DD, indexes into wilv.  This will be the pair we process.  We advance ddbgnx and stop when we hit ddendx
   I scanstart=firstddbgnx;  // start looking for DDEND/nounDD at the first known DDBGN.  But if there turns out to be no DDEND, advance start ptr to avoid rescanning
   while(1){I i;  // loop till we find a complete DD
@@ -1235,9 +1234,11 @@ A jtddtokens(J jt,A w,I env){
     US ch2=*(US*)(wv+wilv[i][0]);  // digraph for next word
     if(ch2==DDEND&&(wilv[i][1]-wilv[i][0]==2)){ddendx=i; break;}  // if end, break, we can process
     if(ch2==DDBGN&&(wilv[i][1]-wilv[i][0]==2)){
-     //  Nested DD found.  We have to go back and preserve the spacing for everything that precedes it
+     //  Nested/noun DD found, OR looking at the first {{.  We have to go back and preserve the spacing for everything that precedes it
      ddbgnx=i;  // set new start pointer, when we find an end
-     fillv=&wilv[firstddbgnx][1]; DQ(2*(ddbgnx-firstddbgnx)-1, *fillv++=wilv[ddbgnx][0];)
+     // Move all the words before the DD into one long megaword - if there are any.  We mustn't disturb the DD itself
+     // Close up after the megaword with empties
+     I *fillv=&wilv[firstddbgnx][1]; DQ(2*(ddbgnx-firstddbgnx)-1, *fillv++=wilv[ddbgnx][0];)  // preserve spacing from firstddbgnx to new {{
      if(AN(w)>=wilv[i][1]+2 && wv[wilv[i][0]+2]==')' && wv[wilv[i][0]+3]=='n'){  // is noun DD?
       // if the nested DD is a noun, break to process it immediately
       ddendx=0;  // use the impossible starting }} to signify noun DD
@@ -1331,22 +1332,23 @@ A jtddtokens(J jt,A w,I env){
    wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
    // Replace ddbgnx and ddendx with the start/end strings.  Fill in the middle, if any, with everything in between
    wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  
-   wilv[ddbgnx+1][0]=bodystart; fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+2;)  // everything in between, and trailing )SP
+   wilv[ddbgnx+1][0]=bodystart; I *fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+2;)  // everything in between, and trailing )SP
    // continue the search.
-   if(ddbgnx==firstddbgnx){ddschbgnx=ddendx+1;  //   If this was not a nested DD, we can simply pick up the search after ddendx.
-   }else{
-    // Nested DD.  The characters below ddendx are out of order and there will be trouble if we try to preserve
-    // the user's spacing by grouping them.  We must run the ending lines together, to save their spacing, and then
-    // refresh w and wil to get the characters in order
-    if(++ddendx<nw){wilv[ddendx][0]=trailstart; wilv[ddendx][1]=bodystart; AN(wil)=2*(AS(wil)[0]=ddendx+1);}  // make one string of DDEND to end of string
-    RZ(w=unwordil(wil,w,0)); RZ(wil=wordil(w));  // run chars in order; get index to words
-    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
-    ddschbgnx=0;  // start scan back at the beginning
-   }
+// obsolete    if(ddbgnx==firstddbgnx){ddschbgnx=ddendx+1;  //   If this was not a nested DD, we can simply pick up the search after ddendx.
+// obsolete    }else{
+   // The characters below ddendx are out of order and there will be trouble if we try to preserve
+   // the user's spacing by grouping them.  We must run the ending lines together, to save their spacing, and then
+   // refresh w and wil to get the characters in order.  We really need this only when there is a nested or noun DD, but that's hard to detect
+   if(++ddendx<nw){wilv[ddendx][0]=trailstart; wilv[ddendx][1]=bodystart; AN(wil)=2*(AS(wil)[0]=ddendx+1);}  // make one string of DDEND to end of string
+   RZ(w=unwordil(wil,w,0)); RZ(wil=wordil(w));  // run chars in order; get index to words
+   wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
+   ddschbgnx=0;  // start scan back at the beginning
+// obsolete    }
   }
 
   // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen
   for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
+   // search for {{; error if first thing found is }}; firstddbgnx is index of {{
  }
  ASSERT(AM(wil)>=0,EVOPENQ);  // we have to make sure there is not an unscannable remnant at the end of the last line
  // All DDs replaced. convert word list back to either text form or enqueued form

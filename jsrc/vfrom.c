@@ -647,63 +647,75 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
 }
 
 // 128!:9 matrix times sparse vector with optional early exit
-// y is (boolean exitvec, shape m);(I, int list of nonzero indexes in v, shape p);(V, float list of nonzero values in v, shape p);(M, shape m,n)[;(ColThreshold,MinPivot);previous best improvement (neg);Frow value in column (neg)]
-// if I is a scalar, the column 1 I} 0$~#M
-// Result for product mode (exitvec is scalar) is product (I {"1 M) +/@:*"1 V (float list shape m)
-// Otherwise result is (best row#;new best gain) unless there is an early abort, in which case the result is an atom:
-//  1=bk<=0 and col>ColThreshold (invalid pivot column, constraint is violated)
-//  2=gain is less than previous best improvement
-//  3=no pivots found, problem is unbounded
-//  4=smallest pivotratio is for a dangerous pivot, avoid this column if possible
-//  5=empty M or I, problem is malformed
-// Ex: 'rc col' =. (128!:40) (1);(ax ];.0 Am);(ax ];.0 Av);Qk
+// product mode:
+// y is ndx;Ax;Am;Av;(M, shape m,n)  where ndx is an atom
+// if ndx<m, the column is ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
+// Result for product mode (exitvec is scalar) is the product
+// DIP mode
+// y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold,MinPivot,bkmin,NFreeCols,NCols,ImpFac);bk;Frow
+// Result is rc;best row;best col;#cols scanned;#dot-products evaluated;best gain
+//  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 no improving pivot found, stall; rc=3 means the problem is unbounded (only the failing column follows)
+//  rc=5=empty M, problem is malformed
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
 #if C_AVX2
  ASSERT(AR(w)==1,EVRANK);
- ASSERT(AN(w)>=4,EVLENGTH);  // audit overall w
+ ASSERT(AN(w)>=5,EVLENGTH);  // audit overall w
  ASSERT(AT(w)&BOX,EVDOMAIN);
  // check ranks
- ASSERT(AR(AAV(w)[0])<=1,EVRANK);  // exitvec
- ASSERT(AR(AAV(w)[1])<=1,EVRANK);  // I
- ASSERT(AR(AAV(w)[2])==1,EVRANK);  // V
- ASSERT(AR(AAV(w)[3])==2,EVRANK);  // M
+ ASSERT(AR(AAV(w)[0])<=1,EVRANK);  // ndx
+ ASSERT(AR(AAV(w)[1])==3&&AS(AAV(w)[1])[1]==2&&AS(AAV(w)[1])[2]==1,EVRANK);  // Ax, shape cols,2 1
+ ASSERT(AR(AAV(w)[2])==1,EVRANK);  // Am
+ ASSERT(AR(AAV(w)[3])==1,EVRANK);  // Av
+ ASSERT(AR(AAV(w)[4])==2,EVRANK);  // M
+ // abort if no columns
+ if(AN(AAV(w)[0])==0)R num(5);  // if no cols (which happens at startup, return error indic)
+ // check types.  Don't convert - force the user to get it right - except for ndx
+ ASSERT(AT(AAV(w)[1])&INT,EVDOMAIN);  // Ax, shape cols,2 1
+ ASSERT(AT(AAV(w)[2])&INT,EVDOMAIN);  // Am
+ ASSERT(AT(AAV(w)[3])&FL,EVDOMAIN);  // Av
+ ASSERT(AT(AAV(w)[4])&FL,EVDOMAIN);  // M
  // check agreement
- ASSERT(AR(AAV(w)[1])==0||AN(AAV(w)[1])==AN(AAV(w)[2]),EVLENGTH);   // I and V agree
- ASSERT(AR(AAV(w)[0])==0||AS(AAV(w)[3])[0]==AN(AAV(w)[0]),EVLENGTH);  // exitvec and M agree
- I n=AS(AAV(w)[3])[1];  // n=#cols in M
- I zn=AS(AAV(w)[3])[0];  // result is one atom per row of M
- I an=AN(AAV(w)[1]);  // an=#atoms in the sparse vector
- // convert types as needed; set ?v=pointer to data area for ?
- D *bv;  // pointer to b values if there are any
- __m256d thresh;  // ColThr Inf    0  MinPivot     validity thresholds
- __m256d oldcol;  // oldcol Frow   0 0    col value at previous smallest pivot / Frow of current col (always <=0)  0 0
- __m256d oldbk;   // oldbk  minimp 0 0    bk value at previous smallest pivot, best gain available in a previous col (always <=0) 0 0
- I bestrow;  // row number (i) at previous smallest pivot
- A z; D *zv; D Frow;
+ ASSERT(AS(AAV(w)[2])[0]==AS(AAV(w)[3])[0],EVLENGTH);   // Am and Av
+ ASSERT(AS(AAV(w)[4])[0]==AS(AAV(w)[4])[1],EVLENGTH);   // M is square
+ // extract pointers to tables
+ A ndxa=AAV(w)[0]; ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
+ I *ndx0=IAV(ndxa), *ndx=ndx0, nc=AN(ndxa), *ndxe=ndx+nc;  // pointer to column numbers in the order processed, and end+1, and #cols
+ I (*axv)[2]=(I(*)[2])IAV(AAV(w)[1]);  // pointer to ax data
+ I *amv0=IAV(AAV(w)[2]);  // pointer to am block, and to the selected column's indexes
+ D *avv0=DAV(AAV(w)[3]);  // pointer to av data, and to the selected column's values
+ D *mv0=DAV(AAV(w)[4]);  // pointer to M data, and to the selected column (for identity columns) or to the current row of M (for sparse columns)
+ D minimp=0.0, minimpfound=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
 
+ I n=AS(AAV(w)[4])[0];  // n=#rows/cols in M
+ // convert types as needed; set ?v=pointer to data area for ?
+ D *bv; // pointer to b values if there are any
+ __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
+ __m256d oldcol;  // oldcol Frow   0      0            col value at previous smallest pivot / Frow of current col (always <=0)  0 0
+ __m256d oldbk;   // oldbk  minimp 0      0            bk value at previous smallest pivot, best gain available in a previous col (always <=0) 0 0
+ I bestcol=1LL<<(BW-1), bestcolrow=1LL<<(32+3);  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
+ I ndotprods=0;  // total # dotproducts evaluated
+ A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
+ I nfreecols, ncols; D impfac;  // number of cols to process before we insist of min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
+ I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
 
  if(AR(AAV(w)[0])==0){
-  bv=0; ASSERT(AN(w)==4,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
-  if(unlikely(an==0||zn==0)){R reshape(sc(zn),zeroionei(0));}   // empty a or empty M, each product is 0
-  GATV0(z,FL,zn,1); zv=DAV(z);  // allocate the result area for column extraction
+  // single index value.  set bv=0 as a flag that we are storing the column
+  bv=0; ASSERT(AN(w)==5,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
+  if(unlikely(n==0)){R reshape(sc(n),zeroionei(0));}   // empty M, each product is 0
+  GATV0(z,FL,n,1); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
+  bvgrd0=0; bvgrde=bvgrd0+AS(AAV(w)[4])[0];  // length of column is #M
  }else{
-  // the list of bk values is given.  We are doing the DIP calculation
-  A ta=AAV(w)[0]; ASSERT(AN(w)==7,EVLENGTH); ASSERT(AS(AAV(w)[3])[0]==AN(ta),EVLENGTH);  // bk and M must agree, and otheer values must be present
-  if(unlikely(!ISDENSETYPE(AT(ta),FL)))RZ(ta=cvt(FL,ta)); bv=DAV(ta);  // get pointer to bk values and verify length
-  ta=AAV(w)[4]; ASSERT(AN(ta)==2,EVLENGTH); if(unlikely(!ISDENSETYPE(AT(ta),FL)))RZ(ta=cvt(FL,ta));
-  A ta1=AAV(w)[5]; ASSERT(AN(ta1)>0,EVLENGTH); if(unlikely(!ISDENSETYPE(AT(ta1),FL)))RZ(ta1=cvt(FL,ta1));
-  A ta2=AAV(w)[6]; ASSERT(AN(ta2)==1,EVLENGTH); if(unlikely(!ISDENSETYPE(AT(ta2),FL)))RZ(ta2=cvt(FL,ta2));
-  if(unlikely(an==0||zn==0)){R num(5);}   // empty a or M - should not occur, give error result
-  Frow=DAV(ta2)[0];  // this must be < 0 for a valid column to work on
-  thresh=_mm256_set_pd(DAV(ta)[1],0.0,inf,DAV(ta)[0]);
-  oldcol=_mm256_set_pd(0.0,0.0,Frow,0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
-  oldbk=_mm256_set_pd(0.0,0.0,DAV(ta1)[0],1.0);
-  bestrow=-1;  // init no eligible row found
+  // A list of index values.  We are doing the DIP calculation
+  ASSERT(AR(AAV(w)[5])==1,EVRANK); ASSERT(AT(AAV(w)[5])&INT,EVDOMAIN); bvgrd0=IAV(AAV(w)[5]); bvgrde=bvgrd0+AN(AAV(w)[5]);  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
+  ASSERT(AN(w)==9,EVLENGTH); 
+  ASSERT(AR(AAV(w)[7])==1,EVRANK); ASSERT(AT(AAV(w)[7])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[7])==AS(AAV(w)[4])[0],EVLENGTH); bv=DAV(AAV(w)[7]);  // bk, one per row of M
+  ASSERT(AR(AAV(w)[8])==1,EVRANK); ASSERT(AT(AAV(w)[8])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[8])==AS(AAV(w)[4])[0]+AS(AAV(w)[1])[0],EVLENGTH); Frow=DAV(AAV(w)[8]);  // Frow, one per row of M and column of A
+  ASSERT(AR(AAV(w)[6])==1,EVRANK); ASSERT(AT(AAV(w)[6])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[6])==6,EVLENGTH);  // 6 float constants
+  if(unlikely(n==0)){R num(5);}   // empty M - should not occur, give error result
+  thresh=_mm256_set_pd(DAV(AAV(w)[6])[1],DAV(AAV(w)[6])[2],inf,DAV(AAV(w)[6])[0]); nfreecols=(I)(nc*DAV(AAV(w)[6])[3]); ncols=(I)(nc*DAV(AAV(w)[6])[4]); impfac=DAV(AAV(w)[6])[5];
+  zv=Frow;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at
  }
- A indexvec=AAV(w)[1]; if(unlikely(!ISDENSETYPE(AT(indexvec),INT)))RZ(indexvec=cvt(INT,indexvec)); I *iv=IAV(indexvec);
- A vvector=AAV(w)[2]; if(unlikely(AR(AAV(w)[1])==1&&!ISDENSETYPE(AT(vvector),FL)))RZ(vvector=cvt(FL,vvector)); D *vv=DAV(vvector);
- A mtx=AAV(w)[3]; if(unlikely(!ISDENSETYPE(AT(mtx),FL)))RZ(mtx=cvt(FL,mtx)); D *mv=DAV(mtx);
  // abort if empty input
  // perform the operation
 #if 0  // obsolete   NB.  if bk[j]<:0 and col[j]>ColThreshold, abort column and return 1
@@ -741,171 +753,177 @@ if mask0&mask1&1 save j
 if t<0 set oldcol/oldbk without disturbing the others
 #endif
 
-#define PROCESSROWRATIOS \
- if(bv){ \
+#define PROCESSROWRATIOS /* We run this after the dot-product has been loaded into dotprod */ \
+ if(likely(bv!=0)){ \
   /* DIP processing.  col data is in dotprod */ \
   __m256d ratios=_mm256_mul_pd(oldbk,dotprod);  /* ratios is col*oldbk col*minimp 0 0 */ \
   __m256d bks=_mm256_set1_pd(bv[i]);  /* bks = bk bk bk - */ \
   dotprod=_mm256_blend_pd(dotprod,bks,0b0100);  /* dotprod=col col bk col */ \
-  __m256d tcond=_mm256_sub_pd(thresh,dotprod); I tmask=_mm256_movemask_pd(tcond); if((tmask&0b0101)==0b0001)goto return1;  /* tmask is col>ColThr 0 bk>0 col>ColMin; also in tcond; abort rc=1 if col>ColThr & bk<0 */ \
+  __m256d tcond=_mm256_sub_pd(thresh,dotprod); I tmask=_mm256_movemask_pd(tcond); if((tmask&0b0101)==0b0001)goto return1;  /* tmask is col>ColThr 0 bk>bkmin col>ColMin; also in tcond; abort, avoiding unbounded, if col>ColThr & bk<=0 */ \
   I imask=i+(tmask<<32);  /* save tmask in the pivot */ \
   ratios=_mm256_fmsub_pd(bks,oldcol,ratios);  /* bk*oldcol-col*oldbk  bk*Frow-col*minimp 0 0  i. e.  1 if new smallest (possibly invalid) pivotratio/0 if abort on limited gain/0 /0 */ \
-  tcond=_mm256_and_pd(tcond,ratios);  /* tcond is (new smallest pivotratio & col>ColThr [& bk>0]) 0 0 0   */ \
+  tcond=_mm256_and_pd(tcond,ratios);  /* tcond is (new smallest pivotratio & col>ColThr [& bk>bkmin]) 0 0 0   */ \
   oldbk=_mm256_blendv_pd(oldbk,bks,tcond); oldcol=_mm256_blendv_pd(oldcol,dotprod,tcond);  /* if valid new smallest pivotratio, update col and bk where the smallest is found */ \
   I rmask=_mm256_movemask_pd(ratios); /*   rmask is new smallest (possibly invalid) pivotratio   !limited gain 0 0 */ \
   if((tmask&=1)>(rmask>>1))goto return2;  /* col>ColThr && abort on limited gain: abort rc=2 */ \
   bestrow=tmask&rmask?imask:bestrow;   /* col>ColThr & new smallest pivotratio: update best-value variables */ \
  }else{zv[i]=_mm256_cvtsd_f64(dotprod); /* just fetching the column: do it */ \
- } \
- mv+=n;
+ }
 
- UI i=0, in=AS(mtx)[0]; // loop counter for current item index, number of items to process
- // if the column is just to be fetched from M, do so without dot-product.  We can use gather down the column, but there's no gain
- __m256d dotprod;  // place where product is assembled or read into
- if(AR(AAV(w)[1])==0){  // scalar index list, means the column is an identity column.  Fetch it directly
-   mv+=*iv;  // advance m pointer to the column we are reading
-   do{dotprod=_mm256_set1_pd(*mv);   // fetch the column value into all 4 lanes
+#define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n;
+#define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?
+#define COLLPE }while(++bvgrd!=bvgrde);
+ do{
+  I colx=*ndx;  // get next column# to work on
+  I bestrow;  // the best row to use as a pivot for this column
+  if(likely(bv!=0)){
+   // col init
+   oldcol=_mm256_set_pd(0.0,0.0,Frow[colx],0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
+   oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0); 
+   bestrow=-1;  // init no eligible row found
+  }
+  COLLPINIT
+  // if the column is just to be fetched from M, do so without dot-product.  We can use gather down the column, but there's no gain
+  __m256d dotprod;  // place where product is assembled or read into
+  if(colx<n){  // scalar index list, means the column is an identity column.  Fetch it directly
+// obsolete    mv+=*iv;  // advance m pointer to the column we are reading
+   COLLP dotprod=_mm256_set1_pd(mv[colx]);   // fetch the column value into all 4 lanes
     PROCESSROWRATIOS
-   }while(++i!=in);
- }else{
-  // here for sparse dot-product.
-  __m256i endmask=_mm256_setzero_si256(); /* length mask for the last word */ 
-  _mm256_zeroupperx(VOIDARG)
-  __m256i wstride=_mm256_set1_epi64x(n);  // stride between cells in atoms - used for index check
-  __m256i ones=_mm256_cmpgt_epi64(wstride,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
-// obsolete   __m256d temp=_mm256_setzero_pd();  // mask to use for gather into all bytes
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
-  __m256i anynegindex=_mm256_setzero_si256();  // accumulate sign bits of the indexes
-  // Load the first 16 indexes and v-values into registers, resolving negative indexes
-  __m256i indexes0, indexes1, indexes2, indexesn;  // indexes, the last may be partial
-  __m256d vvals0,vvals1,vvals2,vvalsn;  // the sparse vector, the last may be partial
-  if(an>NPAR){
-   indexes0=_mm256_loadu_si256((__m256i*)iv);   // fetch a block of indexes
-   vvals0=_mm256_loadu_pd(vv);   // fetch a block of indexes
-   indexes0=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes0),_mm256_castsi256_pd(_mm256_add_epi64(indexes0,wstride)),_mm256_castsi256_pd(indexes0)));  // get indexes, add axis len if neg
-   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-   if(an>2*NPAR){
-    indexes1=_mm256_loadu_si256((__m256i*)(iv+NPAR));   // fetch a block of indexes
-    vvals1=_mm256_loadu_pd(vv+NPAR);   // fetch a block of indexes
-    indexes1=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes1),_mm256_castsi256_pd(_mm256_add_epi64(indexes1,wstride)),_mm256_castsi256_pd(indexes1)));  // get indexes, add axis len if neg
-    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes1,_mm256_sub_epi64(indexes1,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-    if(an>3*NPAR){
-     indexes2=_mm256_loadu_si256((__m256i*)(iv+2*NPAR));   // fetch a block of indexes
-     vvals2=_mm256_loadu_pd(vv+2*NPAR);   // fetch a block of indexes
-     indexes2=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes2),_mm256_castsi256_pd(_mm256_add_epi64(indexes2,wstride)),_mm256_castsi256_pd(indexes2)));  // get indexes, add axis len if neg
-     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes2,_mm256_sub_epi64(indexes2,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+   COLLPE
+  }else{
+   // here for sparse dot-product.
+   colx-=n;  // the offset into A starts after the identity prefix
+   // look up column info, get A values and row numbers
+   I an=axv[colx][1];  // number of sparse atoms in each row
+   D *vv=avv0+axv[colx][0];  // pointer to values for this section of A
+   I *iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv
+   __m256i endmask=_mm256_setzero_si256(); /* length mask for the last word */ 
+   _mm256_zeroupperx(VOIDARG)
+// obsolete    __m256i wstride=_mm256_set1_epi64x(n);  // stride between cells in atoms - used for index check
+   __m256i ones=_mm256_cmpeq_epi64(endmask,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
+ // obsolete   __m256d temp=_mm256_setzero_pd();  // mask to use for gather into all bytes
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+// obsolete   __m256i anynegindex=_mm256_setzero_si256();  // accumulate sign bits of the indexes
+   // Load the first 16 indexes and v-values into registers, resolving negative indexes
+   __m256i indexes0, indexes1, indexes2, indexesn;  // indexes, the last may be partial
+   __m256d vvals0,vvals1,vvals2,vvalsn;  // the sparse vector, the last may be partial
+   if(an>NPAR){
+    indexes0=_mm256_loadu_si256((__m256i*)iv);   // fetch a block of indexes
+    vvals0=_mm256_loadu_pd(vv);   // fetch a block of values
+// obsolete     indexes0=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes0),_mm256_castsi256_pd(_mm256_add_epi64(indexes0,wstride)),_mm256_castsi256_pd(indexes0)));  // get indexes, add axis len if neg
+// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    if(an>2*NPAR){
+     indexes1=_mm256_loadu_si256((__m256i*)(iv+NPAR));   // fetch a block of indexes
+     vvals1=_mm256_loadu_pd(vv+NPAR);   // fetch a block of indexes
+// obsolete      indexes1=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes1),_mm256_castsi256_pd(_mm256_add_epi64(indexes1,wstride)),_mm256_castsi256_pd(indexes1)));  // get indexes, add axis len if neg
+// obsolete      ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes1,_mm256_sub_epi64(indexes1,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     if(an>3*NPAR){
+      indexes2=_mm256_loadu_si256((__m256i*)(iv+2*NPAR));   // fetch a block of indexes
+      vvals2=_mm256_loadu_pd(vv+2*NPAR);   // fetch a block of indexes
+// obsolete       indexes2=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes2),_mm256_castsi256_pd(_mm256_add_epi64(indexes2,wstride)),_mm256_castsi256_pd(indexes2)));  // get indexes, add axis len if neg
+// obsolete       ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes2,_mm256_sub_epi64(indexes2,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     }
     }
+   }
+   // indexes and values loaded, now do the dot-product
+   if(an<=4*NPAR){
+    // <=16 indexes.  We stay in registers
+    indexesn=_mm256_maskload_epi64(iv+((an-1)&-NPAR),endmask);   // fetch last block of indexes
+    vvalsn=_mm256_maskload_pd(vv+((an-1)&-NPAR),endmask);   // fetch last block of values
+// obsolete     indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
+// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    // Now do the operation.  With <16 elements it doesn't help to use dual accumulators
+ #define FINISHDOTPROD dotprod=_mm256_add_pd(dotprod,_mm256_permute4x64_pd(dotprod,0b01001110)); dotprod=_mm256_add_pd(dotprod,_mm256_permute_pd(dotprod,0b0101));   /* combine accumulators horizontally  01+=23, 0+=1: 4 copies */ \
+    PROCESSROWRATIOS 
+
+    // choose a processing loop based on # indexes.  Invalid parts are 0 and can go into the dot-product
+    if(an<=NPAR){
+     COLLP dotprod=_mm256_mul_pd(vvalsn,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI));
+      FINISHDOTPROD
+     COLLPE
+    }else if(an<=2*NPAR){
+     COLLP dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+        dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
+        FINISHDOTPROD
+     COLLPE
+    }else if(an<=3*NPAR){
+     COLLP dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+        dotprod=_mm256_fmadd_pd(vvals1, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
+        dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
+        FINISHDOTPROD
+     COLLPE
+    }else{
+     COLLP dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+        dotprod=_mm256_fmadd_pd(vvals1, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
+        dotprod=_mm256_fmadd_pd(vvals2, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
+        dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
+        FINISHDOTPROD
+      COLLPE
+    }
+   }else{
+    // 17+indexes.  We must read the tail repeatedly.  It might gain a bit to have two accumulators but we don't yet.
+    indexesn=_mm256_loadu_si256((__m256i*)(iv+3*NPAR));   // fetch last block of indexes
+    vvalsn=_mm256_loadu_pd(vv+3*NPAR);   // fetch last block of values
+// obsolete     indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
+// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    COLLP 
+     // We don't audit the indexes, which must be positive
+     dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
+     dotprod=_mm256_fmadd_pd(vvals1, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
+     dotprod=_mm256_fmadd_pd(vvals2, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
+     dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(ones),SZI),dotprod);
+     I *RESTRICT ivv=iv+4*NPAR; D *RESTRICT vvv=vv+4*NPAR;     // init input pointer to start of indexes not loaded into registers, advance output pointer over the prefix
+     __m256i indexes; __m256d vvals;
+     if(an>5*NPAR){
+      indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
+      vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
+      DQNOUNROLL((an-5*NPAR-1)>>LGNPAR,
+       __m256i indexesx=indexes; __m256d vvalsx=vvals;  // 
+       indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
+       vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
+       dotprod=_mm256_fmadd_pd(vvalsx, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesx,_mm256_castsi256_pd(ones),SZI),dotprod);
+      )
+      dotprod=_mm256_fmadd_pd(vvals, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes,_mm256_castsi256_pd(ones),SZI),dotprod);
+     }
+     // runout using mask
+     indexes=_mm256_maskload_epi64(ivv,endmask);  // fetch a block of indexes
+     vvals=_mm256_maskload_pd(vvv,endmask);   // fetch a block of indexes
+     dotprod=_mm256_fmadd_pd(vvals, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes,_mm256_castsi256_pd(endmask),SZI),dotprod);
+     FINISHDOTPROD
+    COLLPE
+   }  // end 'long product'
+  } // end 'needed dot-product'
+  // done with one column.  Collect stats and update parms for the next column
+  if(unlikely(!bv))break;  // if just one product, skip the setup for next column
+  // column ran to completion.  Detect unbounded
+  if(bestrow<0)R v2(3,colx);  // no pivots found for a column, problem is unbounded, indicate which column
+  // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous
+  if(likely((bestcol|SGNIF(bestrow,32+3))<0)){
+   bestcol=*ndx; bestcolrow=bestrow;
+   // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
+   if(likely((bestrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
+    minimpfound=(Frow[*ndx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio
+// obsolete     nimp+=REPSGN(nfreecols);  // if we are past the prefix area, sub from the # improvements remaining
+    zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
    }
   }
-  // indexes and values loaded, now do the dot-product
-  if(an<=4*NPAR){
-   // <=16 indexes.  We stay in registers
-   indexesn=_mm256_maskload_epi64(iv+((an-1)&-NPAR),endmask);   // fetch last block of indexes
-   vvalsn=_mm256_maskload_pd(vv+((an-1)&-NPAR),endmask);   // fetch last block of values
-   indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
-   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-   // Now do the operation.  With <16 elements it doesn't help to use dual accumulators
- #define FINISHDOTPROD dotprod=_mm256_add_pd(dotprod,_mm256_permute4x64_pd(dotprod,0b01001110)); dotprod=_mm256_add_pd(dotprod,_mm256_permute_pd(dotprod,0b0101));   /* combine accumulators horizontally  01+=23, 0+=1: 4 copies */ \
-   PROCESSROWRATIOS 
-
-   // choose a processing loop based on # indexes.  Invalid parts are 0 and can go into the dot-product
-   if(an<=NPAR){
-    do{dotprod=_mm256_mul_pd(vvalsn,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI));
-     FINISHDOTPROD
-    }while(++i!=in);
-   }else if(an<=2*NPAR){
-    do{dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
-       dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
-       FINISHDOTPROD}while(++i!=in);
-   }else if(an<=3*NPAR){
-    do{dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
-       dotprod=_mm256_fmadd_pd(vvals1, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
-       dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
-       FINISHDOTPROD}while(++i!=in);
-   }else{
-    do{dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
-       dotprod=_mm256_fmadd_pd(vvals1, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
-       dotprod=_mm256_fmadd_pd(vvals2, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
-       dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(endmask),SZI),dotprod);
-       FINISHDOTPROD}while(++i!=in);
-   }
-  }else{
-   // 17+indexes.  We must read the tail repeatedly.  It might gain a bit to have two accumulators but we don't yet.
-   indexesn=_mm256_loadu_si256((__m256i*)(iv+3*NPAR));   // fetch last block of indexes
-   vvalsn=_mm256_loadu_pd(vv+3*NPAR);   // fetch a block of indexes
-   indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
-   ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-   do{
-    // this first execution audits the indexes and converts negatives.  If there are no negatives we pass on to the faster loop below
-    dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
-    dotprod=_mm256_fmadd_pd(vvals1, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
-    dotprod=_mm256_fmadd_pd(vvals2, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
-    dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(ones),SZI),dotprod);
-    I *RESTRICT ivv=iv+4*NPAR; D *RESTRICT vvv=vv+4*NPAR;     // init input pointer to start of indexes not loaded into registers
-    __m256i indexes; __m256d vvals;
-    if(an>5*NPAR){
-     indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
-     vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
-     DQNOUNROLL((an-5*NPAR-1)>>LGNPAR,
-      __m256i indexesx=indexes; __m256d vvalsx=vvals;  // loop unroll
-      indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
-      vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
-      anynegindex=_mm256_or_si256(anynegindex,indexesx); indexesx=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesx),_mm256_castsi256_pd(_mm256_add_epi64(indexesx,wstride)),_mm256_castsi256_pd(indexesx)));  // get indexes, add axis len if neg
-      ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesx,_mm256_sub_epi64(indexesx,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-      dotprod=_mm256_fmadd_pd(vvalsx, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesx,_mm256_castsi256_pd(ones),SZI),dotprod);
-     )
-     anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg
-     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-     dotprod=_mm256_fmadd_pd(vvals, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes,_mm256_castsi256_pd(ones),SZI),dotprod);
-    }
-    // runout using mask
-    indexes=_mm256_maskload_epi64(ivv,endmask);  // fetch a block of indexes
-    vvals=_mm256_maskload_pd(vvv,endmask);   // fetch a block of indexes
-    anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg.  unfetched indexes are 0
-    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
-    dotprod=_mm256_fmadd_pd(vvals, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes,_mm256_castsi256_pd(endmask),SZI),dotprod);
-    FINISHDOTPROD ++i;
-    if(_mm256_testz_pd(_mm256_castsi256_pd(anynegindex),_mm256_castsi256_pd(anynegindex)))break;
-   }while(i!=in);
-   while(i!=in){
-    // this second version comes into play if there were no negative indexes.  If there are negatives we end up auditing them repeatedly, too bad.
-    dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
-    dotprod=_mm256_fmadd_pd(vvals1, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes1,_mm256_castsi256_pd(ones),SZI),dotprod);
-    dotprod=_mm256_fmadd_pd(vvals2, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes2,_mm256_castsi256_pd(ones),SZI),dotprod);
-    dotprod=_mm256_fmadd_pd(vvalsn, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesn,_mm256_castsi256_pd(ones),SZI),dotprod);
-    I *RESTRICT ivv=iv+4*NPAR; D *RESTRICT vvv=vv+4*NPAR;     // init input pointer to start of indexes not loaded into registers, advance output pointer over the prefix
-    __m256i indexes; __m256d vvals;
-    if(an>5*NPAR){
-     indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
-     vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
-     DQNOUNROLL((an-5*NPAR-1)>>LGNPAR,
-      __m256i indexesx=indexes; __m256d vvalsx=vvals;  // 
-      indexes=_mm256_loadu_si256((__m256i*)ivv); ivv+=NPAR;  // fetch a block of indexes
-      vvals=_mm256_loadu_pd(vvv); vvv+=NPAR;  // fetch a block of the vector
-      dotprod=_mm256_fmadd_pd(vvalsx, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexesx,_mm256_castsi256_pd(ones),SZI),dotprod);
-     )
-     dotprod=_mm256_fmadd_pd(vvals, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes,_mm256_castsi256_pd(ones),SZI),dotprod);
-    }
-    // runout using mask
-    indexes=_mm256_maskload_epi64(ivv,endmask);  // fetch a block of indexes
-    vvals=_mm256_maskload_pd(vvv,endmask);   // fetch a block of indexes
-    dotprod=_mm256_fmadd_pd(vvals, _mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes,_mm256_castsi256_pd(endmask),SZI),dotprod);
-    FINISHDOTPROD ++i;
-   }
-  } // end 'needed dot-product'
- }
- // all done, return according to the type of call
+  --bvgrd;  // undo the +1 in the product-accounting below
+return1: return2:  // here is column aborted early, possibly on insufficient gain
+  if(unlikely(!bv))break;  // if just one product, skip the setup for next column
+  ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
+  if(unlikely((--ncols<0)&&zv==0)){++ndx; break;}  // quit if we have made an improvement AND have processed enough columns - include the aborted column in the count
+  // prepare for next column
+  minimp=minimpfound; if(--nfreecols<0)minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
+ }while(++ndx!=ndxe);  // end loop over columns
+ // prepare final result
  if(bv){
-  // DIP call
-  if(bestrow<0)goto return3;  // error if no pivots found
-  if(!(bestrow&(1LL<<(32+3))))goto return4;  // error if the best pivot is not > MinPivot
-  GAT0(z,FL,2,1); DAV(z)[0]=(Frow*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol); DAV(z)[1]=(D)(UI4)bestrow;  // return values: new best gain, row it was found in
+  // DIP call.
+  GAT0(z,FL,6,1); zv=DAV(z);
+  zv[0]=minimpfound==0.0?2:0; zv[0]=bestcolrow&(1LL<<(32+3))?zv[0]:1;  // rc=1 if best pivot is dangerous; otherwise 2 if no pivot (stall), 0 if improving pivot found
+  zv[1]=(UI4)bestcol; zv[2]=(UI4)bestcolrow;  // rc (normal or dangerous pivot), col, row
+  zv[3]=ndx-ndx0; zv[4]=ndotprods; zv[5]=minimpfound;  // other stats: #cols, #dotproducts, bext improvement
  }  // if call is just to fetch the column, return it, it's already in z
  EPILOG(z);
-return1: R num(1);  // bk<:0 and col>MinPivot: abort column why?
-return2: R num(2);  // pivotratio for this column is so small that the gain cannot be the best, abort
-return3: R num(3);  // no pivots found, the problem is unbounded
-return4: R num(4);  // the smallest pivot ratio comes from a column value too small to use as a pivot.  It is a dangerous pivot, so we abort; retry with a lower threshold to analyze it
 
 #else
  ASSERT(0,EVNONCE);  // this requires fast gather to make any sense

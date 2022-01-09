@@ -51,6 +51,7 @@ static DF1(jthdrinfo){A z;
 
 F2(jtforeign){I p,q;
  ARGCHK2(a,w);
+ ASSERT(AT(a)&NOUN&&AT(w)&NOUN,EVDOMAIN)
  p=i0(a); q=i0(w); RE(0);
  if(11==p)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
  ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);

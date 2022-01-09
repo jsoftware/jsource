@@ -89,7 +89,7 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
 
 // Turn word list back into string
 // wil is the word list from wordil (we ignore AM and AN), w is the original character list
-// result is a single string containing all the words with no separators
+// result is a single string containing all the words with no separators except before inflections
 // The result is always writable
 A jtunwordil(J jt, A wil, A w, I opts){A z;
  I n=AS(wil)[0]; I (* RESTRICT wilv)[2]=voidAV(wil); C * RESTRICT wv=CAV(w);  // n=#words; wilv->start,end pairs; wv->chars
@@ -97,7 +97,7 @@ A jtunwordil(J jt, A wil, A w, I opts){A z;
  I buflen=(cc<<(opts&1))+((opts&1)<<1)+((opts&2)<<1);  // len to get: one byte per word for delimiter, plus # chars (doubled if we are doubling quotes), plus 2 if enclosing in quotes, plus 4 if requested
  GATV0(z,LIT,buflen,1); C *zv0=CAV(z), *zv=zv0;  // allocate the buffer, point to beginning, set scan pointer
  UI dupchar=(opts&1)?'\'':256; *zv='\''; zv+=(opts&1);  // if dup requested, set to look for quotes and install leading quote
- DO(n, C *w0=wv+wilv[i][0]; C *wend=wv+wilv[i][1]; while(w0!=wend){C c=*w0++; *zv++=c; if(c==dupchar)*zv++=c;})  // copy all words, with 1 space between, duplicating where needed
+ DO(n, C *w0=wv+wilv[i][0]; C *wend=wv+wilv[i][1]; while(w0!=wend){C c=*w0++; *zv++=c; if(c==dupchar)*zv++=c;})  // copy all words, duplicating where needed
  AS(z)[0]=AN(z)=zv-zv0;  // install length of result
  RETF(z);
 }

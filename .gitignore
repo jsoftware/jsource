@@ -10,7 +10,9 @@ jsrc/jversion.h
 
 # temp scripts used for debugging
 *makevs/jdll/*.ijs
+foo.ijs
 jj.ijs
+test*.txt
 
 # windows - most output files go to %userprofile%\jbld\jout
 # some end up in the project folder and are marked here
@@ -60,7 +62,6 @@ release
 # build folders
 bin/
 make2/
-jlibrary/addons/
 jlibrary/bin/
 jlibrary/bin32/
 jlibrary/system/

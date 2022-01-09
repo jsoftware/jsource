@@ -16,11 +16,7 @@
 #define SSINGENC(type) ((type)>>INTX)
 #define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
 
-#if !(defined(__aarch32__)||defined(__arm__)||defined(_M_ARM))
-#undef NOOPTIMIZE
-#define NOOPTIMIZE
-#endif
-A NOOPTIMIZE jtssingleton1(J jt, A w,I caseno){A z;void *zv;
+A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
  F2PREFIP;
  I ar=AR(w);
  // Calculate inplaceability
@@ -30,7 +26,15 @@ A NOOPTIMIZE jtssingleton1(J jt, A w,I caseno){A z;void *zv;
  if(wipok){ z=w; zv=voidAV(w); } else if(likely(ar==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,ar); zv=voidAVn(z,ar);}
 
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
- I wiv=IAV(w)[0],ziv; D wdv=DAV(w)[0],zdv;
+ I wiv=IAV(w)[0],ziv;
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
+ D wdv;
+ memcpy(&wdv,DAV(w),4);
+ memcpy(4+(char*)&wdv,4+(char*)DAV(w),4);   // avoid bus error
+#else
+ D wdv=DAV(w)[0];
+#endif
+ D zdv;
  // Huge switch statement to handle every case.
  switch(caseno){
 

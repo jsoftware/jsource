@@ -22,7 +22,7 @@ jobs:
     #os: [windows-2019]
 
   steps:
-   - name: Check Git repository
+   - name: Checkout Git repository
      uses: actions/checkout@v2
 
    - name: Setup Environment (Linux)
@@ -147,13 +147,16 @@ jobs:
   runs-on: ubuntu-18.04
   needs: jengine
   steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
    - name: Get Test Results
      uses: actions/download-artifact@v2
      with:
        name: dist
 
    - name: Merge Test Results
-     run: cat testlinux.txt testdarwin.txt testwin.txt > tests.txt
+     run: script/testgares.sh
 
    - name: Copy Tests to Build
      uses: ncipollo/release-action@v1

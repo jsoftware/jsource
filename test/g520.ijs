@@ -14,7 +14,7 @@ for_l. >:  i. 50 do.
     ix =. l ? c  NB. indexes
     v =. l ?@$ 0  NB. vector values
     ref =. (ix{"1 M) +/@:*"1 v
-    assert. ref -:!.1e_11 (128!:9) (c);(,."1 (_2) ]\ 0 , #ix);ix;v;M
+    assert. 1e_10 > | ref - (128!:9) (c);(,."1 (_2) ]\ 0 , #ix);ix;v;M
   end.
 end.
 bk =. _2 1 3 1e_8

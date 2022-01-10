@@ -471,6 +471,7 @@ int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstack
  }
 #if USECSTACK
  if(JT(jt,cstacktype)==2){
+  // multithreaded FE.  Reinit the stack limit on every call, as long as cstackmin is nonzero
   JT(jt,qtstackinit) = (uintptr_t)&jt;
   if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
@@ -558,7 +559,7 @@ void _stdcall JSM(JS jt, void* callbacks[])
 // #define MTYOFILE 6 /* output 1!:2[2 */
  JT(jt,smdowd) = callbacks[1];                // callback function for 11!:x
  JT(jt,sminput) = (inputtype)callbacks[2];    // callback function for input from J session keyboard
- JT(jt,smpoll) = (polltype)callbacks[3];      // callback function for unused
+ JT(jt,smpoll) = (polltype)callbacks[3];      // for Qt, the (optional) end-of-stack pointer; otherwise the smpoll flag
  JT(jt,sm) = 0xff & (I)callbacks[4];          // lowest byte, sm : sessioin manager type
 // smoptions
 // #define SMWIN    0  /* j.exe    Jwdw (Windows) front end */
@@ -572,11 +573,15 @@ void _stdcall JSM(JS jt, void* callbacks[])
 // #define SMOPTPOLL   4  /* use smpoll to get last result */
 // #define SMOPTMTH    8  /* multithreaded */
  if(JT(jt,sm)==SMJAVA) JT(jt,smoption) |= SMOPTMTH;  /* assume java is multithreaded */
+ // set the stack discipline to be used for this session.  This persists until changed by another call
  if(SMOPTMTH&JT(jt,smoption)){
+  // Session in a multithreaded FE.  EVERY call to JDo() will set a new stackmin for JE to use (unless stack checking is disabled).  The stack is assumed to grow down, with
+  // jt allocated within the same stack.  There must be CSTACKSIZE-CSTACKRESERVE bytes in the stack before jt
   JT(jt,cstacktype) = 2;
-  JT(jt,qtstackinit) = (uintptr_t)&jt;
+  JT(jt,qtstackinit) = (uintptr_t)&jt;  // jt itself is used as an end-of-stack pointer
   if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }else if(SMQT==JT(jt,sm)){
+  // Qt session.  End-of-stack should be given in callbacks[3].  There must be CSTACKSIZE-CSTACKRESERVE bytes in the stack
   JT(jt,cstacktype) = 1;
   JT(jt,qtstackinit) = (uintptr_t)callbacks[3];
   JT(jt,smpoll) = 0;
@@ -586,6 +591,7 @@ void _stdcall JSM(JS jt, void* callbacks[])
   // if cstackmin is 0, the user has turned off stack checking and we honor that decision
   if(JT(jt,qtstackinit)&&jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
+ // default: cstacktype=0, cstackmin set at initialization from the C stackpointer at that time
 }
 
 /* set jclient callbacks from values - easier for nodejs */
@@ -597,9 +603,10 @@ void _stdcall JSMX(JS jt, void* out, void* wd, void* in, void* poll, I opts)
  JT(jt,sminput) = (inputtype)in;
  JT(jt,smpoll) = (polltype)poll;
  JT(jt,sm) = 0xff & opts;
- JT(jt,qtstackinit) = (SMQT==JT(jt,sm)) ? (uintptr_t)poll : 0;
+ JT(jt,qtstackinit) = (SMQT==JT(jt,sm)) ? (uintptr_t)poll : 0;  // poll arg means 'end-of-stack pointer' for Qt
  JT(jt,smoption) = ((~0xff) & (UI)opts) >> 8;
  if(JT(jt,sm)==SMJAVA) JT(jt,smoption) |= SMOPTMTH;  /* assume java is multithreaded */
+ // stack discipline, see above
  if(SMOPTMTH&JT(jt,smoption)){
   JT(jt,cstacktype) = 2;
   JT(jt,qtstackinit) = (uintptr_t)&jt;

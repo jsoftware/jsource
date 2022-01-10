@@ -1,5 +1,17 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g520.ijs'
 
+1: 0 : 0
+l=.15
+'r c' =. $M =. _0.5 + (2 # l)?@$ 0
+ix =. l ? c  NB. indexes
+v =. l ?@$ 0  NB. vector values
+bk=. 0. +  i.#M
+bkg=.i.#M
+cons=.1e_11 1e_6 0.0 0 1. 1.0
+Frow=.(1+#M)$_4.
+(128!:9) (,c);(,."1 (_2) ]\ 0 , #ix);ix;v;M;bkg;cons;bk;Frow
+)
+
 NB. 128!:9  g;i;v;M ---------------------------------------------------------
 {{)v
 M =. 0. + =/~ i. 6

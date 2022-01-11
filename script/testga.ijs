@@ -11,7 +11,8 @@ testres=: 'test',os,'.txt'
 stdout LF ,~ 9!:14''
 
 NB. RES=: RUN ddall
-RES=: RUN ddall -. < testpath,'gstack.ijs'
+NB. RES=: RUN ddall -. < testpath,'gstack.ijs'
+RES=: RUN ~.> ddall ,~ < testpath,'gstack.ijs'
 
 3 : 0''
 msg=. 9!:14''

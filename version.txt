@@ -3,5 +3,5 @@
 // make a trivial change to this comment to rebuild and copy with the same 
 // #defines
 #define jversion  "904"
-#define jtype     "beta-a" 
+#define jtype    "beta-a" 
 

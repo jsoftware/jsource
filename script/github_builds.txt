@@ -1,0 +1,39 @@
+github builds
+
+Whenever the JE repo is updated, the linux/macos/windows binaries are built and standard tests are run.
+
+The process is defined in the repo file: 
+
+  .github/workflows/jsource.yml
+
+This workflow references files in the repo script folder, e.g.
+
+  buildga.cmd  - runs the windows builds
+  testga.cmd   - runs the windows tests
+
+The tests start J and call testga.ijs to run the test suite.
+
+Builds take place on runners which are machines created dynamically for each OS. Elapsed time is around 25 minutes for a successful run.
+
+If there is any failure, the entire workflow run is halted for that run.
+
+To see the status of a run, login to github and visit
+
+  https://github.com/jsoftware/jsource/actions 
+
+Recent runs are shown with a status mark. Drill down into a run name for the compile logs.
+
+If a run completes successfully, the JE binaries and test results are written to github area:
+
+  jsource/releases/tag/build 
+
+If the latest commit has any change to the repo version.txt file, then the JE binaries are copied over to a staging area on the J webserver, at 
+
+  download/jengine/staged
+
+From there, they can be copied to a distribution folder, e.g. in jengine run:
+
+  cp -r staged/* j904-beta
+
+Github actions are documented at https://docs.github.com/en/actions
+

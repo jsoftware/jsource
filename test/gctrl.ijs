@@ -113,6 +113,13 @@ NB. verb DD followed by noun DD
 (' ') -: {{y}} {{)n }}
 (' a') -: {{y}} {{)n }} , 'a'
 
+NB. open quote
+'aCasey''s Tool Works' -: {{ y , {{)nCasey's Tool Works}} }} 'a'
+('aCasey''s Tool Works',LF) -: {{ y , {{)n
+Casey's Tool Works
+}} }} 'a'
+'open quote' -:  0!:100 etx '{{',LF,'1+y',LF,'''',LF,'}}'
+
 NB. Nameref caching  -------------------------------------------------------------------------------
 NB. names are cached
 4!:55 ;:'vb__ vb_z_'

@@ -47,7 +47,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   ws=AS(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(wt); wv=CAV(w);
-  // Since we are allocating the new boxes, the result will ipso facto be PRIVATE, as long as w is DIRECT.  If w is not DIRECT, we can be PRISTINE if we ensure that
+  // Since we are allocating the new boxes, the result will ipso facto be PRISTINE, as long as w is DIRECT.  If w is not DIRECT, we can be PRISTINE if we ensure that
   // w is PRISTINE inplaceable, but we don't bother to do that because 
   // If the input is DIRECT, mark the result as PRISTINE
   GATV(z,BOX,n,f,ws); AFLAGINIT(z,BOX+((-(wt&DIRECT))&AFPRISTINE)) if(unlikely(n==0)){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp

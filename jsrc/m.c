@@ -865,7 +865,7 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
-#if 1 // next release
+#if 0 // obsolete 
      if((np=QCWORD(np))!=0){fanano0(np);}  // free it
 #else
      // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
@@ -876,7 +876,7 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #endif
      np=np0;  // advance to next box
     };
-#if 1 // next release
+#if 0 // obsolete 
     if((np=QCWORD(np))!=0){fanano0(np);}  // free it
 #else  // could do this by branching back if --n==0
     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun
@@ -1011,7 +1011,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
      // The block is going to be destroyed.  See if there are further ramifications
      if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
      else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
-      // NOTE non-faux virtual blocks are deleted either here or in jtfamftrav() where they can be CONTENTS of boxes (presumably created a WILLBEOPENED).  A virtual block is
+      // NOTE non-faux virtual blocks are deleted either here or in jtfamftrav() where they can be CONTENTS of boxes (presumably created in a WILLBEOPENED).  A virtual block is
       // never freed by fa() as a top-level block
       // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
       // we make sure no such block is created in sprz()

@@ -1230,6 +1230,7 @@ A jtddtokens(J jt,A w,I env){
   I ddendx=-1, ddbgnx=firstddbgnx;  // end/start of DD, indexes into wilv.  This will be the pair we process.  We advance ddbgnx and stop when we hit ddendx
   I scanstart=firstddbgnx;  // start looking for DDEND/nounDD at the first known DDBGN.  But if there turns out to be no DDEND, advance start ptr to avoid rescanning
   while(1){I i;  // loop till we find a complete DD
+   // w/wilv has the accumulated words in the lines of the DD.  scanstart indexes the first word of the most-recent line
    for(i=scanstart;i<nw;++i){
     US ch2=*(US*)(wv+wilv[i][0]);  // digraph for next word
     if(ch2==DDEND&&(wilv[i][1]-wilv[i][0]==2)){ddendx=i; break;}  // if end, break, we can process
@@ -1270,7 +1271,7 @@ A jtddtokens(J jt,A w,I env){
    makewritable(newwil);  // We will modify the block rather than adding to it
    I *nwv=IAV(newwil); DO(AN(newwil), *nwv++ += oldchn;)  // relocate all the new words so that they point to chars after the added LF
    RZ(wil=jtapip(jtinplace,wil,newwil));   // add new words after LF, giving old LF new
-   if(likely(savam>=0)){AM(wil)=savam+scanstart;}else{AM(wil)=0;}  // set total # words in combined list, not including final comment; remember if error scanning line
+   if(likely(savam>=0)){AM(wil)=savam+scanstart;}else{AM(wil)=savam;}  // set total # words in combined list, not including final comment; remember if error scanning line
    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // refresh pointer to word indexes, and length
   }
 

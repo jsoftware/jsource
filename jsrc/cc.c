@@ -180,7 +180,7 @@ DF2(jtboxcut0){A z;
    if(!((I)jtinplace&JTWILLBEOPENED)){
     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
     GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
-    MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); INCORPRAZAPPED(y,t)
+    JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)
    }else{
     // WILLBEOPENED case.  We must allocate a virtual block so we can avoid the copy
     RZ(y=virtual(w,start*cellsize,wr)); ACIPNO(y); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
@@ -218,7 +218,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=nitems; zv=CAV(z);  // allocate a list of items of w, fill in length.  zv is running output pointer
  // copy em in.  We use MC because the strings are probably long and unpredictable - think HTML parsing
  I wcb=wcn<<bplg(wt);  // number of bytes in a cell of w
- DO(m, j=av[i][0]; k=av[i][1]; I jj=j+n; jj=(j>=0)?j:jj; j=n-jj; k=k>j?j:k; k*=wcb; MC(zv,wv+jj*wcb,k); zv+=k;)
+ DO(m, j=av[i][0]; k=av[i][1]; I jj=j+n; jj=(j>=0)?j:jj; j=n-jj; k=k>j?j:k; k*=wcb; JMC(zv,wv+jj*wcb,k,0); zv+=k;)
  RETF(z);
 }    /* a ;@:(<;.0) vector */
 

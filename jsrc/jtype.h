@@ -153,7 +153,7 @@ struct AD {
         // (5) in the return from wordil, holds the number of words if any final NB. is discarded; (6) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (7) in the self block for y L: n and u S: n, the address of the fs block for u; (8) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in hashtables in x15.c and in tickers, the number of entries that have been hashed
-        // (11) in file-lock list and file-number list, the # valid files (14) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
+        // (11) in file-lock list and file-number list, the # valid files (12) if AFUNIFORMITEMS is set, the total# items in all boxes (13) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
@@ -524,7 +524,7 @@ typedef I SI;
 #define AFNVRFLAGX      8
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX MARKX     // matches MARK
-#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AS[0]
+#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFVIRTUALX      C2TX      // matches C2TX
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it

@@ -491,7 +491,7 @@ docase:
    // try.  create a try-stack entry, step to next line
    BASSERT(tdi<NTD,EVLIMIT);
    tryinit(tdv+tdi,i,cw);
-   // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
+   // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
    // if debugging is already off, it stays off
    if(unlikely(jt->uflags.us.cx.cx_c.db))jt->uflags.us.cx.cx_c.db=(nGpysfctdl&16)&&(UC)(tdv+tdi)->d?JT(jt,dbuser)&0x1:0;
    ++tdi; ++i; nGpysfctdl|=4;  // bump tdi pointer, set flag

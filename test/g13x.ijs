@@ -200,7 +200,7 @@ f=: 3 : 'try. 13!:8 y catch. 13!:11 $0 end.'
 10  -: f 256
 3  -: f 0
 
-13!:8 :: 1: x=: (- 35&=) >: ?255  NB. Make sure we don't try to create ETHROW (35), which does not honor adverse
+13!:8 :: 1: x=: (- e.&35 15) >: ?255  NB. Make sure we don't try to create EVTHROW (35) or EVEXIT (15), which do not honor adverse
 x -: 13!:11 ''
 
 'length error' -: 13!:11 etx 'junkfoo'

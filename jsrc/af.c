@@ -178,6 +178,7 @@ DF1(jtfix){PROLOG(0005);A z;
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
+ STACKCHKOFL  // make sure we can't recur to a name by removing the name
  self=AT(self)&NOUN?self:zeroionei(0);  // default to 0 if noun not given
  // To avoid infinite recursion we keep an array of names that we have looked up.  We create that array here, initialized to empty.  To pass it into fixa, we create
  // a faux INT block to hold the value, and use AM in that block to point to the list of names.  The fauxblock has rank 0 but 2 items

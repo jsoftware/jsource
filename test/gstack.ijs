@@ -28,6 +28,7 @@ reverse byte order for Windows.)
 NB. f=: 3 : 'f c=:>:y'
 'stack error' -: (f=: 3 : 'f y'         ) etx 0
 'stack error' -: (f=: 3 : '0!:0 ''f 0''') etx 0
+'stack error' -: (f=: 3 : 'f f. y'      ) etx 0
 'stack error' -: (f=: 3 : '".''f y'''   ) etx 0
 'stack error' -: (f=: 3 : '6!:2 ''f y''') etx 0
 'stack error' -: (f=: 3 : '7!:2 ''f y''') etx 0

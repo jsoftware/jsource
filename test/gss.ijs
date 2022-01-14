@@ -171,11 +171,10 @@ NB. Monads
 NB. Verify each verb goes through a faster path
 compst =: 1 : 0
 :
-x
-u
 timesing =. (QKTEST{2000 200) (6!:2) 'u f.&>~ y'
 timearray =. (QKTEST{2000 200) (6!:2) 'u f.&>~ x'
-timesing,timearray
+timesing,timearray return.
+u x  NB. to force dyad
 )
 vv0 =. <"0 (1000 $ 1 - 1)
 vv1 =. <"1 (1000 2 $ 1 - 1)
@@ -231,11 +230,10 @@ THRESHOLD +. 0.75 > %/ vv1 _1&o. compst vv0
 NB. Repeat for monad
 compst =: 1 : 0
 :
-x
-u
 timesing =. (QKTEST{2000 200) (6!:2) 'u f.&> y'
 timearray =. (QKTEST{2000 200) (6!:2) 'u f.&> x'
-timesing,timearray
+timesing,timearray return.
+u x
 )
 NB. 0.75 > %/ vv1 <. compst vv0   <. >. on INT/BOOL is just a nop
 NB. 0.75 > %/ vv1 >. compst vv0

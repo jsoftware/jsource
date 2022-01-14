@@ -218,16 +218,16 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
 /* c  - stack entry for dbunquote for this function */
 // d - DC area to use in deba
 
-A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
+A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;B s;
  movesentencetosi(jt,queue,m,0);  // install sentence-to-be-executed for stop purposes
- if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);
+ if(s=dbstop(c,ci->source)){z=parsez=0; jsignal(EVSTOP);
  }else{  // cx adds a stack entry for PARSE, needed to get anonymous operators right
-  z=PARSERVALUE(parsea(queue,m));
+  z=PARSERVALUE(parsez=parsea(queue,m));  // make sure we preserve ASGN flag in parsez
  }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
  // executed 13!:0]0, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
- if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
- R z;
+ if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ R parsez;
 }
 
 A jtdbunquote(J jt,A a,A w,A self,DC d){A t,z;B s;V*sv;

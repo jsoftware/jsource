@@ -225,8 +225,8 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
 }
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack
  if(top)R stack[top-1];
- // Fill in the canend field, which tells whether the previous B-block result can become the overall result.  It is used only
- // in T blocks and end./continue./break.
+ // Fill in the canend field, which tells whether the PREVIOUS B-block result can become the overall result.  It is used only
+ // in T blocks and end./continue./break., or to test for non-noun results
  // Clear canend to 0, meaning 'don't know'.  1=must return, 2=won't return, 4/8=provisional values of same
  DO(n, con[i].ig.indiv.canend=0;);
  // Go through in reverse order, filling in a line if we have the status of its successors

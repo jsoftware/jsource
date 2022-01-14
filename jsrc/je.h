@@ -332,6 +332,7 @@ extern F1(jtsphwmk);
 extern F1(jtspit);
 extern F1(jtsqroot);
 extern F1(jtsquare);
+extern F1(jtstackfault);
 extern F1(jtstr0);
 extern F1(jtstype);
 extern F1(jtswap);

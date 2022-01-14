@@ -51,7 +51,9 @@
 #endif
 #define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
- if(likely(!attnval)){if(likely(!(nGpysfctdl&128+16)))z=PARSERVALUE(parsea(queue,m));else {if(thisframe)thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,cw+i,callframe));}}else{jsignal(EVATTN); z=0;} }  // debug parse if debug/pm
+ if(likely(!attnval)){if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}else{jsignal(EVATTN); z=0;}   /* debug parse if debug/pm */ \
+ if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200))if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)z=0;}} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
+ }
 
 /* for_xyz. t do. control data   */
 typedef struct{

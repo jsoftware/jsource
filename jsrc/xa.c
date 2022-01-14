@@ -228,15 +228,16 @@ F1(jtasgzombs){I k;
 }
 
 // display deprecation message mno with text mtxt, if enabled
+// if mno<0, take complement and write willy-nilly
 // return 0 to signal error, 1 to continue
-I jtdeprecmsg(J jt, I mno, C *mtxt){
- if(jt->deprecct==0)R 1;  // msgs disabled, continue
- A okmsg; RZ(okmsg=eps(sc(mno),jt->deprecex)); if(BAV(okmsg)[0]!=0)R 1;  // unless this msg excluded, continue
+I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno;
+ if(mno>=0){if(jt->deprecct==0)R 1;}else{absmno=~mno; jt->deprecct+=jt->deprecct==0;}  // if msgs disabled, return; but force msg out if neg
+ A okmsg; if(jt->deprecex){RZ(okmsg=eps(sc(absmno),jt->deprecex)); if(BAV(okmsg)[0]!=0)R 1;}  // unless this msg excluded, continue
  // code to write output line copied from jtpr1
  // extract the output type buried in jt
  if(jt->deprecct!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
- ASSERT(jt->deprecct>0,EVNONCE);  // if fail on warning, do so
- --jt->deprecct;  // decrment # of messages to allow
+ ASSERT(jt->deprecct>0,mno<0?EVNONNOUN:EVNONCE);  // if fail on warning, do so
+ jt->deprecct-=jt->deprecct!=0;  // decrment # of messages to allow
  R 1;  // return  no error
 }
 
@@ -261,6 +262,19 @@ F1(jtdeprecxs){A ct, excl;
 //9!:54
 F1(jtdeprecxq){
  RETF(link(sc(jt->deprecct),jt->deprecex?jt->deprecex:mtv));  // return  current status
+}
+
+//13!:99 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
+F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
+ sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%llx\n",stackptr,jt->cstackmin);
+ jsto(JJTOJ(jt),MTYOER,buf);
+ stackptr-=0x10000;  // step over valid locals
+ while(1){  // till we crash
+  sprintf(buf,"writing to 0x%p\n",stackptr);
+  jsto(JJTOJ(jt),MTYOER,buf);
+  I n; for(n=0;n<0x100000;++n)*stackptr--=0x55;
+ }
+ R 0;
 }
 
 

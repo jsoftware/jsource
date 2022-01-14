@@ -261,6 +261,7 @@ F2(jtforeign){I p,q;
   case XC(13,81): R CDERIV(CIBEAM, 0,            jtfindrange4, VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,82): R CDERIV(CIBEAM, 0,            jtfindrange2, VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,83): R CDERIV(CIBEAM, jthdrinfo,            0, VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(13,99): R CDERIV(CIBEAM, jtstackfault,            0, VFLAGNONE,RMAX,RMAX,RMAX);
 
   case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE|VJTFLGOK2,RMAX,   1L,  1L  );
   case XC(15,1):  R SDERIV(CIBEAM, jtmemr,       0,            VASGSAFE,RMAX,RMAX,RMAX);

@@ -83,14 +83,13 @@ NB. Test display of error spacing
 '|value error: undef|   (undef undef)    (1+undef+".)''+ 6''' -: efx '(undef undef) (1 + undef + ".) ''+ 6'''
 '|domain error: efx|   5.7    ([:;]<@(+/\);.2)i.5' -: efx '5.7 ([:;]<@(+/\);.2) i. 5'
 
-NB. Verify that undefname is OK, but undefined x. creates an error, in an explicit def
-t =: 3 : 0
-undefname/
-x/
-y
+NB. Verify that undefname is OK, but undefined u creates an error, in an explicit def
+t =: 1 : 0
+undefname/ if. 0 do. return. end.
+v/
 )
 
-'|value error: t|       x/' -: efx 't 5'
+'|value error: t|       v/' -: efx '+ t 5'
 
 '|ill-formed number|   1+1qs|     ^|   3     :(''1+1qs'',(10{a.))' -: efx '3 : (''1+1qs'',(10{a.))'
 
@@ -114,15 +113,34 @@ NB. Verify AR assignment works for 1 & more names
 (,'+') -: 5!:5 <'bc'
 
 NB. Test single-word lines
-swd =: 3 : 0
-+
+swd =: 1 : 0
 y
-&
-/
-undefname
 5
 )
-5 -: swd''
+5 -: + swd ''
+
+
+5 -: + (1 : 0) 
++
+if. do. 5 end.
+)
+
+5 -: + (1 : 0) 
++
+5
+)
+
+swd =: 1 : 0
++ if. 0 do. return. end.
+u if. 0 do. return. end.
+& if. 0 do. return. end.
+/ if. 0 do. return. end.
+undefname if. 0 do. return. end.
+5
+)
+5 -: + swd
+
+
 
 NB. Verify noun assignments to all parts of speech are honored
 3 = +('aa'=:/) i. 3

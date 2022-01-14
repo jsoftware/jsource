@@ -88,7 +88,7 @@ sum=: +/
 
 NB. Going through locatives leaves global path unchanged
 a_z_ =: a =: 1 : 0
-u. f.
+xxx =. u. f.
 1
 )
 + a

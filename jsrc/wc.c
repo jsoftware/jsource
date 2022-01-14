@@ -66,30 +66,37 @@ static I jtcongoto(J jt,I n,CW*con,A*lv){A x,z;C*s;CW*d=con,*e;I i,j,k,m;
 // If the BREAKS turns out to be nested inside a for., it will be changed to BREAKF to cause the for. to be popped off the stack.
 
 // Process end. not associated with select. or try.
-static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r){I e,m,t;
- e=1+i;    // set e to Next Sequential Instruction
- CWASSERT(c); c->go=(US)e;   // Set previous control to come here.  This could be the do. if if./do. or loop/do., or the else. of else./do.
+static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r,CW*con){I e,m,t;
+ e=1+i;    // set e to Next Sequential Instruction after end.
+ CWASSERT(c);
  switch(CWCASE(r,q)){    // look at the stack-types of the antepenultimate and penultimate entries
-  default:                   CWASSERT(0);  // if not known combination, give control error
-  case CWCASE(CDO,CELSE):                  // if. ...do. ... end.  or do. ... else. ... end. - leave as is
-  case CWCASE(CIF,CDO):      break;
-  case CWCASE(CELSEIF,CDO):  CWASSERT(d); d->go=(US)e; break;  // if elseif./do./end., set elseif. to come to end.
-  case CWCASE(CWHILST,CDO):  CWASSERT(d); d->go=(US)(1+j);   // set whilst. to start at end, and fall through to...
-  case CWCASE(CWHILE,CDO):                                    // ...while. ... do.
-   // Set the end. to point back to the post-while., and then scan the loop looking for break./continue.
-   // that has not been processed before (we detect these by d->go==SMAX; so when there are nested loops
-   // we will skip over break. for inner loops, which have already been processed). 
-   CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
-   // fill in break. to go after end., or continue. to go after while.; leave others unchanged
-   DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)(1+k):(US)SMAX;);
-   break;
-  case CWCASE(CFOR,CDOF):
-   // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
-   // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
-   // was previously marked as in select.
-   CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
-   DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->ig.indiv.type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);
+ default:                   CWASSERT(0);  // if not known combination, give control error
+ case CWCASE(CDO,CELSE):                  // ... do. else. end.
+  k=j;  // start the chain at the else. in this case.  Fall through to ...
+ case CWCASE(CELSEIF,CDO):  // elseif. do. end.
+  CWASSERT(d);
+  // elseif. and else. are backchained.  Chase the chain, replacing the chain with the NSI after the end.
+  do{I nextk=con[k].go; con[k].go=e; k=nextk;}while(k);  // end-of-chain is the first elseif./else., end AFTER filling it in
+  break;
+// obsolete  d->go=(US)e; break;  // if elseif./do./end., set elseif. to come to end.
+ case CWCASE(CIF,CDO):      break;
+ case CWCASE(CWHILST,CDO):  CWASSERT(d); d->go=(US)(1+j);   // set whilst. to start at end, and fall through to...
+ case CWCASE(CWHILE,CDO):                                    // ...while. ... do.
+  // Set the end. to point back to the post-while., and then scan the loop looking for break./continue.
+  // that has not been processed before (we detect these by d->go==SMAX; so when there are nested loops
+  // we will skip over break. for inner loops, which have already been processed). 
+  CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
+  // fill in break. to go after end., or continue. to go after while.; leave others unchanged
+  DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)(1+k):(US)SMAX;);
+  break;
+ case CWCASE(CFOR,CDOF):
+  // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
+  // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
+  // was previously marked as in select.
+  CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
+  DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->ig.indiv.type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);
  }
+ c->go=(US)e;   // Set previous control to come to NSI.  This could be the do. of if./do. or loop/do., or the else. of else./do.
  R -1;
 }
 
@@ -100,12 +107,13 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  while(top&&t!=CTRY){
   j=stack[--top];
   switch(t=(j+con)->ig.indiv.type){
-   case CTRY:    break;
-   case CCATCH:  CWASSERT(0>c[0]); c[0]=d[k++]=j; break;
-   case CCATCHD: CWASSERT(0>c[1]); c[1]=d[k++]=j; break;
-   case CCATCHT: CWASSERT(0>c[2]); c[2]=d[k++]=j; break;
-   default:      CWASSERT(0);
- }}
+  case CTRY:    break;
+  case CCATCH:  CWASSERT(0>c[0]); c[0]=d[k++]=j; break;
+  case CCATCHD: CWASSERT(0>c[1]); c[1]=d[k++]=j; break;
+  case CCATCHT: CWASSERT(0>c[2]); c[2]=d[k++]=j; break;
+  default:      CWASSERT(0);
+  }
+ }
  CWASSERT(t==CTRY&&1<k);   // verify at least one catchx.  j now points to try.
  (j+con)->go=(US)d[k-1];                         // point the try. to the first catchx.
  m=k; DQ(k-1, --m; (d[m]+con)->go=(US)d[m-1];);  // point each catchx. to the next catchx., and the last one to the end.
@@ -132,7 +140,8 @@ static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,
    c=j; (j+con)->go=(US)endline;          // set failed-compare point to be the case. test; point case. to the end. (end-of-case goes to end.)
    if(d==1+j)(d+con)->go=(US)(1+d);    // if empty case., set do. to fall through to next inst
    if(t==CFCASE&&top<ot-2)(stack[2+top]+con)->go=(US)(1+stack[3+top]);  // if fcase. (and not last case), point case. AFTER fcase. to go to the do. for that following case.
- }}
+  }
+ }
  (c+con)->go=(US)(1+c);  // set first case. to fall through to the first test
  // j points to the select. for this end.  Replace any hitherto unfilled break./continue. with BREAKS/CONTS
  DQ(endline-j-2, ++j; if(SMAX==con[j].go){if(CBREAK==con[j].ig.indiv.type)con[j].ig.indiv.type=CBREAKS;else if(CCONT==con[j].ig.indiv.type)con[j].ig.indiv.type=CCONTS;});
@@ -147,82 +156,85 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
  for(i=0;i<n;++i){
   // top is the top of the stack (i. e. the place to add the next entry)
   // b, c, d -> con entries, p, q, r are cw-types   for current cw, previous cw on stack, 2d-previous cw on stack
+  // the order is d,c,b and r,q,p going is ascending CW numbers.  i,j,k are indexes corresponding to b,c,d
   // e is the next sequential instruction (following instruction i, the current line)
   // tb counts the number of unclosed if. statements.  If this is nonzero, every sentence becomes a T-block sentence
   q=r=0; e=1+i;             b=i+con; p=b->ig.indiv.type;
   if(0<top){j=stack[top-1]; c=j+con; q=c->ig.indiv.type;}
   if(1<top){k=stack[top-2]; d=k+con; r=d->ig.indiv.type;}
   switch(p){
-   case CBBLOCK:
-     if(tb)b->ig.indiv.type=CTBLOCK;   // In case of  if. if. x do. y end. do. end., y is NOT eligible to be the result, because
-     // it is executed  in a T block; so we switch B to T inside ANY T block
-     break;
-   case CLABEL:  b->go=(US)e;           break;  // label goes to NSI
-   case CTRY:
-   case CCATCH:
-   case CCATCHD:
-   case CCATCHT: stack[top++]=i;        break;  // try./catch.: push address of control word
-   case CCONT: case CBREAK: case CCONTS: case CBREAKS:  CWASSERT(wb);          break;  // continue/break: verify in a loop
-   case CFOR:
-   case CWHILE:  
-   case CWHILST: ++wb;                          // for./while./whilst.: increment nested-loop count, fall through to...
-   case CIF:     stack[top++]=i; ++tb;  break;   // (if. too) ...push addr of cw, increment t-block count
-   case CCASE:
-   case CFCASE:                                 // case./fcase.
-    CWASSERT(q==CSELECT||q==CSELECTN||q==CDOSEL);           // verify in select.
-    stack[top++]=i; if(q==CDOSEL)++tb;        // push address of cw; if not first case, increment T-block count (for the first,
-                                              // we inherit the T-block status from the select.)
+  case CBBLOCK:
+    if(tb)b->ig.indiv.type=CTBLOCK;   // In case of  if. if. x do. y end. do. end., y is NOT eligible to be the result, because
+    // it is executed  in a T block; so we switch B to T inside ANY T block
     break;
-   case CSELECT:                              // select. - start T-block and check select. nesting
-    // The execution-time code creates a stack-frame for select. that must be popped if break. or continue. is
-    // encountered.  If select. blocks are nested, all nested blocks back to the looping structure must be
-    // popped.  But the execution-time stack does not create a stack-frame for while., so looking at the
-    // run-time stack cannot indicate where the top-level select. is.  Instead, we must analyze it here.
-    // we change a nested select. to SELECTN.  This is needed only if we are in a loop.
-    if(wb) {   // analyze only if in loop
-     // Go back through the stack till we hit a loop.  If we find a SELECT along the way, change this to a SELECTN
-     I s;  // stack pointer
-     for(s=top-1;con[stack[s]].ig.indiv.type!=CFOR && con[stack[s]].ig.indiv.type!=CWHILE && con[stack[s]].ig.indiv.type!=CWHILST;--s) {
-      if(con[stack[s]].ig.indiv.type==CSELECT){b->ig.indiv.type=CSELECTN;break;}
-     } 
-    }
-    stack[top++]=i; ++tb;  break;            // push addr of cw, increment t-block count
-   case CDO:                                   // do. - classify according to what structure we are in
-    CWASSERT(((((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE))>>(q&31))&1);   // first, make sure do. is allowed here
-     // classify the do. based on struct: if for. do., call it DOF; if [f]case. do, call it DOSEL;
-     // otherwise (if./elseif., while./whilst.) leave it as DO
-    b->ig.indiv.type=q==CFOR?CDOF:q==CCASE||q==CFCASE?CDOSEL:CDO;
-    stack[top++]=i; --tb;                    // push the line# of the DO line; and note that this ends a T block
-    break;
-   case CELSEIF:                             // elseif. - like end. + if.
-    CWASSERT(q==CDO);                        // verify in if.  (but it could be while. ??)
-    c->go=(US)e;                             // set previous do. go to instruction after elseif.
-    if(r==CELSEIF)d->go=(US)i;               // if struct is elseif. .. do.  elseif., point the previous elseif. to this one
-    top-=2; stack[top++]=i; ++tb;            // remove the previous if. ... do. or elseif. ... do., replace with this elseif.; and
-                                             // note that the previous block was a B and we have now moved to a T
-    break;
-   case CELSE:                               // else.
-    CWASSERT((r==CIF||r==CELSEIF)&&q==CDO);                // verify part of if./elseif. ... do. ... else.
-    c->go=(US)e;                             // set if. to jump to NSI
-    if(r==CELSEIF)d->go=(US)i;               // if struct is elseif. .. do.  else., point the previous elseif. to this else.
-    stack[top-2]=stack[top-1]; stack[top-1]=i;  // replace if./elseif. ... do. on stack with do. ... else.
-    break;
-   case CEND:                                // end. run a conend... routine to update pointers in the cws. q->the do., r->the starting cw of the structure
-    switch(q){
-    case CDOSEL:                            // if [f]case. ... do. ... end. 
-     top=conendsel(i,top,stack,con); CWASSERT(0<=top); b->ig.indiv.type=CENDSEL; break;  // end the select., and change the cw to ENDSEL
-    case CCATCH: case CCATCHD: case CCATCHT:  // if a catch?.
-     CWASSERT(1<=top);
-     top=conendtry(i,top,stack,con); CWASSERT(0<=top);                  break;  // end the catch, verify validity
-    default:                                // if if./elseif./else. or while./whilst./for. ...
-     top-=2;                                // pop the starting cw and the do.
-     if(r==CWHILE||r==CWHILST||r==CFOR)--wb;  // if this ends a loop, decrement the nested-loop count
-     CWASSERT(0>conend(i,j,k,b,c,d,p,q,r));   // update the controls matching this end.
-    }
-    // if the END was not ENDSEL and goes to NSI, change the preceding block from BBLOCK to BBLOCKEND
-    if(i+1<n&&b->go==i+1&&q!=CDOSEL&&con[i-1].ig.indiv.type==CBBLOCK)con[i-1].ig.indiv.type=CBBLOCKEND;
+  case CLABEL:  b->go=(US)e;           break;  // label goes to NSI
+  case CTRY:
+  case CCATCH:
+  case CCATCHD:
+  case CCATCHT: stack[top++]=i;        break;  // try./catch.: push address of control word
+  case CCONT: case CBREAK: case CCONTS: case CBREAKS:  CWASSERT(wb);          break;  // continue/break: verify in a loop
+  case CFOR:
+  case CWHILE:  
+  case CWHILST: ++wb;                          // for./while./whilst.: increment nested-loop count, fall through to...
+  case CIF:     stack[top++]=i; ++tb;  break;   // (if. too) ...push addr of cw, increment t-block count
+  case CCASE:
+  case CFCASE:                                 // case./fcase.
+   CWASSERT(q==CSELECT||q==CSELECTN||q==CDOSEL);           // verify in select.
+   stack[top++]=i; if(q==CDOSEL)++tb;        // push address of cw; if not first case, increment T-block count (for the first,
+                                             // we inherit the T-block status from the select.)
+   break;
+  case CSELECT:                              // select. - start T-block and check select. nesting
+   // The execution-time code creates a stack-frame for select. that must be popped if break. or continue. is
+   // encountered.  If select. blocks are nested, all nested blocks back to the looping structure must be
+   // popped.  But the execution-time stack does not create a stack-frame for while., so looking at the
+   // run-time stack cannot indicate where the top-level select. is.  Instead, we must analyze it here.
+   // we change a nested select. to SELECTN.  This is needed only if we are in a loop.
+   if(wb) {   // analyze only if in loop
+    // Go back through the stack till we hit a loop.  If we find a SELECT along the way, change this to a SELECTN
+    I s;  // stack pointer
+    for(s=top-1;con[stack[s]].ig.indiv.type!=CFOR && con[stack[s]].ig.indiv.type!=CWHILE && con[stack[s]].ig.indiv.type!=CWHILST;--s) {
+     if(con[stack[s]].ig.indiv.type==CSELECT){b->ig.indiv.type=CSELECTN;break;}
+    } 
+   }
+   stack[top++]=i; ++tb;  break;            // push addr of cw, increment t-block count
+  case CDO:                                   // do. - classify according to what structure we are in
+   CWASSERT(((((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE))>>(q&31))&1);   // first, make sure do. is allowed here
+    // classify the do. based on struct: if for. do., call it DOF; if [f]case. do, call it DOSEL;
+    // otherwise (if./elseif., while./whilst.) leave it as DO
+   b->ig.indiv.type=q==CFOR?CDOF:q==CCASE||q==CFCASE?CDOSEL:CDO;
+   stack[top++]=i; --tb;                    // push the line# of the DO line; and note that this ends a T block
+   break;
+  case CELSEIF:                             // elseif. - like end. + if.  Executing an elseif. means previous test succeeded
+   CWASSERT((r==CIF||r==CELSEIF)&&q==CDO);     // verify in if./elseif do.
+   c->go=(US)e;                             // set previous do. go to instruction after elseif. (i. e. previous test failed, go to this test)
+   b->go=r==CIF?0:k; // all elseif./else. must point to the NSI of the eventual end.  Backchain them, ending the chain with a 0 entry for the one following the if.
+// obsolete     if(r==CELSEIF)d->go=(US)i;               // if struct is elseif. .. do.  elseif., point the previous elseif. to this one
+   top-=2; stack[top++]=i; ++tb;            // remove the previous if. ... do. or elseif. ... do., replace with this elseif.; and
+                                            // note that the previous block was a B and we have now moved to a T
+   break;
+  case CELSE:                               // else.
+   CWASSERT((r==CIF||r==CELSEIF)&&q==CDO);                // verify part of if./elseif. ... do. ... else.
+   c->go=(US)e;                             // set previous do. go to instruction after elseif. (i. e. previous test failed, go to this test)
+   b->go=r==CIF?0:k; // all elseif./else. must point to the NSI of the eventual end.  Backchain them, ending the chain with a 0 entry for the one following the if.
+// obsolete     if(r==CELSEIF)d->go=(US)i;               // if struct is elseif. .. do.  else., point the previous elseif. to this else.
+   stack[top-2]=stack[top-1]; stack[top-1]=i;  // replace if./elseif. ... do. on stack with do. ... else.
+   break;
+  case CEND:                                // end. run a conend... routine to update pointers in the cws. q->the do., r->the starting cw of the structure
+   switch(q){
+   case CDOSEL:                            // if [f]case. ... do. ... end. 
+    top=conendsel(i,top,stack,con); CWASSERT(0<=top); b->ig.indiv.type=CENDSEL; break;  // end the select., and change the cw to ENDSEL
+   case CCATCH: case CCATCHD: case CCATCHT:  // if a catch?.
+    CWASSERT(1<=top);
+    top=conendtry(i,top,stack,con); CWASSERT(0<=top);                  break;  // end the catch, verify validity
+   default:                                // if if./elseif./else. or while./whilst./for. ...
+    top-=2;                                // pop the starting cw and the do.
+    if(r==CWHILE||r==CWHILST||r==CFOR)--wb;  // if this ends a loop, decrement the nested-loop count
+    CWASSERT(0>conend(i,j,k,b,c,d,p,q,r,con));   // update the controls matching this end.
+   }
+   // if the END was not ENDSEL and goes to NSI, change the preceding block from BBLOCK to BBLOCKEND
+   if(i+1<n&&b->go==i+1&&q!=CDOSEL&&con[i-1].ig.indiv.type==CBBLOCK)con[i-1].ig.indiv.type=CBBLOCKEND;
   }
-}
+ }
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack
  if(top)R stack[top-1];
  // Fill in the canend field, which tells whether the PREVIOUS B-block result can become the overall result.  It is used only
@@ -238,36 +250,36 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
    I origcanend=con[i].ig.indiv.canend;
    if(!(origcanend&3)){  // if the value is filled in with a final already, we won't change it
     switch(con[i].ig.indiv.type) {
-     case CBBLOCK: case CBBLOCKEND: case CTHROW:
-      con[i].ig.indiv.canend = 8+2; break;  // These are by definition not an end
-     case CRETURN:
-      con[i].ig.indiv.canend = 4+1; break;  // These by definition ARE an end
-     case CFOR: case CSELECTN: case CSELECT: case CLABEL:
-      // These blocks inherit only from NSI
-      if(i>=n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
-      else con[i].ig.indiv.canend = con[i+1].ig.indiv.canend;  // Only successor is NSI, use that
-      break;
-     case CTBLOCK: case CASSERT:
-      // These blocks inherit from NSI only, but if go is NOT off the end, they also inherit from go, which is
-      // catch. or the like.  If go is off the end, the function is taking an error and the result is immaterial
-      if(i>=n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
-      else if(con[i].go>=n)con[i].ig.indiv.canend = con[i+1].ig.indiv.canend;   // if go is off the end, use NSI
-      else con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend & con[i+1].ig.indiv.canend;  // otherwise, make 2 only if both successors are 2
-      break;
-     case CTRY: case CCATCH: case CCATCHD: case CCATCHT: case CDOF: case CDOSEL: case CDO:
-      // These blocks inherit either from NSI or from go
-      if(i==n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
-      else if(con[i].go>=n)con[i].ig.indiv.canend = 4+1;   // if go is off the end, use that
-      else con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend & con[i+1].ig.indiv.canend;  // otherwise, make 2 only if both successors are 2
-      break;
-     case CENDSEL: case CBREAK: case CCONT: case CBREAKS: case CCONTS: case CBREAKF: case CCASE: case CFCASE:
-     case CIF: case CELSE: case CWHILE: case CWHILST: case CELSEIF: case CGOTO: case CEND:
-       // These blocks inherit only from GO, but on a backward branch they provisionally inherit from NSI
-      if(con[i].go>=n)con[i].ig.indiv.canend = 4+1;  // If jump off the end, that's end
-      else if(con[i].go>=i)con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend;  // Only successor is go, use that
-      else if(i==n-1)con[i].ig.indiv.canend = 4+1;  // backward branch but NSI is off the end: end
-      else con[i].ig.indiv.canend = (con[i+1].ig.indiv.canend&0xc) | ((con[i+1].ig.indiv.canend&con[con[i].go].ig.indiv.canend)>>2); // backward branch: provisionally accept NSI; ratify it if go matches
-      break;
+    case CBBLOCK: case CBBLOCKEND: case CTHROW:
+     con[i].ig.indiv.canend = 8+2; break;  // These are by definition not an end
+    case CRETURN:
+     con[i].ig.indiv.canend = 4+1; break;  // These by definition ARE an end
+    case CFOR: case CSELECTN: case CSELECT: case CLABEL:
+     // These blocks inherit only from NSI
+     if(i>=n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
+     else con[i].ig.indiv.canend = con[i+1].ig.indiv.canend;  // Only successor is NSI, use that
+     break;
+    case CTBLOCK: case CASSERT:
+     // These blocks inherit from NSI only, but if go is NOT off the end, they also inherit from go, which is
+     // catch. or the like.  If go is off the end, the function is taking an error and the result is immaterial
+     if(i>=n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
+     else if(con[i].go>=n)con[i].ig.indiv.canend = con[i+1].ig.indiv.canend;   // if go is off the end, use NSI
+     else con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend & con[i+1].ig.indiv.canend;  // otherwise, make 2 only if both successors are 2
+     break;
+    case CTRY: case CCATCH: case CCATCHD: case CCATCHT: case CDOF: case CDOSEL: case CDO:
+     // These blocks inherit either from NSI or from go
+     if(i==n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
+     else if(con[i].go>=n)con[i].ig.indiv.canend = 4+1;   // if go is off the end, use that
+     else con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend & con[i+1].ig.indiv.canend;  // otherwise, make 2 only if both successors are 2
+     break;
+    case CENDSEL: case CBREAK: case CCONT: case CBREAKS: case CCONTS: case CBREAKF: case CCASE: case CFCASE:
+    case CIF: case CELSE: case CWHILE: case CWHILST: case CELSEIF: case CGOTO: case CEND:
+      // These blocks inherit only from GO, but on a backward branch they provisionally inherit from NSI
+     if(con[i].go>=n)con[i].ig.indiv.canend = 4+1;  // If jump off the end, that's end
+     else if(con[i].go>=i)con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend;  // Only successor is go, use that
+     else if(i==n-1)con[i].ig.indiv.canend = 4+1;  // backward branch but NSI is off the end: end
+     else con[i].ig.indiv.canend = (con[i+1].ig.indiv.canend&0xc) | ((con[i+1].ig.indiv.canend&con[con[i].go].ig.indiv.canend)>>2); // backward branch: provisionally accept NSI; ratify it if go matches
+     break;
     }
     madechange|=origcanend^con[i].ig.indiv.canend;  // remember if we made a change
    }

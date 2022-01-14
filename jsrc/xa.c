@@ -266,7 +266,7 @@ F1(jtdeprecxq){
 
 //13!:99 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
 F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
- sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%llx\n",stackptr,jt->cstackmin);
+ sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%p\n",stackptr,(void *)jt->cstackmin);
  jsto(JJTOJ(jt),MTYOER,buf);
  stackptr-=0x10000;  // step over valid locals
  while(1){  // till we crash

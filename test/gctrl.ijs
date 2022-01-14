@@ -120,6 +120,9 @@ Casey's Tool Works
 }} }} 'a'
 'open quote' -:  0!:100 etx '{{',LF,'1+y',LF,'''',LF,'}}'
 
+
+'control error' -: ". etx '{{ while. do. elseif. do.  end. }}'
+
 NB. Nameref caching  -------------------------------------------------------------------------------
 NB. names are cached
 4!:55 ;:'vb__ vb_z_'

@@ -68,7 +68,7 @@ build_for=: 3 : 0
 'invalid'assert 'J-'=0 4{y
 v=: 3{.}.y
 t=: 5}.y
-'bad jversion'assert +/902 903=0".v
+'bad jversion'assert +/902 903 904=0".v
 'bad jtype'assert (('beta-'-:5{.t)*.6=#t)+.('release-'-:8{.t)*.9=#t
 version=: v
 type=: t

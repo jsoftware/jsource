@@ -56,7 +56,9 @@
  }
 
 /* for_xyz. t do. control data   */
-typedef struct{
+typedef struct CDATA {
+ A fchn;  // pointer to next allocated block in stack, 0 if end of stack
+ struct CDATA *bchn;  // pointer to previous allocated block, possibly the local block.  0 in the local block itself
  A t;  // iteration array for for_xyz., select. value, or nullptr for for.
  A item;  // if for_xyz, the sorta-virtual block we are using to hold the value
  I j;  // iteration index
@@ -130,7 +132,8 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
 
 // A for/select. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again)
 // if assignvirt is set (normal), the xyz value is realized and reassigned if it is still the svb.  Otherwise it is freed and the value expunged.
-static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
+// result is address of cv after stack popped
+static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
  if(cv->w==CFOR){
   if(cv->t){  // if for_xyz. that has processed forinit ...
    JT(jt,sympv)[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
@@ -146,7 +149,12 @@ static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
   }
  }
  fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
- R 1;
+#if 0
+ cv=cv->bchn;  // go back to previous stack level
+#else
+ cv--;
+#endif
+ R cv;
 }
 
 // call here when we find that xyz_index has been aliased.  We remove it, free it, and replace it with a new block.  Return 0 if error
@@ -211,8 +219,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  RE(0);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
- UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
-             // 64=call is dyadic 128=pm is running    0xff00=original debug flag byte (must be highest bit)  0xffff0000=#cws in the definition
+ UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8 unused 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
+             // 64=call is dyadic 128=pm is running    0xff00=original debug flag byte   0xffff0000=#cws in the definition
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging/pm'ing
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
@@ -224,7 +232,10 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
 
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
- CDATA*cv;  // pointer to the current entry in the for./select. stack
+ CDATA cdata,*cv=0;  // pointer to the current entry in the for./select. stack
+#if 0
+ cdata.fchn=0;  // init no blocks allocated
+#endif
 
  A locsym;  // local symbol table to use
 
@@ -506,13 +517,26 @@ docase:
    BASSERT(0,EVTHROW);
   case CFOR:
   case CSELECT: case CSELECTN:
-   // for./select. push the stack.  If the stack has not been allocated, start with 9 entries.  After that,
+#if 0
+   // for./select. push the stack.  Use the C stack for the first one, after that allocate as needed.
+   if(cv==0){cv=&cdata; cv->bchn=0;  // for first block, use the canned area.  Indicate no previous blocks; there may be successors that we can reuse
+   }else if(cv->fchn)cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
+   }else{A cd;
+    // we have to allocate an element.  cv points to end of current chain
+    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>SZI,1,i=-1; z=0; continue); ACINITZAP(cd) // allocate, exiting with error if allocation failure.  Zap the block because it must persist over subsequent calls; we will delete by hand
+    cv->fchn=cd;  // forward-chain chain allocated A block to durrent CDATA block
+    CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
+    newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
+   } 
+#else
+//  If the stack has not been allocated, start with 9 entries.  After that,
    // if it fills up, double it as required
    if(unlikely(!r))
     if(unlikely(nGpysfctdl&8)){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
     else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ACINITZAP(cd) cv=(CDATA*)IAV1(cd)-1; nGpysfctdl|=8;}   // 9=r
 
    ++cv; --r;
+#endif
    BZ(forinitnames(jt,cv,cwgroup&0xff,line[CWSENTX]));  // setup the names, before we see the iteration value
    ++i;
    break;
@@ -553,7 +577,7 @@ docase:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
-   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); unstackcv(cv,1); --cv; ++r; 
+   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1); ++r; 
    i=cw[i].go;    // continue at new location
    break;
   case CBREAKS:
@@ -561,7 +585,7 @@ docase:
    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
    // any number of SELECTN, up to the SELECT 
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
-   NOUNROLL do{I fin=cv->w==CSELECT; unstackcv(cv,1); --cv; ++r; if(fin)break;}while(1);
+   NOUNROLL do{I fin=cv->w==CSELECT; cv=unstackcv(cv,1); ++r; if(fin)break;}while(1);
     // fall through to...
   case CBREAK:
   case CCONT:  // break./continue. in while., outside of select.
@@ -574,7 +598,7 @@ docase:
    // We just pop till we have popped a non-select.
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
-   NOUNROLL do{I fin=cv->w; unstackcv(cv,1); --cv; ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
+   NOUNROLL do{I fin=cv->w; cv=unstackcv(cv,1); ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(nGpysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
@@ -648,7 +672,11 @@ docase:
 
  if(unlikely(nGpysfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
+#if 0
+ if(likely(cv==0)){  // the for/select stack has been popped back to initial state
+#else
  if(likely((REPSGN(SGNIF(nGpysfctdl,3))&((I)cv^(I)((CDATA*)IAV1(cd)-1)))==0)){  // if we never allocated cd, or the stack is empty
+#endif
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
   if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
    // We have to make sure that we clear all atored values, because they may point to virtual blocks, even unincorpable ones, in callers.
@@ -661,10 +689,18 @@ docase:
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
   if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  See sbove for tpop
-  NOUNROLL while(cv!=(CDATA*)IAV1(cd)-1){unstackcv(cv,0); --cv;}  // clean up any remnants left on the for/select stack
+#if 0
+  NOUNROLL while(cv){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
+#else
+  NOUNROLL while(cv!=(CDATA*)IAV1(cd)-1){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
+#endif
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
+#if 0
+ A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain, which was freed & zapped
+#else
  if(unlikely(cd!=0)){fa(cd);}  // have to delete explicitly, because we protected the block with ACINITZAP
+#endif
  // locsym may have been freed now
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet

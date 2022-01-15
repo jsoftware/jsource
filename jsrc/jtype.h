@@ -277,8 +277,9 @@ typedef I SI;
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
 #define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
-#define voidAV0(x)       ((void*)((C*)(x)+AKXR(0)))  // unknown, but scalar
 #define voidAVn(x,n)     ((void*)((C*)(x)+AKXR(n)))  // unknown, but rank is known
+#define voidAV0(x)       voidAVn(x,0)  // unknown, but scalar
+#define voidAV1(x)       voidAVn(x,1)  // unknown, but list
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
 
 #if C_LE
@@ -484,11 +485,15 @@ typedef I SI;
 #define ACIPISOK(a)     (AC(a)<1)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
-#define ACINCRLOCAL(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)+1)&~ACINPLACE)
-#define ACDECRLOCAL(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-1))
+#define ACADDLOCAL(a,n) if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)+(n))&~ACINPLACE)
+#define ACSUBLOCAL(a,n) if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-(n)))
+#define ACINCRLOCAL(a)   ACADDLOCAL(a,1)
+#define ACDECRLOCAL(a)   ACSUBLOCAL(a,1)
 #define ACIPNO(a)       ACAND(a,~ACINPLACE)
-#define ACINCR(a)       ACINCRLOCAL(a)
-#define ACDECR(a)       ACDECRLOCAL(a)
+#define ACADD(a,n)      ACADDLOCAL(a,n)
+#define ACSUB(a,n)      ACSUBLOCAL(a,n)
+#define ACINCR(a)       ACADD(a,1)
+#define ACDECR(a)       ACSUB(a,1)
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define ACSET(a,v)      AC(a)=(v);  // used when a might be shared, but atomic not needed

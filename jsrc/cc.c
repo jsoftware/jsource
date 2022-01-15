@@ -191,7 +191,7 @@ DF2(jtboxcut0){A z;
 // obsolete     RZ(y=virtual(w,start*cellsize,wr)); ACIPNO(y); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
 // obsolete    }
    if(!((I)jtinplace&JTWILLBEOPENED)){
-    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
+    GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
     JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)   // copy the data, incorporate the block into the result
    }else{

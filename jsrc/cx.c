@@ -69,7 +69,7 @@ typedef struct CDATA {
  LX indexsym;  // symbol unmber of xyz_index, 0 for for.
 } CDATA;
 
-#define WCD            (sizeof(CDATA)/sizeof(I))
+//  obsolete #define WCD            (sizeof(CDATA)/sizeof(I))
 
 typedef struct{I4 d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and try.
 #define WTD            (sizeof(TD)/sizeof(I))
@@ -149,9 +149,9 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
   }
  }
  fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
-#if 0
+#if 1
  cv=cv->bchn;  // go back to previous stack level
-#else
+#else  // obsolete 
  cv--;
 #endif
  R cv;
@@ -233,7 +233,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
  CDATA cdata,*cv=0;  // pointer to the current entry in the for./select. stack
-#if 0
+#if 1  // obsolete
  cdata.fchn=0;  // init no blocks allocated
 #endif
 
@@ -345,8 +345,10 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  A *old=jt->tnextpushp;
 
  // loop over each sentence
+#if 0  // obsolete 
  A cd=0;  // pointer to block holding the for./select. stack, if any
  I r=0;  // number of unused slots allocated in for./select. stack
+#endif
  I i=0;  // control-word number of the executing line
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  A t=0;  // last T-block result
@@ -517,13 +519,13 @@ docase:
    BASSERT(0,EVTHROW);
   case CFOR:
   case CSELECT: case CSELECTN:
-#if 0
+#if 1  // obsolete 
    // for./select. push the stack.  Use the C stack for the first one, after that allocate as needed.
    if(cv==0){cv=&cdata; cv->bchn=0;  // for first block, use the canned area.  Indicate no previous blocks; there may be successors that we can reuse
-   }else if(cv->fchn)cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
+   }else if(cv->fchn){cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
    }else{A cd;
     // we have to allocate an element.  cv points to end of current chain
-    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>SZI,1,i=-1; z=0; continue); ACINITZAP(cd) // allocate, exiting with error if allocation failure.  Zap the block because it must persist over subsequent calls; we will delete by hand
+    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,i=-1; z=0; continue); ACINITZAP(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent calls; we will delete by hand
     cv->fchn=cd;  // forward-chain chain allocated A block to durrent CDATA block
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
@@ -576,8 +578,9 @@ docase:
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-   // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
-   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1); ++r; 
+   // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)   scaf xyz_index no longer deleted, but xyz is written?
+   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1);
+// obsolete  ++r; 
    i=cw[i].go;    // continue at new location
    break;
   case CBREAKS:
@@ -585,7 +588,8 @@ docase:
    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
    // any number of SELECTN, up to the SELECT 
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
-   NOUNROLL do{I fin=cv->w==CSELECT; cv=unstackcv(cv,1); ++r; if(fin)break;}while(1);
+   NOUNROLL do{I fin=cv->w==CSELECT; cv=unstackcv(cv,1); if(fin)break;}while(1);
+// obsolete  ++r; 
     // fall through to...
   case CBREAK:
   case CCONT:  // break./continue. in while., outside of select.
@@ -598,7 +602,8 @@ docase:
    // We just pop till we have popped a non-select.
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
-   NOUNROLL do{I fin=cv->w; cv=unstackcv(cv,1); ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
+   NOUNROLL do{I fin=cv->w; cv=unstackcv(cv,1); if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
+// obsolete  ++r; 
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(nGpysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
@@ -672,7 +677,7 @@ docase:
 
  if(unlikely(nGpysfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
-#if 0
+#if 1  // obsolete 
  if(likely(cv==0)){  // the for/select stack has been popped back to initial state
 #else
  if(likely((REPSGN(SGNIF(nGpysfctdl,3))&((I)cv^(I)((CDATA*)IAV1(cd)-1)))==0)){  // if we never allocated cd, or the stack is empty
@@ -689,14 +694,14 @@ docase:
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
   if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  See sbove for tpop
-#if 0
+#if 1   // obsolete 
   NOUNROLL while(cv){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
 #else
   NOUNROLL while(cv!=(CDATA*)IAV1(cd)-1){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
 #endif
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
-#if 0
+#if 1  // obsolete 
  A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain, which was freed & zapped
 #else
  if(unlikely(cd!=0)){fa(cd);}  // have to delete explicitly, because we protected the block with ACINITZAP

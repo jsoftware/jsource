@@ -678,7 +678,9 @@ b =: (i.10) ,:"0 ] 1
 (; b (<@(]"2));.0 a) -: b ;@:((<@(]"2));.0) a
 (; b (<@(]"3));.0 a) -: b ;@:((<@(]"3));.0) a
 
-
+NB. Verify <"n produces virtual when WILLOPEN
+a =: 10 1e5 $ ' '
+10000 > 7!:2 '#@>@:(<"1) a'
 
 NB. Other variants ]@;@:  and >@:  are verified under ;.1
 

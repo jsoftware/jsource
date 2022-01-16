@@ -173,15 +173,15 @@ DF2(jtboxcut0){A z;
  wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself sirtual
  I i; for(i=0;i<resatoms;++i){
-   I start=av[i][0]; I endorlen=av[i][1];
+  I start=av[i][0]; I endorlen=av[i][1];
 // obsolete   if(!(BETWEENO(start,0,wi))){if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
-   if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
-   endorlen+=start&abslength;  // convert len to end+1 form
-   endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
+  if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
+  endorlen+=start&abslength;  // convert len to end+1 form
+  endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
 // obsolete    if(endorlen<0){if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
-   if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
-   I substratoms=endorlen*cellsize;
-   // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
+  if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
+  I substratoms=endorlen*cellsize;
+  // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
 // obsolete    if(!((I)jtinplace&JTWILLBEOPENED)){
 // obsolete     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
 // obsolete     GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
@@ -190,30 +190,29 @@ DF2(jtboxcut0){A z;
 // obsolete     // WILLBEOPENED case.  We must allocate a virtual block so we can avoid the copy
 // obsolete     RZ(y=virtual(w,start*cellsize,wr)); ACIPNO(y); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
 // obsolete    }
-   if(!((I)jtinplace&JTWILLBEOPENED)){
-    GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
-    // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
-    JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)   // copy the data, incorporate the block into the result
-   }else{
-    // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
+  if(!((I)jtinplace&JTWILLBEOPENED)){
+   GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
+   // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
+   JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)   // copy the data, incorporate the block into the result
+  }else{
+   // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
 // obsolete     RZ(y=virtual(w,start*cellsize,wr));
-    if((y=gafv(SZI*(NORMAH+wr)-1))==0)break;  // allocate the block, abort loop if error
-    AT(y)=t;
-    ACINIT(y,ACUC1)   // transfer inplaceability from original block
-    ARINIT(y,(RANKT)wr); AN(y)=substratoms;
-    AK(y)=(wv-(C*)y)+start*(cellsize<<k);
-    AFLAGINIT(y,AFVIRTUAL | (t&RECURSIBLE))  // flags: recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
-    AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) // install shape
-    ABACK(y)=wback;  // install pointer to backer
-   }
+   if((y=gafv(SZI*(NORMAH+wr)-1))==0)break;  // allocate the block, abort loop if error
+   AT(y)=t;
+   ACINIT(y,ACUC1)   // transfer inplaceability from original block
+   ARINIT(y,(RANKT)wr); AN(y)=substratoms;
+   AK(y)=(wv-(C*)y)+start*(cellsize<<k);
+   AFLAGINIT(y,AFVIRTUAL | (t&RECURSIBLE))  // flags: recursive, not UNINCORPABLE, not NJA.
+   AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) // install shape
+   ABACK(y)=wback;  // install pointer to backer
+  }
  }
- I nboxes=jt->tnextpushp-AAV(z);  // see how many boxes we allocated without error
 // obsolete  if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave;   // restore tstack pointer
+ // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
+ if(unlikely((I)jtinplace&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
  jt->tnextpushp=pushxsave;   // restore tstack pointer
  // OK to fail now - memory is restored
- // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
- if(((I)jtinplace&JTWILLBEOPENED)&&nboxes){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}
- ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
+ ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  // The result can be called pristine if the contents are DIRECT and the result is recursive, because it contains all copied data
  AFLAGORLOCAL(z,(-(t&DIRECT))&(~(I)jtinplace<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE)
  RETF(z);  // return the recursive block

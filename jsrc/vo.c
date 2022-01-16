@@ -48,10 +48,11 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(wt); wv=CAV(w);
   // Since we are allocating the new boxes, the result will ipso facto be PRISTINE, as long as w is DIRECT.  If w is not DIRECT, we can be PRISTINE if we ensure that
-  // w is PRISTINE inplaceable, but we don't bother to do that because 
+  // w is PRISTINE inplaceable, but we don't bother to do that because PRISTINE is used only for DIRECT contents
   // If the input is DIRECT, mark the result as PRISTINE
   GATV(z,BOX,n,f,ws); AFLAGINIT(z,BOX+((-(wt&DIRECT))&AFPRISTINE)) if(unlikely(n==0)){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
-  // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.
+  // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  If WILLOPEN is given, we synthesize a virtual block and leave
+  // that in the result - it will be freed when the result is, since result is recursive
 
   // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
   // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
@@ -60,13 +61,31 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
   JMCDECL(endmask) JMCSETMASK(endmask,k,0)   // set mask for JMCR - OK to copy SZIs
-  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k,0,endmask); wv+=k; INCORPRAZAPPED(y,wt));   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
-
-
+  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself sirtual
+  while(n--){
+   if(!((I)jtinplace&JTWILLBEOPENED)){
+    GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k,0,endmask); INCORPRAZAPPED(y,wt);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+   }else{
+    // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
+    if((y=gafv(SZI*(NORMAH+wr)-1))==0)break;  // allocate the block, abort loop if error
+    AT(y)=wt;
+    ACINIT(y,ACUC1)   // transfer inplaceability from original block
+    ARINIT(y,(RANKT)r); AN(y)=m;
+    AK(y)=(wv-(C*)y);
+    AFLAGINIT(y,AFVIRTUAL | (wt&RECURSIBLE))  // flags: recursive, not UNINCORPABLE, not NJA.
+    MCISH(AS(y),f+ws,wr) // install shape
+    ABACK(y)=wback;  // install pointer to backer
+   }
+   wv+=k; 
+  }
+// obsolete  if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave;   // restore tstack pointer
+  // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
+  if(unlikely((I)jtinplace&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
   jt->tnextpushp=pushxsave;   // restore tstack pointer
+  // OK to fail now - memory is restored
   //   Since we are copying contents of w, it must lose PRISTINE status if it is boxed
   PRISTCLRF(w);  // destroys w
-  ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
+  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  }
  RETF(z);
 }    /* <"r w */

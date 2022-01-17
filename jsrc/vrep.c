@@ -217,7 +217,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z;
 #define itemsize 0
 #endif
   // If we are moving 8-byte items, we extend the allocation so that we can overstore up to 4 words.  This allows us to avoid remnant handling
-  GA00(z,AT(w),zn+itemsize,AR(w)+!wcr); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=p; AN(z)=zn;  // allo result, copy shape but replace the lengthened axis, which may be added
+  GA00(z,AT(w),zn+(itemsize<<LGNPAR),AR(w)+!wcr); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=p; AN(z)=zn;  // allo result, copy shape but replace the lengthened axis, which may be added
   C *zv=CAV(z);  // output fill pointer
   C *wv=CAV(w);  // input item pointer, increments over input cells
   for(;ncells;--ncells){  // for each result cell

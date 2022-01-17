@@ -264,16 +264,21 @@ F1(jtdeprecxq){
  RETF(link(sc(jt->deprecct),jt->deprecex?jt->deprecex:mtv));  // return  current status
 }
 
+static I recurmsg(J jt, C *msgaddr){
+ C buf[80];
+ if(&buf[0]-msgaddr<0){
+  msgaddr-=0x40000;  // set new level for next msg
+  sprintf(buf,"stack now at 0x%p\n",&buf);
+  jsto(JJTOJ(jt),MTYOER,buf);
+ }
+ if(jt)R (I)&buf+recurmsg(jt,msgaddr);
+ R 0;
+} 
 //13!:99 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
 F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
  sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%p\n",stackptr,(void *)jt->cstackmin);
  jsto(JJTOJ(jt),MTYOER,buf);
- stackptr-=0x10000;  // step over valid locals
- while(1){  // till we crash
-  sprintf(buf,"writing to 0x%p\n",stackptr);
-  jsto(JJTOJ(jt),MTYOER,buf);
-  I n; for(n=0;n<0x100000;++n)*stackptr--=0x55;
- }
+ recurmsg(jt,stackptr);
  R 0;
 }
 

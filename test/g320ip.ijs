@@ -629,14 +629,14 @@ a =: i. 1000
 0 1 2 3 4 -: ($0) {.&(5 ,~ ]) a
 9!:53 (0)
 a =: i. 1000
-IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@< 5 ,~ ]) a'  NB. realize any virtual block
+IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@{.@< 5 ,~ ]) a'  NB. realize any virtual block
 
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
-assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&([: >@< 5 ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&([: >@{.@< 5 ,~ ]) a'
 a =: i. 1000
-assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@< 5 ,~ unsafename) a'
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@{.@< 5 ,~ unsafename) a'
 1
 )
 f''
@@ -647,13 +647,13 @@ a =: i. 1000
 0 1 2 3 4 -: ($0) {.&:(5 ,~ ]) a
 9!:53 (0)
 a =: i. 1000
-IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@< 5 ,~ ]) a'
+IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@{.@< 5 ,~ ]) a'
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
-assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&:([: >@< 5 ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&:([: >@{.@< 5 ,~ ]) a'
 a =: i. 1000
-assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@< 5 ,~ unsafename) a'
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@{.@< 5 ,~ unsafename) a'
 1
 )
 f''

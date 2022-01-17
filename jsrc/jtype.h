@@ -550,7 +550,7 @@ typedef I SI;
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
 #define AFVIRTUALBOXEDX XDX   // matches XDX
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
-#define AFPRISTINEX      ASGNX  // matches ASGN
+#define AFPRISTINEX      ASGNX  // matches ASGN - must be above all DIRECT flags
 #define AFPRISTINE  ((I)1<<AFPRISTINEX)  // meaningful only for BOX type.  This block's contents were made entirely of DIRECT inplaceable or PERMANENT values, and thus can be
    // inplaced by &.> .  If any of the contents are taken out, the PRISTINE flag must be cleared, unless the block is never going to be used again (i. e. is inplaceable).
    // When a VIRTUAL block is created, it inherits the PRISTINE status of its backer; if the block is modified or a value escapes by address, PRISTINE status is cleared in the backer.

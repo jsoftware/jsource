@@ -32,13 +32,24 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
 #endif
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(likely(!f)){
-  // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
-  // If the input is DIRECT and abandoned, mark the result as PRISTINE
-  // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
-// scaf don't realize (in INCORPNC) or make recursive if WILLOPEN
+  // single box: fast path.  Allocate a scalar box and point it to w.
+  GAT0(z,BOX,1,0);
   I aband=SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
-  GAT0(z,BOX,1,0); AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX))) INCORPNC(w); AAV(z)[0]=w;
-  raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
+  if(!((I)jtinplace&JTWILLBEOPENED)){
+   // Normal case.  Mark w as incorporated.  Make all results recursive
+   // If the input is DIRECT and abandoned inplaceable, mark the result as PRISTINE
+   // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
+// scaf don't realize (in INCORPNC) or make recursive if WILLOPEN
+   AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX))) INCORPNC(w);  // this realizes w if virtual
+   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
+  }else{
+   // WILLBEOPENED: the result itself will be discarded and only the contents will be used.
+   // Keep the result nonrecursive and don't realize any virtuals, knowing that they will be be realized if necessary before they are incorporated later.  They will be freed in the caller
+   // If the input is DIRECT and abandoned inplaceable non-virtual, mark the result as PRISTINE
+   AFLAGINIT(z,(-(wt&DIRECT))&((aband)<<AFPRISTINEX)&~(waf<<(AFPRISTINEX-AFVIRTUALX)))
+   ACIPNO(w);  // w must be protected while it is in the box from argument deletion
+  }
+  AAV0(z)[0]=w;  // install the address of the (possibly realized) input
  } else {
   // <"r
 #ifdef BOXEDSPARSE
@@ -474,7 +485,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
 #if AUDITBOXAC
   if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT;
 #endif
-  PRISTCLRF(w) R z;
+  PRISTCLRF(w) RETF(z);
  }
  n=AN(w);
  if(unlikely(((AT(w)&BOX)&REPSGN(-n))==0))RCA(w);  // return w if empty or open

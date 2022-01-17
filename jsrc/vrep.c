@@ -4,6 +4,7 @@
 /* Verbs: a#"r w                                                           */
 
 #include "j.h"
+#include "ve.h"
 
 
 #define REPF(f)         A f(J jt,A a,A w,I wf,I wcr)
@@ -188,15 +189,79 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  R z;
 }    /* (sparse boolean) #"r (dense or sparse) */
 
-static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
+static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z; 
  F2PREFIP;ARGCHK2(a,w);
- RZ(a=vi(a)); x=AV(a);
- m=AS(a)[0];
- DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // add up total # result slots
- GATV0(y,INT,p,1); v=AV(y); 
- DO(m, j=i; DQ(x[j], *v++=j;););  // fill index vector with all the indexes
- A z; R IRS2(y,w,0L,1L,wcr,jtfrom,z);
+ RZ(a=vi(a)); x=IAV(a);
+ m=AS(a)[0]; if(unlikely(m==0))RETF(RETARG(w));
+#if 0  // when the integer reductions get faster
+ mininsI(1,m,1,x,&p,jt); ASSERT(p>=0,EVDOMAIN);  // verify all values >=0
+ ASSERT(EVOK==plusinsI(1,m,1,x,&p,jt),EVLIMIT);  // get total number of result, error if overflow
+#else
+ I anylt0=0, anyofl=0; UI dlct=(m+3)>>2; I backoff=(-m)&3;
+#define COMP1(i) p+=xx[i]; anylt0|=xx[i]; if(i&1)anyofl|=p;  // looking for overflow every other time is enough, leaves branch slot
+ I *xx=x-backoff; switch(backoff){do{case 0: COMP1(0) case 1: COMP1(1) case 2: COMP1(2) case 3: COMP1(3) xx+=4;}while(--dlct);}   \
+// obsolete  DQ(m, p+=x[i]; anylt0|=x[i]; anyofl|=p;);  // add up total # result slots   scaf unroll this
+ ASSERT(anylt0>=0,EVDOMAIN) ASSERT(anyofl>=0,EVLIMIT);
+#endif
+ if(unlikely(ISSPARSE(AT(w)))){
+  GATV0(y,INT,p,1); v=AV(y); 
+  DO(m, j=i; DQ(x[j], *v++=j;););  // fill index vector with all the indexes
+  R IRS2(y,w,0L,1L,wcr,jtfrom,z);
+ }else{I itemsize, ncells, zn, j;  // # atoms in an item (then bytes), #cells to process, #atoms in result
+  // non-sparse code.  copy the repeated items directly
+  PROD(itemsize,wcr-1,AS(w)+wf+1) PROD(ncells,wf,AS(w)) DPMULDE(itemsize*ncells,p,zn) // itematoms*ncells cannot overflow in valid w unless p=0
+  I itembytes=itemsize<<bplg(AT(w));  // #bytes in item
+#if ((C_AVX2&&SY_64) || EMU_AVX2)
+  itemsize=itembytes==SZI?itemsize:0; itemsize=(p>>2)>m?itemsize:0;  // repurpose itemsize to # of added items to leave space for wide stores   TUNE  use word code if average # repeats > 4
+#else
+#define itemsize 0
+#endif
+  // If we are moving 8-byte items, we extend the allocation so that we can overstore up to 4 words.  This allows us to avoid remnant handling
+  GA00(z,AT(w),zn+itemsize,AR(w)+!wcr); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=p; AN(z)=zn;  // allo result, copy shape but replace the lengthened axis, which may be added
+  C *zv=CAV(z);  // output fill pointer
+  C *wv=CAV(w);  // input item pointer, increments over input cells
+  for(;ncells;--ncells){  // for each result cell
+   // make x[j] copies of item wv[j]
+   if(itembytes==SZI){
+    if(itemsize){
+#if (C_AVX2&&SY_64) || EMU_AVX2
+     for(j=0;j<m;++j){  // for each repeated item
+      __m256i wd=_mm256_set1_epi64x(((I*)wv)[j]);  // the word to replicate, in each lane
+      I wdstomove=x[j];  // # repeats
+      // we can overstore 4 words, so we write out one copy forthwith.  We then copy 2 blocks at a time.  We may repeat the first address to get in sync
+      // start with a store to allow aligning the output pointer.  Advance zv1 to a store boundary, but never past the end-of-area+1.  Decr count
+//      _mm256_storeu_si256((__m256i*)zv1,wd);  // first store, which may be overwritten
+      I wdadj=NPAR-(((I)zv>>LGSZI)&(NPAR-1));  // #words to end-of-block
+      _mm256_maskstore_epi64((I*)zv,_mm256_loadu_si256((__m256i*)(validitymask+4-wdadj)),wd);  // first store, which may be overwritten
+      C *zv1=zv;  // local store pointer, which may overwrite
+      zv+=wdstomove*SZI;  // advance the real store pointer to the next valid output location for the next loop
+      wdstomove-=wdadj; wdadj=wdstomove<0?0:wdadj;  wdstomove=wdstomove<0?0:wdstomove; zv1+=wdadj<<LGSZI;  // advance to align, unless that would go past end
+      // move the rest of the data, aligned unless no more valid words.  We may overwrite
+      _mm256_storeu_si256((__m256i*)zv1,wd);  // aligned store, which may be overwritten in full
+      zv1+=((wdstomove+(NPAR-1))&NPAR)<<LGSZI;  // if 'incrementing addr' (i. e. odd # stores needed), increment for the stores
+      C *zvend=zv1+(((wdstomove+(NPAR-1))>>(LGNPAR+1))*2*NPAR*SZI);  // number of pairs to store AFTER the first store.  repct 0->0, 1-4->0, 5-8->1 (repeating addr), 9-12->1 (incrementing addr)...
+      NOUNROLL while(zv1!=zvend){
+       _mm256_storeu_si256((__m256i*)zv1,wd); _mm256_storeu_si256((__m256i*)(zv1+NPAR*SZI),wd); zv1+=2*NPAR*SZI;   // write a pair.  Probably misaligned & thus slow
+      }
+     }
+#endif
+    }else{  // short runs on average.  loop seems to be fast as is
+     for(j=0;j<m;++j){  // for each repeated item
+      I wx=((I*)wv)[j]; DONOUNROLL(x[j], *(I*)zv=wx; zv+=SZI;)  // copy the atom
+     }
+    }
+    wv+=m*SZI;  // advance I types all at once
+   }else{
+    JMCDECL(endmask) JMCSETMASK(endmask,itembytes,0)
+    for(j=0;j<m;++j){  // for each repeated item
+     DO(x[j], JMCR(zv,wv,itembytes,0,endmask) zv+=itembytes;) wv+=itembytes;
+    }
+   }
+  }
+ }
+ RETF(z);
 }    /* (dense  integer) #"r (dense or sparse) */
+#undef itemsize
 
 static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
  F2PREFIP;ARGCHK2(a,w);
@@ -311,7 +376,7 @@ F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
   }
  }
  if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,DUMMYSELF,MIN(1,acr),wcr,acr,wcr,jtrepeat); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity; loop if multiple cells of a
- ASSERT((-acr&-wcr)>=0||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
+ ASSERT((-acr&-wcr)>=0||(AS(a)[0]==AS(w)[wf]),EVLENGTH);  // require agreement if neither cell is an atom
  z=(*repfn)(jtinplace,a,w,wf,wcr);
  // mark w not pristine, since we pulled from it
  PRISTCLRF(w)

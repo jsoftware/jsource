@@ -22,8 +22,8 @@
 #define DDEND (US)('}'+256*'}')  // digraph for end DD
 #define DDSEP 0xa  // ASCII value used to mark line separator inside 9 : string.  Must have class CU so that it ends a final comment
 
-#define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); i=-1; z=0; continue;}}
-#define BZ(e)          if(unlikely(!(e))){i=-1; z=0; continue;}
+#define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); z=0; goto bodyend;}}
+#define BZ(e)          {if(unlikely(!(e))){z=0; goto bodyend;}}
 
 #if SY_64
 #define CWSENTX (cwgroup>>32)  // .sentx
@@ -241,6 +241,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
 
  nGpysfctdl=((I)(a!=0)&(I)(w!=0))<<6;   // relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
+ A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  {A *hv;  // will hold pointer to the precompiled parts
   V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
   A u,v;  // pointers to args
@@ -258,6 +259,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
   if(likely(!(AR(locsym)&ARLSYMINUSE))){AR(locsym)|=ARLSYMINUSE;nGpysfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
+  // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
   if(unlikely((jt->uflags.us.cx.cx_us | (sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.
    // special processing required
    // if we are in debug/pm mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
@@ -283,7 +285,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); tdv=(TD*)AV(td); nGpysfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
+   if(sv->flag&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
   }
   // End of unusual processing
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -338,7 +340,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // bug errors here must be detected
   }
  }
- FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
+ FDEPINC(1);
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine.
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
@@ -350,12 +352,12 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  I r=0;  // number of unused slots allocated in for./select. stack
 #endif
  I i=0;  // control-word number of the executing line
- A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  A t=0;  // last T-block result
  I4 bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error - can force to memory
  I4 ti;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
  while(1){
   // **************** top of main dispatch loop ********************
+  // Inside the loop we must use BZ and BASSERT or continue for errors; these will break out of the loop and run the ending code
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(unlikely(jt->uflags.us.cx.cx_us!=0)){  // fast check to see if we have overhead functions to perform
@@ -410,7 +412,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
   if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // normal exit at end of definition
   // process the control word according to its type
-  I cwgroup;
+  I cwgroup;  // combined line#/flags/type for cw being executed
   // **************** switch by line type ********************
   switch(((cwgroup=cw[i].ig.group[0])&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
 
@@ -525,7 +527,7 @@ docase:
    }else if(cv->fchn){cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
    }else{A cd;
     // we have to allocate an element.  cv points to end of current chain
-    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,i=-1; z=0; continue); ACINITZAP(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent calls; we will delete by hand
+    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,{z=0; goto bodyend;}); ACINITZAP(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent calls; we will delete by hand
     cv->fchn=cd;  // forward-chain chain allocated A block to durrent CDATA block
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
@@ -649,10 +651,11 @@ docase:
    i=cw[i].go;  // Go to the next sentence, whatever it is
   }
  }  // end of main loop
+bodyend: ;  // we branch to here on fatal error, with z=0
+ //  z may be 0 here and may become 0 before we exit
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
 
- FDEPDEC(1);  // OK to ASSERT now
- //  z may be 0 here and may become 0 before we exit
+ FDEPDEC(1);
  if(likely(z!=0)){
   // There was a result (normal case)
   // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
@@ -661,7 +664,7 @@ docase:
    // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
    // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
    // to be worth the trouble
-   realizeifvirtual(z);
+   realizeifvirtualE(z,);  // this just leaves z=0 if there is an error realizing
   }else if(AT(self)&ADV+CONJ){  // non-noun result, but OK from adv/conj
    // if we are returning a non-noun, we have to cleanse it of any implicit locatives that refer to the symbol table in use now.
    // It is OK to refer to other symbol tables, since they will be removed if they try to escape at higher lavels and in the meantime can be executed; but

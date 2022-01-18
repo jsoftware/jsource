@@ -82,6 +82,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
 
 L* jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
 
+// 128!:2
 F2(jtapplystr){PROLOG(0054);A fs,z;
  F2RANK(1,RMAX,jtapplystr,DUMMYSELF);
  RZ(fs=PARSERVALUE(parseforexec(tokens(vs(a),1+(AN(jt->locsyms)>1)))));

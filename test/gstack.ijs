@@ -26,15 +26,24 @@ reverse byte order for Windows.)
 )
 smoutput 6!:13''
 NB. f=: 3 : 'f c=:>:y'
+smoutput 6!:13''
 'stack error' -: (f=: 3 : 'f y'         ) etx 0
+smoutput 6!:13''
 'stack error' -: (f=: 3 : '0!:0 ''f 0''') etx 0
+smoutput 6!:13''
 'stack error' -: (f=: 3 : 'f f. y'      ) etx 0
+smoutput 6!:13''
 'stack error' -: (f=: 3 : '".''f y'''   ) etx 0
+smoutput 6!:13''
 'stack error' -: (f=: 3 : '6!:2 ''f y''') etx 0
+smoutput 6!:13''
 'stack error' -: (f=: 3 : '7!:2 ''f y''') etx 0
 
+smoutput 6!:13''
 'stack error' -: (f=: f  + >:) etx 0
+smoutput 6!:13''
 'stack error' -: (f=: >: + f ) etx 0
+smoutput 6!:13''
 
 f5=: 0: :. (f5^:_1)
 'stack error' -:   f5^:_1 etx 0

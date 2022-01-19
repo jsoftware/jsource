@@ -24,7 +24,7 @@ argument is the location in the file of the 4-byte word that specifies
 the stack size.  (The location varies with the file, and the word is in 
 reverse byte order for Windows.)
 )
-
+smoutput 6!:13''
 NB. f=: 3 : 'f c=:>:y'
 'stack error' -: (f=: 3 : 'f y'         ) etx 0
 'stack error' -: (f=: 3 : '0!:0 ''f 0''') etx 0
@@ -39,6 +39,7 @@ NB. f=: 3 : 'f c=:>:y'
 f5=: 0: :. (f5^:_1)
 'stack error' -:   f5^:_1 etx 0
 'stack error' -: 0 f5^:_1 etx 0
+smoutput 6!:13''
 
 f6=: + :: f6
 'stack error' -: ex '2 3 f6 4 5 6'
@@ -48,6 +49,7 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 'stack error' -: ex '6!:2 t' [ t=: '6!:2 t'
 'stack error' -: ex '7!:2 t' [ t=: '7!:2 t'
 'stack error' -: ex '0!:0 t' [ t=: '0!:0 t'
+smoutput 6!:13''
 
 (+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: 400
 'stack error' -: 0:`([: $: %)@.* etx 5
@@ -64,6 +66,7 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 'stack error' -: ex '$:@,@,@,@,@,@,@,@,@>: 0'
 'stack error' -: ex '$:@,@,@,@,@,@,@,@,@,@>: 0'
 'stack error' -: ex '$:@,@,@,@,@,@,@,@,@,@,@>: 0'
+smoutput 6!:13''
 
 'stack error' -: ex '($: + >:) 0'
 'stack error' -: ex '(>: + $:) 0'
@@ -79,12 +82,14 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 
 'stack error' -: ex '128!:2~ ''128!:2~'''
 'stack error' -: ex 't 128!:2 ;~t' [ t=: '0&{:: ([ 128!:2 ;) 1&{::'
+smoutput 6!:13''
 
 p=: 3 : 0
  m=.(3 #:@:+ [: i.@<:&.-: 2^#) y
  c=.m <@:p;.2"1 y
 )
 'stack error' -: ex 'p;:''a b c'''
+smoutput 6!:13''
 
 f =: 3 : 0
 for_loc. i. y do.
@@ -96,6 +101,7 @@ for_loc. i. y do.
 end.
 )
 f 10000
+smoutput 6!:13''
 
 NB. test for self-repplicating gerund
 {{ J=. ((<@:((":0) ,&:< ]) , ])([.].))(`:6)
@@ -107,6 +113,7 @@ catch.
 17=13!:11''  NB. should be stack error
 end.
 }} ''
+smoutput 6!:13''
 
 
 4!:55 ;:'c f f5 f6 g t p'

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp521.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp521.ijs'
 NB. {. -------------------------------------------------------------------
 
 (scheck x{.$.y), (x=:_5 _10+?12 24) ({. -: {.&.$.) y=:          ?  12 24 3$2

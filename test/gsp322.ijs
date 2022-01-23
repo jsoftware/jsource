@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp322.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp322.ijs'
 NB. ,: ------------------------------------------------------------------
 
 a=: ?5 7 3 2$4

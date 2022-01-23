@@ -212,7 +212,7 @@ valgone: ;
 
    // If there is a POPFROM, we have to make sure it is undone when the caller returns.  If the caller has a POP already, we can leave it alone; otherwise we have to add one.
    // To make sure we don't overflow the stack because of a sequence of cocurrents, we use jt->uflags.us.uq.uq_c.bstkreqd to indicate that a POPFROM is on the stack and in that case
-   // we ensure that there is a POP for every name (but don't create new ones for every cocurrent).  Thus, if jt->uflags.us.cx.cx_c.pmctrbstk is not set, we set it for future calls, and put a POPFIRST onto the caller's stack.
+   // we ensure that there is a POP for every name (but don't create new ones for every cocurrent).  Thus, if jt->uflags.us.cx.cx_c.bstkreqd is not set, we set it for future calls, and put a POPFIRST onto the caller's stack.
    // When that is found, jt->uflags.us.uq.uq_c.bstkreqd will be reset
    if(fromfound){
     if(!(jt->uflags.us.uq.uq_c.bstkreqd)){pushcallstack1(CALLSTACKPOPLOCALEFIRST,earlyloc); jt->uflags.us.uq.uq_c.bstkreqd=1;}

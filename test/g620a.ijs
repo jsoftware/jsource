@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g620a.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g620a.ijs'
 NB. ^@o. ----------------------------------------------------------------
 
 (^o.z) -: ^@o. z=:  0 j.  0.5 * i.5 4

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g9x40.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g9x40.ijs'
 NB. 9!:40 and 9!:41 -----------------------------------------------------
 
 ws=: 9!:40 ''

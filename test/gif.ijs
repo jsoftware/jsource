@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gif.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gif.ijs'
 NB. if/else -------------------------------------------------------------
 
 fa =. 3 : 'if. y do. 1 else. 0 end.'

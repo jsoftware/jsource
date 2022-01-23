@@ -278,7 +278,7 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
  v=(PM*)(CAV1(JT(jt,pma))+sizeof(PM0))+u->i;  // v -> next PM slot to fill
  if(b=u->wrapped){x=v->name; y=v->loc;}  // If this slot already has valid name/loc, extract those values for free
  ++u->i;  // Advance index to next slot
- if(u->i>u->n){u->wrapped=1; if(u->trunc){u->i=u->n; R;}else u->i=0;}  // If we stepped off the end,
+ if(u->i>=u->n){u->wrapped=1; if(u->trunc){u->i=u->n-1; R;}else u->i=0;}  // If we stepped off the end,
   // reset next pointer to 0 (if not trunc) or stay pegged at then end (if trunc).  Trunc comes from the original x to start_jpm_
  v->name=name; if(name)ras(name);  // move name/loc; incr use counts
  v->loc =loc;  if(loc )ras(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts, freeing

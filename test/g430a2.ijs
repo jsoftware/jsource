@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g430a2.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g430a2.ijs'
 NB. 2 f/\y and 2 f~/\y for vector y -------------------------------------
 
 randuni''

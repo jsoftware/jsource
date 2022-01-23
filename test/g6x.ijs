@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g6x.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g6x.ijs'
 NB. 6!: -----------------------------------------------------------------
 
 ts   =: 6!:0
@@ -218,10 +218,8 @@ b=. x + y
 ((6$0);(6$1);1 1 2 2 2 1;_1 0 _1 0 _2 _2(;<);:'f base') -: 0 1 2 3 6 { 6!:11''
 
 
-
-
 NB. Test sampling in explicit operators
-xop=.{{
+xop=:{{
 y=.y+1
 u v y
 }}

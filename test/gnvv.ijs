@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gnvv.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gnvv.ijs'
 NB. N V0 V1 -------------------------------------------------------------
 
 lr=: 1 : '5!:5 <''u'''

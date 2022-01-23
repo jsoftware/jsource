@@ -1,4 +1,3 @@
-
 (9!:14'') 1!:2 [2
 
 testpath=: (1!:43''),'/test/'
@@ -10,9 +9,7 @@ testres=: 'test',os,'.txt'
 
 stdout LF ,~ 9!:14''
 
-NB. RES=: RUN ddall
-RES=: RUN ddall -. < testpath,'gstack.ijs'
-NB. RES=: RUN ~. ddall ,~ < testpath,'gstack.ijs'
+RES=: RUN ddall
 
 3 : 0''
 msg=. 9!:14''
@@ -25,7 +22,7 @@ end.
 msg fappends testres
 )
 
-3 : 0''
+1: 0 : 0
 if. (os -: 'win') *. 1 e. 'avx/' E. 9!:14'' do.
   13!:99''
 end.

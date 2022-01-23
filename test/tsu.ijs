@@ -62,7 +62,7 @@ fex      =: }. @ (i.&(10{a.) {. ]) @ (13!:12) @ i. @ 0: @ (0!:110)
 eftx     =: 1 : 'u :: ((10{a.) -.~ (13!:12) @ i. @ 0:)'   NB. full text of error message
 efx      =: ". eftx
 
-
+prolog=: ]   NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 
 THRESHOLD=: 1 NB. force timing tests to pass

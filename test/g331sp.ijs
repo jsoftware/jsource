@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g331sp.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g331sp.ijs'
 NB. x f;.n y for sparse x, n e. _2 _1 1 2 -------------------------------
 
 randuni''

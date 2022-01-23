@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gs.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gs.ijs'
 NB. S: ------------------------------------------------------------------
 
 phi=. * -.@%@~.&.q:      NB. Euler's totient function

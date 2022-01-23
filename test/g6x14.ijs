@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g6x14.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g6x14.ijs'
 
 NB. epoch datetime is nanoseconds from 2000-01-01
 NB. foreigns convert between epochdt and iso 8601 extended format

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g331col.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g331col.ijs'
 NB. x <;.n y for boxed x and matrix y -----------------------------------
 
 cutcol=: 2 : 0

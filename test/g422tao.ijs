@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g422tao.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g422tao.ijs'
 NB. /:y -----------------------------------------------------------------
 
 NB. The TAO (total array ordering) of J

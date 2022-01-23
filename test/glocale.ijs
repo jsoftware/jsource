@@ -410,38 +410,41 @@ f2_c_ =: 3 : 0
 
 (<;._1 ' a b c asdf asdf a') -: x=: f_a_ 0
 
-18!:4 <'base'
-(<'base') -: 18!:5 ''
+f =: {{
+lswitch <'base'
+assert. (<'base') -: 18!:5 ''
 
-lswitch x=:<'NonExistent2'
-x_base_ -: 18!:5 ''
-x_base_ e. 18!:1 [0
+lswitch xx=:<'NonExxistent2'
+assert. xx_base_ -: 18!:5 ''
+assert. xx_base_ e. 18!:1 [0
 lswitch_base_ <'base'
-(<'base') -: 18!:5 ''
+assert. (<'base') -: 18!:5 ''
 
 lswitch <'base'
 plus_a_=: +
 4 plus_a_ _3
-(<'base') -: 18!:5 ''
+assert. (<'base') -: 18!:5 ''
 
 4!:55 ;:'a a_z_'
 d =: 0&".&.> e =: 18!:3 ''
 lswitch e
 a =: 5.4
 lswitch__ <'base'
-_1 -: 4!:0 <'a'
+assert. _1 -: 4!:0 <'a'
 lswitch d
-a -: 5.4
+assert. a -: 5.4
 lswitch__ <'base'
-_1 -: 4!:0 <'a'
+assert. _1 -: 4!:0 <'a'
 lswitch >d
-a -: 5.4
+assert. a -: 5.4
 lswitch__ <'base'
-_1 -: 4!:0 <'a'
+assert. _1 -: 4!:0 <'a'
 
-18!:55 ;:'a b c asdf NonExistent2'
+18!:55 ;:'a b c asdf NonExxistent2'
 18!:55 e
 0 = e e. 18!:1 (1)  NB. Deleted because not on stack
+}}
+f ''
 
 'locale error'    -: lswitch etx 0
 'domain error'    -: lswitch etx 'a'
@@ -713,11 +716,10 @@ assert. allos -:&(/:~) 0&".@> fnm =. 18!:1 (1) [ 1
 f''
 
 NB. Verify local name doesn't affect lookup
-f =: 3 : 0 ''
+f =: {{
 xy_z_  =: 1:
 nonlocale =. 5
-xy_nonlocale_ ''
-)
+assert. xy_nonlocale_ ''
 
 18!:55 ;:'nonlocale'
 coclass 'nonlocale'
@@ -732,25 +734,26 @@ coclass 'abcpristloc'  NB. absolutely new locale
 a_abcpristloc_ =: 5
 b_abcpristloc_ =: 6
 c_abcpristloc_ =: 11
-c = a + b
-5 = a_nonlocale_
+assert. c = a + b
+assert. 5 = a_nonlocale_
 coclass 'base'
 18!:55 ;:'abcpristloc'  NB. now zombie  usecount 1
 coclass 'abcpristloc'  NB. revive: check reinited  usecount 2
-_1 = 4!:0 ;:'a0 a b c a_nonlocale_'
+assert. _1 = 4!:0 ;:'a0 a b c a_nonlocale_'
 coclass 'base'  NB. take abcpristloc out of execution
 18!:55 ;:'abcpristloc'  NB. now zombie  NB. usecount 1
 s1 =: 7!:0''
 ('base';'z') copath 'nonlocale'  NB. frees abcpristloc
-s1 > 7!:0''
-
+assert. s1 > 7!:0''
+}}
+f ''
 
 
 
 
 4!:55 ;:'a a_z_ ab c d dd dhs2liso dhs2liso_nonlocale_ e ee f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '
-4!:55 ;:'not_a_locative s1 s2 s3 spnow t test x xy_z_ xy_nonlocale_ y '
+4!:55 ;:'not_a_locative s1 s2 s3 spnow t test x xx xy_z_ xy_nonlocale_ y '
 18!:55 ;:'abcpristloc nonlocale'
 
 

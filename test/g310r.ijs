@@ -239,28 +239,30 @@ u. y
 )
 
 NB. Inverse lookups stop fixing at inverse
+f =: 3 : 0  NB. Run in a definition to avoid setting bstkreqd for all subsequent tests
 4!:55 ;:'a c'
 cocurrent 'xxx'
 nameinxxx =: ]
-dec=: 3 : 0
-nameinxxx y
+dec=: {{ nameinxxx y
 :
 nameinxxx y
-)
-enc=: 3 : 0
+}}
+enc=: {{
 >:@nameinxxx y
 :
 >:@nameinxxx y
-)
+}}
 cocurrent 'z'
 a =: enc_xxx_ :. dec_xxx_
 c=: a_z_^:_1
 cocurrent 'base'
-1 -: ]&.a 0
-1 -: ]&.c 0
-101 -: 100 [&.a 0
-101 -: 100 [&.c 0
-
+assert. 1 -: ]&.a 0
+assert. 1 -: ]&.c 0
+assert. 101 -: 100 [&.a 0
+assert. 101 -: 100 [&.c 0
+1
+)
+f ''
 
 4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nm nn sum v'
 18!:55 ;:'xxx yyy'

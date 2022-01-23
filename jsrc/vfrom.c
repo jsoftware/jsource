@@ -907,7 +907,7 @@ abortcol:  // here is column aborted early, possibly on insufficient gain
   // DIP call.
   return2: ;
   GAT0(z,FL,6,1); zv=DAV(z);
-  zv[0]=minimpfound==0.0?3:0; zv[0]=minimpfound==1.0?2:0; zv[0]=bestcolrow&(1LL<<(32+3))?zv[0]:1;  // rc=1 if best pivot is dangerous; 2 if nonimproving; otherwise 3 if no pivot (stall), 0 if improving pivot found
+  zv[0]=minimpfound==0.0?3:0; zv[0]=bestcolrow&(1LL<<(32+3))?zv[0]:1; zv[0]=minimpfound==1.0?2:zv[0];  // rc=1 if best pivot is dangerous; 2 if nonimproving; otherwise 3 if no pivot (stall), 0 if improving pivot found
   zv[1]=(UI4)bestcol; zv[2]=(UI4)bestcolrow;  // rc (normal or dangerous pivot), col, row
   zv[3]=ndx-ndx0; zv[4]=ndotprods; zv[5]=minimpfound;  // other stats: #cols, #dotproducts, bext improvement
  }  // if call is just to fetch the column, return it, it's already in z

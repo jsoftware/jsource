@@ -39,7 +39,6 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    // Normal case.  Mark w as incorporated.  Make all results recursive
    // If the input is DIRECT and abandoned inplaceable, mark the result as PRISTINE
    // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
-// scaf don't realize (in INCORPNC) or make recursive if WILLOPEN
    AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX))) INCORPNC(w);  // this realizes w if virtual
    raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
   }else{

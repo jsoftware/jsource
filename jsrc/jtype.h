@@ -509,8 +509,8 @@ typedef I SI;
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || /* inplaceable value that will probably fit */ \
-  ( (((((AN(a)+AN(w))^AN(a))-AN(a))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
+#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
+  ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
     (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && /* asg-in-place or virt extension */ \
     (virtreqd||!(AM(a)&(-(AM(a)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* name not already on stack (not required for virt extension) */ \
   )  // OK to inplace ordinary operation

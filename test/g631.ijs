@@ -217,8 +217,9 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '(<"0 i. 5)' , ckprist 0 1 0 ] 5
 '(<i. 1000)' , ckprist 0 1 0 ] _1
 ,~ ckprist 0 0 0 ] 5  NB. not pristine when duplicating self
-'(<"0 i. 2 5)' , ckprist 0 1 0 ] 5
-'(<"0 i. 2 6)' , ckprist 0 0 0 ] 5
+'(<"0 i. 2 5)' , ckprist 0 1 0 ] 5  NB. append in place
+'(<"0 i. 2 6)' , ckprist 0 1 0 ] 5
+'(<"0 i. 2 3)' , ckprist 0 0 0 ] 5  NB. append not in place
 ,. ckprist 0 1 1 1 ] 4 5
 ,. ckprist 1 1 0 0 ] 5
 ,."2 ckprist 0 1 1 1 ] 3 4 5
@@ -375,6 +376,18 @@ isprist 13!:83 (<"0 i. 2 5) ]&.> <"0 i. 2 5
 isprist 13!:83 (<"0 i. 2 5) [&.> <"0 i. 2 5
 a =: <"1 i. 100 1000
 5000 > 7!:2 'a =: >:&.> a'
+
+NB. x,y transfers ownership to result if both args are abandoned pristine (but not VIRTUAL)
+16b20 = 16b20 (17 b.) 1 { 13!:83 (;:'a b c d e f g') , (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
+0 = 16b20 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (4) { <"0 i. 6  NB. no apip; new block not recursible
+16b1000020 = 16b1000020 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
+16b1000000 = 16b1000020 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
+16b0000000 = 16b1000020 (17 b.) 1 { 13!:83 ,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
+
+
+
+NB. not if args identical
+NB. not if one arg is virtual
 
 NB. Verify that result loops perform inplacing, including assignment inplacing
 

@@ -473,8 +473,8 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table or higher, convert to cell indexes.
    cellframelen=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // #axes used: 1, if m is a list; otherwise {:$m
    if(AR(ind)==0){  // scalar ind is common enough to test for
-    if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // w is now an INT vector, possibly the input argument
-    if(likely((UI)IAV(ind)[0]<(UI)ws[0]))z=ind; else RZ(z=jtcelloffset(jt,w,ind));  // if the single index is in range, keep it
+    if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // ind is now an INT vector, possibly the input selector
+    if(likely((UI)IAV(ind)[0]<(UI)ws[0]))z=ind; else{ASSERT(IAV(ind)[0]<0,EVINDEX); ASSERT(IAV(ind)[0]+ws[0]>=0,EVINDEX); RZ(z=sc(IAV(ind)[0]+ws[0]));}  // if the single index is in range, keep it; if neg, convert it quickly
    }else RZ(z=jtcelloffset(jt,w,ind));  // create (or keep) list of cell indexes
   }else if(likely(AR(ind)==0)){
    // ind is a single box, <selectors.  It must have rank 0 because the rank affects the rank of m{y and thus the allowed rank of a.

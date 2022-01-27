@@ -646,13 +646,10 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  RETF(z);   // Mark the box as non-inplaceable, as above
 }
 
-// see if row,col is in exclusion list.  Exclusion list is a list of (~col , (row...))... low-value where cols & rows are in order
-static int notexcluded(I *exlist,I col,I row){I nwd;
- col=~col;  // column is complement form
- while((nwd=*exlist++)>col);  // skip till be get to a big-enough col value
- if(col!=nwd)R 0;  // if not the col we want, it's a miss
- while((UI)(nwd=*++exlist)<(UI)row);  // skip to a big-enough row value, which might be start-of-next-row
- R nwd==row;  // return exclusion status
+// see if row,col is in exclusion list.  Exclusion list is a list of col|row
+static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<<16)+row;
+ while(nexlist--)if(*exlist++==colrow)R 0;
+ R 1;
 }
  
 // 128!:9 matrix times sparse vector with optional early exit
@@ -709,7 +706,7 @@ F1(jtmvmsparse){PROLOG(832);
  A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
  I nfreecols, ncols; D impfac;  // number of cols to process before we insist of min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
- I *exlist=0;  // exclusion list: sequence of (-1-col# , excluded rows...) ... low_value
+ I *exlist=0, nexlist;  // exclusion list: list of excluded col|row pairs, length
 
  if(AR(AAV(w)[0])==0){
   // single index value.  set bv=0 as a flag that we are storing the column
@@ -720,17 +717,19 @@ F1(jtmvmsparse){PROLOG(832);
  }else{
   // A list of index values.  We are doing the DIP calculation
   ASSERT(AR(AAV(w)[5])==1,EVRANK); ASSERT(AT(AAV(w)[5])&INT,EVDOMAIN); bvgrd0=IAV(AAV(w)[5]); bvgrde=bvgrd0+AN(AAV(w)[5]);  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
+  if(AN(AAV(w)[5])==0){RETF(num(5))}  // empty bk - give error/empty result
   ASSERT(BETWEENC(AN(w),8,9),EVLENGTH); 
   ASSERT(AR(AAV(w)[7])==1,EVRANK); ASSERT(AT(AAV(w)[7])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[7])==AS(AAV(w)[4])[0],EVLENGTH); bv=DAV(AAV(w)[7]);  // bk, one per row of M
   ASSERT(AR(AAV(w)[8])==1,EVRANK); ASSERT(AT(AAV(w)[8])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[8])==AS(AAV(w)[4])[0]+AS(AAV(w)[1])[0],EVLENGTH); Frow=DAV(AAV(w)[8]);  // Frow, one per row of M and column of A
   ASSERT(AR(AAV(w)[6])==1,EVRANK); ASSERT(AT(AAV(w)[6])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[6])==6,EVLENGTH);  // 6 float constants
-  if(unlikely(n==0)){R num(5);}   // empty M - should not occur, give error result
+  if(unlikely(n==0)){RETF(num(5))}   // empty M - should not occur, give error result
   thresh=_mm256_set_pd(DAV(AAV(w)[6])[1],DAV(AAV(w)[6])[2],inf,DAV(AAV(w)[6])[0]); nfreecols=(I)(nc*DAV(AAV(w)[6])[3]); ncols=(I)(nc*DAV(AAV(w)[6])[4]); impfac=DAV(AAV(w)[6])[5];
   zv=AN(AAV(w)[5])==AN(AAV(w)[7])?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
   if(AN(w)>9){
    // An exclusion list is given.  Remember its address.  Its presence puts us through the 'nonimproving path' case
    ASSERT(AR(AAV(w)[9])==1,EVRANK); ASSERT(AN(AAV(w)[9])>0,EVRANK);  ASSERT(ISDENSETYPE(AT(AAV(w)[9]),INT),EVRANK);  // must be integer list
    exlist=IAV(AAV(w)[9]);  // remember address of exclusions
+   nexlist=AN(AAV(w)[9]);  // and length of list
   }
  }
 
@@ -752,7 +751,7 @@ F1(jtmvmsparse){PROLOG(832);
    if((tmask&=1)>(rmask>>1))goto abortcol;  /* col>ColThr && abort on limited gain: abort rc=2 */ \
    bestrow=tmask&rmask?imask:bestrow;   /* col>ColThr & new smallest pivotratio: update best-value variables */ \
   }else{ /* look for nonimproving pivot */  \
-   if(_mm256_cvtsd_f64(dotprod)>_mm256_cvtsd_f64(thresh) && notexcluded(exlist,colx,i)){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=colx; bestcolrow=i; goto return2;};  /* any positive c value is a pivot row, unless in the exclusion list */ \
+   if(_mm256_cvtsd_f64(dotprod)>_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,colx,i)){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=colx; bestcolrow=i; goto return2;};  /* any positive c value is a pivot row, unless in the exclusion list */ \
   } \
  }else{zv[i]=_mm256_cvtsd_f64(dotprod); /* just fetching the column: do it */ \
  }

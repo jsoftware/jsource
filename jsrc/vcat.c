@@ -250,8 +250,8 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr
     // Pristinity is required because otherwise there might be blocks present in both, and the usecount would be too low in result
 
     I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
-    xfer=aflg&wflg&(RECURSIBLE|AFPRISTINE);  
-    xfer&=REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)*(a!=w)&(I)jtinplace))&AC(a)&AC(w)&SGNIF(xfer,AFPRISTINEX));
+    xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtinplace))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
+    xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE);  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
      // xfer is the transferable recursibility if any: both abandoned, both recursible, not same blocks
     AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGAND(a,~xfer) AFLAGAND(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result

@@ -373,7 +373,7 @@ static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtin
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
 static DF1(ixfixedleft){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT R z;}  // must use the ct when table was created
 // Here for compounds like (i.&0@:e.)&n  e.&n -.&n that compute a prehashed table from w
-static DF1(ixfixedright ){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT R z;}
+static DF1(ixfixedright){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT R z;}
 
 
 static DF2(with2){A z; R df1(z,w,powop(self,a,0));}

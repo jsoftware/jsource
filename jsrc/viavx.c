@@ -793,6 +793,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // jtioz  tolerant CMPX
 // jtoiz1 tolerant CMPX atom
 
+// hashes using the 2-byte hashtable
 // CMPLX array
 static IOFT(Z,US,jtioz, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
 // CMPLX atom
@@ -806,6 +807,8 @@ static IOFT(A,US,jtioa, cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v
 // singleton box
 static IOFT(A,US,jtioa1,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
+// hashes using the 4-byte hashtable
+// CMPLX array
 static IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
 // CMPLX atom
 static IOFT(Z,UI4,jtioz12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
@@ -1766,7 +1769,7 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  // atomic types
  IIMODFULL,IIMODFULL,
- -2,
+ -2,  // 'no hashing' (for box search)
  
 // Reversed hashes, where supported.  IIMODFULL is not needed by the reversed-hash code so we continue its use, started above, as a flag to turn off booleans
  IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,  // bool, INT
@@ -1934,7 +1937,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically
   fnx=-2 + (1.0==jt->cct); // we haven't figured it out yet.  Change meaning of fnx: fnx is -2 for tolerant, -1 for intolerant
-  // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
+  // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 2 if we just need one byte-encoded boolean per input value (i. e. 4 bits per I4 hash entry), 5 if just one bit per input value (32 bits per hash entry)
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
 
@@ -1980,7 +1983,14 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
       if(mode&IIOREPS){  // if reverse check is possible, see if it is desired
        if((m>>(1))>c){rangearg=w; rangearglen=c; fnprov=FNTBLSMALL4+FNTBLREVERSE; }  // booladj?(m>MAXBYTEBOOL?5:2): omitted now
       }
-      CR crres = condrange(AV(rangearg),((AN(rangearg)<<klg))>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,3*rangearglen)<<booladj);
+      // we make the small-range decision mostly on length; if the range table would be bigger than the hashtable, we use the hash.  Here
+      // we invert the calculation to see how big a range we can tolerate without exceeding the table size.  The length of the hash, whether small-range
+      // or not, depends only on the number of items being hashed.  We limit the small-range to 3 times the # items;
+      // but if this is a prehash, we expect that the hash will be used multiple times and we increase the size to weight the scales in favor of
+      // small-range hash.  The full hash spends more time in lookup than in creation, because misses become more likely the
+      // fuller the table.  This makes small-range much more valuable when the hashes are repeated
+      I maxsizemult=mode&IPHCALC?6:4;  // # slots/item to allow in small-range table.  More if prehash
+      CR crres = condrange(AV(rangearg),((AN(rangearg)<<klg))>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,maxsizemult*rangearglen)<<booladj);
       if(crres.range){datamin=crres.min; p=crres.range; fnx=fnprov;  // use the selected orientation
       }else{fnx=FNTBLONEINT;}  // select integer hashing if range too big...
      }else{fnx=FNTBLONEINT;}   // ... or some other 8-byte length (not float, though)
@@ -1989,7 +1999,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     }
    }
   }
-  I fmods = fnflags[fnx];  // fetch flags for this type.  This will be simplified when we finish tolerant hash. -1 means old hash, -2 means no hash
+  I fmods = fnflags[fnx];  // fetch flags for this type. -2 means no hash
   if(!p){  // If we selected small-range hashing, we have decided everything by analyzing the input; keep that.  Otherwise choose m or c depending on fwd/reverse hash
    // We know which type of hashing to use, and now we need to decide between forward and reverse hashing.  We use reverse hashing if the
    // type we have selected supports it, and if w is much shorter than a.  The operation must be i./i:/e., and we must not be prehashing
@@ -2015,7 +2025,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fmods>=0){IH * RESTRICT hh;
-   if(unlikely(fmods!=0)){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode   unlikely fails on single word
+   if(unlikely(fmods!=0)){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode
 
    // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
    // if the #entries fits in a US, use the short table.  But bits always use the long table
@@ -2201,7 +2211,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  // Use c=0 as an error flag
  // for e.-compounds that do arithmetic, w must have the shape of an item in the hash, or a list of them (i. e. framelen 0 or 1); otherwise nonce error (below)
  // for e.-compounds that merely search, w must have the shape of an item in the hash, or a list of them (i. e. framelen 0 or 1); otherwise not found (below)
- // for LESS types, an item of w must have the shape of an item in the hash; otherwise revert
+ // for LESS/INTER types, an item of w must have the shape of an item in the hash; otherwise revert
  // for other types (which can be only IEPS/IIDOT/IICO), an item of w can have larger rank
  if(likely((c&=REPSGN(~f1))>0)){  // revert if w has higher rank than a cell of a
   c=ICMP(as+ar-r,ws+f1,r)?0:c;  // verify agreement in cell-shape, set c=0 if not

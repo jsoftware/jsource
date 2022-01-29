@@ -1,12 +1,12 @@
 name: JE
 
-# on:
-# - push
-
 on:
- push:
-  tags-ignore:
-   - '**'
+ - push
+
+# on:
+# push:
+#  tags-ignore:
+#   - '**'
 
 # trigger workflow on file change
 #on:

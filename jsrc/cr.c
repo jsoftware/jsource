@@ -181,7 +181,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virtwfaux) so as to avoid inplacing ATOPOPEN.
    // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
    ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
-  }else{wav=AAV(w); virtw=*wav++;
+  }else{wav=AAV(w); virtw=C(*wav); wav++;
   }
   // Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
   // jtinplace through, except that we remove WILLOPEN status which we are picking up at this level
@@ -198,7 +198,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
      // for simplicity we apply this correction to the faux block, so as to ensure we don't do it when ATOPOPEN is active.  This means ranks higher than the max for
      // the faux virtual block miss out on the reinitialization.  That's not so bad
    // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
-   if(likely(!(state&ZZFLAGATOPOPEN1))){AK(virtw) += wk;}else{virtw=*wav++;}
+   if(likely(!(state&ZZFLAGATOPOPEN1))){AK(virtw) += wk;}else{virtw=C(*wav); wav++;}
   }while(1);
 
 #define ZZEXIT
@@ -499,10 +499,10 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
   if(likely((SGNIF(state,ZZFLAGATOPOPEN2WX)&SGNIF(AT(w),BOXX))>=0)){
    fauxvirtual(virtw,virtwfaux,w,0,ACUC1); AN(virtw)=1; state&=~ZZFLAGATOPOPEN2W;
-  }else{wav=AAV(w); virtw=*wav;}
+  }else{wav=AAV(w); virtw=C(*wav);}
   if(likely((SGNIF(state,ZZFLAGATOPOPEN2AX)&SGNIF(AT(a),BOXX))>=0)){
    fauxvirtual(virta,virtafaux,a,0,ACUC1); AN(virta)=1; state&=~ZZFLAGATOPOPEN2A;
-  }else{aav=AAV(a); virta=*aav;}
+  }else{aav=AAV(a); virta=C(*aav);}
   
   // loop over the matched part of the outer frame
 
@@ -519,13 +519,13 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 #include "result.h"
 
     if(--i0==0)break;  // stop before we load the last+1 item
-    if(likely(!(state&ZZFLAGATOPOPEN2A))){AK(virta) += ak;}else{aav=(A*)((I)aav+ak); virta=*aav;}
-    if(likely(!(state&ZZFLAGATOPOPEN2W))){AK(virtw) += wk;}else{wav=(A*)((I)wav+wk); virtw=*wav; }
+    if(likely(!(state&ZZFLAGATOPOPEN2A))){AK(virta) += ak;}else{aav=(A*)((I)aav+ak); virta=C(*aav);}
+    if(likely(!(state&ZZFLAGATOPOPEN2W))){AK(virtw) += wk;}else{wav=(A*)((I)wav+wk); virtw=C(*wav); }
    }while(1);
    // we have stopped with the pointers pointing to the last item read.  Advance them both to the next atom
    if(--oct<=0)break;  // if no more cells, avoid fetching out of bounds
-   if(likely(!(state&ZZFLAGATOPOPEN2A))){AK(virta) += ak?ak:wr;}else{virta=*++aav;}
-   if(likely(!(state&ZZFLAGATOPOPEN2W))){AK(virtw) += wk?wk:wr;}else{virtw=*++wav;}
+   if(likely(!(state&ZZFLAGATOPOPEN2A))){AK(virta) += ak?ak:wr;}else{++aav; virta=C(*aav);}
+   if(likely(!(state&ZZFLAGATOPOPEN2W))){AK(virtw) += wk?wk:wr;}else{++wav; virtw=C(*wav);}
   }while(1);
 
 #define ZZEXIT

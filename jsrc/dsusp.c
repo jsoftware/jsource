@@ -174,15 +174,15 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  // The end block is a list of boxes, where the first box, an integer atom, contains the operation type
  I susact;   // requested action
  if(!z||AN(z)==0||JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS){susact=JT(jt,dbuser)&DBSUSSS?SUSSS:SUSCLEAR; JT(jt,dbuser)&=~(DBSUSCLEAR+DBSUSSS);}  // if error in suspension, exit debug mode; empty arg or DBSUSCLEAR is always 13!:0
- else susact=IAV(AAV(z)[0])[0];  // (0;0) {:: z
+ else susact=IAV(C(AAV(z)[0]))[0];  // (0;0) {:: z
  switch(susact){
  case SUSRUN:  // rerun, possibly with changed arguments for tacit verb
   // rerun the line; pass the arguments, if any, as the result
   DGOTO(d,d->dcix); z=behead(z); break;
  case SUSRET: // exit current function, with result
-  DGOTO(d,-1)   z=AAV(z)[1]; break;
+  DGOTO(d,-1)   z=C(AAV(z)[1]); break;
  case SUSJUMP:  // goto line number.  Result not given, use i. 0 0
-  DGOTO(d,lnumcw(IAV(AAV(z)[1])[0],d->dcc)) z=mtm; break;
+  DGOTO(d,lnumcw(IAV(C(AAV(z)[1]))[0],d->dcc)) z=mtm; break;
  case SUSCLEAR:  // exit from debug
   jt->jerr=e;    // restore the error state before debug
   c=jt->sitop; z=mtm;  // in case no error, give empty result
@@ -245,7 +245,7 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){A t,z;B s;V*sv;
    if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(!(d->dcnewlineno&&d->dcix!=-1))break;  // if 'run' specified (by jump not to -1), loop again.  Otherwise exit with result given
    // for 'run', the value of z gives the argument(s) to set; but if no args given, leave them unchanged
-   if(AN(z)){w=AAV(z)[0]; a=AN(z)==2?AAV(z)[1]:0;}  // extract new args if there are any
+   if(AN(z)){w=C(AAV(z)[0]); a=AN(z)==2?C(AAV(z)[1]):0;}  // extract new args if there are any
   }
  }
  if(d->dcss)ssnext(d,d->dcss);  // if we step over/into on the last line of a function, we must stop on the next line of the caller

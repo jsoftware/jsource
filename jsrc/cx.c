@@ -866,7 +866,7 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
  GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
- DO(AN(w), RZ(yv[i]=incorp(vs(wv[i]))););
+ DO(AN(w), RZ(yv[i]=incorp(vs(C(wv[i])))););
  R y;
 }    /* boxed sentences into monad/dyad */
 
@@ -1162,16 +1162,16 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  else{  // not tacit translator - preparse the body
   // we want to get all forms to a common one: boxed string(s) rank<2.  If we went through m : 0, we are in that form
   // already.
-  if(!col0)if(BOX&AT(w)){RZ(w=sent12b(w))  // list of boxes - convert to character, no analysis
+  if(!col0)if(BOX&AT(w)){RZ(w=sent12b(C(w)))  // list of boxes - convert to character, no analysis
   }else{  // character
    RZ(w=jtsent12c(jt,w,n)) // if this is NOT 9 : w, cause a one-line definition to be scanned for {{ }}.  9 : strings have already been scanned
   }
   // If there is a control line )x at the top of the definition, parse it now and discard it from m
-  if(likely(AN(w)!=0))if(unlikely(AN(AAV(w)[0])&&CAV(AAV(w)[0])[0]==')')){
+  if(likely(AN(w)!=0))if(unlikely(AN(C(AAV(w)[0]))&&CAV(C(AAV(w)[0]))[0]==')')){
    // there is a control line.  parse it.  Cut to words
-   A cwds=wordil(AAV(w)[0]); RZ(cwds); ASSERT(AM(cwds)==2,EVDOMAIN);  // must be exactly 2 words: ) and type
+   A cwds=wordil(C(AAV(w)[0])); RZ(cwds); ASSERT(AM(cwds)==2,EVDOMAIN);  // must be exactly 2 words: ) and type
    ASSERT(((IAV(cwds)[1]-IAV(cwds)[0])|(IAV(cwds)[3]-IAV(cwds)[2]))==1,EVDOMAIN);  // the ) and the next char must be 1-letter words  
-   C ctltype=CAV(AAV(w)[0])[IAV(cwds)[2]];  // look at the second char, which must be one of acmdv*  (n is handled in ddtokens)
+   C ctltype=CAV(C(AAV(w)[0]))[IAV(cwds)[2]];  // look at the second char, which must be one of acmdv*  (n is handled in ddtokens)
    I newn=-1; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
    ASSERT(newn>=0,EVDOMAIN);  // error if invalid char
    n=newn;  // accept the type the user specified
@@ -1181,8 +1181,8 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
   }
   // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier
-  A *wv=AAV(w); DO(AN(w)-1, I st=0;
-    DO(AN(*wv), I c=CAV(*wv)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
+  A *wv=AAV(w); DO(AN(w)-1, I st=0; A wvc=C(*wv); 
+    DO(AN(wvc), I c=CAV(wvc)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
     if(st==1){splitloc=wv-AAV(w); break;} ++wv;)
   // split the definition into monad and dyad.
   I mn=splitloc<0?AN(w):splitloc; I nn=splitloc<0?0:AN(w)-splitloc-1;

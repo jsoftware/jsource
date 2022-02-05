@@ -355,11 +355,12 @@ F2(jtroot){A z;I t;
  if(!(t&XNUM))R expn2(mw,recip(ma));  // not inplaceable - could be IMAG
  z=rank2ex0(ma,mw,DUMMYSELF,jtxroota);
  switch(jt->jerr){
-  case EWIMAG: RESETERR; R expn2(cvt(CMPX,w),recip(cvt(CMPX,a)));
-  case EWRAT: 
-  case EWIRR:  RESETERR; R expn2(cvt(FL,  w),recip(cvt(FL,  a)));
-  default:     R z;
-}}
+ case EWIMAG: RESETERR; R expn2(cvt(CMPX,w),recip(cvt(CMPX,a)));
+ case EWRAT: 
+ case EWIRR:  RESETERR; R expn2(cvt(FL,  w),recip(cvt(FL,  a)));
+ default:     R z;
+ }
+}
 
 F1(jtjdot1){R tymes(a0j1,w);}
 F2(jtjdot2){R plus(a,tymes(a0j1,w));}

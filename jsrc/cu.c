@@ -14,7 +14,7 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
  RZ(z=ca(w));
  wp=PAV(w); x=SPA(wp,x); wv=AAV(x);
  zp=PAV(z); x=SPA(zp,x); zv=AAV(x);
- DQ(AN(x), RZ(*zv++=CALL1(f1,*wv++,fs)););
+ DQ(AN(x), RZ(*zv++=CALL1(f1,C(*wv),fs)); ++wv;);
  R z;
 }
 
@@ -39,7 +39,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(wt&BOX);
  // Get input pointer
  fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
- if(likely((flags&BOX)!=0)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
+ if(likely((flags&BOX)!=0)){virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
@@ -102,7 +102,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow
    // pristinity of lower results; thus we may not relax the rule that all contents must be non-inplaceable
    ACIPNO(x);  // can't ever have inplaceable contents
-#if 0  // not clear this is worth doing
+#if 0  // not clear this is worth doing,  and must check for futures
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
     // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
@@ -127,7 +127,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // Store result & advance to next cell
   *zv++=x;
   if(unlikely(!--natoms))break;  // break to avoid fetching over the end of the input
-  if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;  // advance to next input cell - either by fetching the next box or advancing the virtual pointer to the next atom
+  if(flags&BOX){++wv; virtw=C(*wv);}else AK(virtw)+=(I)wv;  // advance to next input cell - either by fetching the next box or advancing the virtual pointer to the next atom
  }
 
  // indicate pristinity of result
@@ -156,7 +156,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // Verify agreement
   ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
   // Allocate result
-  GATV(z,BOX,natoms,lr,AS(la)); if(!natoms)R z; zv=AAV(z);  // make sure we don't fetch outside empty arg
+  GATV(z,BOX,natoms,lr,AS(la)); if(unlikely(!natoms))R z; zv=AAV(z);  // make sure we don't fetch outside empty arg
  }
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags|=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
@@ -165,7 +165,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  // Get input pointer
  fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){
-  virtw=*(wv=AAV(w));  // if input is boxed, point to first box
+  virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1)&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents.  Never if arg repeated, only if recursive
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
@@ -176,7 +176,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  A virta;
  fauxblockINT(virtblocka,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&(BOX<<1))!=0)){
-  virta=*(av=AAV(a));
+  virta=C(*(av=AAV(a)));
   if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT&-(AFLAG(a)&RECURSIBLE);
  }else{
   fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
@@ -248,8 +248,8 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   *zv++=x;
   if(!--natoms)break;
   ++rpt; I endrpt=REPSGN(rpt); rpt=rpt==0?rpti:rpt;  // endrpt=0 if end of repeat, otherwise ~0.  Reload rpt at end
-  if(!(flags&endrpt&2)){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;}  // advance unrepeated arg
-  if(!(flags&endrpt&1)){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;}
+  if(!(flags&endrpt&2)){if(flags&(BOX<<1)){++av; virta=C(*av);}else AK(virta)+=(I)av;}  // advance unrepeated arg
+  if(!(flags&endrpt&1)){if(flags&BOX){++wv; virtw=C(*wv);}else AK(virtw)+=(I)wv;}
  }
  // indicate pristinity of result
  AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE)   // could synthesize rather than loading from z

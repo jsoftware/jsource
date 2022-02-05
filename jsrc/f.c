@@ -285,7 +285,7 @@ static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,
  // yn = #rows in 2-cell of joined table, y=vector of (yn+1) 0s, v->data for vector
   SHAPEN(w,r-1,yn); RZ(*py=y=apvwr(yn,0L,0L)); yv=AV(y);
  // for each atom of w, include height/width in the appropriate row/column cells, and take maximum of types
- DQ(AN(w), maxt=MAX(maxt,AT(*v)); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
+ DQ(AN(w), A cv=C(*v); maxt=MAX(maxt,AT(cv)); s=AS(cv); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); ++v; if(++k==yn){k=0; if(++j==xn)j=0;});
  // Add 1 to each max width/height to account for the boxing character before that position
  // We have not yet accounted for the boxing character at the end.
  DO(xn, ASSERT(xv[i]<IMAX,EVLIMIT); ++xv[i];); 
@@ -372,7 +372,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
   for(j=0;j<xn;++j){
    for(k=0;k<yn;++k){
     // get info for contents of next box: (r,c) = height,width
-    e=wv[i]; s=AS(e); r=s[0]; c=s[1];
+    e=C(wv[i]); s=AS(e); r=s[0]; c=s[1];
     // get offset to store the value at.  First, the vertical calculation.
     // If centering=0, use starting position.  If 2, add (fieldheight-1)-(data height)
     // if 1, add half of that height

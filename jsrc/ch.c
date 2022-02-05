@@ -16,8 +16,8 @@ static A jthparm(J jt,A j,A f,A h){A z;
 
 static A jthgv(J jt,B b,I n,A w,A self){A c,d,e,h,*hv,j,y;V*sv=FAV(self);
  RZ(j=IX(n)); h=sv->fgh[2]; hv=AAV(h);
- RZ(c=hparm(j,sv->fgh[0],hv[0]));
- RZ(d=hparm(j,sv->fgh[1],hv[1]));
+ RZ(c=hparm(j,sv->fgh[0],C(hv[0])));
+ RZ(d=hparm(j,sv->fgh[1],C(hv[1])));
  e=shift1(divide(w,apv(n,1L,1L)));
  switch((VERB&AT(sv->fgh[0])?2:0)+(VERB&AT(sv->fgh[1])?1:0)){
   case 0: y=ascan(CSTAR,divide(tymes(c,e),d)); break;
@@ -50,8 +50,8 @@ static DF2(jthgeom2){PROLOG(0036);A h,*hv,t,z;B b;I an,*av,j,n;V*sv=FAV(self);
  an=AN(a); av=AV(a); n=0; DO(an, j=av[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
  if(!n)R tymes(zeroionei(0),a);
  h=sv->fgh[2]; hv=AAV(h);
- b=VERB&(AT(sv->fgh[0])|AT(sv->fgh[1]))||CMPX&(AT(w)|AT(hv[0])|AT(hv[1]));
- if(!b)z=hgd((B)(1<an),n,w,hv[0],hv[1]);
+ b=VERB&(AT(sv->fgh[0])|AT(sv->fgh[1]))||CMPX&(AT(w)|AT(C(hv[0]))|AT(C(hv[1])));
+ if(!b)z=hgd((B)(1<an),n,w,C(hv[0]),C(hv[1]));
  else if(2000>n)z=hgv((B)(1<an),n,w,self);
  else{
   j=10; t=mtv; z=zeroionei(1);
@@ -87,17 +87,17 @@ DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);
  RZ(w=vi(w)); v=AV(w); 
  n=0; DO(AN(w), j=v[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
  if(!n)R eq(w,w);
- h=sv->fgh[2]; hv=AAV(h);
- b=VERB&(AT(sv->fgh[0])|AT(sv->fgh[1]))||CMPX&(AT(w)|AT(hv[0])|AT(hv[1]));
+ h=sv->fgh[2]; hv=AAV(h); A hv0=C(hv[0]), hv1=C(hv[1]);
+ b=VERB&(AT(sv->fgh[0])|AT(sv->fgh[1]))||CMPX&(AT(w)|AT(hv0)|AT(hv1));
  if(!b){D r=1.0,*u,*v,*yv;
-  RZ(c=cvt(FL,hv[0])); u=DAV(c); pn=AN(c);
-  RZ(d=cvt(FL,hv[1])); v=DAV(d); qn=AN(d);
+  RZ(c=cvt(FL,hv0)); u=DAV(c); pn=AN(c);
+  RZ(d=cvt(FL,hv1)); v=DAV(d); qn=AN(d);
   GATV0(y,FL,n,1); yv=DAV(y);
   DO(n, DO(pn, r*=u[i]; ++u[i];); DO(qn, r/=v[i]; ++v[i];); yv[i]=r;); 
  }else{A j;
   RZ(j=IX(n));
-  c=hparm(j,sv->fgh[0],hv[0]);
-  d=hparm(j,sv->fgh[1],hv[1]);
+  c=hparm(j,sv->fgh[0],hv0);
+  d=hparm(j,sv->fgh[1],hv1);
   switch((VERB&AT(sv->fgh[0])?2:0)+(VERB&AT(sv->fgh[1])?1:0)){
    case 0: y=ascan(CSTAR,divide(c,d)); break;
    case 1: y=divide(ascan(CSTAR,c),d); break;

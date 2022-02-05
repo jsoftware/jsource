@@ -630,6 +630,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
+#define FUTURES 0  // set to enable futures
+
 
 
 
@@ -720,6 +722,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
+#if FUTURES
+#define C(x) unlikely(AT(x)&FUTURE)?jtfutval(jt,x):(x)   // extract & resolve contents x must not have side-effects!
+#else
+#define C(x) (x)
+#endif
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))

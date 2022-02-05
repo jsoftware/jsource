@@ -190,7 +190,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,drop(sc(i),w),hv[imod])); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,drop(sc(i),w),C(hv[imod]))); ++imod;);
  R ope(z);
 }    /* g\."r w for gerund g */
 
@@ -252,7 +252,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  // to be fed into the next iteration.  This is still a saving, because we can use the same box to point to each successive result.
  // Exception: if the reusable box gets incorporated, it is no longer reusable and must be reallocated.  We will use the original z box,
  // which will NEVER be virtual because it is an atom whenever BOXATOP is set, as the starting pointer to the prev boxed result
- A boxedz=z; z=AAV(z)[0]; z=(state&ZZFLAGBOXATOP)?z:boxedz;  // init current pointer for the temp box; if BOXATOP, use >{:y as the first (to-be-boxed) result (always safe to fetch 1 value from z)
+ A boxedz=z; z=AAV(z)[0]; z=(state&ZZFLAGBOXATOP)?z:boxedz;  // init current pointer for the temp box; if BOXATOP, use >{:y as the first (to-be-boxed) result (always safe to fetch 1 value from z).  We are NOT looking at contents
 
 #define ZZDECL
 #define ZZSTARTATEND 1   // build result from bottom up
@@ -343,7 +343,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  SETIC(x,n);
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,repeat(from(sc(i),x),w),hv[imod])); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,repeat(from(sc(i),x),w),C(hv[imod]))); ++imod;);
  R ope(z);
 }
 

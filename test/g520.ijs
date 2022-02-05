@@ -31,7 +31,7 @@ for_l. >:  i. 50 do.
 end.
 bk =. _2 1 3 1e_8
 M =. |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-cons=.1e_11 1e_6 0.0 0 1. 1.0  NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby
+cons=.1e_11 1e_6 0.0 0 1. 1.0 0  NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby nvirt
 Frow=. _4 _3 _2 _1. 0.
 bkg=.i.#M
 NB. Test DIP mode - on identity cols
@@ -57,37 +57,48 @@ M=. 4 4 $ 1.  NB. every ele is valid
 bkg=.i.#M
 bk =. 1. 2 2 2  NB. the pivot is the first row
 Frow=. _1 _1.1 _1.5 _2 0  NB. improvements are _1 _1.1 _3 _4
-assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
-assert. 0 3 0 5 17 _2 -: (128!:9) 0 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
-assert. 0 3 0 4 13 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.2;bk;Frow
-assert. 0 3 0 4 13 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.24 1 1.2;bk;Frow
-assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 1 1.2;bk;Frow
-assert. 0 3 0 5 14 _2 -: (128!:9) 0 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 1 1.2;bk;Frow  NB. cut off in cols 1 2
-assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.51 1 1.2;bk;Frow  NB. col 1 fully evaluated
-assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 0.26 1.0;bk;Frow
-assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0.26 1.0;bk;Frow
-assert. 0 2 0 3 12 _1.5 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0.51 1.0;bk;Frow
-assert. 0 0 0 1 4 _1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0 1.2;bk;Frow  NB. stop after first col
+assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
+assert. 0 3 0 5 17 _2 -: (128!:9) 0 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
+assert. 0 3 0 4 13 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.2 0;bk;Frow
+assert. 0 3 0 4 13 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.24 1 1.2 0;bk;Frow
+assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 1 1.2 0;bk;Frow
+assert. 0 3 0 5 14 _2 -: (128!:9) 0 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 1 1.2 0;bk;Frow  NB. cut off in cols 1 2
+assert. 0 3 0 4 16 _2 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.51 1 1.2 0;bk;Frow  NB. col 1 fully evaluated
+assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 0.26 1.0 0;bk;Frow
+assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0.26 1.0 0;bk;Frow
+assert. 0 2 0 3 12 _1.5 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0.51 1.0 0;bk;Frow
+assert. 0 0 0 1 4 _1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0 1.2 0;bk;Frow  NB. stop after first col
 M=.4 4 $!.0 ] 1e_8 1 1 1  NB. first row is pivot; first col is dangerous
-assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0 1.2;bk;Frow  NB. don't stop on dangerous first col
+assert. 0 1 0 2 8 _1.1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0.26 0 1.2 0;bk;Frow  NB. don't stop on dangerous first col
 NB. bk thresh
 M=. 4 4 $ 1.
 bk=. 1e_1 1e_2 1 1
-assert. 3 0 0 4 4 0 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.5 0 1 1.0;bk;Frow
-assert. 3 0 0 4 8 0 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.05 0 1 1.0;bk;Frow
-assert. 0 3 1 4 16 _0.02 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.005 0 1 1.0;bk;Frow
+assert. 3 0 0 4 4 0 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.5 0 1 1.0 0;bk;Frow
+assert. 3 0 0 4 8 0 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.05 0 1 1.0 0;bk;Frow
+assert. 0 3 1 4 16 _0.02 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.005 0 1 1.0 0;bk;Frow
 NB. unbounded
 M =. |: _3 ]\ 0. 0 0 1 1 1 0 0 0   NB. input by columns
 bk =. 1. 2 2  NB. the first row on each col is the pivot
 bkg=.i.#M
 Frow=. _1 _1.1 _1.5 0  NB. improvements
-assert. 4 0 -: (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
-assert. 4 2 -: (128!:9) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
+assert. 4 0 -: (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
+assert. 4 2 -: (128!:9) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
 NB. stall
 bk =. 0. 0 0  NB. no improving pivots
 M =. |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns
-assert. 3 0 0 3 3 0 -: (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0;bk;Frow
-
+assert. 3 0 0 3 3 0 -: (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
+NB. virtual row gets priority
+M=. |: _4 ]\ 0. 1 1 0   1 0 0 0  0 0 0 1 0 0 0 1   NB. input by columns
+bkg=.i.#M
+bk =. 1. 1 1 1  NB. every row can pivot
+Frow=. _4. _3 _2 _1 0  NB. improvements reduced row by row
+assert. 0 0 1 4 13 _4 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
+assert. 0 1 0 2 8 _3 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow
+assert. 0 0 1 1 4 _4 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 2;bk;Frow
+M=. |: _4 ]\ 0. 1 1 0   1 0 1 0  0 0 0 1 0 0 0 1   NB. input by columns
+assert. 0 1 0 2 8 _3 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow
+M=. |: _4 ]\ 0. 1 1 0   1 0 2 0  0 0 0 1 0 0 0 1   NB. input by columns
+assert. 0 0 1 4 15 _4 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow  NB. later non-virtual doesn't get priority
 1
 }}^:(1 e. 'avx2' E. 9!:14'') 1
 

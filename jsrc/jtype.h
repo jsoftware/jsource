@@ -317,8 +317,15 @@ typedef I SI;
 #define RATX 7
 #define RAT             ((I)1L<<RATX)         /* Q  rational number              */
 #define RATSIZE sizeof(Q)
-// No size for BIT, since it is fractional
-// Bit 8-9 unused
+#define FUTUREX 8
+#define FUTURE          ((I)1L<<FUTUREX)  // if BOX set, this flag is set if the value is a future.  A future is an atomic box (which may be an element of an array.
+                                          // The CONTENTS of a future may not be accessed except through C(future), which will return the address of the contents.  The address of the future (an A block)
+                                          // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that futures MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
+                                          // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
+                                          // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK) requires C(future).
+                                          // If the address of the future is being copied into another block, there is no need for C().  In particular, the future may be ra()'d if it is put into a recursive block.
+                                          // ra() on a future will affect the usecount of the future itself but NOT of the contents, because a future is always marked recursive.
+// Bit 9 unused
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */
 #define SBTSIZE sizeof(SB)

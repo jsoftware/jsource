@@ -406,7 +406,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,take(sc(1+i),w),hv[imod])); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,take(sc(1+i),w),C(hv[imod]))); ++imod;);
  R ope(z);
 }    /* g\"r w for gerund g */
 
@@ -479,11 +479,11 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
  h=VAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
  if(SETIC(x,n)){
   GATV0(z,BOX,n,1); zv=AAV(z);
-  DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),hv[i%d])););
+  DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),C(hv[i%d]))););
   R ope(z);
  }else{A s;
   RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABS(m);
-  RZ(df1(x,reshape(s,filler(w)),*hv));
+  RZ(df1(x,reshape(s,filler(w)),C(*hv)));
   R reshape(over(zeroionei(0),shape(x)),x);
 }}
 

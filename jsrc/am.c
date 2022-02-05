@@ -52,35 +52,35 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  ARGCHK1(w);
  RZ(w1=ca(w)); u=AAV(w1);   // make a copy of the input, point to its value
  // the input is a boxed list.  The last 3 values are (name pqr);(index in which abc appeared in the x,y,... or -1 if it didn't);(original sentence queue including flags)
- p=1; m=AN(w)-3; v=AAV(w); c=i0(v[m+1]);   // get # items in list, and index of the matching one
+ p=1; m=AN(w)-3; v=AAV(w); c=i0(C(v[m+1]));   // get # items in list, and index of the matching one
  // Now audit the input names (including pqr), since we haven't properly stacked them & checked them etc.
  // p is set to 0 if an audit fails
- DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&!!(NOUN&AT(x)););  // verify names defined, and are nouns
+ DO(m+1, x=symbrd(C(v[i])); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&!!(NOUN&AT(x)););  // verify names defined, and are nouns
  if(p){
-  b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);  // length, rank, shape, of pqr; type of first value in list
+  b=C(u[m]); n=AN(b); r=AR(b); s=AS(b); t=AT(C(*u));  // length, rank, shape, of pqr; type of first value in list
   p=(t&DIRECT)>0&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
   if(p)DO(m, y=u[i]; if(!(TYPESEQ(t,AT(y))&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
  }
  // If the audit failed, the sentence might work, but we won't be doing it here.  Go run the original sentence
- if(!p)R PARSERVALUE(parse(v[m+2]));   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
+ if(!p)R PARSERVALUE(parse(C(v[m+2])));   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
  // We can do it here!  We split into two cases: Boolean pqr with two names in the list, which can never fail;
  // and all other, which may produce index error
  fauxblockINT(aafaux,4,1);
- if(q=2==m&&B01&AT(b)){bv=BAV(b); x=u[0]; y=u[1];}  // fast case: exactly two names x and y
+ if(q=2==m&&B01&AT(b)){bv=BAV(b); x=C(u[0]); y=C(u[1]);}  // fast case: exactly two names x and y
  else{   // slow case
   if(!ISDENSETYPE(AT(b),INT))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
   iv=AV(b);    // iv points to the input pqr
-  fauxINT(b,aafaux,m,1)  aa=AV(b); DO(m, aa[i]=(I)AV(u[i]););  // create b, which is a list of pointers to the values of the names
+  fauxINT(b,aafaux,m,1)  aa=AV(b); DO(m, aa[i]=(I)AV(C(u[i])););  // create b, which is a list of pointers to the values of the names
  }
  // Check to see if we can modify in-place.  We can do so only if abc was one of the two names on the right, and we have the
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
  // sure abc is locally defined
- if(p=q&&0<=c&&ACUC1>=AC(u[c])) {  // passes quick check
-   p= (AN(jt->locsyms)==1) || CAV(QCWORD(AAV(v[m+2])[1]))[0]!=CASGN || jtprobe((J)((I)jt+NAV(QCWORD(AAV(v[m+2])[0]))->m),NAV(QCWORD(AAV(v[m+2])[0]))->s,NAV(QCWORD(AAV(v[m+2])[0]))->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
+ if(p=q&&0<=c&&ACUC1>=AC(C(u[c]))) {  // passes quick check
+   p= (AN(jt->locsyms)==1) || CAV(C(QCWORD(AAV(C(v[m+2]))[1])))[0]!=CASGN || jtprobe((J)((I)jt+NAV(C(QCWORD(AAV(C(v[m+2]))[0])))->m),NAV(C(QCWORD(AAV(C(v[m+2]))[0])))->s,NAV(C(QCWORD(AAV(C(v[m+2]))[0])))->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
     // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
     // then look up the symbol entry for word[0]
  }
- if(p)z=u[c]; else GA(z,t,n,r,s);   // z = output area, which may be in-place
+ if(p)z=C(u[c]); else GA(z,t,n,r,s);   // z = output area, which may be in-place
 // switch((!q?12:!p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){   // choose a comparison based on data
 //  case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
 //  case  4: CASE2X(C);  case  5: CASE2X(I);  case  6: CASE2X(D);  case  7: CASE2X(Z);
@@ -100,7 +100,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
   default: ASSERTSYS(0,"casev");
  }
  // Mark all the inputs as nonpristine
- DO(m, w=u[i]; PRISTCLRF(w))
+ DO(m, w=C(u[i]); PRISTCLRF(w))
  RETF(z);
 }   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
@@ -429,19 +429,19 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
  }else{  // a single box.  must contain heterogeneous boxes, or we would have handled it earlier
-  ind=AAV(ind)[0]; n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
+  ind=C(AAV(ind)[0]); n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
   ASSERT((-(n|(r^1))&((AT(ind)&BOX+NUMERIC)-1))>=0,EVINDEX);  // must be empty list or numeric or boxed
   if(((n-1)|SGNIF(AT(ind),BOXX))>=0)RZ(ind=IRS1(ind,0,0,jtbox,j));  // if numeric, box each atom
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
   ASSERT(1>=r,EVINDEX);  // not a table
   ASSERT(n<=wr,EVINDEX);  // not too many axes
-  DQ(n, if(!equ(ds(CACE),v[i]))break; --n;);  // discard trailing (boxed) empty axes
+  DQ(n, if(!equ(ds(CACE),C(v[i])))break; --n;);  // discard trailing (boxed) empty axes
   j=zeroionei(0);  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
-   x=v[i]; d=ws[i];  // d=length of axis i
+   x=C(v[i]); d=ws[i];  // d=length of axis i
    if((-AN(x)&SGNIF(AT(x),BOXX))<0){   // notempty and boxed
     ASSERT(!AR(x),EVINDEX); 
-    x=AAV(x)[0]; k=IX(d);
+    x=C(AAV(x)[0]); k=IX(d);
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
    }else k=pind(d,x);
    RZ(x=tymesA(j,sc(d)));
@@ -458,7 +458,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
 
 // Execution of x m} y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
 static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
- AD * RESTRICT ind=VAV(self)->fgh[0];  // ind=m, the indexes to be modified
+ AD * RESTRICT ind=C(VAV(self)->fgh[0]);  // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  if(likely(!ISSPARSE(AT(w)|AT(ind)))){
   // non-sparse.  The fast cases are: (1) numeric m; (2) single box m.  numeric m turns into a single list of validated indexes; single box m turns into
@@ -478,7 +478,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
    }else RZ(z=jtcelloffset(jt,w,ind));  // create (or keep) list of cell indexes
   }else if(likely(AR(ind)==0)){
    // ind is a single box, <selectors.  It must have rank 0 because the rank affects the rank of m{y and thus the allowed rank of a.
-   A ind0=AAV(ind)[0];  // discard ind, move to selectors
+   A ind0=C(AAV(ind)[0]);  // discard ind, move to selectors
    ASSERT(AN(ind0)<=AR(w),EVLENGTH);  // can't have more selectors than axes
    if(AT(ind0)&BOX){
     // selectors are boxed.  They have selectors for sequential axes.  Put them into a multidimensional axis struct.  In this struct a pointer of 0 means
@@ -488,11 +488,11 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
      // 0-1 selectors, turn it into an ind if it contains a list/atom or a box.  If it contains a table or higher, revert to general case
      if(AN(ind0)!=0){
       // the single selector is a singleton box <indexes or <<compindexes
-      ind0=AAV(ind0)[0];  // advance ind0 to indexes or <compindexes
+      ind0=C(AAV(ind0)[0]);  // advance ind0 to indexes or <compindexes
       if(!(AT(ind0)&BOX))z=pind(AS(w)[0],ind0);  // not boxed - get/keep index list for first axis
       else{  // <<compidexes
        ASSERT(!AR(ind0),EVINDEX);   // must be just one atomic box
-       RZ(z=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(AS(w)[0]),num(1)),pind(AS(w)[0],AAV(ind0)[0]),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
+       RZ(z=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(AS(w)[0]),num(1)),pind(AS(w)[0],C(AAV(ind0)[0])),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
       }
       cellframelen=1;  // in this path, the cells are _1-cells
      }else{
@@ -505,7 +505,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
      // fill in the struct for each axis.  check indexes for validity (allocating a new block  if any are negative); handle complementaries, and axes taken in full
      A ax;  // holds the index block for the current axis.  At end of loop, holds the ind block for axis 0, after complementation
      for(i=indn;i;--i){  // for each axis, rolling up from the bottom.  The input is i-1, the output axis is i (because we added the leading axis)
-      ax=indv[i-1];  // point to the index block
+      ax=C(indv[i-1]);  // point to the index block
       I axlen=AS(w)[i-1];  // length of axis
       axes[i].size=axlen;  // save in axis struct
       axes[i].scan=0;  // start at beginning of indexes
@@ -526,7 +526,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
       }else{
        // here for complementary indexing
        ASSERT(!AR(ax),EVINDEX);   // must be just one box
-       ax=AAV(ax)[0];  // open it
+       ax=C(AAV(ax)[0]);  // open it
        if(AN(ax)){  // if not taken in full...
         RZ(ax=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(axlen),num(1)),pind(axlen,ax),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
         axes[i].max=AN(ax);  // note how many are left
@@ -608,10 +608,10 @@ static DF1(mergn1){       R merge1(w,VAV(self)->fgh[0]);}
 static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 
 // called from m}, m is usually NOT a gerund
-static B ger(A w){A*wv,x;
+static B ger(J jt,A w){A*wv,x;
  if(!(BOX&AT(w)))R 0;
  wv=AAV(w); 
- DO(AN(w), x=wv[i]; if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=AAV(x)[0]; if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
+ DO(AN(w), x=C(wv[i]); if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=C(AAV(x)[0]); if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
@@ -633,7 +633,7 @@ static B gerar(J jt, A w){A x; C c;
   // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
   // 
   if(!(n==2))R 0;  // verify 2 boxes
-  wv = AAV(w);  x=wv[0]; // point to pointers to boxes; point to first box contents
+  wv=AAV(w);  x=C(wv[0]); // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
   if((SGNIF(AT(x),LITX)&(AR(x)-2)&((AN(x)^1)-1))<0){ // LIT, rank<2, AN=1
    c = CAV(x)[0];   // fetch that character
@@ -644,7 +644,7 @@ static B gerar(J jt, A w){A x; C c;
   // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
   if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
-  x = wv[1];   // point to second box
+  x=C(wv[1]);   // point to second box
   if((SGNIF(AT(x),BOXX) & ((AR(x)^1)-1))>=0)R 0;   // verify it contains a list of boxes
   if(!BETWEENC(AN(x),bmin,bmax))R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
@@ -655,8 +655,8 @@ static B gerar(J jt, A w){A x; C c;
 B jtgerexact(J jt, A w){A*wv;
  if(!(BOX&AT(w)))R 0;   // verify gerund is boxed
  if(!(AN(w)))R 0;   // verify there are boxes
- wv = AAV(w);   // point to pointers to contents
- DO(AN(w), if(!(gerar(jt, wv[i])))R 0;);   // fail if any box contains a non-gerund
+ wv=AAV(w);   // point to pointers to contents
+ DO(AN(w), if(!(gerar(jt, C(wv[i]))))R 0;);   // fail if any box contains a non-gerund
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
@@ -665,7 +665,7 @@ B jtgerexact(J jt, A w){A*wv;
 F1(jtamend){
  ARGCHK1(w);
  if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,amccv2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
- else if(ger(w))R gadv(w,CRBRACE);   // v0`v1`v2}
+ else if(ger(jt,w))R gadv(w,CRBRACE);   // v0`v1`v2}
  else           R ADERIV(CRBRACE,mergn1,jtamendn2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // m}
 }
 

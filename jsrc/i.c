@@ -176,6 +176,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
   jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
   jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return
+  jt->deprecex=num(7);  // scaf suppress msg 7 for the nonce
  }
  R 1;
 }

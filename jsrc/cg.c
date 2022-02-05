@@ -24,7 +24,7 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
  // find the real self, valence-dependent
   F2PREFIP;ARGCHK1(w);
  I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
- I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=AAV(FAV(self)->fgh[2])[nexttoexec]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
+ I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=C(AAV(FAV(self)->fgh[2])[nexttoexec]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
@@ -37,7 +37,7 @@ static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
  I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
  ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
- A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
+ A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
@@ -50,7 +50,7 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
  ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
- A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
+ A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
@@ -86,7 +86,7 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ASSERT(n!=0,EVLENGTH);  // gerund must not be empty
  ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);  // allocate one box per gerund
- DO(n, RZ(zv[i]=x=incorp(fx(wv[i]))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
+ DO(n, RZ(zv[i]=x=incorp(fx(C(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  R z;
 }
 
@@ -105,7 +105,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(*hv)->valencefns[0],  w,*hv))); ++hv;);
+ DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(C(*hv))->valencefns[0],  w,C(*hv)))); ++hv;);
  R ope(z);
 }
 
@@ -113,7 +113,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(*hv)->valencefns[1],a,w,*hv))); ++hv;);
+ DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(C(*hv))->valencefns[1],a,w,C(*hv)))); ++hv;);
  R ope(z);
 }
 
@@ -121,10 +121,10 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
 static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  ARGCHK1(w);
  SETIC(w,n); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
- if(!n)R df1(z,w,iden(*hv));
+ if(!n)R df1(z,w,iden(C(*hv)));
  RZ(z=from(num(-1),w));
  old=jt->tnextpushp;
- --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
+ --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(C(hv[hfx]))->valencefns[1],from(sc(j),w),z,C(hv[hfx]))); z=gc(z,old);)
  RETF(z);
 }
 
@@ -260,7 +260,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     }
    //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
    // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
-    A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
+    A fs=C(AAV(FAV(self)->fgh[2])[currres]);  // fetch the gerund to execute
     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))&(((I)2<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
      virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace from VJTFLGOK1/2 depending on valence
 
@@ -278,7 +278,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I nblkscreated=zzboxp-AAV(zz);
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
-    // final resting place
+    // final resting place.  They can't be futures
     // get the size of each item
     I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
     // allocate result area (could be inplace; but the waste of memory in sort/from is more important)
@@ -320,7 +320,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // There was only 1 cell in the result.  Apply the selected verb, inplace if possible
   I vx=i0(vres); RE(0);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERT(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX);
-  A ger=AAV(FAV(self)->fgh[2])[vx];  // the selected gerund
+  A ger=C(AAV(FAV(self)->fgh[2])[vx]);  // the selected gerund
   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
 }
@@ -334,7 +334,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
   ASSERT(BOX&AT(a),EVDOMAIN);
   n=AN(a); av=AAV(a); 
   GATV0(z,BOX,n,1); v=AAV(z);
-  DO(n, RZ(*v++=incorp(gerfrom(av[i],w))););
+  DO(n, RZ(*v++=incorp(gerfrom(C(av[i]),w))););
   R z;
 }}
 
@@ -346,7 +346,7 @@ F2(jtagendai){I flag;
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = incorp(fxeachv(1L,a)));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
- flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
+ flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(C(*avbv))->flag; ++avbv;);  // Don't increment inside FAV!
  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), RMAX, RMAX, RMAX);
 }
 
@@ -358,8 +358,8 @@ F2(jtagendai){I flag;
 
 
 static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(hv[1])); df2(ff,df1(z0,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
- R df1(z0,df1(z1,w,hv[2]),ff);
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,df1(z0,w,C(hv[1])),gs,ds(sv->id)); FDEPDEC(d);
+ R df1(z0,df1(z1,w,C(hv[2])),ff);
 }
 
 // this is u^:gerund y
@@ -370,19 +370,19 @@ static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
-static DF1(jtgcr1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(hv[1])); df2(ff,fs,df1(z0,w,hv[1]),ds(sv->id)); FDEPDEC(d);
- R df1(z0,df1(z1,w,hv[2]),ff);
+static DF1(jtgcr1){DECLFG;A ff,z0,z1,*hv=C(AAV(sv->fgh[2]));
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,fs,df1(z0,w,C(hv[1])),ds(sv->id)); FDEPDEC(d);
+ R df1(z0,df1(z1,w,C(hv[2])),ff);
 }
 
-static DF2(jtgcl2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(hv[1])); df2(ff,df2(z0,a,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
- R df2(z0,df2(z1,a,w,hv[0]),df2(z2,a,w,hv[2]),ff);
+static DF2(jtgcl2){DECLFG;A ff,z0,z1,z2,*hv=C(AAV(sv->fgh[2]));
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,df2(z0,a,w,C(hv[1])),gs,ds(sv->id)); FDEPDEC(d);
+ R df2(z0,df2(z1,a,w,C(hv[0])),df2(z2,a,w,C(hv[2])),ff);
 }
 
-static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(hv[1])); df2(ff,fs,df2(z0,a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
- R df2(z0,df2(z1,a,w,hv[0]),df2(z2,a,w,hv[2]),ff);
+static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=C(AAV(sv->fgh[2]));
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,fs,df2(z0,a,w,C(hv[1])),ds(sv->id)); FDEPDEC(d);
+ R df2(z0,df2(z1,a,w,C(hv[0])),df2(z2,a,w,C(hv[2])),ff);
 }
 
 // called for gerund} or ^:gerund forms.  id is the pseudocharacter for the modifier (} or ^:)
@@ -405,12 +405,12 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
- FDEPINC(d=fdep(hv[1]));
- df1(ffm,w,hv[1]);  // x v1 y - no inplacing
+ FDEPINC(d=fdep(C(hv[1])));
+ df1(ffm,w,C(hv[1]));  // x v1 y - no inplacing
  FDEPDEC(d);
  RZ(ffm);  // OK to fail after FDEPDEC
  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (v1 y)}
- if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(df1(ffx,w,hv[2]))}
+ if(AT(C(hv[2]))&NOUN){ffx=C(hv[2]);}else{RZ(df1(ffx,w,C(hv[2])))}
  R df1(ffm,ffx,ff);
 }
 
@@ -420,8 +420,8 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
- FDEPINC(d=fdep(hv[1]));
- df2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
+ FDEPINC(d=fdep(C(hv[1])));
+ df2(ffm,a,w,C(hv[1]));  // x v1 y - no inplacing.
  FDEPDEC(d);
  RZ(ffm);  // OK to fail after FDEPDEC
  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (x v1 y)}  .  Alas, ffm can no longer be virtual
@@ -430,9 +430,9 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w&&(FAV(hv[2])->flag&VJTFLGOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ RZ(ffy = (FAV(C(hv[2]))->valencefns[1])(a!=w&&(FAV(C(hv[2]))->flag&VJTFLGOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,C(hv[2])));  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
- RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ RZ(ffx = (FAV(C(hv[0]))->valencefns[1])((FAV(C(hv[0]))->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,C(hv[0])));
  // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
  POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
@@ -450,19 +450,19 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  // hs is a BOX array, but its elements are ARs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
- ASSERT(AT(AAV(hs)[0])&AT(AAV(hs)[1])&AT(AAV(hs)[2])&VERB,EVDOMAIN);
- I alr=atoplr(AAV(hs)[0]);
- I flag=(FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&FAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+((alr|(alr>>2))&3);
+ ASSERT(AT(C(AAV(hs)[0]))&AT(C(AAV(hs)[1]))&AT(C(AAV(hs)[2]))&VERB,EVDOMAIN);
+ I alr=atoplr(C(AAV(hs)[0]));
+ I flag=(FAV(C(AAV(hs)[0]))->flag&FAV(C(AAV(hs)[1]))->flag&FAV(C(AAV(hs)[2]))->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+((alr|(alr>>2))&3);
  R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 
 
-static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,AAV(h)[0]);}
-static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,AAV(h)[0]);}
+static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
+static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
 
 A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);
  ASSERT(2==AN(x),EVLENGTH);
- RZ(h=fxeachv(1L,x)); hv=AAV(h); v=VAV(*hv);
+ RZ(h=fxeachv(1L,x)); hv=AAV(h); v=VAV(C(*hv));
  R fdef(0,id,VERB, jtgf1,jtgf2, x,a?w:0L, h, VGERL, (I)v->mr,lrv(v),rrv(v));
 }    /* verify and define 2-element gerund */

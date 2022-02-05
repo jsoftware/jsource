@@ -715,6 +715,7 @@ extern I        jtfnum(J,A);
 extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
+extern A        jtfutval(J,A);
 extern A        jtfxeachv(J,I,A);
 #if SY_64
 extern RESTRICTF A jtga0(J,I,I);

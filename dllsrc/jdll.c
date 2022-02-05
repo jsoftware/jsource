@@ -233,7 +233,7 @@ static int a2v (JJ jt, A a, VARIANT *v, int dobstrs)  // jt is a thread pointer,
 			 ++ap, ++v)
 		{
 			PROLOG(0118);
-			er=a2v (jt, *ap, v, dobstrs);
+			er=a2v (jt, C(*ap), v, dobstrs);
 			tpop(_ttop);
 			if (er!=0)
 			{

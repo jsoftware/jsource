@@ -77,7 +77,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  GATV0(x,INT,wr,1); v=(I**)AV(x);
  DO(wr, m=ws[i]; GATV0(x,INT,m,1); mvc(m*SZI,v[i]=AV(x),1,MEMSETFF););
  for(i=0;i<wn;++i){
-  x=wv[i]; r=AR(x); s=AS(x);
+  x=C(wv[i]); r=AR(x); s=AS(x);
   if(AN(x)){if(!t)t=AT(x); ASSERT(HOMO(t,AT(x)),EVDOMAIN);}
   ASSERT(2>r||r==wr,EVRANK);
   if(2>r)z=0;
@@ -89,7 +89,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
   GATV0(h,INT,wr,1); hv=AV(h);
   GA10(f,t,1); RZ(f=filler(f)); mvc(wr*SZI,u,1,MEMSET00);
   for(i=0;i<wn;++i){
-   zv[i]=x=wv[i];
+   zv[i]=x=C(wv[i]);
    if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}
    j=wr-1; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
  }}

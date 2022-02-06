@@ -278,15 +278,23 @@ do{
      // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
      // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
-#if !ZZSTARTATEND  // going forwards
-     A result0=AAV(zz)[0];   // fetch pointer to the first 
+     I diff;  // Will be set to 0 if we are unable to report the # items
+#if FUTURES
+     // If the returned result is a future, we can't look into it to get its type/len.  We could see if the future has been resolved, but we don't
+    if((diff=AT(z)&FUTURE)){  // if the result is a future that can't be inspected, skip it
 #else
-     A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
+    {
 #endif
-     I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
-     I diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
-     ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
-     I nitems=zs[0]; nitems=(zr==0)?1:nitems; zzcounteditems+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+#if !ZZSTARTATEND  // going forwards
+      A result0=AAV(zz)[0];   // fetch pointer to the first 
+#else
+      A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
+#endif
+      I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
+      diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
+      I nitems=zs[0]; nitems=(zr==0)?1:nitems; zzcounteditems+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+     }
+     ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if we can't say the items are homogeneous
     }
     // Note: by checking COUNTITEMS inside WILLBEOPENED we suppress support for COUNTITEMS in \. which sets WILLBEOPENEDNEVER.  It would be safe to
     // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side

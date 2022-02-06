@@ -82,7 +82,7 @@ static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
  R box(w);  // If top level, we have to make sure (<,'&')`  doesn't replace the left part with bare &
 }
 
-// Convert an AR to an A block.  w is a gerund that has been opened
+// Convert an AR to an A block.  w is a gerund that has been opened.  If it originally came from a verb it can't be a future, but it may contain futures
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
 DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ARGCHK1(w);
@@ -93,14 +93,14 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT((UI)(m-1)<=(UI)(2-1),EVLENGTH);
- wv=AAV(w); y=wv[0];  // set wv->box pointers, y->first box
+ wv=AAV(w); y=C(wv[0]);  // set wv->box pointers, y->first box
  // If the first box contains boxes, they are ARs - go expand them and save as fs
  // id will contains the type of the AR: 0=another AR, '0'=noun, other=id of primitive or hook/fork
  if(BOX&AT(y)){RZ(fs=fx(y)); id=0;}
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){
   // here it's not a primitive verb
-  y=wv[1]; n=AN(y); yv=AAV(y); 
+  y=C(wv[1]); n=AN(y); yv=AAV(y); 
   if(id==CNOUN)R self?box(w):y;
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(BOX&AT(y),EVDOMAIN);
@@ -111,21 +111,21 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
   case CADVF:  // yv must have been set
    // invisible bident/trident except for N/V V V fork
    ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF
-   A h3=(n==3)?fx(yv[2]):mark;  // if 3d parm not given, use mark
-   R hook(fx(yv[0]),fx(yv[1]),h3);
+   A h3=(n==3)?fx(C(yv[2])):mark;  // if 3d parm not given, use mark
+   R hook(fx(C(yv[0])),fx(C(yv[1])),h3);
   case CFORK:
    ASSERT(3==n,EVLENGTH);   // yv must have been set
-   RZ(f=fx(yv[0])); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
-   RZ(g=fx(yv[1])); ASSERT(AT(g)&VERB,     EVSYNTAX);
-   RZ(h=fx(yv[2])); ASSERT(AT(h)&VERB,     EVSYNTAX);
+   RZ(f=fx(C(yv[0]))); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
+   RZ(g=fx(C(yv[1]))); ASSERT(AT(g)&VERB,     EVSYNTAX);
+   RZ(h=fx(C(yv[2]))); ASSERT(AT(h)&VERB,     EVSYNTAX);
    R folk(f,g,h);
   default:
    if(id)fs=ds(id);
    ASSERT(fs&&RHS&AT(fs),EVDOMAIN);
    if(!n)R fs;
    ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);  // after this test, yv is known set
-   if(0<n){RZ(p=fx(yv[0])); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
-   if(1<n){RZ(q=fx(yv[1])); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
+   if(0<n){RZ(p=fx(C(yv[0]))); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
+   if(1<n){RZ(q=fx(C(yv[1]))); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
    R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
  }
 }

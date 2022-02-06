@@ -302,7 +302,7 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
   // Must be the gerund form.  Extract v and remember which argument it will apply to
   ASSERT((AR(w)^1)+(AN(w)^2)==0,EVDOMAIN);  // must be 2-element list
   ASSERT((AN(AAV(w)[0])==0) | (AN(AAV(w)[1])==0),EVDOMAIN);  // one must be empty
-  gside=AN(AAV(w)[0])==0;  // the index to the argument v will act on (or -1 if not gerund)
+  gside=AN(AAV(w)[0])==0;  // the index to the argument v will act on (or -1 if not gerund).  Can't be a future
   wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
  }
  ASSERTVV(a,wvb); v=FAV(wvb);  // v is V* for w

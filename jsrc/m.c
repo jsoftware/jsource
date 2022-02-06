@@ -284,18 +284,18 @@ static D jtspfor1(J jt, A w){D tot=0.0;
   case XNUMX: case BOXX:
    if(!ISSPARSE(AT(w))){
     if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
-     {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(wv[i])););}
+     {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(C(wv[i]))););}
     }
     break;
    }
   case B01X: case INTX: case FLX: case CMPXX: case LITX:
    if(ISSPARSE(AT(w))){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(v->fgh[0]); if(v->fgh[1])tot+=spfor1(v->fgh[1]); if(v->fgh[2])tot+=spfor1(v->fgh[2]);} break;
+   {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;
   case XDX:
    {DX*v=(DX*)AV(w); DQ(AN(w), if(v->x)tot+=spfor1(v->x); ++v;);} break;
   case RATX:  
-   {A*v=AAV(w); DQ(2*AN(w), if(*v)tot+=spfor1(*v++););} break;
+   {A*v=AAV(w); DQ(2*AN(w), if(*v)tot+=spfor1((*v)); ++v;);} break;
  }
  if(!ACISPERM(AC(w))) {
   // for NJA allocations with contiguous header, the size is the header size (7+64 words) plus the data size
@@ -320,12 +320,12 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
-  x=wv[i]; m=AN(x); s=CAV(x);
+  x=C(wv[i]); m=AN(x); s=CAV(x);
   ASSERT(LIT&AT(x),EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   ASSERT(vnm(m,s),EVILNAME);
   RZ(y=symbrd(nfs(m,s))); 
-  zv[i]=spfor1(y);
+  zv[i]=spfor1(C(y));
  }
  RETF(z);
 }    /* 7!:5 space for named object; w is <'name' */
@@ -336,7 +336,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
-  x=wv[i];  // x is the name/number
+  x=C(wv[i]);  // x is the name/number
   I bucketx;  // will be hash/number for the locale
   if(!AR(x)&&AT(x)&INT){
    m=-1; bucketx=IAV(x)[0];   // signal numeric-atom locale; fetch number
@@ -355,7 +355,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
   tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
-   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+JT(jt,sympv); tot+=spfor1(u->name); tot+=spfor1(u->val);}  // add in the size of the name itself and the value, and the L block for the name
+   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+JT(jt,sympv); tot+=spfor1(u->name); tot+=spfor1(C(u->val));}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;
  }
@@ -412,14 +412,14 @@ static void auditsimverify0(A w){
  if(AFLAG(w)>>AFAUDITUCX)SEGFAULT;   // hang if nonzero count
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2))SEGFAULT; 
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
- if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
+ if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(C(*v)); ++v;)}
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
   if((AT(w)&BOX+SPARSE)>0){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; otherwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimverify0((A)(intptr_t)((I)wv[i]+(I)wrel)););
+   DO(n, auditsimverify0((A)(intptr_t)((I)C(wv[i])+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimverify0(v->fgh[0]); auditsimverify0(v->fgh[1]); auditsimverify0(v->fgh[2]);
   }else if(AT(w)&RAT|XNUM) {
@@ -447,7 +447,7 @@ static void auditsimdelete(A w){I delct;
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimdelete((A)(intptr_t)((I)wv[i]+(I)wrel)););
+   DO(n, auditsimdelete((A)(intptr_t)((I)C(wv[i])+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimdelete(v->fgh[0]); auditsimdelete(v->fgh[1]); auditsimdelete(v->fgh[2]);
   }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(*v); ++v;)
@@ -470,7 +470,7 @@ static void auditsimreset(A w){I delct;
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimreset((A)(intptr_t)((I)wv[i]+(I)wrel)););
+   DO(n, auditsimreset((A)(intptr_t)((I)C(wv[i])+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimreset(v->fgh[0]); auditsimreset(v->fgh[1]); auditsimreset(v->fgh[2]);
   }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(*v); ++v;)
@@ -818,6 +818,7 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
    if((np=QCWORD(np))!=0){ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
+     // a future is always recursive; we can increment the future's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
   if(np=QCWORD(np)){ra(np);}  // handle last one

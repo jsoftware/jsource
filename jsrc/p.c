@@ -188,7 +188,7 @@ static A NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
   else{
    // True multiple assignment
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
-   if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],vv[i],symtab);)}  // v is boxed list
+   if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],C(vv[i]),symtab);)}  // v is boxed list
    else {A *nv=AAV(n); DO(AN(n), jtsymbis(jtinplace,nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
    goto retstack;
   }
@@ -257,16 +257,16 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
    {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
   case BOXX:
    if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
-   DO(AN(w), if(wv[i]&&(AC(wv[i])<0))SEGFAULT;)
+   DO(AN(w), if(wv[i]&&(AC(C(wv[i]))<0))SEGFAULT;)
    I acbias=(AFLAG(w)&BOX)!=0;  // subtract 1 if recursive
-   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(!((AT(wv[i])&DIRECT)>0))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
-   {DO(AN(w), auditblock(jt,wv[i],nonrecur,0););}
+   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(!((AT(C(wv[i]))&DIRECT)>0))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
+   {DO(AN(w), auditblock(jt,C(wv[i]),nonrecur,0););}
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(w); auditblock(jt,v->fgh[0],nonrecur,0);
-    auditblock(jt,v->fgh[1],nonrecur,0);
-    auditblock(jt,v->fgh[2],nonrecur,0);} break;
+   {V*v=VAV(w); auditblock(jt,C(v->fgh[0]),nonrecur,0);
+    auditblock(jt,C(v->fgh[1]),nonrecur,0);
+    auditblock(jt,C(v->fgh[2]),nonrecur,0);} break;
   case B01X: case INTX: case FLX: case CMPXX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX:
    if(ISSPARSE(AT(w))){P*v=PAV(w);  A x;
     if(!scheck(w))SEGFAULT;
@@ -818,9 +818,6 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x2
        if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
        audittstack(jt);
-#endif
-#ifndef BOXEDSPARSE
-       if(unlikely(AT(y)&BOX&&AN(y)&&AAV(y)[0]&&ISSPARSE(AT(AAV(y)[0]))))RZ(y=spres(y));  // resolve boxed sparse value
 #endif
        stack[1+((pt0ecam>>(PLINESAVEX+1))&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
        // free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.

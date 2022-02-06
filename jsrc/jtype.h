@@ -325,6 +325,8 @@ typedef I SI;
                                           // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK) requires C(future).
                                           // If the address of the future is being copied into another block, there is no need for C().  In particular, the future may be ra()'d if it is put into a recursive block.
                                           // ra() on a future will affect the usecount of the future itself but NOT of the contents, because a future is always marked recursive.
+                                          // The AN of the 'atomic' future is initialized to 0, and AAV[0] is also 0.  When the future is resolved, the address of the
+                                          // result A block/error code is stored into AAV[0], and if there is no error, AN is set to 1.
 // Bit 9 unused
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */

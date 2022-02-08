@@ -309,7 +309,7 @@ static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
  wv=AAV(w); 
  for(i=0;i<n;++i){
-  y=wv[i];  // pointer to box
+  y=C(wv[i]);  // pointer to box
   if(((b-2)&(AR(y)-1)&-(AT(y)&(INT|B01)))<0)continue;   // scalar numeric locale is ok
   m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
@@ -334,7 +334,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  if(!n)R z;  // if no input, return empty before handling numeric-atom case
  if(AT(w)&(INT|B01)){IAV(z)[0]=(y=findnl(BIV0(w)))&&LOCPATH(y)?1:-1; RETF(z);}  // if integer, must have been atomic or empty.  Handle the one value
  for(i=0;i<n;++i){
-  y=wv[i];
+  y=C(wv[i]);
   if(!AR(y)&&AT(y)&((INT|B01))){  // atomic numeric locale
    zv[i]=findnl(BIV0(y))?1:-1;  // OK because the boxed value cannot be virtual, thus must have padding
   }else{L *yy;
@@ -372,15 +372,15 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
  }else{
   RZ(vlocnl(1,w));
   wv=AAV(w); 
-  DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!((g=(b?jtstfindcre:jtstfind)(jt,AT(y)&(INT|B01)?-1:AN(y),CAV(y),AT(y)&(INT|B01)?BIV0(y):BUCKETXLOC(AN(y),CAV(y))))&&LOCPATH(g)))R 0;);
+  DO(AN(w), y=AT(w)&BOX?C(wv[i]):sc(IAV(w)[i]); if(!((g=(b?jtstfindcre:jtstfind)(jt,AT(y)&(INT|B01)?-1:AN(y),CAV(y),AT(y)&(INT|B01)?BIV0(y):BUCKETXLOC(AN(y),CAV(y))))&&LOCPATH(g)))R 0;);
  }
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale for each name */
 
-F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,w));
+F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,C(w)));
  g=LOCPATH(g);  // the path for the current locale.  It must be non0
  GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV0(g);  // allocate result, point to input & output areas
- DO(AN(g), if(*gv&&*gv!=JT(jt,emptylocale)){A gg=sfn(0,LOCNAME(*gv)); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator and the leading empty (if path was null)
+ DO(AN(g), if(*gv&&C(*gv)!=JT(jt,emptylocale)){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator and the leading empty (if path was null)
  AN(z)=AS(z)[0]=zv-zv0; R z;  // install number of strings added & return
 }
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored, and must incorporate it
@@ -412,7 +412,7 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
 static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
- y=AAV(w)[0]; n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
+ y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
  if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
   g=v->val;
@@ -510,7 +510,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
   g=0;
   if(AT(w) & (INT)){zv[i]=1; g = findnl(IAV(w)[i]);
   }else{
-   zv[i]=1; y=wv[i];
+   zv[i]=1; y=C(wv[i]);
    if(AT(y)&(INT|B01)){g = findnl(BIV0(y));
    }else{
     m=AN(y); u=CAV(y);

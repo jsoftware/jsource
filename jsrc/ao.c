@@ -165,6 +165,20 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
 // start of x f/. y (Key)
 static DF2(jtkey);
 
+
+static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
+// obsolete D ctold=jt->ct;
+ RZ(a&&w);
+ // obsolete jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
+ SETIC(a,n); av=AV(a);
+ RZ(j=grade1(a)); jv=AV(j);
+ GATV(p,B01,n,1,0); pv=BAV(p);
+ DO(n, c=d; d=av[*jv++]; *pv++=c<d;);
+ df2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));
+ // obsolete jt->ct=ctold;
+ EPILOG(z);
+}    /* a f/. w where a is i.~x for dense x  */
+
 static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  ARGCHK2(a,w);
  {I t2; ASSERT(SETIC(a,n)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  n is # items of a
@@ -181,7 +195,17 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(z=over(df1(b,repeat(q,w),VAV(self)->fgh[0]),x));
  z=j?cdot2(box(IX(1+j)),z):z;
  EPILOG(z);
-}
+}  // a f/. w  for sparse a
+
+static DF2(jtkeyspw){PROLOG(0011); I ica, icw;
+ RZ(a&&w);
+ SETIC(a,ica); SETIC(w,icw);
+ ASSERT(ica==icw,EVLENGTH);
+ if(SPARSE&AT(a))R keysp(a,w,self);
+ A z=keyi(indexof(a,a),w,self);
+ EPILOG(z);
+}    // a f/. w for sparse w
+
 
 static DF2(jtkey){F2PREFIP;R jtkeyct(jtinplace,a,w,self,jt->cct);}
 
@@ -481,6 +505,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    // copy the data to the end of its partition and advance the input pointer
    JMCR(partitionptr,wv,celllen,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
+// scaf sparse
    av=(I*)((I)av+k);  // advance to next input value
   }
  }
@@ -646,14 +671,15 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  ARGCHK1(w);
  RZ(q=indexof(w,w));
  p=PAV(q); 
- x=SPA(p,x); u=AV(x); c=AN(x);
- y=SPA(p,i); v=AV(y);
- e=SPA(p,e); k=i0(e); 
- j=0; DO(c, if(k<=u[i])break; if(u[i]==v[i])++j;);
- RZ(b=ne(e,x));
- RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);
- GATV0(z,INT,1+d,1); v=AV(z);
- DQ(j, *v++=*u++;); *v++=SETIC(w,k)-bsum(c,BAV(b)); DQ(d-j, *v++=*u++;);
+ x=SPA(p,x); u=AV(x); c=AN(x);  // u-> values of i.~ w
+ y=SPA(p,i); v=AV(y);  // v-> indexes of i.~ w
+ e=SPA(p,e); k=i0(e); // k is the sparse element in the rep of i.~ w
+ j=0; DO(c, if(k<=u[i])break; if(u[i]==v[i])++j;);  // j = # unique values in w before the first fill element
+ RZ(b=ne(e,x));  // b = mask of values in x that are different from the sparse element
+ RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);  // u now -> #/.~ of the non-sparse items, d=count thereof
+ I nfills=SETIC(w,k)-bsum(c,BAV(b));  // number of cells of fill
+ GATV0(z,INT,d+(nfills!=0),1); v=AV(z);  // allocate result: one for each unique non-fill, plus one for the fills if any
+ DQ(j, *v++=*u++;); if(nfills)*v++=nfills; DQ(d-j, *v++=*u++;);  // copy in the counts
  EPILOG(z);
 }    /* x #/.y , sparse x */
 

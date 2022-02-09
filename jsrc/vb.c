@@ -42,14 +42,14 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
 }    /* E. on matrix arguments */
 
 static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
- ARGCHK2(a,w);
+ ARGCHK2(a,w); a=C(a); w=C(w);
  an=AN(a); av=CAV(a); 
  wn=AN(w); wv=CAV(w); n=1+wn-an; 
  t=AT(w); k=bpnoun(t); s=k*an;
  GATV0(z,B01,wn,AR(w)?1:0); zv=BAV(z); 
  if((-an&(an-wn))<0)mvc(wn-n,zv+n,1,MEMSET00); else mvc(wn,zv,1,MEMSET00);
  if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)DO(n, zv[i]=!memcmpne(av,wv,s); wv+=k;)
- else{GA0(y,t,an,AR(a)); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
+ else{GA0(y,t,an,AR(a)); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,C(y)); wv+=k;);}
  RETF(z);
 }    /* E. on vector arguments */
 

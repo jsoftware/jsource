@@ -372,7 +372,7 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
 }
 
 // Comparisons for extended/rational/float/complex types.
-static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(!equ(C(*u),C(*v)))R 0; ++u; ++v;); R 1;}
 static B jteqq(J jt,I n,Q*u,Q*v){DQ(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jeqd(I n,D*u,D*v,D cct){DQ(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
@@ -1108,7 +1108,7 @@ static A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; vo
   SCDO(XNUMX,A,!equ(x, av[j]));
   SCDO(RATX,Q,!QEQ(x, av[j]));
   SCDO(SBTX,SB,x!=av[j]      );
-  SCDO(BOXX,A,!equ(x,av[j]));
+  SCDO(BOXX,A,!equ(C(x),C(av[j])));
 #if (C_AVX&&SY_64) || EMU_AVX
   // The instruction set is too quirky to do this with macros
    case IOSCCASE(XDX,0,IIDOT): seqsch256(seqschidotDD0,0x0000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
@@ -1145,7 +1145,7 @@ static A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; vo
   SCDON(RATX,Q, !QEQ(wvv[jj], avv[jj]));
   SCDON(INTX,I, wvv[jj]!=avv[jj]      );
   SCDON(SBTX,SB,wvv[jj]!=avv[jj]      );
-  SCDON(BOXX,A, !equ(wvv[jj],avv[jj]));
+  SCDON(BOXX,A, !equ(C(wvv[jj]),C(avv[jj])));
   SCDON(XDX,D, wvv[jj]!=avv[jj]) ;
   SCDON(FLX,D, !TCMPEQ(jt->cct,wvv[jj],avv[jj]));
   default:  jsignal(EVSYSTEM);
@@ -1332,8 +1332,8 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
   R h;                                                                               \
  }
 
-static IOFXW(A,US,jtiowax1,,cthia(~0LL,1.0,C(*v)),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,US,jtiowau,, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
+static IOFXW(A,US,jtiowax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,US,jtiowau,, hiau(*v),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
 static IOFXW(X,US,jtiowx,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,US,jtiowq,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
 static IOFXW(C,US,jtiowc,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -1344,8 +1344,8 @@ static IOFXW(Z,US,jtiowz01,, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!
 static IOFXW(D,US,jtiowc0,, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
 static IOFXW(Z,US,jtiowz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
-static IOFXW(A,UI4,jtiowax12,,cthia(~0LL,1.0,C(*v)),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,UI4,jtiowau2,, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
+static IOFXW(A,UI4,jtiowax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,UI4,jtiowau2,, hiau(*v),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
 static IOFXW(X,UI4,jtiowx2,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,UI4,jtiowq2,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
 static IOFXW(C,UI4,jtiowc2,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */

@@ -191,7 +191,7 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
   GATV0(p,INT,AN(y),1); pv=AV(p);
   m=AN(a); n=AN(t); av=AAV(a); 
-  j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(av[i]); DQ(k,pv[*v++]=j;); j+=(k!=0););
+  j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(C(av[i])); DQ(k,pv[*v++]=j;); j+=(k!=0););
  }else RZ(p=pinv(pfill(r,a)));
  A z; IRS2(p,w,0L,1L,r,jtcanta,z); RZ(z);  // Set rank for w in canta.  p is now INT type.  No need to check agreement since a has rank 1
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result

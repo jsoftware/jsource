@@ -9,7 +9,7 @@
 I level(A w){A*wv;I d,j;
  if((-AN(w)&-(AT(w)&BOX))>=0)R 0;
  d=0; wv=AAV(w);
- DQ(AN(w), j=level(wv[i]); d=d<j?j:d;);
+ DQ(AN(w), j=level(C(wv[i])); d=d<j?j:d;);
  R 1+d;
 }
 
@@ -19,7 +19,7 @@ I levelle(A w,I l){
  if((-AN(w)&-(AT(w)&BOX))>=0)R SGNTO0(~l);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
- DO(AN(w), if(!levelle(wv[i],l))R 0;);  // stop as soon as we see level big enough
+ DO(AN(w), if(!levelle(C(wv[i]),l))R 0;);  // stop as soon as we see level big enough
  R 1;  // if it never gets big enough, say so, keep looking
 }
 
@@ -409,7 +409,7 @@ static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m
  n=AN(w); wcr=AN(cs); wv=AAV(w);
  GATV0(x,B01,wcr,1); b=BAV(x); mvc(wcr,b,1,MEMSET00);
  for(i=0;i<n;++i)
-  if(q=wv[i],ISSPARSE(AT(q))){
+  if(q=C(wv[i]),ISSPARSE(AT(q))){
    p=PAV(q); x=SPA(p,x); m+=AS(x)[0];
    if(!e)e=SPA(p,e); else ASSERT(equ(e,SPA(p,e)),EVSPARSE);
    k=wcr-AR(q); DO(k, b[i]=1;); a=SPA(p,a); v=AV(a); DQ(AN(a), b[k+*v++]=1;);
@@ -455,7 +455,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  DPMULDE(m,xc,i) GA(x,dt,i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
  DPMULDE(m,yc,i) GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); mvc(SZI*i,yv,1,MEMSET00);
  for(i=p=0;i<n;++i){
-  RZ(opes2(&x1,&y1,b,a,e,wv[i],wcr)); v=AS(y1); m1=v[0]; k=v[1];
+  RZ(opes2(&x1,&y1,b,a,e,C(wv[i]),wcr)); v=AS(y1); m1=v[0]; k=v[1];
   if(m<p+m1){
    j=m; m=(i<n-1?m+m:0)+p+m1;
    RZ(x=take(sc(m),x)); xv=CAV(x)+p*xk; mvc(xk*(m-j),xv,dk,AV(e));
@@ -480,7 +480,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  v=AAV(w);
  if(likely((RANKT)((AT(w)&BOX)>>BOXX)>AR(w))){   // boxed and rank=0
   // scalar box: Turn off pristine in w since we are pulling an address from it.  Contents must not be inplaceable
-  z=*v;
+  z=C(*v);
 #if AUDITBOXAC
   if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT;
 #endif
@@ -498,7 +498,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  I *shapeptr; I maxshape0=0; I maxshape1=0; r=0; q=RMAX;  // max axis_1, max axis _2, max rank, min rank
  I te=0; I t=0;  // te=all types including empties; t=nonempty types.  If t!=0, te is immaterial
  for(i=0;i<n;++i){I s;
-  y=v[i]; r=MAX(r,AR(y)); q=MIN(q,AR(y));  // could do this with shift if rank limited to 63
+  y=C(v[i]); r=MAX(r,AR(y)); q=MIN(q,AR(y));  // could do this with shift if rank limited to 63
   if(likely(AN(y)!=0))t|=AT(y); te|=AT(y);  // accumulate types, either nonempty or empty.  Probably all the same AN, so use branch
   // accumulate max shape.  Extend short shapes with 1
   shapeptr=&AS(y)[AR(y)-1]; shapeptr=AR(y)>0?shapeptr:&oneone[1]; s=*shapeptr; maxshape0=MAX(maxshape0,s);
@@ -532,7 +532,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
   fauxINT(cs,csfaux,r+1,1) AS(cs)[0]=AN(cs)=r; u=IAV(cs);  // allocate extra axis for use in copyresultcell
   DO(r-q, u[i]=1;); p=u+r-q; DO(q-2, p[i]=0;); u[r-1]=maxshape0; u[r-2]=maxshape1;  // initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes); fill in known axes
   // find the shape of a result-cell
-  DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y)-2,p[i]=MAX(p[i],s[i]);););  // go through blocks again finding max shape (not checking last 2 axes)
+  DO(n, y=C(v[i]); s=AS(y); p=u+r-AR(y); DO(AR(y)-2,p[i]=MAX(p[i],s[i]);););  // go through blocks again finding max shape (not checking last 2 axes)
   if(unlikely(ISSPARSE(t))){z=opes(t,cs,w); EPILOG(z);} // if sparse, use sparse code
   else{
    PRODX(m,r,u,1);  // # atoms in cell
@@ -548,7 +548,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // Now move the results.  They may need conversion or fill
  JMCDECL(endmask) JMCSETMASK(endmask,m<<klg,0)
  for(i=0;i<n;++i){  // for each input box
-  y=v[i];   // get pointer to contents
+  y=C(v[i]);   // get pointer to contents
 #if AUDITBOXAC
    if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(y)<0)SEGFAULT;
 #endif
@@ -570,7 +570,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
   // if contents has the same rank as result, it is an array of result-cells, and each item adds
   // to c, the total # items in result; otherwise it is a single cell that will be promoted in rank to
   // become one result-cell.  Error if overflow (should be impossible).  j=#leading length-1 axes that need to be added
-  y=v[i]; yr=AR(y); ys=AS(y); I nitems=ys[0]; j=r-yr; nitems=j==0?nitems:1; c+= nitems; ASSERT(0<=c,EVLIMIT); 
+  y=C(v[i]); yr=AR(y); ys=AS(y); I nitems=ys[0]; j=r-yr; nitems=j==0?nitems:1; c+= nitems; ASSERT(0<=c,EVLIMIT); 
   if(!yr)continue;   // do not perform rank extension of atoms
   // here we find the max cell size in *(s+1). *s is not used.  The maximum shape is taken
   // over extension axes of length 1, followed by the actual shape of the contents
@@ -588,7 +588,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
   if(nonempt&&m) {  // Check cell-contents only if there are some nonempty contents, and if the result-cell is nonempty
      // these are different, eg for 0 1$4 which has no cells but they are nonempty, or 1 0 1$4 which has an empty result-cell
    for(i=0;i<n;++i) {   // for each box of contents
-    y=v[i]; yr=AR(y);   // y-> A block for contents of w[i]; yr = its rank
+    y=C(v[i]); yr=AR(y);   // y-> A block for contents of w[i]; yr = its rank
     if(!yr)continue; ys=AS(y);   // atoms are replicated, never filled; otherwise point to shape
     if(r==yr&&0==ys[0])continue;  // if y is unextended and has no cells, it will not contribute, no matter what the cell-shape
     // see if the shape of y-cell (after rank extension) matches the shape of result-cell.  If not, there will be fill
@@ -609,7 +609,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
  zu=CAV(z);  // output pointers
  // loop through each contents and copy to the result area
  for(i=0;i<n;++i){
-  y=v[i];  // y->address of A block for v[i]
+  y=C(v[i]);  // y->address of A block for v[i]
   if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y));   // convert to result type if needed
   yr=AR(y); ys=AS(y);    // yr=rank of y, ys->shape of y
   if(!yr){
@@ -633,7 +633,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
- if(1==n){RZ(z=*v); PRISTCLRF(w) R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
+ if(1==n){RZ(z=C(*v)); PRISTCLRF(w) R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
  // If there is more than 1 box w can remain pristine, because the (necessarily DIRECT) contents are copied to a new block
  // scan the boxes to create the following values:
  // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents
@@ -642,7 +642,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  // result-assembly that we were going to raze the result, and we took the trouble to inspect the contents' shapes as they were going by.
  if(!(AFLAG(w)&AFUNIFORMITEMS)) {  // normal case
   for(i=0;i<n;++i){
-   y=v[i]; r=MAX(r,AR(y));
+   y=C(v[i]); r=MAX(r,AR(y));
    I yt=AT(y); te|=yt; m+=AN(y); yt=AN(y)?yt:0; t|=yt;
   }
   // if there was a nonempty, verify that the nonempties are compatible and find the highest-priority one
@@ -667,7 +667,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying
   for(i=0;i<n;++i){
-   y=v[i]; if(AN(y)){if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;}
+   y=C(v[i]); if(AN(y)){if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;}
   }
  }else{
   // special case where the result-assembly code checked to make sure the items were uniform.  In this case the number of items was hidden away in the AM field (otherwise unneeded, since we know the block isn't virtual)
@@ -677,7 +677,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   I nitems=AS(w)[0];  // total # result items is stored in w
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
   zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
-  // loop through the boxes copying the data into sequential output positions
+  // loop through the boxes copying the data into sequential output positions.  Futures are impossible
   DO(n, y=v[i]; d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;)
  }
 
@@ -688,8 +688,8 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
- n=AN(w); wv=AAV(w);  y=wv[0]; SETIC(y,p); t=AT(y); k=bpnoun(t);  // k is size of an atom
- DO(n, I l; y=wv[i]; r=AR(y); ASSERT(p==SETIC(y,l),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:AS(y)[1];);
+ n=AN(w); wv=AAV(w);  y=C(wv[0]); SETIC(y,p); t=AT(y); k=bpnoun(t);  // k is size of an atom
+ DO(n, I l; y=C(wv[i]); r=AR(y); ASSERT(p==SETIC(y,l),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:AS(y)[1];);
  GA00(z,t,p*c,2); s=AS(z); s[0]=p; s[1]=c;  // p is # items in each input box, thus # rows in result; c is # atoms in each row
  if(t&BOX){
   // boxed contents.  Make the result recursive; since each input box is going into exactly one slot in the result, we get the usecounts right if we
@@ -700,7 +700,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  zv=CAV(z); ck=c*k;  // ck is length of one row in bytes
  for(i=0;i<n;++i){
   // zv is the start of the next output position in the first row
-  y=wv[i]; dk=1==AR(y)?k:k*AS(y)[1];  // y is contents of this box; dk is # atoms in each row of THIS Input box;
+  y=C(wv[i]); dk=1==AR(y)?k:k*AS(y)[1];  // y is contents of this box; dk is # atoms in each row of THIS Input box;
   if(!dk)continue;  // if empty, nothing to move
   xv=zv; zv+=dk; // xv is output pointer for this column; advance zv to next column
   yv=CAV(y);

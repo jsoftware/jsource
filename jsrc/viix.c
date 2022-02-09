@@ -137,7 +137,7 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
   case BOXX:  
    av=AAV(a); wv=AAV(w);
-   DO(c, if(cc=compare(av[i],av[i+c*(n-1)]))break;);
+   DO(c, if(cc=compare(C(av[i]),C(av[i+c*(n-1)])))break;);
  }
  ge=cc; gt=-ge;
  if(unlikely(t&JCHAR+SBT)){
@@ -163,7 +163,7 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
     p=0; q=n-1;
     while(p<=q){
      MID(k,p,q); ck=c*k; I b=1; 
-     DO(c, if(cc=compare(av[i+ck],wv[i+j])){b=gt==cc; break;});
+     DO(c, if(cc=compare(C(av[i+ck]),C(wv[i+j]))){b=gt==cc; break;});
      if(b)q=k-1; else p=k+1;
     } 
     *zv++=1+q;

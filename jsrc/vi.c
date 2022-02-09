@@ -138,7 +138,7 @@ static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
 // test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
 // We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqa(J jt,I n,A*u,A*v){DQ(n, if(!equ(C(*u),C(*v)))R 0; ++u; ++v;); R 1;}
 
 /*
  mode one of the following:
@@ -395,8 +395,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
  }
 
 //
-static IOFX(A,jtioax1,hia(t1,*v),!equ(*v,av[hj]),++v,   --v  )  /* boxed exact 1-element item */   
-static IOFX(A,jtioau, hiau(*v),  !equ(*v,av[hj]),++v,   --v  )  /* boxed uniform type         */
+static IOFX(A,jtioax1,hia(t1,*v),!equ(C(*v),C(av[hj])),++v,   --v  )  /* boxed exact 1-element item */   
+static IOFX(A,jtioau, hiau(*v),  !equ(C(*v),C(av[hj])),++v,   --v  )  /* boxed uniform type         */
 static IOFX(X,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               v+=cn, v-=cn)  /* extended integer           */   
 static IOFX(Q,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               v+=cn, v-=cn)  /* rational number            */   
 static IOFX(C,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
@@ -528,7 +528,7 @@ static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !T
 // boxed array with more than 1 box
 static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
-static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(*v,av[hj]),!equ(*v,av[hj]))
+static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])))
 
 // ********************* third class: small-range arguments ****************************
 
@@ -915,7 +915,7 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
   case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
-  case BOXX:  {RDECL;      SCDO(A, *wv,!equ(x,av[j]));} break;
+  case BOXX:  {RDECL;      SCDO(A, *wv,!equ(C(x),C(av[j])));} break;
   case FLX:   if(1.0==jt->cct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=jt->cct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
@@ -929,7 +929,7 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
 static B jtusebs(J jt,A a,I ac,I m){A*av,x;I t;
  if(!(BOX&AT(a)&&1.0==jt->cct))R 0;
  av=AAV(a); 
- DO(ac*m, x=av[i]; t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
+ DO(ac*m, x=C(av[i]); t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
 }    /* n (# elements in a target item) is assumed to be 1 */
 
@@ -986,7 +986,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
    p=0; q=m1;                        \
    while(p<=q){                      \
     t=0; j=(p+q)>>1; v=av+n*hu[j];    \
-    DO(n, if(t=compare(u[i],v[i]))break;);  \
+    DO(n, if(t=compare(C(u[i]),C(v[i])))break;);  \
     if(0<t)p=j+1; else q=t?j-1:-2;   \
    }                                 \
    zstmt;                            \
@@ -1041,7 +1041,7 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,
 static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  if(!AN(w))R 1;
  m=AN(w)/c; wv=AAV(w); 
- DO(c, t=0; DO(m, x=wv[i]; if(AN(x)){if(t)RZ(TYPESEQ(t,AT(x))) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
+ DO(c, t=0; DO(m, x=C(wv[i]); if(AN(x)){if(t)RZ(TYPESEQ(t,AT(x))) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */
 

@@ -242,6 +242,7 @@ typedef I SI;
 
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define BAV(x)          (      (B*)(x)+AK(x) )  /* boolean                 */
+#define BAV1(x)         (      (B*)(x)+AKXR(1) )  // boolean non-virtual rank 1
 #define CAV(x)          (      (C*)(x)+AK(x) )  /* character               */
 #define CAV0(x)         (((C*)(x)+AKXR(0)))  // character in non-virtual rank-0 array  (allocated as rank 0, that is)
 #define CAV1(x)         (((C*)(x)+AKXR(1)))  // character in non-virtual rank-1 array

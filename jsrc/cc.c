@@ -354,8 +354,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 }    /* ((i+i.r){y)-"1 ({:$y){.j */
 
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
- PREF2(jtcut2sx);
- SETIC(w,n); t=AT(w); m=(I)sv->localuse.lu1.gercut.cutn; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
+ PREF2(jtcut2sx); SETIC(w,n); t=AT(w); m=(I)sv->localuse.lu1.gercut.cutn; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
  RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):!ISSPARSE(AT(a))?sparse1(a):a);
  ASSERT(n==AS(a)[0],EVLENGTH);
  ap=PAV(a);
@@ -434,7 +433,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   }
   z=ope(z);
   EPILOG(z);
-}}   /* sparse f;.n (dense or sparse) */
+}}   // (sparse or dense)  f;.n (dense or sparse)
 
 // sv is u;.n *zz is ??  result is ??
 static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y,z;
@@ -586,12 +585,25 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
+ SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
- if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0))R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
+ if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
+  if(FAV(self)->id!=CCUT){
+   // sparse processing expects a to be the boolean frets.  If we are executing for /., a has fret positions.
+   // Allocate a boolean vector and fill in the fret positions with 1.  There is only 1 block of frets.
+   // The sparse code will immediately turn this boolean into sparse, so we could save a little by creating it sparse
+   m=CUTFRETCOUNT(a);  // # frets, set by caller
+   pd=CUTFRETFRETS(a);  // &first fret
+   GAT0(a,B01,n,1); AS(a)[0]=n; mvc(n,BAV1(a),1,MEMSET00);  // allocate fret block, all 0
+   for(d=0;m;--m){  // for each fret
+     UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d+=len; BAV1(a)[d-1]=1;  // fetch 1- or 4-byte fret length; advance to next fret; store end-of-fret index (cut type is 2)
+   }
+  }
+  R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
+ }
 #define ZZFLAGWORD state
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
- SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  r=MAX(1,AR(w)); wv=CAV(w); PROD(wcn,AR(w)-1,AS(w)+1) k=wcn<<bplg(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&FAV(self)->flag)){

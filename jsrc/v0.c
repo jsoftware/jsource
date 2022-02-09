@@ -55,7 +55,7 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
 static F1(jtcfr){A c,r,*wv;I t;
  ASSERT((-AR(w)&-(AN(w)^2))>=0,EVLENGTH);
  wv=AAV(w); 
- if(AR(w)){c=wv[0]; r=wv[1];}else{c=num(1); r=wv[0];}
+ if(AR(w)){c=C(wv[0]); r=C(wv[1]);}else{c=num(1); r=wv[0];}
  ASSERT(((AR(c)-1)&(AR(r)-2))<0,EVRANK);
  ASSERT((-(NUMERIC&AT(c))&((AN(r)-1)|-(NUMERIC&AT(r))))<0,EVDOMAIN);
  t=AT(r); t=AN(r)?t:B01; if(t&B01+INT)t=XNUM; t=maxtyped(t,AT(c));
@@ -246,7 +246,7 @@ F1(jtpoly1){A c,e,x;
  F1RANK(1L,jtpoly1,DUMMYSELF);
  // If y is not boxed, it's a list of coefficients.  Get the roots
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R rfc(w);
- x=AAV(w)[0];
+ x=C(AAV(w)[0]);
  // If there is more than one box, or the first box has rank <= 1, it's scale;roots form - go handle it
  if(((AN(w)-2)&(1-AR(x)))>=0)R cfr(w);
  // Must be exponent form: a single box containing a table with 2-atom rows
@@ -265,7 +265,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
   n=AN(w); wv=AAV(w);  RZ(s=sc(m));
   GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
   for(i=0;i<n;++i){
-   x=wv[i]; r=AR(x); 
+   x=C(wv[i]); r=AR(x); 
    ASSERT(1>=r,EVRANK); 
    ASSERT(!r||m==AN(x),EVLENGTH); 
    zv[i]=incorp(m<=1?x:reshape(s,x));
@@ -303,7 +303,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  if(b){A*av=AAV(a); 
   if(postfn)R jtupon2cell(jt,a,w,self);  // revert if ^@:p.   must do before a is modified
   ASSERT(2>=an,EVLENGTH);
-  c=1==an?num(1):av[0]; a=av[1!=an]; // c=mplr, a=roots
+  c=1==an?num(1):C(av[0]); a=av[1!=an]; // c=mplr, a=roots
   if((an^1)+(AR(a)^2)==0)R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial
   an=AN(a); at=AT(a);
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);

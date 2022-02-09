@@ -318,7 +318,7 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
 #ifndef BOXEDSPARSE
 #define EQA(a,w) \
- ((-(a!=w)&((AN(a)^AN(w))-1))>=0?(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
+ ((-(C(a)!=C(w))&((AN(C(a))^AN(C(w)))-1))>=0?(C(a)==C(w)):((B (*)())jtmatchsub)(jt,C(a),C(w),0   MATCHSUBDEFAULTS))
 #else
 #define EQA(a,w) \
  (((!ISSPARSE(AT(a)|AT(w)))&&((-(a!=w)&((AN(a)^AN(w))-1))>=0))?(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))

@@ -33,7 +33,7 @@ F jtvfn(J jt,F x){I*v=AV(JT(jt,fopf)); DQ(AM(JT(jt,fopf)),if(x==(F)*v++)R x;); A
 I jtfnum(J jt,A w){A y;I h,j;
  if(AT(w)&B01+INT){ASSERT(h=i0(w),EVFNUM); R h;}
  ASSERT(AT(w)&BOX,EVDOMAIN);
- y=AAV(w)[0];
+ y=C(AAV(w)[0]);
  ASSERT(AN(y),EVLENGTH);
  if(AT(y)&B01+INT){ASSERT(h=i0(y),EVFNUM); R h;}
  RE(j=i0(indexof(vec(BOX,AM(JT(jt,fopf)),AAV(JT(jt,fopa))),boxW(fullname(vslit(y)))))); 
@@ -55,7 +55,7 @@ F1(jtjfiles){A y,z;
 F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
- RZ(t=str0(vslit(AAV(w)[0])));
+ RZ(t=str0(vslit(C(AAV(w)[0]))));
  n=AN(t)-1;
  ASSERT(n!=0,EVLENGTH);
 #if (SYS&SYS_UNIX)
@@ -97,7 +97,7 @@ F1(jtjopen){A z;I h;
  else{A ww;I ct=AM(JT(jt,fopf));
   if(AM(JT(jt,fopf))==AN(JT(jt,fopf))){RZ(JT(jt,fopa)=ext(1,JT(jt,fopa))); RZ(JT(jt,fopf)=ext(1,JT(jt,fopf))); AM(JT(jt,fopf))=ct;}
   RZ(IAV(JT(jt,fopf))[ct]=h=(I)jope(w,FUPDATE_O));
-  RZ(ww=fullname(vslit(AAV(w)[0]))); RZ(ras(ww));  // ras because ww might be the actual original w
+  RZ(ww=fullname(vslit(C(AAV(w)[0])))); RZ(ras(ww));  // ras because ww might be the actual original w
   RZ(AAV(JT(jt,fopa))[ct]=ww);
  
   AM(JT(jt,fopf))=ct+1;
@@ -135,7 +135,7 @@ F jtstdf(J jt,A w){A y;F f;I n,r,t;
  ASSERT(AN(w),EVLENGTH);
  ASSERT(!AR(w),EVRANK);
  if(BOX&AT(w)){
-  y=AAV(w)[0]; t=AT(y); n=AN(y); r=AR(y);
+  y=C(AAV(w)[0]); t=AT(y); n=AN(y); r=AR(y);
   if(t&(LIT+C2T+C4T)){ASSERT(1>=r,EVRANK); ASSERT(n!=0,EVLENGTH); R 0;}
 /*!
   if(t&C2T){ASSERT(1>=r,EVRANK); ASSERT(n!=0,EVLENGTH); ASSERT(vc1(n,USAV(y)),EVDOMAIN); R 0;}

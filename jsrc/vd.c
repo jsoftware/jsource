@@ -76,11 +76,11 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  }
  // construe w as w0 w1 w0t w1t
  RZ(t0=qrr(take(v2(p,m),w)));  // find QR of w0 pxm   w0t
- tv=AAV(t0); q0=*tv++; r0=*tv;  // point to Q and R of w0  pxm mxm  w0t    
+ tv=AAV(t0); q0=C(tv[0]); r0=C(tv[1]);  // point to Q and R of w0  pxm mxm  w0t    
  RZ(a1=drop(v2(0L,m),w));  // a1=w1  pxn-m  w1t
  RZ(y=pdt(conjug(cant1(q0)),a1));  // q0* w1 mxpxn-m     w1t q0t*   q0t*=/q0      result is mxn-m
  RZ(t1=qrr(minus(a1,pdt(q0,y))));  // pxmxn-m  get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)    
- tv=AAV(t1); q1=*tv++; r1=*tv;  
+ tv=AAV(t1); q1=C(tv[0]); r1=C(tv[1]);  
  RZ(q=stitch(q0,q1));  // overall q is q0t    Q of (w1t-(w1t q0t* q0t))
  RZ(r=over(stitch(r0,y),take(v2(n-m,-n),r1)));
  // r is   r0    q0* w1
@@ -192,7 +192,7 @@ F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
- RZ(z=qrr(w)); r=AAV(z)[1]; n=AS(r)[0]; n1=1+n;
+ RZ(z=qrr(w)); r=C(AAV(z)[1]); n=AS(r)[0]; n1=1+n;
  if(FL&AT(r)){D*v=DAV(r);  DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  else        {Z*v=ZAV(r);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);

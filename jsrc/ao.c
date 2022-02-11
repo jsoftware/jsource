@@ -168,13 +168,13 @@ static DF2(jtkey);
 
 static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
 // obsolete D ctold=jt->ct;
- RZ(a&&w);
+ ARGCHK2(a,w);
  // obsolete jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
  SETIC(a,n); av=AV(a);
- RZ(j=grade1(a)); jv=AV(j);
- GATV(p,B01,n,1,0); pv=BAV(p);
- DO(n, c=d; d=av[*jv++]; *pv++=c<d;);
- df2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));
+ RZ(j=grade1(a)); jv=AV(j);  // get grading permutation for the self-indexes.  This groups the partitions
+ GATV0(p,B01,n,1); pv=BAV(p);   // allocate boolean fret mask
+ DO(n, c=d; d=av[*jv++]; *pv++=c<d;);  // d=self-index of current output value (always ascending).  When the value changes, that's a fret
+ df2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));  // z = frets u;.1 j{w
  // obsolete jt->ct=ctold;
  EPILOG(z);
 }    /* a f/. w where a is i.~x for dense x  */
@@ -183,17 +183,27 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  ARGCHK2(a,w);
  {I t2; ASSERT(SETIC(a,n)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  n is # items of a
  RZ(q=indexof(a,a)); p=PAV(q); 
- x=SPA(p,x); u=AV(x);
- y=SPA(p,i); v=AV(y);
- e=SPA(p,e); k=i0(e); 
- j=0; DO(AN(x), if(k<=u[i])break; if(u[i]==v[i])++j;);
- RZ(b=ne(e,x));
- RZ(by=repeat(b,y));
- RZ(x=key(repeat(b,x),from(ravel(by),w),self));
- GASPARSE0(q,B01,1,1); AS(q)[0]=n;  /* q=: 0 by}1$.n;0;1 */
- p=PAV(q); SPB(p,a,iv0); SPB(p,e,num(1)); SPB(p,i,by); SPB(p,x,reshape(tally(by),num(0)));
- RZ(z=over(df1(b,repeat(q,w),VAV(self)->fgh[0]),x));
- z=j?cdot2(box(IX(1+j)),z):z;
+ x=SPA(p,x); u=AV(x); I c=AN(x);  // u-> values of i.~ w
+ y=SPA(p,i); v=AV(y);  // v-> indexes of i.~ w
+ e=SPA(p,e); k=i0(e); // k is the sparse element in the rep of i.~ a sc. the index of the first occurrence of a sparse element in a
+ j=0; I sparsefound=0; DO(c, if(u[i]>=k){sparsefound=1; break;} if(u[i]==v[i])++j;);  // j = # unique values in w before the first fill element
+ RZ(b=ne(e,x));  // b = mask of values in i.~ w that are different from the sparse element  ?? can't be any
+ RZ(by=repeat(b,y));   // by=indexes of values in i.~ a that are different from the sparse element 
+// obsolete  I nfills=SETIC(w,k)-bsum(c,BAV(b));  // number of cells of fill
+// obsolete  x=SPA(p,x); u=AV(x);
+// obsolete  y=SPA(p,i); v=AV(y);
+// obsolete  e=SPA(p,e); k=i0(e); 
+// obsolete  j=0; DO(AN(x), if(k<=u[i])break; if(u[i]==v[i])++j;);
+// obsolete  RZ(b=ne(e,x));
+// obsolete  RZ(by=repeat(b,y));
+ RZ(z=key(repeat(b,x),from(ravel(by),w),self));  // run the key operation on the non-sparse elements
+ if(AN(by)<n){  // if the number of non-sparse items is less than the number of items, we must work on a sparse cell
+  // Create a partition for the sparse cells.  We create a sparse vector with 1 as the sparse element
+  GASPARSE0(q,B01,1,1); AS(q)[0]=n;  /* q=: 0 by}1$.n;0;1 */
+  p=PAV(q); SPB(p,a,iv0); SPB(p,e,num(1)); SPB(p,i,by); SPB(p,x,reshape(tally(by),num(0)));  // q is a mask: all 1s, but 0 on the non-sparse elements of w
+  RZ(z=over(df1(b,repeat(q,w),VAV(self)->fgh[0]),z));  // (u q#(fill ele for w)) , (result on non-sparse)  ?? bug if u result has rank too high, the call to C. will fail with agreement
+  z=j?cdot2(box(IX(1+j)),z):z;  // Use C. to rotate the sparse result into proper position
+ }
  EPILOG(z);
 }  // a f/. w  for sparse a
 
@@ -213,7 +223,8 @@ static DF2(jtkey){F2PREFIP;R jtkeyct(jtinplace,a,w,self,jt->cct);}
 // toler is the ct to use for the classification
 A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  ARGCHK2(a,w);
- if(unlikely(ISSPARSE(AT(a))))R keysp(a,w,self);  // if sparse, go handle it
+ if(unlikely(ISSPARSE(AT(a))))R keysp(a,w,self);  // if a sparse, go handle it
+ if(unlikely(ISSPARSE(AT(w))))R jtkeyspw(jt,a,w,self);  // if w sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
  PUSHCCT(toler);  // now that partitioning is over, reset ct for the executions of u
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct

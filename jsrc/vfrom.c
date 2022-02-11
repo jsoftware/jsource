@@ -671,32 +671,32 @@ F1(jtmvmsparse){PROLOG(832);
  ASSERT(AN(w)>=5,EVLENGTH);  // audit overall w
  ASSERT(AT(w)&BOX,EVDOMAIN);
  // check ranks
- ASSERT(AR(AAV(w)[0])<=1,EVRANK);  // ndx
- ASSERT(AR(AAV(w)[1])==3&&AS(AAV(w)[1])[1]==2&&AS(AAV(w)[1])[2]==1,EVRANK);  // Ax, shape cols,2 1
- ASSERT(AR(AAV(w)[2])==1,EVRANK);  // Am
- ASSERT(AR(AAV(w)[3])==1,EVRANK);  // Av
- ASSERT(AR(AAV(w)[4])==2,EVRANK);  // M
+ ASSERT(AR(C(AAV(w)[0]))<=1,EVRANK);  // ndx
+ ASSERT(AR(C(AAV(w)[1]))==3&&AS(C(AAV(w)[1]))[1]==2&&AS(C(AAV(w)[1]))[2]==1,EVRANK);  // Ax, shape cols,2 1
+ ASSERT(AR(C(AAV(w)[2]))==1,EVRANK);  // Am
+ ASSERT(AR(C(AAV(w)[3]))==1,EVRANK);  // Av
+ ASSERT(AR(C(AAV(w)[4]))==2,EVRANK);  // M
  // abort if no columns
- if(AN(AAV(w)[0])==0)R num(5);  // if no cols (which happens at startup, return error indic)
+ if(AN(C(AAV(w)[0]))==0)R num(5);  // if no cols (which happens at startup, return error indic)
  // check types.  Don't convert - force the user to get it right - except for ndx
- ASSERT(AT(AAV(w)[1])&INT,EVDOMAIN);  // Ax, shape cols,2 1
- ASSERT(AT(AAV(w)[2])&INT,EVDOMAIN);  // Am
- ASSERT(AT(AAV(w)[3])&FL,EVDOMAIN);  // Av
- ASSERT(AT(AAV(w)[4])&FL,EVDOMAIN);  // M
+ ASSERT(AT(C(AAV(w)[1]))&INT,EVDOMAIN);  // Ax, shape cols,2 1
+ ASSERT(AT(C(AAV(w)[2]))&INT,EVDOMAIN);  // Am
+ ASSERT(AT(C(AAV(w)[3]))&FL,EVDOMAIN);  // Av
+ ASSERT(AT(C(AAV(w)[4]))&FL,EVDOMAIN);  // M
  // check agreement
- ASSERT(AS(AAV(w)[2])[0]==AS(AAV(w)[3])[0],EVLENGTH);   // Am and Av
- ASSERT(AS(AAV(w)[4])[0]==AS(AAV(w)[4])[1],EVLENGTH);   // M is square
+ ASSERT(AS(C(AAV(w)[2]))[0]==AS(C(AAV(w)[3]))[0],EVLENGTH);   // Am and Av
+ ASSERT(AS(C(AAV(w)[4]))[0]==AS(C(AAV(w)[4]))[1],EVLENGTH);   // M is square
  // extract pointers to tables
- A ndxa=AAV(w)[0]; ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
+ A ndxa=C(AAV(w)[0]); ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
  I *ndx0=IAV(ndxa), *ndx=ndx0, nc=AN(ndxa), *ndxe=ndx+nc;  // pointer to column numbers in the order processed, and end+1, and #cols
- I (*axv)[2]=(I(*)[2])IAV(AAV(w)[1]);  // pointer to ax data
- I *amv0=IAV(AAV(w)[2]);  // pointer to am block, and to the selected column's indexes
- D *avv0=DAV(AAV(w)[3]);  // pointer to av data, and to the selected column's values
- D *mv0=DAV(AAV(w)[4]);  // pointer to M data, and to the selected column (for identity columns) or to the current row of M (for sparse columns)
+ I (*axv)[2]=(I(*)[2])IAV(C(AAV(w)[1]));  // pointer to ax data
+ I *amv0=IAV(C(AAV(w)[2]));  // pointer to am block, and to the selected column's indexes
+ D *avv0=DAV(C(AAV(w)[3]));  // pointer to av data, and to the selected column's values
+ D *mv0=DAV(C(AAV(w)[4]));  // pointer to M data, and to the selected column (for identity columns) or to the current row of M (for sparse columns)
  D minimp=0.0, minimpfound=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
  I nvirt=0;  // number of virtual rows at the beginning of bkg - give them priority
 
- I n=AS(AAV(w)[4])[0];  // n=#rows/cols in M
+ I n=AS(C(AAV(w)[4]))[0];  // n=#rows/cols in M
  // convert types as needed; set ?v=pointer to data area for ?
  D *bv; // pointer to b values if there are any
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
@@ -709,28 +709,28 @@ F1(jtmvmsparse){PROLOG(832);
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist=0, nexlist;  // exclusion list: list of excluded col|row pairs, length
 
- if(AR(AAV(w)[0])==0){
+ if(AR(C(AAV(w)[0]))==0){
   // single index value.  set bv=0 as a flag that we are storing the column
   bv=0; ASSERT(AN(w)==5,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
   if(unlikely(n==0)){R reshape(sc(n),zeroionei(0));}   // empty M, each product is 0
   GATV0(z,FL,n,1); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
-  bvgrd0=0; bvgrde=bvgrd0+AS(AAV(w)[4])[0];  // length of column is #M
+  bvgrd0=0; bvgrde=bvgrd0+AS(C(AAV(w)[4]))[0];  // length of column is #M
  }else{
   // A list of index values.  We are doing the DIP calculation
-  ASSERT(AR(AAV(w)[5])==1,EVRANK); ASSERT(AT(AAV(w)[5])&INT,EVDOMAIN); bvgrd0=IAV(AAV(w)[5]); bvgrde=bvgrd0+AN(AAV(w)[5]);  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
-  if(AN(AAV(w)[5])==0){RETF(num(5))}  // empty bk - give error/empty result
+  ASSERT(AR(C(AAV(w)[5]))==1,EVRANK); ASSERT(AT(C(AAV(w)[5]))&INT,EVDOMAIN); bvgrd0=IAV(C(AAV(w)[5])); bvgrde=bvgrd0+AN(C(AAV(w)[5]));  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
+  if(AN(C(AAV(w)[5]))==0){RETF(num(5))}  // empty bk - give error/empty result
   ASSERT(BETWEENC(AN(w),8,9),EVLENGTH); 
-  ASSERT(AR(AAV(w)[7])==1,EVRANK); ASSERT(AT(AAV(w)[7])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[7])==AS(AAV(w)[4])[0],EVLENGTH); bv=DAV(AAV(w)[7]);  // bk, one per row of M
-  ASSERT(AR(AAV(w)[8])==1,EVRANK); ASSERT(AT(AAV(w)[8])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[8])==AS(AAV(w)[4])[0]+AS(AAV(w)[1])[0],EVLENGTH); Frow=DAV(AAV(w)[8]);  // Frow, one per row of M and column of A
-  ASSERT(AR(AAV(w)[6])==1,EVRANK); ASSERT(AT(AAV(w)[6])&FL,EVDOMAIN); ASSERT(AN(AAV(w)[6])==7,EVLENGTH);  // 7 float constants
+  ASSERT(AR(C(AAV(w)[7]))==1,EVRANK); ASSERT(AT(C(AAV(w)[7]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[7]))==AS(C(AAV(w)[4]))[0],EVLENGTH); bv=DAV(C(AAV(w)[7]));  // bk, one per row of M
+  ASSERT(AR(C(AAV(w)[8]))==1,EVRANK); ASSERT(AT(C(AAV(w)[8]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[8]))==AS(C(AAV(w)[4]))[0]+AS(C(AAV(w)[1]))[0],EVLENGTH); Frow=DAV(C(AAV(w)[8]));  // Frow, one per row of M and column of A
+  ASSERT(AR(C(AAV(w)[6]))==1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
   if(unlikely(n==0)){RETF(num(5))}   // empty M - should not occur, give error result
-  thresh=_mm256_set_pd(DAV(AAV(w)[6])[1],DAV(AAV(w)[6])[2],inf,DAV(AAV(w)[6])[0]); nfreecols=(I)(nc*DAV(AAV(w)[6])[3]); ncols=(I)(nc*DAV(AAV(w)[6])[4]); impfac=DAV(AAV(w)[6])[5]; nvirt=(I)DAV(AAV(w)[6])[6];
-  zv=AN(AAV(w)[5])==AN(AAV(w)[7])?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
+  thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],DAV(C(AAV(w)[6]))[2],inf,DAV(C(AAV(w)[6]))[0]); nfreecols=(I)(nc*DAV(C(AAV(w)[6]))[3]); ncols=(I)(nc*DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; nvirt=(I)DAV(C(AAV(w)[6]))[6];
+  zv=AN(C(AAV(w)[5]))==AN(C(AAV(w)[7]))?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
   if(AN(w)>9){
    // An exclusion list is given.  Remember its address.  Its presence puts us through the 'nonimproving path' case
-   ASSERT(AR(AAV(w)[9])==1,EVRANK); ASSERT(AN(AAV(w)[9])>0,EVRANK);  ASSERT(ISDENSETYPE(AT(AAV(w)[9]),INT),EVRANK);  // must be integer list
-   exlist=IAV(AAV(w)[9]);  // remember address of exclusions
-   nexlist=AN(AAV(w)[9]);  // and length of list
+   ASSERT(AR(C(AAV(w)[9]))==1,EVRANK); ASSERT(AN(C(AAV(w)[9]))>0,EVRANK);  ASSERT(ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVRANK);  // must be integer list
+   exlist=IAV(C(AAV(w)[9]));  // remember address of exclusions
+   nexlist=AN(C(AAV(w)[9]));  // and length of list
   }
  }
 

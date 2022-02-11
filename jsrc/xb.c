@@ -81,7 +81,7 @@ static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
  I totalsize = bsize(jt,d,tb,AT(w),AN(w),AR(w),AS(w));
  if((AT(w)&DIRECT)>0)R totalsize;
  I nchildren = AN(w); nchildren<<=((AT(w)>>RATX)&1);  // # subblocks
- DO(nchildren, totalsize+=bsizer(jt,d,tb,wv[i]);)
+ DO(nchildren, totalsize+=bsizer(jt,d,tb,C(wv[i]));)
  R totalsize;
 }
 
@@ -181,7 +181,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  C* zvx=zv; zv += n*kk;  // save start of index, step over index
  // move in the blocks: first the offset, writing over the indirect block, then the data
  // the offsets are all relative to the start of the block, which is origzv
- DO(n, I offset=zv-origzv; RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64)); zvx+=kk; RZ(zv=jtbrepfill(jt,b,d,wv[i],zv));)
+ DO(n, I offset=zv-origzv; RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64)); zvx+=kk; RZ(zv=jtbrepfill(jt,b,d,C(wv[i]),zv));)
  R zv;
 }    /* b iff reverse the bytes; d iff 64-bit */
 
@@ -385,7 +385,7 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
 static B jtisnanq(J jt,A w){
  ARGCHK1(w);
  if(AT(w)&FL+CMPX){D *v=DAV(w); DQ(AN(w)<<((AT(w)>>CMPXX)&1), if(_isnan(v[i]))R 1;);}  // if there might be a NaN, return if there is one
- else if(AT(w)&BOX){A *v=AAV(w); STACKCHKOFL DQ(AN(w), if(isnanq(v[i]))R 1;);}  // if boxed, check each one recursively; ensure no stack overflow
+ else if(AT(w)&BOX){A *v=AAV(w); STACKCHKOFL DQ(AN(w), if(isnanq(C(v[i])))R 1;);}  // if boxed, check each one recursively; ensure no stack overflow
  // other types never have NaN
  R 0;  // if we get here, there must be no NaN
 }
@@ -398,7 +398,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
  if (t&FL){v=DAV(w); DQ(n, *u++=_isnan(*v++););}  // float - check each atom
  else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(v[0])|_isnan(v[1]); v+=2;);}  // complex - check each half
- else if(t&BOX){wv=AAV(w); DO(n, *u++=isnanq(wv[i]);); RE(0);}  // boxed - check contents
+ else if(t&BOX){wv=AAV(w); DO(n, *u++=isnanq(C(wv[i]));); RE(0);}  // boxed - check contents
  else mvc(n,u,1,MEMSET00);  // other types are never NaN
  RETF(z);
 }

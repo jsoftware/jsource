@@ -43,29 +43,29 @@ F2(jtaes2)
   ASSERT(1>=AR(a),EVRANK);
   ASSERT(AN(a)>=3&&AN(a)<=4,EVLENGTH);
   av=AAV(a);
-  ASSERT(1>=AR(av[0]),EVRANK);
-  RE(dec=vi(av[0]));
+  ASSERT(1>=AR(C(av[0])),EVRANK);
+  RE(dec=vi(C(av[0])));
   ASSERT(AN(dec)==1,EVDOMAIN);
   decrypt=(AV(dec))[0];
   ASSERT(decrypt==0||decrypt==1,EVDOMAIN);
-  ASSERT(AT(av[1])&LIT,EVDOMAIN);
-  ASSERT(1>=AR(av[1]),EVRANK);
-  key=UAV(av[1]);
-  keyn=AN(av[1]);
+  ASSERT(AT(C(av[1]))&LIT,EVDOMAIN);
+  ASSERT(1>=AR(C(av[1])),EVRANK);
+  key=UAV(C(av[1]));
+  keyn=AN(C(av[1]));
   ASSERT(keyn==16||keyn==24||keyn==32,EVDOMAIN);
-  ASSERT(AT(av[2])&LIT,EVDOMAIN);
-  ASSERT(1>=AR(av[2]),EVRANK);
-  iv=UAV(av[2]);
-  ASSERT(AN(av[2])==16,EVDOMAIN);
+  ASSERT(AT(C(av[2]))&LIT,EVDOMAIN);
+  ASSERT(1>=AR(C(av[2])),EVRANK);
+  iv=UAV(C(av[2]));
+  ASSERT(AN(C(av[2]))==16,EVDOMAIN);
   if(AN(a)>3) {
-    ASSERT(AT(av[3])&LIT,EVDOMAIN);
-    ASSERT(1>=AR(av[3]),EVRANK);
-    ASSERT(3==AN(av[3])||9==AN(av[3]),EVDOMAIN);
-    if(3==AN(av[3])) {
-      mode=(!strncasecmp(CAV(av[3]),"ECB",AN(av[3])))?0:(!strncasecmp(CAV(av[3]),"CBC",AN(av[3])))?1:(!strncasecmp(CAV(av[3]),"CTR",AN(av[3])))?2:-1;
+    ASSERT(AT(C(av[3]))&LIT,EVDOMAIN);
+    ASSERT(1>=AR(C(av[3])),EVRANK);
+    ASSERT(3==AN(C(av[3]))||9==AN(C(av[3])),EVDOMAIN);
+    if(3==AN(C(av[3]))) {
+      mode=(!strncasecmp(CAV(C(av[3])),"ECB",AN(C(av[3]))))?0:(!strncasecmp(CAV(C(av[3])),"CBC",AN(C(av[3]))))?1:(!strncasecmp(CAV(C(av[3])),"CTR",AN(C(av[3]))))?2:-1;
     } else {
       padding=0;
-      mode=(!strncasecmp(CAV(av[3]),"ECB NOPAD",AN(av[3])))?0:(!strncasecmp(CAV(av[3]),"CBC NOPAD",AN(av[3])))?1:(!strncasecmp(CAV(av[3]),"CTR NOPAD",AN(av[3])))?2:-1;
+      mode=(!strncasecmp(CAV(C(av[3])),"ECB NOPAD",AN(C(av[3]))))?0:(!strncasecmp(CAV(C(av[3])),"CBC NOPAD",AN(C(av[3]))))?1:(!strncasecmp(CAV(C(av[3])),"CTR NOPAD",AN(C(av[3]))))?2:-1;
     }
     ASSERT(mode!=-1,EVDOMAIN);
   }

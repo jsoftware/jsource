@@ -550,19 +550,19 @@ F1(jtrngstates){A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(2<=AN(w),EVLENGTH);
  wv=AAV(w); 
- RZ(rngselects(wv[0]));  /* changes jt->rngdata->rng */
+ RZ(rngselects(C(wv[0])));  /* changes jt->rngdata->rng */
  ASSERT(AN(w)==(jt->rngdata->rng?3:9),EVLENGTH);
  switch(jt->rngdata->rng){
   case SMI: vv=jt->rngdata->rngparms0;
-            RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); jt->rngdata->rngparms0[GBI].rngI=k;  // We accept 0-55 even though we never produce 55 ourselves
-            RE(k=i0(wv[3])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[4],0)); jt->rngdata->rngparms0[MTI].rngI=k;
-            RE(k=i0(wv[5])); RZ(rngstates1(DXI,DXN,vv,0,k,wv[6],1)); jt->rngdata->rngparms0[DXI].rngI=k;
-            RE(k=i0(wv[7])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[8],0)); jt->rngdata->rngparms0[MRI].rngI=k;
+            RE(k=i0(C(wv[1]))); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); jt->rngdata->rngparms0[GBI].rngI=k;  // We accept 0-55 even though we never produce 55 ourselves
+            RE(k=i0(C(wv[3]))); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[4]),0)); jt->rngdata->rngparms0[MTI].rngI=k;
+            RE(k=i0(C(wv[5]))); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[6]),1)); jt->rngdata->rngparms0[DXI].rngI=k;
+            RE(k=i0(C(wv[7]))); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[8]),0)); jt->rngdata->rngparms0[MRI].rngI=k;
             break;
-  case GBI: RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); break;  // We accept 0-55 even though we never produce 55 ourselves
-  case MTI: RE(k=i0(wv[1])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[2],0)); break;
-  case DXI: RE(k=i0(wv[1])); RZ(rngstates1(DXI,DXN,vv,0,k,wv[2],1)); break;
-  case MRI: RE(k=i0(wv[1])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[2],0)); break;
+  case GBI: RE(k=i0(C(wv[1]))); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); break;  // We accept 0-55 even though we never produce 55 ourselves
+  case MTI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[2]),0)); break;
+  case DXI: RE(k=i0(C(wv[1]))); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[2]),1)); break;
+  case MRI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[2]),0)); break;
  }
  R mtv;
 }

@@ -1003,7 +1003,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   I litsgn;  // will be neg if lit array that can be used as pointer
   I boxatomsgn;  // neg if boxed atom used as pointer
   if(likely(wt&BOX)){  // inputs are boxes, pointed to by wv
-   x=wv[i]; xt=AT(x); xn=AN(x); xr=AR(x);   // x is argument i
+   x=C(wv[i]); xt=AT(x); xn=AN(x); xr=AR(x);   // x is argument i
    boxatomsgn=-star&(xr-1)&SGNIF(xt,BOXX);  // neg if boxed atom used as pointer
    CDASSERT((-xr&(star-1))>=0,per);         /* non-pointers must be scalars   !xr||star */
 // long way   lit=star&&xt&LIT&&(c=='b'||c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
@@ -1023,7 +1023,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
   // if wt&BOX only, x is an A-block for arg i
   if(unlikely(boxatomsgn<0)){           // scalar boxed integer/boolean scalar is a pointer - NOT memu'd.  If xt is a box, wt must have been a box
-   y=AAV(x)[0];   // fetch the address of the A-block for the pointer
+   y=C(AAV(x)[0]);   // fetch the address of the A-block for the pointer
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);  // pointer must be B01 or INT type (if B01, nust be nullptr)
 #if defined(__aarch64__)
    if(unlikely(AT(y)&B01)){CDASSERT(0==BAV(y)[0],per);
@@ -1236,16 +1236,16 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  ARGCHK2(a,w);
  AFLAGPRISTNO(w)  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
  if(1<AR(a)){I rr=AR(w); rr=rr==0?1:rr; R rank2ex(a,w,DUMMYSELF,1L,rr,1L,rr,jtcd);}
- wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);
+ wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);   // m = # 1-cells of w
  ASSERT(!ISSPARSE(wt),EVDOMAIN);
  ASSERT(LIT&AT(a),EVDOMAIN);
  C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?
- n=cc->n;
+ n=cc->n;  // n=# arguments
  I nn; CDASSERT(n==SHAPEN(w,wr-1,nn),DECOUNT);
- if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}
- else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}
+ if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}  // allocate n boxes for each result arg, plus 1 for the result
+ else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}  // if fast form, just allocate the return value
  // z is always nonrecursive
- if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){
+ if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){   // if w is NOT boxed, and a and w arenot both empty
   t=0; tv=cc->tletter; DQ(n, k=cdjtype(*tv++); t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!ISDENSETYPE(wt,B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));  // if w sparse or not DIRECT, convert it

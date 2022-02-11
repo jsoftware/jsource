@@ -105,7 +105,7 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
  RZ(z=apvwr(n,0L,1L)); x=AV(z);
  wv=AAV(w); 
  for(j=AN(w)-1;0<=j;j--){
-  RZ(q=pind(n,wv[j])); qv=AV(q); qn=AN(q);
+  RZ(q=pind(n,C(wv[j]))); qv=AV(q); qn=AN(q);
   if(!qn)continue;
   DO(qn, ASSERT(bv[qv[i]],EVINDEX); bv[qv[i]]=0;); DO(qn,bv[qv[i]]=1;);
   c=x[qv[0]]; DO(qn-1,x[qv[i]]=x[qv[i+1]];); x[qv[qn-1]]=c;

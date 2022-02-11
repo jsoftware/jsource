@@ -179,7 +179,7 @@ static F jtixf(J jt,A w){F f;
 }    /* process index file arg for file number; 0 if a file name */
 
 static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
- if(AT(w)&BOX){wv=AAV(w);  RZ(in=vi(wv[1])); k=AN(in); u=AV(in);}
+ if(AT(w)&BOX){wv=AAV(w);  RZ(in=vi(C(wv[1]))); k=AN(in); u=AV(in);}
  else{in=w; k=AN(in)-1; u=1+AV(in);}
  ASSERT(1>=AR(in),EVRANK);
  ASSERT(k&&k<=(n?2:1),EVLENGTH);
@@ -238,7 +238,7 @@ static B rmdir(C*v){R!rmdir1(v);}
 F1(jtjmkdir){A y,z;
  F1RANK(0,jtjmkdir,DUMMYSELF);
  ASSERT(AT(w)&BOX,EVDOMAIN);
- RZ(y=str0(vslit(AAV(w)[0])));
+ RZ(y=str0(vslit(C(AAV(w)[0]))));
 #if (SYS & SYS_UNIX)
  R mkdir(CAV(y),0775)?jerrno():num(1);
 #else
@@ -251,7 +251,7 @@ F1(jtjmkdir){A y,z;
 F1(jtjferase){A y,fn;US*s;I h;
  F1RANK(0,jtjferase,DUMMYSELF);
  RE(h=fnum(w));
- if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(AAV(w)[0]),EVFNUM);
+ if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(C(AAV(w)[0])),EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
  A y0=str0(y); R !unlink(CAV(y0))||!rmdir(CAV(y0))?num(1):jerrno();

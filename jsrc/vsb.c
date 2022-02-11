@@ -439,7 +439,7 @@ static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
  m=AN(w); wv=AAV(w); 
  GATV(z,SBT,m,AR(w),AS(w)); zv=SBAV(z);
  for(i=0;i<m;++i){
-  x=wv[i]; n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
+  x=C(wv[i]); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
   ASSERT(!n||AT(x)&LIT+C2T+C4T,EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   RE(*zv++=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x),0));
@@ -684,16 +684,16 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  ASSERTD(1==AR(w), "arg rank");
  ASSERTD(8==AN(w), "arg length");
  wv=AAV(w); 
- RZ(sbcheck1(wv[0],wv[1],wv[2],wv[3],wv[4],wv[5],wv[6],wv[7],0));
+ RZ(sbcheck1(C(wv[0]),C(wv[1]),C(wv[2]),C(wv[3]),C(wv[4]),C(wv[5]),C(wv[6]),C(wv[7]),0));
  u=JT(jt,sbu); s=STRINGTABLE; h=HASHTABLE;
- RZ(x=ca(reshape((over(shape(wv[2]),v2(1,1))),wv[2]))); ACINITZAP(x); JT(jt,sbu)=x;  // make shape nx11x1x1
- AM(JT(jt,sbu))=AV(wv[0])[0];
- RZ(x=ca(wv[3])); ACINITZAP(x); SETSTRINGTABLE(x);
- AM(STRINGTABLE)=AV(wv[1])[0];
- RZ(x=ca(wv[4])); ACINITZAP(x); SETHASHTABLE(x);
- ROOT      =AV(wv[5])[0];
- FILLFACTOR=AV(wv[6])[0];
- GAP       =AV(wv[7])[0];
+ RZ(x=ca(reshape((over(shape(C(wv[2])),v2(1,1))),C(wv[2])))); ACINITZAP(x); JT(jt,sbu)=x;  // make shape nx11x1x1
+ AM(JT(jt,sbu))=AV(C(wv[0]))[0];
+ RZ(x=ca(C(wv[3]))); ACINITZAP(x); SETSTRINGTABLE(x);
+ AM(STRINGTABLE)=AV(C(wv[1]))[0];
+ RZ(x=ca(C(wv[4]))); ACINITZAP(x); SETHASHTABLE(x);
+ ROOT      =AV(C(wv[5]))[0];
+ FILLFACTOR=AV(C(wv[6]))[0];
+ GAP       =AV(C(wv[7]))[0];
  fa(u); fa(s); fa(h);
  R num(1);
 }
@@ -711,12 +711,12 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
  ASSERTD(!AN(w)||4<=AN(w), "arg length");
  if(!AN(w)){resetdata(jt); R num(1); }
  wv=AAV(w); 
- RZ(sbcheck2(wv[0],wv[1],wv[2],wv[3]));
- c=AV(wv[0])[0];                         // cardinality
- if(1<AN(wv[0]))offset=AV(wv[0])[1];// offset
- sn=AV(wv[1])[0];                        // string length
- uv=(SBU*)AV(wv[2]);                   // table of symbols
- sv=CAV(wv[3]);                        // global string table
+ RZ(sbcheck2(C(wv[0]),C(wv[1]),C(wv[2]),C(wv[3])));
+ c=AV(C(wv[0]))[0];                         // cardinality
+ if(1<AN(C(wv[0])))offset=AV(C(wv[0]))[1];// offset
+ sn=AV(C(wv[1]))[0];                        // string length
+ uv=(SBU*)AV(C(wv[2]));                   // table of symbols
+ sv=CAV(C(wv[3]));                        // global string table
  if(!offset)resetdata(jt);
  for(i=MAX(offset,1),v=((offset)?0:1)+uv;i<c;++i,++v){I vi,vn;UC*vc;  // i==0 is sentinel
   vi=v->i;                              // index into sbs
@@ -733,7 +733,7 @@ static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
  m=AN(w); wv=AAV(w); 
  GATV(z,B01,m,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<m;++i){
-  x=wv[i]; n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
+  x=C(wv[i]); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
   ASSERT(!n||AT(x)&LIT+C2T+C4T,EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   RE(*zv++=0<=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x),1));

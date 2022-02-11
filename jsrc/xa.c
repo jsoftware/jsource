@@ -72,7 +72,7 @@ F1(jtevms){A t,*tv,*wv;
  GAT0(t,BOX,1+NEVM,1); tv=AAV(t); 
  *tv++=mtv;
  wv=AAV(w);
- DQ(NEVM, RZ(*tv=incorp(ca(vs(*wv)))); ACINITZAP(*tv) CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room.  ZAP since it's going into recursive box
+ DQ(NEVM, RZ(*tv=incorp(ca(vs(C(*wv))))); ACINITZAP(*tv) CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room.  ZAP since it's going into recursive box
  ACINITZAPRECUR(t,BOX); fa(JT(jt,evm)); JT(jt,evm)=t;  // ras to protect contents
  R mtv;
 }
@@ -248,7 +248,7 @@ F1(jtdeprecxs){A ct, excl;
  }else{
   ASSERT(AR(w)<=1,EVRANK);  // must be atom or list
   ASSERT(((AN(w)-1)&~1)==0,EVLENGTH); // must be 1-2 boxes
-  ct=AAV(w)[0]; excl=AN(w)>1?AAV(w)[1]:mtv;  // extract count and exclusion list
+  ct=C(AAV(w)[0]); excl=AN(w)>1?C(AAV(w)[1]):mtv;  // extract count and exclusion list
  }
  I cti;  // integer value of count
  RE(cti=i0(ct));  // ct must be integral atomic

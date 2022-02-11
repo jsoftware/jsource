@@ -307,7 +307,7 @@ static F1(jtsparsep1){A*wv;I n=0;
  ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK); 
  if(BOX&AT(w)){n=AN(w); wv=AAV(w); ASSERT(1<=n&&n<=3||5==n,EVLENGTH);}
- R sparse1a(0<n?wv[0]:w,1<n?wv[1]:mark,2<n?wv[2]:mark,3<n?wv[3]:mark,4<n?wv[4]:mark);
+ R sparse1a(0<n?C(wv[0]):w,1<n?C(wv[1]):mark,2<n?C(wv[2]):mark,3<n?C(wv[3]):mark,4<n?C(wv[4]):mark);
 }
 
 static F1(jtsparsen1){A*u,z;P*p;
@@ -329,7 +329,7 @@ F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
  if(ISDENSETYPE(AT(a),BOX)){
   ASSERT(1==AR(a),EVRANK);
   ASSERT(2==AN(a),EVLENGTH);
-  av=AAV(a);  a=av[0]; q=av[1];
+  av=AAV(a);  a=C(av[0]); q=C(av[1]);
  }
  RZ(a=cvt(INT,a));
  ASSERT(1>=AR(a),EVRANK);

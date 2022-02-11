@@ -135,7 +135,7 @@ static B jtwidthdp(J jt, A a, I *w, I *d){
 static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*cu1="?kjibdmnpqrs",d,*s,*wv;
      I fb,i,j,mi,n,n1,p,q,vals[3]={-1,-1,0};
  ARGCHK1(w);
- w=AAV(w)[0]; n=AN(w);
+ w=C(AAV(w)[0]); n=AN(w);
  GAT0(z,BOX,1+NMODVALS,1); zv=AAV(z); 
  DO(NMODVALS, zv[1+i]=mtv;);
  if(n&&(C2T+C4T)&AT(w))RZ(w=uco2(num(5),w));
@@ -269,8 +269,8 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  GATV(fb,  B01,n,wr,ws); mvc(n,BAV(fb),1,MEMSET00);
  GAT0(z,BOX,4,1); u=AAV(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
  ib=AV(base); as=AAV(strs); u=AAV(a);
- if(1==nf){MC(ib,AV(*u),SZI*3); mvc(SZI*nc,ib+3,1,MEMSET00); DO(NMODVALS, *as++=incorp(u[i+1]);)}
- else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(u++[1]);) ++u; )
+ if(1==nf){MC(ib,AV(C(*u)),SZI*3); mvc(SZI*nc,ib+3,1,MEMSET00); DO(NMODVALS, *as++=incorp(C(u[i+1]));)}
+ else DQ(nf, MC(ib,AV(C(*u)),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(C(u[1])); ++u;) ++u; )
  bits=BAV(fb);
  switch(CTTZNOFLAG(wt)) {
   case B01X:
@@ -344,7 +344,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  for(i=0;i<n;i++) {  // go through the values figuring the length needed for each value
        ib+=4; u+=NMODVALS; --imod; ib=(imod==0)?AV(base):ib; u=(imod==0)?AAV(strs)-1:u; imod=(imod==0)?nf:imod;
        ++imodc; imodc=(imodc==nc)?0:imodc;  // imodc is i%nc
-       nB=AN(uB); nD=AN(uD); nMN=AN(uM)+AN(uN); nPQ=AN(uP)+AN(uQ); nI=AN(uI);
+       nB=AN(C(uB)); nD=AN(C(uD)); nMN=AN(C(uM))+AN(C(uN)); nPQ=AN(C(uP))+AN(C(uQ)); nI=AN(C(uI));
        d=ib[1]; mods=ib[2]; 
        if(*bits&BITSf) { if(mI&&*bits&BITS__)*iv=nI; else if(mD) *iv=nD; else *iv=2-!!(*bits&BITS_); }
        else if(*bits&BITSz) { 
@@ -539,7 +539,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  if(setjmp(((struct dtoa_info*)jt->dtoa)->_env))ASSERTSYS(jt->jerr, "dtoa");
  if(lvl=level(w)){A*wv=AAV(w),x; 
   ASSERT(1>=lvl, EVDOMAIN);
-  DO(AN(w), x=wv[i]; ASSERT(1>=AR(x),EVRANK); if(AN(x)){ASSERT(AT(x)&JCHAR+NUMERIC,EVDOMAIN);
+  DO(AN(w), x=C(wv[i]); ASSERT(1>=AR(x),EVRANK); if(AN(x)){ASSERT(AT(x)&JCHAR+NUMERIC,EVDOMAIN);
       ASSERT(!(AR(x)&&AT(x)&NUMERIC),EVRANK);});
   A z; R df2(z,reitem(shape(w),a),w,amp(foreign(num(8),num(0)), ds(COPE)));
  } else {

@@ -588,17 +588,17 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
-  if(FAV(self)->id!=CCUT){
-   // sparse processing expects a to be the boolean frets.  If we are executing for /., a has fret positions.
-   // Allocate a boolean vector and fill in the fret positions with 1.  There is only 1 block of frets.
-   // The sparse code will immediately turn this boolean into sparse, so we could save a little by creating it sparse
-   m=CUTFRETCOUNT(a);  // # frets, set by caller
-   pd=CUTFRETFRETS(a);  // &first fret
-   GAT0(a,B01,n,1); AS(a)[0]=n; mvc(n,BAV1(a),1,MEMSET00);  // allocate fret block, all 0
-   for(d=0;m;--m){  // for each fret
-     UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d+=len; BAV1(a)[d-1]=1;  // fetch 1- or 4-byte fret length; advance to next fret; store end-of-fret index (cut type is 2)
-   }
-  }
+// obsolete   if(FAV(self)->id!=CCUT){
+// obsolete    // sparse processing expects a to be the boolean frets.  If we are executing for /., a has fret positions.
+// obsolete    // Allocate a boolean vector and fill in the fret positions with 1.  There is only 1 block of frets.
+// obsolete    // The sparse code will immediately turn this boolean into sparse, so we could save a little by creating it sparse
+// obsolete    m=CUTFRETCOUNT(a);  // # frets, set by caller
+// obsolete    pd=CUTFRETFRETS(a);  // &first fret
+// obsolete    GAT0(a,B01,n,1); AS(a)[0]=n; mvc(n,BAV1(a),1,MEMSET00);  // allocate fret block, all 0
+// obsolete    for(d=0;m;--m){  // for each fret
+// obsolete      UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d+=len; BAV1(a)[d-1]=1;  // fetch 1- or 4-byte fret length; advance to next fret; store end-of-fret index (cut type is 2)
+// obsolete    }
+// obsolete   }
   R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
  }
 #define ZZFLAGWORD state

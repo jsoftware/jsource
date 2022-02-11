@@ -130,6 +130,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 
 // Convert text sentence to a sequence of words to be the queue for parsing
 // a MUST BE the result of wordil, which is an integer list of word index & end+1: (i0,e0),(i1,e1)...  # words not including final NB. is in AM(a)
+// a is never a future
 // w holds the string text of the sentence
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
 // result is a list of parsable words, with types right.  The result is input only to parsing, never to verbs, and thus may be nonrecursive
@@ -328,15 +329,15 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  ASSERT(BOX&AT(a),EVDOMAIN);
  an=AN(a); av=AAV(a); 
  ASSERT(BETWEENC(an,2,4),EVLENGTH);
- RE(f=i0(av[0]));
+ RE(f=i0(C(av[0])));
  ASSERT((UI)f<=(UI)5,EVINDEX);
- RZ(s=vi(av[1])); sv=AV(s);
+ RZ(s=vi(C(av[1]))); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
  v=AS(s); p=v[0]; q=v[1]; ASSERT(2==v[2],EVLENGTH);
  v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT((UI)k<(UI)p&&(UI)e<=(UI)7,EVINDEX););
  ijrd[0]=0; ijrd[1]=-1; ijrd[2]=0; ijrd[3]=-1;
  if(4==an){I d,i,j,n,r;
-  RZ(x=vi(av[3])); n=AN(x); v=AV(x);
+  RZ(x=vi(C(av[3]))); n=AN(x); v=AV(x);
   ASSERT(1==AR(x),EVRANK);
   ASSERT(4>=n,EVLENGTH);
   if(1<=n) ijrd[0]=i=*v++;
@@ -344,7 +345,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   if(3<=n){ijrd[2]=r=*v++; ASSERT((UI)r<(UI)p,EVINDEX);}
   if(4==n){ijrd[3]=d=*v++; ASSERT(BETWEENO(d, -1, q),EVINDEX);}
  }
- m=2==an?mtv:av[2]; c=AN(m);
+ m=2==an?mtv:C(av[2]); c=AN(m);
  ASSERT(1>=AR(m),EVRANK);
  if(!c&&1==AR(m)){   /* m is empty; w must be integer vector */  }
  else if(NUMERIC&AT(m)){
@@ -360,7 +361,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  ARGCHK2(a,w);
  if(chka)RZ(a=fsmvfya(a)); 
  av=AAV(a); 
- f=i0(av[0]); s=av[1]; m=av[2]; ijrd=AV(av[3]);
+ f=i0(C(av[0])); s=C(av[1]); m=C(av[2]); ijrd=AV(C(av[3]));
  n=AN(w); v=AS(s); p=v[0]; q=v[1];
  ASSERT((UI)ijrd[0]<(UI)n,EVINDEX);
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // b=w is atom/list, either literal or empty; c is # columns mapped to input through m

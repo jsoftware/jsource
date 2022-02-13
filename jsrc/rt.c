@@ -18,7 +18,7 @@ static F1(jttrc){A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
  ul=JT(jt,bx)[0]; ll=JT(jt,bx)[6];
  for(j=b=0;j<xn;++j,b=0<j)
   for(k=0;k<yn;++k){
-   p=C(*v); v++;
+   p=C(*v++);
    if(AN(p)){
     m=AS(p)[1]; yv[k]=MAX(yv[k],m);
     pv=CAV(p); c=*pv;

@@ -181,7 +181,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virtwfaux) so as to avoid inplacing ATOPOPEN.
    // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
    ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
-  }else{wav=AAV(w); virtw=C(*wav); wav++;
+  }else{wav=AAV(w); virtw=C(*wav++);
   }
   // Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
   // jtinplace through, except that we remove WILLOPEN status which we are picking up at this level
@@ -198,7 +198,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
      // for simplicity we apply this correction to the faux block, so as to ensure we don't do it when ATOPOPEN is active.  This means ranks higher than the max for
      // the faux virtual block miss out on the reinitialization.  That's not so bad
    // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
-   if(likely(!(state&ZZFLAGATOPOPEN1))){AK(virtw) += wk;}else{virtw=C(*wav); wav++;}
+   if(likely(!(state&ZZFLAGATOPOPEN1))){AK(virtw) += wk;}else{virtw=C(*wav++);}
   }while(1);
 
 #define ZZEXIT

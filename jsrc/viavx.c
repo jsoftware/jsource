@@ -360,7 +360,6 @@ static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
 
 // Hash y, which is not a singleton.
 static UI jthiau(J jt,A y){I m,n;UI z;X*u,x;
- y=C(y); RZ(y)   // scaf must report error
  m=n=AN(y); UC*v=UAV(y);
  if(!n)R 0;
  switch(AT(y)){
@@ -596,7 +595,7 @@ static __forceinline I icmpeq(I *a, I *w, I n) {
 // jtioz0 intolerant CMPX array
 
 static IOFX(A,US,jtioax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,US,jtioau,, hiau(*v),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
+static IOFX(A,US,jtioau,, hiau(C(*v)),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
 static IOFX(X,US,jtiox,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,US,jtioq,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
 static IOFX(C,US,jtioc,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -608,7 +607,7 @@ static IOFX(D,US,jtioc0,, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn
 static IOFX(Z,US,jtioz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
 static IOFX(A,UI4,jtioax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,UI4,jtioau2,, hiau(*v),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
+static IOFX(A,UI4,jtioau2,, hiau(C(*v)),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
 static IOFX(X,UI4,jtiox2,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,UI4,jtioq2,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
 static IOFX(C,UI4,jtioc2,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -1333,7 +1332,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  }
 
 static IOFXW(A,US,jtiowax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,US,jtiowau,, hiau(*v),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
+static IOFXW(A,US,jtiowau,, hiau(C(*v)),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
 static IOFXW(X,US,jtiowx,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,US,jtiowq,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
 static IOFXW(C,US,jtiowc,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -1345,7 +1344,7 @@ static IOFXW(D,US,jtiowc0,, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           
 static IOFXW(Z,US,jtiowz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
 static IOFXW(A,UI4,jtiowax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,UI4,jtiowau2,, hiau(*v),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
+static IOFXW(A,UI4,jtiowau2,, hiau(C(*v)),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
 static IOFXW(X,UI4,jtiowx2,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,UI4,jtiowq2,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
 static IOFXW(C,UI4,jtiowc2,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */

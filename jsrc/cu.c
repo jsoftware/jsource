@@ -14,7 +14,7 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
  RZ(z=ca(w));
  wp=PAV(w); x=SPA(wp,x); wv=AAV(x);
  zp=PAV(z); x=SPA(zp,x); zv=AAV(x);
- DQ(AN(x), RZ(*zv++=CALL1(f1,C(*wv),fs)); ++wv;);
+ DQ(AN(x), RZ(*zv++=CALL1(f1,C(*wv++),fs)));
  R z;
 }
 
@@ -127,7 +127,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // Store result & advance to next cell
   *zv++=x;
   if(unlikely(!--natoms))break;  // break to avoid fetching over the end of the input
-  if(flags&BOX){++wv; virtw=C(*wv);}else AK(virtw)+=(I)wv;  // advance to next input cell - either by fetching the next box or advancing the virtual pointer to the next atom
+  if(flags&BOX){virtw=C(*++wv);}else AK(virtw)+=(I)wv;  // advance to next input cell - either by fetching the next box or advancing the virtual pointer to the next atom
  }
 
  // indicate pristinity of result
@@ -248,8 +248,8 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   *zv++=x;
   if(!--natoms)break;
   ++rpt; I endrpt=REPSGN(rpt); rpt=rpt==0?rpti:rpt;  // endrpt=0 if end of repeat, otherwise ~0.  Reload rpt at end
-  if(!(flags&endrpt&2)){if(flags&(BOX<<1)){++av; virta=C(*av);}else AK(virta)+=(I)av;}  // advance unrepeated arg
-  if(!(flags&endrpt&1)){if(flags&BOX){++wv; virtw=C(*wv);}else AK(virtw)+=(I)wv;}
+  if(!(flags&endrpt&2)){if(flags&(BOX<<1)){virta=C(*++av);}else AK(virta)+=(I)av;}  // advance unrepeated arg
+  if(!(flags&endrpt&1)){if(flags&BOX){virtw=C(*++wv);}else AK(virtw)+=(I)wv;}
  }
  // indicate pristinity of result
  AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE)   // could synthesize rather than loading from z

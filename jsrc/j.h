@@ -630,8 +630,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
-#define HIPRECS 1  // set to enable hiprecs
-#define ARTIFHIPREC 1
+#define HIPRECS 0  // set to enable hiprecs
+#define ARTIFHIPREC 0
 #if ARTIFHIPREC&&HIPRECS
 #define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create hiprec results from <, force-box, and sometimes ;
 #else
@@ -732,10 +732,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&HIPREC))if(unlikely((res=jthipval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #else
 #define CCOMMON(x,pref,err) (x)
-#define C(x) (x)
-#define CCC(x) (x)
-#define z=C(x); {z=(x);}  // must not return 0
-#define CZC(z,x) z=C(x);  // if the value stored may properly be 0
 #endif
 #define C(x) CCOMMON(x,,R 0)  // normal case: return on error
 #define CERR(x) CCOMMON(x,,R jt->jerr)  // return error code on error

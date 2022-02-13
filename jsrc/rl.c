@@ -291,7 +291,7 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
  n=AN(a); av=AAV(a);  
  v=VAV(w); id=v->id;
  b=id==CCOLON&&VXOP&v->flag;  // b if operator, which is spaced as if a hook/fork: u body [v]
- I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=C(v->fgh[fndx]); A gs=C(v->fgh[fndx^1]); A hs=C(v->fgh[2]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
+ I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]); A hs=CNULL(v->fgh[2]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
 // ?t tells whether () is needed around the f/g/h component
  if(1<=n){f=C(av[0]); t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||id==CFORK)&&NOUN&AT(t)&&(lp(f)>0);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
@@ -349,8 +349,8 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  if(AT(w)&NOUN)R lnoun(C(w));
  v=VAV(w); id=v->id;  // outer verb, & its id
  // if f is 0, we take f from g.  In other words, adverbs can put their left arg in either f or g.  u b. uses g so that it can leave f=0 to allow it to function as an ATOMIC2 op
- I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=C(v->fgh[fndx]); A gs=C(v->fgh[fndx^1]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
- hs=C(v->fgh[2]); fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
+ hs=CNULL(v->fgh[2]); fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R lrr(hs);   // pseudo-named entity created during debug of operator.  The defn is in h
  m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
@@ -358,10 +358,10 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);  // x : boxed - must be explicit defn
  GATV0(t,BOX,m,1); tv=AAV(t);
- if(2<m)RZ(C(tv[2])=incorp(lrr(hs)));   // fill in h if present
+ if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
- if(1<m)RZ(C(tv[1])=incorp(fl&VGERR?tiefn(jtinplace,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(gs)));  // fill in g if present
- if(0<m)RZ(C(tv[0])=incorp(fl&VGERL?tiefn(jtinplace,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
+ if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtinplace,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(gs)));  // fill in g if present
+ if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtinplace,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
  R linsert(t,w);
 }
 

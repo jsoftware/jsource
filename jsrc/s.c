@@ -556,7 +556,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  if(!((I)jtinplace&JTASSIGNSYMNON0)){
  // we don't have e, look it up
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-// obsolete   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
   if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
  }
  // if we are writing to a non-local table, update the table's Bloom filter.

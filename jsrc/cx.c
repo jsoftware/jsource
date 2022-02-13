@@ -69,8 +69,6 @@ typedef struct CDATA {
  LX indexsym;  // symbol unmber of xyz_index, 0 for for.
 } CDATA;
 
-//  obsolete #define WCD            (sizeof(CDATA)/sizeof(I))
-
 typedef struct{I4 d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and try.
 #define WTD            (sizeof(TD)/sizeof(I))
 #define NTD            17     /* maximum nesting for try/catch */
@@ -149,11 +147,7 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
   }
  }
  fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
-#if 1
  cv=cv->bchn;  // go back to previous stack level
-#else  // obsolete 
- cv--;
-#endif
  R cv;
 }
 
@@ -202,7 +196,6 @@ static I debugnewi(I i, DC thisframe, A self){
   // debug mode was on when this execution started.  See if the execution pointer was changed by debug.
   // The newline info is in the parent of this frame, which may be up the stack if there are parse lines
   for(siparent=thisframe;siparent&&siparent->dctype!=DCCALL;siparent=siparent->dclnk);  // search up to find call to here
-// obsolete   if((siparent=thisframe->dclnk)&&siparent->dctype==DCCALL&&self==siparent->dcf){   // if prev stack frame is a call to here
   if(siparent&&self==siparent->dcf){   // if prev stack frame is a call to here
    if(siparent->dcnewlineno){  // the debugger has asked for a jump
     i=siparent->dcix;  // get the jump-to line
@@ -233,9 +226,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
  CDATA cdata,*cv=0;  // pointer to the current entry in the for./select. stack
-#if 1  // obsolete
  cdata.fchn=0;  // init no blocks allocated
-#endif
 
  A locsym;  // local symbol table to use
 
@@ -269,8 +260,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
      callframe=jt->sitop;  // remember the caller's frame
      if(jt->uflags.us.cx.cx_c.db){  // if debug
       nGpysfctdl|=2;   // set debug flag if debug requested and not locked (no longer used)
-// obsolete      if(sv->flag&VNAMED){
-// obsolete      }
       // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
       // information about this execution: the local symbols and the control-word table
       if(self==jt->sitop->dcf){  // if the stack frame is for this exec
@@ -347,10 +336,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  A *old=jt->tnextpushp;
 
  // loop over each sentence
-#if 0  // obsolete 
- A cd=0;  // pointer to block holding the for./select. stack, if any
- I r=0;  // number of unused slots allocated in for./select. stack
-#endif
  I i=0;  // control-word number of the executing line
  A t=0;  // last T-block result
  I4 bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error - can force to memory
@@ -400,7 +385,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
       if(thisframe->dcredef&&(siparent=thisframe->dclnk)&&siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){A *hv;
        self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];  // LINE sets pointers for subsequent line lookups
        // Clear all local bucket info in the definition, since it doesn't match the symbol table now
-       // This will affect the current definition and all future executions of this definition.  We allow it because
+       // This will affect the current definition and all hiprec executions of this definition.  We allow it because
        // it's for debug only.  The symbol table itself persists
        DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->sb.sb.bucket=0;});
       }
@@ -521,7 +506,6 @@ docase:
    BASSERT(0,EVTHROW);
   case CFOR:
   case CSELECT: case CSELECTN:
-#if 1  // obsolete 
    // for./select. push the stack.  Use the C stack for the first one, after that allocate as needed.
    if(cv==0){cv=&cdata; cv->bchn=0;  // for first block, use the canned area.  Indicate no previous blocks; there may be successors that we can reuse
    }else if(cv->fchn){cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
@@ -532,15 +516,6 @@ docase:
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
    } 
-#else
-//  If the stack has not been allocated, start with 9 entries.  After that,
-   // if it fills up, double it as required
-   if(unlikely(!r))
-    if(unlikely(nGpysfctdl&8)){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-    else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ACINITZAP(cd) cv=(CDATA*)IAV1(cd)-1; nGpysfctdl|=8;}   // 9=r
-
-   ++cv; --r;
-#endif
    BZ(forinitnames(jt,cv,cwgroup&0xff,line[CWSENTX]));  // setup the names, before we see the iteration value
    ++i;
    break;
@@ -582,7 +557,6 @@ docase:
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)   scaf xyz_index no longer deleted, but xyz is written?
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1);
-// obsolete  ++r; 
    i=cw[i].go;    // continue at new location
    break;
   case CBREAKS:
@@ -591,7 +565,6 @@ docase:
    // any number of SELECTN, up to the SELECT 
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
    NOUNROLL do{I fin=cv->w==CSELECT; cv=unstackcv(cv,1); if(fin)break;}while(1);
-// obsolete  ++r; 
     // fall through to...
   case CBREAK:
   case CCONT:  // break./continue. in while., outside of select.
@@ -605,7 +578,6 @@ docase:
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
    NOUNROLL do{I fin=cv->w; cv=unstackcv(cv,1); if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
-// obsolete  ++r; 
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(nGpysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
@@ -680,11 +652,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
 
  if(unlikely(nGpysfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
-#if 1  // obsolete 
  if(likely(cv==0)){  // the for/select stack has been popped back to initial state
-#else
- if(likely((REPSGN(SGNIF(nGpysfctdl,3))&((I)cv^(I)((CDATA*)IAV1(cd)-1)))==0)){  // if we never allocated cd, or the stack is empty
-#endif
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
   if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
    // We have to make sure that we clear all atored values, because they may point to virtual blocks, even unincorpable ones, in callers.
@@ -697,18 +665,10 @@ bodyend: ;  // we branch to here on fatal error, with z=0
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
   if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  See sbove for tpop
-#if 1   // obsolete 
   NOUNROLL while(cv){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
-#else
-  NOUNROLL while(cv!=(CDATA*)IAV1(cd)-1){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
-#endif
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
-#if 1  // obsolete 
  A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain, which was freed & zapped
-#else
- if(unlikely(cd!=0)){fa(cd);}  // have to delete explicitly, because we protected the block with ACINITZAP
-#endif
  // locsym may have been freed now
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
@@ -1381,8 +1341,6 @@ A jtddtokens(J jt,A w,I env){
    wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  
    wilv[ddbgnx+1][0]=bodystart; I *fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+2;)  // everything in between, and trailing )SP
    // continue the search.
-// obsolete    if(ddbgnx==firstddbgnx){ddschbgnx=ddendx+1;  //   If this was not a nested DD, we can simply pick up the search after ddendx.
-// obsolete    }else{
    // The characters below ddendx are out of order and there will be trouble if we try to preserve
    // the user's spacing by grouping them.  We must run the ending lines together, to save their spacing, and then
    // refresh w and wil to get the characters in order.  We really need this only when there is a nested or noun DD, but that's hard to detect
@@ -1390,7 +1348,6 @@ A jtddtokens(J jt,A w,I env){
    RZ(w=unwordil(wil,w,0)); RZ(wil=wordil(w));  // run chars in order; get index to words
    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
    ddschbgnx=0;  // start scan back at the beginning
-// obsolete    }
   }
 
   // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen

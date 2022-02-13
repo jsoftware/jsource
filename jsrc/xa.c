@@ -537,7 +537,7 @@ F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
  case 2*1+0: ;  // blsr, not used
   v1=(I)w, v2=AN(w);  // two unpredictable values
   NOUNROLL for(i=100000000; i; --i){
-   v1+=SGNTO0(v2); v2+=SGNTO0(v1);
+   v1+=SGNTO0(v2)<<v1; v2+=SGNTO0(v1)<<v2;
   }
   break;
  case 2*1+1: ;  // blsr, used

@@ -249,7 +249,6 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){A t,z;B s;V*sv;
   }
  }
  if(d->dcss)ssnext(d,d->dcss);  // if we step over/into on the last line of a function, we must stop on the next line of the caller
-// obsolete  debz();
  R z;
 }    /* function call, debug version */
 

@@ -10,8 +10,8 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  F1RANK(1,jtcatalog,DUMMYSELF);
  ASSERT(!ISSPARSE((AT(w))),EVNONCE);
  if((-AN(w)&-(AT(w)&BOX))>=0)R box(w);   // empty or unboxed, just box it
- n=AN(w); wv=AAV(w); 
- DO(n, x=C(wv[i]); if(AN(x)){p=AT(x); t=t?t:p; ASSERT(!ISSPARSE(p),EVNONCE); ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype; establish type of result
+ n=AN(w); wv=AAV(w);
+ DO(n, x=C(wv[i]); if(likely(AN(x))){p=AT(x); t=t?t:p; ASSERT(!ISSPARSE(p),EVNONCE); ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype; establish type of result
  t=t?t:B01; k=bpnoun(t);  // if all empty, use boolean for result
  GA10(b,t,n);      bv=CAV(b);  // allocate place to build each item of result - one atom from each box.  bv->item 0
  GATV0(x,INT,n,1);    qv=AV(x);   // allocate vector of max-indexes for each box - only the address is used  qv->max-index 0
@@ -101,7 +101,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   _mm256_zeroupperx(VOIDARG)
   __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
   __m256i ones=_mm256_cmpgt_epi64(wstride,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
-// obsolete   __m256i temp=_mm256_setzero_si256();  // mask to use for gather into all bytes
   I * RESTRICT v=(I*)wv; I* RESTRICT x=(I*)zv;  // input and output pointers
   if(an==1){  // special case of atom {"1 y
    if(m==1){  // the atom { list case is pretty common
@@ -773,7 +772,6 @@ F1(jtmvmsparse){PROLOG(832);
   // if the column is just to be fetched from M, do so without dot-product.  We can use gather down the column, but there's no gain
   __m256d dotprod;  // place where product is assembled or read into
   if(colx<n){  // scalar index list, means the column is an identity column.  Fetch it directly
-// obsolete    mv+=*iv;  // advance m pointer to the column we are reading
    COLLP dotprod=_mm256_set1_pd(mv[colx]);   // fetch the column value into all 4 lanes
     PROCESSROWRATIOS
    COLLPE
@@ -786,29 +784,20 @@ F1(jtmvmsparse){PROLOG(832);
    I *iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv
    __m256i endmask=_mm256_setzero_si256(); /* length mask for the last word */ 
    _mm256_zeroupperx(VOIDARG)
-// obsolete    __m256i wstride=_mm256_set1_epi64x(n);  // stride between cells in atoms - used for index check
    __m256i ones=_mm256_cmpeq_epi64(endmask,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
- // obsolete   __m256d temp=_mm256_setzero_pd();  // mask to use for gather into all bytes
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
-// obsolete   __m256i anynegindex=_mm256_setzero_si256();  // accumulate sign bits of the indexes
    // Load the first 16 indexes and v-values into registers, resolving negative indexes
    __m256i indexes0, indexes1, indexes2, indexesn;  // indexes, the last may be partial
    __m256d vvals0,vvals1,vvals2,vvalsn;  // the sparse vector, the last may be partial
    if(an>NPAR){
     indexes0=_mm256_loadu_si256((__m256i*)iv);   // fetch a block of indexes
     vvals0=_mm256_loadu_pd(vv);   // fetch a block of values
-// obsolete     indexes0=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes0),_mm256_castsi256_pd(_mm256_add_epi64(indexes0,wstride)),_mm256_castsi256_pd(indexes0)));  // get indexes, add axis len if neg
-// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
     if(an>2*NPAR){
      indexes1=_mm256_loadu_si256((__m256i*)(iv+NPAR));   // fetch a block of indexes
      vvals1=_mm256_loadu_pd(vv+NPAR);   // fetch a block of indexes
-// obsolete      indexes1=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes1),_mm256_castsi256_pd(_mm256_add_epi64(indexes1,wstride)),_mm256_castsi256_pd(indexes1)));  // get indexes, add axis len if neg
-// obsolete      ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes1,_mm256_sub_epi64(indexes1,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
      if(an>3*NPAR){
       indexes2=_mm256_loadu_si256((__m256i*)(iv+2*NPAR));   // fetch a block of indexes
       vvals2=_mm256_loadu_pd(vv+2*NPAR);   // fetch a block of indexes
-// obsolete       indexes2=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes2),_mm256_castsi256_pd(_mm256_add_epi64(indexes2,wstride)),_mm256_castsi256_pd(indexes2)));  // get indexes, add axis len if neg
-// obsolete       ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes2,_mm256_sub_epi64(indexes2,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
      }
     }
    }
@@ -817,8 +806,6 @@ F1(jtmvmsparse){PROLOG(832);
     // <=16 indexes.  We stay in registers
     indexesn=_mm256_maskload_epi64(iv+((an-1)&-NPAR),endmask);   // fetch last block of indexes
     vvalsn=_mm256_maskload_pd(vv+((an-1)&-NPAR),endmask);   // fetch last block of values
-// obsolete     indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
-// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
     // Now do the operation.  With <16 elements it doesn't help to use dual accumulators
  #define FINISHDOTPROD dotprod=_mm256_add_pd(dotprod,_mm256_permute4x64_pd(dotprod,0b01001110)); dotprod=_mm256_add_pd(dotprod,_mm256_permute_pd(dotprod,0b0101));   /* combine accumulators horizontally  01+=23, 0+=1: 4 copies */ \
     PROCESSROWRATIOS 
@@ -851,8 +838,6 @@ F1(jtmvmsparse){PROLOG(832);
     // 17+indexes.  We must read the tail repeatedly.  It might gain a bit to have two accumulators but we don't yet.
     indexesn=_mm256_loadu_si256((__m256i*)(iv+3*NPAR));   // fetch last block of indexes
     vvalsn=_mm256_loadu_pd(vv+3*NPAR);   // fetch last block of values
-// obsolete     indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
-// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
     COLLP 
      // We don't audit the indexes, which must be positive
      dotprod=_mm256_mul_pd(vvals0,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv,indexes0,_mm256_castsi256_pd(ones),SZI));
@@ -890,7 +875,6 @@ F1(jtmvmsparse){PROLOG(832);
    // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
    if(likely((bestrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
     minimpfound=(Frow[*ndx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio
-// obsolete     nimp+=REPSGN(nfreecols);  // if we are past the prefix area, sub from the # improvements remaining
     zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
     // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
     if((I4)bestrow<(I4)nvirt){++ndx; ndotprods+=bvgrd-bvgrd0; break;}  // stop early if virtual pivot found, but take credit for the column we process here

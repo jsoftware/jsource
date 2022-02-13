@@ -1031,7 +1031,7 @@ DF2(jtsumattymes1){
   // here for +/@:*"1!.0, double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;
 #if (C_AVX2&&SY_64) || EMU_AVX2
-#if 1  // higher precision.  Required when a large product is added to a small total.  Dependeny loop for acc is 4 clocks; for c is 4 clocks.  Total 12 insts, so unrolled 2 would do
+#if 1  // higher precision.  Required when a large product is added to a small total.  Dependency loop for acc is 4 clocks; for c is 4 clocks.  Total 12 insts, so unrolled 2 would do
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) TWOSUM(acc##n,h,acc##n,q) c##n=_mm256_add_pd(_mm256_add_pd(q,y),c##n);
 #else
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) c##n=_mm256_add_pd(y,c##n); KAHAN(h,n)

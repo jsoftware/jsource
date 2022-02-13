@@ -121,7 +121,6 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
 }
 
 // _9: to 9: and _:, return the saved value.
-// obsolete   These MUST NOT inplace because of a pun in the coding of comparison combination flags
 DF1(jtnum1){F1PREFIP;A z=0;
  ARGCHK2(w,self); RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank; A a=FAV(self)->fgh[2];  // fetch value to store
  if(rank==AR(w))R a;  // at infinite rank, just return the value

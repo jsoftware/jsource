@@ -20,7 +20,7 @@
 /*
  * Strictly these functions were available before Lollipop/21, but there was an accidental ABI
  * breakage in 21 that means you can't write code that runs on current devices and pre-21 devices,
- * so we break the tie in favor of current and future devices.
+ * so we break the tie in favor of current and hiprec devices.
  */
 
 FTSENT* fts_children(FTS* __fts, int __options);

@@ -156,17 +156,11 @@ DF2(jtboxcut0){A z;
   // We have allocated the result; now we allocate a block for each cell of w and copy
   // the w values to the new block.
  A *pushxsave;  // place to restore tstack to
-// obsolete  if(!((I)jtinplace&JTWILLBEOPENED)){
-// obsolete   // if this block cannot contain virtual cells, we make it recursive and divert the allocation system to fill z rather than tstack with the individual boces
-// obsolete   // Regrettably we can't do this for WILLOPENs because virtuals are freed only from tstack and we would lose the backer if we didn't have tstack.  This means we
-// obsolete   // have two pointers - one in z and another in tstack - but the case is rare so we don't add the checking to jtfa
   AFLAGINIT(z,BOX) // Make result inplaceable; recursive too, since otherwise the boxes won't get freed
   // divert the allocation system to use the result area a tstack
   pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
-// obsolete  }
  // MUST NOT FAIL UNTIL tstack restored
  A y;  // y is the newly-allocated block
-// obsolete   A *zv=AAV(z);
  // Step through each block: fetch start/end; verify both positive and inrange; calc size of block; alloc and move; make block recursive
  I (*av)[2]=(I (*)[2])voidAV(a);  // pointer to first start/length pair
  I abslength=(I)FAV(self)->localuse.boxcut0.parm;  // 0 for start/length, ~0 for start/end+1
@@ -174,29 +168,18 @@ DF2(jtboxcut0){A z;
  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself sirtual
  I i; for(i=0;i<resatoms;++i){
   I start=av[i][0]; I endorlen=av[i][1];
-// obsolete   if(!(BETWEENO(start,0,wi))){if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
   if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
   endorlen+=start&abslength;  // convert len to end+1 form
   endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
-// obsolete    if(endorlen<0){if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
   if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
   I substratoms=endorlen*cellsize;
   // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
-// obsolete    if(!((I)jtinplace&JTWILLBEOPENED)){
-// obsolete     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
-// obsolete     GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
-// obsolete     JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)
-// obsolete    }else{
-// obsolete     // WILLBEOPENED case.  We must allocate a virtual block so we can avoid the copy
-// obsolete     RZ(y=virtual(w,start*cellsize,wr)); ACIPNO(y); *zv++=y; AS(y)[0]=endorlen; MCISH(AS(y)+1,AS(w)+1,wr-1) AN(y)=substratoms;  // OK to return because we didn't divert tstack
-// obsolete    }
   if(!((I)jtinplace&JTWILLBEOPENED)){
    GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
    // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
    JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)   // copy the data, incorporate the block into the result
   }else{
    // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
-// obsolete     RZ(y=virtual(w,start*cellsize,wr));
    if((y=gafv(SZI*(NORMAH+wr)-1))==0)break;  // allocate the block, abort loop if error
    AT(y)=t;
    ACINIT(y,ACUC1)   // transfer inplaceability from original block
@@ -207,7 +190,6 @@ DF2(jtboxcut0){A z;
    ABACK(y)=wback;  // install pointer to backer
   }
  }
-// obsolete  if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave;   // restore tstack pointer
  // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
  if(unlikely((I)jtinplace&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
  jt->tnextpushp=pushxsave;   // restore tstack pointer
@@ -588,17 +570,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
-// obsolete   if(FAV(self)->id!=CCUT){
-// obsolete    // sparse processing expects a to be the boolean frets.  If we are executing for /., a has fret positions.
-// obsolete    // Allocate a boolean vector and fill in the fret positions with 1.  There is only 1 block of frets.
-// obsolete    // The sparse code will immediately turn this boolean into sparse, so we could save a little by creating it sparse
-// obsolete    m=CUTFRETCOUNT(a);  // # frets, set by caller
-// obsolete    pd=CUTFRETFRETS(a);  // &first fret
-// obsolete    GAT0(a,B01,n,1); AS(a)[0]=n; mvc(n,BAV1(a),1,MEMSET00);  // allocate fret block, all 0
-// obsolete    for(d=0;m;--m){  // for each fret
-// obsolete      UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d+=len; BAV1(a)[d-1]=1;  // fetch 1- or 4-byte fret length; advance to next fret; store end-of-fret index (cut type is 2)
-// obsolete    }
-// obsolete   }
   R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
  }
 #define ZZFLAGWORD state

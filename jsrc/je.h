@@ -644,6 +644,9 @@ extern A        jtamne(J,A,A,A,B);
 extern A        jtamnsp(J,A,A,A,B);
 extern A        jtapv(J,I,I,I);
 extern A        jtapvwr(J,I,I,I);
+#if ARTIFHIPREC
+extern A        jtartiffut(J,A,I);
+#endif
 extern A        jtascan(J,C,A);
 extern A        jtaslash(J,C,A);
 extern A        jtaslash1(J,C,A);
@@ -715,7 +718,7 @@ extern I        jtfnum(J,A);
 extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
-extern A        jtfutval(J,A);
+extern A        jthipval(J,A);
 extern A        jtfxeachv(J,I,A);
 #if SY_64
 extern RESTRICTF A jtga0(J,I,I);
@@ -920,8 +923,8 @@ extern J        jinit(void);
 extern void     jsto(JS,I,C*);
 extern void     jstpoll(J);
 extern void     jststop(J);
-extern I        level(A);
-extern I        levelle(A,I);
+extern I        level(J,A);
+extern I        levelle(J,A,I);
 extern A        makenounasgsafe(J,A);
 extern void     mvc(I,void*,I,void*);
 extern B        nameless(A);

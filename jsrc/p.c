@@ -7,8 +7,7 @@
 #include "p.h"
 #include <stdint.h>
 
-#define RECURSIVERESULTSCHECK   // obsolete
-//  if(y&&(AT(y)&NOUN)&&!(AFLAG(y)&AFVIRTUAL)&&((AT(y)^AFLAG(y))&RECURSIBLE))SEGFAULT;  // stop if nonrecursive noun result detected
+#define RECURSIVERESULTSCHECK   //  if(y&&(AT(y)&NOUN)&&!(AFLAG(y)&AFVIRTUAL)&&((AT(y)^AFLAG(y))&RECURSIBLE))SEGFAULT;  // stop if nonrecursive noun result detected
 
 
 #define PARSERSTKALLO (490*sizeof(PSTK))  // number of stack entries to allocate, when we allocate, in bytes
@@ -188,8 +187,8 @@ static A NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
   else{
    // True multiple assignment
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
-   if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],C(vv[i]),symtab);)}  // v is boxed list
-   else {A *nv=AAV(n); DO(AN(n), jtsymbis(jtinplace,nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
+   if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,C(nv[i]),C(vv[i]),symtab);)}  // v is boxed list
+   else {A *nv=AAV(n); DO(AN(n), jtsymbis(jtinplace,C(nv[i]),ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
    goto retstack;
   }
  }
@@ -939,7 +938,7 @@ RECURSIVERESULTSCHECK
       if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
 #endif
 #if MEMAUDIT&0x2
-      if(m>=0 && (AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1)))SEGFAULT; 
+      if((AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1)))SEGFAULT; 
       audittstack(jt);
 #endif
      }  // end of classifying fragment

@@ -141,7 +141,7 @@ F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
  RZ(a=vslit(a)); ASSERT(3==AN(a),EVLENGTH); 
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  s=CAV(y);
- p=USAV(fn);;
+ p=USAV(fn);
  s=CAV(a);
  if('r'==s[0]) x|=S_IREAD;  else ASSERT('-'==s[0],EVDOMAIN);
  if('w'==s[1]) x|=S_IWRITE; else ASSERT('-'==s[1],EVDOMAIN);

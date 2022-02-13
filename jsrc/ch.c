@@ -87,7 +87,7 @@ DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);
  RZ(w=vi(w)); v=AV(w); 
  n=0; DO(AN(w), j=v[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
  if(!n)R eq(w,w);
- h=sv->fgh[2]; hv=AAV(h); A hv0=C(hv[0]), hv1=C(hv[1]);
+ h=sv->fgh[2]; hv=AAV(h); A hv0=C(hv[0]); A hv1=C(hv[1]);
  b=VERB&(AT(sv->fgh[0])|AT(sv->fgh[1]))||CMPX&(AT(w)|AT(hv0)|AT(hv1));
  if(!b){D r=1.0,*u,*v,*yv;
   RZ(c=cvt(FL,hv0)); u=DAV(c); pn=AN(c);

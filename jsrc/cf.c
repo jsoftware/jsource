@@ -247,7 +247,7 @@ static DF1(jthkindexofmaxmin){
 static DF2(jthklvl2){
  F2RANK(0,RMAX,jthklvl2,self);
  I comparand; RE(comparand=i0(a));  // get value to compare against
- RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
+ RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(jt,w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
 #define TYPETEST(t) ((((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ((((t)&CONJ+ADV+VERB)|(1LL<<31))>>ADVX)))&3)  // type class: noun adv conj vecb

@@ -200,7 +200,6 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z;
  I anylt0=0, anyofl=0; UI dlct=(m+3)>>2; I backoff=(-m)&3;
 #define COMP1(i) p+=xx[i]; anylt0|=xx[i]; if(i&1)anyofl|=p;  // looking for overflow every other time is enough, leaves branch slot
  I *xx=x-backoff; switch(backoff){do{case 0: COMP1(0) case 1: COMP1(1) case 2: COMP1(2) case 3: COMP1(3) xx+=4;}while(--dlct);}   \
-// obsolete  DQ(m, p+=x[i]; anylt0|=x[i]; anyofl|=p;);  // add up total # result slots   scaf unroll this
  ASSERT(anylt0>=0,EVDOMAIN) ASSERT(anyofl>=0,EVLIMIT);
 #endif
  if(unlikely(ISSPARSE(AT(w)))){

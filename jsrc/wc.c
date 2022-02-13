@@ -78,7 +78,6 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r,CW*con){I e,m,t;
   // elseif. and else. are backchained.  Chase the chain, replacing the chain with the NSI after the end.
   do{I nextk=con[k].go; con[k].go=e; k=nextk;}while(k);  // end-of-chain is the first elseif./else., end AFTER filling it in
   break;
-// obsolete  d->go=(US)e; break;  // if elseif./do./end., set elseif. to come to end.
  case CWCASE(CIF,CDO):      break;
  case CWCASE(CWHILST,CDO):  CWASSERT(d); d->go=(US)(1+j);   // set whilst. to start at end, and fall through to...
  case CWCASE(CWHILE,CDO):                                    // ...while. ... do.
@@ -208,7 +207,6 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
    CWASSERT((r==CIF||r==CELSEIF)&&q==CDO);     // verify in if./elseif do.
    c->go=(US)e;                             // set previous do. go to instruction after elseif. (i. e. previous test failed, go to this test)
    b->go=r==CIF?0:k; // all elseif./else. must point to the NSI of the eventual end.  Backchain them, ending the chain with a 0 entry for the one following the if.
-// obsolete     if(r==CELSEIF)d->go=(US)i;               // if struct is elseif. .. do.  elseif., point the previous elseif. to this one
    top-=2; stack[top++]=i; ++tb;            // remove the previous if. ... do. or elseif. ... do., replace with this elseif.; and
                                             // note that the previous block was a B and we have now moved to a T
    break;
@@ -216,7 +214,6 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
    CWASSERT((r==CIF||r==CELSEIF)&&q==CDO);                // verify part of if./elseif. ... do. ... else.
    c->go=(US)e;                             // set previous do. go to instruction after elseif. (i. e. previous test failed, go to this test)
    b->go=r==CIF?0:k; // all elseif./else. must point to the NSI of the eventual end.  Backchain them, ending the chain with a 0 entry for the one following the if.
-// obsolete     if(r==CELSEIF)d->go=(US)i;               // if struct is elseif. .. do.  else., point the previous elseif. to this else.
    stack[top-2]=stack[top-1]; stack[top-1]=i;  // replace if./elseif. ... do. on stack with do. ... else.
    break;
   case CEND:                                // end. run a conend... routine to update pointers in the cws. q->the do., r->the starting cw of the structure

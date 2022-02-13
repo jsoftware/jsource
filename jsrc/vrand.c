@@ -316,8 +316,8 @@ static UI jtdx_next30(J jt){I j;UI*u,*v,*vv,r,x;
 
 static UI jtdx_next(J jt){UI a,b,c;
  a=dx_next30()&0x000000003fffffff;
- b=dx_next30()&0x000000003fffffff;;
- c=dx_next30()&0x000000003fffffff;;
+ b=dx_next30()&0x000000003fffffff;
+ c=dx_next30()&0x000000003fffffff;
  R a|b<<30|c<<34&0xf000000000000000UL;
 }
 #else

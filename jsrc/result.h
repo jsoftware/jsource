@@ -279,11 +279,11 @@ do{
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
      // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
      I diff;  // Will be set to 0 if we are unable to report the # items
-#if FUTURES
-     // If the returned result is a future, we can't look into it to get its type/len.  We could see if the future has been resolved, but we don't
-    if((diff=AT(z)&FUTURE)){  // if the result is a future that can't be inspected, skip it
+#if HIPRECS
+     // If the returned result is a hiprec, we can't look into it to get its type/len.  We could see if the hiprec has been resolved, but we don't
+     if(likely(!(diff=AT(z)&HIPREC))){  // if the result is a hiprec that can't be inspected, skip it
 #else
-    {
+     {
 #endif
 #if !ZZSTARTATEND  // going forwards
       A result0=AAV(zz)[0];   // fetch pointer to the first 

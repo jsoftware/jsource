@@ -322,7 +322,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){B b;I e,c,d,i,j,n,r,u[XIDIG],*v;
   ++j; *u+=b;
   e=XBASEN*(j-1); d=u[j-1]; NOUNROLL while(d){++e; d/=10;} 
   if(0>c)DO(j, u[i]=-u[i];);
-  x[i].e=e; x[i].p=p; x[i].x=vec(INT,j,u);;
+  x[i].e=e; x[i].p=p; x[i].x=vec(INT,j,u);
  }
  R !jt->jerr;
 }

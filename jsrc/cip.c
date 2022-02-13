@@ -353,8 +353,8 @@ _mm256_zeroupperx(VOIDARG)
 
       // load running total, or 0 if first time
       /*if((a3rem|a3rem-1)<1)scaf to disable*/if(!(flgs&FLGZFIRST)){
-#define ACCZ(r,c) z##r##c=_mm256_load_pd(zilblock+NPAR*(2*r+c));
-        ACCZ(0,0); ACCZ(0,1); ACCZ(1,0); ACCZ(1,1); ACCZ(2,0); ACCZ(2,1); ACCZ(3,0); ACCZ(3,1);
+#define ACCz(r,c) z##r##c=_mm256_load_pd(zilblock+NPAR*(2*r+c));
+        ACCz(0,0) ACCz(0,1) ACCz(1,0) ACCz(1,1) ACCz(2,0) ACCz(2,1) ACCz(3,0) ACCz(3,1)
       }else z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_setzero_pd();
 
 // we might want to prefetch a anyway in case a row is a multiple of a cache line

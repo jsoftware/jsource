@@ -124,7 +124,7 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  if(!n)R df1(z,w,iden(C(*hv)));
  RZ(z=from(num(-1),w));
  old=jt->tnextpushp;
- --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(C(hv[hfx]))->valencefns[1],from(sc(j),w),z,C(hv[hfx]))); z=gc(z,old);)
+ --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
  RETF(z);
 }
 
@@ -278,7 +278,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I nblkscreated=zzboxp-AAV(zz);
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
-    // final resting place.  They can't be futures
+    // final resting place.  They can't be hiprecs
     // get the size of each item
     I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
     // allocate result area (could be inplace; but the waste of memory in sort/from is more important)
@@ -346,7 +346,7 @@ F2(jtagendai){I flag;
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = incorp(fxeachv(1L,a)));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
- flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(C(*avbv))->flag; ++avbv;);  // Don't increment inside FAV!
+ flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), RMAX, RMAX, RMAX);
 }
 
@@ -370,17 +370,17 @@ static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
-static DF1(jtgcr1){DECLFG;A ff,z0,z1,*hv=C(AAV(sv->fgh[2]));
+static DF1(jtgcr1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,fs,df1(z0,w,C(hv[1])),ds(sv->id)); FDEPDEC(d);
  R df1(z0,df1(z1,w,C(hv[2])),ff);
 }
 
-static DF2(jtgcl2){DECLFG;A ff,z0,z1,z2,*hv=C(AAV(sv->fgh[2]));
+static DF2(jtgcl2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,df2(z0,a,w,C(hv[1])),gs,ds(sv->id)); FDEPDEC(d);
  R df2(z0,df2(z1,a,w,C(hv[0])),df2(z2,a,w,C(hv[2])),ff);
 }
 
-static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=C(AAV(sv->fgh[2]));
+static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,fs,df2(z0,a,w,C(hv[1])),ds(sv->id)); FDEPDEC(d);
  R df2(z0,df2(z1,a,w,C(hv[0])),df2(z2,a,w,C(hv[2])),ff);
 }
@@ -406,11 +406,11 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
  FDEPINC(d=fdep(C(hv[1])));
- df1(ffm,w,C(hv[1]));  // x v1 y - no inplacing
+ df1(ffm,w,hv[1]);  // x v1 y - no inplacing
  FDEPDEC(d);
  RZ(ffm);  // OK to fail after FDEPDEC
  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (v1 y)}
- if(AT(C(hv[2]))&NOUN){ffx=C(hv[2]);}else{RZ(df1(ffx,w,C(hv[2])))}
+ if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(df1(ffx,w,hv[2]))}
  R df1(ffm,ffx,ff);
 }
 

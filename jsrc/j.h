@@ -604,7 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00      // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -622,7 +622,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MAXTHREADS 1  // maximum number of threads
 
-#define MAXTASKS 1  // maximum number of futures running at once (others will suspend)
+#define MAXTASKS 1  // maximum number of hiprecs running at once (others will suspend)
 #define MAXTASKSRND 4  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
@@ -630,7 +630,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
-#define FUTURES 0  // set to enable futures
+#define HIPRECS 1  // set to enable hiprecs
+#define ARTIFHIPREC 1
+#if ARTIFHIPREC&&HIPRECS
+#define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create hiprec results from <, force-box, and sometimes ;
+#else
+#define HIPIFARTIF(w,f) (w)
+#endif
 
 
 
@@ -722,11 +728,19 @@ extern unsigned int __cdecl _clearfp (void);
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
-#if FUTURES
-#define C(x) unlikely(AT(x)&FUTURE)?jtfutval(jt,x):(x)   // extract & resolve contents x must not have side-effects!
+#if HIPRECS
+#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&HIPREC))if(unlikely((res=jthipval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #else
+#define CCOMMON(x,pref,err) (x)
 #define C(x) (x)
+#define CCC(x) (x)
+#define z=C(x); {z=(x);}  // must not return 0
+#define CZC(z,x) z=C(x);  // if the value stored may properly be 0
 #endif
+#define C(x) CCOMMON(x,,R 0)  // normal case: return on error
+#define CERR(x) CCOMMON(x,,R jt->jerr)  // return error code on error
+#define CNOERR(x) CCOMMON(x,,)  // value has been resolved before & there cannot be an error
+#define CNULL(x) CCOMMON(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
@@ -1163,6 +1177,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // but that's OK as long as you don't pass it to some place where it can become an argument to another function
 // When a block is incorporated it becomes not pristine, because extractions from the parent may compromise it and we don't want to have to go through recursively to find them
 #define INCORPNC(z) {if(unlikely((AFLAG(z)&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAGPRISTNO(z)} }  // use if you are immediately going to change AC, as with ras()
+#define INCORPNCUI(z) {if(unlikely((AFLAG(z)&AFUNINCORPABLE)!=0)){RZ((z)=realize(z))} else{AFLAGPRISTNO(z)} }  // use if OK to incorporate virtual (but never UNINCORPABLE)
 #define INCORP(z) {INCORPNC(z) ACIPNO(z); }
 #define INCORPNV(z) {AFLAGPRISTNO(z) ACIPNO(z);}  // use when z is known nonvirtual
 // same, but for nonassignable argument.  Must remember to check the result for 0

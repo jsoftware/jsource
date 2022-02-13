@@ -93,8 +93,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 
   // Cost of allocating on the left comes
   // (1) now, as we use (asct*currenthi) units of index space
-  // (2) in the future, as all future allocations on the right lose index space,
-  // in the amount of (new left index end-right index end-future asct)*(width-currenthi).  We estimate future values to equal current ones.
+  // (2) in the hiprec, as all hiprec allocations on the right lose index space,
+  // in the amount of (new left index end-right index end-hiprec asct)*(width-currenthi).  We estimate hiprec values to equal current ones.
   // (3) now, if we have to clear the invalid area (1 store per word cleared)
   // BUT: if the cleared invalid area covers the entire p, we use asct rather than left-index+asct for calculating the other costs
   // The cost of a unit of index space is 1 store per (width*maxindex)/(asct*p) index-space unit, with asct and p rounded up if large;
@@ -359,9 +359,9 @@ static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
 }
 
 // Hash y, which is not a singleton.
-static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
- y=C(y);
- m=n=AN(y);
+static UI jthiau(J jt,A y){I m,n;UI z;X*u,x;
+ y=C(y); RZ(y)   // scaf must report error
+ m=n=AN(y); UC*v=UAV(y);
  if(!n)R 0;
  switch(AT(y)){
  case INT:  R hici(n,AV(y));
@@ -595,8 +595,8 @@ static __forceinline I icmpeq(I *a, I *w, I n) {
 // jtioz01 intolerant CMPX atom
 // jtioz0 intolerant CMPX array
 
-static IOFX(A,US,jtioax1,,cthia(~0LL,1.0,C(*v)),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
-static IOFX(A,US,jtioau,, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
+static IOFX(A,US,jtioax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1  )  /* boxed exact 1-element item */   
+static IOFX(A,US,jtioau,, hiau(*v),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
 static IOFX(X,US,jtiox,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,US,jtioq,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
 static IOFX(C,US,jtioc,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -607,8 +607,8 @@ static IOFX(Z,US,jtioz01,, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=a
 static IOFX(D,US,jtioc0,, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
 static IOFX(Z,US,jtioz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
-static IOFX(A,UI4,jtioax12,,cthia(~0LL,1.0,C(*v)),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
-static IOFX(A,UI4,jtioau2,, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
+static IOFX(A,UI4,jtioax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1  )  /* boxed exact 1-element item */   
+static IOFX(A,UI4,jtioau2,, hiau(*v),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
 static IOFX(X,UI4,jtiox2,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,UI4,jtioq2,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
 static IOFX(C,UI4,jtioc2,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -810,7 +810,7 @@ static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],    
 // boxed array with more than 1 box
 static IOFT(A,US,jtioa, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
-static IOFT(A,US,jtioa1,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj]),!equ(*v,av[hj]))
+static IOFT(A,US,jtioa1,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])))
 
 // hashes using the 4-byte hashtable
 // CMPLX array
@@ -824,7 +824,7 @@ static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],  
 // boxed array with more than 1 box
 static IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
-static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj]),!equ(*v,av[hj]))
+static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])))
 
 // ********************* third class: small-range arguments ****************************
 

@@ -318,17 +318,18 @@ typedef I SI;
 #define RATX 7
 #define RAT             ((I)1L<<RATX)         /* Q  rational number              */
 #define RATSIZE sizeof(Q)
-#define FUTUREX 8
-#define FUTURE          ((I)1L<<FUTUREX)  // if BOX set, this flag is set if the value is a future.  A future is an atomic box (which may be an element of an array).
-                                          // Task creation returns an atomic box (which is NOT a future) that CONTAINS a future.  Futures themselves never become results or arguments, because
-                                          // the value of a future may not be accessed except through C(future), which will return the address of the contents.  The address of the future (an A block)
-                                          // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that futures MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
+#define HIPRECX 8
+#define HIPREC          ((I)1L<<HIPRECX)  // if BOX set, this flag is set if the value is a hiprec.  A hiprec is an atomic box (which may be an element of an array).
+                                          // Task creation returns an atomic box (which is NOT a hiprec) that CONTAINS a hiprec.  A hiprec itself never becomes a result or argument, because
+                                          // the value of a hiprec may not be accessed except through C(hiprec), which will return the address of the contents.  The address of the hiprec (an A block)
+                                          // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that hiprecs MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
                                           // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
-                                          // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the future,  requires C(future).
-                                          // If the address of the future is being copied into another block, there is no need for C().  In particular, the future may be ra()'d if it is put into a recursive block.
-                                          // ra() on a future will affect the usecount of the future itself but NOT of the contents, because a future is always marked recursive.
-                                          // The AN of the 'atomic' future is initialized to 0, and AAV[0] is also 0.  When the future is resolved, the address of the
+                                          // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the hiprec,  requires C(hiprec).
+                                          // If the address of the hiprec is being copied into another block, there is no need for C().  In particular, the hiprec may be ra()'d if it is put into a recursive block.
+                                          // ra() on a hiprec will affect the usecount of the hiprec itself but NOT of the contents, because a hiprec is always marked recursive.
+                                          // The AN of the 'atomic' hiprec is initialized to 0, and AAV[0] is also 0.  When the hiprec is resolved, the address of the
                                           // result A block/error code is stored into AAV[0], and if there is no error, AN is set to 1.
+                                          // When a hiprec is created, ownership is transferred to the enclosing box via zap.  It is also active in the creating task.
 // Bit 9 unused
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */
@@ -511,7 +512,7 @@ typedef I SI;
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
-#define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0; ACIPNO(x);}else ra(x);}
+#define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0 ACIPNO(x);}else ra(x);}
 #define ACX(a)          {AC(a)=ACPERMANENT; AFLAG(a)|=AT(a)&RECURSIBLE;}
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
@@ -1022,7 +1023,6 @@ typedef struct {
 #define VMOD            (I)0x8000        /* function is m&|@g               */
 #define VLOCK           (I)0x10000        /* function is locked              */
 // bit 17 free
-// obsolete #define VNAMED          (I)0x20000       /* named explicit defn         */
 #define VFIX            (I)0x40000       /* f. applied                      */
 #define VXOPRX          19
 #define VXOPR           ((I)1<<VXOPRX)       /* : defn with u. and x.           */

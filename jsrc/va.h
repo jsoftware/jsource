@@ -254,14 +254,16 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
  }
 
 // suff must return the correct result
-#define APFX(f,Tz,Tx,Ty,pfx,pref,suff)   \
+#define APFXL(f,Tz,Tx,Ty,ldfn,pfx,pref,suff)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
   pref \
-  if(n-1==0)  DQ(m,               *z++=pfx(*x,*y); x++; y++; )   \
-  else if(n-1<0)DQ(m, u=*x++; DQC(n, *z++=pfx( u,*y);      y++;))   \
-  else      DQ(m, v=*y++; DQ(n, *z++=pfx(*x, v); x++;     ));  \
+  if(n-1==0)  DQ(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v); )   \
+  else if(n-1<0)DQ(m, u=ldfn(*x++); DQC(n, v=ldfn(*y++); *z++=pfx(u,v);))   \
+  else      DQ(m,  v=ldfn(*y++); DQ(n, u=ldfn(*x++); *z++=pfx(u, v);    ));  \
   suff \
  }
+
+#define APFX(f,Tz,Tx,Ty,pfx,pref,suff)  APFXL(f,Tz,Tx,Ty,,pfx,pref,suff)
 
 // TUNE as of 20210330 Skylake 2.5GHz
 // measurements with  2.5e9*(#i)%~(*/$a0)%~6!:2'3 : ''for. i do. a2>.a3 end. 0'' 0'  on length 1e3, aligned or not

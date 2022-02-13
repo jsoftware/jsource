@@ -52,35 +52,35 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  ARGCHK1(w);
  RZ(w1=ca(w)); u=AAV(w1);   // make a copy of the input, point to its value
  // the input is a boxed list.  The last 3 values are (name pqr);(index in which abc appeared in the x,y,... or -1 if it didn't);(original sentence queue including flags)
- p=1; m=AN(w)-3; v=AAV(w); c=i0(C(v[m+1]));   // get # items in list, and index of the matching one
+ p=1; m=AN(w)-3; v=AAV(w); c=i0(v[m+1]);   // get # items in list, and index of the matching one
  // Now audit the input names (including pqr), since we haven't properly stacked them & checked them etc.
  // p is set to 0 if an audit fails
- DO(m+1, x=symbrd(C(v[i])); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&!!(NOUN&AT(x)););  // verify names defined, and are nouns
+ DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&!!(NOUN&AT(x)););  // verify names defined, and are nouns
  if(p){
-  b=C(u[m]); n=AN(b); r=AR(b); s=AS(b); t=AT(C(*u));  // length, rank, shape, of pqr; type of first value in list
+  b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);  // length, rank, shape, of pqr; type of first value in list
   p=(t&DIRECT)>0&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
   if(p)DO(m, y=u[i]; if(!(TYPESEQ(t,AT(y))&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
  }
  // If the audit failed, the sentence might work, but we won't be doing it here.  Go run the original sentence
- if(!p)R PARSERVALUE(parse(C(v[m+2])));   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
+ if(!p)R PARSERVALUE(parse(v[m+2]));   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
  // We can do it here!  We split into two cases: Boolean pqr with two names in the list, which can never fail;
  // and all other, which may produce index error
  fauxblockINT(aafaux,4,1);
- if(q=2==m&&B01&AT(b)){bv=BAV(b); x=C(u[0]); y=C(u[1]);}  // fast case: exactly two names x and y
+ if(q=2==m&&B01&AT(b)){bv=BAV(b); x=u[0]; y=u[1];}  // fast case: exactly two names x and y
  else{   // slow case
   if(!ISDENSETYPE(AT(b),INT))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
   iv=AV(b);    // iv points to the input pqr
-  fauxINT(b,aafaux,m,1)  aa=AV(b); DO(m, aa[i]=(I)AV(C(u[i])););  // create b, which is a list of pointers to the values of the names
+  fauxINT(b,aafaux,m,1)  aa=AV(b); DO(m, aa[i]=(I)AV(u[i]););  // create b, which is a list of pointers to the values of the names
  }
  // Check to see if we can modify in-place.  We can do so only if abc was one of the two names on the right, and we have the
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
  // sure abc is locally defined
- if(p=q&&0<=c&&ACUC1>=AC(C(u[c]))) {  // passes quick check
-   p= (AN(jt->locsyms)==1) || CAV(C(QCWORD(AAV(C(v[m+2]))[1])))[0]!=CASGN || jtprobe((J)((I)jt+NAV(C(QCWORD(AAV(C(v[m+2]))[0])))->m),NAV(C(QCWORD(AAV(C(v[m+2]))[0])))->s,NAV(C(QCWORD(AAV(C(v[m+2]))[0])))->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
+ if(p=q&&0<=c&&ACUC1>=AC(u[c])) {  // passes quick check
+   p= (AN(jt->locsyms)==1) || CAV(QCWORD(AAV(v[m+2])[1]))[0]!=CASGN || jtprobe((J)((I)jt+NAV(QCWORD(AAV(v[m+2])[0]))->m),NAV(QCWORD(AAV(v[m+2])[0]))->s,NAV(QCWORD(AAV(v[m+2])[0]))->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
     // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
     // then look up the symbol entry for word[0]
  }
- if(p)z=C(u[c]); else GA(z,t,n,r,s);   // z = output area, which may be in-place
+ if(p)z=u[c]; else GA(z,t,n,r,s);   // z = output area, which may be in-place
 // switch((!q?12:!p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){   // choose a comparison based on data
 //  case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
 //  case  4: CASE2X(C);  case  5: CASE2X(I);  case  6: CASE2X(D);  case  7: CASE2X(Z);
@@ -127,7 +127,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 // cellframelen is the number of axes of w that were used in computing the cell indexes, complemented if ind is axes
 // ind is the assembled indices OR a pointer to axes[]
 static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
- ARGCHK3(a,w,ind);
+ ARGCHK2(a,w); RZ(ind);
  I surplusind=AR(ind)-cellframelen; surplusind=cellframelen<0?0:surplusind;  // get # extra axes in ind beyond the ones that selected cells.  for axes, all axes select
  ASSERT(AR(a)<=AR(w)+surplusind,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
  //   w w w w w
@@ -458,7 +458,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
 
 // Execution of x m} y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
 static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
- AD * RESTRICT ind=C(VAV(self)->fgh[0]);  // ind=m, the indexes to be modified
+ AD * RESTRICT ind; ind=C(VAV(self)->fgh[0]);  // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  if(likely(!ISSPARSE(AT(w)|AT(ind)))){
   // non-sparse.  The fast cases are: (1) numeric m; (2) single box m.  numeric m turns into a single list of validated indexes; single box m turns into

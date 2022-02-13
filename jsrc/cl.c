@@ -12,14 +12,14 @@
 static DF1(jtlev1){
  ARGCHK1(w);  // self is never 0
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[0];  // fetch verb and routine for leaf nodes.  Do it early
- if(levelle(w,AT(self))){R CALL1(fsf,w,fs);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack
+ if(levelle(jt,w,AT(self))){R CALL1(fsf,w,fs);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack
 }
 
 // Like monad, but AT(self) is left trigger level, AC(self) is the right trigger level 
 static A jtlev2(J jt,A a,A w,A self){
  ARGCHK2(a,w);
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[1];  // fetch verb and routine for leaf nodes.  Do it early
- I aready=levelle(a,AT(self)); I wready=levelle(w,AC(self));  // see if args are at the needed level
+ I aready=levelle(jt,a,AT(self)); I wready=levelle(jt,w,AC(self));  // see if args are at the needed level
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,
  // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
  // be achieved by altering the left/right levels, but Roger did it this way.
@@ -29,7 +29,8 @@ static A jtlev2(J jt,A a,A w,A self){
  // There may be a structure in the user's data that could be detected for branch prediction.
 }
 
-static I jtefflev(J jt,I j,A h,A x){I n,t; n=AV(h)[j]; R n>=0?n:(t=level(x),MAX(0,n+t));}
+//  convert negative level to level relative to bottom of h.  j is 0 for monad, 1/2 for dyad
+static I jtefflev(J jt,I j,A h,A x){I n,t; n=AV(h)[j]; R n>=0?n:(t=level(jt,x),MAX(0,n+t));}
 
 // execution of u L: n y.  Create the self to send to the recursion routine
 // L: and S: will be rarely used on pristine blocks, which be definition have all DIRECT contents & would thus be
@@ -70,14 +71,14 @@ static DF1(jtscfn){
 static DF1(jtlevs1){
  ARGCHK1(w);  // self is never 0
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[0];  // fetch verb and routine for leaf nodes.  Do it early
- if(levelle(w,AT(self))){RZ(scfn(CALL1(fsf,w,fs),self));} else{STACKCHKOFL RZ(every(w,self));}  // since this recurs, check stack
+ if(levelle(jt,w,AT(self))){RZ(scfn(CALL1(fsf,w,fs),self));} else{STACKCHKOFL RZ(every(w,self));}  // since this recurs, check stack
  R num(0);
 }
 
 static DF2(jtlevs2){
  ARGCHK2(a,w);
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[1];  // fetch verb and routine for leaf nodes.  Do it early
- I aready=levelle(a,AT(self)); I wready=levelle(w,AC(self));  // see if args are at the needed level
+ I aready=levelle(jt,a,AT(self)); I wready=levelle(jt,w,AC(self));  // see if args are at the needed level
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,
  // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
  // be achieved by altering the left/right levels, but Roger did it this way.

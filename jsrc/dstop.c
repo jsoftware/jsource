@@ -46,7 +46,7 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1;   // t->name we are looking for, n=its length, md=valence of call
  NOUNROLL while(s){
   NOUNROLL while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
-  u=strchr(s,'*'); v=strchr(s,' '); if(!v)break;; 
+  u=strchr(s,'*'); v=strchr(s,' '); if(!v)break; 
   if(!u||u>v)e=!strncmp(s,t,MAX(n,v-s));
   else{p=u-s; q=v-u-1; e=p<=n&&!strncmp(s,t,p)&&q<=n&&!strncmp(1+u,t+n-q,q);}
   if(e){s=1+v; if(stopsub(s,nw,md)){if(b){c=0; break;} c=1;}}

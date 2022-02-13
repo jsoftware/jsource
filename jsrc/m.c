@@ -284,7 +284,7 @@ static D jtspfor1(J jt, A w){D tot=0.0;
   case XNUMX: case BOXX:
    if(!ISSPARSE(AT(w))){
     if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
-     {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(C(wv[i]))););}
+     {DO(AN(w), if(wv[i])tot+=spfor1(C(QCWORD(wv[i]))););}
     }
     break;
    }
@@ -407,22 +407,23 @@ void jtspendtracking(J jt){I i;
 
 #if BW==64 && MEMAUDIT&2
 // Make sure all deletecounts start at 0
-static void auditsimverify0(A w){
+static void auditsimverify0(J jt,A w){
  if(!w)R;
  if(AFLAG(w)>>AFAUDITUCX)SEGFAULT;   // hang if nonzero count
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2))SEGFAULT; 
- if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
- if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(C(*v)); ++v;)}
+ if(AFLAG(w)&AFVIRTUAL)auditsimverify0(jt,ABACK(w));  // check backer
+ if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt,C(*v)); ++v;)}
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
   if((AT(w)&BOX+SPARSE)>0){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; otherwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimverify0((A)(intptr_t)((I)C(wv[i])+(I)wrel)););
+   DO(n, auditsimverify0(jt,(A)(intptr_t)((I)CNULL(QCWORD(wv[i]))+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
-   auditsimverify0(v->fgh[0]); auditsimverify0(v->fgh[1]); auditsimverify0(v->fgh[2]);
-  }else if(AT(w)&RAT|XNUM) {
+   auditsimverify0(jt,v->fgh[0]); auditsimverify0(jt,v->fgh[1]); auditsimverify0(jt,v->fgh[2]);
+  }else if(AT(w)&(RAT|XNUM)) {
+  }else if(AT(w)&(SYMB|NAME)) {
   }else SEGFAULT;  // inadmissible type for recursive usecount
  }
  R;
@@ -430,7 +431,7 @@ static void auditsimverify0(A w){
 
 // Simulate tpop on the input block.  If that produces a delete count that equals the usecount,
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
-static void auditsimdelete(A w){I delct;
+static void auditsimdelete(J jt,A w){I delct;
  if(!w)R;
  if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT;
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT;   // hang if too many deletes
@@ -439,7 +440,7 @@ static void auditsimdelete(A w){I delct;
   // we fa() the backer, while we mf() the block itself.  So if the backer is NOT recursive, we have to
   // handle nonrecursive children.  All recursible types will be recursive
   if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT;  // backer must be recursive
-  auditsimdelete(wb);  // delete backer of virtual block, recursibly
+  auditsimdelete(jt,wb);  // delete backer of virtual block, recursibly
  }
  if(delct==ACUC(w)&&!(AFLAG(w)&AFVIRTUAL)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if((AT(w)&BOX+SPARSE)>0){
@@ -447,22 +448,23 @@ static void auditsimdelete(A w){I delct;
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimdelete((A)(intptr_t)((I)C(wv[i])+(I)wrel)););
+   DO(n, auditsimdelete(jt,(A)(intptr_t)((I)CNULL(QCWORD(wv[i]))+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
-   auditsimdelete(v->fgh[0]); auditsimdelete(v->fgh[1]); auditsimdelete(v->fgh[2]);
-  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(*v); ++v;)
+   auditsimdelete(jt,v->fgh[0]); auditsimdelete(jt,v->fgh[1]); auditsimdelete(jt,v->fgh[2]);
+  }else if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(jt,*v); ++v;)
+  }else if(AT(w)&(SYMB|NAME)) {
   }else SEGFAULT;  // inadmissible type for recursive usecount
  }
  R;
 }
 // clear delete counts back to 0 for next run
-static void auditsimreset(A w){I delct;
+static void auditsimreset(J jt,A w){I delct;
  if(!w)R;
  delct = AFLAG(w)>>AFAUDITUCX;   // did this recur?
  AFLAG(w) &= AFAUDITUC-1;   // clear count for next time
  if(AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);
-  auditsimreset(wb);  // reset backer of virtual block
-  if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DQ(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimreset(*v); ++v;)}  // reset children
+  auditsimreset(jt,wb);  // reset backer of virtual block
+  if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DQ(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimreset(jt,*v); ++v;)}  // reset children
  }
  if(delct==ACUC(w)&&!(AFLAG(w)&AFVIRTUAL)&&(UCISRECUR(w))){  // if so, recursive reset
   if((AT(w)&BOX+SPARSE)>0){
@@ -470,10 +472,11 @@ static void auditsimreset(A w){I delct;
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimreset((A)(intptr_t)((I)C(wv[i])+(I)wrel)););
+   DO(n, auditsimreset(jt,(A)(intptr_t)((I)CNULL(QCWORD(wv[i]))+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
-   auditsimreset(v->fgh[0]); auditsimreset(v->fgh[1]); auditsimreset(v->fgh[2]);
-  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(*v); ++v;)
+   auditsimreset(jt,v->fgh[0]); auditsimreset(jt,v->fgh[1]); auditsimreset(jt,v->fgh[2]);
+  }else if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(jt,*v); ++v;)
+  }else if(AT(w)&(SYMB|NAME)) {
   }else SEGFAULT;  // inadmissible type for recursive usecount
  }
  R;
@@ -518,31 +521,31 @@ void audittstack(J jt){F1PREFIP;
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
-   if(*ttop)auditsimverify0(*ttop);
+   if(*ttop)auditsimverify0(jt,*ttop);
   }
   // back up to previous block
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
  // Process the NVR stack as well
- DO(jt->parserstackframe.nvrtop, auditsimverify0(nvrav[i]);)
+ DO(jt->parserstackframe.nvrtop, auditsimverify0(jt,nvrav[i]);)
  // loop through each block of stack
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
-   if(*ttop)auditsimdelete(*ttop);
+   if(*ttop)auditsimdelete(jt,*ttop);
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
  // simulate nvr-stack frees
- DO(jt->parserstackframe.nvrtop, if((AM(nvrav[i])-=AMNVRCT)==AMFREED){auditsimdelete(nvrav[i]);})
- DO(jt->parserstackframe.nvrtop, AM(nvrav[i])+=AMNVRCT)  // restore AMs
+ DO(jt->parserstackframe.nvrtop, if((AM(nvrav[i])-=AMNVRCT)==AMFREED){auditsimdelete(jt,nvrav[i]);})
+ DO(jt->parserstackframe.nvrtop, AM(nvrav[i])+=AMNVRCT;)  // restore AMs
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
-   if(*ttop)auditsimreset(*ttop);
+   if(*ttop)auditsimreset(jt,*ttop);
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
- DO(jt->parserstackframe.nvrtop, auditsimreset(nvrav[i]);)
+ DO(jt->parserstackframe.nvrtop, auditsimreset(jt,nvrav[i]);)
 #endif
 }
 
@@ -737,7 +740,7 @@ A jtgc(J jt,A w,A* old){
    // advisedly and we do not delete the backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
    // (backer count is now <2)
    I bc=AC(b); bc=bc>2?2:bc;  // backer count before tpop.  We will delete backer if value goes down, to a value less than 2.  
-   ACSET(w,2)  // protect w from being freed.  Safe to use 2, since any higher value implies the backer is protected
+   ACINCR(w);  // protect w from being freed.  Its usecount may be >1
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
    // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.
@@ -745,12 +748,13 @@ A jtgc(J jt,A w,A* old){
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
    else{
-    // if the backing block survives, w can continue as virtual; we must undo the increment above.  If the usecount was changed by the tpop, we must replace
-    // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value, which might
+    // if the backing block survives, w can continue as virtual; we must undo the increment above.  If the usecount was changed by the tpop, we don't know whether
+    // there is an extant free for the block on the stack, so we must replace the stack entry.
+    // Otherwise we can keep the stack entry we have, wherever it is, and we can also restore the usecount to its original value, which might
     // include inplaceability
-    if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
-    ACSET(w,c)  // restore initial usecount and inplaceability
-   }
+    if((c-AC(w))&ACPERMANENT){ACSET(w,c)  // count now is > original: the tpop didn't touch it. restore initial usecount and inplaceability
+    }else{tpush1(w);}  // if the stack entry for w was removed, restore it.  This undoes the effect of incrementing the usecount
+  }
   } else {
    // w was UNINCORPABLE.  That happens only if it is returned from a function called by the function in which it was created.  Therefore, w must not be on the stack
    // and we don't have to go through the trouble of protecting it.  And good thing, too, because if w is a faux block its backer has not had its usecount incremented, and
@@ -818,7 +822,7 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
    if((np=QCWORD(np))!=0){ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
-     // a future is always recursive; we can increment the future's usecount here but we will never go to the contents
+     // a hiprec is always recursive; we can increment the hiprec's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
   if(np=QCWORD(np)){ra(np);}  // handle last one
@@ -866,25 +870,27 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
-#if 0 // obsolete 
-     if((np=QCWORD(np))!=0){fanano0(np);}  // free it
-#else
      // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
      if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
       if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
-      else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
+      else{I c=AC(np);
+       // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
+       if(--c<=0){
+        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
+       }else ACSET(np,c)  // virtual block survives, decrement its count
+      }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
      }
-#endif
      np=np0;  // advance to next box
     };
-#if 0 // obsolete 
-    if((np=QCWORD(np))!=0){fanano0(np);}  // free it
-#else  // could do this by branching back if --n==0
     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun
      if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
-     else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
+     else{I c=AC(np);
+      // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
+      if(--c<=0){
+       A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
+      }else ACSET(np,c)  // virtual block survives, decrement its count
+     }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
     }
-#endif
    }
   } else if(t&NAME){A ref;
    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference

@@ -167,15 +167,12 @@ static DF2(jtkey);
 
 
 static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
-// obsolete D ctold=jt->ct;
  ARGCHK2(a,w);
- // obsolete jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
  SETIC(a,n); av=AV(a);
  RZ(j=grade1(a)); jv=AV(j);  // get grading permutation for the self-indexes.  This groups the partitions
  GATV0(p,B01,n,1); pv=BAV(p);   // allocate boolean fret mask
  DO(n, c=d; d=av[*jv++]; *pv++=c<d;);  // d=self-index of current output value (always ascending).  When the value changes, that's a fret
  df2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));  // z = frets u;.1 j{w
- // obsolete jt->ct=ctold;
  EPILOG(z);
 }    /* a f/. w where a is i.~x for dense x  */
 
@@ -189,13 +186,6 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  j=0; I sparsefound=0; DO(c, if(u[i]>=k){sparsefound=1; break;} if(u[i]==v[i])++j;);  // j = # unique values in w before the first fill element
  RZ(b=ne(e,x));  // b = mask of values in i.~ w that are different from the sparse element  ?? can't be any
  RZ(by=repeat(b,y));   // by=indexes of values in i.~ a that are different from the sparse element 
-// obsolete  I nfills=SETIC(w,k)-bsum(c,BAV(b));  // number of cells of fill
-// obsolete  x=SPA(p,x); u=AV(x);
-// obsolete  y=SPA(p,i); v=AV(y);
-// obsolete  e=SPA(p,e); k=i0(e); 
-// obsolete  j=0; DO(AN(x), if(k<=u[i])break; if(u[i]==v[i])++j;);
-// obsolete  RZ(b=ne(e,x));
-// obsolete  RZ(by=repeat(b,y));
  RZ(z=key(repeat(b,x),from(ravel(by),w),self));  // run the key operation on the non-sparse elements
  if(AN(by)<n){  // if the number of non-sparse items is less than the number of items, we must work on a sparse cell
   // Create a partition for the sparse cells.  We create a sparse vector with 1 as the sparse element
@@ -516,7 +506,6 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    // copy the data to the end of its partition and advance the input pointer
    JMCR(partitionptr,wv,celllen,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
-// scaf sparse
    av=(I*)((I)av+k);  // advance to next input value
   }
  }

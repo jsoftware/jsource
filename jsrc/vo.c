@@ -6,24 +6,26 @@
 #define ZZDEFN
 #include "result.h"
 
-I level(A w){A*wv;I d,j;
+I level(J jt,A w){A*wv;I d,j;
+ ARGCHK1(w);
  if((-AN(w)&-(AT(w)&BOX))>=0)R 0;
  d=0; wv=AAV(w);
- DQ(AN(w), j=level(C(wv[i])); d=d<j?j:d;);
+ DQ(AN(w), j=level(jt, C(wv[i])); d=d<j?j:d;);
  R 1+d;
 }
 
 // return 0 if the level of w is greater than l, 1 if <=
 // terminates early if possible
-I levelle(A w,I l){
+I levelle(J jt,A w,I l){
+ ARGCHK1(w);
  if((-AN(w)&-(AT(w)&BOX))>=0)R SGNTO0(~l);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
- DO(AN(w), if(!levelle(C(wv[i]),l))R 0;);  // stop as soon as we see level big enough
+ DO(AN(w), if(!levelle(jt,C(wv[i]),l))R 0;);  // stop as soon as we see level big enough
  R 1;  // if it never gets big enough, say so, keep looking
 }
 
-F1(jtlevel1){ARGCHK1(w); R sc(level(w));}
+F1(jtlevel1){ARGCHK1(w); R sc(level(jt,w));}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
@@ -46,9 +48,9 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    // Keep the result nonrecursive and don't realize any virtuals, knowing that they will be be realized if necessary before they are incorporated later.  They will be freed in the caller
    // If the input is DIRECT and abandoned inplaceable non-virtual, mark the result as PRISTINE
    AFLAGINIT(z,(-(wt&DIRECT))&((aband)<<AFPRISTINEX)&~(waf<<(AFPRISTINEX-AFVIRTUALX)))
-   ACIPNO(w);  // w must be protected while it is in the box from argument deletion
+   INCORPNCUI(w); ACIPNO(w);  // realize unincorpable (but not virtual); w must be protected while it is in the box from argument deletion
   }
-  AAV0(z)[0]=w;  // install the address of the (possibly realized) input
+  AAV0(z)[0]=HIPIFARTIF(w,AFLAG(z));  // install the address of the (possibly realized) input
  } else {
   // <"r
 #ifdef BOXEDSPARSE
@@ -88,7 +90,6 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    }
    wv+=k; 
   }
-// obsolete  if(!((I)jtinplace&JTWILLBEOPENED))jt->tnextpushp=pushxsave;   // restore tstack pointer
   // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
   if(unlikely((I)jtinplace&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
   jt->tnextpushp=pushxsave;   // restore tstack pointer
@@ -180,8 +181,9 @@ F2PREFIP;ARGCHK2(a,w);
    AFLAGANDLOCAL(w,((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE)  // stays PRISTINE if abandoned DIRECT
    // if w is recursive, or WILLOPEN is not set, realize any virtual a.  Virtual a allowed only in WILLOPEN nonrecursive result
    if(likely((AFLAG(w)|~optype)&BOX))realizeifvirtual(a)
-   if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0,c&=~ACINPLACE;)}else{ACIPNO(a)} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
    AFLAGPRISTNO(a)   // since a is incorporated, it can't be PRISTINE
+   if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0,c&=~ACINPLACE;)}else{ACIPNO(a)} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
+   a=HIPIFARTIF(a,AFLAG(w));
   }
   // a has the new value to add at the front of the list
   AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; AAV(w)[0]=a;  // install a at front, add to counts
@@ -633,7 +635,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
- if(1==n){RZ(z=C(*v)); PRISTCLRF(w) R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
+ if(1==n){z=C(*v); PRISTCLRF(w) R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
  // If there is more than 1 box w can remain pristine, because the (necessarily DIRECT) contents are copied to a new block
  // scan the boxes to create the following values:
  // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents
@@ -677,7 +679,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   I nitems=AS(w)[0];  // total # result items is stored in w
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
   zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
-  // loop through the boxes copying the data into sequential output positions.  Futures are impossible
+  // loop through the boxes copying the data into sequential output positions.  hiprec impossible
   DO(n, y=v[i]; d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;)
  }
 

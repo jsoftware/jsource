@@ -87,7 +87,7 @@ typedef struct rngdata {
 // end of cacheline 0
  A filler;            // UNUSED
  S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task
- S ntasks;     // number of futures allowed, 0 if none
+ S ntasks;     // number of hiprecs allowed, 0 if none
  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
  UI cstackinit;       // C stack pointer at beginning of execution init for task
  I bytes;            // bytes currently in use - used only during 7!:1 clear for task

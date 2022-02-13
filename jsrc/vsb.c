@@ -209,7 +209,7 @@ static statusEnum insert(J jt, I key) {
     *  allocate node for data and insert in tree  *
     ***********************************************/
 
-    /* find future parent */
+    /* find hiprec parent */
     current = ROOT;  /* jt-> root points to the int value of the root symbol */
     parent = to_the_left = to_the_right = 0;
 

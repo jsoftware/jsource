@@ -44,8 +44,8 @@ static I jtpad(J jt,A a,A w,C*zv){C dash,*u,*v,*wv;I c,d,r,*s;
 
 static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
  RZ(t=trc(w)); u=AAV(t);
- x=u[0]; xn=AN(x); xv=AV(x); m=0; DO(xn,m+=xv[i];);
- y=u[1]; yn=AN(y); yv=AV(y);
+ x=C(u[0]); xn=AN(x); xv=AV(x); m=0; DO(xn,m+=xv[i];);
+ y=C(u[1]); yn=AN(y); yv=AV(y);
  RZ(p=v2(0L,0L));  pv=AV(p);
  GATV0(z,BOX,yn,1); zv=AAV(z);
  u=AAV(w);

@@ -705,6 +705,7 @@ extern DF1(jteveryself);
 extern DF2(jtevery2self);
 extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
+extern I        jtextendunderlock(J,A*,US*,I);
 extern L*       jtextnvr(J,L*);
 extern void     jtfamf(J,AD * RESTRICT,I);
 extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
@@ -942,6 +943,10 @@ extern void     va1primsetup(A);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
 extern D        xdouble(X);
+#if HIPRECS
+extern void     readlock(S*,S);
+extern void     writelock(S*,S);
+#endif
 #if C_AVX2 || EMU_AVX2
 extern I        memcmpne(void*, void*, I);
 #else

@@ -189,100 +189,130 @@ typedef JTT* JJ;  // thread-specific part of struct
 
 // Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
 typedef struct JSTstruct {
-// shared area
+// shared area.  To implement critical regions we use locks in this struct.  To get best use of cache, we put the lock for
+// a function in the same cacheline as the data used by the function.  To avoid false cacheline sharing, we have to make sure that only
+// very-seldom-referenced data inhabits a cacheline that contains a lock.
+// Cacheline 0 is special, because it contains adbreak, which is checked very frequently by all threads.  Therefore, to keep this cacheline
+// in S state we must have everything else in the line be essentially read-only.
  C* adbreak;		// must be first! ad mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
-
-// parsing, lookup, explicit definition execution
- A stloc;            /* locales symbol table                            */
- L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
- A slist;            // boxed list of filenames used in right arg to 0!:, matches the entries made in sn fiels of L blocks
+ A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
+ A slist;            // boxed list of filenames used in right arg to 0!:, matches the entries made in sn field of L blocks
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
  UC dbuser;           /* user-entered value for db          migrated             */
-#if MEMAUDIT & 2
- C audittstackdisabled;   // set to 1 to disable auditing
-#endif
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
 // 2 bytes free
-
 // stuff used during verb execution
  void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
-// end of cache line 0
- A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
- I igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
- I dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
- I zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
- A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
- C baselocale[4];    // will be "base"
- UI4 baselocalehash;   // name hash for base locale
- A zpath;    // path 'z', used for all initial paths
- I cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores
-// end of cache line 1
- A sbu;              /* SB data for each unique symbol                  */
- A p4792;            // pointer to p: i. 4792, filled in on first use
+// end of cacheline 0
 
-// DLL stuff
+// Cacheline 1: DLL variables
  A cdarg;            /* table of 15!:0 parsed left arguments            */
- A cdhash;           // hash table of cdstr strings into cdarg// end of cache line 0
+ A cdhash;           // hash table of cdstr strings into cdarg
  A cdhashl;          // hash table of cdstr strings into module index
- A cdstr;            /* strings for cdarg                               */
-
-// file stuff
- A flkd;             /* file lock data: number, index, length           */
- A fopa;             /* open files boxed names                          */
-// end of cache line 2
- A fopf;             /* open files corresp. file numbers                */
-
-// little-used stuff
- A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms
- D tssbase;          /* initial 6!:0''                            */
+ A cdstr;            // strings for cdarg/cdhashl
+ S cdlock;           // r/w lock for cdarg/cdhashl
+ // rest of cacheline used only in exceptional paths
+// 6 bytes free
+#if MEMAUDIT & 2
+ C audittstackdisabled;   // set to 1 to disable auditing
+#endif
  A iep;              /* immediate execution phrase                      */
+ A xep;              /* exit execution phrase                           */
  A pma;              /* perf. monitor: data area                        */
- A evm;              /* event messages                                  */
+// end of cacheline 1
+
+// Cacheline 2: J symbol pool
+ L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
+ S symlock;          // r/w lock for symbol pool
+ // rest of cacheline used only in exceptional paths
+// 2 bytes free
  I4 outmaxafter;      /* output: maximum # lines after truncation        */
  I4 outmaxbefore;     /* output: maximum # lines before truncation       */
  I4 outmaxlen;        /* output: maximum line length before truncation   */
- B retcomm;          /* 1 iff retain comments and redundant spaces      */
- UC seclev;           /* security level                                  */
- C locsize[2];       /* size indices for named and numbered locales     */
- C bx[11];               /* box drawing characters                          */
- UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo   migrated*/
- B sesm;             /* whether there is a session manager      migrated        */
- C nfe;              /* 1 for J native front end            migrated            */
- C oleop;            /* com flag to capture output          migrated            */
- UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
-// end of cache line 3
- UC disp[7];          /* # different verb displays                       */
-// 1 byte free
-
 // front-end interface info
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
  void *sminput;
  void *smoutput;
+ I filler2[2];    // 2 words free
+// end of cacheline 2
+
+// Cacheline 3: Locales
+ A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
+ A stloc;            // named locales symbol table
+ S stlock;           // r/w lock for stnum/stloc
+ // rest of cacheline used only in exceptional paths
+// 6 bytes free
+ A evm;              /* event messages                                  */
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
-// end of cache line 4
- C *breakfn;  // [NPATH];   /* break file name                                 */
- C* capture;          /* capture output for python->J etc.               */
- UI smoption;         /* wd options, see comment in jtwd                 */
- I sm;               /* sm options set by JSM()                         */
- I int64rflag;       /* com flag for returning 64-bit integers          */
- I transposeflag;    /* com flag for transposed arrays                  */
+ I filler3[2];    // 2 words free
+// end of cacheline 3
+
+// Cacheline 4: Files
+ A flkd;             /* file lock data: number, index, length           */
+ A fopa;             /* open files boxed names                          */
+ A fopf;             /* open files corresp. file numbers                */
+ S flock;            // r/w lock for flkd/fopa/fopf
+ // rest of cacheline used only in exceptional paths
+ UC sm;               /* sm options set by JSM()                         */
+ C smoption;         // wd options, see comment in jtwd
+ UC int64rflag;       /* com flag for returning 64-bit integers          */
+ UC transposeflag;    /* com flag for transposed arrays                  */
+// 2 bytes free
  void *iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I iomalloclen;   // length of the allocated block (in case we can reuse it)
-// end of cache line 5
- UI qtstackinit;      // jqt front-end C stack pointer    
+ UI qtstackinit;      // jqt front-end C stack pointer
+ I filler4[1];      // 1 word free
+// end of cacheline 4
+
+// Cacheline 5: User symbols
+ A sbu;              /* SB data for each unique symbol                  */
+ S sblock;           // r/w lovk for sbu
+ // rest of cacheline used only in exceptional paths
+// 6 bytes free
  I* breakfh;          /* win break file handle                           */
  I* breakmh;          /* win break map handle                            */
- A xep;              /* exit execution phrase                           */
+ I peekdata;         /* our window into the interpreter                 */
+ C *breakfn;  // [NPATH];   /* break file name                                 */
+ C *capture;          // capture output for python->J etc.  scaf could be byte?
+ I filler5[1];      // 1 word free
+// end of cacheline 5
 
-// debug info
+// Cacheline 6: debug, which is written so seldom that it can have read-only data
  A dbstops;          /* stops set by the user                           */
  A dbtrap;           /* trap, execute on suspension                     */
- I peekdata;         /* our window into the interpreter                 */
+ S dblock;           // lock on dbstops/dbtrap
+ // rest of cacheline is essentially read-only
+ C locsize[2];       /* size indices for named and numbered locales     */
+ C baselocale[4];    // will be "base"
+ B retcomm;          /* 1 iff retain comments and redundant spaces      */
+ UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
+// 2 bytes free
+ UI4 baselocalehash;   // name hash for base locale
+ I igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
+ I dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
+ I zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
+ A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms
+// end of cacheline 6
+
+// Cacheline 7: no locks, essentially read-only
+ UI4 cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores
+ B sesm;             /* whether there is a session manager             */
+ C nfe;              /* 1 for J native front end                    */
+ C oleop;            /* com flag to capture output                    */
+ UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
+ UC seclev;           /* security level                                  */
+ UC disp[7];          /* # different verb displays                       */
+ C bx[11];               /* box drawing characters                          */
+// 5 bytes free
+ A zpath;    // path 'z', used for all initial paths
+ A p4792;            // pointer to p: i. 4792, filled in on first use
+ D tssbase;          /* initial 6!:0''                            */
+// end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
 } JST;   // __attribute__((aligned(JTALIGNBDY))) biot allowed

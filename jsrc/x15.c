@@ -174,21 +174,23 @@ typedef float (_cdecl    *ALTCALLF)();
 typedef struct {
  FARPROC fp;                    /* proc function address                */
  HMODULE h;                     /* library (module) handle              */
- I ai;                          /* argument string index in cdstr      */
- I an;                          /* argument string length               */
- I li;                          /* library name index in cdhashl          */
- I ln;                          /* library name length                  */
- I pi;                          /* proc name index in cdhash             */
- I pn;                          /* proc name length                     */
- I n;                           /* number of arguments (excl. result)   */
- I zt;                          /* result jtype                         */
+ I4 ai;                          /* argument string index in cdstr      */
+ I4 li;                          // library name index in cdstr - set nonzero in cdlookup to indicate that the current cc has a new libary name
+// obsolete  I4 pi;                          /* proc name index in cdhash             */
+ UI4 zt;                          /* result jtype                         */
+ US an;                          /* argument string length               */
+ US ln;                          // library name length
+// obsolete  US pn;                          /* proc name length                     */
+ S n;                           /* number of arguments (excl. result)   */
  C cc;                          /* call class: 0x00 or '0' or '1'       */
  C zl;                          /* result type letter                   */
  B zbx;                         /* > 1 iff result is boxed              */
  B fpreset;                     /* % 1 iff do FPRESET after call        */
  B alternate;                   /* + 1 iff alternate calling convention */
- C star[NCDARGS];               // arguments star or not: 0=not 1=* 2=&
- C tletter[NCDARGS];            /* arguments type letters, cwusi etc.   */
+ struct {
+  C star;               // arguments star or not: 0=not 1=* 2=&
+  C tletter;            /* arguments type letters, cwusi etc.   */
+ } starlett[NCDARGS];   // flag/letter per arg
 } CCT;
 
 #if SY_64 && SY_WIN32
@@ -683,11 +685,11 @@ static void convertup(I*pi,I n,C t){I j=n;
 
 /* cache of 15!:0 parsed left arguments                                 */
 /*                                                                      */
-/* cdarg   - append-only table of parsed results                        */
-/*           rows are interpreted by CCT                                */
+// cdarg   - append-only table of parsed results - rank 0
+//           each entry is pointer to the A block for the CCT of the string (which is in the IAV1 of the block)
 /*           when space runs out allocation is doubled                  */
 // AM(cdarg) is # rows filled
-/* cdstr   - append-only table of 15!:0 left argument strings verbatim  */
+// cdstr   - append-only table of 15!:0 left argument strings verbatim - rank 0
 /*           indexed by ai and an in the CCT struct                     */
 /*           when space runs out allocation is doubled                  */
 // AM(cdstr) is # bytes allocated
@@ -707,10 +709,11 @@ static A jtcdgahash(J jt,I n){A z;I hn;
 }
 
 B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
- RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdarg)=x;
- RZ(INITJT(jjt,cdhash) =cdgahash(4*AS(INITJT(jjt,cdarg))[0]));
- RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16           ));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
- RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdstr)=x;  // AR is used as the lock for cds.  Do this last; it indicates validity for all
+// obsolete  RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdarg)=x;
+ RZ(x=exta(BOX,0L,1L,100L )); ACINITZAP(x) INITJT(jjt,cdarg)=x;  // allocate indirect pointers to CCT blocks
+ RZ(INITJT(jjt,cdhash) =cdgahash(4*AN(INITJT(jjt,cdarg))));  // start with 4x allocation for the strings.  We will reallocate when it gets to 2x.
+ RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
+ RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdstr)=x;  //  Do this last; it indicates validity for all
  AM(INITJT(jjt,cdstr))=AM(INITJT(jjt,cdarg))=AM(INITJT(jjt,cdhash))=AM(INITJT(jjt,cdhashl))=0;  // init all tables to empty
  R 1;
 }
@@ -722,26 +725,28 @@ B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
 #define HASHINDEX(tbl,n,v) ((hic(n,v)*(UIL)AN(tbl))>>32)
 #endif
 
-// see if v->string (length n) is in hashtable tbl.  The hash in tbl contains indexes into cdarg, or -1 for empty slot.
+// see if v->string (length nn) is in hashtable tbl.  The hash in tbl contains indexes into cdarg, or -1 for empty slot.
 // return retval, where pv[k] is the address of the found slot in cdarg
-#define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); CCT*pv=(CCT*)CAV2(JT(jt,cdarg)); \
- NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
+// obsolete #define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); CCT*pv=(CCT*)CAV2(JT(jt,cdarg)); \
+// obsolete  NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
+#define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); A *pv=AAV0(JT(jt,cdarg)); \
+ NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==((CCT*)IAV1(pv[k]))->pvklett##n&&!memcmpne(vv,s+((CCT*)IAV1(pv[k]))->pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
 
-// add v->string (length n) to hashtable tbl.  argx is the index to insert into the hashtable.  Increment AM(tbl), which contains the # hashed items
+// add the index argx into the hashtable tbl for the key v->string (length n).  argx is an index into cdarg.  Increment AM(tbl), which contains the # hashed items
 #define HASHINSERT(tbl,n,v,argx) I j=HASHINDEX(tbl,n,v); I *hv=IAV0(tbl); ++AM(tbl); NOUNROLL while(hv[j]>=0)if(--j<0)j+=AN(tbl); hv[j]=argx;
 
 
 // a is a string block for a cd string
 // result is the address in cdarg of the CCT block for the string, or 0 if not found
 static CCT*jtcdlookup(J jt,A a){
- HASHLOOKUP(JT(jt,cdhash),AN(a),UAV(a),a,&pv[k])
+ HASHLOOKUP(JT(jt,cdhash),AN(a),UAV(a),a,((CCT*)IAV1(pv[k])))
 }
 
 // av->null-terminated name of library
 // result is h field of the entry in cdarg for the library.  This entry may come from any CCT that matches the library name
 static HMODULE jtcdlookupl(J jt,C*av){
  I an=strlen(av);
- HASHLOOKUP(JT(jt,cdhashl),an,av,l,pv[k].h)
+ HASHLOOKUP(JT(jt,cdhashl),an,av,l,((CCT*)IAV1(pv[k]))->h)
 }
 
 // add a hash entry for a cd left arg.  It is known not to be present already
@@ -749,24 +754,53 @@ static HMODULE jtcdlookupl(J jt,C*av){
 // cc->parsed CCT block
 // the string is appended to the end of cdstr, and its offset is installed into cc->ai (cc->an is already filled in)
 // the CCT is appended to cdarg, and then the string is hashed into cdhash
-// result is the address of the CCT entry (which is in cdarg)
-// if the hash table gets too full, it is reallocated & rehashed
-// if the string table or the table of CCTs gets full it is extended
-static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;C*s;CCT*pv,*z;I an,hn,k;
+// result is the address of the permanent CCT entry, which is a permanent block that we allocate here & copy input cc into
+// return 0 if error
+static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;A z;I an,hn,k;
+ // Make a copy of the valid part of cc where it will reside forever, and point cc to it
+ I cclen=offsetof(CCT, starlett)+cc->n*sizeof(cc->starlett[0]); GAT0(z,LIT,cclen,1) ACINITZAP(z)  MC(IAV1(z),cc,cclen); cc= (CCT*)IAV1(z);
  an=AN(a);
- NOUNROLL while(AM(JT(jt,cdstr)) > AN(JT(jt,cdstr))-an){I oldm=AM(JT(jt,cdstr)); RZ(JT(jt,cdstr)=ext(1,JT(jt,cdstr))); AM(JT(jt,cdstr))=oldm;}  // double allocations as needed, keep count
- NOUNROLL while(AM(JT(jt,cdarg))==AS(JT(jt,cdarg))[0]){I oldm=AM(JT(jt,cdarg)); RZ(JT(jt,cdarg)=ext(1,JT(jt,cdarg))); AM(JT(jt,cdarg))=oldm;}
- s=CAV(JT(jt,cdstr)); pv=(CCT*)AV(JT(jt,cdarg));
- cc->ai=AM(JT(jt,cdstr)); MC(s+AM(JT(jt,cdstr)),CAV(a),an); AM(JT(jt,cdstr))+=an;
- z=pv+AM(JT(jt,cdarg)); MC(z,cc,sizeof(CCT)); k=AM(JT(jt,cdarg));
- if(AN(JT(jt,cdarg))<=2*AM(JT(jt,cdarg))){RZ(x=cdgahash(2*AM(JT(jt,cdarg)))); fa(JT(jt,cdhash)); JT(jt,cdhash)=x; AM(JT(jt,cdarg))=k; AM(JT(jt,cdhash))=0; k=0;}  // reallo if needed, and signal to rehash all
- // insert the last k elements of pv into the table.  This will be either all of them (on a rehash) or just the last 1.
- ++AM(JT(jt,cdarg)); DQ(AM(JT(jt,cdarg))-k, HASHINSERT(JT(jt,cdhash),pv[k].an,s+pv[k].ai,k) ++k;);  // add 1 ele to cdarg, and all or 1 to cdhash
- R z;
+ // add the new string - under lock.  If table extensions are required we perform any necessary allocations outside the lock
+ 
+ WRITELOCK(JT(jt,cdlock));
+
+ NOUNROLL while(AM(JT(jt,cdstr)) > AN(JT(jt,cdstr))-an)RZ(jtextendunderlock(jt,&JT(jt,cdstr),&JT(jt,cdlock),0))
+// obsolete I oldm=AM(JT(jt,cdstr)); RZ(JT(jt,cdstr)=ext(1,JT(jt,cdstr))); AM(JT(jt,cdstr))=oldm;  // double allocations as needed, keep count
+ C *s=CAV0(JT(jt,cdstr)); 
+ cc->ai=AM(JT(jt,cdstr)); MC(s+AM(JT(jt,cdstr)),CAV(a),an); AM(JT(jt,cdstr))+=an;  // put addr of next string ito cc; move the string; add its length to table len
+ // add the pointer to the new cc - under lock
+ NOUNROLL while(AM(JT(jt,cdarg))==AN(JT(jt,cdarg))){RZ(jtextendunderlock(jt,&JT(jt,cdarg),&JT(jt,cdlock),0)) s=CAV0(JT(jt,cdstr));}
+// obsolete {I oldm=AM(JT(jt,cdarg)); RZ(JT(jt,cdarg)=ext(1,JT(jt,cdarg))); AM(JT(jt,cdarg))=oldm;}
+ k=AM(JT(jt,cdarg));   // index of the string to be inserted
+ A *pv=AAV0(JT(jt,cdarg));
+ pv[k]=z;   // copy the cc to a new block.
+ ++AM(JT(jt,cdarg));
+ // if requested, hash the libary name into cdhashl - under lock
+ if(cc->li>=0){
+  /* assumes the hash table for libraries (JT(jt,cdhashl)) is fixed sized */
+  // a new lib was loaded and verified.  Add it to cdhashl, pointing to the arg block
+  if(AM(JT(jt,cdhashl))<AN(JT(jt,cdhashl))) {
+   cc->li+=cc->ai; HASHINSERT(JT(jt,cdhashl),cc->ln,s+cc->li,k)   // convert string offset to offset inside strings table; hash the library
+  }else cc=0;  // no room to insert - we will have to fail the operation.  This sucks, because we wait for the table to totally fill
+ }
+// obsolete z=pv+AM(JT(jt,cdarg));
+ // hash the new string into cdhash, possibly resizing the hashtable - under lock
+ if(AN(JT(jt,cdhash))<=2*AM(JT(jt,cdarg))){RZ(jtextendunderlock(jt,&JT(jt,cdhash),&JT(jt,cdlock),1)) s=CAV0(JT(jt,cdstr)); pv=AAV0(JT(jt,cdarg)); k=AM(JT(jt,cdarg));}
+// obsolete {RZ(x=cdgahash(2*AM(JT(jt,cdarg)))); fa(JT(jt,cdhash)); JT(jt,cdhash)=x; AM(JT(jt,cdarg))=k; AM(JT(jt,cdhash))=0; k=0;}  // reallo if needed, and signal to rehash all
+ // insert any elements into the hash that aren't there already.  The strings are in cdarg.  Usually the only string to add is
+ // the last one, but it is also possible that there are none to add (if someone else got in and resized/rehashed the array), or perhaps
+ // we have to hash everything (if we ourselves just did a resize).  AM(cdhash) tells how many atoms are valid, and we install any others
+ DQ(AM(JT(jt,cdarg))-k, HASHINSERT(JT(jt,cdhash),((CCT*)IAV1(pv[k]))->an,s+((CCT*)IAV1(pv[k]))->ai,k) ++k;);  // add 1 ele to cdarg, and all or 1 to cdhash
+
+ WRITEUNLOCK(JT(jt,cdlock));
+ ASSERT(cc!=0,EVFACE)  // give message if we couldn't insert library name into library hash
+
+ R cc;  // return the address of the CC block after we copied it to a safe place
 }
 
-
-static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
+// given a cc block being created, and pointers to strings for the library and procedure, fill in the pointers to
+// the library and procedure.  cc->li has been initialized with the offset of the library name in the cd string - not used here, but set to -1 to SUPPRESS hashing the library name
+static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
  /* not all platforms support GetModuleHandle, so we do it ourselves */
  /* we match on exactly the arg the user supplied                    */
  /* search path and case can cause us to reload the same dll         */
@@ -778,10 +812,11 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
   sprintf(buf,FMTI,k); if(0>k)*buf='_';
   CDASSERT(!strcmp(proc,buf),DEBADFN);
   cc->fp=(FARPROC)k;
+  cc->li=-1;  // suppress hashing library name
   R cc;
  }
- if(h=cdlookupl(lib))cc->h=h;  // if lib is in hash table, use the handle for it.  Save the handle to match other hasshes later
- else{
+ if(h=cdlookupl(lib)){cc->h=h; cc->li=-1;    // if lib is in hash table, use the handle for it.  Suppress rehashing the library
+ }else{
   CDASSERT(AM(JT(jt,cdhashl))<NLIBS,DETOOMANY);    /* too many dlls loaded */
 #if SY_WIN32
 #if SY_WINCE
@@ -800,7 +835,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
 #if SYS & SYS_UNIX
   CDASSERT(h=dlopen((*lib)?lib:0,RTLD_LAZY),DEBADLIB);
 #endif
-  cc->h=h; ha=1;
+  cc->h=h;   // remember the handle; leave cc->li set to cause the library name to be hashed into cdhashl
  }
 #if SY_WIN32 && !SY_WINCE
  f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):(LPCSTR)proc);
@@ -813,12 +848,6 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
 #endif
  CDASSERT(f!=0,DEBADFN);
  cc->fp=f;
- /* assumes the hash table for libraries (JT(jt,cdhashl)) is fixed sized */
- /* assumes cc will be cached as next entry of JT(jt,cdarg)              */
- if(ha){
-  // a new lib was loaded and verified.  Add it to the hash
-  HASHINSERT(JT(jt,cdhashl),cc->ln,lib,AM(JT(jt,cdarg)))
- }
  R cc;
 }
 
@@ -858,20 +887,23 @@ static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r
 /*  &         pointer NOT requiring memu                        */
 /*  n   INT   no result (integer 0)                             */
 
-static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,li,pi;
+static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,pi;
  ASSERT(LIT&AT(a),EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(NLEFTARG>=AN(a),EVLIMIT);
- if(cc=cdlookup(a))R cc;
+ READLOCK(JT(jt,cdlock)); cc=cdlookup(a); READUNLOCK(JT(jt,cdlock));  // see if the string has been encountered before.  The CCT itself is permanent
+ if(cc)R cc;   // if the string is cached, use the cc block for it
  cc=&cct; cc->an=an=AN(a); s=s0=CAV(str0(a));
  /* library (module, file) name */
- NOUNROLL while(*s==' ')++s; p=*s=='"'?strchr(++s,'"'):strchr(s,' '); li=s-s0; cc->ln=p?p-s:0;
+ NOUNROLL while(*s==' ')++s; p=*s=='"'?strchr(++s,'"'):strchr(s,' '); cc->li=s-s0; cc->ln=p?p-s:0;
  CDASSERT(p&&NPATH>cc->ln,DEBADLIB);
  cc->cc=1==cc->ln&&('0'==*s||'1'==*s)?*s:0;
  /* procedure name */
  s=p+1+(I )(*p=='"');
- NOUNROLL while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0; cc->pn=p-s;
- CDASSERT(NPATH>cc->pn,DEBADFN);
+ NOUNROLL while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0;
+ I procnamelen=p-s;  // length of proc name
+// obsolete  cc->pn=p-s;
+ CDASSERT(NPATH>procnamelen,DEBADFN);
  /* > + % */
  s=p+1;
  cc->zbx      =1; NOUNROLL while(*s==' ')++s; if('>'==*s){cc->zbx      =0; ++s;}
@@ -906,20 +938,20 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   if(' '==c)continue;
   ++i; der=DEDEC+256*(1+i);
   CDASSERT(i<NCDARGS,DECOUNT);
-  cc->tletter[i]=0; cc->star[i]=0;
+  cc->starlett[i].tletter=0; cc->starlett[i].star=0;
   CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // verify result type is allowed
-  if('*'==c||'&'==c){cc->star[i]=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
-  cc->tletter[i]=c;
+  if('*'==c||'&'==c){cc->starlett[i].star=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
+  cc->starlett[i].tletter=c;
   CCMCAND(vargt,cand,c) CDASSERT(CCMTST(cand,c),der);  // vrgt defined above,list of valid arg bytes
-  CDASSERT((c!='z'&&c!='j')||cc->star[i],der);
-  if('l'==c){CDASSERT(SY_64,der); cc->tletter[i]='x';}
+  CDASSERT((c!='z'&&c!='j')||cc->starlett[i].star,der);
+  if('l'==c){CDASSERT(SY_64,der); cc->starlett[i].tletter='x';}
 #ifdef C_CD_NODF // platform does not support f or d args
- CDASSERT(cc->star[i]==1 || (cc->tletter[i]!='f' && cc->tletter[i]!='d'),der);
+ CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].tletter!='f' && cc->starlett[i].tletter!='d'),der);
 #endif
  }
  CDASSERT(0<=i||'1'!=cc->cc,DEDEC+256);
- MC(lib, s0+li,cc->ln); lib [cc->ln]=0;
- MC(proc,s0+pi,cc->pn); proc[cc->pn]=0;
+ MC(lib, s0+cc->li,cc->ln); lib [cc->ln]=0;  // create lib string for fn lookup
+ MC(proc,s0+pi,procnamelen); proc[procnamelen]=0;  // create procname string for fn lookup
 
 #if SY_MAC && !SY_64
 // mac osx 32 lseek off_t (64 bit) is not called properly
@@ -931,8 +963,10 @@ strcpy(proc,"x15lseek32");
 }
 #endif
 
- RZ(cc=cdload(cc,lib,proc));
- cc->n=1+i; RZ(cc=cdinsert(a,cc)); cc->li=li+cc->ai; cc->pi=pi+cc->ai;
+ RZ(cc=cdload(cc,lib,proc));  // cc doesn't change: load the library if necessary and fill in cc with its info.
+ // if the library name is found, cdload will set cc->li negative to suppress adding the name to cdhashl
+ cc->n=1+i; RZ(cc=cdinsert(a,cc));  // save # args(+1); add cc to hash and get its permanent address
+// obsolete  cc->pi=pi+cc->ai;
  R cc;
 }
 
@@ -985,7 +1019,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
  FPREFIP(J);  // save inplace flag
  n=cc->n;  // n is # cd args
- if(unlikely(((n-1)|SGNIF(wt,BOXX))>=0)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}  // if there are args, and w is not boxed, verify there are no pointer parms
+ if(unlikely(((n-1)|SGNIF(wt,BOXX))>=0)){DO(n, CDASSERT(!cc->starlett[i].star,DEPARM+256*i));}  // if there are args, and w is not boxed, verify there are no pointer parms
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;  // zv->first input arg  zbx is 1 if the result includes the input boxes; 0 if just bare value
 #if defined(__aarch64__)
  dvc=maxrcnt*sizeof(I)+(char*)data;
@@ -998,7 +1032,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #elif defined(C_CD_ARMHF)
   if((fcnt>16||dcnt>16)&&dv-data==4)dv=data+MAX(fcnt,dcnt)-12;  /* v0 to v15 fully filled before x0 to x3 */
 #endif
-  per=DEPARM+i*256; I star=cc->star[i]; c=cc->tletter[i]; t=cdjtype(c);  // c is type in the call, t is the J type for that.  star is the *& qualifier
+  per=DEPARM+i*256; I star=cc->starlett[i].star; c=cc->starlett[i].tletter; t=cdjtype(c);  // c is type in the call, t is the J type for that.  star is the *& qualifier
   I cbit=(I)1<<(c-'a');  // one-hot encoding of c
   I litsgn;  // will be neg if lit array that can be used as pointer
   I boxatomsgn;  // neg if boxed atom used as pointer
@@ -1231,7 +1265,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  R 1;
 }
 
-F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
+F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  F2PREFIP;
  ARGCHK2(a,w);
  AFLAGPRISTNO(w)  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
@@ -1246,7 +1280,8 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}  // if fast form, just allocate the return value
  // z is always nonrecursive
  if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){   // if w is NOT boxed, and a and w arenot both empty
-  t=0; tv=cc->tletter; DQ(n, k=cdjtype(*tv++); t=MAX(t,k););
+// obsolete   t=0; tv=cc->tletter; DQ(n, k=cdjtype(*tv++); t=MAX(t,k););
+  t=0; DQ(n, k=cdjtype(cc->starlett[i].tletter); t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!ISDENSETYPE(wt,B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));  // if w sparse or not DIRECT, convert it
  }
@@ -1264,11 +1299,13 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 #define FREELIB dlclose
 #endif
 
-void dllquit(J jt){CCT*av;I j,*v;
+void dllquit(J jt){I j,*v;
  if(!JT(jt,cdstr))R;   // if we never initialized, don't free
- v=AV(JT(jt,cdhashl)); av=(CCT*)AV(JT(jt,cdarg));
- DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(av[j].h););   // unload all libraries
- mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00); mvc(AN(JT(jt,cdarg)),CAV(JT(jt,cdarg)),1,MEMSET00); 
+ v=AV(JT(jt,cdhashl)); A *av=AAV1(JT(jt,cdarg));  // point to A blocks for CCTs
+// obsolete  av=(CCT*)AV(JT(jt,cdarg));
+ DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(((CCT*)IAV1(av[j]))->h); fr(av[j]));   // unload all libraries, and free the CCT blocks
+ mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00);
+// obsolete  mvc(AN(JT(jt,cdarg)),CAV(JT(jt,cdarg)),1,MEMSET00); 
  mvc(SZI*AN(JT(jt,cdhash)),CAV(JT(jt,cdhash)),1,MEMSETFF); mvc(SZI*AN(JT(jt,cdhashl)),CAV(JT(jt,cdhashl)),1,MEMSETFF); 
  AM(JT(jt,cdstr))=AM(JT(jt,cdarg))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // reset all tables to empty
  // leave the tables allocated

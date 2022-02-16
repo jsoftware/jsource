@@ -56,7 +56,7 @@ and continue through various inputs to see the flow
    input()   (optional) <-------- if DD seen, get more lines if needed by calling JT(jt,sminput)
                                   jdo() calls immex(inpl(sentence))
                                    ... 
-   output(s)           <--------  jsto(type,s) - JT(jt,sm)outout(type,s)
+   output(s)           <--------  jsto(type,s) - JT(jt,smoutput(type,s)
    output returns      ---------> ...
  ...                   <--------- jdo returns with error code
  loop
@@ -65,7 +65,7 @@ and continue through various inputs to see the flow
  ...
                                   1:2[2 calls jtwri()
                                   jsto(type,string)
-   output(s)           <--------- JT(jt,sm)outout(type,s)
+   output(s)           <--------- JT(jt,smoutput(type,s)
    output returns      ---------> ...
 
 *** repl with read from keyboard (1!:1[1)
@@ -101,7 +101,7 @@ similar to debug suspension except output/input
  processed by gui sm
 
 *** JHS nfe (native front end)
-JT(jt,nfe) flag - JE does not use JT(jt,sm)outout() and JT(jt,sminput)()
+JT(jt,nfe) flag - JE does not use JT(jt,smoutput() and JT(jt,sminput)()
 instead it calls J code that provides equivalent services
 JHS routines are J socket code to talk with javascript browser page
 
@@ -560,7 +560,7 @@ void _stdcall JSM(JS jt, void* callbacks[])
  JT(jt,smdowd) = callbacks[1];                // callback function for 11!:x
  JT(jt,sminput) = (inputtype)callbacks[2];    // callback function for input from J session keyboard
  JT(jt,smpoll) = (polltype)callbacks[3];      // for Qt, the (optional) end-of-stack pointer; otherwise the smpoll flag
- JT(jt,sm) = 0xff & (I)callbacks[4];          // lowest byte, sm : sessioin manager type
+ JT(jt,sm) = 0xff & (I)callbacks[4];          // lowest byte, sm : session manager type
 // smoptions
 // #define SMWIN    0  /* j.exe    Jwdw (Windows) front end */
 // #define SMJAVA   2  /* j.jar    Jwdp (Java) front end */

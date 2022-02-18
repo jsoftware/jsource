@@ -73,6 +73,7 @@ F1(jtevms){A t,*tv,*wv;
  *tv++=mtv;
  wv=AAV(w);
  DQ(NEVM, RZ(*tv=incorp(ca(vs(C(*wv))))); ACINITZAP(*tv) CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room.  ZAP since it's going into recursive box
+ // scaf should quiesce the system here since we want no locks on evm
  ACINITZAPRECUR(t,BOX); fa(JT(jt,evm)); JT(jt,evm)=t;  // ras to protect contents
  R mtv;
 }
@@ -110,7 +111,7 @@ F1(jtieps){
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  RZ(ras(w));
  WRITELOCK(JT(jt,felock)) A iep=JT(jt,iep); JT(jt,iep)=w; WRITEUNLOCK(JT(jt,felock))  // swap addresses under lock
- fa(iep);  // undo the ra() done when value was stored
+ fa(iep);  // undo the ra() done when value was stored - null ok
 // obsolete  RZ(JT(jt,iep)=w); 
  R mtm;
 }

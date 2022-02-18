@@ -42,24 +42,51 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  }
  // if no single-step stop, try looking the line up in the stops table
  if(i==d->dcstop){d->dcstop=-2; R 0;}     /* not stopping if already stopped at the same place */
- if(!(JT(jt,dbstops)))R 0; s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);  // s->stop strings, nw=character form of line#
- a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1;   // t->name we are looking for, n=its length, md=valence of call
- NOUNROLL while(s){
-  NOUNROLL while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
-  u=strchr(s,'*'); v=strchr(s,' '); if(!v)break; 
-  if(!u||u>v)e=!strncmp(s,t,MAX(n,v-s));
-  else{p=u-s; q=v-u-1; e=p<=n&&!strncmp(s,t,p)&&q<=n&&!strncmp(1+u,t+n-q,q);}
-  if(e){s=1+v; if(stopsub(s,nw,md)){if(b){c=0; break;} c=1;}}
-  s=strchr(s,';'); if(s)++s;
+ READLOCK(JT(jt,dblock));  // lock the stops table while we inspect it
+ if((JT(jt,dbstops))){  // if there are stops...
+  s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);  // s->stop strings, nw=character form of line#
+  a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1;   // t->name we are looking for, n=its length, md=valence of call
+  NOUNROLL while(s){
+   NOUNROLL while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
+   u=strchr(s,'*'); v=strchr(s,' '); if(!v)break; 
+   if(!u||u>v)e=!strncmp(s,t,MAX(n,v-s));
+   else{p=u-s; q=v-u-1; e=p<=n&&!strncmp(s,t,p)&&q<=n&&!strncmp(1+u,t+n-q,q);}
+   if(e){s=1+v; if(stopsub(s,nw,md)){if(b){c=0; break;} c=1;}}
+   s=strchr(s,';'); if(s)++s;
+  }
+  if(c){d->dcstop=i;  NOUNROLL while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;}}  // if stop found, turn off single-step everywhere
+  else  d->dcstop=-2;
  }
- if(c){d->dcstop=i;  NOUNROLL while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;}}  // if stop found, turn off single-step everywhere
- else  d->dcstop=-2;
+ READUNLOCK(JT(jt,dblock)); 
  R c;
 }    /* stop on line i? */
 
+// 13!:2, query stops
+F1(jtdbstopq){
+ ASSERTMTV(w); 
+ // we must read & protect the sentence under lock in case another thread is changing it
+ READLOCK(JT(jt,dblock)) A stops=JT(jt,dbstops); if(stops)ras(stops); READUNLOCK(JT(jt,dblock))  // must ra() while under lock
+ if(stops){tpushnr(stops);}else stops=mtv;  // if we did ra(), stack a fa() on the tpop stack
+// obsolete R JT(jt,iep)?JT(jt,iep):mtv;
+ R stops;
+}
 
-F1(jtdbstopq){ASSERTMTV(w); R JT(jt,dbstops)?JT(jt,dbstops):mtv;}
-     /* 13!:2  query stops */
+// 13!:3, set stops
+F1(jtdbstops){
+ ARGCHK1(w);
+ RZ(w=vs(w));
+// obsolete  ASSERT(1>=AR(w),EVRANK);
+// obsolete  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
+ if(AN(w)){RZ(ras(w));}else w=0;  // protect w if it is nonempty; if empty, convert to null
+ WRITELOCK(JT(jt,dblock)) A stops=JT(jt,dbstops); JT(jt,dbstops)=w; WRITEUNLOCK(JT(jt,dblock))  // swap addresses under lock
+ fa(stops);  // undo the ra() done when value was stored - null is ok
+// obsolete  RZ(JT(jt,iep)=w); 
+ R mtm;
+}
 
-F1(jtdbstops){RZ(w=vs(w)); if(AN(w)){RZ(ras(w)); fa(JT(jt,dbstops)); JT(jt,dbstops)=w;}else JT(jt,dbstops)=0; R mtm;}
-     /* 13!:3  set stops */
+
+// obsolete F1(jtdbstopq){ASSERTMTV(w); R JT(jt,dbstops)?JT(jt,dbstops):mtv;}
+// obsolete      /* 13!:2  query stops */
+// obsolete 
+// obsolete F1(jtdbstops){RZ(w=vs(w)); if(AN(w)){RZ(ras(w)); fa(JT(jt,dbstops)); JT(jt,dbstops)=w;}else JT(jt,dbstops)=0; R mtm;}
+// obsolete      /* 13!:3  set stops */

@@ -284,7 +284,7 @@ typedef struct JSTstruct {
 
 // Cacheline 6: debug, which is written so seldom that it can have read-only data
  A dbstops;          /* stops set by the user                           */
- A dbtrap;           /* trap, execute on suspension                     */
+ A dbtrap;           // trap sentence, execute when going into suspension
  S dblock;           // lock on dbstops/dbtrap
  // rest of cacheline is essentially read-only
  B retcomm;          /* 1 iff retain comments and redundant spaces      */

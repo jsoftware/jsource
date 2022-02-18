@@ -120,9 +120,12 @@ static A jtsusp(J jt){A z;
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
  while(1){A  inp;
   jt->jerr=0;
-  if(jt->iepdo&&JT(jt,iep)){
+  A iep=0;
+  // if there is an immex phrase, protect it during its execution
+  if(jt->iepdo){READLOCK(JT(jt,felock)) if((iep=JT(jt,iep))!=0)ra(iep); READUNLOCK(JT(jt,felock))}
+  if(iep){
    // if there is an immex latent expression (9!:27), execute it before prompting
-   jt->iepdo=0; z=immex(JT(jt,iep));  // reset request flag; run sentence & force typeout
+   jt->iepdo=0; z=immex(iep); fa(iep);  // reset request flag; run sentence & force typeout; undo the ra() that protected the immex sentence
    if(JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS)break;  // dbr 0/1 forces end of suspension, as does single-step request
    if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
    tpop(old);  // if we don't need the result for the caller here, free up the space

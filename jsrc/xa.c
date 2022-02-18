@@ -77,6 +77,7 @@ F1(jtevms){A t,*tv,*wv;
  R mtv;
 }
 
+// 5!:0, return ((>u)~)f. 
 F1(jtfxx){
  ARGCHK1(w);
  ASSERT(AT(w)&LIT+BOX,EVDOMAIN);
@@ -93,9 +94,13 @@ F1(jtiepdos){B b; RE(b=b0(w)); jt->iepdo=b; R mtm;}
 // 9!:26, immex sentence
 F1(jtiepq){
  ASSERTMTV(w); 
- ASSERT(1==AR(w),EVRANK);
- ASSERT(!AN(w),EVDOMAIN); 
- R JT(jt,iep)?JT(jt,iep):mtv;
+// obsolete  ASSERT(1==AR(w),EVRANK);
+// obsolete  ASSERT(!AN(w),EVDOMAIN);
+ // we must read & protect the sentence under lock in case another thread is changing it
+ READLOCK(JT(jt,felock)) A iep=JT(jt,iep); if(iep)ras(iep); READUNLOCK(JT(jt,felock))  // must ra() while under lock
+ if(iep){tpushnr(iep);}else iep=mtv;  // if we did ra(), stack a fa() on the tpop stack
+// obsolete R JT(jt,iep)?JT(jt,iep):mtv;
+ R iep;
 }
 
 // 9!:27, immex sentence
@@ -103,8 +108,10 @@ F1(jtieps){
  ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
- RZ(ras(w)); fa(JT(jt,iep));
- RZ(JT(jt,iep)=w); 
+ RZ(ras(w));
+ WRITELOCK(JT(jt,felock)) A iep=JT(jt,iep); JT(jt,iep)=w; WRITEUNLOCK(JT(jt,felock))  // swap addresses under lock
+ fa(iep);  // undo the ra() done when value was stored
+// obsolete  RZ(JT(jt,iep)=w); 
  R mtm;
 }
 

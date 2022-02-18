@@ -63,44 +63,68 @@ static B jtdolock(J jt,B lk,F f,I i,I n){I e;
 #define LKC  3      /* number of columns in JT(jt,flkd) table       */
 
 B jtxlinit(JS jjt,I nthreads){A x;I*s;JJ jt=MTHREAD(jjt);
- GAT0(x,INT,20*LKC,2); ACINITZAP(x); s=AS(x); s[0]=20; s[1]=LKC;  // called at init
+ GAT0(x,INT,20*LKC,2); ACINITZAP(x); s=AS(x); s[0]=20; s[1]=LKC;  // called at init; shape is 20 3
  INITJT(jjt,flkd)=x; AM(INITJT(jjt,flkd))=0;  // AM holds the # valid entries
  R 1;
 }
 
-F1(jtjlocks){A y; ASSERTMTV(w); y=take(sc(AM(JT(jt,flkd))),JT(jt,flkd)); R grade2(y,y);}
+// 1!:30
+// Our preference is to perform no system calls under readlock/writelock.  Here we violate that rule by executing J verbs
+// under the lock.  It's just too easy that way, and these functions are little-used and have low overhead.  Since the returns are
+// small - virtual blocks or scalars - we could allocate/free a block or two to make sure they are available, but we don't bother
+F1(jtjlocks){A y; ASSERTMTV(w); READLOCK(JT(jt,flock)) y=take(sc(AM(JT(jt,flkd))),JT(jt,flkd)); READUNLOCK(JT(jt,flock)) R grade2(y,y);}
      /* return the locks, a 3-column table of (number,index,length) */
 
+// 1!:31
 F1(jtjlock){B b;I*v;
  F1RANK(1,jtjlock,DUMMYSELF);
  RZ(w=vi(w)); 
  ASSERT(LKC==AN(w),EVLENGTH);
- v=AV(w); RE(vfn((F)*v)); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); 
- if(AM(JT(jt,flkd))==AS(JT(jt,flkd))[0]){I ct=AM(JT(jt,flkd)); RZ(JT(jt,flkd)=ext(1,JT(jt,flkd))); AM(JT(jt,flkd))=ct;}
- RE(b=dolock(1,(F)v[0],v[1],v[2]));
+ v=AV(w); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); RE(vfn((F)*v));
+ RE(b=(B)jtunvfn(jt,(F)v[0],(A)(I)dolock(1,(F)v[0],v[1],v[2])));
  if(!b)R num(0);
+// obsolete  if(AM(JT(jt,flkd))==AS(JT(jt,flkd))[0]){I ct=AM(JT(jt,flkd)); RZ(JT(jt,flkd)=ext(1,JT(jt,flkd))); AM(JT(jt,flkd))=ct;}
+ WRITELOCK(JT(jt,flock))
+ while(AM(JT(jt,flkd))==AS(JT(jt,flkd))[0])RZ(jtextendunderlock(jt,&JT(jt,flkd),&JT(jt,flock),0))
  ICPY(AV(JT(jt,flkd))+LKC*AM(JT(jt,flkd)),v,LKC); ++AM(JT(jt,flkd));
+ WRITEUNLOCK(JT(jt,flock))
  R num(1);
 }    /* w is (number,index,length); lock the specified region */
 
+// remove entry j from the lock table and unlock the file it points to
+// We enter holding a write lock on flock.  We relinquish this lock before returning
 static A jtunlj(J jt,I j){B b;I*u,*v;
- RE(j);
- ASSERT(BETWEENO(j,0,AM(JT(jt,flkd))),EVINDEX);
+ if(unlikely(jt->jerr!=0)){WRITEUNLOCK(JT(jt,flock)); R0}
+ if(unlikely(!BETWEENO(j,0,AM(JT(jt,flkd))))){WRITEUNLOCK(JT(jt,flock)); ASSERT(0,EVINDEX);}
  u=AV(JT(jt,flkd)); v=u+j*LKC;
- RE(b=dolock(0,(F)v[0],v[1],v[2]));
- if(!b)R num(0);
+ I v0=v[0], v1=v[1], v2=v[2];  // save the values from the lock-table entry before we destroy it
  --AM(JT(jt,flkd)); 
- if(j<AM(JT(jt,flkd)))ICPY(v,u+AM(JT(jt,flkd))*LKC,LKC); else *v=0; 
- R num(1);
+ if(j<AM(JT(jt,flkd)))ICPY(v,u+AM(JT(jt,flkd))*LKC,LKC);  // fill vacated hole if not at end
+// obsolete   else *v=0; 
+ WRITEUNLOCK(JT(jt,flock))  // we are committed to the unlock, so it is OK to show the file as not in the lock table
+ RE(b=dolock(0,(F)v0,v1,v2));
+// obsolete  if(!b)R num(0);
+ R num(!!b);
 }    /* unlock the j-th entry in JT(jt,flkd) */
 
-B jtunlk(J jt,I x){I j=0,*v=AV(JT(jt,flkd)); 
- NOUNROLL while(j<AM(JT(jt,flkd))){while(x==*v)RZ(unlj(j)); ++j; v+=LKC;} 
+B jtunlk(J jt,I x){
+ // Since each unlock releases the write lock here, the table may get scrambled between unlocks.
+ // Therefore, we rescan from the beginning for every delete.  That would suck if there were numerous locks extant.
+ while(1){
+  WRITELOCK(JT(jt,flock))
+  I *v=AV(JT(jt,flkd)); 
+  DO(AM(JT(jt,flkd)), if(x==IAV2(JT(jt,flkd))[3*i]){RZ(unlj(i)); goto found;})
+  WRITEUNLOCK(JT(jt,flock)) break;  // after a pass with no file matches, we are done.  relinquish the lock and exit loop
+found: ;   // here when a file was unlocked.  We know we have given up the lock on flkd
+ }
+// obsolete  NOUNROLL while(j<AM(JT(jt,flkd))){while(x==*v)RZ(unlj(j)); ++j; v+=LKC;} 
  R 1;
 }    /* unlock all existing locks for file# x */
 
+// 1!:32
 F1(jtjunlock){
  F1RANK(1,jtjunlock,DUMMYSELF); 
  ASSERT(INT&AT(w),EVDOMAIN); 
+ WRITELOCK(JT(jt,flock))
  R unlj(i0(indexof(JT(jt,flkd),w))); 
 }    /* w is (number,index,length); unlock the specified region */

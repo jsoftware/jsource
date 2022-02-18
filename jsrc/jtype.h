@@ -154,6 +154,7 @@ struct AD {
         // number of partitions found; (7) in the self block for y L: n and u S: n, the address of the fs block for u; (8) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in hashtables in x15.c and in tickers, the number of entries that have been hashed
         // (11) in file-lock list and file-number list, the # valid files (12) if AFUNIFORMITEMS is set, the total# items in all boxes (13) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
+        // (14) if the filenames pointed to by fopafl, the file handle for the open file
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
@@ -170,7 +171,7 @@ struct AD {
  UC filler;
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
- US origin;
+ US origin;  // these two values initialized with a single store - must be in order
  S lock;   // can be used as a lock
 #endif
 #else
@@ -219,7 +220,12 @@ typedef I SI;
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
 #define AR(x)           ((x)->r)        /* Rank                            */
+#if HIPRECS
+#define ARINIT(x,v)     {*(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */ \
+    *(I4*)&(x)->origin=THREADID(jt);}   // save the originating thread and clear the lock to 0
+#else
 #define ARINIT(x,v)     *(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */
+#endif
 #define SMMAH           7L   // number of header words in old-fashioned SMM alloc
 #define NORMAH          7L   // number of header words in new system
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
@@ -271,6 +277,7 @@ typedef I SI;
 #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed                   */
 #define AAV0(x)         ((A*)((C*)(x)+AKXR(0)))  // A block in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define AAV1(x)         ((A*)((C*)(x)+AKXR(1)))  // A block in a stack- or heap-allocated list (rank 1)
+#define AAV2(x)         ((A*)((C*)(x)+AKXR(2)))  // A block in a stack- or heap-allocated list (rank 2)
 #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define FAVV(x)         ( (volatile V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj volatile to avoid delayed fetch
@@ -281,6 +288,7 @@ typedef I SI;
 #define voidAVn(x,n)     ((void*)((C*)(x)+AKXR(n)))  // unknown, but rank is known
 #define voidAV0(x)       voidAVn(x,0)  // unknown, but scalar
 #define voidAV1(x)       voidAVn(x,1)  // unknown, but list
+#define voidAV2(x)       voidAVn(x,2)  // unknown, but table
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
 
 #if C_LE

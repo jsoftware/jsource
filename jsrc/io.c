@@ -105,7 +105,7 @@ JT(jt,nfe) flag - JE does not use JT(jt,smoutput() and JT(jt,sminput)()
 instead it calls J code that provides equivalent services
 JHS routines are J socket code to talk with javascript browser page
 
-DD NOTE: DD is not supported on special sentences: iep, xep, dbssexec, dbtrap.  This is mostly because I don't understand how these work.
+DD NOTE: DD is not supported on special sentences: iep, dbssexec, dbtrap.  This is mostly because I don't understand how these work.
 
 DD is supported on ". y, but only if the DD is fully contained in the string
 A recursive JDo may use a DD, but only if it is fully contained in the string
@@ -354,6 +354,17 @@ F1(jtjoff){I x;
  R 0;
 }
 
+// if there is an immex sentence, fetch it, protect it from deletion, run it, and undo the protection
+// in this routine jt is a thread pointer and jjt is the shared pointer
+static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
+ while(1){
+ // if there is an immex phrase, protect it during its execution
+  A iep=0; if(jt->iepdo){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
+  if(iep==0)break;
+  jt->iepdo=0; jtimmex(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) jt->jerr=0; jttpop(jt,old);
+ }
+}
+
 static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)
  jm->jerr=0; jm->etxn=0; /* clear old errors */
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
@@ -365,15 +376,16 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  A *old=jm->tnextpushp;
  *JT(jt,adbreak)=0;  // remove pending ATTN before executing the sentence
  x=jtinpl(jm,0,(I)strlen(lp),lp);
+ // if there is an immex latent expression (9!:27), execute it before prompting
  // All these immexes run with result-display enabled (jt flags=0)
  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
- if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
+ if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>1)); if(!jm->jerr)jtimmex(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
- e=jm->jerr;
- if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0;
- if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
+ e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm) jm->jerr=0;
+// obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
+ if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  jtshowerr(jm);   // jt flags=0 to force typeout
  jtspfree(jm);
  jttpop(jm,old);
@@ -714,7 +726,7 @@ int _stdcall JFree(JS jt){
   SETJTJM(jt,jt,jm)
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
-  if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
+// obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
   dllquit(jm);  // clean up call dll
   free(JT(jt,heap));  // free the initial allocation
   R 0;

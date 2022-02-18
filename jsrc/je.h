@@ -388,8 +388,8 @@ extern F1(jtvtrans);
 extern F1(jtwordil);
 extern DF1(jtwords);
 extern F1(jtxco1);
-extern F1(jtxepq);
-extern F1(jtxeps);
+// obsolete extern F1(jtxepq);
+// obsolete extern F1(jtxeps);
 
 // extern F1(jttest1);
 
@@ -893,6 +893,7 @@ extern A        jtvci(J,I);
 extern A        jtvec(J,I,I,void*);
 extern A        jtvecb01(J,I,I,void*);
 extern F        jtvfn(J,F);
+extern A        jtunvfn(J,F,A);
 extern A        jtvger2(J,C,A,A);
 extern A        jtvirtual(J,AD * RESTRICT,I,I);
 extern B        jtvnm(J,I,C*);

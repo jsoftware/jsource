@@ -220,20 +220,18 @@ typedef struct JSTstruct {
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
- A iep;              /* immediate execution phrase                      */
- A xep;              /* exit execution phrase                           */
- A pma;              /* perf. monitor: data area                        */
+ I* breakfh;          /* win break file handle                           */
+ I* breakmh;          /* win break map handle                            */
+ C *breakfn;  // [NPATH];   /* break file name                                 */
 // end of cacheline 1
 
 // Cacheline 2: J symbol pool
  L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
  S symlock;          // r/w lock for symbol pool
  // rest of cacheline used only in exceptional paths
-// 2 bytes free
- I4 outmaxafter;      /* output: maximum # lines after truncation        */
- I4 outmaxbefore;     /* output: maximum # lines before truncation       */
- I4 outmaxlen;        /* output: maximum line length before truncation   */
+// 6 bytes free
 // front-end interface info
+ C *capture;          // capture output for python->J etc.  scaf could be byte?
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
  void *sminput;
  void *smoutput;
@@ -244,9 +242,9 @@ typedef struct JSTstruct {
  A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
  A stloc;            // named locales symbol table
  S stlock;           // r/w lock for stnum/stloc
+ C locsize[2];       /* size indices for named and numbered locales     */
+ C baselocale[4];    // will be "base"
  // rest of cacheline used only in exceptional paths
-// 6 bytes free
- A evm;              /* event messages                                  */
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
  I filler3[2];    // 2 words free
@@ -254,8 +252,8 @@ typedef struct JSTstruct {
 
 // Cacheline 4: Files
  A flkd;             /* file lock data: number, index, length           */
- A fopa;             /* open files boxed names                          */
- A fopf;             /* open files corresp. file numbers                */
+ A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
+// obsolete  A fopf;             /* open files corresp. file numbers                */
  S flock;            // r/w lock for flkd/fopa/fopf
  // rest of cacheline used only in exceptional paths
  UC sm;               /* sm options set by JSM()                         */
@@ -266,20 +264,22 @@ typedef struct JSTstruct {
  void *iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I iomalloclen;   // length of the allocated block (in case we can reuse it)
  UI qtstackinit;      // jqt front-end C stack pointer
- I filler4[1];      // 1 word free
+ I filler4[2];      // 2 words free
 // end of cacheline 4
 
-// Cacheline 5: User symbols
+// Cacheline 5: User symbols, also used for front-end locks
  A sbu;              /* SB data for each unique symbol                  */
- S sblock;           // r/w lovk for sbu
+ S sblock;           // r/w lock for sbu
+ S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
-// 6 bytes free
- I* breakfh;          /* win break file handle                           */
- I* breakmh;          /* win break map handle                            */
+ I4 outmaxafter;      /* output: maximum # lines after truncation        */
+ I4 outmaxbefore;     /* output: maximum # lines before truncation       */
+ I4 outmaxlen;        /* output: maximum line length before truncation   */
  I peekdata;         /* our window into the interpreter                 */
- C *breakfn;  // [NPATH];   /* break file name                                 */
- C *capture;          // capture output for python->J etc.  scaf could be byte?
- I filler5[1];      // 1 word free
+ A iep;              /* immediate execution phrase                      */
+// obsolete  A xep;              /* exit execution phrase                           */
+ A pma;              /* perf. monitor: data area                        */
+ I filler5[2];      // 1 word free
 // end of cacheline 5
 
 // Cacheline 6: debug, which is written so seldom that it can have read-only data
@@ -287,12 +287,10 @@ typedef struct JSTstruct {
  A dbtrap;           /* trap, execute on suspension                     */
  S dblock;           // lock on dbstops/dbtrap
  // rest of cacheline is essentially read-only
- C locsize[2];       /* size indices for named and numbered locales     */
- C baselocale[4];    // will be "base"
  B retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
-// 2 bytes free
  UI4 baselocalehash;   // name hash for base locale
+ A evm;              /* event messages                                  */
  I igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
  I dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  I zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
@@ -315,7 +313,7 @@ typedef struct JSTstruct {
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
-} JST;   // __attribute__((aligned(JTALIGNBDY))) biot allowed
+} JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed
 typedef JST* JS;  // shared part of struct
 
 #if 0 // used only for direct locale numbering
@@ -336,6 +334,6 @@ typedef JST* JS;  // shared part of struct
 #define JT(p,n) JJTOJ(p)->n
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jt) (&jt->threaddata[0])   // master thread for shared jt
-#define THREADID(jt) (((jt)&(JTALIGNBDY-1)-offsetof(struct JSTstruct, threaddata[0]))>>LGTHREADBLKSIZE)  // thread number from jt
+#define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt
 enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTASKS])<=JTALIGNBDY) };  // assert not too many threads
 enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected

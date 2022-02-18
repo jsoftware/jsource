@@ -1201,7 +1201,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 #if SY_64
 // stats I statsnga=0, statsngashape=0;
 // like jtga, but don't copy shape.   Never called for SPARSE type
-// We pack rank+type into one reg to save registers (it also halps the LIMIT test).  With this, the compiler should be able to save/restore
+// We pack rank+type into one reg to save registers (it also helps the LIMIT test).  With this, the compiler should be able to save/restore
 // only 2 regs (ranktype and bytes) but the prodigal compiler saves 3.  We accept this to be able to save AK AR AT here, so that the caller doesn't have to preserve them over the call.
 // We don't store AN, because that would take another push/pop and we hope the caller needs to preserve it anyway.
 RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;

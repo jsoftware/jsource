@@ -126,7 +126,7 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
 F1(jtjfread){A z;F f;
  F1RANK(0,jtjfread,DUMMYSELF);
  RE(f=stdf(w));  // f=file#, or 0 if w is a filename
- if(f)R 1==(I)f?jgets("\001"):3==(I)f?rdns(stdin):rd(vfn(f),0L,-1L);  // if special file, read it all, possibly with error
+ if(f)R 1==(I)f?jgets("\001"):3==(I)f?rdns(stdin):jtunvfn(jt,f,rd(vfn(f),0L,-1L));  // if special file, read it all, possibly with error
  RZ(f=jope(w,FREAD_O)); z=rd(f,0L,-1L); fclose(f);  // otherwise open/read/close named file
  RETF(z);
 }
@@ -141,7 +141,7 @@ F2(jtjfwrite){B b;F f;
  if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}
  if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f)); 
  wa(f,0L,a); 
- if(b)fclose(f);else fflush(f);
+ if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RNE(mtm);
 }
 
@@ -154,7 +154,7 @@ F2(jtjfappend){B b;F f;
  ASSERT(1>=AR(a),EVRANK);
  if(b=!f)RZ(f=jope(w,FAPPEND_O)) else RE(vfn(f));
  wa(f,fsize(f),a);
- if(b)fclose(f);else fflush(f);
+ if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RNE(mtm);
 }
 
@@ -163,10 +163,12 @@ F1(jtjfsize){B b;F f;I m;
  RE(f=stdf(w));
  if(b=!f)RZ(f=jope(w,FREAD_O)) else RE(vfn(f)); 
  m=fsize(f); 
- if(b)fclose(f);else fflush(f);
+ if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RNE(sc(m));
 }
 
+// process index file arg for file number; return 0 if error or file name
+// if the result is non0, vfn has been called to lock the file#
 static F jtixf(J jt,A w){F f;
  ASSERT(2<=AN(w),EVLENGTH);
  switch(CTTZNOFLAG(AT(w))){
@@ -176,7 +178,7 @@ static F jtixf(J jt,A w){F f;
   case INTX: f=(F)AV(w)[0]; ASSERT(2<(UI)f,EVFNUM);
  }
  R f?vfn(f):f;
-}    /* process index file arg for file number; 0 if a file name */
+}
 
 static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
  if(AT(w)&BOX){wv=AAV(w);  RZ(in=vi(C(wv[1]))); k=AN(in); u=AV(in);}
@@ -191,9 +193,9 @@ static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
 
 F1(jtjiread){A z=0;B b;F f;I i,n;
  F1RANK(1,jtjiread,DUMMYSELF);
- RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));
+ RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));  // b=filename, not number; if name, open the named file
  if(ixin(w,fsize(f),&i,&n))z=rd(f,i,n);
- if(b)fclose(f);else fflush(f);
+ if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  R z;
 }
 
@@ -201,9 +203,9 @@ F2(jtjiwrite){B b;F f;I i;
  F2RANK(RMAX,1,jtjiwrite,DUMMYSELF);
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
- RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FUPDATE_O));
+ RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FUPDATE_O));  // b=filename, not number; if name, open the named file
  if(ixin(w,fsize(f),&i,0L))wa(f,i,a); 
- if(b)fclose(f);else fflush(f);
+ if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RNE(mtm);
 }
 

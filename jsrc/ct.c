@@ -76,29 +76,32 @@ void writelock(S *alock, S prev){
 // On exit we hold the write lock UNLESS there was an error, in which case we return NOT holding the lock (to allow the caller to abort on error)
 // ishash is 1 if *abuf is a hashtable.  In that case, fill it with -1.  Otherwise copy the old contents to the beginning of the resized table.
 // result is 0 if we hit an error, otherwise the table has been resized, but not necessarily by us & it might not have enough space.
-// The tables resized here are allocated with rank 0.  AN() gives the current allocation, and AM() gives the number of atoms actually in use
+// The tables resized here are allocated with rank 0.  AN()/AS() (if present) gives the current allocation, and AM() gives the number of items actually in use
 I jtextendunderlock(J jt, A *abuf, US *alock, I ishash){A z;
  I oldn=AN(*abuf);   // get the previous allocated size
  I t=AT(*abuf);  // get the type of the allocation
  WRITEUNLOCK(*alock);  // relinquish lock while we allocate the new area
- GA00(z,t,2*oldn,0); ACINITZAP(z); // allocate a new block, bigger than the previous one; make it permanent.  This is the only error exit from this routine
+ GA0(z,t,2*oldn,AR(*abuf)); ACINITZAP(z); // allocate a new block, bigger than the previous one; make it permanent.  This is the only error exit from this routine
  WRITELOCK(*alock);  // reacquire lock
  A obuf=*abuf;  // current buffer after reacquiring lock
  if(AN(obuf)==oldn){
   // normal case where no one else resized the block before we did.  Transfer the data and counts from the old block to the new
-  I nvalidatoms=AM(obuf);  // remember number of valid atoms in the old block
+  I itemsize;
+  I nvaliditems=AM(obuf);  // remember number of valid items in the old block
   I datasize=allosize(z);  // number of bytes in data area
-  AN(z)=datasize>>bplg(t);   // advance AN to max allocation - leaving no buffer at the end
+  I alloatoms=datasize>>bplg(t);   // advance AN to max allocation - leaving no buffer at the end
+  // if this allocation is a table, 
+  if(AR(z)==2){itemsize=AS(z)[1]=AS(obuf)[1]; AS(z)[0]=alloatoms/itemsize; AN(z)=AS(z)[0]*itemsize;}else{itemsize=1; AN(z)=alloatoms;}
   if(ishash){
    // If the block is a hashtable, it will be rebuilt from scratch and we just initialize it to -1 pointers
    mvc(datasize,voidAV0(z),1,MEMSETFF);  // fill the entire table
    AM(z)=0;  // indicate the whole hash is invalid after resize
   }else{
-   MC(voidAV0(z),voidAV0(obuf),nvalidatoms<<bplg(t));  // copy the valid data.  Rest can be left garbage
-   AM(z)=nvalidatoms;  // transfer the count of allocated atoms, now valid
+   MC(voidAV0(z),voidAV0(obuf),itemsize*(nvaliditems<<bplg(t)));  // copy the valid data.  Rest can be left garbage
+   AM(z)=nvaliditems;  // transfer the count of allocated atoms, now valid
   }
   // release the old block.  We assume that freeing a block will not permanently block this thread
-  *abuf=z; mf(obuf);
+  *abuf=z; fa(obuf);  // fa, not mf, because the block may be is use elsewhere, e. g. as a backer
  }else{
   // somebody else has already resized the block.  We just back off and hope they resized it enough.
   mf(z);  // discard the block we allocated

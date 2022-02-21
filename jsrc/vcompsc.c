@@ -651,7 +651,7 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // verify rank is OK, based on operation
   if((AR(a)|AR(w))>1){R (m>=(4<<3))?(AF)jtfslashatg:0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special. postflags are 0
   ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom - we know ranks<=1
-  if(unlikely((-AN(a)&-AN(w)>=0)))R0;  // if either arg empty, skip our loop
+  if(unlikely((-AN(a)&-AN(w))>=0))R0;  // if either arg empty, skip our loop
   // split m into search and comparison
   I search=m>>3; I comp=m&7;
   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address

@@ -194,8 +194,9 @@ typedef struct JSTstruct {
 // very-seldom-referenced data inhabits a cacheline that contains a lock.
 // Cacheline 0 is special, because it contains adbreak, which is checked very frequently by all threads.  Therefore, to keep this cacheline
 // in S state we must have everything else in the line be essentially read-only.
- C* adbreak;		// must be first! ad mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
+ C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
+ S qlock;            // lock used for quiescing all tasks
  A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
  A slist;            // boxed list of filenames used in right arg to 0!:, matches the entries made in sn field of L blocks
  B assert;           /* 1 iff evaluate assert. statements               */
@@ -203,8 +204,6 @@ typedef struct JSTstruct {
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
  UC dbuser;           /* user-entered value for db          migrated             */
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
-// 2 bytes free
-// stuff used during verb execution
  void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
 // end of cacheline 0
@@ -269,6 +268,8 @@ typedef struct JSTstruct {
 
 // Cacheline 5: User symbols, also used for front-end locks
  A sbu;              /* SB data for each unique symbol                  */
+ A sbhash;              // hashtable for symbols
+ A sbstrings;          // string data for symbols
  S sblock;           // r/w lock for sbu
  S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
@@ -279,7 +280,6 @@ typedef struct JSTstruct {
  A iep;              /* immediate execution phrase                      */
 // obsolete  A xep;              /* exit execution phrase                           */
  A pma;              /* perf. monitor: data area                        */
- I filler5[2];      // 1 word free
 // end of cacheline 5
 
 // Cacheline 6: debug, which is written so seldom that it can have read-only data

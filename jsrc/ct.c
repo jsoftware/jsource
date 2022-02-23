@@ -75,6 +75,7 @@ void writelock(S *alock, S prev){
 // *alock is the lock to use.  We hold a writelock on *alock on entry, but we may relinquish inside this routine.
 // On exit we hold the write lock UNLESS there was an error, in which case we return NOT holding the lock (to allow the caller to abort on error)
 // ishash is 1 if *abuf is a hashtable.  In that case, fill it with -1.  Otherwise copy the old contents to the beginning of the resized table.
+//  if ishash is set, set obuf->lock to 1 to indicate that a rehash is needed
 // result is 0 if we hit an error, otherwise the table has been resized, but not necessarily by us & it might not have enough space.
 // The tables resized here are allocated with any rank.  AN()/AS() (if present) gives the current allocation, and AM() gives the number of items actually in use
 // When a table is resized, it if mf()'d without recurring to contents.  This means it must not be in use otherwise, for example as a result or a backer
@@ -91,12 +92,15 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I ishash){A z;
   I nvaliditems=AM(obuf);  // remember number of valid items in the old block
   I datasize=allosize(z);  // number of bytes in data area
   I alloatoms=datasize>>bplg(t);   // advance AN to max allocation - leaving no buffer at the end
-  // if this allocation is a table, fill in AN and AS (otherwise AN is all we need)
-  if(AR(z)==2){itemsize=AS(z)[1]=AS(obuf)[1]; AS(z)[0]=alloatoms/itemsize; AN(z)=AS(z)[0]*itemsize;}else{itemsize=1; AN(z)=alloatoms;}
+  // if this allocation is a table, fill in AN and AS[0] (otherwise AN is all we need)
+  // if there are elements of the shape beyond AS[0], they must be parameters or item shape and they are just copied
+  if(AR(z)>=1){itemsize=AN(obuf)/AS(obuf)[0]; AS(z)[0]=alloatoms/itemsize; AN(z)=AS(z)[0]*itemsize; DONOUNROLL(AR(z)-1, AS(z)[i+1]=AS(obuf)[i+1];)
+  }else{itemsize=1; AN(z)=alloatoms;}
   if(ishash){
    // If the block is a hashtable, it will be rebuilt from scratch and we just initialize it to -1 pointers
    mvc(datasize,voidAV(z),1,MEMSETFF);  // fill the entire table
    AM(z)=0;  // indicate the whole hash is invalid after resize
+   z->lock=1;  // alternate indicator of rehash required
   }else{
    MC(voidAV(z),voidAV(obuf),itemsize*(nvaliditems<<bplg(t)));  // copy the valid data.  Rest can be left garbage
    AM(z)=nvaliditems;  // transfer the count of allocated atoms, now valid

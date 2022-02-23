@@ -983,7 +983,7 @@
 #define sbextend(x0,x1,x2,x3)       jtsbextend(jt,(x0),(x1),(x2),(x3))
 #define sbgetdata(x)                jtsbgetdata(jt,(x))
 #define sbhashstat(x)               jtsbhashstat(jt,(x))
-#define sbinsert(x0,x1,x2,x3,x4,x5) jtsbinsert(jt,(x0),(x1),(x2),(x3),(x4),(x5))
+#define sbinsert(x0,x1,x2,x3,x4) jtsbinsert(jt,(x0),(x1),(x2),(x3),(x4))
 #define sblit(x,y)                  jtsblit(jt,(x),(y))
 #define sborder(x)                  jtsborder(jt,(x))
 #define sbprobe(x0,x1,x2,x3)        jtsbprobe(jt,(x0),(x1),(x2),(x3))

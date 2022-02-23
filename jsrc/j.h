@@ -630,7 +630,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
-#define HIPRECS 0     // scaf // set to enable hiprecs
+#define HIPRECS 0 // set to enable hiprecs
 #define ARTIFHIPREC 0
 #if ARTIFHIPREC&&HIPRECS
 #define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create hiprec results from <, force-box, and sometimes ;
@@ -1719,7 +1719,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // Input is the name of word of bytes.  Result is modified name, 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
 #define ZBYTESTOZBITS(b) (b=b|((b|(~b+VALIDBOOLEAN))>>7))  // for each byte: zero if b0 off, b7 off, and b7 turns on when you subtract 1 or 2
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (!(AT(retfff)&SPARSE) && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; }
-#define SBSV(x)         (CAV1((A)AN(JT(jt,sbu)))+(I)(x))
+#define SBSV(x)         (CAV1(JT(jt,sbstrings))+(I)(x))
 #define SBUV(x)         (SBUV4(JT(jt,sbu))+(I)(x))
 #define SEGFAULT        (*(volatile I*)0 = 0)
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))

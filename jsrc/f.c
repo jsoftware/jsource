@@ -547,7 +547,7 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
    z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV(prxthornuni)[0]&1?RoutineC:jttoutf8a);
    break;
   case BOXX:  z=thbox(w,prxthornuni);                  break;
-  case SBTX:  z=thsb(w,prxthornuni);                   break;
+  case SBTX:  READLOCK(JT(jt,sblock)) z=thsb(w,prxthornuni); READUNLOCK(JT(jt,sblock))                  break;
   case NAMEX: z=sfn(0,w);                  break;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
   case VERBX: case ADVX:  case CONJX:

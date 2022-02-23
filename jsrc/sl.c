@@ -89,13 +89,14 @@ void jterasenl(J jt, I n){
 // Runs in master thread
 static A jtinitnl(J jt){A q;
  I s; FULLHASHSIZE(5*1,INTSIZE,0,0,s);  // at least 5 slots, so we always have at least 2 empties
- GATV0(q,INT,s,0); mvc(s*SZI,IAV(q),1,MEMSET00);  // allocate hashtable and clear to 0
+ GATV0(q,INT,s,1); mvc(s*SZI,IAV(q),1,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
  JT(jt,stnum)=q;  // save address of block
- AK(JT(jt,stnum))=0;  // set next number to allocate
+ AS(JT(jt,stnum))[0]=0;  // set next number to allocate
  AM(JT(jt,stnum))=0;  // set number in use
  R q;  // return no error
 }
 
+#if 0 // obsolete
 // Get the locale number to use for the next numbered locale.  (0 if error, with error code set)
 // This call just gets the number to use, it does not allocate the number.  The locale will be installed later, unless an error intervenes
 static I jtgetnl(J jt){
@@ -107,10 +108,10 @@ static I jtgetnl(J jt){
   A new; GATV0(new,INT,s,0); mvc(s*SZI,IAV(new),1,MEMSET00);  // allocate hashtable and clear to 0
   // rehash the old table into the new
   I i; for(i=0;i<AN(JT(jt,stnum));++i){
-   A st; if(st=(A)IAV0(JT(jt,stnum))[i]){  // if there is a value hashed...
+   A st; if(st=(A)IAV1(JT(jt,stnum))[i]){  // if there is a value hashed...
     I probe=HASHSLOT(NAV(LOCNAME(st))->bucketx,s);  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
-    NOUNROLL while(IAV0(new)[probe]){if(--probe<0)probe=AN(new)-1;}  // find empty slot
-    IAV0(new)[probe]=(I)st;  // install in new hashtable
+    NOUNROLL while(IAV1(new)[probe]){if(--probe<0)probe=AN(new)-1;}  // find empty slot
+    IAV1(new)[probe]=(I)st;  // install in new hashtable
    }
   }
   AK(new)=AK(JT(jt,stnum)); ACINITZAP(new) AM(new)=AM(JT(jt,stnum));  // before freeing the block, copy # locales and next locales#
@@ -118,58 +119,89 @@ static I jtgetnl(J jt){
  }
  R AK(JT(jt,stnum));  // return index of next allocation
 }
+#endif
 
-// Install locale l in the numbered-locale table, at the number returned by the previous jtgetnl.  No error is possible
-static void jtinstallnl(J jt, A l){
+// Install locale l in the numbered-locale table.  We have a write lock on stlock.  Return -1 if error (with the lock released), otherwise the locale number
+static I jtinstallnl(J jt, A l){
+ A nbuf=JT(jt,stnum);  // address of the hashtable
+ while(2*AM(nbuf)>AN(nbuf)){  // resize if needed
+  A obuf=nbuf;  //  address of incumbent block before resize
+  if(unlikely(jtextendunderlock(jt,&JT(jt,stnum),&JT(jt,stlock),8+4+2+1)==0))R -1;  // this is the only error exit, with lock removed
+  nbuf=JT(jt,stnum);  // address of the new hashtable
+  // if AM(nbuf) is 0, we were the ones who extended the buffer.  We must rehash the old numbers into it.  In this case we know that
+  // obuf has not been altered.
+  if(likely(AM(nbuf)==0)){
+   // rehash the old table into the new
+   I i; for(i=0;i<AN(obuf);++i){
+    A st; if(st=(A)IAV1(obuf)[i]){  // if there is a value hashed...
+     I probe=HASHSLOT(NAV(LOCNAME(st))->bucketx,AN(nbuf));  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
+     NOUNROLL while(IAV1(nbuf)[probe]){if(--probe<0)probe=AN(nbuf)-1;}  // find empty slot
+     IAV1(nbuf)[probe]=(I)st;  // install in new hashtable
+    }
+   }
+   AM(nbuf)=AM(obuf);  // indicate that the locales have been added
+   mf(obuf);  // free the old buffer, which we are sure we own
+  }
+ }
+ // hash the locale into the table, which we know has enough room
+ I z=AS(nbuf)[0]++;   // get next locale# to allocate, and increment for next time
+ I probe=HASHSLOT(z,AN(nbuf));  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
+ NOUNROLL while(IAV1(nbuf)[probe]){if(--probe<0)probe=AN(nbuf)-1;}  // find empty slot
+ IAV1(nbuf)[probe]=(I)l;  // put new locale in the empty slot
+ ++AM(nbuf);  // increment number of locales outstanding
  ACINITZAP(l);  // protect new value in table
- I probe=HASHSLOT(AK(JT(jt,stnum)),AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
- NOUNROLL while(IAV0(JT(jt,stnum))[probe]){if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // find empty slot
- IAV0(JT(jt,stnum))[probe]=(I)l;  // put new locale in the empty slot
- ++AK(JT(jt,stnum));  // increment next-locale ticket
- ++AM(JT(jt,stnum));  // increment number of locales outstanding
+ R z;
 }
 
 // return the address of the locale block for number n, or 0 if not found
-A jtfindnl(J jt, I n){
+A jtfindnl(J jt, I n){A z=0;
+ READLOCK(JT(jt,stlock))
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find match or an empty.
- NOUNROLL while(IAV0(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx==n)R (A)IAV0(JT(jt,stnum))[probe]; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // return if locale match; wrap around at beginning of block
- R 0;  // if no match, return failure
+ NOUNROLL while(IAV1(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx==n){z=(A)IAV1(JT(jt,stnum))[probe]; goto exit;} if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // return if locale match; wrap around at beginning of block
+exit: ;
+ READUNLOCK(JT(jt,stlock))
+ R z;  // if no match, return failure
 }
 
 // delete the locale numbered n, if it exists
 void jterasenl(J jt, I n){
+ WRITELOCK(JT(jt,stlock))
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find a match or an empty.
- NOUNROLL while(IAV0(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx==n)break; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // wrap around at beginning of block
+ NOUNROLL while(IAV1(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx==n)break; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // wrap around at beginning of block
  // We have found the match, or are at an empty if no match.  Either way, mark the location as empty and scan forward to find the next empty,
  // moving back blocks that might have hashed into the newly vacated spot
- if(IAV0(JT(jt,stnum))[probe])--AM(JT(jt,stnum));  // if we found something to delete, decrement # locales outstanding
+ if(IAV1(JT(jt,stnum))[probe])--AM(JT(jt,stnum));  // if we found something to delete, decrement # locales outstanding
  NOUNROLL while(1){  // probe points to either the original deletion point or a value that was just copied to an earlier position.  Either way it gets deleted
-  IAV0(JT(jt,stnum))[probe]=0;  // delete the now-invalid or -moved location
+  IAV1(JT(jt,stnum))[probe]=0;  // delete the now-invalid or -moved location
   I lastdel=probe;    // remember where the hole is
   I probehash;   // will hold original hash of probe
   NOUNROLL do{
    if(--probe<0)probe=AN(JT(jt,stnum))-1;  // back up to next location to inspect
-   if(!IAV0(JT(jt,stnum))[probe])R;  // if we hit another hole, there can be no more value that need copying, we're done  *** RETURN POINT ***
-   probehash=HASHSLOT(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx,AN(JT(jt,stnum)));  // see where the probed cell would like to hash
+   if(!IAV1(JT(jt,stnum))[probe])goto exit;  // if we hit another hole, there can be no more values that need copying, we're done  *** RETURN POINT ***
+   probehash=HASHSLOT(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx,AN(JT(jt,stnum)));  // see where the probed cell would like to hash
     // If we are not allowed to move the new probe into the hole, because its hash is after the probe position but before-or-equal the hole,
     // we leave it in place and continue looking at the next position.  This test must be performed cyclically, because the probe may have wrapped around 0
   }while((BETWEENO(probehash,probe,lastdel))||(probe>lastdel&&(probe<=probehash||probehash<lastdel)));  // first half is normal, second if probe wrapped around
   // here lastdel is the hole, and probe is a slot that hashed somewhere before lastdel.  We can safely move the probe to cover the hole.
   // This creates a new hole at probe, which we loop back to clear & then try to fill
-  IAV0(JT(jt,stnum))[lastdel]=IAV0(JT(jt,stnum))[probe];  // move the hole forward
+  IAV1(JT(jt,stnum))[lastdel]=IAV1(JT(jt,stnum))[probe];  // move the hole forward
  }
+exit: ;
+ WRITEUNLOCK(JT(jt,stlock))
 }
 
 // return list of active numbered locales, using namelist mask
 static A jtactivenl(J jt){A y;
- GATV0(y,INT,AN(JT(jt,stnum)),1); I *yv=IAV(y);   // allocate place to hold numbers of active locales
- I nloc=0; DO(AN(JT(jt,stnum)), if(IAV0(JT(jt,stnum))[i]&&(LOCPATH((A)IAV0(JT(jt,stnum))[i]))){yv[nloc]=NAV(LOCNAME((A)IAV0(JT(jt,stnum))[i]))->bucketx; ++nloc;})
+ READLOCK(JT(jt,stlock))
+ GATV0E(y,INT,AN(JT(jt,stnum)),1, {READUNLOCK(JT(jt,stlock));R0}); I *yv=IAV(y);   // allocate place to hold numbers of active locales
+ I nloc=0; DO(AN(JT(jt,stnum)), if(IAV1(JT(jt,stnum))[i]&&(LOCPATH((A)IAV1(JT(jt,stnum))[i]))){yv[nloc]=NAV(LOCNAME((A)IAV1(JT(jt,stnum))[i]))->bucketx; ++nloc;})
+ READUNLOCK(JT(jt,stlock))
  R every(take(sc(nloc),y),ds(CTHORN));  // ":&.> nloc{.y
 }
 
 // iterator support.  countnl returns a number of iterations.  indexnl returns the A block (or 0) for 
 I jtcountnl(J jt) { R AN(JT(jt,stnum)); }  // number of locales to reference by index
-A jtindexnl(J jt,I n) {A z=(A)IAV0(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // the locale address, or 0 if none
+A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // the locale address, or 0 if none
 
 #endif
 
@@ -182,6 +214,7 @@ A jtindexnl(J jt,I n) {A z=(A)IAV0(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
+ // allocate the symbol table itself:
  GATV0(g,SYMB,(p+1)&-2,0); AFLAGORLOCAL(g,SYMB)   // have odd number of hashchains, excluding LINFO.  All SYMB tables are born recursive
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
  // (it is queried by 18!:31)
@@ -200,10 +233,10 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    break;
   case 1:  /* numbered locale */
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
+   // Put this locale into the in-use list at an empty location.  ras(g) at that time
+   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0); WRITEUNLOCK(JT(jt,stlock))   // put the locale into the numbered list; exit if error
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);  // ras() is never virtual.  zpath is permanent, no ras needed
-   // Put this locale into the in-use list at an empty location.  ras(g) at that time
-   jtinstallnl(jt, g);  // put the locale into the numbered list at n
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
   case 2:  /* local symbol table */
@@ -258,6 +291,9 @@ F1(jtlocsizes){I p,q,*v;
  R mtm;
 }    /* 9!:39 default locale size set */
 
+// jtprobe, with readlock taken on stlock
+static L *jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stlock)) L *z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stlock)) R z;}
+
 
 // find the symbol table for locale with name u which has length n and hash/number bucketx
 // locale name is known to be valid
@@ -268,7 +304,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
  if(unlikely(!n)){n=sizeof(JT(jt,baselocale)); u=JT(jt,baselocale);bucketx=JT(jt,baselocalehash);}
  if(n>0&&'9'<*u){  // named locale   > because *u is known to be non-empty
   ASSERT(n<256,EVLIMIT);
-  v=jtprobe((J)((I)jt+n),u,(UI4)bucketx,JT(jt,stloc));
+  v=jtprobestlock((J)((I)jt+n),u,(UI4)bucketx);
   if(v)R v->val;   // if there is a symbol, return its value
  }else{
   R findnl(bucketx);
@@ -276,9 +312,12 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
  R 0;  // not found
 }
 
+
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
 #define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+1,1,MEMSET00); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0;
+
 static F2(jtloccre);
+
 // look up locale name, and create the locale if not found
 // If a locale is returned, its path has been made nonnull
 // bucketx is hash (for named locale) or number (for numeric locale)
@@ -342,7 +381,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
    m=AN(y); u=CAV(y); c=*u; 
    if(!vlocnm(m,u))zv[i]=-2;
    else if(c<='9') zv[i]=(y=findnl(strtoI10s(m,u)))&&LOCPATH(y)?1:-1;
-   else            zv[i]=(yy=jtprobe((J)((I)jt+m),u,(UI4)nmhash(m,u),JT(jt,stloc)))&&LOCPATH(yy->val)?0:-1;
+   else            zv[i]=(yy=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)))&&LOCPATH(yy->val)?0:-1;
   }
  }
  RETF(z);
@@ -413,7 +452,7 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
- if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
+ if(v=jtprobestlock((J)((I)jt+n),s,(UI4)nmhash(n,s))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
   g=v->val;
   if(LOCPATH(g)){
@@ -432,13 +471,14 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  R boxW(ca(y));  // result is boxed string of name - we copy it, perhaps not needed
 }    /* create a locale named w with hash table size a */
 
-static F1(jtloccrenum){C s[20];I k,p;
+static F1(jtloccrenum){C s[20];I k,p;A x;
  ARGCHK1(w);
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
- RE(k=jtgetnl(jt));
+// obsolete  RE(k=jtgetnl(jt));
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
- RZ(stcreate(1,p,k,0L));
- sprintf(s,FMTI,k); 
+ RZ(x=stcreate(1,p,0,0L));
+// obsolete  sprintf(s,FMTI,k); 
+ sprintf(s,FMTI,NAV(LOCNAME(x))->bucketx);   // extract locale# and convert to boxed string 
  R boxW(cstr(s));  // result is boxed string of name
 }    /* create a numbered locale with hash table size n */
 
@@ -483,7 +523,7 @@ static SYMWALK(jtlocmap1,I,INT,18,3,1,
      *zv++=zc;
      *zv++=(I)rifvs(sfn(SFNSIMPLEONLY,d->name));})  // this is going to be put into a box
 
-F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
+static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  ARGCHK1(w);
  ASSERT(!AR(w),EVRANK);
  RE(g=equ(w,zeroionei(0))?JT(jt,stloc):equ(w,zeroionei(1))?jt->locsyms:locale(0,w));
@@ -497,6 +537,7 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=incorp(x); zv[1]=incorp(y);
  R z;
 }    /* 18!:30 locale map */
+F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,symlock)) R z;}
 
 SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */
@@ -516,7 +557,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
     m=AN(y); u=CAV(y);
     ASSERT(m<256,EVLIMIT);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}
-    else {v=jtprobe((J)((I)jt+m),u,(UI4)nmhash(m,u),JT(jt,stloc)); if(v)g=v->val;}  // g is locale block for named locale
+    else {v=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)); if(v)g=v->val;}  // g is locale block for named locale
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
@@ -550,6 +591,6 @@ B jtlocdestroy(J jt,A g){
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
 
- if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one
+ if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one  scaf  this is a problem in multithreads.  Allow deletion of named locale only in master?
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

@@ -74,12 +74,14 @@ void writelock(S *alock, S prev){
 // Extend a hashtable/data table under lock.  abuf is the pointer to the block to be extended (*abuf will hold the new block address).
 // *alock is the lock to use.  We hold a writelock on *alock on entry, but we may relinquish inside this routine.
 // On exit we hold the write lock UNLESS there was an error, in which case we return NOT holding the lock (to allow the caller to abort on error)
-// ishash is 1 if *abuf is a hashtable.  In that case, fill it with -1.  Otherwise copy the old contents to the beginning of the resized table.
-//  if ishash is set, set AM() tdo 0 to indicate that a rehash is needed
+// flags&1 is 1 if *abuf is a hashtable.  In that case, fill it with -1 and set AM to 0 to indicate a rehash is needed.  Otherwise copy the old contents to the beginning of the resized table.
+// flags&2 is set to suppress freeing the old block after setting the new one
+// flags&4 is set when flags&1 is set to indicate the hash table should fill with 0 rather than -1 (for address rather than index hashes)
+// flags&8 is  set if the block has rank 1 and needs to keep AS[0]=AN so it cn be used in J verbs
 // result is 0 if we hit an error, otherwise the table has been resized, but not necessarily by us & it might not have enough space.
 // The tables resized here are allocated with any rank.  AN()/AS() (if present) gives the current allocation, and AM() gives the number of items actually in use
 // When a table is resized, it if mf()'d without recurring to contents.  This means it must not be in use otherwise, for example as a result or a backer
-I jtextendunderlock(J jt, A *abuf, US *alock, I ishash){A z;
+I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
  I oldn=AN(*abuf);   // get the previous allocated size
  I t=AT(*abuf);  // get the type of the allocation
  WRITEUNLOCK(*alock);  // relinquish lock while we allocate the new area
@@ -93,19 +95,19 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I ishash){A z;
   I datasize=allosize(z);  // number of bytes in data area
   I alloatoms=datasize>>bplg(t);   // advance AN to max allocation - leaving no buffer at the end
   // if this allocation is a table, fill in AN and AS[0] (otherwise AN is all we need)
-  // if there are elements of the shape beyond AS[0], they must be parameters or item shape and they are just copied
-  if(AR(z)>=1){itemsize=AN(obuf)/AS(obuf)[0]; AS(z)[0]=alloatoms/itemsize; AN(z)=AS(z)[0]*itemsize; DONOUNROLL(AR(z)-1, AS(z)[i+1]=AS(obuf)[i+1];)
-  }else{itemsize=1; AN(z)=alloatoms;}
-  if(ishash){
+  // if there are elements of the shape beyond AS[0], they must be parameters or item shape and they are just copied.  If rank=1, AS[0] is also such a parameter
+  if(AR(z)>1){itemsize=AN(obuf)/AS(obuf)[0]; AS(z)[0]=alloatoms/itemsize; AN(z)=AS(z)[0]*itemsize; DONOUNROLL(AR(z)-1, AS(z)[i+1]=AS(obuf)[i+1];)
+  }else{itemsize=1; AN(z)=alloatoms; AS(z)[0]=flags&8?AS(obuf)[0]:alloatoms;}  // if rank=1, AS[0] is a user field
+  if(flags&1){
    // If the block is a hashtable, it will be rebuilt from scratch and we just initialize it to -1 pointers
-   mvc(datasize,voidAV(z),1,MEMSETFF);  // fill the entire table
+   mvc(datasize,voidAV(z),1,(flags&4)?MEMSET00:MEMSETFF);  // fill the entire table
    AM(z)=0;  // indicate the whole hash is invalid after resize
   }else{
    MC(voidAV(z),voidAV(obuf),itemsize*(nvaliditems<<bplg(t)));  // copy the valid data.  Rest can be left garbage
    AM(z)=nvaliditems;  // transfer the count of allocated atoms, now valid
   }
   // release the old block.  We assume that freeing a block will not permanently block this thread
-  *abuf=z; mf(obuf);  // mf, not obuf, so we don't recur to children that have been copied and are still valid
+  __atomic_store_n(abuf,z,__ATOMIC_RELEASE); if(!(flags&2))mf(obuf);  // mf, not fa, so we don't recur to recursible children that have been copied and are still valid.   The free is optional
  }else{
   // somebody else has already resized the block.  We just back off and hope they resized it enough.
   mf(z);  // discard the block we allocated

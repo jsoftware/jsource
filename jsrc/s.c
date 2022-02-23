@@ -25,7 +25,7 @@
 /* numbered locales:                                                       */
 // JT(jt,stnum)   A block, data is hashtable holding symtab pointer or 0.  Fixed rank 0
 // AN(JT(jt,stnum)) size of hashtable in entries (each 1 L*)
-// AK(JT(jt,stnum)) next loc# to allocate
+// AS(JT(jt,stnum))[1] next loc# to allocate
 // AM(JT(jt,stnum)) number of entries in use in table
 
 /* named locales:                                                          */
@@ -129,43 +129,47 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
 
-F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
+F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ARGCHK1(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
- GAT0(z,BOX,3,1); zv=AAV(z);
+ READLOCK(JT(jt,stlock)) READLOCK(JT(jt,symlock))
+ GAT0E(z,BOX,3,1,goto exit;); zv=AAV(z);
  n=AN((A)((I)JT(jt,sympv)-AKXR(0)))/symcol; pv=JT(jt,sympv);
- GATV0(x,INT,n*5,2); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
- GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
+ GATV0E(x,INT,n*5,2,goto exit;); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
+ GATV0E(y,BOX,n,  1,goto exit;);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
   *xv++=pv->flag+(pv->name?LHASNAME:0)+(pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    
   *xv++=SYMNEXT(pv->next);
-  RZ(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv);  // simple name
+  RZGOTO(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv,exit);  // simple name
  }
  // Allocate box 3: locale name
- GATV0(y,BOX,n,1); yv=AAV(y); zv[2]=incorp(y);
+ GATV0E(y,BOX,n,1,goto exit;); yv=AAV(y); zv[2]=incorp(y);
  DO(n, yv[i]=mtv;);
  n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc)); 
  for(i=0;i<n;++i){  // for each chain-base in locales pool
   for(j=v[i];j=SYMNEXT(j),j;j=JT(jt,sympv)[j].next){      // j is index to named local entry; process the chain
    x=JT(jt,sympv)[j].val;  // x->symbol table for locale
-   RZ(yv[j]=yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))));  // install name in the entry for the locale
-   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
+   RZGOTO(yv[j]=yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))),exit);  // install name in the entry for the locale
+   RZGOTO(q=sympoola(x),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
   }
  }
  n=jtcountnl(jt);
  for(i=0;i<n;++i)if(x=jtindexnl(jt,i)){   /* per numbered locales */
-  RZ(      yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))));
-  RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
+  RZGOTO(      yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))),exit);
+  RZGOTO(q=sympoola(x),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  if(AN(x=jt->locsyms)>1){               /* per local table      */
-  RZ(aa=incorp(cstr("**local**")));
-  RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
+  RZGOTO(aa=incorp(cstr("**local**")),exit);
+  RZGOTO(q=sympoola(x),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
- RETF(z);
+ zz=z;
+exit: ;
+ READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,symlock))
+ RETF(zz);
 }    /* 18!:31 symbol pool */
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table  l is encoded in low bits of jt
@@ -203,6 +207,7 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table.  l is encoded in low bits of jt
 // result is L* address of the symbol-table entry for the name, or 0 if not found
+// locking is the responsibility of the caller
 L*jtprobe(J jt,C*string,UI4 hash,A g){
  RZ(g);
  F2PREFIP;

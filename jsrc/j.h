@@ -630,7 +630,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
-#define HIPRECS 0 // set to enable hiprecs
+#define HIPRECS 0    // set to enable hiprecs
 #define ARTIFHIPREC 0
 #if ARTIFHIPREC&&HIPRECS
 #define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create hiprec results from <, force-box, and sometimes ;

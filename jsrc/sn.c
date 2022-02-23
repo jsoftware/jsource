@@ -133,8 +133,10 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
 static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]&AT(d->val), 
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
-SYMWALK(jtnlsym, A,BOX,20,1, LOCPATH(d->val)&&CAV1(a)[((UC*)NAV(d->name)->s)[0]],
+static SYMWALK(jtnlsymlocked, A,BOX,20,1, LOCPATH(d->val)&&CAV1(a)[((UC*)NAV(d->name)->s)[0]],
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
+
+F2(jtnlsym){READLOCK(JT(jt,stlock)) A z=jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,stlock)) R z;}
 
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
@@ -199,7 +201,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  R ch;
 }
 
-F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
+static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=BAV(w)[0];
  GAT0(ch,BOX,20,1); m=0;
  if(JT(jt,stch)){
@@ -211,7 +213,8 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
     RZ(ch=nch1(b,d->val,&m,ch));
     if(!d->next)break;
     d=SYMNEXT(d->next)+JT(jt,sympv);
-  }}
+   }
+  }
   // now numbered locales
   DO(jtcountnl(jt), A loc=jtindexnl(jt,i); if(loc)RZ(ch=nch1(b,loc,&m,ch)););
  }
@@ -220,6 +223,7 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
  R grade2(ch,ope(ch));
 }    /* 4!:5  names changed */
 
+F1(jtnch){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,symlock)) R z;}
 
 F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
  ARGCHK1(w);

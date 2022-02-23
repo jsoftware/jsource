@@ -332,9 +332,10 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h){I c,m,p,ui;SBU*u;
   break;
  }
  // when we get here we have the write lock and all the tables have the needed space.  Insert the symbol
- if(HASHTABLE->lock){  // rehash the table if it was resized
-  HASHTABLE->lock=0; SBU *v=SBUV4(JT(jt,sbu)); I *hv=IAV(HASHTABLE); 
+ if(AM(HASHTABLE)==0){  // rehash the table if it was resized
+  SBU *v=SBUV4(JT(jt,sbu)); I *hv=IAV(HASHTABLE);   // point to symbols and hashtable
   DO(AM(JT(jt,sbu)), I j=INITHASH(v++->h); while(0<=hv[j]){if(--j<0)j+=AN(HASHTABLE);} hv[j]=i;);
+  AM(HASHTABLE)=1; // set 'table not resized' for next time
  }
 // obsolete  RE(sbextend(n+p,s,h));           /* extend global tables as req'd*/
  // While we were waiting for write locks, someone else may have filled in the symbol.  It wouldn't do to have duplicates

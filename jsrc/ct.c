@@ -75,7 +75,7 @@ void writelock(S *alock, S prev){
 // *alock is the lock to use.  We hold a writelock on *alock on entry, but we may relinquish inside this routine.
 // On exit we hold the write lock UNLESS there was an error, in which case we return NOT holding the lock (to allow the caller to abort on error)
 // ishash is 1 if *abuf is a hashtable.  In that case, fill it with -1.  Otherwise copy the old contents to the beginning of the resized table.
-//  if ishash is set, set obuf->lock to 1 to indicate that a rehash is needed
+//  if ishash is set, set AM() tdo 0 to indicate that a rehash is needed
 // result is 0 if we hit an error, otherwise the table has been resized, but not necessarily by us & it might not have enough space.
 // The tables resized here are allocated with any rank.  AN()/AS() (if present) gives the current allocation, and AM() gives the number of items actually in use
 // When a table is resized, it if mf()'d without recurring to contents.  This means it must not be in use otherwise, for example as a result or a backer
@@ -100,7 +100,6 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I ishash){A z;
    // If the block is a hashtable, it will be rebuilt from scratch and we just initialize it to -1 pointers
    mvc(datasize,voidAV(z),1,MEMSETFF);  // fill the entire table
    AM(z)=0;  // indicate the whole hash is invalid after resize
-   z->lock=1;  // alternate indicator of rehash required
   }else{
    MC(voidAV(z),voidAV(obuf),itemsize*(nvaliditems<<bplg(t)));  // copy the valid data.  Rest can be left garbage
    AM(z)=nvaliditems;  // transfer the count of allocated atoms, now valid

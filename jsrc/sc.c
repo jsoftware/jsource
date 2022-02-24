@@ -169,6 +169,34 @@ valgone: ;
 
  // Now pop the stack.  Execution may have added entries, but our stack frame always starts in the same place.
  // We may add entries to the end of the caller's stack frame
+ //
+ // The possibilities are:
+ // 1. nothing (most likely) - we called a simple name and it returned
+ // 2. just a CALLSTACKPOPLOCALE - we called a locative and it returned.  We have to restore the implied locale, which was saved oon the stack
+ // 3. 18!:4 puts a CALLSTACKPOPFROM entry giving the implied locale before the switch.  We expect that 18!:4 is called through a cover name and if we see it on the stack we
+ //   suppress restoring the global locale when the current name (which must be the cover name) completes.  But, we have to make sure that the previous name, which
+ //   might not have had any stack entry at all, knows to reset the implied locales when IT finishes.  [The problem is that there might be a string of calls with nothing on the stack,
+ //   and then the 18!:4, and you need a marker to indicate which call the 18!:4 applies to.]  So, at the very end, we put a CALLSTACKPOPLOCALEFIRST entry into the
+ //   CALLER's stack to notify it of what its starting locale was.  But there is a further mess: there might be oodles of calls to 18!:4 is a row, and if each one pushes CALLSTACKPOPLOCALEFIRST into
+ //   its caller, the stack will overflow.  To prevent this, when we push the CALLSTACKPOPLOCALEFIRST onto the caller's stack we enter a new mode, wherein EVERY call starts with
+ //   POPLOCALE.  Now there is no ambiguity about where the 18!:4 applies, and we can simply remove them as they come up.
+ // 4. u./v. pushes CALLSTACKPUSHLOCALSYMS to save the LOCAL symbol table.  It overrides any other locale resetting above, is always first, and is always followd by CALLSTACKPOPLOCALE
+ //
+ // We also handle deletion of locales as they leave execution.  Locales cannot be deleted while they are pointed to by paths.  The AC is used to see when there are
+ // no references to a locale, as usual; but if the locale has been marked for deletion and is no longer running, it is half-deleted, losing its path and all its symbols,
+ // and exists as a zombie until its path references disappear.  To tell is a locale is running, we use a separate 'execution count' stored in AR, which is like a low-order extension
+ // of AC.  When a locale is created, it is given usecount of 1 and execution count of 1.  When it is deleted, the execution count is decremented and if it is decremented to 0, that
+ // causes the locale to be half-deleted and the AC decremented, possibly resulting in deletion of the locale.  [A flag prevents half-deletion of the locale more than once.]
+ // To prevent half-deletion while the locale is running, we increment the execution count when an execution (including the first) switches into the locale, and decrement the
+ // execution count when that execution completes (either by a switch back to the previous locale or a successive 18!:4).
+ //
+ // Locale switches through 18!:4 take advantage of the fact that the cover verb does nothing except the 18!:4 function and thus cannot alter locales itself.
+ // The 18!:4 is treated as the start of a new execution for execution-count purposes, and always ensures that the last thing in the caller's stack is either CALLSTACKPOPLOCALEFIRST (for the
+ // very first 18!:4) or CALLSTACKPOPFROM (for others).  When 18!:4 is executed, if the caller's stack ends with POPFIRST or POPFROM, that must mean that the 18!:4 being executed
+ // must be the second one in that name, and therefore the execution-count of the current locale is decremented.  Likewise, when a name finishes with POPFIRST or PO)PFROM on the top of its own stack,
+ // it knows that it executed 18!:4 and must decrement the current locale.  In all cases decrementing the locale count for the locale that the name started with is done only
+ // when processing a POP returning from a locative, but if there is a POPFIRST/POPFROM in the frame, the locale that is decremented must be the one in the POPFIRST/POPFORM (and also
+ // the locale in the POPFIRST/POPFROM must be from the FIRST 18!:4 which will give the starting locale, though we could equally take this value from explocale)
  jt->curname=savname;  // restore the executing name
  if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them
@@ -205,14 +233,14 @@ valgone: ;
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller.  The following pushes are onto the caller's stack
    // NOTE: if there is no higher executing name, these pushes will never get popped.  That would correspond to trying to delete the locale that is running at the console,
    // or typing (cocurrent 'a') into the console, which would leave a POP on the stack, never to be executed because there is no higher function to return to base locale.
-   // There is no way to detect this, because names that don't change locales don't leave a trace, and there is no guarantee that the function-call stack will
+   // There is no way to detect this, because names that don't change locales don't leave a trace, and thus there is no guarantee that the function-call stack will
    // be at 0 when the last name returns, because the name might have been called from the middle of a tacit expression that already had a function-call depth when the
    // name was called.
-   // So, we reset the name-stack pointer whenever we call from console level (jt->uflags.us.uq.uq_c.bstkreqd too)
+   // Therefore, we reset the name-stack pointer whenever we call from console level (jt->uflags.us.uq.uq_c.bstkreqd too)
 
    // If there is a POPFROM, we have to make sure it is undone when the caller returns.  If the caller has a POP already, we can leave it alone; otherwise we have to add one.
    // To make sure we don't overflow the stack because of a sequence of cocurrents, we use jt->uflags.us.uq.uq_c.bstkreqd to indicate that a POPFROM is on the stack and in that case
-   // we ensure that there is a POP for every name (but don't create new ones for every cocurrent).  Thus, if jt->uflags.us.cx.cx_c.bstkreqd is not set, we set it for hiprec calls, and put a POPFIRST onto the caller's stack.
+   // we ensure that there is a POP for every name (but don't create new ones for every cocurrent).  Thus, if jt->uflags.us.cx.cx_c.bstkreqd is not set, we set it for later calls, and put a POPFIRST onto the caller's stack.
    // When that is found, jt->uflags.us.uq.uq_c.bstkreqd will be reset
    if(fromfound){
     if(!(jt->uflags.us.uq.uq_c.bstkreqd)){pushcallstack1(CALLSTACKPOPLOCALEFIRST,earlyloc); jt->uflags.us.uq.uq_c.bstkreqd=1;}
@@ -220,7 +248,8 @@ valgone: ;
    // If the current locale was deletable, push an entry to that effect in the caller's stack.  It will be deleted when it becomes un-current (if ever: if
    // the locale is still in use back to console level, it will not be deleted.  Invariant: if a locale is marked for destruction, it appears
    // nowhere earlier on the call stack
-   if(delcurr)pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,jt->global);
+// obsolete    if(delcurr)pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,jt->global);
+   if(delcurr)pushcallstack1(CALLSTACKDELETE,jt->global);
   }
  }
  // ************** errors OK now

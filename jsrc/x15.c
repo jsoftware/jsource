@@ -187,6 +187,7 @@ typedef struct {
  B zbx;                         /* > 1 iff result is boxed              */
  B fpreset;                     /* % 1 iff do FPRESET after call        */
  B alternate;                   /* + 1 iff alternate calling convention */
+ B hloaded;                    // set if the h entry of this block was loaded
  struct {
   C star;               // arguments star or not: 0=not 1=* 2=&
   C tletter;            /* arguments type letters, cwusi etc.   */
@@ -779,10 +780,11 @@ static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;A z;I an,hn,k;
  if(cc->li>=0){
   /* assumes the hash table for libraries (JT(jt,cdhashl)) is fixed sized */
   // a new lib was loaded and verified.  Add it to cdhashl, pointing to the arg block
+  cc->hloaded=1;
   if(AM(JT(jt,cdhashl))<AN(JT(jt,cdhashl))) {
    cc->li+=cc->ai; HASHINSERT(JT(jt,cdhashl),cc->ln,s+cc->li,k)   // convert string offset to offset inside strings table; hash the library
   }else cc=0;  // no room to insert - we will have to fail the operation.  This sucks, because we wait for the table to totally fill
- }
+ }else cc->hloaded=0;
 // obsolete z=pv+AM(JT(jt,cdarg));
  // hash the new string into cdhash, possibly resizing the hashtable - under lock
  if(AN(JT(jt,cdhash))<=2*AM(JT(jt,cdarg))){RZ(jtextendunderlock(jt,&JT(jt,cdhash),&JT(jt,cdlock),1)) s=CAV0(JT(jt,cdstr)); pv=AAV0(JT(jt,cdarg)); k=AM(JT(jt,cdarg));}
@@ -1301,9 +1303,11 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 
 void dllquit(J jt){I j,*v;
  if(!JT(jt,cdstr))R;   // if we never initialized, don't free
- v=AV(JT(jt,cdhashl)); A *av=AAV1(JT(jt,cdarg));  // point to A blocks for CCTs
+// obsolete  v=AV(JT(jt,cdhashl));
+ A *av=AAV1(JT(jt,cdarg));  // point to A blocks for CCTs
 // obsolete  av=(CCT*)AV(JT(jt,cdarg));
- DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(((CCT*)IAV1(av[j]))->h); fr(av[j]));   // unload all libraries, and free the CCT blocks
+// obsolete  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(((CCT*)IAV1(av[j]))->h); fr(av[j]));   // unload all libraries, and free the CCT blocks
+ DQ(AM(JT(jt,cdarg)), if(((CCT*)IAV1(av[i]))->hloaded)FREELIB(((CCT*)IAV1(av[i]))->h); fr(av[i]));   // unload all libraries, and free the CCT blocks
  mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00);
 // obsolete  mvc(AN(JT(jt,cdarg)),CAV(JT(jt,cdarg)),1,MEMSET00); 
  mvc(SZI*AN(JT(jt,cdhash)),CAV(JT(jt,cdhash)),1,MEMSETFF); mvc(SZI*AN(JT(jt,cdhashl)),CAV(JT(jt,cdhashl)),1,MEMSETFF); 

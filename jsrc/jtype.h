@@ -792,7 +792,7 @@ typedef struct {
 } LS;
 #define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
 #define CALLSTACKPOPFROM 4  // value is jt->global that must be modified in the caller of this function also
-#define CALLSTACKCHANGELOCALE 8  // value is jt->global that was changed within execution of this name
+// obsolete #define CALLSTACKCHANGELOCALE 8  // value is jt->global that was changed within execution of this name
 #define CALLSTACKPOPLOCALEFIRST 16  // set in the POPLOCALE that is added when the first POPFROM is seen
 #define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
 #define CALLSTACKDELETE 256  // the given locale must be deleted, and this is the earliest place on the stack that refers to it

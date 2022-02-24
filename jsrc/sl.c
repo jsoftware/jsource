@@ -567,7 +567,8 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
     jt->callstack[k].type|=CALLSTACKDELETE;  // name active on stack; mark for deletion
    else if(g==jt->global){
     // Name is not on stack but it is executing now.  Add a change+delete entry for it.  There may be multiple of these outstanding
-    pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,g);  // mark locale for deletion
+// obsolete     pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,g);  // mark locale for deletion
+    pushcallstack1(CALLSTACKDELETE,g);  // mark locale for deletion
    } else locdestroy(g);  // not on stack and not running - destroy immediately
   }
  }

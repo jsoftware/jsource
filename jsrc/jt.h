@@ -266,6 +266,7 @@ typedef struct JSTstruct {
  I filler4[2];      // 2 words free
 // end of cacheline 4
 
+
 // Cacheline 5: User symbols, also used for front-end locks
  A sbu;              /* SB data for each unique symbol                  */
  A sbhash;              // hashtable for symbols

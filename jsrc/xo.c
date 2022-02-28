@@ -14,7 +14,6 @@
        
 #include "j.h"
 #include "x.h"
-// scaf use AAV0 for fopafl
 
 B jtxoinit(JS jjt, I nthreads){A x;JJ jt=MTHREAD(jjt);
 #if SY_WIN32 && !SY_WINCE
@@ -24,18 +23,17 @@ B jtxoinit(JS jjt, I nthreads){A x;JJ jt=MTHREAD(jjt);
 #endif
 // obsolete  GAT0(x,BOX,8,1);  ACINITZAP(x); INITJT(jjt,fopa)=x;  // called during init - this is NOT a recursive block
  GAT0(x,INT,8,0);  ACINITZAP(x); INITJT(jjt,fopafl)=x; AM(INITJT(jjt,fopafl))=0;   // AM is # valid files.  Table has rank 0.  We allo as INT but the values are As - we never need to clear to 0
-  // fopaf has filestrings at the front and file handles at the back.
  R 1;
 }
 
 // check that x is in table of file#s.  Return x if so, otherwise 0 for error
 // if the file is found, mark it as busy in fopafl.  This establishes a lock on that file to prevent it from being deleted while I/O is in process
 // Every non-failing call to vfn must be matched by a call to unvfn to unlock the file
-F jtvfn(J jt,F x){F z=0; READLOCK(JT(jt,flock)) A*v=AAV(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){z=x; READLOCK(v[i]->lock) break;}) READUNLOCK(JT(jt,flock)) ASSERT(z!=0,EVFNUM); R z;}
+F jtvfn(J jt,F x){F z=0; READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){z=x; READLOCK(v[i]->lock) break;}) READUNLOCK(JT(jt,flock)) ASSERT(z!=0,EVFNUM); R z;}
 
 // remove internal file lock set by vfn().  Required exactly when vfn has returned non0.  The file is known to be in the file table, but its index may have changed.
 // for syntactic ease we return the dummy argument
-A jtunvfn(J jt,F x,A dummy){READLOCK(JT(jt,flock)) A*v=AAV(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){READUNLOCK(v[i]->lock) break;}) READUNLOCK(JT(jt,flock)) R dummy;}
+A jtunvfn(J jt,F x,A dummy){READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){READUNLOCK(v[i]->lock) break;}) READUNLOCK(JT(jt,flock)) R dummy;}
 
 // w is a user argument, either a number or a filename string.  If a number, return it (with error if it is 0); if a string return the file# if found, or 0 if not found
 // return of 0 is not ipso facto an error
@@ -46,7 +44,7 @@ I jtfnum(J jt,A w){A y;I h,j,z=0;
  ASSERT(AN(y),EVLENGTH);
  if(AT(y)&B01+INT){ASSERT(h=i0(y),EVFNUM); R h;}
  RZ(y=fullname(vslit(y)));  // get name to match
- READLOCK(JT(jt,flock)) A*v=AAV(JT(jt,fopafl)); 
+ READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); 
  DO(AM(JT(jt,fopafl)), if(equ(v[i],y)){z=AM(v[i]); break;} )  // if filename found, return its file#
 // obsolete  j=i0(indexof(vec(BOX,AM(JT(jt,fopf)),AAV(JT(jt,fopa))),boxW(fullname(vslit(y)))));   // scaf should use take()
 // obsolete  if(jt->jerr)z=0;
@@ -58,7 +56,7 @@ I jtfnum(J jt,A w){A y;I h,j,z=0;
 // returns 0 if given file# is not open, otherwise the string name of the file
 F1(jtfname){I j; A z=0;
  I h; ASSERT(h=i0(w),EVFNUM);
- READLOCK(JT(jt,flock))  A*v=AAV(JT(jt,fopafl));
+ READLOCK(JT(jt,flock))  A*v=AAV0(JT(jt,fopafl));
  DO(AM(JT(jt,fopafl)), if(h==AM(v[i])){z=ca(v[i]); break;} )  // if filename found, return its file#.  Clone the string because we need the AM field in the table; also we don't do EPILOG
 // obsolete  REGOTO(j=i0(indexof(JT(jt,fopf),w)),errorexit);
 // obsolete  ASSERTGOTO(j<AM(JT(jt,fopf)),EVFNUM,errorexit);
@@ -70,8 +68,8 @@ F1(jtfname){I j; A z=0;
 // 1!:20
 F1(jtjfiles){A y,z=0;
  ASSERTMTV(w);
- READLOCK(JT(jt,flock))  A*v=AAV(JT(jt,fopafl)); I nrows=AM(JT(jt,fopafl));
- // We are doing an uncomfortable amount of memory allocating here under lock.  scaf
+ READLOCK(JT(jt,flock))  A*v=AAV0(JT(jt,fopafl)); I nrows=AM(JT(jt,fopafl));
+ // We are doing an uncomfortable amount of memory allocating here under lock.
  // We have to clone the string to protect the AM field in the original, and the lock
  GAT0E(y,BOX,2*nrows,2,goto errorexit;) A (*zv)[2]=(A (*)[2])AAV2(y); AS(y)[0]=nrows; AS(y)[1]=2;  // get addr of result data, fill in the shape
  DO(AS(y)[0], RZGOTO(zv[i][1]=ca(v[i]),errorexit); GAT0E(zv[i][0],INT,1,0,goto errorexit;) IAV0(zv[i][0])[0]=AM(v[i]);)  // fill in the boxed file# and a clone of the string
@@ -137,7 +135,7 @@ F1(jtjopen){A z;I h;
 // obsolete  RZ(ras(ww));  // ras because ww might be the actual original w
   WRITELOCK(JT(jt,flock))
   while(AM(JT(jt,fopafl))==AN(JT(jt,fopafl)))RZ(jtextendunderlock(jt,&JT(jt,fopafl),&JT(jt,flock),0))
-  AAV(JT(jt,fopafl))[AM(JT(jt,fopafl))]=ww; ACINITZAP(ww) AM(ww)=h;  // install new string, with file handle in AM
+  AAV0(JT(jt,fopafl))[AM(JT(jt,fopafl))]=ww; ACINITZAP(ww) AM(ww)=h;  // install new string, with file handle in AM
   ++AM(JT(jt,fopafl));
   WRITEUNLOCK(JT(jt,flock))
 // obsolete   I ct=AM(JT(jt,fopf));
@@ -174,7 +172,7 @@ F1(jtjclose){A*av;I*iv,j,h;
 #endif
  // first, remove the table entry so no other threads can write to the file
  A dela=0;  // the string we deleted
- WRITELOCK(JT(jt,flock)) A*v=AAV(JT(jt,fopafl));
+ WRITELOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl));
  DO(AM(JT(jt,fopafl)), if(h==AM(v[i])){dela=v[i]; v[i]=v[--AM(JT(jt,fopafl))]; break;} )  // if file# is open, remove it from the open list
  WRITEUNLOCK(JT(jt,flock))
  // we have detached the string for the closing file.  It is possible that there wasn't one, if another thread got in and deleted it first.

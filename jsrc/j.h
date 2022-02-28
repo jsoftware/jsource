@@ -1083,6 +1083,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
                             z=_mm256_blendv_pd(zero,oned,z); \
                         } }
 
+#define EXPLICITRUNNING (AN(jt->locsyms)>SYMLINFOSIZE)  // the null locale has no chains.  Any real local table will have more.
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
 // SHAPER is used when shape is given and rank is SDT.  Usually 0/1 use COPYSHAPE0 but they can use this; it always copies from the shaape.  This works only up to rank 2 (but could be extended if needed)

@@ -417,11 +417,11 @@ F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
    if(t&(C4T+INT+FL)){
     // If this datatype supports smallrange or radix sorting, go try that
     if(1==api)RZ(z=(t&INT?jtsorti:t&FL?jtsortd:jtsortu)(jtinplace,m,n,w))   // Lists of INT/FL/C4T
-   else if(d==2){
+   }else if(d==2){
     // 2-byte types, which must be B01/LIT/C2T.  Use special code, unless strings too short
     if(t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long
     if(t&LIT+C2T&&n>4600)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long   TUNE
-   }else if(d<2)RZ(z=(t&B01&&(m==1||0==(n&(SZI-1)))?jtsortb:jtsortc)(jtinplace,m,n,w))  // Lists of B01/LIT
+   }else if(d<2){RZ(z=(t&B01&&(m==1||0==(n&(SZI-1)))?jtsortb:jtsortc)(jtinplace,m,n,w))  // Lists of B01/LIT
    }else if(d==4&&t&B01) RZ(z=sortb4(m,n,w))  // Booleans with cell-items 4 bytes long
   }
    // for direct types, we have the choice of direct/indirect.  For indirect, we do grade followed by from to apply the grading permutation.

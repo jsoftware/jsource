@@ -354,7 +354,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
 //  tot+=spfor1(LOCPATH(y));  // ignore the size of the path, since it's just other locales
   tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
-  for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
+  for(j=SYMLINFOSIZE;j<m;++j){  // for each hashchain in the locale
    for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+JT(jt,sympv); tot+=spfor1(u->name); tot+=spfor1(C(u->val));}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;

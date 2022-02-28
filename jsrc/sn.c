@@ -141,13 +141,15 @@ F2(jtnlsym){READLOCK(JT(jt,stlock)) A z=jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
 // a is the rank-1 256-byte initial-letter mask
+// w is the type to look for
+// result is list of names
 static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
  RZ(w=vi(w)); v=AV(w); 
  DQ(AN(w), x=*v++; m|=nlmask[BETWEENC(x,0,6)?x:7];); 
- AS(a)[0]=m&RHS; b=1&&AS(a)[0]&RHS;  // AS(a)[0] is used for the type mask
+ AS(a)[0]=m&RHS; b=1&&AS(a)[0]&RHS;  // AS(a)[0] is used for the type mask   b='type is NOUN/VERB/ADV/CONJ'
  ASSERT(!(m&MARK),EVDOMAIN);
- if(b           )RZ(z=nlxxx(a,jt->global));
- if(b&&(AN(jt->locsyms)>1))RZ(z=over(nlxxx(a,jt->locsyms),z));
+ if(b           )RZ(z=nlxxx(a,jt->global));  // get list of global symbols
+ if(b&&EXPLICITRUNNING)RZ(z=over(nlxxx(a,jt->locsyms),z));   // if there are local symbols, add them on
  if(m==SYMB     )RZ(z=over(nlsym(a,JT(jt,stloc)),z));
  R nub(grade2(z,ope(z)));
 }
@@ -177,11 +179,12 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
 
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  ARGCHK1(w);
- wn=AN(w); e=LXAV0(w);                                /* locale                */
- x=(A)(*e+JT(jt,sympv))->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
- m=*pm; v=AAV(ch)+m;                               /* result to appended to */
- for(i=SYMLINFOSIZE;i<wn;++i,++e)if(*e){
-  d=SYMNEXT(*e)+JT(jt,sympv);
+ wn=AN(w); e=LXAV0(w);                               // w is locale, e->hashchains
+// obsolete  x=(A)(*e+JT(jt,sympv))->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
+ x=LOCNAME(w); p=AN(x); s=NAV(x)->s;  /* locale name/number           */
+ m=*pm; v=AAV(ch)+m;                               /* result to append to */
+ for(i=SYMLINFOSIZE;i<wn;++i)if(e[i]){
+  d=SYMNEXT(e[i])+JT(jt,sympv);
   while(1){
    if(LCH&d->flag&&d->name&&d->val){
     d->flag^=LCH;
@@ -207,10 +210,10 @@ static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
  if(JT(jt,stch)){
   n=AN(JT(jt,stloc)); e=SYMLINFOSIZE+LXAV0(JT(jt,stloc));
   // named locales first
-  for(i=1;i<n;++i,++e)if(*e){
+  for(i=SYMLINFOSIZE;i<n;++i,++e)if(*e){  // for each hashchain in locale table
    d=SYMNEXT(*e)+JT(jt,sympv);
-   NOUNROLL while(1){
-    RZ(ch=nch1(b,d->val,&m,ch));
+   NOUNROLL while(1){   // for each locale in the chain
+    RZ(ch=nch1(b,d->val,&m,ch));  // go check each symbol in the locale
     if(!d->next)break;
     d=SYMNEXT(d->next)+JT(jt,sympv);
    }

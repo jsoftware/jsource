@@ -167,7 +167,7 @@ struct AD {
 //  NOTE!! result.h faux cellshape block depends on n, r, and s being in place from here to the end of this struct, with 2 Is from n to s
  I n;  // # atoms - always 1 for sparse arrays
 #if C_LE
- RANKT r;  // rank
+ RANKT r;  // rank.  Used as flags in SYMB types (i. e. locales)
  UC filler;
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
@@ -725,7 +725,8 @@ typedef struct {I e,p;X x;} DX;
 
 
 #define SYMLINFO 0  // index of LINFO entry
-#define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT root symbol chains, but instead are LINFO entries
+#define SYMLEXECCT 1  // index of EXECCT for the locale
+#define SYMLINFOSIZE 2     // Number of symbol-table entries that DO NOT root symbol chains, but instead are LINFO entries
 // The MSB of LX values is used to indicate that the NEXT value is NOT permanent.  We do this so that we can visit all PERMANENT entries without ever
 // touching a non-PERMANENT one.  By marking NON-permanent symbols with the sign bit, we allow the code for permanent symbols to assume the
 // sign is 0, since the bucket #s are always for permanent symbols.  The end-of-chain pointer does not have the PERMANENT flag set
@@ -733,6 +734,18 @@ typedef struct {I e,p;X x;} DX;
 #define SYMNONPERM (I4)(1L<<SYMNONPERMX)   // flag set if next is non-permanent, or if an LX is invalid
 #define SYMNEXT(s) ((s)&~SYMNONPERM)  // address of next symbol
 #define SYMNEXTISPERM(s) ((s)>0)  // true if next symbol is permanent
+
+// Macros to incr/decr execct of a locale
+#define EXECCTNOTDELD 0x1000000   // This bit is set when a locale is created, and removed when the user asks to delete it.  Lower bits are the exec count.  The locale is half-deleted when exec ct goes to 0
+#if HIPRECS
+#define INCREXECCT(l) _atomic_fetch_add(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL);
+#define DECREXECCT(l) if(_atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0)locdestroy(l);
+#define DELEXECCT(l) if(_atomic_and_fetch(&LXAV0(l)[SYMLEXECCT],~EXECCTNOTDELD,__ATOMIC_ACQ_REL)==0)locdestroy(l);
+#else
+#define INCREXECCT(l) ++LXAV0(l)[SYMLEXECCT];
+#define DECREXECCT(l) if(--LXAV0(l)[SYMLEXECCT]==0)locdestroy(l);
+#define DELEXECCT(l) if((LXAV0(l)[SYMLEXECCT]&=~EXECCTNOTDELD)==0)locdestroy(l);
+#endif
 
 typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
@@ -778,7 +791,7 @@ typedef struct {
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
 #define LOCNAME(g) ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].name)
-#define LOCTHREAD(g)  ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].next)
+// obsolete #define LOCTHREAD(g)  ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].next)
 #define LOCPATH(g) (g)->kchain.locpath
 #define LOCBLOOM(x) AM(x)
 #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter
@@ -792,10 +805,10 @@ typedef struct {
 } LS;
 #define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
 #define CALLSTACKPOPFROM 4  // value is jt->global that must be modified in the caller of this function also
-// obsolete #define CALLSTACKCHANGELOCALE 8  // value is jt->global that was changed within execution of this name
+#define CALLSTACKCHANGELOCALE 8  // value is the value of jt->global before it was modified by the called function
 #define CALLSTACKPOPLOCALEFIRST 16  // set in the POPLOCALE that is added when the first POPFROM is seen
 #define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
-#define CALLSTACKDELETE 256  // the given locale must be deleted, and this is the earliest place on the stack that refers to it
+// obsolete #define CALLSTACKDELETE 256  // the given locale must be deleted, and this is the earliest place on the stack that refers to it
 
 // Add an entry to the call stack, and increment the index variable
 #define pushcallstack(i,t,v) (jt->callstack[i].type=(t), jt->callstack[i].value=(v), ++i)

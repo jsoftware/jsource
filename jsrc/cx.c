@@ -978,7 +978,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx),pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.  The chains have MSB flag, which must be removed
  }
 
- asgct = asgct + ((asgct+4)>>1); // leave 33% empty space + 2, since we will have resolved most names here
+ asgct = asgct + ((asgct+6)>>1); // leave just 33% empty space because buckets & symbol addresses do most of the work
  RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
  *(UI4*)LXAV0(actst)=(UI4)((SYMHASH(NAV(mnuvxynam[4])->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(mnuvxynam[5])->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
 
@@ -986,7 +986,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
  // So we add them by hand - just y and possibly x.  They will be added later too
  RZ(probeis(ca(mnuvxynam[5]),actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(ca(mnuvxynam[4]),actst));}
- for(j=1;j<pfstn;++j){  // for each hashchain
+ for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=JT(jt,sympv)[pfx].next){L *newsym;
    A nm=JT(jt,sympv)[pfx].name;
    // If we are transferring a PERMANENT name, we have to clone it, because the name may be local & if it is we may install bucket info or a symbol index
@@ -1000,7 +1000,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Go through all the newly-created chains and clear the non-PERMANENT flag that was set in each root and next pointer.  This flag is set to
  // indicate that the symbol POINTED TO is non-permanent.
  sympv=JT(jt,sympv);  // refresh pointer to symbols
- for(j=1;j<actstn;++j){  // for each hashchain
+ for(j=SYMLINFOSIZE;j<actstn;++j){  // for each hashchain
   actstv[j]=SYMNEXT(actstv[j]); for(pfx=actstv[j];pfx;pfx=sympv[pfx].next)sympv[pfx].next=SYMNEXT(sympv[pfx].next);  // set PERMANENT for all symbols in the table
  }
 
@@ -1086,6 +1086,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z); AR(z)|=ARLCLONED;  // allocate the clone; zv->clone hashchains; set flag to indicate cloned
  // Copy the first hashchain, which has the x/v hashes
  zv[0]=av[0]; // Copy as LX; really it's a UI4
+ // We don't need to save all SYMLINFOSIZE slots for local symbol tables
  // Go through each hashchain of the model, after the first one.  We know the non-PERMANENT flags are off
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, ztx is element to insert after
   while(SYMNEXTISPERM(ahx)) {L *l;  // for each permanent entry...

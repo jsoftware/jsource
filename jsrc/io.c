@@ -354,6 +354,43 @@ F1(jtjoff){I x;
  R 0;
 }
 
+// wrapper to raise the execct of the starting locale while an immex is running
+// If the global locale changes during execution, we must have called cocurrent or 18!:4 directly.  If cocurrent, there will be a
+// POPFIRST on the stack (which is otherwise empty).  If there is a POPFIRST we need to decrement the current global locale.
+// in this routine jt is a thread pointer and jjt is the shared pointer
+static void jtimmexexecct(JJ jt, A x){
+ I4 savcallstack = jt->callstacknext;   // starting callstack
+ A startloc=jt->global;  // point to current global locale
+ if(likely(startloc!=0))INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
+#if 0 // obsolete
+printf("immex startloc=%p, execct=%x\n",startloc,startloc?LXAV0(startloc)[SYMLEXECCT]:0);  // scaf
+#endif
+ jtimmex(jt,x);   // run the sentence
+#if 0 // obsolete
+printf("immex return startloc=%p, execct=%x, jt->global=%p, stacksize=%d\n",startloc,startloc?LXAV0(startloc)[SYMLEXECCT]:0,jt->global,jt->callstacknext-savcallstack);  // scaf
+#endif
+ if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
+ // the stack may contain POPFIRST or POPFROM if the call changed locales, either properly by cocurrent or illicitly by 18!:4.  In either case we leave the implied locale as the
+ // verb left it, i. e. NOT simulating a return to a named call in the FE.  But we do process the stack 
+ while(jt->callstacknext>savcallstack){  // discard the stack for this call.  This largely follows the code at the end of unquote
+  if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPFROM){
+   // if TOS is POPFROM, the user executed 18!:4 from the keyboard.  The new locale has not been started, so we do nothing.
+  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
+   // The called function switched locales and incremented the count for the new locale.  We must close that execution
+#if 0 // obsolete
+printf("immex decr jt->global\n");
+#endif
+   DECREXECCT(jt->global);  // end execution of the last switched locale
+   if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
+    // We don't go to fast mode willy-nilly because we could be an interrupt handler and the interrupted function may be in slow mode
+  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){
+   // Since we know we didn't do a POP, there's no need to look for one
+  }
+  --jt->callstacknext;
+ } // process the whole stack in reverse order
+}
+
+
 // if there is an immex sentence, fetch it, protect it from deletion, run it, and undo the protection
 // in this routine jt is a thread pointer and jjt is the shared pointer
 static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
@@ -361,7 +398,7 @@ static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
  // if there is an immex phrase, protect it during its execution
   A iep=0; if(jt->iepdo){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
   if(iep==0)break;
-  jt->iepdo=0; jtimmex(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) jt->jerr=0; jttpop(jt,old);
+  jt->iepdo=0; jtimmexexecct(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) jt->jerr=0; jttpop(jt,old);
  }
 }
 
@@ -382,7 +419,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
- x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>1)); if(!jm->jerr)jtimmex(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
+ x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE)); if(!jm->jerr)jtimmexexecct(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
  e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm) jm->jerr=0;
 // obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);

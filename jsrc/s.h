@@ -20,7 +20,7 @@
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,GACOPYSHAPE0,R 0);                \
   if(1<(COL)){AS(z)[0]=(COUNT); AS(z)[1]=(COL);}             \
   zv=(T*)AV(z);                                              \
-  for(i=1;i<n;++i){                  \
+  for(i=SYMLINFOSIZE;i<n;++i){                  \
    k=SYMNEXT(*e++);  /* initial symbol index */  \
    while(j=k){                         \
    d=j+JT(jt,sympv);                                            \

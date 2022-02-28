@@ -81,6 +81,13 @@ add=: mema 2*IF64{4 8
 (9;(,9);2;<<add)=         'xbasic x *x x *x' dcd (,2);2;<<add
 0=memf add
 
+NB. Verify zero padding for write
+add=: mema 5
+(4{.'abcde') memw add,0 5 2
+('abcd' , {.a.) -: memr add,0 5 2
+0=memf add
+
+
 NB. memr/memw boolean
 add=: mema n=: 127+1e4*(IF64<IFRASPI){1024 256
 (a=: n$a.) memw add,0,n,JCHAR

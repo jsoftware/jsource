@@ -893,7 +893,7 @@ RECURSIVERESULTSCHECK
       if(pmask&0b10000000){  // assign - can't be fork/hook
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
-       A symtab=jt->locsyms; if(unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
+       A symtab=jt->locsyms; if(unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(SYMLINFOSIZE-AN(jt->locsyms)))>=0))symtab=jt->global;
        L *rc;
        if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
        else rc=(L*)jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);

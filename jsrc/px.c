@@ -19,7 +19,7 @@
 #include "p.h"
 
 
-A jteval(J jt,C*s){R PARSERVALUE(parseforexec(tokens(cstr(s),1+(AN(jt->locsyms)>1))));}
+A jteval(J jt,C*s){R PARSERVALUE(parseforexec(tokens(cstr(s),1+EXPLICITRUNNING)));}
 
 A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}  // parse *s and apply to w
 A jtev2(J jt,A a,A w,C*s){A z; R df2(z,a,w,eval(s));}  // parse *s and apply to a and w
@@ -33,7 +33,7 @@ F1(jtexec1){A z;
  }else{
   F1RANK(1,jtexec1,DUMMYSELF);
   A savself = jt->parserstackframe.sf;  // in case we are in a recursion, preserve the restart point
-  STACKCHKOFL FDEPINC(1); z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+(AN(jt->locsyms)>1)))); FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
+  STACKCHKOFL FDEPINC(1); z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+EXPLICITRUNNING))); FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
  jt->parserstackframe.sf=savself;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
@@ -49,7 +49,7 @@ F1(jtimmex){F1PREFJT;A z;
  // because if AKGST has been set it will already hold jt->global.  Of course, any event code must restore everything
  // to its previous state, including locales
  AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
- STACKCHKOFL FDEPINC(1); z=parse(AT(w)&BOX?w:tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
+ STACKCHKOFL FDEPINC(1); z=parse(AT(w)&BOX?w:tokens(w,1+EXPLICITRUNNING)); FDEPDEC(1);
  if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr(jtinplace,z);   // z not 0 && LSB of z is 0 && Result is not for debug
  RETF(z);
 }
@@ -58,7 +58,7 @@ F1(jtimmex){F1PREFJT;A z;
 // jt has typeout flags, pass through to immex
 // Result has assignment flag
 F1(jtimmea){F1PREFJT;A t,z,z1;
- RZ(w=ddtokens(w,1+(AN(jt->locsyms)>1))); z=jtimmex(jtinplace,w);   // check for DD, allow continuation
+ RZ(w=ddtokens(w,1+EXPLICITRUNNING)); z=jtimmex(jtinplace,w);   // check for DD, allow continuation
  ASSERT(PARSERASGN(z)||!z||!(AT(z)&NOUN)||(t=eq(num(1),z),
      all1(ISSPARSE(AT(z))?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);  // apply *./@, if sparse
  RETF(z);
@@ -85,7 +85,7 @@ L* jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
 // 128!:2
 F2(jtapplystr){PROLOG(0054);A fs,z;
  F2RANK(1,RMAX,jtapplystr,DUMMYSELF);
- RZ(fs=PARSERVALUE(parseforexec(tokens(vs(a),1+(AN(jt->locsyms)>1)))));
+ RZ(fs=PARSERVALUE(parseforexec(tokens(vs(a),1+EXPLICITRUNNING))));
  ASSERT(VERB&AT(fs),EVSYNTAX);
  STACKCHKOFL FDEPINC(d=fdep(fs)); z=CALL1(FAV(fs)->valencefns[0],w,fs); FDEPDEC(d);
  EPILOG(z); 

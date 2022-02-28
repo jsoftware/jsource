@@ -148,8 +148,9 @@ if. _1=nc<'MAPNAME_jmf_' do.
  'MAPNAME_jmf_ MAPFN_jmf_ MAPSN_jmf_ MAPFH_jmf_ MAPMH_jmf_ MAPADDRESS_jmf_ MAPHEADER_jmf_ MAPFSIZE_jmf_ MAPMSIZE_jmf_ MAPREFS_jmf_'=: i.10
 end. 
 1
-) 
-18!:4 <'base'
+)
+f=: 18!:4
+f <'base'
 1 [ unmap_jmf_ 'q'
 f=: <jpath '~temp/q.jmf'
 1 [ createjmf_jmf_ f,<3e5      NB. 3e5 bytes for data

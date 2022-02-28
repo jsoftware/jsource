@@ -162,9 +162,9 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZGOTO(      yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))),exit);
   RZGOTO(q=sympoola(x),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
- if(AN(x=jt->locsyms)>1){               /* per local table      */
+ if(EXPLICITRUNNING){               /* per local table      */
   RZGOTO(aa=incorp(cstr("**local**")),exit);
-  RZGOTO(q=sympoola(x),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
+  RZGOTO(q=sympoola(jt->locsyms),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  zz=z;
 exit: ;

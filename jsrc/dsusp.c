@@ -133,7 +133,7 @@ static A jtsusp(J jt){A z;
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }
   // Execute one sentence from the user
-  if((inp=jgets("      "))==0){z=0; break;} inp=jtddtokens(jt,inp,1+(AN(jt->locsyms)>1)); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
+  if((inp=jgets("      "))==0){z=0; break;} inp=jtddtokens(jt,inp,1+EXPLICITRUNNING); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   // If the result came from a suspension-ending command, get out of suspension
   // Kludge: 13 : 0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doen't properly route the result of these to the
   // suspension result and we would lose them.  Fortunately they have no arguments

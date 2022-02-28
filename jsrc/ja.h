@@ -726,6 +726,7 @@
 #define nor(x,y)                    jtatomic2(jt,(x),(y),ds(CPLUSCO))  
 #define norm(x)                     jtnorm(jt,(x))  
 #define not(x)                      jtnot(jt,(x))
+#define notW(x)                     jtnot((J)((I)jt|JTINPLACEW),(x))
 #define notonupperstack(x)          jtnotonupperstack(jt,(x))
 #define nub(x)                      jtnub(jt,(x))     
 #define nubi(x)                     jtnubi(jt,(x))     

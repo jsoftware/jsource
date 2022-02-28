@@ -205,7 +205,7 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 
 #endif
 
-// Create symbol table: k is 0 for named, 1 for numbered, 2 for local; p is the number of hash entries including SYMLINFOSIZE;
+// Create symbol table: k is 0 for named, 1 for numbered, 2 for local; p is the number of exact number of hash entries desired (including SYMLINFOSIZE);
 // n is length of name (or locale# to allocate, for numbered locales), u->name
 // Result is SYMB type for the symbol table.  For global tables only, ras() has been executed
 // on the result and on the name and path
@@ -214,8 +214,8 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
- // allocate the symbol table itself:
- GATV0(g,SYMB,(p+1)&-2,0); AFLAGORLOCAL(g,SYMB)   // have odd number of hashchains, excluding LINFO.  All SYMB tables are born recursive
+ // allocate the symbol table itself: we have to give exactly what the user asked for so that cloned tables will hash identically; but a minimum of 1 chain field so hashes can always run
+ GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB) LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  //  All SYMB tables are born recursive.  Init EXECCT to 'in use'
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
@@ -267,7 +267,7 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  // NOTE: you must apply a name from a private locale ONLY to the locale it was created in, or to a global locale.  Private names contain bucket info & symbol pointers that would
  // cause errors if applied in another locale.  It is OK to apply a non-private name to any locale.
- RZ(jt->locsyms=stcreate(2,2,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms; ACX(jt->locsyms); // close chain so u. at top level has no effect.  No Bloom filter since local table
+ RZ(jt->locsyms=stcreate(2,0,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=SYMLINFOSIZE; AM(jt->locsyms)=(I)jt->locsyms; ACX(jt->locsyms); // close chain so u. at top level has no effect.  No Bloom filter since local table
  // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
  INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
  // Go back and fix the path for z locale to be the empty locale (which is what we use when the path itself is empty)
@@ -314,7 +314,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
-#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+1,1,MEMSET00); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0;
+#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;
 
 static F2(jtloccre);
 
@@ -501,9 +501,20 @@ F1(jtlocswitch){A g;
  ARGCHK1(w);
  ASSERT(!AR(w),EVRANK); 
  RZ(g=locale(1,w));
+#if 0   // obsolete 
+if(AT(w)&(B01|INT))printf("18!:4 (%lld), ",BIV0(w));
+else printf("18!:4 <'%.*s' (len=%d), ",(int)AN(AAV(w)[0]),CAV(AAV(w)[0]),(int)AN(AAV(w)[0]));  // scaf
+printf("execct=0x%x ",LXAV0(g)[SYMLEXECCT]);  // scaf
+if(jt->global)printf("jt->global=%.*s with execct %x, new loc=%.*s with execct %x, pushok=%d\n",(int)AN(LOCNAME(jt->global)),NAV(LOCNAME(jt->global))->s,LXAV0(jt->global)[SYMLEXECCT],(int)AN(LOCNAME(g)),NAV(LOCNAME(g))->s,LXAV0(g)[SYMLEXECCT],!!jt->curname);  // scaf
+#endif
  // put a marker for the operation on the call stack
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
- if(jt->curname)pushcallstack1(CALLSTACKPOPFROM,jt->global);
+ if(jt->curname){
+  // We expect just one 18!:4 per named call.  If there are more, they will create multiple POPFROMs and the later ones will be deleted.  The exec counts for the intermediate locales will
+  // not be incremented or decremented
+  // jt->global can be 0 here, if the user deleted the base locale.  The only thing he can do then is 18!:4 from keyboard level.  The POPFROM we do here will never be executed
+  pushcallstack1(CALLSTACKPOPFROM,jt->global);
+ }
  SYMSETGLOBAL(jt->locsyms,g);
 
  R mtm;
@@ -561,6 +572,9 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
+   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&0x8000000),"execct has gone < 0")
+   DELEXECCT(g)  // say that the user doesn't want this local any more
+#if 0  /// obsolete
    // See if we can find the locale on the execution stack.  If so, set the DELETE flag
    for(k=0;k<jt->callstacknext;++k)if(jt->callstack[k].value==g)break;
    if(k<jt->callstacknext)
@@ -570,6 +584,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
 // obsolete     pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,g);  // mark locale for deletion
     pushcallstack1(CALLSTACKDELETE,g);  // mark locale for deletion
    } else locdestroy(g);  // not on stack and not running - destroy immediately
+#endif
   }
  }
  R z;
@@ -592,6 +607,6 @@ B jtlocdestroy(J jt,A g){
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
 
- if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one  scaf  this is a problem in multithreads.  Allow deletion of named locale only in master?
+ if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one  scaf  this is a problem in multithreads.
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

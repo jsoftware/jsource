@@ -1307,7 +1307,7 @@ void dllquit(J jt){I j,*v;
  A *av=AAV1(JT(jt,cdarg));  // point to A blocks for CCTs
 // obsolete  av=(CCT*)AV(JT(jt,cdarg));
 // obsolete  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(((CCT*)IAV1(av[j]))->h); fr(av[j]));   // unload all libraries, and free the CCT blocks
- DQ(AM(JT(jt,cdarg)), if(((CCT*)IAV1(av[i]))->hloaded)FREELIB(((CCT*)IAV1(av[i]))->h); fr(av[i]));   // unload all libraries, and free the CCT blocks
+ DQ(AM(JT(jt,cdarg)), if(((CCT*)IAV0(av[i]))->hloaded)FREELIB(((CCT*)IAV0(av[i]))->h); fr(av[i]));   // unload all libraries, and free the CCT blocks
  mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00);
 // obsolete  mvc(AN(JT(jt,cdarg)),CAV(JT(jt,cdarg)),1,MEMSET00); 
  mvc(SZI*AN(JT(jt,cdhash)),CAV(JT(jt,cdhash)),1,MEMSETFF); mvc(SZI*AN(JT(jt,cdhashl)),CAV(JT(jt,cdhashl)),1,MEMSETFF); 
@@ -1385,6 +1385,7 @@ F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
  R vecb01(t,m,u);
 }    /* 15!:1  memory read */
 
+// write to memory.  w is addr,offset,count[,type]
 F2(jtmemw){C*u;I m,n,t,*v;
  ARGCHK2(a,w);
  ASSERT(INT&AT(w),EVDOMAIN);
@@ -1401,7 +1402,10 @@ F2(jtmemw){C*u;I m,n,t,*v;
 // This function is obsolete and should not be used
 // ASSERT(!IsBadWritePtr(u,m*k),EVDOMAIN);
 #endif
- MC(u,AV(a),m<<bplg(t));
+ I mvlen=AN(a)<<bplg(t);
+// obsolete MC(u,AV(a),m<<bplg(t));
+ MC(u,AV(a),mvlen);   // copy the valid bytes of a
+ if(m>AN(a))mvc(1LL<<bplg(t),u+mvlen,1,MEMSET00);  // append zero if called for
  R mtm;
 }    /* 15!:2  memory write */
 

@@ -87,6 +87,8 @@ add=: mema 5
 ('abcd' , {.a.) -: memr add,0 5 2
 0=memf add
 
+NB. Unload libraries
+1 ] 15!:5''
 
 NB. memr/memw boolean
 add=: mema n=: 127+1e4*(IF64<IFRASPI){1024 256

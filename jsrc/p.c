@@ -733,7 +733,7 @@ endname: ;
     
     if(pmask){  // If all 0, nothing is dispatchable, go push next word
      A fs=fsa->a;  // the action to be executed if lines 0-4
-     pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after thie result of this exec.   Wait till we know not fail, so we don't have to wait for (
+     pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after the result of this exec.   Wait till we know not fail, so we don't have to wait for (
      jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
@@ -893,7 +893,8 @@ RECURSIVERESULTSCHECK
       if(pmask&0b10000000){  // assign - can't be fork/hook
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
-       A symtab=jt->locsyms; if(unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(SYMLINFOSIZE-AN(jt->locsyms)))>=0))symtab=jt->global;
+       A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab; symtab=!EXPLICITRUNNING?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
+// obsolete symtab=unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(SYMLINFOSIZE-AN(jt->locsyms)))>=0)?;}   // =: used, or symbol table is the short one, meaning 'no symbols': use global table
        L *rc;
        if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
        else rc=(L*)jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);

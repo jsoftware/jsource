@@ -1304,7 +1304,7 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 void dllquit(J jt){I j,*v;
  if(!JT(jt,cdstr))R;   // if we never initialized, don't free
 // obsolete  v=AV(JT(jt,cdhashl));
- A *av=AAV1(JT(jt,cdarg));  // point to A blocks for CCTs
+ A *av=AAV0(JT(jt,cdarg));  // point to A blocks for CCTs
 // obsolete  av=(CCT*)AV(JT(jt,cdarg));
 // obsolete  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(((CCT*)IAV1(av[j]))->h); fr(av[j]));   // unload all libraries, and free the CCT blocks
  DQ(AM(JT(jt,cdarg)), if(((CCT*)IAV0(av[i]))->hloaded)FREELIB(((CCT*)IAV0(av[i]))->h); fr(av[i]));   // unload all libraries, and free the CCT blocks

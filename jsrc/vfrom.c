@@ -658,7 +658,8 @@ static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<<16)+row;
 // Result for product mode (exitvec is scalar) is the product
 // DIP mode
 // y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Nvirt);bk;Frow[;exclusion list]
-// Result is rc;best row;best col;#cols scanned;#dot-products evaluated;best gain
+// Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
+//           rc,failing column of NTT, an element of ndx (if rc=4)
 //  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //  rc=5=empty M, problem is malformed
 // if the exclusion list is given, we are looking for nonimproving pivots, and the exclusion list is used to prevent repetition of basis:
@@ -868,7 +869,8 @@ F1(jtmvmsparse){PROLOG(832);
   // done with one column.  Collect stats and update parms for the next column
   if(unlikely(!bv))break;  // if just one product, skip the setup for next column
   // column ran to completion.  Detect unbounded
-  if(bestrow<0)R v2(4,colx);  // no pivots found for a column, problem is unbounded, indicate which column
+  if(bestrow<0)
+R v2(4,*ndx);  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
   // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous
   if(likely((bestcol|SGNIF(bestrow,32+3))<0)){  // if this is the first valid pivot, or the previous pivot is danngerous
    bestcol=*ndx; bestcolrow=bestrow;

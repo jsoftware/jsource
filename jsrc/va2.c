@@ -837,8 +837,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    } \
    acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
    label##9: last2x2  \
-   acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); acc010=_mm256_add_pd(acc010,_mm256_permute2f128_pd(acc010,acc010,0x01)); \
-    acc100=_mm256_add_pd(acc100,_mm256_permute2f128_pd(acc100,acc100,0x01)); acc110=_mm256_add_pd(acc110,_mm256_permute2f128_pd(acc110,acc110,0x01)); \
+   acc000=_mm256_add_pd(acc000,_mm256_permute4x64_pd(acc000,0b11111110)); acc010=_mm256_add_pd(acc010,_mm256_permute4x64_pd(acc010,0b11111110)); \
+    acc100=_mm256_add_pd(acc100,_mm256_permute4x64_pd(acc100,0b11111110)); acc110=_mm256_add_pd(acc110,_mm256_permute4x64_pd(acc110,0b11111110)); \
    acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); acc010=_mm256_add_pd(acc010,_mm256_permute_pd (acc010,0x0));  \
     acc100=_mm256_add_pd(acc100,_mm256_permute_pd (acc100,0xf)); acc110=_mm256_add_pd(acc110,_mm256_permute_pd (acc110,0x0)); \
    acc000=_mm256_blend_pd(acc000,acc010,0xa); acc100=_mm256_blend_pd(acc100,acc110,0xa); \
@@ -882,7 +882,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    acc000=_mm256_add_pd(acc000,acc010); acc100=_mm256_add_pd(acc100,acc110); \
    acc000=_mm256_add_pd(acc000,acc100);  \
    label##9: last1x1  \
-   acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); \
+   acc000=_mm256_add_pd(acc000,_mm256_permute4x64_pd(acc000,0b11111110)); \
    acc000=_mm256_add_pd(acc000,_mm256_permute_pd(acc000,0xf)); \
    av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
    }
@@ -923,7 +923,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
  } \
  acc3=MUL_ACC(acc3,_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask)); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
  acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \
- acc0=_mm256_add_pd(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+ acc0=_mm256_add_pd(acc0,_mm256_permute4x64_pd(acc0,0b11111110)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
  *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++zv;
 #else
 #define ONEPRODD D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;
@@ -1072,7 +1072,7 @@ DF2(jtsumattymes1){
       TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_add_pd(c0,c2);   // add 0+1, 2+3
       TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2
      // acc0/c0 survive.  Combine horizontally
-      c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01)); acc1=_mm256_permute2f128_pd(acc0,acc0,0x01);  // c0: 01+=23, acc1<-23
+      c0=_mm256_add_pd(c0,_mm256_permute4x64_pd(c0,0b11111110)); acc1=_mm256_permute4x64_pd(acc0,0b11111110);  // c0: 01+=23, acc1<-23
       TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1); // combine p=01+23
       c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // combine c0+c1, acc1<-1
       TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1);    // combine 0123, combine all low parts
@@ -1081,8 +1081,8 @@ DF2(jtsumattymes1){
       c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
       acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2);   // add all the high parts
      // acc0/c0 survive.  Combine horizontally
-      c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01));  // 02, 13
-      acc0=_mm256_add_pd(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01));
+      c0=_mm256_add_pd(c0,_mm256_permute4x64_pd(c0,0b11111110));  // 02, 13
+      acc0=_mm256_add_pd(acc0,_mm256_permute4x64_pd(acc0,0b11111110));
       c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf));   // 0123
       acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));
       acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap

@@ -179,7 +179,7 @@ DF2(jtboxcut0){A z;
    // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
    JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)   // copy the data, incorporate the block into the result
   }else{
-   // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
+   // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead.  This follows the code in jtbox()
    if((y=gafv(SZI*(NORMAH+wr)-1))==0)break;  // allocate the block, abort loop if error
    AT(y)=t;
    ACINIT(y,ACUC1)   // transfer inplaceability from original block

@@ -227,7 +227,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
   acc0=prim(acc0,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
   acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); acc0=prim(acc0,acc4); \
   acc2=prim(acc2,acc3); acc0=prim(acc0,acc1); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
-  acc0=prim(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+  acc0=prim(acc0,_mm256_permute4x64_pd(acc0,0b11111110)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
   *(I*)z=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++z;  /* store the single result from 0 */ \
  )
 
@@ -424,7 +424,7 @@ DF1(jtcompsum){
    TWOSUM(acc0,acc1,acc0,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(acc2,acc3,acc2,c1) c0=_mm256_add_pd(c0,c1);    // add 0+1, 2+3; combine all low parts of Kahan corrections into low total
    TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2, bringing along low part
   // acc0/c0 survive.  Combine horizontally
-   c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01)); acc1=_mm256_permute2f128_pd(acc0,acc0,0x01);  // c0: 01+=23, acc1<-23
+   c0=_mm256_add_pd(c0,_mm256_permute4x64_pd(c0,0b11111110)); acc1=_mm256_permute4x64_pd(acc0,0b11111110);  // c0: 01+=23, acc1<-23
    TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1); // combine p=01+23
    c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // combine c0+c1, acc1<-1
    TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1);    // combine 0123, combine all low parts

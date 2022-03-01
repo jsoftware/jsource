@@ -243,6 +243,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
    AR(g)|=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    // The first hashchain is not used as a symbol pointer - it holds xy bucket info
+   // Bloom filter not used for local symbol tables
    ;
  }
  R g;
@@ -268,6 +269,10 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  // NOTE: you must apply a name from a private locale ONLY to the locale it was created in, or to a global locale.  Private names contain bucket info & symbol pointers that would
  // cause errors if applied in another locale.  It is OK to apply a non-private name to any locale.
  RZ(jt->locsyms=stcreate(2,0,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=SYMLINFOSIZE; AM(jt->locsyms)=(I)jt->locsyms; ACX(jt->locsyms); // close chain so u. at top level has no effect.  No Bloom filter since local table
+ // To speed up the test for existence of local symbols, we adjust the position of jt->locsyms so that it is on an odd boundary of (two Is).  This has the salubrious side effect
+ // of putting the oft-referenced parts (AN through the chains) into a single cacheline.  We know that AC is positioned at an offset of 3 words, and we know that the allocation has spare space at the end,
+ // so we copy to move AC to the midpoint of the allocation (a new cacheline, in 64-bit) and repoint jt->locsyms accordingly
+ DQNOUNROLL(8+3, ((I*)jt->locsyms)[i+8-3]=((I*)jt->locsyms)[i];) jt->locsyms=(A)((I*)jt->locsyms+8-3);
  // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
  INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
  // Go back and fix the path for z locale to be the empty locale (which is what we use when the path itself is empty)

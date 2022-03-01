@@ -104,7 +104,7 @@ A name(J jt,A a,A w){ \
  outs0: orign2-=n2; orign2<<=LGNPAR; orign2+=(((fz)&0x1000?inv?0x4322111100000000:0x0000000011112234:inv?0x4010201030102010:0x0102010301020104)>>(maskatend<<2))&7; if((fz)&0x1000){orign2=n0-1-orign2; orign2=orign2<0?n0:orign2;} R sc(orign2); \
  /* add accums, which give negative result.  Convert to positive; if inv, that's the result, otherwise subtract from i0 */ \
  outs1: acc0=_mm256_add_epi64(acc0,acc1); acc2=_mm256_add_epi64(acc2,acc3); acc4=_mm256_add_epi64(acc4,acc5); acc6=_mm256_add_epi64(acc6,acc7); acc0=_mm256_add_epi64(acc0,acc2); acc4=_mm256_add_epi64(acc4,acc6); acc0=_mm256_add_epi64(acc0,acc4); \
-  acc0=_mm256_add_epi64(acc0,_mm256_permute2f128_si256(acc0,acc0,0x01)); acc0=_mm256_add_epi64(acc0,_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(acc0),0x0f))); \
+  acc0=_mm256_add_epi64(acc0,_mm256_permute4x64_epi64(acc0,0b11111110)); acc0=_mm256_add_epi64(acc0,_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(acc0),0x0f))); \
   orign2 = _mm256_extract_epi64(acc0,0); R sc(inv?-orign2:n0+orign2); \
 }
 

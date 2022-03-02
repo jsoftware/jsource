@@ -1739,6 +1739,10 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define SYMSWAPTOLOCAL(l,lsave) (lsave=jt->locsyms, SYMRESTOREFROMLOCAL(l))  // go to stacked local l, save current in lsave
 #define SYMSETLOCAL(l) (AKGST(l)=jt->global, jt->locsyms=(l))  // change the locals to l
 #define SYMPUSHLOCAL(l) (AM(l)=(I)jt->locsyms, SYMSETLOCAL(l))  // push l onto locals stack
+#define SYMORIGIN JT(jt,sympv)  // the origin of the global symbol table
+#define SYMLOCALROOT SYMORIGIN[0].next   // the root of the local free-symbol chain
+#define SYMGLOBALROOT SYMORIGIN[0].next   // the root of the shared free-symbol chain
+#define SYMRESERVE(n) if(unlikely(SYMNEXT(SYMLOCALROOT)==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(SYMLOCALROOT)].next)==0)))RZ(jtreservesym(jt,n))   // called outside of lock to make sure n symbols are available for assignment
 // fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1.
 // Implies that AM must not be modified when abandoned block is assigned to x/y
 #define SYMVALFA(l) if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AC((l).val)|=ACINPLACE&(AC((l).val)-2);}else{A v=(l).val; fa(v);}

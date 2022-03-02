@@ -139,7 +139,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
 }
 
 // w is an arg; result is IMIN if not memoable
-// memoable is: atomic int/bool or float with int value
+// memoable is: atomic int/bool or other with int value
 static I jtint0(J jt,A w){A x;
  if(unlikely(AR(w)))R IMIN;
  if(unlikely(!(ISDENSETYPE(AT(w),B01+INT))))w=pcvt(INT,w);

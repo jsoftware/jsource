@@ -213,6 +213,8 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 //   the name is an A type holding an NM, which has hash filled in, and, for numbered locales, the bucketx filled in with the locale number
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
+// For k=0, we have a write lock on stlock which we must hold throughout.
+// For k=0 or 1, we have made sure there are 2-k symbols reserved (for LOCPATH and, for k=0, the assignment to stloc).  Not required for k=2, which is not assigned
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // allocate the symbol table itself: we have to give exactly what the user asked for so that cloned tables will hash identically; but a minimum of 1 chain field so hashes can always run
  GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB) LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  //  All SYMB tables are born recursive.  Init EXECCT to 'in use'
@@ -220,26 +222,32 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
-  case 0:  /* named locale */
+  case 0:  // named locale - we have a write lock on stlock
    AR(g)=ARNAMED;   // set rank to indicate named locale
-   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;    // put new block into locales table, allocate at head of chain without non-PERMANENT marking
+   v=symnew(&LXAV0(g)[SYMLINFO],0); v->flag|=LINFO;    // put new block into locales table, allocate at head of chain without non-PERMANENT marking,  The symbol must be available
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z'. correct for all but z locale itself, which is overwritten at initialization
-   ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent
+   ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent.  ZAP to match store into LOCPATH
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ras() on g
-   symbisdel(x,g,JT(jt,stloc));
+   // Put the locale name into the symbol table.  We can't use symbis etc because we have to keep the continuous lock on stlock to prevent multiple assignment of a named locale
+   // We know the name is not in the table; we spin to the end of the chain on the theory that most-used locales will be loaded first
+   UI4 hsh=NAV(x)->hash; L *sympv=SYMORIGIN;  // hash of name; origin of symbol tables
+   LX *hv=LXAV0(JT(jt,stloc))+SYMHASH(hsh,AN(JT(jt,stloc))-SYMLINFOSIZE);  // get hashchain base in stloc
+   LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
+   v=symnew(hv,tx); ra(x); v->name=x; v->val=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; ra to matc store of name; save value; ZAP to match store of value
+// obsolete    symbisdel(x,g,JT(jt,stloc));
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
-  case 1:  /* numbered locale */
+  case 1:  // numbered locale - we have no lock
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
-   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0); WRITEUNLOCK(JT(jt,stlock))   // put the locale into the numbered list; exit if error
+   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0); WRITEUNLOCK(JT(jt,stlock))   // put the locale into the numbered list; exit if error (with lock removed)
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);  // ras() is never virtual.  zpath is permanent, no ras needed
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
-  case 2:  /* local symbol table */
+  case 2:  // local symbol table - we have no lock and we don't assign
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
    AR(g)|=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    // The first hashchain is not used as a symbol pointer - it holds xy bucket info
@@ -457,7 +465,9 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
- if(v=jtprobestlock((J)((I)jt+n),s,(UI4)nmhash(n,s))){
+ SYMRESERVE(2)  // make sure we have symbols to insert, for LOCPATH and for the locale itself
+ WRITELOCK(JT(jt,stlock))  // take a write lock until we have installed the new locale if any.  No errors!
+ if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
   g=v->val;
   if(LOCPATH(g)){
@@ -471,8 +481,9 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  }else{
   // new named locale needed
   FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
-  RZ(stcreate(0,p,n,s));
+  if(unlikely(stcreate(0,p,n,s)==0))y=0;   // create the locale, but if error, cause this routine to exit with failure
  }
+ WRITEUNLOCK(JT(jt,stlock))  // errors OK now
  R boxW(ca(y));  // result is boxed string of name - we copy it, perhaps not needed
 }    /* create a locale named w with hash table size a */
 
@@ -481,6 +492,7 @@ static F1(jtloccrenum){C s[20];I k,p;A x;
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
 // obsolete  RE(k=jtgetnl(jt));
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
+ SYMRESERVE(1)  // make sure we have symbols to insert, for LOCPATH
  RZ(x=stcreate(1,p,0,0L));
 // obsolete  sprintf(s,FMTI,k); 
  sprintf(s,FMTI,NAV(LOCNAME(x))->bucketx);   // extract locale# and convert to boxed string 

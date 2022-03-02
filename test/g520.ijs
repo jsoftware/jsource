@@ -100,6 +100,16 @@ M=. |: _4 ]\ 0. 1 1 0   1 0 1 0  0 0 0 1 0 0 0 1   NB. input by columns
 assert. 0 1 0 2 8 _3 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow
 M=. |: _4 ]\ 0. 1 1 0   1 0 2 0  0 0 0 1 0 0 0 1   NB. input by columns
 assert. 0 0 1 4 15 _4 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow  NB. later non-virtual doesn't get priority
+NB. nonimproving pivots
+M=. |: _4 ]\ 0. 0 0 1e_12   1e_12 1e_8 0 0  0 0 0 0   0 0 0 0   NB. input by columns
+Frow=. 5$1.0   NB. rows are immaterial
+bk =. 4 $ _1.0  NB. bk is immaterial
+bkg=.i.#M
+assert. 2 1 1 1 6 1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow;($00);(4 5 6 7)
+assert. 2 1 1 2 10 1 -: (128!:9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow;($00);(4 5 6 7)
+assert. 3 0 0 4 16 0 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+M=. |: _4 ]\ 0. 0 0 1e_12   1e_12 1e_8 1e_5 0  0 0 0 0   0 0 0 0   NB. input by columns
+assert. 2 1 2 1 7 1 -: (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0 0 1 1.0 1;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
 1
 }}^:(1 e. 'avx2' E. 9!:14'') 1
 

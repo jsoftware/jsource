@@ -72,7 +72,7 @@ typedef UI4                RANK4T;  // 4 ranks
 #define RMAX               (((I)1<<LGRMAX)-1)   // max rank, leaving 2 bits for flags
 
 typedef I                  FLAGT;
-typedef I4                LX;  // index of an L block in JT(jt,sympv)
+typedef I4                LX;  // index of an L block in SYMORIGIN
 
 typedef struct AD AD;
 typedef AD *A;
@@ -790,8 +790,8 @@ typedef struct {
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
-#define LOCNAME(g) ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].name)
-// obsolete #define LOCTHREAD(g)  ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].next)
+#define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
+// obsolete #define LOCTHREAD(g)  ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].next)
 #define LOCPATH(g) (g)->kchain.locpath
 #define LOCBLOOM(x) AM(x)
 #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter

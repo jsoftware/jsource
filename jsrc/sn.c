@@ -180,11 +180,11 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  ARGCHK1(w);
  wn=AN(w); e=LXAV0(w);                               // w is locale, e->hashchains
-// obsolete  x=(A)(*e+JT(jt,sympv))->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
+// obsolete  x=(A)(*e+SYMORIGIN)->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
  x=LOCNAME(w); p=AN(x); s=NAV(x)->s;  /* locale name/number           */
  m=*pm; v=AAV(ch)+m;                               /* result to append to */
  for(i=SYMLINFOSIZE;i<wn;++i)if(e[i]){
-  d=SYMNEXT(e[i])+JT(jt,sympv);
+  d=SYMNEXT(e[i])+SYMORIGIN;
   while(1){
    if(LCH&d->flag&&d->name&&d->val){
     d->flag^=LCH;
@@ -197,7 +197,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
     }
    }
    if(!d->next)break;
-   d=SYMNEXT(d->next)+JT(jt,sympv);
+   d=SYMNEXT(d->next)+SYMORIGIN;
   }
  }
  *pm=m;
@@ -211,11 +211,11 @@ static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
   n=AN(JT(jt,stloc)); e=SYMLINFOSIZE+LXAV0(JT(jt,stloc));
   // named locales first
   for(i=SYMLINFOSIZE;i<n;++i,++e)if(*e){  // for each hashchain in locale table
-   d=SYMNEXT(*e)+JT(jt,sympv);
+   d=SYMNEXT(*e)+SYMORIGIN;
    NOUNROLL while(1){   // for each locale in the chain
     RZ(ch=nch1(b,d->val,&m,ch));  // go check each symbol in the locale
     if(!d->next)break;
-    d=SYMNEXT(d->next)+JT(jt,sympv);
+    d=SYMNEXT(d->next)+SYMORIGIN;
    }
   }
   // now numbered locales

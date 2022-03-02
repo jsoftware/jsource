@@ -355,7 +355,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
   tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each hashchain in the locale
-   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+JT(jt,sympv); tot+=spfor1(u->name); tot+=spfor1(C(u->val));}  // add in the size of the name itself and the value, and the L block for the name
+   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+SYMORIGIN; tot+=spfor1(u->name); tot+=spfor1(C(u->val));}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;
  }
@@ -552,7 +552,7 @@ void audittstack(J jt){F1PREFIP;
 // Free all symbols pointed to by the SYMB block w, including PERMANENT ones.  But don't return CACHED values to the symbol pool
 void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  LX freeroot=0; LX *freetailchn=(LX *)jt->shapesink;  // sym index of first freed ele; addr of chain field in last freed ele
- L *jtsympv=JT(jt,sympv);  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
+ L *jtsympv=SYMORIGIN;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // loop through each hash chain, clearing the blocks in the chain
@@ -586,7 +586,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
   // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
   // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
   LX k,* RESTRICT wv=LXAV0(w);
-  L *jtsympv=JT(jt,sympv);
+  L *jtsympv=SYMORIGIN;
   if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...
    // Remove the locale from its global table, depending on whether it is named or numbered
    NM *locname=NAV(LOCNAME(w));  // NM block for name
@@ -601,7 +601,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
    fr(LOCNAME(w));
    // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-   jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  JT(jt,sympv)[0] is the base of the free chain
+   jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  SYMORIGIN[0] is the base of the free chain
   }
  }
  // continue to free the table itself

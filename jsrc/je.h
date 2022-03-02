@@ -816,6 +816,7 @@ extern A        jtrealizeboxedvirtuals(J,A);
 extern A        jtredcatcell(J,A,I);
 extern D        jtremdd(J,D,D);
 extern I        jtremid(J,I,D);
+extern I        jtreservesym(J,I);
 extern A        jtrifvs(J,AD* RESTRICT);
 extern B        jtredef(J,A,L*);
 extern B        jtrnginit(JS,I);

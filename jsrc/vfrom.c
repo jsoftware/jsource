@@ -645,8 +645,9 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  RETF(z);   // Mark the box as non-inplaceable, as above
 }
 
-// see if row,col is in exclusion list.  Exclusion list is a list of col|row
-static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<<16)+row;
+// see if row,col is in exclusion list.  Exclusion list is a list of col|col with the smaller value in the high-order part
+// Result is 0 if OK to accept the combination
+static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<row)?(col<<32)+row:(row<<32)+col;  // canonicalize column numbers into one value
  while(nexlist--)if(*exlist++==colrow)R 0;
  R 1;
 }
@@ -662,7 +663,7 @@ static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<<16)+row;
 //           rc,failing column of NTT, an element of ndx (if rc=4)
 //  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //  rc=5=empty M, problem is malformed
-// if the exclusion list is given, we are looking for nonimproving pivots, and the exclusion list is used to prevent repetition of basis:
+// if the exclusion list is given, we stop on the first nonimproving pivot, and the exclusion list is used to prevent repetition of basis:
 //
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
@@ -707,7 +708,7 @@ F1(jtmvmsparse){PROLOG(832);
  A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
  I nfreecols, ncols; D impfac;  // number of cols to process before we insist of min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
- I *exlist=0, nexlist;  // exclusion list: list of excluded col|row pairs, length
+ I *exlist=0, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
 
  if(AR(C(AAV(w)[0]))==0){
   // single index value.  set bv=0 as a flag that we are storing the column
@@ -719,18 +720,21 @@ F1(jtmvmsparse){PROLOG(832);
   // A list of index values.  We are doing the DIP calculation
   ASSERT(AR(C(AAV(w)[5]))==1,EVRANK); ASSERT(AT(C(AAV(w)[5]))&INT,EVDOMAIN); bvgrd0=IAV(C(AAV(w)[5])); bvgrde=bvgrd0+AN(C(AAV(w)[5]));  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
   if(AN(C(AAV(w)[5]))==0){RETF(num(5))}  // empty bk - give error/empty result
-  ASSERT(BETWEENC(AN(w),8,9),EVLENGTH); 
-  ASSERT(AR(C(AAV(w)[7]))==1,EVRANK); ASSERT(AT(C(AAV(w)[7]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[7]))==AS(C(AAV(w)[4]))[0],EVLENGTH); bv=DAV(C(AAV(w)[7]));  // bk, one per row of M
-  ASSERT(AR(C(AAV(w)[8]))==1,EVRANK); ASSERT(AT(C(AAV(w)[8]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[8]))==AS(C(AAV(w)[4]))[0]+AS(C(AAV(w)[1]))[0],EVLENGTH); Frow=DAV(C(AAV(w)[8]));  // Frow, one per row of M and column of A
-  ASSERT(AR(C(AAV(w)[6]))==1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
+  ASSERT(BETWEENC(AN(w),8,11),EVLENGTH); 
+  ASSERT(AR(C(AAV(w)[7]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[7]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[7]))==AS(C(AAV(w)[4]))[0],EVLENGTH); bv=DAV(C(AAV(w)[7]));  // bk, one per row of M
+  ASSERT(AR(C(AAV(w)[8]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[8]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[8]))==AS(C(AAV(w)[4]))[0]+AS(C(AAV(w)[1]))[0],EVLENGTH); Frow=DAV(C(AAV(w)[8]));  // Frow, one per row of M and column of A
+  ASSERT(AR(C(AAV(w)[6]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
   if(unlikely(n==0)){RETF(num(5))}   // empty M - should not occur, give error result
   thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],DAV(C(AAV(w)[6]))[2],inf,DAV(C(AAV(w)[6]))[0]); nfreecols=(I)(nc*DAV(C(AAV(w)[6]))[3]); ncols=(I)(nc*DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; nvirt=(I)DAV(C(AAV(w)[6]))[6];
   zv=AN(C(AAV(w)[5]))==AN(C(AAV(w)[7]))?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
   if(AN(w)>9){
-   // An exclusion list is given.  Remember its address.  Its presence puts us through the 'nonimproving path' case
-   ASSERT(AR(C(AAV(w)[9]))==1,EVRANK); ASSERT(AN(C(AAV(w)[9]))>0,EVRANK);  ASSERT(ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVRANK);  // must be integer list
+   ASSERT(AN(w)==11,EVLENGTH); 
+   // An exclusion list is given (and thus also yk).  Remember their addresses.  Its presence puts us through the 'nonimproving path' case
+   ASSERT(AR(C(AAV(w)[9]))<=1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVDOMAIN);  // must be integer list
    exlist=IAV(C(AAV(w)[9]));  // remember address of exclusions
    nexlist=AN(C(AAV(w)[9]));  // and length of list
+   ASSERT(AR(C(AAV(w)[10]))<=1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[10])),INT),EVDOMAIN); ASSERT(AN(C(AAV(w)[10]))==AS(C(AAV(w)[4]))[0],EVLENGTH); // yk, one per row of M
+   yk=IAV(C(AAV(w)[10]));  // remember address of translation table of row# to basis column#
   }
  }
 
@@ -738,7 +742,7 @@ F1(jtmvmsparse){PROLOG(832);
 
 #define PROCESSROWRATIOS /* We run this after the dot-product has been loaded into dotprod */ \
  if(likely(bv!=0)){ \
-  /* DIP processing.  col data is in dotprod */ \
+  /* DIP processing.  col data is in dotprod as col col col col */ \
   if(exlist==0){ /* normal look for improving pivot */  \
    __m256d ratios=_mm256_mul_pd(oldbk,dotprod);  /* ratios is col*oldbk col*minimp 0 0 */ \
    __m256d bks=_mm256_set1_pd(bv[i]);  /* bks = bk bk bk - */ \
@@ -752,7 +756,7 @@ F1(jtmvmsparse){PROLOG(832);
    bestrow=(tmask&=1)&rmask?imask:bestrow;   /* col>ColThr & new smallest pivotratio: update best-value variables */ \
    if(tmask>(rmask>>1) && (I4)bestrow>=(I4)nvirt)goto abortcol;  /* col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority */ \
   }else{ /* look for nonimproving pivot */  \
-   if(_mm256_cvtsd_f64(dotprod)>_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,colx,i)){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=colx; bestcolrow=i; goto return2;};  /* any positive c value is a pivot row, unless in the exclusion list */ \
+   if(_mm256_cvtsd_f64(dotprod)>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  /* any c value>=ColThresh is a pivot row, unless in the exclusion list */ \
   } \
  }else{zv[i]=_mm256_cvtsd_f64(dotprod); /* just fetching the column: do it */ \
  }
@@ -868,32 +872,38 @@ F1(jtmvmsparse){PROLOG(832);
   } // end 'needed dot-product'
   // done with one column.  Collect stats and update parms for the next column
   if(unlikely(!bv))break;  // if just one product, skip the setup for next column
-  // column ran to completion.  Detect unbounded
-  if(bestrow<0)
-R v2(4,*ndx);  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
-  // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous
-  if(likely((bestcol|SGNIF(bestrow,32+3))<0)){  // if this is the first valid pivot, or the previous pivot is danngerous
-   bestcol=*ndx; bestcolrow=bestrow;
-   // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
-   if(likely((bestrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
-    minimpfound=(Frow[*ndx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio
-    zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
-    // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
-    if((I4)bestrow<(I4)nvirt){++ndx; ndotprods+=bvgrd-bvgrd0; break;}  // stop early if virtual pivot found, but take credit for the column we process here
+  if(exlist==0){  // looking for nonimproving pivots?
+   // not looking for nonimproving pivots.  Do a normal pivot-pick
+   // column ran to completion.  Detect unbounded
+   if(bestrow<0)R v2(4,*ndx);  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
+          // but if we are looking for nonimproving pivots, we don't use F or bk and this is invalid
+   // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous
+   if(likely((bestcol|SGNIF(bestrow,32+3))<0)){  // if this is the first valid pivot, or the previous pivot is dangerous
+    bestcol=*ndx; bestcolrow=bestrow;
+    // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
+    if(likely((bestrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
+     minimpfound=(Frow[*ndx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio
+     zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
+     // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
+     if((I4)bestrow<(I4)nvirt){++ndx; ndotprods+=bvgrd-bvgrd0; break;}  // stop early if virtual pivot found, but take credit for the column we process here
+    }
    }
-  }
-  --bvgrd;  // undo the +1 in the product-accounting below
+   --bvgrd;  // undo the +1 in the product-accounting below
 abortcol:  // here is column aborted early, possibly on insufficient gain
-  if(unlikely(!bv))break;  // if just one product, skip the setup for next column
-  ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
-  if(unlikely((--ncols<0)&&zv==0)){++ndx; break;}  // quit if we have made an improvement AND have processed enough columns - include the aborted column in the count
-  // prepare for next column
-  minimp=minimpfound; if(--nfreecols<0)minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
+   if(unlikely(!bv))break;  // if just one product, skip the setup for next column
+   ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
+   if(unlikely((--ncols<0)&&zv==0)){++ndx; break;}  // quit if we have made an improvement AND have processed enough columns - include the aborted column in the count
+   // prepare for next column
+   minimp=minimpfound; if(--nfreecols<0)minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
+  }else{
+   // we are looking for nonimproving pivots.  Skip all the gain accounting, and just remember how many products we did
+   ndotprods+=bvgrd-bvgrd0;  // accumulate # products performed
+  }
  }while(++ndx!=ndxe);  // end loop over columns
  // prepare final result
  if(bv){
   // DIP call.
-  return2: ;
+ return2: ;
   GAT0(z,FL,6,1); zv=DAV(z);
   zv[0]=minimpfound==0.0?3:0; zv[0]=bestcolrow&(1LL<<(32+3))?zv[0]:1; zv[0]=minimpfound==1.0?2:zv[0];  // rc=1 if best pivot is dangerous; 2 if nonimproving; otherwise 3 if no pivot (stall), 0 if improving pivot found
   zv[1]=(UI4)bestcol; zv[2]=(UI4)bestcolrow;  // rc (normal or dangerous pivot), col, row

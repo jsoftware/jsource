@@ -348,7 +348,7 @@ static A virthook(J jtip, A f, A g){
 #define USEDGLOBAL (1LL<<USEDGLOBALX)
 static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
  if(((I)jtinplace&JTFROMEXEC))R sv;
- LX *locbuckets=LXAV0(jt->locsyms); L *sympv=JT(jt,sympv);
+ LX *locbuckets=LXAV0(jt->locsyms); L *sympv=SYMORIGIN;
  A fndst=UNLXAV0(locbuckets); if(unlikely((pt0ecam&USEDGLOBAL)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
  LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  LX nextsymx=*asymx;  // symbol number pointed to by asymx, possibly w/permanent indicator
@@ -572,7 +572,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 #else
       symx=NAV(QCWORD(y))->sb.sb.symx; buck=NAV(QCWORD(y))->sb.sb.bucket;
 #endif
-      L *sympv=JT(jt,sympv);  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
+      L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       I bx=NAVV(QCWORD(y))->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
       pt0ecam&=~(USEDGLOBAL+((NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX))+VALTYPE);
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
@@ -657,7 +657,7 @@ rdglob: ;  // here when we tried the buckets and failed
         A origy=QCWORD(*(volatile A*)queue);  // refetch y
         if(NAV(origy)->flag&NMCACHED){
          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
-         NAV(origy)->cachedref=(A)(s-JT(jt,sympv)); NAV(origy)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(origy)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
+         NAV(origy)->cachedref=(A)(s-SYMORIGIN); NAV(origy)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(origy)->sb.sb.bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
         y=s->val; tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
@@ -771,7 +771,7 @@ endname: ;
          if(likely(GETSTACK0PT&PTASGNLOCAL)){
           // local assignment.  First check for primary symbol.  We expect this to succeed
           if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->sb.sb.symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
-           s=JT(jt,sympv)+(I)s;  // get address of symbol in primary table.  There may be no value; that's OK
+           s=SYMORIGIN+(I)s;  // get address of symbol in primary table.  There may be no value; that's OK
           }else{s=jtprobeislocal(jt,QCWORD(*(volatile A*)queue));}
          }else s=probeisquiet(QCWORD(*(volatile A*)queue));  // global assignment, get slot address
          // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
@@ -1014,7 +1014,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
    I at=AT(y = QCWORD(queue[0]));  // fetch the word
    if((at&NAME)!=0) {L *s;A sv;  // pointer to value block for the name
     if(likely((((I)NAV(y)->sb.sb.symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
-     s=JT(jt,sympv)+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table
+     s=SYMORIGIN+(I)NAV(y)->sb.sb.symx;  // get address of symbol in primary table
      if(likely((sv=s->val)!=0))goto got1val;  // if value has not been assigned, ignore it.  Could just treat as undef
     }
     if(likely((s=syrd(y,jt->locsyms))!=0)){     // Resolve the name.

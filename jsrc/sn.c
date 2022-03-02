@@ -136,7 +136,7 @@ static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]
 static SYMWALK(jtnlsymlocked, A,BOX,20,1, LOCPATH(d->val)&&CAV1(a)[((UC*)NAV(d->name)->s)[0]],
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
-F2(jtnlsym){READLOCK(JT(jt,stlock)) A z=jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,stlock)) R z;}
+F2(jtnlsym){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) A z=jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) R z;}
 
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
@@ -226,7 +226,7 @@ static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
  R grade2(ch,ope(ch));
 }    /* 4!:5  names changed */
 
-F1(jtnch){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,symlock)) R z;}
+F1(jtnch){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
 F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
  ARGCHK1(w);
@@ -260,7 +260,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
     }
    }
    L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(v->name)->m),NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
-             // if the probe returns nonzero, it was a cached value which is not unmoored: we must free the name
+             // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name
   }
  }
  RETF(z);

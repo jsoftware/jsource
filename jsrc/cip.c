@@ -694,7 +694,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
  m=t; m=t&INT?FL:m; m=t&B01?INT:m;  // type of result, promoting bool and int
  RZ(z=ipprep(a,w,m,&m,&n,&p));  // allocate the result area, with the needed shape and type
- if(AN(z)==0)R z;  // return without computing if result is empty
+ if(AN(z)==0)R z;  // return without computing if result is empty.  Type stays FL
  if(!p){mvc(AN(z)<<bplg(AT(z)),AV(z),1,MEMSET00); R z;}  // if dot-products are all 0 length, set them all to 0
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}

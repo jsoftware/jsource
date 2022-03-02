@@ -595,7 +595,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
     jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
    } else {
     // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
-    ACINIT(w,2) WRITELOCK(JT(jt,stlock)) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc)); WRITEUNLOCK(JT(jt,stlock))  // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
+    ACINIT(w,2) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc));   // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
    }
    // Free the name
    fr(LOCNAME(w));

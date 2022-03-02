@@ -305,7 +305,7 @@ F1(jtlocsizes){I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 // jtprobe, with readlock taken on stlock
-static L *jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stlock)) L *z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stlock)) R z;}
+static L *jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) L *z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
 
 
 // find the symbol table for locale with name u which has length n and hash/number bucketx
@@ -461,18 +461,18 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
 }    /* 18!:2  set locale path */
 
 
-static F2(jtloccre){A g,y;C*s;I n,p;L*v;
+static F2(jtloccre){A g,y,z=0;C*s;I n,p;L*v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
  SYMRESERVE(2)  // make sure we have symbols to insert, for LOCPATH and for the locale itself
- WRITELOCK(JT(jt,stlock))  // take a write lock until we have installed the new locale if any.  No errors!
+ WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!
  if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
   g=v->val;
   if(LOCPATH(g)){
    // verify locale is empty (if it is zombie, its hashchains are garbage - clear them)
-   LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
+   LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERTGOTO(!u[i],EVLOCALE,exit););
    fa(LOCPATH(g))  // free old path
   }else{
    ra(g);  // going from zombie to valid adds to the usecount
@@ -481,10 +481,12 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  }else{
   // new named locale needed
   FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
-  if(unlikely(stcreate(0,p,n,s)==0))y=0;   // create the locale, but if error, cause this routine to exit with failure
+  if(unlikely(stcreate(0,p,n,s)==0))goto exit;   // create the locale, but if error, cause this routine to exit with failure
  }
- WRITEUNLOCK(JT(jt,stlock))  // errors OK now
- R boxW(ca(y));  // result is boxed string of name - we copy it, perhaps not needed
+ z=y;  // good return
+exit:
+ WRITEUNLOCK(JT(jt,stloc)->lock)  // errors OK now
+ R boxW(ca(z));  // result is boxed string of name - we copy it, perhaps not needed
 }    /* create a locale named w with hash table size a */
 
 static F1(jtloccrenum){C s[20];I k,p;A x;
@@ -565,7 +567,7 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=incorp(x); zv[1]=incorp(y);
  R z;
 }    /* 18!:30 locale map */
-F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,symlock)) R z;}
+F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
 SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */

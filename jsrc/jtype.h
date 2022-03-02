@@ -738,9 +738,9 @@ typedef struct {I e,p;X x;} DX;
 // Macros to incr/decr execct of a locale
 #define EXECCTNOTDELD 0x1000000   // This bit is set when a locale is created, and removed when the user asks to delete it.  Lower bits are the exec count.  The locale is half-deleted when exec ct goes to 0
 #if HIPRECS
-#define INCREXECCT(l) _atomic_fetch_add(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL);
-#define DECREXECCT(l) if(_atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0)locdestroy(l);
-#define DELEXECCT(l) if(_atomic_and_fetch(&LXAV0(l)[SYMLEXECCT],~EXECCTNOTDELD,__ATOMIC_ACQ_REL)==0)locdestroy(l);
+#define INCREXECCT(l) __atomic_fetch_add(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL);
+#define DECREXECCT(l) if(__atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0)locdestroy(l);
+#define DELEXECCT(l) if(__atomic_and_fetch(&LXAV0(l)[SYMLEXECCT],~EXECCTNOTDELD,__ATOMIC_ACQ_REL)==0)locdestroy(l);
 #else
 #define INCREXECCT(l) ++LXAV0(l)[SYMLEXECCT];
 #define DECREXECCT(l) if(--LXAV0(l)[SYMLEXECCT]==0)locdestroy(l);

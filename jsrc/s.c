@@ -143,7 +143,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ARGCHK1(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
- READLOCK(JT(jt,stlock)) READLOCK(JT(jt,symlock))
+ READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock))
  GAT0E(z,BOX,3,1,goto exit;); zv=AAV(z);
  n=AN((A)((I)SYMORIGIN-AKXR(0)))/symcol; pv=SYMORIGIN;
  GATV0E(x,INT,n*5,2,goto exit;); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
@@ -178,7 +178,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  }
  zz=z;
 exit: ;
- READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,symlock))
+ READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock))
  RETF(zz);
 }    /* 18!:31 symbol pool */
 
@@ -186,33 +186,38 @@ exit: ;
 // the symbol is deleted if found.  Return address of deleted symbol if it was cached - caller must then take responsibility for the name
 // if the symbol is PERMANENT, it is not deleted but its value is removed
 // if the symbol is CACHED, it is removed from the chain but otherwise untouched, leaving the symbol abandoned.  It is the caller's responsibility to handle the name
-L* jtprobedel(J jt,C*string,UI4 hash,A g){
+// We writelock the symbol table we are deleting from, and release the lock on exit.  It may be a symbol table or the global table stloc
+L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
  F1PREFIP;
  RZ(g);
  L *sympv=SYMORIGIN;  // base of symbol pool
  LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
+ WRITELOCK(g->lock)
  LX delblockx=*asymx;
  while(1){
   delblockx=SYMNEXT(delblockx);
-  if(!delblockx)R 0;  // if chain empty or ended, not found
+  if(!delblockx){ret=0; break;}  // if chain empty or ended, not found
   L *sym=sympv+delblockx;  // address of next in chain, before we delete it
   LX nextdelblockx=sym->next;  // unroll loop once
   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
     {
      if(unlikely(sym->flag&LCACHED)){
       *asymx=sym->next;   // cached: just unhook from chain.  can't be permanent
-      R sym;
+      ret=sym;   // cached block - return its address
      }else{
       SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
       if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=sympv[0].next; sympv[0].next=delblockx;}  // add to symbol free list
+      ret=0;  // normal return
      }
-     R 0;
+     break;  // name match - return
     }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
   )
   asymx=&sym->next;   // mismatch - step to next
   delblockx=nextdelblockx;
  }
+ WRITEUNLOCK(g->lock)
+ R ret;
 }
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table.  l is encoded in low bits of jt

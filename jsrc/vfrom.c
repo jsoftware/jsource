@@ -645,12 +645,14 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  RETF(z);   // Mark the box as non-inplaceable, as above
 }
 
+#if C_AVX2
 // see if row,col is in exclusion list.  Exclusion list is a list of col|col with the smaller value in the high-order part
 // Result is 0 if OK to accept the combination
 static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<row)?(col<<32)+row:(row<<32)+col;  // canonicalize column numbers into one value
  while(nexlist--)if(*exlist++==colrow)R 0;
  R 1;
 }
+#endif
  
 // 128!:9 matrix times sparse vector with optional early exit
 // product mode:
@@ -662,7 +664,7 @@ static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<row)?(col<
 // Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
 //           rc,failing column of NTT, an element of ndx (if rc=4)
 //  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
-//  rc=5=empty M, problem is malformed
+//  rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // if the exclusion list is given, we stop on the first nonimproving pivot, and the exclusion list is used to prevent repetition of basis:
 //
 // Rank is infinite
@@ -678,7 +680,7 @@ F1(jtmvmsparse){PROLOG(832);
  ASSERT(AR(C(AAV(w)[3]))==1,EVRANK);  // Av
  ASSERT(AR(C(AAV(w)[4]))==2,EVRANK);  // M
  // abort if no columns
- if(AN(C(AAV(w)[0]))==0)R num(5);  // if no cols (which happens at startup, return error indic)
+ if(AN(C(AAV(w)[0]))==0)R num(6);  // if no cols (which happens at startup, return error indic)
  // check types.  Don't convert - force the user to get it right - except for ndx
  ASSERT(AT(C(AAV(w)[1]))&INT,EVDOMAIN);  // Ax, shape cols,2 1
  ASSERT(AT(C(AAV(w)[2]))&INT,EVDOMAIN);  // Am
@@ -718,21 +720,21 @@ F1(jtmvmsparse){PROLOG(832);
   bvgrd0=0; bvgrde=bvgrd0+AS(C(AAV(w)[4]))[0];  // length of column is #M
  }else{
   // A list of index values.  We are doing the DIP calculation
-  ASSERT(AR(C(AAV(w)[5]))==1,EVRANK); ASSERT(AT(C(AAV(w)[5]))&INT,EVDOMAIN); bvgrd0=IAV(C(AAV(w)[5])); bvgrde=bvgrd0+AN(C(AAV(w)[5]));  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
-  if(AN(C(AAV(w)[5]))==0){RETF(num(5))}  // empty bk - give error/empty result
+  ASSERT(AR(C(AAV(w)[5]))==1,EVRANK); ASSERT(AN(C(AAV(w)[5]))==0||AT(C(AAV(w)[5]))&INT,EVDOMAIN); bvgrd0=IAV(C(AAV(w)[5])); bvgrde=bvgrd0+AN(C(AAV(w)[5]));  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
+  if(AN(C(AAV(w)[5]))==0){RETF(num(6))}  // empty bk - give error/empty result 6
   ASSERT(BETWEENC(AN(w),8,11),EVLENGTH); 
   ASSERT(AR(C(AAV(w)[7]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[7]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[7]))==AS(C(AAV(w)[4]))[0],EVLENGTH); bv=DAV(C(AAV(w)[7]));  // bk, one per row of M
   ASSERT(AR(C(AAV(w)[8]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[8]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[8]))==AS(C(AAV(w)[4]))[0]+AS(C(AAV(w)[1]))[0],EVLENGTH); Frow=DAV(C(AAV(w)[8]));  // Frow, one per row of M and column of A
   ASSERT(AR(C(AAV(w)[6]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
-  if(unlikely(n==0)){RETF(num(5))}   // empty M - should not occur, give error result
+  if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
   thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],DAV(C(AAV(w)[6]))[2],inf,DAV(C(AAV(w)[6]))[0]); nfreecols=(I)(nc*DAV(C(AAV(w)[6]))[3]); ncols=(I)(nc*DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; nvirt=(I)DAV(C(AAV(w)[6]))[6];
   zv=AN(C(AAV(w)[5]))==AN(C(AAV(w)[7]))?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
   if(AN(w)>9){
    ASSERT(AN(w)==11,EVLENGTH); 
    // An exclusion list is given (and thus also yk).  Remember their addresses.  Its presence puts us through the 'nonimproving path' case
-   ASSERT(AR(C(AAV(w)[9]))<=1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVDOMAIN);  // must be integer list
    exlist=IAV(C(AAV(w)[9]));  // remember address of exclusions
    nexlist=AN(C(AAV(w)[9]));  // and length of list
+   ASSERT(AR(C(AAV(w)[9]))<=1,EVRANK); ASSERT(nexlist==0||ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVDOMAIN);  // must be integer list
    ASSERT(AR(C(AAV(w)[10]))<=1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[10])),INT),EVDOMAIN); ASSERT(AN(C(AAV(w)[10]))==AS(C(AAV(w)[4]))[0],EVLENGTH); // yk, one per row of M
    yk=IAV(C(AAV(w)[10]));  // remember address of translation table of row# to basis column#
   }

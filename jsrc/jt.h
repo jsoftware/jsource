@@ -240,7 +240,7 @@ typedef struct JSTstruct {
 // Cacheline 3: Locales
  A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
  A stloc;            // named locales symbol table
- S stlock;           // r/w lock for stnum/stloc
+ S stlock;           // r/w lock for stnum.  stloc is never modified, so we use the ->lock field of stloc to lock that table
  C locsize[2];       /* size indices for named and numbered locales     */
  C baselocale[4];    // will be "base"
  // rest of cacheline used only in exceptional paths

@@ -630,7 +630,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
-#define HIPRECS 0   // set to enable hiprecs
+#define HIPRECS (1&&SY_64)      // scaf // set to enable hiprecs
 #define ARTIFHIPREC 0
 #if ARTIFHIPREC&&HIPRECS
 #define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create hiprec results from <, force-box, and sometimes ;
@@ -722,9 +722,9 @@ extern unsigned int __cdecl _clearfp (void);
 #if SY_64
 // The Bloom filter is set of 4 16-bit sections.  For each hash value, a single bit is set in each section.  The LOCBLOOM of a locale holds the OR or all the Bloom masks that
 // have been written.  When a value is looked up, we skip the table if LOCBLOOM doesn't have a 1 in each position presented by the new mask.
-#define BLOOMMASK(hash) ((1LL<<((hash)&15))+(10000LL<<(((hash)>>4)&15))+(100000000LL<<(((hash)>>8)&15))+(1000000000000LL<<(((hash)>>12)&15)))   // Bloom filter for a given hash
+#define BLOOMMASK(hash) ((0x1LL<<((hash)&15))+(0x10000LL<<(((hash)>>4)&15))+(0x100000000LL<<(((hash)>>8)&15))+(0x1000000000000LL<<(((hash)>>12)&15)))   // Bloom filter for a given hash
 #else
-#define BLOOMMASK(hash) ((1L<<((hash)&15))+(10000L<<(((hash)>>4)&15)))   // Bloom filter for a given hash
+#define BLOOMMASK(hash) ((1L<<((hash)&15))+(0x10000L<<(((hash)>>4)&15)))   // Bloom filter for a given hash
 #endif
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously

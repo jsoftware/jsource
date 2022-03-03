@@ -31,11 +31,11 @@ typedef struct rngparms {
   UI*  rngV;          /* RNG: state vectors                              */
   UI4  rngM;          /* RNG: moduli                                     */
   S    rngI;          /* RNG: indices                                    */
- } RNGPARMS;
+ } RNGPARMS;  // 32 bytes
 
 // should align this to cacheline bdy
 typedef struct rngdata {
- RNGPARMS rngparms[5];  // parms for RNGs when used signly
+ RNGPARMS rngparms[5];  // parms for RNGs when used singly
  UI*  rngv;             /* RNG: rngV[rng]                                  */
  UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
  A    rngseed;          /* RNG: array seed                                 */
@@ -43,18 +43,22 @@ typedef struct rngdata {
  C    rngw;             /* RNG: # bits in a random #                       */
  C    rng;              /* RNG: generator selector                         */
  RNGPARMS rngparms0[5];  // parms for RNG 0
- } RNG;
+ } RNG;  // 342 bytes
 
 
 
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
-// The first 2 cache lines is stacked on task switch
  struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // task-initialized values
-// these values are stacked and restored over the execution of a task
+// *********************************** the starting area contains values that are inherited from the spawning task
  A global;           // global symbol table inherit for task
  D cct;               // complementary comparison tolerance inherit for task
- I4 currslistx;    // index into slist of the current script being executed (or -1 if none) inherit for task
+ UI cstackinit;       // C stack pointer at beginning of execution inherit for task
+ UI cstackmin;        // red warning for C stack pointer inherit for task
+ C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
+ C pp[7];            // print precision (sprintf field for numeric output) inherit for task
+ C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
+// 3 bytes free
  union {  // this union is 4 bytes long
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -64,54 +68,53 @@ typedef struct rngdata {
      C    pmctr;     // set when PM is running inherit
      UC   db;               /* debug flag; see 13!:0 inherit                          */
     } cx_c;        // accessing as bytes
-   } cx;   // flags needed by unquote and jtxdefn
-// ** here starts the part that is initialized after it is stacked
+   } cx;   // flags needed by unquote and jtxdefn   inherit for task
+// ************************************** here starts the area that is initialized to 0 when task starts
    union {
     US uq_us;       // accessing both flags at once
     struct {
      C    bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
      B    spfreeneeded;     // When set, we should perform a garbage-collection pass clear for task
     } uq_c;        // accessing as bytes
-   } uq;   // flags needed only by unquote
+   } uq;   // flags needed only by unquote  clear for task
   } us;   // access as US
- } uflags;   // 
- UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task
- S etxn;             // strlen(etx) but set negative to freeze changes to the error line
- S etxn1;            // last non-zero etxn                 migrated clear for task
- UI cstackmin;        // red warning for C stack pointer init for task
+ } uflags;   // 4 bytes
+ I bytes;            // bytes currently in use - used only during 7!:1 clear for task
+ S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
+ S etxn1;            // last non-zero etxn    clear for task
+ B foldrunning;      // 1 if fold is running (allows Z:) clear for task
+ UC jerr;             // error number (0 means no error)      clear for task
+ UC jerr1;            // last non-zero jerr  clear for task
+ C namecaching;     // 1=for script 2=on  clear for task
+// end of cacheline 0
  struct ASGINFO {
   L *assignsym;       // symbol-table entry for the symbol about to be assigned
   A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and not read-only
- } asginfo;
- A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
-// end of cacheline 0
- A filler;            // UNUSED
- S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task
- S ntasks;     // number of hiprecs allowed, 0 if none
- I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
- UI cstackinit;       // C stack pointer at beginning of execution init for task
- I bytes;            // bytes currently in use - used only during 7!:1 clear for task
+ } asginfo;   // clear for task
+ A xmod;             // extended integer: the m in m&|@f clear for task
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
- B foldrunning;      // 1 if fold is running (allows Z:) clear for task
- UC jerr;             // error number (0 means no error)    migrated  clear for task
- C recurstate;       // state of recursions through JDo migrated init for task
+ B iepdo;            // 1 iff do iep clear for task
+ C xmode;            // extended integer operating mode clear for task
+// ************************************** here starts the part that is initialized to non0 values when the task is started
+ C recurstate;       // state of recursions through JDo    init for task to BUSY
 #define RECSTATEIDLE    0  // JE is inactive, waiting for work
 #define RECSTATEBUSY    1  // JE is running a call from JDo
 #define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
- C namecaching;     // 1=for script 2=on  clear for task
- B iepdo;            // 1 iff do iep clear for task
- UC jerr1;            // last non-zero jerr                 migrated  clear for task
-// ** end of initialized part
- C xmode;            // extended integer operating mode inherit for task
- C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
- A xmod;             // extended integer: the m in m&|@f inherit for task
- C pp[7];            // print precision (sprintf field for numeric output) inherit for task
- C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
-// end of cacheline 1 (little used)
-// *** end of the region saved at task startup
+  // 1 byte free
+ I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
+ A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
+ UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F
+ S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task to ?
+ S ntasks;     // number of hiprecs allowed, 0 if none init for task to ?
+// obsolete  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
+// **************************************  end of initialized part
 
-// everything after here persists over the life of the thread
+// ************************************** everything after here persists over the life of the thread
+ LX symfreeroot;   // symbol # of head of local free-symbol queue (0=end)
+  // 4 bytes free
+// end of cacheline 1
+
 
 // things needed for memory allocation
  A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
@@ -124,13 +127,22 @@ typedef struct rngdata {
 // things needed by name lookup (unquote)
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  I4 callstacknext;    /* named fn calls: current depth                   */
- I4 fcalln;           /* named fn calls: maximum permissible depth   migrated    */
+ I4 fcalln;           /* named fn calls: maximum permissible depth     */
  A curname;          // current name, an A block containing an NM
- A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
- I4 parsercalls;      /* # times parser was called          migrated             */
- C fillv0len;   // length of fill installed in fillv0
-// 3 bytes free
 // end of cacheline 3
+ A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
+ I4 parsercalls;      /* # times parser was called                 */
+ S taskstate;  // task state: modified by other tasks on a system lock
+#define TASKSTATERUNNINGX 0   // task has started
+#define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
+#define TASKSTATEWAITINGX 1  // task is waiting for any reason
+#define TASKSTATEWAITING (1LL<<TASKSTATEWAITINGX)
+#define TASKSTATESYSWAITX 2  // reason for wait is pending system lock
+#define TASKSTATESYSWAIT (1LL<<TASKSTATESYSWAITX)
+#define TASKSTATESYSWAITPENDINGX 3 // set by requester of syswait to indicate syswait needs ACK (ACK by turning this bit off)
+#define TASKSTATESYSWAITPENDING (1LL<<TASKSTATESYSWAITPENDINGX)
+ C fillv0len;   // length of fill installed in fillv0
+// 1 byte free
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
@@ -141,8 +153,8 @@ typedef struct rngdata {
 // end of cacheline 4
 
 // things needed by execution of certain verbs
- A idothash0;        // 2-byte hash table for use by i.    migrated
- A idothash1;        // 4-byte hash table for use by i.    migrated
+ A idothash0;        // 2-byte hash table for use by i.
+ A idothash1;        // 4-byte hash table for use by i.
  A fill;             // user fill atom
  C* fillv;            /* fill value                                      */
  C fillv0[sizeof(Z)];/* default fill value                              */
@@ -158,12 +170,14 @@ typedef struct rngdata {
  I deprecct;  // number of deprecation  errors to display, -1 to emsg
  A deprecex;  // list of INTs of messages not to display
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
+// end of cacheline 6
+ A *repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this task but freed by other tasks.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
 
 // debugging info
  DC sitop;            /* pointer to top of SI stack                                 */
  I getlasterror;     /* DLL stuff                                       */
  I dlllasterror;     /* DLL stuff                                       */
-//  end of cacheline 6
+// end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;
 #if !C_CRC32C
@@ -196,16 +210,16 @@ typedef struct JSTstruct {
 // in S state we must have everything else in the line be essentially read-only.
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
- S qlock;            // lock used for quiescing all tasks
- A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
- A slist;            // boxed list of filenames used in right arg to 0!:, matches the entries made in sn field of L blocks
+ S systemlock;       // lock used for quiescing all tasks
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
- UC dbuser;           /* user-entered value for db          migrated             */
+ UC dbuser;           /* user-entered value for db             */
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
  void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
+ A stloc;            // named locales symbol table - this pointer never changes
+ A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives.
 // end of cacheline 0
 
 // Cacheline 1: DLL variables
@@ -239,14 +253,13 @@ typedef struct JSTstruct {
 
 // Cacheline 3: Locales
  A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
- A stloc;            // named locales symbol table
  S stlock;           // r/w lock for stnum.  stloc is never modified, so we use the ->lock field of stloc to lock that table
  C locsize[2];       /* size indices for named and numbered locales     */
  C baselocale[4];    // will be "base"
  // rest of cacheline used only in exceptional paths
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
- I filler3[2];    // 2 words free
+ I filler3[4];    // 2 words free
 // end of cacheline 3
 
 // Cacheline 4: Files
@@ -263,7 +276,8 @@ typedef struct JSTstruct {
  void *iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I iomalloclen;   // length of the allocated block (in case we can reuse it)
  UI qtstackinit;      // jqt front-end C stack pointer
- I filler4[2];      // 2 words free
+ A p4792;            // pointer to p: i. 4792, filled in on first use
+ D tssbase;          /* initial 6!:0''                            */
 // end of cacheline 4
 
 
@@ -295,22 +309,24 @@ typedef struct JSTstruct {
  I igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
  I dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  I zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
- A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms
+ A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed
 // end of cacheline 6
 
-// Cacheline 7: no locks, essentially read-only
- UI4 cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores
+// Cacheline 7: scripts, essentially read-only
+ A slist;            // boxed list of filenames used in right arg to 0!:, the entries made in sn field of L blocks are indexes into this.  AM has # valid entries
+ S slistlock;        // lock for slist
+ // rest of cacheline used only in exceptional paths
+ C bx[11];               /* box drawing characters                          */
  B sesm;             /* whether there is a session manager             */
  C nfe;              /* 1 for J native front end                    */
  C oleop;            /* com flag to capture output                    */
+ UI4 cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
  UC seclev;           /* security level                                  */
  UC disp[7];          /* # different verb displays                       */
- C bx[11];               /* box drawing characters                          */
-// 5 bytes free
+// 3 bytes free
  A zpath;    // path 'z', used for all initial paths
- A p4792;            // pointer to p: i. 4792, filled in on first use
- D tssbase;          /* initial 6!:0''                            */
+ I filler7[1];    // 2 words free
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));

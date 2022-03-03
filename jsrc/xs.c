@@ -13,12 +13,12 @@
 
 
 B jtxsinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
- GAT0(x,BOX,10,1); ACINITZAP(x); INITJT(jjt,slist)=x; AS(INITJT(jjt,slist))[0]=0;  // init block, set item count to 0.  This block is NOT recursive but becomes one if extended
+ GAT0(x,BOX,10,1); ACINITZAP(x); INITJT(jjt,slist)=x; AM(INITJT(jjt,slist))=0;  // init block, set item count to 0.  This block is NOT recursive but becomes one if extended
  MTHREAD(jjt)->currslistx=-1;  // indicate 'not in script' in master thread
  R 1;
 }
 
-F1(jtsnl){ASSERTMTV(w); R vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist)));}
+F1(jtsnl){ASSERTMTV(w); R vec(BOX,AM(JT(jt,slist)),AAV(JT(jt,slist)));}
      /* 4!:3  list of script names */
 
 
@@ -94,14 +94,27 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  if(3==ce){z=num(jt->jerr==0); RESETERR; R z;}else RNE(mtm);
 }
 
-static F1(jtaddscriptname){I i;
- RE(i=i0(indexof(vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist))),box(ravel(w)))));  // look up only in the defined names
- if(AS(JT(jt,slist))[0]==i){
-  if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){RZ(JT(jt,slist)=ext(1,JT(jt,slist)));}  // extend, preserving curr index (destroying len momentarily)
-  INCORP(w); RZ(ras(w)); RZ(AAV(JT(jt,slist))[i]=w);
-  AS(JT(jt,slist))[0]=i+1;  // set new len
+static F1(jtaddscriptname){I i;A z;
+ INCORP(w);  // make sure later ras() can't fail
+ A boxw=box(ravel(w));   // take <w before locking
+ WRITELOCK(JT(jt,slistlock))
+ // We call indexof, which is OK because on list vs atom it will just do a sequential search.  But we do have to set up AN/AS correctly
+// obsolete  RE(i=i0(indexof(vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist))),)));  // look up only in the defined names
+ I savn=AN(JT(jt,slist));
+ AS(JT(jt,slist))[0]=AN(JT(jt,slist))=AM(JT(jt,slist));
+ z=indexof(JT(jt,slist),boxw);  // look up only in the defined names
+ AN(JT(jt,slist))=savn;  // restore count; shape is immaterial
+ if(z==0)goto exit;  // if error in indexof, abort
+ i=i0(z);  // get the index at which found
+ if(AM(JT(jt,slist))==i){  // if string must be added...
+  NOUNROLL while(AM(JT(jt,slist))==AN(JT(jt,slist)))RZ(jtextendunderlock(jt,&JT(jt,slist),&JT(jt,slistlock),0))  // extend if list full
+// obsolete   if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){RZ(JT(jt,slist)=ext(1,JT(jt,slist)));}  // extend, preserving curr index (destroying len momentarily)
+  ras(w); AAV(JT(jt,slist))[i]=w;
+  AM(JT(jt,slist))=i+1;  // set new len
  }
- R sc(i);
+exit:
+ WRITEUNLOCK(JT(jt,slistlock))
+ R z;  // either where found or where added
 }
 
 
@@ -141,7 +154,8 @@ F1(jtscriptstring){
 // 4!:7 set script name to use and return previous value
 F1(jtscriptnum){
  I i=i0(w);  // fetch index
- ASSERT(BETWEENO(i,-1,AS(JT(jt,slist))[0]),EVINDEX);  // make sure it's _1 or valid index
+ READLOCK(JT(jt,slistlock)) I scriptn=AM(JT(jt,slist)); READUNLOCK(JT(jt,slistlock))   // no problem if we lose lock since list only grows
+ ASSERT(BETWEENO(i,-1,scriptn),EVINDEX);  // make sure it's _1 or valid index
  A rv=sc(jt->currslistx);  // save the old value
  RZ(rv); jt->currslistx=i;  // set the new value (if no error)
  R rv;  // return prev value

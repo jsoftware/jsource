@@ -59,11 +59,23 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,*v,xn,yn;L*u;
  R 1;
 }    /* 0: initialize (no old array); 1: extend old array */
 
-// Make sure there is a symbol available for allocation.  Extend the symbol table if not.
-// This must be called outside of any lock and only when the free-symbol queue is empty
+// Make sure there are n symbols available for allocation.  Extend the symbol table if not.
+// This must be called outside of any lock and only when the local free-symbol queue has fewer than n values
 I jtreservesym(J jt,I n){
- RZ(symext(1)); /* extend pool if req'd        */
- SYMRESERVE(n)   // check to make sure we got enough 
+ // loop till we get the number of symbols required
+ I nsymadded=0;  // number of symbols we have added.  We ignore any symbols we actually have, since there can't be many of them
+ while(1){
+  // count off symbols from the global area, up to a fair number (we need to get enough to justify the lock overhead small)
+
+  // transfer what we got to our local table
+
+  // if we didn't get enough, call a system lock and extend/relocate the table
+  if(nsymadded>=n)break;  // success if we got enough
+  if(jtsystemlock(jt)){I extok=symext(1); jtsystemunlock(jt); RZ(extok)}  // extend symbol table under the big lock
+nsymadded=n;  // scaf
+ }
+// obsolete  RZ(symext(1)); /* extend pool if req'd        */
+// obsolete  SYMRESERVE(n)   // check to make sure we got enough 
  R 1;
 }
 
@@ -241,6 +253,7 @@ L*jtprobe(J jt,C*string,UI4 hash,A g){
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
 // If the value is empty, return 0 for not found
 // We know that there are buckets and that we should search them
+// Take no locks
 L *probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[bucket#], bx is index within bucket
  // There is always a local symbol table, but it may be empty
  RZ(a);u=NAV(a);  // u->NM block
@@ -265,6 +278,7 @@ L *probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[bu
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
 // If the value is empty, return 0 for not found
+// Take no locks
 L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
@@ -299,6 +313,7 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table (which must exist)
 // If not found, one is created
+// Take no locks
 L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
@@ -337,7 +352,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
    R l;  // return 
   }
  } else {
-  // No bucket information, do full search
+  // No bucket information, do full search.  No lock needed on local table
   L *l=probeis(a,jt->locsyms);
   RZ(l);
   AR(jt->locsyms)|=(~l->flag)&LPERMANENT;  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
@@ -345,15 +360,18 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
  }
 }
 
-
+// Acquire a symbol and then xctl to probeis.  Suitable when the caller needs a symbol AND has no locks
+// May fail if symbol cannot be allocated
+L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) R probeis(a,g);}
 
 // a is A for name
 // g is symbol table to use
-// result is L* symbol-table entry to use
-// if not found, one is created
+// result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
+// if not found, one is created.  Caller must ensure that a symbol is available
+// locking is the responsibilty of the caller
 L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
- SYMRESERVE(1)   // make sure there will be a symbol if we need one
+// obsolete  SYMRESERVE(1)   // make sure there will be a symbol if we need one
  LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
  if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
   v=tx+sympv;
@@ -375,16 +393,17 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 // g is the current locale, l/string=length/name, hash is the hash for it (l is carried in the low 8 bits of jt)
 // result is L* symbol-table slot for the name, or 0 if none
 // Bit 0 (ARNAMED) of the result is set iff the name was found in a named locale
-L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e=0;
+// We must have no locks coming in; we take a read lock on each symbol table we have to search
+L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e;
  RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(e=jtprobe(jt,string,hash,g)){e=(L*)((I)e+AR(g)); break;} g=gn;}while(g);  // return when name found.
- R e;  // fall through: not found
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(e){R (L*)((I)e+AR(g));}} g=gn;}while(g);  // return when name found.
+ R 0;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found.  We know the name will be found somewhere
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(jtprobe(jt,string,hash,g)){break;} g=gn;}while(g);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; L *e; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(e){break;}} g=gn;}while(g);  // return when name found.
  R g;
 }
 
@@ -541,7 +560,7 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
  R 1;
 }    /* check for changes to stack */
 
-// find symbol entry for name a in symbol table g; this is known to be global assignment
+// find symbol entry for name a in global symbol table g; this is known to be global assignment
 // the name a may require lookup through the path; once we find the locale, we search only in it
 // Result is &symbol-table entry for the name, or a new one
 // We are called for purposes of setting assignsym for inplace assignments.  The symbol we create will eventually be assigned
@@ -553,7 +572,8 @@ L* jtprobeisquiet(J jt,A a){A g;
  I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
  else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
- R probeis(a, g);  // return pointer to slot, creating one if not found
+ SYMRESERVE(1) WRITELOCK(g->lock) L *res=probeis(a, g); WRITEUNLOCK(g->lock)   // return pointer to slot, creating one if not found
+ R res;
 }
 
 static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
@@ -576,8 +596,11 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g
  if(!((I)jtinplace&JTASSIGNSYMNON0)){
- // we don't have e, look it up
-  RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
+ // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
+ // the name was invalid anyway and is subject to having the value removed
+ if(g==jtlocal)e=probeislocal(a); else{SYMRESERVE(1) WRITELOCK(g->lock) e=probeis(a, g); WRITEUNLOCK(g->lock)}
+ RZ(e)
+// obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
  }
  // if we are writing to a non-local table, update the table's Bloom filter.

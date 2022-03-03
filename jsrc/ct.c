@@ -2,6 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 
+// Tasks
 #include "j.h"
 
 #if ARTIFHIPREC
@@ -115,4 +116,10 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
  R 1;  // normal return
 }
 
+// Take lock on the entire system, waiting till all threads acknowledge
+// Result is 1 if we got the lock, 0 if somebody else did or there was an error (which is currently impossible)
+I jtsystemlock(J jt){R 1;}
+
+// Release system lock previously acquired
+void jtsystemunlock(J jt){}
 

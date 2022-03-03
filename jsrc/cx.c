@@ -908,9 +908,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
  // create a symbol-table entry for each such name
  // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
- RZ(probeis(mnuvxynam[5],pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],pfst));}
- if(type<3){RZ(probeis(mnuvxynam[2],pfst)); RZ(probeis(mnuvxynam[0],pfst));}
- if(type==2){RZ(probeis(mnuvxynam[3],pfst)); RZ(probeis(mnuvxynam[1],pfst));}
+ RZ(probeisres(mnuvxynam[5],pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeisres(mnuvxynam[4],pfst));}
+ if(type<3){RZ(probeisres(mnuvxynam[2],pfst)); RZ(probeisres(mnuvxynam[0],pfst));}
+ if(type==2){RZ(probeisres(mnuvxynam[3],pfst)); RZ(probeisres(mnuvxynam[1],pfst));}
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
@@ -935,7 +935,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     // it when executed; but we are just making sure that it doesn't make the refs invalid.  name:: also sets NAMEXY, and we have to leave that because
     // any valid ref to mnuvxy will need that set; so there is a chance that name:: =. will result in an ordinary reference to the name's having the NAMEXY
     // flag.  That won't hurt anything significant.
-    L *nml; RZ(nml=probeis(t,pfst)); AT(nml->name)&=~NAMEABANDON;   // put name in symbol table, with ABANDON flag cleared
+    L *nml; RZ(nml=probeisres(t,pfst)); AT(nml->name)&=~NAMEABANDON;   // put name in symbol table, with ABANDON flag cleared
    } else if(AT(t)&LIT) {
     // LIT followed by =.  Probe each word.  Now that we support lists of NAMEs, this is used only for AR assignments
     // First, convert string to words
@@ -945,13 +945,13 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
      for(kk=0;kk<wdsn;++kk) {
       // Convert word to NAME; if local name, add to symbol table
       if((wnm=onm(wdsv[kk]))) {
-       if(!(NAV(wnm)->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeis(wnm,pfst)); AT(nml->name)&=~NAMEABANDON;}  // see above
+       if(!(NAV(wnm)->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeisres(wnm,pfst)); AT(nml->name)&=~NAMEABANDON;}  // see above
       } else RESETERR
      }
     } else RESETERR  // if invalid words, ignore - we don't catch it here
    }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){  // not NAME, not LIT; is it NAMEs box?
     // the special form created above.  Add each non-global name to the symbol table
-    A *tv=AAV(t); DO(AN(t), if(!(NAV(tv[i])->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeis(tv[i],pfst)); AT(nml->name)&=~NAMEABANDON;})
+    A *tv=AAV(t); DO(AN(t), if(!(NAV(tv[i])->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeisres(tv[i],pfst)); AT(nml->name)&=~NAMEABANDON;})
    }
   } // end 'local assignment'
  }  // for each word in sentence
@@ -964,9 +964,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    if(cwlen>4){  // for_xyz.
     // for_xyz. found.  Lookup xyz and xyz_index
     A xyzname = str(cwlen+1,CAV(QCWORD(lv[cwv[j].ig.indiv.sentx]))+4);  // +1 is -5 for_. +6 _index
-    RZ(probeis(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
+    RZ(probeisres(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
     MC(CAV(xyzname)+cwlen-5,"_index",6L);    // append _index to name
-    RZ(probeis(nfs(cwlen+1,CAV(xyzname)),pfst));  // create xyz_index
+    RZ(probeisres(nfs(cwlen+1,CAV(xyzname)),pfst));  // create xyz_index
    }
   }
  }
@@ -985,13 +985,13 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
  // So we add them by hand - just y and possibly x.  They will be added later too
- RZ(probeis(ca(mnuvxynam[5]),actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(ca(mnuvxynam[4]),actst));}
+ RZ(probeisres(ca(mnuvxynam[5]),actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeisres(ca(mnuvxynam[4]),actst));}
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=SYMORIGIN[pfx].next){L *newsym;
    A nm=SYMORIGIN[pfx].name;
    // If we are transferring a PERMANENT name, we have to clone it, because the name may be local & if it is we may install bucket info or a symbol index
    if(ACISPERM(AC(nm)))RZ(nm=ca(nm));   // only cases are mnuvxy
-   RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
+   RZ(newsym=probeisres(nm,actst));  // create new symbol (or possibly overwrite old argument name)
    newsym->flag = SYMORIGIN[pfx].flag|LPERMANENT;   // Mark as permanent
   }
  }

@@ -152,9 +152,9 @@ struct AD {
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
         // (5) in the return from wordil, holds the number of words if any final NB. is discarded; (6) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (7) in the self block for y L: n and u S: n, the address of the fs block for u; (8) in the call to jtisf (multiple assignment), holds the
-        // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in hashtables in x15.c and in tickers, the number of entries that have been hashed
+        // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in all tables that use extendunderlock, the number of valid entries in the table (AN gives the allocation)
         // (11) in file-lock list and file-number list, the # valid files (12) if AFUNIFORMITEMS is set, the total# items in all boxes (13) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
-        // (14) if the filenames pointed to by fopafl, the file handle for the open file
+        // (14) in the filenames pointed to by fopafl, the file handle for the open file
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)

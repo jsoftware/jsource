@@ -357,7 +357,7 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
  if(unlikely(s->flag&LCACHED)){*asymx=s->next;  // cached ref: remove its name, making it unmoored.  This ref can't make such a reference but a different ref could
  }else{
   s->val=0; s->valtype=0; // remove the value ref, but don't touch the value itself
-  if(likely(!SYMNEXTISPERM(nextsymx))){*asymx=s->next; fa(s->name); s->name=0; s->flag=0; s->sn=0; s->next=sympv[0].next; sympv[0].next=nextsymx;}
+  if(likely(!SYMNEXTISPERM(nextsymx))){*asymx=s->next; fa(s->name); s->name=0; s->flag=0; s->sn=0; s->next=SYMLOCALROOT; SYMLOCALROOT=nextsymx;}
  }
  // the name is deleted, leaving the value.  Make the value inplaceable if there are no refs out against it.  If it is a local variable we think any outstanding
  // inplaceable refs will last till the end of the sentence, where we tpop the value

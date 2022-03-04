@@ -257,6 +257,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  R g;
 }    /* create locale, named (0==k) or numbered (1==k) */
 
+// initialization routine: INITZAP not required to protect blocks
 B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,locsize)[0]=3;  /* default hash table size for named    locales */
  INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
@@ -266,13 +267,13 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
  // init z locale
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
- RZ(zloc=stcreate(0,p,1L,"z")); ACX(zloc);   // make the z locale permanent
+ SYMRESERVE(2) RZ(zloc=stcreate(0,p,1L,"z")); ACX(zloc);   // make the z locale permanent
  // create zpath, the default path to use for all other locales
  GATV0(q,BOX,2,0); AAV0(q)[0]=zloc; AAV0(q)[1]=0; ACX(q); JT(jt,zpath)=q;   // install z locale and ending 0; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
- RZ(jt->global=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
+ SYMRESERVE(2) RZ(jt->global=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  // NOTE: you must apply a name from a private locale ONLY to the locale it was created in, or to a global locale.  Private names contain bucket info & symbol pointers that would
  // cause errors if applied in another locale.  It is OK to apply a non-private name to any locale.
@@ -284,7 +285,8 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
  INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
  // Go back and fix the path for z locale to be the empty locale (which is what we use when the path itself is empty)
- GATV0(q,BOX,2,0); AAV0(q)[0]=jt->locsyms; AAV0(q)[1]=0; ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent 
+ GATV0(q,BOX,1,0); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list
+// obsolete  AAV0(q)[0]=jt->locsyms; AAV0(q)[1]=0;
  R 1;
 }
 
@@ -432,7 +434,7 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
 F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,C(w)));
  g=LOCPATH(g);  // the path for the current locale.  It must be non0
  GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV0(g);  // allocate result, point to input & output areas
- DO(AN(g), if(*gv&&C(*gv)!=JT(jt,emptylocale)){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator and the leading empty (if path was null)
+ DO(AN(g), if(*gv){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator
  AN(z)=AS(z)[0]=zv-zv0; R z;  // install number of strings added & return
 }
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored, and must incorporate it
@@ -447,7 +449,8 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
  // The path is stored with one extra zero element at the end to allow for loop unrolling.  If the path is empty, the first path points to the empty locale
  // The path is allocated as a rank-0 list so that a path of length 1 doesn't need the data from the second cacheline
  GATV0(x,BOX,MAX(AN(a),1)+1,0); AFLAGINIT(x,BOX); A *xv=AAV0(x); // allocate enough locations, plus one.  Set as recursive.  xv->first slot
- if(unlikely(AN(a)==0)){*xv++=JT(jt,emptylocale);  // path empty, use an empty locale (which is permanent)
+ if(unlikely(AN(a)==0)){   // if path empty, leave it empty
+// obsolete *xv++=JT(jt,emptylocale);  // path empty, use an empty locale (which is permanent)
  }else if(AN(a)==1){RZ(h=locale(1,a)); ra(h); *xv++=h;  // singleton, might be numeric atom - save it
  }else{A locatom;
   // more than one locale; must be list of boxes.  Go through the list, using a virtual block
@@ -455,7 +458,8 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
   fauxblock(locfaux); fauxvirtual(locatom,locfaux,a,0,ACUC1) AN(locatom)=1;  // create an faux atom, starting at beginning of a
   A *xv0=xv; DO(AN(a), RZ(h=locale(1,locatom)); if(likely(h!=g)){*xv++=h; ra(h);} AK(locatom)+=SZI;) AN(x)=(xv-xv0)+1;  // move locales for the names, but don't allow a locale in its own path
  }
- *xv=0;  // terminate locale list with null.  AN may be wrong but we look for the trailing 0
+ *xv=0;  // terminate locale list with null.
+// obsolete   AN may be wrong but we look for the trailing 0
  fa(LOCPATH(g)); ACINITZAP(x); LOCPATH(g)=x;  // switch paths.  We are guaranteed that the path of g is nonnull so ra not needed
  R mtm;
 }    /* 18!:2  set locale path */
@@ -494,8 +498,7 @@ static F1(jtloccrenum){C s[20];I k,p;A x;
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
 // obsolete  RE(k=jtgetnl(jt));
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
- SYMRESERVE(1)  // make sure we have symbols to insert, for LOCPATH
- RZ(x=stcreate(1,p,0,0L));
+ SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert, for LOCPATH
 // obsolete  sprintf(s,FMTI,k); 
  sprintf(s,FMTI,NAV(LOCNAME(x))->bucketx);   // extract locale# and convert to boxed string 
  R boxW(cstr(s));  // result is boxed string of name

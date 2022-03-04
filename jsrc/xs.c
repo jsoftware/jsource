@@ -97,7 +97,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 static F1(jtaddscriptname){I i;A z;
  INCORP(w);  // make sure later ras() can't fail
  A boxw=box(ravel(w));   // take <w before locking
- WRITELOCK(JT(jt,slistlock))
+ WRITELOCK(JT(jt,startlock))
  // We call indexof, which is OK because on list vs atom it will just do a sequential search.  But we do have to set up AN/AS correctly
 // obsolete  RE(i=i0(indexof(vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist))),)));  // look up only in the defined names
  I savn=AN(JT(jt,slist));
@@ -107,13 +107,13 @@ static F1(jtaddscriptname){I i;A z;
  if(z==0)goto exit;  // if error in indexof, abort
  i=i0(z);  // get the index at which found
  if(AM(JT(jt,slist))==i){  // if string must be added...
-  NOUNROLL while(AM(JT(jt,slist))==AN(JT(jt,slist)))RZ(jtextendunderlock(jt,&JT(jt,slist),&JT(jt,slistlock),0))  // extend if list full
+  NOUNROLL while(AM(JT(jt,slist))==AN(JT(jt,slist)))RZ(jtextendunderlock(jt,&JT(jt,slist),&JT(jt,startlock),0))  // extend if list full
 // obsolete   if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){RZ(JT(jt,slist)=ext(1,JT(jt,slist)));}  // extend, preserving curr index (destroying len momentarily)
   ras(w); AAV(JT(jt,slist))[i]=w;
   AM(JT(jt,slist))=i+1;  // set new len
  }
 exit:
- WRITEUNLOCK(JT(jt,slistlock))
+ WRITEUNLOCK(JT(jt,startlock))
  R z;  // either where found or where added
 }
 
@@ -154,7 +154,7 @@ F1(jtscriptstring){
 // 4!:7 set script name to use and return previous value
 F1(jtscriptnum){
  I i=i0(w);  // fetch index
- READLOCK(JT(jt,slistlock)) I scriptn=AM(JT(jt,slist)); READUNLOCK(JT(jt,slistlock))   // no problem if we lose lock since list only grows
+ READLOCK(JT(jt,startlock)) I scriptn=AM(JT(jt,slist)); READUNLOCK(JT(jt,startlock))   // no problem if we lose lock since list only grows
  ASSERT(BETWEENO(i,-1,scriptn),EVINDEX);  // make sure it's _1 or valid index
  A rv=sc(jt->currslistx);  // save the old value
  RZ(rv); jt->currslistx=i;  // set the new value (if no error)

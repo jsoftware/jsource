@@ -414,13 +414,13 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
  if((b&-AR(ind))<0){   // array of boxed indexes
   RZ(j=aindex(ind,w,0L)); j=(A)((I)j&~1LL);  // see if the boxes are homogeneous, or erroneous
   if(!j){  // if not homogeneous...
-   if(unlikely(jt->deprecct!=0))RZ(jtdeprecmsg(jt,1,"(001) inhomogeneous multiple selectors in (x m} y): consider applying them separately\n"));
+   if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,1,"(001) inhomogeneous multiple selectors in (x m} y): consider applying them separately\n"));
    RZ(x=MODIFIABLE(from(ind,increm(iota(shape(w)))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
    DQ(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
    *cellframelen=AR(w); R x;   // the indexes are what we want, and they include all the axes of w
   }
   // Homogeneous boxes.  j has them in a single table.  turn each row into an index
-  if(unlikely(jt->deprecct!=0))RZ(jtdeprecmsg(jt,2,"(002) homogeneous multiple selectors in (x m} y): consider using rank-2 m\n"));
+  if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,2,"(002) homogeneous multiple selectors in (x m} y): consider using rank-2 m\n"));
   b=0; ind=j;  // use the code for numeric array
   // later this can use the code for table m
  }
@@ -518,7 +518,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
        RZ(ax=pind(axlen,ax));  // audit selectors
        if(unlikely(AR(ax)>1)){
         // one of the selectors has rank >1.  We have to go to general case
-        if(unlikely(jt->deprecct!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
+        if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
         goto noaxes;  // table in selectors: abort axis work
        }
        axes[i].max=(AR(ax)-1)|AN(ax);  // note how many there are, or -1 if atom

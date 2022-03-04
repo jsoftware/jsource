@@ -574,7 +574,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    if(likely(wv[j]!=0)){freeroot=freeroot?freeroot:wv[j]; *freetailchn=wv[j]; freetailchn=asymx;}  // free chain may have permanent flags   save addr of the very first freed item
   }
  }
- if(likely(freeroot!=0)){*freetailchn=jtsympv[0].next;jtsympv[0].next=freeroot;}  // put all blocks freed here onto the free chain
+ if(likely(freeroot!=0)){*freetailchn=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
 }
 
 // free the symbol table (i. e. locale) w.  AR(w) has been loaded.  We return w so caller doesn't have to save it
@@ -601,7 +601,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
    fr(LOCNAME(w));
    // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-   jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  SYMORIGIN[0] is the base of the free chain
+   jtsympv[k].next=SYMLOCALROOT;SYMLOCALROOT=k;  // put symbol on the free list.  SYMLOCALROOT is the base of the free chain
   }
  }
  // continue to free the table itself

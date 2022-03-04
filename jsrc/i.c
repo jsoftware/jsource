@@ -162,6 +162,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  INITJT(jjt,igemm_thres)=IGEMM_THRES;   // tuning parameters for cip.c
  INITJT(jjt,dgemm_thres)=DGEMM_THRES;
  INITJT(jjt,zgemm_thres)=ZGEMM_THRES;
+ INITJT(jjt,deprecex)=num(7);  // scaf suppress msg 7 for the nonce
  I threadno; for(threadno=0;threadno<nthreads;++threadno){jt=&jjt->threaddata[threadno];
   RESETRANK;  // init both ranks to RMAX
   strcpy(jt->pp,"%0.6g");
@@ -176,7 +177,6 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
   jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
   jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return
-  jt->deprecex=num(7);  // scaf suppress msg 7 for the nonce
  }
  R 1;
 }

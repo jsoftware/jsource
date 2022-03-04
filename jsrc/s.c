@@ -41,20 +41,22 @@
 #define symcol ((sizeof(L)+SZI-1)/SZI)
 
 B jtsymext(J jt,B b){A x,y;I j,m,n,*v,xn,yn;L*u;
- if(b){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)
+ if(b){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
  else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
- m=j<<1;                              /* new size in bytes           */
- m-=AKXR(0);                  /* less array overhead         */
- m/=symcol*SZI;                             /* new # rows                  */
- xn=m*symcol;          /* new pool array atoms        */
- GATV0(x,INT,xn,0); v=(I*)LAV0(x);                 /* new pool array              */
- if(b)ICPY(v,LAV0(y),yn);                     /* copy old data to new array  */
- mvc(SZI*(xn-yn),v+yn,1,MEMSET00);               /* 0 unused area for safety    */
- u=n+(L*)v; j=1+n;
- DQ(m-n-1, u++->next=(LX)(j++););                 /* build free list extension, leave last chain 0   */
- if(b)u->next=SYMGLOBALROOT;              /* push extension onto stack   */
- ((L*)v)[0].next=(LX)n;                           /* new base of free chain               */
- ACINITZAP(x); SYMORIGIN=LAV0(x);                           /* preserve new array          */
+ m=j<<1;                     // new size in bytes - 2 * old size
+ m-=AKXR(0);                // m is now amount to allo to keep total byte size indicated by j<<1
+ m/=symcol*SZI;              // round m to # LX entries we can fit
+ xn=m*symcol;             // xn=#Is to allo
+ GATV0(x,INT,xn,0); v=(I*)LAV0(x);    // allo the array; v->new symbol 0
+ if(b)ICPY(v,LAV0(y),yn);             // if extension, copy old data to new block
+ mvc(SZI*(xn-yn),v+yn,1,MEMSET00);               /* 0 unused area for safety  kludge  */
+ // dice the added area into symbols, chain them together, add to free chain
+ u=n+(L*)v; j=1+n;    // u->start of new area  j=sym# of (1st new sym+1), will always chain each symbol to the next
+ DQ(m-n-1, u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
+ if(b)u->next=SYMGLOBALROOT;             // if there is an old chain, transfer it to the end of the new chain
+ ACINITZAP(x); SYMORIGIN=LAV0(x);           // preserve new array and switch to it
+// obsolete  ((L*)v)[0].next=(LX)n;                           /* new base of free chain               */
+ SYMGLOBALROOT=(LX)n;  // start the new free chain with the first added ele
  if(b)fa(y);                                /* release old array           */
  R 1;
 }    /* 0: initialize (no old array); 1: extend old array */
@@ -65,14 +67,22 @@ I jtreservesym(J jt,I n){
  // loop till we get the number of symbols required
  I nsymadded=0;  // number of symbols we have added.  We ignore any symbols we actually have, since there can't be many of them
  while(1){
-  // count off symbols from the global area, up to a fair number (we need to get enough to justify the lock overhead small)
-
-  // transfer what we got to our local table
-
+  // count off symbols from the global area, up to a fair number (we need to get enough to justify the lock overhead)
+  I ninlock;
+  WRITELOCK(JT(jt,symlock))
+  L *sympv=SYMORIGIN; LX sprev;    // start of symbol block, sym# of a symbol in the chain, starts at the symbol holding SYMGLOBALROOT
+  NOUNROLL for(ninlock=0, sprev=0;ninlock<100&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next));  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
+  if(ninlock!=0){  // if the global chain is not empty...
+   // transfer what we got to our local table
+   LX localhead=SYMNEXT(SYMLOCALROOT);   // start of the local chain
+   SYMLOCALROOT=SYMGLOBALROOT;   // make the new symbols the head of the local chain
+   SYMGLOBALROOT=SYMNEXT(sympv[sprev].next);  // restore the rest of the global symbols to the global chain
+   sympv[sprev].next=localhead;  // restore our preexisting local symbols to the local chain
+  }
+  WRITEUNLOCK(JT(jt,symlock))
   // if we didn't get enough, call a system lock and extend/relocate the table
-  if(nsymadded>=n)break;  // success if we got enough
+  if((nsymadded+=ninlock)>=n)break;  // incr total symbols added; success if we got enough
   if(jtsystemlock(jt)){I extok=symext(1); jtsystemunlock(jt); RZ(extok)}  // extend symbol table under the big lock
-nsymadded=n;  // scaf
  }
 // obsolete  RZ(symext(1)); /* extend pool if req'd        */
 // obsolete  SYMRESERVE(n)   // check to make sure we got enough 
@@ -146,7 +156,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    }
   }
  }
- if(likely(freeroot!=0)){*freetailchn=jtsympv[0].next;jtsympv[0].next=freeroot;}  // put all blocks freed here onto the free chain
+ if(likely(freeroot!=0)){*freetailchn=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
 }
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
@@ -218,7 +228,7 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
       ret=sym;   // cached block - return its address
      }else{
       SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
-      if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=sympv[0].next; sympv[0].next=delblockx;}  // add to symbol free list
+      if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=SYMLOCALROOT; SYMLOCALROOT=delblockx;}  // add to symbol free list
       ret=0;  // normal return
      }
      break;  // name match - return
@@ -396,14 +406,15 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 // We must have no locks coming in; we take a read lock on each symbol table we have to search
 L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e;
  RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(e){R (L*)((I)e+AR(g));}} g=gn;}while(g);  // return when name found.
+ // we store an extra 0 at the end of the path to allow us to unroll this loop once
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(e){R (L*)((I)e+AR(g));}} g=gn;}  // return when name found.
  R 0;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found.  We know the name will be found somewhere
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; L *e; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(e){break;}} g=gn;}while(g);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL while(g){A gn=*v++; L *e; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(e){break;}} g=gn;}  // return when name found.
  R g;
 }
 

@@ -238,15 +238,20 @@ F1(jtasgzombs){I k;
 // display deprecation message mno with text mtxt, if enabled
 // if mno<0, take complement and write willy-nilly
 // return 0 to signal error, 1 to continue
-I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);
- A okmsg; if(jt->deprecex){RZ(okmsg=eps(sc(absmno),jt->deprecex)); if(BAV(okmsg)[0]!=0)R 1;}  // unless this msg excluded, continue
- if(mno>=0){if(jt->deprecct==0)R 1;}else{jt->deprecct+=jt->deprecct==0;}  // if msgs disabled, return; but force msg out if neg
+I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
+ READLOCK(JT(jt,startlock))
+ A okmsg; if(JT(jt,deprecex)){RZGOTO(okmsg=eps(sc(absmno),JT(jt,deprecex)),exiterr); if(BAV(okmsg)[0]!=0)goto exitok;}  // unless this msg excluded, continue
+ if(mno>=0){if(JT(jt,deprecct)==0)goto exitok;}else{JT(jt,deprecct)+=JT(jt,deprecct)==0;}  // if msgs disabled, return; but force msg out if neg
  // code to write output line copied from jtpr1
  // extract the output type buried in jt
- ASSERT(jt->deprecct>0,mno<0?EVNONNOUN:EVNONCE);  // if fail on warning, do so
- if(jt->deprecct!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
- jt->deprecct-=jt->deprecct!=0;  // decrment # of messages to allow
- R 1;  // return  no error
+ ASSERTGOTO(JT(jt,deprecct)>0,mno<0?EVNONNOUN:EVNONCE,exiterr);  // if fail on warning, do so
+ if(JT(jt,deprecct)!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
+ JT(jt,deprecct)-=JT(jt,deprecct)!=0;  // decrment # of messages to allow
+exitok: ;
+ res=1;
+exiterr: ;
+ READUNLOCK(JT(jt,startlock))
+ R res;  // return  no error
 }
 
 // 9!:55  Set deprecation msg status  #msgs to give before error (default, 0, means 'never error'; -1 mean error immediately);exclusions
@@ -263,13 +268,19 @@ F1(jtdeprecxs){A ct, excl;
  RZ(excl=vi(excl));  // excl mst be integral
  ASSERT(AR(excl)<2,EVRANK);  // and atomic or list
  // install values
- jt->deprecct=cti; ra(excl); fa(jt->deprecex); jt->deprecex=excl;
+ INCORP(w);
+ WRITELOCK(JT(jt,startlock))
+ JT(jt,deprecct)=cti; ra(excl); fa(JT(jt,deprecex)); JT(jt,deprecex)=excl;
+ WRITEUNLOCK(JT(jt,startlock))
  R mtm;
 }
 
 //9!:54
 F1(jtdeprecxq){
- RETF(link(sc(jt->deprecct),jt->deprecex?jt->deprecex:mtv));  // return  current status
+ READLOCK(JT(jt,startlock))
+ A z=link(sc(JT(jt,deprecct)),JT(jt,deprecex)?JT(jt,deprecex):mtv);  // return current status
+ READUNLOCK(JT(jt,startlock))
+ RETF(z);
 }
 
 static I recurmsg(J jt, C *msgaddr){

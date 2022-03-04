@@ -167,16 +167,13 @@ typedef struct rngdata {
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
- I deprecct;  // number of deprecation  errors to display, -1 to emsg
- A deprecex;  // list of INTs of messages not to display
+ I getlasterror;     /* DLL stuff                                       */
+ I dlllasterror;     /* DLL stuff                                       */
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
 // end of cacheline 6
  A *repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this task but freed by other tasks.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
-
-// debugging info
  DC sitop;            /* pointer to top of SI stack                                 */
- I getlasterror;     /* DLL stuff                                       */
- I dlllasterror;     /* DLL stuff                                       */
+ A filler7[2];
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;
@@ -211,11 +208,11 @@ typedef struct JSTstruct {
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
  S systemlock;       // lock used for quiescing all tasks
+ US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
  UC dbuser;           /* user-entered value for db             */
- US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
  void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
  A stloc;            // named locales symbol table - this pointer never changes
@@ -248,7 +245,7 @@ typedef struct JSTstruct {
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
  void *sminput;
  void *smoutput;
- I filler2[2];    // 2 words free
+ I filler2[2];
 // end of cacheline 2
 
 // Cacheline 3: Locales
@@ -259,7 +256,7 @@ typedef struct JSTstruct {
  // rest of cacheline used only in exceptional paths
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
- I filler3[4];    // 2 words free
+ I filler3[4];
 // end of cacheline 3
 
 // Cacheline 4: Files
@@ -312,21 +309,22 @@ typedef struct JSTstruct {
  A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed
 // end of cacheline 6
 
-// Cacheline 7: scripts, essentially read-only
+// Cacheline 7: startup (scripts and deprecmsgs), essentially read-only
  A slist;            // boxed list of filenames used in right arg to 0!:, the entries made in sn field of L blocks are indexes into this.  AM has # valid entries
- S slistlock;        // lock for slist
+ A deprecex;  // list of INTs of messages not to display
+ I4 deprecct;  // number of deprecation  errors to display, -1 to emsg
+ S startlock;        // lock for slist
  // rest of cacheline used only in exceptional paths
  C bx[11];               /* box drawing characters                          */
+ UC disp[7];          /* # different verb displays                       */
+ US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
  B sesm;             /* whether there is a session manager             */
  C nfe;              /* 1 for J native front end                    */
  C oleop;            /* com flag to capture output                    */
- UI4 cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
  UC seclev;           /* security level                                  */
- UC disp[7];          /* # different verb displays                       */
-// 3 bytes free
+// 5 bytes free
  A zpath;    // path 'z', used for all initial paths
- I filler7[1];    // 2 words free
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));

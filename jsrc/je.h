@@ -873,6 +873,7 @@ extern L*       jtsyrdfromloc(J,A,A);
 extern L*       jtsyrdnobuckets(J,A);
 extern I        jtsystemlock(J);
 extern void     jtsystemunlock(J);
+extern void     jtsystemlockaccept(J);
 extern A        jttaker(J,I,A);
 extern D        jttceil(J,D);
 extern D        jttfloor(J,D);

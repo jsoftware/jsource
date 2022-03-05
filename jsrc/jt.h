@@ -132,23 +132,13 @@ typedef struct rngdata {
 // end of cacheline 3
  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
  I4 parsercalls;      /* # times parser was called                 */
- S taskstate;  // task state: modified by other tasks on a system lock
-#define TASKSTATERUNNINGX 0   // task has started
-#define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
-#define TASKSTATEWAITINGX 1  // task is waiting for any reason
-#define TASKSTATEWAITING (1LL<<TASKSTATEWAITINGX)
-#define TASKSTATESYSWAITX 2  // reason for wait is pending system lock
-#define TASKSTATESYSWAIT (1LL<<TASKSTATESYSWAITX)
-#define TASKSTATESYSWAITPENDINGX 3 // set by requester of syswait to indicate syswait needs ACK (ACK by turning this bit off)
-#define TASKSTATESYSWAITPENDING (1LL<<TASKSTATESYSWAITPENDINGX)
  C fillv0len;   // length of fill installed in fillv0
-// 1 byte free
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
+// 3 bytes free
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
  I malloctotal;    // net total of malloc/free performed in m.c only
 
-// things needed by parsing
  PFRAME parserstackframe;  // 4 words  
 // end of cacheline 4
 
@@ -173,10 +163,19 @@ typedef struct rngdata {
 // end of cacheline 6
  A *repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this task but freed by other tasks.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  DC sitop;            /* pointer to top of SI stack                                 */
- A filler7[2];
+ S taskidleq;   // thread#s of the tasks waiting for work.  Root of the chain is in the master thread.
+ S tasklock;   // lock used for taskidleq.  Needed only to count tasks
+ S taskstate;  // task state: modified by other tasks on a system lock
+#define TASKSTATERUNNINGX 0   // task has started
+#define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
+#define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
+#define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
+ // 2 bytes free
+ A filler7[1];
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;
+// the following lines are engaged only for low-performance builds
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
@@ -350,5 +349,7 @@ typedef JST* JS;  // shared part of struct
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jt) (&jt->threaddata[0])   // master thread for shared jt
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt
+#define JTTHREAD0(jj) (JJTOJ(jj)->threaddata)   // the array of JTT structs
+#define JTFORTHREAD(jj,n) &(JTTHREAD0(jj)[n])   // JTT struct for thread n
 enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTASKS])<=JTALIGNBDY) };  // assert not too many threads
 enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected

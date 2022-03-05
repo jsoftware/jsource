@@ -5,6 +5,9 @@
 // Tasks
 #include "j.h"
 
+// burn some time
+static NOINLINE I delay(I n){I johnson=0x1234; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson;}
+
 #if ARTIFHIPREC
 // w is a block that will become the contents of a box.  Put it inside a hiprec and return the address of the hiprec.
 // aflag is the boxing flag of the block the result is going to go into.  w has been prepared for that type
@@ -116,10 +119,99 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
  R 1;  // normal return
 }
 
+
+// ************************ system lock **********************************
 // Take lock on the entire system, waiting till all threads acknowledge
 // Result is 1 if we got the lock, 0 if somebody else did or there was an error (which is currently impossible)
-I jtsystemlock(J jt){R 1;}
+I jtsystemlock(J jt){S xxx;
+ // Acquire the systemlock.
+ xxx=0;
+ while(!__atomic_compare_exchange_n(&JT(jt,systemlock), &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+  // Lock is busy.  Two cases are possible: (1) someone else wants a new lock - let them have it; (2) the previous lock is finishing up - wait for it to run to completion
+  if(xxx>=0){jtsystemlockaccept(jt); R 0;}   // someone else got it
+  xxx=0;  // operation finishing - wait for it
+  // should delay?
+ }
+ // We are the owner.  Go through all tasks, turning on the SYSLOCK task flag in each threads.  Count how many are running after the flag is set
+ // if there is only 1 (us), leave the systemlock at 1 and return success
+ I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // our thread#, #running threads, base of thread blocks
+ DO(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)&TASKSTATERUNNING)>>TASKSTATERUNNINGX;)
+ if(nrunning==1)R 1;  // exit fast if we are the only task running
+ // Set the number of other running tasks into the systemlock
+ __atomic_store_n(&JT(jt,systemlock),nrunning-1,__ATOMIC_RELEASE);
+ // Make the lock request in the break field
+ __atomic_store_n(&JT(jt,adbreak)[1],1,__ATOMIC_RELEASE);
+ // wait for the systemlock count to go to 0.  This indicates all threads have accepted the lock
+ while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=0);
+ // store the number of running tasks (including us) in the systemlock.  This is a parm to unlock
+ __atomic_store_n(&JT(jt,systemlock),nrunning,__ATOMIC_RELEASE);
+ // return.  All threads are ready for the lock processing
+ R 1;
+}
 
-// Release system lock previously acquired
-void jtsystemunlock(J jt){}
+// Release system lock previously acquired.  Called after all lock processing has finished.
+// The systemlock indicates how many other threads are running
+void jtsystemunlock(J jt){
+ // turn on MSB of systemlock, indicating we are on the way out
+ __atomic_fetch_or(&JT(jt,systemlock),0x8000,__ATOMIC_ACQ_REL);
+ // remove the lock request from the break field
+ __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);
+ // go through all threads, turning off SYSLOCK in each
+ JTT *jjbase=JTTHREAD0(jt); DO(MAXTASKS, __atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
+ // wait for the systemlock to go to 1 (all the running threads except us decrement it)
+ while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(S)0x8001);
+ // set the systemlock to 0, completing the operation
+ __atomic_store_n(&JT(jt,systemlock),0,__ATOMIC_RELEASE);
+}
+
+// Allow a lock to proceed.  Called by a running thread when it notices the system-lock request
+void jtsystemlockaccept(J jt){
+ // Decrement the systemlock
+ __atomic_fetch_sub(&JT(jt,systemlock),1,__ATOMIC_ACQ_REL);
+ // Wait until the break request has been removed
+ while(__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE)!=0);
+ // Decrement the systemlock
+ __atomic_fetch_sub(&JT(jt,systemlock),1,__ATOMIC_ACQ_REL);
+ // this thread is free to continue.  No lock request is possible until systemlock has been cleared
+}
+
+// *********************** task creation ********************************
+
+// Create worker thread n.  If created, put it on the task chain
+void jtthreadcreate(J jt,I n){
+ // create thread
+ // wait for it to be waiting
+}
+
+// Processing loop for thread.  Create a wait block for the thread, and wait on it.  Each loop runs one user task
+void jtthreadmain(J jt){
+ // create wait block
+ // loop executing tasks
+ // publish the wait address
+ while(1){
+  // wait till there is a task to run
+  // extract task parameters: args & result block
+  // initialize the non-parameter part of task block
+  // go to RUNNING state, but not if a SYSTEMLOCK is pending
+  // run the task
+  // put the result into the result block, unprotect args
+  // wake up any tasks waiting for the result - how?
+  // unprotect result
+  // go back to non-RUNNING state, but not if SYSTEMLOCK is pending
+  // publish the wait address
+  // put thread back on the thread queue
+ }
+} 
+// execute the user's task.
+A jttaskrun(J jt,I threadno, A a, A w, A v){
+ // realize virtual arguments
+ // allocate a result block
+ // protect the arguments and result
+ // wait until there is a thread to run - how?
+ // take the thread from the thread queue
+ // initialize the task parameters
+ // wait until the thread is waiting for work
+ // wake up the thread
+ R 0;
+}
 

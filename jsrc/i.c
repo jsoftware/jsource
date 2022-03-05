@@ -208,6 +208,7 @@ static B jtinitfinis(JS jjt,I nthreads){
 static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 /* required for jdll and doesn't hurt others */
  gjt=jjt; // global jt for JPF debug
+ jt->taskstate=TASKSTATERUNNING;  // The master thread is always running
  
 #if (SYS & SYS_DOS)
  t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);

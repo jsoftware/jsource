@@ -731,8 +731,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
 #if HIPRECS
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&HIPREC))if(unlikely((res=jthipval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
-#define READLOCK(lock) { S xxx=0;  if(unlikely(!__atomic_compare_exchange_n(&lock, &xxx, (S)1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)))readlock(&lock,xxx); }
-#define WRITELOCK(lock)  { S xxx=0;  if(unlikely(!__atomic_compare_exchange_n(&lock, &xxx, (S)0x8000, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)))writelock(&lock,xxx); }
+#define READLOCK(lock) { S xxx=0;  if(unlikely(!__atomic_compare_exchange_n(&lock, &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)))readlock(&lock,xxx); }
+#define WRITELOCK(lock)  { S xxx=0;  if(unlikely(!__atomic_compare_exchange_n(&lock, &xxx, (S)0x8000, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)))writelock(&lock,xxx); }
 #define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);
 #define WRITEUNLOCK(lock) __atomic_store_n(&lock,0, __ATOMIC_RELEASE);
 #else

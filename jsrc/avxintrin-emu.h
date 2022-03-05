@@ -1094,7 +1094,7 @@ __EMU_M256_IMPL2_M2I_DUP( __m256, cmp_ps )
 
 static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, const int predicate)
 {
-    __m128d res;
+    __m128d res=res;
 
     if ( predicate >= 0 && predicate <= 7 ) {
         res = m1;
@@ -1110,7 +1110,7 @@ __EMU_M256_IMPL2_M2I_DUP( __m256d, cmp_pd )
 
 static __emu_inline __m128d __emu_mm_cmp_sd(__m128d m1, __m128d m2, const int predicate)
 {
-    __m128d res;
+    __m128d res=res;
 
     if ( predicate >= 0 && predicate <= 7 ) {
         res = m1;
@@ -1124,7 +1124,7 @@ static __emu_inline __m128d __emu_mm_cmp_sd(__m128d m1, __m128d m2, const int pr
 
 static __emu_inline __m128 __emu_mm_cmp_ss(__m128 m1, __m128 m2, const int predicate)
 {
-    __m128 res;
+    __m128 res=res;
 
     if ( predicate >= 0 && predicate <= 7 ) {
         res = m1;

@@ -90,7 +90,7 @@ fi
 fi
 fi
 
-if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
+if ! $CC --version | grep clang >/dev/null; then
 # gcc
 common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fno-stack-protector  \
  -Werror -Wextra -Wno-unknown-warning-option \

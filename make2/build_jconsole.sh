@@ -63,7 +63,7 @@ compiler=$(readlink -f $(command -v $CC) 2> /dev/null || echo $CC)
 echo "CC=$CC"
 echo "compiler=$compiler"
 
-if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
+if ! $CC --version | grep clang >/dev/null; then
 # gcc
 common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
  -Werror -Wextra -Wno-unknown-warning-option \

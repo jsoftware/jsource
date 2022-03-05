@@ -113,6 +113,15 @@ fi
 
 TARGET=jconsole
 
+if [ -z "${j64x##*32*}" ]; then
+USE_EMU_AVX=0
+else
+USE_EMU_AVX="${USE_EMU_AVX:=1}"
+fi
+if [ $USE_EMU_AVX -eq 1 ] ; then
+common="$common -DEMU_AVX=1"
+fi
+
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 common="$common -DREADLINE"
 else

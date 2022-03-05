@@ -351,5 +351,7 @@ typedef JST* JS;  // shared part of struct
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt
 #define JTTHREAD0(jj) (JJTOJ(jj)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jj,n) &(JTTHREAD0(jj)[n])   // JTT struct for thread n
+#if !(defined(ANDROID) && defined(__x86_64__) && MAXTASKS<2)
 enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTASKS])<=JTALIGNBDY) };  // assert not too many threads
 enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected
+#endif

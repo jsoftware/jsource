@@ -590,11 +590,14 @@ L* jtprobeisquiet(J jt,A a){A g;
 static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
 // assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
 // Result points to the symbol-table block for the assignment
-// flags set if jt: bit 0=this is a final assignment; bit 1=jt->asginfo.assignsym is nonzero, use it
+// flags set if jt: bit 0=this is a final assignment;
+//  we tried using bit 1=jt->asginfo.assignsym is nonzero, use it; it saves a few cycles testing e, but it seemed risky if ASGNSAFE failed
+// if g is marked as having local symbols, we assume that it is equal to jt->locsyms (especially in subroutines)
 L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  ARGCHK2(a,w);
  I anmf=NAV(a)->flag; RZ(g)  // fetch flags for the name
- A jtlocal=jt->locsyms, jtglobal=jt->global;  // current private/public symbol tables
+// obsolete  A jtlocal=jt->locsyms, 
+// obsolete  A jtglobal=jt->global;  // current public symbol table
  e = jt->asginfo.assignsym; // set e if assignsym
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
@@ -602,20 +605,20 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
  }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
   // not locative assignment, check for global assignment to a locally-defined name
-  if(unlikely(g==jtglobal))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
+  if(unlikely(g==jt->global))ASSERT(!probelocal(a,jt->locsyms),EVDOMAIN)  // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
  }
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g
- if(!((I)jtinplace&JTASSIGNSYMNON0)){
- // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
- // the name was invalid anyway and is subject to having the value removed
- if(g==jtlocal)e=probeislocal(a); else{SYMRESERVE(1) WRITELOCK(g->lock) e=probeis(a, g); WRITEUNLOCK(g->lock)}
- RZ(e)
+// obsolete if ASGNSAFE perfect  if(unlikely(!((I)jtinplace&JTASSIGNSYMNON0))){++scafnoe;
+ if(unlikely(e==0)){
+  // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
+  // the name was invalid anyway and is subject to having the value removed
+// obsolete   if(g==jt->locsyms)e=probeislocal(a); else{SYMRESERVE(1) WRITELOCK(g->lock) e=probeis(a, g); WRITEUNLOCK(g->lock)}
+  if((anmf&ARLOCALTABLE)!=0)e=probeislocal(a); else{SYMRESERVE(1) WRITELOCK(g->lock) e=probeis(a, g); WRITEUNLOCK(g->lock)}
+  RZ(e)
 // obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
  }
- // if we are writing to a non-local table, update the table's Bloom filter.
- if(unlikely((anmf&ARLOCALTABLE)==0)){BLOOMOR(g,BLOOMMASK(NAV(a)->hash));}
 
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
  if(unlikely(e->flag&(LCACHED|LREADONLY))){  // exception cases
@@ -624,6 +627,8 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // the name to the new symbol, and then delete e, which will actually just make it a value-only unmoored symbol
   SYMRESERVE(1) L *newe=symnew(0,(e-SYMORIGIN)|SYMNONPERM); jtprobedel((J)((I)jt+NAV(e->name)->m),NAV(e->name)->s,NAV(e->name)->hash,g); newe->name=e->name; e->name=0; e=newe;
  }
+ // if we are writing to a non-local table, update the table's Bloom filter.
+ if((anmf&ARLOCALTABLE)==0){BLOOMOR(g,BLOOMMASK(NAV(a)->hash));}
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags
  {I *aaf=&AFLAG(x); aaf=x?aaf:&abandflag; xaf=*aaf;}  // flags from x, of LWASABANDONED if there is no x

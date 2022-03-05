@@ -235,7 +235,7 @@ F1(jtvtrans){PROLOG(0053);A locsyms,y,z=0;I c,i,ttabi;TA ttab[NTTAB];
   RZ(y=vtokens(w));  // return AM bit0=monad
   I tmonad=AM(y);
   ttabi=c;
-  RZ(locsyms=stcreate(2,40,0L,0L));  // not necessary to set global pointers
+  RZ(locsyms=stcreate(2,40,0L,0L)); AR(locsyms)&=~ARLOCALTABLE;  // not necessary to set global pointers; flag table so we don't switch to locsyms during assignment
   symbis(mnuvxynam[5],num(1),locsyms); if(!tmonad)symbis(mnuvxynam[4],num(1),locsyms); 
   z=jttparse(jt,y,locsyms,tmonad,0==i,ttab,&ttabi,c); RESETERR;
   if(i&&!z)z=colon(num(4-tmonad),w);

@@ -134,7 +134,7 @@ typedef struct rngdata {
  I4 parsercalls;      /* # times parser was called                 */
  C fillv0len;   // length of fill installed in fillv0
 // 3 bytes free
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the pthread_cond_t we are waiting on
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
  I malloctotal;    // net total of malloc/free performed in m.c only
@@ -163,7 +163,7 @@ typedef struct rngdata {
 // end of cacheline 6
  A *repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this task but freed by other tasks.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  DC sitop;            /* pointer to top of SI stack                                 */
- S taskidleq;   // thread#s of the tasks waiting for work.  Root of the chain is in the master thread.
+ S taskidleq;   // thread#s of the tasks waiting for work, or waiting on a hiprec.  Root of the idle chain is in the master
  S tasklock;   // lock used for taskidleq.  Needed only to count tasks
  S taskstate;  // task state: modified by other tasks on a system lock
 #define TASKSTATERUNNINGX 0   // task has started

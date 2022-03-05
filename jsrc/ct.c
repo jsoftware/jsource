@@ -17,24 +17,30 @@ A jtartiffut(J jt,A w,I aflag){A z;
 }
 #endif
 #if HIPRECS
-// x is a A holding a hiprecs value.  Return its value when it has been resolved
+// w is a A holding a hiprecs value.  Return its value when it has been resolved
 A jthipval(J jt,A w){
  // read the hiprecs value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
  // that if we read nonzero the hiprec has been resolved, even without an acquire barrier
  A res=AAV0(w)[0];  // fetch the possible value
- if(unlikely(res==0)){
-  // here the hiprec was unresolved.  Wait for it
-  SEGFAULT;  // scaf
+ while(res==0){
+  // value not defined.  We have to wait for it.  Since we will probably have to wait, we don't try to improve on mutex/wait/broadcast
+  // acquire mutex in hiprec
+
+  res=AAV0(w)[0];  // refetch inside the lock, in case the value has become available
+  if(res==0){/* scaf wait;*/ res=AAV0(w)[0];} // wait for the value
+  // release mutex
+
  }
  // res now contains the certified value of the hiprec.
  ASSERT(((I)res&-256)!=0,(I)res)   // if error, return the error code
  R res;  // otherwise return the resolved value
 }
 
-// take a readlock on *alock.  We come here only if the lock was in use.  The previous value was prev
+// take a readlock on *alock.  We come here only if a writelock was requested or running
 void readlock(S *alock, S prev){
  // loop until we get the lock
- while(1) {
+ do{
+  __atomic_fetch_sub(alock,1,__ATOMIC_ACQ_REL);  // rescind our read request.  if a write started, that's not a problem.
   // spin until any write request has gone away
   I nspins=5000;  // good upper bound on the amount of time a write could reasonably take, in cycles
   while(prev<0){
@@ -44,13 +50,11 @@ void readlock(S *alock, S prev){
    if(--nspins==0){nspins=5000; /* scaf delay(5000*100 nsec); */}
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
-  // try to reacquire the lock
-  if(__atomic_compare_exchange_n(alock, &prev, prev+1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))R;  // return if we get the read lock
-  //  here somebody else came along while we were requesting.  very rare.  loop back to retry
- }
+  // try to reacquire the lock, loop if can't
+ }while(__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)<0));
 }
 
-// take a writelock on *alock.  We come here only if the lock was in use.  The previous value was prev
+// take a writelock on *alock.  We have turned on the write request; we come here only if the lock was in use.  The previous value was prev
 void writelock(S *alock, S prev){
  // loop until we get the lock
  I nspins;
@@ -177,41 +181,40 @@ void jtsystemlockaccept(J jt){
 
 // *********************** task creation ********************************
 
-// Create worker thread n.  If created, put it on the task chain
+// Create worker thread n.
 void jtthreadcreate(J jt,I n){
  // create thread
- // wait for it to be waiting
+ // set core affinity
 }
 
 // Processing loop for thread.  Create a wait block for the thread, and wait on it.  Each loop runs one user task
 void jtthreadmain(J jt){
- // create wait block
- // loop executing tasks
- // publish the wait address
+ // get/set stack limits
+ // create & acquire mutex for the thread
  while(1){
-  // wait till there is a task to run
+  // clear wait condition
+  // put thread on the thread queue
+  // wait on wait condition and mutex
   // extract task parameters: args & result block
   // initialize the non-parameter part of task block
   // go to RUNNING state, but not if a SYSTEMLOCK is pending
   // run the task
   // put the result into the result block, unprotect args
-  // wake up any tasks waiting for the result - how?
+  // broadcast to wake up any tasks waiting for the result
   // unprotect result
   // go back to non-RUNNING state, but not if SYSTEMLOCK is pending
-  // publish the wait address
-  // put thread back on the thread queue
  }
 } 
 // execute the user's task.
 A jttaskrun(J jt,I threadno, A a, A w, A v){
  // realize virtual arguments
- // allocate a result block
+ // allocate a result block.  Init cond and mutex to idle
  // protect the arguments and result
  // wait until there is a thread to run - how?
- // take the thread from the thread queue
+ // remove the thread from the thread queue
  // initialize the task parameters
- // wait until the thread is waiting for work
- // wake up the thread
+ // wait until wait condition is nonempty
+ // signal the thread
  R 0;
 }
 

@@ -23,7 +23,7 @@ A jthipval(J jt,A w){
  // that if we read nonzero the hiprec has been resolved, even without an acquire barrier
  A res=AAV0(w)[0];  // fetch the possible value
  while(res==0){
-  // value not defined.  We have to wait for it.  Since we will probably have to wait, we don't try to improve on mutex/wait/broadcast
+  // value not defined.  Since we will probably have to wait, we don't try to improve on mutex/wait/broadcast
   // acquire mutex in hiprec
 
   res=AAV0(w)[0];  // refetch inside the lock, in case the value has become available
@@ -40,14 +40,15 @@ A jthipval(J jt,A w){
 void readlock(S *alock, S prev){
  // loop until we get the lock
  do{
-  __atomic_fetch_sub(alock,1,__ATOMIC_ACQ_REL);  // rescind our read request.  if a write started, that's not a problem.
+  __atomic_fetch_sub(alock,1,__ATOMIC_ACQ_REL);  // rescind our read request.  The writer may hitch slightly when he sees our request, but we won't put it up more than once
   // spin until any write request has gone away
   I nspins=5000;  // good upper bound on the amount of time a write could reasonably take, in cycles
   while(prev<0){
    // we are delaying while a writer finishes.  Usually this will be fairly short, as controlled by nspins.  The danger is that the
    // writer will be preempted, leaving us in a tight spin.  If the spin counter goes to 0, we decide this must have happened, and we
    // do a low-power delay for a little while (method TBD)
-   if(--nspins==0){nspins=5000; /* scaf delay(5000*100 nsec); */}
+   if(--nspins==0){nspins=5000; delay(5000);}
+   delay(20);  // delay a little to reduce bus traffic while we wait for the writer to finish
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the lock, loop if can't
@@ -63,6 +64,7 @@ void writelock(S *alock, S prev){
   nspins=prev&0x7fff?5000+1000:5000;  // max expected writer delay, plus reader delay if there are readers
   while(prev<0){
    if(--nspins==0){nspins=5000; /* scaf delay(5000*100 nsec); */}
+   delay(20);  // delay a little to reduce bus traffic while we wait for the writer to finish
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the writelock
@@ -73,6 +75,7 @@ void writelock(S *alock, S prev){
  nspins=1000;  // max expected reader delay.  They are all running in parallel
  while(prev&0x7fff){  // wait until reads complete
   if(--nspins==0){nspins=1000; /* scaf delay(5000*100 nsec); */}  // delay if a thread seems to have been preempted
+  delay(20);  // delay a little to reduce bus traffic while we wait for the readers to finish
   prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
  }
 }
@@ -194,7 +197,7 @@ void jtthreadmain(J jt){
  while(1){
   // clear wait condition
   // put thread on the thread queue
-  // wait on wait condition and mutex
+  // do{wait on wait condition and mutex}while(condition not filled)
   // extract task parameters: args & result block
   // initialize the non-parameter part of task block
   // go to RUNNING state, but not if a SYSTEMLOCK is pending
@@ -207,11 +210,10 @@ void jtthreadmain(J jt){
 } 
 // execute the user's task.
 A jttaskrun(J jt,I threadno, A a, A w, A v){
+ // take a thread to run.  if none, just execute & return
  // realize virtual arguments
  // allocate a result block.  Init cond and mutex to idle
  // protect the arguments and result
- // wait until there is a thread to run - how?
- // remove the thread from the thread queue
  // initialize the task parameters
  // wait until wait condition is nonempty
  // signal the thread

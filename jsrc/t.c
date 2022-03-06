@@ -179,9 +179,7 @@ PRIM primtab[256] = {
  /*  j. */  PRIMACV(CJDOT,   VERB, jtjdot1,   jtjdot2,  0,   0,   0   ,VISATOMIC1|VASGSAFE,VF2NONE),
  /*  L. */  PRIMACV(CLDOT,   VERB, jtlevel1,  jtdomainerr2, RMAX,RMAX,RMAX,VASGSAFE,VF2WILLOPEN1),
  /*  L: */  PRIMACV(CLCAPCO, CONJ, jtdomainerr1, jtlcapco, 0,   0,   0   ,VFLAGNONE,VF2NONE),
- /*  m. */       /* see above */
  /*  M. */  PRIMACV(CMCAP,   ADV,  jtmemo,    jtdomainerr2, 0,   0,   0   ,VFLAGNONE,VF2NONE),
- /*  n. */       /* see above */
  /*  o. */  PRIMATOMIC12(CCIRCLE, VERB, jtpix, jtatomic2, 0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE),
  /*  p. */  PRIMACV(CPOLY,   VERB, jtpoly1,   jtpoly2,  1,   1,   0   ,VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE),
  /*  p..*/  PRIMACV(CPDERIV, VERB, jtpderiv1, jtpderiv2,1,   0,   1   ,VASGSAFE,VF2NONE),
@@ -193,9 +191,7 @@ PRIM primtab[256] = {
  /*  u. */  PRIMACV(CUDOT,   VERB, jtimplocref,jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE,VF2IMPLOC),
  /*  u: */  PRIMACV(CUCO,    VERB, jtuco1,    jtuco2,   RMAX,RMAX,RMAX,VASGSAFE,VF2NONE),
  /*  v. */  PRIMACV(CVDOT,   VERB, jtimplocref, jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE,VF2IMPLOC),
-/*  x. */       /* see above */
  /*  x: */  PRIMACV(CXCO,    VERB, jtxco1,    jtxco2,   RMAX,RMAX,RMAX,VASGSAFE|VISATOMIC1,VF2NONE),
- /*  y. */       /* see above */
  /*  F.  */  PRIMACV(CFDOT,  CONJ, jtdomainerr1, jtfold,  0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  F.. */  PRIMACV(CFDOTDOT,  CONJ, jtdomainerr1, jtfold,  0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  F.: */  PRIMACV(CFDOTCO,  CONJ, jtdomainerr1, jtfold,  0,   0,   0   ,VFLAGNONE,VF2NONE),

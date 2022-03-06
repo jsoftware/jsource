@@ -120,26 +120,28 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
  RETF(z);
 }
 
-// _9: to 9: and _:, return the saved value.
+// _9: to 9: and _:, return the saved value.  If we can inplace the operation (i. e. 0:"0), do so for DIRECT types, preserving the existing precision
 DF1(jtnum1){F1PREFIP;A z=0;
- ARGCHK2(w,self); RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank; A a=FAV(self)->fgh[2];  // fetch value to store
+ ARGCHK2(w,self); RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank; A a=FAV(self)->fgh[2];  // fetch value to store: always an INT/boolean, but if boolean the high-order bytes are 0, so 0 is valid INT/FL and 1 a valid INT
  if(rank==AR(w))R a;  // at infinite rank, just return the value
  // rank given, must replicate the value.  if rank 0, we can do it inplace
  I natoms;  // number of atoms to allocate
- I akl=bplg(AT(a)), wkl=bplg(AT(w));  // sizes of atoms
+ I k=bplg(AT(a));  // lg2 of size of atoms moved
  if(rank==0){
   natoms=AN(w);  // result has same # atoms as input
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&-(AT(w)&B01+INT+FL)&~((AT(w)&B01+INT+FL)-(AT(a)&B01+INT+FL)),w)){  // inplaceable, and direct numeric and type of a is not bigger than that of w
    // inplace: we will cast the atom of a to the (never smaller) size of w.  This is OK because a is never a bigger type
-   z=w; akl=wkl;
+   // 0 can be used for any w; boolean 1 can be used as is for boolean/INT w; other values must be converted in FL.  So, if result is FL, nonzero values must be converted
+   if((AT(w)>>FLX)&(IAV0(a)[0]!=0))RZ(a=cvt(FL,a));  // make value conform to existing type
+   z=w; k=bplg(AT(w));  // copy to the existing output area, 
+  }
  }else{
   // not inplace: count the atoms of the result
   PROD(natoms,AR(w)-rank,AS(w));  // # atoms in result: 1 per cell
-  wkl=akl;  // we will allocate with the type of a, so use that length
  }
- if(!z)GA(z,AT(a),natoms,AR(w)-rank,AS(w)+rank);}  // allocate result if not inplace
+ if(!z)GA(z,AT(a),natoms,AR(w)-rank,AS(w));  // allocate result if not inplace
  // We now have the result area, with the right type.  Fill it
- mvc(natoms<<wkl,voidAV(z),1LL<<akl,voidAV(a));
+ mvc(natoms<<k,voidAV(z),1LL<<k,voidAV(a));  // could use voidAV0(a)
  R z;
 }
 DF2(jtnum2){ARGCHK3(a,w,self); R FAV(self)->fgh[2];}

@@ -50,15 +50,19 @@ typedef struct rngdata {
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
  struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // task-initialized values
-// *********************************** the starting area contains values that are inherited from the spawning task
+// *********************************** the starting area contains values that are inherited from the spawning task.  Some of these are reinitialized
  A global;           // global symbol table inherit for task
  D cct;               // complementary comparison tolerance inherit for task
- UI cstackinit;       // C stack pointer at beginning of execution inherit for task
- UI cstackmin;        // red warning for C stack pointer inherit for task
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C pp[7];            // print precision (sprintf field for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
-// 3 bytes free
+ B iepdo;            // 1 iff do iep on going to immex   init for task to 0   shaould be shared?
+ C xmode;            // extended integer operating mode init for tack to 0
+ C recurstate;       // state of recursions through JDo    init for task to BUSY
+#define RECSTATEIDLE    0  // JE is inactive, waiting for work
+#define RECSTATEBUSY    1  // JE is running a call from JDo
+#define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
+#define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
  union {  // this union is 4 bytes long
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -86,33 +90,29 @@ typedef struct rngdata {
  UC jerr;             // error number (0 means no error)      clear for task
  UC jerr1;            // last non-zero jerr  clear for task
  C namecaching;     // 1=for script 2=on  clear for task
-// end of cacheline 0
  struct ASGINFO {
   L *assignsym;       // symbol-table entry for the symbol about to be assigned
   A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and not read-only
  } asginfo;   // clear for task
+// end of cacheline 0
+// At task startup, the entry parameters are stored here, at ((I*)jt)[8..11]
  A xmod;             // extended integer: the m in m&|@f clear for task
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
- B iepdo;            // 1 iff do iep clear for task
- C xmode;            // extended integer operating mode clear for task
-// ************************************** here starts the part that is initialized to non0 values when the task is started
- C recurstate;       // state of recursions through JDo    init for task to BUSY
-#define RECSTATEIDLE    0  // JE is inactive, waiting for work
-#define RECSTATEBUSY    1  // JE is running a call from JDo
-#define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
-#define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
-  // 1 byte free
- I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
- A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
+ I4 parsercalls;      // # times parser was called clear for task
+// ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be uinitialized
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F
- S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task to ?
- S ntasks;     // number of hiprecs allowed, 0 if none init for task to ?
+ A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
+ I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
+// obsolete  S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task to ?
+// obsolete  S ntasks;     // number of hiprecs allowed, 0 if none init for task to ?
 // obsolete  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
 // **************************************  end of initialized part
 
 // ************************************** everything after here persists over the life of the thread
  LX symfreeroot;   // symbol # of head of local free-symbol queue (0=end)
-  // 4 bytes free
+ UI cstackinit;       // C stack pointer at beginning of execution
+ UI cstackmin;        // red warning for C stack pointer
+ A filler1[1];
 // end of cacheline 1
 
 
@@ -131,9 +131,8 @@ typedef struct rngdata {
  A curname;          // current name, an A block containing an NM
 // end of cacheline 3
  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
- I4 parsercalls;      /* # times parser was called                 */
  C fillv0len;   // length of fill installed in fillv0
-// 3 bytes free
+// 7 bytes free
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the pthread_cond_t we are waiting on
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased

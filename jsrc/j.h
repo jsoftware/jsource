@@ -803,7 +803,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)(d),EVSTACK); jt->fdepi+=(I4)(d);}
 #define STACKVERIFY
 #endif
-#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)
+#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance
 // FEQ/FIEQ are used in bcvt, where FUZZ may be set to 0 to ensure only exact values are demoted to lower precision

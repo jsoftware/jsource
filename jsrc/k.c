@@ -349,6 +349,8 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 // copy of the data if w is already of the right type), and returned in *y.  Result is
 // 0 if error, 1 if success.  If the conversion loses precision, error is returned
 // Calls through bcvt are tagged with a flag in jt, indicating to set fuzz=0
+// For sparse arguments, this function calls other J verbs and must clear the ranks in that case only
+// kludge this interface sucks - why not return the A block of the result?  We could expunge jtcvt() 
 B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&(NOUN|SPARSE);
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); n=AN(w);

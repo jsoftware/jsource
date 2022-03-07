@@ -162,8 +162,8 @@ typedef struct rngdata {
 // end of cacheline 6
  A *repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this task but freed by other tasks.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  DC sitop;            /* pointer to top of SI stack                                 */
- S taskidleq;   // thread#s of the tasks waiting for work, or waiting on a hiprec.  Root of the idle chain is in the master
- S tasklock;   // lock used for taskidleq.  Needed only to count tasks
+ S taskidleq;   // thread#s of the tasks waiting for work.  Root of the idle chain is in the master
+ S tasklock;   // lock used for taskidleq, used only in master thread.  Unused in other threads
  S taskstate;  // task state: modified by other tasks on a system lock
 #define TASKSTATERUNNINGX 0   // task has started
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
@@ -328,6 +328,10 @@ typedef struct JSTstruct {
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
 } JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed
 typedef JST* JS;  // shared part of struct
+
+// When the task is not running, part of the per-call area is used as a communication region to hold parameters:
+#define TASKCOMMREGION(jt) ((void **)jt+8)   // [0..3] are parms, each a (void *)
+
 
 #if 0 // used only for direct locale numbering
  I*   numlocdelqh;      // head of deleted queue, waiting for realloc

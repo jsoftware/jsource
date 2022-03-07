@@ -17,19 +17,22 @@ A jtartiffut(J jt,A w,I aflag){A z;
 }
 #endif
 #if HIPRECS
+
+typedef struct condmutex{
+ pthread_cond_t cond;
+ pthread_mutex_t mutex;
+} WAITBLOK;
+
 // w is a A holding a hiprecs value.  Return its value when it has been resolved
 A jthipval(J jt,A w){
  // read the hiprecs value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
  // that if we read nonzero the hiprec has been resolved, even without an acquire barrier
  A res=AAV0(w)[0];  // fetch the possible value
- while(res==0){
-  // value not defined.  Since we will probably have to wait, we don't try to improve on mutex/wait/broadcast
-  // acquire mutex in hiprec
-
-  res=AAV0(w)[0];  // refetch inside the lock, in case the value has become available
-  if(res==0){/* scaf wait;*/ res=AAV0(w)[0];} // wait for the value
-  // release mutex
-
+ while(res==0){  // repeat till defined, in case we get spurious wakeups
+  // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
+  pthread_mutex_lock(&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
+  if((res=__atomic_load_n(&AAV0(w)[0],__ATOMIC_ACQUIRE)==0)pthread_cond_wait(&((WAITBLOK*)&AAV0(pyx)[1])->cond,&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
+  pthread_mutex_unlock(&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
  }
  // res now contains the certified value of the hiprec.
  ASSERT(((I)res&-256)!=0,(I)res)   // if error, return the error code
@@ -182,41 +185,60 @@ void jtsystemlockaccept(J jt){
  // this thread is free to continue.  No lock request is possible until systemlock has been cleared
 }
 
+#if 0
 // *********************** task creation ********************************
-
 // Create worker thread n.
-void jtthreadcreate(J jt,I n){
+I jtthreadcreate(J jt,I n){
+ pthread_attr_t attr;  // attributes for the task we will start
  // create thread
- // set core affinity
+ pthread_attr_init(&attr);
+ pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);  // default parms, except for DETACHED (which means we will never join() )
+ ASSERT(pthread_create(&JTFORTHREAD(jt,n)->pthreadid,&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE);  // create the thread, saveits threadid
+ R 1;
 }
 
 // Processing loop for thread.  Create a wait block for the thread, and wait on it.  Each loop runs one user task
-void jtthreadmain(J jt){
+void* jtthreadmain(J jt){
  // get/set stack limits
- // create & acquire mutex for the thread
+ if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R; if(pthread_attr_setstackaddr(0,CSTACKSIZE)!=0)R; 
+ // allocate condition & mutex here in a struct & initialize
+ WAITBLOK wblok; jt->waitblok=&wblok; pthread_cond_init(&wblok.cond,0); pthread_mutex_init(&wblok.mutex,0);)
  while(1){
-  // clear wait condition
-  // put thread on the thread queue
-  // do{wait on wait condition and mutex}while(condition not filled)
+  // put pointer to our cond/mutex into commregion so other tasks can see it
+  // take our mutex
+  // put our thread on the thread queue under lock
+  TASKCOMMREGION(jt)[0]=(I)&wblok; pthread_mutex_lock(&wblok.mutex); WRITELOCK(MTHREAD(jt)->tasklock) jt->taskidleq=MTHREAD(jt)->taskidleq; MTHREAD(jt)->taskidleq=THREADID(jt); WRITEUNLOCK(MTHREAD(jt)->tasklock)
+  // wait
+  // release mutex
+  pthread_cond_wait(&wblok.cond,&wblok.mutex); pthread_mutex_unlock(&wblok.mutex);
   // extract task parameters: args & result block
   // initialize the non-parameter part of task block
   // go to RUNNING state, but not if a SYSTEMLOCK is pending
-  // run the task
-  // put the result into the result block, unprotect args
+  // run the task, raising & lowering the locale execct
+  // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
+  if(unlikely(z==0)){if(unlikely((z=(A)jt->jerr)==0)z=(A)EVSYSTEM;}
+  __atomic_store_n(&AAV0(pyx)[0],z,__ATOMIC_RELEASE);
+  // unprotect args
   // broadcast to wake up any tasks waiting for the result
-  // unprotect result
+  pthread_mutex_lock(&((WAITBLOK*)&AAV0(pyx)[1])->mutex); pthread_cond_broadcast(&((WAITBLOK*)&AAV0(pyx)[1])->cond); pthread_mutex_unlock(&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
+  // unprotect pyx
   // go back to non-RUNNING state, but not if SYSTEMLOCK is pending
  }
 } 
-// execute the user's task.
-A jttaskrun(J jt,I threadno, A a, A w, A v){
+
+// execute the user's task.  Result is a pyx.
+A jttaskrun(J jt,A a, A w, A v){
  // take a thread to run.  if none, just execute & return
+ J exjt=JTFORTHREAD(jt,threadno);
+ WAITBLOK *exwblok=TASKCOMMREGION(exjt)[0];  // before we destroy it, save the address of the task's waitblok
  // realize virtual arguments
- // allocate a result block.  Init cond and mutex to idle
+ // allocate a result block.  Init value, cond, and mutex to idle
+ GAT0(pyx,INT,((sizeof(WAITBLOK)+(SZI-1))>>LGSZI)+1,0); ACINITZAP(pyx); AAV0(pyx)[0]=0; // allocate the result pointer (1), and the cond/mutex for the pyx.  ra() the pyx, set to unresolved
+ pthread_cond_init(&((WAITBLOK*)&AAV0(pyx)[1])->cond,0); pthread_mutex_init(&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
  // protect the arguments and result
  // initialize the task parameters
- // wait until wait condition is nonempty
- // signal the thread
- R 0;
+ // Grab the thread's mutex and wake it up
+ pthread_mutex_lock(exwblok->mutex); pthread_cond_signal(exwblok->cond); pthread_mutex_unlock(exwblok->mutex);
+ R pyx;
 }
-
+#endif

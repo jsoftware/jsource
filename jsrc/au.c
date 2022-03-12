@@ -52,9 +52,9 @@ F2(jtdomainerr2){F2PREFIP; ASSERT(0,EVDOMAIN);}
 A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
  GAT0(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will be all filled in
- AT(z)=t;  // install actual type
+ AT(z)=t; AFLAGINIT(z,t&RECURSIBLE); // install actual type
  AN(z)=0xdeadbeef;  // AN field of function is used for actual rank
- if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
+ if(fs)INCORPRA(fs); if(gs)INCORPRA(gs); if(hs)INCORPRA(hs);   // indicate fgh are about to be incorporated, and raise
  v->localuse.clr[0]=v->localuse.clr[1]=v->localuse.clr[2]=v->localuse.clr[3]=0;  // clear the private field
  v->valencefns[0]    =f1?f1:jtdomainerr1;  /* monad C function */
  v->valencefns[1]    =f2?f2:jtdomainerr2;  /* dyad  C function */

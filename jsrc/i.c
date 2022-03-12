@@ -24,7 +24,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  GATV0(z,NAME,m,1); AT(z)=NAME|NAMEBYVALUE; zv=NAV(z);  // Use GATV because GA doesn't support NAME type; but we must have NAMEBYVALUE set
  MC(zv->s,s,m); zv->s[m]=0;
  zv->m   =(UC)m; 
- zv->sb.sb.bucket=0;
+ zv->bucket=0;
  zv->bucketx=0;
  zv->flag=NMDOT+NMXY;
  zv->hash=(UI4)nmhash(m,s);

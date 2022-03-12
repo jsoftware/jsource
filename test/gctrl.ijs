@@ -138,7 +138,7 @@ vb y
 )
 9!:5 (0)
 
-5 -: g0 ''
+5 -: g0 ''   NB. run the verbs to establish caching for the names
 5 -: g1 ''
 5 -: g0 ''
 5 -: g1 ''

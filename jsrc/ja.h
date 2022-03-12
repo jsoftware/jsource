@@ -869,6 +869,8 @@
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
 #define ra0(x)                      radescend(x, if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);})
+// Make a block recursive if it is recursible and not already recursive.  Virtuals are already recursive.  We use this in a place where we know the result can't be unincorpable.  x might not be a noun
+#define ramkrecur(x)                if(unlikely(((AT(x)^AFLAG(x))&RECURSIBLE))){AFLAG(x)|=AT(x)&RECURSIBLE; jtra((x),AT(x));}
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))

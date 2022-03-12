@@ -377,12 +377,18 @@ isprist 13!:83 (<"0 i. 2 5) [&.> <"0 i. 2 5
 a =: <"1 i. 100 1000
 5000 > 7!:2 'a =: >:&.> a'
 
-NB. x,y transfers ownership to result if both args are abandoned pristine (but not VIRTUAL)
+NB. x,y transfers ownership to result if both args are abandoned pristine (but not VIRTUAL).  But not in the first set below: now all exec results are made recursive
 16b20 = 16b20 (17 b.) 1 { 13!:83 (;:'a b c d e f g') , (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
-0 = 16b20 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (4) { <"0 i. 6  NB. no apip; new block not recursible
+16b20 = 16b20 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (4) { <"0 i. 6  NB. no apip; new block not recursible
 16b1000020 = 16b1000020 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
-16b1000000 = 16b1000020 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
-16b0000000 = 16b1000020 (17 b.) 1 { 13!:83 ,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
+16b1000020 = 16b1000020 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
+16b0000020 = 16b1000020 (17 b.) 1 { 13!:83 ,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
+
+16b20 = 16b20 (17 b.) 1 { (;:'a b c d e f g') 13!:83@, (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
+0 = 16b20 (17 b.) 1 {  (2 1 3 2 4 3 5 4&{ 13!:83@, 2 1&{)   <"0 i. 6  NB. no apip; new block not recursible
+16b1000020 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:83@, (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
+16b1000000 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:83@, (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
+16b0000000 = 16b1000020 (17 b.) 1 { 13!:83@,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
 
 
 

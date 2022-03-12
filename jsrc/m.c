@@ -634,7 +634,7 @@ A jtincorp(J jt, A w) {ARGCHK1(w); INCORP(w); R w;}
 
 // allocate a virtual block, given the backing block
 // offset is offset in atoms from start of w; r is rank
-// result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
+// result block is never inplaceable, recursible, virtual.  Can return 0 if allocation error
 // result is PRISTINE iff the backer is
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->asginfo.assignsym
 // We fill in everything but AN and AS, which are done in the caller
@@ -829,7 +829,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   // If it is a nameref, clear the bucket info.  Explanation in nameref()
-  if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->sb.sb.bucket=0;
+  if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->bucket=0;
   //  Recur on each component
   raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);

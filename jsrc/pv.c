@@ -183,23 +183,24 @@ static TACT(jtvmove){A t;TA*u,x,z;
 /* b. replaces n0"_ v1 v2 by n0 v1 v2                  */
 /* c. replaces [: g ] by g, if monad                   */
 
+#define ASGR(dest,src) {A asg; RZ(asg=(src)); INCORPRA(asg); fa(dest); dest=asg;}
 static A jtvfinal(J jt,A w,I tmonad,I tsubst,TA *ttab,I *ttabi,I ttabi0){I i;V*u,*v;
  ARGCHK1(w);
  if(!(VERB&AT(w)))R w;
  v=FAV(w);
  if(CFORK!=v->id){i=tvi(w); R 0<=i?jtvfinal(jt,ttab[i].t,tmonad,tsubst,ttab,ttabi,ttabi0):w;}
  I f=!!v->fgh[2];
- RZ(v->fgh[2]=incorp(tine(jtvfinal(jt,f?v->fgh[2]:v->fgh[2-1],tmonad,tsubst,ttab,ttabi,ttabi0))));
- RZ(v->fgh[1]=incorp(tine(jtvfinal(jt,f?v->fgh[1]:v->fgh[1-1],tmonad,tsubst,ttab,ttabi,ttabi0))));
- RZ(v->fgh[0]=incorp(tine(jtvfinal(jt,f?v->fgh[0]:CP,tmonad,tsubst,ttab,ttabi,ttabi0))));
+ ASGR(v->fgh[2],tine(jtvfinal(jt,f?v->fgh[2]:v->fgh[2-1],tmonad,tsubst,ttab,ttabi,ttabi0)));
+ ASGR(v->fgh[1],tine(jtvfinal(jt,f?v->fgh[1]:v->fgh[1-1],tmonad,tsubst,ttab,ttabi,ttabi0)));
+ ASGR(v->fgh[0],tine(jtvfinal(jt,f?v->fgh[0]:CP,tmonad,tsubst,ttab,ttabi,ttabi0)));
  if(VERB&AT(v->fgh[2]?v->fgh[0]:CP)){
   u=FAV(v->fgh[2]?v->fgh[0]:CP); 
-  if(CFCONS==u->id)v->fgh[0]=u->fgh[2];  // must be incorped already
-  else if(CQQ==u->id&&NOUN&AT(u->fgh[0])&&equ(ainf,u->fgh[1]))v->fgh[0]=u->fgh[0];  // must be incorped already
+  if(CFCONS==u->id)ASGR(v->fgh[0],u->fgh[2])  // must be incorped already
+  else if(CQQ==u->id&&NOUN&AT(u->fgh[0])&&equ(ainf,u->fgh[1]))ASGR(v->fgh[0],u->fgh[0]);  // must be incorped already
   if(NOUN&AT(v->fgh[2]?v->fgh[0]:CP))RZ(w=folknohfn(v->fgh[2]?v->fgh[0]:CP,v->fgh[2]?v->fgh[1]:v->fgh[1-1],v->fgh[2]?v->fgh[2]:v->fgh[2-1]));
  }
  RZ(w=tine(w));
- if(FAV(w)->id==CFORK&&AT(FAV(w)->fgh[0])&VERB&&FAV(FAV(w)->fgh[0])->id==CCAP){FAV(w)->fgh[0]=FAV(w)->fgh[1]; FAV(w)->fgh[1]=FAV(w)->fgh[2]; FAV(w)->fgh[2]=0;}
+ if(FAV(w)->id==CFORK&&AT(FAV(w)->fgh[0])&VERB&&FAV(FAV(w)->fgh[0])->id==CCAP){FAV(w)->fgh[0]=FAV(w)->fgh[1]; FAV(w)->fgh[1]=FAV(w)->fgh[2]; FAV(w)->fgh[2]=0;}  // ASGR not needed
  R w;
 }    
 

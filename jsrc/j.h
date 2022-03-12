@@ -604,7 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00      // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x1d       // scaf      // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2

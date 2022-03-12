@@ -292,7 +292,7 @@ L *probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[bu
 L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
- if(likely((b = u->sb.sb.bucket)!=0)){
+ if(likely((b = u->bucket)!=0)){
   L *sympv=SYMORIGIN;  // base of symbol array
   // we don't check for primary symbol index because that is normally picked up in parsea
   if(0 > (bx = ~u->bucketx)){
@@ -329,10 +329,10 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
  ARGCHK1(a);u=NAV(a);  // u->NM block
  // if this is a looked-up assignment in a primary symbol table, use the stored symbol#
  I4 symx, b;
-#if SY_64
+#if 0 // obsolete 
  I sb=u->sb.symxbucket; symx=sb; b=sb>>32;  // fetch 2 values together if possible
 #else
- symx=u->sb.sb.symx; b=u->sb.sb.bucket;
+ symx=u->symx; b=u->bucket;
 #endif
  if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)){R sympv+(I)symx;
  }else if((likely(b!=0))){
@@ -495,7 +495,7 @@ L*jtsyrdnobuckets(J jt,A a){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(!NAV(a)->sb.sb.bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R e;}  // return if found locally from name
+  if(unlikely(!NAV(a)->bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R e;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
  R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g

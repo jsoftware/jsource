@@ -204,7 +204,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <PreprocessorDefinitions>__clang__=1;NDEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -462,7 +462,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <PreprocessorDefinitions>__clang__=1;C_NA=0;EMU_AVX=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -520,7 +520,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\j.dll</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;HAVE_SSSE3=1;HAVE_AVX=1;EMU_AVX=1;ENABLE_AVX;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -577,7 +577,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx.dll</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;C_AVX2=1;HAVE_AVX2=1;EMU_AVX=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -634,7 +634,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;HAVE_SSSE3=1;HAVE_AVX=1;EMU_AVX=1;ENABLE_AVX;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -690,7 +690,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <PreprocessorDefinitions>C_NA=0;__clang__=1;C_AVX=1;C_AVX2=1;HAVE_AVX2=1;EMU_AVX=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -794,7 +794,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <AdditionalOptions>-maes -msse3 -fno-strict-aliasing -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>__clang__=1;C_NA=0;EMU_AVX=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
@@ -854,7 +854,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -956,7 +956,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <PreprocessorDefinitions>__clang__=1;EMU_AVX=1;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NOASM;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1007,7 +1007,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <PreprocessorDefinitions>__clang__=1;EMU_AVX=1;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NOASM;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -1112,7 +1112,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>__clang__=1;EMU_AVX=1;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\debug/jdll.pch</PrecompiledHeaderOutputFile>

@@ -27,6 +27,10 @@ endif
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 endif
+ifeq (1,${USE_HIPRECS})
+PTHREADINC = -I../../pthreads4w/include
+PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
+endif
 ifeq (1,${DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
@@ -37,14 +41,14 @@ endif
 
 ifeq (1,${x64})
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
+CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} ${PTHREADINC} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 ASMFLAGS= /Cx
 else
 CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
+CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} ${PTHREADINC} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 endif
@@ -270,8 +274,8 @@ else
 TARGET= j32.dll
 endif
 
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
+$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)

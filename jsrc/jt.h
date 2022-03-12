@@ -11,6 +11,10 @@
 #include <sys/stat.h>
 #endif
 
+#if HIPRECS
+#include <pthread.h>
+#endif
+
 /*
 All allocated and variable data for a J instance is accessed through
 its JST structure.

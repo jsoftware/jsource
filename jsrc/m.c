@@ -740,7 +740,7 @@ A jtgc(J jt,A w,A* old){
    // advisedly and we do not delete the backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
    // (backer count is now <2)
    I bc=AC(b); bc=bc>2?2:bc;  // backer count before tpop.  We will delete backer if value goes down, to a value less than 2.  
-   ACINCR(w);  // protect w from being freed.  Its usecount may be >1
+   ACINCRLOCAL(w);  // protect w from being freed.  Its usecount may be >1
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
    // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.
@@ -834,7 +834,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
   raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
-  DQ(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);
+  DQ(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);  // not INCRPOS, because EPILOG is used in connum to make invalid blocks recursive (kludge)
  } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd); A x;
   // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
   x = SPA(v,a); raonlys(x);     x = SPA(v,e); raonlys(x);     x = SPA(v,i); raonlys(x);     x = SPA(v,x); raonlys(x);

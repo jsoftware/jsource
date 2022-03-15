@@ -731,10 +731,10 @@ B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
 // obsolete #define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); CCT*pv=(CCT*)CAV2(JT(jt,cdarg)); \
 // obsolete  NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
 #define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); A *pv=AAV0(JT(jt,cdarg)); \
- NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==((CCT*)IAV1(pv[k]))->pvklett##n&&!memcmpne(vv,s+((CCT*)IAV1(pv[k]))->pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
+ NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==((CCT*)IAV1(pv[k]))->pvklett##n&&!memcmpne(vv,s+((CCT*)IAV1(pv[k]))->pvklett##i,nn))R retval; if(unlikely(--j<0))j+=AN(tbl);}
 
 // add the index argx into the hashtable tbl for the key v->string (length n).  argx is an index into cdarg.  Increment AM(tbl), which contains the # hashed items
-#define HASHINSERT(tbl,n,v,argx) I j=HASHINDEX(tbl,n,v); I *hv=IAV0(tbl); ++AM(tbl); NOUNROLL while(hv[j]>=0)if(--j<0)j+=AN(tbl); hv[j]=argx;
+#define HASHINSERT(tbl,n,v,argx) I j=HASHINDEX(tbl,n,v); I *hv=IAV0(tbl); ++AM(tbl); NOUNROLL while(hv[j]>=0)if(unlikely(--j<0))j+=AN(tbl); hv[j]=argx;
 
 
 // a is a string block for a cd string
@@ -1422,7 +1422,7 @@ F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG
 }
 F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 
-F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
+F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCRLOCAL(z); R sc((I)z);}
      /* 15!:8  get header */
 
 F1(jtfh15){I k; RE(k=i0(w)); fr((A)k); R num(0);}

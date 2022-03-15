@@ -49,6 +49,7 @@ F2(jtdomainerr2){F2PREFIP; ASSERT(0,EVDOMAIN);}
 
 // create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
 // if there has been a previous error this function returns 0
+// This creates a recursive block and raises fgh
 A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
  GAT0(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will be all filled in

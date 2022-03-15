@@ -35,9 +35,9 @@ static AF fork2tbl[6][5]={
 FORK2(jtfolk2,0x1000)    // this version used by reversions, where localuse may not be set
 
 // see if f is defined as [:, as a single name
-static B jtcap(J jt,A x){V*v;L *l;
+static B jtcap(J jt,A x){V*v;L *l=0;
  if(v=VAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(l=syrd(v->fgh[0],jt->locsyms))&&(x=l->val))v=VAV(x);  // don't go through chain of names, since it might loop (on u) and it's ugly to chase the chain
- R CCAP==v->id;
+ B res=CCAP==v->id; if(l)tpush(x); R res;  // syrd ra()s the value
 }
 
 static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->fgh[2])->fgh[0],v->fgh[0]);}

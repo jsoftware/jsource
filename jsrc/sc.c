@@ -19,25 +19,28 @@ DF2(jtunquote){A z;I flgd0cp;  // flgs: 1=pseudofunction 2=cached lookup 8=execu
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
  A thisname=v->fgh[0]; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
  A savname=jt->curname;  // we stack the executing name
- if(likely(thisname!=0)){  // normal names
+ if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
   I4 cachedlkp=v->localuse.lu1.cachedref;  // negative if cacheable; positive if cached
   if(cachedlkp>0){
-   // There is a lookup for this nameref - use it
+   // There is a cached lookup for this nameref - use it
    stabent=&SYMORIGIN[cachedlkp];  // the symbol block for the cached item
    fs=stabent->val;  // the value of the cached item
    if(likely(fs!=0)){
     // the lookup exists.  If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
     if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale
     else explocale=0;  // if no direct locative, set so
-    flgd0cp|=2;  // indicate cached lookup
+    flgd0cp|=2;  // indicate cached lookup, which also tells us that we have not ra()d the name
    }else{cachedlkp=v->localuse.lu1.cachedref=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{
 valgone: ;
+   // name was not cached.  Look it up.  The calls to the lookup routines all issue ra() (under lock) on the value if found
    if(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
-    if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);}  // Try local, then look up the name starting in jt->global
+    if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
+    }else{ACINCRLOCALPOS(stabent->val);  // incr usecount to match what syrd1 does
+    }
    }else{  // locative or u./v.
     if(likely(!(NAV(thisname)->flag&NMIMPLOC))){  // locative
      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
@@ -46,6 +49,7 @@ valgone: ;
      if(stabent = probelocal(thisname,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
+      ACINCRLOCALPOS(stabent->val);  // incr usecount to match what syrd1 does
      }
     }
    }
@@ -54,7 +58,8 @@ valgone: ;
    I4 cacheable=(I4)(I)stabent&ARNAMED; stabent=(L*)((I)stabent&~ARNAMED);  // extract cachable flag from stabent & clear it
    fs=stabent->val;  // fetch the value for the name
    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
-   ASSERT(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
+   // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa
+   ASSERTSUFF(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
    if(unlikely((cachedlkp&(-cacheable))<0)){
     // point the nameref to the lookup result.  This prevents further changes to the lookup
@@ -93,9 +98,10 @@ valgone: ;
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
-  flgd0cp|=1;  // indicate pseudofunction
+  flgd0cp|=1;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
   stabent=0;  // no name lookup was performed
  }
+ // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale
@@ -115,11 +121,11 @@ valgone: ;
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
 #endif
- STACKCHKOFL
+ STACKCHKOFLSUFF(z=0; goto exitfa;)
  if(unlikely(explocale!=0)){  // there is a locative or implied locative
   // locative. switch to it, stacking the prev value.  If the switch is to the current local symbol table, that means 'switch to caller's environment'
   if(unlikely(explocale==jt->locsyms)){
-   pushcallstack1d(CALLSTACKPUSHLOCALSYMS,jt->locsyms);  // save current locsyms
+   pushcallstack1dsuff(CALLSTACKPUSHLOCALSYMS,jt->locsyms,z=0; goto exitfa;);  // save current locsyms
    jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current.  Leave GST unchanged in it
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
   }
@@ -128,14 +134,22 @@ printf("Locative call from locale %p to locale %p (%.*s to %.*s), callstackx=%ll
 if(savname)printf("(from %.*s ",(int)AN(savname),NAV(savname)->s);
 if(jt->curname)printf("to %.*s) ",(int)AN(jt->curname),NAV(jt->curname)->s);
 #endif
-  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale in lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
+  pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;); jt->global=explocale;  // move to new implied locale.  DO NOT change locale in lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
   INCREXECCT(explocale);   // we are starting a new execution in explocale.  Protect the locale while it runs
 #if 0 // obsolete
 printf("incr execct to %x\n",LXAV0(explocale)[SYMLEXECCT]);  // scaf
 #endif
     // scaf if someone deletes the locale before we start it, we are toast
  }
- // ************** no errors till the stack has been popped
+#if 0 // obsolete
+else{
+printf("Locale call within locale %p (%.*s), callstackx=%lld ",jt->global,(int)AN(LOCNAME(jt->global)),NAV(LOCNAME(jt->global))->s,callstackx);  // scaf
+if(savname)printf("(from %.*s ",(int)AN(savname),NAV(savname)->s);
+if(jt->curname)printf("to %.*s) ",(int)AN(jt->curname),NAV(jt->curname)->s);
+printf("\n");
+}
+#endif
+ // ************** errors must pop the stack and unra() before exiting
  AF actionfn=v->valencefns[flgd0cp>>3];  // index is 'is dyad'.  Load here to allow call address to settle
  w=flgd0cp&8?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
@@ -146,28 +160,28 @@ printf("incr execct to %x\n",LXAV0(explocale)[SYMLEXECCT]);  // scaf
   // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
   // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
   // possible before the branch.  Check the generated code on any change of compiler.
-  if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
+// obsolete   if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
-  if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
+// obsolete   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
  } else {
   // Extra processing is required.  Check each option individually
   DC d=0;  // pointer to debug stack frame, if one is allocated
   if(jt->uflags.us.cx.cx_us){  // debug or pm
    // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
-   RZ(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs)); d->dcn=(I)(flgd0cp&3?0:stabent);   // save last sym lookup as debug parm if it is valid (not cached or pseudoname)
+   RZSUFF(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs),z=0; goto exitpop;); d->dcn=(I)(flgd0cp&3?0:stabent);   // save last sym lookup as debug parm if it is valid (not cached or pseudoname)
   }
 
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cp&8?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
   if(!(flgd0cp&1) && jt->uflags.us.uq.uq_c.bstkreqd && callstackx==jt->callstacknext){
 #if 0 // obsolete
-printf("Locale call within locale %p (%.*s), callstackx=%lld ",jt->global,(int)AN(LOCNAME(jt->global)),NAV(LOCNAME(jt->global))->s,callstackx);  // scaf
+printf("Pushing stack for long processing, callstackx=%lld ",callstackx);  // scaf
 if(savname)printf("(from %.*s ",(int)AN(savname),NAV(savname)->s);
 if(jt->curname)printf("to %.*s) ",(int)AN(jt->curname),NAV(jt->curname)->s);
 #endif
-   pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); INCREXECCT(jt->global);  // push the call, and increment the count of the new exec (which is the same locale as the old)
+   pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;); INCREXECCT(jt->global);  // push the call, and increment the count of the new exec (which is the same locale as the old)
 #if 0 // obsolete
 printf("incr execct to %x\n",LXAV0(jt->global)[SYMLEXECCT]);  // scaf
 #endif
@@ -175,9 +189,9 @@ printf("incr execct to %x\n",LXAV0(jt->global)[SYMLEXECCT]);  // scaf
   if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
    z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,d);  // if debugging, go do that. 
   }else{
-   if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
+// obsolete    if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
    A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
-  if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
+// obsolete   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
   }
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cp&8?VAL2:VAL1);  // record the return from call
   if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
@@ -219,6 +233,7 @@ printf("incr execct to %x\n",LXAV0(jt->global)[SYMLEXECCT]);  // scaf
  // the locale in the POPFIRST/CHANGELOCALE must be from the FIRST 18!:4 which will give the starting locale, though we could equally take this value from explocale)
  //
  // Note that the POPFROM after the first propagates back through the stack until it is annihilated by the POPFIRST.  This guarantees that 
+exitpop: ;
 #if 0 // obsolete
 printf("Processing %lld stack entries from %lld, jt->global=%p (%.*s) with execct %x: returning ",jt->callstacknext-callstackx,callstackx,jt->global,(int)AN(LOCNAME(jt->global)),NAV(LOCNAME(jt->global))->s,LXAV0(jt->global)[SYMLEXECCT]) ; // scaf
 if(jt->curname)printf("from %.*s ",(int)AN(jt->curname),NAV(jt->curname)->s);
@@ -391,7 +406,9 @@ printf("Stacking CHANGE at %d\n",jt->callstacknext) ; // scaf
   }
  }
  // ************** errors OK now
- R z;
+exitfa:
+if(unlikely(!(flgd0cp&3))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); /* scaf */ fa(fs);}}  // unra the name if it was looked up from the symbol tables
+R z;
 }
 
 
@@ -426,8 +443,8 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
 // For other types, we build a function ref to 'name~', and fill in the type, rank, and a pointer to the name;
 //  the name will be dereferenced when the function is executed
 A jtnameref(J jt,A w,A locsyms){
- ARGCHK1(w);
- R namerefacv(w,syrd(w,locsyms));  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
+ ARGCHK1(w); L *sym=syrd(w,locsyms); if(likely(sym!=0))tpush(sym->val);   // undo the ra() in syrd, after we finish
+ R namerefacv(w,sym);  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
 }    /* argument assumed to be a NAME */
 
 // Adverb 4!:8 create looked-up cacheable reference to (possibly boxed) literal name a
@@ -438,7 +455,7 @@ F1(jtcreatecachedref){
  ASSERT(!(NAV(nm)->flag&(NMILOC|NMDOT|NMIMPLOC)),EVDOMAIN) // if special name or indirect locative, error
  L *sym=syrd(nm,JT(jt,emptylocale));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
  ASSERT(sym!=0,EVVALUE);  // return if error or name not defined
- A z=sym->val; if(unlikely(AT(z)&NOUN))R z;  // if name is a noun, return its value
+ A z=sym->val; tpush(z); if(unlikely(AT(z)&NOUN))R z;  // undo the ra() in syrd.  if name is a noun, return its value
  RZ(z=fdef(0,CTILDE,AT(z), jtunquote1,jtunquote, nm,0L,0L, (z->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(z)->mr,lrv(FAV(z)),rrv(FAV(z))));// create reference
  FAV(z)->localuse.lu1.cachedref=sym-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
  sym->flag|=LCACHED;  // protect the value from changes.  We do not chain back from the name

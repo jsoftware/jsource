@@ -60,7 +60,7 @@ typedef struct CDATA {
  A fchn;  // pointer to next allocated block in stack, 0 if end of stack
  struct CDATA *bchn;  // pointer to previous allocated block, possibly the local block.  0 in the local block itself
  A t;  // iteration array for for_xyz., select. value, or nullptr for for.
- A item;  // if for_xyz, the sorta-virtual block we are using to hold the value
+ A item;  // if for_xyz, the virtual block we are using to hold the value
  I j;  // iteration index
  I niter;  // for for. and for_xyz., number of iterations (number of items in T block)
  I itemsiz;  // size of an item of xyz, in bytes
@@ -108,10 +108,10 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  if(likely(cv->indexsym!=0)){
   // for_xyz.   protect iterator value and save it; create virtual item name
   ASSERT(!ISSPARSE(AT(t)),EVNONCE)
-  rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.
+  rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.  note we can free from a boxed array now
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
   // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
-  // true virtual blocks are freed only by tpop, and we will be freeing this in unstackcv, either normally or at end-of-definition
+  // true virtual blocks are freed only by tpop or from free of a boxed array, and we will be freeing this in unstackcv, either normally or at end-of-definition
   // We must keep ABACK in case we create a virtual block from xyz.
   // We store the block in 2 places: cv and symp.val.  We ra() once for each place
   // If there is an incumbent value, discard it
@@ -119,11 +119,13 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   fa(val); asym->val=0; asym->valtype=0;   // free the incumbent if any, clear val in symbol in case of error
   // Calculate the item size and save it
   I isz; I r=AR(t)-1; r=r<0?0:r; PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
-  // Allocate a sorta-virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
-  A svb; GA(svb,tt,isz,r,AS(t)+1); // one item
-  AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINITZAP(svb); ACINIT(svb,2); AFLAGINIT(svb,(tt&RECURSIBLE)|AFVIRTUAL); ABACK(svb)=t;  // We DO NOT raise the backer because this is sorta-virtual
+  // Allocate a virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
+// obsolete   A svb; GA(svb,tt,isz,r,AS(t)+1); // one item
+  A *pushxsave = jt->tnextpushp; jt->tnextpushp=&asym->val; A svb=virtual(t,0,r); jt->tnextpushp=pushxsave;  // since we can't ZAP a virtual, allocate this offstack to take ownership
+  RZ(svb) AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINIT(svb,2); AN(svb)=isz; MCISH(AS(svb),AS(t)+1,r)  // AC=2 since we store in symbol and cv
+// obsolete  AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINITZAP(svb); ACINIT(svb,2); AFLAGINIT(svb,(tt&RECURSIBLE)|AFVIRTUAL); ABACK(svb)=t;  // We DO NOT raise the backer because this is sorta-virtual
   // Install the virtual block as xyz, and remember its address
-  cv->item=asym->val=svb; asym->valtype=ATYPETOVALTYPE(tt);  // save in 2 places, commensurate with AC of 2
+  cv->item=svb; asym->valtype=ATYPETOVALTYPE(tt);  // save in 2 places (already in asym->val), commensurate with AC of 2
  }
  R 1;
 }    /* for. do. end. initializations */
@@ -136,14 +138,14 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
   if(cv->t){  // if for_xyz. that has processed forinit ...
    SYMORIGIN[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
    // If xyz still points to the virtual block, we must be exiting the loop early: the value must remain, so realize it
-   A svb=cv->item;  // the sorta-virtual block for the item
-   if(unlikely(SYMORIGIN[cv->itemsym].val==svb)){A newb;
+   A svb=cv->item;  // the virtual block for the item
+   if(unlikely(SYMORIGIN[cv->itemsym].val==svb)){A newb;   // loop did not complete, and xyz has not been reassigned
     fa(svb);   // remove svb from itemsym.val.  Safe, because it can't be the last free
     if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); SYMORIGIN[cv->itemsym].val=newb; SYMORIGIN[cv->itemsym].valtype=ATYPETOVALTYPE(AT(newb)); // realize stored value, raise, make recursive, store in symbol table
     }else{SYMORIGIN[cv->itemsym].val=0; SYMORIGIN[cv->itemsym].valtype=0;}  // after error, we needn't bother with a value
    }
-   // Decrement the usecount to account for being removed from cv - this is the final free of the svb
-   fr(svb);  // MUST NOT USE fa() so that we don't recur and free svb's current contents in cv->t
+   // Decrement the usecount to account for being removed from cv - this is the final free of the svb, unless it is a result.  Since this is a virtual block, free the backer also
+   if(AC(svb)<=1)fa(ABACK(svb)); fr(svb);  // MUST NOT USE fa() for svb so that we don't recur and free svb's current contents in cv->t - svb is virtual
   }
  }
  fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
@@ -295,7 +297,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // not tying up a backer that could have been freed otherwise (we do have to raise the usecount); (2) if the input
   // has been abandoned, we do not need to raise the usecount here: we can just mark the arg non-inplaceable, usecount 1 and take advantage
   // of assignment in place here - in this case we must flag the name to suppress decrementing the usecount on reassignment or final free.  In
-  // both cases we know the block will be freed by the caller.
+  // both cases we know the block will be freed by the caller.  Since we may revert the value to abandoned inplace to allow it to be free,
+  // we must not modify AM.
   // Virtual abandoned blocks are both cases at once.  That's OK.
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
   L *sympv=SYMORIGIN;  // bring into local
@@ -537,17 +540,17 @@ docase:
     L *itemsym=&sympv[cv->itemsym];
     if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // if z might be the result, protect it over the free
     if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
-    // if xyz has been reassigned, fa the incumbent and reinstate the sorta-virtual block, advanced to the next item
+    // if xyz has been reassigned, fa the incumbent and reinstate the virtual block, advanced to the next item
      AK(cv->item)+=cv->itemsiz;  // advance to next item
      if(unlikely(itemsym->val!=cv->item)){
-      // discard & free incumbent, switch to sorta-virtual, raise it
+      // discard & free incumbent, switch to virtual, raise it
       A val=itemsym->val; fa(val) val=cv->item; ra(val) itemsym->val=val;
       itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
      }
      ++i; continue;   // advance to next line and process it
     }
     // ending the iteration.  set xyz to i.0
-    {A val=itemsym->val; fa(val)}  // discard & free incumbent, probably the sorta-virtual block
+    {A val=itemsym->val; fa(val)}  // discard & free incumbent, probably the virtual block.  If the virtual block, this is never the final free, which comes in unstackcv
     itemsym->val=mtv;  // after last iteration, set xyz to mtv, which is permanent
     itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
    }else if(likely(cv->j<cv->niter)){++i; continue;}  // advance to next line and process it
@@ -984,7 +987,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
- // So we add them by hand - just y and possibly x.  They will be added later too
+ // So we add them by hand - just y and possibly x.  They will be added later too, perhaps
  RZ(probeisres(ca(mnuvxynam[5]),actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeisres(ca(mnuvxynam[4]),actst));}
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=SYMORIGIN[pfx].next){L *newsym;

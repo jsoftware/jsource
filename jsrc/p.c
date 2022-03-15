@@ -608,6 +608,7 @@ rdglob: ;  // here when we tried the buckets and failed
         // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
        if(likely(s!=0)){
         if(likely(s->valtype!=0)){  // if value has not been assigned, ignore it.
+fa(s->val); // scaf
          pt0ecam|=s->valtype<<VALTYPEX;  // save the type
          if(s->valtype==QCNOUN){A sv=s->val;   // this is testing for saved NOUN type
           // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
@@ -642,7 +643,7 @@ rdglob: ;  // here when we tried the buckets and failed
       // end of looking at local/global symbol tables
       // s has the symbol for the name.  pt0ecam&USEDGLOBAL is set if the name was found in a global table.  The type from valtype is in spare bits of GETSTACK0PT
       // since we have called subroutines, we don't use sympv, refetching it instead
-      if(likely(1)){  // obsolete
+      if(likely(1)){
        // The name is defined.  If it's a noun, use its value (the common & fast case)
        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
        // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
@@ -1021,19 +1022,19 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2].t) into the return
   R (A)((I)z+pt0ecam);  // this is the return point from normal parsing
 
- }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
+ }else{A y;A sv=0;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
    // overhead, because it happens enough to notice.
    // No ASSERT - must get to the end to pop stack
    jt->parserstackframe.parsercurrtok=0;  // error token if error found
    I at=AT(y = QCWORD(queue[0]));  // fetch the word
-   if((at&NAME)!=0) {L *s;A sv;  // pointer to value block for the name
+   if((at&NAME)!=0) {L *s;  // pointer to value block for the name
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
-     if(likely((sv=s->val)!=0))goto got1val;  // if value has not been assigned, ignore it.  Could just treat as undef
+     if(likely((sv=s->val)!=0)){ACINCRLOCALPOSSP(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd
     }
-    if(likely((s=syrd(y,jt->locsyms))!=0)){     // Resolve the name.
+    if(likely((s=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it
      RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
 got1val:;
      if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
@@ -1041,7 +1042,7 @@ got1val:;
        sv=namecoco(jtinplace, y, (syrdforlocale(y)!=jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
       }
       y=sv;
-     } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.
+     } else {y = namerefacv(y, s); fa(sv); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
     } else {
      // undefined name.
      if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
@@ -1049,6 +1050,8 @@ got1val:;
     }
    }
    if(likely(y!=0))if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error
+   // If sv!=0, we found the value and ra()d it.  Match the ra with a tpush so that the value stays protected during further execution
+   if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence
   jt->parserstackframe = oframe;
   R y;

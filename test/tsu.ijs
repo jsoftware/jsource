@@ -56,6 +56,12 @@ git.ijs
 gss.ijs
 )
 
+NB. When a name executes cocurrent, all subsequent calls from that name use a slower linkage.  Thus we don't want RUN to call
+NB. 0!:x directly, because then all the calls in RUN (after a file that does cocurrent) use slow linkage.  Interpose a name
+ex01=:0!:1
+ex02=:0!:2
+ex03=:0!:3
+
 etx      =: 1 : 'u :: (<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)'  NB. error message from error number
 ex       =: ". etx
 fex      =: }. @ (i.&(10{a.) {. ]) @ (13!:12) @ i. @ 0: @ (0!:110)
@@ -183,13 +189,13 @@ NB. ebi extensions
 
 RSET=: 4 : '(x)=: y'
 RBAD=: 3 : '>_4}.each(#testpath)}.each(-.RB)#RF'
-RUN=: RBAD@('RB'&RSET)@(0!:3)@('RF'&RSET)
-RUND=: RBAD@('RB'&RSET)@(0!:2)@('RF'&RSET)  NB. Run w/display
+RUN=: RBAD@('RB'&RSET)@(ex03)@('RF'&RSET)
+RUND=: RBAD@('RB'&RSET)@(ex02)@('RF'&RSET)  NB. Run w/display
 
-RUN1=: 13 : '0!:2<testpath,y,''.ijs'''
+RUN1=: 13 : 'ex02<testpath,y,''.ijs'''
 
 RESUB1=: 3 : 'y[echo >y'
-RESUB2=: (13 : '-.0!:3 RESUB1 y')"0
+RESUB2=: (13 : '-.ex03 RESUB1 y')"0
 RECHO=: 13 : '+/ RESUB2 y'
 
 NB. bill extensions
@@ -210,13 +216,13 @@ for_y234. y123 do.
  echo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
-  0!:2 y234
+  ex02 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
-  0!:2 y234
+  ex02 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
@@ -246,13 +252,13 @@ while. x123~:0 do.
   echo RLAST=: >y234
   save_ran=:9!:44''
   Debug=: 0
-  0!:2 y234
+  ex02 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
   Debug=: 1
-  0!:2 y234
+  ex02 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
@@ -282,13 +288,13 @@ for_y234. y123{~?~#y123 do.
  echo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
-  0!:2 y234
+  ex02 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
-  0!:2 y234
+  ex02 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
@@ -315,13 +321,13 @@ assert. 0=(;:'x y oldnl') e. nl''
 oldnl=: nl''
 while. x123~:0 do.
  Debug=: 0
- 0!:2<testpath,y123,'.ijs'
+ ex02<testpath,y123,'.ijs'
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
  assert. (<'base')-:18!:5''
  assert. ((;:'oldnl')-.~nl'') -: oldnl
  Debug=: 1
- 0!:2<testpath,y123,'.ijs'
+ ex02<testpath,y123,'.ijs'
  Debug=: 0
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'

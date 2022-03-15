@@ -604,7 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x1d       // scaf      // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00    // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -670,13 +670,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
-#define ASSERTGOTO(b,e,lbl)   {if(unlikely(!(b))){jsignal(e); goto lbl;}}  // when there is cleanup to do
+#define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
+#define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
 #define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
 // version for debugging
 // #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
+#define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); goto lbl;}}  // set name for display (only if error)
 #define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
@@ -794,10 +796,11 @@ extern unsigned int __cdecl _clearfp (void);
 // define fs block used in every/every2.  It is the self for the f in f&.>, and contains only function pointers, an optional param in AK, and the flag field
 #define EVERYFS(name,f0,f1,akparm,flg) PRIM name={{akparm,0,0,0,0,0,0},{.primvb={.valencefns={f0,f1},.flag=flg}}};
 
-#if USECSTACK
+#if USECSTACK  // obsolete, always
 #define FDEPDEC(d)
 #define FDEPINC(d)
 #define STACKCHKOFL {D stackpos; ASSERT((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK);}
+#define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK,suff);}
 #else  // old style counting J recursion levels
 #define FDEPDEC(d)      jt->fdepi-=(I4)(d)  // can be used in conditional expressions
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)(d),EVSTACK); jt->fdepi+=(I4)(d);}
@@ -1172,7 +1175,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \
          if((len)<5)stmt  /*  len 5 or less, hash is enough */ \
          else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL for(;lzz;c0+=((lzz-1)&(SZI-1))+1,c1+=((lzz-1)&(SZI-1))+1,lzz=(lzz-1)&-SZI)if(((*(I*)c0^*(I*)c1)<<((-lzz&(SZI-1))<<LGBB))!=0)break; \
-          if(likely(lzz==0))stmt \
+          if(likely(lzz==0)){stmt} \
          } \
         }
 
@@ -1681,7 +1684,8 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define RESETRANK       (jt->ranks=R2MAX)
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(unlikely(!(exp)))R0}
-#define RZGOTO(exp,lbl) {if(unlikely(!(exp)))goto lbl;}
+#define RZSUFF(exp,suff) {if(unlikely(!(exp))){suff}}
+#define RZGOTO(exp,lbl) RZSUFF(exp,goto lbl;)
 #define RZQ(exp)         {if(unlikely(!(exp)))R 0;}  // allows FINDNULLRET without jt
 #if MEMAUDIT&0xc
 #define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&LPAR?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 

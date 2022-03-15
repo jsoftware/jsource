@@ -243,7 +243,7 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
 }
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table.  l is encoded in low bits of jt
-// result is L* address of the symbol-table entry for the name, or 0 if not found
+// result is L* address of the symbol-table entry for the name, or 0 if not found or value missing
 // locking is the responsibility of the caller
 L*jtprobe(J jt,C*string,UI4 hash,A g){
  RZ(g);
@@ -401,16 +401,18 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 
 // look up a non-locative name using the locale path
 // g is the current locale, l/string=length/name, hash is the hash for it (l is carried in the low 8 bits of jt)
-// result is L* symbol-table slot for the name, or 0 if none
+// result is L* symbol-table slot for the name, with bit 0 set with the AR flags of the locale found in (this indicates named/numbered), or 0 if none
 // Bit 0 (ARNAMED) of the result is set iff the name was found in a named locale
 // We must have no locks coming in; we take a read lock on each symbol table we have to search
+// if we find a name, we ra() it under lock.  All we have to do is increment the name since it is known to be recursive if possible
 L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e;
  RZ(g);  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(e){R (L*)((I)e+AR(g));}} g=gn;}  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g));
+ NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); if(e){ACINCRPOSSP(e->val); READUNLOCK(g->lock) R (L*)((I)e+AR(g));} READUNLOCK(g->lock)} g=gn;}  // return when name found.
  R 0;  // fall through: not found
 }    /* find name a where the current locale is g */ 
-// same, but return the locale in which the name is found.  We know the name will be found somewhere
+// same, but return the locale in which the name is found, and no ra().  We know the name will be found somewhere
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
@@ -431,33 +433,37 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   ASSERT(k<256,EVLIMIT);
   if(likely(!e)){  // first time through
-   e=jtprobe((J)((I)jt+k),v,hash,jt->locsyms);  // look up local first
-   if(!e)e=(L*)((I)jtsyrd1((J)((I)jt+k),v,hash,jt->global)&~ARNAMED);  // if not local, try global, and remove cachable flag
+   e=jtprobe((J)((I)jt+k),v,hash,jt->locsyms);  // look up local first.  All these lookups ra() the value if found
+   if(!e)e=(L*)((I)jtsyrd1((J)((I)jt+k),v,hash,jt->global)&~ARNAMED);else{ACINCRLOCALPOS(e->val);}  // if not local, try global, and remove cachable flag
   }else e=(L*)((I)jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g)&~ARNAMED);   // look up later indirect locatives, yielding an A block for a locative; remove cachable flag
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
-  ASSERTN(!AR(y),EVRANK,nfs(k,v));   // verify atomic
-  if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERT(g!=0,EVLOCALE);  // if atomic integer, look it up
+  ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v),exitfa);   // verify atomic
+  if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // if atomic integer, look it up
   }else{
-   ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
+   ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v),exitfa);  // verify box
    x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
     // Boxed integer - use that as bucketx, the locale number
-    g=findnl(BIV0(x)); ASSERT(g!=0,EVLOCALE);  // boxed integer, look it up
+    g=findnl(BIV0(x)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // boxed integer, look it up
    }else{
     xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
-    ASSERTN(1>=AR(x),EVRANK,nfs(k,v));   // verify list (or atom)
-    ASSERTN(xn,EVLENGTH,nfs(k,v));   // verify not empty
-    ASSERTN(LIT&AT(x),EVDOMAIN,nfs(k,v));  // verify string
-    ASSERTN(vlocnm(xn,xv),EVILNAME,nfs(k,v));  // verify legal name
+    ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v),exitfa);   // verify list (or atom)
+    ASSERTNGOTO(xn,EVLENGTH,nfs(k,v),exitfa);   // verify not empty
+    ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v),exitfa);  // verify string
+    ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v),exitfa);  // verify legal name
     I bucketx=BUCKETXLOC(xn,xv);
-    RZ(g=stfindcre(xn,xv,bucketx));  // find st for the name
+    RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
    }
   }
  }
  R g;
+exitfa: ;
+ fa(e->val);
+ R 0;
 }
 
-// look up known locative name; return starting locale of locative, or 0 if error
+// a is a locative NAME block; result is the starting locale, or 0 if error
+// if the locative is direct we just look up/create the locale with that name; if indirect we find the value, then look up that locale
 A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  n=AN(a); v=NAV(a); m=v->m;
  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
@@ -467,12 +473,12 @@ A jtsybaseloc(J jt,A a) {I m,n;NM*v;
 
 // look up a name (either simple or locative) using the full name resolution
 // result is symbol-table slot for the name if found, or 0 if not found
-// This code is copied in p.c
+// If the block is found, the value has been ra()d
 L*jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first
-  if(e = probelocal(a,locsyms)){R e;}  // return flagging the result if local
+  if(e = probelocal(a,locsyms)){ACINCRLOCALPOSSP(e->val); R e;}  // return flagging the result if local.
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));
  R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g
@@ -490,12 +496,12 @@ A jtsyrdforlocale(J jt,A a){A g;
 // same as syrd, but we have already checked for buckets
 // look up a name (either simple or locative) using the full name resolution
 // result is symbol-table slot for the name if found, or 0 if not found
-// This code is copied in p.c
+// If the name/value are found, ra() the value
 L*jtsyrdnobuckets(J jt,A a){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(!NAV(a)->bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R e;}  // return if found locally from name
+  if(unlikely(!NAV(a)->bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){ACINCRLOCALPOSSP(e->val); R e;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
  R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g
@@ -511,17 +517,20 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,*zv;L*v;
   x=C(wv[i]); v=syrd(nfs(AN(x),CAV(x)),jt->locsyms); 
   ASSERT(v!=0,EVVALUE);
   y=v->val;
-  ASSERT(NOUN&AT(y),EVDOMAIN);
+  ASSERTGOTO(NOUN&AT(y),EVDOMAIN,exitfa);
   zv[i]=flag?(I)AV(y):(I)v;
+  fa(y);  // undo the ra() in syrd
  }
  RETF(z);
+exitfa:;
+ fa(y); R 0;
 }    /* 15!:6 (0=flag) or 15!:14 (1=flag) */
 
 F1(jtdllsymget){R dllsymaddr(w,0);}
 F1(jtdllsymdat){R dllsymaddr(w,1);}
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found or invalid name
-F1(jtsymbrd){L*v; ARGCHK1(w); ASSERTN(v=syrd(w,jt->locsyms),EVVALUE,w); R v->val;}
+F1(jtsymbrd){L*v; ARGCHK1(w); ASSERTN(v=syrd(w,jt->locsyms),EVVALUE,w); tpush(v->val); R v->val;}   // undo the ra() in syrd
 
 // look up name w, return value unless locked or undefined; then return just the name
 F1(jtsymbrdlocknovalerr){A y;L *v;
@@ -532,7 +541,7 @@ F1(jtsymbrdlocknovalerr){A y;L *v;
   R nameref(w,jt->locsyms);  // return reference to undefined name
  }
  // no error.  Return the value unless locked function
- y=v->val;
+ y=v->val; tpush(y);  // undo the ra() in syrd
  R FUNC&AT(y)&&(jt->glock||VLOCK&FAV(y)->flag)?nameref(w,jt->locsyms):y;
 }
 

@@ -91,10 +91,10 @@ void writelock(S *alock, S prev){
 // flags&1 is 1 if *abuf is a hashtable.  In that case, fill it with -1 and set AM to 0 to indicate a rehash is needed.  Otherwise copy the old contents to the beginning of the resized table.
 // flags&2 is set to suppress freeing the old block after setting the new one
 // flags&4 is set when flags&1 is set to indicate the hash table should fill with 0 rather than -1 (for address rather than index hashes)
-// flags&8 is  set if the block has rank 1 and needs to keep AS[0]=AN so it cn be used in J verbs
+// flags&8 is  set if the block has rank 1 and needs to keep AS[0] unchanged so it can be used in J verbs
 // result is 0 if we hit an error, otherwise the table has been resized, but not necessarily by us & it might not have enough space.
 // The tables resized here are allocated with any rank.  AN()/AS() (if present) gives the current allocation, and AM() gives the number of items actually in use
-// When a table is resized, it if mf()'d without recurring to contents.  This means it must not be in use otherwise, for example as a result or a backer
+// When a table is resized, it is mf()'d without recurring to contents.  This means it must not be in use otherwise, for example as a result or a backer
 I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
  I oldn=AN(*abuf);   // get the previous allocated size
  I t=AT(*abuf);  // get the type of the allocation
@@ -102,6 +102,7 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
  GA0(z,t,2*oldn,AR(*abuf)); ACINITZAP(z); // allocate a new block, bigger than the previous one; make it permanent.  This is the only error exit from this routine
  WRITELOCK(*alock);  // reacquire lock
  A obuf=*abuf;  // current buffer after reacquiring lock
+ AFLAGINIT(z,AFLAG(obuf));  // preserve the recursive status of the block since we are transferring contents
  if(AN(obuf)==oldn){
   // normal case where no one else resized the block before we did.  Transfer the data and counts from the old block to the new
   I itemsize;
@@ -111,7 +112,9 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
   // if this allocation is a table, fill in AN and AS[0] (otherwise AN is all we need)
   // if there are elements of the shape beyond AS[0], they must be parameters or item shape and they are just copied.  If rank=1, AS[0] is also such a parameter
   if(AR(z)>1){itemsize=AN(obuf)/AS(obuf)[0]; AS(z)[0]=alloatoms/itemsize; AN(z)=AS(z)[0]*itemsize; DONOUNROLL(AR(z)-1, AS(z)[i+1]=AS(obuf)[i+1];)
-  }else{itemsize=1; AN(z)=alloatoms; AS(z)[0]=flags&8?AS(obuf)[0]:alloatoms;}  // if rank=1, AS[0] is a user field
+  }else{itemsize=1; AN(z)=alloatoms; AS(z)[0]=flags&8?AS(obuf)[0]:alloatoms;}  // if rank=1, AS[0] may be a user field.  If rank=0 it will be overwritten
+  // if the type is boxed, and we extended the allocation, we had better clear the added atoms in case we ever free the block elsewhere
+  if(unlikely(t&BOX))mvc((AN(z)-2*oldn)*BOXSIZE,AAV(z)+2*oldn,1,MEMSET00);
   if(flags&1){
    // If the block is a hashtable, it will be rebuilt from scratch and we just initialize it to -1 pointers
    mvc(datasize,voidAV(z),1,(flags&4)?MEMSET00:MEMSETFF);  // fill the entire table

@@ -472,7 +472,7 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(C(*u),C(*v
 #define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) NOUNROLL do{if(hj==hsrc##sct){ \
   if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
   if((store!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
-  if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
+  if(unlikely(--name<0))name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
   }while(1);
 
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
@@ -634,11 +634,11 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 #define MASK(dd,xx)         {D dv=(xx); if(*(UIL*)&dv!=(UIL)NEGATIVE0){dd=*(UIL*)&dv&ctmask;}else{dd=0;} }
 
 // FIND for read.  Stop loop if endtest is true; execute fstmt if match ((exp) is false).  hj holds the index of the value being tested
-#define FINDRD(exp,hindex,endtest,fstmt) do{hj=hv[hindex]; if(endtest)break;if(!(exp)){fstmt break;}if(--hindex<0)hindex+=p;}while(1);
+#define FINDRD(exp,hindex,endtest,fstmt) do{hj=hv[hindex]; if(endtest)break;if(!(exp)){fstmt break;}if(unlikely(--hindex<0))hindex+=p;}while(1);
 
 // FIND for write.  j is the scan pointer through the hashtable, and has been initialized to the starting bucket
 // store i into the hashtable if not found.  The test should be intolerant except for NUB/KEY operation
-#define FINDWR(TH,exp) NOUNROLL do{if(asct==(hj=hv[j])){hv[j]=(TH)i; break;}if(!(exp))break;if(--j<0)j+=p;}while(1);
+#define FINDWR(TH,exp) NOUNROLL do{if(asct==(hj=hv[j])){hv[j]=(TH)i; break;}if(!(exp))break;if(unlikely(--j<0))j+=p;}while(1);
 
 // functions for building the hash table for tolerant comparison.  expa is the function for detecting matches on a values
 
@@ -2387,7 +2387,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 // start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
 // (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
 // the first block that hashed to this address)
-#define FIND(exp) NOUNROLL while(asct>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
+#define FIND(exp) NOUNROLL while(asct>(hj=hv[j])&&(exp)){if(unlikely(--j<0))j+=p;}
 
 // function to search forward
 // T is the type of the data

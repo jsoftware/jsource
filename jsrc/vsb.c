@@ -334,7 +334,7 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h){I c,m,p,ui;SBU*u;
  // when we get here we have the write lock and all the tables have the needed space.  Insert the symbol
  if(AM(HASHTABLE)==0){  // rehash the table if it was resized
   SBU *v=SBUV4(JT(jt,sbu)); I *hv=IAV(HASHTABLE);   // point to symbols and hashtable
-  DO(AM(JT(jt,sbu)), I j=INITHASH(v++->h); while(0<=hv[j]){if(--j<0)j+=AN(HASHTABLE);} hv[j]=i;);
+  DO(AM(JT(jt,sbu)), I j=INITHASH(v++->h); while(0<=hv[j]){if(unlikely(--j<0))j+=AN(HASHTABLE);} hv[j]=i;);
   AM(HASHTABLE)=1; // set 'table not resized' for next time
  }
 // obsolete  RE(sbextend(n+p,s,h));           /* extend global tables as req'd*/
@@ -357,7 +357,7 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h){I c,m,p,ui;SBU*u;
  // set flag info in the table entry
  u=SBUV(c); u->i=m+p; u->n=n; u->h=h;   /* index/length/hash            */
  u->flag=c2;                            /* SBC2 SBC4 flag               */
- I hi=INITHASH(h); I *hv=IAV(HASHTABLE); while(0<=hv[hi]){if(--hi<0)hi+=AN(HASHTABLE);}           // init and find the insertion point
+ I hi=INITHASH(h); I *hv=IAV(HASHTABLE); while(0<=hv[hi]){if(unlikely(--hi<0))hi+=AN(HASHTABLE);}           // init and find the insertion point
  IAV1(HASHTABLE)[hi]=c;                      // have the hash point to new symbol */
  ++AM(JT(jt,sbu));                            /* # unique symbols             */
  AM(STRINGTABLE)+=n+p;                         /* # chars in sbs               */
@@ -411,7 +411,7 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
    case 0: if(n==u->n&&!memcmpne(t,s,n))goto exit; break;
    }
   }
-  if(--hi<0)hi+=AN(HASHTABLE);
+  if(unlikely(--hi<0))hi+=AN(HASHTABLE);
  }
 exit: ;
  if(!(test&2))READUNLOCK(JT(jt,sblock));  // release lock if we took one
@@ -602,7 +602,7 @@ static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
  READLOCK(JT(jt,sblock))
  n=AM(JT(jt,sbu)); v=SBUV4(JT(jt,sbu)); p=AN(HASHTABLE);
  GATV0E(z,INT,n,1,goto exit;); zv=AV(z);
- DO(n, j=INITHASH(v++->h); k=1; while(i!=IAV1(HASHTABLE)[j]){if(--j<0)j+=AN(HASHTABLE); ++k;} *zv++=k;);
+ DO(n, j=INITHASH(v++->h); k=1; while(i!=IAV1(HASHTABLE)[j]){if(unlikely(--j<0))j+=AN(HASHTABLE); ++k;} *zv++=k;);
 exit: ;
  READUNLOCK(JT(jt,sblock))
  R z;
@@ -670,7 +670,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp,I intcall){PR
   ASSERTD(sn>=vi+vn,"u index/length");
   k=(c2&SBC4?hic4:c2&SBC2?hic2:hic)(vn,vc);
   ASSERTD(k==v->h,"u hash");
-  j=INITHASH2(k,hn); while(i!=hv[j]&&0<=hv[j])if(--j<0)j+=hn;
+  j=INITHASH2(k,hn); while(i!=hv[j]&&0<=hv[j])if(unlikely(--j<0))j+=hn;
   ASSERTD(i==hv[j],"u/h mismatch");
   ASSERTD(BLACK==v->color||RED==v->color,"u color");
   RZ(xv[i]=incorp(c2&SBC4?vec(C4T,vn>>2,vc):c2&SBC2?vec(C2T,vn>>1,vc):str(vn,vc)));

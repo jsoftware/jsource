@@ -117,7 +117,7 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(C(wv[i])));  // point to name, audit for validity
-  if(y){if(v=syrd(y,jt->locsyms)){x=v->val; t=AT(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined
+  if(y){if(v=syrd(y,jt->locsyms)){x=v->val; t=AT(x); fa(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
   // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
   //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).
@@ -172,7 +172,7 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- DO(n, x=C(wv[i]); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y,jt->locsyms); RESETERR; zv[i]=v?v->sn:-1;);
+ DO(n, x=C(wv[i]); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y,jt->locsyms); RESETERR; zv[i]=v?v->sn:-1; if(likely(v!=0))fa(v->val);); // undo ra() in syrd
  RETF(z);
 }    /* 4!:4  script index */
 
@@ -240,8 +240,10 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
   // If the value is at large in the stacks and not deferred-freed, increment the use count and deferred-free it
   // If the name is assigned in a local symbol table, we ASSUME it is at large in the stacks and incr/deferred-free it.  We sidestep the nvr stack for local nouns
   if(y&&(v=syrd(y,jt->locsyms))){
+fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond usecount of 0
    if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
-   A locfound=syrdforlocale(y);  // get the locale in which the name is defined
+   A locfound=syrdforlocale(y);  // get the locale in which the name is defined - must exist
+
    if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){I am,nam;  // If the AM field is not under name semantics, just go free the name immediately.  Virtuals cannot be on the NVR stack
     // it is still possible that the value is LABANDONED, if it has never been reassigned.  We are about to delete it, so it is safe to switch to NVR semantics
     AMNVRCINI(v->val);  // establish NCR semantics in AM field.  If this block is LABANDONED it MUST go away when the sentence ends

@@ -505,14 +505,20 @@ typedef I SI;
 #define ACIPISOK(a)     (AC(a)<1)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
+#define ACUC2           (ACUSECOUNT*2) // <= this is usecount<=2, which is inplaceable if you know the usecount has been uncremented earlier
 #define ACADDLOCAL(a,n) if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)+(n))&~ACINPLACE)
 #define ACSUBLOCAL(a,n) if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-(n)))
+// use ACINCR... when you know the block is recursive & you just want to adjust the usecount. POS means you know it is >0.  SP means it might be sparse (which always requires recursion)
 #define ACINCRLOCAL(a)   ACADDLOCAL(a,1)
+#define ACINCRLOCALPOS(a) {if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1);}
+#define ACINCRLOCALPOSSP(a) {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
 #define ACDECRLOCAL(a)   ACSUBLOCAL(a,1)
 #define ACIPNO(a)       ACAND(a,~ACINPLACE)
 #define ACADD(a,n)      ACADDLOCAL(a,n)
 #define ACSUB(a,n)      ACSUBLOCAL(a,n)
 #define ACINCR(a)       ACADD(a,1)
+#define ACINCRPOS(a)    if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1)
+#define ACINCRPOSSP(a)  {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
 #define ACDECR(a)       ACSUB(a,1)
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
@@ -612,14 +618,15 @@ typedef I SI;
 #define AMNVRFREEACT(a,final,v,nv) (v=AM(a),nv=v|AMFREED,nv=v&-AMNVRCT?nv:1*AMNVRCT+AMFREED+AMNV,nv=v<((final)<<AMNVRCTX)?v:nv,AM(a)=nv);
 #define AMNVRCINI(a) {if(!(AM(a)&AMNV))AMNVRSET(a,AMNV);}  // if AM doesn't have NVR semantics, initialize it
 
-// Flags in the AR field of symbol tables
+// Flags in the AR field of symbol tables.  The allocated rank is always 0
 #define ARNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
+// the rest of the flags apply only to local symbol tables
 #define ARNAMEADDEDX LPERMANENTX  // 2 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
 #define ARNAMEADDED (1LL<<ARNAMEADDEDX)
 #define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
-#define ARLSYMINUSE 32  // This bit is set in the rank of the original symbol table when it is in use
+#define ARLSYMINUSE 32  // This bit is set in the rank of the original local symbol table when it is in use
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
@@ -812,8 +819,9 @@ typedef struct {
 
 // Add an entry to the call stack, and increment the index variable
 #define pushcallstack(i,t,v) (jt->callstack[i].type=(t), jt->callstack[i].value=(v), ++i)
-#define pushcallstack1(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
-#define pushcallstack1d(t,v) {FDEPDEC(d); ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
+#define pushcallstack1(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK); pushcallstack(jt->callstacknext,(t),(v));}
+#define pushcallstack1d(t,v) {FDEPDEC(d); ASSERT(jt->callstacknext<jt->fcalln,EVSTACK); pushcallstack(jt->callstacknext,(t),(v));}
+#define pushcallstack1dsuff(t,v,suff) {FDEPDEC(d); ASSERTSUFF(jt->callstacknext<jt->fcalln,EVSTACK,suff); pushcallstack(jt->callstacknext,(t),(v));}
 
 // NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (??)
 typedef struct{

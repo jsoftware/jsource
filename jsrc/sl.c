@@ -135,7 +135,7 @@ static I jtinstallnl(J jt, A l){
    I i; for(i=0;i<AN(obuf);++i){
     A st; if(st=(A)IAV1(obuf)[i]){  // if there is a value hashed...
      I probe=HASHSLOT(NAV(LOCNAME(st))->bucketx,AN(nbuf));  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
-     NOUNROLL while(IAV1(nbuf)[probe]){if(--probe<0)probe=AN(nbuf)-1;}  // find empty slot
+     NOUNROLL while(IAV1(nbuf)[probe]){if(unlikely(--probe<0))probe=AN(nbuf)-1;}  // find empty slot
      IAV1(nbuf)[probe]=(I)st;  // install in new hashtable
     }
    }
@@ -146,7 +146,7 @@ static I jtinstallnl(J jt, A l){
  // hash the locale into the table, which we know has enough room
  I z=AS(nbuf)[0]++;   // get next locale# to allocate, and increment for next time
  I probe=HASHSLOT(z,AN(nbuf));  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
- NOUNROLL while(IAV1(nbuf)[probe]){if(--probe<0)probe=AN(nbuf)-1;}  // find empty slot
+ NOUNROLL while(IAV1(nbuf)[probe]){if(unlikely(--probe<0))probe=AN(nbuf)-1;}  // find empty slot
  IAV1(nbuf)[probe]=(I)l;  // put new locale in the empty slot
  ++AM(nbuf);  // increment number of locales outstanding
  ACINITZAP(l);  // protect new value in table
@@ -157,7 +157,7 @@ static I jtinstallnl(J jt, A l){
 A jtfindnl(J jt, I n){A z=0;
  READLOCK(JT(jt,stlock))
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find match or an empty.
- NOUNROLL while(IAV1(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx==n){z=(A)IAV1(JT(jt,stnum))[probe]; goto exit;} if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // return if locale match; wrap around at beginning of block
+ NOUNROLL while(IAV1(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx==n){z=(A)IAV1(JT(jt,stnum))[probe]; goto exit;} if(unlikely(--probe<0))probe=AN(JT(jt,stnum))-1;}  // return if locale match; wrap around at beginning of block
 exit: ;
  READUNLOCK(JT(jt,stlock))
  R z;  // if no match, return failure
@@ -167,7 +167,7 @@ exit: ;
 void jterasenl(J jt, I n){
  WRITELOCK(JT(jt,stlock))
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find a match or an empty.
- NOUNROLL while(IAV1(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx==n)break; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // wrap around at beginning of block
+ NOUNROLL while(IAV1(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx==n)break; if(unlikely(--probe<0))probe=AN(JT(jt,stnum))-1;}  // wrap around at beginning of block
  // We have found the match, or are at an empty if no match.  Either way, mark the location as empty and scan forward to find the next empty,
  // moving back blocks that might have hashed into the newly vacated spot
  if(IAV1(JT(jt,stnum))[probe])--AM(JT(jt,stnum));  // if we found something to delete, decrement # locales outstanding
@@ -176,7 +176,7 @@ void jterasenl(J jt, I n){
   I lastdel=probe;    // remember where the hole is
   I probehash;   // will hold original hash of probe
   NOUNROLL do{
-   if(--probe<0)probe=AN(JT(jt,stnum))-1;  // back up to next location to inspect
+   if(unlikely(--probe<0))probe=AN(JT(jt,stnum))-1;  // back up to next location to inspect
    if(!IAV1(JT(jt,stnum))[probe])goto exit;  // if we hit another hole, there can be no more values that need copying, we're done  *** RETURN POINT ***
    probehash=HASHSLOT(NAV(LOCNAME((A)IAV1(JT(jt,stnum))[probe]))->bucketx,AN(JT(jt,stnum)));  // see where the probed cell would like to hash
     // If we are not allowed to move the new probe into the hole, because its hash is after the probe position but before-or-equal the hole,

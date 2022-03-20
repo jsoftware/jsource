@@ -112,6 +112,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){
  RZ(z); rifvs(z);  // realize any virtual z
  // We need a write lock since we are modifying the table.  Then look to see if the tables need to be extended
  A ht3=FAV(self)->fgh[2];  // the 3-column hash table
+#if BW==64
  WRITELOCK(ht3->lock);
  while(1){  // until all the tables are OK
   if(AM(AAV0(ht3)[1])==AS(AAV0(ht3)[1])[0]){RZ(jtextendunderlock(jt,&AAV0(ht3)[1],&ht3->lock,0)) continue;}  // extend the key table
@@ -119,6 +120,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){
   if(AM(AAV0(ht3)[0])*2>AN(AAV0(ht3)[0])){RZ(jtextendunderlock(jt,&AAV0(ht3)[0],&ht3->lock,1)) continue;}  // extend the hash table, noting that it is a hash
   break;
  }
+#endif
  // when we get here we have the write lock and all the tables have the needed space.  Insert the result
  A hasht=AAV0(ht3)[0], keys=AAV0(ht3)[1], results=AAV0(ht3)[2];
  I (*v)[2]=(I (*)[2])IAV2(keys); I *hv=IAV0(hasht);   // point to keys and ht3able
@@ -135,7 +137,9 @@ static A jtmemoput(J jt,I x,I y,A self,A z){
  hv[hi]=AM(results)++;                      // have the hash point to new result, incr the # results
  ++AM(keys);                           // incr # keys, in lockstep with results
  ++AM(hasht);   // incr # hash entries
+#if BW==64
  WRITEUNLOCK(ht3->lock); 
+#endif
  R z;
 }
 

@@ -1,4 +1,7 @@
 # READLINE=1
+ifeq (1,${USE_HIPRECS})
+PTHREADINC = -I../../pthreads4w/include
+endif
 ifeq (1,${DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
@@ -6,11 +9,11 @@ endif
 
 ifeq (1,${x64})
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= ${FDEBUG} /DEMU_AVX=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
+CFLAGS= ${PTHREADINC} ${FDEBUG} /DEMU_AVX=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /STACK:0x10000000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
 else
 CF1= -m32 -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= ${FDEBUG} /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
+CFLAGS= ${PTHREADINC} ${FDEBUG} /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /STACK:0x10000000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
 endif
 

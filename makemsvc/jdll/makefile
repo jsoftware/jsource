@@ -29,7 +29,11 @@ FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/s
 endif
 ifeq (1,${USE_HIPRECS})
 PTHREADINC = -I../../pthreads4w/include
+ifeq (1,${x64})
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
+else
+PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
+endif
 endif
 ifeq (1,${DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1

@@ -28,7 +28,7 @@ else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 endif
 ifeq (1,${USE_HIPRECS})
-PTHREADINC = -I../../pthreads4w/include
+PTHREADINC = -I../../pthreads4w/include -DHIPRECS=1
 ifeq (1,${x64})
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
 else

@@ -122,6 +122,13 @@ if [ $USE_EMU_AVX -eq 1 ] ; then
 common="$common -DEMU_AVX=1"
 fi
 
+USE_HIPRECS="${USE_HIPRECS:=0}"
+if [ $USE_HIPRECS -eq 1 ] ; then
+common="$common -DHIPRECS=1"
+else
+common="$common -DHIPRECS=0"
+fi
+
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 common="$common -DREADLINE"
 else

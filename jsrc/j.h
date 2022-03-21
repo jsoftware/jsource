@@ -631,7 +631,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
 #ifndef HIPRECS
-#define HIPRECS (0&&SY_64)   // set to enable hiprecs
+#define HIPRECS 0   // set to enable hiprecs
 #endif
 
 #define ARTIFHIPREC 0

@@ -1,6 +1,6 @@
 # READLINE=1
 !if "1"=="$(USE_HIPRECS)"
-PTHREADINC = -I../../pthreads4w/include
+PTHREADINC = -I../../pthreads4w/include -DHIPRECS=1
 !endif
 !if "1"=="$(DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1

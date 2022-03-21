@@ -122,6 +122,13 @@ if [ $USE_EMU_AVX -eq 1 ] ; then
 common="$common -DEMU_AVX=1"
 fi
 
+USE_PYXES="${USE_PYXES:=0}"
+if [ $USE_PYXES -eq 1 ] ; then
+common="$common -DPYXES=1"
+else
+common="$common -DPYXES=0"
+fi
+
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 common="$common -DREADLINE"
 else

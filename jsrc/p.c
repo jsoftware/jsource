@@ -79,7 +79,7 @@ A x;
  R 1;
 }
 
-#if 0
+#if 0  // obsolete 
 // w is a block that looks ripe for in-place assignment.  We just have to make sure that it is not in use somewhere up the stack.
 // It isn't, if (1) it isn't on the stack at all; (2) if it was put on the stack by the currently-executing sentence.  We call this
 // routine only when we are checking inplacing for final assignments, or for virtual extension.  For final assignment the parser stack is guaranteed to be empty; so any
@@ -182,7 +182,6 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
-// return sets stack[0].t to -1 if this is a final assignment
 // pt0 i the PT code for the left-hand side, pt0 is the PT code for the assigptnment, m is the token number to be assigned next (0 if the next thing is MASK)
 // jt has flag set for final assignment (passed into symbis)
 // The return must be 0 for bad, anything else for good
@@ -445,12 +444,9 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
 // Any assignment to a name is resolved to an address when the copula is encountered and there
 //  is only one execution on the stack.  This resolution will always succeed for a local assignment to a name.
 //  For a global assignment to a locative, it may fail, or may resolve to an address that is different from
-//  the correct address after the execution.  The address of the L block for the symbol to be assigned is stored in jt->asginfo.assignsym.
-//
-// [As a time-saving maneuver, we store jt->asginfo.assignsym even if the name is not in-placeable because of its type or usecount.
-// We can use jt->asginfo.assignsym to avoid re-looking-up the name.]
-//
-// If jt->asginfo.assignsym is set, the (necessarily inplaceable) verb may choose to perform an in-place
+//  the correct address after the execution.  The address of the block that is to be assigned is in jt->zombieval
+/
+// If jt->zombieval is set, the (necessarily inplaceable) verb may choose to perform an in-place
 // operation.  It will check usecounts and addresses to decide whether to do this, and it bears the responsibility
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
@@ -519,8 +515,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 #define PLINESAVEX 20  // 3 bits of pline
 // above #define USEDGLOBALX 21
 // above #define USEDGLOBAL (1LL<<USEDGLOBALX)
-// if ASGNSAFE perfect #define ASSIGNSYMNON0X 28  // set when we have NON0 in jt->assignsym.  Remains set till the corresponding assignment
-// if ASGNSAFE perfect #define ASSIGNSYMNON0 (1LL<<ASSIGNSYMNON0X)
+// obsolete if ASGNSAFE perfect #define ASSIGNSYMNON0X 28  // set when we have NON0 in jt->assignsym.  Remains set till the corresponding assignment
+// obsolete if ASGNSAFE perfect #define ASSIGNSYMNON0 (1LL<<ASSIGNSYMNON0X)
 #define NOTFINALEXECX 17
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define NAMEFLAGSX 17  // 17 and 20
@@ -798,7 +794,7 @@ endname: ;
        pt0ecam|=pmask<<PLINESAVEX;  // lose pline over the subroutine calls to try to prevent a register spill
        pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  This ties up the reg while flags settle, but it's mostly used for predictions
        // If it is an inplaceable assignment to a known name that has a value, remember the name and the value
-       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
+       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombie we are warranting
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        jt->parserstackframe.sf=fs;  // set new recursion point for $:
@@ -811,15 +807,15 @@ endname: ;
           // local assignment.  First check for primary symbol.  We expect this to succeed
           if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
            s=SYMORIGIN+(I)s;  // get address of symbol in primary table.  There may be no value; that's OK
-          }else{s=jtprobeislocal(jt,QCWORD(*(volatile A*)queue));}
-         }else s=probeisquiet(QCWORD(*(volatile A*)queue));  // global assignment, get slot address
-         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
-         // a relocation of the symbol table) is marked as not ASGSAFE
-         jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
-// if ASGNSAFE perfect         pt0ecam|=(s!=0)<<ASSIGNSYMNON0X;  // remember if it's nonzero
+          }else{s=jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms);}
+         }else s=probequiet(QCWORD(*(volatile A*)queue));  // global assignment, get slot address
+// obsolete          // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
+// obsolete          // a relocation of the symbol table) is marked as not ASGSAFE
+// obsolete          jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
+// obsolete if ASGNSAFE perfect         pt0ecam|=(s!=0)<<ASSIGNSYMNON0X;  // remember if it's nonzero
          // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
          // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace
-         s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+ACUC2))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
+         s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+ACUC2))?zval:0; jt->zombieval=zval;  // needs AFRO=1, AFNJA=2
          // These instructions take a while to execute; they will probably be running when the pipeline breaks
          pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
         }
@@ -927,8 +923,6 @@ RECURSIVERESULTSCHECK
        auditmemchains();  // trap here while we still point to the action routine
 #endif
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
-       stack[pmask]=stack[0]; // close up the stack
-       stack=stack+pmask;  // advance stackpointer to position before result 1 2
 #if AUDITEXECRESULTS
        auditblock(jt,yy,1,1);
 #endif
@@ -939,9 +933,11 @@ RECURSIVERESULTSCHECK
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecur(yy);  // force recursive y
-       if(ISFAOWED(arg1)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
-       if(ISFAOWED(arg2)){arg2=CLRFAOWED(arg2);if(unlikely(arg2==yy))yy=SETFAOWED(yy);else fa(arg2);}
-       if(ISFAOWED(arg3)){arg3=CLRFAOWED(arg3);if(unlikely(arg3==yy))yy=SETFAOWED(yy);else fa(arg3);}
+       if(ISFAOWED(arg1=stack[1].a)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+       if(ISFAOWED(arg1=stack[pmask+1].a)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+       if(ISFAOWED(arg3)){arg1=CLRFAOWED(arg3);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+       stack[pmask]=stack[0]; // close up the stack
+       stack=stack+pmask;  // advance stackpointer to position before result 1 2
        PTFROMTYPE(stack[1].pt,AT(yy)) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
       }
      }else{
@@ -961,7 +957,7 @@ RECURSIVERESULTSCHECK
        auditmemchains();
 #endif
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
-// if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
+// obsolete if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        FPZ(rc)  // fail if error
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
@@ -988,9 +984,9 @@ RECURSIVERESULTSCHECK
         RECURSIVERESULTSCHECK
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         ramkrecur(yy);  // force recursive y
-        if(ISFAOWED(arg1)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
-        if(ISFAOWED(arg2)){arg2=CLRFAOWED(arg2);if(unlikely(arg2==yy))yy=SETFAOWED(yy);else fa(arg2);}
-        if(ISFAOWED(arg3)){arg3=CLRFAOWED(arg3);if(unlikely(arg3==yy))yy=SETFAOWED(yy);else fa(arg3);}
+        if(ISFAOWED(arg1=stack[1].a)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else faacv(arg1);}
+        if(ISFAOWED(arg1=stack[2].a)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else faacv(arg1);}
+        if(ISFAOWED(arg1=stack[3].a)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else faacv(arg1);}
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
@@ -1004,9 +1000,9 @@ RECURSIVERESULTSCHECK
         RECURSIVERESULTSCHECK
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         ramkrecur(yy);  // force recursive y
-        if(ISFAOWED(arg1)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
-        if(ISFAOWED(arg2)){arg2=CLRFAOWED(arg2);if(unlikely(arg2==yy))yy=SETFAOWED(yy);else fa(arg2);}
-        if(ISFAOWED(arg3)){arg3=CLRFAOWED(arg3);if(unlikely(arg3==yy))yy=SETFAOWED(yy);else fa(arg3);}
+        if(ISFAOWED(arg1=stack[1].a)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+        if(ISFAOWED(arg1=stack[2].a)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+        if(ISFAOWED(arg3)){arg1=CLRFAOWED(arg3);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
         PTFROMTYPE(stack[trident].pt,AT(yy)) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
        }
@@ -1039,30 +1035,31 @@ RECURSIVERESULTSCHECK
    
   }  // break with stack==0 on error to failparse; main exit is when queue is empty (m<0), to exitparse
 
-  // *** pt0ecam has been repurposed to 1 for final assignment, 0 0therwise
  exitparse:
+  // *** pt0ecam has been repurposed to 1 for final assignment, 0 0therwise
    // Prepare the result
   if(1){  // no error on this branch
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
    // stack[1] is the initial mark (not written out), stack[2] is the result, and stack[3] had better be the first ending mark
+   if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); FP}
+   if(unlikely(&stack[3]!=stackend1)){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); FP}
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error
-   if(unlikely(stack[3].pt!=PTMARK||!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0; stack+=2;  // OK if 0 or 1 CAVN left (0 should not occur).  Skip over leading marks
-   }else{
-    // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x).  The fa must be deferred till after the result has been used.  We turn it into a tpush
-    if(unlikely(ISFAOWED(z))){z=CLRFAOWED(z); tpushna(z);}  // if the result needs a free, do it via tpush
-    stack+=3;  // skip over marks AND the result, which we push   scaf memory leak on tpush failure
-   }
+// obsolete   if(unlikely(stack[3].pt!=PTMARK||!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0; stack+=2;  // OK if 0 or 1 CAVN left (0 should not occur).  Skip over leading marks
+// obsolete   }else{
+   // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x).  The fa must be deferred till after the result has been used.  We turn it into a tpush
+   if(unlikely(ISFAOWED(z))){z=CLRFAOWED(z); tpushna(z);}  // if the result needs a free, do it via tpush
+// obsolete    stack+=3;  // skip over marks AND the result, which we push   scaf memory leak on tpush failure
+// obsolete    }
   }else{
 failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
    // if m=0, the stack contains a virtual mark.  We must step over that so we don't free the garbage mask
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
+   // fa() any blocks left on the stack that have FAOWED
+   for(;stack!=stackend1;++stack)if(ISFAOWED(stack->a)){fa(CLRFAOWED(stack->a))};  // issue deferred fa for items ra()d and not finished
   }
 #if MEMAUDIT&0x2
   audittstack(jt);
 #endif
-
-  // fa() any blocks left on the stack that have FAOWED
-  for(;stack!=stackend1;++stack)if(ISFAOWED(stack->a)){fa(CLRFAOWED(stack->a))};  // issue deferred fa
 
 #if 0  // obsolete
   if(unlikely(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop!=0)){  // if we never put anything on the NVR stack we don't need to free it
@@ -1092,7 +1089,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
      auditmemchains();  // trap here while we still have the parseline
 #endif
 
-  // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2].t) into the return
+  // NOW it is OK to return.  Insert the final-assignment bit (pt0ecam) into the return
   R (A)((I)z+pt0ecam);  // this is the return point from normal parsing
 
  }else{A y;A sv=0;  // m<2.  Happens fairly often, and full parse can be omitted

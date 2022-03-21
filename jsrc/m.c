@@ -636,7 +636,7 @@ A jtincorp(J jt, A w) {ARGCHK1(w); INCORP(w); R w;}
 // offset is offset in atoms from start of w; r is rank
 // result block is never inplaceable, recursible, virtual.  Can return 0 if allocation error
 // result is PRISTINE iff the backer is
-// This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->asginfo.assignsym
+// This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->zombieval
 // We fill in everything but AN and AS, which are done in the caller
 // You should be wary of making an NJA block virtual, because with a usecount of 1 it might be inplaced by the code for x,y or x u}y
 // If this code is called with inplacing turned on (* w inplaceable), we assume that w is going to be replaced by the virtual result,
@@ -822,7 +822,7 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
    if((np=QCWORD(np))!=0){ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
-     // a hiprec is always recursive; we can increment the hiprec's usecount here but we will never go to the contents
+     // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
   if(np=QCWORD(np)){ra(np);}  // handle last one

@@ -8,25 +8,25 @@
 // burn some time
 static NOINLINE I delay(I n){I johnson=0x1234; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson;}
 
-#if ARTIFHIPREC
-// w is a block that will become the contents of a box.  Put it inside a hiprec and return the address of the hiprec.
+#if ARTIFPYX
+// w is a block that will become the contents of a box.  Put it inside a pyx and return the address of the pyx.
 // aflag is the boxing flag of the block the result is going to go into.  w has been prepared for that type
 A jtartiffut(J jt,A w,I aflag){A z;
- GAT0(z,BOX,1,0); AFLAG(z)|=BOX; AAV0(z)[0]=w; AT(z)|=HIPREC; if(aflag&BOX){ra(z);}else{ACIPNO(z); ra(w);}  // just one of z/w must be adjusted to the recursion environment
+ GAT0(z,BOX,1,0); AFLAG(z)|=BOX; AAV0(z)[0]=w; AT(z)|=PYX; if(aflag&BOX){ra(z);}else{ACIPNO(z); ra(w);}  // just one of z/w must be adjusted to the recursion environment
  R z;
 }
 #endif
-#if HIPRECS
+#if PYXES
 
 typedef struct condmutex{
  pthread_cond_t cond;
  pthread_mutex_t mutex;
 } WAITBLOK;
 
-// w is a A holding a hiprecs value.  Return its value when it has been resolved
+// w is an A holding a pyx value.  Return its value when it has been resolved
 A jthipval(J jt,A w){
- // read the hiprecs value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
- // that if we read nonzero the hiprec has been resolved, even without an acquire barrier
+ // read the pyx value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
+ // that if we read nonzero the pyx has been resolved, even without an acquire barrier
  A res=AAV0(w)[0];  // fetch the possible value
  while(res==0){  // repeat till defined, in case we get spurious wakeups
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
@@ -34,7 +34,7 @@ A jthipval(J jt,A w){
   if((res=__atomic_load_n(&AAV0(w)[0],__ATOMIC_ACQUIRE)==0)pthread_cond_wait(&((WAITBLOK*)&AAV0(pyx)[1])->cond,&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
   pthread_mutex_unlock(&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
  }
- // res now contains the certified value of the hiprec.
+ // res now contains the certified value of the pyx.
  ASSERT(((I)res&-256)!=0,(I)res)   // if error, return the error code
  R res;  // otherwise return the resolved value
 }

@@ -143,10 +143,7 @@ struct AD {
  } kchain;
  FLAGT flag;
  union {
-  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for any non-NJA value that has ever been assigned to a name, AM holds NVR information.
-        // Bit 0 is set to indicate that AM has NVR data (all result values start with AM pointing to tstack with bit 0 clear); bit 1 is set if a free for the value has
-        // been deferred and must be applied when the NVR count goes to 0; bits 2 and up are the NVR count, i. e. the number of times the value is on the NVR stack
-        // Bit 0 is set to initiate this use when a value is assigned to a name for the first time (and NVR count is set to 0 then)
+  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) obsolete NVR info, available for named values except xy in xdefn
         // (3) for SYMB tables for explicit definitions, the address of the calling symbol table; for other SYMB tables,
         // a Bloom filter of the hashes assigned in the locale (using the low bits of the hash) (4) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
@@ -220,7 +217,7 @@ typedef I SI;
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
 #define AR(x)           ((x)->r)        /* Rank                            */
-#if HIPRECS
+#if PYXES
 #define ARINIT(x,v)     {*(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */ \
     *(I4*)&(x)->origin=THREADID(jt);}   // save the originating thread and clear the lock to 0
 #else
@@ -326,18 +323,18 @@ typedef I SI;
 #define RATX 7
 #define RAT             ((I)1L<<RATX)         /* Q  rational number              */
 #define RATSIZE sizeof(Q)
-#define HIPRECX 8
-#define HIPREC          ((I)1L<<HIPRECX)  // if BOX set, this flag is set if the value is a hiprec.  A hiprec is an atomic box (which may be an element of an array).
-                                          // Task creation returns an atomic box (which is NOT a hiprec) that CONTAINS a hiprec.  A hiprec itself never becomes a result or argument, because
-                                          // the value of a hiprec may not be accessed except through C(hiprec), which will return the address of the contents.  The address of the hiprec (an A block)
-                                          // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that hiprecs MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
+#define PYXX 8
+#define PYX          ((I)1L<<PYXX)  // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
+                                          // Task creation returns an atomic box (which is NOT a pyx) that CONTAINS a pyx.  A pyx itself never becomes a result or argument, because
+                                          // the value of a pyx may not be accessed except through C(pyx), which will return the address of the contents.  The address of the pyx (an A block)
+                                          // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that pyxes MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
                                           // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
-                                          // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the hiprec,  requires C(hiprec).
-                                          // If the address of the hiprec is being copied into another block, there is no need for C().  In particular, the hiprec may be ra()'d if it is put into a recursive block.
-                                          // ra() on a hiprec will affect the usecount of the hiprec itself but NOT of the contents, because a hiprec is always marked recursive.
-                                          // The AN of the 'atomic' hiprec is initialized to 0, and AAV[0] is also 0.  When the hiprec is resolved, the address of the
+                                          // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the pyx,  requires C(pyx).
+                                          // If the address of the pyx is being copied into another block, there is no need for C().  In particular, the pyx may be ra()'d if it is put into a recursive block.
+                                          // ra() on a pyx will affect the usecount of the pyx itself but NOT of the contents, because a pyx is always marked recursive.
+                                          // The AN of the 'atomic' pyx is initialized to 0, and AAV[0] is also 0.  When the pyx is resolved, the address of the
                                           // result A block/error code is stored into AAV[0], and if there is no error, AN is set to 1.
-                                          // When a hiprec is created, ownership is transferred to the enclosing box via zap.  It is also active in the creating task.
+                                          // When a pyx is created, ownership is transferred to the enclosing box via zap.  It is also active in the creating task.
 // Bit 9 unused
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */
@@ -486,6 +483,7 @@ typedef I SI;
 #define STYPE(t)        ((t)|SPARSE)
 #define DTYPE(t)        ((t)&~SPARSE)
 
+#if 0  // obsolete
 // flags in AM
 #define AMNVX 0   // set if the value has been assigned to a name is used for NVR status
 #define AMNV ((I)1<<AMNVX)
@@ -495,6 +493,7 @@ typedef I SI;
 #define AMIMMUT ((I)1<<AMIMMUTX)
 #define AMNVRCTX 3  // start of NVR count: the number of times this value is on the NVR stack
 #define AMNVRCT ((I)1<<AMNVRCTX)
+#endif
 
 // Flags in the count field of type A
 #define ACINPLACEX      (BW-1)
@@ -537,7 +536,7 @@ typedef I SI;
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(AC(w)<=ACUC2))  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
+#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->zombieval==w&&((s)<0)&&(AC(w)<=ACUC2))  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
@@ -549,7 +548,7 @@ typedef I SI;
 #define EXTENDINPLACENJA(a,w) \
   ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
     ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
-      (jt->asginfo.zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&1)>(UI)jt->asginfo.zombieval) /* asg-in-place or virt extension.  Remember if virt extension  */ \
+      (jt->zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&1)>(UI)jt->zombieval) /* asg-in-place or virt extension.  Remember if virt extension  */ \
         /* virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value is stacked only once */ \
         /* we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized */ \
     )  /* OK to inplace assignment/virtual */ \
@@ -764,7 +763,7 @@ typedef struct {I e,p;X x;} DX;
 
 // Macros to incr/decr execct of a locale
 #define EXECCTNOTDELD 0x1000000   // This bit is set when a locale is created, and removed when the user asks to delete it.  Lower bits are the exec count.  The locale is half-deleted when exec ct goes to 0
-#if HIPRECS
+#if PYXES
 #define INCREXECCT(l) __atomic_fetch_add(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL);
 #define DECREXECCT(l) if(__atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0)locdestroy(l);
 #define DELEXECCT(l) if(__atomic_and_fetch(&LXAV0(l)[SYMLEXECCT],~EXECCTNOTDELD,__ATOMIC_ACQ_REL)==0)locdestroy(l);

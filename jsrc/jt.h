@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #endif
 
-#if HIPRECS
+#if PYXES
 #include <pthread.h>
 #endif
 
@@ -94,10 +94,12 @@ typedef struct rngdata {
  UC jerr;             // error number (0 means no error)      clear for task
  UC jerr1;            // last non-zero jerr  clear for task
  C namecaching;     // 1=for script 2=on  clear for task
- struct ASGINFO {
-  L *assignsym;       // symbol-table entry for the symbol about to be assigned
-  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and not read-only
- } asginfo;   // clear for task
+// obsolete  struct ASGINFO {
+// obsolete   L *assignsym;       // symbol-table entry for the symbol about to be assigned
+ A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
+            // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval onlt to compare
+            // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
+// obsolete  } asginfo;   // clear for task
 // end of cacheline 0
 // At task startup, the entry parameters are stored here, at ((I*)jt)[8..11]
  A xmod;             // extended integer: the m in m&|@f clear for task
@@ -108,7 +110,7 @@ typedef struct rngdata {
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
 // obsolete  S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task to ?
-// obsolete  S ntasks;     // number of hiprecs allowed, 0 if none init for task to ?
+// obsolete  S ntasks;     // number of pyxes allowed, 0 if none init for task to ?
 // obsolete  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
 // **************************************  end of initialized part
 
@@ -116,7 +118,7 @@ typedef struct rngdata {
  LX symfreeroot;   // symbol # of head of local free-symbol queue (0=end)
  UI cstackinit;       // C stack pointer at beginning of execution
  UI cstackmin;        // red warning for C stack pointer
- A filler1[1];
+ A filler1[2];
 // end of cacheline 1
 
 

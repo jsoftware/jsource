@@ -345,7 +345,7 @@
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
-#define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
+// obsolete #define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){if(tt&RECURSIBLE&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT;/*scaf*/jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 
@@ -827,7 +827,7 @@
 #define probeis(x,y)                jtprobeis(jt,(x),(y))
 #define probeisres(x,y)             jtprobeisres(jt,(x),(y))
 #define probeislocal(x)             jtprobeislocal(jt,(x))
-#define probeisquiet(x)             jtprobeisquiet(jt,(x))
+#define probequiet(x)             jtprobequiet(jt,(x))
 #define probelocal(x,y)             jtprobelocal(jt,(x),(y))
 #define probenum(x,y)               jtprobenum(jt,(x),(y))  
 #define prod(x,y)                   jtprod(jt,(x),(y))

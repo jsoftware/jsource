@@ -102,7 +102,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow
    // pristinity of lower results; thus we may not relax the rule that all contents must be non-inplaceable
    ACIPNO(x);  // can't ever have inplaceable contents
-#if 0  // not clear this is worth doing,  and must check for hiprecs
+#if 0  // not clear this is worth doing,  and must check for pyxes
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
     // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
@@ -302,7 +302,7 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
   // Must be the gerund form.  Extract v and remember which argument it will apply to
   ASSERT((AR(w)^1)+(AN(w)^2)==0,EVDOMAIN);  // must be 2-element list
   ASSERT((AN(AAV(w)[0])==0) | (AN(AAV(w)[1])==0),EVDOMAIN);  // one must be empty
-  gside=AN(AAV(w)[0])==0;  // the index to the argument v will act on (or -1 if not gerund).  Can't be a hiprec
+  gside=AN(AAV(w)[0])==0;  // the index to the argument v will act on (or -1 if not gerund).  Can't be a pyx
   wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
  }
  ASSERTVV(a,wvb); v=FAV(wvb);  // v is V* for w

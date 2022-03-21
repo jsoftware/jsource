@@ -580,19 +580,15 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
  R 1;
 }    /* check for changes to stack */
 
-// find symbol entry for name a in global symbol table g; this is known to be global assignment
+// find symbol entry for name a in global symbol table g; this is known to be in service of global assignment
 // the name a may require lookup through the path; once we find the locale, we search only in it
 // Result is &symbol-table entry for the name, or a new one
-// We are called for purposes of setting assignsym for inplace assignments.  The symbol we create will eventually be assigned
-// except when the locale is changed by the verb being called.  That is exceedingly rare.  When it happens, the symbol entry created
-// here will persist until the locale is deleted (it has a name and no value).  Normally the symbol created here will be the target
-// of its assignment - possibly only eventually after execution of a verb - and it will be used then.  We go ahead and create the
-// symbol rather than failing the lookup because it does save a lookup in the eventual call to symbis.
-L* jtprobeisquiet(J jt,A a){A g;
+// We are called for purposes of setting zombieval for inplace assignments.  We do not create the symbol because multiple threads may assign a name
+L* jtprobequiet(J jt,A a){A g;
  I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
  else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
- SYMRESERVE(1) WRITELOCK(g->lock) L *res=probeis(a, g); WRITEUNLOCK(g->lock)   // return pointer to slot, creating one if not found
+ READLOCK(g->lock) L *res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g); READUNLOCK(g->lock)   // return pointer to slot, creating one if not found
  R res;
 }
 
@@ -600,14 +596,14 @@ static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent val
 // assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
 // Result points to the symbol-table block for the assignment
 // flags set if jt: bit 0=this is a final assignment;
-//  we tried using bit 1=jt->asginfo.assignsym is nonzero, use it; it saves a few cycles testing e, but it seemed risky if ASGNSAFE failed
+// obsolete //  we tried using bit 1=jt->asginfo.assignsym is nonzero, use it; it saves a few cycles testing e, but it seemed risky if ASGNSAFE failed
 // if g is marked as having local symbols, we assume that it is equal to jt->locsyms (especially in subroutines)
-L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
+L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  ARGCHK2(a,w);
  I anmf=NAV(a)->flag; RZ(g)  // fetch flags for the name
 // obsolete  A jtlocal=jt->locsyms, 
 // obsolete  A jtglobal=jt->global;  // current public symbol table
- e = jt->asginfo.assignsym; // set e if assignsym
+// obsolete  e = jt->asginfo.assignsym; // set e if assignsym
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately assignsym doesn't give us the symbol table
@@ -619,15 +615,16 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  // g has the locale we are writing to
  anmf=AR(g);  // get rank-flags for the locale g
 // obsolete if ASGNSAFE perfect  if(unlikely(!((I)jtinplace&JTASSIGNSYMNON0))){++scafnoe;
- if(unlikely(e==0)){
-  // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
-  // the name was invalid anyway and is subject to having the value removed
+ L *e;  // the symbol we will use
+// obsolete  if(unlikely(e==0)){
+ // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
+ // the name was invalid anyway and is subject to having the value removed
 // obsolete   if(g==jt->locsyms)e=probeislocal(a); else{SYMRESERVE(1) WRITELOCK(g->lock) e=probeis(a, g); WRITEUNLOCK(g->lock)}
-  if((anmf&ARLOCALTABLE)!=0)e=probeislocal(a); else{SYMRESERVE(1) WRITELOCK(g->lock) e=probeis(a, g); WRITEUNLOCK(g->lock)}
-  RZ(e)
+ if((anmf&ARLOCALTABLE)!=0)e=probeislocal(a); else{SYMRESERVE(1) WRITELOCK(g->lock) e=probeis(a, g); WRITEUNLOCK(g->lock)}
+ RZ(e)
 // obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
- }
+// obsolete  }
 
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
  if(unlikely(e->flag&(LCACHED|LREADONLY))){  // exception cases

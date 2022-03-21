@@ -281,7 +281,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // End of unusual processing
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
 
-  // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
+  // zombieval should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
   // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest
   // in preventing it - still not a full fix, since invalid inplacing may have been done already
   CLEARZOMBIE
@@ -314,7 +314,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     // not abandoned; but it could be VIRTUAL and even UNINCORPABLE!  We know that those blocks have valid usecounts inited to 1, so if we
     // keep the usecount right the block will never be freed except when it goes out of scope in the originator
     ra(w);  // not abandoned: raise the block.  No need for AFKNOWNNAMED since usecount will preclude virtual extension
-    if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
+// obsolete     if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
    }
    ybuckptr->val=w; ybuckptr->valtype=ATYPETOVALTYPE(AT(w)); ybuckptr->sn=jt->currslistx;  // finish the assignment
   }
@@ -324,7 +324,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
-   }else{ra(a); if((likely(!(AFLAG(a)&AFVIRTUAL+AFNJA)))){AMNVRCINI(a)}}
+   }else{ra(a);}
+// obsolete  if((likely(!(AFLAG(a)&AFVIRTUAL+AFNJA)))){AMNVRCINI(a)}
    xbuckptr->val=a; xbuckptr->valtype=ATYPETOVALTYPE(AT(a)); xbuckptr->sn=jt->currslistx;
   }
   // Do the other assignments, which occur less frequently, with symbis
@@ -389,7 +390,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
       if(thisframe->dcredef&&(siparent=thisframe->dclnk)&&siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){A *hv;
        self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];  // LINE sets pointers for subsequent line lookups
        // Clear all local bucket info in the definition, since it doesn't match the symbol table now
-       // This will affect the current definition and all hiprec executions of this definition.  We allow it because
+       // This will affect the current definition and all pyx executions of this definition.  We allow it because
        // it's for debug only.  The symbol table itself persists
        DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
       }

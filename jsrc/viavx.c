@@ -93,8 +93,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 
   // Cost of allocating on the left comes
   // (1) now, as we use (asct*currenthi) units of index space
-  // (2) in the hiprec, as all hiprec allocations on the right lose index space,
-  // in the amount of (new left index end-right index end-hiprec asct)*(width-currenthi).  We estimate hiprec values to equal current ones.
+  // (2) in the future, as all pyx allocations on the right lose index space,
+  // in the amount of (new left index end-right index end-pyx asct)*(width-currenthi).  We estimate future values to equal current ones.
   // (3) now, if we have to clear the invalid area (1 store per word cleared)
   // BUT: if the cleared invalid area covers the entire p, we use asct rather than left-index+asct for calculating the other costs
   // The cost of a unit of index space is 1 store per (width*maxindex)/(asct*p) index-space unit, with asct and p rounded up if large;

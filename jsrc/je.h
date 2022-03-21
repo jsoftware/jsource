@@ -644,7 +644,7 @@ extern A        jtamne(J,A,A,A,B);
 extern A        jtamnsp(J,A,A,A,B);
 extern A        jtapv(J,I,I,I);
 extern A        jtapvwr(J,I,I,I);
-#if ARTIFHIPREC
+#if ARTIFPYX
 extern A        jtartiffut(J,A,I);
 #endif
 extern A        jtascan(J,C,A);
@@ -795,7 +795,7 @@ extern L*       jtprobedel(J,C*,UI4,A);
 extern L*       jtprobeis(J, A, A);
 extern L*       jtprobeisres(J, A, A);
 extern L*       jtprobeislocal(J,A);
-extern L*       jtprobeisquiet(J, A);
+extern L*       jtprobequiet(J, A);
 extern L*       jtprobelocal(J,A,A);
 extern L*       probelocalbuckets(L*,A,LX,I);
 extern I        jtprod(J, I, I*);
@@ -949,7 +949,7 @@ extern void     va1primsetup(A);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
 extern D        xdouble(X);
-#if HIPRECS
+#if PYXES
 extern void     readlock(S*,S);
 extern void     writelock(S*,S);
 #endif

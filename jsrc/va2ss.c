@@ -41,9 +41,10 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  z=0; I ac=AC(a); I wc=AC(w);
  // see if we can inplace an assignment.  That is always a good idea, though rare
- if(unlikely(((B)(a==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX)))&(B)1)+((B)(w==jt->asginfo.zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))&(B)1))){
-  if(likely((((AFLAG(jt->asginfo.zombieval)>>AFUNINCORPABLEX) | (AM(jt->asginfo.zombieval)&SGNTO0((AMNVRCT-1)-AM(jt->asginfo.zombieval))))&1))==0){
-   z=jt->asginfo.zombieval; if(likely((RANKT)ipcaserank==AR(z)))goto getzv;
+ if(unlikely(((B)(a==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX))))+((B)(w==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))))){
+// obsolete   if(likely((((AFLAG(jt->zombieval)>>AFUNINCORPABLEX) | (AM(jt->zombieval)&SGNTO0((AMNVRCT-1)-AM(jt->zombieval))))&1))==0){
+  if(likely(!(AFLAG(jt->zombieval)&AFVIRTUAL+AFUNINCORPABLE))){
+   z=jt->zombieval; if(likely((RANKT)ipcaserank==AR(z)))goto getzv;
   }
  }
  // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be

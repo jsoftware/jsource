@@ -622,7 +622,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MAXTHREADS 1  // maximum number of threads
 
-#define MAXTASKS 1  // maximum number of hiprecs running at once (others will suspend)
+#define MAXTASKS 1  // maximum number of tasks running at once
 #define MAXTASKSRND 4  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
@@ -630,10 +630,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
-#define HIPRECS (0&&SY_64)   // set to enable hiprecs
-#define ARTIFHIPREC 0
-#if ARTIFHIPREC&&HIPRECS
-#define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create hiprec results from <, force-box, and sometimes ;
+#define PYXES (0&&SY_64)   // set to enable pyxes
+#define ARTIFPYX 0
+#if ARTIFPYX&&PYXES
+#define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create pyx results from <, force-box, and sometimes ;
 #else
 #define HIPIFARTIF(w,f) (w)
 #endif
@@ -731,8 +731,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
-#if HIPRECS
-#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&HIPREC))if(unlikely((res=jthipval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
+#if PYXES
+#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely((res=jthipval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #define READLOCK(lock) { if(unlikely(__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL)<0))readlock(&lock); }
 #define WRITELOCK(lock)  { S prev; if(prev=__atomic_fetch_or(alock,(S)0x8000,__ATOMIC_ACQ_REL)!=0)writelock(&lock,prev); }
 #define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // bits 0-14 belong to read
@@ -1665,9 +1665,9 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
-#define CLEARZOMBIE     {jt->asginfo=(struct ASGINFO){0,0};}  // Used when we know there shouldn't be an assignsym, just in case
-#define PUSHZOMB struct ASGINFO savasginfo = jt->asginfo; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
-#define POPZOMB {jt->asginfo=savasginfo;}
+#define CLEARZOMBIE     {jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
+#define PUSHZOMB A savasginfo = jt->zombieval; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
+#define POPZOMB {jt->zombieval=savasginfo;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
 #define R0 {if(!jt->jerr)SEGFAULT; R 0;}

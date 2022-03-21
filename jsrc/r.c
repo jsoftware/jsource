@@ -82,7 +82,7 @@ static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
  R box(w);  // If top level, we have to make sure (<,'&')`  doesn't replace the left part with bare &
 }
 
-// Convert an AR to an A block.  w is a gerund that has been opened.  If it originally came from a verb it can't be a hiprec, but it may contain hiprecs
+// Convert an AR to an A block.  w is a gerund that has been opened.  If it originally came from a verb it can't be a pyx, but it may contain pyxes
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
 DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ARGCHK1(w);

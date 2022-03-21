@@ -278,7 +278,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I nblkscreated=zzboxp-AAV(zz);
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
-    // final resting place.  They can't be hiprecs
+    // final resting place.  They can't be pyxes
     // get the size of each item
     I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
     // allocate result area (could be inplace; but the waste of memory in sort/from is more important)

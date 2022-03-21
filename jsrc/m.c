@@ -516,7 +516,7 @@ void audittstack(J jt){F1PREFIP;
 #if BW==64 && MEMAUDIT&2
  if(JT(jt,audittstackdisabled)&1)R;
  A *ttop;
- A *nvrav=AAV1(jt->nvra);
+// obsolete A *nvrav=AAV1(jt->nvra);
  // verify counts start clear
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain
@@ -526,8 +526,8 @@ void audittstack(J jt){F1PREFIP;
   // back up to previous block
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
- // Process the NVR stack as well
- DO(jt->parserstackframe.nvrtop, auditsimverify0(jt,nvrav[i]);)
+// obsolete  // Process the NVR stack as well
+// obsolete  DO(jt->parserstackframe.nvrtop, auditsimverify0(jt,nvrav[i]);)
  // loop through each block of stack
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -535,9 +535,9 @@ void audittstack(J jt){F1PREFIP;
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
- // simulate nvr-stack frees
- DO(jt->parserstackframe.nvrtop, if((AM(nvrav[i])-=AMNVRCT)==AMFREED){auditsimdelete(jt,nvrav[i]);})
- DO(jt->parserstackframe.nvrtop, AM(nvrav[i])+=AMNVRCT;)  // restore AMs
+// obsolete  // simulate nvr-stack frees
+// obsolete  DO(jt->parserstackframe.nvrtop, if((AM(nvrav[i])-=AMNVRCT)==AMFREED){auditsimdelete(jt,nvrav[i]);})
+// obsolete  DO(jt->parserstackframe.nvrtop, AM(nvrav[i])+=AMNVRCT;)  // restore AMs
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -545,7 +545,7 @@ void audittstack(J jt){F1PREFIP;
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
- DO(jt->parserstackframe.nvrtop, auditsimreset(jt,nvrav[i]);)
+// obsolete  DO(jt->parserstackframe.nvrtop, auditsimreset(jt,nvrav[i]);)
 #endif
 }
 
@@ -740,7 +740,7 @@ A jtgc(J jt,A w,A* old){
    // advisedly and we do not delete the backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
    // (backer count is now <2)
    I bc=AC(b); bc=bc>2?2:bc;  // backer count before tpop.  We will delete backer if value goes down, to a value less than 2.  
-   ACINCRLOCAL(w);  // protect w from being freed.  Its usecount may be >1
+   ACINCRLOCAL(w);  // protect w from being freed.  Its usecount may be >1.  Local because no other task can see our virtual
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
    // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.

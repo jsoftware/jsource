@@ -98,9 +98,11 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
 #if SY_64
 // obsolete #define HIC(x,y)  ((UI)x+10495464745870458733U*(UI)y)
 #define INITHASH(tbl,x,y) ((((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UI)AN(tbl))>>32)  // starting hash index for a given x,y
+#define LOCKLOC ht3->lock
 #else
 // obsolete #define HIC(x,y)  ((UI)x+2838338383U*(UI)y)
 #define INITHASH(tbl,x,y) (((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UIL)AN(tbl))>>32;  // starting hash index for a given x,y
+#define LOCKLOC jt->etxn1  // any address will do, since locks are NOPs in 32-bit
 #endif
 
 // self->h is the hash block, a 3-element box that never moves, allocated at rank 0.  We lock on the h block
@@ -112,11 +114,11 @@ static A jtmemoput(J jt,I x,I y,A self,A z){
  RZ(z); rifvs(z);  // realize any virtual z
  // We need a write lock since we are modifying the table.  Then look to see if the tables need to be extended
  A ht3=FAV(self)->fgh[2];  // the 3-column hash table
- WRITELOCK(ht3->lock);
- while(1){  // until all the tables are OK
-  if(AM(AAV0(ht3)[1])==AS(AAV0(ht3)[1])[0]){RZ(jtextendunderlock(jt,&AAV0(ht3)[1],&ht3->lock,0)) continue;}  // extend the key table
-  if(AM(AAV0(ht3)[2])==AN(AAV0(ht3)[2])){RZ(jtextendunderlock(jt,&AAV0(ht3)[2],&ht3->lock,0)) continue;}  // extend the result table
-  if(AM(AAV0(ht3)[0])*2>AN(AAV0(ht3)[0])){RZ(jtextendunderlock(jt,&AAV0(ht3)[0],&ht3->lock,1)) continue;}  // extend the hash table, noting that it is a hash
+ WRITELOCK(LOCKLOC);
+ while(1){  // until all the tables are OK.  If a line fails, it has released the lock
+  if(AM(AAV0(ht3)[1])==AS(AAV0(ht3)[1])[0]){RZ(jtextendunderlock(jt,&AAV0(ht3)[1],&LOCKLOC,0)) continue;}  // extend the key table
+  if(AM(AAV0(ht3)[2])==AN(AAV0(ht3)[2])){RZ(jtextendunderlock(jt,&AAV0(ht3)[2],&LOCKLOC,0)) continue;}  // extend the result table
+  if(AM(AAV0(ht3)[0])*2>AN(AAV0(ht3)[0])){RZ(jtextendunderlock(jt,&AAV0(ht3)[0],&LOCKLOC,1)) continue;}  // extend the hash table, noting that it is a hash
   break;
  }
  // when we get here we have the write lock and all the tables have the needed space.  Insert the result
@@ -135,7 +137,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){
  hv[hi]=AM(results)++;                      // have the hash point to new result, incr the # results
  ++AM(keys);                           // incr # keys, in lockstep with results
  ++AM(hasht);   // incr # hash entries
- WRITEUNLOCK(ht3->lock); 
+ WRITEUNLOCK(LOCKLOC); 
  R z;
 }
 
@@ -144,11 +146,11 @@ static A jtmemoput(J jt,I x,I y,A self,A z){
 static A jtmemoget(J jt,I x,I y,A self){A z=0;  // init to not found
  // Take a read lock on the table
  A ht3=FAV(self)->fgh[2];  // the 3-column hash table
- READLOCK(ht3->lock);
+ READLOCK(LOCKLOC);
  A hasht=AAV0(ht3)[0], keys=AAV0(ht3)[1], results=AAV0(ht3)[2];
  I (*v)[2]=(I (*)[2])IAV2(keys); I *hv=IAV0(hasht);   // point to keys and hashtable
  I hi=INITHASH(hasht,x,y); while(hv[hi]>=0){if(((v[hv[hi]][0]^y)|(v[hv[hi]][1]^x))==0){z=AAV0(results)[hv[hi]]; break;} if(unlikely(--hi<0))hi+=AN(hasht);}           // init search, exiting when key found
- READUNLOCK(ht3->lock);
+ READUNLOCK(LOCKLOC);
  R z;  // return match if found, 0 if not
 }
 

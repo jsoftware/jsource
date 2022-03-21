@@ -548,7 +548,6 @@ val1 -: y
 (100 ?@$ 100) (? 100 4 $ 6 7 8 9)test1 i. 6 7 8 9 
 
 
-
 'index error' -:  0 (i. 6)} etx 0
 
 (0 1 (2 3)} i. 6 2) -: (i. 2 2)  ({.@[)`({:@[)`]} i. 6 2  NB. Someday this might result in virtual m}
@@ -749,6 +748,9 @@ x =: "
 'domain error' -: ex '([`(5!:1<''x'')`])}'
 'domain error' -: ex '([`]`(5!:1<''x''))}'
 
+NB. Verify values out of execution are still inplaceable
+a =: i. 1e6
+IGNOREIFFVI 10000 > 7!:2 'a =: (#a) 0} a'
 
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'

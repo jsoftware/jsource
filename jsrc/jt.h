@@ -134,14 +134,14 @@ typedef struct rngdata {
  I4 fcalln;           /* named fn calls: maximum permissible depth     */
  A curname;          // current name, an A block containing an NM
 // end of cacheline 3
- A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
+// obsolete  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
  C fillv0len;   // length of fill installed in fillv0
 // 7 bytes free
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the pthread_cond_t we are waiting on
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
  I malloctotal;    // net total of malloc/free performed in m.c only
-
+ I filler4[1];
  PFRAME parserstackframe;  // 4 words  
 // end of cacheline 4
 

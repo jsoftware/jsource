@@ -327,10 +327,9 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  // the argument a is marked inplaceable.  Usecount of <1 is inplaceable, and for memory-mapped nouns, 2 is also OK since
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has assignsym set, will inplace only the last append
- // This is 'loose' inplacing, which doesn't scruple about globals appearing on the stack elsewhere
  // Allow only DIRECT and BOX types, to simplify usecounting
  if((I)jtinplace&JTINPLACEA){
-  I virtreqd=0;  // the inplacing test sets this if the result must be virtual
+  UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   I at=AT(a), ar=AR(a), wr=AR(w), aflag=AFLAG(a), ac=AC(a), an=AN(a);  // unchanging values
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
   // would push a over a power-of-2 boundary, skip  the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)

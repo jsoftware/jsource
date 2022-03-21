@@ -243,7 +243,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
 fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond usecount of 0
    if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
    A locfound=syrdforlocale(y);  // get the locale in which the name is defined - must exist
-
+#if 0  // obsolete 
    if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){I am,nam;  // If the AM field is not under name semantics, just go free the name immediately.  Virtuals cannot be on the NVR stack
     // it is still possible that the value is LABANDONED, if it has never been reassigned.  We are about to delete it, so it is safe to switch to NVR semantics
     AMNVRCINI(v->val);  // establish NCR semantics in AM field.  If this block is LABANDONED it MUST go away when the sentence ends
@@ -261,6 +261,7 @@ fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond use
      ras(v->val);
     }
    }
+#endif
    L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(v->name)->m),NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
              // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name
   }

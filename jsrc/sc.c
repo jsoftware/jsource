@@ -39,7 +39,7 @@ valgone: ;
    if(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
     if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
-    }else{ACINCRLOCALPOS(stabent->val);  // incr usecount to match what syrd1 does
+    }else{ASSERT(AT(stabent->val)&FUNC,EVDOMAIN); raposacv(stabent->val);  // incr usecount to match what syrd1 does.  
     }
    }else{  // locative or u./v.
     if(likely(!(NAV(thisname)->flag&NMIMPLOC))){  // locative
@@ -49,7 +49,7 @@ valgone: ;
      if(stabent = probelocal(thisname,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
-      ACINCRLOCALPOS(stabent->val);  // incr usecount to match what syrd1 does
+      ASSERT(AT(stabent->val)&FUNC,EVDOMAIN); raposacv(stabent->val);  // incr usecount to match what syrd1 does
      }
     }
    }
@@ -407,7 +407,7 @@ printf("Stacking CHANGE at %d\n",jt->callstacknext) ; // scaf
  }
  // ************** errors OK now
 exitfa:
-if(unlikely(!(flgd0cp&3))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); /* scaf */ fa(fs);}}  // unra the name if it was looked up from the symbol tables
+if(likely(!(flgd0cp&3))){faacv(fs);}  // unra the name if it was looked up from the symbol tables
 R z;
 }
 
@@ -415,12 +415,12 @@ R z;
 // The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
 static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
 
-// return ref to adv/conj/verb whose name is a and whose symbol-table entry is w
+// return ref to adv/conj/verb whose name is a and whose symbol-table entry is sym
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
 // and return that; the name will be resolved when the name~ is executed.
 // If the name is undefined, return a reference to [: (a verb that always fails)
-A jtnamerefacv(J jt, A a, L* w){A y;V*v;
- y=w?w->val:ds(CCAP);  // If there is a slot, get the value; if not, treat as [: (verb that creates error)
+A jtnamerefacv(J jt, A a, L* sym){A y;V*v;
+ y=sym?sym->val:ds(CCAP);  // If there is a slot, get the value; if not, treat as [: (verb that creates error)
  if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
  // This reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference

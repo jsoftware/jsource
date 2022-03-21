@@ -346,9 +346,12 @@
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 #define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
-#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
+#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){if(tt&RECURSIBLE&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT;/*scaf*/jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
-#define fa(x) fajt(jt,(x))
+
+#define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
+#define falikely(x) fa(x)  // when the block will usually be deleted
+#define faacv(x) fa(x)  // block is known to be ACV
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x),)
 // Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.
@@ -727,7 +730,7 @@
 #define norm(x)                     jtnorm(jt,(x))  
 #define not(x)                      jtnot(jt,(x))
 #define notW(x)                     jtnot((J)((I)jt|JTINPLACEW),(x))
-#define notonupperstack(x)          jtnotonupperstack(jt,(x))
+// obsolete #define notonupperstack(x)          jtnotonupperstack(jt,(x))
 #define nub(x)                      jtnub(jt,(x))     
 #define nubi(x)                     jtnubi(jt,(x))     
 #define nubsieve(x)                 jtnubsieve(jt,(x))
@@ -856,9 +859,14 @@
 #define ra00(x,tt)                  rarecur(x,tt,tt,,)  // tt is all that needs to be tested
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
-// ra() DOES NOT realize a virtual block; use it in places where virtual blocks are not possible.  ras() does include rifv
-#define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; \
-                                    radescend(x,)}
+// ra() DOES NOT realize a virtual block.  ras() does include rifv
+#define ra(x)   {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}
+// In the following pos means the block is known to be assigned already, thus usecount>0, but not necessarily recursive usecount (if y in xdefn); acv means known non-noun; gbl means global name (always recursive usecount)
+#define rapos(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}
+#define raposlocal(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}   // name in local table, does not need atomic operation if AC=1
+#define raposacv(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1;}  // must be recursive usecount
+#define raposgbl(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(ISSPARSE(AT(x))))jtra((x),(AT(x)));}  // must be recursive usecount but may be sparse
+
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
 #define raczap(x,cond,falsestart)   {I c=AC(x); if(likely(cond)){*AZAPLOC(x)=0; c&=~ACINPLACE;}else{falsestart c+=(c>>(BW-2))^1;} AC(x)=c; \

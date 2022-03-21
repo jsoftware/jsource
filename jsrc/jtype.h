@@ -439,6 +439,9 @@ typedef I SI;
 // Don't traverse for ra/fa unless one of these bits is set
 #define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB|SPARSE)
 // Allow recursive usecount in one of these types
+// A recursive block is flagged by having the recursible type bit copied into the AFLAG.  But note: the block is not recursible unless the same bit is set in both
+// the type and the flag, where something like (0$a:) + 0$0 might reuse an argument block and leave the flags showing boxed when the type is B01.  scaf should fix this?
+// We know that any block that has been ra()d is recursive, and therefore that fa() can assume recursibility for any recursible type
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB)  // sparse box not allowed
 // SYMB is TRAVERSIBLE so that fa() will call to free the symbols, and RECURSIBLE so that fanapop will pass the type-flag.  To ensure that a SYMB is always freed when
 // its count goes to 0, we must ensure that it is always born recursive
@@ -514,12 +517,14 @@ typedef I SI;
 #define ACINCRLOCALPOSSP(a) {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
 #define ACDECRLOCAL(a)   ACSUBLOCAL(a,1)
 #define ACIPNO(a)       ACAND(a,~ACINPLACE)
-#define ACADD(a,n)      ACADDLOCAL(a,n)
-#define ACSUB(a,n)      ACSUBLOCAL(a,n)
 #define ACINCR(a)       ACADD(a,1)
+#if 0  // obsolete
+#define ACSUB(a,n)      ACSUBLOCAL(a,n)
 #define ACINCRPOS(a)    if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1)
 #define ACINCRPOSSP(a)  {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
 #define ACDECR(a)       ACSUB(a,1)
+#endif
+#define ACADD(a,n)      ACADDLOCAL(a,n)
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define ACSET(a,v)      AC(a)=(v);  // used when a might be shared, but atomic not needed
@@ -531,15 +536,25 @@ typedef I SI;
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
+#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(AC(w)<=ACUC2))  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
-  ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
-    (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && /* asg-in-place or virt extension */ \
-    (virtreqd||!(AM(a)&(-(AM(a)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* name not already on stack (not required for virt extension) */ \
-  )  // OK to inplace ordinary operation
+// obsolete #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
+// obsolete   ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
+// obsolete     (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && /* asg-in-place or virt extension */ \
+// obsolete     (virtreqd||!(AM(a)&(-(AM(a)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* name not already on stack (not required for virt extension) */ \
+// obsolete   )  // OK to inplace ordinary operation
+#define EXTENDINPLACENJA(a,w) \
+  ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
+    ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
+      (jt->asginfo.zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&1)>(UI)jt->asginfo.zombieval) /* asg-in-place or virt extension.  Remember if virt extension  */ \
+        /* virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value is stacked only once */ \
+        /* we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized */ \
+    )  /* OK to inplace assignment/virtual */ \
+  )
+// obsolete    &&  (virtreqd||AC(a)<=ACUC2) )   /* name not already on stack (not required for virt extension) */
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
@@ -551,12 +566,15 @@ typedef I SI;
 #define AFDEBUGRESULTX  2           // special flag for values that alter debug state
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 // Note: bit 4 is LABANDONED which is merged here
-// Note: bits 8-9 are used to hold AM flags merged in symbis
+// obsolete // Note: bits 8-9 are used to hold AM flags merged in symbis
 #define AFNVRFLAGX      8
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX MARKX     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
-#define AFVIRTUALX      C2TX      // matches C2TX
+#define AFUNINCORPABLEX SBTX      // matches SBTX 16
+#define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
+                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
+#define AFVIRTUALX      C2TX      // matches C2TX 17
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
@@ -571,9 +589,11 @@ typedef I SI;
                                  // UNINCORPORABLE blocks created by partitioning modifers to track cells may be inplaceable, and a virtual block whose backer
                                  // has been abandoned may be marked inplaceable as well.
                                  // NOTE: AFVIRTUALX must be higher than any RECURSIBLENOUN type (for test in result.h)
-#define AFUNINCORPABLEX SBTX      // matches SBTX
-#define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
-                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
+#define AFKNOWNNAMEDX   C4TX      // matches C4TX 18
+#define AFKNOWNNAMED    ((I)1<<AFKNOWNNAMEDX)      // set (often) in a value when the value is assigned to a name.  It is possible that the name will be deleted, in which case the flag will be cleared
+                                  // even if the value is assigned to another name.  The purpose is to allow virtual extension: if you know that a value is assigned to a name, then only one
+                                  // thread can encounter the value with AC=2, and that is safe for virtual extension
+
 #define AFVIRTUALBOXEDX XDX   // matches XDX
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
 #define AFPRISTINEX      ASGNX  // matches ASGN - must be above all DIRECT flags
@@ -1147,22 +1167,23 @@ typedef struct {DX re;DX im;} ZX;
 // parser stack - should be a qword for fast copying
 typedef struct {
   // Because the parse decode looks mostly at pt, make that the first thing so that it is always aligned to the beginning
-  // of whatever block is usd to copy one stack element to another.
+  // of whatever block is used to copy one stack element to another.
  UI4 pt;  // parser type: code for one of the 9 variants recognized.
  S filler;
  US t;  // token number for this block - 16 bits of token.  After assignment, set to -1 if final assignment
  A a;  // pointer to block
 } PSTK;
 
-// stack frame used by the parser
+// stack frame used by the parser.  There are two stacks in a stack block: the normal execution stack
+// which grows down from stkend1; an error-info stack that grows up from stkbgn.  stkbgn[-1] has the error info.
  typedef struct{
   PSTK* parserstkbgn;     // &start of parser stack
   PSTK* parserstkend1;    // &end+1 of parser stack
   A    sf;   // $: stack in the parser (other users of $: have their own stacks)
-  US   filler;
   US   parsercurrtok;   // the token number of the word to flag if there is an error
-  US  nvrtop;           /* top of nvr stack; # valid entries               */
-  US  nvrotop;          // previous top of nvr stack
+  US   filler[3];
+ // obsolete US  nvrtop;           /* top of nvr stack; # valid entries               */
+ // obsolete   US  nvrotop;          // previous top of nvr stack
  } PFRAME;  // these are stacked en bloc
 
 typedef struct {

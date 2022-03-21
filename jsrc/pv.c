@@ -182,7 +182,7 @@ static TACT(jtvmove){A t;TA*u,x,z;
 /* b. replaces n0"_ v1 v2 by n0 v1 v2                  */
 /* c. replaces [: g ] by g, if monad                   */
 
-#define ASGRCOMMON(w,x,s,test) ({A val=(s); test if(AFLAG(w)&RECURSIBLE){if(val)ra(val); if(FAV(w)->fgh[x]!=0&&!(AFLAG(FAV(w)->fgh[x])&AFRO)&&!(AC(FAV(w)->fgh[x])&ACPERMANENT)){ACDECR(FAV(w)->fgh[x]);} } FAV(w)->fgh[x]=val; FAV(w)->fgh[x];})
+#define ASGRCOMMON(w,x,s,test) ({A val=(s); test if(AFLAG(w)&RECURSIBLE){if(val)ra(val); if(FAV(w)->fgh[x]!=0){A t=FAV(w)->fgh[x]; FAV(w)->fgh[x]=0; fa(t);} } FAV(w)->fgh[x]=val; FAV(w)->fgh[x];})  // t for audits
 #define ASGR(w,x,s) ASGRCOMMON(w,x,s,RZ(val))
 #define ASGRZ(w,x,s) ASGRCOMMON(w,x,s,)  // no error
 

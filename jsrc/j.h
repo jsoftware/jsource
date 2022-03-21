@@ -604,7 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00    // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00 // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -1748,8 +1748,9 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define SYMGLOBALROOT SYMORIGIN[0].next   // the root of the shared free-symbol chain
 #define SYMRESERVE(n) if(unlikely(SYMNEXT(SYMLOCALROOT)==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(SYMLOCALROOT)].next)==0)))RZ(jtreservesym(jt,n))   // called outside of lock to make sure n symbols are available for assignment
 // fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1.
-// Implies that AM must not be modified when abandoned block is assigned to x/y
-#define SYMVALFA(l) if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AC((l).val)|=ACINPLACE&(AC((l).val)-2);}else{A v=(l).val; fa(v);}
+// Implies that AM must not be modified when abandoned block is assigned to x/y.
+// Clear KNOWNNAMED since we are removing the value from a name
+#define SYMVALFA(l) {A v=(l).val; if(v){AFLAGAND(v,~AFKNOWNNAMED); if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; ACOR(v,ACINPLACE&(AC(v)-2));}else{fa(v);}}}
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

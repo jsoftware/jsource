@@ -216,13 +216,13 @@ for_y234. y123 do.
  echo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
-  ex02 y234
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
-  ex02 y234
+  0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
@@ -252,13 +252,13 @@ while. x123~:0 do.
   echo RLAST=: >y234
   save_ran=:9!:44''
   Debug=: 0
-  ex02 y234
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
   Debug=: 1
-  ex02 y234
+  0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
@@ -288,13 +288,13 @@ for_y234. y123{~?~#y123 do.
  echo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
-  ex02 y234
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
-  ex02 y234
+  0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
@@ -321,13 +321,13 @@ assert. 0=(;:'x y oldnl') e. nl''
 oldnl=: nl''
 while. x123~:0 do.
  Debug=: 0
- ex02<testpath,y123,'.ijs'
+ 0!:2<testpath,y123,'.ijs'
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
  assert. (<'base')-:18!:5''
  assert. ((;:'oldnl')-.~nl'') -: oldnl
  Debug=: 1
- ex02<testpath,y123,'.ijs'
+ 0!:2<testpath,y123,'.ijs'
  Debug=: 0
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'

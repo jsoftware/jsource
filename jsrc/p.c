@@ -53,6 +53,7 @@ end.
 (10) 6!:2 'namelkp i. 1e6'
 
 */
+#if 0  // obsolete
 /* NVR - named value reference                                          */
 /* a value referenced in the parser which is the value of a name        */
 /* (that is, in some symbol table).                                     */
@@ -66,15 +67,19 @@ end.
 /*                                                                      */
 // The nvr stack contains pointers to values, added as names are moved
 // from the queue to the stack.  Local values are not pushed.
-
-B jtparseinit(JS jjt, I nthreads){A x;
+#endif
+B jtparseinit(JS jjt, I nthreads){
+#if 0  // obsolete 
+A x;
  I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
   GAT0(x,INT,20,1); ACINIT(x,ACUC1) jt->nvra=x;   // Initial stack.  Size is doubled as needed
   // ras not required because this is called during initialization 
  }
+#endif
  R 1;
 }
 
+#if 0
 // w is a block that looks ripe for in-place assignment.  We just have to make sure that it is not in use somewhere up the stack.
 // It isn't, if (1) it isn't on the stack at all; (2) if it was put on the stack by the currently-executing sentence.  We call this
 // routine only when we are checking inplacing for final assignments, or for virtual extension.  For final assignment the parser stack is guaranteed to be empty; so any
@@ -90,6 +95,7 @@ I jtnotonupperstack(J jt, A w) {
  // not stacked here, so not reassignable here.  see if name was not stacked at all - that would be OK
  R !(AM(w)&(-(AM(w)&AMNV)<<1));   // return OK if name not using NV semantics or stackcount=0 (rare, since why did we think is might be inplacable?)
 }
+#endif
 
 
 #define AVN   (     ADV+VERB+NOUN)
@@ -344,13 +350,19 @@ static A virthook(J jtip, A f, A g){
 #define jthook virthook
 #endif
 
-// name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush or NVR free
+// name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush
+// result is the value, possibly with FAOWED set
 #define USEDGLOBALX 21
 #define USEDGLOBAL (1LL<<USEDGLOBALX)
+#define FAOWED 1  // when this bit is set in an address in stack,a, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution
+#define SETFAOWED(w) (A)((I)(w)|FAOWED)
+#define CLRFAOWED(w) (A)((I)(w)&~FAOWED)
+#define ISFAOWED(w) ((I)(w)&FAOWED)  // is fa() required?
 static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
- if(((I)jtinplace&JTFROMEXEC))R sv;
+ if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(sv);   // in "., we can't do this (scaf why?), so indic that we need to fa
+ A locfound=jt->locsyms; if(unlikely((pt0ecam&USEDGLOBAL)!=0))locfound=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
+#if 0  // obsolete
  LX *locbuckets=LXAV0(jt->locsyms); L *sympv=SYMORIGIN;
- A fndst=UNLXAV0(locbuckets); if(unlikely((pt0ecam&USEDGLOBAL)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
  LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  LX nextsymx=*asymx;  // symbol number pointed to by asymx, possibly w/permanent indicator
  while(sympv+SYMNEXT(nextsymx)!=s){asymx=&(sympv+SYMNEXT(nextsymx))->next; nextsymx=*asymx;}
@@ -360,6 +372,16 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
   s->val=0; s->valtype=0; // remove the value ref, but don't touch the value itself
   if(likely(!SYMNEXTISPERM(nextsymx))){*asymx=s->next; fa(s->name); s->name=0; s->flag=0; s->sn=0; s->next=SYMLOCALROOT; SYMLOCALROOT=nextsymx;}
  }
+#endif
+ L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(s->name)->m),NAV(s->name)->s,NAV(s->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
+             // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name   scaf move to under lock
+ // The name has been deleted.  The value is still protected by the fa() made in syrd.
+ if(likely(!ISSPARSE(AT(sv))))if(likely(AC(sv)==ACUC1)){
+  // The usecount has gone down to 1 (including the fa from syrd), the block can become inplaceable again.  We have to give it a valid zaploc in case anyone wants to use it.
+  // In this case the tpush undoes the ra() from syrd and we do not set FAOWED
+  ACSET(sv,ACINPLACE+ACUC1); AZAPLOC(sv)=jt->tnextpushp; tpushna(sv); R sv;
+ }
+#if 0  // obsolete
  // the name is deleted, leaving the value.  Make the value inplaceable if there are no refs out against it.  If it is a local variable we think any outstanding
  // inplaceable refs will last till the end of the sentence, where we tpop the value
  if(likely((AM(sv)&-AMNVRCT)==0)){
@@ -373,11 +395,14 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
   if(AM(sv)&AMFREED){fa(sv)}else{AMNVROR(sv,AMFREED)}
  }
  R sv;  // always return sv to help register allocation.  Any error comes from tpush, where it is fatal
+#endif
+ R SETFAOWED(sv);
 }
 
 #define FP goto failparse;   // indicate parse failure and exit
 #define EP(x) {pt0ecam=(x); goto exitparse;}   // exit parser with success; x = 1 if final assignment
-#define FPZ(x) if(unlikely(!(x))){FP}   // exit parser w/failure if x==0
+#define FPZSUFF(x,suff) if(unlikely(!(x))){suff FP}   // exit parser w/failure if x==0, doing suff on the way out
+#define FPZ(x) FPZSUFF(x,)   // exit parser w/failure if x==0
 
 #if 0  // keep for commentary
 // An in-place operation requires an inplaceable argument, which is marked as AC<0,
@@ -429,9 +454,11 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
 // operation.  It will check usecounts and addresses to decide whether to do this, and it bears the responsibility
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
+
+#if 0 // obsolete
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
 L* NOINLINE jtextnvr(J jt,L *s){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra?s:0;}
-
+#endif
 #if 0  // for this to work we would have to rearrange the stack AFTER execution
 // Given that we took an error executing the block starting at jt->parserstackframe.parserstkend1, figure out what the error-token number should be
 I infererrtok(J jt){
@@ -464,6 +491,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
  // never look at a stack location until we have moved from the queue to that position.
  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
+ // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each execution
  // The stack grows down
  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current stack entry
  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
@@ -529,8 +557,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
   y=*(volatile A*)queue;  // unroll y once
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
-  stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
-  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.
+  PSTK *stackend1=stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
+// obsolete   jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.
 
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
@@ -582,11 +610,13 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
        s=sympv+(I)symx;  // get address of symbol in primary table
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        pt0ecam|=s->valtype<<VALTYPEX;  // save the type
+       raposlocal(s->val);  // ra() the value to match syrd
       }else if(likely(buck!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic name
        if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        if((s=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
        if(unlikely(s->valtype==0)){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // if value has not been assigned, ignore it.
        pt0ecam|=s->valtype<<VALTYPEX;  // save the type
+       raposlocal(s->val);  // ra() the value to match syrd
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
 rdglob: ;  // here when we tried the buckets and failed
@@ -595,11 +625,14 @@ rdglob: ;  // here when we tried the buckets and failed
         // Note: this cannot be a NAMEABANDON, because such a name is never stacked where it can have the cachedref filled in
         A cachead=NAV(y)->cachedref; // use the cached address
         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((sympv[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
-        y=cachead; tx=ATYPETOVALTYPE(AT(y)); goto endname; // take its type, proceed
+        y=cachead; tx=ATYPETOVALTYPE(AT(y)); goto endname; // take its type, proceed.  We skip the FAOWED issues
        }
        jt->parserstackframe.parsercurrtok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
        s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
    // y must not be referenced after this call
+       if(likely(s!=0)){pt0ecam|=USEDGLOBAL; pt0ecam|=s->valtype<<VALTYPEX;}else goto undefname;  // if symbol found, save the type & remember it was global; otherwise the name was undefined
+            // Note: USEDGLOBAL is used only for name:: processing; in that case the bucket info is always defined & thus any match here must be global
+#if 0  // obsolete 
         // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
         // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the global value of the base pointer
         // Stack a named value only once.  This is needed only for names whose VALUE is put onto the stack (i. e. a noun); if we stack a REFERENCE
@@ -638,11 +671,14 @@ fa(s->val); // scaf
         }else goto undefname;  // no val
        }else goto undefname;  // no sym
        pt0ecam|=USEDGLOBAL;  // indicate that the symbol was not in the local table
+#endif
       }
-
-      // end of looking at local/global symbol tables
-      // s has the symbol for the name.  pt0ecam&USEDGLOBAL is set if the name was found in a global table.  The type from valtype is in spare bits of GETSTACK0PT
+      // end of looking at local/global symbol tables.
+      // s has the symbol for the name/value.  pt0ecam&USEDGLOBAL is set if the name was found in a global table.  The type from valtype is in spare bits of GETSTACK0PT.
       // since we have called subroutines, we don't use sympv, refetching it instead
+      //
+      // ra() has been issued for the value.  If we don't undo that, we must set FAOWED in y to indicate that fact.  The value will stay protected until
+      // the execution that uses this y has completed and the result has been made recursive, so that we know the input value has been RA()d if it has been used
       if(likely(1)){
        // The name is defined.  If it's a noun, use its value (the common & fast case)
        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
@@ -651,19 +687,20 @@ fa(s->val); // scaf
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
        if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|(QCNOUN<<VALTYPEX))){   // use value if noun or special name, or name::
-        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){y=namecoco(jtinplace, QCWORD(*(volatile A*)queue), pt0ecam, s);}  // if name::, go delete the name, leaving the value to be deleted later
-        else y=s->val;
+        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){FPZSUFF(y=namecoco(jtinplace, QCWORD(*(volatile A*)queue), pt0ecam, s), fa(s->val);)}  // if name::, go delete the name, leaving the value to be deleted later
+        else y=SETFAOWED(s->val);
         tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
        }else if(unlikely((pt0ecam&VALTYPE)==(VALTYPENAMELESSADV<<VALTYPEX))){
-        // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
-        A origy=QCWORD(*(volatile A*)queue);  // refetch y
+        // nameless modifier, and not a locative.  This handles 'each'.  Don't create a reference; maybe cache the value
+        A origy=QCWORD(*(volatile A*)queue);  // refetch y so we can look at its flags
         if(NAV(origy)->flag&NMCACHED){
          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
          NAV(origy)->cachedref=(A)(s-SYMORIGIN); NAV(origy)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(origy)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
-        y=s->val; tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
+        y=SETFAOWED(s->val); tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
         y = namerefacv(QCWORD(*(volatile A*)queue), s);   // Replace other acv with reference
+        fa(s->val);  // the reference uses only the name.  we must release the value
         FPZ(y)
         tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
        }
@@ -734,7 +771,7 @@ endname: ;
     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
     
     if(pmask){  // If all 0, nothing is dispatchable, go push next word
-     A fs=fsa->a;  // the action to be executed if lines 0-4
+     A fs=CLRFAOWED(fsa->a);  // the action to be executed if lines 0-4
      pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after the result of this exec.   Wait till we know not fail, so we don't have to wait for (
      jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
@@ -769,7 +806,7 @@ endname: ;
         // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
         // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
          // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
-        if(pt0ecam&VASGSAFE&&(!(pt0ecam&(2<<PLINESAVEX))||FAVV(stack[1].a)->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
+        if(pt0ecam&VASGSAFE&&(!(pt0ecam&(2<<PLINESAVEX))||FAVV(CLRFAOWED(stack[1].a))->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
          if(likely(GETSTACK0PT&PTASGNLOCAL)){
           // local assignment.  First check for primary symbol.  We expect this to succeed
           if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
@@ -781,8 +818,8 @@ endname: ;
          jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
 // if ASGNSAFE perfect         pt0ecam|=(s!=0)<<ASSIGNSYMNON0X;  // remember if it's nonzero
          // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
-         // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
-         s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
+         // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace
+         s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+ACUC2))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
          // These instructions take a while to execute; they will probably be running when the pipeline breaks
          pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
         }
@@ -793,38 +830,39 @@ endname: ;
        AF actionfn=FAVV(fs)->valencefns[pmask>>2];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
        A arg2=stack[(pmask>>1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        A arg1=stack[(pmask&3)+1].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
-       stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
-       stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
-       stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
-       // When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
+       // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
        // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
        // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
        // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
        // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
+       // (2) If either arg is FAOWED, it can't be inplaceable & we use tpop[aw] to hold the FAOWED arg, flagged as FAOWED.  We must not duplicate an arg in this case
        // This calculation should run to completion while the expected misprediction is being processed
-       A *tpopw=AZAPLOC(arg2); tpopw=(A*)((I)tpopw&REPSGN(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  // point to pointer to arg2 (if it is inplace) - only if dyad
-       A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0;  // monad: w fs  dyad: a w   if monad, change to w w  
+       A *tpopw=AZAPLOC(CLRFAOWED(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(CLRFAOWED(arg2))&((AFLAG(CLRFAOWED(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=(I)arg2&(pmask>>2)?(A*)arg2:tpopw;
+              // point to pointer to arg2 (if it is inplace) - only if dyad
+       A *tpopa=AZAPLOC(CLRFAOWED(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(CLRFAOWED(arg1))&((AFLAG(CLRFAOWED(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISFAOWED(arg1)?(A*)arg1:tpopa;
+              // tpopa/tpopw are:  monad: w fs  dyad: a w
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
-       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pmask>>2)))&((pmask>>1)|1))),arg1,arg2,fs);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
+       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pmask>>2)))&((pmask>>1)|1))),CLRFAOWED(arg1),CLRFAOWED(arg2),fs);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
          // could use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  But when we don't break we lose time waiting for jt->fs to settle
        // expect pipeline break
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
 #endif
-       FPZ(y);  // fail parse if error
+       FPZ(y);  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
 #if AUDITEXECRESULTS
        auditblock(jt,y,1,1);
 #endif
 #if MEMAUDIT&0x2
        if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
-       audittstack(jt);
 #endif
-       stack[1+((pt0ecam>>(PLINESAVEX+1))&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
+       pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecur(y);  // force recursive y
-       // free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
+       // (1) if any of args/fs is FAOWED, the value is now out of execution and can be fa()d.  BUT if the value is y, it remains in execution and we inherit the
+       // FAOWED status into y (but only once per value).  This is mutually exclusive with
+       // (2) free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
        // We free them right here, and zap their tpop entry to avoid an extra free later.
        // We free using fanapop, which recurs only on recursive blocks, because that's what the tpop we are replacing does
        // We can free all DIRECT blocks, and PRISTINE also.  We mustn't free non-PRISTINE boxes because the contents are at large
@@ -832,23 +870,32 @@ RECURSIVERESULTSCHECK
        // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc BEFORE the call
-       {
-       if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
+       // first the w arg
+       if(ISFAOWED(tpopw)){arg1=CLRFAOWED(tpopw); tpopw=tpopa; if(unlikely(arg1==y))y=SETFAOWED(y);else fa(arg1);}
+       else if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
         I c=(UI)AC(arg1)>>(arg1==y);  // get inplaceability; set off if the arg is the result
         if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
          *tpopw=0; tpopw=tpopa; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
         }else tpopw=tpopa;
        }else tpopw=tpopa;
-       if(arg1=*tpopw){  // if arg1==arg2 this will never load a value requiring action
+       // repeat for a if any
+       if(ISFAOWED(tpopw)){arg1=CLRFAOWED(tpopw); if(unlikely(arg1==y))y=SETFAOWED(y);else fa(arg1);}
+       else if(arg1=*tpopw){  // if arg1==arg2 this will never load a value requiring action
         I c=(UI)AC(arg1)>>(arg1==y);   // can remove y here, see above
         if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
          *tpopw=0; fanapop(arg1,AFLAG(arg1));
         }
        }
+       // repeat for fs
+       if(ISFAOWED(arg1=stack[2-(pmask&1)].a)){fa(CLRFAOWED(arg1));}   // 1 2 2
+       // close up the stack and store the result
+       stack[3-(pmask&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
+       stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
+       stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
+       stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
 #if MEMAUDIT&0x2
        audittstack(jt);
 #endif
-       }
        y=NEXTY;  // refetch next-word to save regs
 
        // Handle early exits: AVN on line (0)12 or (not LPAR on line 02 and finalexec).
@@ -871,16 +918,17 @@ RECURSIVERESULTSCHECK
        AF actionfn=FAVV(fs)->valencefns[pmask-1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
        A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
+       A arg3=stack[2].a; arg3=pmask&2?arg3:0;  // fs, if this is a conjunction, for FAOWED testing
        UI4 restok=stack[1].t;  // save token # to use for result
-       stack[pmask]=stack[0]; // close up the stack
-       stack=stack+pmask;  // advance stackpointer to position before result 1 2
-       A yy=(*actionfn)(jt,arg1,arg2,fs);
+       A yy=(*actionfn)(jt,CLRFAOWED(arg1),CLRFAOWED(arg2),fs);
        y=NEXTY;  // refetch next-word to save regs
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
 #endif
-       FPZ(yy);  // fail parse if error
+       FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
+       stack[pmask]=stack[0]; // close up the stack
+       stack=stack+pmask;  // advance stackpointer to position before result 1 2
 #if AUDITEXECRESULTS
        auditblock(jt,yy,1,1);
 #endif
@@ -891,6 +939,9 @@ RECURSIVERESULTSCHECK
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecur(yy);  // force recursive y
+       if(ISFAOWED(arg1)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+       if(ISFAOWED(arg2)){arg2=CLRFAOWED(arg2);if(unlikely(arg2==yy))yy=SETFAOWED(yy);else fa(arg2);}
+       if(ISFAOWED(arg3)){arg3=CLRFAOWED(arg3);if(unlikely(arg3==yy))yy=SETFAOWED(yy);else fa(arg3);}
        PTFROMTYPE(stack[1].pt,AT(yy)) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
       }
      }else{
@@ -904,12 +955,16 @@ RECURSIVERESULTSCHECK
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
 // obsolete symtab=unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(SYMLINFOSIZE-AN(jt->locsyms)))>=0)?;}   // =: used, or symbol table is the short one, meaning 'no symbols': use global table
        L *rc;
-       if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
-       else rc=(L*)jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),stack[0].a,stack[2].a,symtab);
+       if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),CLRFAOWED(stack[0].a),CLRFAOWED(stack[2].a),symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
+       else rc=(L*)jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),CLRFAOWED(stack[0].a),CLRFAOWED(stack[2].a),symtab);
+#if MEMAUDIT&0x10
+       auditmemchains();
+#endif
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
 // if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        FPZ(rc)  // fail if error
+       // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
        if(likely((US)pt0ecam==0))EP(1)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
        stack+=2;  // if we have to keep going, advance stack to the assigned value
        // here we are dealing with the uncommon case of non-final assignment.
@@ -925,26 +980,33 @@ RECURSIVERESULTSCHECK
        break;  // go pull the next word(s)
       }else{
        if(pmask&0b100000){
-        A yy=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
+        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
+        A yy=folk(CLRFAOWED(arg1),CLRFAOWED(arg2),CLRFAOWED(arg3));  // create the fork
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
         //  so that it is safe to remove its protection
         y=NEXTY;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
-        FPZ(yy);  // if error, return 0 stackpointer
+        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         ramkrecur(yy);  // force recursive y
+        if(ISFAOWED(arg1)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+        if(ISFAOWED(arg2)){arg2=CLRFAOWED(arg2);if(unlikely(arg2==yy))yy=SETFAOWED(yy);else fa(arg2);}
+        if(ISFAOWED(arg3)){arg3=CLRFAOWED(arg3);if(unlikely(arg3==yy))yy=SETFAOWED(yy);else fa(arg3);}
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
         // hook and non-fork tridents
-        A h=stack[3].a;
-        I trident=PTISCAVN(stack[3].pt)?3:2; h=PTISCAVN(stack[3].pt)?h:mark;  // beginning of stack after execution; a is invalid in end-of-stack
-        A yy=hook(stack[1].a,stack[2].a,h);  // create the hook
+        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
+        I trident=PTISCAVN(stack[3].pt)?3:2; arg3=PTISCAVN(stack[3].pt)?arg3:mark;  // beginning of stack after execution; a is invalid in end-of-stack
+        A yy=hook(CLRFAOWED(arg1),CLRFAOWED(arg2),CLRFAOWED(arg3));  // create the hook
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
         //  so that it is safe to remove its protection
         y=NEXTY;  // refetch next-word to save regs
         RECURSIVERESULTSCHECK
-        FPZ(yy);  // if error, return 0 stackpointer
+        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         ramkrecur(yy);  // force recursive y
+        if(ISFAOWED(arg1)){arg1=CLRFAOWED(arg1);if(unlikely(arg1==yy))yy=SETFAOWED(yy);else fa(arg1);}
+        if(ISFAOWED(arg2)){arg2=CLRFAOWED(arg2);if(unlikely(arg2==yy))yy=SETFAOWED(yy);else fa(arg2);}
+        if(ISFAOWED(arg3)){arg3=CLRFAOWED(arg3);if(unlikely(arg3==yy))yy=SETFAOWED(yy);else fa(arg3);}
         PTFROMTYPE(stack[trident].pt,AT(yy)) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
        }
@@ -956,7 +1018,7 @@ RECURSIVERESULTSCHECK
       if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
 #endif
 #if MEMAUDIT&0x2
-      if((AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1)))SEGFAULT; 
+      if((US)pt0ecam!=0 && (AC(CLRFAOWED(stack[0].a))==0 || (AC(CLRFAOWED(stack[0].a))<0 && AC(CLRFAOWED(stack[0].a))!=ACINPLACE+ACUC1)))SEGFAULT; 
       audittstack(jt);
 #endif
      }  // end of classifying fragment
@@ -982,17 +1044,27 @@ RECURSIVERESULTSCHECK
    // Prepare the result
   if(1){  // no error on this branch
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
-   // stack[1] is the initial mark (not necessarily written out), stack[2] is the result, and stack[3] had better be the first ending mark
+   // stack[1] is the initial mark (not written out), stack[2] is the result, and stack[3] had better be the first ending mark
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error
-   if(unlikely(stack[3].pt!=PTMARK||!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 CAVN left (0 should not occur)
+   if(unlikely(stack[3].pt!=PTMARK||!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0; stack+=2;  // OK if 0 or 1 CAVN left (0 should not occur).  Skip over leading marks
+   }else{
+    // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x).  The fa must be deferred till after the result has been used.  We turn it into a tpush
+    if(unlikely(ISFAOWED(z))){z=CLRFAOWED(z); tpushna(z);}  // if the result needs a free, do it via tpush
+    stack+=3;  // skip over marks AND the result, which we push   scaf memory leak on tpush failure
+   }
   }else{
 failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
-   CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
+   // if m=0, the stack contains a virtual mark.  We must step over that so we don't free the garbage mask
+   stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
   }
 #if MEMAUDIT&0x2
   audittstack(jt);
 #endif
 
+  // fa() any blocks left on the stack that have FAOWED
+  for(;stack!=stackend1;++stack)if(ISFAOWED(stack->a)){fa(CLRFAOWED(stack->a))};  // issue deferred fa
+
+#if 0  // obsolete
   if(unlikely(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop!=0)){  // if we never put anything on the NVR stack we don't need to free it
    // Now that the sentence has completed, take care of some cleanup.  Names that were reassigned after
    // their value was moved onto the stack had the decrementing of the use count deferred: we decrement
@@ -1009,6 +1081,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
     ++v;);   // schedule deferred frees.
      // na so that we don't audit, since audit will relook at this NVR stack
   }
+#endif
 
   // Still can't return till frame-stack popped
   jt->parserstackframe = oframe;
@@ -1032,7 +1105,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
    if((at&NAME)!=0) {L *s;  // pointer to value block for the name
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
-     if(likely((sv=s->val)!=0)){ACINCRLOCALPOSSP(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd
+     if(likely((sv=s->val)!=0)){rapos(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd
     }
     if(likely((s=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it
      RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
@@ -1040,8 +1113,8 @@ got1val:;
      if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
       if(unlikely(at&NAMEABANDON)){
        sv=namecoco(jtinplace, y, (syrdforlocale(y)!=jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
-      }
-      y=sv;
+       y=CLRFAOWED(sv); sv=(A)ISFAOWED(sv);  // coco will set FAOWED if it didn't fa() the value; transfer that to sv
+      }else y=sv;  // not name::, just use the value
      } else {y = namerefacv(y, s); fa(sv); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
     } else {
      // undefined name.

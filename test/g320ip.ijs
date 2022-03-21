@@ -317,21 +317,27 @@ a =: i. 1e6
 f10=:{{ _5 {. a , 6 }}
 999996 999997 999998 999999 6 -: f10 a
 a =: i. 1e6
-1e6 -: # ([ f10) a
+1e6 -: # ([ f10@5) a
+20000 > 7!:2 'f10 5 [ a'
+NB. asgn-in-place still allowed if name has been taken off the stack
+a =: i. 1e6
+f10=:{{ _5 {. a =: a , 6 }}
+999996 999997 999998 999999 6 -: f10 a
+a =: i. 1e6
+1e6 -: # ([ f10@5) a
 20000 > 7!:2 'f10 5 [ a'
 NB. asgn-in-place not allowed if name is on the stack
 a =: i. 1e6
 f10=:{{ _5 {. a =: a , 6 }}
 999996 999997 999998 999999 6 -: f10 a
 a =: i. 1e6
-1e6 -: # ([ f10) a
-20000 < 7!:2 'f10 5 [ a'
-
+1e6 -: # ([ f10@5) a
+20000 < 7!:2 '([ f10@5) a'
 
 NB. Verify forms for indexing
 a =: i. 1e6
 10000 > 7!:2 '3 : ''a =: }:@:(,&8) a'''  NB. must be in an explicit to inplace
-5000 > 7!:2 '1 2 3 _1 { a , 7'
+NB. no virtual extension 5000 > 7!:2 '1 2 3 _1 { a , 7'
 1 2 3 7 -: 1 2 3 _1 { a , 7
 
 NB. Verify no local-to-global aliasing
@@ -560,19 +566,19 @@ IGNOREIFFVI 4000 < 7!:2 'a =: (, {.@unsafename) a'
 NB. singleton hook
 a =: 10+1
 aad =: 15!:14 <'a'
-a =: a + 4
-aad2=:15!:14 <'a'  NB. On NVR stack, so not inplaceable
-aad ~: aad2
-a =: a (+ ]) 4
-aad=:15!:14 <'a'  NB. On NVR stack, so not inplaceable
-aad ~: aad2
+a =: a + 4  NB. inplaceable
+aad2=:15!:14 <'a'
+aad = aad2
+a =: a (+ ]) 4  NB. inplaceable
+aad=:15!:14 <'a'
+aad = aad2
 3 : 0 ''
 a =. 10+1
 aad =. 15!:14 <'a'
 a =. a + 4
-assert. aad = 15!:14 <'a' [ 1  NB. not on NVR in defn
+assert. aad = 15!:14 <'a' [ 1
 a =. a (+ ]) 4
-assert. aad = 15!:14 <'a' [ 2 NB. not on NVR in defn (hook)
+assert. aad = 15!:14 <'a' [ 2
 1
 )
 9!:53 (0)

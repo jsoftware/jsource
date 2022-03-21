@@ -774,7 +774,7 @@ extern A        jtmkwris(J, A);
 extern I        jtmult(J,I,I);
 extern A        jtnamerefacv(J, A, L*);
 extern A        jtnfs(J,I,C*);
-extern I        jtnotonupperstack(J,A);
+// obsolete extern I        jtnotonupperstack(J,A);
 extern A        jtodom(J,I,I,I* RESTRICT);
 extern A        jtparsea(J,A*,I);
 extern B        jtparseinit(JS,I);

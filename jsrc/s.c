@@ -334,7 +334,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
 #else
  symx=u->symx; b=u->bucket;
 #endif
- if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)){R sympv+(I)symx;
+ if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)){R sympv+(I)symx;  // local symbol given and we are using the original table: use the symbol
  }else if((likely(b!=0))){
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
@@ -409,7 +409,7 @@ L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e;
  RZ(g);  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
  I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g));
- NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); if(e){ACINCRPOSSP(e->val); READUNLOCK(g->lock) R (L*)((I)e+AR(g));} READUNLOCK(g->lock)} g=gn;}  // return when name found.
+ NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); if(e){raposgbl(e->val); READUNLOCK(g->lock) R (L*)((I)e+AR(g));} READUNLOCK(g->lock)} g=gn;}  // return when name found.
  R 0;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found, and no ra().  We know the name will be found somewhere
@@ -433,8 +433,8 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   ASSERT(k<256,EVLIMIT);
   if(likely(!e)){  // first time through
-   e=jtprobe((J)((I)jt+k),v,hash,jt->locsyms);  // look up local first.  All these lookups ra() the value if found
-   if(!e)e=(L*)((I)jtsyrd1((J)((I)jt+k),v,hash,jt->global)&~ARNAMED);else{ACINCRLOCALPOS(e->val);}  // if not local, try global, and remove cachable flag
+   e=jtprobe((J)((I)jt+k),v,hash,jt->locsyms);  // look up local first.  syrd will ra() the value if found
+   if(!e)e=(L*)((I)jtsyrd1((J)((I)jt+k),v,hash,jt->global)&~ARNAMED);else{rapos(e->val);}  // if not local, try global, and remove cachable flag.  ra to match syrd
   }else e=(L*)((I)jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g)&~ARNAMED);   // look up later indirect locatives, yielding an A block for a locative; remove cachable flag
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
@@ -478,7 +478,7 @@ L*jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first
-  if(e = probelocal(a,locsyms)){ACINCRLOCALPOSSP(e->val); R e;}  // return flagging the result if local.
+  if(e = probelocal(a,locsyms)){rapos(e->val); R e;}  // return flagging the result if local.
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));
  R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g
@@ -501,7 +501,7 @@ L*jtsyrdnobuckets(J jt,A a){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(!NAV(a)->bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){ACINCRLOCALPOSSP(e->val); R e;}  // return if found locally from name
+  if(unlikely(!NAV(a)->bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){rapos(e->val); R e;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
  R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g
@@ -639,8 +639,9 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  // if we are writing to a non-local table, update the table's Bloom filter.
  if((anmf&ARLOCALTABLE)==0){BLOOMOR(g,BLOOMMASK(NAV(a)->hash));}
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
+
  I xaf;  // holder for nvr/free flags
- {I *aaf=&AFLAG(x); aaf=x?aaf:&abandflag; xaf=*aaf;}  // flags from x, of LWASABANDONED if there is no x
+ {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
 
  if(likely(!(AFNJA&xaf))){
   I wt=AT(w);
@@ -650,32 +651,32 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
-   // We do this only for final assignment, because we are creating a name that would then need to be put onto the NVR stack for protection if the sentence continued
-   // If w does not contain NVR information, initialize it to do so.  LSB indicates NVR; till then it is a zap pointer
+// obsolete    // We do this only for final assignment, because we are creating a name that would then need to be put onto the NVR stack for protection if the sentence continued
+// obsolete    // If w does not contain NVR information, initialize it to do so.  LSB indicates NVR; till then it is a zap pointer
    // SPARSE nouns must never be inplaceable, because their components are not 
    rifv(w); // must realize any virtual
-   if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment of abandoned noun
-    *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
+   if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment of abandoned noun  scaf doesn't have to be final if we can flag it in execution
+    AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
+    *AZAPLOC(w)=0; ACRESET(w,ACUC1)  // make it non-abandoned, and 
+    if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
       // NOTE: NJA can't zap either, but it never has AC<0
-    AMNVRSET(w,AMNV);  // going from abandoned to name semantics: set NVR info in value
+// obsolete     AMNVRSET(w,AMNV);  // going from abandoned to name semantics: set NVR info in value
    }else{
+    AFLAGOR(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
     ra(w);  // if zap not allowed, just ra() the whole thing
-    if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
+// obsolete     if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
    }
+   // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.  Do so before we store the new value,
+   // but after the new value is raised, in case the new value was being protected by the old (ex: n =. >n)
+   // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
+   if(x)SYMVALFA(*e);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case
    e->val=w; e->valtype=ATYPETOVALTYPE(wt);  // install the new value
+
    // if the value we are assigning is an ADV, and it contains no name references, and the name is not a locative, mark the value as NAMELESS to speed up later parsing.
    // NOTE that the value may be in use elsewhere; may even be a primitive.  Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
    if(unlikely((wt&ADV)!=0))if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))e->valtype=VALTYPENAMELESSADV;
 
-   // We have raised the usecount of w.  Now dispose of x
-   // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
-   // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
-   // that value until its last use.
-   // For simplicity, we defer ALL deletions till the end of the sentence.  We put the to-be-deleted value onto the NVR stack if it isn't there already,
-   // and free it.  If the value is already on the NVR stack and has been deferred-freed, we decrement the usecount here to mark the current free, knowing that the whole block
-   // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
-   // on the NVR stack at all.
-   // ABANDONED values can never be NVR (which are never inplaceable), so they will be flagged as !NVR,!UNFREED,ABANDONED
+#if 0  // obsolete
    if(((xaf|e->flag)&LWASABANDONED)!=0){
     // here for the cases where we don't change the usecount in x: nonexistent or abandoned x
     if(unlikely((e->flag&LWASABANDONED)!=0)){
@@ -687,7 +688,12 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
      e->flag&=~(1LL<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
     }
    }else{
-    // x must be decremented, one way or another.  If the value is virtual, it will eventually be freed by tpop, so we can just nonrecursively decrement the usecount now
+   // For simplicity, we defer ALL deletions till the end of the sentence.  We put the to-be-deleted value onto the NVR stack if it isn't there already,
+   // and free it.  If the value is already on the NVR stack and has been deferred-freed, we decrement the usecount here to mark the current free, knowing that the whole block
+   // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
+   // on the NVR stack at all.
+   // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
+   // that value until its last use.
     if(unlikely((xaf&AFVIRTUAL)!=0)){fadecr(x)  // virtual value, AM is still the backer
     }else{I am,nam;
      // Normal reassignment of a name.  AM must have NVR semantics.  What we do depends on NVR status
@@ -706,6 +712,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
      // if the block was on the NVR stack and not freed, we have marked it freed and we will just wait for the eventual deletion
     }
    }
+#endif
   }
  } else {  // x exists, and is either read-only or memory-mapped
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value

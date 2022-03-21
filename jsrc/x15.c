@@ -1422,7 +1422,7 @@ F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG
 }
 F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 
-F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCRLOCAL(z); R sc((I)z);}
+F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
      /* 15!:8  get header */
 
 F1(jtfh15){I k; RE(k=i0(w)); fr((A)k); R num(0);}

@@ -6,6 +6,7 @@ copy script\ver.ijs
 
 mkdir j64
 copy bin\profile.ijs j64
+copy pthreads4w\bin\pthreadVC3.dll j64
 
 copy version.txt jsrc\jversion.h
 echo #define jplatform "windows" >> jsrc\jversion.h

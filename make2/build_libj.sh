@@ -153,6 +153,13 @@ if [ $USE_BOXEDSPARSE -eq 1 ] ; then
 common="$common -DBOXEDSPARSE"
 fi
 
+USE_HIPRECS="${USE_HIPRECS:=0}"
+if [ $USE_HIPRECS -eq 1 ] ; then
+common="$common -DHIPRECS=1"
+else
+common="$common -DHIPRECS=0"
+fi
+
 USE_SLEEF_SRC="${USE_SLEEF_SRC:=1}"
 if [ -z "${j64x##*32*}" ] && [ -z "${jplatform##*raspberry*}" ]; then
 # USE_SLEEF="${USE_SLEEF:=1}"

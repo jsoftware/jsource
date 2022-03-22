@@ -24,15 +24,17 @@ typedef struct condmutex{
 } WAITBLOK;
 
 // w is an A holding a pyx value.  Return its value when it has been resolved
-A jthipval(J jt,A w){
+A jthipval(J jt,A pyx){
  // read the pyx value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
  // that if we read nonzero the pyx has been resolved, even without an acquire barrier
- A res=AAV0(w)[0];  // fetch the possible value
+ A res=AAV0(pyx)[0];  // fetch the possible value
  while(res==0){  // repeat till defined, in case we get spurious wakeups
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
+#if 0 // scaf
   pthread_mutex_lock(&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
-  if((res=__atomic_load_n(&AAV0(w)[0],__ATOMIC_ACQUIRE)==0)pthread_cond_wait(&((WAITBLOK*)&AAV0(pyx)[1])->cond,&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
+  if((res=__atomic_load_n(&AAV0(pyx)[0],__ATOMIC_ACQUIRE))==0)pthread_cond_wait(&((WAITBLOK*)&AAV0(pyx)[1])->cond,&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
   pthread_mutex_unlock(&((WAITBLOK*)&AAV0(pyx)[1])->mutex);
+#endif
  }
  // res now contains the certified value of the pyx.
  ASSERT(((I)res&-256)!=0,(I)res)   // if error, return the error code
@@ -55,7 +57,7 @@ void readlock(S *alock, S prev){
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the lock, loop if can't
- }while(__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)<0));
+ }while(__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)<0);
 }
 
 // take a writelock on *alock.  We have turned on the write request; we come here only if the lock was in use.  The previous value was prev

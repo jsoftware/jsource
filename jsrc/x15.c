@@ -1429,7 +1429,7 @@ F1(jtfh15){I k; RE(k=i0(w)); fr((A)k); R num(0);}
      /* 15!:9  free header */
 
 F1(jtdllsymset){ARGCHK1(w); R (A)i0(w);}      /* do some validation here */
-     /* 15!:7 */
+     /* 15!:7 get address of the A block for w */
 
 /* dll callback routines */
 static J cbjt; /* callbacks require jt and can only use the one */

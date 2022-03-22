@@ -12,7 +12,7 @@
 #endif
 
 #if PYXES
-#include <pthread.h>
+#include "../pthreads4w/include/pthread.h"
 #endif
 
 /*

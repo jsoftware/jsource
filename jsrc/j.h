@@ -739,16 +739,16 @@ extern unsigned int __cdecl _clearfp (void);
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
 #if PYXES
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely((res=jthipval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
-#define READLOCK(lock) { if(unlikely(__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL)<0))readlock(&lock); }
-#define WRITELOCK(lock)  { S prev; if(prev=__atomic_fetch_or(alock,(S)0x8000,__ATOMIC_ACQ_REL)!=0)writelock(&lock,prev); }
+#define READLOCK(lock) {S prev; if(unlikely((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))<0))readlock(&lock,prev); }
+#define WRITELOCK(lock)  { S prev; if(prev=__atomic_fetch_or(&lock,(S)0x8000,__ATOMIC_ACQ_REL)!=0)writelock(&lock,prev); }
 #define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // bits 0-14 belong to read
 #define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,0x7fff, __ATOMIC_ACQ_REL);  // bit 15 belongs to write
 #else
 #define CCOMMON(x,pref,err) (x)
-#define READLOCK(lock)
-#define WRITELOCK(lock)
-#define READUNLOCK(lock)
-#define WRITEUNLOCK(lock)
+#define READLOCK(lock) ;
+#define WRITELOCK(lock) ;
+#define READUNLOCK(lock) ;
+#define WRITEUNLOCK(lock) ;
 #endif
 #define C(x) CCOMMON(x,,R 0)  // normal case: return on error
 #define CERR(x) CCOMMON(x,,R jt->jerr)  // return error code on error

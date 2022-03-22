@@ -372,8 +372,11 @@ static A namecoco(J jt, A y, I pt0ecam, L *s){F1PREFIP; A sv=s->val;
   if(likely(!SYMNEXTISPERM(nextsymx))){*asymx=s->next; fa(s->name); s->name=0; s->flag=0; s->sn=0; s->next=SYMLOCALROOT; SYMLOCALROOT=nextsymx;}
  }
 #endif
- L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(s->name)->m),NAV(s->name)->s,NAV(s->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
+ L *zombsym;
+ WRITELOCK(locfound->lock)
+ if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(s->name)->m),NAV(s->name)->s,NAV(s->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
              // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name   scaf move to under lock
+ WRITEUNLOCK(locfound->lock)
  // The name has been deleted.  The value is still protected by the fa() made in syrd.
  if(likely(!ISSPARSE(AT(sv))))if(likely(AC(sv)==ACUC1)){
   // The usecount has gone down to 1 (including the fa from syrd), the block can become inplaceable again.  We have to give it a valid zaploc in case anyone wants to use it.

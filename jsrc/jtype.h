@@ -566,7 +566,7 @@ typedef I SI;
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 // Note: bit 4 is LABANDONED which is merged here
 // obsolete // Note: bits 8-9 are used to hold AM flags merged in symbis
-#define AFNVRFLAGX      8
+// obsolete #define AFNVRFLAGX      8
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX MARKX     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
@@ -727,12 +727,13 @@ typedef struct {I e,p;X x;} DX;
 /*        decimal point after last digit                                   */
 
 // LSB codes in enqueued words.  Set by enqueue(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
-// type of 0000 is unused; 1-11 are the type bits in order
+// type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
 #define QCMASK 0x1fLL   // all the LSB flags
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
-// the CAVN types are selected for comp ease in the typeval field of an assigned value, which might also hold VALTYPENAMELESSADV
+// the CAVN types are selected for comp ease in the typeval field of an assigned value.  They are indexes into ptcol.
+// The value which might also hold VALTYPENAMELESSADV, which is converted to ADV before the lookup) 
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any other CAVN type
 #define QCADV  ((ADVX-LASTNOUNX)+1) // 4
 // note: code point 5 must be left unused so we don't mess up clearing the pull queue

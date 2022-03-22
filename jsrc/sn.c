@@ -262,8 +262,10 @@ fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond use
     }
    }
 #endif
+   WRITELOCK(locfound->lock)
    L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(v->name)->m),NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
              // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name
+   WRITEUNLOCK(locfound->lock)
   }
  }
  RETF(z);

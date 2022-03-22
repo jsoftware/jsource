@@ -243,7 +243,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
   if(y&&(locfound=syrdforlocale(y))){
 // obsolete fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond usecount of 0
    // if debug turned on, see if the name is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.  scaf We can't check other threads' stacks
-   if(jt->uflags.us.cx.cx_c.db){READLOCK(g->lock) L *v=jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); if(v)v=(L*)(I)redef(mark,v); READUNLOCK(g->lock) RZ(v)}
+   if(jt->uflags.us.cx.cx_c.db){READLOCK(g->lock) L *v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); if(v)v=(L*)(I)redef(mark,v); READUNLOCK(g->lock) RZ(v)}
 #if 0  // obsolete 
    if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){I am,nam;  // If the AM field is not under name semantics, just go free the name immediately.  Virtuals cannot be on the NVR stack
     // it is still possible that the value is LABANDONED, if it has never been reassigned.  We are about to delete it, so it is safe to switch to NVR semantics

@@ -599,7 +599,7 @@ static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent val
 // flags set if jt: bit 0=this is a final assignment;
 // obsolete //  we tried using bit 1=jt->asginfo.assignsym is nonzero, use it; it saves a few cycles testing e, but it seemed risky if ASGNSAFE failed
 // if g is marked as having local symbols, we assume that it is equal to jt->locsyms (especially in subroutines)
-L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
+I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  ARGCHK2(a,w);
  I anmf=NAV(a)->flag; RZ(g)  // fetch flags for the name
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
@@ -735,18 +735,18 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    // no need to store valtype - that can't change from noun
-   realizeifvirtualE(w,goto exitlock;);  // realize if virtual.  The copy stored in the mapped array must be real
+// obsolete    realizeifvirtualE(w,goto exitlock;);  // realize if virtual.  The copy stored in the mapped array must be real
    I wt=AT(w); wn=AN(w); wr=AR(w); I m=wn<<bplg(wt);
    ASSERTGOTO((wt&DIRECT)>0,EVDOMAIN,exitlock);  // boxed, extended, etc can't be assigned to memory-mapped array
    ASSERTGOTO(allosize(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
   }
  }
- if(g!=0)WRITEUNLOCK(g->lock)
  // ************* we have released the write lock
  e->sn=jt->currslistx;  // Save the script in which this name was defined
  if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
- R e;   // return the block for the assignment
+ if(g!=0)WRITEUNLOCK(g->lock)
+ R 1;   // good return
 exitlock:  // error exit
  if(g!=0)WRITEUNLOCK(g->lock)
  R 0;
@@ -756,7 +756,7 @@ exitlock:  // error exit
 // assignment within a sentence requires that values linger on a bit: till the end of the sentence or sometimes till printing is complete
 // Values awaiting deletion are accumulated within the NVR stack till the sentence ends.  If there is an assignment not in a sentence, such as for for_x. or from sockets or DLLs,
 // we have to finish the deletion immediately so that the NVR stack doesn't overflow
-L* jtsymbisdel(J jt,A a,A w,A g){
+I jtsymbisdel(J jt,A a,A w,A g){
  // All we have to do is mark the assignment as final.  That prevents any additions to the NVR stack.
  R jtsymbis((J)((I)jt|JTFINALASGN),a,w,g);
 }

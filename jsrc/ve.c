@@ -350,7 +350,7 @@ AHDR2(remII,I,I,I){I u,v;
  R EVOK;
 }
 
-
+#if 0  // obsolete
 static I igcd1(I a,I b){R a?igcd1(b%a,a):b;}  // Emulate Euclid
 
 I jtigcd(J jt,I a,I b){
@@ -361,6 +361,34 @@ I jtigcd(J jt,I a,I b){
  }
  R a?igcd1(b%a,a):b;
 }
+#else
+// 'binary gcd' algorithm, per Lemire https://lemire.me/blog/2013/12/26/fastest-way-to-compute-the-greatest-common-divisor/
+// can be vectorised, annoying without hardware ctz (avx512 has clz which works)
+I jtigcd(J jt,I a,I b){I d;UI4 s,xz,yz;UI x,y;
+ // IMIN+.IMIN, IMIN+.0, and 0+.IMIN are |IMIN, which is not representable
+ if(unlikely((a|b)==IMIN)){jt->jerr=EWOV; R 0;}
+ // switch to UI so shifts are logical, in case of IMIN
+ x=ABS(a);y=ABS(b);
+ if(!x||!y)R x|y;  // if either value is 0, return absolute value of the other
+ // The algorithm is as follows:
+ // s=CTTZI(x|y) gives the number of factors of 2 shared between x and y
+ // we save this, and remove that many factors of 2 from x and y, as well as all the remaining factors of 2, since they cannot contribute to the result
+ // Then, compute gcd by repeated subtraction, except that for any intermediate value y, we can substitute y>>CTTZI(y), since (again) additional factors of 2 will not contribute
+ // This is generally much faster than repeated division, largely because CTTZI is disproportionately cheap
+ // Finally, restore the factors of 2 which were removed at the beginning
+ xz=CTTZI(x); yz=CTTZI(y); s=CTTZI(x|y);
+ x>>=xz;
+ while(1){
+  y>>=yz;
+  d=y-x;  // Euclid's step
+  yz=CTTZI(d);  // #LSB's is same for true & comp
+  if(!d)break;
+  if(d<0)x=y; // if x>y, (x,y)<-(y,x-y)
+  y=ABS(d);   // if y>x, (x,y)<-(x,y-x)
+ }
+ R x<<s;
+}
+#endif
 
 D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
  a=ABS(a); b=ABS(b); if(a>b){t=a; a=b; b=t;}

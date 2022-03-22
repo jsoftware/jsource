@@ -80,7 +80,8 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
  R PARSERVALUE(parseforexec(z));
 }
 
-L* jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
+// immediate assignment of value x to name
+I jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
 
 // 128!:2
 F2(jtapplystr){PROLOG(0054);A fs,z;

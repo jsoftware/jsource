@@ -419,9 +419,11 @@ static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunq
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
 // and return that; the name will be resolved when the name~ is executed.
 // If the name is undefined, return a reference to [: (a verb that always fails)
-A jtnamerefacv(J jt, A a, L* sym){A y;V*v;
- y=sym?sym->val:ds(CCAP);  // If there is a slot, get the value; if not, treat as [: (verb that creates error)
- if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
+// The value is used only for flags and rank
+A jtnamerefacv(J jt, A a, A val){A y;V*v;
+ y=val?val:ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)
+// obsolete  if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
+ if(unlikely((NOUN&AT(y))!=0))R y;  // return if error or it's a noun
  // This reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference
  v=FAV(y);
@@ -443,8 +445,8 @@ A jtnamerefacv(J jt, A a, L* sym){A y;V*v;
 // For other types, we build a function ref to 'name~', and fill in the type, rank, and a pointer to the name;
 //  the name will be dereferenced when the function is executed
 A jtnameref(J jt,A w,A locsyms){
- ARGCHK1(w); L *sym=syrd(w,locsyms); if(likely(sym!=0))tpush(sym->val);   // undo the ra() in syrd, after we finish
- R namerefacv(w,sym);  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
+ ARGCHK1(w); L *sym=syrd(w,locsyms); if(likely(sym!=0))tpush(sym->val);   // undo the ra() in syrd, after the sentence completes
+ R namerefacv(w,sym?sym->val:0);  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
 }    /* argument assumed to be a NAME */
 
 // Adverb 4!:8 create looked-up cacheable reference to (possibly boxed) literal name a

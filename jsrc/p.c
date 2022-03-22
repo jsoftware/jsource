@@ -185,7 +185,7 @@ static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK
 // pt0 i the PT code for the left-hand side, pt0 is the PT code for the assigptnment, m is the token number to be assigned next (0 if the next thing is MASK)
 // jt has flag set for final assignment (passed into symbis)
 // The return must be 0 for bad, anything else for good
-static A NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
+static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
  B ger=0;C *s;
  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -236,7 +236,8 @@ static A NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
   }
  }
 retstack:  // return, but 0 if error
- if(unlikely(jt->jerr))R 0; R (A)1;
+// obsolete  if(unlikely(jt->jerr))R 0; R 1;
+ R !jt->jerr;  // return 0 if error
 }
 
 
@@ -698,8 +699,8 @@ fa(s->val); // scaf
         }
         y=SETFAOWED(s->val); tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
-        y = namerefacv(QCWORD(*(volatile A*)queue), s);   // Replace other acv with reference
-        fa(s->val);  // the reference uses only the name.  we must release the value
+        y = namerefacv(QCWORD(*(volatile A*)queue), s->val);   // Replace other acv with reference
+        fa(s->val);  // the reference stores only the name (the value is used for flags & rank).  we must release the value
         FPZ(y)
         tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
        }
@@ -708,7 +709,7 @@ undefname:
        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
        // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
-       y = namerefacv(QCWORD(*(volatile A*)queue), s);    // this will create a ref to undefined name as verb [:
+       y = namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:
        FPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
        tx=ATYPETOVALTYPE(VERB);  // refresh the type with the type of the resolved name
       }
@@ -953,11 +954,14 @@ RECURSIVERESULTSCHECK
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
 // obsolete symtab=unlikely((SGNIF(stack[1].pt,PTASGNLOCALX)&(SYMLINFOSIZE-AN(jt->locsyms)))>=0)?;}   // =: used, or symbol table is the short one, meaning 'no symbols': use global table
-       L *rc;
+       I rc;
        if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),CLRFAOWED(stack[0].a),CLRFAOWED(stack[2].a),symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
-       else rc=(L*)jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),CLRFAOWED(stack[0].a),CLRFAOWED(stack[2].a),symtab);
+       else rc=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),CLRFAOWED(stack[0].a),CLRFAOWED(stack[2].a),symtab);
 #if MEMAUDIT&0x10
        auditmemchains();
+#endif
+#if MEMAUDIT&0x2
+  audittstack(jt);  // scaf
 #endif
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
 // obsolete if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 
@@ -1040,6 +1044,9 @@ RECURSIVERESULTSCHECK
 
  exitparse:
   // *** pt0ecam has been repurposed to 1 for final assignment, 0 0therwise
+#if MEMAUDIT&0x2
+  audittstack(jt);
+#endif
    // Prepare the result
   if(1){  // no error on this branch
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
@@ -1115,11 +1122,11 @@ got1val:;
        sv=namecoco(jtinplace, y, (syrdforlocale(y)!=jt->locsyms)<<USEDGLOBALX, s);  // if name::, go delete the name, leaving the value to be deleted later
        y=CLRFAOWED(sv); sv=(A)ISFAOWED(sv);  // coco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else y=sv;  // not name::, just use the value
-     } else {y = namerefacv(y, s); fa(sv); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
+     } else {y = namerefacv(y, s->val); fa(sv); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
     } else {
      // undefined name.
      if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
-     else y = namerefacv(y, s);    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error
+     else y = namerefacv(y, 0);    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error
     }
    }
    if(likely(y!=0))if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error

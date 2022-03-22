@@ -572,8 +572,8 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 }    /* 18!:30 locale map */
 F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
-SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
-     /* check for redefinition (erasure) of entire symbol table */
+ SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
+     /* check for redefinition (erasure) of entire symbol table. */
 
 F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  RZ(vlocnl(1,w));

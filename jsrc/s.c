@@ -412,7 +412,7 @@ L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e;
  NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) e=jtprobe(jt,string,hash,g); if(e){raposgbl(e->val); READUNLOCK(g->lock) R (L*)((I)e+AR(g));} READUNLOCK(g->lock)} g=gn;}  // return when name found.
  R 0;  // fall through: not found
 }    /* find name a where the current locale is g */ 
-// same, but return the locale in which the name is found, and no ra().  We know the name will be found somewhere
+// same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 is not found
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
@@ -483,7 +483,7 @@ L*jtsyrd(J jt,A a,A locsyms){A g;
  } else RZ(g=sybaseloc(a));
  R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g
 }
-// same, but return locale in which found
+// same, but return locale in which found.  No ra(), 0 if symbol not found.  Takes & releases readlock on searched locales
 A jtsyrdforlocale(J jt,A a){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
@@ -559,6 +559,7 @@ F1(jtsymbrdlock){A y;
 // as modified - xdefn will try to hot-swap to the new definition between lines
 // If the modified name is executing higher on the stack, fail
 // returns nonzero for OK to allow the assignment to proceed
+// User must have a lock on the locale v is in
 B jtredef(J jt,A w,L*v){A f;DC c,d;
  // find the most recent DCCALL, exit if none
  d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R 1;

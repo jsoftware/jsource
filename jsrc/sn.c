@@ -228,7 +228,7 @@ static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
 
 F1(jtnch){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
-F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
+F1(jtex){A*wv,y,z;B*zv;I i,n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
@@ -239,10 +239,11 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
   // If the name is defined and is an ACV, invalidate all looked-up ACVs
   // If the value is at large in the stacks and not deferred-freed, increment the use count and deferred-free it
   // If the name is assigned in a local symbol table, we ASSUME it is at large in the stacks and incr/deferred-free it.  We sidestep the nvr stack for local nouns
-  if(y&&(v=syrd(y,jt->locsyms))){
-fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond usecount of 0
-   if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
-   A locfound=syrdforlocale(y);  // get the locale in which the name is defined - must exist
+  A locfound;  // get the locale in which the name is defined - must exist
+  if(y&&(locfound=syrdforlocale(y))){
+// obsolete fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond usecount of 0
+   // if debug turned on, see if the name is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.  scaf We can't check other threads' stacks
+   if(jt->uflags.us.cx.cx_c.db){READLOCK(g->lock) L *v=jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); if(v)v=(L*)(I)redef(mark,v); READUNLOCK(g->lock) RZ(v)}
 #if 0  // obsolete 
    if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){I am,nam;  // If the AM field is not under name semantics, just go free the name immediately.  Virtuals cannot be on the NVR stack
     // it is still possible that the value is LABANDONED, if it has never been reassigned.  We are about to delete it, so it is safe to switch to NVR semantics
@@ -263,8 +264,8 @@ fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond use
    }
 #endif
    WRITELOCK(locfound->lock)
-   L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(v->name)->m),NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
-             // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name
+   L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
+             // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name.  The name may have been deleted since we found the locale
    WRITEUNLOCK(locfound->lock)
   }
  }

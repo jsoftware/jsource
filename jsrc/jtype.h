@@ -581,9 +581,8 @@ typedef I SI;
                                  // VIRTUAL blocks are always recursive so that fa() will not recur.  Virtual blocks are always freed from tpop.  Since it cannot be copied or realized,
                                  // the virtual block always has usecount of ACUC1 or ACUC1+ACINPLACE.  EXCEPTION: for the initial assignment to x/y in an explicit
                                  // definition, we allow assigning a virtual block, because we know that the block and its backer are allocated in a higher level
-                                 // and can never be freed until the explicit definition finishes.  In this case it is safe to increment the usecount of the virtual block -
-                                 // not to ra() the block, which would try to recur.  It is OK to fa() the block on exit or on reassignment, because that will
-                                 // just decrement the usecount of the nonrecursive block.
+                                 // and can never be freed until the explicit definition finishes.  ra() is OK since all virtual blocks are recursive.  It is OK to fa() the block on exit
+                                 // or on reassignment, because that will just decrement the usecount of the nonrecursive block.
                                  // VIRTUAL blocks are normally not inplaceable (since they are by definition aliased to another block), but the temporary
                                  // UNINCORPORABLE blocks created by partitioning modifers to track cells may be inplaceable, and a virtual block whose backer
                                  // has been abandoned may be marked inplaceable as well.
@@ -620,6 +619,7 @@ typedef I SI;
 #define AFLAGAND(a,v)   AFLAG(a)&=(v);
 #define AFLAGOR(a,v)    AFLAG(a)|=(v);
 #define AFLAGPRISTNO(a) AFLAGANDLOCAL(a,~AFPRISTINE)  // nothing from another thread can be PRISTINE
+#if 0 // obsolete 
 // following used to modify AM as NVR count
 #define AMNVRINCR(a) AM(a)+=AMNVRCT;  // increment, no return
 #define AMNVRDECR(a,am) (am=AM(a),AM(a)-=AMNVRCT,am)  // save count, decrement, return old value
@@ -636,6 +636,7 @@ typedef I SI;
 // old value of AM is loaded into v.  nv is a temp.  final is an expression whose value is 1 iff this is a final assignment, else 0
 #define AMNVRFREEACT(a,final,v,nv) (v=AM(a),nv=v|AMFREED,nv=v&-AMNVRCT?nv:1*AMNVRCT+AMFREED+AMNV,nv=v<((final)<<AMNVRCTX)?v:nv,AM(a)=nv);
 #define AMNVRCINI(a) {if(!(AM(a)&AMNV))AMNVRSET(a,AMNV);}  // if AM doesn't have NVR semantics, initialize it
+#endif
 
 // Flags in the AR field of symbol tables.  The allocated rank is always 0
 #define ARNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
@@ -726,14 +727,17 @@ typedef struct {I e,p;X x;} DX;
 /*        least significant digit first                                    */
 /*        decimal point after last digit                                   */
 
-// LSB codes in enqueued words.  Set by enqueue(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
+// LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
 // type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
 #define QCMASK 0x1fLL   // all the LSB flags
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
+// values 0-11 are the same in all contexts:
 // the CAVN types are selected for comp ease in the typeval field of an assigned value.  They are indexes into ptcol.
 // The value which might also hold VALTYPENAMELESSADV, which is converted to ADV before the lookup) 
+#define ATYPETOVALTYPE(t) (((t)&NOUN)?1:CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 8=VERB 10=CONJ  0 means 'no value'
+#define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any other CAVN type
 #define QCADV  ((ADVX-LASTNOUNX)+1) // 4
 // note: code point 5 must be left unused so we don't mess up clearing the pull queue
@@ -741,14 +745,21 @@ typedef struct {I e,p;X x;} DX;
 #define QCLPAR  ((LPARX-LASTNOUNX)+1)  // 9
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10
 #define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // name followed by copula
-// the last AT type is RPAR, which is 11 (30-20+1)
-// assignments occupy 12-15, with 4 variants
+// bit 4 and code points 12-15 depend on the context.
+// In the words of a sentence, created by enqueue(), they are as follows:
+ // the last AT type is RPAR, which is 11 (30-20+1)
+ // assignments occupy 12-15, with 4 variants
 #define QCASGN 0x0c // copula.  QCASGNISLOCAL and QCASGNISTONAME are modifiers
 #define QCASGNISLOCAL 0x1 // =. preceded by nonlocative name
 #define QCASGNISTONAME 0x2  // copula is preceded by name
-#define QCISLKPNAME 0x10LL   // name requires lookup (i. e. not assigned)
+ // named lookups have bit 4 set, and use other flags to indicate the type of name
+#define QCISLKPNAME 0x10   // name requires lookup (i. e. not assigned)
 #define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
 #define QCNAMEABANDON 0x08 // combining flag - name has :: - set only if not assigned
+// In the LSBs returned by syrd() etc (stored by symbis()), bit 4 and the higher code points are as follows:
+#define QCGLOBAL 0x10  // set if the name was found in a global table
+#define VALTYPENAMELESSADV ((SYMBX-LASTNOUNX)+1) // 6 set in nameless & non-locative adv, to suppress reference creation.
+#define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse
 
 
 #define SYMLINFO 0  // index of LINFO entry
@@ -778,7 +789,7 @@ typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
  A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned
  C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
- C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value or value not CAVN
+ C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCGLOBAL is set in global tables
  S sn;  // script index the name was defined in.  Not used for LINFO
  LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT
 } L;  // name must come first because of the way we use validitymask[11]
@@ -809,11 +820,6 @@ typedef struct {
 #define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
-
-// in valtype
-#define ATYPETOVALTYPE(t) (((t)&NOUN)?1:CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 8=VERB 10=CONJ  0 means 'no value'
-#define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
-#define VALTYPENAMELESSADV 0x0eLL  // set in nameless & non-locative adv, to suppress reference creation.  Would like to make this a unique bit for test
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
@@ -851,8 +857,8 @@ typedef struct{
 //   (for direct locatives) the hash of the locative - if numbered, the number itself.
 //   (for indirect locatives) hash of the last indirect name
 //   (for locale names in SYMLINFO of a numbered locale) the locale number
- A cachedref; // (only for cachable NAME blocks): the nameref for this name entry, if it is not a noun.  The cached ref may or may not have the LX of the symbol for the name
-//         if flag&NMCACHEDSYM is set, the value here is the index of a symbol with the value to use for the name - it could be from a NAMELESS modifier
+ A cachedref; // (only for cachable NAME blocks): the value to be used for this name entry, if it is not a noun.  It may be (1) in a nameless modifier, the A block for the value, which has PERMANENT AC
+               // (2) otherwise, the nameref for the name block, which may or may not have the pointer to the looked-up value.  This nameref is not PERMANENT AC and must be deleted when the name is deleted
  LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
  I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
 //   0 if chain index not known or name is a locative

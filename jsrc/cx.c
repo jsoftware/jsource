@@ -300,6 +300,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // both cases we know the block will be freed by the caller.  Since we may revert the value to abandoned inplace to allow it to be free,
   // we must not modify AM.
   // Virtual abandoned blocks are both cases at once.  That's OK.
+  // To simplify value stacking, we ensure that any recursible block is recursive.  This is guaranteed by ra() for non-abandoned blocks
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
   L *sympv=SYMORIGIN;  // bring into local
   L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
@@ -308,6 +309,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
+    ramkrecur(w);  // make the block recursive
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
    }else{
@@ -323,7 +325,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   if(a){
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
-    AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
+    ramkrecur(a); AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
    }else{ra(a);}
 // obsolete  if((likely(!(AFLAG(a)&AFVIRTUAL+AFNJA)))){AMNVRCINI(a)}
    xbuckptr->val=a; xbuckptr->valtype=ATYPETOVALTYPE(AT(a)); xbuckptr->sn=jt->currslistx;

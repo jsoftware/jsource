@@ -861,9 +861,9 @@
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block.  ras() does include rifv
 #define ra(x)   {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}
-// In the following pos means the block is known to be assigned already, thus usecount>0, but not necessarily recursive usecount (if y in xdefn); acv means known non-noun; gbl means global name (always recursive usecount)
+// In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount)
 #define rapos(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}
-#define raposlocal(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}   // name in local table, does not need atomic operation if AC=1
+#define raposlocal(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}   // name in local table, recursive if not sparse and does not need atomic operation if AC=1
 #define raposacv(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1;}  // must be recursive usecount
 #define raposgbl(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(ISSPARSE(AT(x))))jtra((x),(AT(x)));}  // must be recursive usecount but may be sparse
 

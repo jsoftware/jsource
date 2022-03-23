@@ -145,9 +145,9 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [NAMEX-LASTNOUNX] = 0xC9200080,  // PNM assigned: high 16 bits immaterial because this MUST match line 7 which will delete it
 [MARKX-LASTNOUNX] = PTMARK,  // PM
 [ADVX-LASTNOUNX] = 0xC9C8403E,  // PA
-// gap[ASGNX-LASTNOUNX]
-// gap [SYMBX-LASTNOUNX]
-// gap [CONWX-LASTNOUNX]
+// gap[ASGNX-LASTNOUNX]   must be left open in enqueue() tokens to avoid messing up the pull queue
+[VALTYPENAMELESSADV-1] = 0xC9C8403E, // gap [SYMBX-LASTNOUNX]  only in syrd() results, i. e. from symbol
+[VALTYPESPARSE-1] = PTNOUN,  // gap [CONWX-LASTNOUNX]  only in syrd() results, i. e. from symbol
 [VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
 [LPARX-LASTNOUNX] = 0x0100007F,  // PL
 [CONJX-LASTNOUNX] = 0xC9D04000,  // PC
@@ -710,7 +710,7 @@ undefname:
        // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
        y = namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:
-       FPZ(y)   // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
+       FPZ(y)   // if syrd gave an error, namerefacv will return 0 (from fdef).  This will have previously signaled an error
        tx=ATYPETOVALTYPE(VERB);  // refresh the type with the type of the resolved name
       }
 endname: ;

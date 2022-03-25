@@ -116,6 +116,8 @@ t -:      15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 t=: 100 4 ?@$ 0
 t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 
+(15!:14 <'t') = (15!:12 <'t') + 8*SZI
+
 'domain error' -: 15!:6  etx <'test'
 'domain error' -: 15!:6  etx ;:'t test'
 'value error' -: 15!:6  etx <u:'test'

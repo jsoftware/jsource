@@ -189,10 +189,10 @@ NB. ebi extensions
 
 RSET=: 4 : '(x)=: y'
 RBAD=: 3 : '>_4}.each(#testpath)}.each(-.RB)#RF'
-RUN=: RBAD@('RB'&RSET)@(ex03)@('RF'&RSET)
-RUND=: RBAD@('RB'&RSET)@(ex02)@('RF'&RSET)  NB. Run w/display
+RUN=: RBAD@('RB'&RSET)@(ex03`(0!:3)@.(*@".@'Debug'))@('RF'&RSET)
+RUND=: RBAD@('RB'&RSET)@(ex02`(0!:2)@.(*@".@'Debug'))@('RF'&RSET)  NB. Run w/display
 
-RUN1=: 13 : 'ex02<testpath,y,''.ijs'''
+RUN1=: 13 : 'ex02`(0!:2)@.(*@".@''Debug'') <testpath,y,''.ijs'''
 
 RESUB1=: 3 : 'y[echo >y'
 RESUB2=: (13 : '-.ex03 RESUB1 y')"0

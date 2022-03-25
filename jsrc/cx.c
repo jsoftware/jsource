@@ -211,7 +211,7 @@ static I debugnewi(I i, DC thisframe, A self){
 
 // Processing of explicit definitions, line by line
 DF2(jtxdefn){F2PREFIP;PROLOG(0048);
- RE(0);
+ RE(0);     // scaf ARGCHK?
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8 unused 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
@@ -1008,7 +1008,8 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // indicate that the symbol POINTED TO is non-permanent.
  sympv=SYMORIGIN;  // refresh pointer to symbols
  for(j=SYMLINFOSIZE;j<actstn;++j){  // for each hashchain
-  actstv[j]=SYMNEXT(actstv[j]); for(pfx=actstv[j];pfx;pfx=sympv[pfx].next)sympv[pfx].next=SYMNEXT(sympv[pfx].next);  // set PERMANENT for all symbols in the table
+  actstv[j]=SYMNEXT(actstv[j]); for(pfx=actstv[j];pfx;pfx=sympv[pfx].next){sympv[pfx].next=SYMNEXT(sympv[pfx].next);  // set PERMANENT for all symbols in the table
+if(sympv[pfx].val||sympv[pfx].sn||sympv[pfx].valtype)SEGFAULT;}  // scaf
  }
 
  // Go back through the words of the definition, and add bucket/index information for each simplename, and cachability flag

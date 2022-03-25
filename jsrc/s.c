@@ -398,6 +398,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
  v=symnew(hv,tx|SYMNONPERM);   // symbol is non-PERMANENT and known to be available
  ra(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
+if(v->val||v->sn||v->valtype||v->flag)SEGFAULT;  // scaf
  R v;
 }    /* probe for assignment */
 
@@ -444,8 +445,8 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x;C*s,*v,*xv;I k,xn;
 // obsolete   }else e=(L*)QCWORD((I)jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative; remove cachable flag
 // obsolete   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
 // obsolete   y=e->val;    // y->A block for locale
-   y=jtprobe((J)((I)jt+k),v,hash,jt->locsyms);  // look up local first.  syrd will ra() the value if found
-   if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,hash,jt->global));else{rapos(QCWORD(y));}  // if not local, start in implied locale.  ra to match syrd
+   y=QCWORD(jtprobe((J)((I)jt+k),v,hash,jt->locsyms));  // look up local first.
+   if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,hash,jt->global));else{rapos(y);}  // if not local, start in implied locale.  ra to match syrd
   }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
   ASSERTN(y,EVVALUE,nfs(k,v));  // verify found.  If y was found, it has been ra()d
   ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v),exitfa);   // verify atomic
@@ -550,15 +551,15 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
  } else RZ(g=sybaseloc(a));
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
  I bloom=BLOOMMASK(hash); A *v=AAV0(LOCPATH(g));
- NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym(jt,string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}  // exit loop when found
+ NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}  // exit loop when found
  R 0;  // not found, locks released
 gotval: ;
  // found: l points to the symbol.  We hold a lock on g, if it is nonzero
  I res;
- if(component==0){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)l;}
- else if(component==1){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)voidAV(l->val);}
- else if(component==3){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)(l->val);}
- else{res=l->sn+1;}
+ if(component==0){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)l;}  // 15!:6, symbol address
+ else if(component==1){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)voidAV(l->val);}  // 15!:14, data address
+ else if(component==2){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)(l->val);}  // 15!:12, header address
+ else{res=l->sn+1;}  // 4!:4, script index
  if(g)READUNLOCK(g->lock)
  R res;
 }

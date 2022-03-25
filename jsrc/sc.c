@@ -10,11 +10,11 @@
 // This routine calls a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
-DF2(jtunquote){A z;I flgd0cp;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad
+DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
- RE(0);  // why?  should ARGCHK?
+ RE(0);  // why?  should ARGCHK?  scaf
  JATTN;  // check for user interrupt
- flgd0cp=w!=self?8:0; // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
+ I flgd0cp=w!=self?8:0; // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  V *v=FAV(self);  // V block for this V/A/C reference
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
  A thisname=v->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any

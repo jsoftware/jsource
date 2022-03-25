@@ -275,6 +275,7 @@ F2(jtforeign){I p,q;
   case XC(15,9):  R SDERIV(CIBEAM, jtfh15,       0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,10): R SDERIV(CIBEAM, jtcder,       0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,11): R SDERIV(CIBEAM, jtcderx,      0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,12): R SDERIV(CIBEAM, jtdllsymhdr,  0,            VASGSAFE,RMAX,RMAX,RMAX);
 #if 0
   case XC(15,12): R CDERIV(CIBEAM, jtsmmblks,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 #endif

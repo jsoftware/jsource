@@ -533,6 +533,7 @@ typedef I SI;
 #define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0 ACIPNO(x);}else ra(x);}
 #define ACX(a)          {AC(a)=ACPERMANENT; AFLAG(a)|=AT(a)&RECURSIBLE;}
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
+#define ACSETPERM(x)    {AC(x)=ACPERMANENT+100000; ACOR(x,AT(x)&RECURSIBLE);}  // Make a block permanent from now on.  In case other threads have committed to changing the usecount, make it permanent with a margin of safety
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
@@ -639,7 +640,8 @@ typedef I SI;
 #endif
 
 // Flags in the AR field of symbol tables.  The allocated rank is always 0
-#define ARNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
+#define ARNAMEDX 0   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
+#define ARNAMED ((I)1<<ARNAMEDX)   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 // the rest of the flags apply only to local symbol tables
 #define ARNAMEADDEDX LPERMANENTX  // 2 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
 #define ARNAMEADDED (1LL<<ARNAMEADDEDX)
@@ -689,7 +691,7 @@ typedef struct {  // we could consider align(4) to save space - would require ch
 typedef struct DS{      /* 1 2 3                                                        */
  struct DS*dclnk;       /* x x x  link to next stack entry                              */
  A dcy;                 /* x x x  &tokens; text       ; right argument                  */
- I dcn;                 /* x x x  #tokens; line #     ; ptr to symb entry               */
+ I dcn;                 /* x x x  #tokens; line #     ; ptr to executing value               */
  I dcix;                // x x x  index ; next index  ; line# in exp def being executed, or to be exec next
  I dcj;                 /* x x x  error#; prev index  ; error #                         */
  C dctype;              /* x x x  type of entry (see #define DC*)                       */
@@ -738,7 +740,7 @@ typedef struct {I e,p;X x;} DX;
 // The value which might also hold VALTYPENAMELESSADV, which is converted to ADV before the lookup) 
 #define ATYPETOVALTYPE(t) (((t)&NOUN)?1:CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 8=VERB 10=CONJ  0 means 'no value'
 #define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
-#define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any other CAVN type
+#define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any non-noun CAVN type, i. e. not in ACV.  But it must be set in SPARSE.  It can be used to test  for FUNC in a named QCTYPE
 #define QCADV  ((ADVX-LASTNOUNX)+1) // 4
 // note: code point 5 must be left unused so we don't mess up clearing the pull queue
 #define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
@@ -756,10 +758,31 @@ typedef struct {I e,p;X x;} DX;
 #define QCISLKPNAME 0x10   // name requires lookup (i. e. not assigned)
 #define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
 #define QCNAMEABANDON 0x08 // combining flag - name has :: - set only if not assigned
-// In the LSBs returned by syrd() etc (stored by symbis()), bit 4 and the higher code points are as follows:
+// In the LSBs returned by syrd()  (stored by symbis()), bit 4 and the higher code points are as follows:
+#define QCGLOBALX 4
 #define QCGLOBAL 0x10  // set if the name was found in a global table
+#define SETGLOBAL(w) (A)((I)(w)|QCGLOBAL)
+#define CLRGLOBAL(w) (A)((I)(w)&~QCGLOBAL)
 #define VALTYPENAMELESSADV ((SYMBX-LASTNOUNX)+1) // 6 set in nameless & non-locative adv, to suppress reference creation.
-#define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse
+#define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
+// In the LSBs returned by syrd1() bit 4 means:
+#define QCNAMEDX 4  // set if the value was found in a named locale, clear if numbered
+#define QCNAMED ((I)1<<QCNAMEDX)  // set if the value was found in a named locale, clear if numbered
+// After the named value has been processed, bit 4 changes meaning to:
+#define QCFAOWEDX 4
+#define QCFAOWED 0x10  // when this bit is set in an address in stack.a, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution
+#define SETFAOWED(w) (A)((I)(w)|QCFAOWED)
+#define CLRFAOWED(w) (A)((I)(w)&~QCFAOWED)
+#define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
+#define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part, 0-15 for the syntax units including assignment
+// When the vallue is pushed onto the parser stack, the FAOWED bit moves to bit 0 where is can be distinguished from a tstack pointer
+#define STKFAOWEDX 0
+#define STKFAOWED ((I)1<<STKFAOWEDX)  // set in parser stack if value needs to be freed
+#define SETSTKFAOWED(w) (A)((I)(w)|STKFAOWED)
+#define CLRSTKFAOWED(w) (A)((I)(w)&~STKFAOWED)
+#define ISSTKFAOWED(w) ((I)(w)&STKFAOWED)  // is fa() required?
+
+
 
 
 #define SYMLINFO 0  // index of LINFO entry
@@ -809,7 +832,7 @@ typedef struct {
 #define LPERMANENTX  1
 #define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
 #define LINFO           (I)4            /* locale info                     */
-#define LCACHED         (I)8      // this value is cached in some nameref
+// obsolete #define LCACHED         (I)8      // this value is cached in some nameref
 #define LWASABANDONEDX  4
 #define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
                                     // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
@@ -857,7 +880,7 @@ typedef struct{
 //   (for direct locatives) the hash of the locative - if numbered, the number itself.
 //   (for indirect locatives) hash of the last indirect name
 //   (for locale names in SYMLINFO of a numbered locale) the locale number
- A cachedref; // (only for cachable NAME blocks): the value to be used for this name entry, if it is not a noun.  It may be (1) in a nameless modifier, the A block for the value, which has PERMANENT AC
+ A cachedref; // (only for cachable NAME blocks): the value to be used for this name entry, if it is not a noun.  Has QCFAOWED semantics (with FAOWED always off).  It may be (1) in a nameless modifier, the A block for the value, which has PERMANENT AC
                // (2) otherwise, the nameref for the name block, which may or may not have the pointer to the looked-up value.  This nameref is not PERMANENT AC and must be deleted when the name is deleted
  LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
  I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
@@ -878,8 +901,8 @@ typedef struct{
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
 #define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
-#define NMCACHEDSYMX    6
-#define NMCACHEDSYM     (1<<NMCACHEDSYMX)      // This NM is storing a symbol index, not a pointer to a reference
+// obsolete #define NMCACHEDSYMX    6
+// obsolete #define NMCACHEDSYM     (1<<NMCACHEDSYMX)      // This NM is storing a symbol index, not a pointer to a reference
 
 
 typedef struct {I a,e,i,x;} P;
@@ -1009,7 +1032,7 @@ typedef struct {
     AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function
-    LX cachedref;  //  for namerefs ('name'~), 0 if non-cachable, neg if cachable but not yet cached, positive if cached
+    A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
    } lu1;  // this is the high-use stuff in the second cacheline
   };
@@ -1143,6 +1166,8 @@ typedef struct {
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 #define VF2IMPLOCX 20   // This verb is one of u. v.
 #define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))
+#define VF2CACHEABLEX 21   // In a nameref, indicates the nameref is cacheable
+#define VF2CACHEABLE  ((I)(((I)1)<<VF2CACHEABLE))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit

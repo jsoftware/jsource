@@ -29,9 +29,9 @@ F1(jtswap){A y;C*s;I n;
   ASSERT(1>=AR(w),EVRANK);  // list or atom only
   n=AN(w); s=CAV(w); 
   ASSERT(vnm(n,s),EVILNAME);   // valid name
-  RZ(y=nfs(AN(w),CAV(w)));  // create a NAME block for the string
+  RZ(y=nfs(AN(w),CAV(w)));  // create a NAME block for the string - not cacheable
   RZ(y=nameref(y,jt->locsyms));  // Create a name-reference pointing to the name
-  // Make sure this reference is non-cachable.  'name'~ is a way to get a non-cachable reference
+  // Make sure this reference is non-cached.  'name'~ is a way to get a non-cachable reference
   if(AT(y)&VERB+CONJ+ADV)FAV(y)->localuse.lu1.cachedref=0;  // turn off cachability if it's a reference (not if a noun)
   R y;
  }

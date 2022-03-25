@@ -1428,8 +1428,8 @@ F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);} 
 F1(jtfh15){I k; RE(k=i0(w)); fr((A)k); R num(0);}
      /* 15!:9  free header */
 
+// 15!:7.  w has the address of a header.  Put that address in play as an A block
 F1(jtdllsymset){ARGCHK1(w); R (A)i0(w);}      /* do some validation here */
-     /* 15!:7 get address of the A block for w */
 
 /* dll callback routines */
 static J cbjt; /* callbacks require jt and can only use the one */

@@ -307,7 +307,8 @@ F1(jtlocsizes){I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 // jtprobe, with readlock taken on stlock
-static L *jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) L *z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
+// obsolete static L* jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) L *z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}  // scaf this fails - must not return symbol
+static A jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) A z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}  // scaf this fails - must not return symbol
 
 
 // find the symbol table for locale with name u which has length n and hash/number bucketx
@@ -315,12 +316,12 @@ static L *jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock)
 // n=0 means 'use base locale'
 // n=-1 means 'numbered locale, don't bother checking digits'   u is invalid
 // The slot we return might be a zombie, if LOCPATH is clear.  The caller must check.
-A jtstfind(J jt,I n,C*u,I bucketx){L*v;
+A jtstfind(J jt,I n,C*u,I bucketx){
  if(unlikely(!n)){n=sizeof(JT(jt,baselocale)); u=JT(jt,baselocale);bucketx=JT(jt,baselocalehash);}
  if(n>0&&'9'<*u){  // named locale   > because *u is known to be non-empty
   ASSERT(n<256,EVLIMIT);
-  v=jtprobestlock((J)((I)jt+n),u,(UI4)bucketx);
-  if(v)R v->val;   // if there is a symbol, return its value
+  A v=jtprobestlock((J)((I)jt+n),u,(UI4)bucketx);
+  if(v)R v;   // if there is a symbol, return its value
  }else{
   R findnl(bucketx);
  }
@@ -391,12 +392,12 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
   y=C(wv[i]);
   if(!AR(y)&&AT(y)&((INT|B01))){  // atomic numeric locale
    zv[i]=findnl(BIV0(y))?1:-1;  // OK because the boxed value cannot be virtual, thus must have padding
-  }else{L *yy;
+  }else{A yy;
    // string locale, whether number or numeric
    m=AN(y); u=CAV(y); c=*u; 
    if(!vlocnm(m,u))zv[i]=-2;
    else if(c<='9') zv[i]=(y=findnl(strtoI10s(m,u)))&&LOCPATH(y)?1:-1;
-   else            zv[i]=(yy=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)))&&LOCPATH(yy->val)?0:-1;
+   else            zv[i]=(yy=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)))&&LOCPATH(yy)?0:-1;
   }
  }
  RETF(z);
@@ -465,7 +466,7 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
 }    /* 18!:2  set locale path */
 
 
-static F2(jtloccre){A g,y,z=0;C*s;I n,p;L*v;
+static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
@@ -473,7 +474,7 @@ static F2(jtloccre){A g,y,z=0;C*s;I n,p;L*v;
  WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!
  if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
-  g=v->val;
+  g=v;
   if(LOCPATH(g)){
    // verify locale is empty (if it is zombie, its hashchains are garbage - clear them)
    LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERTGOTO(!u[i],EVLOCALE,exit););
@@ -572,10 +573,10 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 }    /* 18!:30 locale map */
 F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
- SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
+ SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d->val)))
      /* check for redefinition (erasure) of entire symbol table. */
 
-F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
+F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  RZ(vlocnl(1,w));
  if(ISDENSETYPE(AT(w),B01))RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
@@ -590,11 +591,11 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
     m=AN(y); u=CAV(y);
     ASSERT(m<256,EVLIMIT);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}
-    else {v=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)); if(v)g=v->val;}  // g is locale block for named locale
+    else {A v=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)); if(v)g=v;}  // g is locale block for named locale
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&0x8000000),"execct has gone < 0")
+   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&0x8000000),"execct has gone < 0")  // scaf eventually
    DELEXECCT(g)  // say that the user doesn't want this local any more
 #if 0  /// obsolete
    // See if we can find the locale on the execution stack.  If so, set the DELETE flag

@@ -12,79 +12,90 @@
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
 DF2(jtunquote){A z;I flgd0cp;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
- RE(0);
- JATTN;
+ RE(0);  // why?  should ARGCHK?
+ JATTN;  // check for user interrupt
  flgd0cp=w!=self?8:0; // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  V *v=FAV(self);  // V block for this V/A/C reference
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
- A thisname=v->fgh[0]; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
+ A thisname=v->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
+// obsolete  A valflag;   // the looked-up name, including flags with QCNAMED semantics
  A savname=jt->curname;  // we stack the executing name
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
-  I4 cachedlkp=v->localuse.lu1.cachedref;  // negative if cacheable; positive if cached
-  if(cachedlkp>0){
+// obsolete   I4 cachedlkp=v->localuse.lu1.cachedref;  // negative if cacheable; positive if cached
+  if((fs=v->localuse.lu1.cachedref)!=0){
    // There is a cached lookup for this nameref - use it
-   stabent=&SYMORIGIN[cachedlkp];  // the symbol block for the cached item
-   fs=stabent->val;  // the value of the cached item
-   if(likely(fs!=0)){
-    // the lookup exists.  If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
-    if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale
+// obsolete    stabent=&SYMORIGIN[cachedlkp];  // the symbol block for the cached item
+// obsolete    fs=stabent->val;  // the value of the cached item
+// obsolete    if(likely(fs!=0)){
+    // If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
+    if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale  scaf could hold pointer, since named
     else explocale=0;  // if no direct locative, set so
     flgd0cp|=2;  // indicate cached lookup, which also tells us that we have not ra()d the name
-   }else{cachedlkp=v->localuse.lu1.cachedref=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
+// obsolete    }else{cachedlkp=v->localuse.lu1.cachedref=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{
-valgone: ;
+// obsolete valgone: ;
    // name was not cached.  Look it up.  The calls to the lookup routines all issue ra() (under lock) on the value if found
    if(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
-    if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
-    }else{ASSERT(AT(stabent->val)&FUNC,EVDOMAIN); raposacv(stabent->val);  // incr usecount to match what syrd1 does.  
+    if(likely((fs=probelocal(thisname,jt->locsyms))==0)){fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
+      // this is a pun - probelocal returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
+    }else{raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does.  
     }
    }else{  // locative or u./v.
     if(likely(!(NAV(thisname)->flag&NMIMPLOC))){  // locative
      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
-     stabent=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
+     fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
-     if(stabent = probelocal(thisname,jt->locsyms)){
+     if(fs=probelocal(thisname,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
-      ASSERT(AT(stabent->val)&FUNC,EVDOMAIN); raposacv(stabent->val);  // incr usecount to match what syrd1 does
+      raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does
      }
     }
    }
-   // syrd1 returns bit 0 set if the value is from a named locale, i. e. is cachable.  probelocal always returns with that flag off, since local symbols are never cachable
-   ASSERT(stabent!=0,EVVALUE);  // name must be defined
-   I4 cacheable=(I4)(I)stabent&ARNAMED; stabent=(L*)((I)stabent&~ARNAMED);  // extract cachable flag from stabent & clear it
-   fs=stabent->val;  // fetch the value for the name
-   ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
+   // fs has QCNAMED semantics
+   ASSERT(fs!=0,EVVALUE);  // name must be defined
+   I namedloc=(I)fs&QCNAMED; fs=QCWORD(fs);  // extract NAMED flag from fs, clear other flags
+// obsolete    fs=stabent->val;  // fetch the value for the name
+// obsolete    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
    // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa
    ASSERTSUFF(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
-   if(unlikely((cachedlkp&(-cacheable))<0)){
+   // we have to wait till here to 
+// obsolete    if(unlikely((cachedlkp&(-cacheable))<0)){
+   if(unlikely((v->flag2>>(VF2CACHEABLEX-QCNAMEDX))&namedloc)){   // cacheable nameref, and value found in a named locale
     // point the nameref to the lookup result.  This prevents further changes to the lookup
-    v->localuse.lu1.cachedref=stabent-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
-    stabent->flag|=LCACHED;  // protect the value from changes
-    // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
-    // to use the flags.  If we do PPPP, this will be too late
-    v->flag=FAV(fs)->flag&(VIRS1+VIRS2+VJTFLGOK1+VJTFLGOK2+VASGSAFE);  // combining flags, do not require looking into id
-    v->flag2=FAV(fs)->flag2&(VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A);  // combining flags, do not require looking into id
+// obsolete     v->localuse.lu1.cachedref=stabent-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
+// obsolete     stabent->flag|=LCACHED;  // protect the value from changes
+    WRITELOCK(fs->lock);  // we want to cache a name only once
+    if(v->localuse.lu1.cachedref==0){  // if this is nopt true, someone else beat us to the cache.  OK, we'll get it next time
+     v->localuse.lu1.cachedref=fs;  // store cached address, with FAOWED semantics (not owed)
+     ACSETPERM(fs);  // make the cached value immortal
+     // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
+     // to use the flags.  If we do PPPP, this will be too late
+     v->flag=FAV(fs)->flag&(VIRS1+VIRS2+VJTFLGOK1+VJTFLGOK2+VASGSAFE);  // combining flags, do not require looking into id
+     v->flag2=FAV(fs)->flag2&(VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A);  // combining flags, do not require looking into id
 // flag2: if we look through name(s) when replacing f[12] and fs, we could support VF2BOXATOP1+VF2BOXATOP2+VF2ATOPOPEN1+VF2ATOPOPEN2W+VF2ATOPOPEN2A+
 //  and we might be able to use VF2RANKATOP1+VF2RANKATOP2+VF2RANKONLY1+VF2RANKONLY2+  but we haven't checked the loops yet
-     // we could mark the lookup as cached, but if debug is on we want to display the lookup value first time through    ???
-     // If the NM block is cachable, point it to the nameref.  The NM block must be marked cachable AND still be pointed to by the explicit definition, which
-     // means that its usecount must be more than what comes from the nameref.  If the explicit definition has been deleted, we must ensure that we don't put a loop
-     // in the chains, because there will never be a free from the non-nameref side to break the loop
-    if(NAV(thisname)->flag&NMCACHED && AC(thisname)>((AFLAG(self)&TRAVERSIBLE)!=0)){  // name from explicit definition, and definition still active
-     // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
-     // We must ensure that raising the nameref does not raise the usecount of the name, as it would if the nameref is not yet recursive.  If the usecount of the
-     // name were raised, it would never go to 0 when the explicit definition is freed, and the block would leak.  Likewise we must undo the situation where the
-     // nameref was raised before this caching: that would set the name usecount to 2 and freeing the explicit verb would not trigger revisiting the link to the
-     // nameref.  In short, when there is a cached ref from the name, the count of the name is always 1, and the nameref has been incremented: so the name will
-     // not go away until the explicit does, and when that happens, the link will be removed in fa().
-     NAV(thisname)->cachedref=self; ra(self); ACSET(thisname,ACUC1);   // exp def is ALWAYS recursive usecount, so we raise self when we store to it.
-        //  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
+      // we could mark the lookup as cached, but if debug is on we want to display the lookup value first time through    ???
+      // If the NM block is cachable, point it to the nameref.  The NM block must be marked cachable AND still be pointed to by the explicit definition, which
+      // means that its usecount must be more than what comes from the nameref.  If the explicit definition has been deleted, we must ensure that we don't put a loop
+      // in the chains, because there will never be a free from the non-nameref side to break the loop
+     if(NAV(thisname)->flag&NMCACHED && AC(thisname)>((AFLAG(self)&TRAVERSIBLE)!=0)){  // name from explicit definition, and definition still active  ?? scaf multithread trouble
+      // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
+      // We must ensure that raising the nameref does not raise the usecount of the name, as it would if the nameref is not yet recursive.  If the usecount of the
+      // name were raised, it would never go to 0 when the explicit definition is freed, and the block would leak.  Likewise we must undo the situation where the
+      // nameref was raised before this caching: that would set the name usecount to 2 and freeing the explicit verb would not trigger revisiting the link to the
+      // nameref.  In short, when there is a cached ref from the name, the count of the name is always 1, and the nameref has been incremented: so the name will
+      // not go away until the explicit does, and when that happens, the link will be removed in fa().
+      NAV(thisname)->cachedref=(A)((I)self+ATYPETOVALTYPE(AT(self)));   // cache the reference, with QCFAOWED semantics.  FAOWED is off
+      ra(self); ACSET(thisname,ACUC1);   // exp def is ALWAYS recursive usecount, so we raise self when we store to it.
+         //  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
+     }
     }
+    WRITEUNLOCK(fs->lock);
    }
   }
  }else{
@@ -99,7 +110,7 @@ valgone: ;
   // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
   flgd0cp|=1;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
-  stabent=0;  // no name lookup was performed
+// obsolete   stabent=0;  // no name lookup was performed
  }
  // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
 #if NAMETRACK
@@ -111,7 +122,8 @@ valgone: ;
  wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; MC(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
  A locnm=LOCNAME(jt->global);  // name of current global locale
  wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
- if(stabent&&stabent->sn>=0){
+ if((flgd0cp&3)==0){  // there is a name to look up
+... look up the sn of thisname ...
   READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in the locale name
  }
  trackinfo[wx]=0;  // null-terminate the info
@@ -170,7 +182,8 @@ printf("\n");
   DC d=0;  // pointer to debug stack frame, if one is allocated
   if(jt->uflags.us.cx.cx_us){  // debug or pm
    // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
-   RZSUFF(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs),z=0; goto exitpop;); d->dcn=(I)(flgd0cp&3?0:stabent);   // save last sym lookup as debug parm if it is valid (not cached or pseudoname)
+// obsolete    RZSUFF(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs),z=0; goto exitpop;); d->dcn=(I)(flgd0cp&3?0:stabent);   // save last sym lookup as debug parm if it is valid (not cached or pseudoname)
+   RZSUFF(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs),z=0; goto exitpop;); d->dcn=(I)fs;   // save executing value for redef checks
   }
 
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cp&8?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
@@ -434,9 +447,10 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // problem by making [: unsafe.
  A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
  RZ(z);
- // if the nameref is cachable, either because the name is cachable or name caching is enabled now, enable caching in lI4
+ // if the nameref is cachable, either because the name is cachable or name caching is enabled now, mark it cacheable
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
- FAV(z)->localuse.lu1.cachedref=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<SYMNONPERMX;  // 0x80.. to enable caching, otherwise 0
+// obsolete  FAV(z)->localuse.lu1.cachedref=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<SYMNONPERMX;  // 0x80.. to enable caching, otherwise 0
+ FAV(z)->flag2|=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
  R z;
 }
 
@@ -445,22 +459,26 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
 // For other types, we build a function ref to 'name~', and fill in the type, rank, and a pointer to the name;
 //  the name will be dereferenced when the function is executed
 A jtnameref(J jt,A w,A locsyms){
- ARGCHK1(w); L *sym=syrd(w,locsyms); if(likely(sym!=0))tpush(sym->val);   // undo the ra() in syrd, after the sentence completes
- R namerefacv(w,sym?sym->val:0);  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
+ ARGCHK1(w); A y=QCWORD(syrd(w,locsyms)); if(likely(y!=0))tpush(y);   // undo the ra() in syrd, after the sentence completes
+ R namerefacv(w,y);  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
 }    /* argument assumed to be a NAME */
 
 // Adverb 4!:8 create looked-up cacheable reference to (possibly boxed) literal name a
 // The name must be defined.  It supplies the type and rank of the reference.  We require the name to be defined so that
 // there will not be a circular reference if a name in a numbered locale is a reference to the same name
-F1(jtcreatecachedref){
+F1(jtcreatecachedref){A z;
  A nm; RZ(nm=onm(w)); // create name from arg
  ASSERT(!(NAV(nm)->flag&(NMILOC|NMDOT|NMIMPLOC)),EVDOMAIN) // if special name or indirect locative, error
- L *sym=syrd(nm,JT(jt,emptylocale));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
- ASSERT(sym!=0,EVVALUE);  // return if error or name not defined
- A z=sym->val; tpush(z); if(unlikely(AT(z)&NOUN))R z;  // undo the ra() in syrd.  if name is a noun, return its value
- RZ(z=fdef(0,CTILDE,AT(z), jtunquote1,jtunquote, nm,0L,0L, (z->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(z)->mr,lrv(FAV(z)),rrv(FAV(z))));// create reference
- FAV(z)->localuse.lu1.cachedref=sym-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
- sym->flag|=LCACHED;  // protect the value from changes.  We do not chain back from the name
+ A val=QCWORD(syrd(nm,JT(jt,emptylocale)));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
+ ASSERT(val!=0,EVVALUE);  // return if error or name not defined
+ ASSERT(!(AT(val)&NOUN),EVDOMAIN)
+// obsolete  A z=sym->val;
+// obsolete  tpush(z); if(unlikely())R z;  // undo the ra() in syrd.  if name is a noun, return its value
+ RZ(z=fdef(0,CTILDE,AT(val), jtunquote1,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val))));// create reference
+ FAV(z)->localuse.lu1.cachedref=val;  // install cached address of value
+ ACSETPERM(val);  // now that the value is cached, it lives forever
+// obsolete  FAV(z)->localuse.lu1.cachedref=sym-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
+// obsolete  sym->flag|=LCACHED;  // protect the value from changes.  We do not chain back from the name
  RETF(z);
 }
 

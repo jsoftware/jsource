@@ -755,7 +755,7 @@ F1(jtmvmsparse){PROLOG(832);
    tcond=_mm256_and_pd(tcond,ratios);  /* tcond is (new smallest pivotratio & col>ColThr [& bk>bkmin]) 0 0 0   */ \
    oldbk=_mm256_blendv_pd(oldbk,bks,tcond); oldcol=_mm256_blendv_pd(oldcol,dotprod,tcond);  /* if valid new smallest pivotratio, update col and bk where the smallest is found */ \
    I rmask=_mm256_movemask_pd(ratios); /*   rmask is new smallest (possibly invalid) pivotratio   !limited gain 0 0 */ \
-   bestrow=(tmask&=1)&rmask?imask:bestrow;   /* col>ColThr & new smallest pivotratio: update best-value variables */ \
+   bestrow=(tmask&=1)&rmask?imask:bestrow;   /* col>ColThr & new smallest pivotratio: update best-value variables.  This updates even if bk=0, avoiding unbounded */ \
    if(tmask>(rmask>>1) && (I4)bestrow>=(I4)nvirt)goto abortcol;  /* col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority */ \
   }else{ /* look for nonimproving pivot */  \
    if(_mm256_cvtsd_f64(dotprod)>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  /* any c value>=ColThresh is a pivot row, unless in the exclusion list */ \

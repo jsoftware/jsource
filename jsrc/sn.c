@@ -96,7 +96,7 @@ F1(jtnfb){A y;C*s;I n;
 }    /* name from scalar boxed string */
 
 // w is an A for a name string; return NAME block or 0 if error
-static F1(jtstdnm){C*s;I j,n,p,q;
+F1(jtstdnm){C*s;I j,n,p,q;
  if(!(w=vs(w)))R 0;  // convert to ASCII
  n=AN(w); s=CAV(w);  // n = #characters, s->string
  if(!(n))R 0;
@@ -110,14 +110,15 @@ static F1(jtstdnm){C*s;I j,n,p,q;
 F1(jtonm){A x,y; RZ(x=ope(w)); y=stdnm(x); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); R y;}
 
 // w is array of boxed strings; result is name class for each
-F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v; 
+F1(jtnc){A*wv,x,y,z;I i,n,t,*zv; 
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);   // n=#names  wv->first box
  ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(C(wv[i])));  // point to name, audit for validity
-  if(y){if(v=syrd(y,jt->locsyms)){x=v->val; t=AT(x); fa(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
+// obsolete   if(y){if(v=syrd(y,jt->locsyms)){x=v->val; t=AT(x); fa(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
+  if(y){if(x=QCWORD(syrd(y,jt->locsyms))){t=AT(x); fa(x);}else{if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
   // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
   //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).
@@ -164,18 +165,6 @@ F2(jtnl2){UC*u;
  u=UAV(a); DQ(AN(a),CAV1(a=tmp)[*u++]=1;);
  R nlx(tmp,w);
 }    /* 4!:1  name list */
-
-
-F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
- ARGCHK1(w);
- n=AN(w); 
- ASSERT(!n||BOX&AT(w),EVDOMAIN);
- wv=AAV(w); 
- GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- DO(n, x=C(wv[i]); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y,jt->locsyms); RESETERR; zv[i]=v?v->sn:-1; if(likely(v!=0))fa(v->val);); // undo ra() in syrd
- RETF(z);
-}    /* 4!:4  script index */
-
 
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  ARGCHK1(w);
@@ -243,7 +232,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
   if(y&&(locfound=syrdforlocale(y))){
 // obsolete fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond usecount of 0
    // if debug turned on, see if the name is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.  scaf We can't check other threads' stacks
-   if(jt->uflags.us.cx.cx_c.db){READLOCK(g->lock) L *v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); I rres=1; if(v)rres=redef(mark,v); READUNLOCK(g->lock) RZ(rres)}
+   if(jt->uflags.us.cx.cx_c.db){READLOCK(g->lock) A v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); I rres=1; if(v)rres=redef(mark,v); READUNLOCK(g->lock) RZ(rres)}
 #if 0  // obsolete 
    if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){I am,nam;  // If the AM field is not under name semantics, just go free the name immediately.  Virtuals cannot be on the NVR stack
     // it is still possible that the value is LABANDONED, if it has never been reassigned.  We are about to delete it, so it is safe to switch to NVR semantics
@@ -264,8 +253,9 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
    }
 #endif
    WRITELOCK(locfound->lock)
-   L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
-             // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name.  The name may have been deleted since we found the locale
+// obsolete    L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
+   jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
+// obsolete              // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name.  The name may have been deleted since we found the locale
    WRITEUNLOCK(locfound->lock)
   }
  }

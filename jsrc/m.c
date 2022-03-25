@@ -563,11 +563,11 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     k=SYMNEXT(k);
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
-    if(likely(!(jtsympv[k].flag&LCACHED))){
-     SYMVALFA(jtsympv[k]);    // free value
-     jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-     asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
-    }else{*asymx=SYMNEXT(jtsympv[k].next);}  // for cached value, remove from list to be freed.  It becomes unmoored.
+// obsolete     if(likely(!(jtsympv[k].flag&LCACHED))){
+    SYMVALFA(jtsympv[k]);    // free value
+    jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+    asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
+// obsolete    }else{*asymx=SYMNEXT(jtsympv[k].next);}  // for cached value, remove from list to be freed.  It becomes unmoored.
     k=nextk;  // advance to next block in chain
    }while(k);
    // if the chain is not (now) empty, make it the base of the free pool & chain previous pool from it.  CACHED items have been removed
@@ -893,7 +893,8 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
     }
    }
   } else if(t&NAME){A ref;
-   if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
+// obsolete    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
+   if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference
     // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
     // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
     // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we return without freeing the reference
@@ -1006,23 +1007,26 @@ void jttpop(J jt,A *old){A *endingtpushp;
    if(np){
 // stats nonnullpops++;
     I c=AC(np);  // fetch usecount.
-    I flg=AFLAG(np);  // fetch flags, just in case
+    // We never tpush a PERMANENT block, but a block can become PERMANENT during the run, so we have to check
+    if(likely(!ACISPERM(c))){     // if block not PERMANENT...
+     I flg=AFLAG(np);  // fetch flags, just in case
+
 #ifdef PREFETCH
-    PREFETCH((C*)np0);   // prefetch the next box.  Might be 0; that's no crime
+     PREFETCH((C*)np0);   // prefetch the next box.  Might be 0; that's no crime
 #endif
-    // We never tpush a PERMANENT block so we needn't check for it.
-    // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
-    // Otherwise just decrement the count
-    if(--c<=0){
+     // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
+     // Otherwise just decrement the count
+     if(--c<=0){
 // stats ++frees;
-     // The block is going to be destroyed.  See if there are further ramifications
-     if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
-     else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
-      // NOTE non-faux virtual blocks are deleted either here or in jtfamftrav() where they can be CONTENTS of boxes (presumably created in a WILLBEOPENED).  A virtual block is
-      // never freed by fa() as a top-level block
-      // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
-      // we make sure no such block is created in sprz()
-    }else ACSET(np,c)
+      // The block is going to be destroyed.  See if there are further ramifications
+      if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
+      else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
+       // NOTE non-faux virtual blocks are deleted either here or in jtfamftrav() where they can be CONTENTS of boxes (presumably created in a WILLBEOPENED).  A virtual block is
+       // never freed by fa() as a top-level block
+       // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
+       // we make sure no such block is created in sprz()
+     }else ACSET(np,c)
+    }
    }
    np=np0;  // Advance to next block
   }

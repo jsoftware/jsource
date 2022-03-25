@@ -318,7 +318,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     ra(w);  // not abandoned: raise the block.  No need for AFKNOWNNAMED since usecount will preclude virtual extension
 // obsolete     if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
    }
-   ybuckptr->val=w; ybuckptr->valtype=ATYPETOVALTYPE(AT(w)); ybuckptr->sn=jt->currslistx;  // finish the assignment
+   ybuckptr->val=w; ybuckptr->valtype=ATYPETOVALTYPE(AT(w)); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCGLOBAL semantics
   }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)

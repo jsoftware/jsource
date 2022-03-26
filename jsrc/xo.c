@@ -178,7 +178,7 @@ F1(jtjclose){A*av;I*iv,j,h;
  // we have detached the string for the closing file.  It is possible that there wasn't one, if another thread got in and deleted it first.
  ASSERT(dela,EVFNUM)
  // Wait for any outstanding I/O to complete
- WRITELOCK(dela->lock)   fa(dela);  // active I/O sets a readlock on dela.  Wait for all to finish.  This lock goes away when the block is freed - which we do immediately
+ WRITELOCK(dela->lock) WRITEUNLOCK(dela->lock) fa(dela);  // active I/O sets a readlock on dela.  Wait for all to finish.  It can't start again because the string is gone.  Free dela finally
  if(fclose((F)h))R jerrno();   // try to close the file, fail if error
  R num(1);  // always return success
 // obsolete  RE(j=i0(indexof(JT(jt,fopf),sc(fnum(w))))); ASSERT(j<AM(JT(jt,fopf)),EVFNUM);

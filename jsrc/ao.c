@@ -402,7 +402,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     }
    }
    // Finally, if this was mean, divide the total by the frequency
-   if(unlikely(((FAV(self)->flag&VFKEYSLASHF)>>VFKEYSLASHFX)==3)){z=divideAW(z,freq);}  // always inplaceable
+   if(unlikely((((FAV(self)->flag&VFKEYSLASHF)==(3<<VFKEYSLASHFX))))){z=divideAW(z,freq);}  // always inplaceable
    EPILOG(z);
   }  // end 'locally handled arg types'
  }

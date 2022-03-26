@@ -166,7 +166,7 @@ typedef struct rngdata {
  I dlllasterror;     /* DLL stuff                                       */
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
 // end of cacheline 6
- A *repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this task but freed by other tasks.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
+ A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  DC sitop;            /* pointer to top of SI stack                                 */
  S taskidleq;   // thread#s of the tasks waiting for work.  Root of the idle chain is in the master
  S tasklock;   // lock used for taskidleq, used only in master thread.  Unused in other threads
@@ -354,10 +354,10 @@ typedef JST* JS;  // shared part of struct
 #else
 #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)))
 #endif
-#define JT(p,n) JJTOJ(p)->n
+#define JT(p,n) (JJTOJ(p)->n)
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
-#define MTHREAD(jt) (&jt->threaddata[0])   // master thread for shared jt
-#define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt
+#define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
+#define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jj) (JJTOJ(jj)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jj,n) &(JTTHREAD0(jj)[n])   // JTT struct for thread n
 #if !(defined(ANDROID) && defined(__x86_64__) && MAXTASKS<2)

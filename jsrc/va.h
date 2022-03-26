@@ -55,10 +55,10 @@
 #define VIPOKRNKA          ((I)1<<VIPOKRNKAX)
 
 // Extract the argument-conversion type from cv coming from the table
-#define atype(x) (((x)&VARGMSK)>>VARGX)
+#define atype(x) (((x)>>VARGX)&(VARGMSK>>VARGX))
 
 // Extract the result type from cv coming from the table
-#define rtype(x) (((x)&VRESMSK)>>VRESX)
+#define rtype(x) (((x)>>VRESX)&(VRESMSK>>VRESX))
 
 #if SY_64
 #define NOT(v)          ((v)^0x0101010101010101)

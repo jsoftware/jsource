@@ -144,7 +144,7 @@ F1(jtoutparms){I*v;
  R mtv;
 }
 
-F1(jtposq){ASSERTMTV(w); R v2((jt->boxpos&JTTHORNX)>>JTTHORNXX,(jt->boxpos&JTTHORNY)>>JTTHORNYX);}
+F1(jtposq){ASSERTMTV(w); R v2((jt->boxpos>>JTTHORNXX)&(JTTHORNX>>JTTHORNXX),(jt->boxpos>>JTTHORNYX)&(JTTHORNY>>JTTHORNYX));}
 
 F1(jtposs){I n,p,q,*v;
  RZ(w=vi(w));

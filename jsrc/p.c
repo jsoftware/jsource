@@ -178,7 +178,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 
 
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
-// We flag all multiple assignments as final because we are not carrying the value of the name further into the sentence  (scaf what if it's an atom?)
+// We flag all multiple assignments as final because the value is protected in the source
 static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
@@ -351,13 +351,13 @@ static A virthook(J jtip, A f, A g){
 #endif
 
 // name:: delete the symbol name but not deleting the value.  Undo the pending fa: If usecount goes to 1, make it abandoned inplaceable and tpush them
-// Incoming y has QCGLOBAL semantics, result value has QCFAOWED semantics
+// Incoming y is the value attached to the symbol & has QCGLOBAL semantics, result is same value with QCFAOWED semantics
 // result is the value, possibly with FAOWED set
 // obsolete #define USEDGLOBALX 21
 // obsolete #define USEDGLOBAL (1LL<<USEDGLOBALX)
 static A namecoco(J jt, A name, A y){F1PREFIP;
  if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., we can't do this (scaf why?), so indic that we need to fa
- A locfound=jt->locsyms; if(unlikely(((I)y&QCGLOBAL)!=0))locfound=syrdforlocale(QCWORD(y));  // get locale to use.  This re-looks up global names, but they should be rare in name::
+ A locfound=jt->locsyms; if(unlikely(((I)y&QCGLOBAL)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name::
 #if 0  // obsolete
  LX *locbuckets=LXAV0(jt->locsyms); L *sympv=SYMORIGIN;
  LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
@@ -370,7 +370,7 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
   if(likely(!SYMNEXTISPERM(nextsymx))){*asymx=s->next; fa(s->name); s->name=0; s->flag=0; s->sn=0; s->next=SYMLOCALROOT; SYMLOCALROOT=nextsymx;}
  }
 #endif
- L *zombsym;
+// obsolete  L *zombsym;
  WRITELOCK(locfound->lock)
 // obsolete  if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(name)->m),NAV(name)->s,NAV(name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
  jtprobedel((J)((I)jt+NAV(name)->m),NAV(name)->s,NAV(name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
@@ -722,9 +722,6 @@ undefname:
       }
 endname: ;
      }
-#if MEMAUDIT&0x2
-      audittstack(jt);  // scaf
-#endif
 
      // names have been resolved
      // y has the resolved value, which has the 4-bit QC type with QCFAOWED semantics (QCFAOWED set if a fa is needed on the value)
@@ -783,8 +780,6 @@ endname: ;
     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
     
     if(pmask){  // If all 0, nothing is dispatchable, go push next word
-if(jt->parsercalls==0x7)
- jt->parsercalls=0x7;  // scaf
      A fs=QCWORD(fsa->a);  // the action to be executed if lines 0-4
      pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after the result of this exec.   Wait till we know not fail, so we don't have to wait for (
      jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
@@ -826,7 +821,7 @@ if(jt->parsercalls==0x7)
           if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
            zval=(SYMORIGIN+(I)s)->val;  // get value of symbol in primary table.  There may be no value; that's OK
           }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
-         }else zval=probequiet(QCWORD(*(volatile A*)queue));  // global assignment, get slot address
+         }else zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));  // global assignment, get slot address
 // obsolete          // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
 // obsolete          // a relocation of the symbol table) is marked as not ASGSAFE
 // obsolete          jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
@@ -834,8 +829,7 @@ if(jt->parsercalls==0x7)
          // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
          // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace
 // obsolete          s=s?s:SYMVAL0; A zval=s->val; 
-         zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+ACUC2))?zval:0; jt->zombieval=zval;  // needs AFRO=1, AFNJA=2
-         // These instructions take a while to execute; they will probably be running when the pipeline breaks
+         zval=zval?zval:AFLAG0; zval=AC(zval)==((((AFLAG(zval)>>AFROX)&(AFRO>>AFROX))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;
          pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
         }
        }
@@ -870,9 +864,6 @@ RECURSIVERESULTSCHECK
 #endif
 #if MEMAUDIT&0x2
        if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
-#endif
-#if MEMAUDIT&0x2
-       audittstack(jt);   // scaf
 #endif
        pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
@@ -911,9 +902,6 @@ RECURSIVERESULTSCHECK
        stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
        stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
-#if MEMAUDIT&0x2
-       audittstack(jt);  // scaf
-#endif
        y=NEXTY;  // refetch next-word to save regs
 
        // Handle early exits: AVN on line (0)12 or (not LPAR on line 02 and finalexec).
@@ -977,9 +965,6 @@ RECURSIVERESULTSCHECK
        else rc=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);
 #if MEMAUDIT&0x10
        auditmemchains();
-#endif
-#if MEMAUDIT&0x2
-  audittstack(jt);  // scaf
 #endif
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
 // obsolete if ASGNSAFE perfect       pt0ecam&=~ASSIGNSYMNON0; // clear the flag indicating assignsym is set 

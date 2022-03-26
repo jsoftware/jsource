@@ -211,7 +211,7 @@ exit: ;
 // We take no locks on g.  They are the user's responsibility
 L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
  F1PREFIP;
- RZ(g);
+// obsolete  RZ(g);
  L *sympv=SYMORIGIN;  // base of symbol pool
  LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
 // obsolete  WRITELOCK(g->lock)
@@ -398,7 +398,6 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
  v=symnew(hv,tx|SYMNONPERM);   // symbol is non-PERMANENT and known to be available
  ra(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
-if(v->val||v->sn||v->valtype||v->flag)SEGFAULT;  // scaf
  R v;
 }    /* probe for assignment */
 
@@ -555,11 +554,12 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
  R 0;  // not found, locks released
 gotval: ;
  // found: l points to the symbol.  We hold a lock on g, if it is nonzero
- I res;
- if(component==0){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)l;}  // 15!:6, symbol address
- else if(component==1){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)voidAV(l->val);}  // 15!:14, data address
- else if(component==2){ASSERT(NOUN&AT(l->val),EVDOMAIN) res=(I)(l->val);}  // 15!:12, header address
+ I res=0;
+ if(component==0){ASSERTGOTO(NOUN&AT(l->val),EVDOMAIN,exitlock) res=(I)l;}  // 15!:6, symbol address
+ else if(component==1){ASSERTGOTO(NOUN&AT(l->val),EVDOMAIN,exitlock) res=(I)voidAV(l->val);}  // 15!:14, data address
+ else if(component==2){ASSERTGOTO(NOUN&AT(l->val),EVDOMAIN,exitlock) res=(I)(l->val);}  // 15!:12, header address
  else{res=l->sn+1;}  // 4!:4, script index
+exitlock:
  if(g)READUNLOCK(g->lock)
  R res;
 }
@@ -592,7 +592,7 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
   RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); RESETERR; 
   I val=jtsyrdinternal(jt,y,component);
   RE(0);  // if the name lookup failed, exit
-  ASSERT(component==3||y!=0,EVVALUE);  // error if name not found, for symbol or data address
+  ASSERT(component==3||val!=0,EVVALUE);  // error if name not found, for symbol or data address
 // obsolete   y=v->val;
 // obsolete   ASSERTGOTO(NOUN&AT(y),EVDOMAIN,exitfa);
   zv[i]=val-(component==3);  // undo the increment of script number.  Could use >>1

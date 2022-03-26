@@ -147,10 +147,10 @@ I jtsystemlock(J jt){S xxx;
   xxx=0;  // operation finishing - wait for it
   // should delay?
  }
- // We are the owner.  Go through all tasks, turning on the SYSLOCK task flag in each threads.  Count how many are running after the flag is set
+ // We are the owner.  Go through all tasks, turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
  // if there is only 1 (us), leave the systemlock at 1 and return success
  I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // our thread#, #running threads, base of thread blocks
- DO(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)&TASKSTATERUNNING)>>TASKSTATERUNNINGX;)
+ DO(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;)
  if(nrunning==1)R 1;  // exit fast if we are the only task running
  // Set the number of other running tasks into the systemlock
  __atomic_store_n(&JT(jt,systemlock),nrunning-1,__ATOMIC_RELEASE);

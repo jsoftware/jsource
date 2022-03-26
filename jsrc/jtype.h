@@ -168,7 +168,8 @@ struct AD {
  UC filler;
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
- US origin;  // these two values initialized with a single store - must be in order
+  // these two values initialized with a single store - must be in order
+ US origin;  // 
  S lock;   // can be used as a lock
 #endif
 #else
@@ -537,7 +538,8 @@ typedef I SI;
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->zombieval==w&&((s)<0)&&(AC(w)<=ACUC2))  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
+// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->zombieval==w&&((s)<0)&&(AC(w)<=ACUC2))  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
+#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)<0)&&jt->zombieval==w)  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
@@ -1167,7 +1169,7 @@ typedef struct {
 #define VF2IMPLOCX 20   // This verb is one of u. v.
 #define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))
 #define VF2CACHEABLEX 21   // In a nameref, indicates the nameref is cacheable
-#define VF2CACHEABLE  ((I)(((I)1)<<VF2CACHEABLE))
+#define VF2CACHEABLE  ((I)(((I)1)<<VF2CACHEABLEX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit

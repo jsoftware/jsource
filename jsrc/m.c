@@ -220,7 +220,9 @@ B jtspfree(J jt){I i;A p;
    US offsetmask = FHRHBLOCKOFFSETMASK(i);  // mask to use for extracting offset to root
    A baseblockproxyroot = 0;  // init to empty proxy chain
    US freereqd = 0;  // indicate if any fully-freed block is found
-   for(p=jt->mfree[i].pool;p;p=AFCHAIN(p)){
+   // after we finish the main free list, we will try the expatq
+   I nexpats=IMIN;  // number of expats repatriated
+   for(p=jt->mfree[i].pool;p;){
 #if MEMAUDIT&1
     if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT;  // make sure chains are valid
 #endif
@@ -229,7 +231,26 @@ B jtspfree(J jt){I i;A p;
     if(baseh==virginbase) {AFPROXYCHAIN(p) = baseblockproxyroot; baseblockproxyroot = p;}  // on first encounter of base block, chain the proxy for it
     AFHRH(base) = baseh += incr;  // increment header in base & restore
     freereqd |= baseh;  // accumulate indication of freed base
+    p=AFCHAIN(p);  // next block if any
+#if PYXES
+    ++nexpats;  // keep track of # blocks of this size repatriated
+    if(p==0){
+     // We have exhausted the main chain.  See if there are expats to process.  We may take expats more than once
+     if((p=jt->repatq[i])!=0){
+      //  there are expats.  Take them off the expatq
+      while(!__atomic_compare_exchange_n(&jt->repatq[i], &p, (A)0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // clear expatq and take its address
+     }
+     nexpats=nexpats<0?0:nexpats;  // if this is the first time we find expats, set count to 0 and we go up from there
+    }
+#endif
    }
+#if PYXES
+   // do space accounting for the expat blocks that we saw here
+   if(unlikely(nexpats>0)){  // small expats will probably be rare
+    jt->bytes-=nexpats*incr;  // keep track of total allocation
+    jt->mfree[i].ballo-=nexpats*incr;  // also number of bytes in this chain
+   }
+#endif
    // if any blocks can be freed, pass through the chain to remove them.
    if(FHRHISROOTALLOFREE(freereqd)) {   // if any of the base blocks were freed...
     A survivetail = (A)&jt->mfree[i].pool;  // running pointer to last block in chain of blocks that are NOT dropped off.  Chain is rooted in jt->mfree[i].pool, i. e. it replaces the previous chain there
@@ -1096,7 +1117,14 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);   // chain blocks to each other; set chain of last block to 0
  AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
 #else
- u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
+ u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
+#if PYXES
+// the lock must always be cleared when the block is returned, so we can set it once.  The origin likewise doesn't change
+#define MOREINIT *(I4 *)&u->origin=THREADID(jt);  // init allocating thread# and clear the lock
+#else
+#define MOREINIT
+#endif
+ DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT);    // chain blocks to each other; set chain of last block to 0
  AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
 #endif
  jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
@@ -1125,6 +1153,9 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  I nt=jt->malloctotal+=n;
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
+#if PYXES
+ z->lock=0;  // init lock on the block to 'available'
+#endif
  R z;
 }
 
@@ -1234,7 +1265,8 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 #endif
 
 
-// free a block.  The usecount must make it freeable
+// free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
+// repatriate it
 void jtmf(J jt,A w,I hrh){I mfreeb;
 #if MEMAUDIT&16
 auditmemchains();
@@ -1270,6 +1302,9 @@ printf("%p-\n",w);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
+#if PYXES
+  I origthread=w->origin; if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
+#endif
   jt->bytes -= allocsize;  // keep track of total allocation
   mfreeb = jt->mfree[blockx].ballo;   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
@@ -1277,6 +1312,14 @@ printf("%p-\n",w);
   if(unlikely(0 > (mfreeb-=allocsize)))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
   jt->mfree[blockx].ballo=mfreeb;
+#if PYXES
+  }else{
+   // repatriate a block allocated in another thread
+   jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
+   A expval=jt->repatq[blockx]; 
+   do AFCHAIN(w)=expval; while(!__atomic_compare_exchange_n(&jt->repatq[blockx], &expval, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // install w as head of chain, with old chain following
+  }
+#endif
  }else{                // buffer allocated from malloc
   mfreeb = jt->mfreegenallo;
   allocsize = FHRHSYSSIZE(hrh);

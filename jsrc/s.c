@@ -412,7 +412,7 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
  I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g));
  NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
-                              if(res){raposgbl(QCWORD(res)); res=(A)(((I)res&~QCNAMED)+(AR(g)<<(QCNAMEDX-ARNAMEDX))); READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED
+                              if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res); res=(A)(((I)res&~QCNAMED)+(AR(g)<<(QCNAMEDX-ARNAMEDX))); READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED
                               READUNLOCK(g->lock)} g=gn;
                   }  // return when name found.
  R 0;  // fall through: not found
@@ -687,7 +687,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // It is safe to do the recursive-usecount change here, because the value cannot have been released to any other core.  Similarly for
  // virtuals.
  rifv(w); // must realize any virtual
- if(unlikely(((AT(w)^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,AT(w)&RECURSIBLE)jtra(w,AT(w));}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
+ if(unlikely(((AT(w)^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,AT(w)&RECURSIBLE)jtra(w,AT(w),0);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
 // obsolete  A jtlocal=jt->locsyms, 
 // obsolete  A jtglobal=jt->global;  // current public symbol table

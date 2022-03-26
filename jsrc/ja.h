@@ -346,7 +346,7 @@
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 // obsolete #define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
-#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){if(tt&RECURSIBLE&&(tt^AFLAG(x))&RECURSIBLE)SEGFAULT;/*scaf*/jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
+#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
@@ -852,7 +852,7 @@
 #define qrr(x)                      jtqrr(jt,(x))  
 #define qstd(x)                     jtqstd(jt,(x))
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
-#define rarecur(x,tt,test,prolog,asgn) {if(unlikely(((test)&TRAVERSIBLE)!=0)){prolog AFLAG(x) asgn |=(tt)&RECURSIBLE; jtra((x),(tt));}}  // recur on descendants if traversible, set recursive if recursible
+#define rarecur(x,tt,test,prolog,asgn) {if(unlikely(((test)&TRAVERSIBLE)!=0)){prolog AFLAG(x) asgn |=(tt)&RECURSIBLE; jtra((x),(tt),0);}}  // recur on descendants if traversible, set recursive if recursible
 // If this block is recursible and not recursive, execute prolog and then raise the descendants
 #define radescend(x,prolog)         {I tt=AT(x); FLAGT flg=AFLAG(x); rarecur(x,tt,tt^flg,prolog,=flg)}
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
@@ -861,12 +861,13 @@
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block.  ras() does include rifv
 #define ra(x)   {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}
-// In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount)
+// In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount);
+// sv means the last arg is saved/restored through the call; qcg means the name is known to have qcglobal semantics (we use the constituents)
 #define rapos(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}
 #define raposlocal(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x,)}   // name in local table, recursive if not sparse and does not need atomic operation if AC=1
 #define raposacv(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1;}  // must be recursive usecount
-#define raposgbl(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(ISSPARSE(AT(x))))jtra((x),(AT(x)));}  // must be recursive usecount but may be sparse
-
+#define raposgblqcgsv(x,qct,sv) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}  // must be recursive usecount but may be sparse
+#define raposlocalqcgsv(x,qct,sv) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}  // must be recursive usecount but may be sparse
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
 #define raczap(x,cond,falsestart)   {I c=AC(x); if(likely(cond)){*AZAPLOC(x)=0; c&=~ACINPLACE;}else{falsestart c+=(c>>(BW-2))^1;} AC(x)=c; \
@@ -878,7 +879,7 @@
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
 #define ra0(x)                      radescend(x, if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);})
 // Make a block recursive if it is recursible and not already recursive.  Virtuals are already recursive.  We use this in a place where we know the result can't be unincorpable.  x might not be a noun
-#define ramkrecur(x)                if(unlikely(((AT(x)^AFLAG(x))&RECURSIBLE))){AFLAG(x)|=AT(x)&RECURSIBLE; jtra((x),AT(x));}
+#define ramkrecursv(x)              if(unlikely(((AT(x)^AFLAG(x))&RECURSIBLE))){AFLAG(x)|=AT(x)&RECURSIBLE; x=jtra(x,AT(x),x);}  // if block is not recursive, it must be local
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))

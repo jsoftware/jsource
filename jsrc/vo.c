@@ -696,7 +696,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  if(t&BOX){
   // boxed contents.  Make the result recursive; since each input box is going into exactly one slot in the result, we get the usecounts right if we
   // raise the usecount in the contents of w
-  jtra(w,BOX); AFLAGORLOCAL(z,BOX)
+  z=jtra(w,BOX,z); AFLAGORLOCAL(z,BOX)
   PRISTCLRF(w);   // contents have escaped.  w is no longer used
  }
  zv=CAV(z); ck=c*k;  // ck is length of one row in bytes

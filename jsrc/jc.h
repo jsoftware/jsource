@@ -250,6 +250,8 @@
 #define CMDOT      (C)'\320'       /* 208 320 d0 m.                           */
 #define CMCAP      (C)'\321'       /* 209 321 d1 M.                           */
 #define CNDOT      (C)'\322'       /* 210 322 d2 n.                           */
+#define CTDOT      (C)0xd3  // t.
+#define CTCAPDOT   (C)0xd4  // T.
 #define CQCAPCO    (C)'\326'       /* 214 326 d6 Q:                           */
 #define CSCAPCO    (C)'\332'       /* 218 332 da S:                           */
 // 228-231 free

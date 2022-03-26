@@ -609,14 +609,14 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
        L *s=sympv+(I)symx;  // get address of symbol in primary table
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
 // obsolete        pt0ecam|=s->valtype<<VALTYPEX;  // save the type
-       raposlocal(s->val);  // ra() the value to match syrd
-       y=(A)((I)s->val+(I)s->valtype);  //  combine the type and value.  type has QCGLOBAL semantics, as y does.
+       y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCGLOBAL semantics, as y does.
+       raposlocalqcgsv(s->val,s->valtype,y);  // ra() the value to match syrd.  type has global flag clear
       }else if(likely(buck!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic name
        if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        if((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
 // obsolete        if(unlikely(s->valtype==0)){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // if value has not been assigned, ignore it.
 // obsolete       pt0ecam|=s->valtype<<VALTYPEX;  // save the type
-       raposlocal(QCWORD(y));  // ra() the value to match syrd
+       raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra() the value to match syrd
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
 rdglob: ;  // here when we tried the buckets and failed
@@ -865,10 +865,10 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x2
        if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
 #endif
+       ramkrecursv(y);  // force recursive y
        pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
-       ramkrecur(y);  // force recursive y
        // (1) if any of args/fs is FAOWED, the value is now out of execution and can be fa()d.  BUT if the value is y, it remains in execution and we inherit the
        // FAOWED status into y (but only once per value).  This is mutually exclusive with
        // (2) free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
@@ -942,7 +942,7 @@ RECURSIVERESULTSCHECK
 #endif
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
-       ramkrecur(yy);  // force recursive y
+       ramkrecursv(yy);  // force recursive y
        if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
        if(ISSTKFAOWED(arg1=stack[pmask+1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
        if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
@@ -990,10 +990,10 @@ RECURSIVERESULTSCHECK
         A yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
         //  so that it is safe to remove its protection
-        y=NEXTY;  // refetch next-word to save regs
-        RECURSIVERESULTSCHECK
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
-        ramkrecur(yy);  // force recursive y
+        RECURSIVERESULTSCHECK
+        ramkrecursv(yy);  // force recursive y
+        y=NEXTY;  // refetch next-word to save regs
         if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
         if(ISSTKFAOWED(arg1=stack[3].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
@@ -1006,10 +1006,10 @@ RECURSIVERESULTSCHECK
         A yy=hook(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the hook
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
         //  so that it is safe to remove its protection
-        y=NEXTY;  // refetch next-word to save regs
-        RECURSIVERESULTSCHECK
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
-        ramkrecur(yy);  // force recursive y
+        RECURSIVERESULTSCHECK
+        ramkrecursv(yy);  // force recursive y
+        y=NEXTY;  // refetch next-word to save regs
         if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
         if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}

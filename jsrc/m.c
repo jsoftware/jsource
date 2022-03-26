@@ -231,15 +231,17 @@ B jtspfree(J jt){I i;A p;
     if(baseh==virginbase) {AFPROXYCHAIN(p) = baseblockproxyroot; baseblockproxyroot = p;}  // on first encounter of base block, chain the proxy for it
     AFHRH(base) = baseh += incr;  // increment header in base & restore
     freereqd |= baseh;  // accumulate indication of freed base
+    A prevp=p;  // save end-of-chain pointer
     p=AFCHAIN(p);  // next block if any
 #if PYXES
     ++nexpats;  // keep track of # blocks of this size repatriated
     if(p==0){
      // We have exhausted the main chain.  See if there are expats to process.  We may take expats more than once
-     if((p=jt->repatq[i])!=0){
+     if((p=__atomic_load_n(&jt->repatq[i],__ATOMIC_ACQUIRE))!=0){
       //  there are expats.  Take them off the expatq
-      while(!__atomic_compare_exchange_n(&jt->repatq[i], &p, (A)0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // clear expatq and take its address
+      while(!__atomic_compare_exchange_n(&jt->repatq[i], &p, (A)0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // clear expatq and take its address.  No ABA problem since we take entire q
      }
+     AFCHAIN(prevp)=p;  // extend the freed chain to include the new blocks, so we will process them all in later steps
      nexpats=nexpats<0?0:nexpats;  // if this is the first time we find expats, set count to 0 and we go up from there
     }
 #endif
@@ -693,7 +695,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
     // We must ensure that the backer has recursive usecount, as a way of protecting the CONTENTS.  We zap the tpop for the backer itself, but
     // not for the contents.
     ACRESET(w,ACUC1) *wzaploc=0;  // zap the tpop for w in lieu of ra() for it
-    if((t^wf)&RECURSIBLE){AFLAGRESET(w,wf|=(t&RECURSIBLE)) jtra(w,t);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
+    if((t^wf)&RECURSIBLE){AFLAGRESET(w,wf|=(t&RECURSIBLE)) jtra(w,t,0);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
 // when virtuals can be zapped, use that here
   }else{
    // if we can't transfer ownership, must ra the backer.  UNINCORPORABLEs go through here, and must be virtual so the backer, not the indirect block, is raised
@@ -827,12 +829,13 @@ static A raonlys(AD * RESTRICT w) { RZQ(w);
  ra(w); R w; }
 
 // This routine handles the recursion for ra().  ra() itself does the top level, this routine handles the contents
-I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
+// sv is passed in so it can be returned as the result, to save a register in the caller
+A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
  // we use if rather than switch because the first leg is most likely and the first two legs get almost everything
  if((t&BOX+SPARSE)>0){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
+  if(unlikely(n==0))R sv;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
   NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
@@ -860,7 +863,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
   // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
   x = SPA(v,a); raonlys(x);     x = SPA(v,e); raonlys(x);     x = SPA(v,i); raonlys(x);     x = SPA(v,x); raonlys(x);
  }
- R 1;
+ R sv;
 }
 
 // This optionally deletes wd, after deleting its contents.  t is the recursion mask: if t contains a bit set for a recursive
@@ -1316,8 +1319,7 @@ printf("%p-\n",w);
   }else{
    // repatriate a block allocated in another thread
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
-   A expval=jt->repatq[blockx]; 
-   do AFCHAIN(w)=expval; while(!__atomic_compare_exchange_n(&jt->repatq[blockx], &expval, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // install w as head of chain, with old chain following
+   A expval=jt->repatq[blockx]; do AFCHAIN(w)=expval; while(!__atomic_compare_exchange_n(&jt->repatq[blockx], &expval, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // atomic install at head of chain
   }
 #endif
  }else{                // buffer allocated from malloc

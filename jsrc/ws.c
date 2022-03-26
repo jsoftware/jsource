@@ -20,6 +20,9 @@ static C spellintab2[128-0x20][3] = {
 ['e'-0x20]={0,CEPS,0},            ['E'-0x20]={0,CEBAR,0},           ['f'-0x20]={0,CFIX,0},            ['H'-0x20]={0,CHGEOM,0},          ['i'-0x20]={0,CIOTA,CICO},        ['I'-0x20]={0,CICAP,0},           
 ['j'-0x20]={0,CJDOT,0},           ['L'-0x20]={0,CLDOT,CLCAPCO},     ['m'-0x20]={0,CMDOT,0},           ['M'-0x20]={0,CMCAP,0},           ['n'-0x20]={0,CNDOT,0},           ['o'-0x20]={0,CCIRCLE,0},         
 ['p'-0x20]={0,CPOLY,CPCO},        ['q'-0x20]={0,0,CQCO},            ['r'-0x20]={0,CRDOT,0},           ['s'-0x20]={0,0,CSCO},            ['S'-0x20]={0,0,CSCAPCO},
+#if PYXES
+['t'-0x20]={0,CTDOT,0},            ['T'-0x20]={0,CTCAPDOT,0},
+#endif
 ['u'-0x20]={0,CUDOT,CUCO},        ['v'-0x20]={0,CVDOT,0},           ['x'-0x20]={0,0,CXCO},           ['0'-0x20]={CNOUN,0,CFCONS},          
 ['1'-0x20]={0,0,CFCONS},          ['2'-0x20]={CHOOK,0,CFCONS},      ['3'-0x20]={CFORK,0,CFCONS},      ['4'-0x20]={CADVF,0,CFCONS},      ['5'-0x20]={0,0,CFCONS},          ['6'-0x20]={0,0,CFCONS},          
 ['7'-0x20]={0,0,CFCONS},          ['8'-0x20]={0,0,CFCONS},          ['9'-0x20]={0,0,CFCONS},          ['F'-0x20]={0,CFDOT,CFCO},        ['Z'-0x20]={0,0,CZCO},
@@ -80,6 +83,9 @@ static US spellouttab[256] = {
 [CMDOT   ]=(UC)'m'+DOT0,       [CMCAP   ]=(UC)'M'+DOT0,       [CNDOT   ]=(UC)'n'+DOT0,       [CCIRCLE ]=(UC)'o'+DOT0,       
 [CPOLY   ]=(UC)'p'+DOT0,       [CPCO    ]=(UC)'p'+CO0,       [CQCAPCO ]=(UC)'Q'+CO0,       [CQCO    ]=(UC)'q'+CO0,       
 [CRDOT   ]=(UC)'r'+DOT0,       [CSCO    ]=(UC)'s'+CO0,       [CSCAPCO ]=(UC)'S'+CO0,
+#if PYXES
+ [CTDOT    ]=(UC)'t'+DOT0,       [CTCAPDOT ]=(UC)'T'+DOT0,
+#endif
 [CUDOT   ]=(UC)'u'+DOT0,       [CVDOT   ]=(UC)'v'+DOT0,       
 [CUCO    ]=(UC)'u'+CO0,       [CXCO    ]=(UC)'x'+CO0,
 [CFCONS  ]=(UC)'0'+CO0,       [CAMIP   ]=(UC)'}',             [CCASEV  ]=(UC)'}',             [CFETCH  ]=(UC)'{'+CO0+CO1,

@@ -70,7 +70,7 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
 // obsolete     v->localuse.lu1.cachedref=stabent-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
 // obsolete     stabent->flag|=LCACHED;  // protect the value from changes
     WRITELOCK(fs->lock);  // we want to cache a name only once
-    if(v->localuse.lu1.cachedref==0){  // if this is nopt true, someone else beat us to the cache.  OK, we'll get it next time
+    if(v->localuse.lu1.cachedref==0){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
      v->localuse.lu1.cachedref=fs;  // store cached address, with FAOWED semantics (not owed)
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
@@ -83,7 +83,7 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
       // If the NM block is cachable, point it to the nameref.  The NM block must be marked cachable AND still be pointed to by the explicit definition, which
       // means that its usecount must be more than what comes from the nameref.  If the explicit definition has been deleted, we must ensure that we don't put a loop
       // in the chains, because there will never be a free from the non-nameref side to break the loop
-     if(NAV(thisname)->flag&NMCACHED && AC(thisname)>((AFLAG(self)&TRAVERSIBLE)!=0)){  // name from explicit definition, and definition still active  ?? scaf multithread trouble
+     if(NAV(thisname)->flag&NMCACHED && AC(thisname)>((AFLAG(self)&TRAVERSIBLE)!=0)){  // name from explicit definition, and definition still active
       // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
       // We must ensure that raising the nameref does not raise the usecount of the name, as it would if the nameref is not yet recursive.  If the usecount of the
       // name were raised, it would never go to 0 when the explicit definition is freed, and the block would leak.  Likewise we must undo the situation where the
@@ -123,8 +123,10 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
  A locnm=LOCNAME(jt->global);  // name of current global locale
  wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
  if((flgd0cp&3)==0){  // there is a name to look up
+#if 0    // scaf should make this right
 ... look up the sn of thisname ...
   READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in the locale name
+#endif
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif

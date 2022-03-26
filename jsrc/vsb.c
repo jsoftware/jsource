@@ -759,7 +759,7 @@ exit: ;
 static void resetdata(J jt){
  WRITELOCK(JT(jt,sblock))
  fa(STRINGTABLE); fa(HASHTABLE); fa(JT(jt,sbu)); // free old symbol
- jtsbtypeinit(JJTOJ(jt),MAXTHREADS);                          // initialization routine
+ jtsbtypeinit(JJTOJ(jt),MAXTASKS);                          // initialization routine
  ras(JT(jt,sbu)); ra(STRINGTABLE); ra(HASHTABLE); // init does not ra(); we do it here
  WRITEUNLOCK(JT(jt,sblock))
 }    /* re-initialize global symbol table */

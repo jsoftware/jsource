@@ -349,7 +349,11 @@ extern F1(jttable);
 extern F1(jttail);
 extern F1(jttally);
 extern F1(jttco);
-extern F1(jttdot);
+#if PYXES
+extern F2(jttdot);
+extern F1(jttcapdot1);
+extern F2(jttcapdot2);
+#endif
 extern F1(jtthorn1);
 extern F1(jtthorn1u);
 extern A jtthorn1xy(J,A,I);
@@ -802,7 +806,7 @@ extern A       jtprobelocal(J,A,A);
 extern A       probelocalbuckets(L*,A,LX,I);
 extern I        jtprod(J, I, I*);
 extern I        jtqcompare(J,Q,Q);
-extern I        jtra(AD* RESTRICT,I);
+extern A        jtra(AD* RESTRICT,I,A);
 extern A        jtras(J,AD* RESTRICT);
 extern A        jtra00s(J,AD* RESTRICT);
 extern A        jtrank1ex(J,AD * RESTRICT,A,I,AF);

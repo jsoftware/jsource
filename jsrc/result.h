@@ -184,7 +184,7 @@ do{
      // if unzappable OR recursible nonrecursive, raise children - even if z is UNINCORPABLE or VIRTUAL.  The children are about to be copied
      // We raise only the children, not the base block.  This converts the children to recursive usecount.  We leave the base block nonrecursive if it started
      // that way.  We may zap it later.  By not making the base recursive, we add 1 to the effective usecount of the children
-     jtra(z,AT(z));   // raise children only and make them recursive
+     jtra(z,AT(z),0);   // raise children only and make them recursive
     }
     // copy the cells, which have been raised if needed.  If we are copying forward, it is OK to copy fullwords
     JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen,ZZSTARTATEND,zzendmask)

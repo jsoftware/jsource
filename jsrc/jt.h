@@ -139,11 +139,11 @@ typedef struct rngdata {
 // obsolete  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
  C fillv0len;   // length of fill installed in fillv0
 // 7 bytes free
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the pthread_cond_t we are waiting on
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the address of the WAITBLOK we are waiting on
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
  I malloctotal;    // net total of malloc/free performed in m.c only
- I filler4[1];
+ DC sitop;            /* pointer to top of SI stack                                 */
  PFRAME parserstackframe;  // 4 words  
 // end of cacheline 4
 
@@ -167,16 +167,20 @@ typedef struct rngdata {
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
 // end of cacheline 6
  A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
- DC sitop;            /* pointer to top of SI stack                                 */
- S taskidleq;   // thread#s of the tasks waiting for work.  Root of the idle chain is in the master
- S tasklock;   // lock used for taskidleq, used only in master thread.  Unused in other threads
+ S taskidleq;   // thread#s of the tasks waiting for work.  Root of the idle chain is in the master.
+ S tasklock;  // lock for taskidleq.  Used only in master
  S taskstate;  // task state: modified by other tasks on a system lock
 #define TASKSTATERUNNINGX 0   // task has started
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
 #define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
 #define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
  // 2 bytes free
- A filler7[1];
+#if PYXES
+ pthread_t pthreadid;  // OS-dependent thread ID.  We need it only for destroying tasks.
+ C filler7[16-sizeof(pthread_t)];  // trouble if it's bigger than this!
+#else
+ I filler7[2];
+#endif
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;
@@ -269,11 +273,11 @@ typedef struct JSTstruct {
 // obsolete  A fopf;             /* open files corresp. file numbers                */
  S flock;            // r/w lock for flkd/fopa/fopf
  // rest of cacheline used only in exceptional paths
+ S nwthreads;    // number of worker threads allocated so far
  UC sm;               /* sm options set by JSM()                         */
  C smoption;         // wd options, see comment in jtwd
  UC int64rflag;       /* com flag for returning 64-bit integers          */
  UC transposeflag;    /* com flag for transposed arrays                  */
-// 2 bytes free
  void *iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I iomalloclen;   // length of the allocated block (in case we can reuse it)
  UI qtstackinit;      // jqt front-end C stack pointer
@@ -337,6 +341,7 @@ typedef JST* JS;  // shared part of struct
 
 // When the task is not running, part of the per-call area is used as a communication region to hold parameters:
 #define TASKCOMMREGION(jt) ((void **)jt+8)   // [0..3] are parms, each a (void *)
+#define TASKAWAITBLOK(jt) (*(void **)&jt->shapesink)  // pointer to WAITBLOK in a waiting task
 
 
 #if 0 // used only for direct locale numbering
@@ -359,7 +364,7 @@ typedef JST* JS;  // shared part of struct
 #define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jj) (JJTOJ(jj)->threaddata)   // the array of JTT structs
-#define JTFORTHREAD(jj,n) &(JTTHREAD0(jj)[n])   // JTT struct for thread n
+#define JTFORTHREAD(jj,n) (&(JTTHREAD0(jj)[n]))   // JTT struct for thread n
 #if !(defined(ANDROID) && defined(__x86_64__) && MAXTASKS<2)
 enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTASKS])<=JTALIGNBDY) };  // assert not too many threads
 enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected

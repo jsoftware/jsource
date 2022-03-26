@@ -620,9 +620,9 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
-#define MAXTHREADS 1  // maximum number of threads
-
-#define MAXTASKS 1  // maximum number of tasks running at once
+// obsolete #define MAXTHREADS 1  // maximum number of threads
+// obsolete 
+#define MAXTASKS 1  // maximum number of tasks running at once, including the master thread
 #define MAXTASKSRND 4  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
@@ -1201,7 +1201,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // use to incorporate into a known-recursive box.  We raise the usecount of z
 #define INCORPRA(z) {INCORPNC(z) ra(z); }
 // use to incorporate a newly-created zapped block of type t into a known-recursive box.  If t is recursible, raise the contents of z
-#define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if((t)&RECURSIBLE){AFLAGINIT(z,t); jtra(z,(t));}}
+#define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if((t)&RECURSIBLE){AFLAGINIT(z,t); jtra(z,(t),0);}}
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
 // and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))

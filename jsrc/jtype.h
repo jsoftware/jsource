@@ -513,12 +513,12 @@ typedef I SI;
 #define ACSUBLOCAL(a,n) if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-(n)))
 // use ACINCR... when you know the block is recursive & you just want to adjust the usecount. POS means you know it is >0.  SP means it might be sparse (which always requires recursion)
 #define ACINCRLOCAL(a)   ACADDLOCAL(a,1)
-#define ACINCRLOCALPOS(a) {if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1);}
-#define ACINCRLOCALPOSSP(a) {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
-#define ACDECRLOCAL(a)   ACSUBLOCAL(a,1)
 #define ACIPNO(a)       ACAND(a,~ACINPLACE)
 #define ACINCR(a)       ACADD(a,1)
 #if 0  // obsolete
+#define ACINCRLOCALPOS(a) {if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1);}
+#define ACINCRLOCALPOSSP(a) {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
+#define ACDECRLOCAL(a)   ACSUBLOCAL(a,1)
 #define ACSUB(a,n)      ACSUBLOCAL(a,n)
 #define ACINCRPOS(a)    if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1)
 #define ACINCRPOSSP(a)  {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
@@ -739,8 +739,8 @@ typedef struct {I e,p;X x;} DX;
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
 // values 0-11 are the same in all contexts:
 // the CAVN types are selected for comp ease in the typeval field of an assigned value.  They are indexes into ptcol.
-// The value which might also hold VALTYPENAMELESSADV, which is converted to ADV before the lookup) 
-#define ATYPETOVALTYPE(t) (((t)&NOUN)?1:CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value'
+// The value which might also hold VALTYPESPARSE, or VALTYPENAMELESSADV, which is converted to ADV before the lookup).  These types are seen only in valtypes in named blocks, which have QCGLOBAL semantics
+#define ATYPETOVALTYPE(t) (((t)&NOUN)?(ISSPARSE(t)?VALTYPESPARSE:QCNOUN):CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value'
 #define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any non-noun CAVN type, i. e. not in ACV.  But it must be set in SPARSE.  It can be used to test  for FUNC in a named QCTYPE
 #define QCADV  ((ADVX-LASTNOUNX)+1) // 4

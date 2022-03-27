@@ -370,24 +370,7 @@ printf("immex startloc=%p, execct=%x\n",startloc,startloc?LXAV0(startloc)[SYMLEX
 printf("immex return startloc=%p, execct=%x, jt->global=%p, stacksize=%d\n",startloc,startloc?LXAV0(startloc)[SYMLEXECCT]:0,jt->global,jt->callstacknext-savcallstack);  // scaf
 #endif
  if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
- // the stack may contain POPFIRST or POPFROM if the call changed locales, either properly by cocurrent or illicitly by 18!:4.  In either case we leave the implied locale as the
- // verb left it, i. e. NOT simulating a return to a named call in the FE.  But we do process the stack 
- while(jt->callstacknext>savcallstack){  // discard the stack for this call.  This largely follows the code at the end of unquote
-  if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPFROM){
-   // if TOS is POPFROM, the user executed 18!:4 from the keyboard.  The new locale has not been started, so we do nothing.
-  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
-   // The called function switched locales and incremented the count for the new locale.  We must close that execution
-#if 0 // obsolete
-printf("immex decr jt->global\n");
-#endif
-   DECREXECCT(jt->global);  // end execution of the last switched locale
-   if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
-    // We don't go to fast mode willy-nilly because we could be an interrupt handler and the interrupted function may be in slow mode
-  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){
-   // Since we know we didn't do a POP, there's no need to look for one
-  }
-  --jt->callstacknext;
- } // process the whole stack in reverse order
+ jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
 }
 
 

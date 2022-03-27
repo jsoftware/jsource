@@ -539,7 +539,7 @@ typedef I SI;
 // same, but s is an expression that is neg if it's OK to inplace
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->zombieval==w&&((s)<0)&&(AC(w)<=ACUC2))  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)<0)&&jt->zombieval==w)  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
+#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)<0)&&jt->zombieval==w)  // OK to inplace ordinary operation  scaf could improve?
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary

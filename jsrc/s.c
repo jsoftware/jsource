@@ -40,24 +40,26 @@
 
 #define symcol ((sizeof(L)+SZI-1)/SZI)
 
-B jtsymext(J jt,B b){A x,y;I j,m,n,*v,xn,yn;L*u;
- if(b){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
+I jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
+// obsolete if(b){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
+// obsolete  else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
+ if(SYMORIGIN!=0){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
  else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
  m=j<<1;                     // new size in bytes - 2 * old size
  m-=AKXR(0);                // m is now amount to allo to keep total byte size indicated by j<<1
  m/=symcol*SZI;              // round m to # LX entries we can fit
  xn=m*symcol;             // xn=#Is to allo
  GATV0(x,INT,xn,0); v=(I*)LAV0(x);    // allo the array; v->new symbol 0
- if(b)ICPY(v,LAV0(y),yn);             // if extension, copy old data to new block
+ if(SYMORIGIN!=0)ICPY(v,LAV0(y),yn);             // if extension, copy old data to new block
  mvc(SZI*(xn-yn),v+yn,1,MEMSET00);               /* 0 unused area for safety  kludge  */
  // dice the added area into symbols, chain them together, add to free chain
  u=n+(L*)v; j=1+n;    // u->start of new area  j=sym# of (1st new sym+1), will always chain each symbol to the next
  DQ(m-n-1, u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
- if(b)u->next=SYMGLOBALROOT;             // if there is an old chain, transfer it to the end of the new chain
+ if(SYMORIGIN!=0){u->next=SYMGLOBALROOT; fa(y);}   // if there is an old chain, transfer it to the end of the new chain, then free the old area
+// obsolete  if(SYMORIGIN!=0)fa(y);                                /* release old array           */
  ACINITZAP(x); SYMORIGIN=LAV0(x);           // preserve new array and switch to it
 // obsolete  ((L*)v)[0].next=(LX)n;                           /* new base of free chain               */
  SYMGLOBALROOT=(LX)n;  // start the new free chain with the first added ele
- if(b)fa(y);                                /* release old array           */
  R 1;
 }    /* 0: initialize (no old array); 1: extend old array */
 
@@ -82,7 +84,8 @@ I jtreservesym(J jt,I n){
   WRITEUNLOCK(JT(jt,symlock))
   // if we didn't get enough, call a system lock and extend/relocate the table
   if((nsymadded+=ninlock)>=n)break;  // incr total symbols added; success if we got enough
-  if(jtsystemlock(jt)){I extok=symext(1); jtsystemunlock(jt); RZ(extok)}  // extend symbol table under the big lock
+  RZ(jtsystemlock(jt,LOCKPRISYM,jtsymext))  // 
+// obsolete   if(jtsystemlock(jt)){I extok=symext(1); jtsystemunlock(jt); RZ(extok)}  // extend symbol table under the big lock
  }
 // obsolete  RZ(symext(1)); /* extend pool if req'd        */
 // obsolete  SYMRESERVE(n)   // check to make sure we got enough 

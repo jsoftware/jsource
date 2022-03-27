@@ -87,6 +87,7 @@ typedef struct rngdata {
    } uq;   // flags needed only by unquote  clear for task
   } us;   // access as US
  } uflags;   // 4 bytes
+// TASKCOMMAREA starts here, holding parms passed at startup
  I bytes;            // bytes currently in use - used only during 7!:1 clear for task
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
  S etxn1;            // last non-zero etxn    clear for task
@@ -103,9 +104,11 @@ typedef struct rngdata {
 // end of cacheline 0
 // At task startup, the entry parameters are stored here, at ((I*)jt)[8..11]
  A xmod;             // extended integer: the m in m&|@f clear for task
+// end of TASKCOMMAREA
+// end of cacheline 0
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  I4 parsercalls;      // # times parser was called clear for task
-// ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be uinitialized
+// ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
@@ -215,7 +218,9 @@ typedef struct JSTstruct {
 // in S state we must have everything else in the line be essentially read-only.
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
- S systemlock;       // lock used for quiescing all tasks
+ S systemlock;       // lock used for quiescing all tasks.  Bits is order of ascending priority:
+#define LOCKPRIDEBUG 1  // lock is requested for debug suspension
+#define LOCKPRISYM 2  // lock is requested for symbol extension
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */
@@ -340,7 +345,7 @@ typedef struct JSTstruct {
 typedef JST* JS;  // shared part of struct
 
 // When the task is not running, part of the per-call area is used as a communication region to hold parameters:
-#define TASKCOMMREGION(jt) ((void **)jt+8)   // [0..3] are parms, each a (void *)
+#define TASKCOMMREGION(jt) ((void **)(&jt->bytes))   // [0..3] are parms, each a (void *)
 #define TASKAWAITBLOK(jt) (*(void **)&jt->shapesink)  // pointer to WAITBLOK in a waiting task
 
 
@@ -363,8 +368,8 @@ typedef JST* JS;  // shared part of struct
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
-#define JTTHREAD0(jj) (JJTOJ(jj)->threaddata)   // the array of JTT structs
-#define JTFORTHREAD(jj,n) (&(JTTHREAD0(jj)[n]))   // JTT struct for thread n
+#define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
+#define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
 #if !(defined(ANDROID) && defined(__x86_64__) && MAXTASKS<2)
 enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTASKS])<=JTALIGNBDY) };  // assert not too many threads
 enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected

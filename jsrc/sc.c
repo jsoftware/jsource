@@ -426,6 +426,28 @@ if(likely(!(flgd0cp&3))){faacv(fs);}  // unra the name if it was looked up from 
 R z;
 }
 
+// This code needs to be executed before returning to the initial caller (i. e. the keyboard, or at end of task).
+// It cleans up any stack entries left by the first named call (since there was no end-of-stack to handle them)
+void jtstackepilog(J jt, I4 initcurrstack){
+ // the stack may contain POPFIRST or POPFROM if the call changed locales, either properly by cocurrent or illicitly by 18!:4.  In either case we leave the implied locale as the
+ // verb left it, i. e. NOT simulating a return to a named call in the FE.  But we do process the stack 
+ while(jt->callstacknext>initcurrstack){  // discard the stack for this call.  This largely follows the code at the end of unquote
+  if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPFROM){
+   // if TOS is POPFROM, the user executed 18!:4 from the keyboard.  The new locale has not been started, so we do nothing.
+  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
+   // The called function switched locales and incremented the count for the new locale.  We must close that execution
+#if 0 // obsolete
+printf("immex decr jt->global\n");
+#endif
+   DECREXECCT(jt->global);  // end execution of the last switched locale
+   if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
+    // We don't go to fast mode willy-nilly because we could be an interrupt handler and the interrupted function may be in slow mode
+  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){
+   // Since we know we didn't do a POP, there's no need to look for one
+  }
+  --jt->callstacknext;
+ } // process the whole stack in reverse order
+}
 
 // The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
 static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified

@@ -261,7 +261,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
 B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,locsize)[0]=3;  /* default hash table size for named    locales */
  INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
- RZ(symext(0));     /* initialize symbol pool                       */
+ RZ(jtsymext(jt));     /* initialize symbol pool                       */
  I p; FULLHASHSIZE(400,SYMBSIZE,1,SYMLINFOSIZE,p);
  GATV0(q,SYMB,p,0); AFLAGORLOCAL(q,SYMB) INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc.  All SYMBs are recursive (though this one, which will never be freed, needn't be)
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
@@ -629,6 +629,6 @@ B jtlocdestroy(J jt,A g){
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
 
- if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one  scaf  this is a problem in multithreads.
+ if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one  scaf **************************  this is a problem in multithreads.
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

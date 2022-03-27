@@ -622,8 +622,8 @@ extern unsigned int __cdecl _clearfp (void);
 
 // obsolete #define MAXTHREADS 1  // maximum number of threads
 // obsolete 
-#define MAXTASKS 1  // maximum number of tasks running at once, including the master thread
-#define MAXTASKSRND 4  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
+#define MAXTASKS 1  // scaf // maximum number of tasks running at once, including the master thread
+#define MAXTASKSRND 8  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
@@ -631,7 +631,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
 #ifndef PYXES
-#define PYXES 0
+#define PYXES 0   // scaf
 #endif
 #if !SY_64
 #undef PYXES
@@ -644,8 +644,19 @@ extern unsigned int __cdecl _clearfp (void);
 #define HIPIFARTIF(w,f) (w)
 #endif
 
-
-
+// if we are not multithreading, we replace the atomic operations with non-atomic versions
+#if !PYXES
+#define __atomic_store_n(aptr,val, memorder) (*aptr=val)
+#define __atomic_load_n(aptr, memorder) *aptr
+#define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
+#define __atomic_fetch_or(aptr, val, memorder) ({I res=*aptr; *aptr|=val; res;})
+#define __atomic_fetch_sub(aptr, val, memorder) ({I res=*aptr; *aptr-=val; res;})
+#define __atomic_fetch_add(aptr, val, memorder) ({I res=*aptr; *aptr+=val; res;})
+#define __atomic_fetch_and(aptr, val, memorder) ({I res=*aptr; *aptr&=val; res;})
+#define __atomic_add_fetch(aptr, val, memorder) (*aptr+=val)
+#define __atomic_sub_fetch(aptr, val, memorder) (*aptr-=val)
+#define __atomic_and_fetch(aptr, val, memorder) (*aptr&=val)
+#endif
 
 #define ADDBYTESINI1(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 #if BW==64
@@ -738,7 +749,7 @@ extern unsigned int __cdecl _clearfp (void);
 // test for equality of 2 8-bit values simultaneously
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
 #if PYXES
-#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely((res=jthipval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
+#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely((res=jtpyxval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #define READLOCK(lock) {S prev; if(unlikely((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))<0))readlock(&lock,prev); }
 #define WRITELOCK(lock)  { S prev; if(prev=__atomic_fetch_or(&lock,(S)0x8000,__ATOMIC_ACQ_REL)!=0)writelock(&lock,prev); }
 #define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // bits 0-14 belong to read

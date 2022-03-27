@@ -356,7 +356,7 @@ static A virthook(J jtip, A f, A g){
 // obsolete #define USEDGLOBALX 21
 // obsolete #define USEDGLOBAL (1LL<<USEDGLOBALX)
 static A namecoco(J jt, A name, A y){F1PREFIP;
- if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., we can't do this (scaf why?), so indic that we need to fa
+ if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., we can't do this because the value is not protected by FAOWED, so indic that we need to fa
  A locfound=jt->locsyms; if(unlikely(((I)y&QCGLOBAL)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name::
 #if 0  // obsolete
  LX *locbuckets=LXAV0(jt->locsyms); L *sympv=SYMORIGIN;

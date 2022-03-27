@@ -190,7 +190,7 @@ void writelock(S *alock, S prev){
  // We are the owner of the current write request.  When the reads finish, we have the lock
  nspins=1000;  // max expected reader delay, in 20-ns units.  They are all running in parallel
  while(prev&0x7fff){  // wait until reads complete
-  if(--nspins==0){nspins=1000; delay(5000*100 nsec);}  // delay if a thread seems to have been preempted
+  if(--nspins==0){nspins=1000; delay(500000);}  // delay if a thread seems to have been preempted
   delay(20);  // delay a little to reduce bus traffic while we wait for the readers to finish
   prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
  }

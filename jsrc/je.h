@@ -349,11 +349,9 @@ extern F1(jttable);
 extern F1(jttail);
 extern F1(jttally);
 extern F1(jttco);
-#if PYXES
 extern F2(jttdot);
 extern F1(jttcapdot1);
 extern F2(jttcapdot2);
-#endif
 extern F1(jtthorn1);
 extern F1(jtthorn1u);
 extern A jtthorn1xy(J,A,I);

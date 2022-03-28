@@ -470,7 +470,7 @@ extern unsigned int __cdecl _clearfp (void);
 // NEW WAY
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
-#define CSTACKSIZE      (SY_64?12000000:1000000)  // size we allocate in the calling function
+#define CSTACKSIZE      (SY_64?12009472:1015808)  // size we allocate in the calling function, aligned to 16k system page size
 #define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
 #else
 // OBSOLETE OLD WAY (with USECSTACK off)

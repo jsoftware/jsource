@@ -622,7 +622,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 // obsolete #define MAXTHREADS 1  // maximum number of threads
 // obsolete 
-#define MAXTASKS 1  // scaf // maximum number of tasks running at once, including the master thread
+#define MAXTASKS 6  // scaf // maximum number of tasks running at once, including the master thread
 #define MAXTASKSRND 8  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
@@ -642,6 +642,12 @@ extern unsigned int __cdecl _clearfp (void);
 #define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create pyx results from <, force-box, and sometimes ;
 #else
 #define HIPIFARTIF(w,f) (w)
+#endif
+
+// if we are not multithreading, the master thread only
+#if !PYXES
+#undef MAXTASKS
+#define MAXTASKS 1  // scaf // maximum number of tasks running at once, including the master thread
 #endif
 
 // if we are not multithreading, we replace the atomic operations with non-atomic versions

@@ -259,7 +259,14 @@ static I jtthreadcreate(J jt,I n){
  // create thread
  pthread_attr_init(&attr);
  ASSERT(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED)==0,EVFACE)  // default parms, except for DETACHED (which means we will never join() )
- ASSERT(pthread_attr_setstacksize(&attr,CSTACKSIZE)==0,EVFACE)    // request sufficient stack size
+ size_t stksiz=CSTACKSIZE;
+#if defined(__APPLE__)
+ stksiz=pthread_get_stacksize_np(pthread_self());
+#elif defined(__linux__)
+ pthread_attr_t tattr;  // attributes for the current task
+ if(pthread_getattr_np(pthread_self(),&tattr)==0) if(pthread_attr_getstacksize(&tattr,&stksiz)!=0)stksiz=CSTACKSIZE;
+#endif
+ ASSERT(pthread_attr_setstacksize(&attr,stksiz)==0,EVFACE)    // request sufficient stack size
  ASSERT(pthread_create(&JTFORTHREAD(jt,n)->pthreadid,&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
  R 1;
 }

@@ -218,18 +218,19 @@ typedef struct JSTstruct {
 // in S state we must have everything else in the line be essentially read-only.
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
- S systemlock;       // lock used for quiescing all tasks.  Bits is order of ascending priority:
-#define LOCKPRIDEBUG 1  // lock is requested for debug suspension
-#define LOCKPRISYM 2  // lock is requested for symbol extension
- US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
- B assert;           /* 1 iff evaluate assert. statements               */
+ S systemlock;       // lock used for quiescing all tasks.  Bits in order of desc3ending priority:
+#define LOCKPRISYM 1  // lock is requested for symbol extension
+#define LOCKPRIDEBUG 2  // lock is requested for debug suspension
+ S systemlocktct;   // counter field, used for systemlock sync
+ US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
  B stch;             /* enable setting of changed bit                   */
- C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
- UC dbuser;           /* user-entered value for db             */
+ C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
+// 7 bytes free
  void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
  A stloc;            // named locales symbol table - this pointer never changes
- A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives.
+ A zpath;         // path 'z', used for all initial paths
+ I filler0[1];
 // end of cacheline 0
 
 // Cacheline 1: DLL variables
@@ -258,7 +259,7 @@ typedef struct JSTstruct {
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
  void *sminput;
  void *smoutput;
- I filler2[2];
+ A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives.
 // end of cacheline 2
 
 // Cacheline 3: Locales
@@ -335,9 +336,10 @@ typedef struct JSTstruct {
  C nfe;              /* 1 for J native front end                    */
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
- UC seclev;           /* security level                                  */
-// 5 bytes free
- A zpath;    // path 'z', used for all initial paths
+ UC seclev;           /* security level                                  */ UC dbuser;           /* user-entered value for db             */
+ B assert;           /* 1 iff evaluate assert. statements               */
+// 3 bytes free
+ I filler7[1];
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));

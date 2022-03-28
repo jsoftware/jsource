@@ -631,7 +631,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
 #ifndef PYXES
-#define PYXES 0   // scaf
+#define PYXES 1   // scaf
 #endif
 #if !SY_64
 #undef PYXES

@@ -188,10 +188,8 @@ PRIM primtab[256] = {
  /*  r. */  PRIMACV(CRDOT,   VERB, jtrdot1,   jtrdot2,  0,   0,   0   ,VISATOMIC1|VASGSAFE,VF2NONE),
  /*  s: */  PRIMACV(CSCO,    VERB, jtsb1,     jtsb2,    RMAX,RMAX,RMAX,VASGSAFE,VF2NONE),
  /*  S: */  PRIMACV(CSCAPCO, CONJ, jtdomainerr1, jtscapco, 0,   0,   0   ,VFLAGNONE,VF2NONE),
-#if PYXES
  /*  t. */  PRIMACV(CTDOT,   CONJ, jtdomainerr1, jttdot, 0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  T. */  PRIMACV(CTCAPDOT, VERB, jttcapdot1, jttcapdot2, 0,   0,   0   ,VFLAGNONE,VF2NONE),
-#endif
  /*  u. */  PRIMACV(CUDOT,   VERB, jtimplocref,jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE,VF2IMPLOC),
  /*  u: */  PRIMACV(CUCO,    VERB, jtuco1,    jtuco2,   RMAX,RMAX,RMAX,VASGSAFE,VF2NONE),
  /*  v. */  PRIMACV(CVDOT,   VERB, jtimplocref, jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE,VF2IMPLOC),

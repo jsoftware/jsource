@@ -283,7 +283,7 @@ static I jtthreadcreate(J jt,I n){
  size_t stksiz=CSTACKSIZE;
 #if defined(__APPLE__)
  stksiz=pthread_get_stacksize_np(pthread_self());
-#elif defined(__linux__)
+#elif defined(__linux__) && defined(_GNU_SOURCE)
  pthread_attr_t tattr;  // attributes for the current task
  if(pthread_getattr_np(pthread_self(),&tattr)==0) if(pthread_attr_getstacksize(&tattr,&stksiz)!=0)stksiz=CSTACKSIZE;
 #endif

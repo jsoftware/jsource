@@ -49,9 +49,10 @@
 #else
 #define SETTRACK
 #endif
-#define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
+#define parseline(z,lbl) {S attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
- if(likely(!attnval)){if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}else{jsignal(EVATTN); z=0;}   /* debug parse if debug/pm */ \
+ if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); goto lbl;} jsignal(EVATTN); z=0;} \
+ else{lbl: if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}   /* debug parse if debug/pm */ \
  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200))if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)z=0;}} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
 
@@ -413,7 +414,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
-   tpop(old); parseline(z);
+   tpop(old); parseline(z,lbl1);
    // if there is no error, or ?? debug mode, step to next line
    if(likely(z!=0)){bi=i; i+=((cwgroup>>5)&1)+1;  // go to next sentence, or to the one after that if it's harmless end. 
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // end of definition
@@ -453,10 +454,10 @@ tblockcase:
    if(likely(cwgroup&0x200))tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely((cwgroup&0xff)==CASSERT)){
-    if(JT(jt,assert)){parseline(t); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nGpysfctdl<<(BW-2),callframe); t=t!=0?mtv:t; // if assert., signal post-execution error if result not all 1s.
+    if(JT(jt,assert)){parseline(t,lbl2); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nGpysfctdl<<(BW-2),callframe); t=t!=0?mtv:t; // if assert., signal post-execution error if result not all 1s.
        // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while. .  But we can't set t=0 without looking like an error.  So we use a safe permanent value, mtv.  
     }else{++i; break;}  // if ignored assert, go to NSI
-   }else{parseline(t);}
+   }else{parseline(t,lbl3);}
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // exit if end of defn
     if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)+jt->uflags.us.cx.cx_us)!=0))break;  // break if T block extended

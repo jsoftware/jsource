@@ -767,7 +767,7 @@ A jtgc(J jt,A w,A* old){
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
    // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.
-   if(unlikely(AC(b)<bc)){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b exists only for w, delete b.  get w out of the way.  w cannot be sparse.  Since we
+   if(unlikely(AC(b)<bc)){A origw = w; RZ(w=realize(w)); radescend(w); fa(b); mf(origw); }  // if b exists only for w, delete b.  get w out of the way.  w cannot be sparse.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
    else{

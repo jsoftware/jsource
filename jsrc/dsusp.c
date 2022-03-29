@@ -202,6 +202,9 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  R z;
 }
 
+// Take system lock before going into debug
+//static A 
+
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
 A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;

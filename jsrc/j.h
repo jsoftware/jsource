@@ -631,7 +631,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
 #ifndef PYXES
-#define PYXES 1   // scaf
+#define PYXES 0   // scaf
 #endif
 #if !SY_64
 #undef PYXES
@@ -647,7 +647,7 @@ extern unsigned int __cdecl _clearfp (void);
 // if we are not multithreading, the master thread only
 #if !PYXES
 #undef MAXTASKS
-#define MAXTASKS 1  // scaf // maximum number of tasks running at once, including the master thread
+#define MAXTASKS 1  // override to no tasks if no pyxes
 #endif
 
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
@@ -655,10 +655,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
 #define __atomic_load_n(aptr, memorder) *aptr
 #define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
-#define __atomic_fetch_or(aptr, val, memorder) ({I res=*aptr; *aptr|=val; res;})
-#define __atomic_fetch_sub(aptr, val, memorder) ({I res=*aptr; *aptr-=val; res;})
-#define __atomic_fetch_add(aptr, val, memorder) ({I res=*aptr; *aptr+=val; res;})
-#define __atomic_fetch_and(aptr, val, memorder) ({I res=*aptr; *aptr&=val; res;})
+#define __atomic_fetch_or(aptr, val, memorder) ({I rrres=*aptr; *aptr|=val; rrres;})
+#define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=*aptr; *aptr-=val; rrres;})
+#define __atomic_fetch_add(aptr, val, memorder) ({I rrres=*aptr; *aptr+=val; rrres;})
+#define __atomic_fetch_and(aptr, val, memorder) ({I rrres=*aptr; *aptr&=val; rrres;})
 #define __atomic_add_fetch(aptr, val, memorder) (*aptr+=val)
 #define __atomic_sub_fetch(aptr, val, memorder) (*aptr-=val)
 #define __atomic_and_fetch(aptr, val, memorder) (*aptr&=val)

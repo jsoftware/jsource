@@ -42,7 +42,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    // If the input is DIRECT and abandoned inplaceable, mark the result as PRISTINE
    // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
    AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX))) INCORPNC(w);  // this realizes w if virtual
-   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
+   raczap(w,aband!=0)  // INCORPNC+this=INCORPRA, but using zap when abandoned
   }else{
    // WILLBEOPENED: the result itself will be discarded and only the contents will be used.
    // Keep the result nonrecursive and don't realize any virtuals, knowing that they will be be realized if necessary before they are incorporated later.  They will be freed in the caller
@@ -141,7 +141,7 @@ F2PREFIP;ARGCHK2(a,w);
   if(unboxempty<0){
    // w was unboxed or empty.  Put it directly into neww, then ra or zap it if recursive.  If DIRECT abandoned, make result PRISTINE
    AFLAGORLOCAL(neww,(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX))  // starts PRISTINE if abandoned DIRECT
-   if(likely(!(optype&BOX))){raczap(w,aband!=0,c&=~ACINPLACE; INCORPNC(w);)}else{ACIPNO(w);}  // INCORPNC+this=INCORPRA, but using zap when abandoned.  If not recursive, must be non-inplace
+   if(likely(!(optype&BOX))){INCORPNC(w); raczap(w,aband!=0)}else{ACIPNO(w);}  // INCORPNC+this=INCORPRA, but using zap when abandoned.  If not recursive, must be non-inplace
    AAV(neww)[0]=w;   // install w as first box
   }else{
    // w was boxed, & a known singleton.  Put the single value into neww, then ra or zap if neww recursive.  neww is PRISTINE if w is abandoned pristine
@@ -182,7 +182,7 @@ F2PREFIP;ARGCHK2(a,w);
    // if w is recursive, or WILLOPEN is not set, realize any virtual a.  Virtual a allowed only in WILLOPEN nonrecursive result
    if(likely((AFLAG(w)|~optype)&BOX))realizeifvirtual(a)
    AFLAGPRISTNO(a)   // since a is incorporated, it can't be PRISTINE
-   if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0,c&=~ACINPLACE;)}else{ACIPNO(a)} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
+   if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0)}else{ACIPNO(a)} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
    a=HIPIFARTIF(a,AFLAG(w));
   }
   // a has the new value to add at the front of the list

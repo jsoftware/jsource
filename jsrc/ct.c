@@ -321,13 +321,17 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  }
  R box(pyx);
 }
+#endif
 
 // u t. n - start a task.  We just create a vrb to handle the arguments
 F2(jttdot){
  ASSERTVN(a,w);
- ASSERT(PYXES,EVNONCE)
+#if PYXES
  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
  R fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
+#else
+ ASSERT(PYXES,EVNONCE)
+#endif
 }
 
 // T. y - set debugging thread #
@@ -335,7 +339,7 @@ F1(jttcapdot1){ASSERT(0, EVNONCE)}
 // x T. y - various thread and task operations
 F2(jttcapdot2){A z;
  ARGCHK2(a,w)
- ASSERT(PYXES,EVNONCE)
+#if PYXES
  I m; RE(m=i0(a))   // get the x argument, which must be an atom
  // process the requested function.  We test by hand because only a few could be called often
  if(likely(m==3)){
@@ -377,5 +381,7 @@ zv[threadct++]=currjt->taskidleq;
   }
  }else ASSERT(0,EVDOMAIN)
  RETF(z);  // return thread#
-}
+#else
+ ASSERT(PYXES,EVNONCE)
 #endif
+}

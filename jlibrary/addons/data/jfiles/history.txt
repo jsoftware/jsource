@@ -1,7 +1,0 @@
-data/jfiles - change history
-
-== 1.0.0/1 ==
- * moved to addons
-
-== 1.0.2 ==
- * j801

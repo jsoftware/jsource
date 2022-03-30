@@ -149,7 +149,7 @@ CC=COMPILER
 export CC
 USE_SLEEF=1
 export USE_SLEEF
-USE_PYXES=<pyxes>
+USE_PYXES=1
 export USE_PYXES
 CLEAN
 j64x=j64TYPE ./build_libj.sh  
@@ -158,10 +158,9 @@ echo done
 )
 
 same=: 'SUFFIX';suffix;'PLATFORM';platform;'MAKE2';pmake2;'CLEAN';clean;'COMPILER';compiler
-shlibj    =: shtemplate rplc 'TARGET';'libj'    ;'<pyxes>';'0';'TYPE';'';    ;same
-shlibjavx =: shtemplate rplc 'TARGET';'libjavx' ;'<pyxes>';'0';'<pyxes>';'0'; 'TYPE';'avx' ;same
-shlibjavx2=: shtemplate rplc 'TARGET';'libjavx2';'<pyxes>';'0'; 'TYPE';'avx2';same
-shlibjpyx =: shtemplate rplc 'TARGET';'libjpyx' ;'<pyxes>';'1';'TYPE';'avx2';same
+shlibj    =: shtemplate rplc 'TARGET';'libj'    ;'TYPE';'';    ;same
+shlibjavx =: shtemplate rplc 'TARGET';'libjavx' ;'TYPE';'avx' ;same
+shlibjavx2=: shtemplate rplc 'TARGET';'libjavx2';'TYPE';'avx2';same
 
 shcommon=: }:0 : 0 rplc 'MAKE2';pmake2
 target=../jlibrary/bin/TARGETSUFFIX
@@ -206,8 +205,6 @@ case. 'libjavx' do.
  shlibjavx fwrite psh
 case. 'libjavx2' do.
  shlibjavx2 fwrite psh
-case. 'libjpyx' do.
- shlibjpyx fwrite psh
 case.            do.
  'unknown build' assert 0
 end.

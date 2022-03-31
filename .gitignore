@@ -71,3 +71,11 @@ jlibrary/tools/
 
 #github workflow action folders
 j64/
+
+# addons
+jlibrary/addons
+!jlibrary/addons/data/jfiles
+!jlibrary/addons/data/jmf
+!jlibrary/addons/dev/fold
+!jlibrary/addons/dev/lu
+

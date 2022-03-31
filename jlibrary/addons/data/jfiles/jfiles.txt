@@ -1,0 +1,24 @@
+jfiles.ijs
+
+==========
+
+This script contains definitions for the J component file system.
+
+
+
+main functions:
+
+   jcreate        jcreate 'dat'
+
+   jappend        (<i.2 3) jappend 'dat'
+
+   jdup           'new' jdup 'dat'
+
+   jerase         jerase 'dat'
+
+   jread          jread 'dat';2
+
+   jreplace       ('new value';123) jreplace 'dat';2 5
+
+   jsize          jsize 'dat'
+

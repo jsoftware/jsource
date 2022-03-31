@@ -1,0 +1,20 @@
+data/jmf - change history
+
+== 1.0.0 ==
+ * moved to addons
+
+== 1.0.1/5 ==
+ * J701 beta release
+
+== 1.0.6/7 ==
+ * UNAME android
+
+== 1.0.8 ==
+ * j801
+
+== 1.0.13 ==
+ * MAC OS X (darwin) mmap lseek
+
+== 1.0.20 ==
+ * 807 header change
+

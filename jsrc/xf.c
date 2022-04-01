@@ -9,8 +9,7 @@
 #include <windows.h>
 #include <winbase.h>
 #else
-#ifdef __GNUC__
-#define _GNU_SOURCE
+#if defined(__GNUC__) && defined(_GNU_SOURCE)
 #include <dlfcn.h>
 #endif
 #include <sys/types.h>
@@ -330,8 +329,7 @@ F1(jtjgetpid){
 }
 
 #if (SYS & SYS_UNIX)
-// #ifdef __GNUC__
-#if 0
+#if defined(__GNUC__) && defined(_GNU_SOURCE)
 F1(jtpathdll){Dl_info info;
  ASSERTMTV(w);
  if(dladdr(jtpathdll, &info)){

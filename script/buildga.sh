@@ -28,19 +28,19 @@ echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 cd make2
 ./clean.sh
 
-j64x=j64 ./build_jconsole.sh
+j64x=j64 USE_PYXES=1 ./build_jconsole.sh
 j64x=j64 ./build_tsdll.sh
-j64x=j64 ./build_libj.sh
+j64x=j64 USE_PYXES=1 ./build_libj.sh
 if [ "$1" == "darwin" ]; then
 ./clean.sh
-j64x=j64arm ./build_jconsole.sh || true
+j64x=j64arm USE_PYXES=1 ./build_jconsole.sh || true
 j64x=j64arm ./build_tsdll.sh || true
-j64x=j64arm ./build_libj.sh || true
+j64x=j64arm USE_PYXES=1 ./build_libj.sh || true
 fi
 ./clean.sh
-j64x=j64avx ./build_libj.sh
+j64x=j64avx USE_PYXES=1 ./build_libj.sh
 ./clean.sh
-j64x=j64avx2 ./build_libj.sh
+j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
 
 cd ..
 cp bin/$1/j64/* j64

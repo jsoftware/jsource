@@ -285,7 +285,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
 static I jtthreadcreate(J jt,I n){
  pthread_attr_t attr;  // attributes for the task we will start
  // create thread
- pthread_attr_init(&attr);
+ ASSERT(pthread_attr_init(&attr)==0,EVFACE);
  ASSERT(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED)==0,EVFACE)  // default parms, except for DETACHED (which means we will never join() )
  size_t stksiz=CSTACKSIZE;
 #if defined(__APPLE__)

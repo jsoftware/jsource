@@ -28,6 +28,9 @@ share name;sharename[;mt] - share 'sharename' as name
 
 MAPNAME,MAPFN,... showmap col indexes 
 )
+memhad_z_=: [: {: [: memr 0 2 4 ,~ (15!:6)@<
+memdad_z_=: 15!:14@<
+
 0 : 0
 807 made changes to the header that affect jmf J code
 before 807 - HADR field bytes are (lilendian) rrrr (j32) rrrrrrrr (j64)
@@ -48,13 +51,6 @@ HS=: SZI*HSN
 AFRO=: 1
 AFNJA=: 2
 NULLPTR=: <0
-gethad=: 3 : 0
-sad=. symget <fullname y
-'bad name' assert sad
-1{memr sad,0 4,JINT
-)
-symget=: 15!:6
-symset=: 15!:7
 allochdr=: 3 : 'r[2 setHADC r=.15!:8 y'
 freehdr=: 15!:9
 msize=: gethadmsize=: 3 : 'memr y,HADM,1,JINT'
@@ -62,7 +58,7 @@ fullname=: 3 : 0
 t=. y-.' '
 t,('_'~:{:t)#'_base_'
 )
-newheader=: 0~:memr (gethad'SZI_jmf_'),HADR,1,JINT
+newheader=: 0~:memr (memhad'SZI_jmf_'),HADR,1,JINT
 
 setheader=: 4 : 0
 if. newheader do.
@@ -194,9 +190,9 @@ settypeshape=: 3 : 0
 'name type shape'=: y
 type =: nountype type
 rank=. #shape
-had=. gethad name
+had=. memhad name
 'flag msize'=. memr had,HADFLAG,2,JINT
-'not mapped and writeable' assert 2=flag
+'not mapped and writeable' assert 2=3 (17 b.) flag
 size=. (JTYPES i.type){JSIZES
 ts=. size**/shape
 'msize too small' assert ts<:msize
@@ -280,20 +276,16 @@ else.
 end.
 i.0 0
 )
-getflagsad=: 3 : 0
-SZI+1{memr (symget <fullname y),0 4,JINT
-)
 readonly=: 3 : 0
-AFRO(17 b.)memr (getflagsad y),0 1,JINT
+AFRO(17 b.) a.i.memr (HADFLAG+memhad fullname y),0 1,JCHAR
 :
-flagsad=. getflagsad y
-flags=. memr flagsad,0 1,JINT
+ad=. HADFLAG+memhad fullname y
+flags=. a.i.memr ad,0 1,JCHAR
 flags=. flags(17 b.)(26 b.)AFRO
 flags=. flags(23 b.)AFRO*0~:x
-flags memw flagsad,0 1,JINT
+(flags{a.) memw ad,0 1,JCHAR
 i. 0 0
 )
-
 showmap=: 3 : 0
 h=. 'name';'fn';'sn';'fh';'mh';'address';'header';'fsize';'jmf';'mt';'msize';'refs'
 hads=. 6{"1 mappings
@@ -392,7 +384,7 @@ end.
 
 m=. (had;0=type) (MAPHEADER,MAPJMF)}m
 mappings=: mappings,m
-(name)=: symset had
+(name)=: 15!:7 had
 i.0 0
 )
 remap=: 3 : 0

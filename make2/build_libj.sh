@@ -156,6 +156,7 @@ fi
 USE_PYXES="${USE_PYXES:=0}"
 if [ $USE_PYXES -eq 1 ] ; then
 common="$common -DPYXES=1"
+LDTHREAD=" -pthread "
 else
 common="$common -DPYXES=0"
 fi

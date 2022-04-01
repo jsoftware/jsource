@@ -622,8 +622,8 @@ extern unsigned int __cdecl _clearfp (void);
 
 // obsolete #define MAXTHREADS 1  // maximum number of threads
 // obsolete 
-#define MAXTASKS 6  // scaf // maximum number of tasks running at once, including the master thread
-#define MAXTASKSRND 8  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
+#define MAXTASKS 15    // maximum number of tasks running at once, including the master thread
+#define MAXTASKSRND 16  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
@@ -631,7 +631,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
 #ifndef PYXES
-#define PYXES 0   // scaf
+#define PYXES 1
 #endif
 #if !SY_64
 #undef PYXES
@@ -1773,7 +1773,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1.
 // Implies that AM must not be modified when abandoned block is assigned to x/y.
 // Clear KNOWNNAMED since we are removing the value from a name
-#define SYMVALFA(l) {A v=(l).val; if(v){AFLAGAND(v,~AFKNOWNNAMED); if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; ACOR(v,ACINPLACE&(AC(v)-2));}else{fa(v);}}}
+#define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGAND(v,~AFKNOWNNAMED); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGAND(v,~AFKNOWNNAMED););}}}
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

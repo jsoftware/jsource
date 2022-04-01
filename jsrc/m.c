@@ -88,7 +88,7 @@ logfirsttime=0; logparm=svlogparm;
 
 
 // Return the total length of the data area of y, i. e. the number of bytes from start-of-data to end-of-allocation
-// The allocation size depends on the type of allocation
+// The allocation size depends on the type of allocation.  The block must not be read-only
 I allosize(A y) {
  if(AFLAG(y)&AFVIRTUAL)R 0;  // if this block is virtual, you can't append to the data, so don't ask about the length
  if(!(AFLAG(y)&(AFNJA))) {

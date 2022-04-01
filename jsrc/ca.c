@@ -369,7 +369,7 @@ F2(jtampco){AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
 static DF1(withl){F1PREFIP;DECLFG; A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
 static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
 
-// Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the pricision in effect when the hash was made
+// Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the precision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
 static DF1(ixfixedleft){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT R z;}  // must use the ct when table was created
 // Here for compounds like (i.&0@:e.)&n  e.&n -.&n that compute a prehashed table from w

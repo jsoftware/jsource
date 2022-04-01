@@ -827,9 +827,11 @@ endname: ;
 // obsolete          jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
 // obsolete if ASGNSAFE perfect         pt0ecam|=(s!=0)<<ASSIGNSYMNON0X;  // remember if it's nonzero
          // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
-         // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace
+         // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace.
+         // The block can be virtual, if it is x/y to xdefn.  We must never inplace to a virtual block
 // obsolete          s=s?s:SYMVAL0; A zval=s->val; 
-         zval=zval?zval:AFLAG0; zval=AC(zval)==((((AFLAG(zval)>>AFROX)&(AFRO>>AFROX))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;
+// obsolete          zval=zval?zval:AFLAG0; zval=AC(zval)==((((AFLAG(zval)>>AFROX)&(AFRO>>AFROX))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;
+         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;
          pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
         }
        }

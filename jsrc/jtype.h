@@ -550,10 +550,11 @@ typedef I SI;
 // obsolete   )  // OK to inplace ordinary operation
 #define EXTENDINPLACENJA(a,w) \
   ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
-    ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
-      (jt->zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&1)>(UI)jt->zombieval) /* asg-in-place or virt extension.  Remember if virt extension  */ \
+    ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA, where any fit MUST be used */\
+      (jt->zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&(((AC(a)^ACUC2)|(AFLAG(a)&(AFRO|AFVIRTUAL)))==0))>(UI)jt->zombieval) /* asg-in-place or virt extension.  Remember if virt extension  */ \
         /* virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value is stacked only once */ \
         /* we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized */ \
+        /* the other requirements for inplacing are AC=2 and not VIRTUAL or RO */ \
     )  /* OK to inplace assignment/virtual */ \
   )
 // obsolete    &&  (virtreqd||AC(a)<=ACUC2) )   /* name not already on stack (not required for virt extension) */

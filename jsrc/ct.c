@@ -145,6 +145,7 @@ A jtartiffut(J jt,A w,I aflag){A z;
 #endif
 #if PYXES
 
+// ****************************** waiting for values *******************************
 typedef struct condmutex{
  pthread_cond_t cond;
  pthread_mutex_t mutex;
@@ -156,6 +157,8 @@ typedef struct pyxcondmutex{
  C errcode;  // 0 if no error, or error code
  WAITBLOK pyxwb;  // sync info
 } PYXBLOK;
+
+static struct timespec maxwait={0,2000000};  // 2ms - maximum time to wait for a pyx.  After that, check to see if a system lock has been requested
 
 // w is an A holding a pyx value.  Return its value when it has been resolved
 A jtpyxval(J jt,A pyx){A res; C errcode;
@@ -173,6 +176,7 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
  ASSERT(0,errcode)   // if error, return the error code
 }
 
+// ************************************* Locks **************************************
 // take a readlock on *alock.  We come here only if a writelock was requested or running
 void readlock(S *alock, S prev){
  // loop until we get the lock
@@ -218,6 +222,7 @@ void writelock(S *alock, S prev){
 }
 
 // *********************** task creation ********************************
+
 // Processing loop for thread.  Create a wait block for the thread, and wait on it.  Each loop runs one user task
 static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
  // get/set stack limits
@@ -234,7 +239,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   WRITELOCK(mjt->tasklock);  jt->taskidleq=mjt->taskidleq; mjt->taskidleq=THREADID(jt); WRITEUNLOCK(mjt->tasklock);   // atomic install at head of chain
   // wait, then release mutex
   pthread_cond_wait(&wblok.cond,&wblok.mutex); pthread_mutex_unlock(&wblok.mutex);
-  // extract task parameters: args & pyx block.  Their usecount was raised before we started
+  // extract task parameters: args & pyx block.  Their usecount was raised before we started.  The self here is for u t. v so that we can get to the v 
   A arg1=TASKCOMMREGION(jt)[0]; A arg2=TASKCOMMREGION(jt)[1]; A arg3=TASKCOMMREGION(jt)[2]; A pyx=TASKCOMMREGION(jt)[3];
   // initialize the non-parameter part of task block
   memset(&jt->uflags.us.uq,0,offsetof(JTT,ranks)-offsetof(JTT,uflags.us.uq));    // clear what should be cleared
@@ -247,7 +252,9 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   A startloc=jt->global;  // point to current global locale
   if(likely(startloc!=0))INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
   I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
-  A z=FAV(FAV(self)->fgh[0])->valencefns[dyad](jt,arg1,arg2,arg3);  // execute the u in u t. v
+  // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
+  A uarg3=FAV(self)->fgh[0], uarg2=arg2; uarg2=dyad?uarg2:uarg3;  // get self, positioned after the last noun arg
+  A z=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
   if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
   jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
 
@@ -298,10 +305,12 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
  // take a thread to run.  if none, just execute & return
  J mjt=MTHREAD(JJTOJ(jt));
- WRITELOCK(mjt->tasklock); J exjt=JTFORTHREAD(jt,mjt->taskidleq); mjt->taskidleq=jt->taskidleq; WRITEUNLOCK(mjt->tasklock);   // exjt is thread to run; remove from idle q.  If no idle, exjt==mjt
+ WRITELOCK(mjt->tasklock); J exjt=JTFORTHREAD(jt,mjt->taskidleq); mjt->taskidleq=exjt->taskidleq; WRITEUNLOCK(mjt->tasklock);   // exjt is thread to run; remove from idle q.  If no idle, exjt==mjt
  if(exjt==mjt){
-  // there is no idle thread.  Just run the verb in the master, creating a simple boxed result
-  pyx=FAV(FAV(self)->fgh[0])->valencefns[dyad](jt,arg1,arg2,arg3);  // execute the u in u t. v
+  // there is no idle thread.  Just run the verb in this thread, creating a simple boxed result
+  // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
+  A uarg3=FAV(self)->fgh[0], uarg2=arg2; uarg2=dyad?uarg2:uarg3;  // get self, positioned after the last noun arg
+  pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
  }else{
   // there is a thread.  start a task there
   // realize virtual arguments; raise the usecount of the arguments including self
@@ -319,7 +328,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   WAITBLOK *exwblok=TASKAWAITBLOK(exjt);  // get the address of the task's waitblok
   pthread_mutex_lock(&exwblok->mutex); pthread_cond_signal(&exwblok->cond); pthread_mutex_unlock(&exwblok->mutex);
  }
- R box(pyx);
+ R box(pyx);  // Create a RECURSIVE box holding the pyx or result value
 }
 #endif
 

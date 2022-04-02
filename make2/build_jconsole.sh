@@ -122,7 +122,7 @@ if [ $USE_EMU_AVX -eq 1 ] ; then
 common="$common -DEMU_AVX=1"
 fi
 
-USE_PYXES="${USE_PYXES:=0}"
+USE_PYXES="${USE_PYXES:=1}"
 if [ $USE_PYXES -eq 1 ] ; then
 common="$common -DPYXES=1"
 else

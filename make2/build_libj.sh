@@ -153,7 +153,7 @@ if [ $USE_BOXEDSPARSE -eq 1 ] ; then
 common="$common -DBOXEDSPARSE"
 fi
 
-USE_PYXES="${USE_PYXES:=0}"
+USE_PYXES="${USE_PYXES:=1}"
 if [ $USE_PYXES -eq 1 ] ; then
 common="$common -DPYXES=1"
 LDTHREAD=" -pthread "

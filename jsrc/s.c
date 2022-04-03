@@ -40,7 +40,7 @@
 
 #define symcol ((sizeof(L)+SZI-1)/SZI)
 
-I jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
+A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
 // obsolete if(b){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
 // obsolete  else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
  if(SYMORIGIN!=0){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
@@ -60,7 +60,7 @@ I jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
  ACINITZAP(x); SYMORIGIN=LAV0(x);           // preserve new array and switch to it
 // obsolete  ((L*)v)[0].next=(LX)n;                           /* new base of free chain               */
  SYMGLOBALROOT=(LX)n;  // start the new free chain with the first added ele
- R 1;
+ R (A)1;
 }    /* 0: initialize (no old array); 1: extend old array */
 
 // Make sure there are n symbols available for allocation.  Extend the symbol table if not.

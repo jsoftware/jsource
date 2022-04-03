@@ -79,7 +79,7 @@ I lnumsi(DC d){A c;I i;
 
 
 static DC suspset(DC d){DC e=0;
- NOUNROLL while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  /* find bottommost call                 */
+ NOUNROLL while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  // find bottommost call, e=previous ele
  if(!(d&&DCCALL==d->dctype))R 0;                /* don't suspend if no such call     */
  if(d->dcc){RZQ(e); e->dcsusp=1;}               // if explicit, set susp on line - there should always be a following frame, but if not do nothing
  else      d->dcsusp=1;                         /* if not explicit, set susp on call */
@@ -120,6 +120,7 @@ static A jtsusp(J jt){A z;
  A trap=0; READLOCK(JT(jt,dblock)) if((trap=JT(jt,dbtrap))!=0)ra(trap); READUNLOCK(JT(jt,dblock))  // fetch trap sentence and protect it
  if(trap){RESETERR; immex(trap); fa(trap); tpop(old);}  // execute with force typeout, remove protection
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
+ J jtold=jt;  // save the thread that we started in
  while(1){A  inp;
   jt->jerr=0;
   A iep=0;
@@ -138,10 +139,15 @@ static A jtsusp(J jt){A z;
   // Kludge: 13 : 0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doen't properly route the result of these to the
   // suspension result and we would lose them.  Fortunately they have no arguments
   if(JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
+  if(z&&AFLAG(z)&AFDEBUGRESULT&&IAV(C(AAV(z)[0]))[0]==SUSTHREAD){  // (0;0) {:: z; is this T. y?
+   jt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
+   continue;
+  }
   if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1
   tpop(old);  // if we don't need the result for the caller here, free up the space
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info
+ jt=jtold;  // Reset to original debug thread
  // Reset stack
  if(JT(jt,dbuser)&DB1){
 #if USECSTACK
@@ -202,8 +208,11 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  R z;
 }
 
-// Take system lock before going into debug
-//static A 
+// Take system lock before going into debug.  If the debug request is granted to another thread, keep puuting it up until we get it
+static A jtdebugmux(J jt){A z;
+ do{z=jtsystemlock(jt,LOCKPRIDEBUG,jtdebug);}while(z==(A)1);
+ R z;
+}
 
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
@@ -215,7 +224,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  jsignal(err);   // signal the requested error
  jt->parserstackframe=oframe;  // restore to the executing sentence
  // enter debug mode if that is enabled
- if(c&&jt->uflags.us.cx.cx_c.db){jt->sitop->dcj=jt->jerr; z=debug(); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ if(c&&jt->uflags.us.cx.cx_c.db){jt->sitop->dcj=jt->jerr; z=jtdebugmux(jt); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
@@ -234,7 +243,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;B s;
  }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
  // executed 13!:0]0, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
- if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
  R parsez;
 }
 
@@ -250,7 +259,7 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){A t,z;B s;V*sv;
    else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outside of debug mode
-   if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
+   if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(!(d->dcnewlineno&&d->dcix!=-1))break;  // if 'run' specified (by jump not to -1), loop again.  Otherwise exit with result given
    // for 'run', the value of z gives the argument(s) to set; but if no args given, leave them unchanged
    if(AN(z)){w=C(AAV(z)[0]); a=AN(z)==2?C(AAV(z)[1]):0;}  // extract new args if there are any
@@ -309,6 +318,9 @@ static F2(jtdbrr){DC d;
 F1(jtdbrr1 ){R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
 F2(jtdbrr2 ){R dbrr(a, w);}
 
+// T. y - set debugging thread #
+// This is a suspension command, but not suspension-ending
+F1(jttcapdot1){I thno; RE(thno=i0(w)); ASSERT(BETWEENC(thno,0,JT(jt,nwthreads)),EVDOMAIN) A z; RZ(z=mkwris(link(sc(SUSTHREAD),sc(thno)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
 
 // 13!:14, query suspension trap sentence
 F1(jtdbtrapq){

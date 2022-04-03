@@ -20,6 +20,7 @@
 #define SUSJUMP     4       /* jump to specified line                       */
 #define SUSNEXT     5       /* run next line                                */
 #define SUSSS       6       /* single step mode                             */
+#define SUSTHREAD   8       // set thread number
 
 
 /* si->dcss values; 0 means not single step                                 */

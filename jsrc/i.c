@@ -163,17 +163,17 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  INITJT(jjt,dgemm_thres)=DGEMM_THRES;
  INITJT(jjt,zgemm_thres)=ZGEMM_THRES;
  INITJT(jjt,deprecex)=num(7);  // scaf suppress msg 7 for the nonce
+#if USECSTACK
+ jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
+ jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
+#else
+  jt->fdepn=NFDEP;
+#endif
  I threadno; for(threadno=0;threadno<nthreads;++threadno){jt=&jjt->threaddata[threadno];
   RESETRANK;  // init both ranks to RMAX
   strcpy(jt->pp,"%0.6g");
   jt->fcalln=NFCALL;
   jt->cct= 1.0-FUZZ;
-#if USECSTACK
-  jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
-  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
-#else
-  jt->fdepn=NFDEP;
-#endif
   jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
   jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return
@@ -208,7 +208,7 @@ static B jtinitfinis(JS jjt,I nthreads){
 static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 /* required for jdll and doesn't hurt others */
  gjt=jjt; // global jt for JPF debug
- jt->taskstate=TASKSTATERUNNING;  // The master thread is always running
+ jt->taskstate=0;  // The master thread is non-running when it is idle, so that system lock doesn't wait for it
  
 #if (SYS & SYS_DOS)
  t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);

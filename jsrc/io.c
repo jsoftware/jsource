@@ -396,6 +396,8 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  A *old=jm->tnextpushp;
  *JT(jt,adbreak)=0;  // remove pending ATTN before executing the sentence
  x=jtinpl(jm,0,(I)strlen(lp),lp);
+ I taskstate=jm->taskstate; if(likely(!(taskstate&TASKSTATERUNNING)))jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
+      // but if the master task is already running, this is a recursion, and just stay in running state
  // if there is an immex latent expression (9!:27), execute it before prompting
  // All these immexes run with result-display enabled (jt flags=0)
  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
@@ -406,6 +408,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm) jm->jerr=0;
 // obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
+ if(likely(!(taskstate&TASKSTATERUNNING)))jtclrtaskrunning(jm);  //  when we finally return to FE, clear running state in case other tasks are running and need system lock
  jtshowerr(jm);   // jt flags=0 to force typeout
  jtspfree(jm);
  jttpop(jm,old);

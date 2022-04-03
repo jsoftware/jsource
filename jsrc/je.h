@@ -837,6 +837,13 @@ extern B        jtscheck(J,A);
 extern A        jtscx(J,X);
 extern A        jtscib(J,I);
 extern B        jtsesminit(JS,I);
+#if PYXES
+extern void jtsettaskrunning(J);
+extern void jtclrtaskrunning(J);
+#else
+#define jtsettaskrunning(J)
+#define jtclrtaskrunning(J)
+#endif
 extern void     jtsetleakcode(J,I);
 extern A        jtsfn(J,B,A);
 extern A        jtsfne(J,A);
@@ -866,7 +873,7 @@ extern I        jtsumattymesprods(J,I,void *,void *,I,I,I,I,I,void *);
 extern B        jtsymbinit(JS,I);
 extern I       jtsymbis(J,A,A,A);
 extern I       jtsymbisdel(J,A,A,A);
-extern I        jtsymext(J);
+extern A        jtsymext(J);
 extern void     jtsymfreeha(J,A);
 extern L*       jtsymnew(J,LX*,LX);
 extern A        jtsybaseloc(J,A);
@@ -876,7 +883,7 @@ extern A        jtsyrdforlocale(J,A);
 extern A        jtsyrd1forlocale(J,C*,UI4,A);
 extern L*       jtsyrdfromloc(J,A,A);
 extern A       jtsyrdnobuckets(J,A);
-extern I        jtsystemlock(J,I,I (*)(JTT*));
+extern A        jtsystemlock(J,I,A (*)(JTT*));
 extern I        jtsystemlockaccept(J,I);
 extern A        jttaker(J,I,A);
 extern D        jttceil(J,D);

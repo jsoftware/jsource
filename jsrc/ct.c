@@ -66,17 +66,18 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 // Take lock on the entire system, waiting till all threads acknowledge
 // priority is the priority of the request.  lockedfunction is the function to call when the lock has been agreed.
 // if multiple requesters ask for a lock, the function will be called in only one of them
-// lockedfunction should return 0 for error, 1 for OK.  If it returns error, the error will be signaled to all tasks
-// Result is 0 for error, otherwise OK
-I jtsystemlock(J jt,I priority,I (*lockedfunction)()){
+// lockedfunction should return 0 for error, otherwise the value to use.  The return to the caller depends on jerr and
+// whether the thread ran the function: in the thread that ran the function, value/error from lockedfunction is passed through;
+// in other threads, 1 is returned always with no error signaled
+A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
  // If the system is already in systemlock, the system is essentially single-threaded.  Just execute the user's function.
  // This would happen if a sentence executed in debug suspension needed symbols, or had an error
- if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2){(*lockedfunction)(jt); RE(0); R 1;}
+ if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2){R (*lockedfunction)(jt);}
  // Process the request.  We don't know what the highest-priority request is until we have heard from all the
  // threads.  Thus, it is possible that our request will still be pending whe we finish.  In that case, loop till it is satisfied
  while(priority!=0){
-  // If the systemlock is negative, the system is still finishing the previous lock.  Wait for it to clear
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)<0)delay(100);
+// obsolete   // If the systemlock is negative, the system is still finishing the previous lock.  Wait for it to clear
+// obsolete   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)<0)delay(100);
   S xxx=0; I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
   // In the leader task only, go through all tasks, turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
@@ -91,11 +92,11 @@ I jtsystemlock(J jt,I priority,I (*lockedfunction)()){
   if(executor){  // if we were the first to request the winning priority
    // This is the winning thread.  Perform the function and save the error status
    while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)delay(20); nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // pick up nrunning
-   (*lockedfunction)(jt);
+   z=(*lockedfunction)(jt);
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],jt->jerr,__ATOMIC_RELEASE);
   }
   // state 5: everybody gets the result of the operation
-  C res; DOINSTATE(executor,5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)
+  DOINSTATE(executor,5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)
   // Now wind down the lock.
   if(executor){
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],0,__ATOMIC_RELEASE);  // clear the error flag from the interrupt request
@@ -110,11 +111,13 @@ I jtsystemlock(J jt,I priority,I (*lockedfunction)()){
   }else{
    // outside the executor, we wait for our tasklock to be removed
    while(__atomic_load_n(&jt->taskstate,__ATOMIC_ACQUIRE)&TASKSTATELOCKACTIVE)delay(20);
+   z=(A)1;  // just use a value of 1 to indicate we were not the executing thread
   }
-  ASSERT(res==0,res)  // if there was an error, signal it in all threads
   priority&=~winningpri;  // if our request was serviced, remove it, regardless of who serviced it
  }
- R 1;  // no error
+ // here a request was processed at the level we requested.  We have the value to return; error
+ // is available but has been signaled to the executor only
+ R z;  // ewturn to requester
 }
 
 // Allow a lock to proceed.  Called by a running thread when it notices the broadcast system-lock request at its priority or higher
@@ -122,14 +125,14 @@ I jtsystemlock(J jt,I priority,I (*lockedfunction)()){
 // Result is 0 if the lock processing failed
 I jtsystemlockaccept(J jt, I priority){
  do{
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=2)delay(20); __atomic_fetch_sub(&JT(jt,systemlock),1,__ATOMIC_ACQ_REL);  // state 2: requesters raise requests
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=3)delay(20); C finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlock),1,__ATOMIC_ACQ_REL);  // state 3: see what won
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)delay(20); __atomic_fetch_sub(&JT(jt,systemlock),1,__ATOMIC_ACQ_REL);  // state 4: transfer to executor
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=5)delay(20); C res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlock),1,__ATOMIC_ACQ_REL);  // state 5: get result status
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=2)delay(20);                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 2: requesters raise requests
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=3)delay(20); C finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 3: see what won
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)delay(20);                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 4: transfer to executor
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=5)delay(20); C res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 5: get result status
   while(__atomic_load_n(&jt->taskstate,__ATOMIC_ACQUIRE)&TASKSTATELOCKACTIVE)delay(20);
   ASSERT(res==0,res)  // if there was an error, signal it in all threads
   // loop back if there is another request that this can tolerate
-  I winningpri=LOWESTBIT(finalpriority); finalpriority&=~winningpri; priority&=~finalpriority; // final<-remaining requests; leave priority as the ones we are OK with
+  I winningpri=LOWESTBIT(finalpriority); finalpriority&=~winningpri; priority&=finalpriority; // final<-remaining requests; leave priority as the ones we are OK with
  }while(priority);  // if our priority was SYM and the remaining request is DEBUG, we have to return to get to a DEBUG point
  // this thread is free to continue.  No lock request is possible until systemlock has been cleared
  R 1;
@@ -164,12 +167,14 @@ static struct timespec maxwait={0,2000000};  // 2ms - maximum time to wait for a
 A jtpyxval(J jt,A pyx){A res; C errcode;
  // read the pyx value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
  // that if we read nonzero the pyx has been resolved, even without an acquire barrier
- while((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){  // repeat till defined, in case we get spurious wakeups
+ while((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){  // repeat till defined
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   pthread_mutex_lock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
   if((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0)
-   pthread_cond_wait(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
+   pthread_cond_timedwait(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex,&maxwait);
   pthread_mutex_unlock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
+  // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
+  if(unlikely(__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE))!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG);}
  }
  // res now contains the certified value of the pyx.
  if(likely(res!=0))R res;   // valid value, use it
@@ -223,14 +228,28 @@ void writelock(S *alock, S prev){
 
 // *********************** task creation ********************************
 
+// The RUNNING flag must not be changed while a system lock is in progress, because the lock owner knows how many active tasks there are
+void jtsettaskrunning(J jt){
+ // go to RUNNING state; but we are not allowed to change state if LOCKACTIVE has been set in our task.  In that
+ // case someone has started a system lock and our running status has been captured
+ S oldstate; while(oldstate=0, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){if(oldstate&TASKSTATELOCKACTIVE)delay(10000);}
+}
+void jtclrtaskrunning(J jt){
+  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
+ S oldstate; while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG|LOCKPRISYM);}else delay(10000);}
+}
+
 // Processing loop for thread.  Create a wait block for the thread, and wait on it.  Each loop runs one user task
 static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
- // get/set stack limits
-// not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
- jt->cstackinit=(UI)&wblok;  // use a local as a surrogate for the stack pointer
  // allocate condition & mutex here in a struct & initialize
  pthread_cond_init(&wblok.cond,0); pthread_mutex_init(&wblok.mutex,0);
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
+ // get/set stack limits
+// not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
+ jt->cstackinit=(UI)&wblok;  // use a local as a surrogate for the stack pointer
+ jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // init stack as for main thread
+   // Note: we use cstackinit as an indication that this thread is ready to use.  It is actually a few cycles away from that.  Thus it is possible, but extremely unlikely,
+   // that this task will not be seen first time u t. v is used
  while(1){
   // put pointer to our cond/mutex into commregion so other tasks can see it
   // take our mutex
@@ -238,15 +257,13 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   TASKAWAITBLOK(jt)=&wblok; J mjt=MTHREAD(JJTOJ(jt));
   WRITELOCK(mjt->tasklock);  jt->taskidleq=mjt->taskidleq; mjt->taskidleq=THREADID(jt); WRITEUNLOCK(mjt->tasklock);   // atomic install at head of chain
   // wait, then release mutex
-  pthread_cond_wait(&wblok.cond,&wblok.mutex); pthread_mutex_unlock(&wblok.mutex);
+  pthread_mutex_lock(&wblok.mutex); pthread_cond_wait(&wblok.cond,&wblok.mutex); pthread_mutex_unlock(&wblok.mutex);
   // extract task parameters: args & pyx block.  Their usecount was raised before we started.  The self here is for u t. v so that we can get to the v 
   A arg1=TASKCOMMREGION(jt)[0]; A arg2=TASKCOMMREGION(jt)[1]; A arg3=TASKCOMMREGION(jt)[2]; A pyx=TASKCOMMREGION(jt)[3];
   // initialize the non-parameter part of task block
   memset(&jt->uflags.us.uq,0,offsetof(JTT,ranks)-offsetof(JTT,uflags.us.uq));    // clear what should be cleared
   jt->iepdo=0; jt->xmode=0;  jt->recurstate=RECSTATEBUSY; RESETRANK; jt->locsyms=JT(jt,emptylocale); jt->currslistx=-1;  // init what needs initing.  Notably clear the local symbols
-  // go to RUNNING state; but we are not allowed to change state if LOCKACTIVE has been set in our task.  In that
-  // case someone has started a system lock and our running status has been captured
-  S oldstate=0; while(!__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){if(oldstate&TASKSTATELOCKACTIVE)delay(100000); oldstate=0;}
+  jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
   // run the task, raising & lowering the locale execct.  Bivalent
   I4 savcallstack = jt->callstacknext;   // starting callstack
   A startloc=jt->global;  // point to current global locale
@@ -274,8 +291,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   fa(arg1); fa(arg2); if(dyad){fa(arg3);}
   // unprotect pyx
   fa(pyx);
-  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
-  oldstate=TASKSTATERUNNING; while(!__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){if(oldstate&TASKSTATELOCKACTIVE)jtsystemlockaccept(jt,LOCKPRIDEBUG|LOCKPRISYM); oldstate=TASKSTATERUNNING;}
+  jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks
   jttpop(jt,old); // clear anything left on the stack after execution
   // loop back to wait for next task
  }
@@ -296,6 +312,8 @@ static I jtthreadcreate(J jt,I n){
 #endif
  ASSERT(pthread_attr_setstacksize(&attr,stksiz)==0,EVFACE)    // request sufficient stack size
  ASSERT(pthread_create(&JTFORTHREAD(jt,n)->pthreadid,&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
+ // since the user may try to use the thread right away, delay until it is available for use.  We use cstackmin as a 99.999% proxy for 'ready'
+ while(__atomic_load_n(&JTFORTHREAD(jt,n)->cstackmin,__ATOMIC_ACQUIRE)==0){delay(10000);}  // task startup takes a while
  R 1;
 }
 
@@ -343,8 +361,6 @@ F2(jttdot){
 #endif
 }
 
-// T. y - set debugging thread #
-F1(jttcapdot1){ASSERT(0, EVNONCE)}
 // x T. y - various thread and task operations
 F2(jttcapdot2){A z;
  ARGCHK2(a,w)

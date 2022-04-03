@@ -1097,14 +1097,16 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  // We don't need to save all SYMLINFOSIZE slots for local symbol tables
  // Go through each hashchain of the model, after the first one.  We know the non-PERMANENT flags are off
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, ztx is element to insert after
+  SYMRESERVE(1)   // this relocates symbols
   while(SYMNEXTISPERM(ahx)) {L *l;  // for each permanent entry...
-   SYMRESERVE(1) l=symnew(zhbase,SYMNEXT(ztx));   // make sure symbol is available; append new symbol after tail (or head, if tail is empty), as PERMANENT
+   l=symnew(zhbase,SYMNEXT(ztx));   // make sure symbol is available; append new symbol after tail (or head, if tail is empty), as PERMANENT.
    *zhbase=SYMNEXT(*zhbase);  // zhbase points to the pointer to the entry we just added.  First time, that's the chain base
    A nm=(SYMORIGIN)[ahx].name;
    l->name=nm; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
    l->flag=(SYMORIGIN)[ahx].flag&(LINFO|LPERMANENT);  // Preserve only flags that persist
    ztx = ztx?(SYMORIGIN)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
+   SYMRESERVEPREFSUFF(1,I lsymno=l-SYMORIGIN;, l=&(SYMORIGIN)[lsymno];)   // relocate l if the symbols are relocated
    zhbase=&l->next;  // after the first time, zhbase is the chain field of the tail
    ahx = (SYMORIGIN)[ahx].next;  // advance to next symbol
   }

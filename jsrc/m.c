@@ -891,6 +891,8 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
     np=*wv;  // prefetch first box
     NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
      np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+     // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
+     // value has been installed.  Thus we ensure that fa() never causes a system lock.
 #ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
@@ -905,7 +907,8 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
       }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
      }
      np=np0;  // advance to next box
-    };
+    }
+    // runout for the box, repeated from above  // scaf should use loop tricks to avoid repeat?
     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun
      if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
      else{I c=AC(np);

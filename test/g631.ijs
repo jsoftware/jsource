@@ -140,7 +140,7 @@ if. y < 0 do. boxr =. _ [ boxs =. 1000 end.   NB. scalar box, not RO
 'virt prist wprist rprist' =. 4 {. n
 NB. virt: produces virtual result when applied inplace
 NB. virtnip: produces virtual result when applied not-in-place
-NB. virtprist: produced virtual result leaves pristine set in the arg it came from
+NB. virtprist: produces virtual result leaves pristine set in the arg it came from
 'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
 NB. Verify taking from a pristine loses its pristinity
 a =: <"boxr i. boxs  NB. Sets prist

@@ -418,7 +418,7 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(C(*u),C(*v
  k    target item # bytes
  ac   # left  arg cells  (cells, NOT items)
  wc   # right arg cells
- ak   # bytes left  arg cells, or 0 if only 1 cell
+ ak   # bytes left  arg cells, or 0 if only 1 cell   scaf unnecessary?  not used in smallrange
  wk   # bytes right arg cells, or 0 if only one cell
  a    left  arg
  w    right arg, or mark for m&i. or m&i: or e.&n or -.&n
@@ -521,7 +521,8 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(C(*u),C(*v
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI/IFORKEY - we set IIMODREFLEX if one of those is set */ \
   if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
   if(w==mark){wsct=0;}   /* if prehashing, turn off the second half */                          \
-  for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv;  \
+  for(l=0;l<ac;++l,av+=acn,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){                                                 \
    /* zv progresses through the result - for those versions that support IRS */ \
    if(!(mode&IPHOFFSET)){hashallo(hh,p,asct,mode); if(!(md&IIMODREFLEX)){if(md==IICO)XDQAP(T,TH,hash,exp,stride) else XDOAP(T,TH,hash,exp,stride);} if(wsct==0)break;}  \
    switch(md){ \
@@ -757,7 +758,8 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
   jx=0;                                                                     \
-  for(;ac>0;av+=acn,wv+=wcn,--ac){                                                             \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+  for(;ac>0;av+=acn,--ac,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){                   \
    if(!(mode&IPHOFFSET)){  /* if we are not using a prehashed table */                                        \
     hashallo(hh,p,asct,mode);                                                           \
     if(!(IIMODREFLEX&md)){I cn= k/sizeof(T);  /* not reflexive */                                            \
@@ -915,13 +917,13 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eq
 // CQW is the result loop for (e. i: 1:) (e. i: 0:)
 // cm is the number of cells of w per cell of a 
 #define IOFSMALLRANGE(f,T,Ttype)    \
- IOF(f){IH *hh=IHAV(h);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
+ IOF(f){IH *hh=IHAV(h);I l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
   _mm256_zeroupperx(VOIDARG)  \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
-  e=1==wc?0:wsct; if(w==mark){wsct=0;} \
-  for(l=0;l<ac;++l,av+=asct,wv+=e){ \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+  for(l=0;l<ac;++l,av+=asct,wv+=--wreps<0?wsct:0,wreps=wreps<0?wrepssv:wreps){ \
    if(!(mode&(IPHOFFSET))){mode = hashallo(hh,p,asct,mode);}  /* clear table & set parms for this loop - only if not using prehashed table, which always start at offset 0 */ \
    switch(mode&(IIOPMSK|IIMODFULL|IIMODPACK|IIMODBASE0)){ /* We know the setting of IIMODBITS without looking */ \
    default: ASSERTSYS(0,"switch failure in i."); \

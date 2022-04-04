@@ -1775,7 +1775,8 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1.
 // Implies that AM must not be modified when abandoned block is assigned to x/y.
 // Clear KNOWNNAMED since we are removing the value from a name
-#define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGAND(v,~AFKNOWNNAMED); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGAND(v,~AFKNOWNNAMED););}}}
+// obsolete #define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGAND(v,~AFKNOWNNAMED); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGAND(v,~AFKNOWNNAMED););}}}
+#define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(v); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGCLRKNOWN(v));}}}
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

@@ -771,7 +771,8 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
       // NOTE: NJA can't zap either, but it never has AC<0
 // obsolete     AMNVRSET(w,AMNV);  // going from abandoned to name semantics: set NVR info in value
    }else{
-    AFLAGOR(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
+    if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
+// obsolete  AFLAGOR(w,AFKNOWNNAMED);
     ra(w);  // if zap not allowed, just ra() the whole thing
 // obsolete     if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
    }

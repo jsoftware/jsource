@@ -805,6 +805,19 @@ assert. (l i.!.1"1 r) -: (l i."1 r)
 1: f/~ (<"1 ,. 0 1 1 1 1 1 2 2 10 11 12 13 14 , 200+i. 15) ,"0/ ((<"1) 0 30 , _5e4 1e6 , _5e5 1e7 ,: _5e6 1e8)
 1: f/~ ((<"1) 5 ,. 0 1 1 1 1 1 2 2 10 11 12 13 14 , 200+i. 15) ,"0/ ((<"1) 0 30 , _5e4 1e6 , _5e5 1e7 ,: _5e6 1e8)
 
+NB. surplus frame in y
+a =: 3 4 5 ($,) i. 4 5
+b =: i. 3 4
+(a i."1 b) -: (a (4 : 'x i. y')"1 b)
+a =: i. 3 4 5
+b =: i. 3 4
+(a i."1 b) -: (a (4 : 'x i. y')"1 b)
+a =: 0. + i. 3 4 5
+b =: 0. + i. 3 4
+(a i."1 b) -: (a (4 : 'x i. y')"1 b)
+(a i.!.0"1 b) -: (a (4 : 'x i.!.0 y')"1 b)
+
+
 4!:55 ;:'a adot1 adot2 sdot0 b c ciof ct f f1 f2 g iota j l r map n p q t test x xx y yy'
 4!:55 ;:'xop yop1 yopn'
 4!:55 ;: 'mtchontally mtchonreshape mtchontally0 mtchonreshape0'

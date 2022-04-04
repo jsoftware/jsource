@@ -502,9 +502,9 @@ typedef I SI;
 #define ACPERMANENTX    (BW-2)
 #define ACPERMANENT     ((I)1<<ACPERMANENTX)  // next-to-top bit, set in blocks that should never modify the AC field
 #define ACUSECOUNT      (I)1  // lower bits used for usecount
-#define ACAND(a,v)      AC(a)&=(v);
-#define ACOR(a,v)       AC(a)|=(v);
-#define ACIPYES(a)      ACOR(a,ACINPLACE)
+#define ACAND(a,v)      __atomic_fetch_and(&AC(a),(v),__ATOMIC_ACQ_REL);
+#define ACOR(a,v)       __atomic_fetch_or(&AC(a),(v),__ATOMIC_ACQ_REL);
+#define ACIPYESLOCAL(a)  (AC(a)|=ACINPLACE)
 #define ACIPISOK(a)     (AC(a)<1)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
@@ -512,9 +512,12 @@ typedef I SI;
 #define ACADDLOCAL(a,n) if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)+(n))&~ACINPLACE)
 #define ACSUBLOCAL(a,n) if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-(n)))
 // use ACINCR... when you know the block is recursive & you just want to adjust the usecount. POS means you know it is >0.  SP means it might be sparse (which always requires recursion)
-#define ACINCRLOCAL(a)   ACADDLOCAL(a,1)
-#define ACIPNO(a)       ACAND(a,~ACINPLACE)
+#define ACINCRVIRT(a)   (AC(a)=(AC(a)&~ACINPLACE)+1)
+#define ACIPNO(a)       {if(AC(a)<0)AC(a)&=~ACINPLACE;}  // if AC<0, the block must not be visible to other threads
+#define ACIPNOABAND(a)  {AC(a)&=~ACINPLACE;}  // block is known to be inplace abandoned & thus not PERMANENT
+#define ACADD(a,n)      if(AC(a)<0)AC(a)=(n)+1;else if(likely(!ACISPERM(AC(a))))__atomic_fetch_add(&AC(a),(n),__ATOMIC_ACQ_REL);
 #define ACINCR(a)       ACADD(a,1)
+#define ACDECRNOPERM(a)  __atomic_fetch_sub(&AC(a),1,__ATOMIC_ACQ_REL);  // must not be PERM
 #if 0  // obsolete
 #define ACINCRLOCALPOS(a) {if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1);}
 #define ACINCRLOCALPOSSP(a) {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
@@ -524,17 +527,17 @@ typedef I SI;
 #define ACINCRPOSSP(a)  {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
 #define ACDECR(a)       ACSUB(a,1)
 #endif
-#define ACADD(a,n)      ACADDLOCAL(a,n)
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
-#define ACSET(a,v)      AC(a)=(v);  // used when a might be shared, but atomic not needed
+#define ACSETLOCAL(a,v) AC(a)=(v);  // used when a might be shared, but atomic not needed
+#define ACSET(a,v)      __atomic_store_n(&AC(a),(v),__ATOMIC_RELEASE);  // used when a might be shared, but atomic not needed
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
 #define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0 ACIPNO(x);}else ra(x);}
-#define ACX(a)          {AC(a)=ACPERMANENT; AFLAG(a)|=AT(a)&RECURSIBLE;}
+#define ACX(a)          {AC(a)=ACPERMANENT; AFLAGORLOCAL(a,AT(a)&RECURSIBLE);}   // used only in initializations
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
-#define ACSETPERM(x)    {AC(x)=ACPERMANENT+100000; ACOR(x,AT(x)&RECURSIBLE);}  // Make a block permanent from now on.  In case other threads have committed to changing the usecount, make it permanent with a margin of safety
+#define ACSETPERM(x)    {AC(x)=ACPERMANENT+100000; __atomic_fetch_or(&AFLAG(x),(AT(x)&RECURSIBLE),__ATOMIC_ACQ_REL);}  // Make a block permanent from now on.  In case other threads have committed to changing the usecount, make it permanent with a margin of safety
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
@@ -591,20 +594,21 @@ typedef I SI;
                                  // UNINCORPORABLE blocks created by partitioning modifers to track cells may be inplaceable, and a virtual block whose backer
                                  // has been abandoned may be marked inplaceable as well.
                                  // NOTE: AFVIRTUALX must be higher than any RECURSIBLENOUN type (for test in result.h)
-#define AFKNOWNNAMEDX   C4TX      // matches C4TX 18
+#define AFKNOWNNAMEDX   C4TX      // matches C4TX 18   *** can be changed when block is shared
 #define AFKNOWNNAMED    ((I)1<<AFKNOWNNAMEDX)      // set (often) in a value when the value is assigned to a name.  It is possible that the name will be deleted, in which case the flag will be cleared
                                   // even if the value is assigned to another name.  The purpose is to allow virtual extension: if you know that a value is assigned to a name, then only one
-                                  // thread can encounter the value with AC=2, and that is safe for virtual extension
+                                  // thread can encounter the value with AC=2, and that is safe for virtual extension.  If a block becomes shared, 
 
 #define AFVIRTUALBOXEDX XDX   // matches XDX
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
-#define AFPRISTINEX      ASGNX  // matches ASGN - must be above all DIRECT flags
+#define AFPRISTINEX      ASGNX  // matches ASGN 24 - must be above all DIRECT flags   *** can be changed when block is shared
 #define AFPRISTINE  ((I)1<<AFPRISTINEX)  // meaningful only for BOX type.  This block's contents were made entirely of DIRECT inplaceable or PERMANENT values, and thus can be
    // inplaced by &.> .  If any of the contents are taken out, the PRISTINE flag must be cleared, unless the block is never going to be used again (i. e. is inplaceable).
    // When a VIRTUAL block is created, it inherits the PRISTINE status of its backer; if the block is modified or a value escapes by address, PRISTINE status is cleared in the backer.
    // If a PRISTINE virtual block is realized, the backer must become non-PRISTINE (because its contents are escaping).
    // If a PRISTINE block is incorporated, it must lose PRISTINE status because it is no longer possible to know whether contents may have been fetched while the
    // block was incorporated.
+   // NOTE: if a block becomes shared, the value of PRISTINE becomes immaterial
 #define AFDPARENX CONWX     // matches CONW
 #define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) or noun () and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
@@ -616,14 +620,23 @@ typedef I SI;
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 #define AFLAGINIT(a,v)  AFLAG(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define AFLAGRESET(a,v) AFLAG(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
-#define AFLAGSET(a,v)   AFLAG(a)=(v);  // used when a might be shared and this must be atomic
+// obsolete #define AFLAGSET(a,v)   AFLAG(a)=(v);  // used when a might be shared and this must be atomic
 #define AFLAGFAUX(a,v)  AFLAG(a)=(v);  // used when a is known to be a faux block
 #define AFLAGANDLOCAL(a,v)   AFLAG(a)&=(v);  // LOCAL functions are used when the block is known not to be shared
 #define AFLAGORLOCAL(a,v)    AFLAG(a)|=(v);
-#define AFLAGAND(a,v)   AFLAG(a)&=(v);
-#define AFLAGOR(a,v)    AFLAG(a)|=(v);
-#define AFLAGPRISTNO(a) AFLAGANDLOCAL(a,~AFPRISTINE)  // nothing from another thread can be PRISTINE
-#if 0 // obsolete 
+// Once a block has been shared, the flags do not change except for PRISTINE and KNOWNNAMED.  (Pristine only gets cleared, KNOWNNAMED is set and cleared).
+// To make sure a word-wide change doesn't store an old value, we store into these flags using single-byte operations.  This will cause sharing in the exceedingly rare
+// case of simultaneous modification, but it avoids the need for RFO cycles.
+#if C_LE
+#define AFLAGSETKNOWN(a) ((C*)&AFLAG(a))[2]|=AFKNOWNNAMED>>16;  // if the value is ever exposed to another thread, the count will be too high for KNOWN to matter
+#define AFLAGCLRKNOWN(a) ((C*)&AFLAG(a))[2]&=~(AFKNOWNNAMED>>16);
+#define AFLAGSETPRIST(a) ((C*)&AFLAG(a))[3]|=AFPRISTINE>>24;
+#define AFLAGCLRPRIST(a) ((C*)&AFLAG(a))[3]&=~(AFPRISTINE>>24);
+#endif
+#define AFLAGPRISTNO(a) if(unlikely(AFLAG(a)&AFPRISTINE))AFLAGCLRPRIST(a)  // the test is to ensure we don't touch PERMANENT blocks
+#if 0   // obsolete
+#define AFLAGAND(a,v)   __atomic_fetch_and(&AFLAG(a),(v),__ATOMIC_ACQ_REL);  // scaf remove these; have 1-byte stores to mod PRIST & KNOWN
+#define AFLAGOR(a,v)    __atomic_fetch_or(&AFLAG(a),(v),__ATOMIC_ACQ_REL);
 // following used to modify AM as NVR count
 #define AMNVRINCR(a) AM(a)+=AMNVRCT;  // increment, no return
 #define AMNVRDECR(a,am) (am=AM(a),AM(a)-=AMNVRCT,am)  // save count, decrement, return old value

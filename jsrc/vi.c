@@ -369,7 +369,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                             \
   b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI||mode==IFORKEY);  \
   zb=(B*)zv; zc=(C*)zv; zi=zv; cm=w==mark?0:c;                                       \
-  for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+  for(l=0;l<ac;++l,av+=acn,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){                                                 \
    if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!b){if(mode==IICO)XDQA(hash,exp,dec) else XDOA(hash,exp,inc);}}  \
     switch(md){                                                                       \
     case IIDOT:   if(b){          XDO(hash,exp,inc,*zv++=m==hj?(hv[j]=i):hj);}       \
@@ -484,7 +485,8 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
   b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI||mode==IFORKEY);              \
   zb=(B*)zv; zc=(C*)zv; zd=(D*)zv; zi=zv; e=cn*(m-1); bx=1&&BOX&AT(a);                           \
   jx=0; dl.d=dr.d=dx.d=x=0.0;                                                                    \
-  for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                             \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+  for(l=0;l<ac;++l,av+=acn,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){                                                             \
    if(mode<IPHOFFSET){                                                                           \
     DO(p,hv[i]=m;);                                                                              \
     if(bx||!b){                                                                                  \
@@ -577,12 +579,13 @@ static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(C(*v),C(av[hj])),!equ(C(*v),C(
 // cm is the number of cells of w per cell of a 
 // clear the value table; 
 #define IOFSMALLRANGE(f,T,COZ1,COW0,COW1,COWX,CQW0,CQW1)    \
- IOF(f){A h=*hp;B b,*hb,*zb;I cm,e,*hu,*hv,l,max,md,min,p,s,*v,*zi,*zv;T*av,*u,*wv,x,*zu;       \
+ IOF(f){A h=*hp;B b,*hb,*zb;I cm,*hu,*hv,l,max,md,min,p,s,*v,*zi,*zv;T*av,*u,*wv,x,*zu;       \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET; b=(mode==IIDOT||mode==IICO)&&a==w&&ac==wc;             \
   av=(T*)AV(a); wv=(T*)AV(w); zv=zi=AV(z); zb=(B*)zv; zu=(T*)zv;                                \
   p=AN(h); min=jt->min; max=p+min; hv=AV(h); hb=(B*)hv-min; hu=hv-min;                          \
-  e=1==wc?0:c; cm=w==mark?0:c;                                                                  \
-  for(l=0;l<ac;++l,av+=m,wv+=e){                                                                \
+  cm=w==mark?0:c;                                                                  \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+  for(l=0;l<ac;++l,av+=asct,wv+=--wreps<0?wsct:0,wreps=wreps<0?wrepssv:wreps){ \
    if(b){                                                                                       \
     if(mode==IIDOT){DO(p,hv[i]=-1;); u=wv;          DO(m, v=hu+*u++; if(0>*v)*v=i; *zv++=*v;);       }  \
     else           {DO(p,hv[i]=-1;); u=wv+m; zv+=m; DQ(m, v=hu+*--u; if(0>*v)*v=i; *--zv=*v;); zv+=m;}  \

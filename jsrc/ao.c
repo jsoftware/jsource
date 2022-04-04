@@ -516,11 +516,15 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
  // Transfer pristinity of w to wperm so we can see if it went away, but only if w is pristine inplaceable.  We want to leave
  // wperm pristine so it can be used, but it's pristine only is w is zombie.  We sacrifice pristinity to inplaceability
- AFLAGINIT(wperm,AFLAG(wperm)|AFLAG(w)&AFPRISTINE&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX)))
+ I wprist=AFLAG(w)&AFPRISTINE;
+ I wpprist=wprist&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX));  // original pristinity of wperm
+ AFLAGINIT(wperm,AFLAG(wperm)|wpprist)
  // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
- // If the operation turned off pristinity of wperm, do the same for w.  Remember that pristinity only matters if the block is inplaceable
- AFLAGAND(w,AFLAG(wperm)|~AFPRISTINE)
+ // If the operation turned off pristinity of wperm, do the same for w.  Pristinity only matters if the block is inplaceable, but our tests expect that
+ // assigned values retain their pristinity, so we have to clear pristinity of w whenever wperm ends non-prist
+// obsolete AFLAGAND(w,AFLAG(wperm)|~AFPRISTINE)
+ if(unlikely(wprist>(AFLAG(wperm)&AFPRISTINE)))AFLAGCLRPRIST(w)  // if pristinity of wperm was turned off, do the same in w
  EPILOG(z);
 }    /* a f/. w for dense x & w */
 

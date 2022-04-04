@@ -254,9 +254,10 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
     I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
     xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtinplace))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
-    xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE);  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
- // xfer is the transferable recursibility if any, plus inherited pristinity
-    AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGAND(a,~xfer) AFLAGAND(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
+    if(unlikely((xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE))!=0)){  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
+     // a and w are both non-shared blocks, and not VIRTUAL or PERMANENT.  xfer is the transferable recursibility if any, plus inherited pristinity
+     AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGANDLOCAL(a,~xfer) AFLAGANDLOCAL(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
+    }else{AFLAGCLRPRIST(w); AFLAGCLRPRIST(a);}  // if we can't transfer pristinity, we must clear it
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF

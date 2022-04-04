@@ -763,7 +763,7 @@ A jtgc(J jt,A w,A* old){
    // advisedly and we do not delete the backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
    // (backer count is now <2)
    I bc=AC(b); bc=bc>2?2:bc;  // backer count before tpop.  We will delete backer if value goes down, to a value less than 2.  
-   ACINCRLOCAL(w);  // protect w from being freed.  Its usecount may be >1.  Local because no other task can see our virtual
+   ACINCRVIRT(w);  // protect w from being freed.  Its usecount may be >1.  Local because no other task can see our virtual, and it can't be PERM
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
    // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.
@@ -775,7 +775,7 @@ A jtgc(J jt,A w,A* old){
     // there is an extant free for the block on the stack, so we must replace the stack entry.
     // Otherwise we can keep the stack entry we have, wherever it is, and we can also restore the usecount to its original value, which might
     // include inplaceability
-    if((c-AC(w))&ACPERMANENT){ACSET(w,c)  // count now is > original: the tpop didn't touch it. restore initial usecount and inplaceability
+    if((c-AC(w))&ACPERMANENT){ACSETLOCAL(w,c)  // count now is > original: the tpop didn't touch it. restore initial usecount and inplaceability
     }else{tpush1(w);}  // if the stack entry for w was removed, restore it.  This undoes the effect of incrementing the usecount
   }
   } else {
@@ -903,7 +903,7 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
        // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
        if(--c<=0){
         A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
-       }else ACSET(np,c)  // virtual block survives, decrement its count
+       }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
       }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
      }
      np=np0;  // advance to next box
@@ -915,7 +915,7 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
       // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
       if(--c<=0){
        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
-      }else ACSET(np,c)  // virtual block survives, decrement its count
+      }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
      }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
     }
    }
@@ -1043,7 +1043,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
 #endif
      // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
      // Otherwise just decrement the count
-     if(--c<=0){
+     if(c<=1){
 // stats ++frees;
       // The block is going to be destroyed.  See if there are further ramifications
       if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
@@ -1052,7 +1052,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
        // never freed by fa() as a top-level block
        // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
        // we make sure no such block is created in sprz()
-     }else ACSET(np,c)
+     }else ACDECRNOPERM(np)
     }
    }
    np=np0;  // Advance to next block

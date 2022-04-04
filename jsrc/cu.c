@@ -34,7 +34,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  GATV(z,BOX,natoms,wr,AS(w));
  if(!natoms)R z;  // exit if no result atoms
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
- A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was recursive inplaceable pristine, contents can be inplaced
+ A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was recursive inplaceable pristine, contents can be inplaced AFPRISTINE=w must be marked non-PRIST
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(wt&BOX);
  // Get input pointer
@@ -62,14 +62,14 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // ra (as when FORK frees an unused block), the LSB must be inspected.  We do need to keep the usecount accurate after the return, though.
   I wcbefore=AC(virtw); // get (always non-inplaceable) usecount before the call
   if(((AC(virtw)-(flags&ACPERMANENT))&ACINPLACE)<0){  // AC(virtw) always has sign 0
-   ACIPYES(virtw);  // make the block inplaceable
+   ACIPYESLOCAL(virtw);  // make the block inplaceable
    // If we are setting the usecount to inplaceable, that must be a change, because we do that only on contents of boxes.  If the block is inplaceable, the system requires that AM point to a tpop-stack entry
    // that will free the block, and code may simulate a free by clearing that entry.  We can't be sure that the original tpush entry is still valid, but we do know that our w block is recursive and inplaceable, so we can use
    // any pointer to the block - for example *wv - as a zappable location.  If the block weren't recursive this wouldn't work
    AZAPLOC(virtw)=wv;  // point to a zappable entry
   }
   if(unlikely((x=CALL1IP(f1,virtw,fs))==0)){ // run the user's verb
-   ACIPNO(virtw); R0;  // restore inplaceability before we exit
+   ACIPNO(virtw); R0;  // error: restore noninplaceability before we exit
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
   if(likely((AT(x)&DIRECT)>0)){
@@ -85,8 +85,9 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // BUT: virtw may have been zapped & freed: detect that and don't touch virtw then
   if(likely(flags&BOX))if(likely((I)*wv!=0)){  // virtw was not destroyed
    ACIPNO(virtw);
-   // if x=virtw, or the usecount of virtw changed, virtw has escaped and w must be marked as not PRISTINE
-   AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
+   // if x=virtw, or the usecount of virtw changed, virtw has escaped and w must be marked as not PRISTINE  scaf collect this into a flag abd do it once at the end
+   flags|=(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
+// obsolete    AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
   }
 
   // prepare the result so that it can be incorporated into the overall boxed result
@@ -130,6 +131,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   if(flags&BOX){virtw=C(*++wv);}else AK(virtw)+=(I)wv;  // advance to next input cell - either by fetching the next box or advancing the virtual pointer to the next atom
  }
 
+ if(unlikely(flags&AFLAG(w)&AFPRISTINE))AFLAGCLRPRIST(w);  // if contents of w escaped, mark w no longer pristine
  // indicate pristinity of result
  AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE)   // could synthesize rather than loading from z
  R z;
@@ -147,6 +149,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  I flags;  // 20=w is boxed 40=a is boxed 1=w is repeated 2=a is repeated
  // other flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=w input was boxed; BOX<<1=a was boxed;
  //            ACPERMANENT>>1=w input was inplaceable pristine, contents can be inplaced; ACPERMANENT=same for a
+ //            AFPRISTINE=a contents of w has escaped; w must be marked non-PRISTINE  AFPRISTINE+1=same for a
  {
   I ar=AR(a); I wr=AR(w);
   I cf=ar; A la=w; cf=ar<wr?cf:wr; la=ar<wr?la:a; I lr=ar+wr-cf;  // #common frame, Ablock with long shape, long rank.
@@ -199,16 +202,16 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
   I wcbefore=AC(virtw); // get (always non-inplaceable) usecount before the call
   if(((AC(virtw)-((flags<<1)&ACPERMANENT))&ACINPLACE)<0){  // AC(virtw) always has sign 0
-   ACIPYES(virtw);  // make the block inplaceable
+   ACIPYESLOCAL(virtw);  // make the block inplaceable
    // If we are setting the usecount to inplaceable, that must be a change, because we do that only on contents of boxes.  If the block is inplaceable, the system requires that AM point to a tpop-stack entry
    // that will free the block, and code may simulate a free by clearing that entry.  We can't be sure that the original tpush entry is still valid, but we do know that our w block is recursive and inplaceable, so we can use
    // any pointer to the block - for example *wv - as a zappable location
    AZAPLOC(virtw)=wv;  // point to a zappable entry
   }
-  I acbefore=AC(virta);if(((AC(virta)-(flags&ACPERMANENT))&ACINPLACE)<0){ACIPYES(virta);AZAPLOC(virta)=av;}  // note uses different flag
+  I acbefore=AC(virta);if(((AC(virta)-(flags&ACPERMANENT))&ACINPLACE)<0){ACIPYESLOCAL(virta);AZAPLOC(virta)=av;}  // note uses different flag
 
   if(unlikely((x=CALL2IP(f2,virta,virtw,fs))==0)){ // run the user's verb
-   ACIPNO(virtw); ACIPNO(virta); R0;  // restore inplaceability before we exit
+   ACIPNO(virtw); ACIPNO(virta); R0;  // error: restore noninplaceability before we exit
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
   if(likely((AT(x)&DIRECT)>0)){
@@ -222,9 +225,11 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
 
   // Now that we have looked at the original usecount of x (in case it is =virtaw), remove inplacing from virtaw to restore its proper status
   ACIPNO(virtw); ACIPNO(virta);
-  // if x=virtaw, or the usecount of virtw changed, virtaw has escaped and w must be marked as not PRISTINE
-  AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
-  AFLAGAND(a,~(((acbefore!=AC(virta))|(x==virta))<<AFPRISTINEX))
+  // if x=virtaw, or the usecount of virtw changed, virtaw has escaped and w must be marked as not PRISTINE  scaf collect this into a flag abd do it once at the end
+// obsolete   AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
+// obsolete   AFLAGAND(a,~(((acbefore!=AC(virta))|(x==virta))<<AFPRISTINEX))
+  flags|=(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
+  flags|=(((acbefore!=AC(virta))|(x==virta))<<(AFPRISTINEX+1));
 
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
@@ -251,6 +256,8 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   if(!(flags&endrpt&2)){if(flags&(BOX<<1)){virta=C(*++av);}else AK(virta)+=(I)av;}  // advance unrepeated arg
   if(!(flags&endrpt&1)){if(flags&BOX){virtw=C(*++wv);}else AK(virtw)+=(I)wv;}
  }
+ if(unlikely(flags&AFLAG(w)&AFPRISTINE))AFLAGCLRPRIST(w);  // if contents of w escaped, mark w no longer pristine
+ if(unlikely((flags>>1)&AFLAG(a)&AFPRISTINE))AFLAGCLRPRIST(a);  // if contents of a escaped, mark a no longer pristine
  // indicate pristinity of result
  AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE)   // could synthesize rather than loading from z
  R z;

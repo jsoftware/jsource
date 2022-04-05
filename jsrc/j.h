@@ -1312,8 +1312,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #endif
 
 #define IX(n)           apv((n),0L,1L)
-#define JATTN           {if(unlikely(*JT(jt,adbreakr)!=0)){jsignal(EVATTN); R 0;}}
-#define JBREAK0         {if(unlikely(2<=*JT(jt,adbreakr))){jsignal(EVBREAK); R 0;}}
+#define JATTN           {if(unlikely(JT(jt,adbreakr)[0]!=0)){jsignal(EVATTN); R 0;}}
+#define JBREAK0         {if(unlikely(2<=JT(jt,adbreakr)[0])){jsignal(EVBREAK); R 0;}}
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))

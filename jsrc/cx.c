@@ -210,9 +210,14 @@ static I debugnewi(I i, DC thisframe, A self){
  R i;  // return the current line, possibly modified
 }
 
-// Processing of explicit definitions, line by line
+// Processing of explicit definitions, line by line.  Bivalent, called as y vb or x y vb.  If JTXDEFMODIFIER is set,
+// it's a modifier, called as u adv or u v conj
 DF2(jtxdefn){F2PREFIP;PROLOG(0048);
- RE(0);     // scaf ARGCHK?
+#if 1
+ ARGCHK2(a,w);
+#else  // obsolete 
+ RE(0);
+#endif
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8 unused 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
@@ -233,18 +238,32 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
 
  A locsym;  // local symbol table to use
 
- nGpysfctdl=((I)(a!=0)&(I)(w!=0))<<6;   // relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  {A *hv;  // will hold pointer to the precompiled parts
-  V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
   A u,v;  // pointers to args
+  V *sv; I sflg;   // pointer to definition, and flags therefrom
+#if 1
+ if(((I)jtinplace&JTXDEFMODIFIER)==0){
+  // we are executing a verb.  It may be an operator
+  nGpysfctdl=64&~(AT(w)>>(VERBX-6)); self=nGpysfctdl&64?self:w; w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
+  sv=FAV(self); sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
+  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;
+ }else{
+  // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
+  nGpysfctdl=AT(w)&(ADV|CONJ)?0:64; self=nGpysfctdl&64?self:w; v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
+  sv=FAV(self); sflg=sv->flag;   // fetch flags
+ }
+#else  // obsolete 
+  nGpysfctdl=((I)(a!=0)&(I)(w!=0))<<6;   // relieve pressure on a and w
+  V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
   // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
   a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;    // leave x and y undefined in modifier execution
-  nGpysfctdl|=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
   // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved modifier (f=type, g=compiled text).  The flags don't change
-  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
+  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}
+#endif
+  nGpysfctdl|=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
   // Read the info for the parsed definition, including control table and number of lines
   LINE(sv);
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
@@ -699,8 +718,10 @@ bodyend: ;  // we branch to here on fatal error, with z=0
 static DF1(xv1){A z; R df1(z,  w,FAV(self)->fgh[0]);}
 static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
 
-static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code - inplaceable
-static DF1(xadv){R xdefn(w, 0L,self);}  // inplaceable
+// obsolete static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code - inplaceable
+// obsolete static DF1(xadv){R xdefn(w, 0L,self);}  // inplaceable
+// modifier not referring to x/y.  Bivalent (adv/conj). Flag it as non-verb in jt
+static DF2(jtxmod){R jtxdefn((J)((I)jt+JTXDEFMODIFIER),a,w,self);}  // inplaceable and bivalent
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
@@ -712,12 +733,14 @@ static F1(jtxopcall){R jt->uflags.us.cx.cx_us&&jt->sitop&&DCCALL==jt->sitop->dct
 // If we have to add a name for debugging purposes, do so
 // Flag the operator with VOPR, and remove VFIX for it so that the compound can be fixed
 DF2(jtxop2){A ff,x;
- RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX));  // inherit other flags
+ ARGCHK2(a,w);
+ self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
+ RZ(ff=fdef(0,CCOLON,VERB, jtxdefn,jtxdefn, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX));  // inherit other flags
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
-static DF1(xop1){
- R xop2(w,0,self);
-}
+// obsolete static DF1(xop1){
+// obsolete  R xop2(w,0,self);
+// obsolete }
 
 
 // w is a box containing enqueued words for the sentences of a definition, jammed together
@@ -1199,10 +1222,10 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  }
  A z;
  switch(n){
- case 3:  z=fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 4:  z=fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ case 3:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxmod,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxmod, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 4:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
  case 13: z=vtrans(w); break;
  default: ASSERT(0,EVDOMAIN);
  }

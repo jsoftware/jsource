@@ -230,8 +230,8 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
   // If the name is assigned in a local symbol table, we ASSUME it is at large in the stacks and incr/deferred-free it.  We sidestep the nvr stack for local nouns
   A locfound;  // get the locale in which the name is defined - must exist
   if(y&&(locfound=syrdforlocale(y))){
-// obsolete fa(v->val); // undo syrd scaf must take a writelock and avoid freeing beyond usecount of 0
-   // if debug turned on, see if the value is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.  scaf We can't check other threads' stacks
+// obsolete fa(v->val); // undo syrd
+   // if debug turned on, see if the value is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.
    if(jt->uflags.us.cx.cx_c.db){READLOCK(locfound->lock) A v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); I rres=1; if(v)rres=redef(mark,v); READUNLOCK(locfound->lock) RZ(rres)}
 #if 0  // obsolete 
    if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){I am,nam;  // If the AM field is not under name semantics, just go free the name immediately.  Virtuals cannot be on the NVR stack

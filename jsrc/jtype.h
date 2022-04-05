@@ -116,6 +116,10 @@ typedef AD *A;
 // following bit is used in the call to jtcelloffset
 #define JTCELLOFFROMX   0  // treat a single list as if a rank-2 array
 #define JTCELLOFFROM    (((I)1)<<JTCELLOFFROMX)
+// following bit is used in the call to jtxdefn
+#define JTXDEFMODIFIERX      2   // the executed entity is an adverb or conjunction
+#define JTXDEFMODIFIER       (((I)1)<<JTXDEFMODIFIERX)
+
 
 
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
@@ -635,7 +639,7 @@ typedef I SI;
 #endif
 #define AFLAGPRISTNO(a) if(unlikely(AFLAG(a)&AFPRISTINE))AFLAGCLRPRIST(a)  // the test is to ensure we don't touch PERMANENT blocks
 #if 0   // obsolete
-#define AFLAGAND(a,v)   __atomic_fetch_and(&AFLAG(a),(v),__ATOMIC_ACQ_REL);  // scaf remove these; have 1-byte stores to mod PRIST & KNOWN
+#define AFLAGAND(a,v)   __atomic_fetch_and(&AFLAG(a),(v),__ATOMIC_ACQ_REL);
 #define AFLAGOR(a,v)    __atomic_fetch_or(&AFLAG(a),(v),__ATOMIC_ACQ_REL);
 // following used to modify AM as NVR count
 #define AMNVRINCR(a) AM(a)+=AMNVRCT;  // increment, no return

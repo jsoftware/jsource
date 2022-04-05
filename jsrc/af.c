@@ -95,7 +95,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
   if(v->flag&VXOPR){
    // operator: fix the operands and rebuild.  If the operator is a pseudo-name, we have to fish the actual operator block out of h
    if(!f){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}
-   f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h,g);
+   f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h?h:g,g);  // xop2 is bivalent 
   }
   else{f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);}  // v : v, similarly
  case CADVF:

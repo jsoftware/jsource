@@ -12,7 +12,8 @@
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
 DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
- RE(0);  // why?  should ARGCHK?  scaf
+// obsolete  RE(0);  // why?  should ARGCHK?  scaf
+ ARGCHK2(a,w);  // w is w or self always, must be valid  
  JATTN;  // check for user interrupt
  I flgd0cp=w!=self?8:0; // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  V *v=FAV(self);  // V block for this V/A/C reference

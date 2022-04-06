@@ -351,7 +351,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 #endif
 
 // u t. n - start a task.  We just create a vrb to handle the arguments
-F2(jttdot){
+F2(jttdot){F2PREFIP;
  ASSERTVN(a,w);
 #if PYXES
  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now

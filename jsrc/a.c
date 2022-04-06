@@ -16,7 +16,7 @@ static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace^((JTIN
 }
 
 // w~, which is either reflexive/passive or evoke
-F1(jtswap){A y;C*s;I n;
+F1(jtswap){F1PREFIP;A y;C*s;I n;
  ARGCHK1(w); 
  if(VERB&AT(w)){
   // reflexive/passive.  Create verb that swaps.  Most flags do not apply to the derived verb
@@ -63,7 +63,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
   default: ASSERT(0,EVDOMAIN);
 }}
 
-F1(jtbdot){A b,h=0;I j=0,n,*v;
+F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
  ARGCHK1(w);
  if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
  RZ(w=vi(w));
@@ -221,7 +221,7 @@ static DF2(jtmemo2){DECLF;A z;I x,y;
 }
 
 // Create the memoed verb.  We create an h argument of hashtable;key;value, as described above
-F1(jtmemo){PROLOG(300);A h,*hv;I m;
+F1(jtmemo){F1PREFIP;PROLOG(300);A h,*hv;I m;
  ARGCHK1(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  V *v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate

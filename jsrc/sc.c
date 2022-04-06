@@ -491,7 +491,7 @@ A jtnameref(J jt,A w,A locsyms){
 // Adverb 4!:8 create looked-up cacheable reference to (possibly boxed) literal name a
 // The name must be defined.  It supplies the type and rank of the reference.  We require the name to be defined so that
 // there will not be a circular reference if a name in a numbered locale is a reference to the same name
-F1(jtcreatecachedref){A z;
+F1(jtcreatecachedref){F1PREFIP;A z;
  A nm; RZ(nm=onm(w)); // create name from arg
  ASSERT(!(NAV(nm)->flag&(NMILOC|NMDOT|NMIMPLOC)),EVDOMAIN) // if special name or indirect locative, error
  A val=QCWORD(syrd(nm,JT(jt,emptylocale)));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)

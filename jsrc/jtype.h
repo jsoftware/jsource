@@ -116,8 +116,9 @@ typedef AD *A;
 // following bit is used in the call to jtcelloffset
 #define JTCELLOFFROMX   0  // treat a single list as if a rank-2 array
 #define JTCELLOFFROM    (((I)1)<<JTCELLOFFROMX)
-// following bit is used in the call to jtxdefn
-#define JTXDEFMODIFIERX      2   // the executed entity is an adverb or conjunction
+// following bit is used in the call to jtxdefn/unquote to indicate the execution is of a modifier
+// This bit is set in ALL calls to modifiers, in case they are named
+#define JTXDEFMODIFIERX      7   // the executed entity is an adverb or conjunction
 #define JTXDEFMODIFIER       (((I)1)<<JTXDEFMODIFIERX)
 
 
@@ -394,7 +395,7 @@ typedef I SI;
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 // note: LPAR used as flag to cvt() see below; also as modifier to ADV type
 #define LPARSIZE sizeof(I)
-// CONJ must be 1 bit below RPAR, with no parsable type (including any flags that might be set, see below) in CONJ or RPAR
+// CONJ must be 1 bit below RPAR
 #define CONJX 29
 #define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
 #define CONJSIZE sizeof(V)
@@ -421,7 +422,7 @@ typedef I SI;
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
 // Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
 // Restriction: MARK must be reserved for use as BOXMULTIASSIGN because of how parser tests for it
-// ** NOTE!! bits 28-30 are used in the call to cvt() (arg only) to override the convsion type for XNUMs
+// ** NOTE!! bits 28-30 are used in the call to cvt() (arg only) to override the conversion type for XNUMs
 #define XCVTXNUMORIDEX  LPARX   // in cvt(), indicates that forced precision for result is present
 #define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
 #define XCVTXNUMCVX     CONJX
@@ -475,8 +476,8 @@ typedef I SI;
 #define TYPESLT(x,y)    ((UI)(x)<(UI)(y))  // type x < type y
 #define TYPESGT(x,y)    ((UI)(x)>(UI)(y)) // type x > type y
 
-#define PARTOFSPEECHEQ(x,y) (((((x)|(RPAR&-((x)&NOUN)))^((y)|(RPAR&-((x)&NOUN))))&RPAR+CONJ+VERB+ADV)==0)  // using RPAR to hold NOUN status, verify parts-of-speech the same
-#define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&RPAR+CONJ+VERB+ADV)==0)  // verify known-nonnoun parts-of-speech the same
+#define PARTOFSPEECHEQ(x,y) (((((x)|(LPAR&-((x)&NOUN)))^((y)|(LPAR&-((y)&NOUN))))&LPAR+CONJ+VERB+ADV)==0)  // using RPAR to hold NOUN status, verify parts-of-speech the same
+#define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&CONJ+VERB+ADV)==0)  // verify known-nonnoun parts-of-speech the same
 
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))

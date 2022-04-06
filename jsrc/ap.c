@@ -937,7 +937,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
 
 static DF1(jtiota1){I j; R apv(SETIC(w,j),1L,1L);}
 
-F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
+F1(jtbslash){F1PREFIP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
 ;
  ARGCHK1(w);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);

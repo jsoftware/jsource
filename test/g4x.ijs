@@ -228,7 +228,7 @@ a =: 5
 4!:55 <'a'
 '|value error|   a:+    a_:' -: ". eftx 'a: + a_:'
 
-a=.b=.0
+a=:b=:0
 4!:55 ;:'a undefname b'
 _1 = 4!:0 ;:'a undefname b'
 13!:0 (1)

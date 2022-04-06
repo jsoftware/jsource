@@ -63,7 +63,7 @@ static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroione
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
 // Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
 // Preserve comparison-combination flags for tolerance fit, in case this is a fit-allowing primitive that uses them
-F2(jtfit){A f;C c;I k,l,m,r;V*sv;
+F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
  ASSERTVN(a,w);  // a must be a verb, w a noun
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
  I cno=0;

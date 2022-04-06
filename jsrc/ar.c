@@ -1002,7 +1002,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
 static DF2(jtoprod){A z; R df2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
-F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
+F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;I flag=0;
  ARGCHK1(w);
  if(NOUN&AT(w))R evger(w,sc(GINSERT));  // treat m/ as m;.6.  This means that a node with CSLASH never contains gerund u
  v=FAV(w); 
@@ -1053,7 +1053,7 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
 }
 
 // entry point for monad and dyad F. F.. F.: F: F:. F::
-DF2(jtfold){
+DF2(jtfold){F2PREFIP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
  A derivvb; RZ(derivvb=unquote(a,w,foldconj));

@@ -73,7 +73,7 @@ static F2(jtcancel){A c,d,f,x,y;
  R link(a,w);
 }
 
-F2(jthgeom){A c,d,h=0;B p,q;I at,wt;
+F2(jthgeom){F2PREFIP;A c,d,h=0;B p,q;I at,wt;
  ARGCHK2(a,w);
  at=AT(a); p=1&&at&NOUN; c=d=mtv;
  wt=AT(w); q=1&&wt&NOUN;

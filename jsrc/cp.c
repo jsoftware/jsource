@@ -257,7 +257,7 @@ static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
 // kibosh on it by setting self (otherwise unused, and set to nonzero in the initial invocation
 // from parse) to 0 in all calls resulting from execution of gerund v.  Then we fail any gerund
 // if self is 0.
-DF2(jtpowop){A hs;B b;V*v;
+DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  if(AT(w)&VERB){

@@ -79,7 +79,7 @@ F1(jtevms){A t,*tv,*wv;
 }
 
 // 5!:0, return ((>u)~)f. 
-F1(jtfxx){
+F1(jtfxx){F1PREFIP;
  ARGCHK1(w);
  ASSERT(AT(w)&LIT+BOX,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);

@@ -90,7 +90,7 @@ for_loc. i. y do.
 end.
 )
 f 10000
-NB. test for self-repplicating gerund
+NB. test for self-replicating gerund
 {{ J=. ((<@:((":0) ,&:< ]) , ])([.].))(`:6)
  CRASH=. 5!:1@<'J'
 try.

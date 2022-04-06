@@ -369,7 +369,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                             \
   b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI||mode==IFORKEY);  \
   zb=(B*)zv; zc=(C*)zv; zi=zv; cm=w==mark?0:c;                                       \
-  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){c=0;} \
   for(l=0;l<ac;++l,av+=acn,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){                                                 \
    if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!b){if(mode==IICO)XDQA(hash,exp,dec) else XDOA(hash,exp,inc);}}  \
     switch(md){                                                                       \
@@ -485,7 +485,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
   b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI||mode==IFORKEY);              \
   zb=(B*)zv; zc=(C*)zv; zd=(D*)zv; zi=zv; e=cn*(m-1); bx=1&&BOX&AT(a);                           \
   jx=0; dl.d=dr.d=dx.d=x=0.0;                                                                    \
-  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){c=0;} \
   for(l=0;l<ac;++l,av+=acn,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){                                                             \
    if(mode<IPHOFFSET){                                                                           \
     DO(p,hv[i]=m;);                                                                              \

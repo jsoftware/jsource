@@ -727,7 +727,7 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 
 
 // a"w; result is a verb
-F2(jtqq){AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
+F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  ARGCHK2(a,w);
  // The localuse value in the function will hold the ranks from w.
  if(unlikely(VERB&AT(w))){

@@ -303,7 +303,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 }    /* f&.(a.&i.) w */
 
 // u&.v
-F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
+F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  ARGCHK2(a,w);
  if(AT(w)&BOX){
   // Must be the gerund form.  Extract v and remember which argument it will apply to
@@ -363,7 +363,7 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  R h;
 }
 
-F2(jtundco){AF f1=0,f2;I gside=-1, flag=0;
+F2(jtundco){F2PREFIP;AF f1=0,f2;I gside=-1, flag=0;
  ARGCHK2(a,w);
  A wvb=w;  // the verb we will take the inverse of
  if(AT(w)&BOX){

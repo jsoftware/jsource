@@ -664,7 +664,7 @@ B jtgerexact(J jt, A w){A*wv;
 
 
 // u} handling.  This is not inplaceable but the derived verb is
-F1(jtamend){
+F1(jtamend){F1PREFIP;
  ARGCHK1(w);
  if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,amccv2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(ger(jt,w))R gadv(w,CRBRACE);   // v0`v1`v2}
@@ -673,7 +673,7 @@ F1(jtamend){
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}
 
-F1(jtemend){
+F1(jtemend){F1PREFIP;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  R ADERIV(CEMEND,0L,jtamen2,VFLAGNONE, RMAX,RMAX,RMAX);
 }

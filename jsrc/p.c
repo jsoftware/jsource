@@ -928,7 +928,8 @@ RECURSIVERESULTSCHECK
        A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
        A arg3=stack[2].a; arg3=pmask&2?arg3:0;  // fs, if this is a conjunction, for FAOWED testing
        UI4 restok=stack[1].t;  // save token # to use for result
-       A yy=(*actionfn)(jt,QCWORD(arg1),QCWORD(arg2),fs);
+       // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
+       A yy=(*actionfn)((J)((I)jt|JTXDEFMODIFIER),QCWORD(arg1),QCWORD(arg2),fs);
        y=NEXTY;  // refetch next-word to save regs
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10

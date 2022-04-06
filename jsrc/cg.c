@@ -129,7 +129,7 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
 }
 
 // u`:m
-F2(jtevger){A hs;I k;
+F2(jtevger){F2PREFIP;A hs;I k;
  ARGCHK2(a,w);
  STACKCHKOFL  // because this is an execution, we must check the stack to avoid self-executions
  RE(k=i0(w)); 
@@ -145,7 +145,7 @@ F2(jtevger){A hs;I k;
    ASSERT(0,EVDOMAIN);
 }}
 
-F2(jttie){ARGCHK2(a,w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
+F2(jttie){F2PREFIP;ARGCHK2(a,w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large
@@ -339,7 +339,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
 }}
 
 // initial handler for u@.v, to create resulting verb
-F2(jtagendai){I flag;
+F2(jtagendai){F2PREFIP;I flag;
  ARGCHK2(a,w)
  ASSERT(NOUN&AT(a),EVDOMAIN);  // u must always be a gerund
  if(unlikely(NOUN&AT(w)))R exg(gerfrom(w,a));  // noun form, as before

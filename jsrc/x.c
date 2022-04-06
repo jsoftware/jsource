@@ -49,7 +49,7 @@ static DF1(jthdrinfo){A z;
  R z;
 }
 
-F2(jtforeign){I p,q;
+F2(jtforeign){F2PREFIP;I p,q;
  ARGCHK2(a,w);
  ASSERT(AT(a)&NOUN&&AT(w)&NOUN,EVDOMAIN)
  p=i0(a); q=i0(w); RE(0);

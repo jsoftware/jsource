@@ -1059,7 +1059,7 @@ static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
 DF1(jtdetxm){A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}
      /* determinant via expansion by minors. w is matrix with >1 columns */
 
-F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
+F2(jtdot){F2PREFIP;A f,h=0;AF f2=jtdotprod;C c,d;
  ASSERTVV(a,w);
  if(CSLASH==FAV(a)->id){
   f=FAV(a)->fgh[0]; c=FAV(f)->id; d=FAV(w)->id;  // op was c/ . d

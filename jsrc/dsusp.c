@@ -208,7 +208,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  R z;
 }
 
-// Take system lock before going into debug.  If the debug request is granted to another thread, keep puuting it up until we get it
+// Take system lock before going into debug.  If the debug request is granted to another thread, keep putting it up until we get it
 static A jtdebugmux(J jt){A z;
  do{z=jtsystemlock(jt,LOCKPRIDEBUG,jtdebug);}while(z==(A)1);
  R z;

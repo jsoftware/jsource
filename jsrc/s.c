@@ -542,7 +542,7 @@ static L *jtprobeforsym(J jt,C*string,UI4 hash,A g){
 }
 
 // a is a NAME block.  Look up the name and return the requested component as an I
-// component is: 0=&symbol (deprecated) 1=&value data area 2=%value header 3=script number+1.  Result is 0 if name not found
+// component is: 0=&symbol (deprecated) 1=&value data area 2=%value header 3=script number+1.  Result is 0 if name not found or error in locative name
 static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
  ARGCHK1(a);
  I stringlen=NAV(a)->m; C *string=NAV(a)->s; UI4 hash=NAV(a)->hash;
@@ -550,7 +550,7 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
   // If there is a local symbol table, search it first
   if(l=jtprobeforsym((J)((I)jt+stringlen),string,hash,jt->locsyms)){goto gotval;}  // return flagging the result if local.  Stored names have QCGLOBAL semantics
   g=jt->global;  // Continue with the current locale
- } else RZ(g=sybaseloc(a));
+ } else RZ(g=sybaseloc(a));  // look up locative; error possible in name, return 0
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
  I bloom=BLOOMMASK(hash); A *v=AAV0(LOCPATH(g));
  NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}  // exit loop when found
@@ -594,7 +594,7 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
 // obsolete  y=QCWORD(syrd(nfs(AN(x),CAV(x)),jt->locsyms));
   RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); RESETERR; 
   I val=jtsyrdinternal(jt,y,component);
-  RE(0);  // if the name lookup failed, exit
+  if(component==3)RESETERR; RE(0);  // if the name lookup failed, exit; but 4!:4 never fails, because used in 13!:13
   ASSERT(component==3||val!=0,EVVALUE);  // error if name not found, for symbol or data address
 // obsolete   y=v->val;
 // obsolete   ASSERTGOTO(NOUN&AT(y),EVDOMAIN,exitfa);

@@ -1056,7 +1056,7 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
 DF2(jtfold){F2PREFIP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
- A derivvb; RZ(derivvb=unquote(a,w,foldconj));
+ A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),a,w,foldconj));
  // Modify the derived verb to go to our preparatory stub.  Save the dyadic entry point for the derived verb so the stub can call it
  FAV(derivvb)->localuse.lu1.foldfn=FAV(derivvb)->valencefns[1];
  FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;

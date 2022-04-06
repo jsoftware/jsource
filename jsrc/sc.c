@@ -5,27 +5,30 @@
 
 #include "j.h"
 
-// This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs).  self is the name reference
+// This function handles both valences: monad as (w,self), dyad as (a,w,self).  self is the name reference
+// JTXDEFMODIFIER is set if the name is a modifier
 //
 // This routine calls a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
 DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
+ ARGCHK1(w);  // w is w or self always, must be valid
+ self=AT(w)&((VERB|NAME)<<(((I)jtinplace>>(JTXDEFMODIFIERX-1))&(CONJX-VERBX)))?w:self;  //  If the call is to execute a verb, w will be VERB[/NAME] for a monad; if for a modifier, it will be ADV/CONJ.  If monad, adjust self
+ ARGCHK1(a);
 // obsolete  RE(0);  // why?  should ARGCHK?  scaf
- ARGCHK2(a,w);  // w is w or self always, must be valid  
  JATTN;  // check for user interrupt
- I flgd0cp=w!=self?8:0; // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
- V *v=FAV(self);  // V block for this V/A/C reference
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
- A thisname=v->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
 // obsolete  A valflag;   // the looked-up name, including flags with QCNAMED semantics
  A savname=jt->curname;  // we stack the executing name
+// obsolete  V *v=FAV(self);  // V block for this V/A/C reference, later to the looked-up name
+ I flgd0cp=w!=self?8:0; // self is right now; if it =w, we must be processing a monad
+ A thisname=FAV(self)->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
-// obsolete   I4 cachedlkp=v->localuse.lu1.cachedref;  // negative if cacheable; positive if cached
-  if((fs=v->localuse.lu1.cachedref)!=0){
+// obsolete   I4 cachedlkp=FAV(self)->localuse.lu1.cachedref;  // negative if cacheable; positive if cached
+  if((fs=FAV(self)->localuse.lu1.cachedref)!=0){
    // There is a cached lookup for this nameref - use it
 // obsolete    stabent=&SYMORIGIN[cachedlkp];  // the symbol block for the cached item
 // obsolete    fs=stabent->val;  // the value of the cached item
@@ -34,11 +37,11 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
     if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale  scaf could hold pointer, since named
     else explocale=0;  // if no direct locative, set so
     flgd0cp|=2;  // indicate cached lookup, which also tells us that we have not ra()d the name
-// obsolete    }else{cachedlkp=v->localuse.lu1.cachedref=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
+// obsolete    }else{cachedlkp=FAV(self)->localuse.lu1.cachedref=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{
 // obsolete valgone: ;
    // name was not cached.  Look it up.  The calls to the lookup routines all issue ra() (under lock) on the value if found
-   if(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
+   if(likely(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
     if(likely((fs=probelocal(thisname,jt->locsyms))==0)){fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
       // this is a pun - probelocal returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
@@ -66,18 +69,18 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
    // we have to wait till here to 
 // obsolete    if(unlikely((cachedlkp&(-cacheable))<0)){
-   if(unlikely((v->flag2>>(VF2CACHEABLEX-QCNAMEDX))&namedloc)){   // cacheable nameref, and value found in a named locale
+   if(unlikely((FAV(self)->flag2>>(VF2CACHEABLEX-QCNAMEDX))&namedloc)){   // cacheable nameref, and value found in a named locale
     // point the nameref to the lookup result.  This prevents further changes to the lookup
-// obsolete     v->localuse.lu1.cachedref=stabent-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
+// obsolete     FAV(self)->localuse.lu1.cachedref=stabent-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
 // obsolete     stabent->flag|=LCACHED;  // protect the value from changes
     WRITELOCK(fs->lock);  // we want to cache a name only once
-    if(v->localuse.lu1.cachedref==0){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
-     v->localuse.lu1.cachedref=fs;  // store cached address, with FAOWED semantics (not owed)
+    if(FAV(self)->localuse.lu1.cachedref==0){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
+     FAV(self)->localuse.lu1.cachedref=fs;  // store cached address, with FAOWED semantics (not owed)
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
      // to use the flags.  If we do PPPP, this will be too late
-     v->flag=FAV(fs)->flag&(VIRS1+VIRS2+VJTFLGOK1+VJTFLGOK2+VASGSAFE);  // combining flags, do not require looking into id
-     v->flag2=FAV(fs)->flag2&(VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A);  // combining flags, do not require looking into id
+     FAV(self)->flag=FAV(fs)->flag&(VIRS1+VIRS2+VJTFLGOK1+VJTFLGOK2+VASGSAFE);  // combining flags, do not require looking into id
+     FAV(self)->flag2=FAV(fs)->flag2&(VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A);  // combining flags, do not require looking into id
 // flag2: if we look through name(s) when replacing f[12] and fs, we could support VF2BOXATOP1+VF2BOXATOP2+VF2ATOPOPEN1+VF2ATOPOPEN2W+VF2ATOPOPEN2A+
 //  and we might be able to use VF2RANKATOP1+VF2RANKATOP2+VF2RANKONLY1+VF2RANKONLY2+  but we haven't checked the loops yet
       // we could mark the lookup as cached, but if debug is on we want to display the lookup value first time through    ???
@@ -102,9 +105,9 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
  }else{
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
-  jt->curname=thisname=v->fgh[1];  // get the original name
+  jt->curname=thisname=FAV(self)->fgh[1];  // get the original name
   explocale=0;  // flag no explicit locale
-  fs=v->fgh[2];  // point to the actual executable
+  fs=FAV(self)->fgh[2];  // point to the actual executable
   ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
   ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
@@ -131,9 +134,9 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif
- v=FAV(fs);  // repurpose v to point to the resolved verb block
+// obsolete  v=FAV(fs);  // repurpose v to point to the resolved verb block
 #if !USECSTACK
- I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
+ I d=FAV(fs)->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
 #endif
  STACKCHKOFLSUFF(z=0; goto exitfa;)
@@ -165,8 +168,8 @@ printf("\n");
 }
 #endif
  // ************** errors must pop the stack and unra() before exiting
- AF actionfn=v->valencefns[flgd0cp>>3];  // index is 'is dyad'.  Load here to allow call address to settle
- w=flgd0cp&8?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
+ AF actionfn=FAV(fs)->valencefns[(flgd0cp&8)>>3];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
+ w=flgd0cp&8?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
  if(likely(!(jt->uflags.ui4))) {
@@ -177,7 +180,8 @@ printf("\n");
   // possible before the branch.  Check the generated code on any change of compiler.
 // obsolete   if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
-  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+  // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name loookup.  Pass the other inplacing flags through if the call supports inplacing
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cp>>3)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
 // obsolete   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
  } else {
@@ -202,11 +206,11 @@ if(jt->curname)printf("to %.*s) ",(int)AN(jt->curname),NAV(jt->curname)->s);
 printf("incr execct to %x\n",LXAV0(jt->global)[SYMLEXECCT]);  // scaf
 #endif
   }  //  If cocurrent is about, make every call visible
-  if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
+  if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&FAV(fs)->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
    z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,d);  // if debugging, go do that. 
   }else{
 // obsolete    if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
-   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
+   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cp>>3)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
 // obsolete   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
   }
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cp&8?VAL2:VAL1);  // record the return from call
@@ -450,8 +454,8 @@ printf("immex decr jt->global\n");
  } // process the whole stack in reverse order
 }
 
-// The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
-static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
+// obsolete // The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
+// obsolete static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
 
 // return ref to adv/conj/verb whose name is a and whose symbol-table entry is sym
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
@@ -470,7 +474,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // and let unquote use the up-to-date value.
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
- A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ A z=fdef(0,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
  RZ(z);
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, mark it cacheable
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
@@ -499,7 +503,7 @@ F1(jtcreatecachedref){F1PREFIP;A z;
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
 // obsolete  A z=sym->val;
 // obsolete  tpush(z); if(unlikely())R z;  // undo the ra() in syrd.  if name is a noun, return its value
- RZ(z=fdef(0,CTILDE,AT(val), jtunquote1,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val))));// create reference
+ RZ(z=fdef(0,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val))));// create reference
  FAV(z)->localuse.lu1.cachedref=val;  // install cached address of value
  ACSETPERM(val);  // now that the value is cached, it lives forever
 // obsolete  FAV(z)->localuse.lu1.cachedref=sym-SYMORIGIN;  // convert symbol address back to index in case symbols are relocated
@@ -511,7 +515,7 @@ F1(jtcreatecachedref){F1PREFIP;A z;
 F2(jtnamerefop){V*v;
  ARGCHK2(a,w);
  v=FAV(w);
- R fdef(0,CCOLON,VERB,  jtunquote1,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
+ R fdef(0,CCOLON,VERB,  jtunquote,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
 }    
 
 /* namerefop() is used by explicit defined operators when: */

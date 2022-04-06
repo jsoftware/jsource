@@ -720,8 +720,9 @@ static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
 
 // obsolete static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code - inplaceable
 // obsolete static DF1(xadv){R xdefn(w, 0L,self);}  // inplaceable
-// modifier not referring to x/y.  Bivalent (adv/conj). Flag it as non-verb in jt
-static DF2(jtxmod){F2PREFIP;R jtxdefn((J)((I)jt|JTXDEFMODIFIER),a,w,self);}  // inplaceable and bivalent
+// obsolete // modifier not referring to x/y.  Bivalent (adv/conj). Flag it as non-verb in jt
+// obsolete static DF2(jtxmod){F2PREFIP;
+// obsolete R jtxdefn((J)((I)jt|JTXDEFMODIFIER),a,w,self);}  // inplaceable and bivalent
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
@@ -1223,8 +1224,8 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  A z;
  switch(n){
  case 3:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxmod,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxmod, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxdefn,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
  case 4:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
  case 13: z=vtrans(w); break;
  default: ASSERT(0,EVDOMAIN);

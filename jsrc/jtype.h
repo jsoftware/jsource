@@ -116,13 +116,6 @@ typedef AD *A;
 // following bit is used in the call to jtcelloffset
 #define JTCELLOFFROMX   0  // treat a single list as if a rank-2 array
 #define JTCELLOFFROM    (((I)1)<<JTCELLOFFROMX)
-// following bit is used in the call to jtxdefn/unquote to indicate the execution is of a modifier
-// This bit is set in ALL calls to modifiers, in case they are named
-#define JTXDEFMODIFIERX      7   // the executed entity is an adverb or conjunction
-#define JTXDEFMODIFIER       (((I)1)<<JTXDEFMODIFIERX)
-
-
-
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
@@ -136,7 +129,13 @@ typedef AD *A;
 #define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
 #define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)
 
-#define JTFLAGMSK       255  // mask big enough to cover all defined flags
+// following bit is used in the call to jtxdefn/unquote to indicate the execution is of a modifier
+// This bit is set in ALL calls to modifiers, in case they are named
+// ****** This bit should not be used for any other purpose ******
+#define JTXDEFMODIFIERX      8   // the executed entity is an adverb or conjunction
+#define JTXDEFMODIFIER       (((I)1)<<JTXDEFMODIFIERX)
+
+#define JTFLAGMSK       511  // mask big enough to cover all defined flags
 #define JTALIGNBDY      MAX(8192,(MAXTASKSRND<<LGTHREADBLKSIZE))  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
 
 struct AD {
@@ -395,6 +394,7 @@ typedef I SI;
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 // note: LPAR used as flag to cvt() see below; also as modifier to ADV type
 #define LPARSIZE sizeof(I)
+// unquote requires that the spacing CONJX-ADVX equal VERBX-NAMEX
 // CONJ must be 1 bit below RPAR
 #define CONJX 29
 #define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */

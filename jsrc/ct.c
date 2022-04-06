@@ -367,33 +367,32 @@ F2(jttcapdot2){A z;
 #if PYXES
  I m; RE(m=i0(a))   // get the x argument, which must be an atom
  // process the requested function.  We test by hand because only a few could be called often
- if(likely(m==3)){
+ if(likely(m==4)){
   // rattle the boxes of y and return status of each
   ASSERT(SGNIF(AT(w),BOXX)|(-AN(w))<0,EVDOMAIN)   // must be boxed or empty
   GAT(z,INT,AN(w),AR(w),AS(w)) I *zv=IAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
-  DONOUNROLL(AN(w), if(unlikely(!(AT(wv[i])&PYX)))zv[i]=-2; else zv[i]=((PYXBLOK*)AAV0(wv[i]))->pyxorigthread;)
- }else if(m==1){
+  DONOUNROLL(AN(w), if(unlikely(!(AT(wv[i])&PYX)))zv[i]=-1001;  // not pyx: _1001
+                    else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread>=0)zv[i]=((PYXBLOK*)AAV0(wv[i]))->pyxorigthread;  // running pyx: the running thread
+                    else if(((PYXBLOK*)AAV0(wv[i]))->errcode>0)zv[i]=-((PYXBLOK*)AAV0(wv[i]))->errcode;  // finished with error: -error code
+                    else zv[i]=-1000;  // finished with no error: _1000
+  )
+ }else if(m==2){
   // return list of idle threads
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   GAT0(z,INT,MAXTASKS,1) I *zv=IAV1(z);  // Don't allocate under lock, and list may change: so allocate max possible
   I threadct=0;  J mjt=MTHREAD(JJTOJ(jt)); J currjt=mjt;  // # threads, master thread, current thread
-  WRITELOCK(mjt->tasklock);
-  while(currjt->taskidleq){
-zv[threadct++]=currjt->taskidleq;
- currjt=JTFORTHREAD(jt,currjt->taskidleq);
-}
- WRITEUNLOCK(mjt->tasklock);   // copy idle threads to result.  The master can never be idle
+  WRITELOCK(mjt->tasklock);  while(currjt->taskidleq){zv[threadct++]=currjt->taskidleq; currjt=JTFORTHREAD(jt,currjt->taskidleq);} WRITEUNLOCK(mjt->tasklock);   // copy idle threads to result.  The master can never be idle
   AN(z)=AS(z)[0]=threadct;  // install # idles found
- }else if(m==4){
+ }else if(m==3){
   // return current thread #
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   RZ(z=sc(THREADID(jt)))
- }else if(m==2){
+ }else if(m==1){
   // return number of threads created
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   RZ(z=sc(JT(jt,nwthreads)))
  }else if(m==0){
-  // create a thread
+  // create a thread and start it
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   // reserve a thread#, verify we have enough thread blocks for it
   I resthread=__atomic_add_fetch(&JT(jt,nwthreads),1,__ATOMIC_ACQ_REL);

@@ -28,11 +28,11 @@ F1(jtfdepadv){ARGCHK1(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 #endif
 
 
-DF1(jtdfs1){F1PREFIP;A s=jt->parserstackframe.sf,z; RZ(self); z=CALL1IP(FAV(self)->valencefns[0],  w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; RETF(z);}
+DF1(jtdfs1){F1PREFIP;A s=jt->parserstackframe.sf,z; RZ(self); df1(z,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
 A s=jt->parserstackframe.sf,z; 
 RZ(self); 
-z=CALL2IP(FAV(self)->valencefns[1],a,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; 
+df2(z,a,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; 
 RETF(z);}    
      /* for monads and dyads that can possibly involve $: */
 

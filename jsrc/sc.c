@@ -5,17 +5,23 @@
 
 #include "j.h"
 
-// This function handles both valences: monad as (w,self), dyad as (a,w,self).  self is the name reference
-// JTXDEFMODIFIER is set if the name is a modifier
+// This function handles both valences: monad as (w,self,self), dyad as (a,w,self).  self is the name reference.  Never called without 3 args
+// JTXDEFMODIFIER is set if the name is a modifier: not used here, but passed on - xdefn uses it
 //
 // This routine calls a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
 DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad
+ A thisname=FAV(self)->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
  ARGCHK1(w);  // w is w or self always, must be valid
- self=AT(w)&((VERB|NAME)<<(((I)jtinplace>>(JTXDEFMODIFIERX-1))&(CONJX-VERBX)))?w:self;  //  If the call is to execute a verb, w will be VERB[/NAME] for a monad; if for a modifier, it will be ADV/CONJ.  If monad, adjust self
+// obsolete  self=AT(w)&((VERB|NAME)<<(((I)jtinplace>>(JTXDEFMODIFIERX-1))&(CONJX-VERBX)))?w:self;  //  If the call is to execute a verb, w will be VERB[/NAME] for a monad; if for a modifier, it will be ADV/CONJ.  If monad, adjust self
  ARGCHK1(a);
+// obsolete if(!(AT(self)&(VERB|ADV|CONJ)))SEGFAULT;  // scaf
+// obsolete if(AT(self)&VERB&&!(AT(a)&NOUN))SEGFAULT; // scaf
+// obsolete if(AT(self)&VERB&&w!=self&&!(AT(w)&NOUN))SEGFAULT; // scaf
+// obsolete if(AT(self)&ADV+CONJ&&!(AT(a)&NOUN+VERB))SEGFAULT; // scaf
+// obsolete if(AT(self)&ADV+CONJ&&w!=self&&!(AT(w)&NOUN+VERB))SEGFAULT; // scaf
 // obsolete  RE(0);  // why?  should ARGCHK?  scaf
  JATTN;  // check for user interrupt
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
@@ -23,7 +29,6 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
  A savname=jt->curname;  // we stack the executing name
 // obsolete  V *v=FAV(self);  // V block for this V/A/C reference, later to the looked-up name
  I flgd0cp=w!=self?8:0; // self is right now; if it =w, we must be processing a monad
- A thisname=FAV(self)->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
@@ -181,7 +186,8 @@ printf("\n");
 // obsolete   if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name loookup.  Pass the other inplacing flags through if the call supports inplacing
-  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cp>>3)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+// obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cp>>3)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cp>>3)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
 // obsolete   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
  } else {
@@ -530,7 +536,7 @@ F2(jtnamerefop){V*v;
 // Bivalent: called with (a,w,self) or (w,self).  We treat as dyad but turn it into monad if input w is not a noun
 DF2(jtimplocref){
  self=AT(w)&NOUN?self:w;
- self=JT(jt,implocref)[FAV(self)->id&1];
- w=AT(w)&NOUN?w:self;
+ self=JT(jt,implocref)[FAV(self)->id&1];  // namerefs for u and v
+ w=AT(w)&NOUN?w:self;  // see whether we're a dyad
  R unquote(a,w,self); // call as (w,self,self) or (a,w,self)
 }

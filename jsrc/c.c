@@ -6,9 +6,11 @@
 #include "j.h"
 
 // obv1 and obv2 merely pass the call to f.  Since we took the inplace flags for the compound from the original a, we can pass them on too
-static DF1(obv1cell){F1PREFIP;DECLFG;A z;PROLOG(0103); z=(f1)(jtinplace,w,fs); EPILOG(z);}
+// obsolete static DF1(obv1cell){F1PREFIP;DECLFG;A z;PROLOG(0103); z=(f1)(jtinplace,w,fs,fs); EPILOG(z);}
+static DF1(obv1cell){F1PREFIP;DECLFG;A z;PROLOG(0103); z=CALL1IP(f1,w,fs); EPILOG(z);}
 static DF1(obv1){PREF1(obv1cell); R obv1cell(jt,w,self);}
-static DF2(obv2cell){F2PREFIP;DECLFG;A z;PROLOG(0104); z=(f2)(jtinplace,a,w,fs); EPILOG(z);}
+// obsolete static DF2(obv2cell){F2PREFIP;DECLFG;A z;PROLOG(0104); z=(f2)(jtinplace,a,w,fs); EPILOG(z);}
+static DF2(obv2cell){F2PREFIP;DECLFG;A z;PROLOG(0104); z=CALL2IP(f2,a,w,fs); EPILOG(z);}
 static DF2(obv2){PREF2(obv2cell); R obv2cell(jt,a,w,self);}
 
 // Set ASGSAFE from a&w; set INPLACE from a

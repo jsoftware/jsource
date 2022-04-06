@@ -683,7 +683,7 @@ static DF1(rank1){DECLF;I m,wr;
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
-static DF1(jtrank10atom){ A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[0])(jt,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
+static DF1(jtrank10atom){ A fs=FAV(self)->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceability through.
 
 

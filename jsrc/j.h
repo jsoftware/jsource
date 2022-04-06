@@ -772,9 +772,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define CNOERR(x) CCOMMON(x,,)  // value has been resolved before & there cannot be an error
 #define CNULL(x) CCOMMON(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
 #define CNULLNOERR(x) CCOMMON(x,if(likely(res!=0)),)  // if x is 0, keep it 0; ignore error
-#define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
+#define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
-#define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
+#define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
@@ -895,7 +895,7 @@ if(opt&0x1){hx=w; \
 }else{J jtf; \
  I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
- RZ(hx=(fghfn)(jtf,PTR(w),hs)); \
+ RZ(hx=(fghfn)(jtf,PTR(w),hs,hs)); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
 } \
@@ -908,7 +908,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
   fghfn=FAVV(fs)->valencefns[0]; \
   I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
-  RZ(fx=(fghfn)(jtf,PTR(w),fs)); \
+  RZ(fx=(fghfn)(jtf,PTR(w),fs,fs)); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \
  } \
@@ -922,9 +922,9 @@ if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); if(!(opt&0x40))c=(UI)c>>(w==fx
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if(opt&0x40){ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs)); \
+ RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs)); \
 }else{ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+ RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs,gs)); \
 } \
 /* EPILOG to free up oddments from f and g, but not if we may be returning a virtual block */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
@@ -967,11 +967,11 @@ if(opt&0x2){hx=w; \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
   /* the flags in gh@][ are passed through from gh */ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs)); \
+  RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs,hs)); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(hx=(fghfn)(jtf,PTR(a),PTR(w),hs)); \
+  RZ(hx=(fghfn)(jtf,PTR(a),PTR(w),hs,hs)); \
   hx=PTROP(hx,+,(I)((hx!=w)&(hx!=a))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  } \
  ARGCHK1D(hx) \
@@ -991,11 +991,11 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
    jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
    if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){*tpopw=0; if(likely(c&1)){fanapop(w,AFLAG(w));}else{AC(w)=c-1;}}}} \
    else{if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){*tpopa=0; if(likely(c&1)){fanapop(a,AFLAG(a));}else{AC(a)=c-1;}}}} \
-   RZ(fx=(fghfn)(jtf,PTR(opt&0x40?a:w),fs)); \
+   RZ(fx=(fghfn)(jtf,PTR(opt&0x40?a:w),fs,fs)); \
    hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   }else{ \
    jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-   RZ(fx=(fghfn)(jtf,PTR(a),PTR(w),fs)); \
+   RZ(fx=(fghfn)(jtf,PTR(a),PTR(w),fs,fs)); \
    hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   } \
   ARGCHK2D(fx,hx) \
@@ -1012,7 +1012,7 @@ if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if((opt&0xc0)==0xc0){ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs)); \
+ RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs)); \
 }else{ \
  RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
 } \

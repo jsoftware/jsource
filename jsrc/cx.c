@@ -212,12 +212,19 @@ static I debugnewi(I i, DC thisframe, A self){
 
 // Processing of explicit definitions, line by line.  Bivalent, called as y vb or x y vb.  If JTXDEFMODIFIER is set,
 // it's a modifier, called as u adv or u v conj
-DF2(jtxdefn){F2PREFIP;PROLOG(0048);
+DF2(jtxdefn){
+ V *sv=FAV(self); I sflg=sv->flag;   // pointer to definition, and flags therefrom
+ F2PREFIP;PROLOG(0048);
 #if 1
  ARGCHK2(a,w);
 #else  // obsolete 
  RE(0);
 #endif
+// obsolete if(!(AT(self)&(VERB|ADV|CONJ)))SEGFAULT;  // scaf
+// obsolete if(AT(self)&VERB&&!(AT(a)&NOUN))SEGFAULT; // scaf
+// obsolete if(AT(self)&VERB&&w!=self&&!(AT(w)&NOUN))SEGFAULT; // scaf
+// obsolete if(AT(self)&ADV+CONJ&&!(AT(a)&NOUN+VERB))SEGFAULT; // scaf
+// obsolete if(AT(self)&ADV+CONJ&&w!=self&&!(AT(w)&NOUN+VERB))SEGFAULT; // scaf
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8 unused 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
@@ -242,17 +249,18 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  {A *hv;  // will hold pointer to the precompiled parts
   A u,v;  // pointers to args
-  V *sv; I sflg;   // pointer to definition, and flags therefrom
 #if 1
+ nGpysfctdl=w!=self?64:0;  // set if dyad
  if(((I)jtinplace&JTXDEFMODIFIER)==0){
   // we are executing a verb.  It may be an operator
-  nGpysfctdl=64&~(AT(w)>>(VERBX-6)); self=nGpysfctdl&64?self:w; w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
-  sv=FAV(self); sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
-  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;
+// obsolete   nGpysfctdl=64&~(AT(w)>>(VERBX-6)); self=nGpysfctdl&64?self:w; w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
+   w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
+  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // flags don't change
  }else{
   // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
-  nGpysfctdl=AT(w)&(ADV|CONJ)?0:64; self=nGpysfctdl&64?self:w; v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
-  sv=FAV(self); sflg=sv->flag;   // fetch flags
+// obsolete   nGpysfctdl=AT(w)&(ADV|CONJ)?0:64; self=nGpysfctdl&64?self:w;
+  v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
+// obsolete   sv=FAV(self); sflg=sv->flag;   // fetch flags
  }
 #else  // obsolete 
   nGpysfctdl=((I)(a!=0)&(I)(w!=0))<<6;   // relieve pressure on a and w
@@ -296,7 +304,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sv->flag&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
+   if(sflg&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
   }
   // End of unusual processing
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one

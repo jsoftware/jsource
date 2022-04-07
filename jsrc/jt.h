@@ -130,23 +130,25 @@ typedef struct rngdata {
  struct {
   I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
   A pool;             // pointer to first free block
- }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
+ } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 // cacheline 2 ends inside the pool struct (3 qwords extra)
 
 // things needed by name lookup (unquote)
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
- I4 callstacknext;    /* named fn calls: current depth                   */
- I4 fcalln;           /* named fn calls: maximum permissible depth     */
  A curname;          // current name, an A block containing an NM
-// end of cacheline 3
-// obsolete  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
+ US fcalln;           /* named fn calls: maximum permissible depth     */
+ US callstacknext;    /* named fn calls: current depth                   */
  C fillv0len;   // length of fill installed in fillv0
-// 7 bytes free
+// 3 bytes free
+ DC sitop;            /* pointer to top of SI stack                                 */
+ I filler3[1];
+// end of cacheline 3
+
+// obsolete  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the address of the WAITBLOK we are waiting on
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
  I malloctotal;    // net total of malloc/free performed in m.c only
- DC sitop;            /* pointer to top of SI stack                                 */
  PFRAME parserstackframe;  // 4 words  
 // end of cacheline 4
 
@@ -157,10 +159,10 @@ typedef struct rngdata {
  C* fillv;            /* fill value                                      */
  C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG
-
 // seldom-used fields
  I malloctotalhwmk;  // highest value since most recent 7!:1
 // end of cacheline 5
+
  A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
@@ -169,6 +171,8 @@ typedef struct rngdata {
  I dlllasterror;     /* DLL stuff                                       */
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
 // end of cacheline 6
+
+ // Area used for intertask communication
  A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  S taskidleq;   // thread#s of the tasks waiting for work.  Root of the idle chain is in the master.
  S tasklock;  // lock for taskidleq.  Used only in master

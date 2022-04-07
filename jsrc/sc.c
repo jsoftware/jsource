@@ -11,7 +11,7 @@
 // This routine calls a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
-DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dyad
+DF2(jtunquote){A z;
  A thisname=FAV(self)->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
  {if(unlikely(JT(jt,adbreakr)[0]!=0)){((AF)jtjsignal)(jt,EVATTN,thisname); R 0;}}  // this is JATTN, but we force the compiler to load thisname early
@@ -24,11 +24,17 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
 // obsolete if(AT(self)&ADV+CONJ&&!(AT(a)&NOUN+VERB))SEGFAULT; // scaf
 // obsolete if(AT(self)&ADV+CONJ&&w!=self&&!(AT(w)&NOUN+VERB))SEGFAULT; // scaf
 // obsolete  RE(0);  // why?  should ARGCHK?  scaf
- I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
 // obsolete  A valflag;   // the looked-up name, including flags with QCNAMED semantics
  A savname=jt->curname;  // we stack the executing name
 // obsolete  V *v=FAV(self);  // V block for this V/A/C reference, later to the looked-up name
- I flgd0cp=w!=self?8:0; // self is right now; if it =w, we must be processing a monad
+#define FLGPSEUDOX 16  // operation is dyad
+#define FLGPSEUDO ((I)1<<FLGPSEUDOX)
+#define FLGCACHEDX 17  // operation is dyad
+#define FLGCACHED ((I)1<<FLGCACHEDX)
+#define FLGDYADX 19  // operation is dyad
+#define FLGDYAD ((I)1<<FLGDYADX)
+// bits 0-15 hold the currstackx before execution
+ I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad 1=pseudofunction 2=cached lookup 8=execution of dyad bits 8-23=jt->callstacknext at start
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
@@ -38,10 +44,10 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
 // obsolete    stabent=&SYMORIGIN[cachedlkp];  // the symbol block for the cached item
 // obsolete    fs=stabent->val;  // the value of the cached item
 // obsolete    if(likely(fs!=0)){
-    // If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
-    if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale  scaf could hold pointer, since named
-    else explocale=0;  // if no direct locative, set so
-    flgd0cp|=2;  // indicate cached lookup, which also tells us that we have not ra()d the name
+   // If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
+   if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale  scaf could hold pointer, since named
+   else explocale=0;  // if no direct locative, set so
+   flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
 // obsolete    }else{cachedlkp=FAV(self)->localuse.lu1.cachedref=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{
 // obsolete valgone: ;
@@ -118,7 +124,7 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
-  flgd0cp|=1;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
+  flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
 // obsolete   stabent=0;  // no name lookup was performed
  }
  // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
@@ -131,7 +137,7 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
  wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; MC(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
  A locnm=LOCNAME(jt->global);  // name of current global locale
  wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
- if((flgd0cp&3)==0){  // there is a name to look up
+ if((flgd0cpC&(FLGCACHED|FLGPSEUDO))==0){  // there is a name to look up
 #if 0    // scaf should make this right
 ... look up the sn of thisname ...
   READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in the locale name
@@ -145,6 +151,8 @@ DF2(jtunquote){A z;  // flgs: 1=pseudofunction 2=cached lookup 8=execution of dy
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
 #endif
  STACKCHKOFLSUFF(z=0; goto exitfa;)
+// obsolete  S callstackx=jt->callstacknext;
+ flgd0cpC|=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
  if(unlikely(explocale!=0)){  // there is a locative or implied locative
   // locative. switch to it, stacking the prev value.  If the switch is to the current local symbol table, that means 'switch to caller's environment'
   if(unlikely(explocale==jt->locsyms)){
@@ -173,8 +181,8 @@ printf("\n");
 }
 #endif
  // ************** errors must pop the stack and unra() before exiting
- AF actionfn=FAV(fs)->valencefns[(flgd0cp&8)>>3];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
- w=flgd0cp&8?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed
+ AF actionfn=FAV(fs)->valencefns[flgd0cpC>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
+ w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
  if(likely(!(jt->uflags.ui4))) {
@@ -183,25 +191,25 @@ printf("\n");
   // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
   // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
   // possible before the branch.  Check the generated code on any change of compiler.
-// obsolete   if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
+// obsolete   if(unlikely(!(flgd0cpC&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name loookup.  Pass the other inplacing flags through if the call supports inplacing
-// obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cp>>3)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
-  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cp>>3)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+// obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cpC>>3)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
-// obsolete   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
+// obsolete   if(unlikely(!(flgd0cpC&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
  } else {
   // Extra processing is required.  Check each option individually
   DC d=0;  // pointer to debug stack frame, if one is allocated
   if(jt->uflags.us.cx.cx_us){  // debug or pm
    // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
-// obsolete    RZSUFF(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs),z=0; goto exitpop;); d->dcn=(I)(flgd0cp&3?0:stabent);   // save last sym lookup as debug parm if it is valid (not cached or pseudoname)
-   RZSUFF(d=deba(DCCALL,flgd0cp&8?a:0,flgd0cp&8?w:a,fs),z=0; goto exitpop;); d->dcn=(I)fs;   // save executing value for redef checks
+// obsolete    RZSUFF(d=deba(DCCALL,flgd0cpC&8?a:0,flgd0cpC&8?w:a,fs),z=0; goto exitpop;); d->dcn=(I)(flgd0cpC&3?0:stabent);   // save last sym lookup as debug parm if it is valid (not cached or pseudoname)
+   RZSUFF(d=deba(DCCALL,flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs),z=0; goto exitpop;); d->dcn=(I)fs;   // save executing value for redef checks
   }
 
-  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cp&8?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
+  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
-  if(!(flgd0cp&1) && jt->uflags.us.uq.uq_c.bstkreqd && callstackx==jt->callstacknext){
+  if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.us.uq.uq_c.bstkreqd && (US)flgd0cpC==jt->callstacknext){
 #if 0 // obsolete
 printf("Pushing stack for long processing, callstackx=%lld ",callstackx);  // scaf
 if(savname)printf("(from %.*s ",(int)AN(savname),NAV(savname)->s);
@@ -213,13 +221,13 @@ printf("incr execct to %x\n",LXAV0(jt->global)[SYMLEXECCT]);  // scaf
 #endif
   }  //  If cocurrent is about, make every call visible
   if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&FAV(fs)->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
-   z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,d);  // if debugging, go do that. 
+   z=dbunquote(flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
   }else{
-// obsolete    if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
-   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cp>>3)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
-// obsolete   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
+// obsolete    if(unlikely(!(flgd0cpC&2)))ACINCR(fs);  // protect the entity if not cached
+   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(FAV(fs)->flag,(flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))|(JTXDEFMODIFIER|~JTFLAGMSK))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
+// obsolete   if(unlikely(!(flgd0cpC&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
   }
-  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cp&8?VAL2:VAL1);  // record the return from call
+  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // record the return from call
   if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
   if(d)debz();  // release stack frame if allocated
  }
@@ -267,6 +275,7 @@ if(savname)printf("to %.*s ",(int)AN(savname),NAV(savname)->s);
 printf("\n"); // scaf
 #endif
  jt->curname=savname;  // restore the executing name
+ I callstackx=(US)flgd0cpC;  // extract the init call stackx, which we will use to analyze
  if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them
   if(likely(((jt->callstack[callstackx].type^CALLSTACKPOPLOCALE) | ((callstackx+1)^jt->callstacknext))==0)) {   // jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext
@@ -276,11 +285,11 @@ printf("Decr execct of locale %.*s from %x, callstackx=%lld\n",(int)AN(LOCNAME(j
 #endif
    DECREXECCT(jt->global);  // end the execution that we started with this locative
    SYMSETGLOBAL(jt->locsyms,jt->callstack[callstackx].value);  // restore global locale
-   jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller
+   jt->callstacknext=callstackx;  // restore stackpointer for caller
   }else{
    // Locales were changed.  Process the stack fully
    // PUSHLOCALE (u./v.) will always be first in stack, and we can process it now.  If it is there it is always followed by a POP
-   I savstackx=callstackx;  // save value to restore caller to
+// obsolete    I savstackx=callstackx;  // save value to restore caller to
    if(jt->callstack[callstackx].type&CALLSTACKPUSHLOCALSYMS){SYMSETLOCAL((A)jt->callstack[callstackx].value); callstackx++;}  // restore locsyms if we stacked it, and restore possibly-changed global value therein
    // The stack is [CALLSTACKPUSHLOCALSYMS] [POPLOCALE] [POPLOCALEFIRST/POPFROM/CHANGELOCALE], no more.  We have advanced callstackx past the CALLSTACKPUSHLOCALSYMS if any
    // It is possible that the stack might be malformed, if the user called 18!:4 and then other calls without return.  Boot does this, alas; in particular stdlib calls 18!:4 directly and then finishes with cocurrent,
@@ -302,7 +311,7 @@ printf("Processing POPFROM %.*s\n",(int)AN(LOCNAME(jt->callstack[jt->callstackne
      // if TOS is POPFROM, the verb issued 18!:4 (perhaps multiple times, in which case we remember the first).  We must remember
      // the locale as of the 18!:4 as a flag, so we don't reset the global pointer, and also as a value in case we have to add a POPLOCALEFIRST to it.
      // If the verb is u./v., we ignore the POPFROM so that the global value in the extended definition doesn't change
-     if(savstackx==callstackx){
+     if((US)flgd0cpC==callstackx){
       // The just-completed name did n>0 18!:4s, and n-1 INCR/DECR pairs.  It is left to us to INCR for the last value, left in jt->global
       INCREXECCT(jt->global);  // signal execution started on the last 18!:4
 #if 0 // obsolete
@@ -339,7 +348,7 @@ printf("Decr execct of locale %.*s from %x, callstackx=%lld\n",(int)AN(LOCNAME(p
     }
    }while(--jt->callstacknext>callstackx);  // process the whole stack in reverse order
 
-   jt->callstacknext=(I4)savstackx;  // restore stackpointer for caller.  The following pushes are onto the caller's stack
+   jt->callstacknext=(US)flgd0cpC;  // restore stackpointer for caller.  The following pushes are onto the caller's stack
    // NOTE: if there is no higher executing name, these pushes will never get popped.  That would correspond to trying to delete the locale that is running at the console,
    // or typing (cocurrent 'a') into the console, which would leave a POP on the stack, never to be executed because there is no higher function to return to base locale.
    // There is no way to detect this, because names that don't change locales don't leave a trace, and thus there is no guarantee that the function-call stack will
@@ -433,7 +442,7 @@ printf("Stacking CHANGE at %d\n",jt->callstacknext) ; // scaf
  }
  // ************** errors OK now
 exitfa:
-if(likely(!(flgd0cp&3))){faacv(fs);}  // unra the name if it was looked up from the symbol tables
+if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){faacv(fs);}  // unra the name if it was looked up from the symbol tables
 R z;
 }
 

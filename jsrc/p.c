@@ -831,7 +831,7 @@ endname: ;
          // The block can be virtual, if it is x/y to xdefn.  We must never inplace to a virtual block
 // obsolete          s=s?s:SYMVAL0; A zval=s->val; 
 // obsolete          zval=zval?zval:AFLAG0; zval=AC(zval)==((((AFLAG(zval)>>AFROX)&(AFRO>>AFROX))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;
-         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;
+         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
          pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
         }
        }

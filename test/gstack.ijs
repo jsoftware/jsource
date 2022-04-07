@@ -101,6 +101,23 @@ catch.
 end.
 }} ''
 
+NB. **************************************** threads & tasks **********************************
+3 : 0 ''
+try.
+while. 2 > 1 T. '' do. 0 T. '' end.  NB. make sure we have 2 worker threads
+catch.
+assert. -. IF64  NB. threads should be supported on all 64-bit systems
+end.
+assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
+assert. 2 = 1 T. ''
+assert. 1 2 *./@e. 2 T. ''
+assert. 0 1 2 *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  0.1 0.1 0.3 
+assert. 0 1 2 *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  0.3 0.3 0.1 
+assert. (_1000;1 2;_1001) e.~&> 4 T. (3&T.@'')@(6!:3) t.'' "(0)  0.2 0.6 0.4
+1
+)
+
+
 4!:55 ;:'c f f5 f6 g t p'
 
 

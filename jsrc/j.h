@@ -649,6 +649,10 @@ extern unsigned int __cdecl _clearfp (void);
 #undef MAXTASKS
 #define MAXTASKS 1  // override to no tasks if no pyxes
 #endif
+#if defined(ANDROID) && defined(__x86_64__)
+#undef MAXTASKS
+#define MAXTASKS 1  // workaround for android x86_64
+#endif
 
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
 #if !PYXES

@@ -282,7 +282,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
    // result was good, use it
    rifv(z);  // realize virtual result before returning
    ra(z);  // since the pyx is recursive, we must ra the result we store into it  could zap
-   __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result: value or error code
+   __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
   }
   __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxorigthread,-1,__ATOMIC_RELEASE);  // set pyx no longer running
   // broadcast to wake up any tasks waiting for the result
@@ -291,7 +291,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   fa(arg1); fa(arg2); if(dyad){fa(arg3);}
   // unprotect pyx
   fa(pyx);
-  jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks
+  jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)
   jttpop(jt,old); // clear anything left on the stack after execution
   // loop back to wait for next task
  }

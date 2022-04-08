@@ -337,9 +337,11 @@ typedef I SI;
                                           // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the pyx,  requires C(pyx).
                                           // If the address of the pyx is being copied into another block, there is no need for C().  In particular, the pyx may be ra()'d if it is put into a recursive block.
                                           // ra() on a pyx will affect the usecount of the pyx itself but NOT of the contents, because a pyx is always marked recursive.
-                                          // The AN of the 'atomic' pyx is initialized to 0, and AAV[0] is also 0.  When the pyx is resolved, the address of the
-                                          // result A block/error code is stored into AAV[0], and if there is no error, AN is set to 1.
-                                          // When a pyx is created, ownership is transferred to the enclosing box via zap.  It is also active in the creating task.
+                                          // The pyx looks like an atomic box but it actually holds a PYXBLOK where the data would be.  The PYXBLOK begins with the result value, so that when
+                                          // the pyx is freed the result will be also.  The AN of the 'atomic' pyx is initialized to 1, and AAV[0] to 0.  When the pyx is resolved, the address of the
+                                          // result A block is stored into AAV[0], error code is saved in the PYXBLOK, and the executing thread field of the PYXBLOK is set to -1.
+                                          // When a pyx is created, ownership is transferred to the enclosing box via zap.  The enclosing box is active in the creating task.  The PYXBLOK is ra()d
+                                          // before it is passed to the executing task; the task fa()s it after it is filled in.
 // Bit 9 unused
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */

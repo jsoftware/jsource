@@ -146,21 +146,24 @@ A jtartiffut(J jt,A w,I aflag){A z;
  R z;
 }
 #endif
-#if PYXES
-
 // ****************************** waiting for values *******************************
+#if PYXES
 typedef struct condmutex{
  pthread_cond_t cond;
  pthread_mutex_t mutex;
 } WAITBLOK;
+#endif
 
 typedef struct pyxcondmutex{
  A pyxvalue;  // the A block of the pyx, when it is filled in.  It is 0 until then.
  S pyxorigthread;  // thread number that is working on this pyx, or _1 if the value is available
  C errcode;  // 0 if no error, or error code
+#if PYXES
  WAITBLOK pyxwb;  // sync info
+#endif
 } PYXBLOK;
 
+#if PYXES
 static struct timespec maxwait={0,2000000};  // 2ms - maximum time to wait for a pyx.  After that, check to see if a system lock has been requested
 
 // w is an A holding a pyx value.  Return its value when it has been resolved
@@ -348,23 +351,27 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  }
  R box(pyx);  // Create a RECURSIVE box holding the pyx or result value
 }
+#else
+static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
+ ARGCHK2(arg1,arg2);  // the verb is not the issue
+ I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
+ A uarg3=FAV(self)->fgh[0], uarg2=arg2; uarg2=dyad?uarg2:uarg3;  // get self, positioned after the last noun arg
+ pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
+ R box(pyx);  // Create a RECURSIVE box holding the pyx or result value
+}
+static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
 #endif
 
 // u t. n - start a task.  We just create a vrb to handle the arguments
 F2(jttdot){F2PREFIP;
  ASSERTVN(a,w);
-#if PYXES
  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
  R fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
-#else
- ASSERT(PYXES,EVNONCE)
-#endif
 }
 
 // x T. y - various thread and task operations
 F2(jttcapdot2){A z;
  ARGCHK2(a,w)
-#if PYXES
  I m; RE(m=i0(a))   // get the x argument, which must be an atom
  // process the requested function.  We test by hand because only a few could be called often
  if(likely(m==4)){
@@ -405,7 +412,4 @@ F2(jttcapdot2){A z;
   }
  }else ASSERT(0,EVDOMAIN)
  RETF(z);  // return thread#
-#else
- ASSERT(PYXES,EVNONCE)
-#endif
 }

@@ -130,7 +130,7 @@ DF2(jtunquote){A z;
  // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
- C trackinfo[256];  // will hold name followed by locale
+ C trackinfo[256];  // will hold name followed by locale and scriptname
  forcetomemory(&trackinfo);
  mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN+' ');  // clear name & locale
  UI wx=0, wlen;   // index/len we will write to
@@ -138,10 +138,10 @@ DF2(jtunquote){A z;
  A locnm=LOCNAME(jt->global);  // name of current global locale
  wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
  if((flgd0cpC&(FLGCACHED|FLGPSEUDO))==0){  // there is a name to look up
-#if 0    // scaf should make this right
-... look up the sn of thisname ...
-  READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in the locale name
-#endif
+  A sna; I snx;
+  if((sna=scind(box(sfn(0,thisname))))&&(snx=BIV0(sna))>=0){
+   READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[snx]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[snx]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in the locale name
+  }
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif

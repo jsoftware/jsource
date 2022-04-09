@@ -256,7 +256,7 @@ A jtprobe(J jt,C*string,UI4 hash,A g){
  L *symnext, *sym=sympv+SYMNEXT(symx);  // first symbol address - might be the free root if symx is 0
  NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
-  symnext=sympv+SYMNEXT(symx=sym->next);
+  symnext=sympv+(symx=SYMNEXT(sym->next));
 // obsolete   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R sym->val?sym:0;)     // (1) exact match - if there is a value, use this slot, else say not found
   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R (A)((I)sym->val+sym->valtype);)     // (1) exact match - if there is a value, return it.  valtype has QCGLOBAL semantics
   sym=symnext;  // advance to value we read
@@ -367,8 +367,8 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
    R l;  // return 
   }
  } else {
-  // No bucket information, do full search.  No lock needed on local table
-  L *l=probeis(a,jt->locsyms);
+  // No bucket information, do full search.  No lock needed on local table, but we do have to reserve a symbol in case the name is new
+  SYMRESERVE(1) L *l=probeis(a,jt->locsyms);
   RZ(l);
   AR(jt->locsyms)|=(~l->flag)&LPERMANENT;  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
   R l;

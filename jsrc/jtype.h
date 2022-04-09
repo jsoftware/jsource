@@ -331,7 +331,7 @@ typedef I SI;
 #define PYXX 8
 #define PYX          ((I)1L<<PYXX)  // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
                                           // Task creation returns an atomic box (which is NOT a pyx) that CONTAINS a pyx.  A pyx itself never becomes a result or argument, because
-                                          // the value of a pyx may not be accessed except through C(pyx), which will return the address of the contents.  The address of the pyx (an A block)
+                                          // the value of a pyx may not be accessed except through C(pyx), which will return the address of the contents.  An A block pointing to the pyx (necessarily of BOX type)
                                           // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that pyxes MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
                                           // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
                                           // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the pyx,  requires C(pyx).

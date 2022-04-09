@@ -342,6 +342,10 @@ typedef I SI;
                                           // result A block is stored into AAV[0], error code is saved in the PYXBLOK, and the executing thread field of the PYXBLOK is set to -1.
                                           // When a pyx is created, ownership is transferred to the enclosing box via zap.  The enclosing box is active in the creating task.  The PYXBLOK is ra()d
                                           // before it is passed to the executing task; the task fa()s it after it is filled in.
+                                          //
+                                          // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
+                                          // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
+                                          // a being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
 // Bit 9 unused
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */

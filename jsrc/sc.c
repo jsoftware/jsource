@@ -14,7 +14,7 @@
 DF2(jtunquote){A z;
  A thisname=FAV(self)->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
- {if(unlikely(JT(jt,adbreakr)[0]!=0)){((AF)jtjsignal)(jt,EVATTN,thisname); R 0;}}  // this is JATTN, but we force the compiler to load thisname early
+ {if(unlikely(JT(jt,adbreakr)[0]!=0)){jtjsignal2(jt,EVATTN,thisname); R 0;}}  // this is JATTN, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
 // obsolete  self=AT(w)&((VERB|NAME)<<(((I)jtinplace>>(JTXDEFMODIFIERX-1))&(CONJX-VERBX)))?w:self;  //  If the call is to execute a verb, w will be VERB[/NAME] for a monad; if for a modifier, it will be ADV/CONJ.  If monad, adjust self
 // obsolete  ARGCHK1(a);

@@ -572,6 +572,38 @@ void audittstack(J jt){F1PREFIP;
 #endif
 }
 
+// x 13!:84 y  audit a recursive pyx array y 
+// result 0=ok, 1=pyx found with usecount<x 2=pyx found with usecount<0 (maybe deadbeef) 3=nonrecursive block found 4=dead value found
+F2(jtauditpyx){I mindepth;
+ ARGCHK2(a,w);
+ RE(mindepth=i0(a));   // minimum expected depth
+ I n=AN(w); // number of boxes
+ ASSERT(n==0||AT(w)&BOX,EVDOMAIN)
+ if(!AFLAG(w)&BOX)R num(3);
+ // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+ A* RESTRICT wv=AAV(w);  // pointer to box pointers
+ if(unlikely(n==0))R num(0);  // Can't be mapped boxed; skip everything if no boxes
+ NOUNROLL while(--n>=0){  // n is always >0 to start.
+  A np=*wv++;
+  // inspect the cell.  If it is a pyx, verify that its usecount is sufficient and that its value, if given, has not been freed
+  // if not a pyx, recur if it is a box
+  if((np=QCWORD(np))!=0){
+   if(AC(np)<0)R num(2);  // the value has been freed - error
+   if(AT(np)&BOX){
+    if(AT(np)&PYX){
+     if(AC(np)<mindepth)R num(1);
+     if(AAV(np)[0]!=0 && AC(AAV(np)[0])<0)R num(4);  // dead contents
+    }else{
+     A z=jtauditpyx(jt,a,np);
+     if(BIV0(z)!=0)R z;  // if recursion found error, pass it up
+    }
+   }
+  }
+ }
+ R num(0);
+}
+
+
 // Free all symbols pointed to by the SYMB block w, including PERMANENT ones.  But don't return CACHED values to the symbol pool
 void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  LX freeroot=0; LX *freetailchn=(LX *)jt->shapesink;  // sym index of first freed ele; addr of chain field in last freed ele
@@ -845,7 +877,7 @@ A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
 #if AUDITEXECRESULTS
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
-   if((np=QCWORD(np))!=0){ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
+   if((np=QCWORD(np))!=0){ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.  scaf count cannot be <0, don't need to test
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
@@ -900,7 +932,7 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
      if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
       if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
       else{I c=AC(np);
-       // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
+       // virtual block.  Must be the contents of a WILLBEOPENED, but it may have other aliases so the usecount must be checked
        if(--c<=0){
         A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
        }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count

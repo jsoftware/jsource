@@ -604,7 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00          // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00 // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -622,9 +622,14 @@ extern unsigned int __cdecl _clearfp (void);
 
 // obsolete #define MAXTHREADS 1  // maximum number of threads
 // obsolete 
-#define MAXTASKS 15    // maximum number of tasks running at once, including the master thread
-#define MAXTASKSRND 16  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
-
+#define MAXTASKS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
+                       // threads will be paged out
+#define MAXTASKSRND 64  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
+#if MAXTASKS>255
+#define WLOCKBIT 0x8000  // the LSB of the part of a 16-bit lock used for write locks.
+#else
+#define WLOCKBIT 0x100  // With <256 threads, we split the lock into 2 8-bit sections so we can use LOCK XADD instructions
+#endif
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
@@ -760,10 +765,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
 #if PYXES
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely((res=jtpyxval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
-#define READLOCK(lock) {S prev; if(unlikely((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))<0))readlock(&lock,prev); }
-#define WRITELOCK(lock)  { S prev; if(prev=__atomic_fetch_or(&lock,(S)0x8000,__ATOMIC_ACQ_REL)!=0)writelock(&lock,prev); }
-#define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // bits 0-14 belong to read
-#define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,0x7fff, __ATOMIC_ACQ_REL);  // bit 15 belongs to write
+#define READLOCK(lock) {S prev; if(unlikely(((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))&(S)-WLOCKBIT)!=0))readlock(&lock,prev);}
+#if WLOCKBIT==0x8000
+#define WRITELOCK(lock)  {S prev; if(unlikely((prev=__atomic_fetch_or(&lock,(S)WLOCKBIT,__ATOMIC_ACQ_REL))!=0))writelock(&lock,prev);}
+#else
+#define WRITELOCK(lock)  {S prev; if(unlikely((prev=__atomic_fetch_add(&lock,WLOCKBIT,__ATOMIC_ACQ_REL))!=0))writelock(&lock,prev);}
+#endif
+#define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // decrement the read bits
+#define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,WLOCKBIT-1, __ATOMIC_ACQ_REL);  // clear all the write bits
 #else
 #define CCOMMON(x,pref,err) (x)
 #define READLOCK(lock) ;
@@ -1141,7 +1150,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GA0(v,t,n,r) {GA00(v,t,n,r) *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 and must fill in with AN if so - never for sparse blocks
 #define GA10(v,t,n) {GA00(v,t,n,1) AS(v)[0]=(n);}  // used when rank is known to be 1
 
-// GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
+// GAT[^V]*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \

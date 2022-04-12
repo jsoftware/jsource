@@ -45,8 +45,12 @@ DF2(jtunquote){A z;
 // obsolete    fs=stabent->val;  // the value of the cached item
 // obsolete    if(likely(fs!=0)){
    // If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
-   if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale  scaf could hold pointer, since named
-   else explocale=0;  // if no direct locative, set so
+   if(unlikely((explocale=(A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave explocale=0.  This is a pun on 0
+    if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
+     RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));  //  extract locale string, find/create locale
+     FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
+    }
+   }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
 // obsolete    }else{cachedlkp=FAV(self)->localuse.lu1.cachedref=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{
@@ -60,7 +64,11 @@ DF2(jtunquote){A z;
     }
    }else{  // locative or u./v.
     if(likely(!(NAV(thisname)->flag&NMIMPLOC))){  // locative
-     RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
+     // see if the locale is cached.  This will help name"n mainly, but also stored xctls like public_z_ =: entry_loc_ where entry_loc will have the locale pointer
+     if((explocale=FAV(self)->localuse.lu0.cachedloc)==0){  // use cached locale if there is one
+      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
+      if(!(NAV(thisname)->flag&NMILOC))FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
+     }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
      if(fs=probelocal(thisname,jt->locsyms)){
@@ -472,15 +480,18 @@ printf("immex decr jt->global\n");
 // obsolete // The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
 // obsolete static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
 
-// return ref to adv/conj/verb whose name is a and whose symbol-table entry is sym
+// return ref to adv/conj/verb whose name is a and whose value/type is val (with QCGLOBAL semantics)
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
 // and return that; the name will be resolved when the name~ is executed.
 // If the name is undefined, return a reference to [: (a verb that always fails)
+// This verb also does some processing designed to reduce register usage in the parser:
+//  * if val is not 0, it is freed
+//  * the flags from val are transferred to the result (with QCFAOWED semantics)
 // The value is used only for flags and rank
 A jtnamerefacv(J jt, A a, A val){A y;V*v;
- y=val?val:ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)
+ y=val?QCWORD(val):ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)
 // obsolete  if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
- if(unlikely((NOUN&AT(y))!=0))R y;  // return if error or it's a noun
+ if(unlikely((NOUN&AT(y))!=0))R (A)((I)val|QCFAOWED);  // if noun, keep the flags, and indicate we didn't fa() it
  // This reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference
  v=FAV(y);
@@ -490,21 +501,26 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
  A z=fdef(0,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ if(likely(val!=0))fa(QCWORD(val))else val=(A)QCVERB;  // release the value, now that we don't need it.  If val was 0, get flags to install into reference t indicate [: is a verb
  RZ(z);
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, mark it cacheable
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
 // obsolete  FAV(z)->localuse.lu1.cachedref=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<SYMNONPERMX;  // 0x80.. to enable caching, otherwise 0
  FAV(z)->flag2|=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
- R z;
+ R (A)((I)z|QCPTYPE(val));  // no FAOWED since we freed val
 }
 
 // return reference to the name given in w, used when moving from queue to stack
 // For a noun, the reference points to the data, and has rank/shape info
 // For other types, we build a function ref to 'name~', and fill in the type, rank, and a pointer to the name;
 //  the name will be dereferenced when the function is executed
-A jtnameref(J jt,A w,A locsyms){
- ARGCHK1(w); A y=QCWORD(syrd(w,locsyms)); if(likely(y!=0))tpush(y);   // undo the ra() in syrd, after the sentence completes
- R namerefacv(w,y);  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
+//  if fa is needed, we do it here
+A jtnameref(J jt,A w,A locsyms){A z;
+ ARGCHK1(w); z=syrd(w,locsyms);
+// obsolete  if(likely(y!=0))tpush(y);   // undo the ra() in syrd, after the sentence completes
+ RZ(z=namerefacv(w,z));  // make a reference to the name & fa the value
+ if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed, tpush it h & cancel the request
+ R QCWORD(z);
 }    /* argument assumed to be a NAME */
 
 // Adverb 4!:8 create looked-up cacheable reference to (possibly boxed) literal name a

@@ -526,7 +526,7 @@ typedef I SI;
 #define ACINCRVIRT(a)   (AC(a)=(AC(a)&~ACINPLACE)+1)
 #define ACIPNO(a)       {if(AC(a)<0)AC(a)&=~ACINPLACE;}  // if AC<0, the block must not be visible to other threads
 #define ACIPNOABAND(a)  {AC(a)&=~ACINPLACE;}  // block is known to be inplace abandoned & thus not PERMANENT
-#define ACADD(a,n)      if(AC(a)<0)AC(a)=(n)+1;else if(likely(!ACISPERM(AC(a))))__atomic_fetch_add(&AC(a),(n),__ATOMIC_ACQ_REL);
+#define ACADD(a,n)      if(AC(a)<0)__atomic_store_n(&AC(a),(n)+1,__ATOMIC_RELEASE);else if(likely(!ACISPERM(AC(a))))__atomic_fetch_add(&AC(a),(n),__ATOMIC_ACQ_REL);
 #define ACINCR(a)       ACADD(a,1)
 #define ACDECRNOPERM(a)  __atomic_fetch_sub(&AC(a),1,__ATOMIC_ACQ_REL);  // must not be PERM
 #if 0  // obsolete
@@ -924,7 +924,7 @@ typedef struct{
 #define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
 #define NMILOC          2       // indirect locale abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMDOT           128       // one of the names m. n. u. v. x. y.      */
-#define NMXY            8       // x/y, which must have NAMEBYVALUE set
+// obsolete #define NMXY            8       // x/y, which must have NAMEBYVALUE set
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
 #define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
@@ -1046,6 +1046,7 @@ typedef struct {
   struct {
    union {
     I filler;  // pad to cacheline
+    A cachedloc;   //  for namerefs ('name'~), the locale address if the name is a direct named lookup (after the first reference)
    } lu0;
    // end of first cacheline, which is not used much during execution
    union {  // 8 bytes in the second (main) cacheline
@@ -1072,6 +1073,7 @@ typedef struct {
  RANKT mr;  // combining monad rank
  C id;  // pseudochar for the function encoded here
  C lc;  // lc is a local-use byte.  Used in atomic verbs to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
+// 3 bytes free
 } V;  // two cachelines in 64-bit (16 Is); 20 I4s in 32-bit
 // The AN and AR fields of functions are not used
 

@@ -877,7 +877,7 @@
 // obsolete #define rapos(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x)}
 #define rapos(x)   {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atomic instruction if c<0
 // obsolete #define raposlocal(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x)}   // name in local table, recursive if not sparse and does not need atomic operation if AC=1
-#define raposlocal(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=2;else ACADD(x,1); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atoomic instruction if c<0
+#define raposlocal(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else ACADD(x,1); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atoomic instruction if c<0
 // obsolete #define raposacv(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1;}  // must be recursive usecount
 #define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1);}}
 // obsolete #define raposgblqcgsv(x,qct,sv) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}  // must be recursive usecount but may be sparse
@@ -888,7 +888,7 @@
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
 // obsolete #define raczap(x,cond,falsestart)   {I c=AC(x); if(likely(cond)){*AZAPLOC(x)=0; c&=~ACINPLACE;}else{falsestart c+=(c>>(BW-2))^1;} AC(x)=c; \
 // obsolete                                     radescend(x)}
-#define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=2;else ACADD(x,1);} \
+#define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=ACUC2;else ACADD(x,1);} \
                                     radescend(x)}}
                                     // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame
                                     // cond must be true only if c<0

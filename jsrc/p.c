@@ -683,7 +683,7 @@ fa(s->val); // scaf
        // The name is defined.  If it's a noun, use its value (the common & fast case)
        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
        // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
-       // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
+       // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.  nameless was detected on assignment.
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
 // obsolete        if(pt0ecam&((NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))|(QCNOUN<<VALTYPEX))){   // use value if noun or special name, or name::
@@ -696,19 +696,22 @@ fa(s->val); // scaf
         // nameless modifier, and not a locative.  This handles 'each'.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch y so we can look at its flags
         y=(A)((I)y+QCADV-VALTYPENAMELESSADV);  // convert type to normal adverb, which the parser looks for
-        if(NAV(origy)->flag&NMCACHED){
-         // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
+        if(NAV(origy)->flag&NMCACHED){  // nameless mod is cachable - replace it by its value in the name
+         // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent
 // obsolete          NAV(origy)->cachedref=(A)(s-SYMORIGIN); NAV(origy)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(origy)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(y); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal
         }
         y=SETFAOWED(y);
 // obsolete  tx=ATYPETOVALTYPE(ADV);  // it must be a nameless adverb, until we support nameless conjunctions
-       }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
-        A savy=y;  // this hurts.
-        y = namerefacv(QCWORD(*(volatile A*)queue), QCWORD(savy));   // Replace other acv with reference
-        fa(QCWORD(savy));  // the reference stores only the name (the value is used for flags & rank).  we must release the value
+       }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the name.  But if the value IS a reference, use the value if possible to avoid the extra lookup
+// obsolete         A savy=y;  // this hurts.
+        A origname=QCWORD(*(volatile A*)queue);  // refetch the name
+        if(unlikely(FAV(y)->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
+         // the value is a non-locative reference to another reference.  It is safe to skip over it.  Leave y holding the value
+        }else{y=namerefacv(origname, y);}   // Replace other acv with reference, and fa() looked-up y value
+// obsolete         fa(QCWORD(savy));  // the reference stores only the name (the value is used for flags & rank).  we must release the value
         FPZ(y)
-        y=(A)((I)y+QCPTYPE(savy));  // preserve type of reference; go to QCFAOWED semantics with FAOWED off
+// obsolete         y=(A)((I)y+QCPTYPE(savy));  // preserve type of reference; go to QCFAOWED semantics with FAOWED off
 // obsolete         tx=(pt0ecam&VALTYPE)>>VALTYPEX;  // use saved s->valtype as typeclass of this name
        }
       }else{
@@ -716,9 +719,9 @@ undefname:
        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
        // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
-       y=namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:
+       y=namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:, including flags
        FPZ(y)   // if syrd gave an error, namerefacv will return 0 (from fdef).  This will have previously signaled an error
-       y=(A)((I)y+ATYPETOVALTYPE(VERB));  // install verb type, QCFAOWED semantics
+// obsolete        y=(A)((I)y+ATYPETOVALTYPE(VERB));  // install verb type, QCFAOWED semantics
       }
 endname: ;
      }
@@ -1130,11 +1133,12 @@ got1val:;
        sv=namecoco(jtinplace, y, sv);  // if name::, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // coco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else y=QCWORD(sv);  // not name::, just use the value
-     } else {y = namerefacv(y, QCWORD(sv)); fa(QCWORD(sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
+     } else {y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
+// obsolete  fa(QCWORD(sv)); 
     } else {
      // undefined name.
      if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
-     else y = namerefacv(y, 0);    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error
+     else y = QCWORD(namerefacv(y, 0));    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error
     }
    }
    if(likely(y!=0))if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error

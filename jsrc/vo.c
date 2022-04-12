@@ -25,7 +25,7 @@ I levelle(J jt,A w,I l){
  R 1;  // if it never gets big enough, say so, keep looking
 }
 
-F1(jtlevel1){ARGCHK1(w); R sc(level(jt,w));}
+F1(jtlevel1){ARGCHK1(w); I z=level(jt,w); RE(0) R sc(z);}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);

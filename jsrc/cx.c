@@ -49,11 +49,23 @@
 #else
 #define SETTRACK
 #endif
+
+#define NOUNERR(t,ti) \
+    /* Signal post-exec error*/ \
+    {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
+    /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
+    break;}
+
+#define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
+
 #define parseline(z,lbl) {S attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
  if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); goto lbl;} jsignal(EVATTN); z=0;} \
  else{lbl: if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}   /* debug parse if debug/pm */ \
- if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200))if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)z=0;}} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
+ if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
+   if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \
+ }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
 
 /* for_xyz. t do. control data   */
@@ -184,13 +196,6 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
  R tdi;
 }
 
-#define CHECKNOUN if (unlikely(!(NOUN&AT(t)))){   /* error, T block not creating noun */ \
-    /* Signal post-exec error*/ \
-    t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
-    /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
-    break; }
-
 // Return next line to execute, in case debug changed it
 // If debug is running we have to check for a new line to run, after any execution with error or on any line in case the debugger interrupted something
 // result is line to continue on
@@ -278,7 +283,8 @@ DF2(jtxdefn){
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
   locsym=hv[3];  // fetch pointer to preallocated symbol table
   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
-  if(likely(!(AR(locsym)&ARLSYMINUSE))){AR(locsym)|=ARLSYMINUSE;nGpysfctdl|=32;}  // remember if we are using the original symtab
+  if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){nGpysfctdl|=32;}  // remember if we are using the original symtab
+// obsolete AR(locsym)|=ARLSYMINUSE;
   else{RZ(locsym=clonelocalsyms(locsym));}
   // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
   if(unlikely((jt->uflags.us.cx.cx_us | (sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.

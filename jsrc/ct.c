@@ -185,14 +185,14 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
 }
 
 // ************************************* Locks **************************************
-// take a readlock on *alock.  We come here only if a writelock was requested or running
+// take a readlock on *alock.  We come here only if a writelock was requested or running.  We have incremented the readlock
 void readlock(S *alock, S prev){
  // loop until we get the lock
  do{
   __atomic_fetch_sub(alock,1,__ATOMIC_ACQ_REL);  // rescind our read request.  The writer may hitch slightly when he sees our request, but we won't put it up more than once
   // spin until any write request has gone away
   I nspins=5000;  // good upper bound on the amount of time a write could reasonably take, in cycles
-  while(prev<0){
+  while(prev&-WLOCKBIT){
    // we are delaying while a writer finishes.  Usually this will be fairly short, as controlled by nspins.  The danger is that the
    // writer will be preempted, leaving us in a tight spin.  If the spin counter goes to 0, we decide this must have happened, and we
    // do a low-power delay for a little while (method TBD)
@@ -201,32 +201,37 @@ void readlock(S *alock, S prev){
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the lock, loop if can't
- }while(__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)<0);
+ }while(__atomic_fetch_sub(alock,1,__ATOMIC_ACQ_REL)<0);
 }
 
 // take a writelock on *alock.  We have turned on the write request; we come here only if the lock was in use.  The previous value was prev
 void writelock(S *alock, S prev){
  // loop until we get the lock
  I nspins;
- while(1) {
- // if another writer has requested, they will win.  wait until they finish.  As above, back off if it looks like they were preempted
+ while(prev&(S)-WLOCKBIT) {
+ // Another writer requested.  They win.  wait until they finish.  As above, back off if it looks like they were preempted
   nspins=prev&0x7fff?5000+1000:5000;  // max expected writer delay, plus reader delay if there are readers, in 20-ns units
-  while(prev<0){
+  while(prev&(S)-WLOCKBIT){
    if(--nspins==0){nspins=5000; delay(500000);}
    delay(20);  // delay a little to reduce bus traffic while we wait for the writer to finish
-   prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
+   prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);  // loop without RFO cycle till the other writer goes away
   }
   // try to reacquire the writelock
-  if(prev=__atomic_fetch_or(alock,(S)0x8000,__ATOMIC_ACQ_REL)>=0)break;  // put up our request; if no previous writer, it is valid, go wait for readers to finish
-  //  here another writer beat us to the request.  Very rare.  Go back to wait
+#if WLOCKBIT==0x8000
+  prev=__atomic_fetch_or(alock,(S)WLOCKBIT,__ATOMIC_ACQ_REL);
+#else
+  prev=__atomic_fetch_add(alock,WLOCKBIT,__ATOMIC_ACQ_REL);
+#endif
+  // that repeats our request
  }
  // We are the owner of the current write request.  When the reads finish, we have the lock
  nspins=1000;  // max expected reader delay, in 20-ns units.  They are all running in parallel
- while(prev&0x7fff){  // wait until reads complete
+ while(prev&(WLOCKBIT-1)){  // wait until reads complete
   if(--nspins==0){nspins=1000; delay(500000);}  // delay if a thread seems to have been preempted
   delay(20);  // delay a little to reduce bus traffic while we wait for the readers to finish
   prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
  }
+ // the lock is now 8000 and we have it.  It may go off 8000 while we run, but we won't look
 }
 
 // *********************** task creation ********************************
@@ -258,9 +263,11 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   // take our mutex
   // put our thread on the thread queue
   TASKAWAITBLOK(jt)=&wblok; J mjt=MTHREAD(JJTOJ(jt));
-  WRITELOCK(mjt->tasklock);  jt->taskidleq=mjt->taskidleq; mjt->taskidleq=THREADID(jt); WRITEUNLOCK(mjt->tasklock);   // atomic install at head of chain
-  // wait, then release mutex
-  pthread_mutex_lock(&wblok.mutex); pthread_cond_wait(&wblok.cond,&wblok.mutex); pthread_mutex_unlock(&wblok.mutex);
+  pthread_mutex_lock(&wblok.mutex);  // must lock mutex before we reveal that we are ready
+   WRITELOCK(mjt->tasklock);  jt->taskidleq=mjt->taskidleq; mjt->taskidleq=THREADID(jt); WRITEUNLOCK(mjt->tasklock);   // install our thread at head of chain
+   pthread_cond_wait(&wblok.cond,&wblok.mutex);  // wait, then release mutex
+  pthread_mutex_unlock(&wblok.mutex);
+  // When we get here we have been made ready to run
   // extract task parameters: args & pyx block.  Their usecount was raised before we started.  The self here is for u t. v so that we can get to the v 
   A arg1=TASKCOMMREGION(jt)[0]; A arg2=TASKCOMMREGION(jt)[1]; A arg3=TASKCOMMREGION(jt)[2]; A pyx=TASKCOMMREGION(jt)[3];
   // initialize the non-parameter part of task block
@@ -284,7 +291,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   }else{
    // result was good, use it
    rifv(z);  // realize virtual result before returning
-   ra(z);  // since the pyx is recursive, we must ra the result we store into it  could zap
+   ra(z);  // since the pyx is recursive, we must ra the result we store into it  scaf zap if neg
    __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
   }
   __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxorigthread,-1,__ATOMIC_RELEASE);  // set pyx no longer running
@@ -295,7 +302,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   // unprotect pyx
   fa(pyx);
   jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)
-  jttpop(jt,old); // clear anything left on the stack after execution
+  jttpop(jt,old); // clear anything left on the stack after execution, including z
   // loop back to wait for next task
  }
 } 
@@ -362,7 +369,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
 #endif
 
-// u t. n - start a task.  We just create a vrb to handle the arguments
+// u t. n - start a task.  We just create a verb to handle the arguments
 F2(jttdot){F2PREFIP;
  ASSERTVN(a,w);
  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
@@ -376,8 +383,8 @@ F2(jttcapdot2){A z;
  // process the requested function.  We test by hand because only a few could be called often
  if(likely(m==4)){
   // rattle the boxes of y and return status of each
-  ASSERT(SGNIF(AT(w),BOXX)|(-AN(w))<0,EVDOMAIN)   // must be boxed or empty
-  GAT(z,INT,AN(w),AR(w),AS(w)) I *zv=IAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
+  ASSERT((SGNIF(AT(w),BOXX)|(AN(w)-1))<0,EVDOMAIN)   // must be boxed or empty
+  GATV(z,INT,AN(w),AR(w),AS(w)) I *zv=IAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
   DONOUNROLL(AN(w), if(unlikely(!(AT(wv[i])&PYX)))zv[i]=-1001;  // not pyx: _1001
                     else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread>=0)zv[i]=((PYXBLOK*)AAV0(wv[i]))->pyxorigthread;  // running pyx: the running thread
                     else if(((PYXBLOK*)AAV0(wv[i]))->errcode>0)zv[i]=-((PYXBLOK*)AAV0(wv[i]))->errcode;  // finished with error: -error code

@@ -96,7 +96,7 @@ I jtreservesym(J jt,I n){
 // if SYMNEXT(tailx)==0, append at head (immediately after *hv); if SYMNEXT(tailx)!=0, append after tailx.  If queue is empty, tailx is always 0
 // The stored chain pointer to the new record is given the non-PERMANENT status from the sign of tailx
 // result is new symbol
-// Caller must ensure, by prior use of SYMRESERVE, that the symbol is available
+// Caller must ensure, by prior use of SYMRESERVE, that the symbol is available.. This routine takes no locks
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
 // obsolete  SYMRESERVE(1)  // scaf
  j=SYMNEXT(SYMLOCALROOT);
@@ -383,7 +383,7 @@ L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) R probeis(a,g);}
 // g is symbol table to use
 // result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
 // if not found, one is created.  Caller must ensure that a symbol is available
-// locking is the responsibilty of the caller
+// locking is the responsibility of the caller
 L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
 // obsolete  SYMRESERVE(1)   // make sure there will be a symbol if we need one
@@ -392,7 +392,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
   v=tx+sympv;
   NOUNROLL while(1){
    LX lxnext=v->next;  // unroll loop once
-   u=NAV(v->name);  // name may be 0 but only in unmoored cached references, which are never on any chain
+   u=NAV(v->name);  // name cannot be 0
    IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
    if(!lxnext)break;                                /* (2) link list end */
    v=(tx=SYMNEXT(lxnext))+sympv;
@@ -776,7 +776,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
     ra(w);  // if zap not allowed, just ra() the whole thing
 // obsolete     if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
    }
-   // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.  Do so before we store the new value,
+   // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so before we store the new value,
    // but after the new value is raised, in case the new value was being protected by the old (ex: n =. >n)
    // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
    if(x)SYMVALFA(*e);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case
@@ -831,10 +831,10 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
   }
  }
- // ************* we have released the write lock
  e->sn=jt->currslistx;  // Save the script in which this name was defined
  if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
  if(g!=0)WRITEUNLOCK(g->lock)
+ // ************* we have released the write lock
  R 1;   // good return
 exitlock:  // error exit
  if(g!=0)WRITEUNLOCK(g->lock)

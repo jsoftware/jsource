@@ -409,6 +409,7 @@ extern F2(jtanyebar);
 extern F2(jtapplystr);
 extern F2(jtatco);
 extern F2(jtatop);
+extern F2(jtauditpyx);
 extern F2(jtbase2);
 extern F2(jtbinrep2);
 extern F2(jtbit);

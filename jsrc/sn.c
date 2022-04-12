@@ -45,6 +45,7 @@ B vlocnm(I n,C*s){
 
 static const C argnames[7]={'m','n','u','v','x','y',0};
 // s-> a string of length n.  Make a NAME block for the name.  It might not be valid; use our best efforts then.  We ALWAYS look at the first and last character, even if length is 0
+// If the name is mnuvxy (NOT u. v.), use the canned block for it
 // Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
 A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  // Discard leading and trailing blanks.  Leave t pointing to the last character
@@ -52,9 +53,9 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  t=s+n-1;
  DQ(n, if(' '!=*t)break; --t; --n;);
  ASSERT(n!=0,EVILNAME);   // error if name is empty  (? not required since name always valid?
- // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
+ // If the name is the special mnuvxy, return a copy of the preallocated block for that name (we may have to add flags to it)
  if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
-  R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags may be added)
+  R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags/buckets may be added)
  }
  // The name may not be valid, but we will allocate a NAME block for it anyway
  GATV0(z,NAME,n,1); zv=NAV(z);   // the block is cleared to 0

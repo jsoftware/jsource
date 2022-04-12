@@ -236,7 +236,7 @@ F1(jtasgzombs){I k;
 }
 
 // display deprecation message mno with text mtxt, if enabled
-// if mno<0, take complement and write willy-nilly
+// if mno<0, take complement and write willy-nilly; and no error (it's a pee)
 // return 0 to signal error, 1 to continue
 I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  READLOCK(JT(jt,startlock))
@@ -244,7 +244,8 @@ I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  if(mno>=0){if(JT(jt,deprecct)==0)goto exitok;}else{JT(jt,deprecct)+=JT(jt,deprecct)==0;}  // if msgs disabled, return; but force msg out if neg
  // code to write output line copied from jtpr1
  // extract the output type buried in jt
- ASSERTGOTO(JT(jt,deprecct)>0,mno<0?EVNONNOUN:EVNONCE,exiterr);  // if fail on warning, do so
+ if(JT(jt,deprecct)<0&&mno<0)goto exiterr;  // non-noun is a pee; don't set error info here
+ ASSERTGOTO(JT(jt,deprecct)>0,EVNONCE,exiterr);  // if fail on warning, do so
  if(JT(jt,deprecct)!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
  JT(jt,deprecct)-=JT(jt,deprecct)!=0;  // decrment # of messages to allow
 exitok: ;

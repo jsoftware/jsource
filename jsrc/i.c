@@ -40,10 +40,6 @@ global memory is distinct between tasks but is shared between threads
 
 JE support for multiple tasks is good
 
-JE support for threads has a few problems
- there are a few global constants not handled in globinit
- they need to be found and sorted out
-
  global storage that changes after globinit is a bad bug waiting to happen
 
 storage belonging to a task or thread MUST be be in the J structure

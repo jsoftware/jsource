@@ -56,11 +56,18 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 }
 
 // ************************ system lock **********************************
-// perform the action for state n.  In the leader, set ct/advance/act/wait  In others, wait/act/decr ct
+#define POLLDELAY delay(20);
+#if PYXES
+#define YIELD sched_yield();  // if we are spinning on other threads, give them a chance to run in case they might be on this core
+#else
+#define YIELD ;   // if no other processes, no reason to delay
+#endif
+
+// perform the action for state n.  In the leader, set ct/advance/act/wait  In others, wait/act/decr ct.  When we finish all actors have performed the action for state n
 #define DOINSTATE(l,n,expr) \
- {if(l){__atomic_store_n(&JT(jt,systemlocktct),nrunning-1,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),(n),__ATOMIC_RELEASE);}else while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n))delay(20);  \
+ {if(l){__atomic_store_n(&JT(jt,systemlocktct),nrunning-1,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),(n),__ATOMIC_RELEASE);}else while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n))YIELD  \
   expr \
-  if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0)delay(20);else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
+  if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0)YIELD else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
  }
  
 // Take lock on the entire system, waiting till all threads acknowledge
@@ -83,7 +90,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   // In the leader task only, go through all tasks, turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
   if(leader){DONOUNROLL(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;)}
   // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop
-  C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);)  // remember pririty before we made or request
+  C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);)  // remember priority before we made our request
   // state 3: all threads get the final request priorities
   C finalpriority; DOINSTATE(leader,3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);)
   I winningpri=LOWESTBIT(finalpriority); I executor=winningpri&priority&~oldpriority;  // priority to execute: were we the first to request it?
@@ -91,27 +98,30 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   if(leader){__atomic_store_n(&JT(jt,systemlocktct),nrunning,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),4,__ATOMIC_RELEASE);}
   if(executor){  // if we were the first to request the winning priority
    // This is the winning thread.  Perform the function and save the error status
-   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)delay(20); nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // pick up nrunning
+   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // pick up nrunning
    z=(*lockedfunction)(jt);
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],jt->jerr,__ATOMIC_RELEASE);
   }
   // state 5: everybody gets the result of the operation
   DOINSTATE(executor,5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)
-  // Now wind down the lock.
+  // Now wind down the lock.  taskct is known to be 0.  Turn off all the LOCK bits and then set state to 0.  Other tasks will
+  // wait for state to move off 5.  There is no guarantee they will see state 0 of the next systemlock, but state cannot advance beyond 1 until they have finished this one.
+  // There is also no guarantee they will see their LOCK removed
   if(executor){
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],0,__ATOMIC_RELEASE);  // clear the error flag from the interrupt request
    // remove the lock request from the break field
    __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);
    // go through all threads, turning off SYSLOCK in each.  This allows other tasks to run and new tasks to start
    DO(MAXTASKS, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
-   // wait for the systemlocktct to go to 0 (all the running threads except us decrement it)
-   while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0)delay(20);
+// obsolete    // wait for the systemlocktct to go to 0 (all the running threads except us decrement it)
+// obsolete    while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0)YIELD
    // set the systemlock to 0, completing the operation
    __atomic_store_n(&JT(jt,systemlock),0,__ATOMIC_RELEASE);
   }else{
-   // outside the executor, we wait for our tasklock to be removed
-   while(__atomic_load_n(&jt->taskstate,__ATOMIC_ACQUIRE)&TASKSTATELOCKACTIVE)delay(20);
-   z=(A)1;  // just use a value of 1 to indicate we were not the executing thread
+   // outside the executor, we wait for state to move off 5
+// obsolete    while(__atomic_load_n(&jt->taskstate,__ATOMIC_ACQUIRE)&TASKSTATELOCKACTIVE)YIELD
+   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
+   z=(A)1;  // just use a value of 1 to indicate we were not the executing thread.  The real z goes to the executor
   }
   priority&=~winningpri;  // if our request was serviced, remove it, regardless of who serviced it
  }
@@ -120,16 +130,18 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
  R z;  // ewturn to requester
 }
 
-// Allow a lock to proceed.  Called by a running thread when it notices the broadcast system-lock request at its priority or higher
+// Allow a system lock to proceed.  Called by a running thread when it notices the broadcast system-lock request at its priority or higher
 // priority is mask indicating the priorities for which this accept is valid
 // Result is 0 if the lock processing failed
 I jtsystemlockaccept(J jt, I priority){
  do{
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=2)delay(20);                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 2: requesters raise requests
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=3)delay(20); C finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 3: see what won
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)delay(20);                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 4: transfer to executor
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=5)delay(20); C res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 5: get result status
-  while(__atomic_load_n(&jt->taskstate,__ATOMIC_ACQUIRE)&TASKSTATELOCKACTIVE)delay(20);
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=2)YIELD                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 2: requesters raise requests
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=3)YIELD C finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 3: see what won
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 4: transfer to executor
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=5)YIELD C res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 5: get result status
+  // outside the executor, we wait for state to move off 5
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
+// obsolete    while(__atomic_load_n(&jt->taskstate,__ATOMIC_ACQUIRE)&TASKSTATELOCKACTIVE)YIELD
   ASSERT(res==0,res)  // if there was an error, signal it in all threads
   // loop back if there is another request that this can tolerate
   I winningpri=LOWESTBIT(finalpriority); finalpriority&=~winningpri; priority&=finalpriority; // final<-remaining requests; leave priority as the ones we are OK with
@@ -197,7 +209,7 @@ void readlock(S *alock, S prev){
    // writer will be preempted, leaving us in a tight spin.  If the spin counter goes to 0, we decide this must have happened, and we
    // do a low-power delay for a little while (method TBD)
    if(--nspins==0){nspins=5000; delay(5000);}
-   delay(20);  // delay a little to reduce bus traffic while we wait for the writer to finish
+   POLLDELAY  // delay a little to reduce bus traffic while we wait for the writer to finish
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the lock, loop if can't
@@ -213,7 +225,7 @@ void writelock(S *alock, S prev){
   nspins=prev&0x7fff?5000+1000:5000;  // max expected writer delay, plus reader delay if there are readers, in 20-ns units
   while(prev&(S)-WLOCKBIT){
    if(--nspins==0){nspins=5000; delay(500000);}
-   delay(20);  // delay a little to reduce bus traffic while we wait for the writer to finish
+   POLLDELAY  // delay a little to reduce bus traffic while we wait for the writer to finish
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);  // loop without RFO cycle till the other writer goes away
   }
   // try to reacquire the writelock
@@ -228,7 +240,7 @@ void writelock(S *alock, S prev){
  nspins=1000;  // max expected reader delay, in 20-ns units.  They are all running in parallel
  while(prev&(WLOCKBIT-1)){  // wait until reads complete
   if(--nspins==0){nspins=1000; delay(500000);}  // delay if a thread seems to have been preempted
-  delay(20);  // delay a little to reduce bus traffic while we wait for the readers to finish
+  POLLDELAY  // delay a little to reduce bus traffic while we wait for the readers to finish
   prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
  }
  // the lock is now 8000 and we have it.  It may go off 8000 while we run, but we won't look
@@ -356,7 +368,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   WAITBLOK *exwblok=TASKAWAITBLOK(exjt);  // get the address of the task's waitblok
   pthread_mutex_lock(&exwblok->mutex); pthread_cond_signal(&exwblok->cond); pthread_mutex_unlock(&exwblok->mutex);
  }
- R box(pyx);  // Create a RECURSIVE box holding the pyx or result value
+R pyx;
+// obsolete  R box(pyx);  // Create a RECURSIVE box holding the pyx or result value
 }
 #else
 static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
@@ -364,16 +377,16 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
  A uarg3=FAV(self)->fgh[0], uarg2=arg2; uarg2=dyad?uarg2:uarg3;  // get self, positioned after the last noun arg
  pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
- R box(pyx);  // Create a RECURSIVE box holding the pyx or result value
+ R pyx;
 }
 static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
 #endif
 
-// u t. n - start a task.  We just create a verb to handle the arguments
+// u t. n - start a task.  We just create a verb to handle the arguments, performing <@u
 F2(jttdot){F2PREFIP;
  ASSERTVN(a,w);
  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
- R fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
+ R atco(ds(CBOX),fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX));  // use <@: to get BOXATOP flags
 }
 
 // x T. y - various thread and task operations

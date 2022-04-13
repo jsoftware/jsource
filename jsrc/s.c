@@ -734,7 +734,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // ****** if g is a global table, we have a write lock on the locale, which we must release in any error paths.  g=0 otherwise *******
 // obsolete  RZGOTO(e,exitlock)
 // obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
+ if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
 // obsolete  }
 
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
@@ -749,10 +749,12 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   L *newe=symnew(0,(e-SYMORIGIN)|SYMNONPERM); jtprobedel((J)((I)jt+NAV(e->name)->m),NAV(e->name)->s,NAV(e->name)->hash,g); newe->name=e->name; e->name=0; e=newe;
  }
 #endif
- ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only value (xxx_index), fail
 
  I xaf;  // holder for nvr/free flags
  {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
+ e->sn=jt->currslistx;  // Save the script in which this name was defined
+ if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
+ ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only value (xxx_index), fail
 
  if(likely(!(AFNJA&xaf))){
   // Normal case of non-memory-mapped assignment.
@@ -769,21 +771,21 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment of abandoned noun
     // We cap zap abandoned nouns.  But only if they are final assignment: something like nm:: [ nm=. 4+4 would free the active block if we zapped.
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
-    *AZAPLOC(w)=0; ACINIT(w,ACUC1)  // make it non-abandoned.  Like raczap(1)
+    *AZAPLOC(w)=0; ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1)
 // obsolete     if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
       // NOTE: NJA can't zap either, but it never has AC<0
 // obsolete     AMNVRSET(w,AMNV);  // going from abandoned to name semantics: set NVR info in value
    }else{
     if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
 // obsolete  AFLAGOR(w,AFKNOWNNAMED);
-    ra(w);  // if zap not allowed, just ra() the whole thing
+    ra(w);  // if zap not allowed, just ra() the whole thing.  w is known recursible so this is quick.  w may be inplaceable but not zappable
 // obsolete     if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
    }
    // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so before we store the new value,
    // but after the new value is raised, in case the new value was being protected by the old (ex: n =. >n)
    // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
-   if(x)SYMVALFA(*e);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case
    e->val=w;
+   SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
 
 #if 0  // obsolete
    if(((xaf|e->flag)&LWASABANDONED)!=0){
@@ -822,7 +824,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
     }
    }
 #endif
-  }
+  }else x=0;  // repurpose x to be the value needing fa
  } else {  // x exists, and is either read-only or memory-mapped
   ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
@@ -833,11 +835,12 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    ASSERTGOTO(allosize(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
   }
+  x=0;  // indicate no further fa needed
  }
- e->sn=jt->currslistx;  // Save the script in which this name was defined
- if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
+ // x here is the value that needs to be freed
  if(g!=0)WRITEUNLOCK(g->lock)
  // ************* we have released the write lock
+ SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock
  R 1;   // good return
 exitlock:  // error exit
  if(g!=0)WRITEUNLOCK(g->lock)

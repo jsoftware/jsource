@@ -1785,11 +1785,16 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // obsolete #define SYMRESERVE(n) if(unlikely(SYMNEXT(SYMLOCALROOT)==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(SYMLOCALROOT)].next)==0)))RZ(jtreservesym(jt,n))   // called outside of lock to make sure n symbols are available for assignment
 #define SYMRESERVEPREFSUFF(n,pref,suff) if(unlikely(SYMNEXT(SYMLOCALROOT)==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(SYMLOCALROOT)].next)==0))){pref RZ(jtreservesym(jt,n)) suff}   // if call to reserve needed, bracket with pref/suff
 #define SYMRESERVE(n) SYMRESERVEPREFSUFF(n,,)   // called outside of lock to make sure n symbols are available for assignment
-// fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1.
+// fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1 so that it may be freed by the caller as abandoned
 // Implies that AM must not be modified when abandoned block is assigned to x/y.
 // Clear KNOWNNAMED since we are removing the value from a name
+// split into two parts: the symbol-dependent and not, so we can move the expensive part outside of lock
+#define SYMVALFA1(l,faname) {if(faname!=0){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(faname); if(likely(AC(faname)<2))ACRESET(faname,ACINPLACE|ACUC1); faname=0;}}}
+#define SYMVALFA2(faname) if(faname!=0){faaction(jt,faname,AFLAGCLRKNOWN(faname));}
 // obsolete #define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGAND(v,~AFKNOWNNAMED); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGAND(v,~AFKNOWNNAMED););}}}
-#define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(v); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGCLRKNOWN(v));}}}
+// obsolete #define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(v); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGCLRKNOWN(v));}}}
+// obsolete #define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(v); if(likely(AC(faname)<2)ACRESET(faname,ACINPLACE|ACUC1);}else{faaction(jt,v,AFLAGCLRKNOWN(v));}}}
+#define SYMVALFA(l) {A v=(l).val; SYMVALFA1(l,v) SYMVALFA2(v)}
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

@@ -666,7 +666,7 @@ static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<row)?(col<
 //  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //  rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // if the exclusion list is given, we stop on the first nonimproving pivot, and the exclusion list is used to prevent repetition of basis
-// If Frow is empty, we are looking for nonimproving pivots in rows where the selector is 0.  In that case the bkgrd puts the bk values in ascending order.  We return the first column that will make more 0 B rows non0 than non0 B rows 0.
+// If Frow is empty, we are looking for nonimproving pivots in rows where the selector is 0.  In that case the bkgrd puts the bk values in descending order.  We return the first column that will make more 0 B rows non0 than non0 B rows 0.
 //
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
@@ -766,12 +766,9 @@ F1(jtmvmsparse){PROLOG(832);
   }else{ \
    /* we are looking for a pivot along a col with Frow=0.  We demand that it eliminate more 0s than it produces */ \
    D bk=bv[i]; D c=_mm256_cvtsd_f64(dotprod); \
-   if(!bkgt0){ \
-    if(bk>bkmin){if(newnon0ct<2)goto abortcolFrow; bkgt0=1; \
-    }else{newnon0ct+=c<-_mm256_cvtsd_f64(thresh);}  /* c is big enough negative to knock bk off 0 */ \
-   } \
-   if(bkgt0){ \
-    if(c>_mm256_cvtsd_f64(thresh)){  /* eligible pivot.  Compare pivot ratios bk/c */ \
+   if(bkgt0){  /* find the smallest pivot ratio, & the frequency thereof */ \
+    if(bk<bkmin){bkgt0=0; \
+    }else if(c>_mm256_cvtsd_f64(thresh)){  /* eligible pivot.  Compare pivot ratios bk/c */ \
      if((bkold-bkmin)*c>bk*cold){  /* bkold-(bk/c)*cold > bthresh: new pivot leaves old pivot with nonzero b */ \
       new0ct=1; bkold=bk; cold=c; bestrow=i; \
      }else if((bk-bkmin)*cold>bkold*c){  /* bk-(bkold/cold)*c > bthresh: old pivot leaves new pivot with nonzero b  - no action*/ \
@@ -780,20 +777,25 @@ F1(jtmvmsparse){PROLOG(832);
      } \
     } \
    } \
+   if(!bkgt0){  /* now we can count the number of new 0s, deducting it from new0ct */ \
+    new0ct-=(bkmin-bk)*cold<-c*bkold;  /* need bk-c*(pivotb/pivotc) > bkmin */ \
+   } \
   } \
  }else{zv[i]=_mm256_cvtsd_f64(dotprod); /* just fetching the column: do it */ \
  }
 
-#define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; I newnon0ct=0, new0ct=0; D bkold=inf, cold=1.0; I bkgt0=0;
+#define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; I new0ct=0; D bkold=inf, cold=1.0; I bkgt0=1;
 #define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?
 #define COLLPE }while(++bvgrd!=bvgrde);
  do{
   I colx=*ndx;  // get next column# to work on
   I bestrow;  // the best row to use as a pivot for this column
   if(likely(bv!=0)){
-   // col init
-   oldcol=_mm256_set_pd(0.0,0.0,Frow[colx],0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
-   oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0); 
+   if(exlist==0){
+    // col init
+    oldcol=_mm256_set_pd(0.0,0.0,Frow[colx],0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
+    oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0);
+   }
    bestrow=-1;  // init no eligible row found
   }
   COLLPINIT
@@ -920,14 +922,13 @@ abortcol:  // here is column aborted early, possibly on insufficient gain
    minimp=minimpfound; if(--nfreecols<0)minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
   }else{
    // we are looking for nonimproving pivots.  Skip all the gain accounting, and just remember how many products we did
+   ndotprods+=bvgrd-bvgrd0;  // accumulate # products performed
    if(Frow==0){
     // accept a zero-Frow pivot if it exists, has more non0 than 0, and is not excluded
-    if(bestrow>=0 && newnon0ct>new0ct && notexcluded(exlist,nexlist,*ndx,yk[bestrow])){
+    if(bestrow>=0 && new0ct<0 && notexcluded(exlist,nexlist,*ndx,yk[bestrow])){
      minimpfound=1.0; bestcol=*ndx; bestcolrow=bestrow; goto return2;
     }
    }
-abortcolFrow: ;
-   ndotprods+=bvgrd-bvgrd0;  // accumulate # products performed
   }
  }while(++ndx!=ndxe);  // end loop over columns
  // prepare final result

@@ -877,7 +877,7 @@ typedef struct {
 // obsolete #define LOCTHREAD(g)  ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].next)
 #define LOCPATH(g) (g)->kchain.locpath
 #define LOCBLOOM(x) AM(x)
-#define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter
+#define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
 
 
 // Definition of callstack

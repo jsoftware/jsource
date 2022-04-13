@@ -213,7 +213,7 @@ void readlock(S *alock, S prev){
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the lock, loop if can't
- }while(__atomic_fetch_sub(alock,1,__ATOMIC_ACQ_REL)<0);
+ }while(__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)<0);
 }
 
 // take a writelock on *alock.  We have turned on the write request; we come here only if the lock was in use.  The previous value was prev

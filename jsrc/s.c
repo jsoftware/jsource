@@ -328,7 +328,7 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table (which must exist)
 // If not found, one is created
-// Take no locks
+// May call probeis which takes a lock on the local table; if so we release the lock
 L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
@@ -367,8 +367,10 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
    R l;  // return 
   }
  } else {
-  // No bucket information, do full search.  No lock needed on local table, but we do have to reserve a symbol in case the name is new
-  SYMRESERVE(1) L *l=probeis(a,jt->locsyms);
+  // No bucket information, do full search. We do have to reserve a symbol in case the name is new
+  // We don't need a lock, because this is a local table; but this path is rare - only for computed names, and for assignments
+  // during creation of the local symbol tables, where we will keep the lock once we take it
+  SYMRESERVE(1) L *l=probeis(a,jt->locsyms); WRITEUNLOCK(jt->locsyms->lock);  // release the unneeded lock
   RZ(l);
   AR(jt->locsyms)|=(~l->flag)&LPERMANENT;  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
   R l;
@@ -376,18 +378,19 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
 }
 
 // Acquire a symbol and then xctl to probeis.  Suitable when the caller needs a symbol AND has no locks
-// May fail if symbol cannot be allocated
-L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) R probeis(a,g);}
+// May fail if symbol cannot be allocated.  takes and releases a write lock on the symbol table
+L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) L *z=probeis(a,g); WRITEUNLOCK(g->lock); R z;}
 
 // a is A for name
 // g is symbol table to use
 // result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
-// if not found, one is created.  Caller must ensure that a symbol is available
-// locking is the responsibility of the caller
+// if not found, one is created.  Caller must ensure that a symbol is reserved
+// Takes a write lock on  g and returns holding that lock
 L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
 // obsolete  SYMRESERVE(1)   // make sure there will be a symbol if we need one
  LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
+ WRITELOCK(g->lock);  // write-lock the table before we access it
  if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
   v=tx+sympv;
   NOUNROLL while(1){
@@ -722,14 +725,14 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is new we won't need the symbol.
  if((AR(g)&ARLOCALTABLE)!=0){g=0; e=probeislocal(a);  // probe, reserving 1 symbol
  }else{SYMRESERVE(1)
-  // if we are writing to a non-local table, update the table's Bloom filter.
-  BLOOMOR(g,BLOOMMASK(NAV(a)->hash));
   valtype|=QCGLOBAL;  // must flag local/global type in symbol
-  WRITELOCK(g->lock)   // lock the global table till we have updated the symbol
-  e=probeis(a, g);  // get the symbol address to use, old or new
+// obsolete   WRITELOCK(g->lock)   // lock the global table till we have updated the symbol
+  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a locl on the table
+  // if we are writing to a non-local table, update the table's Bloom filter.
+  BLOOMOR(g,BLOOMMASK(NAV(a)->hash));  // requires writelock on g
  }
  // ****** if g is a global table, we have a write lock on the locale, which we must release in any error paths.  g=0 otherwise *******
- RZGOTO(e,exitlock)
+// obsolete  RZGOTO(e,exitlock)
 // obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
 // obsolete  }

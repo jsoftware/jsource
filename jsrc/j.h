@@ -206,9 +206,11 @@ static inline omp_int_t omp_get_max_threads() { return 1;}
 #ifndef unlikely
 #define unlikely(x) __builtin_expect((x),0)
 #endif
+#define often(x) __builtin_expect_with_probability((x),1,0.6)
 #else
 #define likely(x) (x)
 #define unlikely(x) (x)
+#define often(x) (x)
 #endif
 
 #if 1
@@ -1325,8 +1327,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #endif
 
 #define IX(n)           apv((n),0L,1L)
-#define JATTN           {if(unlikely(JT(jt,adbreakr)[0]!=0)){jsignal(EVATTN); R 0;}}
-#define JBREAK0         {if(unlikely(2<=JT(jt,adbreakr)[0])){jsignal(EVBREAK); R 0;}}
+#define JATTN           {if(unlikely(JT(jt,adbreakr)[0]!=0)){jsignal(EVATTN); R 0;}}   // requests orderly termination at start of sentence
+#define JBREAK0         {if(unlikely(2<=JT(jt,adbreakr)[0])){jsignal(EVBREAK); R 0;}}  // requests immediate stop
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))

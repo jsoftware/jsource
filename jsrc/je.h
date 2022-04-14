@@ -825,7 +825,7 @@ extern D        jtremdd(J,D,D);
 extern I        jtremid(J,I,D);
 extern I        jtreservesym(J,I);
 extern A        jtrifvs(J,AD* RESTRICT);
-extern B        jtredef(J,A,A);
+extern A        jtredef(J,A,A);
 extern B        jtrnginit(JS,I);
 extern B        jtsbtypeinit(JS,I);
 extern void     jtsbtypeglobinit();

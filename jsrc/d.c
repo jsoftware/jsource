@@ -227,7 +227,7 @@ void jtjsigd(J jt,C*s){C buf[100],*d="domain error: ";I m,n,p;
 
 // here for errors coming from explicit definition
 void jtjsignal(J jt,I e){A x;
- if(EVATTN==e||EVBREAK==e||e==EVINPRUPT) *JT(jt,adbreak)=0;
+// obsolete  if(EVATTN==e||EVBREAK==e||e==EVINPRUPT) *JT(jt,adbreak)=0;
 // template for debug break point
 // if(EVDOMAIN==e){
 // fprintf(stderr,"domain error\n");

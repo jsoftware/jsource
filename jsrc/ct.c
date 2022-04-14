@@ -183,13 +183,16 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
  // read the pyx value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
  // that if we read nonzero the pyx has been resolved, even without an acquire barrier
  while((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){  // repeat till defined
+  I adbreak=__atomic_load_n((US*)&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
+  // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
+  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG);}  // process lock and keep waiting
+  // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution.  In that case fail the pyx.  It will not be deleted until the value has been stored
+  if(unlikely((adbreak&0xff)>1)){errcode=EVBREAK; break;}  // JBREAK: fail the pyx and exit
   pthread_mutex_lock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
   if((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0)
    pthread_cond_timedwait(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex,&maxwait);
   pthread_mutex_unlock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
-  // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
-  if(unlikely(__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE))!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG);}
  }
  // res now contains the certified value of the pyx.
  if(likely(res!=0))R res;   // valid value, use it

@@ -635,17 +635,17 @@ F1(jtsymbrdlock){A y;
 }
 
 
-// w is a value, v is the symbol-table entry about to be assigned
+// w is a value, v is the value about to be reassigned
 // Called only in debug mode.  If we redefine an executing name, it would invalidate
 // the debug stack.  Fail if any redefinition would change part of speech or the id of the executing function.
 // If the currently-executing definition is reloaded, mark the stack entry: xdefn will pick it up when debug is on
 // as modified - xdefn will try to hot-swap to the new definition between lines
 // If the modified name is executing higher on the stack, fail
-// returns nonzero for OK to allow the assignment to proceed
-// User must have a lock on the locale v is in
-B jtredef(J jt,A w,A v){A f;DC c,d;
+// returns v for OK to allow the assignment to proceed, 0 if error
+// User must have a lock on the locale v is in    scaf ??
+A jtredef(J jt,A w,A v){A f;DC c,d;
  // find the most recent DCCALL, exit if none
- d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R 1;
+ d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R v;
 // obsolete  if(v==(L*)d->dcn){  // if we reassign any name whose value equals the executing value, we treat it as a reassignment of the executing name.  This is for comp ease
  if(v==(A)d->dcn){  // if we reassign any name whose value equals the executing value, we treat it as a reassignment of the executing name.  This is for comp ease
   // attempted reassignment of the executing name
@@ -662,7 +662,7 @@ B jtredef(J jt,A w,A v){A f;DC c,d;
  }
  // Don't allow redefinition of a name that is suspended higher up on the stack
  c=d; NOUNROLL while(c=c->dclnk){ ASSERTN(!(DCCALL==c->dctype&&v==(A)c->dcn),EVSTACK,c->dca);}
- R 1;
+ R v;   // good return: recycle v to save a register
 }    /* check for changes to stack */
 
 // find symbol entry for name a in global symbol table g; this is known to be in service of global assignment
@@ -690,10 +690,13 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
  // name is NJA or is a reassignment, but since NJAs cannot be non-DIRECT little is lost.  We will be doing an unneeded realize if a virtual [x]y from
  // xdefn is reassigned to itself.  Too bad: we need to make sure we don't hold the lock through an expensive operation.
- // It is safe to do the recursive-usecount change here, because the value cannot have been released to any other core.  Similarly for
+ // It is safe to do the recursive-usecount change here as local, because the value cannot have been released to any other core.  Similarly for
  // virtuals.
+ // Find the internal code for the name to be assigned.  Do this before we take the lock.
+ I wt=AT(w);
+ I valtype=ATYPETOVALTYPE(wt);  // value to install.  It will have QCGLOBAL semantics
  rifv(w); // must realize any virtual
- if(unlikely(((AT(w)^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,AT(w)&RECURSIBLE)jtra(w,AT(w),0);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
+ if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE)jtra(w,wt,0);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
 // obsolete  A jtlocal=jt->locsyms, 
 // obsolete  A jtglobal=jt->global;  // current public symbol table
@@ -708,12 +711,12 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  }
  // g has the locale we are writing to
 
- // Find the internal code for the name to be assigned.  Do this before we take the lock.
- I wt=AT(w);
- I valtype=ATYPETOVALTYPE(wt);  // value to install.  It will have QCGLOBAL semantics
  // if the value we are assigning is an ADV, and it contains no name references, and the name is not a locative, mark the value as NAMELESS to speed up later parsing.
  // NOTE that the value may be in use elsewhere; may even be a primitive.  Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
- if(unlikely((wt&ADV)!=0))if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))valtype=VALTYPENAMELESSADV;
+ if(unlikely((valtype&QCNOUN)==0)){
+  if(valtype==QCADV)if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))valtype=VALTYPENAMELESSADV;
+  if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
+ }
 
 // obsolete  anmf=AR(g);  // get rank-flags for the locale g
 // obsolete if ASGNSAFE perfect  if(unlikely(!((I)jtinplace&JTASSIGNSYMNON0))){++scafnoe;
@@ -725,21 +728,22 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is new we won't need the symbol.
  if((AR(g)&ARLOCALTABLE)!=0){g=0; e=probeislocal(a);  // probe, reserving 1 symbol
  }else{SYMRESERVE(1)
+  I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
   valtype|=QCGLOBAL;  // must flag local/global type in symbol
 // obsolete   WRITELOCK(g->lock)   // lock the global table till we have updated the symbol
-  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a locl on the table
+  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the table
   // if we are writing to a non-local table, update the table's Bloom filter.
-  BLOOMOR(g,BLOOMMASK(NAV(a)->hash));  // requires writelock on g
+  BLOOMOR(g,bloom);  // requires writelock on g
  }
  // ****** if g is a global table, we have a write lock on the locale, which we must release in any error paths.  g=0 otherwise *******
 // obsolete  RZGOTO(e,exitlock)
 // obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
- if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
+// obsolete  if(unlikely(jt->glock!=0))if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
 // obsolete  }
 
+ // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
+ if(unlikely(jt->uflags.us.cx.cx_c.db))if(e->val!=0&&((e->valtype&QCNOUN)==0))RZGOTO(redef(w,e->val),exitlock);  // could move outside of lock, but it's only for debug
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
-// obsolete  if(unlikely(jt->uflags.us.cx.cx_c.db))RZGOTO(redef(w,e),exitlock);  // if debug, check for changes to stack
- if(unlikely(jt->uflags.us.cx.cx_c.db))RZGOTO(redef(w,x),exitlock);  // if debug, check for changes to stack
 #if 0  // obsolete 
  if(unlikely(e->flag&(LCACHED|LREADONLY))){  // exception cases
   ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only value (xxx_index), fail
@@ -761,6 +765,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
    e->valtype=valtype;  // set the value type of the new value
+   e->val=w;  // store the new value to free w before ra()
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
@@ -768,8 +773,10 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
 // obsolete    // If w does not contain NVR information, initialize it to do so.  LSB indicates NVR; till then it is a zap pointer
    // SPARSE nouns must never be inplaceable, because their components are not 
 // obsolete    rifv(w); // must realize any virtual
-   if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment of abandoned noun
-    // We cap zap abandoned nouns.  But only if they are final assignment: something like nm:: [ nm=. 4+4 would free the active block if we zapped.
+// obsolete    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment of abandoned noun
+   _Static_assert(JTFINALASGNX==QCNOUNX,"bit divergence");
+   if((SGNIF((I)jtinplace&valtype,QCNOUNX)&AC(w))<0){  // if final assignment of abandoned noun
+    // We can zap abandoned nouns.  But only if they are final assignment: something like nm:: [ nm=. 4+4 would free the active block if we zapped.
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     *AZAPLOC(w)=0; ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1)
 // obsolete     if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
@@ -778,13 +785,12 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    }else{
     if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
 // obsolete  AFLAGOR(w,AFKNOWNNAMED);
-    ra(w);  // if zap not allowed, just ra() the whole thing.  w is known recursible so this is quick.  w may be inplaceable but not zappable
+    ra(w);  // if zap not allowed, just ra() the whole thing.  w is known recursible so this is quick.  w may be inplaceable but not zappable so no rapos
 // obsolete     if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
    }
-   // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so before we store the new value,
-   // but after the new value is raised, in case the new value was being protected by the old (ex: n =. >n)
+   // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
+   // in case the new value was being protected by the old (ex: n =. >n).
    // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
-   e->val=w;
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
 
 #if 0  // obsolete
@@ -825,7 +831,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    }
 #endif
   }else x=0;  // repurpose x to be the value needing fa
- } else {  // x exists, and is either read-only or memory-mapped
+ }else{  // x exists, and is either read-only or memory-mapped
   ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    // no need to store valtype - that can't change from noun

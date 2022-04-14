@@ -119,15 +119,16 @@ user doc at: https://code.jsoftware.com/wiki/Guides/Interrupt
 
 JE uses JATTN and JBREAK0 to stop execution of sentences with an error
 
-JATTN signals an attention at the start of a line
-JBREAK0 signals an interrupt in a long compute, 6!:3, socket select, ...
+JATTN signals an attention at the start of a line.  The system can resume execution after JATTN
+JBREAK0 signals an interrupt in a long compute, 6!:3, socket select, ... Since the lowest sentence was interrupted resumption is not guaranteed
 
 JATTN and JBREAK0 poll a breakbyte
  the value can be 0 continue, 1 signal in JATTN, or >1 signal in JBREAK0
 
-NOTE: some JEs define a multi-byte breakarea.  ONLY THE FIRST BYTE can be changed by break processing
+NOTE: some JEs define a multi-byte breakarea.  ONLY THE FIRST BYTE can be changed by break processing.
+Later bytes are used for internal break processing
 
-the first word in jt (jt->adbreak) is a pointer to the breakbyte
+the first word in jt (jt->adbreak) is a pointer to the breakbyte.  
 
 a separate task or thread increments the breakbyte to request a break
  JE resets to 0 on new user input or on processing an error (including the one caused by ATTN/BREAK0)
@@ -159,7 +160,7 @@ JHS has the additional complication of critical sections of J code
 
  this is done by having TWO pointers to the breakbyte: one for requesting a break (jt->adbreak)
  and another for testing (jt->adbreakr).  Normally these are the same, but to disable break adbreakr is
- set to a pointer to a fixed 0 byte; it at the end of the critical section adbreakr is set back to equal adbreak.
+ set to a pointer to a fixed 0 byte; at the end of the critical section adbreakr is set back to equal adbreak.
 
 */
 

@@ -87,7 +87,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    ACIPNO(virtw);
    // if x=virtw, or the usecount of virtw changed, virtw has escaped and w must be marked as not PRISTINE
    flags|=(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
-// obsolete    AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
   }
 
   // prepare the result so that it can be incorporated into the overall boxed result
@@ -226,8 +225,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // Now that we have looked at the original usecount of x (in case it is =virtaw), remove inplacing from virtaw to restore its proper status
   ACIPNO(virtw); ACIPNO(virta);
   // if x=virtaw, or the usecount of virtw changed, virtaw has escaped and w must be marked as not PRISTINE
-// obsolete   AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
-// obsolete   AFLAGAND(a,~(((acbefore!=AC(virta))|(x==virta))<<AFPRISTINEX))
   flags|=(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
   flags|=(((acbefore!=AC(virta))|(x==virta))<<(AFPRISTINEX+1));
 

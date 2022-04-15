@@ -815,7 +815,6 @@ CDPROC int _stdcall JFree(JS jt)
 {
 	if(!jt) return 0;
  SETJTJM(jt,jt,jm)
-// obsolete	if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
 #if !SY_WINCE
 	dllquit(jm);  // clean up call dll
 #endif

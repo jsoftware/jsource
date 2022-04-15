@@ -96,31 +96,6 @@ static A jtinitnl(J jt){A q;
  R q;  // return no error
 }
 
-#if 0 // obsolete
-// Get the locale number to use for the next numbered locale.  (0 if error, with error code set)
-// This call just gets the number to use, it does not allocate the number.  The locale will be installed later, unless an error intervenes
-static I jtgetnl(J jt){
- // If the table is too close to full, reallocate it & copy.
- // We let the table get up to half full, figuring that on average it will be somewhat less
- if(2*AM(JT(jt,stnum))>AN(JT(jt,stnum))){
-  // Allocate a new block.  Don't use ext because we have to keep the old one for rehashing
-  I s; FULLHASHSIZE(2*AM(JT(jt,stnum))+2,INTSIZE,0,0,s);
-  A new; GATV0(new,INT,s,0); mvc(s*SZI,IAV(new),1,MEMSET00);  // allocate hashtable and clear to 0
-  // rehash the old table into the new
-  I i; for(i=0;i<AN(JT(jt,stnum));++i){
-   A st; if(st=(A)IAV1(JT(jt,stnum))[i]){  // if there is a value hashed...
-    I probe=HASHSLOT(NAV(LOCNAME(st))->bucketx,s);  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
-    NOUNROLL while(IAV1(new)[probe]){if(--probe<0)probe=AN(new)-1;}  // find empty slot
-    IAV1(new)[probe]=(I)st;  // install in new hashtable
-   }
-  }
-  AK(new)=AK(JT(jt,stnum)); ACINITZAP(new) AM(new)=AM(JT(jt,stnum));  // before freeing the block, copy # locales and next locales#
-  fa(JT(jt,stnum)); JT(jt,stnum)=new; // install the new table, release the old
- }
- R AK(JT(jt,stnum));  // return index of next allocation
-}
-#endif
-
 // Install locale l in the numbered-locale table.  We have a write lock on stlock.  Return -1 if error (with the lock released), otherwise the locale number
 static I jtinstallnl(J jt, A l){
  A nbuf=JT(jt,stnum);  // address of the hashtable
@@ -236,7 +211,6 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    LX *hv=LXAV0(JT(jt,stloc))+SYMHASH(hsh,AN(JT(jt,stloc))-SYMLINFOSIZE);  // get hashchain base in stloc
    LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
    v=symnew(hv,tx); ra(x); v->name=x; v->val=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; ra to matc store of name; save value; ZAP to match store of value
-// obsolete    symbisdel(x,g,JT(jt,stloc));
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
   case 1:  // numbered locale - we have no lock
@@ -286,7 +260,6 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
  // Go back and fix the path for z locale to be the empty locale (which is what we use when the path itself is empty)
  GATV0(q,BOX,1,0); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list
-// obsolete  AAV0(q)[0]=jt->locsyms; AAV0(q)[1]=0;
  R 1;
 }
 
@@ -307,7 +280,6 @@ F1(jtlocsizes){I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 // jtprobe, with readlock taken on stlock
-// obsolete static L* jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) L *z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}  // scaf this fails - must not return symbol
 static A jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) A z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
 
 // find the symbol table for locale with name u which has length n and hash/number bucketx
@@ -450,7 +422,6 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
  // The path is allocated as a rank-0 list so that a path of length 1 doesn't need the data from the second cacheline
  GATV0(x,BOX,MAX(AN(a),1)+1,0); AFLAGINIT(x,BOX); A *xv=AAV0(x); // allocate enough locations, plus one.  Set as recursive.  xv->first slot
  if(unlikely(AN(a)==0)){   // if path empty, leave it empty
-// obsolete *xv++=JT(jt,emptylocale);  // path empty, use an empty locale (which is permanent)
  }else if(AN(a)==1){RZ(h=locale(1,a)); ra(h); *xv++=h;  // singleton, might be numeric atom - save it
  }else{A locatom;
   // more than one locale; must be list of boxes.  Go through the list, using a virtual block
@@ -459,7 +430,6 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
   A *xv0=xv; DO(AN(a), RZ(h=locale(1,locatom)); if(likely(h!=g)){*xv++=h; ra(h);} AK(locatom)+=SZI;) AN(x)=(xv-xv0)+1;  // move locales for the names, but don't allow a locale in its own path
  }
  *xv=0;  // terminate locale list with null.
-// obsolete   AN may be wrong but we look for the trailing 0
  fa(LOCPATH(g)); ACINITZAP(x); LOCPATH(g)=x;  // switch paths.  We are guaranteed that the path of g is nonnull so ra not needed
  R mtm;
 }    /* 18!:2  set locale path */
@@ -496,10 +466,8 @@ exit:
 static F1(jtloccrenum){C s[20];I k,p;A x;
  ARGCHK1(w);
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
-// obsolete  RE(k=jtgetnl(jt));
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
  SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert, for LOCPATH
-// obsolete  sprintf(s,FMTI,k); 
  sprintf(s,FMTI,NAV(LOCNAME(x))->bucketx);   // extract locale# and convert to boxed string 
  R boxW(cstr(s));  // result is boxed string of name
 }    /* create a numbered locale with hash table size n */
@@ -523,12 +491,6 @@ F1(jtlocswitch){A g;
  ARGCHK1(w);
  ASSERT(!AR(w),EVRANK); 
  RZ(g=locale(1,w));
-#if 0   // obsolete 
-if(AT(w)&(B01|INT))printf("18!:4 (%lld), ",BIV0(w));
-else printf("18!:4 <'%.*s' (len=%d), ",(int)AN(AAV(w)[0]),CAV(AAV(w)[0]),(int)AN(AAV(w)[0]));  // scaf
-printf("execct=0x%x ",LXAV0(g)[SYMLEXECCT]);  // scaf
-if(jt->global)printf("jt->global=%.*s with execct %x, new loc=%.*s with execct %x, pushok=%d\n",(int)AN(LOCNAME(jt->global)),NAV(LOCNAME(jt->global))->s,LXAV0(jt->global)[SYMLEXECCT],(int)AN(LOCNAME(g)),NAV(LOCNAME(g))->s,LXAV0(g)[SYMLEXECCT],!!jt->curname);  // scaf
-#endif
  // put a marker for the operation on the call stack
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
  if(jt->curname){
@@ -596,17 +558,6 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
   if(g){I k;  // if the specified locale exists in the system...
    ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&0x8000000),"execct has gone < 0")  // scaf eventually
    DELEXECCT(g)  // say that the user doesn't want this local any more
-#if 0  /// obsolete
-   // See if we can find the locale on the execution stack.  If so, set the DELETE flag
-   for(k=0;k<jt->callstacknext;++k)if(jt->callstack[k].value==g)break;
-   if(k<jt->callstacknext)
-    jt->callstack[k].type|=CALLSTACKDELETE;  // name active on stack; mark for deletion
-   else if(g==jt->global){
-    // Name is not on stack but it is executing now.  Add a change+delete entry for it.  There may be multiple of these outstanding
-// obsolete     pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,g);  // mark locale for deletion
-    pushcallstack1(CALLSTACKDELETE,g);  // mark locale for deletion
-   } else locdestroy(g);  // not on stack and not running - destroy immediately
-#endif
   }
  }
  R z;

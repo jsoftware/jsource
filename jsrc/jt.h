@@ -95,12 +95,9 @@ typedef struct rngdata {
  UC jerr;             // error number (0 means no error)      clear for task
  UC jerr1;            // last non-zero jerr  clear for task
  C namecaching;     // 1=for script 2=on  clear for task
-// obsolete  struct ASGINFO {
-// obsolete   L *assignsym;       // symbol-table entry for the symbol about to be assigned
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
             // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval onlt to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
-// obsolete  } asginfo;   // clear for task
 // end of cacheline 0
 // At task startup, the entry parameters are stored here, at ((I*)jt)[8..11]
  A xmod;             // extended integer: the m in m&|@f clear for task
@@ -112,9 +109,6 @@ typedef struct rngdata {
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
-// obsolete  S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task to ?
-// obsolete  S ntasks;     // number of pyxes allowed, 0 if none init for task to ?
-// obsolete  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
 // **************************************  end of initialized part
 
 // ************************************** everything after here persists over the life of the thread
@@ -144,7 +138,6 @@ typedef struct rngdata {
  I filler3[1];
 // end of cacheline 3
 
-// obsolete  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the address of the WAITBLOK we are waiting on
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
@@ -280,7 +273,6 @@ typedef struct JSTstruct {
 // Cacheline 4: Files
  A flkd;             /* file lock data: number, index, length           */
  A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
-// obsolete  A fopf;             /* open files corresp. file numbers                */
  S flock;            // r/w lock for flkd/fopa/fopf
  // rest of cacheline used only in exceptional paths
  S nwthreads;    // number of worker threads allocated so far
@@ -308,7 +300,6 @@ typedef struct JSTstruct {
  I4 outmaxlen;        /* output: maximum line length before truncation   */
  I peekdata;         /* our window into the interpreter                 */
  A iep;              /* immediate execution phrase                      */
-// obsolete  A xep;              /* exit execution phrase                           */
  A pma;              /* perf. monitor: data area                        */
 // end of cacheline 5
 

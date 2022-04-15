@@ -106,8 +106,6 @@ typedef AD *A;
 // following 2 bits used as input to jtsymbis only
 #define JTFINALASGNX    0   // turn this on in jt to indicate that the assignment is final and does not have to worry about protecting the input value
 #define JTFINALASGN     (((I)1)<<JTFINALASGNX)
-// obsolete #define JTASSIGNSYMNON0X 1   // the a value is jt->assignsym and does not need to be looked up
-// obsolete #define JTASSIGNSYMNON0     (((I)1)<<JTASSIGNSYMNON0X)
 // following bits are used in thorn for boxes
 #define JTTHORNYX       2  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: horiz
 #define JTTHORNY    (((I)3)<<JTTHORNYX)
@@ -495,18 +493,6 @@ typedef I SI;
 #define STYPE(t)        ((t)|SPARSE)
 #define DTYPE(t)        ((t)&~SPARSE)
 
-#if 0  // obsolete
-// flags in AM
-#define AMNVX 0   // set if the value has been assigned to a name is used for NVR status
-#define AMNV ((I)1<<AMNVX)
-#define AMFREEDX 1   // set if a free for the value has been deferred & it should be freed when NVR count goes to 0
-#define AMFREED ((I)1<<AMFREEDX)
-#define AMIMMUTX 2   // set if the block has been marked immutable and cannot be inplaced
-#define AMIMMUT ((I)1<<AMIMMUTX)
-#define AMNVRCTX 3  // start of NVR count: the number of times this value is on the NVR stack
-#define AMNVRCT ((I)1<<AMNVRCTX)
-#endif
-
 // Flags in the count field of type A
 #define ACINPLACEX      (BW-1)
 #define ACINPLACE       ((I)((UI)1<<ACINPLACEX))  // set when this block CAN be used in inplace operations.  Always the sign bit.
@@ -529,15 +515,6 @@ typedef I SI;
 #define ACADD(a,n)      if(AC(a)<0)__atomic_store_n(&AC(a),(n)+1,__ATOMIC_RELEASE);else if(likely(!ACISPERM(AC(a))))__atomic_fetch_add(&AC(a),(n),__ATOMIC_ACQ_REL);
 #define ACINCR(a)       ACADD(a,1)
 #define ACDECRNOPERM(a)  __atomic_fetch_sub(&AC(a),1,__ATOMIC_ACQ_REL);  // must not be PERM
-#if 0  // obsolete
-#define ACINCRLOCALPOS(a) {if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1);}
-#define ACINCRLOCALPOSSP(a) {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
-#define ACDECRLOCAL(a)   ACSUBLOCAL(a,1)
-#define ACSUB(a,n)      ACSUBLOCAL(a,n)
-#define ACINCRPOS(a)    if(likely(!ACISPERM(AC(a))))AC(a)=(AC(a)+1)
-#define ACINCRPOSSP(a)  {if(likely(!ACISPERM(AC(a)))){AC(a)=(AC(a)+1); if(unlikely(ISSPARSE(AT(a))))jtra(a,AT(a));}}
-#define ACDECR(a)       ACSUB(a,1)
-#endif
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define ACSETLOCAL(a,v) AC(a)=(v);  // used when a might be shared, but atomic not needed
@@ -551,17 +528,10 @@ typedef I SI;
 #define ACSETPERM(x)    {AC(x)=ACPERMANENT+100000; __atomic_fetch_or(&AFLAG(x),(AT(x)&RECURSIBLE),__ATOMIC_ACQ_REL);}  // Make a block permanent from now on.  In case other threads have committed to changing the usecount, make it permanent with a margin of safety
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
-// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
-// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->zombieval==w&&((s)<0)&&(AC(w)<=ACUC2))  // OK to inplace ordinary operation   scaf the ACUC2 test is in zombieval
 #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)<0)&&jt->zombieval==w)  // OK to inplace ordinary operation  scaf could improve?
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-// obsolete #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
-// obsolete   ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
-// obsolete     (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && /* asg-in-place or virt extension */ \
-// obsolete     (virtreqd||!(AM(a)&(-(AM(a)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* name not already on stack (not required for virt extension) */ \
-// obsolete   )  // OK to inplace ordinary operation
 #define EXTENDINPLACENJA(a,w) \
   ( ((AC(a)&((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1)))<0) || /* inplaceable value that will probably fit */ \
     ( ((((((AN(a)+NORMAH+1-1)+AN(w))^(AN(a)+NORMAH+1-1))-(AN(a)+NORMAH+1-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA, where any fit MUST be used */\
@@ -571,7 +541,6 @@ typedef I SI;
         /* the other requirements for inplacing are AC=2 and not VIRTUAL or RO */ \
     )  /* OK to inplace assignment/virtual */ \
   )
-// obsolete    &&  (virtreqd||AC(a)<=ACUC2) )   /* name not already on stack (not required for virt extension) */
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
@@ -583,8 +552,6 @@ typedef I SI;
 #define AFDEBUGRESULTX  2           // special flag for values that alter debug state
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 // Note: bit 4 is LABANDONED which is merged here
-// obsolete // Note: bits 8-9 are used to hold AM flags merged in symbis
-// obsolete #define AFNVRFLAGX      8
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX MARKX     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
@@ -631,7 +598,6 @@ typedef I SI;
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 #define AFLAGINIT(a,v)  AFLAG(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define AFLAGRESET(a,v) AFLAG(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
-// obsolete #define AFLAGSET(a,v)   AFLAG(a)=(v);  // used when a might be shared and this must be atomic
 #define AFLAGFAUX(a,v)  AFLAG(a)=(v);  // used when a is known to be a faux block
 #define AFLAGANDLOCAL(a,v)   AFLAG(a)&=(v);  // LOCAL functions are used when the block is known not to be shared
 #define AFLAGORLOCAL(a,v)    AFLAG(a)|=(v);
@@ -645,26 +611,6 @@ typedef I SI;
 #define AFLAGCLRPRIST(a) ((C*)&AFLAG(a))[3]&=~(AFPRISTINE>>24);
 #endif
 #define AFLAGPRISTNO(a) if(unlikely(AFLAG(a)&AFPRISTINE))AFLAGCLRPRIST(a)  // the test is to ensure we don't touch PERMANENT blocks
-#if 0   // obsolete
-#define AFLAGAND(a,v)   __atomic_fetch_and(&AFLAG(a),(v),__ATOMIC_ACQ_REL);
-#define AFLAGOR(a,v)    __atomic_fetch_or(&AFLAG(a),(v),__ATOMIC_ACQ_REL);
-// following used to modify AM as NVR count
-#define AMNVRINCR(a) AM(a)+=AMNVRCT;  // increment, no return
-#define AMNVRDECR(a,am) (am=AM(a),AM(a)-=AMNVRCT,am)  // save count, decrement, return old value
-#define AMNVRSET(a,x) (AM(a)=(x))
-#define AMNVRAND(a,x) (AM(a)&=(x));  // AND, no return
-#define AMNVROR(a,x) (AM(a)|=(x));  // OR, no return
-// decide action and new AM value to free a
-// nvrct!=0, !free -> set free
-// nvrct!=0, free -> no chg, fa
-// nvrct==0, final -> no chg, fa
-// nvrct==0, !final, free -> (disaster about to happen, someone else is freeing the block we are about to use)
-// nvrct==0, !final, !free -> stack, incr nvrct, set free
-// v==nv if all we have to do is fa
-// old value of AM is loaded into v.  nv is a temp.  final is an expression whose value is 1 iff this is a final assignment, else 0
-#define AMNVRFREEACT(a,final,v,nv) (v=AM(a),nv=v|AMFREED,nv=v&-AMNVRCT?nv:1*AMNVRCT+AMFREED+AMNV,nv=v<((final)<<AMNVRCTX)?v:nv,AM(a)=nv);
-#define AMNVRCINI(a) {if(!(AM(a)&AMNV))AMNVRSET(a,AMNV);}  // if AM doesn't have NVR semantics, initialize it
-#endif
 
 // Flags in the AR field of symbol tables.  The allocated rank is always 0
 #define ARNAMEDX 0   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
@@ -860,7 +806,6 @@ typedef struct {
 #define LPERMANENTX  1
 #define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
 #define LINFO           (I)4            /* locale info                     */
-// obsolete #define LCACHED         (I)8      // this value is cached in some nameref
 #define LWASABANDONEDX  4
 #define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
                                     // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
@@ -875,7 +820,6 @@ typedef struct {
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
 #define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
-// obsolete #define LOCTHREAD(g)  ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].next)
 #define LOCPATH(g) (g)->kchain.locpath
 #define LOCBLOOM(x) AM(x)
 #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
@@ -892,7 +836,6 @@ typedef struct {
 #define CALLSTACKCHANGELOCALE 8  // value is the value of jt->global before it was modified by the called function
 #define CALLSTACKPOPLOCALEFIRST 16  // set in the POPLOCALE that is added when the first POPFROM is seen
 #define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
-// obsolete #define CALLSTACKDELETE 256  // the given locale must be deleted, and this is the earliest place on the stack that refers to it
 
 // Add an entry to the call stack, and increment the index variable
 #define pushcallstack(i,t,v) (jt->callstack[i].type=(t), jt->callstack[i].value=(v), ++i)
@@ -925,12 +868,9 @@ typedef struct{
 #define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
 #define NMILOC          2       // indirect locale abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMDOT           128       // one of the names m. n. u. v. x. y.      */
-// obsolete #define NMXY            8       // x/y, which must have NAMEBYVALUE set
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
 #define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
-// obsolete #define NMCACHEDSYMX    6
-// obsolete #define NMCACHEDSYM     (1<<NMCACHEDSYMX)      // This NM is storing a symbol index, not a pointer to a reference
 
 
 typedef struct {I a,e,i,x;} P;
@@ -1243,8 +1183,6 @@ typedef struct {
   A    sf;   // $: stack in the parser (other users of $: have their own stacks)
   US   parsercurrtok;   // the token number of the word to flag if there is an error
   US   filler[3];
- // obsolete US  nvrtop;           /* top of nvr stack; # valid entries               */
- // obsolete   US  nvrotop;          // previous top of nvr stack
  } PFRAME;  // these are stacked en bloc
 
 typedef struct {

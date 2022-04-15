@@ -83,7 +83,6 @@ F1(jtjlock){B b;I*v;
  v=AV(w); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); RE(vfn((F)*v));
  RE(b=(B)jtunvfn(jt,(F)v[0],(A)(I)dolock(1,(F)v[0],v[1],v[2])));
  if(!b)R num(0);
-// obsolete  if(AM(JT(jt,flkd))==AS(JT(jt,flkd))[0]){I ct=AM(JT(jt,flkd)); RZ(JT(jt,flkd)=ext(1,JT(jt,flkd))); AM(JT(jt,flkd))=ct;}
  WRITELOCK(JT(jt,flock))
  while(AM(JT(jt,flkd))==AS(JT(jt,flkd))[0])RZ(jtextendunderlock(jt,&JT(jt,flkd),&JT(jt,flock),0))
  ICPY(AV(JT(jt,flkd))+LKC*AM(JT(jt,flkd)),v,LKC); ++AM(JT(jt,flkd));
@@ -100,10 +99,8 @@ static A jtunlj(J jt,I j){B b;I*u,*v;
  I v0=v[0], v1=v[1], v2=v[2];  // save the values from the lock-table entry before we destroy it
  --AM(JT(jt,flkd)); 
  if(j<AM(JT(jt,flkd)))ICPY(v,u+AM(JT(jt,flkd))*LKC,LKC);  // fill vacated hole if not at end
-// obsolete   else *v=0; 
  WRITEUNLOCK(JT(jt,flock))  // we are committed to the unlock, so it is OK to show the file as not in the lock table
  RE(b=dolock(0,(F)v0,v1,v2));
-// obsolete  if(!b)R num(0);
  R num(!!b);
 }    /* unlock the j-th entry in JT(jt,flkd) */
 
@@ -117,7 +114,6 @@ B jtunlk(J jt,I x){
   WRITEUNLOCK(JT(jt,flock)) break;  // after a pass with no file matches, we are done.  relinquish the lock and exit loop
 found: ;   // here when a file was unlocked.  We know we have given up the lock on flkd
  }
-// obsolete  NOUNROLL while(j<AM(JT(jt,flkd))){while(x==*v)RZ(unlj(j)); ++j; v+=LKC;} 
  R 1;
 }    /* unlock all existing locks for file# x */
 

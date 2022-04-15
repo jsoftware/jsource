@@ -290,31 +290,6 @@ static statusEnum insert(J jt, I key) {
 // *********************** end of red/black tree *************************
 // *********************** code for hashtable *************************
 
-#if 0   // obsolete 
-static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
- c=AM(JT(jt,sbu));
- if(c==AS(JT(jt,sbu))[0]){                   /* extend sbu unique symbols    */
-  I sfill=FILLFACTOR; I sgap=GAP; I sroot=ROOT; A ssbs=STRINGTABLE; A ssbh=HASHTABLE;  // save fields
-  AK(JT(jt,sbu))=AKXR(4); AS(JT(jt,sbu))[1]=sizeof(SBU)/SZI; AS(JT(jt,sbu))[2]=1; AS(JT(jt,sbu))[3]=1; AN(JT(jt,sbu))=AS(JT(jt,sbu))[0]*AS(JT(jt,sbu))[1];  // reconstruct fields for extend
-  RZ(x=ext(1,JT(jt,sbu))); JT(jt,sbu)=x; AM(x)=c;
-  FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh);    // restore
- }
- if(AN(STRINGTABLE)<n+AM(STRINGTABLE)){            /* extend sbs strings           */
-  GATV0(x,LIT,2*(n+AM(STRINGTABLE)),1); ACINITZAP(x) MC(CAV(x),CAV1(STRINGTABLE),AM(STRINGTABLE)); AM(x)=AM(STRINGTABLE);
-  fa(STRINGTABLE); SETSTRINGTABLE(x);  // can't
- }
- if(AN(HASHTABLE)<2*c){                   /* extend sbh hash table        */
-
-  FULLHASHSIZE(2*AN(HASHTABLE),INTSIZE,1,0,p);
-  RZ(x=apvwr(p,-1L,0L)); ACINITZAP(x); hv=AV(x); v=SBUV4(JT(jt,sbu)); I oroot=ROOT;
-  fa(HASHTABLE); SETHASHTABLE(x); ROOT=oroot;
-  DO(c, j=INITHASH(v++->h); while(0<=hv[j]){if(--j<0)j+=AN(HASHTABLE);} hv[j]=i;);
-  hi=INITHASH(h);                               /* new hi wrt new sbh size      */
-  while(0<=hv[hi]){if(--hi<0)hi+=AN(HASHTABLE);} 
- }
- R hi;
-}
-#endif
 static SB jtsbprobe(J,S,I,C*,I);
 
 // insert symbol *s (length n) into the hash.  c0 is the flag for length of the characters as stored; c2 is the flag for the minimum required size
@@ -337,7 +312,6 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h){I c,m,p,ui;SBU*u;
   DO(AM(JT(jt,sbu)), I j=INITHASH(v++->h); while(0<=hv[j]){if(unlikely(--j<0))j+=AN(HASHTABLE);} hv[j]=i;);
   AM(HASHTABLE)=1; // set 'table not resized' for next time
  }
-// obsolete  RE(sbextend(n+p,s,h));           /* extend global tables as req'd*/
  // While we were waiting for write locks, someone else may have filled in the symbol.  It wouldn't do to have duplicates
  if((c=sbprobe(c0,n,s,2))>=0)goto exit;  // look again, under lock
 // c2 new flag; c0 original flag

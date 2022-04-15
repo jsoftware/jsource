@@ -74,7 +74,6 @@ static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,
   // to remove the assignment, and the new ones need to be incremented to prevent them from being freed
   // until the name is freed.  We detect the case from jt->zombieval being set to the address of z
   // (if the block could not be inplaced, z will have been changed)
-// obsolete   if(jt->asginfo.assignsym&&jt->asginfo.assignsym->val==z){RZ(ras(y)); RZ(ras(x)); fa(y0); fa(x0);}
   if(jt->zombieval==z){RZ(ras(y)); RZ(ras(x)); fa(y0); fa(x0);}
   SPB(zp,i,y); SPB(zp,x,x);
  }

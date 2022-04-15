@@ -99,7 +99,6 @@ static F1(jtaddscriptname){I i;A z;
  A boxw=box(ravel(w));   // take <w before locking
  WRITELOCK(JT(jt,startlock))
  // We call indexof, which is OK because on list vs atom it will just do a sequential search.  But we do have to set up AN/AS correctly
-// obsolete  RE(i=i0(indexof(vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist))),)));  // look up only in the defined names
  I savn=AN(JT(jt,slist));
  AS(JT(jt,slist))[0]=AN(JT(jt,slist))=AM(JT(jt,slist));
  z=indexof(JT(jt,slist),boxw);  // look up only in the defined names
@@ -108,7 +107,6 @@ static F1(jtaddscriptname){I i;A z;
  i=i0(z);  // get the index at which found
  if(AM(JT(jt,slist))==i){  // if string must be added...
   NOUNROLL while(AM(JT(jt,slist))==AN(JT(jt,slist)))RZ(jtextendunderlock(jt,&JT(jt,slist),&JT(jt,startlock),0))  // extend if list full
-// obsolete   if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){RZ(JT(jt,slist)=ext(1,JT(jt,slist)));}  // extend, preserving curr index (destroying len momentarily)
   ras(w); AAV(JT(jt,slist))[i]=w;
   AM(JT(jt,slist))=i+1;  // set new len
  }

@@ -363,13 +363,7 @@ static void jtimmexexecct(JJ jt, A x){
  I4 savcallstack = jt->callstacknext;   // starting callstack
  A startloc=jt->global;  // point to current global locale
  if(likely(startloc!=0))INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
-#if 0 // obsolete
-printf("immex startloc=%p, execct=%x\n",startloc,startloc?LXAV0(startloc)[SYMLEXECCT]:0);  // scaf
-#endif
  jtimmex(jt,x);   // run the sentence
-#if 0 // obsolete
-printf("immex return startloc=%p, execct=%x, jt->global=%p, stacksize=%d\n",startloc,startloc?LXAV0(startloc)[SYMLEXECCT]:0,jt->global,jt->callstacknext-savcallstack);  // scaf
-#endif
  if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
  jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
 }
@@ -407,7 +401,6 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE)); if(!jm->jerr)jtimmexexecct(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
  e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm) jm->jerr=0;
-// obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  if(likely(!(taskstate&TASKSTATERUNNING)))jtclrtaskrunning(jm);  //  when we finally return to FE, clear running state in case other tasks are running and need system lock
  jtshowerr(jm);   // jt flags=0 to force typeout
@@ -750,7 +743,6 @@ int _stdcall JFree(JS jt){
   SETJTJM(jt,jt,jm)
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
-// obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
   dllquit(jm);  // clean up call dll
   free(JT(jt,heap));  // free the initial allocation
   R 0;

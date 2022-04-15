@@ -32,7 +32,6 @@ F1(jtswap){F1PREFIP;A y;C*s;I n;
   RZ(y=nfs(AN(w),CAV(w)));  // create a NAME block for the string - not cacheable
   RZ(y=nameref(y,jt->locsyms));  // Create a name-reference pointing to the name
   // Make sure this reference is non-cached.  'name'~ is a way to get a non-cachable reference
-// obsolete   if(AT(y)&VERB+CONJ+ADV)FAV(y)->localuse.lu1.cachedref=0;
   if(AT(y)&VERB+CONJ+ADV)FAV(y)->flag2&=~VF2CACHEABLE;  // turn off cachability if it's a reference (not if a noun, which doesn't have this flag)
   R y;
  }
@@ -97,11 +96,9 @@ F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
 #endif
 
 #if SY_64
-// obsolete #define HIC(x,y)  ((UI)x+10495464745870458733U*(UI)y)
 #define INITHASH(tbl,x,y) ((((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UI)AN(tbl))>>32)  // starting hash index for a given x,y
 #define LOCKLOC ht3->lock
 #else
-// obsolete #define HIC(x,y)  ((UI)x+2838338383U*(UI)y)
 #define INITHASH(tbl,x,y) (((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UIL)AN(tbl))>>32;  // starting hash index for a given x,y
 #define LOCKLOC jt->etxn1  // any address will do, since locks are NOPs in 32-bit
 #endif
@@ -156,48 +153,6 @@ static A jtmemoget(J jt,I x,I y,A self){A z=0;  // init to not found
 }
 
 
-#if 0  // obsolete 
-
-static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
- h=FAV(self)->fgh[2]; hv=AAV(h); 
- q=hv[1]; jv=AV(q); m=AS(q)[0];
- k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v&&!(y==*v&&x==v[1])){v+=2; if(v==jv+2*m)v=jv;}  // search hash table, stop on match or end
- R AAV(hv[2])[((v-jv)>>1)];  // return match if found, 0 if not
-}
-
-// add new arg(s)/result pair which missed during lookup.  Args are I, result is A
-static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
- RZ(z);
- h=FAV(self)->fgh[2]; hv=AAV(h);  // c = # fa()s needed to deallocate self, not counting the ones that just protect the name
- q=hv[0]; mv= AV(q);
- q=hv[1]; jv= AV(q);
- q=hv[2]; cv=AAV(q); m=AN(q);
- // If the buffer must be extended, allocate a new one
- if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
-  FULLHASHSIZE(2**mv,BOXSIZE,1,0,m);  // # boxes to allocate to get at least 2**mv slots
-  RZ(jj=mkwris(reshape(v2(m,2L),sc(IMIN)))); ACINITZAP(jj) jv= AV(jj);  // init arg table to IMIN
-  GATV0(cc,BOX,m,1); ACINITZAPRECUR(cc,BOX) cv=AAV(cc);  // the old table is recursive - the new one must be too
-  for(i=0,u=ju;i<n;++i,u+=2){
-   if(IMIN!=*u){  // copy the hash - does this lose the buffer for an arg of IMIN?
-    // the current slot in the memo table is filled.  Rehash it, and move the args into *jv and the values into *cv
-    k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
-    cv[(v-jv)>>1]=cu[i]; v[0]=u[0]; v[1]=u[1];
-   }
-   cu[i]=0;  // always clear the pointer to the value so that we don't free the value when we free the old table
-  }
-  // Free the old buffers, ras() the new to make them recursive usect, then clear the tpops to bring the usecount down to 1
-  // h has recursive usecount
-  mf(hv[1]); hv[1]=jj;   // expunge old table, new one raised above, install.   h is not virtual
-  mf(hv[2]); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  cc itself raised above
- }
- ++*mv;
- k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
- // bump the usecount of the result to account for new ref from table
- RZ(ras(z)); cv[(v-jv)>>1]=z; v[0]=y; v[1]=x; 
- R z;
-}
-#endif
-
 // w is an arg; result is IMIN if not memoable
 // memoable is: atomic int/bool or other with int value
 static I jtint0(J jt,A w){A x;
@@ -229,9 +184,6 @@ F1(jtmemo){F1PREFIP;PROLOG(300);A h,*hv;I m;
  // the tables are standard extendible, with # items in AM, thus must be zapped
  // So, we defer initializing them until they have been made recursive inside fdef
  GAT0(hv[0],INT,m,0) GAT0(hv[1],INT,2*(m>>1),2) GAT0(hv[2],BOX,m>>1,0)  // allo hash/keys/results
-// obsolete  GAT0(q,INT,1,0); AV(q)[0]=0;        hv[0]=incorp(q);  // is modified; musn't use sc()
-// obsolete  RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=incorp(mkwris(q)));
-// obsolete  GATV0(q,BOX,m,1);                 hv[2]=incorp(q);
  A z=fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,lrv(v),rrv(v));
  AM(hv[0])=0; mvc(m*SZI,AAV0(hv[0]),1,MEMSETFF);  // clear hash table
  AM(hv[1])=0; AS(hv[1])[0]=m>>1;  // init empty key table, 2 INTs each row

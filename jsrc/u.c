@@ -627,7 +627,6 @@ A jtfindnameinscript(J jt,C *script, C *name, I pos){
  for(step=0;step<2;++step){
   switch(step){  // try the startup, from the bottom up
   case 1: ; C buf[100]; eval(strcat(strcat(strcpy(buf,"load'"),script),"'"));  // load script and fall through
-// obsolete   case 0: ; A w=nfs(strlen(name),name); A val; if((val=QCWORD(syrd(w,jt->locsyms)))!=0){target=QCWORD(namerefacv(w,val)); fa(val) if(target&&LOWESTBIT(AT(target))&pos)R target;}  // there is always a ref, but it may be to [:.  Undo ra() in syrd
   case 0: ; A w=nfs(strlen(name),name); A val; if((val=syrd(w,jt->locsyms))!=0){target=QCWORD(namerefacv(w,val)); if(target&&LOWESTBIT(AT(target))&pos)R target;}  // there is always a ref, but it may be to [:.  Undo ra() in syrd
   }
   RESETERR;  // if we loop back, clear errors

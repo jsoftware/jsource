@@ -67,7 +67,6 @@ F1(jtdbstopq){
  // we must read & protect the sentence under lock in case another thread is changing it
  READLOCK(JT(jt,dblock)) A stops=JT(jt,dbstops); if(stops)ras(stops); READUNLOCK(JT(jt,dblock))  // must ra() while under lock
  if(stops){tpushnr(stops);}else stops=mtv;  // if we did ra(), stack a fa() on the tpop stack
-// obsolete R JT(jt,iep)?JT(jt,iep):mtv;
  R stops;
 }
 
@@ -75,18 +74,10 @@ F1(jtdbstopq){
 F1(jtdbstops){
  ARGCHK1(w);
  RZ(w=vs(w));
-// obsolete  ASSERT(1>=AR(w),EVRANK);
-// obsolete  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  if(AN(w)){RZ(ras(w));}else w=0;  // protect w if it is nonempty; if empty, convert to null
  WRITELOCK(JT(jt,dblock)) A stops=JT(jt,dbstops); JT(jt,dbstops)=w; WRITEUNLOCK(JT(jt,dblock))  // swap addresses under lock
  fa(stops);  // undo the ra() done when value was stored - null is ok
-// obsolete  RZ(JT(jt,iep)=w); 
  R mtm;
 }
 
 
-// obsolete F1(jtdbstopq){ASSERTMTV(w); R JT(jt,dbstops)?JT(jt,dbstops):mtv;}
-// obsolete      /* 13!:2  query stops */
-// obsolete 
-// obsolete F1(jtdbstops){RZ(w=vs(w)); if(AN(w)){RZ(ras(w)); fa(JT(jt,dbstops)); JT(jt,dbstops)=w;}else JT(jt,dbstops)=0; R mtm;}
-// obsolete      /* 13!:3  set stops */

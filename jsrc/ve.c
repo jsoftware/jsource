@@ -350,18 +350,6 @@ AHDR2(remII,I,I,I){I u,v;
  R EVOK;
 }
 
-#if 0  // obsolete
-static I igcd1(I a,I b){R a?igcd1(b%a,a):b;}  // Emulate Euclid
-
-I jtigcd(J jt,I a,I b){
- if(a>IMIN&&b>IMIN){a=ABS(a); b=ABS(b);}
- else{
-  if(a==b||!a||!b){jt->jerr=EWOV; R 0;}
-  if(a==IMIN){b=ABS(b); a=-(a+b);}else{a=ABS(a); b=-(a+b);}
- }
- R a?igcd1(b%a,a):b;
-}
-#else
 // 'binary gcd' algorithm, per Lemire https://lemire.me/blog/2013/12/26/fastest-way-to-compute-the-greatest-common-divisor/
 // can be vectorised, annoying without hardware ctz (avx512 has clz which works)
 I jtigcd(J jt,I a,I b){I d;UI4 s,xz,yz;UI x,y;
@@ -388,7 +376,6 @@ I jtigcd(J jt,I a,I b){I d;UI4 s,xz,yz;UI x,y;
  }
  R x<<s;
 }
-#endif
 
 D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
  a=ABS(a); b=ABS(b); if(a>b){t=a; a=b; b=t;}

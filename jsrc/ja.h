@@ -346,8 +346,6 @@
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
-// obsolete #define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
-// obsolete #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{AC(x)=Zc-1+((UI)Zc>>(BW-2)); nomfaction}}  // call if sparse or ending
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL); nomfaction}}}  // call if sparse or ending; never touch a PERM
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 
@@ -732,7 +730,6 @@
 #define norm(x)                     jtnorm(jt,(x))  
 #define not(x)                      jtnot(jt,(x))
 #define notW(x)                     jtnot((J)((I)jt|JTINPLACEW),(x))
-// obsolete #define notonupperstack(x)          jtnotonupperstack(jt,(x))
 #define nub(x)                      jtnub(jt,(x))     
 #define nubi(x)                     jtnubi(jt,(x))     
 #define nubsieve(x)                 jtnubsieve(jt,(x))
@@ -854,40 +851,28 @@
 #define qrr(x)                      jtqrr(jt,(x))  
 #define qstd(x)                     jtqstd(jt,(x))
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
-// obsolete #define rarecur(x,tt,test,prolog,asgn) {if(unlikely(((test)&TRAVERSIBLE)!=0)){prolog AFLAG(x) asgn |=(tt)&RECURSIBLE; jtra((x),(tt),0);}}  // recur on descendants if traversible, set recursive if recursible
 // If this block is recursible and not recursive, execute prolog and then raise the descendants.  Since sharing a block with another thread requires going recursive, the flag operations can be local
-// obsolete #define radescend(x,prolog)         {I tt=AT(x); FLAGT flg=AFLAG(x); rarecur(x,tt,tt^flg,prolog,=flg)}
 #define radescend(x)         {I tt=AT(x); {if(unlikely(((tt^AFLAG(x))&TRAVERSIBLE)!=0)){AFLAGORLOCAL((x),(tt)&RECURSIBLE); jtra((x),(tt),0);}}}
 // Make a block recursive if it is recursible and not already recursive.  Virtuals are already recursive.  We use this in a place where we know the result can't be unincorpable.  x might not be a noun
 #define ramkrecursv(x)              if(unlikely(((AT(x)^AFLAG(x))&RECURSIBLE))){AFLAGORLOCAL((x),AT(x)&RECURSIBLE); x=jtra(x,AT(x),x);}  // if block is not recursive, it must be local
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
-// obsolete #define ra00(x,tt)                  rarecur(x,tt,tt,,)  // tt is all that needs to be tested
 #define ra00(x,tt)                {if(unlikely(((tt)&TRAVERSIBLE)!=0)){AFLAGORLOCAL((x),(tt)&RECURSIBLE); jtra((x),(tt),0);}}
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
-// obsolete #define ra0(x)                      radescend(x, if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);})
 #define ra0(x)                      {if(unlikely((AFLAG(x)&AFVIRTUAL)!=0)){RZ((x)=realize(x));}radescend(x)}
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block.  ras() does include rifv
-// obsolete #define ra(x)   {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; radescend(x)}
 #define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=ACUC2;else ACADD(x,1); radescend(x)}}  // better a misbranch than an atoomic instruction if c<0
 // In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount);
 // sv means the last arg is saved/restored through the call; qcg means the name is known to have qcglobal semantics (we use the constituents)
-// obsolete #define rapos(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x)}
 #define rapos(x)   {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atomic instruction if c<0
-// obsolete #define raposlocal(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; radescend(x)}   // name in local table, recursive if not sparse and does not need atomic operation if AC=1
 #define raposlocal(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else ACADD(x,1); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atoomic instruction if c<0
-// obsolete #define raposacv(x) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1;}  // must be recursive usecount
 #define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1);}}
-// obsolete #define raposgblqcgsv(x,qct,sv) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}  // must be recursive usecount but may be sparse
 #define raposgblqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
-// obsolete #define raposlocalqcgsv(x,qct,sv) {I c=AC(x); AC(x)=c+=(c>>(BW-2))^1; if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}  // must be recursive usecount but may be sparse
 #define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else ACADD(x,1); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
-// obsolete #define raczap(x,cond,falsestart)   {I c=AC(x); if(likely(cond)){*AZAPLOC(x)=0; c&=~ACINPLACE;}else{falsestart c+=(c>>(BW-2))^1;} AC(x)=c; \
-// obsolete                                     radescend(x)}
 #define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=ACUC2;else ACADD(x,1);} \
                                     radescend(x)}}
                                     // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame

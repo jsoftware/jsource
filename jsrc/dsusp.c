@@ -116,7 +116,6 @@ static A jtsusp(J jt){A z;
 #endif
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
  // if there is a 13!:15 sentence (latent expression) to execute before going into debug, do it
-// obsolete  if(JT(jt,dbtrap)){RESETERR; immex(JT(jt,dbtrap)); tpop(old);}  // force typeout
  A trap=0; READLOCK(JT(jt,dblock)) if((trap=JT(jt,dbtrap))!=0)ra(trap); READUNLOCK(JT(jt,dblock))  // fetch trap sentence and protect it
  if(trap){RESETERR; immex(trap); fa(trap); tpop(old);}  // execute with force typeout, remove protection
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
@@ -328,7 +327,6 @@ F1(jtdbtrapq){
  // we must read & protect the sentence under lock in case another thread is changing it
  READLOCK(JT(jt,dblock)) A trap=JT(jt,dbtrap); if(trap)ras(trap); READUNLOCK(JT(jt,dblock))  // must ra() while under lock
  if(trap){tpushnr(trap);}else trap=mtv;  // if we did ra(), stack a fa() on the tpop stack
-// obsolete R JT(jt,iep)?JT(jt,iep):mtv;
  R trap;
 }
 
@@ -336,18 +334,10 @@ F1(jtdbtrapq){
 F1(jtdbtraps){
  ARGCHK1(w);
  RZ(w=vs(w));
-// obsolete  ASSERT(1>=AR(w),EVRANK);
-// obsolete  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  if(AN(w)){RZ(ras(w));}else w=0;  // protect w if it is nonempty; if empty, convert to null
  WRITELOCK(JT(jt,dblock)) A trap=JT(jt,dbtrap); JT(jt,dbtrap)=w; WRITEUNLOCK(JT(jt,dblock))  // swap addresses under lock
  fa(trap);  // undo the ra() done when value was stored - null is ok
-// obsolete  RZ(JT(jt,iep)=w); 
  R mtm;
 }
 
 
-// obsolete F1(jtdbtrapq){ASSERTMTV(w); R JT(jt,dbtrap)?JT(jt,dbtrap):mtv;}   
-// obsolete      /* 13!:14 query trap */
-// obsolete 
-// obsolete F1(jtdbtraps){RZ(w=vs(w)); if(AN(w)){RZ(ras(w)); fa(JT(jt,dbtrap)); JT(jt,dbtrap)=w;}else JT(jt,dbtrap)=0L; R mtm;}
-// obsolete      /* 13!:15 set trap */

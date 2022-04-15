@@ -392,8 +392,6 @@ extern F1(jtvtrans);
 extern F1(jtwordil);
 extern DF1(jtwords);
 extern F1(jtxco1);
-// obsolete extern F1(jtxepq);
-// obsolete extern F1(jtxeps);
 
 // extern F1(jttest1);
 
@@ -780,7 +778,6 @@ extern A        jtmkwris(J, A);
 extern I        jtmult(J,I,I);
 extern A        jtnamerefacv(J, A, A);
 extern A        jtnfs(J,I,C*);
-// obsolete extern I        jtnotonupperstack(J,A);
 extern A        jtodom(J,I,I,I* RESTRICT);
 extern A        jtparsea(J,A*,I);
 extern B        jtparseinit(JS,I);

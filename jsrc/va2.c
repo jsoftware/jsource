@@ -677,8 +677,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
   // The ordering here assumes that jtinplace will usually be set
-// obsolete alternative  if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&!(adocv.cv&VCANHALT && JT(jt,asgzomblevel)<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-// obsolete alternative  }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==a&&!(adocv.cv&VCANHALT && JT(jt,asgzomblevel)<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(w),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
   }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(a),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)

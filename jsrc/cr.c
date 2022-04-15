@@ -756,7 +756,6 @@ F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   } else {
    RESETERR;  // the gerund check may have raised an error
    f1=cons1; f2=cons2;    // use the constant routines for nouns
-// obsolete ACIPNO(a);// use the constant routines for nouns; mark the constant non-inplaceable since it may be reused;
    // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
    // assigned to a name, which will protects values inside it.
    ACIPNO(a);

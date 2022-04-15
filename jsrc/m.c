@@ -539,7 +539,6 @@ void audittstack(J jt){F1PREFIP;
 #if BW==64 && MEMAUDIT&2
  if(JT(jt,audittstackdisabled)&1)R;
  A *ttop;
-// obsolete A *nvrav=AAV1(jt->nvra);
  // verify counts start clear
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain
@@ -549,8 +548,6 @@ void audittstack(J jt){F1PREFIP;
   // back up to previous block
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
-// obsolete  // Process the NVR stack as well
-// obsolete  DO(jt->parserstackframe.nvrtop, auditsimverify0(jt,nvrav[i]);)
  // loop through each block of stack
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -558,9 +555,6 @@ void audittstack(J jt){F1PREFIP;
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
-// obsolete  // simulate nvr-stack frees
-// obsolete  DO(jt->parserstackframe.nvrtop, if((AM(nvrav[i])-=AMNVRCT)==AMFREED){auditsimdelete(jt,nvrav[i]);})
-// obsolete  DO(jt->parserstackframe.nvrtop, AM(nvrav[i])+=AMNVRCT;)  // restore AMs
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -568,7 +562,6 @@ void audittstack(J jt){F1PREFIP;
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
-// obsolete  DO(jt->parserstackframe.nvrtop, auditsimreset(jt,nvrav[i]);)
 #endif
 }
 
@@ -618,11 +611,9 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     k=SYMNEXT(k);
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
-// obsolete     if(likely(!(jtsympv[k].flag&LCACHED))){
     SYMVALFA(jtsympv[k]);    // free value
     jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
     asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
-// obsolete    }else{*asymx=SYMNEXT(jtsympv[k].next);}  // for cached value, remove from list to be freed.  It becomes unmoored.
     k=nextk;  // advance to next block in chain
    }while(k);
    // if the chain is not (now) empty, make it the base of the free pool & chain previous pool from it.  CACHED items have been removed
@@ -952,7 +943,6 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
     }
    }
   } else if(t&NAME){A ref;
-// obsolete    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
    if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference
     // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
     // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];

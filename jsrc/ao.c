@@ -523,7 +523,6 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  // If the operation turned off pristinity of wperm, do the same for w.  Pristinity only matters if the block is inplaceable, but our tests expect that
  // assigned values retain their pristinity, so we have to clear pristinity of w whenever wperm ends non-prist
-// obsolete AFLAGAND(w,AFLAG(wperm)|~AFPRISTINE)
  if(unlikely(wprist>(AFLAG(wperm)&AFPRISTINE)))AFLAGCLRPRIST(w)  // if pristinity of wperm was turned off, do the same in w
  EPILOG(z);
 }    /* a f/. w for dense x & w */

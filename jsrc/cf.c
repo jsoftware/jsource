@@ -11,10 +11,10 @@
 
 // 9!:63 return [((AC of x) ; x) ;] inplacingflags ; < (AC of y) ; y
 F1(jtshowinplacing1){F1PREFIP;
-R link(sc((I)jtinplace&JTFLAGMSK),box(link(sc(AC(w)),w)));
+R jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w)));
 }
 F2(jtshowinplacing2){F2PREFIP;
-R link(link(sc(AC(a)),a),link(sc((I)jtinplace&JTFLAGMSK),box(link(sc(AC(w)),w))));
+R jlink(jlink(sc(AC(a)),a),jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w))));
 }
 
 FORK1(fork100,0x00) FORK1(fork101,0x01) FORK1(fork110,0x10) FORK1(fork111,0x11) FORK1(fork120,0x20) FORK1(fork121,0x21) 
@@ -288,8 +288,8 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    if(d==CCOMMA)switch(c){   // all of this except for ($,) is handled by virtual blocks
     case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
    }else if(d==CBOX){
-    if(c==CRAZE){f2=jtlink; linktype=ACINPLACE;  // (;<)
-    }else if(c==CCOMMA){f2=jtlink; linktype=ACINPLACE+1;  // (,<)
+    if(c==CRAZE){f2=jtjlink; linktype=ACINPLACE;  // (;<)
+    }else if(c==CCOMMA){f2=jtjlink; linktype=ACINPLACE+1;  // (,<)
     }
    }else if(d==CLDOT){   // (compare L.)
     I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;

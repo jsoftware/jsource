@@ -1333,7 +1333,7 @@ F1(jtcderx){I t;C buf[1024];
 #if SYS&SYS_UNIX
  {const char *e = dlerror(); strcpy (buf, e?e:"");}
 #endif
- R link(sc(t),cstr(buf));
+ R jlink(sc(t),cstr(buf));
 }    /* 15!:11  GetLastError information */
 
 F1(jtmema){I k; RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */

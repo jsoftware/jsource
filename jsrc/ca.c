@@ -350,7 +350,7 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
   }
  }
  else if(unlikely(BOTHEQ8(c,d,CGRADE,CGRADE))){f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}  // /:&:/: monad
- else if(unlikely(BOTHEQ8(c,d,CCOMMA,CBOX))){f2=jtlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
+ else if(unlikely(BOTHEQ8(c,d,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
 
  // Copy the monad open/raze status from v into u&:v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
@@ -451,7 +451,7 @@ F2(jtamp){F2PREFIP;A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,
   case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
   case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
   case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y
-  case CCOMMA: if(c==CBOX){f2=jtlink; linktype=ACINPLACE;} break;  // x ,&< y   supports IP 
+  case CCOMMA: if(c==CBOX){f2=jtjlink; linktype=ACINPLACE;} break;  // x ,&< y   supports IP 
   case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;  // >.@g
   case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;   // <.@g
   case CRAZE:  // detect ;@(<@(f/\));.

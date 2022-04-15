@@ -276,7 +276,7 @@ F1(jtdeprecxs){A ct, excl;
 //9!:54
 F1(jtdeprecxq){
  READLOCK(JT(jt,startlock))
- A z=link(sc(JT(jt,deprecct)),JT(jt,deprecex)?JT(jt,deprecex):mtv);  // return current status
+ A z=jlink(sc(JT(jt,deprecct)),JT(jt,deprecex)?JT(jt,deprecex):mtv);  // return current status
  READUNLOCK(JT(jt,startlock))
  RETF(z);
 }

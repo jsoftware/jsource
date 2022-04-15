@@ -107,7 +107,7 @@ F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinp
 // This verb propagates WILLOPEN, so it must not raise usecounts or EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
 // As a result of this we support both recursive and nonrecursive y inputs.  If y is unboxed, we create a recursive block if WILLOPEN is
 // not set, or a nonrecursive block if WILLOPEN is set
-DF2(jtlink){
+DF2(jtjlink){
 F2PREFIP;ARGCHK2(a,w);
 #if FORCEVIRTUALINPUTS
  // to allow mapped-boxed tests to run, we detect when the virtual block being realized is at offset 0 from its

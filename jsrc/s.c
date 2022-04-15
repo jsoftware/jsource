@@ -322,8 +322,8 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
    // positive bucketx (now negative); that means skip that many items and then do name search
-   // Even if we know there have been no names assigned we have to spin to the end of the chain
-   // We don't unroll these loops because there is usually one symbol ber bucket
+   // Even if we know there have been no names assigned we have to spin to the end of the chain (for insertion purposes)
+   // We don't unroll these loops because there is usually one symbol per bucket
    I m=u->m; C* s=u->s; UI4 hsh=u->hash;  // length/addr of name from name block, and hash
    LX tx = lx;  // tx will hold the address of the last item in the chain, in case we have to add a new symbol
    L* l;
@@ -693,12 +693,14 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   if(likely(x!=w)){
    e->valtype=valtype;  // set the value type of the new value
    e->val=w;  // store the new value to free w before ra()
+   SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
+                   // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
    // SPARSE nouns must never be inplaceable, because their components are not 
    _Static_assert(JTFINALASGNX==QCNOUNX,"bit divergence");
-   if((SGNIF((I)jtinplace&valtype,QCNOUNX)&AC(w))<0){  // if final assignment of abandoned noun
+   if((SGNIF((I)jtinplace&valtype,QCNOUNX)&AC(w))<0){  // if final assignment of abandoned noun   scaf why noun?
     // We can zap abandoned nouns.  But only if they are final assignment: something like nm:: [ nm=. 4+4 would free the active block if we zapped.
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     *AZAPLOC(w)=0; ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1)
@@ -707,10 +709,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
     if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
     ra(w);  // if zap not allowed, just ra() the whole thing.  w is known recursible so this is quick.  w may be inplaceable but not zappable so no rapos
    }
-   // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
-   // in case the new value was being protected by the old (ex: n =. >n).
-   // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
-   SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
 
   }else x=0;  // repurpose x to be the value needing fa
  }else{  // x exists, and is either read-only or memory-mapped
@@ -727,6 +725,9 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // x here is the value that needs to be freed
  if(g!=0)WRITEUNLOCK(g->lock)
  // ************* we have released the write lock
+ // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
+ // in case the new value was being protected by the old (ex: n =. >n).
+ // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
  SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock
  R 1;   // good return
 exitlock:  // error exit

@@ -1,6 +1,16 @@
 #include "cpuinfo.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#else
+#include <unistd.h>
+#endif
+
 extern uint64_t g_cpuFeatures;
+extern int numberOfCores;
 
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
 uint32_t OPENSSL_armcap_P;
@@ -9,6 +19,7 @@ void cpuInit(void)
 {
   g_cpuFeatures = 0;
   OPENSSL_armcap_P = 0;
+  numberOfCores=getNumberOfCores();
 }
 
 #elif defined(__aarch64__)||defined(_M_ARM64)
@@ -24,6 +35,7 @@ uint32_t OPENSSL_armcap_P;
 void cpuInit(void)
 {
   g_cpuFeatures = 0;
+  numberOfCores=getNumberOfCores();
 
 #if defined(__linux__)
   unsigned long hwcaps= getauxval(AT_HWCAP);
@@ -233,6 +245,7 @@ static __inline__ void x86_cpuid(unsigned int func, unsigned int values[4])
 void cpuInit(void)
 {
   g_cpuFeatures = 0;
+  numberOfCores=getNumberOfCores();
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
   unsigned int regs[4];
@@ -379,6 +392,7 @@ void cpuInit(void)
 void cpuInit(void)
 {
   g_cpuFeatures = 0;
+  numberOfCores=getNumberOfCores();
 }
 
 #endif
@@ -446,3 +460,28 @@ void OPENSSL_setcap(void)
 
 #endif
 }
+
+int getNumberOfCores(void) {
+#ifdef _WIN32
+ SYSTEM_INFO sysinfo;
+ GetSystemInfo(&sysinfo);
+ return sysinfo.dwNumberOfProcessors;
+#elif defined(__APPLE__)
+ int nm[2];
+ size_t len = 4;
+ uint32_t count;
+
+ nm[0] = CTL_HW; nm[1] = HW_AVAILCPU;
+ sysctl(nm, 2, &count, &len, NULL, 0);
+
+ if(count < 1) {
+  nm[1] = HW_NCPU;
+  sysctl(nm, 2, &count, &len, NULL, 0);
+  if(count < 1) { count = 1; }
+ }
+ return count;
+#else
+ return sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+}
+

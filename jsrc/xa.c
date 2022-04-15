@@ -8,6 +8,7 @@
 
 #include "cpuinfo.h"
 extern uint64_t g_cpuFeatures;
+extern int numberOfCores;
 
 #include <string.h>
 #ifdef _WIN32
@@ -322,6 +323,10 @@ F1(jtcpufeature){
 #else
   R cstr("unknown");
 #endif
+ } else if (!strcasecmp(CAV(w),"CORES")) {
+  R sc(numberOfCores);
+ } else if (!strcasecmp(CAV(w),"MAXTASKS")) {
+  R sc(MAXTASKS);
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

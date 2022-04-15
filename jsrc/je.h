@@ -499,7 +499,7 @@ extern F2(jtless);
 extern DF2(jtintersect);
 #endif
 extern F2(jtlev);
-extern DF2(jtlink);
+extern DF2(jtjlink);
 extern F2(jtloccre2);
 extern F2(jtlock2);
 extern F2(jtlocnl2);

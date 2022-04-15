@@ -1,5 +1,5 @@
 rem %1 is path to source library
-rem ....\copy_library_from_current j64-903
+rem ....\copy_library_from_current j64-904
 
 cd /users/eric/gitdev/jsource/jlibrary
 

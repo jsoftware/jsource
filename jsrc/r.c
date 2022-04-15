@@ -32,7 +32,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
  GATV0(z,BOX,m,1); x=AAV(z);
  RZ(x[0]=incorp(df));  // always out f first
- RZ(x[1]=incorp(b||c||xop?dg:fl&VDDOP?(hv=AV(hs),link(sc(hv[0]),link(spellout(id),sc(hv[1])))):spellout(id)));  // if invisible or operator, out dg, which is g or the explicit body; otherwise out the primitive w
+ RZ(x[1]=incorp(b||c||xop?dg:fl&VDDOP?(hv=AV(hs),jlink(sc(hv[0]),jlink(spellout(id),sc(hv[1])))):spellout(id)));  // if invisible or operator, out dg, which is g or the explicit body; otherwise out the primitive w
  if(2<m)RZ(x[2]=incorp(c||xop?drr(hs):dg));  // if there is a 3d box, out it from h if operator or trident; otherwise from g
  EPILOG(z);
 }

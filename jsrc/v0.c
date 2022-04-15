@@ -232,13 +232,13 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  // switch based on degree of polynomial
  switch(m){
   case 1:  r=ravel(negate(aslash(CDIV,take(num(2),w)))); break;  // linear - return solution, whatever its type
-  case 0:  R link(num(0),mtv);  // degree 0 - return 0;''
+  case 0:  R jlink(num(0),mtv);  // degree 0 - return 0;''
   default: if(t&CMPX)r=rfcz(m,w);  // higher order - if complex, go straight to complex solutions
            else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));} // otherwise, find rational solutions in r, and residual polynomial in w1.
             // if there are residual (complex) solutions, go find them
  }
  // Return result, which is leading nonzero coeff;roots
- R link(from(sc(m),w),rsort(r));
+ R jlink(from(sc(m),w),rsort(r));
 }
 
 // entry point for p. y

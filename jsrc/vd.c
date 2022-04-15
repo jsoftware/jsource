@@ -72,7 +72,7 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
   t=norm(ravel(w));  // norm of col 
   ASSERT(!AN(w)||!equ(t,num(0)),EVDOMAIN);  // norm must not be 0 unless column is empty
   RZ(q=tymes(w,recip(t)));
-  R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num(1)));
+  R jlink(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num(1)));
  }
  // construe w as w0 w1 w0t w1t
  RZ(t0=qrr(take(v2(p,m),w)));  // find QR of w0 pxm   w0t
@@ -87,7 +87,7 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  //        0     R of w1-(q0 q0* w1)
  // qr is  q0 r0    (q0 q0* w1) + (Q of w1-(q0 q0* w1))(R of w1-(q0 q0* w1))
  // = w0 w1 = w
- z=link(q,r); EPILOG(z);
+ z=jlink(q,r); EPILOG(z);
 }
 
 #define verifyinplace(to,from) if(to!=from){MC(CAV(to),CAV(from),AN(to)<<bplg(AT(to)));}

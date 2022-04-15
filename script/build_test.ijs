@@ -2,7 +2,7 @@ man=: 0 : 0
 manage building/testing J releases/betas from J
 
    git_status''           NB. report git status and jversion
-   build_for'J903-beta-e' NB. set build globals and jversion.h
+   build_for'J904-beta-e' NB. set build globals and jversion.h
    
 tags
  $ cd git/jsource
@@ -10,9 +10,9 @@ tags
  $ git pull
  
  $ cd ~
- $ git/jsource/script/tag.sh j903-beta-?
+ $ git/jsource/script/tag.sh j904-beta-?
  $ cd git/jsource
- $ git checkout tags/j903-beta-x
+ $ git checkout tags/j904-beta-x
 
 
 
@@ -25,7 +25,7 @@ JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.s
    
    get_jversion''
    set_jversion''    NB. version and type set by build_for
-   build_for'J903-beta-f'
+   build_for'J904-beta-f'
 
 windows builds done with vs2019
 
@@ -46,7 +46,7 @@ spawn - linux/macos/windows
    git branch -a  -list branches
    git checkout branch
    
-   build_for 'J903-beta-f'
+   build_for 'J904-beta-f'
    
 
 )   

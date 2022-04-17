@@ -430,8 +430,8 @@ dobblock:
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
-   }else if(jt->jerr==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status
-   }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // error in debug mode
+   }else if((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+   }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
    }else if(jt->jerr==EVTHROW){

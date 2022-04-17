@@ -61,6 +61,7 @@
 #define EWOVIPMULII     5
 #define EWOVFLOOR0      52   // minor oflo in <./>., can be left as INT
 #define EWOVFLOOR1      53   // major oflo in <./>., must be converted to FL
+#define EVDEBUGEND      79  // EVEXIT+64 set when debug wants to fail all avoiding all try blocks
 #define EVSUPPRESS      255  // turn off error reporting: don't change anything.  Not used
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors
 #define EVOKCLEANUP     512  // no error, but there is cleanup work to do

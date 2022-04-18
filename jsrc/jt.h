@@ -87,7 +87,7 @@ typedef struct rngdata {
    } uq;   // flags needed only by unquote  clear for task
   } us;   // access as US
  } uflags;   // 4 bytes
-// TASKCOMMAREA starts here, holding parms passed at startup
+// TASKCOMMREGION starts here, holding parms passed at startup
  I bytes;            // bytes currently in use - used only during 7!:1 clear for task
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
  S etxn1;            // last non-zero etxn    clear for task
@@ -98,15 +98,14 @@ typedef struct rngdata {
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
             // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval onlt to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
-// end of cacheline 0
-// At task startup, the entry parameters are stored here, at ((I*)jt)[8..11]
  A xmod;             // extended integer: the m in m&|@f clear for task
-// end of TASKCOMMAREA
+// end of cacheline 0
+// end of TASKCOMMREGION
 // end of cacheline 0
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  I4 parsercalls;      // # times parser was called clear for task
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
- UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F
+ UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
 // **************************************  end of initialized part
@@ -131,7 +130,7 @@ typedef struct rngdata {
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  A curname;          // current name, an A block containing an NM
  US fcalln;           /* named fn calls: maximum permissible depth     */
- US callstacknext;    /* named fn calls: current depth                   */
+ US callstacknext;    // current stack pointer into callstack.  Could be elided if callstack put on a 16K boundary, not a bad idea anyway
  C fillv0len;   // length of fill installed in fillv0
 // 3 bytes free
  DC sitop;            /* pointer to top of SI stack                                 */
@@ -160,9 +159,10 @@ typedef struct rngdata {
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
- I getlasterror;     /* DLL stuff                                       */
- I dlllasterror;     /* DLL stuff                                       */
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
+ UI4 getlasterror;     // DLL error info from previous DLL call
+ UI4 dlllasterror;     // DLL domain error info (before DLL call)
+ I filler6[1];
 // end of cacheline 6
 
  // Area used for intertask communication

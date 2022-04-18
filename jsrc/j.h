@@ -624,7 +624,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MAXTASKS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
                        // threads will be paged out
-#define MAXTASKSRND 64  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
+#define MAXTASKSRND 64  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
 #if MAXTASKS>255
 #define WLOCKBIT 0x8000  // the LSB of the part of a 16-bit lock used for write locks.
 #else

@@ -69,6 +69,9 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
   expr \
   if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0)YIELD else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
  }
+
+// Similar function, for systemlockaccept
+#define DOINSTATEA(n,expr) {while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n))YIELD expr __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);}
  
 // Take lock on the entire system, waiting till all threads acknowledge
 // priority is the priority of the request.  lockedfunction is the function to call when the lock has been agreed.
@@ -85,7 +88,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
  while(priority!=0){
   S xxx=0; I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
-  // In the leader task only, go through all tasks, turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
+  // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
   if(leader){DONOUNROLL(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;)}
   // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop
   C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);)  // remember priority before we made our request
@@ -129,18 +132,17 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
 // priority is mask indicating the priorities for which this accept is valid
 // Result is 0 if the lock processing failed
 I jtsystemlockaccept(J jt, I priority){
- do{
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=2)YIELD                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 2: requesters raise requests
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=3)YIELD C finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 3: see what won
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD                                                                       __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 4: transfer to executor
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=5)YIELD C res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE); __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);  // state 5: get result status
-  // outside the executor, we wait for state to move off 5
-  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
+ do{C finalpriority; C res;
+  DOINSTATEA(2,)  // state 2: requests at different priorities
+  DOINSTATEA(3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);)  // state 3: get winning priority
+  DOINSTATEA(4,)  // state 4: transfer nrunning to executor
+  DOINSTATEA(5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)// state 5: everybody gets the result of the operation
+  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD  // wait for state to move off 5, indicating completion
   ASSERT(res==0,res)  // if there was an error, signal it in all threads
+  // this thread is free to continue.  systemlock has been cleared
   // loop back if there is another request that this can tolerate
   I winningpri=LOWESTBIT(finalpriority); finalpriority&=~winningpri; priority&=finalpriority; // final<-remaining requests; leave priority as the ones we are OK with
- }while(priority);  // if our priority was SYM and the remaining request is DEBUG, we have to return to get to a DEBUG point
- // this thread is free to continue.  No lock request is possible until systemlock has been cleared
+ }while(priority);  // if our priority was SYM-only and the remaining request is DEBUG, we have to return to get to a DEBUG point
  R 1;
 }
 
@@ -277,12 +279,16 @@ void writelock(S *alock, S prev){
 // The RUNNING flag must not be changed while a system lock is in progress, because the lock owner knows how many active tasks there are
 void jtsettaskrunning(J jt){
  // go to RUNNING state; but we are not allowed to change state if LOCKACTIVE has been set in our task.  In that
- // case someone has started a system lock and our running status has been captured
+ // case someone has started a system lock and our running status has been captured.  LOCKACTIVE is set in state 1 and removed in state 5.  We must
+ // first wait for the lock to clear and then wait to get out of state 5 (so that we don't do a systemlock request and think we are single-threaded)
  S oldstate; while(oldstate=0, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){if(oldstate&TASKSTATELOCKACTIVE){YIELD delay(1000);}}
+ while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
 }
-void jtclrtaskrunning(J jt){
-  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
- S oldstate; while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG|LOCKPRISYM);}else {YIELD delay(1000);}}
+void jtclrtaskrunning(J jt){S oldstate;
+ // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
+ while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+  if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG|LOCKPRISYM);}else{YIELD delay(1000);}
+ }
 }
 
 // Processing loop for thread.  Create a wait block for the thread, and wait on it.  Each loop runs one user task
@@ -447,7 +453,7 @@ ASSERT(0,EVNONCE)
  }else if(m==2){
   // return list of idle threads
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  GAT0(z,INT,MAXTASKS,1) I *zv=IAV1(z);  // Don't allocate under lock, and list may change: so allocate max possible
+  GAT0(z,INT,MAXTASKS-1,1) I *zv=IAV1(z);  // Don't allocate under lock, and list may change: so allocate max possible
   I threadct=0;  J mjt=MTHREAD(JJTOJ(jt)); J currjt=mjt;  // # threads, master thread, current thread
   WRITELOCK(mjt->tasklock);  while(currjt->taskidleq){zv[threadct++]=currjt->taskidleq; currjt=JTFORTHREAD(jt,currjt->taskidleq);} WRITEUNLOCK(mjt->tasklock);   // copy idle threads to result.  The master can never be idle
   AN(z)=AS(z)[0]=threadct;  // install # idles found
@@ -464,7 +470,7 @@ ASSERT(0,EVNONCE)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   // reserve a thread#, verify we have enough thread blocks for it
   I resthread=__atomic_add_fetch(&JT(jt,nwthreads),1,__ATOMIC_ACQ_REL);
-  if(resthread>MAXTASKS-1){__atomic_store_n(&JT(jt,nwthreads),MAXTASKS-1,__ATOMIC_RELEASE); ASSERT(0,EVLIMIT);} //  this leaves the tiniest of timing windows, bfd
+  if(resthread>=MAXTASKS-1){__atomic_store_n(&JT(jt,nwthreads),MAXTASKS-2,__ATOMIC_RELEASE); ASSERT(0,EVLIMIT);} //  this leaves the tiniest of timing windows, bfd
   // Try to allocate a thread in the OS and start it running
   I threadstatus=jtthreadcreate(jt,resthread);
   if(threadstatus==0){__atomic_add_fetch(&JT(jt,nwthreads),-1,__ATOMIC_ACQ_REL); z=0;  // if error, restore thread count; error signaled earlier

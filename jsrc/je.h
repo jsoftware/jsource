@@ -837,7 +837,7 @@ extern A        jtscx(J,X);
 extern A        jtscib(J,I);
 extern B        jtsesminit(JS,I);
 #if PYXES
-extern void jtsettaskrunning(J);
+extern I jtsettaskrunning(J);
 extern void jtclrtaskrunning(J);
 #else
 #define jtsettaskrunning(jt) (jt->taskstate|=TASKSTATERUNNING)

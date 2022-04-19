@@ -227,22 +227,37 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
-// parsex: parse an explicit defn line when the debugger/pm is running
+// parsex: parse an explicit defn line when the debugger/pm/ATTN is running
 // queue is words of sentence, length m
 /* ci - current row of control matrix               */
 /* c  - stack entry for dbunquote for this function */
-// d - DC area to use in deba
-
-A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;B s;
+A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
  movesentencetosi(jt,queue,m,0);  // install sentence-to-be-executed for stop purposes
- // we can stop before the sentence, or after it if it fails
- if(s=dbstop(c,ci->source)){z=parsez=0; jsignal(EVSTOP);
+#if 0  // obsolete 
+// we can stop before the sentence, or after it if it fails
+ if(dbstop(c,ci->source)){z=parsez=0; jsignal(EVSTOP);
  }else{  // cx adds a stack entry for PARSE, needed to get anonymous operators right
   z=PARSERVALUE(parsez=parsea(queue,m));  // make sure we preserve ASGN flag in parsez
  }
- // If we hit a stop, or if we hit an error (outside of try./catch., which turns debug off), enter debug mode.  But if debug mode is off now, we must have just
+#else
+ // if there is a system lock to take, take it and continue
+ S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE);
+ if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG);}
+ // if there is an ATTN/BREAK to take, take it and enter debug suspension
+ if(attnval&0xff){
+  if(!(jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2;  // if not debug, promote the ATTN to BREAK for other threads to speed it up
+  jsignal(EVATTN); z=parsez=0; goto noparse;  // if debug is not enabled, this will just be an error in the unparsed line
+ }
+ // we can stop before the sentence, or after it if it fails
+ // if there is a stop, enter debug suspension
+ if(c&&dbstop(c,ci->source)){z=parsez=0; jsignal(EVSTOP); goto noparse;}
+ // xdefn adds a stack entry for PARSE, needed to get anonymous operators right
+ z=PARSERVALUE(parsez=parsea(queue,m));  // make sure we preserve ASGN flag in parsez
+noparse: ;
+#endif
+ // If we hit a stop or ATTN, or if we hit an error (outside of try./catch., which turns debug off), enter debug suspension if enabled.  But if debug mode is off now, we must have just
  // executed 13!:0]0 or a suspension-ending command, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
- if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ if(!z&&c&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
  // we have come out of suspension (if we went into it).  parsez has the value to return to execution.  It may have a value created by the user, or the value from the non-failing sentence.
  // Or, it may be 0, in which case the definition will fail.  In this case the error-code matters: the error will be printed when the failure reaches console level (in the master thread).  An error code of
  // EVDEBUGEND is used to force quiet failure all the way back to console level (usually in a task); an error code of 0, normal in a single-task system, will cause the failure to go back to

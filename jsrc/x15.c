@@ -1000,7 +1000,7 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
 // will be the result of 15!:0.  z is always nonrecursive
 static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B zbx;
     C c,cipt[NCDARGS],*u;FARPROC fp;float f;I cipcount=0,cipn[NCDARGS],*cipv[NCDARGS],cv0[2],
-    data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,xn,xr,xt,*xv; DoF dd[NCDARGS]; UI4 t;
+    data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,xn,xr,xt,*xv; DoF dd[NCDARGS]; I t;
 #if defined(__aarch64__)
 // parameter in stack is not fixed size
  char *dvc;        // character pointer to data[]
@@ -1303,11 +1303,11 @@ F1(jtcdf){ASSERTMTV(w); dllquit(jt); R mtm;}
      /* 15!:5 */
 
 /* return error info from last cd domain error - resets to DEOK */
-F1(jtcder){UI4 t; ASSERTMTV(w); t=jt->dlllasterror; jt->dlllasterror=DEOK; R v2(t&0xff,t>>8);}
+F1(jtcder){I4 t; ASSERTMTV(w); t=jt->dlllasterror; jt->dlllasterror=DEOK; R v2(t&0xff,t>>8);}
      /* 15!:10 */
 
 /* return errno info from last cd with errno not equal to 0 - resets to 0 */
-F1(jtcderx){UI4 t;C buf[1024];
+F1(jtcderx){I4 t;C buf[1024];
  ASSERTMTV(w); t=jt->getlasterror; jt->getlasterror=0;
 
 #if SY_WIN32 && !SY_WINCE

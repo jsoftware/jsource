@@ -160,8 +160,8 @@ typedef struct rngdata {
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
- UI4 getlasterror;     // DLL error info from previous DLL call
- UI4 dlllasterror;     // DLL domain error info (before DLL call)
+ I4 getlasterror;     // DLL error info from previous DLL call
+ I4 dlllasterror;     // DLL domain error info (before DLL call)
  I filler6[1];
 // end of cacheline 6
 

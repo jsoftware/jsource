@@ -164,7 +164,7 @@ typedef struct condmutex{
 
 typedef struct pyxcondmutex{
  A pyxvalue;  // the A block of the pyx, when it is filled in.  It is 0 until then.
- float pyxmaxwt;  // max time to wait for this pyx
+ float pyxmaxwt;  // max time to wait for this pyx in seconds
  S pyxorigthread;  // thread number that is working on this pyx, or _1 if the value is available
  C errcode;  // 0 if no error, or error code
 #if PYXES
@@ -277,16 +277,22 @@ void writelock(S *alock, S prev){
 // *********************** task creation ********************************
 
 // The RUNNING flag must not be changed while a system lock is in progress, because the lock owner knows how many active tasks there are
-void jtsettaskrunning(J jt){
+// set running, returning 1 if it wasn't set already
+I jtsettaskrunning(J jt){
  // go to RUNNING state; but we are not allowed to change state if LOCKACTIVE has been set in our task.  In that
  // case someone has started a system lock and our running status has been captured.  LOCKACTIVE is set in state 1 and removed in state 5.  We must
  // first wait for the lock to clear and then wait to get out of state 5 (so that we don't do a systemlock request and think we are single-threaded)
- S oldstate; while(oldstate=0, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){if(oldstate&TASKSTATELOCKACTIVE){YIELD delay(1000);}}
+ S oldstate; while(oldstate=0, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+  if(oldstate&TASKSTATERUNNING)R 0;   // if for some reason we are called with the bit already set, keep it set and indicate it wasn't us that set it
+  if(oldstate&TASKSTATELOCKACTIVE){YIELD delay(1000);}
+ }
  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
+ R 1;
 }
 void jtclrtaskrunning(J jt){S oldstate;
  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
  while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+  if(!(oldstate&TASKSTATERUNNING))R;   // if for some reason we are called with the bit already off, keep it off
   if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG|LOCKPRISYM);}else{YIELD delay(1000);}
  }
 }
@@ -453,7 +459,7 @@ ASSERT(0,EVNONCE)
  }else if(m==2){
   // return list of idle threads
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  GAT0(z,INT,MAXTASKS-1,1) I *zv=IAV1(z);  // Don't allocate under lock, and list may change: so allocate max possible
+  GAT0(z,INT,MAXTASKS,1) I *zv=IAV1(z);  // Don't allocate under lock, and list may change: so allocate max possible
   I threadct=0;  J mjt=MTHREAD(JJTOJ(jt)); J currjt=mjt;  // # threads, master thread, current thread
   WRITELOCK(mjt->tasklock);  while(currjt->taskidleq){zv[threadct++]=currjt->taskidleq; currjt=JTFORTHREAD(jt,currjt->taskidleq);} WRITEUNLOCK(mjt->tasklock);   // copy idle threads to result.  The master can never be idle
   AN(z)=AS(z)[0]=threadct;  // install # idles found
@@ -470,7 +476,7 @@ ASSERT(0,EVNONCE)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   // reserve a thread#, verify we have enough thread blocks for it
   I resthread=__atomic_add_fetch(&JT(jt,nwthreads),1,__ATOMIC_ACQ_REL);
-  if(resthread>=MAXTASKS-1){__atomic_store_n(&JT(jt,nwthreads),MAXTASKS-2,__ATOMIC_RELEASE); ASSERT(0,EVLIMIT);} //  this leaves the tiniest of timing windows, bfd
+  if(resthread>=MAXTASKS){__atomic_store_n(&JT(jt,nwthreads),MAXTASKS-1,__ATOMIC_RELEASE); ASSERT(0,EVLIMIT);} //  this leaves the tiniest of timing windows, bfd
   // Try to allocate a thread in the OS and start it running
   I threadstatus=jtthreadcreate(jt,resthread);
   if(threadstatus==0){__atomic_add_fetch(&JT(jt,nwthreads),-1,__ATOMIC_ACQ_REL); z=0;  // if error, restore thread count; error signaled earlier

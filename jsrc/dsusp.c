@@ -209,8 +209,14 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
 
 // Take system lock before going into debug.  If the debug request is granted to another thread, keep putting it up until we get it
 static A jtdebugmux(J jt){A z;
- do{z=jtsystemlock(jt,LOCKPRIDEBUG,jtdebug);}while(z==(A)1);
- R z;
+ do{
+  z=jtsystemlock(jt,LOCKPRIDEBUG,jtdebug);  // request debug
+  // when we return, we may not have been the selected thread, in which case we need to put our request up again.
+  // but if the user directed us to terminate, we must do that.
+  if(!jt->uflags.us.cx.cx_c.db){RESETERR R 0;}  // if user turned off debug mode, fail all tasks (back to a try.) and print no message.  This is the only valid time for result 0 with jt->jerr=0
+  if(jt->jerr==EVDEBUGEND){R 0;}  // if user suppressed this thread, fail it back to start/console (with no message)
+ }while(z==(A)1);  // loop back if we were not the selected thread
+ R z;  // if we were selected, carry on as requested by user: line# will have been set, and value if any
 }
 
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
@@ -248,7 +254,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
   if(!(jt->uflags.us.cx.cx_c.db&(DB1)))__atomic_store_n((S*)JT(jt,adbreak),2,__ATOMIC_RELEASE);  // if not debug, promote the ATTN to BREAK for other threads to speed it up
   jsignal(EVATTN); z=parsez=0; goto noparse;  // if debug is not enabled, this will just be an error in the unparsed line
  }
- // we can stop before the sentence, or after it if it fails
+ // we can stop before the sentence, or after it if it fails.  Stopping before is better because then we know we can restart safely
  // if there is a stop, enter debug suspension
  if(c&&dbstop(c,ci->source)){z=parsez=0; jsignal(EVSTOP); goto noparse;}
  // xdefn adds a stack entry for PARSE, needed to get anonymous operators right
@@ -290,6 +296,19 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){A t,z;B s;V*sv;
 F1(jtdbq){ASSERTMTV(w); R sc(JT(jt,dbuser)&~DBSUSCLEAR);}
      /* 13!:17 debug flag */
 
+// x 13!:11 y set error number(s) in threads.  Error _1 is converted to EVDEBUGEND
+F2(jtdberr2){
+ ARGCHK2(a,w);
+ ASSERT(AR(a)<2,EVRANK); ASSERT(AN(a)>0,EVDOMAIN); if(AT(a)!=INT)RZ(a=cvt(INT,a));  // verify #threads OK
+ ASSERT(AR(w)<2,EVRANK); ASSERT(AN(w)==1||AN(w)==AN(a),EVDOMAIN); if(AT(w)!=INT)RZ(w=cvt(INT,w));  // verify #err#s OK
+ DONOUNROLL(AN(a), ASSERT(BETWEENC(IAV(a)[i],0,JT(jt,nwthreads)),EVDOMAIN))  // verify threads exist
+ JTT *jjbase=JTTHREAD0(jt); I winc=AN(a)!=1;  //  base of thread blocks  1 if we are not repeating w
+ DONOUNROLL(AN(a), jjbase[IAV(a)[i]].jerr=IAV(w)[i*winc]>=0?IAV(w)[i*winc]:EVDEBUGEND;)  // install the requested error number
+ R mtm;  // i. 0 0
+}
+
+
+
 // Suspension-ending commands.  These commands return a list of boxes flagged with the AFDEBUGRESULT flag.  The first box is always an integer atom and gives the type
 // of exit (run, step, clear, etc).  Other boxes give values for the run and ret types.  EXCEPTION: 13!:0 returns i. 0 0 for compatibility, but still flagged as AFDEBUGRESULT
 F1(jtdbc){UC k;
@@ -300,7 +319,9 @@ F1(jtdbc){UC k;
   ASSERT(!k||!jt->glock,EVDOMAIN);
  }
  if(AN(w)){
-  jt->uflags.us.cx.cx_c.db=k&1; JT(jt,dbuser)=k;
+  // turn debugging on/off in all threads
+  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
+  DONOUNROLL(MAXTASKS, __atomic_store_n(&jjbase[i].uflags.us.cx.cx_c.db,k&1,__ATOMIC_RELEASE);) JT(jt,dbuser)=k;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
 #else

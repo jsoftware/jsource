@@ -66,6 +66,7 @@ extern F1(jtdbc);
 extern F1(jtdbcall);
 extern F1(jtdbcutback);
 extern F1(jtdberr);
+extern F2(jtdberr2);
 extern F1(jtdbetx);
 extern F1(jtdbjump);
 extern F1(jtdbnext);

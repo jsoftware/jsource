@@ -244,7 +244,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(13,8):  R CDERIV(CIBEAM, jtdbsig1,     jtdbsig2,     VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,9):  R CDERIV(CIBEAM, jtdbrr1,      jtdbrr2,      VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,10):  R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);  // still in stdlib
-  case XC(13,11): R CDERIV(CIBEAM, jtdberr,      0,            VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(13,11): R CDERIV(CIBEAM, jtdberr,      jtdberr2,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,12): R CDERIV(CIBEAM, jtdbetx,      0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,13): R CDERIV(CIBEAM, jtdbcall,     0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,14): R CDERIV(CIBEAM, jtdbtrapq,    0,            VFLAGNONE,RMAX,RMAX,RMAX);

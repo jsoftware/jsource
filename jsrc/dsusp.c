@@ -245,7 +245,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
  if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG);}
  // if there is an ATTN/BREAK to take, take it and enter debug suspension
  if(attnval&0xff){
-  if(!(jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2;  // if not debug, promote the ATTN to BREAK for other threads to speed it up
+  if(!(jt->uflags.us.cx.cx_c.db&(DB1)))__atomic_store_n((S*)JT(jt,adbreak),2,__ATOMIC_RELEASE);  // if not debug, promote the ATTN to BREAK for other threads to speed it up
   jsignal(EVATTN); z=parsez=0; goto noparse;  // if debug is not enabled, this will just be an error in the unparsed line
  }
  // we can stop before the sentence, or after it if it fails

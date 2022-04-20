@@ -209,7 +209,7 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
   I adbreak=__atomic_load_n((US*)&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
-  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG);}  // process lock and keep waiting
+  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
   // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution.  In that case fail the pyx.  It will not be deleted until the value has been stored
   if(unlikely((adbreak&0xff)>1)){errcode=EVBREAK; break;}  // JBREAK: fail the pyx and exit
   // if the pyx has a max time, see if that is exceeded
@@ -319,7 +319,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   pthread_mutex_unlock(&wblok.mutex);
   // When we get here we have been made ready to run
   // extract task parameters: args & pyx block.  Their usecount was raised before we started.  The self here is for u t. v so that we can get to the v 
-  A arg1=TASKCOMMREGION(jt)[0]; A arg2=TASKCOMMREGION(jt)[1]; A arg3=TASKCOMMREGION(jt)[2]; A pyx=TASKCOMMREGION(jt)[3];
+  A arg1=__atomic_load_n(&TASKCOMMREGION(jt)[0],__ATOMIC_ACQUIRE); A arg2=TASKCOMMREGION(jt)[1]; A arg3=TASKCOMMREGION(jt)[2]; A pyx=TASKCOMMREGION(jt)[3];
   // initialize the non-parameter part of task block
   memset(&jt->uflags.us.uq,0,offsetof(JTT,ranks)-offsetof(JTT,uflags.us.uq));    // clear what should be cleared
   jt->iepdo=0; jt->xmode=0;  jt->recurstate=RECSTATEBUSY; RESETRANK; jt->locsyms=JT(jt,emptylocale); jt->currslistx=-1;  // init what needs initing.  Notably clear the local symbols
@@ -398,9 +398,9 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   // initialize the task parameters.  First, the ones inherited from this jt
   memcpy(exjt,jt,offsetof(JTT,uflags.us.uq));  // the inherited area
   // Now, the args and pyx
-  TASKCOMMREGION(exjt)[0]=arg1; TASKCOMMREGION(exjt)[1]=arg2; TASKCOMMREGION(exjt)[2]=arg3; TASKCOMMREGION(exjt)[3]=pyx; 
+  TASKCOMMREGION(exjt)[0]=arg1; TASKCOMMREGION(exjt)[1]=arg2; TASKCOMMREGION(exjt)[2]=arg3; __atomic_store_n(&TASKCOMMREGION(exjt)[3],pyx,__ATOMIC_RELEASE); 
   // Grab the thread's mutex and wake it up
-  WAITBLOK *exwblok=TASKAWAITBLOK(exjt);  // get the address of the task's waitblok
+  WAITBLOK *exwblok=__atomic_load_n(&TASKAWAITBLOK(exjt),__ATOMIC_ACQUIRE);  // get the address of the task's waitblok
   pthread_mutex_lock(&exwblok->mutex); pthread_cond_signal(&exwblok->cond); pthread_mutex_unlock(&exwblok->mutex);
  }
  R pyx;

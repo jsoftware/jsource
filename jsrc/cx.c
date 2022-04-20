@@ -61,7 +61,7 @@
 
 // run one line.  If we see break request, accept it as ATTN but promote it to BREAK in other cores if debug off
 #if 0 // obsolete 
-#define parseline(z,lbl) {S attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
+#define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
  if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); goto lbl;} if(!((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2; jsignal(EVATTN); z=0;} \
  else{lbl: if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}   /* debug parse if debug/pm */ \
@@ -70,7 +70,7 @@
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
 #else
-#define parseline(z,lbl) {S attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
+#define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
  if(likely(!(attnval+(nGpysfctdl&128+16))))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,(nGpysfctdl&128+16)?callframe:0);} \
  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
@@ -643,7 +643,7 @@ docase:
    if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
-   if(unlikely(2<=*JT(jt,adbreakr))) {BASSERT(0,EVBREAK);} 
+   if(unlikely(2<=__atomic_load_n((US*)JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
    i=cw[i].go;  // Go to the next sentence, whatever it is
   }

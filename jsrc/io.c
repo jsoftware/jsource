@@ -236,7 +236,7 @@ static A jtinpl(JJ jt,B b,I n,C*s){C c;I k=0;
 #if _WIN32
  if(n&&(c=s[n-1],CCR==c))--n;
 #endif
- ASSERT(!*IJT(jt,adbreakr),EVINPRUPT);
+ ASSERT(!__atomic_load_n(IJT(jt,adbreakr),__ATOMIC_ACQUIRE),EVINPRUPT);
  if(!b){ /* 1==b means literal input */
   if(n&&COFF==s[n-1])joff(num(0));
   c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});  // discard stuff that looks like error typeout
@@ -269,7 +269,7 @@ static C* nfeinput(JS jt,C* s){A y;
 // otherwise processed in inpl
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
 A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
- *IJT(jt,adbreak)=0;  // turn off any pending break
+ __atomic_store_n(IJT(jt,adbreak),0,__ATOMIC_RELEASE);  // turn off any pending break
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
@@ -389,7 +389,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  I4 savcallstack = jm->callstacknext;
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
- *JT(jt,adbreak)=0;  // remove pending ATTN before executing the sentence
+ __atomic_store_n(JT(jt,adbreak),0,__ATOMIC_RELEASE);  // remove pending ATTN before executing the sentence
  x=jtinpl(jm,0,(I)strlen(lp),lp);
  I wasidle=jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
       // but if the master task is already running, this is a recursion, and just stay in running state

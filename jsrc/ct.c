@@ -95,13 +95,13 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   // state 3: all threads get the final request priorities
   C finalpriority; DOINSTATE(leader,3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);)
   I winningpri=LOWESTBIT(finalpriority); I executor=winningpri&priority&~oldpriority;  // priority to execute: were we the first to request it?
-  // state 4: transfer nrunning to executor
-  if(leader){__atomic_store_n(&JT(jt,systemlocktct),nrunning,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),4,__ATOMIC_RELEASE);}
+  // state 4: transfer nrunning to executor and run the locked function.  Other tasks must do nothing and wait for state 5.
+  if(leader){__atomic_store_n(&JT(jt,systemlocktct),nrunning,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),4,__ATOMIC_RELEASE);}  // leader advances to state 4
   if(executor){  // if we were the first to request the winning priority
    // This is the winning thread.  Perform the function and save the error status
-   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // pick up nrunning
-   z=(*lockedfunction)(jt);
-   __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],jt->jerr,__ATOMIC_RELEASE);
+   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // executor waits for state 4 and picks up nrunning.  Not actually necessary, but otherwise we have to guarantee tct unchanged by function
+   z=(*lockedfunction)(jt);  // perform the locked function
+   __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],jt->jerr,__ATOMIC_RELEASE);  // make the error status available to all threads
   }
   // state 5: everybody gets the result of the operation
   DOINSTATE(executor,5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)
@@ -120,6 +120,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
    // outside the executor, we wait for state to move off 5
    while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
    z=(A)1;  // just use a value of 1 to indicate we were not the executing thread.  The real z goes to the executor
+   // NOTE that a non-executor thread here does not use the error status
   }
   priority&=~winningpri;  // if our request was serviced, remove it, regardless of who serviced it
  }
@@ -135,7 +136,7 @@ I jtsystemlockaccept(J jt, I priority){
  do{C finalpriority; C res;
   DOINSTATEA(2,)  // state 2: requests at different priorities
   DOINSTATEA(3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);)  // state 3: get winning priority
-  DOINSTATEA(4,)  // state 4: transfer nrunning to executor
+  // state 4: transfer nrunning to executor and run the function.  Other threads wait for the result
   DOINSTATEA(5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)// state 5: everybody gets the result of the operation
   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD  // wait for state to move off 5, indicating completion
   ASSERT(res==0,res)  // if there was an error, signal it in all threads

@@ -252,7 +252,7 @@ A jtprobe(J jt,C*string,UI4 hash,A g){
 // We know that there are buckets and that we should search them
 // Take no locks
 A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[bucket#], bx is index within bucket
- // There is always a local symbol table, but it may be empty
+ // There is always a local symbol table, but it may be empty (performance is immaterial then)
  RZ(a);u=NAV(a);  // u->NM block
  if(0 > (bx = ~bx)){
   // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition

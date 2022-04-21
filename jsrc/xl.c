@@ -81,7 +81,7 @@ F1(jtjlock){B b;I*v;
  RZ(w=vi(w)); 
  ASSERT(LKC==AN(w),EVLENGTH);
  v=AV(w); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); RE(vfn((F)*v));
- RE(b=(B)jtunvfn(jt,(F)v[0],(A)(I)dolock(1,(F)v[0],v[1],v[2])));
+ RE(b=(B)(I)jtunvfn(jt,(F)v[0],(A)(I)dolock(1,(F)v[0],v[1],v[2])));
  if(!b)R num(0);
  WRITELOCK(JT(jt,flock))
  while(AM(JT(jt,flkd))==AS(JT(jt,flkd))[0])RZ(jtextendunderlock(jt,&JT(jt,flkd),&JT(jt,flock),0))

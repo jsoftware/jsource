@@ -130,7 +130,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
 }
 
 // Allow a system lock to proceed.  Called by a running thread when it notices the broadcast system-lock request at its priority or higher
-// priority is mask indicating the priorities for which this accept is valid
+// priority is mask indicating the priorities for which this accept is valid.  smaller bit-values have higher priority
 // Result is 0 if the lock processing failed
 I jtsystemlockaccept(J jt, I priority){
  do{C finalpriority; C res;
@@ -139,7 +139,7 @@ I jtsystemlockaccept(J jt, I priority){
   // state 4: transfer nrunning to executor and run the function.  Other threads wait for the result
   DOINSTATEA(5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)// state 5: everybody gets the result of the operation
   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD  // wait for state to move off 5, indicating completion
-  ASSERT(res==0,res)  // if there was an error, signal it in all threads
+  ASSERT(res==0,res)  // if there was an error, signal it in all acceptor threads
   // this thread is free to continue.  systemlock has been cleared
   // loop back if there is another request that this can tolerate
   I winningpri=LOWESTBIT(finalpriority); finalpriority&=~winningpri; priority&=finalpriority; // final<-remaining requests; leave priority as the ones we are OK with
@@ -176,12 +176,13 @@ typedef struct pyxcondmutex{
 #if PYXES
 static struct timespec maxwait={0,2000000};  // 2ms - maximum time to wait for a pyx.  After that, check to see if a system lock has been requested
 
-// Install a value/errcode into a pyx, and broadcast to anyone waiting on it
-// If the value has been previously installed (possible only with user pyxes), return 0, otherwise 1
+// Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.  fa() the pyx to indicate that the thread has released the pyx
+// If the value has been previously installed (invalid, and possible only with user pyxes), return abort code 0, otherwise 1
 static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  S prevthread=__atomic_exchange_n(&((PYXBLOK*)AAV0(pyx))->pyxorigthread,-1,__ATOMIC_ACQ_REL);  // set pyx no longer running
  if(unlikely(prevthread<0))R 0;  // the pyx is read-only once written
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->errcode,errcode,__ATOMIC_RELEASE);  // copy failure code.  Must be non0 - if not that is itself an error
+ if(likely(z!=0))ra(z);  // since the pyx is recursive, we must ra the result we store into it
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
  // broadcast to wake up any tasks waiting for the result
  pthread_mutex_lock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex); pthread_cond_broadcast(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond); pthread_mutex_unlock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
@@ -190,7 +191,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  R 1;
 }
 
-// Allocate a pyx, marked as owned by (thread).  
+// Allocate a pyx, marked as owned by (thread).  Set usecount to 2, counting the thread as one owner
 static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
  // Allocate.  Init value, cond, and mutex to idle
  GAT0(pyx,INT,((sizeof(PYXBLOK)+(SZI-1))>>LGSZI)+1,0); AAV0(pyx)[0]=0; // allocate the result pointer (1), and the cond/mutex for the pyx.
@@ -207,7 +208,7 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
  // read the pyx value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
  // that if we read nonzero the pyx has been resolved, even without an acquire barrier
  while((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){  // repeat till defined
-  I adbreak=__atomic_load_n((US*)&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);  // break requests
+  I adbreak=__atomic_load_n((US*)&JT(jt,adbreak)[0],__ATOMIC_ACQUIRE);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
   if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
@@ -338,16 +339,9 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
 
   // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
   C errcode=0;
-  if(unlikely(z==0)){
-   errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;
-  }else{
-   // result was good, use it
-   rifv(z);  // realize virtual result before returning
-   ra(z);  // since the pyx is recursive, we must ra the result we store into it  scaf zap if neg
-  }
-  // unprotect args
-  fa(arg1); fa(arg2); if(dyad){fa(arg3);}
-  jtsetpyxval(jt,pyx,z,errcode);  // report the value and wake up waiting tasks.  Cannot fail.  This frees the pyx from the owner's point of view
+  if(unlikely(z==0)){errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{rifv(z);}  // realize virtual result before returning it
+  jtsetpyxval(jt,pyx,z,errcode);  // report the value and wake up waiting tasks.  Cannot fail.  This protects the arguments in the pyx and frees the pyx from the owner's point of view
+  fa(arg1); fa(arg2); if(dyad){fa(arg3);}  // unprotect args only after they have been safely installed
   jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)
   jttpop(jt,old); // clear anything left on the stack after execution, including z
   RESETERR  // we had to keep the error till now; remove it for next time
@@ -450,7 +444,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
-  A pyx=AAV(w)[0], val=AAV(w)[1];  // get the components to store
+  A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
   ASSERT(AT(pyx)&PYX,EVDOMAIN)
   RZ(jtsetpyxval(jt,pyx,val,0))  // install value.  Will fail if previously set
   z=mtm;  // good quiet value
@@ -489,9 +483,9 @@ ASSERT(0,EVNONCE)
 #if PYXES
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
-  A pyx=AAV(w)[0], val=AAV(w)[1];  // get the components to store
-  ASSERT(AT(pyx)&PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(I,0,255),EVDOMAIN)  // get the error number
-  RZ(jtsetpyxval(jt,pyx,val,0))  // install value.  Will fail if previously set
+  A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
+  ASSERT(AT(pyx)&PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,0,255),EVDOMAIN)  // get the error number
+  RZ(jtsetpyxval(jt,pyx,0,err))  // install value.  Will fail if previously set
   z=mtm;  // good quiet value
 #else
 ASSERT(0,EVNONCE)

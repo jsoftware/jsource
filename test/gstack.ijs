@@ -102,6 +102,17 @@ end.
 }} ''
 
 NB. **************************************** threads & tasks **********************************
+g =: 3 : 0  NB. semaphore task
+'remotepyx remote_stuff'=.y
+assert. remote_stuff=1
+6 T. remotepyx,<(localpyx =. 5 T. 2);<2
+'remotepyx remote_stuff'=.>localpyx
+assert. remote_stuff=3
+6 T. remotepyx,<(localpyx =. 5 T. 2);<4
+4!:55 <'localpyx'
+1
+)
+
 f =: 3 : 0
 try.
 while. 2 > 1 T. '' do. 0 T. '' end.  NB. make sure we have 2 worker threads
@@ -117,6 +128,14 @@ assert. 0 1 2 *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  0.1 0.1 0.3
 assert. 0 1 2 *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  0.3 0.3 0.1 
 assert. (_1000;1 2;_1001) e.~&> 4 T. (3&T.@'')@(6!:3) t.'' "(0)  0.2 0.6 0.4
 while. 2 ~: # 2 T. '' do. end.  NB. wait till threads become ready
+NB. semaphore test
+localpyx=.5 T. 5
+g t. '' localpyx;<1
+'remotepyx remote_stuff'=.>localpyx
+assert. remote_stuff=2
+6 T. remotepyx,<(localpyx =. 5 T. 5);<3
+'remotepyx remote_stuff'=.>localpyx
+assert. remote_stuff=4
 end.
 1
 )

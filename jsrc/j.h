@@ -638,7 +638,7 @@ extern unsigned int __cdecl _clearfp (void);
 #ifndef PYXES
 #define PYXES 1
 #endif
-#if 0 && !SY_64
+#if !SY_64
 #undef PYXES
 #define PYXES 0
 #endif

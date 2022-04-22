@@ -31,7 +31,7 @@ CFLAGSLN= -DREADLINE -DUSE_LINENOISE
 RCS= ../../makevs/jconsole/jconsole.rc
 
 !ifndef LD
-LD=link
+LD=lld-link
 !endif
 
 .c.o:

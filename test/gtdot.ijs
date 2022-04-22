@@ -9,7 +9,7 @@ N > 0
 NB. create all available threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
 N0 = 1 T.''
-N0 = # 2 T.''
+1: N0 = # 2 T.''
 
 NB. no more thread can be created
 'limit error' -: 0&T. etx ''
@@ -66,14 +66,14 @@ end.
 f''
 
 N0 = 1 T.''
-N0 = # 2 T.''
+1: N0 = # 2 T.''
 
 N1=:  <.&.%: N
 
 f1^:(N1>0) ''
 
 N0 = 1 T.''
-N0 = # 2 T.''
+1: N0 = # 2 T.''
 
 NB. run in master thread
 
@@ -82,7 +82,7 @@ N=: <. 1.5 * >: 9!:56'maxtasks'
 f''
 
 N0 = 1 T.''
-N0 = # 2 T.''
+1: N0 = # 2 T.''
 
 N=: 2 * >: 9!:56'maxtasks'
 N1=:  <.&.%: N
@@ -90,12 +90,12 @@ N1=:  <.&.%: N
 f''
 
 N0 = 1 T.''
-N0 = # 2 T.''
+1: N0 = # 2 T.''
 
 f1^:(N1>0) ''
 
 N0 = 1 T.''
-N0 = # 2 T.''
+1: N0 = # 2 T.''
 
 N=: <: 9!:56'maxtasks'
 N1=:  <.&.%: N
@@ -103,6 +103,6 @@ N1=:  <.&.%: N
 f2^:(N1>0) ''
 
 N0 = 1 T.''
-N0 = # 2 T.''
+1: N0 = # 2 T.''
 
 4!:55 ;:'N N0 N1 f f1 f2 g g1 '

@@ -13,6 +13,7 @@ jsrc/jversion.h
 foo.ijs
 jj.ijs
 test*.txt
+*.tmp
 
 # windows - most output files go to %userprofile%\jbld\jout
 # some end up in the project folder and are marked here

@@ -249,7 +249,7 @@ B jtspfree(J jt){I i;A p;
 #if PYXES
    // do space accounting for the expat blocks that we saw here
    if(unlikely(nexpats>0)){  // small expats will probably be rare
-    jt->bytes-=nexpats*incr;  // keep track of total allocation
+    __atomic_fetch_sub(&jt->bytes,nexpats*incr,__ATOMIC_ACQ_REL);  // keep track of total allocation
     jt->mfree[i].ballo-=nexpats*incr;  // also number of bytes in this chain
    }
 #endif
@@ -274,12 +274,12 @@ B jtspfree(J jt){I i;A p;
     if(FHRHISROOTALLOFREE(AFHRH(baseblock))){ // Free fully-unused base blocks;
 #if 1 || ALIGNTOCACHE   // with short headers, always align to cache bdy
      FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
-     jt->malloctotal-=PSIZE+TAILPAD+CACHELINESIZE;  // return storage+bdy
-     jt->mfreegenallo-=TAILPAD+CACHELINESIZE;  // remove pad from the amount we report allocated
+     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD+CACHELINESIZE,__ATOMIC_ACQ_REL);  // return storage+bdy
+     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD+CACHELINESIZE,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
 #else
      FREECHK(baseblock);
-     jt->malloctotal-=PSIZE+TAILPAD;  // return storage
-     jt->mfreegenallo-=TAILPAD;  // remove pad from the amount we report allocated
+     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD,__ATOMIC_ACQ_REL);  // return storage
+     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
 #endif
     }else{AFHRH(baseblock) = virginbase;}   // restore the count to 0 in the rest
     p=np;   //  step to next base block
@@ -292,7 +292,7 @@ B jtspfree(J jt){I i;A p;
    // compensated for by a change to mfreegenallo.  mfreegenallo must also account for the excess padding that is now being returned
    // This elides the step of subtracting coalesced buffers from the number of allocated buffers of size i, followed by
    // adding the bytes for those blocks to mfreebgenallo
-   jt->mfreegenallo -= SBFREEB - (jt->mfree[i].ballo & ~MFREEBCOUNTING);  // subtract diff between current mfreeb[] and what it will be set to
+   __atomic_fetch_sub(&jt->mfreegenallo,SBFREEB - (jt->mfree[i].ballo & ~MFREEBCOUNTING),__ATOMIC_ACQ_REL);  // subtract diff between current mfreeb[] and what it will be set to
    jt->mfree[i].ballo = SBFREEB + (jt->mfree[i].ballo & MFREEBCOUNTING);  // set so we trigger rescan when we have allocated another SBFREEB bytes
   }
  }
@@ -418,7 +418,7 @@ R totalallo;
 // Also count current space, and set that into jt->bytes and the result of this function
 I jtspstarttracking(J jt){I i;
  for(i=PMINL;i<=PLIML;++i){jt->mfree[-PMINL+i].ballo |= MFREEBCOUNTING;}
- jt->mfreegenallo |= MFREEBCOUNTING;  // same for non-pool alloc
+ __atomic_fetch_or(&jt->mfreegenallo,MFREEBCOUNTING,__ATOMIC_ACQ_REL);  // same for non-pool alloc
  R jt->bytes = spbytesinuse();
 }
 
@@ -1015,7 +1015,7 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
     jt->tnextpushp = pushp;  // set the push pointer so we can back out the last allocation
     ASSERT(0,EVWSFULL);   // fail
    }
-   jt->malloctotal += NTSTACK+NTSTACKBLOCK;  // add to total allocated
+   __atomic_fetch_add(&jt->malloctotal,NTSTACK+NTSTACKBLOCK,__ATOMIC_ACQ_REL);  // add to total allocated
    // chain previous allocation to the new one
    *v = (A)jt->tstackcurr;   // backchain old buffers to new, including bias
    jt->tstackcurr = (A*)v;    // set new buffer as the one to use, biased so we can index it from pushx
@@ -1085,7 +1085,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
    // There is no way two allocations could back up so as to make the end of one exactly the beginning of the other
    if((A*)np!=pushp-1){
     // if there is another block in this allocation, step to it.  Otherwise:
-    if(jt->tstacknext){FREECHK(jt->tstacknext); jt->malloctotal-=NTSTACK+NTSTACKBLOCK;}   // account for malloc'd memory
+    if(jt->tstacknext){FREECHK(jt->tstacknext); __atomic_fetch_sub(&jt->malloctotal,NTSTACK+NTSTACKBLOCK,__ATOMIC_ACQ_REL);}   // account for malloc'd memory
   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
     jt->tstacknext=jt->tstackcurr;  // save the next-to-use, after removing bias
     jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
@@ -1135,8 +1135,8 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  // allocate without alignment
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
- I nt=jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
- jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // ...add them to the total bytes allocated drom OS
+ I nt=__atomic_add_fetch(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // add to total JE mem allocated
+ __atomic_fetch_add(&jt->mfreegenallo,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);   // ...add them to the total bytes allocated drom OS
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
  // we visit them in back-to-front order so the first-allocated headers are in cache
@@ -1157,7 +1157,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
 #endif
  jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
  if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
-  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+ I jtbytes=__atomic_add_fetch(&jt->bytes,n,__ATOMIC_ACQ_REL); if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
  }
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  R z;
@@ -1175,14 +1175,16 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  ASSERT(z=MALLOC(n),EVWSFULL);
 #endif
  AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
- if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
-  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+ if(unlikely((((__atomic_fetch_add(&jt->mfreegenallo,n,__ATOMIC_ACQ_REL))&MFREEBCOUNTING)!=0))){
+  I jtbytes=__atomic_add_fetch(&jt->bytes,n,__ATOMIC_ACQ_REL); if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
+// obsolete   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
  }
- I nt=jt->malloctotal+=n;
+ I nt=__atomic_add_fetch(&jt->malloctotal,n,__ATOMIC_ACQ_REL);
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
 #if PYXES
- z->lock=0;  // init lock on the block to 'available'
+ *(I4 *)&z->origin=THREADID(jt);  // init allocating thread# and clear the lock
+// obsolete  z->lock=0;  // init lock on the block to 'available'
 #endif
  R z;
 }
@@ -1213,7 +1215,8 @@ if((I)jt&3)SEGFAULT;
    jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
    if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
-    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+    I jtbytes=__atomic_add_fetch(&jt->bytes,n,__ATOMIC_ACQ_REL); if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
+// obsolete     jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
    }
    // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
    // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
@@ -1295,7 +1298,8 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
-void jtmf(J jt,A w,I hrh){I mfreeb;
+void jtmf(J jt,A w,I hrh){
+// obsolete I mfreeb;
 #if MEMAUDIT&16
 auditmemchains();
 #endif
@@ -1325,21 +1329,24 @@ printf("%p-\n",w);
 #endif
 #endif
  I allocsize;  // size of full allocation for this block
+#if PYXES
+ I origthread=w->origin;
+#endif
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   allocsize = FHRHPOOLBINSIZE(hrh);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
 #if PYXES
-  I origthread=w->origin; if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
+ if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
 #endif
-  jt->bytes -= allocsize;  // keep track of total allocation
-  mfreeb = jt->mfree[blockx].ballo;   // number of bytes allocated at this size (biased zero point)
+  __atomic_fetch_sub(&jt->bytes,allocsize,__ATOMIC_ACQ_REL);  // keep track of total allocation
+  I mfreeb = __atomic_fetch_sub(&jt->mfree[blockx].ballo,allocsize,__ATOMIC_ACQ_REL);   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
-  if(unlikely(0 > (mfreeb-=allocsize)))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
+  if(unlikely(mfreeb<0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
-  jt->mfree[blockx].ballo=mfreeb;
+// obsolete   jt->mfree[blockx].ballo=mfreeb;
 #if PYXES
   }else{
    // repatriate a block allocated in another thread
@@ -1348,15 +1355,16 @@ printf("%p-\n",w);
   }
 #endif
  }else{                // buffer allocated from malloc
-  mfreeb = jt->mfreegenallo;
+// obsolete   mfreeb = jt->mfreegenallo;
   allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
-  jt->bytes -= allocsize;  // keep track of total allocation
-  jt->malloctotal-=allocsize;
-  jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
+  jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block came from
+  __atomic_fetch_sub(&jt->bytes,allocsize,__ATOMIC_ACQ_REL);  // keep track of total allocation
+  __atomic_fetch_sub(&jt->malloctotal,allocsize,__ATOMIC_ACQ_REL);
+  __atomic_fetch_sub(&jt->mfreegenallo,allocsize,__ATOMIC_ACQ_REL);  // account for all the bytes returned to the OS
 #if ALIGNTOCACHE
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else

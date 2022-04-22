@@ -88,7 +88,7 @@ typedef struct rngdata {
   } us;   // access as US
  } uflags;   // 4 bytes
 // TASKCOMMREGION starts here, holding parms passed at startup
- I bytes;            // bytes currently in use - used only during 7!:1 clear for task
+ I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
  S etxn1;            // last non-zero etxn    clear for task
  B foldrunning;      // 1 if fold is running (allows Z:) clear for task
@@ -101,8 +101,6 @@ typedef struct rngdata {
  A xmod;             // extended integer: the m in m&|@f clear for task
 // end of cacheline 0
 // end of TASKCOMMREGION
-// end of cacheline 0
- I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  I4 parsercalls;      // # times parser was called clear for task
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
@@ -139,8 +137,8 @@ typedef struct rngdata {
 
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the address of the WAITBLOK we are waiting on
 // things needed for allocation of large blocks
- I mfreegenallo;        // Amount allocated through malloc, biased
- I malloctotal;    // net total of malloc/free performed in m.c only
+ A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
+ A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
  PFRAME parserstackframe;  // 4 words  
 // end of cacheline 4
 
@@ -155,18 +153,12 @@ typedef struct rngdata {
  I malloctotalhwmk;  // highest value since most recent 7!:1
 // end of cacheline 5
 
- A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
- A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
+// seldom used,  but contended during system lock 
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
- I filler6[1];
-// end of cacheline 6
-
- // Area used for intertask communication
- A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  S taskidleq;   // thread#s of the tasks waiting for work.  Root of the idle chain is in the master.
  S tasklock;  // lock for taskidleq.  Used only in master
  S taskstate;  // task state: modified by other tasks on a system lock
@@ -181,6 +173,13 @@ typedef struct rngdata {
 #else
  I filler7[2];
 #endif
+// end of cacheline 6
+
+ // Area used for intertask communication of memory allocation
+ A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
+ I bytes;            // bytes currently in use - used only during 7!:1
+ I mfreegenallo;        // Amount allocated through malloc, biased
+ I malloctotal;    // net total of malloc/free performed in m.c only
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;
@@ -342,7 +341,7 @@ typedef struct JSTstruct {
 typedef JST* JS;  // shared part of struct
 
 // When the task is not running, part of the per-call area is used as a communication region to hold parameters:
-#define TASKCOMMREGION(jt) ((void **)(&jt->bytes))   // [0..3] are parms, each a (void *)
+#define TASKCOMMREGION(jt) ((void **)(&jt->bytesmax))   // [0..3] are parms, each a (void *)
 #define TASKAWAITBLOK(jt) (*(void **)&jt->shapesink)  // pointer to WAITBLOK in a waiting task
 
 

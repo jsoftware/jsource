@@ -905,7 +905,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
    case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 
-static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
+static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
  p=1<ac?m:0; q=1<wc||1<c;
  zn=AN(z); 
  zv=AV(z); zb=(B*)zv; u=AV(a); v=AV(w); 
@@ -922,6 +922,7 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
   case FLX:   if(1.0==jt->cct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=jt->cct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
+ RETF(z);
 }    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
 
 

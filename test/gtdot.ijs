@@ -45,7 +45,7 @@ while. do.
  6!:3[0.1
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
-]&> pyx,pyx0
+(,]&> pyx), ]&>pyx0
 )
 
 g=: 3 : 0

@@ -122,12 +122,13 @@ end.
 if. IF64 do.
 assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
 assert. 2 <: 1 T. ''
-while. 2 > # 2 T. '' do. end.  NB. wait till threads become ready
-assert. 1 2 *./@e. 2 T. ''
-assert. 0 1 2 *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  0.1 0.1 0.3 
-assert. 0 1 2 *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  0.3 0.3 0.1 
-assert. (_1000;1 2;_1001) e.~&> 4 T. (3&T.@'')@(6!:3) t.'' "(0)  0.2 0.6 0.4
-while. 2 ~: # 2 T. '' do. end.  NB. wait till threads become ready
+nwthreads=. 1 T. ''
+while. nwthreads ~: # 2 T. '' do. end.  NB. wait till threads become ready
+assert. (>: i. nwthreads) *./@e. 2 T. ''
+assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.1), 0.3 
+assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.3), 0.1 
+assert. (((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> 4 T. (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 0.6 0.4
+while. nwthreads ~: # 2 T. '' do. end.  NB. wait till threads become ready
 NB. semaphore test
 localpyx=.5 T. 5
 g t. '' localpyx;<1

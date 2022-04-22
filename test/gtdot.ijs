@@ -50,14 +50,14 @@ assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 
 g=: 3 : 0
 9!:1[(7^5)+3 T.''  NB. random per thread
-6!:3[?0            NB. arbitrary delay
+6!:3[0.3*?0            NB. arbitrary delay
 1
 )
 
 g1=: 3 : 0
 9!:1[(7^5)-3 T.''  NB. random per thread
 for_i. i.%:N1 do.
- 6!:3[?0
+ 6!:3[0.3*?0
  pyx=. g t.'' "0 i.%:N1
 end.
 ]&> pyx

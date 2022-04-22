@@ -1361,7 +1361,9 @@ printf("%p-\n",w);
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
+#if PYXES
   jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block came from
+#endif
   __atomic_fetch_sub(&jt->bytes,allocsize,__ATOMIC_ACQ_REL);  // keep track of total allocation
   __atomic_fetch_sub(&jt->malloctotal,allocsize,__ATOMIC_ACQ_REL);
   __atomic_fetch_sub(&jt->mfreegenallo,allocsize,__ATOMIC_ACQ_REL);  // account for all the bytes returned to the OS

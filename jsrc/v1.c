@@ -13,7 +13,7 @@
 
 // To reduce parameter overhead, we call matchsub with trailing parameters omitted if x==0.  This is fine for clang.  In MSVC, the parameter area
 // is used as a workarea by the routine, and thus omitting the parms makes for a segfault.
-#if defined(__clang__)
+#if defined(__clang__)&&SY_64
 #define MATCHSUBDEFAULTS
 #else
 #define MATCHSUBDEFAULTS ,0,0,1,1,1

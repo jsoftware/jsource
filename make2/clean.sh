@@ -21,3 +21,9 @@ find ../dllsrc -name "*.o" -type f -delete
 find ../sleef/src -name "*.o" -type f -delete
 find ../base64 -name "*.o" -type f -delete
 find obj -name "*.o" -type f -delete || true
+
+find ../jsrc -name "*.tmp" -type f -delete
+find ../dllsrc -name "*.tmp" -type f -delete
+find ../sleef/src -name "*.tmp" -type f -delete
+find ../base64 -name "*.tmp" -type f -delete
+find obj -name "*.tmp" -type f -delete || true

@@ -15,7 +15,7 @@ OBJS=  ../../jsrc/tsdll.o
 DEF= ../../makevs/tsdll/tsdll.def
 
 !ifndef LD
-LD=link
+LD=lld-link
 !endif
 
 .c.o:

@@ -33,12 +33,12 @@ cd ..
 2. build j.dll
 same as for jconsole but cd into jdll. add JAVX or JAVX2 and OpenMP flag as needed
 cd jdll
-nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 clean
-nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0
-nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 clean
-nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 clean
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 c USE_PYXES=1lean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1c lean
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1
 cd ..
 
 3. build tsdll.dll -  used in test suite to validate cd

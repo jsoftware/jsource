@@ -15,7 +15,7 @@ OBJS=  ../../jsrc/andjnative.o ../../jsrc/jeload.o
 DEF= ../../makemsvc/jnative/jnative.def
 
 ifndef LD
-LD=link
+LD=lld-link
 endif
 
 %.o: %.c

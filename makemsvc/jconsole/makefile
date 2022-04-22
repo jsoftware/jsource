@@ -31,7 +31,7 @@ endif
 RCS= ../../makevs/jconsole/jconsole.rc
 
 ifndef LD
-LD=link
+LD=lld-link
 endif
 
 %.o: %.c

@@ -195,7 +195,7 @@
        ;;
        ;;   1) Copy jsrc/jversion-x.h to jsrc/jversion.h and edit values;
        ;;   2) Set jplatform and j64x environment variables;
-       ;;   3) Run make2/build_jconsole.sh and make2/build_libj.sh;
+       ;;   3) Run make3/build_jconsole.sh and make3/build_libj.sh;
        ;;
        ;; However, upstream expects users to run J directly from the source
        ;; directory; they do not supply a make `install' target.  Thus it takes
@@ -206,7 +206,7 @@
          ;;
          ;;   1) jsrc/jversion.h as in a typical build;
          ;;   2) jlibrary/bin/profilex.ijs to point to writable directories;
-         ;;   3) make2/build_*.sh to respect standard build conventions;
+         ;;   3) make3/build_*.sh to respect standard build conventions;
          ;;   4) jsrc/jconsole.c to fix libedit dlopen; and
          ;;   5) Hard coded references to addons directory.
          (replace 'configure
@@ -228,7 +228,7 @@
                ;; 1. Short-circuit the fragile compiler detection;
                ;; 2. Make sure to include our CFLAGS and LFLAGS; and
                ;; 3. Propagate script errors to top level.
-               (with-directory-excursion "make2"
+               (with-directory-excursion "make3"
                  (for-each
                   (lambda (file)
                     (substitute* file
@@ -303,8 +303,8 @@
              (setenv "USE_THREAD" "1")
              (for-each (lambda (var-val) (apply setenv var-val))
                        (quote ,extra-envars))
-             ;; The build scripts assume that PWD is make2.
-             (with-directory-excursion "make2"
+             ;; The build scripts assume that PWD is make3.
+             (with-directory-excursion "make3"
                (let* ((platform ,(if (target-arm?) "raspberry" "linux"))
                       (target-bit ,(if (target-64bit?) "64" "32"))
                       (run-script
@@ -501,7 +501,7 @@ that are not already well understood.")
                     ("LDFLAGS" "-lsleef"))))
 
 (define j (apply j-package j-base-args))
-(define %j-target-hash "lr47z4x2bw7xjllupd5ekr3ulzzcgy3uhhgyxypd5gkfch46qdha")
+(define %j-target-hash "tihgvwf7oqyi3cg5p4gregjby42odlrkobumroa6nb7cuphrsrya")
 
 (match (program-arguments)
   ;; Don't execute anything if loading in repl

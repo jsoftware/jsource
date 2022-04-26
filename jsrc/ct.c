@@ -5,6 +5,108 @@
 // Threads and Tasks
 #include "j.h"
 
+typedef struct {
+ void (*act)(J jt,A ctx,I i);
+ A ctx;
+ I n,c,i; // n is the total number of tasks that need to be done; c is the number that have been completed so far; i is the number that have been started so far (or the (i)ndex of the next one)
+ //todo hints (priority, tasks want to run concurrently or not, ...)
+ //todo put c and i on their own cache line to avoid fighting for act, ctx, and n
+} JOB;
+// when a job is done, its context will be automatically freed
+
+typedef struct QN QN; //concurrent queue node
+struct QN { QN *n; A v; };
+typedef struct { QN *h, *t; QN *to_free; I waiters; pthread_cond_t cond; pthread_mutex_t mutex; } QQ;
+
+// to_free takes care of the following case:
+// - thread 1 grabs a job pointer
+// - thread 2 grabs the same job pointer
+// - thread 2 attempts to claim a task, succeeds.  It's the last task, so
+// - thread 2 frees the job
+// - that memory is reused somewhere else
+// - thread 1 attempts to claim a task from the freed job
+// to avoid this issue, 'freeing' the job comprises putting it on the to_free list.  The memory itself is valid, and so thread 1 will always find that all the tasks have been claimed already and so find something else to do
+// periodically, all threads will synchronise, and somebody will free everything on the to_free list.  (Making it a tree instead of the list would permit threads to share this work, but eh)
+
+// as a secondary mechanism, nodes on to_free are tagged with their low bit
+// and when the queue is being emptied (ie the last node is being claimed), its next pointer will be set to 0xdeadbeef
+// (hence, any pointer with its low bits set is invalid and should be reloaded)
+// both mechanisms are necessary; tagging prevent faulty pops, but peeks are also used for jobs which have multiple tasks and want them to run concurrently
+
+QQ cqq_init() {
+ QQ r={0};
+ pthread_cond_init(&r.cond,0);
+ pthread_mutex_init(&r.mutex,0);
+ R r; }
+
+// note: we don't really care about the aba problem.  jobs may end up out of order, but that's ok.  uaf is handled by the above mechanism
+void cenqueue(J jt, QQ *q, A v) {
+ QN *n = malloc(sizeof(QN)); //todo - stupid to malloc or to allocate an A for this; should have a separate freelist
+ n->v = v;
+ n->n = NULL;
+ QN *old;
+ QN *t;
+ do {
+  t = __atomic_load_n(&q->t,__ATOMIC_SEQ_CST);
+  if(!t) {
+   if (__atomic_compare_exchange_n(&q->t, &t, n, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {
+    __atomic_store_n(&q->h, n, __ATOMIC_SEQ_CST);
+    // not sure of this logic for waking...
+    // also, is it possible to avoid locking here when no one is waiting? (granted, this is an unlikely scenario)
+    // a more important optimisation: don't wake _everybody_ up.  Annoying because we can't just check (e.g.) n==1 and if so pthread_cond_signal, because another thread might write in the mean time, and no one will pick up what they wrote.  Perhaps if we have a singular task and it seems as though there are waiters, we should try to contact one of them directly rather than touching the queue?
+    pthread_mutex_lock(&q->mutex);
+    // relaxed because it's protected by a mutex
+    if(__atomic_load_n(&q->waiters, __ATOMIC_RELAXED)) {
+     __atomic_store_n(&q->waiters,0,__ATOMIC_RELAXED);
+     pthread_cond_broadcast(&q->cond); }
+    pthread_mutex_unlock(&q->mutex);
+    break;
+   } else { continue; } }
+ } while(!__atomic_compare_exchange_n(&t->n, &(QN*){NULL}, n, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
+ __atomic_store_n(&q->t, n, __ATOMIC_SEQ_CST); }
+
+static void add_to_free(QQ *q, QN *n) {
+ QN *next;
+ do {
+  next = __atomic_load_n(&q->to_free, __ATOMIC_SEQ_CST);
+  n->n = (QN*)(1|(I)next);
+ } while (!__atomic_compare_exchange_n(&q->to_free, &(QN*){next}, (QN*)(1|(I)n), 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)); }
+static void clear_to_free(QQ *q) {
+ for(QN *c = (QN*)((~7)&(I)q->to_free);c;c=(QN*)((~7)&(I)c->n))free(c);
+ q->to_free = NULL; }
+
+A cdequeue(J jt, QQ *q, A v) {
+ QN *n,*next;
+ while(1) {
+  n = __atomic_load_n(&q->h, __ATOMIC_SEQ_CST);
+  if (n) {
+   next = __atomic_load_n(&n->n, __ATOMIC_SEQ_CST);
+   if(!next) {
+    // trying to pop the last element of the queue
+    // we first install a dummy next pointer to stall other accessors
+    if(!__atomic_compare_exchange_n(&n->n, &next, (QN*)0xdeadbeef, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {
+     // cas failed.  Either a writer added a new node (in which case we can continue as usual and don't need to do anything special), or else another reader already removed this node (in which case we have to retry)
+     if(7&(I)next) continue;
+    } else {
+     // won cas
+     __atomic_store_n(&q->h, NULL, __ATOMIC_SEQ_CST);
+     __atomic_store_n(&q->t, NULL, __ATOMIC_SEQ_CST);
+     break; } }
+   else if (7&(I)next) { continue; }
+   else {
+    QN *old = n;
+    if(__atomic_compare_exchange_n(&q->h, &old, next, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) break; }
+  } else {
+   // ...nor of this logic for being woken up
+   pthread_mutex_lock(&q->mutex);
+   //ditto re relaxed
+   if(__atomic_load_n(&q->h,__ATOMIC_RELAXED)){ pthread_mutex_unlock(&q->mutex); continue; }
+   __atomic_fetch_add(&q->waiters,1,__ATOMIC_RELAXED);
+   pthread_cond_wait(&q->cond,&q->mutex); } }
+ A r = n->v;
+ add_to_free(q,n);
+ R r; }
+
 // burn some time, approximately n nanoseconds
 NOINLINE I delay(I n){I johnson=0x1234; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson;}
 

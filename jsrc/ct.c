@@ -443,6 +443,7 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  while(1){
   QN *n=cpeek(jt,JT(jt,jobqueue));
   JOB *job=(JOB*)AAV0(n->v);
+  //should check if it wants to run concurrently; and if it's not, and there are other things to run, cpopex it and push it to the back
   I i=__atomic_fetch_add(&job->i,1,__ATOMIC_ACQ_REL);
   if(i>=job->n)continue; //somebody else grabbed this job
   if(i+1==job->n)cpopew(jt,JT(jt,jobqueue),n); //we snagged the last task

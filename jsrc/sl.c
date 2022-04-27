@@ -247,7 +247,8 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
- SYMRESERVE(2) RZ(jt->global=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
+ SYMRESERVE(2) RZ(q=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
+ DQ(nthreads, JTFORTHREAD(jt,i)->global=q;)
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  // NOTE: you must apply a name from a private locale ONLY to the locale it was created in, or to a global locale.  Private names contain bucket info & symbol pointers that would
  // cause errors if applied in another locale.  It is OK to apply a non-private name to any locale.

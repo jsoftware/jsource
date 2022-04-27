@@ -100,6 +100,8 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   if(executor){  // if we were the first to request the winning priority
    // This is the winning thread.  Perform the function and save the error status
    while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // executor waits for state 4 and picks up nrunning.  Not actually necessary, but otherwise we have to guarantee tct unchanged by function
+   // remove the lock request from the break field so that it doesn't cause the function to think a lock is requested
+   __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);
    z=(*lockedfunction)(jt);  // perform the locked function
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],jt->jerr,__ATOMIC_RELEASE);  // make the error status available to all threads
   }
@@ -110,8 +112,6 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   // There is also no guarantee they will see their LOCK removed
   if(executor){
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],0,__ATOMIC_RELEASE);  // clear the error flag from the interrupt request
-   // remove the lock request from the break field
-   __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);
    // go through all threads, turning off SYSLOCK in each.  This allows other tasks to run and new tasks to start
    DO(MAXTASKS, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
    // set the systemlock to 0, completing the operation

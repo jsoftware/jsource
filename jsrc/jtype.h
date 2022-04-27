@@ -1215,3 +1215,19 @@ struct QN { QN *n; A v; };
 typedef struct { QN *h,*to_free; pthread_mutex_t mutex; pthread_cond_t cond; I waiters; QN *t; } QQ;
 _Static_assert(sizeof(QQ) <= 128,"locks too large");
 _Static_assert(offsetof(QQ,t) >= 64,"locks too small");
+
+
+
+#ifdef PYXES
+typedef struct { pthread_cond_t cond; pthread_mutex_t mutex; } WAITBLOK;
+#define WAITBLOKINIT(x) {pthread_cond_init(&(x)->cond,0);pthread_mutex_init(&(x)->mutex,0);}
+#define WAITBLOKGRAB(x) {pthread_mutex_lock(&(x)->mutex);}
+#define WAITBLOKWAIT(x) {pthread_cond_wait(&(x)->cond,&(x)->mutex);pthread_mutex_unlock(&(x)->mutex);}
+#define WAITBLOKFLAG(x) {pthread_mutex_lock(&(x)->mutex);pthread_cond_signal(&(x)->cond);pthread_mutex_unlock(&(x)->mutex);}
+#else
+typedef struct {} WAITBLOK;
+#define WAITBLOKINIT(x) ;
+#define WAITBLOKGRAB(x) ;
+#define WAITBLOKWAIT(x) ;
+#define WAITBLOKFLAG(x) ;
+#endif

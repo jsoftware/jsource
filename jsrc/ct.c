@@ -294,12 +294,6 @@ A jtartiffut(J jt,A w,I aflag){A z;
 }
 #endif
 // ****************************** waiting for values *******************************
-#if PYXES
-typedef struct condmutex{
- pthread_cond_t cond;
- pthread_mutex_t mutex;
-} WAITBLOK;
-#endif
 
 typedef struct pyxcondmutex{
  A pyxvalue;  // the A block of the pyx, when it is filled in.  It is 0 until then.
@@ -323,7 +317,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  if(likely(z!=0))ra(z);  // since the pyx is recursive, we must ra the result we store into it
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
  // broadcast to wake up any tasks waiting for the result
- pthread_mutex_lock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex); pthread_cond_broadcast(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond); pthread_mutex_unlock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
+ WAITBLOKFLAG(&((PYXBLOK*)AAV0(pyx))->pyxwb);
  // unprotect pyx.  It was raised when it was assigned to this owner; now it belongs to the system
  fa(pyx);
  R 1;
@@ -333,7 +327,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
 static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
  // Allocate.  Init value, cond, and mutex to idle
  GAT0(pyx,INT,((sizeof(PYXBLOK)+(SZI-1))>>LGSZI)+1,0); AAV0(pyx)[0]=0; // allocate the result pointer (1), and the cond/mutex for the pyx.
- pthread_cond_init(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,0); pthread_mutex_init(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex,0);
+ WAITBLOKINIT(&((PYXBLOK*)AAV0(pyx))->pyxwb);
  // Init the pyx to a recursive box, with raised usecount.  AN=1 always.  But set the value/errcode to NULL/no error and the thread# to the executing thread
  AT(pyx)=BOX+PYX; AFLAG(pyx)=BOX; ACINIT(pyx,ACUC2); AN(pyx)=1; ((PYXBLOK*)AAV0(pyx))->pyxvalue=0; ((PYXBLOK*)AAV0(pyx))->pyxorigthread=thread; ((PYXBLOK*)AAV0(pyx))->errcode=0;  ((PYXBLOK*)AAV0(pyx))->pyxmaxwt=timeout;
  // The pyx's usecount of 2 is one for the owning thread and one for the current thread, which has a tpop for the pyx.  When the pyx is filled in the owner will fa().

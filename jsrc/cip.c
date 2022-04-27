@@ -223,6 +223,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  R NANTEST==0;  // return with error (0) if any FP error
 }
 // cache-blocking code
+typedef struct { D*av,*wv,*zv;I m,n,p,flgs; I nanerr; WAITBLOK wb; } CACHEMMSTATE;
 #define OPHEIGHTX 2
 #define OPHEIGHT ((I)1<<OPHEIGHTX)  // height of outer-product block
 #define OPWIDTHX 3
@@ -235,7 +236,17 @@ static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
 // m must not exceed MAXAROWS.  mfull is the number of rows from the actual starting row to the end of a
 // Result is 0 if NaN error, 1 if OK
-static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
+static void cachedmmultx(J jt,A ctx,I ti){ CACHEMMSTATE *pd=(CACHEMMSTATE*)AAV0(ctx);
+ I flgs=pd->flgs;
+ I m=MIN(MAXAROWS,pd->m-ti*MAXAROWS);
+ I n=pd->n;
+ I pnom=pd->p-(((ti*MAXAROWS)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP));
+ I pstored=pd->p;
+ D *av=pd->av+(ti*MAXAROWS*(pd->p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP))));
+ D *wv=pd->wv+((n*ti*MAXAROWS)&-((flgs>>FLGAUTRIX)&1));
+ D *zv=pd->zv+(n*ti*MAXAROWS);
+ 
+ D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // Allocate a temporary result area for the stripe of z results
  D zt[((MAXAROWS+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH+5*CACHELINESIZE/SZD];
  D *zblock=(D*)(((I)zt+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // cache-aligned area to hold z values
@@ -488,42 +499,28 @@ _mm256_zeroupperx(VOIDARG)
    flgs&=~(FLGZFIRST|FLGZLAST);  // we have finished a 16x64 cache section.  That touched all the columns of z.  For the remaining sections we must accumulate into the z values.  If this was the last pass, clear that flag too, since we're finished
   }  // end of loop for each 16x64 section of w
  }  // end of loop for each 64-col slice of w
- R NANTEST==0;  // return with error (0) if any FP error
+ __atomic_fetch_add(&pd->nanerr,!!NANTEST,__ATOMIC_RELAXED);//could be _fetch_or, but x86 has lock xadd
 }
+void cachedmmultxe(J,A ctx){ WAITBLOKFLAG(&((CACHEMMSTATE*)AAV0(ctx))->wb); }
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
 // Result is 0 if error, which must be NaN error
 // For historical reason (i. e. to match the non-AVX2 version) n and p have been multiplied by 2 for complex multiplies
 I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 // TODO: bug when EMU_AVX
- int rc=1,i;
- I blocksize,nblocks,(*fn)();  // loop controls
  if(((((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
   // blocked algorithm.  there is no size limit on the blocks
-  fn=blockedmmult;  // select function
-  nblocks=1; blocksize=m; // do it all in a single block
- }else{
-  // cached algorithm.  blocks must not exceed MAXAROWS lines
-  fn=cachedmmultx;  // select function
-  // Figure out the number of blocks we will use, and the size of each.  We make the number of blocks a multiple of the number of threads, and round the
-  // block size up to a multiple of OPHEIGHT
-  nblocks = ((m+MAXAROWS)*0x55555555)>>(32+7);  // minimum number of blocks needed
-  blocksize=MAXAROWS;   // max size of each
- }
- for(i=0;i<nblocks;++i){
-  // if AUTRI, bring a in from the left and w down from the top as we proceed.  And shorten p.
-  if(0==(*fn)(jt,
-              av+(i*MAXAROWS*(p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP)))),
-              wv+((n*i*MAXAROWS)&-((flgs>>FLGAUTRIX)&1)),
-              zv+(n*i*MAXAROWS),
-              MIN(blocksize,m-i*MAXAROWS),
-              n,
-              p-(((i*MAXAROWS)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP)),
-              p,flgs)){rc=0; break;}  // set error if one was found
- }
- R rc;
-}
-
+  R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
+ A ctx;
+ GAT0(ctx,LIT,sizeof(CACHEMMSTATE),0); CACHEMMSTATE *s=(CACHEMMSTATE*)AAV0(ctx);
+ s->av=av;s->wv=wv;s->zv=zv;s->m=m;s->n=n;s->p=p;s->flgs=flgs;s->nanerr=0;
+ WAITBLOKINIT(&s->wb);
+ WAITBLOKGRAB(&s->wb);
+ jtjobpush(jt,cachedmmultx,cachedmmultxe,ctx,((m+MAXAROWS)*0x55555555)>>(32+7)/*(m+MAXAROWS-1)/MAXAROWS?*/);
+ WAITBLOKWAIT(&s->wb);
+ __asm__ volatile("" ::: "memory");
+ R !s->nanerr;}
+ 
 #else
 // cache-blocking code
 #define OPHEIGHT 2  // height of outer-product block

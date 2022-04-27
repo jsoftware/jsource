@@ -449,9 +449,7 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
   if(i+1==job->n)cpopew(jt,JT(jt,jobqueue),n); //we snagged the last task
   job->f(jt,job->ctx,i);
   if(job->n==__atomic_add_fetch(&job->c,1,__ATOMIC_ACQ_REL)){ //we completed the last task
-   if(job->end)job->end(jt,job->ctx);}
-  //free ctx
- }}
+   if(job->end)job->end(jt,job->ctx);}}}
 
 // Create worker thread n, and call its threadmain to start it in wait state
 static I jtthreadcreate(J jt,I n){
@@ -502,6 +500,7 @@ static void utaskf(J jt,A ctx,I idummy){
  if(unlikely(z==0)){fail:errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualB(z);}  // realize virtual result before returning it
  jtsetpyxval(jt,pd->pyx,z,errcode);  // report the value and wake up waiting tasks.  Cannot fail.  This protects the arguments in the pyx and frees the pyx from the owner's point of view
  fa(pd->arg1); fa(pd->arg2); if(dyad)fa(pd->arg3);  // unprotect args only after they have been safely installed
+ fa(ctx);
  jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)
  jttpop(jt,old); // clear anything left on the stack after execution, including z
  RESETERR  // we had to keep the error till now; remove it for next time

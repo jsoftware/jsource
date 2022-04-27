@@ -513,11 +513,13 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
  A ctx;
  GAT0(ctx,LIT,sizeof(CACHEMMSTATE),0); CACHEMMSTATE *s=(CACHEMMSTATE*)AAV0(ctx);
+ ra(ctx);
  s->av=av;s->wv=wv;s->zv=zv;s->m=m;s->n=n;s->p=p;s->flgs=flgs;s->nanerr=0;
  WAITBLOKINIT(&s->wb);
  WAITBLOKGRAB(&s->wb);
  jtjobpush(jt,cachedmmultx,cachedmmultxe,ctx,((m+MAXAROWS)*0x55555555)>>(32+7)/*(m+MAXAROWS-1)/MAXAROWS?*/);
  WAITBLOKWAIT(&s->wb);
+ fa(ctx);
  __asm__ volatile("" ::: "memory");
  R !s->nanerr;}
  

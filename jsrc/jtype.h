@@ -1204,3 +1204,14 @@ typedef struct {
   C*   v;            /* comparison: beginning of data area              */
   SORTSP *sp;  // pointer to extension for sparse arrays
  } SORT;
+
+// concurrent queues
+typedef struct QN QN; //queue node
+struct QN { QN *n; A v; };
+// layout optimised for linux/glibc, where mutex is 40 bytes and condition is 48
+// put to_free and head on one cache line, tail on another; that way, when the queue has occupants, readers and writers won't fight with each other
+// potentially, reading would be faster if h and to_free were on separate cache lines.  But that would bloat the whole structure beyond two cache lines
+// any path that touches mutex, cond, and waiters will be slow, so spreading them out is ok
+typedef struct { QN *h,*to_free; pthread_mutex_t mutex; pthread_cond_t cond; I waiters; QN *t; } QQ;
+_Static_assert(sizeof(QQ) <= 128,"locks too large");
+_Static_assert(offsetof(QQ,t) >= 64,"locks too small");

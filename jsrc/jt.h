@@ -87,7 +87,6 @@ typedef struct rngdata {
    } uq;   // flags needed only by unquote  clear for task
   } us;   // access as US
  } uflags;   // 4 bytes
-// TASKCOMMREGION starts here, holding parms passed at startup
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
  S etxn1;            // last non-zero etxn    clear for task
@@ -96,11 +95,10 @@ typedef struct rngdata {
  UC jerr1;            // last non-zero jerr  clear for task
  C namecaching;     // 1=for script 2=on  clear for task
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
-            // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval onlt to compare
+            // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
  A xmod;             // extended integer: the m in m&|@f clear for task
 // end of cacheline 0
-// end of TASKCOMMREGION
  I4 parsercalls;      // # times parser was called clear for task
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
@@ -135,7 +133,7 @@ typedef struct rngdata {
  I filler3[1];
 // end of cacheline 3
 
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  While waiting for work, this holds the address of the WAITBLOK we are waiting on
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
 // things needed for allocation of large blocks
  A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
@@ -214,7 +212,7 @@ typedef struct JSTstruct {
 // in S state we must have everything else in the line be essentially read-only.
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
- S systemlock;       // lock used for quiescing all tasks.  Bits in order of desc3ending priority:
+ S systemlock;       // lock used for quiescing all tasks.  Bits in order of descending priority:
 #define LOCKPRISYM 1  // lock is requested for symbol extension
 #define LOCKPRIDEBUG 2  // lock is requested for debug suspension
  S systemlocktct;   // counter field, used for systemlock sync
@@ -330,19 +328,16 @@ typedef struct JSTstruct {
  C nfe;              /* 1 for J native front end                    */
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
- UC seclev;           /* security level                                  */ UC dbuser;           /* user-entered value for db             */
+ UC seclev;           /* security level                                  */
+ UC dbuser;           /* user-entered value for db             */
  B assert;           /* 1 iff evaluate assert. statements               */
 // 3 bytes free
- I filler7[1];
+ QQ *jobqueue;      // accessed indirectly to avoid spilling into the next cache line, as layout is annoying; never changes
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
-} JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed
+} __attribute__((aligned(JTALIGNBDY))) JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed
 typedef JST* JS;  // shared part of struct
-
-// When the task is not running, part of the per-call area is used as a communication region to hold parameters:
-#define TASKCOMMREGION(jt) ((void **)(&jt->bytesmax))   // [0..3] are parms, each a (void *)
-#define TASKAWAITBLOK(jt) (*(void **)&jt->shapesink)  // pointer to WAITBLOK in a waiting task
 
 
 #if 0 // used only for direct locale numbering
@@ -366,5 +361,5 @@ typedef JST* JS;  // shared part of struct
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
-enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTASKS])<=JTALIGNBDY) };  // assert not too many threads
-enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected
+_Static_assert(sizeof(struct JSTstruct)<=JTALIGNBDY,"too many threads");  // assert not too many threads
+_Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected

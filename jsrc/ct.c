@@ -14,12 +14,14 @@ B jtjobpush(J jt,void(*f)(J,A,I),void(*end)(J,A),A ctx,I n){
 
 #ifdef PYXES
 typedef struct {
- void (*f)(J jt,A ctx,I i);
- void (*end)(J jt,A ctx);
+ void (*f)(J jt,A ctx,I i); //perform the actual work
+ void (*end)(J jt,A ctx);   //called after all the work is done
+ I n; //number of tasks that need to be done
+ I c; //number of tasks that have been completed so far
+ I i; //number of tasks that have been started so far
  A ctx;
- I n,c,i; // n is the total number of tasks that need to be done; c is the number that have been completed so far; i is the number that have been started so far (or the (i)ndex of the next one)
  //todo hints (priority, tasks want to run concurrently or not, ...)
- //todo put c and i on their own cache line to avoid fighting for f end ctx n; maybe not necessary on nonx86 given weak default memory model?
+ //todo put c and i on their own cache line to avoid fighting for f end ctx n; maybe not worthwhile; maybe completely superfluous on nonx86 given weak memory model?
 } JOB;
 // when a job is done, its context will be automatically freed
 

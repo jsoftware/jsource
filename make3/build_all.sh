@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # build all binaries
 
 realpath()

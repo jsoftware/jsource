@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # rm all *.o for clean builds - makefile dependencies are not set
 
 realpath()

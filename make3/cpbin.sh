@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # copy binaries in bin/ to jlibrary/bin
 

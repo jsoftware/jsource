@@ -317,10 +317,10 @@ static UI hic0(I k, UIL* v){
  // Owing to latency, hash pairs of inputs.  Check each for -0
  UI crc0=-1, crc1=crc0;
  for(k-=2;k>=0;v+=2, k-=2){
-  if(v[0]!=(UIL)NEGATIVE0){crc0=CRC32LL(crc0,v[0]);}else{crc0=CRC32LL(crc0,0);}
-  if(v[1]!=(UIL)NEGATIVE0){crc1=CRC32LL(crc1,v[1]);}else{crc1=CRC32LL(crc1,0);}
+  if(likely(v[0]!=(UIL)NEGATIVE0)){crc0=CRC32LL(crc0,v[0]);}else{crc0=CRC32LL(crc0,0);}
+  if(likely(v[1]!=(UIL)NEGATIVE0)){crc1=CRC32LL(crc1,v[1]);}else{crc1=CRC32LL(crc1,0);}
  }
- if(k>-2){if(v[0]!=(UIL)NEGATIVE0){crc0=CRC32LL(crc0,v[0]);}else{crc0=CRC32LL(crc0,0);}}
+ if(k>-2){if(likely(v[0]!=(UIL)NEGATIVE0)){crc0=CRC32LL(crc0,v[0]);}else{crc0=CRC32LL(crc0,0);}}
  R CRC32L(crc0,crc1);
 }
 
@@ -333,7 +333,7 @@ static UI hiq(Q*v){A y=v->n; R hici(AN(y),UIAV(y));}
 
 // Hash a single double, using only the bits in ctmask.
 //  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
-static UI cthid(UIL ctmask,D d){R *(UIL*)&d!=(UIL)NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&ctmask):CRC32LL(-1L,0);}
+static UI cthid(UIL ctmask,D d){R likely(*(UIL*)&d!=(UIL)NEGATIVE0)?CRC32LL(-1L,*(UIL*)&d&ctmask):CRC32LL(-1L,0);}
 
 // Hash the data in the given A, which is an element of the box we are hashing
 // If empty or boxed, hash the shape
@@ -625,14 +625,14 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // create tolerant hash for a single D
 // Note: the masking may cause a nonzero to hash to negative zero.  This is OK, because any nonzero will not be
 // tequal to +0 or -0.  But we must ensure that -0 hashes to the same value as +0, since those two numbers are equal.
-#define HIDMSK(v) (*(UIL*)v!=(UIL)NEGATIVE0?CRC32LL(-1L,*(UIL*)v&ctmask):CRC32LL(-1L,0))
+#define HIDMSK(v) (likely(*(UIL*)v!=(UIL)NEGATIVE0)?CRC32LL(-1L,*(UIL*)v&ctmask):CRC32LL(-1L,0))
 // save the mask result in m
-#define HIDMSKSV(m,v) ((m=*(UIL*)v&ctmask), (*(UIL*)v!=(UIL)NEGATIVE0?CRC32LL(-1L,m):CRC32LL(-1L,0)) )
+#define HIDMSKSV(m,v) ((m=*(UIL*)v&ctmask), (likely(*(UIL*)v!=(UIL)NEGATIVE0)?CRC32LL(-1L,m):CRC32LL(-1L,0)) )
 // save the unmasked D value (as bits) in m
-#define HIDUMSKSV(m,v) ((m=*(UIL*)v), (m!=(UIL)NEGATIVE0?CRC32LL(-1L,m&ctmask):CRC32LL(-1L,0)) )
+#define HIDUMSKSV(m,v) ((m=*(UIL*)v), (likely(m!=(UIL)NEGATIVE0)?CRC32LL(-1L,m&ctmask):CRC32LL(-1L,0)) )
 // create hash for a D type
 #define HID(y)              CRC32LL(-1L,(y))
-#define MASK(dd,xx)         {D dv=(xx); if(*(UIL*)&dv!=(UIL)NEGATIVE0){dd=*(UIL*)&dv&ctmask;}else{dd=0;} }
+#define MASK(dd,xx)         {D dv=(xx); if(likely(*(UIL*)&dv!=(UIL)NEGATIVE0)){dd=*(UIL*)&dv&ctmask;}else{dd=0;} }
 
 // FIND for read.  Stop loop if endtest is true; execute fstmt if match ((exp) is false).  hj holds the index of the value being tested
 #define FINDRD(exp,hindex,endtest,fstmt) do{hj=hv[hindex]; if(endtest)break;if(!(exp)){fstmt break;}if(unlikely(--hindex<0))hindex+=p;}while(1);

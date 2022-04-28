@@ -142,7 +142,7 @@ static A jtsusp(J jt){A z;
   if(z&&AFLAG(z)&AFDEBUGRESULT&&IAV(C(AAV(z)[0]))[0]==SUSTHREAD){  // (0;0) {:: z; is this T. y?
    J newjt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
    if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
-   savcstackmin=newjt->cstackmin; newjt->cstackmin=jtold->cstackmin; jt=newjt;  // switch to new jt, but keep our old stack limit
+   savcstackmin=newjt->cstackmin; newjt->cstackmin=jtold->cstackmin; jt=newjt;  // switch to new jt, but keep our original stack limit
    old=jt->tnextpushp;  // now that we are under a new jt, we must use its tpush stack
    continue;
   }

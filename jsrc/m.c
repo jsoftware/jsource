@@ -630,7 +630,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
   freesymb(jt,w);   // delete all the names/values
  }else{
   // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
-  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
+  // First, free the name (in the SYMLINFO block), and then free the SYMLINFO block itself
   LX k,* RESTRICT wv=LXAV0(w);
   L *jtsympv=SYMORIGIN;
   if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...

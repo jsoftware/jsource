@@ -98,17 +98,17 @@ static A jtinitnl(J jt){A q;
 
 // Install locale l in the numbered-locale table.  We have a write lock on stlock.  Return -1 if error (with the lock released), otherwise the locale number
 static I jtinstallnl(J jt, A l){
- A nbuf=JT(jt,stnum);  // address of the hashtable
+ A nbuf=__atomic_load_n(&JT(jt,stnum),__ATOMIC_ACQUIRE);  // address of the hashtable
  while(2*AM(nbuf)>AN(nbuf)){  // resize if needed
   A obuf=nbuf;  //  address of incumbent block before resize
   if(unlikely(jtextendunderlock(jt,&JT(jt,stnum),&JT(jt,stlock),8+4+2+1)==0))R -1;  // this is the only error exit, with lock removed
-  nbuf=JT(jt,stnum);  // address of the new hashtable
+  nbuf=__atomic_load_n(&JT(jt,stnum),__ATOMIC_ACQUIRE);  // address of the new hashtable
   // if AM(nbuf) is 0, we were the ones who extended the buffer.  We must rehash the old numbers into it.  In this case we know that
   // obuf has not been altered.
   if(likely(AM(nbuf)==0)){
    // rehash the old table into the new
    I i; for(i=0;i<AN(obuf);++i){
-    A st; if(st=(A)IAV1(obuf)[i]){  // if there is a value hashed...
+    A st; if(st=(A)IAV1(obuf)[i]){  // if there is a value hashed... (it is a SYMB type)
      I probe=HASHSLOT(NAV(LOCNAME(st))->bucketx,AN(nbuf));  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
      NOUNROLL while(IAV1(nbuf)[probe]){if(unlikely(--probe<0))probe=AN(nbuf)-1;}  // find empty slot
      IAV1(nbuf)[probe]=(I)st;  // install in new hashtable
@@ -216,10 +216,12 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
   case 1:  // numbered locale - we have no lock
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
-   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0); WRITEUNLOCK(JT(jt,stlock))   // put the locale into the numbered list; exit if error (with lock removed)
-   sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
+   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed)
+   sprintf(s,FMTI,n); RZGOTO(x=nfs(strlen(s),s),exitlock);  // scaf let LOCNAME be the locale# for numbered (call it LOCNUM); no need for name
+   NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric   scaf avoid sprintf
    ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);  // ras() is never virtual.  zpath is permanent, no ras needed
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
+   WRITEUNLOCK(JT(jt,stlock))
    break;
   case 2:  // local symbol table - we have no lock and we don't assign
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
@@ -229,6 +231,9 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    ;
  }
  R g;
+exitlock:
+ WRITEUNLOCK(JT(jt,stlock))
+ R 0;
 }    /* create locale, named (0==k) or numbered (1==k) */
 
 // initialization routine: INITZAP not required to protect blocks
@@ -293,7 +298,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){
  if(n>0&&'9'<*u){  // named locale   > because *u is known to be non-empty
   ASSERT(n<256,EVLIMIT);
   A v=jtprobestlock((J)((I)jt+n),u,(UI4)bucketx);
-  if(v)R v;   // if there is a symbol, return its value
+  if(v)R v;   // if there is a symbol, return its value  scaf this fails if someone else is deleting this locale when we are referring to it through a locative
  }else{
   R findnl(bucketx);
  }
@@ -543,6 +548,8 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  if(ISDENSETYPE(AT(w),B01))RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
+ // Do this in a critical region since others may be deleting as well.  Any lock will do
+ WRITELOCK(JT(jt,locdellock))
  for(i=0;i<n;++i){
   g=0;
   if(AT(w) & (INT)){zv[i]=1; g = findnl(IAV(w)[i]);
@@ -551,16 +558,18 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
    if(AT(y)&(INT|B01)){g = findnl(BIV0(y));
    }else{
     m=AN(y); u=CAV(y);
-    ASSERT(m<256,EVLIMIT);
+    ASSERTGOTO(m<256,EVLIMIT,exitlock);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}
-    else {A v=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)); if(v)g=v;}  // g is locale block for named locale
+    else {A v=jtprobe((J)((I)jt+m),u,(UI4)nmhash(m,u),JT(jt,stloc)); if(v)g=v;}  // g is locale block for named locale
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&0x8000000),"execct has gone < 0")  // scaf eventually
-   DELEXECCT(g)  // say that the user doesn't want this local any more
+   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&(EXECCTNOTDELD>>1)),"execct has gone < 0")  // scaf eventually
+   DELEXECCT(g)  // say that the user doesn't want this locale any more.  Paths etc. still might.
   }
  }
+exitlock:
+ WRITEUNLOCK(JT(jt,locdellock))
  R z;
 }    /* 18!:55 destroy a locale (but only mark for destruction if on stack) */
 
@@ -570,17 +579,18 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
 // usecount.  When the locale is no longer in any paths, it will be freed along with the name.
 B jtlocdestroy(J jt,A g){
  // see if the locale has been deleted already.  Return fast if so
- if(unlikely(!LOCPATH(g)))R 1;  // already deleted - can't do it again
+ A path=(A)__atomic_fetch_and((I*)&LOCPATH(g),0,__ATOMIC_ACQ_REL);
+ if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
- RZ(redefg(g));  // abort if the locale contains the currently-running definition
+ if(unlikely(redefg(g)==0)){LOCPATH(g)=path; R 0;}  // abort, restoring the path, if the locale contains the currently-running definition
  freesymb(jt,g);   // delete all the values
- fa(LOCPATH(g));   // delete the path too.  block is recursive; must fa() to free sublevels
- // Set path pointer to 0 to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
- LOCPATH(g)=0; LOCBLOOM(g)=0;
+ fa(path);   // delete the path too.  block is recursive; must fa() to free sublevels
+ // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
+// obsolete  LOCPATH(g)=0;
+ LOCBLOOM(g)=0;
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
-
- if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one  scaf **************************  this is a problem in multithreads.
+ if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

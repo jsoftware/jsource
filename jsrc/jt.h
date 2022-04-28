@@ -249,6 +249,7 @@ typedef struct JSTstruct {
  L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
  S symlock;          // r/w lock for symbol pool
  // rest of cacheline used only in exceptional paths
+ S locdellock;  // lock to serialize user request to delete locale
 // 6 bytes free
 // front-end interface info
  C *capture;          // capture output for python->J etc.  scaf could be byte?

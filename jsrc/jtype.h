@@ -784,20 +784,12 @@ typedef struct {I e,p;X x;} DX;
 
 typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
- A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned
+ A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned.  In LINFO, the number of a numbered locale, unused otherwise
  C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
  C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCGLOBAL is set in global tables
  S sn;  // script index the name was defined in.  Not used for LINFO
- LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT
+ LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT.  Not used in LINFO
 } L;  // name must come first because of the way we use validitymask[11]
-
-/* symbol pool entry                         LINFO entry (named/numbered)      */
-//-------------------------------------------------------------------------
-/* name - name on LHS of assignment          locale name                    */
-/* val  - value                              locale search path              */
-// flag - various flags                      locale flags                 
-/* sn   - script index                              not used                   */
-/* next - index of successor in hash list or 0      mot used                  */
 
 // FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
 // In all local symbol tables, the first 'hashchain' has the chain numbers for y/x; they are the first symbols in those chains, always permanent
@@ -805,7 +797,7 @@ typedef struct {
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LPERMANENTX  1
 #define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
-#define LINFO           (I)4            /* locale info                     */
+#define LINFO           (I)4            // Indicates the symbol-table entry is info only and the value is not a valid pointer (diags only)
 #define LWASABANDONEDX  4
 #define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
                                     // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
@@ -814,13 +806,15 @@ typedef struct {
 #define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:31
 #define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:31
 #define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
-// in LINFO entry
-#define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
+// obsolete // in LINFO entry
+// obsolete #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
 #define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
-#define LOCNUM(g) (LXAV0(g)[SYMLINFO]])  // in a numbered locale, the index is just the locale number
+// obsolete #define LOCNUMW(g) (NAV(LOCNAME(g))->bucketx)  // locale number, for numbered locales   scaf should move this to SYMLINFO or to ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)
+#define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)  // locale number, for numbered locales
+#define LOCNUM(g) (I)LOCNUMW(g)
 #define LOCPATH(g) (g)->kchain.locpath
 #define LOCBLOOM(x) AM(x)
 #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
@@ -844,7 +838,7 @@ typedef struct {
 #define pushcallstack1d(t,v) {FDEPDEC(d); ASSERT(jt->callstacknext<jt->fcalln,EVSTACK); pushcallstack(jt->callstacknext,(t),(v));}
 #define pushcallstack1dsuff(t,v,suff) {FDEPDEC(d); ASSERTSUFF(jt->callstacknext<jt->fcalln,EVSTACK,suff); pushcallstack(jt->callstacknext,(t),(v));}
 
-// NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (??)
+// NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (?? but it means first cacheline is unused)
 typedef struct{
  I bucketx; // (for local simple names, only if bucket!=0) the number of chain entries to discard before
 //   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry

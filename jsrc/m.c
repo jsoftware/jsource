@@ -638,14 +638,15 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
    NM *locname=NAV(LOCNAME(w));  // NM block for name
    if(likely(!(arw&ARNAMED))){
     // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
-    jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+// obsolete     jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+    jterasenl(jt,LOCNUM(w));  // remove the locale from the hash table.
    } else {
     // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
     ACINIT(w,2) WRITELOCK(JT(jt,stloc)->lock) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc)); WRITEUNLOCK(JT(jt,stloc)->lock)   // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
    }
    // Free the name
    fr(LOCNAME(w));
-   // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
+   // clear the data fields in symbol SYMLINFO   kludge but this is how it was done (should be done in symnew)
    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
    jtsympv[k].next=SYMLOCALROOT;SYMLOCALROOT=k;  // put symbol on the free list.  SYMLOCALROOT is the base of the free chain
   }

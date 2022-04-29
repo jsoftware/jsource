@@ -167,8 +167,8 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  GATV0E(y,BOX,n,  1,goto exit;);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
-  *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
-  *xv++=pv->flag+(pv->name?LHASNAME:0)+(pv->val?LHASVALUE:0);  // flag
+  *xv++=(!(pv->flag&LINFO)&&pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  In LINFO, val may be locale#.  Must allow SYMB through
+  *xv++=pv->flag+(pv->name?LHASNAME:0)+(!(pv->flag&LINFO)&&pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    
   *xv++=SYMNEXT(pv->next);
   RZGOTO(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv,exit);  // simple name
@@ -176,7 +176,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  // Allocate box 3: locale name
  GATV0E(y,BOX,n,1,goto exit;); yv=AAV(y); zv[2]=incorp(y);
  DO(n, yv[i]=mtv;);
- n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc)); 
+ n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc));   // v->locale chains
  for(i=0;i<n;++i){  // for each chain-base in locales pool
   for(j=v[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next){      // j is index to named local entry; process the chain
    x=SYMORIGIN[j].val;  // x->symbol table for locale

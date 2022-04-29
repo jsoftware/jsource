@@ -250,7 +250,7 @@ typedef struct JSTstruct {
  S symlock;          // r/w lock for symbol pool
  // rest of cacheline used only in exceptional paths
  S locdellock;  // lock to serialize user request to delete locale
-// 6 bytes free
+// 4 bytes free
 // front-end interface info
  C *capture;          // capture output for python->J etc.  scaf could be byte?
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
@@ -264,10 +264,12 @@ typedef struct JSTstruct {
  S stlock;           // r/w lock for stnum.  stloc is never modified, so we use the ->lock field of stloc to lock that table
  C locsize[2];       /* size indices for named and numbered locales     */
  C baselocale[4];    // will be "base"
+ UI4 baselocalehash;   // name hash for base locale
  // rest of cacheline used only in exceptional paths
+// 4 bytes free
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
- I filler3[4];
+ I filler3[3];
 // end of cacheline 3
 
 // Cacheline 4: Files
@@ -295,7 +297,7 @@ typedef struct JSTstruct {
  S sblock;           // r/w lock for sbu
  S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
- I4 outmaxafter;      /* output: maximum # lines after truncation        */
+ I4 outmaxafter;      /* output: maximum # lines after truncation     scaf could be S   */
  I4 outmaxbefore;     /* output: maximum # lines before truncation       */
  I4 outmaxlen;        /* output: maximum line length before truncation   */
  I peekdata;         /* our window into the interpreter                 */
@@ -310,12 +312,12 @@ typedef struct JSTstruct {
  // rest of cacheline is essentially read-only
  B retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
- UI4 baselocalehash;   // name hash for base locale
+ float igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
+ float dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
+ float zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A evm;              /* event messages                                  */
- I igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
- I dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
- I zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed
+ I filler6[2];
 // end of cacheline 6
 
 // Cacheline 7: startup (scripts and deprecmsgs), essentially read-only

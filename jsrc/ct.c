@@ -517,7 +517,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
   I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
   GAT0(z,INT,(sizeof(pthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AM(z)=CREDMUTEX;  // allocate mutex, make it immortal, install credential
-  pthread_mutexattr_t mutexattr; ASSERT(pthread_mutexattr_init(&mutexattr)==0,EVFACE) if(recur)ASSERT(pthread_mutexattr_setkind_np(&mutexattr,PTHREAD_MUTEX_RECURSIVE)==0,EVFACE)
+  pthread_mutexattr_t mutexattr; ASSERT(pthread_mutexattr_init(&mutexattr)==0,EVFACE) if(recur)ASSERT(pthread_mutexattr_settype(&mutexattr,PTHREAD_MUTEX_RECURSIVE)==0,EVFACE)
   pthread_mutex_init((pthread_mutex_t*)IAV0(z),&mutexattr);
 #else
   ASSERT(0,EVNONCE)

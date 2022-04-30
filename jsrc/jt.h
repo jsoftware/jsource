@@ -221,7 +221,6 @@ typedef struct JSTstruct {
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
-// 7 bytes free
  void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
  A stloc;            // named locales symbol table - this pointer never changes
@@ -236,7 +235,9 @@ typedef struct JSTstruct {
  A cdstr;            // strings for cdarg/cdhashl
  S cdlock;           // r/w lock for cdarg/cdhashl
  // rest of cacheline used only in exceptional paths
-// 6 bytes free
+ B retcomm;          /* 1 iff retain comments and redundant spaces      */
+ UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
+// 4 bytes free
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
@@ -305,19 +306,19 @@ typedef struct JSTstruct {
  A pma;              /* perf. monitor: data area                        */
 // end of cacheline 5
 
-// Cacheline 6: debug, which is written so seldom that it can have read-only data
+// Cacheline 6: debug, which is written so seldom that it can have read-only data; also jobs
  A dbstops;          /* stops set by the user                           */
  A dbtrap;           // trap sentence, execute when going into suspension
  S dblock;           // lock on dbstops/dbtrap
+ S joblock;          // lock on job queue
  // rest of cacheline is essentially read-only
- B retcomm;          /* 1 iff retain comments and redundant spaces      */
- UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
  float igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
  float dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  float zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A evm;              /* event messages                                  */
  A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed
- I filler6[2];
+ void *jobqh;  // head of job queue.  Accessed under joblock
+ void *jobqt;  // tail of job queue.  Accessed under joblock
 // end of cacheline 6
 
 // Cacheline 7: startup (scripts and deprecmsgs), essentially read-only

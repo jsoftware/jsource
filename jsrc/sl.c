@@ -231,7 +231,6 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
    WRITEUNLOCK(JT(jt,stlock))
    break;
   case 2:  // local symbol table - we have no lock and we don't assign
-   // Don't invalidate ACV lookups, since the local symbol table is not in any path
    AR(g)|=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    // The first hashchain is not used as a symbol pointer - it holds xy bucket info
    // Bloom filter not used for local symbol tables

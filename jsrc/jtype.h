@@ -145,7 +145,7 @@ struct AD {
  } kchain;
  FLAGT flag;
  union {
-  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) obsolete NVR info, available for named values except xy in xdefn
+  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) in syncos, a credential to allow pthread calls
         // (3) for SYMB tables for explicit definitions, the address of the calling symbol table; for other SYMB tables,
         // a Bloom filter of the hashes assigned in the locale (using the low bits of the hash) (4) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u

@@ -137,6 +137,30 @@ assert. remote_stuff=2
 6 T. remotepyx,<(localpyx =. 5 T. 5);<3
 'remotepyx remote_stuff'=.>localpyx
 assert. remote_stuff=4
+NB. mutex
+mtx =. 10 T. 0
+0 = 12 T. mtx
+1 = 12 T. mtx
+13 T. mtx
+0 = 11 T. mtx
+'domain error' -: 12 T. etx >: mtx
+'interface error' -: 14 T. etx mtx
+13 T. mtx
+14 T. mtx
+mtx =. 10 T. 0
+tod =. 6!:1''
+0 = 11 T. mtx
+1 = 11 T. mtx;2.0
+0.45 < dly =. tod-~6!:1''  NB. verify delay
+13 T. mtx
+14 T. mtx
+mtx=.10 T. 1  NB. recursive
+0 = 11 T. mtx
+0 = 11 T. mtx  NB. lock count=2
+13 T. mtx
+'interface error' -: 14 T. etx mtx
+13 T. mtx
+14 T. mtx
 end.
 1
 )

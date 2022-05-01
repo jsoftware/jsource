@@ -1,11 +1,50 @@
 /* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-
 // Threads and Tasks
 #include "j.h"
 // burn some time, approximately n nanoseconds
 NOINLINE I delay(I n){I johnson=0x1234; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson;}
+
+#if PYXES
+#if !defined(_WIN32) && !defined(__linux__)
+#include <sys/time.h>
+int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex, const struct timespec *restrict abs_timeout)
+{
+ int pthread_rc;
+ struct timespec remaining, slept, ts;
+ struct timeval nowtime;
+ if (abs_timeout) {
+  if (abs_timeout->tv_nsec >= 1000000000L) return EINVAL;
+  gettimeofday(&nowtime,0);  // system time now
+  remaining.tv_sec = abs_timeout->tv_sec - nowtime.tv_sec;
+  if ((remaining.tv_nsec = abs_timeout->tv_nsec - 1000*nowtime.tv_usec) < 0) {
+   remaining.tv_sec--;
+   remaining.tv_nsec += 1000000000L;
+  }
+  if (remaining.tv_sec < 0) return ETIMEDOUT;
+ } else return ETIMEDOUT;
+ while ((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY) {
+ ts.tv_sec = 0;
+ ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000 : 
+              (remaining.tv_nsec < 10000000 ? remaining.tv_nsec : 10000000));
+ nanosleep(&ts, &slept);
+ ts.tv_nsec -= slept.tv_nsec;
+ if (ts.tv_nsec <= remaining.tv_nsec) {
+ remaining.tv_nsec -= ts.tv_nsec;
+ } else {
+ remaining.tv_sec--;
+ remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+ }
+ if (remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0)) {
+ return ETIMEDOUT;
+ }
+ }
+
+ return pthread_rc;
+}
+#endif
+#endif
 
 #if SY_WIN32
 struct timezone {
@@ -541,8 +580,15 @@ ASSERT(0,EVNONCE)
    struct timeval nowtime;
    gettimeofday(&nowtime,0);  // system time now
    I tosec=floor(timeout)+nowtime.tv_sec;
+#if _WIN32
    I tousec=(I)(1000000.*(timeout-floor(timeout)))+nowtime.tv_usec;
    struct timespec endtime={tosec+(tousec>=1000000),tousec-1000000*(tousec>=1000000)};  // system time when we give up.  The struct says it uses nsec but it seems to use usec
+#else
+   I tonsec=1000L*(I)(1000000.*(timeout-floor(timeout)))+nowtime.tv_usec;
+   struct timespec endtime;
+   endtime.tv_sec=tosec+(tonsec>=1000000000L);
+   endtime.tv_nsec=tonsec-1000000000L*(tonsec>=1000000000L);
+#endif
    I lockrc=pthread_mutex_timedlock((pthread_mutex_t*)IAV0(mutex),&endtime);
    lockfail=lockrc==ETIMEDOUT;  // timeout is a soft failure
    ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure

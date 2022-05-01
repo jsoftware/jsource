@@ -13,6 +13,9 @@
 
 #if PYXES
 #include <pthread.h>
+#if !defined(_WIN32) && !defined(__linux__)
+extern int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex, const struct timespec *restrict abs_timeout);
+#endif
 #endif
 
 /*

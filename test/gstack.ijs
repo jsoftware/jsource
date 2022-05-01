@@ -139,11 +139,11 @@ assert. remote_stuff=2
 assert. remote_stuff=4
 NB. mutex
 mtx =. 10 T. 0
-0 = 12 T. mtx
-1 = 12 T. mtx
+0 = 11 T. mtx;0
+1 = 11 T. mtx;0
 13 T. mtx
 0 = 11 T. mtx
-'domain error' -: 12 T. etx >: mtx
+'domain error' -: 11 T. etx >: mtx
 'interface error' -: 14 T. etx mtx
 13 T. mtx
 14 T. mtx

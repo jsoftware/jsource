@@ -523,16 +523,20 @@ ASSERT(0,EVNONCE)
   ASSERT(0,EVNONCE)
 #endif
   break;}
- case 11: {  // lock mutex.  w is mutex[;timeout]
+ case 11: {  // lock mutex.  w is mutex[;timeout] timeout of 0=trylock
 #if PYXES
-  A mutex=w; D timeout=0.0; I lockfail=0;
+  A mutex=w; D timeout=inf; I lockfail=0;
   if(AT(w)&BOX){
    ASSERT(AR(w)<=1,EVRANK); ASSERT(BETWEENC(AN(w),1,2),EVLENGTH) mutex=AAV(w)[0];  // pull out mutex
    if(AN(w)==2){A tob=AAV(w)[1]; ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=cvt(FL,tob)) timeout=DAV(tob)[0];}  // pull out timeout
   }
   ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
-  if(timeout==0.0){  // is there a max timeout?
+  if(timeout==inf){  // is there a max timeout?
    ASSERT(pthread_mutex_lock((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
+  }else if(timeout=0.0){
+   I lockrc=pthread_mutex_trylock((pthread_mutex_t*)IAV0(mutex));
+   lockfail=lockrc==EBUSY;  // busy is a soft failure
+   ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure
   }else{
    struct timeval nowtime;
    gettimeofday(&nowtime,0);  // system time now
@@ -544,18 +548,6 @@ ASSERT(0,EVNONCE)
    ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure
   }
   z=num(lockfail);
-#else
-  ASSERT(0,EVNONCE)
-#endif
-  break;}
- case 12: {  // conditionally lock mutex.  w is mutex.  Result is 0 if lock taken, otherwise 1
-#if PYXES
-  A mutex=w;
-  ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
-  I lockrc=pthread_mutex_trylock((pthread_mutex_t*)IAV0(mutex));
-  I lockbusy=lockrc==EBUSY;  // busy is a soft failure
-  ASSERT((lockrc&(lockbusy-1))==0,EVFACE);  // any other non0 is a hard failure
-  z=num(lockbusy);
 #else
   ASSERT(0,EVNONCE)
 #endif

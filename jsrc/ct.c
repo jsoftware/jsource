@@ -555,7 +555,7 @@ ASSERT(0,EVNONCE)
  case 10: {  // create a mutex.  w indicates recursive status
 #if PYXES
   I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
-  GAT0(z,INT,(sizeof(pthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AM(z)=CREDMUTEX;  // allocate mutex, make it immortal, install credential
+  GAT0(z,INT,(sizeof(pthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AN(z)=1; AM(z)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
   pthread_mutexattr_t mutexattr; ASSERT(pthread_mutexattr_init(&mutexattr)==0,EVFACE) if(recur)ASSERT(pthread_mutexattr_settype(&mutexattr,PTHREAD_MUTEX_RECURSIVE)==0,EVFACE)
   pthread_mutex_init((pthread_mutex_t*)IAV0(z),&mutexattr);
 #else
@@ -567,12 +567,12 @@ ASSERT(0,EVNONCE)
   A mutex=w; D timeout=inf; I lockfail=0;
   if(AT(w)&BOX){
    ASSERT(AR(w)<=1,EVRANK); ASSERT(BETWEENC(AN(w),1,2),EVLENGTH) mutex=AAV(w)[0];  // pull out mutex
-   if(AN(w)==2){A tob=AAV(w)[1]; ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=cvt(FL,tob)) timeout=DAV(tob)[0];}  // pull out timeout
+   if(AN(w)==2){A tob=AAV(w)[1]; ASSERT(AR(tob)<=1,EVLENGTH) ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=cvt(FL,tob)) timeout=DAV(tob)[0];}  // pull out timeout
   }
   ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
   if(timeout==inf){  // is there a max timeout?
    ASSERT(pthread_mutex_lock((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
-  }else if(timeout=0.0){
+  }else if(timeout==0.0){
    I lockrc=pthread_mutex_trylock((pthread_mutex_t*)IAV0(mutex));
    lockfail=lockrc==EBUSY;  // busy is a soft failure
    ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure

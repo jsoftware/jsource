@@ -155,7 +155,7 @@ mtx =. 10 T. 0
 14 T. mtx
 mtx =. 10 T. 0
 tod =. 6!:1''
-0 = 11 T. mtx
+0 = 11 T. <mtx  NB. boxed mtx OK
 1 = 11 T. mtx;2.0
 0.45 < dly =. tod-~6!:1''  NB. verify delay
 13 T. mtx
@@ -166,10 +166,17 @@ mtx=.10 T. 1  NB. recursive
 13 T. mtx
 'interface error' -: 14 T. etx mtx
 13 T. mtx
+'' -: $ mtx
+1 = #mtx
+'domain error' -: 11 T. etx mtx;'a'
+'rank error' -: 11 T. etx mtx;i. 1 1
+'length error' -: 11 T. etx mtx;1 2
+'length error' -: 11 T. etx mtx;1;2
+'rank error' -: 11 T. etx 2 2 $<mtx
 14 T. mtx
 end.
 1
 )
 f ''
 
-4!:55 ;:'N N0 N1 f f1 f2 g g1 '
+4!:55 ;:'mtx N N0 N1 f f1 f2 g g1 '

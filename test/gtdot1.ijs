@@ -11,9 +11,11 @@ TASK1=: 4 ] 12     NB. 12 crash   limit error of 1!:20
 
 STRIDE=: 3000                 NB. stride between tasks
 NX=: 20
+MINLEN=: 1e5
+MLEN=: <.MINLEN%2
 
-2!:0 :: 1:^:IFUNIX 'rm -rf ',jpath '~temp/tdot'
-1!:55 ::1:^:IFWIN ((jpath'~temp/tdot/')&,)&.> {."1[ 1!:0 jpath '~temp/tdot/*' 
+1: (2!:0 :: 1:)^:IFUNIX 'rm -rf ',jpath '~temp/tdot'
+1: (1!:55 ::1:)^:IFWIN ((jpath'~temp/tdot/')&,)&.> {."1[ 1!:0 jpath '~temp/tdot/*' 
 mkdir_j_ jpath '~temp/tdot'
 
 NB. test parallel erase/write
@@ -27,7 +29,7 @@ assert. x<STRIDE NB. check for overlapping file names between tasks
 y=. STRIDE * y                 NB. offset of file name
 for_xno. i.x do.
  f=. 'dat',~ jpath '~temp/tdot/f',":y+xno        NB. unique file name for each task
- l=. 1e6+?1e5                  NB. file length at leat 1e6
+ l=. MINLEN+?MLEN              NB. file length at least MINLEN
  (<f) 1!:2~ a=. a.{~?l#256     NB. write random data
  1!:55 <f                      NB. erase file
 end.
@@ -55,7 +57,7 @@ y=. STRIDE * y                 NB. offset of file name
 z=. 1                          NB. initialize result
 for_xno. i.x do.
  f=. 'dat',~ jpath '~temp/tdot/f',":y+xno        NB. unique file name for each task
- l=. 1e6+?1e5                  NB. file length at leat 1e6
+ l=. MINLEN+?MLEN              NB. file length at least MINLEN
  (<f) 1!:2~ a=. a.{~?l#256     NB. write random data
  z=. z *. a -: 1!:1 <f         NB. assert each read is successful
 end.
@@ -106,7 +108,7 @@ if. 0=2|y do.                  NB. write file even y
 NB. write file
  for_xno. i.x do.
   f=. 'dat',~ jpath '~temp/tdot/f',":y+xno       NB. unique file name for each task
-  l=. 1e6+?1e5                 NB. file length at leat 1e6
+  l=. MINLEN+?MLEN             NB. file length at least MINLEN
   (<f) 1!:2~ a=. a.{~?l#256    NB. write random data
   z=. z *. a -: 1!:1 <f        NB. assert each read is successful
  end.
@@ -137,10 +139,10 @@ y=. STRIDE * y                 NB. offset of file name
 NB. append file
 for_xno. i.x do.
  f=. 'dat',~ jpath '~temp/tdot/f',":y+xno        NB. unique file name for each task
- l=. 1e6+?1e5                  NB. file length at leat 1e6
+ l=. MINLEN+?MLEN              NB. file length at least MINLEN
  1!:55 ::1: <f                 NB. erase file
  for_i. 100 do.                NB. append 100 times
-  (<f) 1!:3~ (1e5+?1e5)#'a'    NB. append 1e5 character each time
+  (<f) 1!:3~ (MINLEN+?MLEN)#'a'    NB. append MLEN character each time
  end.
 end.
 1
@@ -219,8 +221,8 @@ y=. STRIDE * y                 NB. offset of file name
 z=. 1                          NB. initialize result
 for_xno. i.x do.
  f=. 'dat',~ jpath '~temp/tdot/f',":y+xno        NB. unique file name for each task
- l=. ?1e5                      NB. file length at leat 1e6
- p=. ?1e6                      NB. random index position
+ l=. ?MINLEN                   NB. file length at least MINLEN
+ p=. ?MINLEN                   NB. random index position
  (f;p) 1!:12~ a=. l#'a'        NB. write l#'a' at position p
  z=. z *. a -: 1!:11 f;p,l     NB. assert each read is successful
 end.
@@ -250,13 +252,14 @@ z=. 1                          NB. initialize result
 fs=. ''                        NB. file name list
 fns=. 0$0                      NB. file number list
 for_xno. i.x do.
- fs=. fs, <f=. 'dat',~ jpath '~temp/tdot/f',":y+xno    NB. unique file name for each task
- l=. 1e6+?1e5                  NB. file length at leat 1e6
+ fs=. fs, <f=. winpathsep^:IFWIN 'dat',~ jpath '~temp/tdot/f',":y+xno    NB. unique file name for each task
+ l=. MINLEN+?MLEN              NB. file length at least MINLEN
  1!:55 ::1:<f                  NB. erase file if exist
  fns=. fns, fn=. 1!:21 <f      NB. open file
  (fn) 1!:2~ a=. a.{~?l#256     NB. write random data
  z=. z *. a -: 1!:1 fn         NB. assert each read is successful
 end.
+assert. z
 z=. z *. *./ ((<"0 fns),.fs) e. 1!:20''    NB. file name and list should agree with 1!:20
 z=. z *. *./ 1!:22 fns                     NB. close all files
 z=. z *. *./ 0= ((<"0 fns),.fs) e. 1!:20'' NB. file name and list should not be inside 1!:20
@@ -286,14 +289,15 @@ z=. 1                          NB. initialize result
 fs=. ''                        NB. file name list
 fns=. 0$0                      NB. file number list
 for_xno. i.x do.
- fs=. fs, <f=. 'dat',~ jpath '~temp/tdot/f',":y+xno    NB. unique file name for each task
- l=. ?1e5                      NB. file length at leat 1e6
- p=. ?1e6                      NB. random index position
+ fs=. fs, <f=. winpathsep^:IFWIN 'dat',~ jpath '~temp/tdot/f',":y+xno    NB. unique file name for each task
+ l=. ?MINLEN                   NB. file length at least MINLEN
+ p=. ?MINLEN                   NB. random index position
  1!:55 ::1:<f                  NB. erase file if exist
  fns=. fns, fn=. 1!:21 <f      NB. open file
  (fn,p) 1!:12~ a=. a.{~?l#256  NB. write random data
  z=. z *. a -: 1!:11 fn,p,l    NB. assert each read is successful
 end.
+assert. z
 z=. z *. *./ ((<"0 fns),.fs) e. 1!:20''    NB. file name and list should agree with 1!:20
 z=. z *. *./ 1!:22 fns                     NB. close all files
 z=. z *. *./ 0= ((<"0 fns),.fs) e. 1!:20'' NB. file name and list should not be inside 1!:20
@@ -355,9 +359,9 @@ z=. 1                          NB. initialize result
 fs=. ''                        NB. file name list
 fns=. 0$0                      NB. file number list
 for_xno. i.x do.
- fs=. fs, <f=. 'dat',~ jpath '~temp/tdot/f',":y+xno       NB. unique file name for each task
- l=. ?1e5                      NB. file length at leat 1e6
- p=. ?1e6                      NB. random index position
+ fs=. fs, <f=. winpathsep^:IFWIN 'dat',~ jpath '~temp/tdot/f',":y+xno       NB. unique file name for each task
+ l=. ?MINLEN                   NB. file length at least MINLEN
+ p=. ?MINLEN                   NB. random index position
  1!:55 ::1:<f                  NB. erase file if exist
  fns=. fns, fn=. 1!:21 <f      NB. open file
  (fn,p) 1!:12~ a=. a.{~?l#256  NB. write random data
@@ -367,6 +371,7 @@ for_xno. i.x do.
  1!:32 fn, p, l                NB. unlock file
  assert. (fn,p,l) -.@e. 1!:30 ''   NB. file entry shouldn't exist in lock table
 end.
+assert. z
 z=. z *. *./ ((<"0 fns),.fs) e. 1!:20''    NB. file name and list should agree with 1!:20
 z=. z *. *./ 1!:22 fns                     NB. close all files
 z=. z *. *./ 0= ((<"0 fns),.fs) e. 1!:20'' NB. file name and list should not be inside 1!:20
@@ -398,7 +403,7 @@ assert. x<STRIDE NB. check for overlapping file names between tasks
 y=. STRIDE * y                 NB. offset of file name
 for_xno. i.x do.
  f=. 'dat',~ jpath '~temp/tdot/f',":y+xno        NB. unique file name for each task
- l=. ?1e5                      NB. file length at leat 1e6
+ l=. ?MINLEN                   NB. file length at least MINLEN
  (<f) 1!:2~ a=. a.{~?l#256     NB. write random data
  b=. 1!:6 <f                   NB. query file attribute
  b 1!:6 <f                     NB. set file attribute
@@ -422,7 +427,7 @@ end.
 NB. run & open the futures results
 ; s1''
 
-2!:0 :: 1:^:IFUNIX 'rm -rf ',jpath '~temp/tdot'
-1!:55 ::1:^:IFWIN ((jpath'~temp/tdot/')&,)&.> {."1[ 1!:0 jpath '~temp/tdot/*' 
+1: (2!:0 :: 1:)^:IFUNIX 'rm -rf ',jpath '~temp/tdot'
+1: (1!:55 ::1:)^:IFWIN ((jpath'~temp/tdot/')&,)&.> {."1[ 1!:0 jpath '~temp/tdot/*' 
 
 4!:55 ;:'NX STRIDE TASK1 TASK s1 t1 '

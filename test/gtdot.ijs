@@ -166,7 +166,7 @@ mtx=.10 T. 1  NB. recursive
 13 T. mtx
 'interface error' -: 14 T. etx mtx
 13 T. mtx
-'' -: $ mtx
+'' -: $ mtx  NB. mtx looks atomic
 1 = #mtx
 'domain error' -: 11 T. etx mtx;'a'
 'rank error' -: 11 T. etx mtx;i. 1 1
@@ -179,4 +179,4 @@ end.
 )
 f ''
 
-4!:55 ;:'mtx N N0 N1 f f1 f2 g g1 '
+4!:55 ;:'N N0 N1 f f1 f2 g g1 '

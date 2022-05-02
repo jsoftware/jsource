@@ -1,4 +1,4 @@
-/* Copyright 1990-2011, Jsoftware Inc.  All rights reserved. */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved. */
 /* License in license.txt.                                   */
 /*                                                                         */
 /* Verbs: Boolean-Valued                                                   */

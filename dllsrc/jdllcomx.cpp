@@ -1,4 +1,4 @@
-/* Copyright (c) 1990-2000, Iverson Software Inc.  All rights reserved.    */
+/* Copyright (c) 1990-2022, Iverson Software Inc.  All rights reserved.    */
 /* Licensed to Jsoftware Inc.                                              */
 /*                                                                         */
 // included in both JEXE and JDLL servers

@@ -1,4 +1,4 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: From & Associates. See Hui, Some Uses of { and }, APL87.         */
@@ -764,27 +764,25 @@ F1(jtmvmsparse){PROLOG(832);
   }else if(Frow!=0){ /* look for nonimproving pivot */  \
    if(_mm256_cvtsd_f64(dotprod)>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  /* any c value>=ColThresh is a pivot row, unless in the exclusion list */ \
   }else{ \
-   /* we are looking for a pivot along a col with Frow=0.  We demand that it eliminate more 0s than it produces */ \
+   /* we are looking for a pivot along a col with Frow=0.  We take it if ALL the zero-ck rows have negative c.  Then the pivot will actually move */ \
    D bk=bv[i]; D c=_mm256_cvtsd_f64(dotprod); \
-   if(bkgt0){  /* find the smallest pivot ratio, & the frequency thereof */ \
-    if(bk<bkmin){bkgt0=0; \
-    }else if(c>_mm256_cvtsd_f64(thresh)){  /* eligible pivot.  Compare pivot ratios bk/c */ \
-     if((bkold-bkmin)*c>bk*cold){  /* bkold-(bk/c)*cold > bthresh: new pivot leaves old pivot with nonzero b */ \
-      new0ct=1; bkold=bk; cold=c; bestrow=i; \
-     }else if((bk-bkmin)*cold>bkold*c){  /* bk-(bkold/cold)*c > bthresh: old pivot leaves new pivot with nonzero b  - no action*/ \
-     }else{  /* the two values go to 0 simultaneously.  keep the smaller as the pivot */ \
-      ++new0ct; if(bk*cold<bkold*c){bkold=bk; cold=c; bestrow=i;}  /* if bk/c < bkold/cold, update */ \
-     } \
+   if(bkle0){  /* now we can count the number of new 0s, deducting it from new0ct */ \
+    if(bk>=bkmin){bkle0=0; if(unlikely(bvgrd==bvgrd0))goto abortcol; /* if there were no negative bk, we can do nothing useful here */ \
+    }else if(c>-_mm256_cvtsd_f64(thresh)){goto abortcol;  /* if any c nonneg when bk<=0, can't move, abort  */ \
     } \
    } \
-   if(!bkgt0){  /* now we can count the number of new 0s, deducting it from new0ct */ \
-    new0ct-=(bkmin-bk)*cold<-c*bkold;  /* need bk-c*(pivotb/pivotc) > bkmin */ \
+   if(!bkle0){  /* find the smallest pivot ratio, & the frequency thereof */ \
+    if(c>_mm256_cvtsd_f64(thresh)){  /* eligible pivot.  Compare pivot ratios bk/c */ \
+     if(bkold*c>bk*cold){  /* bkold-(bk/c)*cold > 0: smaller pivot ratio.  c is positive */ \
+      bkold=bk; cold=c; bestrow=i; \
+     } \
+    }else if(c>0)goto abortcol;  /* possible dangerous pivot: skip the column */ \
    } \
   } \
  }else{zv[i]=_mm256_cvtsd_f64(dotprod); /* just fetching the column: do it */ \
  }
 
-#define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; I new0ct=0; D bkold=inf, cold=1.0; I bkgt0=1;
+#define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; D bkold=inf, cold=1.0; I bkle0=1;
 #define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?
 #define COLLPE }while(++bvgrd!=bvgrde);
  do{
@@ -925,7 +923,7 @@ abortcol:  // here is column aborted early, possibly on insufficient gain
    ndotprods+=bvgrd-bvgrd0;  // accumulate # products performed
    if(Frow==0){
     // accept a zero-Frow pivot if it exists, has more non0 than 0, and is not excluded
-    if(bestrow>=0 && new0ct<0 && notexcluded(exlist,nexlist,*ndx,yk[bestrow])){
+    if(bestrow>=0 && notexcluded(exlist,nexlist,*ndx,yk[bestrow])){
      minimpfound=1.0; bestcol=*ndx; bestcolrow=bestrow; goto return2;
     }
    }

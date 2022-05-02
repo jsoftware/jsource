@@ -1,4 +1,6 @@
-#!/usr/bin/env -S guix repl
+#!/usr/bin/env sh
+dir=${0%/*}; dir=${dir:-.}
+exec guix time-machine --channels=$dir/channels.scm -- repl "$0"
 !#
 ;;; GNU Guix development package.
 ;;;
@@ -65,48 +67,49 @@
   #:use-module ((gnu packages maths) #:select (sleef)))
 
 
-(define %source-dir (dirname (current-filename)))
+(define %source-dir
+  (let ((pipe (open-pipe* OPEN_READ "git" "rev-parse" "--show-toplevel")))
+    (read-line pipe)))
 
 (define (git-version)
   "Return a version string suitable for development builds."
-  (let* ((pipe (with-directory-excursion %source-dir
-                 (open-pipe* OPEN_READ "git" "describe" "--always"
+  (with-directory-excursion %source-dir
+    (let* ((pipe (open-pipe* OPEN_READ "git" "describe" "--always"
                                                         "--tags"
-                                                        "--abbrev=0")))
-         (version (string-append (read-line pipe) "+git")))
-    (close-pipe pipe)
-    version))
+                                                        "--abbrev=0"))
+           (version (string-append (read-line pipe) "+git")))
+      (close-pipe pipe)
+      version)))
 
 (define (git-user)
   "Return a user info string scraped from Git."
-  (let* ((name-pipe (with-directory-excursion %source-dir
-                      (open-pipe* OPEN_READ "git" "config" "user.name")))
-         (email-pipe (with-directory-excursion %source-dir
-                       (open-pipe* OPEN_READ "git" "config" "user.email")))
-         (name (read-line name-pipe))
-         (email (read-line email-pipe))
-         (status (every identity (map close-pipe `(,name-pipe ,email-pipe)))))
-    (format #f "~a <~a>" name email)))
+  (with-directory-excursion %source-dir
+    (let* ((name-pipe (open-pipe* OPEN_READ "git" "config" "user.name"))
+           (email-pipe (open-pipe* OPEN_READ "git" "config" "user.email"))
+           (name (read-line name-pipe))
+           (email (read-line email-pipe))
+           (status (every identity (map close-pipe `(,name-pipe ,email-pipe)))))
+      (format #f "~a <~a>" name email))))
 
 ;; Predicate intended for SELECT? argument of local-file procedure. Returns
 ;; true if and only if file is tracked by git.
 (define git-file?
-  (let* ((pipe (with-directory-excursion %source-dir
-                 (open-pipe* OPEN_READ "git" "ls-files")))
-         (files (let loop ((lines '()))
-                  (match (read-line pipe)
-                    ((? eof-object?) (reverse lines))
-                    ((? (lambda (file)   ; skip this file
-                          (string-match (current-filename)
-                                        (canonicalize-path file))))
-                     (loop lines))
-                    (line (loop (cons line lines))))))
-         (status (close-pipe pipe)))
-    (lambda (file stat)
-      (match (stat:type stat)
-        ('directory #t)
-        ((or 'regular 'symlink) (any (cut string-suffix? <> file) files))
-        (_ #f)))))
+  (with-directory-excursion %source-dir
+    (let* ((pipe (open-pipe* OPEN_READ "git" "ls-files"))
+           (files (let loop ((lines '()))
+                    (match (read-line pipe)
+                      ((? eof-object?) (reverse lines))
+                      ((? (lambda (file)   ; skip this file
+                            (string-match (current-filename)
+                                          (canonicalize-path file))))
+                       (loop lines))
+                      (line (loop (cons line lines))))))
+           (status (close-pipe pipe)))
+      (lambda (file stat)
+        (match (stat:type stat)
+          ('directory #t)
+          ((or 'regular 'symlink) (any (cut string-suffix? <> file) files))
+          (_ #f))))))
 
 
 ;; G-exp script that detects AVX/AVX2 support at runtime and executes jconsole

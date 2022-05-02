@@ -179,7 +179,8 @@
     (native-inputs `(("toolchain" ,toolchain)))
     (inputs (cons* libedit libomp jsoftware-auxiliary-files extra-inputs))
     (arguments
-     `(#:parallel-tests? #f
+     `(#:parallel-build? #f
+       #:parallel-tests? #f
        #:tests? #f
        #:modules (((ice-9 ftw) #:select (scandir))
                   ((ice-9 popen) #:select (open-pipe* close-pipe))
@@ -501,7 +502,7 @@ that are not already well understood.")
                     ("LDFLAGS" "-lsleef"))))
 
 (define j (apply j-package j-base-args))
-(define %j-target-hash "tihgvwf7oqyi3cg5p4gregjby42odlrkobumroa6nb7cuphrsrya")
+(define %j-target-hash "har6llk2rv3bwh3gao3qr3ue3dkmm6n4agvmkjhkes3iku2zjngq")
 
 (match (program-arguments)
   ;; Don't execute anything if loading in repl

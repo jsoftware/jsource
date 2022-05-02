@@ -197,7 +197,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
-  case 0:  // named locale - we have a write lock on stlock
+  case 0:  // named locale - we have a write lock on stloc->lock
    AR(g)=ARNAMED;   // set rank to indicate named locale
    v=symnew(&LXAV0(g)[SYMLINFO],0);    // put new block into locales table, allocate at head of chain without non-PERMANENT marking,  The symbol must be available
    v->flag|=LINFO;  // mark as not having a value
@@ -562,7 +562,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
     m=AN(y); u=CAV(y);
     ASSERTGOTO(m<256,EVLIMIT,exitlock);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}
-    else {A v=jtprobe((J)((I)jt+m),u,(UI4)nmhash(m,u),JT(jt,stloc)); if(v)g=v;}  // g is locale block for named locale
+    else {A v=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)); if(v)g=v;}  // g is locale block for named locale
    }
   }
   if(g){I k;  // if the specified locale exists in the system...

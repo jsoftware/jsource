@@ -54,7 +54,7 @@
     /* Signal post-exec error*/ \
     {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
+    i=cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
     break;}
 
 #define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \

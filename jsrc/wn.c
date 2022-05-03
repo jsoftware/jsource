@@ -55,14 +55,14 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
  R 1;
 }
 
-static NUMH(jtnumi){I neg;I j;
+static NUMH(jtnumi){UI neg;UI j;  // must be UI to avoid signed overflow
  neg='-'==s[0]; s+=neg; n-=neg; if(!n)R 0;  // extract & skip sign; exit if no digits
  for(;*s=='0';--n,++s);  // skip leading zeros, even down to nothing, which will be 0 value
  if(!(19>=n))R 0;   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
   // 19-digit number can be is a little way into the negative; so testing for negative will be a valid test for overflow
  j=0; DQ(n, I dig=*s++; if(!BETWEENC(dig,'0','9'))R 0; j=10*j+(dig-'0'););
  *(I*)vv=(j^(-neg))+neg;   // if - was coded, take 2's comp, which will leave IMIN unchanged
- R 1+REPSGN(j&(j-neg));  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
+ R 1+REPSGN((I)(j&(j-neg)));  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
 }     /* called only if SY_64 */
 
 static NUMH(jtnumx){A y;B b,c;C d;I j,k,m,*yv;X*v;

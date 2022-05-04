@@ -128,6 +128,7 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  if(AT(w)&NOUN+NAME){RETF(tleaf(lrep(w)));}
  v=FAV(w); id=v->id; fl=v->flag;
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
+ if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R trr(gs);  // if <@:t. discard the <@:
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL){RETF(trr(hs));}

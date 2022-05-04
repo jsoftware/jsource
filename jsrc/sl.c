@@ -550,7 +550,8 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  if(ISDENSETYPE(AT(w),B01))RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
- // Do this in a critical region since others may be deleting as well.  Any lock will do
+ // Do this in a critical region since others may be deleting as well.  Any lock will do.  We don't
+ // use stloc->lock because most deletions are of numbered locales & we want to keep stloc available for named
  WRITELOCK(JT(jt,locdellock))
  for(i=0;i<n;++i){
   g=0;

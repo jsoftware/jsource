@@ -78,16 +78,21 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
  if(aif&FIXALOCSONLY&&!hasimploc(w))R w;  // nothing to fix
  if(NAME&AT(w)){R sfn(0,w);}  // only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
  if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
- v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;
+ v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;  // for levels other than the top, use na to cuase replacement of $:
  if(v->id==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork
  if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
- switch(v->id){
+ switch(v->id){  // we know that modifiers have been executed to produce verb/nouns
  case CSLASH: 
   R df1(z,REFIXA(2,f),wf);
  case CSLDOT: case CBSLASH: case CBSDOT:
   R df1(z,REFIXA(1,f),wf);
- case CAT: case CATCO: case CCUT:
-  f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);
+ case CTDOT:
+  f=REFIXA(0,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // recur and rebuild.  t. starts a new recursion, so don't replace $: in it
+ case CATCO:
+  if(FAV(g)->id==CTDOT)R REFIXA(na,g);   // t. is internally <@:t. .  Remove the <@; and continue.
+// otherwise fall through to...
+ case CAT: case CCUT:
+  f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // rerun the compound after fixing the args
  case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
   f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
  case CCOLON:
@@ -104,8 +109,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
   f=REFIXA(2,f); g=REFIXA(1,g); R hook(f,g,mark);
  case CFORK:
   f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
- case CATDOT:
- case CGRCO:
+ case CATDOT: case CGRCO:
   IAV(aa)[0]=(aif|na);
   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
   RZ(g=REFIXA(na,g));

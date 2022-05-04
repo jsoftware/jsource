@@ -350,6 +350,7 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  v=VAV(w); id=v->id;  // outer verb, & its id
  // if f is 0, we take f from g.  In other words, adverbs can put their left arg in either f or g.  u b. uses g so that it can leave f=0 to allow it to function as an ATOMIC2 op
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
+ if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R lrr(gs);  // if <@:t. discard the <@:
  hs=CNULL(v->fgh[2]); fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R lrr(hs);   // pseudo-named entity created during debug of operator.  The defn is in h

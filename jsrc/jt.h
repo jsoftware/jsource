@@ -142,7 +142,7 @@ typedef struct rngdata {
 // things needed for allocation of large blocks
  A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
- PFRAME parserstackframe;  // 4 words  
+ PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
 // end of cacheline 4
 
 // things needed by execution of certain verbs

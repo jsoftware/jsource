@@ -62,6 +62,7 @@ test=: 1 : '(jtr -: tree) <''u'''
 i.            test
 0:            test
 -             test
++ t. ''       test
 
 1 2 3&+       test
 +&(i.10 2)    test

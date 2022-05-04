@@ -23,6 +23,11 @@ g    =: &.>
 (ar<'f') -: ar<'g'
 (|.&.>y) -: |. 'eachh' f. y=: ;:'Cogito, ergo sum.'
 
+eachh=: + t. ''
+f    =: 'eachh' f.
+g    =: + t. ''
+(ar<'f') -: ar<'g'
+
 f=: undefined_no
 'value error' -: ex 'f f.'
 

@@ -392,6 +392,7 @@ static void* jtthreadmain(void * arg){J jt=(J)arg; WAITBLOK wblok;
   I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
   // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
   A uarg3=FAV(self)->fgh[0], uarg2=arg2; uarg2=dyad?uarg2:uarg3;  // get self, positioned after the last noun arg
+  jt->parserstackframe.sf=self;  // each thread starts a new recursion point 
   A z=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
   if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
   jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
@@ -439,7 +440,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   // there is no idle thread.  Just run the verb in this thread, creating a simple boxed result
   // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
   A uarg3=FAV(self)->fgh[0], uarg2=arg2; uarg2=dyad?uarg2:uarg3;  // get self, positioned after the last noun arg
-  pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
+  // u always starts a recursion point, whether in a new task or not
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;   // execute the u in u t. v
  }else{
   // there is a thread.  start a task there
   // realize virtual arguments; raise the usecount of the arguments including self

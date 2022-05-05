@@ -393,7 +393,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  RZ(g);  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g));
+ I bloom=BLOOMMASK(hash); v=AAV1(LOCPATH(g));
  NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
                               if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res); res=(A)(((I)res&~QCNAMED)+(AR(g)<<(QCNAMEDX-ARNAMEDX))); READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED
                               READUNLOCK(g->lock)} g=gn;
@@ -403,7 +403,7 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 is not found
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
  RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); A *v=AAV0(LOCPATH(g)); NOUNROLL while(g){A gn=*v++; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}  // return when name found.
+ I bloom=BLOOMMASK(hash); A *v=AAV1(LOCPATH(g)); NOUNROLL while(g){A gn=*v++; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}  // return when name found.
  R g;
 }
 
@@ -524,7 +524,7 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));  // look up locative; error possible in name, return 0
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); A *v=AAV0(LOCPATH(g));
+ I bloom=BLOOMMASK(hash); A *v=AAV1(LOCPATH(g));
  NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}  // exit loop when found
  R 0;  // not found, locks released
 gotval: ;

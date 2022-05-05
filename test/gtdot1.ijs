@@ -179,6 +179,7 @@ s1=: 3 : 0
 NB. run & open the futures results
 ; s1''
 
+1: {{)n  NB. deleting the next 2 tests because they test the OS more than JE, and take 1 minute
 NB. test parallel create directory
 NB. x is number of iteration in each task
 NB. y is a task number
@@ -191,7 +192,7 @@ if. 0=2|y do.                  NB. create directory even y
  y=. STRIDE * y                NB. offset of file name
  for_xno. i.x do.
   f=. 'dir',~ jpath '~temp/tdot/f',":y+xno       NB. unique directory name for each task
-  1: 1!:5 <f                   NB. erase directory
+  1: 1!:5 <f                   NB. create directory
  end.
 else.
 NB. list directory for odd y
@@ -203,7 +204,7 @@ NB. test create directory on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 1!:55 :: 1: "0 -.&' '&.> <"1 'dir',~"1 '~temp/tdot/f',"1 ": ,. i.TASK*STRIDE   NB. clear all directories
-10 (t1 t.'')"0 [ i.TASK          NB. start task
+3 (t1 t.'')"0 [ i.3          NB. start task
 )
 
 NB. run & open the futures results
@@ -221,7 +222,7 @@ y=. STRIDE * y                 NB. offset of file name
 z=. 1                          NB. initialize result
 for_xno. i.x do.
  f=. 'dat',~ jpath '~temp/tdot/f',":y+xno        NB. unique file name for each task
- l=. ?MINLEN                   NB. file length at least MINLEN
+ l=. ?1000<.MINLEN             NB. file length at least MINLEN
  p=. ?MINLEN                   NB. random index position
  (f;p) 1!:12~ a=. l#'a'        NB. write l#'a' at position p
  z=. z *. a -: 1!:11 f;p,l     NB. assert each read is successful
@@ -233,11 +234,13 @@ NB. test indexed write/read on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 1!:55 :: 1: "0 -.&' '&.> <"1 'dat',~"1 '~temp/tdot/f',"1 ": ,. i.TASK*STRIDE   NB. clear all files
-]&.> NX (t1 t.'')"0 [ i.TASK  NB. start task, too many files limit error if x it too large
+]&.> 5 (t1 t.'')"0 [ i.3  NB. start task, too many files limit error if x is too large
 )
 
 NB. run & open the futures results
 ; s1''
+}}  NB. end of commented-out tests
+
 
 NB. test parallel file open/close
 NB. x is number of iteration in each task
@@ -447,14 +450,16 @@ end.
 )
 
 NB. test name access while path is being changed
-NB. Nilad.  Result is list of results from each thread
+NB. Result is list of results from each thread
 s1=: 3 : 0
- ]&.> 5e5 (t1 f. t.'')"0 [ i.2       NB. start task
+ ]&.> 5e5 (t1 f. t.'')"0  y       NB. start task
 )
 
 t1done=: 0
 'a_l1_ a_l2_ a_l3_ b_l1_ b_l2_ b_l3_' =: i. 6
-; }. shrxno =: 1 ; s1''
+; }. shrxno =: 1 ; s1 0 1
+t1done=: 0
+; }. shrxno =: 1 ; s1 0 0 1 1
 
 
 NB. x is number of iterations
@@ -484,13 +489,15 @@ end.
 NB. test name access while name is being changed/deleted
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
- ]&.> 5e5 (t1 f. t.'')"0 [ i.2       NB. start task
+ ]&.> 5e5 (t1 f. t.'')"0 y       NB. start task
 )
 
-t1done=: 0
 'a_l1_ a_l2_ b_l1_ b_l2_ ' =: 0 1 3 4
 (;:'l1 l2') 18!:2 <'base'
-; }. shrxno =: 2 ; s1''
+t1done=: 0
+; }. shrxno =: 2 ; s1 0 1
+t1done=: 0
+; }. shrxno =: 2 ; s1 0 0 1 1
 
 (<'z') 18!:2 <'base'
 18!:55 ;:'l1 l2 l3'

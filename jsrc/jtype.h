@@ -815,7 +815,7 @@ typedef struct {
 // obsolete #define LOCNUMW(g) (NAV(LOCNAME(g))->bucketx)  // locale number, for numbered locales   scaf should move this to SYMLINFO or to ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)
 #define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)  // locale number, for numbered locales
 #define LOCNUM(g) (I)LOCNUMW(g)
-#define LOCPATH(g) (g)->kchain.locpath
+#define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted
 #define LOCBLOOM(x) AM(x)
 #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
 

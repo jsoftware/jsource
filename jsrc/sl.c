@@ -250,7 +250,8 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
  SYMRESERVE(2) RZ(zloc=stcreate(0,p,1L,"z")); ACX(zloc);   // make the z locale permanent
  // create zpath, the default path to use for all other locales
- GATV0(q,BOX,2,0); AAV0(q)[0]=zloc; AAV0(q)[1]=0; ACX(q); JT(jt,zpath)=q;   // install z locale and ending 0; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
+ GAT0(q,BOX,2,1); AAV1(q)[0]=zloc; ACX(q); JT(jt,zpath)=q;   // install z locale; ending 0 implied; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
+// obsolete AAV1(q)[1]=0;
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
@@ -266,8 +267,8 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  DQNOUNROLL(8+3, ((I*)jt->locsyms)[i+8-3]=((I*)jt->locsyms)[i];) jt->locsyms=(A)((I*)jt->locsyms+8-3);
  // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
  INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
- // Go back and fix the path for z locale to be the empty locale (which is what we use when the path itself is empty)
- GATV0(q,BOX,1,0); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list
+ // Go back and fix the path for z locale to be empty
+ GAT0(q,BOX,1,1); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list
  R 1;
 }
 
@@ -413,7 +414,7 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
 
 F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,C(w)));
  g=LOCPATH(g);  // the path for the current locale.  It must be non0
- GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV0(g);  // allocate result, point to input & output areas
+ GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV1(g);  // allocate result, point to input & output areas
  DO(AN(g), if(*gv){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator
  AN(z)=AS(z)[0]=zv-zv0; R z;  // install number of strings added & return
 }
@@ -431,7 +432,7 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
  // When all locales that have it in the path have been removed, the locale (including the name) will be deleted
  // The path is stored with one extra zero element at the end to allow for loop unrolling.  If the path is empty, the first path points to the empty locale
  // The path is allocated as a rank-0 list so that a path of length 1 doesn't need the data from the second cacheline
- GATV0(x,BOX,MAX(AN(a),1)+1,0); AFLAGINIT(x,BOX); A *xv=AAV0(x); // allocate enough locations, plus one.  Set as recursive.  xv->first slot
+ GAT0(x,BOX,MAX(AN(a),1)+1,1); AFLAGINIT(x,BOX); A *xv=AAV1(x); // allocate enough locations, plus one.  Set as recursive.  xv->first slot
  if(unlikely(AN(a)==0)){   // if path empty, leave it empty
  }else if(AN(a)==1){RZ(h=locale(1,a)); ra(h); *xv++=h;  // singleton, might be numeric atom - save it
  }else{A locatom;
@@ -442,7 +443,7 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
  }
  *xv=0;  // terminate locale list with null.
  // We have the new path in x, and we can switch to it, but we have to call a system lock before we free the old path, to purge the old one from the system
- A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x;  // switch paths.  Transfer ownership to LOCPATH(g) now that no error possible
+ WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
  if(!ACISPERM(AC(oldpath))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(oldpath);}  // if the old path is not PERMANENT, wait for a lock before freeing
  R mtm;
 }    /* 18!:2  set locale path */

@@ -111,5 +111,5 @@ pcheck 18!:31 ''
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -139,5 +139,5 @@ NB. jtr appears twice, one is global another local
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

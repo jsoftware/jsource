@@ -62,5 +62,5 @@ test (0*b);(0*c);y3
 4!:55 ;:'a b c cutcol m n test y y1 y2 y3 yy'
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

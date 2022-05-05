@@ -577,5 +577,5 @@ x (/:"1 0 -: g"1 0) y=:a.{~?20$256
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

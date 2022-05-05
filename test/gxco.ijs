@@ -89,5 +89,5 @@ NB. f1"0 ]10^2 3 9
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

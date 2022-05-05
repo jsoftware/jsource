@@ -70,5 +70,5 @@ cir=. 4 : 'x o. y'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

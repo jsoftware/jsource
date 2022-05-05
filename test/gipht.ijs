@@ -80,5 +80,5 @@ f1"0 ]1e1 1e3 1e5 1e7 1e9
 randfini''
  
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

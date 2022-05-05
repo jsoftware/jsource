@@ -217,5 +217,5 @@ mbxcheck_jmf_ q
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

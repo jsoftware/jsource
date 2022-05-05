@@ -101,5 +101,5 @@ _0.5 1&p. eq (2&! d. 1)
 
 )
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

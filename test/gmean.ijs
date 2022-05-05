@@ -50,5 +50,5 @@ f&>/~ 0 1;(i.100);(1e7*i.100);(0.1*i.100);((j. |.) i. 100);(i. 100x); (i. 100x) 
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

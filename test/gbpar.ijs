@@ -104,5 +104,5 @@ s ~: S"1 0 >:i.17
 4!:55 ;:'A b c f g I P S s xx yy'
  
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

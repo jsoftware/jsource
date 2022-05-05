@@ -588,5 +588,5 @@ a =: i. 1000 1000
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

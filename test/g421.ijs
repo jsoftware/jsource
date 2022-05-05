@@ -469,5 +469,5 @@ b <: 512 + a
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -686,5 +686,5 @@ NB. zapped virtual block - used to corrupt memory
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

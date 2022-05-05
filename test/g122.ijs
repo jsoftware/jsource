@@ -419,5 +419,5 @@ test4=: 4 : 0
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

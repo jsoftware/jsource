@@ -394,5 +394,5 @@ _1 0 1 2 5 6 9 10 13 15 _2 -: 3 {:: 6!:11''
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

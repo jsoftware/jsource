@@ -565,5 +565,5 @@ NB. Verify they don't check syntax
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

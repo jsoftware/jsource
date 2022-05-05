@@ -556,5 +556,5 @@ a =. i. 1e6
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

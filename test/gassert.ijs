@@ -93,5 +93,5 @@ _2 -: f _2
 4!:55 ;:'f lf s word ws'
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

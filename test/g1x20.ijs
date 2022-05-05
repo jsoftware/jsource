@@ -98,5 +98,5 @@ t=:(pc#'does/not/exist/no.x'),(mac#':does:not:exist:no.x'),unix#'does/not/exist/
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

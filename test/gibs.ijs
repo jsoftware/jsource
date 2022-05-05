@@ -114,5 +114,5 @@ r=: y=: (547 2 ?@$ #u){u
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

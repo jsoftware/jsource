@@ -1185,5 +1185,5 @@ assert. ((<P;0),(<01),<(<I),(<00),<P;0) -: (* ] ((9!:63) (9!:63))) 0
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

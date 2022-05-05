@@ -109,5 +109,5 @@ b (exp -: expand) x=: j./ ?2$1e6 [ b=:  (1+?1000)$0
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

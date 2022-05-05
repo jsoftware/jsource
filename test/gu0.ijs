@@ -678,5 +678,5 @@ y=: 10&u: x
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

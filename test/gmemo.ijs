@@ -54,5 +54,5 @@ r"0 i. 10000
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -34,5 +34,5 @@ NB. LeVeque, Fundamentals of Number Theory, Addison-Wesley, 1977, p. 5.
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

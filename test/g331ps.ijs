@@ -135,5 +135,5 @@ x=: 1 (0)}0=1019 ?@$ 4
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

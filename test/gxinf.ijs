@@ -253,5 +253,5 @@ _ 2x match ! __ 2r1
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

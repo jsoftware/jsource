@@ -198,5 +198,5 @@ x (g"4 3 -: e."4 3) y=:?11  7 4 5$5
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -509,5 +509,5 @@ p1''   NB. Fails on the second call
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

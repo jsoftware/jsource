@@ -172,5 +172,5 @@ n (}."2 -: f"2) x [ n=:?}.$x
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

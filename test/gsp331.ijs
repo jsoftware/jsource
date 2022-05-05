@@ -71,5 +71,5 @@ q=: x j}1$.2e9;0;2-2
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

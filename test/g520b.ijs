@@ -104,5 +104,5 @@ f2"0 ] 1000+i.10
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

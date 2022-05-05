@@ -455,5 +455,5 @@ yy =: 1e6 $ 1.0
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

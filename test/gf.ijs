@@ -177,5 +177,5 @@ f=: (C +:)"0 f.
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

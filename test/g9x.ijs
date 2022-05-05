@@ -420,5 +420,5 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

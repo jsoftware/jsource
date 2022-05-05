@@ -56,5 +56,5 @@ a=: (?3 5$10) f"0 ?3 5$30
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

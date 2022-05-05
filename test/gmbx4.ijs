@@ -1064,5 +1064,5 @@ r=: y=: (?7 2$#y){y=: (<5!:2 <'g'),<@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Er
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

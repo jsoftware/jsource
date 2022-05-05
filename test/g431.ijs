@@ -303,5 +303,5 @@ xover =: 3 : '~:/y'
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

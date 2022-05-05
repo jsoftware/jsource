@@ -164,5 +164,5 @@ xx (+./ .<:-:+./@(<:"1 _)) 0
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

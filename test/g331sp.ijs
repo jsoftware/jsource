@@ -135,5 +135,5 @@ _2 test t
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

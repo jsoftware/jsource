@@ -328,5 +328,5 @@ n01cdf=: -: @: >: @: erf @: ((%:0.5)&*)   NB. CDF of N(0,1)
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

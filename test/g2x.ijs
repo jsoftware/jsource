@@ -19,5 +19,5 @@ errnox =: 2!:8
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

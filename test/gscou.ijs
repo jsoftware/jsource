@@ -202,5 +202,5 @@ t=: s: <"0 u:i.512
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

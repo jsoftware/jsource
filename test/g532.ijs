@@ -73,5 +73,5 @@ t=.(+&.>i.5),;:'(raze a) -: }: a=. ^0j1*?3 4$1256'
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

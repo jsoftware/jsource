@@ -16,5 +16,5 @@ f_a_ =. >.
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

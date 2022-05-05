@@ -67,5 +67,5 @@ f   =. mac{'no/such/dir/or/file';':no:such:dir:or:file'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

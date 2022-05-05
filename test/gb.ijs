@@ -263,5 +263,5 @@ x -: ]&.(28 b.&12345) x
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

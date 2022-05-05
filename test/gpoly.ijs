@@ -380,5 +380,5 @@ NB. (c;r) (p. -: pdot) z
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

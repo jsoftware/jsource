@@ -29,5 +29,5 @@ f=: 3 : '(+./ -: or/) y ?@$ 2'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

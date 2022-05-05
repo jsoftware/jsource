@@ -46,5 +46,5 @@ test 256%~j./?2 1000$5000  NB. complex
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

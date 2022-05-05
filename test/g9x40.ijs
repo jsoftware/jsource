@@ -162,5 +162,5 @@ x=: (i{.t),(3+i)}.t [ i=: ('   :' E. t)i.1
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

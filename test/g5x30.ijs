@@ -262,5 +262,5 @@ u1 =: (u: 16b03c0),'r2'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

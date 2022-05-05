@@ -544,5 +544,5 @@ f0 =. {{ (u. f. b. 0) }}   NB. u. does not invoke PPPP
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

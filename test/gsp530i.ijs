@@ -138,5 +138,5 @@ s -: d
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -80,5 +80,5 @@ perm =: 1!:7
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

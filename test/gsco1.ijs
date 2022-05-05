@@ -70,5 +70,5 @@ NB. IF64 +. s0 -: s1
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -102,5 +102,5 @@ test <"0 ] 2 j. 1+2e_14*i:20
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

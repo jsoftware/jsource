@@ -38,5 +38,5 @@ test/ 1+2 1*1+?100 1000x
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

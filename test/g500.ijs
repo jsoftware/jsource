@@ -47,5 +47,5 @@ y=: 2e4$'boustrophedonic chuffed'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

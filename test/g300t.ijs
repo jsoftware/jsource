@@ -11,5 +11,5 @@ THRESHOLD +. 0.4 > | (-/ % <./) t=: (10 timer '-/ .* m') , 10 timer 'h m'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

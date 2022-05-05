@@ -439,5 +439,5 @@ _2 3 (|.!.f"1 2 -: rot"1 2) j./?2 2 3 7$1000 [ f=:0
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

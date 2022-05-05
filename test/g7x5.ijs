@@ -207,5 +207,5 @@ NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

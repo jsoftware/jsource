@@ -345,5 +345,5 @@ m;n;x;y
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

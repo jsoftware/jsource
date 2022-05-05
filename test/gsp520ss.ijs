@@ -31,5 +31,5 @@ pc f&>/ qc [ q=: (0,6$1)*"3 (?11 7 9$2) * ?11 7 9 8$124
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

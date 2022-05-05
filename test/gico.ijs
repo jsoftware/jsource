@@ -821,5 +821,5 @@ f2"0] 10^i.2 10
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

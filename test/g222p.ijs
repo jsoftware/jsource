@@ -105,5 +105,5 @@ ne=: 4 : 'x~:y'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

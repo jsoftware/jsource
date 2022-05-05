@@ -64,5 +64,5 @@ t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

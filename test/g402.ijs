@@ -121,5 +121,5 @@ g=: 3 : 'y#:i.*/y'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -143,5 +143,5 @@ test ((1+?123),&.>2 3 4) $&.> 2;3;0
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

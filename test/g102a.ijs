@@ -138,5 +138,5 @@ y=: [&.o.2|?100$2e5
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

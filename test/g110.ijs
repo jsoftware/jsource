@@ -247,5 +247,5 @@ NB. tests for correct generation of AVX2 instructions.  Verifies that the compil
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

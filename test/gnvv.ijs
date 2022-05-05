@@ -22,5 +22,5 @@ testx=: 2 : '(u b._1) -: 5!:5<''v'''
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -109,5 +109,5 @@ test2a"0 i.NRNG
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

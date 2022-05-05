@@ -21,5 +21,5 @@ f1=: 4 : 0 " 0
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

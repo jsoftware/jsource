@@ -353,5 +353,5 @@ NB. x v!.f y where x is extended and v requires fill --------------------
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

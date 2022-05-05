@@ -266,5 +266,5 @@ NB. obsolete 'domain error' -: f etx 1 2
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

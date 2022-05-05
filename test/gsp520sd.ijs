@@ -43,5 +43,5 @@ f&> c [ q=: 2 1 1 3$j./?2$2e6
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

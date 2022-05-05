@@ -105,5 +105,5 @@ y     =: IF64{:: _2147483648; _9223372036854775808
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

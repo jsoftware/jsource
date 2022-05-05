@@ -45,5 +45,5 @@ NB. With new code, test all permutations of smallest element, repeated and not, 
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

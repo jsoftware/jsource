@@ -38,5 +38,5 @@ x=:(0.01*_700+?20$1400),0,*/\4$0j1
 
 )
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

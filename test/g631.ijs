@@ -429,5 +429,5 @@ isip 13!:83 {{ i. y }} 1e6
 
 4!:55 ;:'a ckprist countis e exx_z_ gname isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

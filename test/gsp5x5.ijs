@@ -50,5 +50,5 @@ test 1$.s;(5?#s);-~4j1
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

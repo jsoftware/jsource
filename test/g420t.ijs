@@ -88,5 +88,5 @@ THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

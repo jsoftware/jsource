@@ -84,5 +84,5 @@ y=: j./ _5000 + 2 10000 ?@$ 10000
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

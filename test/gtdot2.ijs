@@ -335,5 +335,5 @@ NB. run & open the futures results
 
 4!:55 ;:'NX STRIDE TASK s1 t1'
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

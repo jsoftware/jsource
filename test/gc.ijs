@@ -169,5 +169,5 @@ k = p log"1 p pow"1 0 k=:?2 10$n
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

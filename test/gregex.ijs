@@ -21,5 +21,5 @@ E=: '\x{306f}' NB. codepoint of D
 
 4!:55 ;:'A B C D E'
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

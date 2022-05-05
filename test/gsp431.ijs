@@ -86,5 +86,5 @@ d=: $.^:_1 s=: 1$.7 11 13;0 1 2;_1
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

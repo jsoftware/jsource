@@ -53,5 +53,5 @@ f (1-e)*x
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

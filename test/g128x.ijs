@@ -79,5 +79,5 @@ dm =.lrtoa@:(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~) 1000
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

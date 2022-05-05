@@ -10,5 +10,5 @@ NB. NB. .. .: :. .: NB. NB not: 3_4_5_ _.
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

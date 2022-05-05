@@ -98,5 +98,5 @@ testb i.2000
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

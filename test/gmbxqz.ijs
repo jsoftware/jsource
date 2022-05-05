@@ -86,5 +86,5 @@ r=: y=: 5!:2 <'g'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

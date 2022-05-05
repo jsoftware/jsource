@@ -161,5 +161,5 @@ NB. 0 ~: h 15!:21 'gethostname'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

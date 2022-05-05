@@ -382,5 +382,5 @@ test1 1.5 + <. 20 * 100 1000 ?@$ 0
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

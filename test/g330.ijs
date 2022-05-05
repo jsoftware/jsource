@@ -396,5 +396,5 @@ IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$s:@<"0 'chthonic
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

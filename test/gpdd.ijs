@@ -43,5 +43,5 @@ x -: ({.x) p.. p.. x=: ?10$100
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -91,5 +91,5 @@ assert. (0 ". '16b123456789abcdef 3') = 81985529216486896 3
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

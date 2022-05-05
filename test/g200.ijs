@@ -336,5 +336,5 @@ _ -:  1r2 ^ {. __ 1r1
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

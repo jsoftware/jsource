@@ -27,5 +27,5 @@ f=: 3 : '(*:/ -: nand/) y ?@$ 2'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -132,5 +132,5 @@ t -: (3#x) (,(3*i)+/i.3)} 1 $. 15e8 ; 0 ; 2-2
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -544,5 +544,5 @@ NB. empty-arg detection
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -125,5 +125,5 @@ _3000 3000 10000 ((cr 3&u:) -: 13!:82) }. yy
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

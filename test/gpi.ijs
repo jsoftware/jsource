@@ -17,5 +17,5 @@ t=: (am,gm)^:(i.10) 1,%%:2
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

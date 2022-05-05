@@ -130,5 +130,5 @@ A1~ 3 4 0 5$-~3j4
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

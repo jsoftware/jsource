@@ -297,5 +297,5 @@ THRESHOLD+. (6!:2 'slow 0') > 1.5 * (6!:2 'fast2 0')
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

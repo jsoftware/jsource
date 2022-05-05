@@ -316,5 +316,5 @@ a.                   f"_ 0 ] 100+i.12
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

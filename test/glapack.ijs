@@ -87,5 +87,5 @@ NB. obsolete 9!:49 s48
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

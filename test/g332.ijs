@@ -343,5 +343,5 @@ NB. 'ill-formed number' -: ex '123 45e   '
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

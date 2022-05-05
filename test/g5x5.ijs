@@ -915,5 +915,5 @@ f=: (<(<,':'),<(<(,'0');1),<(,'0');1 0$'') (1 : 'u u`:6`:6 y')
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

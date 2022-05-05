@@ -83,5 +83,5 @@ t1 ~: f t2
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

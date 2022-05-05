@@ -247,5 +247,5 @@ NB. _ 0 _. _. -: _ _ __ __ ^ _ __ _ __
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

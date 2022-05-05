@@ -50,5 +50,5 @@ g&>c
 4!:55 ;:'a c f g p q r'
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

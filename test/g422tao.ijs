@@ -17,5 +17,5 @@ eq=: -:!.0
 
 4!:55 ;:'eq ge gt le lt'
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

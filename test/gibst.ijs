@@ -91,5 +91,5 @@ NB. x (   I. @(e.!.0)) R y
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

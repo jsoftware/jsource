@@ -193,5 +193,5 @@ NB. Cases that failed once
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -807,5 +807,5 @@ NB. left justify.  same deal for fmt2.
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

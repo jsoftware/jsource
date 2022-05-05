@@ -190,5 +190,5 @@ q=: x=: <"0 <"0 i.2 3 4
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

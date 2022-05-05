@@ -211,5 +211,5 @@ isnum=: 13 : '{:0,nn~:(nn=._1)".y'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -89,5 +89,5 @@ t=.(+&.>i.5),;:'(tail -: {:) ^0j1*?3 4$1256'
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

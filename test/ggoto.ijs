@@ -180,5 +180,5 @@ bod=: (<;._2) 0 : 0
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -125,5 +125,5 @@ g3 imin,0,imax
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

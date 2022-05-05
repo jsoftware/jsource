@@ -82,5 +82,5 @@ test <"0 ?40$100
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

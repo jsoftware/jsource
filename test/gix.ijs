@@ -196,5 +196,5 @@ NB. Verify that y can have the long frame
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

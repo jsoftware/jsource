@@ -15,5 +15,5 @@ _ _ _ -: +:@3 b. 0
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

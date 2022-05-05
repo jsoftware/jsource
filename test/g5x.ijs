@@ -65,5 +65,5 @@ pr =. 5!:6
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

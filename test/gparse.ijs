@@ -162,5 +162,5 @@ NB. t =. * x  NB. OK from console - can't really check without breaking tests wh
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -824,5 +824,5 @@ b =: 0. + i. 3 4
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

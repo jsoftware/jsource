@@ -59,5 +59,5 @@ f y=: s:@<"0 'a'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

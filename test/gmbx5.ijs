@@ -1068,5 +1068,5 @@ q=: x=: (?10 2 3$#x){x=: <"0 (<5!:2 <'g') , <@(s:"0) (10 u: 65536+a.&i.)&.> ;:'C
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

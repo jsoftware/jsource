@@ -22,5 +22,5 @@ test&>/~ 0 1;(_500+?@$~1000);(100 ?@$ 0); j./2 100 ?@$ 0
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

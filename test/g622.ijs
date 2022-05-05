@@ -17,5 +17,5 @@ NB. 'nonce error' -: ,&.>/ etx (i. 5);4;i. 2 3
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -56,5 +56,5 @@ THRESHOLD +. ((100) 6!:2 '0 < L. a') > 100 * ((100) 6!:2 '0 (< L.) a')
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

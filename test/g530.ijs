@@ -759,5 +759,5 @@ IGNOREIFFVI 10000 > 7!:2 'a =: (#a) 0} a'
 4!:55 ;:'lim lm mody rx ry selshape tm tx ty' 
 randfini''
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

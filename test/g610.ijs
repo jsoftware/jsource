@@ -22,5 +22,5 @@ e =. `(<  (<,'3') , <,'0';'+:';'-')
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -171,5 +171,5 @@ y (,:"1 -: lam"1) x
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

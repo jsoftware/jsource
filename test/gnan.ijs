@@ -292,5 +292,5 @@ _1 1 = 7 o. __ _
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

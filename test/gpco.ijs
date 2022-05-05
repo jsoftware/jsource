@@ -101,5 +101,5 @@ t=: Goldbach n=: 4+2*?1e5
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

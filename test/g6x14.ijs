@@ -156,5 +156,5 @@ NB. rank
 
 4!:55 ;:'IMIN efs sfe a e t '
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

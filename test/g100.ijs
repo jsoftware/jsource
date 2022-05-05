@@ -211,5 +211,5 @@ y     =: <.  -2^IF64{31 62
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

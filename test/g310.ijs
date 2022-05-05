@@ -363,5 +363,5 @@ NB. obsolete 9!:49 svxy
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

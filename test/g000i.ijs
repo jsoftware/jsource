@@ -48,5 +48,5 @@ f=: 3 : '(=/ -: eq/) ?y$2'
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -156,5 +156,5 @@ f x=: 252097800629
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

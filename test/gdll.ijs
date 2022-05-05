@@ -193,5 +193,5 @@ f''
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xbasic_add xx yy z'
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

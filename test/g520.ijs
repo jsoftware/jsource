@@ -1129,5 +1129,5 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

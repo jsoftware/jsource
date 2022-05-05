@@ -17,5 +17,5 @@ NB. f/"r y over an axis of length 2 -------------------------------------
 
 4!:55 ;:'b'
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

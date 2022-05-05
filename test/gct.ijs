@@ -35,5 +35,5 @@ f"0 ]0.001 * 5 10 ?@$ 2e9
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

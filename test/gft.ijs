@@ -32,5 +32,5 @@ THRESHOLD +. (1-*:threshold) > | (s-t)%s
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

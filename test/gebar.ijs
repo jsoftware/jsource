@@ -283,5 +283,5 @@ olim =: 9!:20''
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

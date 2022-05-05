@@ -33,5 +33,5 @@ t -:&((-.x e. 'YMDhms')&#) x
 
 4!:55 ;:'t ts x'
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -159,5 +159,5 @@ NB. '10 not cut back' -: main5 10
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

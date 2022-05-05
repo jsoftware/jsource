@@ -152,5 +152,5 @@ f =: 3!:11
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

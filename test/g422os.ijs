@@ -31,5 +31,5 @@ THRESHOLD +. 0.75 > %/ 10000&(6!:2) '5 ({ /:~) y' ,: '5 ({ /:~"]) y' NB. 0.71 on
 4!:55 ;:'n x y'
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

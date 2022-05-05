@@ -84,5 +84,5 @@ max=: 4 : 'x>.y'
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

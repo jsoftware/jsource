@@ -124,5 +124,5 @@ test4=: 1 : 0
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

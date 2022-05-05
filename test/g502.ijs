@@ -52,5 +52,5 @@ NB. no longer honored ((%:x)+/*:x) -: f x
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

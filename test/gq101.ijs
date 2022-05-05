@@ -26,5 +26,5 @@ x=: (+%)/\90$1x
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

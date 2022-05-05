@@ -39,5 +39,5 @@ _ -: (r.?13$40     ) _: r.?13$40
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

@@ -833,5 +833,5 @@ t -: 1000  NB. quit after 1000 tries
 randfini''
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

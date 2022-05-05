@@ -59,5 +59,5 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: 10&u: 65536+a.i. ' miasma cht
 
 
 
-echo^:ECHOFILENAME 'memory used: ',":7!:1''
+epilog''
 

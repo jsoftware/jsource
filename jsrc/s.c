@@ -363,7 +363,7 @@ L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) L *z=probeis(a,g); WRITEUNLOCK(g->lo
 // g is symbol table to use
 // result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
 // if not found, one is created.  Caller must ensure that a symbol is reserved
-// Takes a write lock on  g and returns holding that lock
+// Takes a write lock on g and returns holding that lock
 L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
  LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables

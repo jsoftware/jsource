@@ -63,7 +63,7 @@
 #if 0 // obsolete 
 #define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
- if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); goto lbl;} if(!((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2; jsignal(EVATTN); z=0;} \
+ if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); goto lbl;} if(!((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2; jsignal(EVATTN); z=0;} \
  else{lbl: if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}   /* debug parse if debug/pm */ \
  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
    if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \

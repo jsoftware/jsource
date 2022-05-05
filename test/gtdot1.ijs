@@ -427,7 +427,77 @@ end.
 NB. run & open the futures results
 ; s1''
 
+NB. x is number of iterations
+NB. y is a task number
+NB. result is always 1
+NB. task 0 repeatedly changes the path for base locale; task 1 repeatedly accesses a name
+t1=: 4 : 0"_ 0
+if. y=0 do.
+  while. -. t1done do.
+    (<'base') 18!:2~ (#~ 2 2 2 #: [: >: [: ? 7:) ;: 'l1 l2 l3'
+  end.
+else.
+  while. (,<,'z') -: 18!:2 <'base' do. end.  NB. wait for task 0 to start 
+  for_xno. i.x do.
+   assert. 1 0 1 0 1 0 -: (a,b,a,b,a,b) < 2.5
+  end.
+  t1done__=:1
+end.
+1
+)
+
+NB. test name access while path is being changed
+NB. Nilad.  Result is list of results from each thread
+s1=: 3 : 0
+ ]&.> 5e5 (t1 f. t.'')"0 [ i.2       NB. start task
+)
+
+t1done=: 0
+'a_l1_ a_l2_ a_l3_ b_l1_ b_l2_ b_l3_' =: i. 6
+; }. shrxno =: 1 ; s1''
+
+
+NB. x is number of iterations
+NB. y is a task number
+NB. result is always 1
+NB. task 0 repeatedly changes globals; task 1 repeatedly accesses them
+t1=: 4 : 0"_ 0
+if. y=0 do.
+  while. -. t1done do.  NB. as long as other is running
+   'a_l1_ b_l1_ a_l1_ b_l1_ a_l1_ b_l1_ a_l1_ b_l1_ a_l1_ b_l1_ ' =: (10 $ 0 3) + ?0
+   4!:55 <'a_l1_' 
+   'a_l1_ b_l1_ a_l1_ b_l1_ a_l1_ b_l1_ a_l1_ b_l1_ a_l1_ b_l1_ ' =: (10 $ 0 3) + ?0
+   4!:55 <'b_l1_' 
+  end.
+  1
+else.
+  res =. $0
+  for_xno. i.x do.
+   res =. res ,  1 0 1 0 1 0 -: (a,b,a,b,a,b) < 2.5
+  end.
+  t1done=: 1
+  *./ res
+end.
+
+)
+
+NB. test name access while name is being changed/deleted
+NB. Nilad.  Result is list of results from each thread
+s1=: 3 : 0
+ ]&.> 5e5 (t1 f. t.'')"0 [ i.2       NB. start task
+)
+
+t1done=: 0
+'a_l1_ a_l2_ b_l1_ b_l2_ ' =: 0 1 3 4
+(;:'l1 l2') 18!:2 <'base'
+; }. shrxno =: 2 ; s1''
+
+(<'z') 18!:2 <'base'
+18!:55 ;:'l1 l2 l3'
+
+
+
 1: (2!:0 :: 1:)^:IFUNIX 'rm -rf ',jpath '~temp/tdot'
 1: (1!:55 ::1:)^:IFWIN ((jpath'~temp/tdot/')&,)&.> {."1[ 1!:0 jpath '~temp/tdot/*' 
 
-4!:55 ;:'MINLEN MLEN NX STRIDE TASK1 TASK s1 t1 '
+4!:55 ;:'MINLEN MLEN NX STRIDE TASK1 TASK s1 t1 t1done shrxno '

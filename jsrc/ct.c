@@ -265,7 +265,7 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
   I adbreak=__atomic_load_n((US*)&JT(jt,adbreak)[0],__ATOMIC_ACQUIRE);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
-  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
+  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
   // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution.  In that case fail the pyx.  It will not be deleted until the value has been stored
   if(unlikely((adbreak&0xff)>1)){errcode=EVBREAK; break;}  // JBREAK: fail the pyx and exit
   // if the pyx has a max time, see if that is exceeded
@@ -302,7 +302,7 @@ void readlock(S *alock, S prev){
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the lock, loop if can't
- }while(__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)<0);
+ }while((prev=__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)&(S)-WLOCKBIT)!=0);
 }
 
 // take a writelock on *alock.  We have turned on the write request; we come here only if the lock was in use.  The previous value was prev
@@ -310,14 +310,14 @@ void writelock(S *alock, S prev){
  // loop until we get the lock
  I nspins;
  while(prev&(S)-WLOCKBIT) {
- // Another writer requested.  They win.  wait until they finish.  As above, back off if it looks like they were preempted
-  nspins=prev&0x7fff?50+10:50;  // max expected writer delay, plus reader delay if there are readers, in 20-ns units
+ // Another writer requested before us.  They win.  wait until they finish.  As above, back off if it looks like they were preempted
+  nspins=prev&(WLOCKBIT-1)?50+10:50;  // max expected writer delay, plus reader delay if there are readers, in 20-ns units
   while(prev&(S)-WLOCKBIT){
    if(--nspins==0){nspins=50; YIELD}
    POLLDELAY  // delay a little to reduce bus traffic while we wait for the writer to finish
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);  // loop without RFO cycle till the other writer goes away
   }
-  // try to reacquire the writelock
+  // try to reacquire the writelock.  When the holder releases it, all requests are cleared
 #if WLOCKBIT==0x8000
   prev=__atomic_fetch_or(alock,(S)WLOCKBIT,__ATOMIC_ACQ_REL);
 #else
@@ -330,9 +330,9 @@ void writelock(S *alock, S prev){
  while(prev&(WLOCKBIT-1)){  // wait until reads complete
   if(--nspins==0){nspins=20; YIELD}  // delay if a thread seems to have been preempted
   POLLDELAY  // delay a little to reduce bus traffic while we wait for the readers to finish
-  prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
+  prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);  // no need to RFO: once readers finish we have it
  }
- // the lock is now 8000 and we have it.  It may go off 8000 while we run, but we won't look
+ // Readers have finished; we get the lock.  The read count may go non0 while we run, but we won't look
 }
 
 // *********************** task creation ********************************
@@ -354,7 +354,7 @@ void jtclrtaskrunning(J jt){S oldstate;
  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
  while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
   if(!(oldstate&TASKSTATERUNNING))R;   // if for some reason we are called with the bit already off, keep it off
-  if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG|LOCKPRISYM);}else{YIELD delay(1000);}
+  if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG+LOCKPRIPATH+LOCKPRISYM);}else{YIELD delay(1000);}
  }
 }
 

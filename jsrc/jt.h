@@ -219,7 +219,8 @@ typedef struct JSTstruct {
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
  S systemlock;       // lock used for quiescing all tasks.  Bits in order of desc3ending priority:
 #define LOCKPRISYM 1  // lock is requested for symbol extension
-#define LOCKPRIDEBUG 2  // lock is requested for debug suspension
+#define LOCKPRIPATH 2  // lock is requested to change a locale path
+#define LOCKPRIDEBUG 4  // lock is requested for debug suspension
  S systemlocktct;   // counter field, used for systemlock sync
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
  B stch;             /* enable setting of changed bit                   */
@@ -269,8 +270,10 @@ typedef struct JSTstruct {
  C locsize[2];       /* size indices for named and numbered locales     */
  C baselocale[4];    // will be "base"
  UI4 baselocalehash;   // name hash for base locale
+ UC seclev;           /* security level                                  */ UC dbuser;           /* user-entered value for db             */
+ B assert;           /* 1 iff evaluate assert. statements               */
  // rest of cacheline used only in exceptional paths
-// 4 bytes free
+// 2 bytes free
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
  I filler3[3];
@@ -337,9 +340,7 @@ typedef struct JSTstruct {
  C nfe;              /* 1 for J native front end                    */
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
- UC seclev;           /* security level                                  */ UC dbuser;           /* user-entered value for db             */
- B assert;           /* 1 iff evaluate assert. statements               */
-// 3 bytes free
+// 5 bytes free
  I filler7[1];
 // end of cacheline 7
 

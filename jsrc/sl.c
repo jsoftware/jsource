@@ -420,6 +420,9 @@ F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF);
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored, and must incorporate it
      /* 18!:2  query locale path */
 
+// null systemlock handler to wait for quiet system.  Used for changing locale path
+static A jtnullsyslock(JTT* jt){R (A)1;}
+
 F2(jtlocpath2){A g,h; AD * RESTRICT x;
  F2RANK(1,0,jtlocpath2,DUMMYSELF);
  RZ(g=locale(1,w));
@@ -435,10 +438,12 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
   // more than one locale; must be list of boxes.  Go through the list, using a virtual block
   ASSERT(AT(a)&BOX,EVLOCALE);
   fauxblock(locfaux); fauxvirtual(locatom,locfaux,a,0,ACUC1) AN(locatom)=1;  // create an faux atom, starting at beginning of a
-  A *xv0=xv; DO(AN(a), RZ(h=locale(1,locatom)); if(likely(h!=g)){*xv++=h; ra(h);} AK(locatom)+=SZI;) AN(x)=(xv-xv0)+1;  // move locales for the names, but don't allow a locale in its own path
+  A *xv0=xv; DO(AN(a), RZ(h=locale(1,locatom)); if(likely(h!=g)){*xv++=h; ra(h);} AK(locatom)+=SZI;) AN(x)=(xv-xv0)+1;  // move locales for the names into the recursive path, but don't allow a locale in its own path
  }
  *xv=0;  // terminate locale list with null.
- fa(LOCPATH(g)); ACINITZAP(x); LOCPATH(g)=x;  // switch paths.  We are guaranteed that the path of g is nonnull so ra not needed
+ // We have the new path in x, and we can switch to it, but we have to call a system lock before we free the old path, to purge the old one from the system
+ A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x;  // switch paths.  Transfer ownership to LOCPATH(g) now that no error possible
+ if(!ACISPERM(AC(oldpath))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(oldpath);}  // if the old path is not PERMANENT, wait for a lock before freeing
  R mtm;
 }    /* 18!:2  set locale path */
 

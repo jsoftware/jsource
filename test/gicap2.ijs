@@ -178,3 +178,6 @@ test5"0 i.5 20
 4!:55 ;:'x xx y yy'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

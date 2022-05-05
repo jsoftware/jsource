@@ -138,3 +138,6 @@ NB. jtr appears twice, one is global another local
 4!:55 ;:'trnoun trtil trx '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

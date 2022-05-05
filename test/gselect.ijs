@@ -323,3 +323,6 @@ y =. y , 'g'
 4!:55 ;:'f0 f1 f2 f3 f4 f5 g1 g2 g3 g4 x t'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

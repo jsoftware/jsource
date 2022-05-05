@@ -67,3 +67,6 @@ f   =: mac{'no/such/dir/or/file';':no:such:dir:or:file'
 4!:55 ;:'erase f mac pc read unix win write x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

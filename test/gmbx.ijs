@@ -22,3 +22,4 @@ mean=: +/ % #
 
 NB. do not erase names
 NB. 4!:55 ;:'f f1 g mean q r'
+

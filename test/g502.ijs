@@ -51,3 +51,6 @@ NB. no longer honored ((%:x)+/*:x) -: f x
 4!:55 ;:'c1 c2 cc cc f ss t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

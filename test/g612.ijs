@@ -25,3 +25,6 @@ x =: 5 7
 4!:55 ;:'a f plus x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

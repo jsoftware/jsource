@@ -138,3 +138,6 @@ f&>c
 4!:55 ;:'A A2 c cat d double f mean minus q r ravel rev rot s sum t x x0 xx y y0 yy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

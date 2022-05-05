@@ -138,3 +138,6 @@ ferase f
 4!:55 ;:'f f0 fdir ferase fread fwrite i jdata t x '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

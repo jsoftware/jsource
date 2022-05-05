@@ -137,3 +137,5 @@ NB. boxed
 4!:55 ;:'a adot1 adot2 sdot0 b n t test x'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''

@@ -101,3 +101,6 @@ x -: %/\x=: [&.j. 0 0 0 0
 4!:55 ;:'div x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -78,3 +78,6 @@ dm =.lrtoa@:(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~) 1000
 4!:55 ;:'a i q qr r todiag lrtoa s x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -9,3 +9,6 @@ NB. NB. .. .: :. .: NB. NB not: 3_4_5_ _.
 1
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

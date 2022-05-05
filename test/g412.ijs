@@ -55,3 +55,6 @@ pc=: (9!:12 '') e. 0 1 2 6 7
 4!:55 ;:'F pc'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

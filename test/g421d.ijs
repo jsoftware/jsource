@@ -81,3 +81,6 @@ test <"0 ?40$100
 4!:55 ;:'adot1 adot2 sdot0 f g test testa xx yy'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

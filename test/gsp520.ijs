@@ -102,3 +102,6 @@ h&>c [ i=: <$0
 4!:55 ;:'c d f g h i r s x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

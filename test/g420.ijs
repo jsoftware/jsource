@@ -832,3 +832,6 @@ t -: 1000  NB. quit after 1000 tries
 4!:55 ;:'rand s t test x y z'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

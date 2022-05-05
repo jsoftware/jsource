@@ -536,3 +536,6 @@ end.
 4!:55 ;:'erase f fa fb fc fd fe ff fg fh fi fj goo sub t write x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

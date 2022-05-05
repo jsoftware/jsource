@@ -145,3 +145,6 @@ y=: 1e_4*_1e5+?100$2e5
 4!:55 ;:'x y z'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

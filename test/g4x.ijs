@@ -418,3 +418,6 @@ end.
 4!:55 ;:'sum__ sum_z_ t ttt this1 this2 v verbx x y '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -118,3 +118,6 @@ m=: ^2
 
 )
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

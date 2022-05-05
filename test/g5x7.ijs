@@ -177,3 +177,6 @@ a3=: /\
 4!:55 ;:'a1 a2 a3 c1 c2 chk f1 f2 f3 f4 f5 mean perm ww xr'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

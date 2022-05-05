@@ -20,3 +20,6 @@ f1=: 4 : 0 " 0
 4!:55 ;:'b f0 f1 i n v'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

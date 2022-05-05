@@ -199,3 +199,6 @@ f=: e.!.0
 4!:55 ;:'f f1 g j mean q r t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

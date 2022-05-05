@@ -262,3 +262,6 @@ x -: ]&.(28 b.&12345) x
 4!:55 ;:'B d f g g0 g1 g2 l N p test u x xx y yy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -90,3 +90,6 @@ f&>/~c
 4!:55 ;:'a c d f g h p q r s t ti x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

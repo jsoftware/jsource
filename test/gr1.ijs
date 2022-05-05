@@ -45,3 +45,6 @@ _5r2 -: 5r_2
 4!:55 ;:'cmpx fl int intx rat x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

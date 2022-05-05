@@ -85,3 +85,6 @@ d=: $.^:_1 s=: 1$.7 11 13;0 1 2;_1
 4!:55 ;:'d f f2 g h rk s'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

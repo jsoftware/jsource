@@ -88,3 +88,6 @@ t=.(+&.>i.5),;:'(tail -: {:) ^0j1*?3 4$1256'
 4!:55 ;:'adot1 adot2 sdot0 t tail'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

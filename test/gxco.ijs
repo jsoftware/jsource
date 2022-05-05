@@ -88,3 +88,6 @@ NB. f1"0 ]10^2 3 9
 4!:55 ;:'e d f f1 p q'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -140,3 +140,6 @@ _4 _0.25 -: _2 0.5 % 0.5 _2
 4!:55 ;:'x y z'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

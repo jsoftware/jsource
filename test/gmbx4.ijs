@@ -1063,3 +1063,6 @@ r=: y=: (?7 2$#y){y=: (<5!:2 <'g'),<@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Er
 4!:55 ;:'f f1 g j mean q r t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

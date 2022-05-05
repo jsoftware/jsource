@@ -71,3 +71,6 @@ NB. symbol
 4!:55 ;:'test x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -21,3 +21,6 @@ f=: ($.4)!:($.3)
 4!:55 ;:'f'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

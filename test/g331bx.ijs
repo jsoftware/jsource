@@ -87,3 +87,6 @@ x ] g y
 4!:55 ;:'c cut f g index size stdx x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -115,3 +115,6 @@ a:&, f a
 4!:55 ;:'a f f1 g h h1 mean q r rsq ss tbase timenoa timea tip tnip x x1 y y1'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

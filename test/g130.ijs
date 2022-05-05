@@ -49,3 +49,6 @@ _ __ -: 3 _4 % 0
 'length error' -: 3 4   %~etx ?4 2$183164
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

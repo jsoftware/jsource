@@ -47,3 +47,6 @@ f=: 3 : '(=/ -: eq/) ?y$2'
 4!:55 ;:'f eq x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

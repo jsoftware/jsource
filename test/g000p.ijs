@@ -104,3 +104,6 @@ eq=: 4 : 'x=y'
 4!:55 ;:'eq eqscan f x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

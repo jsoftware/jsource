@@ -83,3 +83,6 @@ y=: j./ _5000 + 2 10000 ?@$ 10000
 4!:55 ;:'complex f mag t test x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

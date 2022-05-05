@@ -393,3 +393,6 @@ _1 0 1 2 5 6 9 10 13 15 _2 -: 3 {:: 6!:11''
 4!:55 ;:'s sp sum_z_ t time ts tss tv x xop xx '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

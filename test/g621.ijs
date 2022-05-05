@@ -172,3 +172,6 @@ NB. Inplacing
 4!:55 ;:'part pfx recur square start t test x z '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -142,3 +142,6 @@ ge =: 3 : 0
 4!:55 ;:'fa fb fc fd fe ga gb gc gcd gd ge x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

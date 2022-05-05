@@ -44,3 +44,6 @@ NB. With new code, test all permutations of smallest element, repeated and not, 
 4!:55 ;:'test yy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

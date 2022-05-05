@@ -60,3 +60,6 @@ test=: 3 : 0
 4!:55 ;:'cfsqrt N rat t test v xx yy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

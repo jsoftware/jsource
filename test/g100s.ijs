@@ -78,3 +78,6 @@ plus=: 4 : 'x+y'
 4!:55 ;:'f plus x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

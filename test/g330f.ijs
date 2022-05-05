@@ -83,3 +83,6 @@ test 16
 4!:55 ;:'adot1 adot2 sdot0 b data f i m test yy'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

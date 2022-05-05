@@ -162,3 +162,6 @@ NB. complex
 4!:55 ;:'base1 base2 ext f n rank x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

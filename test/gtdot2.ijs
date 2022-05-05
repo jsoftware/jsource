@@ -334,3 +334,6 @@ NB. run & open the futures results
 18!:55 [ 18!:1 [1                   NB. erase residual numbered locales in each task
 
 4!:55 ;:'NX STRIDE TASK s1 t1'
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -20,3 +20,6 @@ E=: '\x{306f}' NB. codepoint of D
 (,:6 3) -: E rxmatch A
 
 4!:55 ;:'A B C D E'
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

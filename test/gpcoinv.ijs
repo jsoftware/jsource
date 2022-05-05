@@ -33,3 +33,6 @@ NB. LeVeque, Fundamentals of Number Theory, Addison-Wesley, 1977, p. 5.
 4!:55 ;:'f v x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -296,3 +296,6 @@ THRESHOLD+. (6!:2 'slow 0') > 1.5 * (6!:2 'fast2 0')
 4!:55 ;:'a f fib fa fb fc fd fe ff fg fi fj fk fl fm t slow slow2 fast fast2 '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

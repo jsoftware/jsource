@@ -28,3 +28,6 @@ f=: 3 : '(+./ -: or/) y ?@$ 2'
 4!:55 ;:'f or x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

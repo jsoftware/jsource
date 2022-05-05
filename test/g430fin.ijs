@@ -124,3 +124,6 @@ _3000 3000 10000 ((cr 3&u:) -: 13!:82) }. yy
 4!:55 ;:'cr f g mm sum test yy yy1 yy2 yy3'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

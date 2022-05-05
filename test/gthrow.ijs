@@ -158,3 +158,6 @@ NB. '10 not cut back' -: main5 10
 4!:55 ;:'f main main1 main2 main3 main4 main5 sub t'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

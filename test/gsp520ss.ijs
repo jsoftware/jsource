@@ -30,3 +30,6 @@ pc f&>/ qc [ q=: (0,6$1)*"3 (?11 7 9$2) * ?11 7 9 8$124
 4!:55 ;:'f p pc pr q qc qr s t z'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

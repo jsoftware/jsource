@@ -439,3 +439,6 @@ g0 =: 7!:0''
 4!:55 ;:'g0 g1 n queens x '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

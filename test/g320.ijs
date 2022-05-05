@@ -620,3 +620,6 @@ xx =. | xx
 4!:55 ;:'adot1 adot2 sdot0 cat f n l r t test x xx y yy'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

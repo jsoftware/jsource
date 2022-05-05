@@ -134,3 +134,6 @@ x=: 1 (0)}0=1019 ?@$ 4
 4!:55 ;:'f n P test testb testbw testi testn testov x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

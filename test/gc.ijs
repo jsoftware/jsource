@@ -168,3 +168,6 @@ k = p log"1 p pow"1 0 k=:?2 10$n
 4!:55 ;:'pind pow t wh where x '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

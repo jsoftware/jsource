@@ -37,3 +37,6 @@ x=: 20$_.
 
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

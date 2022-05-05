@@ -55,3 +55,6 @@ a=: (?3 5$10) f"0 ?3 5$30
 4!:55 ;:'a f Level test totient'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -71,3 +71,6 @@ gt=: 4 : 'x>y'
 4!:55 ;:'f gt x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -418,3 +418,6 @@ test4=: 4 : 0
 4!:55 ;:'a adot1 adot2 sdot0 c d e f g h match match0 n test test0 test1 test2 test3 test4 x xx y yy'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

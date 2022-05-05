@@ -45,3 +45,6 @@ f=: 3 : '(~:/ -: ne/) y ?@$ 2'
 4!:55 ;:'f ne x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -102,3 +102,6 @@ max=: 4 : 'x>.y'
 4!:55 ;:'adot1 adot2 sdot0 max x'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -63,3 +63,6 @@ test2=: 2 : 0
 4!:55 ;:'adot1 adot2 sdot0 ct data test test2 xx yy'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

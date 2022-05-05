@@ -240,3 +240,6 @@ phi=: -:%:5
 4!:55 ;:'m n p phi pp q r rp s sin sinh tangent taysqrt x y '
 
 )
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

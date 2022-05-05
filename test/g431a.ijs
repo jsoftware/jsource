@@ -246,3 +246,6 @@ a=: ". ;._2 [ 0 : 0
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd em en f iind infix k kay key ob oind omask osub outfix'
 4!:55 ;:'prefix sd seg suffix t testa testb'
 randfini''
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

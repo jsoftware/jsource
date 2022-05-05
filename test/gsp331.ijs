@@ -70,3 +70,6 @@ q=: x j}1$.2e9;0;2-2
 4!:55 ;:'classify cut1 f i j n p q qs s t x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

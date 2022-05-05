@@ -100,3 +100,6 @@ erase h
 4!:55 ;:'close erase f h i intv iread open t write'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

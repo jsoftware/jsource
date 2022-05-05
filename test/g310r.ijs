@@ -268,3 +268,6 @@ f ''
 18!:55 ;:'xxx yyy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

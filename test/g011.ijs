@@ -161,3 +161,6 @@ NB. symbol
 4!:55 ;:'a b f inc ir p q x y zfl zfloor '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

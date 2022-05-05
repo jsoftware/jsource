@@ -55,3 +55,6 @@ erase <'conflict'
 4!:55 ;:'read unix win write x '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

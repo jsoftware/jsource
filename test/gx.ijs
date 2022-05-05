@@ -34,3 +34,6 @@ _1 -: jnc <'x.'
 4!:55 ;:'jnc jnl old'
 )
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

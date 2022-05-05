@@ -31,3 +31,6 @@ THRESHOLD +. (1-*:threshold) > | (s-t)%s
 4!:55 ;:'mean plus rev s sum t tally x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

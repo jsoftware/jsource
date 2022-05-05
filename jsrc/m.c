@@ -1137,7 +1137,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
  I nt=__atomic_add_fetch(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // add to total JE mem allocated
- __atomic_fetch_add(&jt->mfreegenallo,TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);   // ...only the pad is net allocation
+ __atomic_fetch_add(&jt->mfreegenallo,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);   // add to total from OS
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
  // we visit them in back-to-front order so the first-allocated headers are in cache

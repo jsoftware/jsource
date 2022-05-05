@@ -274,12 +274,12 @@ B jtspfree(J jt){I i;A p;
     if(FHRHISROOTALLOFREE(AFHRH(baseblock))){ // Free fully-unused base blocks;
 #if 1 || ALIGNTOCACHE   // with short headers, always align to cache bdy
      FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
-     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD+CACHELINESIZE,__ATOMIC_ACQ_REL);  // return storage+bdy
-     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD+CACHELINESIZE,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
+     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // return storage+bdy
+     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // only the pad is net allocation
 #else
      FREECHK(baseblock);
-     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD,__ATOMIC_ACQ_REL);  // return storage
-     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
+     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // return storage
+     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
 #endif
     }else{AFHRH(baseblock) = virginbase;}   // restore the count to 0 in the rest
     p=np;   //  step to next base block
@@ -1137,7 +1137,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
  I nt=__atomic_add_fetch(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // add to total JE mem allocated
- __atomic_fetch_add(&jt->mfreegenallo,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);   // ...add them to the total bytes allocated drom OS
+ __atomic_fetch_add(&jt->mfreegenallo,TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);   // ...only the pad is net allocation
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
  // we visit them in back-to-front order so the first-allocated headers are in cache

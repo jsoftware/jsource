@@ -100,3 +100,6 @@ t=: Goldbach n=: 4+2*?1e5
 4!:55 ;:'Goldbach mask n P100 plt plt1 plt100 pt sieve t v'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

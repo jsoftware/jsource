@@ -374,3 +374,6 @@ neg p
 4!:55 ;:'sum t third write x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

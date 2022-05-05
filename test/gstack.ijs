@@ -104,3 +104,6 @@ end.
 4!:55 ;:'c f f5 f6 t p'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

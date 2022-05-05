@@ -1184,3 +1184,6 @@ assert. ((<P;0),(<01),<(<I),(<00),<P;0) -: (* ] ((9!:63) (9!:63))) 0
 4!:55 ;:'a a1 aad aad2 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast l0 l1 local max min nmm nb qd t test testa unsafename undefinedname x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

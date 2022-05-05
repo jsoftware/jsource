@@ -10,3 +10,6 @@ f1=: %: @: (+/) @: *:
 4!:55 ;:'f0 f1'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

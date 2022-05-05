@@ -495,3 +495,6 @@ sym1=: (-: 0&|:) *. (-: _2&|:)
 4!:55 ;:'rank rho sym0 sym1 t vfy X x y'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

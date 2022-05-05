@@ -18,3 +18,6 @@ t=: 5!:2 <'phi'
 4!:55 ;:'phi t'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

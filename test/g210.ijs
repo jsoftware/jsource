@@ -425,3 +425,6 @@ NB. x$!.f y -------------------------------------------------------------
 4!:55 ;:'adot1 adot2 sdot0 b f res rk s t ya xa yb yc'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

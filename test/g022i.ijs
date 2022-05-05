@@ -26,3 +26,6 @@ f=: 3 : '(>:/ -: ge/) y ?@$ 2'
 4!:55 ;:'f ge x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

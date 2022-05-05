@@ -77,3 +77,6 @@ times=: 4 : 'x*y'
 4!:55 ;:'f times x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

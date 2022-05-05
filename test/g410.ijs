@@ -451,3 +451,6 @@ NB. Types, for singleton and not
 4!:55 ;:'t test x y z '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

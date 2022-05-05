@@ -138,3 +138,5 @@ _1:  testlr z
 4!:55 ;:'D I t test testl testlr testr z'
 
 )
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -119,3 +119,6 @@ b =: + ((1 : '/') \)
 4!:55 ;:'adot1 adot2 sdot0 b f g i x'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

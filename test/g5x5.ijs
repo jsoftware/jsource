@@ -914,3 +914,6 @@ f=: (<(<,':'),<(<(,'0');1),<(,'0');1 0$'') (1 : 'u u`:6`:6 y')
 4!:55 ;:'value vbox vchar x '
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

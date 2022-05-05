@@ -555,3 +555,6 @@ a =. i. 1e6
 4!:55 ;: 'a'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

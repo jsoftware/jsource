@@ -69,3 +69,6 @@ NB. symbol
 4!:55 ;:'ir p q'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

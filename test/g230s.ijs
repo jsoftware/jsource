@@ -24,3 +24,6 @@ f=: 3 : '(|/\. -: rem/\.) y ?@$ 2'
 4!:55 ;:'f rem x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

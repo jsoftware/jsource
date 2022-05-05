@@ -67,3 +67,6 @@ c f&> <y [ a=: $.?(n,4)$1000
 
 4!:55 ;:'a c f n r s x xx y'
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

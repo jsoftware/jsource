@@ -16,3 +16,6 @@ t=: (am,gm)^:(i.10) 1,%%:2
 4!:55 ;:'a am b cm gm t'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

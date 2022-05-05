@@ -58,3 +58,6 @@ f y=: s:@<"0 'a'
 4!:55 ;:'a c f r y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

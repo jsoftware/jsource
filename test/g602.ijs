@@ -447,3 +447,6 @@ _14  (": -: (": x:)) 999996
 4!:55 ;:'sqz t take tcorn test th thbox thorn1 tint top '
 4!:55 ;:'topleft ubar width x y z ' 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

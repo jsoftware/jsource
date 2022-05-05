@@ -62,3 +62,6 @@ THRESHOLD +. threshold < (+/ % #), y rsq"1 y1
 4!:55 ;:'f f1 f2 n rsq ss x y y1' 
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

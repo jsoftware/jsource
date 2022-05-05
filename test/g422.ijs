@@ -576,3 +576,6 @@ x (/:"1 0 -: g"1 0) y=:a.{~?20$256
 4!:55 ;:'a adot1 adot2 sdot0 b c d e f g ge i k le m n0vec p v x y z'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

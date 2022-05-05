@@ -16,3 +16,6 @@ NB. 'nonce error' -: ,&.>/ etx (i. 5);4;i. 2 3
 4!:55 ;:'x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -18,3 +18,6 @@ errnox =: 2!:8
 4!:55 ;:'errnox'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

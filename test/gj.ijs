@@ -60,3 +60,6 @@ t      -: *t=.0 0j1 _1 0j_1 1
 4!:55 ;:'a b jdot t'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

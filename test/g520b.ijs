@@ -103,3 +103,6 @@ f2"0 ] 1000+i.10
 4!:55 ;:'b f0 f1 f2 i x y '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

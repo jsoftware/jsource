@@ -109,3 +109,6 @@ g  0.5-?1000$1e6
 4!:55 ;:'f fc g x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

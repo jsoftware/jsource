@@ -344,3 +344,6 @@ m;n;x;y
 4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

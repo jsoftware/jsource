@@ -37,3 +37,6 @@ test/ 1+2 1*1+?100 1000x
 4!:55 ;:'n r test yy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

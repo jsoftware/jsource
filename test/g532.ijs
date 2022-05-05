@@ -72,3 +72,6 @@ t=.(+&.>i.5),;:'(raze a) -: }: a=. ^0j1*?3 4$1256'
 4!:55 ;:'adot1 adot2 sdot0 curtail t '
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -149,3 +149,6 @@ erase  =. 1!:55
 4!:55 ;:'append erase in mtm out read size t write x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

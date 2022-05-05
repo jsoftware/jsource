@@ -120,3 +120,6 @@ x=: (5 1e4 ?@$ 2)
 
 4!:55 ;:'adot1 adot2 sdot0 f g rk x xx y'
 randfini''
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

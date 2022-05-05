@@ -24,3 +24,6 @@ f=: 3 : '(!/\. -: outof/\.) y ?@$ 2'
 4!:55 ;:'f outof x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

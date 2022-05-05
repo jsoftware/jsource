@@ -14,3 +14,6 @@ NB. obsolete 9!:49 s48
 4!:55 ;:'s48 x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

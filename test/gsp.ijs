@@ -240,3 +240,6 @@ sa=. 1 (0 0 ; 1 1)} 1 $. 2 2 ; 0 01 ; 00
 4!:55 ;:'bsp i s sa t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

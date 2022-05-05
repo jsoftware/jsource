@@ -180,3 +180,6 @@ end.
 f ''
 
 4!:55 ;:'N N0 N1 f f1 f2 g g1 '
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

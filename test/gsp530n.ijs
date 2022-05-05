@@ -179,3 +179,6 @@ case 4
 4!:55 ;:'a b c ca case cw d e f g h i m r s t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

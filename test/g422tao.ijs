@@ -16,3 +16,6 @@ eq=: -:!.0
 1 =   3j4 gt 2j7
 
 4!:55 ;:'eq ge gt le lt'
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

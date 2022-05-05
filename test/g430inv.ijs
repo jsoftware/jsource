@@ -20,3 +20,6 @@ w -: ~:/\. inv ~:/\. w=:1=?40 2$3
 
 4!:55 ;:'inv w'
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

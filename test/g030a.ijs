@@ -15,3 +15,6 @@ f_a_ =. >.
 4!:55 ;:'f x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

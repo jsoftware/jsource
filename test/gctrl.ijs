@@ -543,3 +543,6 @@ f0 =. {{ (u. f. b. 0) }}   NB. u. does not invoke PPPP
 4!:55 ;:'f0 f1 f2 f3 g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test vb__ vb_z_'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

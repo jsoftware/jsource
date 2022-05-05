@@ -564,3 +564,6 @@ NB. Verify they don't check syntax
 4!:55 ;:'rb rbi rx test unbin WS x xr xrh y'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

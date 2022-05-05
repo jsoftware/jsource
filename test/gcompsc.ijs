@@ -543,3 +543,6 @@ NB. empty-arg detection
 4!:55 ;:'zb zd zi zs'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

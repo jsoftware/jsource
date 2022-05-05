@@ -468,3 +468,6 @@ b <: 512 + a
 4!:55 ;:'s sd seg suffix t test xx ' 
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

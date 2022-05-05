@@ -671,3 +671,6 @@ y=: u: x
 4!:55 ;:'domerr f g i j k lr sq t UTYPE x y z'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

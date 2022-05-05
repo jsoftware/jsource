@@ -820,3 +820,6 @@ f2"0] 10^i.2 10
 4!:55 ;: 'mtchontally mtchonreshape mtchontally0 mtchonreshape0'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

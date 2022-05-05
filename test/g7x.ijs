@@ -87,3 +87,6 @@ t -: /:~t
 4!:55 ;:'f g h n old pr s sp space t x y '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

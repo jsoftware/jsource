@@ -155,3 +155,6 @@ f x=: 252097800629
 4!:55 ;:'qa qco t2 x y '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

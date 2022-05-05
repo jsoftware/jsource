@@ -110,3 +110,6 @@ pcheck 18!:31 ''
 4!:55 ;:'a adv b f h i k li m oktypes p pcheck perm s sum t x y yy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

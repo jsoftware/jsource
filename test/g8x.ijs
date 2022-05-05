@@ -806,3 +806,6 @@ NB. left justify.  same deal for fmt2.
 4!:55 ;:'afzrnd f fmt fmt1 fmt2 round s t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -104,3 +104,6 @@ y     =: IF64{:: _2147483648; _9223372036854775808
 4!:55 ;:'test testa testb testc x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

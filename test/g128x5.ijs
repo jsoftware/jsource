@@ -86,3 +86,6 @@ NB. [x] 128!:8 y   hashing -----------------------------------------------------
 
 
 4!:55 ;:'b f f1 g i isnan mean q r x'
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

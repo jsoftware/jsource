@@ -25,3 +25,6 @@ x=: (+%)/\90$1x
 4!:55 ;:'gcd i j x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

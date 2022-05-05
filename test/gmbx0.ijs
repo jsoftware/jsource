@@ -359,3 +359,6 @@ q=: x=: ((<4$<'x'),<<"0 ]<@(s:"0) 2 3$10&u:'AbCdEf') ((1;0;2);<0;1;0)} <"0 <"0 i
 4!:55 ;:'f f1 g j mean q r t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

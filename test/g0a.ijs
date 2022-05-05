@@ -59,3 +59,6 @@ NB. handling empty arrays -----------------------------------------------
 4!:55 ;:'n'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

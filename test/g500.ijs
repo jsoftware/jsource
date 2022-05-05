@@ -46,3 +46,6 @@ y=: 2e4$'boustrophedonic chuffed'
 4!:55 ;:'x xa xb xd xi xj y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

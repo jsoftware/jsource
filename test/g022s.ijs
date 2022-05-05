@@ -71,3 +71,6 @@ ge=: 4 : 'x>:y'
 4!:55 ;:'f ge x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

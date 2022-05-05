@@ -16,3 +16,6 @@ xtx  =: |: ((+/) .*) ]
 4!:55 ;:'lr pr sumsq xtx'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

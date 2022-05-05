@@ -21,3 +21,6 @@ test=: 2 : 0
 4!:55 ;:'test'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

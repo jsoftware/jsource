@@ -1247,3 +1247,6 @@ b1 =: 7!:0''
 4!:55 ;: 'a c'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

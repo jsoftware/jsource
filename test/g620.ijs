@@ -14,3 +14,6 @@ _ _ _ -: +:@3 b. 0
 4!:55 ;:'a x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

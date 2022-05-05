@@ -13,3 +13,6 @@ g =. - :. +
 4!:55 ;:'f g'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

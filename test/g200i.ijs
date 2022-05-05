@@ -26,3 +26,6 @@ f=: 3 : '(^/ -: pow/) y ?@$ 2'
 4!:55 ;:'f pow x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

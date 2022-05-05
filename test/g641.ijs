@@ -54,3 +54,6 @@ seed -: 9!:0 ''
 4!:55 ;:'a b s seed x'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

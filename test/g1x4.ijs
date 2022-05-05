@@ -71,3 +71,6 @@ _1 -: 4!:7 (0)
 4!:55 ;:'close d dir f h j mac open p pc s size unix win x ' 
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

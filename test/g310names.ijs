@@ -21,3 +21,6 @@ a -: 99 ?.@$ 1e6
 4!:55 ;:'a c'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -49,3 +49,6 @@ test 1$.s;(5?#s);-~4j1
 4!:55 ;:'c d r s test x xx yy'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

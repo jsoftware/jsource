@@ -1128,3 +1128,6 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 4!:55 <'abcdefghijabcdefghijabcdefghij0001'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

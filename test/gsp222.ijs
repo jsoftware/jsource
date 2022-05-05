@@ -65,3 +65,6 @@ f&>/~c
 4!:55 ;:'c f p q r s t'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

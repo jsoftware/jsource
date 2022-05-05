@@ -64,3 +64,6 @@ NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/
 4!:55 ;:'h p sp_z_ spl spn'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -335,3 +335,6 @@ _ -:  1r2 ^ {. __ 1r1
 4!:55 ;:'a exp f h n pow rou s x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

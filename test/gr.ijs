@@ -46,3 +46,6 @@ a (r. -: rdot) b
 4!:55 ;: 'a b c rdot'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

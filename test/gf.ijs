@@ -176,3 +176,6 @@ f=: (C +:)"0 f.
 4!:55 ;:'mat monad plus s sgn slash t v ws y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

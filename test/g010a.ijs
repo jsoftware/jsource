@@ -182,3 +182,6 @@ NB. SB < SB ---------------------------------------------------------------
 4!:55 ;:'adot1 adot2 sdot0 x y z'
 randfini''
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

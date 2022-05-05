@@ -757,3 +757,6 @@ f ''
 18!:55 ;:'abcpristloc nonlocale'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

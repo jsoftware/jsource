@@ -372,3 +372,6 @@ f =: &&&
 4!:55 ;:'mac nine one rk seven six test three tr two x z zero '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

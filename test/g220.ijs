@@ -32,3 +32,6 @@ mean=: +/ % #
 4!:55 ;:'mean t x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

@@ -22,3 +22,6 @@ f =: -&3 4 5 6
 4!:55 ;:'dr f x y'
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

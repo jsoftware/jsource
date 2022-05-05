@@ -282,3 +282,6 @@ f =: g@.*
 4!:55 ;:'n12 n2 oarg or plus pow r t test test1 th tv '
 
 
+
+echo^:ECHOFILENAME 'memory used: ',":7!:1''
+

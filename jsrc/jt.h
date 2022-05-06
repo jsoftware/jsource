@@ -338,10 +338,9 @@ typedef struct JSTstruct {
  B sesm;             /* whether there is a session manager             */
  C nfe;              /* 1 for J native front end                    */
  C oleop;            /* com flag to capture output                    */
- JOBQ *jobqueue;      // accessed indirectly to avoid spilling into the next cache line, as layout is annoying; never changes
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
-// 5 bytes free
- B filler7[6];
+ // 6 bytes free
+ JOBQ *jobqueue;      // accessed indirectly to avoid spilling into the next cache line, as layout is annoying; never changes
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));

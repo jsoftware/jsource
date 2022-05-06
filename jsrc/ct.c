@@ -587,6 +587,7 @@ ASSERT(0,EVNONCE)
 #else
 ASSERT(0,EVNONCE)
 #endif
+  break;}
  case 7: { // signal error in pyx
 #if PYXES
   // set value of pyx.  y is pyx;value

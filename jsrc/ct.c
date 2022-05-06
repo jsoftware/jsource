@@ -524,12 +524,9 @@ ASSERT(0,EVNONCE)
 ASSERT(0,EVNONCE)
 #endif
  }else if(m==2){
-  // return list of idle threads
+  // return number of idle threads
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  GA0(z,INT,MAXTASKS,1) I *zv=IAV1(z);  // Don't allocate under lock, and list may change: so allocate max possible.  Don't use GAT in case MAXTASKS is too big for it
-  I threadct=0;  J mjt=MTHREAD(JJTOJ(jt)); J currjt=mjt;  // # threads, master thread, current thread
-  WRITELOCK(mjt->tasklock);  while(currjt->taskidleq){zv[threadct++]=currjt->taskidleq; currjt=JTFORTHREAD(jt,currjt->taskidleq);} WRITEUNLOCK(mjt->tasklock);   // copy idle threads to result.  The master can never be idle
-  AN(z)=AS(z)[0]=threadct;  // install # idles found
+  GAT0(z,INT,1,0); *IAV0(z)=__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_RELAXED);
  }else if(m==3){
   // return current thread #
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now

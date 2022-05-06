@@ -583,17 +583,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
 // Tuning options for cip.c
-#if C_AVX2 && defined(_WIN32)
-// tuned for windows
-#if _OPENMP
-#define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
-#define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
-#else
+#if (C_AVX2 && PYXES) || !defined(_OPENMP)
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#endif
+#elif defined(_WIN32)
+// tuned for windows
+#define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
 #else
 // tuned for linux
 #define IGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS

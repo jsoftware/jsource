@@ -536,7 +536,6 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;
  // u always starts a recursion point, whether in a new task or not
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
- pyx=FAV(FAV(self)->fgh[0])->valencefns[dyad](jt,arg1,uarg2,uarg3);
  fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now in case they were virtual
  R pyx;}
 #else

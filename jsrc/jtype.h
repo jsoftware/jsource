@@ -1205,29 +1205,10 @@ typedef struct {
   SORTSP *sp;  // pointer to extension for sparse arrays
  } SORT;
 
-// concurrent queues
-typedef struct QN QN; //queue node
-struct QN { QN *n; A v; };
-// layout optimised for linux/glibc, where mutex is 40 bytes and condition is 48
-// put to_free and head on one cache line, tail on another; that way, when the queue has occupants, readers and writers won't fight with each other
-// potentially, reading would be faster if h and to_free were on separate cache lines.  But that would bloat the whole structure beyond two cache lines
-// any path that touches mutex, cond, and waiters will be slow, so spreading them out is ok
-typedef struct { QN *h,*to_free; pthread_mutex_t mutex; pthread_cond_t cond; I waiters; QN *t; } QQ;
-_Static_assert(sizeof(QQ) <= 128,"locks too large");
-_Static_assert(offsetof(QQ,t) >= 64,"locks too small");
-
-
-
-#ifdef PYXES
-typedef struct { pthread_cond_t cond; pthread_mutex_t mutex; } WAITBLOK;
-#define WAITBLOKINIT(x) {pthread_cond_init(&(x)->cond,0);pthread_mutex_init(&(x)->mutex,0);}
-#define WAITBLOKGRAB(x) {pthread_mutex_lock(&(x)->mutex);}
-#define WAITBLOKWAIT(x) {pthread_cond_wait(&(x)->cond,&(x)->mutex);pthread_mutex_unlock(&(x)->mutex);}
-#define WAITBLOKFLAG(x) {pthread_mutex_lock(&(x)->mutex);pthread_cond_signal(&(x)->cond);pthread_mutex_unlock(&(x)->mutex);}
-#else
-typedef struct {} WAITBLOK;
-#define WAITBLOKINIT(x) ;
-#define WAITBLOKGRAB(x) ;
-#define WAITBLOKWAIT(x) ;
-#define WAITBLOKFLAG(x) ;
-#endif
+typedef struct {
+ A h;  // queue head, 0 if queue empty
+ A t;  // queue tail, 0 if queue empty
+ I4 waiters;  // Number of waiting threads
+ pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
+ pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
+} JOBQ;

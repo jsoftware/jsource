@@ -332,7 +332,7 @@ typedef struct JSTstruct {
  UC dbuser;           /* user-entered value for db             */
  B assert;           /* 1 iff evaluate assert. statements               */
 // 3 bytes free
- QQ *jobqueue;      // accessed indirectly to avoid spilling into the next cache line, as layout is annoying; never changes
+ JOBQ *jobqueue;      // accessed indirectly to avoid spilling into the next cache line, as layout is annoying; never changes
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));

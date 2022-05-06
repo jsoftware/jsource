@@ -528,8 +528,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
  fa(job);fa(pyx); // better to allocate these and then conditionally free them than to perform the allocation under lock
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;
-  // u always starts a recursion point, whether in a new task or not
-  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
+ // u always starts a recursion point, whether in a new task or not
+ A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  pyx=FAV(FAV(self)->fgh[0])->valencefns[dyad](jt,arg1,uarg2,uarg3);
  fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now in case they were virtual
  R pyx;}
@@ -538,7 +538,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;   // get self, positioned after the last noun arg
- pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
+ // u always starts a recursion point, whether in a new task or not
+ A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  R pyx;
 }
 static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}

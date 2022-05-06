@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Debug: Suspension                                                       */
@@ -120,6 +120,7 @@ static A jtsusp(J jt){A z;
  if(trap){RESETERR; immex(trap); fa(trap); tpop(old);}  // execute with force typeout, remove protection
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
  J jtold=jt;  // save the thread that we started in
+ UI savcstackmin=0;  // when we switch threads, we keep our stack; so we must use our stack-end.  If this is not zero, we must reset the stack on exit/change
  while(1){A  inp;
   jt->jerr=0;
   A iep=0;
@@ -139,14 +140,18 @@ static A jtsusp(J jt){A z;
   // suspension result and we would lose them.  Fortunately they have no arguments
   if(JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
   if(z&&AFLAG(z)&AFDEBUGRESULT&&IAV(C(AAV(z)[0]))[0]==SUSTHREAD){  // (0;0) {:: z; is this T. y?
-   jt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
+   J newjt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
+   if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
+   savcstackmin=newjt->cstackmin; newjt->cstackmin=jtold->cstackmin; jt=newjt;  // switch to new jt, but keep our original stack limit
+   old=jt->tnextpushp;  // now that we are under a new jt, we must use its tpush stack
    continue;
   }
   if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1
   tpop(old);  // if we don't need the result for the caller here, free up the space
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info
- jt=jtold;  // Reset to original debug thread
+ if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
+ jt=jtold;  // Reset to original debug thread.  NOTE that old is no longer valid, so don't tpop
  // Reset stack
  if(JT(jt,dbuser)&DB1){
 #if USECSTACK
@@ -174,6 +179,7 @@ static A jtsusp(J jt){A z;
 // We come into debug when there has been an error with debug enabled.  Stops are detected as errors before the stopped line is executed.
 // Tacit definitions detect stop before they execute.
 static A jtdebug(J jt){A z=0;C e;DC c,d;
+  __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);  // Now that we know all threads have gone into debug, we must clear ATTN/BREAK in case we start an explicit definition
  c=jt->sitop; NOUNROLL while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  RZ(d=suspset(jt->sitop));  // find the topmost CALL frame and mark it as suspended
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
@@ -185,6 +191,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  I susact;   // requested action
  if(!z||AN(z)==0||JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS){susact=JT(jt,dbuser)&DBSUSSS?SUSSS:SUSCLEAR; JT(jt,dbuser)&=~(DBSUSCLEAR+DBSUSSS);}  // if error in suspension, exit debug mode; empty arg or DBSUSCLEAR is always 13!:0
  else susact=IAV(C(AAV(z)[0]))[0];  // (0;0) {:: z
+ // susact describes what is to be done; it has already been stored into dcss
  switch(susact){
  case SUSRUN:  // rerun, possibly with changed arguments for tacit verb
   // rerun the line; pass the arguments, if any, as the result
@@ -208,6 +215,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
 }
 
 // Take system lock before going into debug.  If the debug request is granted to another thread, keep putting it up until we get it
+// return is result from debug, or 0 if we are exiting debug or hit an error
 static A jtdebugmux(J jt){A z;
  do{
   z=jtsystemlock(jt,LOCKPRIDEBUG,jtdebug);  // request debug
@@ -248,7 +256,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
 #else
  // if there is a system lock to take, take it and continue
  S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE);
- if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG);}
+ if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}
  // if there is an ATTN/BREAK to take, take it and enter debug suspension
  if(attnval&0xff){
   if(!(jt->uflags.us.cx.cx_c.db&(DB1)))__atomic_store_n(JT(jt,adbreak),2,__ATOMIC_RELEASE);  // if not debug, promote the ATTN to BREAK for other threads to speed it up

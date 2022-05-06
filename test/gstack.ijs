@@ -101,47 +101,9 @@ catch.
 end.
 }} ''
 
-NB. **************************************** threads & tasks **********************************
-g =: 3 : 0  NB. semaphore task
-'remotepyx remote_stuff'=.y
-assert. remote_stuff=1
-6 T. remotepyx,<(localpyx =. 5 T. 2);<2
-'remotepyx remote_stuff'=.>localpyx
-assert. remote_stuff=3
-6 T. remotepyx,<(localpyx =. 5 T. 2);<4
-4!:55 <'localpyx'
-1
-)
+4!:55 ;:'c f f5 f6 t p'
 
-f =: 3 : 0
-try.
-while. 2 > 1 T. '' do. 0 T. '' end.  NB. make sure we have 2 worker threads
-catch.
-assert. -. IF64  NB. threads should be supported on all 64-bit systems
-end.
-if. IF64 do.
-assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
-assert. 2 <: 1 T. ''
-nwthreads=. 1 T. ''
-while. nwthreads ~: # 2 T. '' do. end.  NB. wait till threads become ready
-assert. (>: i. nwthreads) *./@e. 2 T. ''
-assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.1), 0.3 
-assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.3), 0.1 
-assert. (((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> 4 T. (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 0.6 0.4
-while. nwthreads ~: # 2 T. '' do. end.  NB. wait till threads become ready
-NB. semaphore test
-localpyx=.5 T. 5
-g t. '' localpyx;<1
-'remotepyx remote_stuff'=.>localpyx
-assert. remote_stuff=2
-6 T. remotepyx,<(localpyx =. 5 T. 5);<3
-'remotepyx remote_stuff'=.>localpyx
-assert. remote_stuff=4
-end.
-1
-)
-f ''
 
-4!:55 ;:'c f f5 f6 g t p'
 
+epilog''
 

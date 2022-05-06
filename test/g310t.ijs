@@ -210,3 +210,6 @@ isnum=: 13 : '{:0,nn~:(nn=._1)".y'
 4!:55 ;:'a ar eq eq1 eq12 eq2 eqx isnum'
 
 
+
+epilog''
+

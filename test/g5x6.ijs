@@ -16,3 +16,6 @@ xtx  =: |: ((+/) .*) ]
 4!:55 ;:'lr pr sumsq xtx'
 
 
+
+epilog''
+

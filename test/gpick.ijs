@@ -63,3 +63,6 @@ t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
 4!:55 ;:'boxed cat map mapp pick S sc spread_temp si sz t'
 
 
+
+epilog''
+

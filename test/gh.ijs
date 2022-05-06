@@ -327,3 +327,6 @@ n01cdf=: -: @: >: @: erf @: ((%:0.5)&*)   NB. CDF of N(0,1)
 4!:55 ;:'prf q r rf roots sin sinb sinh sinhb test x z '
 
 
+
+epilog''
+

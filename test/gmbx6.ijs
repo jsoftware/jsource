@@ -397,3 +397,6 @@ q=: x=: (<5!:2 <'g'), <"0 <@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum. B
 4!:55 ;:'f f1 g j mean q r t x y'
 
 
+
+epilog''
+

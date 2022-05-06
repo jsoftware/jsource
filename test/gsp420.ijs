@@ -265,3 +265,6 @@ NB. obsolete 'domain error' -: f etx 1 2
 4!:55 ;:'a1 a2 ' 
 
 
+
+epilog''
+

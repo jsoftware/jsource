@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Xenos: File Open/Close                                                  */
@@ -64,7 +64,7 @@ F1(jtjfiles){A y,z=0;
  READLOCK(JT(jt,flock))  A*v=AAV0(JT(jt,fopafl)); I nrows=AM(JT(jt,fopafl));
  // We are doing an uncomfortable amount of memory allocating here under lock.
  // We have to clone the string to protect the AM field in the original, and the lock
- GAT0E(y,BOX,2*nrows,2,goto errorexit;) A (*zv)[2]=(A (*)[2])AAV2(y); AS(y)[0]=nrows; AS(y)[1]=2;  // get addr of result data, fill in the shape
+ GAE0(y,BOX,2*nrows,2,goto errorexit;) A (*zv)[2]=(A (*)[2])AAV2(y); AS(y)[0]=nrows; AS(y)[1]=2;  // get addr of result data, fill in the shape
  DO(AS(y)[0], RZGOTO(zv[i][1]=ca(v[i]),errorexit); GAT0E(zv[i][0],INT,1,0,goto errorexit;) IAV0(zv[i][0])[0]=AM(v[i]);)  // fill in the boxed file# and a clone of the string
  z=y;  // success
 errorexit: READUNLOCK(JT(jt,flock))

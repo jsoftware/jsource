@@ -1,4 +1,4 @@
-/* Copyright 1990-2016, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Explicit Definition : and Associates                      */
@@ -54,7 +54,7 @@
     /* Signal post-exec error*/ \
     {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
+    i=cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
     break;}
 
 #define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
@@ -63,7 +63,7 @@
 #if 0 // obsolete 
 #define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
- if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); goto lbl;} if(!((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2; jsignal(EVATTN); z=0;} \
+ if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); goto lbl;} if(!((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2; jsignal(EVATTN); z=0;} \
  else{lbl: if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}   /* debug parse if debug/pm */ \
  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
    if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \

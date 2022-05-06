@@ -32,3 +32,6 @@ mean=: +/ % #
 4!:55 ;:'mean t x y'
 
 
+
+epilog''
+

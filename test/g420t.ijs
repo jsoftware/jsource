@@ -87,3 +87,6 @@ THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 4!:55 ;:'adot1 adot2 sdot0 f rsq s ss t x y'
 randfini''
 
+
+epilog''
+

@@ -362,3 +362,6 @@ NB. obsolete 9!:49 svxy
 4!:55 ;:'minors monad nln p q svxy Tv ws x'
 
 
+
+epilog''
+

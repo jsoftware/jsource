@@ -351,6 +351,7 @@ NB. 5!:5 ----------------------------------------------------------------
 +:                               test1
 j.                               test1
 0:                               test1
++ t. ''                          test1
 f                                test1
 +/                               test1
 +./                              test1
@@ -912,4 +913,7 @@ f=: (<(<,':'),<(<(,'0');1),<(,'0');1 0$'') (1 : 'u u`:6`:6 y')
 4!:55 ;:'t take test test1 test2 testeq testlr tr trcase tree trg trgl trgr trtil trx '
 4!:55 ;:'value vbox vchar x '
 randfini''
+
+
+epilog''
 

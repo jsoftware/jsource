@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Symbol Table: Named Function Call (unquote)                                   */
@@ -30,7 +30,7 @@ DF2(jtunquote){A z;
   // normal path for named functions
   if((fs=FAV(self)->localuse.lu1.cachedref)!=0){
    // There is a cached lookup for this nameref - use it
-   // If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
+   // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
    if(unlikely((explocale=(A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave explocale=0.  This is a pun on 0
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
      RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));  //  extract locale string, find/create locale

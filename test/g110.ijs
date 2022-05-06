@@ -246,3 +246,6 @@ NB. tests for correct generation of AVX2 instructions.  Verifies that the compil
 4!:55 ;:'dr eq exp f qct rk s sgn t test testa testb testc times x y'
 
 
+
+epilog''
+

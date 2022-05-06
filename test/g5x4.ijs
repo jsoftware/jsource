@@ -62,6 +62,7 @@ test=: 1 : '(jtr -: tree) <''u'''
 i.            test
 0:            test
 -             test
++ t. ''       test
 
 1 2 3&+       test
 +&(i.10 2)    test
@@ -136,4 +137,7 @@ NB. jtr appears twice, one is global another local
 4!:55 ;:'shl shr take test th tr trcase tree trg trgl trgr '
 4!:55 ;:'trnoun trtil trx '
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-/* Copyright 1990-2010, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Memory Management                                                       */
@@ -274,12 +274,12 @@ B jtspfree(J jt){I i;A p;
     if(FHRHISROOTALLOFREE(AFHRH(baseblock))){ // Free fully-unused base blocks;
 #if 1 || ALIGNTOCACHE   // with short headers, always align to cache bdy
      FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
-     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD+CACHELINESIZE,__ATOMIC_ACQ_REL);  // return storage+bdy
-     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD+CACHELINESIZE,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
+     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // return storage+bdy
+     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // only the pad is net allocation
 #else
      FREECHK(baseblock);
-     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD,__ATOMIC_ACQ_REL);  // return storage
-     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
+     __atomic_fetch_sub(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // return storage
+     __atomic_fetch_sub(&jt->mfreegenallo,TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // remove pad from the amount we report allocated
 #endif
     }else{AFHRH(baseblock) = virginbase;}   // restore the count to 0 in the rest
     p=np;   //  step to next base block
@@ -630,7 +630,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
   freesymb(jt,w);   // delete all the names/values
  }else{
   // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
-  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
+  // First, free the name (in the SYMLINFO block), and then free the SYMLINFO block itself
   LX k,* RESTRICT wv=LXAV0(w);
   L *jtsympv=SYMORIGIN;
   if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...
@@ -638,14 +638,15 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
    NM *locname=NAV(LOCNAME(w));  // NM block for name
    if(likely(!(arw&ARNAMED))){
     // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
-    jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+// obsolete     jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+    jterasenl(jt,LOCNUM(w));  // remove the locale from the hash table.
    } else {
     // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
     ACINIT(w,2) WRITELOCK(JT(jt,stloc)->lock) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc)); WRITEUNLOCK(JT(jt,stloc)->lock)   // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
    }
    // Free the name
    fr(LOCNAME(w));
-   // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
+   // clear the data fields in symbol SYMLINFO   kludge but this is how it was done (should be done in symnew)
    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
    jtsympv[k].next=SYMLOCALROOT;SYMLOCALROOT=k;  // put symbol on the free list.  SYMLOCALROOT is the base of the free chain
   }
@@ -1136,7 +1137,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
  I nt=__atomic_add_fetch(&jt->malloctotal,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);  // add to total JE mem allocated
- __atomic_fetch_add(&jt->mfreegenallo,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);   // ...add them to the total bytes allocated drom OS
+ __atomic_fetch_add(&jt->mfreegenallo,PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE,__ATOMIC_ACQ_REL);   // add to total from OS
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
  // we visit them in back-to-front order so the first-allocated headers are in cache

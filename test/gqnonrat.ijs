@@ -101,3 +101,6 @@ sin=: nsin sin0 ]
 4!:55 ;:'cos cos0 exp exp0 ln ln0 ncos nexp nln nsin sin sin0 sqrt'
 
 
+
+epilog''
+

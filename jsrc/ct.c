@@ -1,7 +1,6 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-
 // Threads and Tasks
 #include "j.h"
 
@@ -21,6 +20,63 @@ NOINLINE I delay(I n){I johnson=0x1234; do{johnson ^= (johnson<<1) ^ johnson>>(B
 #endif
 //36ns TUNE; ~60clk on zen, ~160clk on intel; consider adding more general uarch tuning capabilities (eg for cache size)
 //7ns mispredict penalty (15-20clk) + mul latency (3clk)
+
+#if PYXES
+#if !defined(_WIN32) && !defined(__linux__)
+#include <sys/time.h>
+int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex, const struct timespec *restrict abs_timeout)
+{
+ int pthread_rc;
+ struct timespec remaining, slept, ts;
+ struct timeval nowtime;
+ if (abs_timeout) {
+  if (abs_timeout->tv_nsec >= 1000000000L) return EINVAL;
+  gettimeofday(&nowtime,0);  // system time now
+  remaining.tv_sec = abs_timeout->tv_sec - nowtime.tv_sec;
+  if ((remaining.tv_nsec = abs_timeout->tv_nsec - 1000*nowtime.tv_usec) < 0) {
+   remaining.tv_sec--;
+   remaining.tv_nsec += 1000000000L;
+  }
+  if (remaining.tv_sec < 0) return ETIMEDOUT;
+ } else return ETIMEDOUT;
+ while ((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY) {
+ ts.tv_sec = 0;
+ ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000 : 
+              (remaining.tv_nsec < 10000000 ? remaining.tv_nsec : 10000000));
+ nanosleep(&ts, &slept);
+ ts.tv_nsec -= slept.tv_nsec;
+ if (ts.tv_nsec <= remaining.tv_nsec) {
+ remaining.tv_nsec -= ts.tv_nsec;
+ } else {
+ remaining.tv_sec--;
+ remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+ }
+ if (remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0)) {
+ return ETIMEDOUT;
+ }
+ }
+
+ return pthread_rc;
+}
+#endif
+#endif
+
+#if SY_WIN32
+struct timezone {
+    int tz_minuteswest;
+    int tz_dsttime;
+};
+
+// Tip o'hat to Michaelangel007 on StackOverflow
+// MSVC defines this in winsock2.h!?
+typedef struct timeval {
+    long tv_sec;
+    long tv_usec;
+} timeval;
+extern int gettimeofday(struct timeval * tp, struct timezone * tzp);
+#else
+#include <sys/time.h>
+#endif
 
 // Extend a hashtable/data table under lock.  abuf is the pointer to the block to be extended (*abuf will hold the new block address).
 // *alock is the lock to use.  We hold a writelock on *alock on entry, but we may relinquish inside this routine.
@@ -114,6 +170,8 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   if(executor){  // if we were the first to request the winning priority
    // This is the winning thread.  Perform the function and save the error status
    while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // executor waits for state 4 and picks up nrunning.  Not actually necessary, but otherwise we have to guarantee tct unchanged by function
+   // remove the lock request from the break field so that it doesn't cause the function to think a lock is requested
+   __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);
    z=(*lockedfunction)(jt);  // perform the locked function
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],jt->jerr,__ATOMIC_RELEASE);  // make the error status available to all threads
   }
@@ -124,8 +182,6 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   // There is also no guarantee they will see their LOCK removed
   if(executor){
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],0,__ATOMIC_RELEASE);  // clear the error flag from the interrupt request
-   // remove the lock request from the break field
-   __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);
    // go through all threads, turning off SYSLOCK in each.  This allows other tasks to run and new tasks to start
    DO(MAXTASKS, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
    // set the systemlock to 0, completing the operation
@@ -189,7 +245,6 @@ typedef struct pyxcondmutex{
 } PYXBLOK;
 
 #if PYXES
-static struct timespec maxwait={0,2000000};  // 2ms - maximum time to wait for a pyx.  After that, check to see if a system lock has been requested
 
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.  fa() the pyx to indicate that the thread has released the pyx
 // If the value has been previously installed (invalid, and possible only with user pyxes), return abort code 0, otherwise 1
@@ -226,14 +281,19 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
   I adbreak=__atomic_load_n((US*)&JT(jt,adbreak)[0],__ATOMIC_ACQUIRE);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
-  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
+  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
   // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution.  In that case fail the pyx.  It will not be deleted until the value has been stored
   if(unlikely((adbreak&0xff)>1)){errcode=EVBREAK; break;}  // JBREAK: fail the pyx and exit
   // if the pyx has a max time, see if that is exceeded
   if(unlikely(maxtime<tod())){errcode=EVTIME; break;}  // timeout: fail the pyx and exit
   pthread_mutex_lock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
-  if((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0)
-   pthread_cond_timedwait(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex,&maxwait);
+  if((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){
+   struct timeval nowtime;
+   gettimeofday(&nowtime,0);  // system time now
+   I tousec=nowtime.tv_usec+200000;
+   struct timespec endtime={nowtime.tv_usec+(tousec>=1000000),tousec-1000000*(tousec>=1000000)};  // system time when we give up.  The struct says it uses nsec but it seems to use usec
+   pthread_cond_timedwait(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex,&endtime);
+  }
   pthread_mutex_unlock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
  }
  // res now contains the certified value of the pyx.
@@ -258,7 +318,7 @@ void readlock(S *alock, S prev){
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
   }
   // try to reacquire the lock, loop if can't
- }while(__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)<0);
+ }while((prev=__atomic_fetch_add(alock,1,__ATOMIC_ACQ_REL)&(S)-WLOCKBIT)!=0);
 }
 
 // take a writelock on *alock.  We have turned on the write request; we come here only if the lock was in use.  The previous value was prev
@@ -266,14 +326,14 @@ void writelock(S *alock, S prev){
  // loop until we get the lock
  I nspins;
  while(prev&(S)-WLOCKBIT) {
- // Another writer requested.  They win.  wait until they finish.  As above, back off if it looks like they were preempted
-  nspins=prev&0x7fff?50+10:50;  // max expected writer delay, plus reader delay if there are readers, in 20-ns units
+ // Another writer requested before us.  They win.  wait until they finish.  As above, back off if it looks like they were preempted
+  nspins=prev&(WLOCKBIT-1)?50+10:50;  // max expected writer delay, plus reader delay if there are readers, in 20-ns units
   while(prev&(S)-WLOCKBIT){
    if(--nspins==0){nspins=50; YIELD}
    POLLDELAY  // delay a little to reduce bus traffic while we wait for the writer to finish
    prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);  // loop without RFO cycle till the other writer goes away
   }
-  // try to reacquire the writelock
+  // try to reacquire the writelock.  When the holder releases it, all requests are cleared
 #if WLOCKBIT==0x8000
   prev=__atomic_fetch_or(alock,(S)WLOCKBIT,__ATOMIC_ACQ_REL);
 #else
@@ -286,9 +346,9 @@ void writelock(S *alock, S prev){
  while(prev&(WLOCKBIT-1)){  // wait until reads complete
   if(--nspins==0){nspins=20; YIELD}  // delay if a thread seems to have been preempted
   POLLDELAY  // delay a little to reduce bus traffic while we wait for the readers to finish
-  prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);
+  prev=__atomic_load_n(alock,__ATOMIC_ACQUIRE);  // no need to RFO: once readers finish we have it
  }
- // the lock is now 8000 and we have it.  It may go off 8000 while we run, but we won't look
+ // Readers have finished; we get the lock.  The read count may go non0 while we run, but we won't look
 }
 
 // *********************** task creation ********************************
@@ -310,7 +370,7 @@ void jtclrtaskrunning(J jt){S oldstate;
  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
  while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
   if(!(oldstate&TASKSTATERUNNING))R;   // if for some reason we are called with the bit already off, keep it off
-  if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG|LOCKPRISYM);}else{YIELD delay(1000);}
+  if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG+LOCKPRIPATH+LOCKPRISYM);}else{YIELD delay(1000);}
  }
 }
 
@@ -405,7 +465,6 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
    A z=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
    if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
    jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
-
    // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
    C errcode=0;
 #define BZ(e)          {if(unlikely(!(e))){z=0; goto fail;}}
@@ -469,6 +528,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
  fa(job);fa(pyx); // better to allocate these and then conditionally free them than to perform the allocation under lock
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;
+  // u always starts a recursion point, whether in a new task or not
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  pyx=FAV(FAV(self)->fgh[0])->valencefns[dyad](jt,arg1,uarg2,uarg3);
  fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now in case they were virtual
  R pyx;}
@@ -490,13 +551,15 @@ F2(jttdot){F2PREFIP;
  R atco(ds(CBOX),fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX));  // use <@: to get BOXATOP flags
 }
 
+// credentials.  These are installed into AM of a synco to indicate the type of a synco
+#define CREDMUTEX 0x582a9524c923485f
+
 // x T. y - various thread and task operations
 F2(jttcapdot2){A z;
  ARGCHK2(a,w)
  I m; RE(m=i0(a))   // get the x argument, which must be an atom
- // process the requested function.  We test by hand because only a few could be called often
- if(likely(m==4)){
-  // rattle the boxes of y and return status of each
+ switch(m){
+ case 4: { // rattle the boxes of y and return status of each
   ASSERT((SGNIF(AT(w),BOXX)|(AN(w)-1))<0,EVDOMAIN)   // must be boxed or empty
   GATV(z,INT,AN(w),AR(w),AS(w)) I *zv=IAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
   DONOUNROLL(AN(w), if(unlikely(!(AT(wv[i])&PYX)))zv[i]=-1001;  // not pyx: _1001
@@ -504,17 +567,17 @@ F2(jttcapdot2){A z;
                     else if(((PYXBLOK*)AAV0(wv[i]))->errcode>0)zv[i]=-((PYXBLOK*)AAV0(wv[i]))->errcode;  // finished with error: -error code
                     else zv[i]=-1000;  // finished with no error: _1000
   )
- }else if(m==5){
+  break;}
+ case 5: { // create a user pyx.  y is the timeout in seconds
 #if PYXES
-  // create a user pyx.  y is the timeout in seconds
   ASSERT(AN(w)==1,EVLENGTH) w=cvt(FL,w); D *atimeout=DAV(w); atimeout=*atimeout==0?&inf:atimeout;  // get the timeout value.  If 0, use infinity
   z=box(jtcreatepyx(jt,THREADID(jt),*atimeout));  // create the recursive pyx, owned by this thread
 #else
 ASSERT(0,EVNONCE)
 #endif
- }else if(m==6){
+  break;}
+ case 6: { // set value of pyx.  y is pyx;value
 #if PYXES
-  // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
   ASSERT(AT(pyx)&PYX,EVDOMAIN)
@@ -523,32 +586,7 @@ ASSERT(0,EVNONCE)
 #else
 ASSERT(0,EVNONCE)
 #endif
- }else if(m==2){
-  // return number of idle threads
-  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  GAT0(z,INT,1,0); *IAV0(z)=__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_RELAXED);
- }else if(m==3){
-  // return current thread #
-  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  RZ(z=sc(THREADID(jt)))
- }else if(m==1){
-  // return number of threads created
-  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  RZ(z=sc(JT(jt,nwthreads)))
- }else if(m==0){
-  // create a thread and start it
-  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  // reserve a thread#, verify we have enough thread blocks for it
-  I resthread=__atomic_add_fetch(&JT(jt,nwthreads),1,__ATOMIC_ACQ_REL);
-  if(resthread>=MAXTASKS){__atomic_store_n(&JT(jt,nwthreads),MAXTASKS-1,__ATOMIC_RELEASE); ASSERT(0,EVLIMIT);} //  this leaves the tiniest of timing windows, bfd
-  // Try to allocate a thread in the OS and start it running
-  I threadstatus=jtthreadcreate(jt,resthread);
-  if(threadstatus==0){__atomic_add_fetch(&JT(jt,nwthreads),-1,__ATOMIC_ACQ_REL); z=0;  // if error, restore thread count; error signaled earlier
-  }else{
-   RZ(z=sc(resthread))  // thread# is result.  The thread installs itself into the idleq when it waits
-  }
- }else if(m==7){
-  // signal error in pyx
+ case 7: { // signal error in pyx
 #if PYXES
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
@@ -559,6 +597,101 @@ ASSERT(0,EVNONCE)
 #else
 ASSERT(0,EVNONCE)
 #endif
- }else ASSERT(0,EVDOMAIN)
+  break;}
+ case 2:  { // return list of idle threads
+  // return number of idle threads
+  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
+  GAT0(z,INT,1,0); *IAV0(z)=__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_RELAXED);
+  break;}
+ case 3: { // return current thread #
+  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
+  RZ(z=sc(THREADID(jt)))
+  break;}
+ case 1: { // return number of threads created
+  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
+  RZ(z=sc(JT(jt,nwthreads)))
+  break;}
+ case 0:  { // create a thread and start it
+  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
+  // reserve a thread#, verify we have enough thread blocks for it
+  I resthread=__atomic_add_fetch(&JT(jt,nwthreads),1,__ATOMIC_ACQ_REL);
+  if(resthread>=MAXTASKS){__atomic_store_n(&JT(jt,nwthreads),MAXTASKS-1,__ATOMIC_RELEASE); ASSERT(0,EVLIMIT);} //  this leaves the tiniest of timing windows, bfd
+  // Try to allocate a thread in the OS and start it running
+  I threadstatus=jtthreadcreate(jt,resthread);
+  if(threadstatus==0){__atomic_add_fetch(&JT(jt,nwthreads),-1,__ATOMIC_ACQ_REL); z=0;  // if error, restore thread count; error signaled earlier
+  }else{
+   RZ(z=sc(resthread))  // thread# is result.  The thread installs itself into the idleq when it waits
+  }
+  break;}
+ case 10: {  // create a mutex.  w indicates recursive status
+#if PYXES
+  I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
+  GAT0(z,INT,(sizeof(pthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AN(z)=1; AM(z)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
+  pthread_mutexattr_t mutexattr; ASSERT(pthread_mutexattr_init(&mutexattr)==0,EVFACE) if(recur)ASSERT(pthread_mutexattr_settype(&mutexattr,PTHREAD_MUTEX_RECURSIVE)==0,EVFACE)
+  pthread_mutex_init((pthread_mutex_t*)IAV0(z),&mutexattr);
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
+ case 11: {  // lock mutex.  w is mutex[;timeout] timeout of 0=trylock
+#if PYXES
+  A mutex=w; D timeout=inf; I lockfail=0;
+  if(AT(w)&BOX){
+   ASSERT(AR(w)<=1,EVRANK); ASSERT(BETWEENC(AN(w),1,2),EVLENGTH) mutex=AAV(w)[0];  // pull out mutex
+   if(AN(w)==2){A tob=AAV(w)[1]; ASSERT(AR(tob)<=1,EVLENGTH) ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=cvt(FL,tob)) timeout=DAV(tob)[0];}  // pull out timeout
+  }
+  ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
+  if(timeout==inf){  // is there a max timeout?
+   ASSERT(pthread_mutex_lock((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
+  }else if(timeout==0.0){
+   I lockrc=pthread_mutex_trylock((pthread_mutex_t*)IAV0(mutex));
+   lockfail=lockrc==EBUSY;  // busy is a soft failure
+   ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure
+  }else{
+   struct timeval nowtime;
+   gettimeofday(&nowtime,0);  // system time now
+   I tosec=floor(timeout)+nowtime.tv_sec;
+#if _WIN32
+   I tousec=(I)(1000000.*(timeout-floor(timeout)))+nowtime.tv_usec;
+   struct timespec endtime={tosec+(tousec>=1000000),tousec-1000000*(tousec>=1000000)};  // system time when we give up.  The struct says it uses nsec but it seems to use usec
+#else
+   I tonsec=1000L*(I)(1000000.*(timeout-floor(timeout)))+nowtime.tv_usec;
+   struct timespec endtime;
+   endtime.tv_sec=tosec+(tonsec>=1000000000L);
+   endtime.tv_nsec=tonsec-1000000000L*(tonsec>=1000000000L);
+#endif
+   I lockrc=pthread_mutex_timedlock((pthread_mutex_t*)IAV0(mutex),&endtime);
+   lockfail=lockrc==ETIMEDOUT;  // timeout is a soft failure
+   ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure
+  }
+  z=num(lockfail);
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
+ case 13: {  // unlock mutex.  w is mutex
+#if PYXES
+  A mutex=w;
+  ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
+  ASSERT(pthread_mutex_unlock((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
+  z=mtm;
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
+ case 14: {  // destroy mutex.  w is mutex
+#if PYXES
+  A mutex=w;
+  ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
+  ASSERT(pthread_mutex_destroy((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
+  AM(mutex)=0;  // remove credential from modified mutex
+  fa(mutex);  // undo the initial INITZAP
+  z=mtm;
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
+ default: ASSERT(0,EVDOMAIN) break;
+ }
  RETF(z);  // return thread#
 }

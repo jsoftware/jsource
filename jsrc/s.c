@@ -1,4 +1,4 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Symbol Table                                                            */
@@ -167,8 +167,8 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  GATV0E(y,BOX,n,  1,goto exit;);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
-  *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
-  *xv++=pv->flag+(pv->name?LHASNAME:0)+(pv->val?LHASVALUE:0);  // flag
+  *xv++=(!(pv->flag&LINFO)&&pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  In LINFO, val may be locale#.  Must allow SYMB through
+  *xv++=pv->flag+(pv->name?LHASNAME:0)+(!(pv->flag&LINFO)&&pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    
   *xv++=SYMNEXT(pv->next);
   RZGOTO(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv,exit);  // simple name
@@ -176,7 +176,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  // Allocate box 3: locale name
  GATV0E(y,BOX,n,1,goto exit;); yv=AAV(y); zv[2]=incorp(y);
  DO(n, yv[i]=mtv;);
- n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc)); 
+ n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc));   // v->locale chains
  for(i=0;i<n;++i){  // for each chain-base in locales pool
   for(j=v[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next){      // j is index to named local entry; process the chain
    x=SYMORIGIN[j].val;  // x->symbol table for locale
@@ -363,7 +363,7 @@ L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) L *z=probeis(a,g); WRITEUNLOCK(g->lo
 // g is symbol table to use
 // result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
 // if not found, one is created.  Caller must ensure that a symbol is reserved
-// Takes a write lock on  g and returns holding that lock
+// Takes a write lock on g and returns holding that lock
 L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
  LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
@@ -393,7 +393,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  RZ(g);  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g));
+ I bloom=BLOOMMASK(hash); v=AAV1(LOCPATH(g));
  NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
                               if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res); res=(A)(((I)res&~QCNAMED)+(AR(g)<<(QCNAMEDX-ARNAMEDX))); READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED
                               READUNLOCK(g->lock)} g=gn;
@@ -403,7 +403,7 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 is not found
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
  RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); A *v=AAV0(LOCPATH(g)); NOUNROLL while(g){A gn=*v++; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}  // return when name found.
+ I bloom=BLOOMMASK(hash); A *v=AAV1(LOCPATH(g)); NOUNROLL while(g){A gn=*v++; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}  // return when name found.
  R g;
 }
 
@@ -524,7 +524,7 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));  // look up locative; error possible in name, return 0
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); A *v=AAV0(LOCPATH(g));
+ I bloom=BLOOMMASK(hash); A *v=AAV1(LOCPATH(g));
  NOUNROLL while(g){A gn=*v++; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}  // exit loop when found
  R 0;  // not found, locks released
 gotval: ;

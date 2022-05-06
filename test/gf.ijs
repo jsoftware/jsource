@@ -23,6 +23,11 @@ g    =: &.>
 (ar<'f') -: ar<'g'
 (|.&.>y) -: |. 'eachh' f. y=: ;:'Cogito, ergo sum.'
 
+eachh=: + t. ''
+f    =: 'eachh' f.
+g    =: + t. ''
+(ar<'f') -: ar<'g'
+
 f=: undefined_no
 'value error' -: ex 'f f.'
 
@@ -170,4 +175,7 @@ f=: (C +:)"0 f.
 4!:55 ;:'a a001 ambi ar b C cap dec dyad eachh f fact fact1 eq g i inc lr '
 4!:55 ;:'mat monad plus s sgn slash t v ws y'
 
+
+
+epilog''
 

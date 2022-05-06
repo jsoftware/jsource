@@ -1199,12 +1199,3 @@ typedef struct {
   C*   v;            /* comparison: beginning of data area              */
   SORTSP *sp;  // pointer to extension for sparse arrays
  } SORT;
-
-typedef struct {
- A h;  // queue head, 0 if queue empty
- A t;  // queue tail, 0 if queue empty
- UI4 waiters;  // Number of waiting threads
- UI4 queued;   // Number of jobs on the queue
- pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
- pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
-} JOBQ;

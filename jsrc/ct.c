@@ -362,7 +362,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
   if(n==__atomic_add_fetch(&blok->internal.nf,1,__ATOMIC_ACQ_REL)){ //we completed the last task
    if(end)end(jt,ctx); goto end;}}
  while(__atomic_load_n(&blok->internal.nf,__ATOMIC_ACQUIRE)+1<n&&!__atomic_load_n(&blok->internal.err,__ATOMIC_RELAXED))_mm_pause();
- end:
+ end:;
  C r=__atomic_load_n(&blok->internal.err,__ATOMIC_SEQ_CST);fa(job);R r;}
 
 // Processing loop for thread.  Grab jobs from the global queue, and execute them

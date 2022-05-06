@@ -657,8 +657,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define MAXTASKS 1  // workaround for android x86_64
 #endif
 
+#if PYXES
+// equivalent to atomic_fetch_add(aptr,val,__ATOMIC_ACQ_REL), except without the atomicity guarantee
+// what it does provide is the ordering guarantee; it is is intended to be used under lock
+// see boehm, 'threads cannot be implemented as a library', esp. sec. 4.3
+#define atomic_fetch_add_weak(aptr,val) ({ I rrres=__atomic_load_n(aptr,__ATOMIC_ACQUIRE);__atomic_store_n(aptr,val+rrres,__ATOMIC_RELEASE);rrres; })
+#else
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
-#if !PYXES
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
 #define __atomic_load_n(aptr, memorder) *aptr
 #define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
@@ -666,6 +671,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=*aptr; *aptr-=val; rrres;})
 #define __atomic_fetch_add(aptr, val, memorder) ({I rrres=*aptr; *aptr+=val; rrres;})
 #define __atomic_fetch_and(aptr, val, memorder) ({I rrres=*aptr; *aptr&=val; rrres;})
+#define atomic_fetch_add_weak __atomic_fetch_add
 #define __atomic_add_fetch(aptr, val, memorder) (*aptr+=val)
 #define __atomic_sub_fetch(aptr, val, memorder) (*aptr-=val)
 #define __atomic_and_fetch(aptr, val, memorder) (*aptr&=val)

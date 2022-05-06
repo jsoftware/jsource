@@ -400,7 +400,8 @@ static void popjob(J jt,A job){
  if(__atomic_load_n(&JT(jt,jobqueue)->h,__ATOMIC_SEQ_CST)==job){
   A next=__atomic_load_n(&blok->next,__ATOMIC_SEQ_CST);
   __atomic_store_n(&JT(jt,jobqueue)->h,next,__ATOMIC_SEQ_CST);
-  if(!next)__atomic_store_n(&JT(jt,jobqueue)->t,0,__ATOMIC_SEQ_CST);}
+  if(!next)__atomic_store_n(&JT(jt,jobqueue)->t,0,__ATOMIC_SEQ_CST);
+  atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,-1);}
  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);}
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
@@ -410,6 +411,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
  pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
  if(!JT(jt,jobqueue)->t){ JT(jt,jobqueue)->t=JT(jt,jobqueue)->h=job; } //queue was empty
  else { ((JOB*)AAV0(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
+ atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,1);
  if(__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_SEQ_CST))pthread_cond_broadcast(&JT(jt,jobqueue)->cond);
  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
  while(1){
@@ -438,13 +440,14 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
   pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
   if(!JT(jt,jobqueue)->h){
    __atomic_fetch_add(&JT(jt,jobqueue)->waiters,1,__ATOMIC_ACQ_REL);
-   while(!JT(jt,jobqueue)->h) pthread_cond_wait(&JT(jt,jobqueue)->cond,&JT(jt,jobqueue)->mutex);} //could be we got woken up, but other threads picked off all the tasks before us
-  __atomic_fetch_sub(&JT(jt,jobqueue)->waiters,1,__ATOMIC_ACQ_REL); //do this now; no one will see it until we release the mutex
+   while(!JT(jt,jobqueue)->h) pthread_cond_wait(&JT(jt,jobqueue)->cond,&JT(jt,jobqueue)->mutex); //could be we got woken up, but other threads picked off all the tasks before us
+   __atomic_fetch_sub(&JT(jt,jobqueue)->waiters,1,__ATOMIC_ACQ_REL);} //do this now; no one will see it until we release the mutex
   A job=JT(jt,jobqueue)->h;
   JOB *blok=(JOB*)AAV0(job);
   if(!blok->n){ //user task; remove it before releasing the lock
    JT(jt,jobqueue)->h=blok->next;
    if(!blok->next)JT(jt,jobqueue)->t=0; //emptied queue, need to clear tail too
+   atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,-1);
    pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
    __atomic_store_n(&((PYXBLOK*)AAV0(blok->user.pyx))->pyxorigthread,jt-JT(jt,threaddata),__ATOMIC_SEQ_CST);
    // set up jt state here only; for internal tasks, such setup is not needed
@@ -521,8 +524,10 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  JOB *blok=(JOB*)AAV0(job);*blok=(JOB){};blok->user.pyx=pyx;blok->user.args[0]=arg1;blok->user.args[1]=arg2;blok->user.args[2]=arg3;memcpy(blok->user.inherited,jt,offsetof(JTT,uflags.us.uq));
  if(__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_RELAXED)){
   pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
-  if(JT(jt,jobqueue)->waiters&&!JT(jt,jobqueue)->h){
-   JT(jt,jobqueue)->h=JT(jt,jobqueue)->t=job;
+  if(JT(jt,jobqueue)->queued<JT(jt,jobqueue)->waiters){
+   atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,1);
+   if(!JT(jt,jobqueue)->t){ JT(jt,jobqueue)->t=JT(jt,jobqueue)->h=job; } //queue was empty
+   else { ((JOB*)AAV0(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
    pthread_cond_signal(&JT(jt,jobqueue)->cond);
    pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
    R pyx;}

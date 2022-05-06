@@ -519,13 +519,14 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  // realize virtual arguments; raise the usecount of the arguments including self
  ra(job);  rifv(arg1); ra(arg1); rifv(arg2); ra(arg2); if(dyad){rifv(arg3);ra(arg3);}
  JOB *blok=(JOB*)AAV0(job);*blok=(JOB){};blok->user.pyx=pyx;blok->user.args[0]=arg1;blok->user.args[1]=arg2;blok->user.args[2]=arg3;memcpy(blok->user.inherited,jt,offsetof(JTT,uflags.us.uq));
- pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
- if(JT(jt,jobqueue)->waiters&&!JT(jt,jobqueue)->h){
-  JT(jt,jobqueue)->h=JT(jt,jobqueue)->t=job;
-  pthread_cond_signal(&JT(jt,jobqueue)->cond);
-  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
-  R pyx;}
- pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
+ if(__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_RELAXED)){
+  pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
+  if(JT(jt,jobqueue)->waiters&&!JT(jt,jobqueue)->h){
+   JT(jt,jobqueue)->h=JT(jt,jobqueue)->t=job;
+   pthread_cond_signal(&JT(jt,jobqueue)->cond);
+   pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
+   R pyx;}
+  else pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);}
  fa(job);fa(pyx); // better to allocate these and then conditionally free them than to perform the allocation under lock
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;
  // u always starts a recursion point, whether in a new task or not

@@ -55,11 +55,12 @@ typedef struct rngdata {
 
 
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
- struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
+struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
+ C _cl0[0];          // marker for the start of cacheline 0
 // task-initialized values
 // *********************************** the starting area contains values that are inherited from the spawning task.  Some of these are reinitialized
  A global;           // global symbol table inherit for task
- D cct;               // complementary comparison tolerance inherit for task
+ D cct;              // complementary comparison tolerance inherit for task
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C pp[7];            // print precision (sprintf field for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
@@ -102,6 +103,7 @@ typedef struct rngdata {
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
  A xmod;             // extended integer: the m in m&|@f clear for task
 // end of cacheline 0
+ C _cl1[0];
  I4 parsercalls;      // # times parser was called clear for task
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
@@ -113,10 +115,10 @@ typedef struct rngdata {
  LX symfreeroot;   // symbol # of head of local free-symbol queue (0=end)
  UI cstackinit;       // C stack pointer at beginning of execution
  UI cstackmin;        // red warning for C stack pointer
- A filler1[2];
+ A filler1[3];
 // end of cacheline 1
 
-
+ C _cl2[0];
 // things needed for memory allocation
  A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
  struct {
@@ -136,6 +138,7 @@ typedef struct rngdata {
  I filler3[1];
 // end of cacheline 3
 
+ C _cl4[0];
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
 // things needed for allocation of large blocks
  A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
@@ -143,6 +146,7 @@ typedef struct rngdata {
  PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
 // end of cacheline 4
 
+ C _cl5[0];
 // things needed by execution of certain verbs
  A idothash0;        // 2-byte hash table for use by i.
  A idothash1;        // 4-byte hash table for use by i.
@@ -154,15 +158,15 @@ typedef struct rngdata {
  I malloctotalhwmk;  // highest value since most recent 7!:1
 // end of cacheline 5
 
+ C _cl6[0];
 // seldom used,  but contended during system lock 
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
- S taskidleq;   // thread#s of the tasks waiting for work.  Root of the idle chain is in the master.
- S tasklock;  // lock for taskidleq.  Used only in master
  S taskstate;  // task state: modified by other tasks on a system lock
+ C filler70[6];
 #define TASKSTATERUNNINGX 0   // task has started
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
 #define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
@@ -176,6 +180,7 @@ typedef struct rngdata {
 #endif
 // end of cacheline 6
 
+ C _cl7[0];
  // Area used for intertask communication of memory allocation
  A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  I bytes;            // bytes currently in use - used only during 7!:1
@@ -213,6 +218,7 @@ typedef struct JSTstruct {
 // very-seldom-referenced data inhabits a cacheline that contains a lock.
 // Cacheline 0 is special, because it contains adbreak, which is checked very frequently by all threads.  Therefore, to keep this cacheline
 // in S state we must have everything else in the line be essentially read-only.
+ C _cl0[0];
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
  S systemlock;       // lock used for quiescing all tasks.  Bits in order of descending priority:
@@ -231,15 +237,14 @@ typedef struct JSTstruct {
 // end of cacheline 0
 
 // Cacheline 1: DLL variables
+ C _cl1[0];
  A cdarg;            /* table of 15!:0 parsed left arguments            */
  A cdhash;           // hash table of cdstr strings into cdarg
  A cdhashl;          // hash table of cdstr strings into module index
  A cdstr;            // strings for cdarg/cdhashl
  S cdlock;           // r/w lock for cdarg/cdhashl
  // rest of cacheline used only in exceptional paths
- B retcomm;          /* 1 iff retain comments and redundant spaces      */
- UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
-// 4 bytes free
+// 6 bytes free
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
@@ -249,6 +254,7 @@ typedef struct JSTstruct {
 // end of cacheline 1
 
 // Cacheline 2: J symbol pool
+ C _cl2[0];
  L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
  S symlock;          // r/w lock for symbol pool
  // rest of cacheline used only in exceptional paths
@@ -263,6 +269,7 @@ typedef struct JSTstruct {
 // end of cacheline 2
 
 // Cacheline 3: Locales
+ C _cl3[0];
  A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
  S stlock;           // r/w lock for stnum.  stloc is never modified, so we use the ->lock field of stloc to lock that table
  C locsize[2];       /* size indices for named and numbered locales     */
@@ -279,6 +286,7 @@ typedef struct JSTstruct {
 // end of cacheline 3
 
 // Cacheline 4: Files
+ C _cl4[0];
  A flkd;             /* file lock data: number, index, length           */
  A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
  S flock;            // r/w lock for flkd/fopa/fopf
@@ -297,6 +305,7 @@ typedef struct JSTstruct {
 
 
 // Cacheline 5: User symbols, also used for front-end locks
+ C _cl5[0];
  A sbu;              /* SB data for each unique symbol                  */
  A sbhash;              // hashtable for symbols
  A sbstrings;          // string data for symbols
@@ -311,22 +320,24 @@ typedef struct JSTstruct {
  A pma;              /* perf. monitor: data area                        */
 // end of cacheline 5
 
-// Cacheline 6: debug, which is written so seldom that it can have read-only data; also jobs
+// Cacheline 6: debug, which is written so seldom that it can have read-only data
+ C _cl6[0];
  A dbstops;          /* stops set by the user                           */
  A dbtrap;           // trap sentence, execute when going into suspension
  S dblock;           // lock on dbstops/dbtrap
- S joblock;          // lock on job queue
+ B retcomm;          /* 1 iff retain comments and redundant spaces      */
+ UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
  // rest of cacheline is essentially read-only
  float igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
  float dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  float zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A evm;              /* event messages                                  */
  A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed
- void *jobqh;  // head of job queue.  Accessed under joblock
- void *jobqt;  // tail of job queue.  Accessed under joblock
+ I filler6[2];
 // end of cacheline 6
 
 // Cacheline 7: startup (scripts and deprecmsgs), essentially read-only
+ C _cl7[0];
  A slist;            // boxed list of filenames used in right arg to 0!:, the entries made in sn field of L blocks are indexes into this.  AM has # valid entries
  A deprecex;  // list of INTs of messages not to display
  I4 deprecct;  // number of deprecation  errors to display, -1 to emsg
@@ -371,3 +382,22 @@ typedef JST* JS;  // shared part of struct
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
 _Static_assert(sizeof(struct JSTstruct)<=JTALIGNBDY,"too many threads");  // assert not too many threads
 _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected
+
+#if SY_64
+_Static_assert(offsetof(JTT,_cl0)==0*64,"cacheline 0 offset wrong");
+_Static_assert(offsetof(JTT,_cl1)==1*64,"cacheline 1 offset wrong");
+_Static_assert(offsetof(JTT,_cl2)==2*64,"cacheline 2 offset wrong");
+//_Static_assert(offsetof(JTT,_cl3)==3*64); //cacheline 3 ends in the middle of an object
+_Static_assert(offsetof(JTT,_cl4)==4*64,"cacheline 4 offset wrong");
+_Static_assert(offsetof(JTT,_cl5)==5*64,"cacheline 5 offset wrong");
+_Static_assert(offsetof(JTT,_cl6)==6*64,"cacheline 6 offset wrong");
+_Static_assert(offsetof(JTT,_cl7)==7*64,"cacheline 7 offset wrong");
+_Static_assert(offsetof(JST,_cl0)==0*64,"cacheline 0 offset wrong");
+_Static_assert(offsetof(JST,_cl1)==1*64,"cacheline 1 offset wrong");
+_Static_assert(offsetof(JST,_cl2)==2*64,"cacheline 2 offset wrong");
+_Static_assert(offsetof(JST,_cl3)==3*64,"cacheline 3 offset wrong");
+_Static_assert(offsetof(JST,_cl4)==4*64,"cacheline 4 offset wrong");
+_Static_assert(offsetof(JST,_cl5)==5*64,"cacheline 5 offset wrong");
+_Static_assert(offsetof(JST,_cl6)==6*64,"cacheline 6 offset wrong");
+_Static_assert(offsetof(JST,_cl7)==7*64,"cacheline 7 offset wrong");
+#endif

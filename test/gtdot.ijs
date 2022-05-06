@@ -10,7 +10,7 @@ N > 0
 NB. create all available threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
 N0 = 1 T.''
-1: N0 = # 2 T.''
+1: N0 = 2 T.''
 
 NB. no more thread can be created
 'limit error' -: 0&T. etx ''
@@ -67,14 +67,14 @@ end.
 f''
 
 N0 = 1 T.''
-1: N0 = # 2 T.''
+1: N0 = 2 T.''
 
 N1=:  <.&.%: N
 
 f1^:(N1>0) ''
 
 N0 = 1 T.''
-1: N0 = # 2 T.''
+1: N0 = 2 T.''
 
 NB. run in master thread
 
@@ -83,7 +83,7 @@ N=: <. 1.5 * >: 9!:56'maxtasks'
 f''
 
 N0 = 1 T.''
-1: N0 = # 2 T.''
+1: N0 = 2 T.''
 
 N=: 2 * >: 9!:56'maxtasks'
 N1=:  <.&.%: N
@@ -91,12 +91,12 @@ N1=:  <.&.%: N
 f''
 
 N0 = 1 T.''
-1: N0 = # 2 T.''
+1: N0 = 2 T.''
 
 f1^:(N1>0) ''
 
 N0 = 1 T.''
-1: N0 = # 2 T.''
+1: N0 = 2 T.''
 
 N=: <: 9!:56'maxtasks'
 N1=:  <.&.%: N
@@ -104,7 +104,7 @@ N1=:  <.&.%: N
 f2^:(N1>0) ''
 
 N0 = 1 T.''
-1: N0 = # 2 T.''
+1: N0 = 2 T.''
 
 NB. mutex
 
@@ -129,12 +129,11 @@ if. IF64 do.
 assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
 assert. 2 <: 1 T. ''
 nwthreads=. 1 T. ''
-while. nwthreads ~: # 2 T. '' do. end.  NB. wait till threads become ready
-assert. (>: i. nwthreads) *./@e. 2 T. ''
+while. nwthreads ~: 2 T. '' do. end.  NB. wait till threads become ready
 assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.1), 0.3 
 assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.3), 0.1 
 assert. (((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> 4 T. (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 0.6 0.4
-while. nwthreads ~: # 2 T. '' do. end.  NB. wait till threads become ready
+while. nwthreads ~: 2 T. '' do. end.  NB. wait till threads become ready
 NB. semaphore test
 localpyx=.5 T. 5
 g t. '' localpyx;<1

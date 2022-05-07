@@ -1886,6 +1886,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 
 
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
+#define VIRTPAGESIZE 4096  // size of the memory mapped by a single TLB entry
 
 
 // flags in call to cachedmmult and blockedmmult

@@ -53,6 +53,15 @@ typedef struct rngdata {
  } RNG;  // 342 bytes
 
 
+typedef struct {
+ A h;  // queue head, 0 if queue empty
+ A t;  // queue tail, 0 if queue empty
+ UI4 waiters;  // Number of waiting threads
+ UI4 queued;   // Number of jobs on the queue
+ pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
+ pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
+} JOBQ;
+
 
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
 struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
@@ -355,7 +364,7 @@ typedef struct JSTstruct {
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
-} __attribute__((aligned(JTALIGNBDY))) JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed
+} JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed
 typedef JST* JS;  // shared part of struct
 
 

@@ -393,6 +393,7 @@ typedef struct {
   } internal;
  };
 } JOB;
+
 static void popjob(J jt,A job){
  if(__atomic_load_n(&JT(jt,jobqueue)->h,__ATOMIC_SEQ_CST)!=job)R;//early out if somebody else already removed this job for us
  JOB *blok=(JOB*)AAV0(job);
@@ -605,8 +606,7 @@ ASSERT(0,EVNONCE)
 ASSERT(0,EVNONCE)
 #endif
   break;}
- case 2:  { // return list of idle threads
-  // return number of idle threads
+ case 2:  { // return count of idle threads
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   GAT0(z,INT,1,0); *IAV0(z)=__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_RELAXED);
   break;}

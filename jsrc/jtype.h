@@ -290,6 +290,7 @@ typedef I SI;
 #define voidAV1(x)       voidAVn(x,1)  // unknown, but list
 #define voidAV2(x)       voidAVn(x,2)  // unknown, but table
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
+#define UNvoidAV1(x)     ((A)((I)(x)-AKXR(1)))   // go from a pointer to *AV1 back to the base of the A block
 
 #if C_LE
 #define BIV0(w) (IAV(w)[0]&(1-((AT(w)&INT)>>(INTX-1))))  // the first (presumably only) value in w, when w is an INT or B01 type
@@ -1199,12 +1200,3 @@ typedef struct {
   C*   v;            /* comparison: beginning of data area              */
   SORTSP *sp;  // pointer to extension for sparse arrays
  } SORT;
-
-typedef struct {
- A h;  // queue head, 0 if queue empty
- A t;  // queue tail, 0 if queue empty
- UI4 waiters;  // Number of waiting threads
- UI4 queued;   // Number of jobs on the queue
- pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
- pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
-} JOBQ;

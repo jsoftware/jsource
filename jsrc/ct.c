@@ -395,7 +395,7 @@ typedef struct {
 } JOB;
 static void popjob(J jt,A job){
  if(__atomic_load_n(&JT(jt,jobqueue)->h,__ATOMIC_SEQ_CST)!=job)R;//early out if somebody else already removed this job for us
- JOB *blok=(JOB*)AAV0(job);
+ JOB *blok=(JOB*)AAV1(job);
  pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
  if(__atomic_load_n(&JT(jt,jobqueue)->h,__ATOMIC_SEQ_CST)==job){
   A next=__atomic_load_n(&blok->next,__ATOMIC_SEQ_CST);
@@ -405,11 +405,11 @@ static void popjob(J jt,A job){
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4 n){
- A job;GAT0E(job,LIT,sizeof(JOB),0,R EVWSFULL); ra(job);
- JOB *blok=(JOB*)AAV0(job); *blok=(JOB){.n=n,.internal={.f=f,.end=end,.ctx=ctx,}};
+ A job;GAT0E(job,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1,R EVWSFULL); ACINITZAP(job);
+ JOB *blok=(JOB*)AAV1(job); *blok=(JOB){.n=n,.internal={.f=f,.end=end,.ctx=ctx,}};
  pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
  if(!JT(jt,jobqueue)->t){ JT(jt,jobqueue)->t=JT(jt,jobqueue)->h=job; } //queue was empty
- else { ((JOB*)AAV0(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
+ else { ((JOB*)AAV1(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
  if(__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_SEQ_CST))pthread_cond_broadcast(&JT(jt,jobqueue)->cond);
  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
  while(1){
@@ -442,7 +442,7 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
    while(!JT(jt,jobqueue)->h) pthread_cond_wait(&JT(jt,jobqueue)->cond,&JT(jt,jobqueue)->mutex); //could be we got woken up, but other threads picked off all the tasks before us
    __atomic_fetch_sub(&JT(jt,jobqueue)->waiters,1,__ATOMIC_ACQ_REL);} //do this now; no one will see it until we release the mutex
   A job=JT(jt,jobqueue)->h;
-  JOB *blok=(JOB*)AAV0(job);
+  JOB *blok=(JOB*)AAV1(job);
   if(!blok->n){ //user task; remove it before releasing the lock
    __atomic_fetch_sub(&JT(jt,jobqueue)->uwaiters,1,__ATOMIC_ACQ_REL);
    JT(jt,jobqueue)->h=blok->next;
@@ -518,17 +518,17 @@ static I jtthreadcreate(J jt,I n){
 static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
  RZ(pyx=jtcreatepyx(jt,-2,inf));
- A job;GAT0(job,LIT,sizeof(JOB),0);
+ A job;GAT0(job,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1);ACINITZAP(job);
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
  // realize virtual arguments; raise the usecount of the arguments including self
- ra(job);  rifv(arg1); ra(arg1); rifv(arg2); ra(arg2); if(dyad){rifv(arg3);ra(arg3);}
- JOB *blok=(JOB*)AAV0(job);*blok=(JOB){};blok->user.pyx=pyx;blok->user.args[0]=arg1;blok->user.args[1]=arg2;blok->user.args[2]=arg3;memcpy(blok->user.inherited,jt,offsetof(JTT,uflags.us.uq));
+ rifv(arg1); ra(arg1); rifv(arg2); ra(arg2); if(dyad){rifv(arg3);ra(arg3);}
+ JOB *blok=(JOB*)AAV1(job);*blok=(JOB){};blok->user.pyx=pyx;blok->user.args[0]=arg1;blok->user.args[1]=arg2;blok->user.args[2]=arg3;memcpy(blok->user.inherited,jt,offsetof(JTT,uflags.us.uq));
  if(__atomic_load_n(&JT(jt,jobqueue)->queued,__ATOMIC_ACQUIRE)<__atomic_load_n(&JT(jt,jobqueue)->uwaiters,__ATOMIC_ACQUIRE)){
   pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
   if(JT(jt,jobqueue)->queued<JT(jt,jobqueue)->uwaiters){
    JT(jt,jobqueue)->queued++;
    if(!JT(jt,jobqueue)->t){ JT(jt,jobqueue)->t=JT(jt,jobqueue)->h=job; } //queue was empty
-   else { ((JOB*)AAV0(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
+   else { ((JOB*)AAV1(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
    pthread_cond_signal(&JT(jt,jobqueue)->cond);
    pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
    R pyx;}

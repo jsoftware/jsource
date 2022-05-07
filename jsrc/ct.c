@@ -396,23 +396,21 @@ typedef struct {
 
 static void popjob(J jt,A job){
  if(__atomic_load_n(&JT(jt,jobqueue)->h,__ATOMIC_SEQ_CST)!=job)R;//early out if somebody else already removed this job for us
- JOB *blok=(JOB*)AAV0(job);
+ JOB *blok=(JOB*)AAV1(job);
  pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
  if(__atomic_load_n(&JT(jt,jobqueue)->h,__ATOMIC_SEQ_CST)==job){
   A next=__atomic_load_n(&blok->next,__ATOMIC_SEQ_CST);
   __atomic_store_n(&JT(jt,jobqueue)->h,next,__ATOMIC_SEQ_CST);
-  if(!next)__atomic_store_n(&JT(jt,jobqueue)->t,0,__ATOMIC_SEQ_CST);
-  atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,-1);}
+  if(!next)__atomic_store_n(&JT(jt,jobqueue)->t,0,__ATOMIC_SEQ_CST);}
  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);}
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4 n){
- A job;GAT0E(job,LIT,sizeof(JOB),0,R EVWSFULL); ra(job);
- JOB *blok=(JOB*)AAV0(job); *blok=(JOB){.n=n,.internal={.f=f,.end=end,.ctx=ctx,}};
+ A job;GAT0E(job,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1,R EVWSFULL); ACINITZAP(job);
+ JOB *blok=(JOB*)AAV1(job); *blok=(JOB){.n=n,.internal={.f=f,.end=end,.ctx=ctx,}};
  pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
  if(!JT(jt,jobqueue)->t){ JT(jt,jobqueue)->t=JT(jt,jobqueue)->h=job; } //queue was empty
- else { ((JOB*)AAV0(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
- atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,1);
+ else { ((JOB*)AAV1(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
  if(__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_SEQ_CST))pthread_cond_broadcast(&JT(jt,jobqueue)->cond);
  pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
  while(1){
@@ -437,6 +435,7 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // init stack as for main thread
  // Note: we use cstackinit as an indication that this thread is ready to use.  It is actually a few cycles away from that.  Thus it is possible, but extremely unlikely,
  // that this task will not be seen first time u t. v is used
+ __atomic_fetch_add(&JT(jt,jobqueue)->uwaiters,1,__ATOMIC_ACQ_REL);
  while(1){
   pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
   if(!JT(jt,jobqueue)->h){
@@ -444,11 +443,12 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
    while(!JT(jt,jobqueue)->h) pthread_cond_wait(&JT(jt,jobqueue)->cond,&JT(jt,jobqueue)->mutex); //could be we got woken up, but other threads picked off all the tasks before us
    __atomic_fetch_sub(&JT(jt,jobqueue)->waiters,1,__ATOMIC_ACQ_REL);} //do this now; no one will see it until we release the mutex
   A job=JT(jt,jobqueue)->h;
-  JOB *blok=(JOB*)AAV0(job);
+  JOB *blok=(JOB*)AAV1(job);
   if(!blok->n){ //user task; remove it before releasing the lock
+   __atomic_fetch_sub(&JT(jt,jobqueue)->uwaiters,1,__ATOMIC_ACQ_REL);
    JT(jt,jobqueue)->h=blok->next;
    if(!blok->next)JT(jt,jobqueue)->t=0; //emptied queue, need to clear tail too
-   atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,-1);
+   JT(jt,jobqueue)->queued--;
    pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
    __atomic_store_n(&((PYXBLOK*)AAV0(blok->user.pyx))->pyxorigthread,jt-JT(jt,threaddata),__ATOMIC_SEQ_CST);
    // set up jt state here only; for internal tasks, such setup is not needed
@@ -467,6 +467,7 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
    A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;  // get self, positioned after the last noun arg
    jt->parserstackframe.sf=self;  // each thread starts a new recursion point
    A z=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
+   __atomic_fetch_add(&JT(jt,jobqueue)->uwaiters,1,__ATOMIC_ACQ_REL); // do this as soon as possible after executing the user task, so other threads see it sooner
    if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
    jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
    // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
@@ -517,18 +518,18 @@ static I jtthreadcreate(J jt,I n){
 // execute the user's task.  Result is an ordinary array or a pyx.  Bivalent
 static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
- RZ(pyx=jtcreatepyx(jt,-1,inf));
- A job;GAT0(job,LIT,sizeof(JOB),0);
+ RZ(pyx=jtcreatepyx(jt,-2,inf));
+ A job;GAT0(job,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1);ACINITZAP(job);
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
  // realize virtual arguments; raise the usecount of the arguments including self
- ra(job);  rifv(arg1); ra(arg1); rifv(arg2); ra(arg2); if(dyad){rifv(arg3);ra(arg3);}
- JOB *blok=(JOB*)AAV0(job);*blok=(JOB){};blok->user.pyx=pyx;blok->user.args[0]=arg1;blok->user.args[1]=arg2;blok->user.args[2]=arg3;memcpy(blok->user.inherited,jt,offsetof(JTT,uflags.us.uq));
- if(__atomic_load_n(&JT(jt,jobqueue)->waiters,__ATOMIC_RELAXED)){
+ rifv(arg1); ra(arg1); rifv(arg2); ra(arg2); if(dyad){rifv(arg3);ra(arg3);}
+ JOB *blok=(JOB*)AAV1(job);*blok=(JOB){};blok->user.pyx=pyx;blok->user.args[0]=arg1;blok->user.args[1]=arg2;blok->user.args[2]=arg3;memcpy(blok->user.inherited,jt,offsetof(JTT,uflags.us.uq));
+ if(__atomic_load_n(&JT(jt,jobqueue)->queued,__ATOMIC_ACQUIRE)<__atomic_load_n(&JT(jt,jobqueue)->uwaiters,__ATOMIC_ACQUIRE)){
   pthread_mutex_lock(&JT(jt,jobqueue)->mutex);
-  if(JT(jt,jobqueue)->queued<JT(jt,jobqueue)->waiters){
-   atomic_fetch_add_weak(&JT(jt,jobqueue)->queued,1);
+  if(JT(jt,jobqueue)->queued<JT(jt,jobqueue)->uwaiters){
+   JT(jt,jobqueue)->queued++;
    if(!JT(jt,jobqueue)->t){ JT(jt,jobqueue)->t=JT(jt,jobqueue)->h=job; } //queue was empty
-   else { ((JOB*)AAV0(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
+   else { ((JOB*)AAV1(JT(jt,jobqueue)->t))->next=job; JT(jt,jobqueue)->t=job; }
    pthread_cond_signal(&JT(jt,jobqueue)->cond);
    pthread_mutex_unlock(&JT(jt,jobqueue)->mutex);
    R pyx;}
@@ -568,9 +569,10 @@ F2(jttcapdot2){A z;
  switch(m){
  case 4: { // rattle the boxes of y and return status of each
   ASSERT((SGNIF(AT(w),BOXX)|(AN(w)-1))<0,EVDOMAIN)   // must be boxed or empty
-  GATV(z,INT,AN(w),AR(w),AS(w)) I *zv=IAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
+  GATV(z,FL,AN(w),AR(w),AS(w)) D *zv=DAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
   DONOUNROLL(AN(w), if(unlikely(!(AT(wv[i])&PYX)))zv[i]=-1001;  // not pyx: _1001
                     else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread>=0)zv[i]=((PYXBLOK*)AAV0(wv[i]))->pyxorigthread;  // running pyx: the running thread
+                    else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread==-2)zv[i]=inf; // not yet started; thread not yet known: _
                     else if(((PYXBLOK*)AAV0(wv[i]))->errcode>0)zv[i]=-((PYXBLOK*)AAV0(wv[i]))->errcode;  // finished with error: -error code
                     else zv[i]=-1000;  // finished with no error: _1000
   )

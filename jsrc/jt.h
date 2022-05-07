@@ -52,12 +52,12 @@ typedef struct rngdata {
  RNGPARMS rngparms0[5];  // parms for RNG 0
  } RNG;  // 342 bytes
 
-
 typedef struct {
  A h;  // queue head, 0 if queue empty
  A t;  // queue tail, 0 if queue empty
  UI4 waiters;  // Number of waiting threads
- UI4 queued;   // Number of jobs on the queue
+ UI4 uwaiters; // Number of threads not working on user jobs (either idle, or working on internal jobs
+ UI4 queued;   // Number of user jobs on the queue
  pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
  pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
 } JOBQ;
@@ -364,7 +364,7 @@ typedef struct JSTstruct {
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
-} JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed
+} JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed on windows
 typedef JST* JS;  // shared part of struct
 
 

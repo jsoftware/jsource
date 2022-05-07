@@ -378,6 +378,8 @@ I jtigcd(J jt,I a,I b){I d;UI4 s,xz,yz;UI x,y;
 }
 
 D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
+ if(unlikely(_isnan(a)))R a;
+ if(unlikely(_isnan(b)))R b;
  a=ABS(a); b=ABS(b); if(a>b){t=a; a=b; b=t;}
  ASSERT(inf!=b,EVNAN);
  if(!a)R b;

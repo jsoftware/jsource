@@ -290,6 +290,7 @@ typedef I SI;
 #define voidAV1(x)       voidAVn(x,1)  // unknown, but list
 #define voidAV2(x)       voidAVn(x,2)  // unknown, but table
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
+#define UNvoidAV1(x)     ((A)((I)(x)-AKXR(1)))   // go from a pointer to *AV1 back to the base of the A block
 
 #if C_LE
 #define BIV0(w) (IAV(w)[0]&(1-((AT(w)&INT)>>(INTX-1))))  // the first (presumably only) value in w, when w is an INT or B01 type

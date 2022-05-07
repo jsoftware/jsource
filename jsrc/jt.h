@@ -62,6 +62,7 @@ typedef struct {
  pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
 } JOBQ;
 
+
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
 struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl0[0];          // marker for the start of cacheline 0

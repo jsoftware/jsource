@@ -401,20 +401,18 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
  // (possibly immediately), that condition will cause the job to be dequeued, and then (as a special case) fa()d.  Since we might still
  // be processing the job, we ra the job now to protect it.  It will be freed at the later of (coming to the top of the job list) and
  // (all tasks finished and waited for here).  We fa explicitly rather than calling tpop
- A jobA;GAT0(jobA,INT,(offsetof(JOB,internal)+sizeof(struct uiint)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);
- JOB *job=(JOB*)AAV1(jobA); *job=(JOB){.n=n,.internal={.f=f,.ctx=ctx,}};
+ A jobA;GAT0(jobA,INT,(offsetof(JOB,internal)+sizeof(struct uiint)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // allocate enough for an internal task
+ JOB *job=(JOB*)AAV1(jobA); job->next=0; job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first here
  pthread_mutex_lock(&jobq->mutex);
- if(likely(JT(jt,nwthreads)!=0)){
+ if(likely((-JT(jt,nwthreads)&(1-n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
   _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
-  jobq->ht[1]->next=job; jobq->ht[1]=job;  ACINIT(jobA,ACUC2);  // Insert job at the tail.  if q is empty, tail points to head.  Raise the usecount to match the fa() that will happen when the job ends
+  jobq->ht[1]->next=job; jobq->ht[1]=job; ACINIT(jobA,ACUC2);  // Insert job at the tail.  if q is empty, tail points to head.  Raise the usecount to match the fa() that will happen when the job ends
+  if(jobq->waiters!=0)pthread_cond_broadcast(&jobq->cond);  // if there are waiting threads, wake them up  scaf why test?
  }
- if(__atomic_load_n(&jobq->waiters,__ATOMIC_ACQUIRE))pthread_cond_broadcast(&jobq->cond);  // if there are waiting threads, wake them up  scaf why test?
    // todo: would be nice to wake only as many as we have work for
+ // In our job setup we have accounted for the fact that we are taking the first task, so that we need nothing more from the block to start running the first task
+ UI4 i=0; C err=0;  // the number of the block we are working on, and the current error status
  while(1){  // at top of loop we have a lock on the jobq mutex
-  // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
-  UI4 i=job->ns; C err=job->internal.err;  // account for the work unit we are taking, fetch current error status
-  if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()
-  job->ns=i+1;  // we're taking the block - account for it
   pthread_mutex_unlock(&jobq->mutex);
   // run the user's function on one thread.  If there are errors, we skip after the first
   if(!err){   //  If an error has been signaled, skip over it and immediately mark it finished
@@ -422,6 +420,10 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
   }
   pthread_mutex_lock(&jobq->mutex);
   ++job->internal.nf;  // we have finished a block - account for it
+  i=job->ns; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status
+  // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
+  if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()
+  job->ns=i+1;  // we're taking the block - account for it
  }
  pthread_mutex_unlock(&jobq->mutex);
  // There are no more tasks to start.  Wait for them to finish, then call the ending routine.

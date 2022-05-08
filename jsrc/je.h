@@ -92,6 +92,7 @@ extern F1(jtdispq);
 extern F1(jtdisps);
 extern F1(jtdl);
 extern F1(jtdllsymdat);
+extern F1(jtdllvaladdr);
 extern F1(jtdllsymhdr);
 extern F1(jtdllsymget);
 extern F1(jtdllsymset);

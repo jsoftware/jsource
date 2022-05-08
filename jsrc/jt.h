@@ -52,13 +52,13 @@ typedef struct rngdata {
  RNGPARMS rngparms0[5];  // parms for RNG 0
  } RNG;  // 342 bytes
 
+typedef struct jobstruct JOB;
 typedef struct {
- A h;  // queue head, 0 if queue empty
- A t;  // queue tail, 0 if queue empty
- pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
- UI4 waiters;  // Number of waiting threads
- UI4 uwaiters; // Number of threads not working on user jobs (either idle, or working on internal jobs
+ JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[0]
  UI4 queued;   // Number of user jobs on the queue
+ US waiters;  // Number of waiting threads
+ US uwaiters; // Number of threads not working on user jobs (either idle, or working on internal jobs)
+ pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
  pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
 } JOBQ;
 

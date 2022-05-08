@@ -236,7 +236,7 @@ static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
 // m must not exceed MAXAROWS.  mfull is the number of rows from the actual starting row to the end of a
 // Result is 0 if NaN error, 1 if OK
-static C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
+static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
  I flgs=pd->flgs;
  I m=MIN(MAXAROWS,pd->m-ti*MAXAROWS);
  I n=pd->n;
@@ -512,8 +512,8 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   // blocked algorithm.  there is no size limit on the blocks
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
  CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs};
- DO(((m+MAXAROWS)*0x55555555)>>(32+7),cachedmmultx(jt,&ctx,i););
- //jtjobrun(jt,cachedmmultx,0,&ctx,((m+MAXAROWS)*0x55555555)>>(32+7)/*(m+MAXAROWS-1)/MAXAROWS?*/);
+// obsolete  DO(((m+MAXAROWS)*0x55555555)>>(32+7),cachedmmultx(jt,&ctx,i););
+ jtjobrun(jt,cachedmmultx,0,&ctx,((m+MAXAROWS)*0x55555555)>>(32+7)/*(m+MAXAROWS-1)/MAXAROWS?*/);
  __asm__ volatile("" ::: "memory");
  R !ctx.nanerr;}
  

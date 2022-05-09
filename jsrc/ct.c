@@ -676,11 +676,12 @@ ASSERT(0,EVNONCE)
    I tousec=(I)(1000000.*(timeout-floor(timeout)))+nowtime.tv_usec;
    struct timespec endtime={tosec+(tousec>=1000000),tousec-1000000*(tousec>=1000000)};  // system time when we give up.  The struct says it uses nsec but it seems to use usec
 #else
-   I tonsec=1000L*(I)(1000000.*(timeout-floor(timeout)))+nowtime.tv_usec;
+   I tonsec=(I)(1000000000.*(timeout-floor(timeout)))+1000*nowtime.tv_usec;
    struct timespec endtime;
    endtime.tv_sec=tosec+(tonsec>=1000000000L);
    endtime.tv_nsec=tonsec-1000000000L*(tonsec>=1000000000L);
 #endif
+//   fprintf(stderr,"nowtime %ld %d endtime %ld %ld timeout %f \n",nowtime.tv_sec,nowtime.tv_usec,endtime.tv_sec,endtime.tv_nsec,timeout);
    I lockrc=pthread_mutex_timedlock((pthread_mutex_t*)IAV0(mutex),&endtime);
    lockfail=lockrc==ETIMEDOUT;  // timeout is a soft failure
    ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure

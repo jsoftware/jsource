@@ -156,7 +156,13 @@ mtx =. 10 T. 0
 tod =. 6!:1''
 0 = 11 T. <mtx  NB. boxed mtx OK
 1 = 11 T. mtx;2.0
-0.45 < dly =. tod-~6!:1''  NB. verify delay
+(2.005 > dly) *. 2 < dly =. tod-~6!:1''  NB. verify delay
+tod =. 6!:1''
+1 = 11 T. mtx;0.1
+(0.105 > dly) *. 0.1 < dly =. tod-~6!:1''  NB. verify delay
+tod =. 6!:1''
+1 = 11 T. mtx;0
+(0.005 > dly) *. 0 < dly =. tod-~6!:1''  NB. verify no delay
 13 T. mtx
 14 T. mtx
 mtx=.10 T. 1  NB. recursive

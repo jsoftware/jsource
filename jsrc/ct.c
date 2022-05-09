@@ -26,36 +26,21 @@ NOINLINE I delay(I n){I johnson=0x1234; do{johnson ^= (johnson<<1) ^ johnson>>(B
 #include <sys/time.h>
 int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex, const struct timespec *restrict abs_timeout)
 {
+ if(!abs_timeout) R pthread_mutex_trylock(mutex);
+ if(abs_timeout->tv_nsec >= 1000000000) R EINVAL;
  int pthread_rc;
- struct timespec remaining, slept, ts;
- struct timeval nowtime;
- if (abs_timeout) {
-  if (abs_timeout->tv_nsec >= 1000000000L) return EINVAL;
-  gettimeofday(&nowtime,0);  // system time now
-  remaining.tv_sec = abs_timeout->tv_sec - nowtime.tv_sec;
-  if ((remaining.tv_nsec = abs_timeout->tv_nsec - 1000*nowtime.tv_usec) < 0) {
-   remaining.tv_sec--;
-   remaining.tv_nsec += 1000000000L;
-  }
-  if (remaining.tv_sec < 0) return ETIMEDOUT;
- } else return ETIMEDOUT;
  while ((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY) {
- ts.tv_sec = 0;
- ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000 : 
-              (remaining.tv_nsec < 10000000 ? remaining.tv_nsec : 10000000));
- nanosleep(&ts, &slept);
- ts.tv_nsec -= slept.tv_nsec;
- if (ts.tv_nsec <= remaining.tv_nsec) {
- remaining.tv_nsec -= ts.tv_nsec;
- } else {
- remaining.tv_sec--;
- remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+  struct timeval nowtime;
+  gettimeofday(&nowtime,0);
+  if(abs_timeout->tv_sec < nowtime.tv_sec
+    || abs_timeout->tv_sec == nowtime.tv_sec && abs_timeout->tv_nsec <= 1000*nowtime.tv_usec) R ETIMEDOUT;
+  struct timespec ts;
+  ts.tv_sec = 0;
+  ts.tv_nsec = nowtime.tv_sec   == abs_timeout->tv_sec ? MIN(10000000,abs_timeout->tv_nsec - 1000*nowtime.tv_usec) :
+               nowtime.tv_sec+1 == abs_timeout->tv_sec ? MIN(10000000,abs_timeout->tv_nsec - 1000*nowtime.tv_usec + 1000000000) :
+               10000000;
+  nanosleep(&ts,0);
  }
- if (remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0)) {
- return ETIMEDOUT;
- }
- }
-
  return pthread_rc;
 }
 #endif

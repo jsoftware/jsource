@@ -1,6 +1,6 @@
 # READLINE=1
-ifeq (1,${USE_PYXES})
 PTHREADINC = -I../../pthreads4w/include -DPYXES=1
+ifeq (1,${USE_PYXES})
 endif
 ifeq (1,${DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1

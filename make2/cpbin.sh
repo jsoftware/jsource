@@ -34,15 +34,18 @@ if [ $jplatform = "darwin" ]; then
 # macos 64-bit
 if [ -f "../bin/${jplatform}/j64/jconsole" ] && [ -f "../bin/${jplatform}/j64arm/jconsole" ]; then
 # fat binary
-if [ -f "../jlibrary/bin/jconsole-mac" ]; then
-mv -f "../jlibrary/bin/jconsole-mac" "/tmp/jconsole-mac.old.$$"
+if [ -f "../jlibrary/bin/jconsole" ]; then
+mv -f "../jlibrary/bin/jconsole" "/tmp/jconsole.old.$$"
 fi
 echo \# lipo "../bin/${jplatform}/j64/jconsole" "../bin/${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole-mac"
 lipo "../bin/${jplatform}/j64/jconsole" "../bin/${jplatform}/j64arm/jconsole" -create -output "../jlibrary/bin/jconsole-mac"
+cp ../jlibrary/bin/jconsole-mac ../jlibrary/bin/jconsole
 elif [ -f "../bin/${jplatform}/j64/jconsole" ]; then
 cop j64 jconsole bin jconsole-mac
+cp ../jlibrary/bin/jconsole-mac ../jlibrary/bin/jconsole
 elif [ -f "../bin/${jplatform}/j64arm/jconsole" ]; then
 cop j64arm jconsole bin jconsole-mac
+cp ../jlibrary/bin/jconsole-mac ../jlibrary/bin/jconsole
 fi
 
 if [ -f "../bin/${jplatform}/j64/libtsdll.dylib" ] && [ -f "../bin/${jplatform}/j64arm/libtsdll.dylib" ]; then

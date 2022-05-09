@@ -368,6 +368,8 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'domain error' -: ex '(3!:3)&0  ^: _1 ] 9'
 'domain error' -: ex '(3!:3)&1  ^: _1 ] 9'
 
+2e10 > {:7!:1''
+
 'domain error' -: unbin etx '02' (<_2;0 1)}3!:3 x=: ?8$2
 'domain error' -: unbin etx '10' (<_2;6 7)}3!:3 x=: ?8$2
 

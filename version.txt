@@ -2,5 +2,5 @@
 // any change to this file triggers copy build to jsoftware server
 // make a trivial change to this comment to rebuild and copy with the same
 #define jversion "904"
-#define jtype    "beta-c"
+#define jtype    "beta-c" 
 

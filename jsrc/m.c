@@ -1404,7 +1404,7 @@ F1(jtca){A z;I t;P*wp,*zp;
  }else{
   if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
   else {
-   n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for 
+   n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for minimum rank, someday
    GA(z,t,n,AR(w),AS(w));
    AN(z)=AN(w);  // copy AN, which has its own meaning in FUNC
   }

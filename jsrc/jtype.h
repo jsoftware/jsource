@@ -155,6 +155,7 @@ struct AD {
         // (11) in file-lock list and file-number list, the # valid files (12) if AFUNIFORMITEMS is set, the total# items in all boxes (13) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
         // (14) in the filenames pointed to by fopafl, the file handle for the open file
   A back; // For VIRTUAL blocks, points to backing block
+  A jobpyx;    // for user JOB blocks, points to the pyx
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
 } mback;
@@ -775,8 +776,8 @@ typedef struct {I e,p;X x;} DX;
 #define EXECCTNOTDELD 0x1000000   // This bit is set when a locale is created, and removed when the user asks to delete it.  Lower bits are the exec count.  The locale is half-deleted when exec ct goes to 0
 #if PYXES
 #define INCREXECCT(l) __atomic_fetch_add(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL);
-#define DECREXECCT(l) if(__atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0)locdestroy(l);
-#define DELEXECCT(l) if(__atomic_and_fetch(&LXAV0(l)[SYMLEXECCT],~EXECCTNOTDELD,__ATOMIC_ACQ_REL)==0)locdestroy(l);
+#define DECREXECCT(l) if(unlikely(__atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0))locdestroy(l);
+#define DELEXECCT(l) if(unlikely(__atomic_and_fetch(&LXAV0(l)[SYMLEXECCT],~EXECCTNOTDELD,__ATOMIC_ACQ_REL)==0))locdestroy(l);
 #else
 #define INCREXECCT(l) ++LXAV0(l)[SYMLEXECCT];
 #define DECREXECCT(l) if(--LXAV0(l)[SYMLEXECCT]==0)locdestroy(l);
@@ -999,6 +1000,7 @@ typedef struct {
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function
     A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
+    I forcetask;  // for t., the flags extracted from n 
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

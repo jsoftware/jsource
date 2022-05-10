@@ -55,9 +55,8 @@ typedef struct rngdata {
 typedef struct jobstruct JOB;
 typedef struct {
  JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[0]
- UI4 queued;   // Number of user jobs on the queue
+ UI4 nuunfin;   // Number of unfinished user jobs, queued and running
  US waiters;  // Number of waiting threads
- US uwaiters; // Number of threads not working on user jobs (either idle, or working on internal jobs)
  pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
  pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
 } JOBQ;
@@ -67,20 +66,18 @@ typedef struct {
 struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl0[0];          // marker for the start of cacheline 0
 // task-initialized values
-// *********************************** the starting area contains values that are inherited from the spawning task.  Some of these are reinitialized
+// *********************************** the starting area contains values that are inherited from the spawning task en bloc.  Some of these are reinitialized
  A global;           // global symbol table inherit for task
- D cct;              // complementary comparison tolerance inherit for task
+ D cct;              // complementary comparison tolerance inherit for task  could be a float if non-complementary
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
- C pp[7];            // print precision (sprintf field for numeric output) inherit for task
+ C ppn;              // print precision (field width for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
- B iepdo;            // 1 iff do iep on going to immex   init for task to 0   shaould be shared?
- C xmode;            // extended integer operating mode init for tack to 0
  C recurstate;       // state of recursions through JDo    init for task to BUSY
 #define RECSTATEIDLE    0  // JE is inactive, waiting for work
 #define RECSTATEBUSY    1  // JE is running a call from JDo
 #define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
- union {  // this union is 4 bytes long
+ union {  // this union is 4 bytes long on a 4-byte bdy
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
    union {
@@ -90,7 +87,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
      UC   db;               /* debug flag; see 13!:0 inherit                          */
     } cx_c;        // accessing as bytes
    } cx;   // flags needed by unquote and jtxdefn   inherit for task
-// ************************************** here starts the area that is initialized to 0 when task starts
+// ************************************** here starts the area that is initialized to 0 when task starts 0x16
    union {
     US uq_us;       // accessing both flags at once
     struct {
@@ -100,6 +97,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
    } uq;   // flags needed only by unquote  clear for task
   } us;   // access as US
  } uflags;   // 4 bytes
+ B iepdo;            // 1 iff do iep on going to immex   init for task to 0   shaould be shared?
+ C xmode;            // extended integer operating mode init for task to 0
+// 6 bytes free
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
  S etxn1;            // last non-zero etxn    clear for task

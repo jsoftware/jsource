@@ -240,6 +240,7 @@ extern F1(jtnubind);
 extern F1(jtnubind0);
 extern F1(jtnubsieve);
 extern F1(jtnubsievesp);
+extern F1(jtnulljob);
 extern DF1(on1);
 extern DF1(on1cell);
 extern F1(jtonm);

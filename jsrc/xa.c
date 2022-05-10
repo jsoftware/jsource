@@ -156,13 +156,14 @@ F1(jtposs){I n,p,q,*v;
 
 F1(jtppq){C*end;I k;
  ASSERTMTV(w);
- k = strtoI(3+jt->pp, (char**)&end, 10);
- R sc(k);
+// obsolete  k = strtoI(3+jt->pp, (char**)&end, 10);
+ R sc(jt->ppn);
 }
 
 F1(jtpps){I k;
  RE(sc(k=i0(w))); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
- snprintf(3+jt->pp,sizeof(jt->pp)-3,FMTI"g", k);
+// obsolete  snprintf(3+jt->pp,sizeof(jt->pp)-3,FMTI"g", k);
+ jt->ppn=k;
  R mtv;
 }
 

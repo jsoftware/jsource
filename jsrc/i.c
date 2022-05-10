@@ -217,8 +217,8 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
  fpsetmask(0);
 #endif
  INITJT(jjt,tssbase)=tod();  // starting time for all threads
- INITJT(jjt,jobqueue)=aligned_malloc(sizeof(JOBQ),64); // job queue, cache-line aligned
 #if PYXES
+ INITJT(jjt,jobqueue)=aligned_malloc(sizeof(JOBQ),64); // job queue, cache-line aligned
  *INITJT(jjt,jobqueue)=(JOBQ){.mutex=PTHREAD_MUTEX_INITIALIZER,.cond=PTHREAD_COND_INITIALIZER};
  JT(jjt,jobqueue)->ht[1]=(JOB *)&JT(jjt,jobqueue)->ht[0];  // when q is empty, tail points to head
 #endif

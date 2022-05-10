@@ -11,8 +11,8 @@
 #include <sys/stat.h>
 #endif
 
-#include <pthread.h>
 #if PYXES
+#include <pthread.h>
 #if !defined(_WIN32) && !defined(__linux__)
 extern int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex, const struct timespec *restrict abs_timeout);
 #endif
@@ -52,6 +52,7 @@ typedef struct rngdata {
  RNGPARMS rngparms0[5];  // parms for RNG 0
  } RNG;  // 342 bytes
 
+#if PYXES
 typedef struct jobstruct JOB;
 typedef struct {
  JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[0]
@@ -60,7 +61,7 @@ typedef struct {
  pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
  pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
 } JOBQ;
-
+#endif
 
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
 struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
@@ -360,7 +361,9 @@ typedef struct JSTstruct {
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
  // 6 bytes free
+#if PYXES
  JOBQ *jobqueue;      // accessed indirectly to avoid spilling into the next cache line, as layout is annoying; never changes
+#endif
 // end of cacheline 7
 
  JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));

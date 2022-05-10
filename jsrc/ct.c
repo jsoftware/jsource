@@ -211,7 +211,7 @@ A jtartiffut(J jt,A w,I aflag){A z;
 }
 #endif
 // ****************************** waiting for values *******************************
-#ifdef PYXES
+#if PYXES
 typedef struct { pthread_cond_t cond; pthread_mutex_t mutex; } WAITBLOK;
 #define WAITBLOKINIT(x) {pthread_cond_init(&(x)->cond,0);pthread_mutex_init(&(x)->mutex,0);}
 #define WAITBLOKGRAB(x) {pthread_mutex_lock(&(x)->mutex);}
@@ -521,17 +521,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue)
  // u always starts a recursion point, whether in a new task or not
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  R pyx;}
-#else
-static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
- ARGCHK2(arg1,arg2);  // the verb is not the issue
- I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
- A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;   // get self, positioned after the last noun arg
- // u always starts a recursion point, whether in a new task or not
- A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
- R pyx;
-}
-static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
-#endif
+
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
 // execute an internal job made up of n tasks.  f is the function to run, end is the function to call at end, ctx is parms to pass to each task
@@ -582,6 +572,18 @@ F1(jtnulljob){
   jtjobrun(jt,&nulljohnson,0,&ctx,ntasks);
   R mtm;
 }
+
+#else
+static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
+ ARGCHK2(arg1,arg2);  // the verb is not the issue
+ I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2;  // the call is either noun self x or noun noun self.  See which set dyad flag and select self.
+ A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;   // get self, positioned after the last noun arg
+ // u always starts a recursion point, whether in a new task or not
+ A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
+ R pyx;
+}
+static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
+#endif
 
 // u t. n - start a task.  We just create a verb to handle the arguments, performing <@u
 // n is forcetask [deltapriority [; k [;v] ]...
@@ -646,11 +648,15 @@ ASSERT(0,EVNONCE)
 #endif
   break;}
  case 2:  { // thread info: (count of idle threads),(count of unfinished user tasks)
+#if PYXES
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   JOBQ *jobq=JT(jt,jobqueue);
   pthread_mutex_lock(&jobq->mutex);  // lock the jobq to present a consistent picture
   GAT0(z,INT,2,1); IAV1(z)[0]=jobq->waiters; IAV1(z)[1]=jobq->nuunfin;
   pthread_mutex_unlock(&jobq->mutex);
+#else
+ASSERT(0,EVNONCE)
+#endif
   break;}
  case 3: { // return current thread #
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now

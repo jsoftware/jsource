@@ -196,6 +196,7 @@ F1(jttsit1){R tsit2(num(1),w);}
 #define sleepms(i) usleep(i*1000)
 #endif
 
+// 6!:3
 F1(jtdl){D m,n,*v;UINT ms,s;
  RZ(w=cvt(FL,w));
  n=0; v=DAV(w); DQ(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);

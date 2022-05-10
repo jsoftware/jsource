@@ -744,7 +744,9 @@ int _stdcall JFree(JS jt){
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
   dllquit(jm);  // clean up call dll
+#if PYXES
   aligned_free(JT(jt,jobqueue));
+#endif
   free(JT(jt,heap));  // free the initial allocation
   R 0;
 }

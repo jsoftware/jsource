@@ -12,7 +12,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
 #endif
 
 // burn some time, approximately n nanoseconds
-NOINLINE I johnson(I n){I johnson=0x1234; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson;}
+NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
 #define delay(n) {if(__builtin_constant_p(n)){if(n>36)DONOUNROLL(n/36,_mm_pause();)else johnson(n);}else if(unlikely(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
 #else
@@ -539,7 +539,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
  pthread_mutex_lock(&jobq->mutex);
- if(likely((-JT(jt,nwthreads)&(1-n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
+ if(likely((-(I)JT(jt,nwthreads)&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
   _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
   // When we finish all tasks, we will have a problem.  The job block is on the jobq somewhere, but not necessarily at the top.
   // We can't dequeue the job or free it.  What we do is leave it on the jobq, with ns=n.  When the job is next taken for a task
@@ -573,7 +573,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
  // job may still be in the job list - if so it will be fa()d when it reaches the top
 }
 
-// 13!:20 run a null job with tasks.  w is #spins per task, # tasks
+// 13!:85 run a null job with tasks.  w is #spins per task, # tasks
 static C nulljohnson(J jt,void *ctx,UI4 i){R johnson(*(I*)ctx);}  // delay a bit
 F1(jtnulljob){
   ASSERT(AR(w)==1,EVRANK); ASSERT(AN(w)==2,EVLENGTH); if(!(AT(w)&INT))RZ(w=cvt(INT,w));

@@ -514,7 +514,6 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs};
 // obsolete  DO(((m+MAXAROWS)*0x55555555)>>(32+7),cachedmmultx(jt,&ctx,i););
  jtjobrun(jt,cachedmmultx,0,&ctx,((m+MAXAROWS)*0x55555555)>>(32+7)/*(m+MAXAROWS-1)/MAXAROWS?*/);
- __asm__ volatile("" ::: "memory");
  R !ctx.nanerr;}
  
 #else

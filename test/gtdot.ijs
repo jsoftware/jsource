@@ -6,8 +6,11 @@ NB. j904 64-bit only
 
 N=: <: 9!:56'maxtasks'
 N > 0
-N1=: <.&.%: 2 * N+1
+N1=: <.@%: N
 N1 > 0
+N >: N1*N1
+N2=: 32 <. <.@%: 20 * N+2
+N2 > 0
 
 NB. create all available threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
@@ -81,6 +84,26 @@ N = {. 2 T.''    NB. all should be waiting
 N = 1 T.''
 N = {. 2 T.''    NB. all should be waiting
 
+0 f1 N1          NB. run in master thread
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+1 f1 N1          NB. queued job
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+0 f2 N1          NB. run in master thread
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+1 f2 N1          NB. queued job
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
 NB. number of tasks > number of worker threads
 
 0 f 2*N          NB. run in master thread
@@ -109,6 +132,26 @@ N = 1 T.''
 N = {. 2 T.''    NB. all should be waiting
 
 1 f2 N1          NB. queued job
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+0 f1 N2          NB. run in master thread
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+1 f1 N2          NB. queued job
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+0 f2 N2          NB. run in master thread
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+1 f2 N2          NB. queued job
 
 N = 1 T.''
 N = {. 2 T.''    NB. all should be waiting
@@ -206,7 +249,7 @@ end.
 )
 f ''
 
-4!:55 ;:'N N1 f f1 f2 g g1 aaa__ bbb__ ccc__ '
+4!:55 ;:'N N1 N2 f f1 f2 g g1 aaa__ bbb__ ccc__ '
 
 epilog''
 

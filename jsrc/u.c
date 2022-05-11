@@ -563,7 +563,7 @@ for(i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
 F1(jtvi){ARGCHK1(w);
-// ASSERT(NUMERIC&AT(w),EVDOMAIN)  // debug 7!:1 high water mark for (3!:3)&1  ^: _1 ] 9 cvt(INT,w) didn't raise error if w is BOX
+ ASSERTSYS(NUMERIC&AT(w), "non-numeric argument to jtvi");
  if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
  if((AT(w)&SPARSE+B01)>AR(w))R zeroionei(BAV(w)[0]);   // non-sparse Boolean atom, take atomic integer
  R cvt(INT,w);

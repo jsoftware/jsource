@@ -4,46 +4,48 @@ NB. T. t. ------------------------------------------------------------------
 NB. **************************************** threads & tasks **********************************
 NB. j904 64-bit only
 
-N0=: N=: <: 9!:56'maxtasks'
+N=: <: 9!:56'maxtasks'
 N > 0
+N1=: <.&.%: 2 * N+1
+N1 > 0
 
 NB. create all available threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
-N0 = 1 T.''
-N0 = {. 2 T.''  NB. all should be waiting
+N = 1 T.''
+N = {. 2 T.''  NB. all should be waiting
 
 NB. no more thread can be created
 'limit error' -: 0&T. etx ''
 
-f=: 3 : 0
-pyx=. g t.'' "0 i.N
+f=: 4 : 0
+pyx=. g t.x "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
  if. *./0>r do. break. end.
- 6!:3[0.1
+ 6!:3[0.001
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 ]&> pyx
 )
 
-f1=: 3 : 0
-pyx=. g1 t.'' "0 i.%:N1
+f1=: 4 : 0
+pyx=. x&g1@y t.x "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
  if. *./0>r do. break. end.
- 6!:3[0.1
+ 6!:3[0.001
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 ]&> pyx
 )
 
-f2=: 3 : 0
-pyx=. g1 t.'' "0 i.%:N1
-pyx0=. g t.'' "0 i.%:N1
+f2=: 4 : 0
+pyx=. x&g1@y t.x "0 i.y
+pyx0=. g t.x "0 i.y
 while. do.
  r=. 4 T. pyx,pyx0               NB. echo r for debug
  if. *./0>r do. break. end.
- 6!:3[0.1
+ 6!:3[0.001
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 (,]&> pyx), ]&>pyx0
@@ -51,60 +53,65 @@ assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 
 g=: 3 : 0
 9!:1[(7^5)+3 T.''  NB. random per thread
-6!:3[0.3*?0            NB. arbitrary delay
+6!:3[0.001*?0      NB. arbitrary delay
 1
 )
 
-g1=: 3 : 0
+g1=: 4 : 0
 9!:1[(7^5)-3 T.''  NB. random per thread
-for_i. i.%:N1 do.
- 6!:3[0.3*?0
- pyx=. g t.'' "0 i.%:N1
+for_i. i.y do.
+ 6!:3[0.001*?0     NB. arbitrary delay
+ pyx=. g t.x "0 i.y
 end.
 ]&> pyx
 )
 
-f''
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
-N0 = 1 T.''
-N0 = {. 2 T.''  NB. all should be waiting
+NB. number of tasks < number of worker threads
 
-N1=:  <.&.%: N
+0 f N            NB. run in master thread
 
-f1^:(N1>0) ''
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
-N0 = 1 T.''
-N0 = {. 2 T.''  NB. all should be waiting
+1 f N            NB. queued job
 
-NB. run in master thread
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
-N=: <. 1.5 * >: 9!:56'maxtasks'
+NB. number of tasks > number of worker threads
 
-f''
+0 f 2*N          NB. run in master thread
 
-N0 = 1 T.''
-N0 = {. 2 T.''  NB. all should be waiting
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
-N=: 2 * >: 9!:56'maxtasks'
-N1=:  <.&.%: N
+1 f 2*N          NB. queued job
 
-f''
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
-N0 = 1 T.''
-N0 = {. 2 T.''  NB. all should be waiting
+0 f1 N1          NB. run in master thread
 
-f1^:(N1>0) ''
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
-N0 = 1 T.''
-N0 = {. 2 T.''  NB. all should be waiting
+1 f1 N1          NB. queued job
 
-N=: <: 9!:56'maxtasks'
-N1=:  <.&.%: N
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
-f2^:(N1>0) ''
+0 f2 N1          NB. run in master thread
 
-N0 = 1 T.''
-N0 = {. 2 T.''  NB. all should be waiting
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
+
+1 f2 N1          NB. queued job
+
+N = 1 T.''
+N = {. 2 T.''    NB. all should be waiting
 
 NB. mutex
 
@@ -135,17 +142,17 @@ assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.3)
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 0.6 0.4  NB. last thread should run in master; earlier ones complete first
 while. nwthreads ~: {. 2 T. '' do. end.  NB. wait till threads become ready
 NB. Verify forcetask arg
-pyx =. 6!:3 t. 0"0 N0 # 1.0  NB. fill up with delating threads
+pyx =. 6!:3 t. 0"0 N # 1.0  NB. fill up with delating threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
 while. nwthreads ~: {. 2 T. '' do. end.  NB. wait till threads become ready
-pyx =. 6!:3 t. 0"0 (>:N0) # 1.0  NB. fill up with delating threads
+pyx =. 6!:3 t. 0"0 (>:N) # 1.0  NB. fill up with delating threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) > 6!:1''  NB. master should wait
 while. nwthreads ~: {. 2 T. '' do. end.  NB. wait till threads become ready
-pyx =. 6!:3 t. 1"0 (>:N0) # 1.0  NB. fill up with delating threads
+pyx =. 6!:3 t. 1"0 (>:N) # 1.0  NB. fill up with delating threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
@@ -199,7 +206,7 @@ end.
 )
 f ''
 
-4!:55 ;:'N N0 N1 f f1 f2 g g1 '
+4!:55 ;:'N N1 f f1 f2 g g1 aaa__ bbb__ ccc__ '
 
 epilog''
 

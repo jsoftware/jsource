@@ -423,16 +423,19 @@ typedef I SI;
 #define NAMEBYVALUE     ((I)1L<<NAMEBYVALUEX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name
 #define NAMEABANDONX SYMBX
 #define NAMEABANDON            ((I)1L<<NAMEABANDONX)     // name is name::, which will be deassigned after the value is stacked.  NAMEBYVALUE must also be set
-// in the parser VERB is set in a NAME type to indicate use of global symbol table
 // ** BOX type can have the following informational flags set
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
 // Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
 // Restriction: MARK must be reserved for use as BOXMULTIASSIGN because of how parser tests for it
 // ** NOTE!! bits 28-30 are used in the call to cvt() (arg only) to override the conversion type for XNUMs
-#define XCVTXNUMORIDEX  LPARX   // in cvt(), indicates that forced precision for result is present
-#define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
-#define XCVTXNUMCVX     CONJX
-#define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
+// MARK and ASGN hold the 2-bit rounding mode
+#define XCVTXNUMORIDEMSK  (MARK+ASGN+CONW)   // in cvt(), the override to use if XCVTXNUMORIDEX is set, otherwise 00
+#define XCVTXNUMORIDEX  CONWX   // in cvt(), indicates that forced precision for result is present
+#define XMODETOCVT(x) (((((x)+2)&5)<<MARKX)|CONW)  // convert XMODE to a request to cvt to convert to that mode
+#define CVTTOXMODE(x) ((((x)+MARK)>>(MARKX+1))&3) // convert cvt request back to xmode
+// obsolete #define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
+// obsolete #define XCVTXNUMCVX     CONJX
+// obsolete #define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
 
 
 #define ANY             -1L

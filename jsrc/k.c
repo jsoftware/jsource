@@ -354,8 +354,9 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&(NOUN|SPARSE);
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); n=AN(w);
- if(unlikely(((t|wt)&SPARSE+BOX+SBT)!=0)){
-  // Unusual cases: box, ticker, sparse.
+ if(unlikely(((t|wt)&SPARSE+BOX+SBT+FUNC)!=0)){
+  // Unusual cases: box, ticker, sparse, func (should not occur).
+  ASSERTSYS(!((t|wt)&FUNC),"non-noun in cvt");
   // Handle sparse
   if(likely(ISSPARSE(t|wt))){
    RANK2T oqr=jt->ranks; RESETRANK; 
@@ -434,13 +435,13 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
   case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
   case CVCASE(B01X, FLX): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(INTX, FLX): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-  case CVCASE(XNUMX, FLX): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
-  case CVCASE(RATX, FLX): R QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
+  case CVCASE(XNUMX, FLX): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
+  case CVCASE(RATX, FLX): R QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
   case CVCASE(CMPXX, FLX): R ZfromD(w, yv);
   case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R BfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R IfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
-  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
+  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
+  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
   case CVCASE(FLX, CMPXX): R DfromZ(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(B01X, XNUMX): R BfromX(w, yv);
   case CVCASE(INTX, XNUMX): R IfromX(w, yv);

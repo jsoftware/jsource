@@ -8,14 +8,14 @@
 // bits 2-3 should be forced to 1 jtflags;
 #define VCVTIP          0xc  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
 #define VARGX           4           // bit position for arg flags
-#define VBB             (B01<<VARGX)         /* convert arguments to B              */
-#define VII             (INT<<VARGX)         /* convert arguments to I              */
-#define VDD             (FL<<VARGX)          /* convert arguments to D              */
-#define VZZ             (CMPX<<VARGX)        /* convert arguments to Z              */
-#define VIPWCRLONGX     9  // internal use in va2, overlaps BOX
+#define VBB             (B01<<VARGX)         /* convert arguments to B 4             */
+#define VII             (INT<<VARGX)         /* convert arguments to I 5             */
+#define VDD             (FL<<VARGX)          /* convert arguments to D 6             */
+#define VZZ             (CMPX<<VARGX)        /* convert arguments to Z 7             */
+#define VIPWCRLONGX     9  // internal use in va2, overlaps BOX 9
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
-#define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM           */
-#define VQQ             (RAT<<VARGX)         /* convert arguments to RAT            */
+#define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM 10           */
+#define VQQ             (RAT<<VARGX)         /* convert arguments to RAT  11          */
 #define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ)  // mask for argument requested type
 #define VRESX           12           // bit position for result flags
 #define VB              (B01<<VRESX)/* result type B  bit 12                     */
@@ -26,9 +26,9 @@
 #define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
 #define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
-#define VRD             (0x800<<VRESX)// convert result to D if possible - unused code point
-#define VRI             (0x8000<<VRESX)// convert result to I if possible - unused code point
-// bits VRESX+ 1 10 12 16 are free
+#define VRD             (0x800<<VRESX)// convert result to D if possible 23
+#define VRI             (0x8000<<VRESX)// convert result to I if possible  27
+// bits VRESX+ 1 10 12 16 are free 13 22 24 29-30
 #define VIPWFLONGX     17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX
 #define VIPWFLONG      ((I)1<<VIPWFLONGX)
 #define VIPOKWX         20      // This routine can put its result over W
@@ -37,17 +37,17 @@
 #define VIPOKA          ((I)1<<VIPOKAX)
 #define VCANHALTX       25    // This routine can generate an error after it has started
 #define VCANHALT        ((I)1<<VCANHALTX)
-#define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM
+#define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM =CONW
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
-#define VXCVTYPEX       29          // bit position for VX conversion type
-#define VXCVTYPEMSK     ((I)3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type - leave here where they don't overlap noun types
-#define VXX             (Vxx|VXCHASVTYPE|((I)XMEXACT<<VXCVTYPEX))  // exact conversion
-#define VXEQ            (Vxx|VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
-#define VXCF            (Vxx|VXCHASVTYPE|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
-#define VXFC            (Vxx|VXCHASVTYPE|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
+// obsolete #define VXCVTYPEX       29          // bit position for VX conversion type
+// obsolete #define VXCVTYPEMSK     ((I)3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type - leave here where they don't overlap noun types
+#define VXX             (Vxx|XMODETOCVT((I)XMEXACT))  // exact conversion
+#define VXEQ            (Vxx|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
+#define VXCF            (Vxx|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */
+#define VXFC            (Vxx|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
 // bit 31 must not be used - it may be a sign bit, which has a meaning
-#define VARGCVTMSKF     (VXCHASVTYPE|VXCVTYPEMSK)  // mask for type to pass into XCVT, includes XNUM override
-#define VFRCEXMT        (VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
+// obsolete #define VARGCVTMSKF     (VXCHASVTYPE|VXCVTYPEMSK)  // mask for type to pass into XCVT, includes XNUM override
+#define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
 // upper bits for 64-bit va2
 #define VIPOKRNKWX         28      // filled by va2 if the ranks allow inplacing w
 #define VIPOKRNKW          ((I)1<<VIPOKRNKWX)

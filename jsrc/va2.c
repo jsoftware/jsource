@@ -647,8 +647,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-    if(TYPESNE(t,AT(a))){aawwzk[0]=(aawwzk[0]>>bplg(AT(a)))<<bplg(t); aawwzk[1]=(aawwzk[1]>>bplg(AT(a)))<<bplg(t); RZ(a=cvt(t|((I)jtinplace&VARGCVTMSKF),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
-    if(TYPESNE(t,AT(w))){aawwzk[2]=(aawwzk[2]>>bplg(AT(w)))<<bplg(t); aawwzk[3]=(aawwzk[3]>>bplg(AT(w)))<<bplg(t); RZ(w=cvt(t|((I)jtinplace&VARGCVTMSKF),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
+    if(TYPESNE(t,AT(a))){aawwzk[0]=(aawwzk[0]>>bplg(AT(a)))<<bplg(t); aawwzk[1]=(aawwzk[1]>>bplg(AT(a)))<<bplg(t); RZ(a=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
+    if(TYPESNE(t,AT(w))){aawwzk[2]=(aawwzk[2]>>bplg(AT(w)))<<bplg(t); aawwzk[3]=(aawwzk[3]>>bplg(AT(w)))<<bplg(t); RZ(w=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
    }  // It might be better to do the conversion earlier, and defer the error
       // until here.  We will have to look at the generated code when we can use all the registers
 
@@ -1143,8 +1143,8 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  if(((JTINPLACEA*((r==ar)&SGNTO0(AC(a)))+((r==wr)&SGNTO0(AC(w))))&(I)jtinplace&(adocv.cv>>VIPOKWX)))R jtupon2cell(jtinplace,a,w,self);  // if inplaceable, revert
  if(unlikely(!TYPESEQ(yt,zt)))R jtupon2cell(jtinplace,a,w,self);  // if the result of f (which feeds through f/) isn't the same type as the result of g, revert
  if(t){  // convert args if needed
-  if(TYPESNE(t,at))RZ(a=cvt(t|(adocv.cv&VARGCVTMSKF),a));
-  if(TYPESNE(t,wt))RZ(w=cvt(t|(adocv.cv&VARGCVTMSKF),w));
+  if(TYPESNE(t,at))RZ(a=cvt(t|(adocv.cv&XCVTXNUMORIDEMSK),a));
+  if(TYPESNE(t,wt))RZ(w=cvt(t|(adocv.cv&XCVTXNUMORIDEMSK),w));
  }
  ak=b?m:zn; wk=b?zn:m; ak=an<nn?0:ak; wk=wn<nn?0:wk; ak<<=bplg(AT(a));wk<<=bplg(AT(w));
  GA10(y,yt,zn);  // allocate one item for result of g

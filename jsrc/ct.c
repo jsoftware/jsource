@@ -377,6 +377,23 @@ typedef struct jobstruct {
  };
 } JOB;
 
+// we use the 6 LSBs of jobq->ht[0] as the lock, so that when we get the lock we also have the job pointer.  The job is always on a cacheline boundary
+// If we don't get the lock we immediately rescind it.  Even if we have more than 63 threads the universe will be cold before we get 64 increments without a decrement
+#define JOBLOCK(jobq) ({I z; if(unlikely(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(CACHELINESIZE-1))!=0))z=joblock(jobq); (JOB*)z; })
+#define JOBUNLOCK(jobq,oldh) __atomic_store_n(&jobq->ht[0],oldh,__ATOMIC_RELEASE);
+static I joblock(JOBQ *jobq){I z;
+ // loop until we get the lock
+ do{
+  __atomic_fetch_sub((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL);  // spin until the holder releases
+  I nspins=10;  // good upper bound on the amount of time a lock could reasonably take, in poll delays.  It's the time of an uncontended lock of the mutex
+  // we are delaying while a writer finishes.  Usually this will be fairly short, as controlled by nspins.  The danger is that the
+  // writer will be preempted, leaving us in a tight spin.  If the spin counter goes to 0, we decide this must have happened, and we
+  // do a low-power delay for a little while (method TBD)
+  do{if(--nspins==0){nspins=50; YIELD} POLLDELAY}while((__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)&(CACHELINESIZE-1))!=0);  // loop till lock released
+  // try to reacquire the lock, loop if can't
+ }while(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(CACHELINESIZE-1))!=0);
+ R z;
+}
 
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
 static void *jtthreadmain(void *arg){J jt=arg;I dummy;
@@ -386,10 +403,10 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  __atomic_store_n(&jt->cstackinit,(UI)&dummy,__ATOMIC_RELAXED);  // use a local as a surrogate for the stack pointer
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // init stack as for main thread
  // Note: we use cstackinit as an indication that this thread is ready to use.
- JOBQ *jobq=JT(jt,jobqueue);
-  pthread_mutex_lock(&jobq->mutex);
+ JOBQ *jobq=JT(jt,jobqueue); 
+// obsolete   pthread_mutex_lock(&jobq->mutex);
 // obsolete   ++jobq->uavail;  // add this new thread to the count of threads eligible for user tasks
-  goto nexttasklocked;
+// obsolete   goto nexttasklocked;
 
  // loop forever executing tasks
 nexttask: ; 
@@ -435,10 +452,10 @@ nexttasklocked: ;  // come here if already holding the lock
    // set up jt state here only; for internal tasks, such setup is not needed
    A *old=jt->tnextpushp;  // we leave a clear stack when we go
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
-   memset(&jt->uflags.us.uq,0,offsetof(JTT,ranks)-offsetof(JTT,uflags.us.uq));    // clear what should be cleared
+   memset(&jt->uflags.us.uq,0,offsetof(JTT,locsyms)-offsetof(JTT,uflags.us.uq));    // clear what should be cleared - up to locsyms
    A startloc=jt->global;  // extract the globals from the job
 // obsolete   jt->iepdo=0; jt->xmode=0;
-   jt->recurstate=RECSTATEBUSY; RESETRANK; jt->locsyms=JT(jt,emptylocale); jt->currslistx=-1;  // init what needs initing.  Notably clear the local symbols
+   jt->locsyms=JT(jt,emptylocale); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATEBUSY;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
    I4 savcallstack = jt->callstacknext;   // starting callstack
@@ -509,7 +526,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue)
    ++jobq->nuunfin;  // add the new user job to the unfinished count
    _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
    jobq->ht[1]->next=job; jobq->ht[1]=job; job->next=0;   // Insert job at the tail.  if q is empty, tail points to head.
-   ra(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
+   raposuncond(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
    pthread_cond_signal(&jobq->cond);  // Wake just one waiting thread (if there are any)
    pthread_mutex_unlock(&jobq->mutex);
    R pyx;}

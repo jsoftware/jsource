@@ -55,10 +55,12 @@ typedef struct rngdata {
 #if PYXES
 typedef struct jobstruct JOB;
 typedef struct {
- JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[0]
+ JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[0].  The job MUST be on a cacheline boundary, because LSBs are used as a lock
  UI4 nuunfin;   // Number of unfinished user jobs, queued and running
  US waiters;  // Number of waiting threads
+// 2 bytes free
  pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
+// on UNIX, first cacheline ends here.  On windows this is still in the first cacheline
  pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
 } JOBQ;
 #endif
@@ -72,12 +74,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  D cct;              // complementary comparison tolerance inherit for task  could be a float if non-complementary
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C ppn;              // print precision (field width for numeric output) inherit for task
- C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
- C recurstate;       // state of recursions through JDo    init for task to BUSY
-#define RECSTATEIDLE    0  // JE is inactive, waiting for work
-#define RECSTATEBUSY    1  // JE is running a call from JDo
-#define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
-#define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
+ C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task  could merge into .db or boxpos
+// 1 byte free
  union {  // this union is 4 bytes long on a 4-byte bdy
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -93,14 +91,15 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
     US uq_us;       // accessing both flags at once
     struct {
      C    bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
-     B    spfreeneeded;     // When set, we should perform a garbage-collection pass clear for task
+     B    spfreeneeded;     // When set, we should perform a garbage-collection pass should be persistent    combine w/pmctr & db
     } uq_c;        // accessing as bytes
    } uq;   // flags needed only by unquote  clear for task
   } us;   // access as US
  } uflags;   // 4 bytes
- B iepdo;            // 1 iff do iep on going to immex   init for task to 0   shaould be shared?
+ I4 parsercalls;      // # times parser was called clear for task
+ B iepdo;            // 1 iff do iep on going to immex   init for task to 0   should be shared?
  C xmode;            // extended integer operating mode init for task to 0
-// 6 bytes free
+// 2 bytes free
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
  S etxn1;            // last non-zero etxn    clear for task
@@ -114,11 +113,16 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A xmod;             // extended integer: the m in m&|@f clear for task
 // end of cacheline 0
  C _cl1[0];
- I4 parsercalls;      // # times parser was called clear for task
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
- UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
- I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1
+ UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
+ I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
+ C recurstate;       // state of recursions through JDo    init for task to BUSY
+#define RECSTATEIDLE    0  // JE is inactive, waiting for work
+#define RECSTATEBUSY    1  // JE is running a call from JDo
+#define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
+#define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
+// 3 bytes free
 // **************************************  end of initialized part
 
 // ************************************** everything after here persists over the life of the thread

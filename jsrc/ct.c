@@ -362,7 +362,7 @@ void jtclrtaskrunning(J jt){S oldstate;
 typedef struct jobstruct {
  JOB *next; // points to the block containing the next job
  UI4 n;  // number of tasks in this job.  If 0, this is a user job
- UI4 ns;  // number of tasks already started for this job
+ UI4 ns;  // number of tasks already started for this job  If 0, this is a user job (the originator takes 0)
  union {
   struct {
    A args[3];  // w,u,u if monad; a,w,u if dyad
@@ -420,23 +420,27 @@ nexttasklocked: ;  // come here if already holding the lock
    --jobq->waiters;   // indicate we are no longer waiting
   }
   // We have a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
-  UI4 jobn=job->n; UI4 jobns=job->ns; JOB *jobnext=job->next;  // fetch what we know we will need
-  void *ctx=job->internal.ctx; C err=job->internal.err;  // also fetch what internal job will need
+  I jobns=job->ns; JOB *jobnext=job->next; I jobn=job->n; JOB *oldtail=__atomic_load_n(&jobq->ht[1],__ATOMIC_RELAXED);  // fetch what we know we will need; increment # starts.  jobns is the piece we are taking here
+   // The ATOMIC seems to be needed to force the compiler to read and not generate a conditional branch
+  unsigned char (*f)(J jt,void *ctx,UI4 i)=job->internal.f; void *ctx=job->internal.ctx; C err=job->internal.err;  // also fetch what internal job will need
+   // The compiler defers these reads but the read delay is so long that they will get executed early anyway
   // increment the # starts; if that equals or exceeds the # of tasks, dequeue the job
-  JOB **writeptr=&jobq->ht[0]; job->ns=++jobns; writeptr=jobns>=jobn?writeptr:(JOB**)&jt->shapesink[0]; writeptr[0]=jobnext;  // if task count not met, divert writes; if not diverted, deq the job
-  writeptr=jobnext==0?writeptr:(JOB**)&jt->shapesink[0]; writeptr[1]=(JOB *)writeptr;  // if there is a next job, divert the writes; otherwise point tail to head indicating empty chain
+// obsolete   JOB **writeptr=&jobq->ht[0]; job->ns=++jobns; writeptr=jobns>=jobn?writeptr:(JOB**)&jt->shapesink[0]; writeptr[0]=jobnext;  // if task count not met, divert writes; if not diverted, deq the job
+// obsolete   writeptr=jobnext==0?writeptr:(JOB**)&jt->shapesink[0]; writeptr[1]=(JOB *)writeptr;  // if there is a next job, divert the writes; otherwise point tail to head indicating empty chain
 // obsolete   jobq->queued=jobqqueued-=(jobn==0);   // if this is a user job, decr count of queued jobs
-  unsigned char (*f)(J jt,void *ctx,UI4 i)=job->internal.f;
+  job->ns=jobns+1;   // increment task counter for next owner
+  JOB **writeptr=&jobq->ht[0]; writeptr=jobnext==0?writeptr:(JOB**)&jt->shapesink[0]; oldtail=jobns+1<jobn?oldtail:(JOB *)&jobq->ht[0]; jobnext=jobns+1<jobn?job:jobnext;  // if job finishing, dequeue it
+  writeptr[1]=oldtail; JOBUNLOCK(jobq,jobnext);  // if no more jobs AND current job all started, mark queue empty by pointing tail to head.  If job finishing, dequeue it while releasing lock
   // We have now dequeued the job if it has all started, and extracted what an internal job needs to run.  Let the thundering herd come and fight over the mutex
   pthread_mutex_unlock(&jobq->mutex);
-  // mutex released - now process the job
+  // lock released - now process the job
   if(jobn!=0){
    // internal job.  We first have to handle the special case of jobns>n.  This indicates that the job has been entirely started (possibly not finished), but
-   // we couldn't free the job block earlier because it might have been in the middle of the job list.  We can free it now, then look for the next job.
+   // we couldn't free the job block earlier because it might have been in the middle of the job list (in this case it would have been finished in the originating thread).  We can free it now, then look for the next job.
    // Note that if the job is not finished it will still be protected by the originator until all tasks have finished
-   if((unlikely(jobns>jobn))){fa(UNvoidAV1(job)); goto nexttask;}
+   if((unlikely(jobns+1>jobn))){fa(UNvoidAV1(job)); goto nexttask;}
    if(likely(!err)){   //  If an error has been signaled, skip over it and immediately mark it finished
-    if(unlikely((err=f(jt,ctx,jobns-1))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
+    if(unlikely((err=f(jt,ctx,jobns))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
    }
    // This block is done.  Since we will need the mutex when we go to look for work, we take it now.
    // That way we don't have to use atomic ops for internal.nf and thus no RFO cycles on the job block.  For much the same reason, and considering that

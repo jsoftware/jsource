@@ -7,7 +7,7 @@
 #include "vasm.h"
 #include "gemm.h"
 
-#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
+#define MAXAROWS 64  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
 
 // Analysis for inner product
 // a,w are arguments
@@ -513,7 +513,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
  CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs};
 // obsolete  DO(((m+MAXAROWS)*0x55555555)>>(32+7),cachedmmultx(jt,&ctx,i););
- jtjobrun(jt,cachedmmultx,0,&ctx,((m+MAXAROWS)*0x55555555)>>(32+7)/*(m+MAXAROWS-1)/MAXAROWS?*/);
+ jtjobrun(jt,cachedmmultx,0,&ctx,(m+MAXAROWS-1)/MAXAROWS);
  R !ctx.nanerr;}
  
 #else

@@ -863,18 +863,17 @@
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block.  ras() does include rifv
-#define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=ACUC2;else ACADD(x,1); radescend(x)}}  // better a misbranch than an atomic instruction if c<0
+#define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // better a misbranch than an atomic instruction if c<0
 // In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount);
 // sv means the last arg is saved/restored through the call; qcg means the name is known to have qcglobal semantics (we use the constituents) uncond means the arg cannot be perm/sparse/need recurson, so just increment
-#define rapos(x)   {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atomic instruction if c<0
-#define raposlocal(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else ACADD(x,1); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atomic instruction if c<0
-#define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1);}}
-#define raposuncond(x) ACADD(x,1);
+#define rapos(x)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atomic instruction if c<0
+#define raposlocal(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atomic instruction if c<0
+#define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);}}
 #define raposgblqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
-#define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else ACADD(x,1); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
+#define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
-#define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=ACUC2;else ACADD(x,1);} \
+#define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);} \
                                     radescend(x)}}
                                     // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame
                                     // cond must be true only if c<0

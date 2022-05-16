@@ -176,7 +176,7 @@ N = {. 2 T.''    NB. all should be waiting
 
 NB. mutex
 
-g =: 3 : 0  NB. semaphore task
+sema =: 3 : 0  NB. semaphore task
 'remotepyx remote_stuff'=.y
 assert. remote_stuff=1
 6 T. remotepyx,<(localpyx =. 5 T. 2);<2
@@ -219,7 +219,7 @@ t0 =. 6!:1''
 assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
 NB. semaphore test
 localpyx=.5 T. 5
-g t. '' localpyx;<1
+sema t. '' localpyx;<1
 'remotepyx remote_stuff'=.>localpyx
 assert. remote_stuff=2
 6 T. remotepyx,<(localpyx =. 5 T. 5);<3
@@ -267,7 +267,7 @@ end.
 )
 f ''
 
-4!:55 ;:'N N1 N2 f f1 f2 g g1 aaa__ bbb__ ccc__ '
+NB. scaf 4!:55 ;:'N N1 N2 f f1 f2 g g1 aaa__ bbb__ ccc__ sema'
 
 epilog''
 

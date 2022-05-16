@@ -627,6 +627,7 @@ typedef I SI;
 #define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original local symbol table when it is in use
+#define ARINVALID 64  // This (named or numbered) symbol table was never filled in and must not be analyzed when freed
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 

@@ -971,10 +971,10 @@ y =. y
 
 NB. Inplaceable result of explicit definition stays inplaceable after exit
 f3 =: 3 : '10000 # a'
-(dbq'') +. 170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 NB. Even if named
 f3 =: 3 : 'p =. 10000 # a'
-(dbq'') +. 170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 NB. Inplacing forks
 NB. The code to generate the testcases:

@@ -376,7 +376,7 @@ A jtnameref(J jt,A w,A locsyms){A z;
 F1(jtcreatecachedref){F1PREFIP;A z;
  A nm; RZ(nm=onm(w)); // create name from arg
  ASSERT(!(NAV(nm)->flag&(NMILOC|NMDOT|NMIMPLOC)),EVDOMAIN) // if special name or indirect locative, error
- A val=QCWORD(syrd(nm,JT(jt,emptylocale)));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
+ A val=QCWORD(syrd(nm,(A)(*JT(jt,emptylocale))[THREADID(jt)]));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
  ASSERT(val!=0,EVVALUE);  // return if error or name not defined
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
  RZ(z=fdef(0,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val))));// create reference

@@ -198,30 +198,33 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
   case 0:  // named locale - we have a write lock on stloc->lock
-   AR(g)=ARNAMED;   // set rank to indicate named locale
+   AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
    v=symnew(&LXAV0(g)[SYMLINFO],0);    // put new block into locales table, allocate at head of chain without non-PERMANENT marking,  The symbol must be available
    v->flag|=LINFO;  // mark as not having a value
 // obsolete  v->flag|=LINFO;
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z'. correct for all but z locale itself, which is overwritten at initialization
-   ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent.  ZAP to match store into LOCPATH
+   LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent.
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ras() on g
-   // Put the locale name into the symbol table.  We can't use symbis etc because we have to keep the continuous lock on stlock to prevent multiple assignment of a named locale
+   // Put the locale name into stloc.  We can't use symbis etc because we have to keep the continuous lock on stlock to prevent multiple assignment of a named locale
+   // (and so we don't really need to ra/fa when adding/removing from stloc) 
    // We know the name is not in the table; we spin to the end of the chain on the theory that most-used locales will be loaded first
    UI4 hsh=NAV(x)->hash; L *sympv=SYMORIGIN;  // hash of name; origin of symbol tables
    LX *hv=LXAV0(JT(jt,stloc))+SYMHASH(hsh,AN(JT(jt,stloc))-SYMLINFOSIZE);  // get hashchain base in stloc
    LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
-   v=symnew(hv,tx); ra(x); v->name=x; v->val=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; ra to matc store of name; save value; ZAP to match store of value
+   v=symnew(hv,tx); v->name=x; v->val=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; save value; ZAP to match store of value
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
+   ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
+   AR(g)=ARNAMED;   // set rank to indicate named locale
    break;
   case 1:  // numbered locale - we have no lock
+   AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0));   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    v->flag|=LINFO;  // mark as not having a value (for diags.  value is used for locnum)
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
-   RZ(x=nfs(20,&CAV(ds(CALP))['a'])) ACINITZAP(x);  // create the name block before lock.  The hash will be meaningless
-   LOCNAME(g)=x;  // set name pointer in SYMLINFO
-   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed)
+   RZ(x=nfs(20,&CAV(ds(CALP))['a']))  // create the name block before lock.  The hash will be meaningless
+   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed); zap g
 // obsolete    sprintf(s,FMTI,n); RZGOTO(x=nfs(strlen(s),s),exitlock);  // scaf let LOCNAME be the locale# for numbered (call it LOCNUM); no need for name
    I nmlen=sprintf(NAV(x)->s,FMTI,n); AN(x)=nmlen; NAV(x)->m=nmlen;  // install true locale number and length of name
 // obsolete    NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric   scaf avoid sprintf
@@ -229,11 +232,15 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'.  Must be after installnl
    LOCPATH(g)=JT(jt,zpath);  // zpath is permanent, no ras needed  Must be after installnl
    WRITEUNLOCK(JT(jt,stlock))
+   LOCNAME(g)=x;  // set name pointer in SYMLINFO
+   ACINITZAP(x);   // now that we know we will succeed, transfer ownership to name to the locale
+   AR(g)=0;   // set rank to indicate numbered locale
    break;
   case 2:  // local symbol table - we have no lock and we don't assign
-   AR(g)|=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
+   AR(g)=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    // The first hashchain is not used as a symbol pointer - it holds xy bucket info
    // Bloom filter not used for local symbol tables
+   break;
  }
  R g;
 }    /* create locale, named (0==k) or numbered (1==k) */
@@ -256,17 +263,24 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  // init base locale
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
  SYMRESERVE(2) RZ(q=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
- DQ(nthreads, JTFORTHREAD(jt,i)->global=q;)
+// obsolete  DQ(nthreads, JTFORTHREAD(jt,i)->global=q;)
+ jt->global=q;  // init baselocale in master.  workers must init on each call
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  // NOTE: you must apply a name from a private locale ONLY to the locale it was created in, or to a global locale.  Private names contain bucket info & symbol pointers that would
  // cause errors if applied in another locale.  It is OK to apply a non-private name to any locale.
- RZ(jt->locsyms=stcreate(2,0,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=SYMLINFOSIZE; AM(jt->locsyms)=(I)jt->locsyms; ACX(jt->locsyms); // close chain so u. at top level has no effect.  No Bloom filter since local table
- // To speed up the test for existence of local symbols, we adjust the position of jt->locsyms so that it is on an odd boundary of (two Is).  This has the salubrious side effect
+ A emptyloc; RZ(emptyloc=stcreate(2,0,0,0)); AKGST(emptyloc)=jt->global; AN(emptyloc)=SYMLINFOSIZE; AM(emptyloc)=(I)emptyloc; ACX(emptyloc); // close chain so u. at top level has no effect.  No Bloom filter since local table
+ // To speed up the test for existence of local symbols, we adjust the position of emptyloc so that it is on an odd boundary of (two Is).  This has the salubrious side effect
  // of putting the oft-referenced parts (AN through the chains) into a single cacheline.  We know that AC is positioned at an offset of 3 words, and we know that the allocation has spare space at the end,
- // so we copy to move AC to the midpoint of the allocation (a new cacheline, in 64-bit) and repoint jt->locsyms accordingly
- DQNOUNROLL(8+3, ((I*)jt->locsyms)[i+8-3]=((I*)jt->locsyms)[i];) jt->locsyms=(A)((I*)jt->locsyms+8-3);
- // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
- INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
+ // so we copy to move AC to the midpoint of the allocation (a new cacheline, in 64-bit)
+// obsolete DQNOUNROLL(8+3, ((I*)emptyloc)[i+8-3]=((I*)emptyloc)[i];)
+ // We need a different empty locale for each thread, because the global symbol table is stored there.  Allocate at rank 1, and fill it with copies of emptyloc
+ // Unfortunately the layout of the locale uses words 0 and 8, so we can't pack the bllock for the threads into adjacent cachelines.  Perhaps we should just have the thread
+ // allocate an empty locale when it starts, but we have coded this and we will keep it.  Unallocated threrads will drop out of cache.
+ GA0(q,INT,16*MAXTASKS,1) INITJT(jjt,emptylocale)=(I(*)[MAXTASKS][16])((I*)q+8-3);   //  this mangles the header; OK since the block will never be freed
+ DONOUNROLL(MAXTASKS, A ei=(A)&((I*)q)[16*i+8-3]; MC(ei,emptyloc,(8+3)*SZI); AM(ei)=(I)ei;)
+// obsolete  emptyloc=(A)((I*)emptyloc+8-3);
+// obsolete  INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
+ jt->locsyms=(A)(*INITJT(jjt,emptylocale))[0];  // init jt->locsyms for master thread to the emptylocale for the master thread.  jt->locsyms in other threads must be initialized for each user task
  // Go back and fix the path for z locale to be empty
  GAT0(q,BOX,1,1); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list
  R 1;
@@ -592,7 +606,7 @@ B jtlocdestroy(J jt,A g){
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
- if(unlikely(redefg(g)==0)){LOCPATH(g)=path; R 0;}  // abort, restoring the path, if the locale contains the currently-running definition
+ if(unlikely(redefg(g)==0)){LOCPATH(g)=path; R 0;}  // abort, restoring the path, if the locale contains the currently-running definition   this checks every symbol!!?  scaf
  freesymb(jt,g);   // delete all the values
  fa(path);   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used

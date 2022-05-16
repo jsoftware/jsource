@@ -180,12 +180,12 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
  S taskstate;  // task state: modified by other tasks on a system lock
- C filler70[6];
 #define TASKSTATERUNNINGX 0   // task has started
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
 #define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
 #define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
- // 2 bytes free
+ C filler70[6];
+ // 6 bytes free
 #if PYXES
  pthread_t pthreadid;  // OS-dependent thread ID.  We need it only for destroying tasks.
  C filler7[16-sizeof(pthread_t)];  // trouble if it's bigger than this!
@@ -346,7 +346,7 @@ typedef struct JSTstruct {
  float dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  float zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A evm;              /* event messages                                  */
- A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed
+ I (*emptylocale)[MAXTASKS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
  I filler6[2];
 // end of cacheline 6
 

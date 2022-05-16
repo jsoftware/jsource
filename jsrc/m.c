@@ -628,7 +628,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
  if(likely(arw&ARLOCALTABLE)){
   // local tables have no path or name, and are not listed in any index.  Just delete the local names
   freesymb(jt,w);   // delete all the names/values
- }else{
+ }else if(likely(!(arw&ARINVALID))){  // INVALID means there was an error filling in the locale - don't look at LOCNAME etc
   // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
   // First, free the name (in the SYMLINFO block), and then free the SYMLINFO block itself
   LX k,* RESTRICT wv=LXAV0(w);
@@ -1195,7 +1195,7 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 RESTRICTF A jtgaf(J jt,I blockx){A z;
 // audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
-// use 6!:5 to start audit I i,j;MS *x; if(JT(jt,peekdata)){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
+// audit free chain I xxi,xxj;A xxx; {for(xxi=PMINL;xxi<=PLIML;++xxi){xxj=0; xxx=(jt->mfree[-PMINL+xxi].pool); while(xxx){xxx=xxx->kchain.chain; ++xxj;}}}  // scaf
 #if MEMAUDIT&16
 auditmemchains();
 #endif

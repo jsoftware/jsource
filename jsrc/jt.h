@@ -149,7 +149,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C fillv0len;   // length of fill installed in fillv0
 // 3 bytes free
  DC sitop;            /* pointer to top of SI stack                                 */
- I filler3[1];
+ I bytes;            // bytes currently in use - used only during 7!:1
 // end of cacheline 3
 
  C _cl4[0];
@@ -197,9 +197,10 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl7[0];
  // Area used for intertask communication of memory allocation
  A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
- I bytes;            // bytes currently in use - used only during 7!:1
- I mfreegenallo;        // Amount allocated through malloc, biased
- I malloctotal;    // net total of malloc/free performed in m.c only
+ I4 repatbytes;  // number of bytes repatriated since the last garbage collection, modified by all threads
+// 4 bytes free
+ I mfreegenallo;        // Amount allocated through malloc, biased  modified onlt by owning thread
+ I malloctotal;    // net total of malloc/free performed in m.c only  modified onlt by owning thread
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;

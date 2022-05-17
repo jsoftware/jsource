@@ -70,7 +70,7 @@ eftx     =: 1 : 'u :: ((10{a.) -.~ (13!:12) @ i. @ 0:)'   NB. full text of error
 efx      =: ". eftx
 
 prolog=: ]   NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-epilog =: {{ 1: echo^:ECHOFILENAME 'memory used: ',":7!:1'' }}  NB. epilog'' is run as the last line of each testcase
+epilog =: {{ 1: echo^:ECHOFILENAME 'memory used: ',":(7!:1,7!:7)'' }}  NB. epilog'' is run as the last line of each testcase
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 
 THRESHOLD=: 1 NB. force timing tests to pass

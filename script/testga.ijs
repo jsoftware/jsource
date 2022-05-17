@@ -6,6 +6,7 @@ os=: (('Linux';'Darwin') i. <UNAME) pick ;:'linux darwin win'
 testres=: 'test',os,'.txt'
 
 0!:0 <testpath,'tsu.ijs'
+ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 

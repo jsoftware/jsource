@@ -40,6 +40,16 @@
 #endif
 #endif
 
+#if defined(_WIN32)
+#include <psapi.h>
+#elif defined(__APPLE__)
+#include <mach/mach.h>
+#include <mach/message.h>  // for mach_msg_type_number_t
+#include <mach/kern_return.h>  // for kern_return_t
+#include <mach/task_info.h>
+#else
+#include <sys/resource.h>
+#endif
 
 F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}  //  7!:0
 
@@ -60,6 +70,31 @@ F1(jtspit){A z;I k;
  RZ(z);
  R sc(jt->bytesmax-k);
 }   // 7!:2, calculate max space used
+
+// 7!:7
+// Return resident memory of the current process
+F1(jtspresident){
+ASSERTMTV(w);
+#if defined(_WIN32)
+ PROCESS_MEMORY_COUNTERS mem;
+ BOOL res = GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem));
+ ASSERT(res != 0,EVFACE);
+ R v2((I)mem.WorkingSetSize, (I)mem.PeakWorkingSetSize);
+#elif defined(__APPLE__)
+ mach_task_basic_info_data_t info;
+ info.virtual_size = 0;
+ mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+ kern_return_t res = task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &count);
+ ASSERT(res == KERN_SUCCESS,EVFACE);
+ R v2((I)info.resident_size, (I)info.resident_size_max);
+#else
+// posix
+ struct rusage mem;
+ int res = getrusage(RUSAGE_SELF, &mem);
+ ASSERT(res == 0,EVFACE);
+ R v2(1024*(I)mem.ru_maxrss, 1024*(I)mem.ru_maxrss);   // linux only implemented max rss
+#endif
+}
 
 F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 

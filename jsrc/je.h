@@ -334,6 +334,7 @@ extern F1(jtspfor);
 extern F1(jtspforloc);
 extern F1(jtsphwmk);
 extern F1(jtspit);
+extern F1(jtspresident);
 extern F1(jtsqroot);
 extern F1(jtsquare);
 extern F1(jtstackfault);

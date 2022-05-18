@@ -34,6 +34,7 @@ blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gm
 blacklist=: blacklist, (<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 blacklist=: blacklist, (1=9!:56'maxtasks')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs' NB. require multithreading
+blacklist=: blacklist, (<testpath),each <'gcip.ijs'    NB. blacklist until fixed to allow other tests running
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays

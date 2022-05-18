@@ -421,7 +421,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    while(job==0); // wait till we get a job to run; exit holding the job lock but not the mutex
   }
   // We have a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
-  I jobns=job->ns; JOB *jobnext=job->next; I jobn=job->n;   // fetch what we know we will need.  jobns is the piece we are taking here
+  UI jobns=job->ns; JOB *jobnext=job->next; UI jobn=job->n;   // fetch what we know we will need.  jobns is the piece we are taking here
    // The ATOMIC seems to be needed to force the compiler to read and not generate a conditional branch
   unsigned char (*f)(J jt,void *ctx,UI4 i)=job->internal.f; void *ctx=job->internal.ctx; C err=job->internal.err;  // also fetch what internal job will need
    // The compiler defers these reads but the read delay is so long that they will get executed early anyway
@@ -430,9 +430,11 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
 // obsolete   writeptr=jobnext==0?writeptr:(JOB**)&jt->shapesink[0]; writeptr[1]=(JOB *)writeptr;  // if there is a next job, divert the writes; otherwise point tail to head indicating empty chain
 // obsolete   jobq->queued=jobqqueued-=(jobn==0);   // if this is a user job, decr count of queued jobs
   job->ns=jobns+1;   // increment task counter for next owner
-  JOB **writeptr=&jobq->ht[1]; writeptr=jobnext==0?writeptr:(JOB**)&jt->shapesink[0]; writeptr=jobns+1<jobn?writeptr:(JOB**)&jt->shapesink[0]; jobnext=jobns+1<jobn?job:jobnext;  // if job finishing, dequeue it
-  *writeptr=(JOB *)writeptr; JOBUNLOCK(jobq,jobnext);  // if no more jobs AND current job all started, mark queue empty by pointing tail to itself.  If job finishing, dequeue it while releasing lock
-  // We have now dequeued the job if it has all started, and extracted what an internal job needs to run.  Let the thundering herd come and fight over the mutex
+  JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobns+1<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobns+1<jobn?job:jobnext;  // calc head & tail ptrs
+      // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns+1<jobn), divert write of tail; otherwise leave it.  If job finishing, set new headptr in jobnext
+      // If this is a user job, ns is garbage but n=0, so jobns+1<jobn will never be true (because the vbls are unsigned).
+  *writeptr=(JOB *)writeptr; JOBUNLOCK(jobq,jobnext);  // Do the writes.  tailptr write, if not diverted, sets tail->itself.  The write of the headptr releases the lock.
+  // We have now dequeued the job if it has all started, and extracted what an internal job needs to run.  Let the thundering herd come and fight over the job lock
   
   // lock released - now process the job
   if(jobn!=0){
@@ -513,10 +515,10 @@ static I jtthreadcreate(J jt,I n){
 static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue);
  ARGCHK2(arg1,arg2);  // the verb is not the issue
  RZ(pyx=jtcreatepyx(jt,-2,inf));
- A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);
+ A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // protect the job till it is finished
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.
- UI forcetask=FAV(self)->localuse.lu1.forcetask-1;  // 0 if the user wants to force this job to queue, 0 otherwise
- if((UI)JT(jt,nwthreads)>(forcetask&__atomic_load_n(&jobq->nuunfin,__ATOMIC_ACQUIRE))){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested)
+ UI forcetask=FAV(self)->localuse.lu1.forcetask-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
+ if((UI)JT(jt,nwthreads)>(forcetask&__atomic_load_n(&jobq->nuunfin,__ATOMIC_ACQUIRE))){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
  // realize virtual arguments; raise the usecount of the arguments including self
   if(dyad){rifv(arg3);ra(arg3);} rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
@@ -537,14 +539,16 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue)
    pthread_cond_signal(&jobq->cond);  // Wake just one waiting thread (if there are any)
    pthread_mutex_unlock(&jobq->mutex);
    R pyx;
-  } else JOBUNLOCK(jobq,oldjob);  // return lock if 
+  } else JOBUNLOCK(jobq,oldjob);  // return lock if there is no task to take the job
+  // No thread for the job.  Run it here
   fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now in case they were virtual
  }
- fa(jobA);fa(pyx); // better to allocate these and then conditionally free them than to perform the allocation under lock
+ fa(jobA); ACINITZAP(pyx); fa(pyx); // better to allocate then conditionally free than to perform the allocation under lock.  The pyx has 2 owners: the job and the tpop stack.  We remove the job
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;
  // u always starts a recursion point, whether in a new task or not
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
- R pyx;}
+ R pyx;
+}
 
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
@@ -616,15 +620,50 @@ static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
 #endif
 
 // u t. n - start a task.  We just create a verb to handle the arguments, performing <@u
-// n is forcetask [deltapriority [; k [;v] ]...
+// n is [importantoptions, all numeric or boxed numeric] [; k [;v] ]...
 F2(jttdot){F2PREFIP;
  ASSERTVN(a,w);
- ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // only singleton is allowed as an argument for now, or empty list
- I forcetask=0;
- if(AN(w)==1){RE(forcetask=i0(w)); ASSERT((forcetask&-2)==0,EVDOMAIN);}  // verify forcetask is 0 or 1
-
+ ASSERT(AR(w)<=1,EVRANK) // arg must be atom or list
+ I nolocal=-1;  // establish unset values for options
+ A afixed=0;  // the fixed-format args if any
+ // parse the options
+ // Go through each box, analyzing.  If we hit leading fixed-format options, remember where and skip for later
+ DO(AN(w),
+  A akw; A aval;  // A block for keyword, A block for value
+  if(AT(w)&BOX){
+   A boxl1=C(AAV(w)[i]);  // contents of first box to examine
+   if(AN(boxl1)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
+   if(AT(boxl1)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
+   if(AT(boxl1)&BOX){
+    A boxl2=C(AAV(boxl1)[0]);   // w is (<((<boxl2), ...))
+    if(AN(boxl2)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
+    if(AT(boxl2)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
+    akw=boxl2;   // the keyword
+    if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw))  // keyword must be literal type
+    ASSERT(AR(boxl1)<2,EVRANK) ASSERT(AN(boxl1)<=2,EVLENGTH) aval=AN(boxl2)==1?0:C(AAV(boxl1)[1]);  // arg has only 0-1 value; get value if any
+   }else{
+    akw=boxl1;  // the keyword
+    if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw))  // keyword must be literal type
+    aval=0;
+   }
+  }else if(AT(w)&NUMERIC){afixed=w; break;  // numeric arg must be fixed-format
+  }else{akw=w; if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw)) aval=0;  // string arg is a valueless keyword
+  }
+  // we have the keyword/value; examine them one by one
+  if(strncmp(CAV(akw),"worker",AN(akw))==0){
+   ASSERT(nolocal<0,EVDOMAIN)  // can't set same parm twice
+   aval=aval==0?num(1):aval;  // if value omitted, assume 1
+   RE(nolocal=b0(aval))   // extract binary value
+  }else{ASSERT(0,EVDOMAIN)}   // error if keyword is unknown
+  if(!(AT(w)&BOX))break;  // unboxed must be a single value
+ )
+ // if there is a fixed-format area, analyze it
+ ASSERT(afixed==0 || AN(afixed)==0,EVDOMAIN)  // fixed area not supported, must be empty
+ // set defaults for omitted parms
+ nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0
+ // parms read, install them into the block for t. verb
  A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX));
- FAV(z)->localuse.lu1.forcetask=forcetask;  // save the t. options for execution
+ FAV(z)->localuse.lu1.forcetask=nolocal;  // save the t. options for execution
  R atco(ds(CBOX),z);  // use <@: to get BOXATOP flags
 }
 

@@ -52,7 +52,7 @@ A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
  mvc(SZI*(xn-yn),v+yn,1,MEMSET00);               /* 0 unused area for safety  kludge  */
  // dice the added area into symbols, chain them together, add to free chain
  u=n+(L*)v; j=1+n;    // u->start of new area  j=sym# of (1st new sym+1), will always chain each symbol to the next
- DQ(m-n-1, u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
+DQ(m-n-1, /*testing u->scafthread=~0;*/ u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
  if(SYMORIGIN!=0){u->next=SYMGLOBALROOT; fa(y);}   // if there is an old chain, transfer it to the end of the new chain, then free the old area
  ACINITZAP(x); SYMORIGIN=LAV0(x);           // preserve new array and switch to it
  SYMGLOBALROOT=(LX)n;  // start the new free chain with the first added ele
@@ -67,9 +67,9 @@ I jtreservesym(J jt,I n){
  while(1){
   // count off symbols from the global area, up to a fair number (we need to get enough to justify the lock overhead)
   I ninlock;
-  WRITELOCK(JT(jt,symlock))
+  WRITELOCK(JT(jt,symlock))   // scaf not needed in system lock?
   L *sympv=SYMORIGIN; LX sprev;    // start of symbol block, sym# of a symbol in the chain, starts at the symbol holding SYMGLOBALROOT
-  NOUNROLL for(ninlock=0, sprev=0;ninlock<100&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next));  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
+  NOUNROLL for(ninlock=0, sprev=0;ninlock<100&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next))/*testing sympv[sprev].scafthread=THREADID(jt)*/;  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
   if(ninlock!=0){  // if the global chain is not empty...
    // transfer what we got to our local table
    LX localhead=SYMNEXT(SYMLOCALROOT);   // start of the local chain
@@ -89,11 +89,12 @@ I jtreservesym(J jt,I n){
 // if SYMNEXT(tailx)==0, append at head (immediately after *hv); if SYMNEXT(tailx)!=0, append after tailx.  If queue is empty, tailx is always 0
 // The stored chain pointer to the new record is given the non-PERMANENT status from the sign of tailx
 // result is new symbol
-// Caller must ensure, by prior use of SYMRESERVE, that the symbol is available.. This routine takes no locks
+// Caller must ensure, by prior use of SYMRESERVE, that the symbol is available. This routine takes no locks
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
  j=SYMNEXT(SYMLOCALROOT);
  SYMLOCALROOT=SYMORIGIN[j].next;       /* new top of stack            */
  u=j+SYMORIGIN;  // the new symbol.  u points to it, j is its index
+// testing u->scafthread=THREADID(jt);
  if(likely(SYMNEXT(tailx)!=0)) {L *t=SYMNEXT(tailx)+SYMORIGIN;
   // appending to tail, must be a symbol.  Queue is known to be nonempty
   u->next=t->next;t->next=j|(tailx&SYMNONPERM);  // it's always the end: point to next & prev, and chain from prev.  Everything added here is non-PERMANENT
@@ -161,19 +162,20 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
  READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock))
- GAT0E(z,BOX,3,1,goto exit;); zv=AAV(z);
+ GAT0E(z,BOX,4,1,goto exit;); zv=AAV(z);
  n=AN((A)((I)SYMORIGIN-AKXR(0)))/symcol; pv=SYMORIGIN;
- GATV0E(x,INT,n*5,2,goto exit;); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
+ GATV0E(x,INT,n*6,2,goto exit;); AS(x)[0]=n; AS(x)[1]=6; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
  GATV0E(y,BOX,n,  1,goto exit;);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(!(pv->flag&LINFO)&&pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  In LINFO, val may be locale#.  Must allow SYMB through
   *xv++=pv->flag+(pv->name?LHASNAME:0)+(!(pv->flag&LINFO)&&pv->val?LHASVALUE:0);  // flag
-  *xv++=pv->sn;    
-  *xv++=SYMNEXT(pv->next);
+  *xv++=pv->sn;    // script index
+  *xv++=SYMNEXT(pv->next);  // chain
+  *xv++=/*testing pv->scafthread*/0;  // for debug, the thread# that allocated the symbol
   RZGOTO(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv,exit);  // simple name
  }
- // Allocate box 3: locale name
+ // Allocate box 2: locale name
  GATV0E(y,BOX,n,1,goto exit;); yv=AAV(y); zv[2]=incorp(y);
  DO(n, yv[i]=mtv;);
  n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc));   // v->locale chains
@@ -193,6 +195,9 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZGOTO(aa=incorp(cstr("**local**")),exit);
   RZGOTO(q=sympoola(jt->locsyms),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
+ // box 3: # free symbols for each thread
+ GATV0E(x,INT,JT(jt,nwthreads)+1,1,goto exit;); xv=AV(x); zv[3]=incorp(x);  // box 0: sym info
+ DO(JT(jt,nwthreads)+1, J jt0=JTFORTHREAD(jt,i); I nfreesym=0; for(j=jt0->symfreeroot;j=SYMNEXT(j),j;j=SYMORIGIN[j].next)++nfreesym; xv[i]=nfreesym;)
  zz=z;
 exit: ;
  READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock))

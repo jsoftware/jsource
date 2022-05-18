@@ -36,20 +36,22 @@ NB. 18!:31 y ------------------------------------------------------------
 pcheck=: 3 : 0
  if. 13!:17'' do. 1 return. end.   NB. parameters not applicable when dbr 1
  yy=: y
- assert. ((,3)-:$y) *. 32=type y
- 'p a s'=. y
+ assert. ((,4)-:$y) *. 32=type y
+ 'p a s f'=. y
  assert. 2=#$p
  assert. (2=#$p) *. 4 =type p                  NB. symbol pool
  assert. (1=#$a) *. 32=type a                  NB. object name
  assert. (1=#$s) *. 32=type s                  NB. locale name (or '**local**')
  assert. (#p) = (#a),#s
-NB. p has: index,type,flag,sn,next
+NB. p has: index,type,flag,sn,next,origin
 NB. Flag is changed,cachable,LINFO,PERM,WASABANDONED,hasname,hasvalue
 
  i=. i.#p
  NB. b=. 0 0 -:"1 ]2 5{"1 p      NB. flag=0 & no prev pointer: empty symbol, on free list
  b=. 0 = (64+32) 17 b. 2{"1 p      NB. flag=0 (no name or value): empty symbol, on free list
  orph=. 64 = (64+32) 17 b. 2{"1 p      NB. flag=64 (no name, value): cached orphan value
+NB. testing  scaforigin__   =: 5{"1 p
+NB. testing  scafnfree__   =: f
  assert. {.b  NB. first symbol always free
  assert. 0=2 3{"1 b#p
  assert. (4{"1 b#p) e. (# i.@#) b

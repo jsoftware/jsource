@@ -602,7 +602,7 @@ exitlock:
 // usecount.  When the locale is no longer in any paths, it will be freed along with the name.
 B jtlocdestroy(J jt,A g){
  // see if the locale has been deleted already.  Return fast if so
- A path=(A)__atomic_fetch_and((I*)&LOCPATH(g),0,__ATOMIC_ACQ_REL);
+ A path=(A)__atomic_exchange_n((I*)&LOCPATH(g),0,__ATOMIC_ACQ_REL);
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)

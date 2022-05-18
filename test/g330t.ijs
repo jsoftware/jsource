@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g330t.ijs'
+prolog './g330t.ijs'
 NB. ;y timing tests -----------------------------------------------------
 
 ss   =: +/ @: *:

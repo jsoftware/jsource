@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gpick.ijs'
+prolog './gpick.ijs'
 NB. {:: -----------------------------------------------------------------
 
 boxed=: (32&=)@(3!:0)

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './goox.ijs'
+prolog './goox.ijs'
 NB. order of execution --------------------------------------------------
 
 g=: 3 : 0

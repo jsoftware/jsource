@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g011p.ijs'
+prolog './g011p.ijs'
 randuni''
 
 NB. <./\ B ---------------------------------------------------------------

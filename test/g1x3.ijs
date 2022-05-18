@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x3.ijs'
+prolog './g1x3.ijs'
 NB. 1!:3 ----------------------------------------------------------------
 
 read   =: 1!:1

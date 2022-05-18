@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gpcoinv.ijs'
+prolog './gpcoinv.ijs'
 NB. p:^:_1 --------------------------------------------------------------
 
 f =: p:^:_1

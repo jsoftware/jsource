@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gpco2.ijs'
+prolog './gpco2.ijs'
 NB. p: dyad -------------------------------------------------------------
 
 isprime=: (1 = #@q:) :: 0: "0

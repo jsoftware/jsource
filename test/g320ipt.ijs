@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g320ipt.ijs'
+prolog './g320ipt.ijs'
 NB. x,y Append in place timing tests ------------------------------------
 
 ss   =: +/ @: *:

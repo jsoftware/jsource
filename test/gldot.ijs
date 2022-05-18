@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gldot.ijs'
+prolog './gldot.ijs'
 NB. L. y ----------------------------------------------------------------
 
 open  =: 32&~: @ (3!:0)

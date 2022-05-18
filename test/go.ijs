@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './go.ijs'
+prolog './go.ijs'
 NB. x o.y for x e.i.13 --------------------------------------------------
 
 NB. test failed on small ct

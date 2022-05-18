@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gimaxmin.ijs'
+prolog './gimaxmin.ijs'
 NB. i.<./ ---------------------------------------------------------------
 
 test=: 3 : 0

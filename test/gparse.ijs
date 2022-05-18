@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gparse.ijs'
+prolog './gparse.ijs'
 NB. parsing edge cases ----------------------------------
 
 'syntax error' -: ex 'a =: 5 b =: )' [  a =: 0

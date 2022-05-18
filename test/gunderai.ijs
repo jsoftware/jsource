@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gunderai.ijs'
+prolog './gunderai.ijs'
 NB. u&.(a.&i.) ----------------------------------------------------------
 
 s=: 1000  ?@$ 256

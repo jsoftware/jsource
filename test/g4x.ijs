@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g4x.ijs'
+prolog './g4x.ijs'
 NB. 4!:0 ----------------------------------------------------------------
 
 jnc   =: 4!:0

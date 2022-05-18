@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g420fg.ijs'
+prolog './g420fg.ijs'
 NB. f/@:g for atomic verbs ----------------------------------------------
 
 f=: ;: '! % * + - < = > ^ | <. <: >. >: +. +: *. *: ~: o.'

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gn.ijs'
+prolog './gn.ijs'
 NB. NB. -----------------------------------------------------------------
 
 NB. Don't tread on me!

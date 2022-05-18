@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g630.ijs'
+prolog './g630.ijs'
 NB. & -------------------------------------------------------------------
 
 ((|.x),|.y) -: (x=:'Cogito, ergo sum.') ,&|. y=:'I think not'

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp331.ijs'
+prolog './gsp331.ijs'
 NB. #;.n ----------------------------------------------------------------
 
 f=: 3 : 0

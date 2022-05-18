@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gnum.ijs'
+prolog './gnum.ijs'
 NB. numeric constants ---------------------------------------------------
 
 3j4      -: ". '3j4'

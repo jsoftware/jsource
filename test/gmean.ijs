@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gmean.ijs'
+prolog './gmean.ijs'
 NB. (+/%#)"r ------------------------------------------------------------
 
 mean=: 3 : '(+/y)%#y'

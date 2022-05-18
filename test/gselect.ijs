@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gselect.ijs'
+prolog './gselect.ijs'
 NB. select. -------------------------------------------------------------
 
 f0=: 3 : 0

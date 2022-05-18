@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g5x4.ijs'
+prolog './g5x4.ijs'
 NB. 5!:4 ----------------------------------------------------------------
 
 oldboxc =: 9!:6''   NB. controlled environment

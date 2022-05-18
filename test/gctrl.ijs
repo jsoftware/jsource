@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gctrl.ijs'
+prolog './gctrl.ijs'
 NB. control word parsing ------------------------------------------------
 
 f0 =. 3 : 'if. if. 1 do. 2 end. do. 3 else. 4 end.'

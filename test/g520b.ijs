@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g520b.ijs'
+prolog './g520b.ijs'
 NB. boolean { y ---------------------------------------------------------
 
 f0=: 3 : 0

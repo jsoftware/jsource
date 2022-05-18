@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsco2.ijs'
+prolog './gsco2.ijs'
 NB. s: ------------------------------------------------------------------
 
 NB. create test data set 

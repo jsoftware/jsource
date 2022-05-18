@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g520p.ijs'
+prolog './g520p.ijs'
 NB. { permutations and permutation groups -------------------------------
 
 NB. Generating any permutation as a sequence of 0&C. (rotating by 1)

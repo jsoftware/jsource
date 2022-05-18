@@ -267,7 +267,7 @@ end.
 )
 f ''
 
-NB. scaf 4!:55 ;:'N N1 N2 f f1 f2 g g1 aaa__ bbb__ ccc__ sema'
+4!:55 ;:'N N1 N2 f f1 f2 g g1 aaa__ bbb__ ccc__ sema'
 
 epilog''
 

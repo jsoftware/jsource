@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gintg.ijs'
+prolog './gintg.ijs'
 
 1: 0 : 0  NB. removed from 901
 

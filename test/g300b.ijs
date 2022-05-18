@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g300b.ijs'
+prolog './g300b.ijs'
 NB. boolean inner products, +./ .*. and ~:/ .*. , etc. ------------------
 
 ip=: 4 : 0

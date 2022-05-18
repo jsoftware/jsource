@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gop.ijs'
+prolog './gop.ijs'
 NB. o./\ B --------------------------------------------------------------
 
 cir=: 4 : 'x o. y'

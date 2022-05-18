@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gstack.ijs'
+prolog './gstack.ijs'
 NB. stack issues (function call limit) ----------------------------------
 
 0 0 $  0 : 0

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g300t.ijs'
+prolog './g300t.ijs'
 NB. -/ .* y timing tests ------------------------------------------------
 
 h=: [: -/"1 {."2 * |."1@:({:"2)

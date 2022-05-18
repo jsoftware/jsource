@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gq101.ijs'
+prolog './gq101.ijs'
 NB. rational numbers +. -------------------------------------------------
 
 gcd=: 4 : 0 " 0

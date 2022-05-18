@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g520.ijs'
+prolog './g520.ijs'
 
 1: 0 : 0
 l=.15

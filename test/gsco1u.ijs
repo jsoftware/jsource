@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsco1u.ijs'
+prolog './gsco1u.ijs'
 NB. s: unicode ------------------------------------------------------------------
 
 0 s: 11

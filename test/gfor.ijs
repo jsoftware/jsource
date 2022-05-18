@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gfor.ijs'
+prolog './gfor.ijs'
 NB. for. ----------------------------------------------------------------
 
 f0=: 3 : 0

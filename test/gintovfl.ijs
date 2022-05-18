@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gintovfl.ijs'
+prolog './gintovfl.ijs'
 NB. integer operations --------------------------------------------------
 
 B =: IF64{31 63

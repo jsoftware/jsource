@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g000.ijs'
+prolog './g000.ijs'
 
 NB. Early in the testing, verify that local assignments relocate the symbol table correctly
 

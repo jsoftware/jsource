@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gddot.ijs'
+prolog './gddot.ijs'
 1: 0 : 0  NB. removed in 901
 NB. d. scalar functions -------------------------------------------------
 

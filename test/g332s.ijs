@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g332s.ijs'
+prolog './g332s.ijs'
 NB. x;:y ----------------------------------------------------------------
 
 NB. example 0: English words

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gdll_df.ijs'
+prolog './gdll_df.ijs'
 NB. DLL call with d f declarations
 NB. these will fail on builds with C_DF=0
 NB. as cd on these platforms can not handle f results

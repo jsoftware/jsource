@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gu.ijs'
+prolog './gu.ijs'
 NB. Unicode 2-byte characters -------------------------------------------
 
 UTYPE=: 131072   NB. type code for Unicode

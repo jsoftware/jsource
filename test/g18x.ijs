@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g18x.ijs'
+prolog './g18x.ijs'
 NB. 18!:30 y ------------------------------------------------------------
 
 x=: i.12

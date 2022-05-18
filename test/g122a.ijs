@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g122a.ijs'
+prolog './g122a.ijs'
 NB. x -.@-:"r y ---------------------------------------------------------
 
 f=: 4 : 0

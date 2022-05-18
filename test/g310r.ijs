@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g310r.ijs'
+prolog './g310r.ijs'
 NB. : representations of explicit operators -----------------------------
 
 nln=: 10{a.

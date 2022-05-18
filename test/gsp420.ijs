@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp420.ijs'
+prolog './gsp420.ijs'
 NB. / -------------------------------------------------------------------
 
 (=/x  ) Nearmt =/$.x=: ?1000$2

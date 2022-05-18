@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g430inv.ijs'
+prolog './g430inv.ijs'
 NB. inverses of scans ---------------------------------------------------
 
 inv=: 1 : 'u^:_1'

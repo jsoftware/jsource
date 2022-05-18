@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gpi.ijs'
+prolog './gpi.ijs'
 NB. pi ------------------------------------------------------------------
 
 NB. pi and the common mean (AGM, arithmetic-geometric mean)

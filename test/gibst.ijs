@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gibst.ijs'
+prolog './gibst.ijs'
 NB. i.!.0 and associates timing tests -----------------------------------
 
 randuni''

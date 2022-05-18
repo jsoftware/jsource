@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g120.ijs'
+prolog './g120.ijs'
 NB. -y ------------------------------------------------------------------
 
 'domain error' -: - etx 'abc'

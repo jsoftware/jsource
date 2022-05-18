@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gmmf1s.ijs'
+prolog './gmmf1s.ijs'
 NB. memory mapped files -------------------------------------------------
 
 t=: 18!:4

@@ -598,28 +598,36 @@ F2(jtauditpyx){I mindepth;
 
 // Free all symbols pointed to by the SYMB block w, including PERMANENT ones.  But don't return CACHED values to the symbol pool
 void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
- LX freeroot=0; LX *freetailchn=(LX *)jt->shapesink;  // sym index of first freed ele; addr of chain field in last freed ele
+ LX freeroot=0; L *freetailchn=(L*)((I)jt->shapesink-offsetof(L,next));  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=SYMORIGIN;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // loop through each hash chain, clearing the blocks in the chain
+ I nfreed=0;  // total count of blocks accumulated into free list
+ LX lastk;  // last in chain of freed blocks
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
-  if(k=wv[j]){LX *asymx=&wv[j];  // pointer to previous chain
+  if(k=wv[j]){
+// obsolete LX *asymx=&wv[j];  // pointer to root of chain
+   freeroot=freeroot?freeroot:SYMNEXT(k);  // chain is nonempty; if first time, it becomes the head of the growing free chain
    do{
     k=SYMNEXT(k);
+    ++nfreed;  // k is a valid free; count it
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
     SYMVALFA(jtsympv[k]);    // free value
     jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-    asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
+// obsolete    asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
+    lastk=k;  // remember end-of-chain
     k=nextk;  // advance to next block in chain
    }while(k);
-   // if the chain is not (now) empty, make it the base of the free pool & chain previous pool from it.  CACHED items have been removed
-   if(likely(wv[j]!=0)){freeroot=freeroot?freeroot:wv[j]; *freetailchn=wv[j]; freetailchn=asymx;}  // free chain may have permanent flags   save addr of the very first freed item
+   // chain the new chain (starting at wv[j]) to the growing free chain
+// obsolete    if(likely(wv[j]!=0)){freeroot=freeroot?freeroot:wv[j]; *freetailchn=wv[j]; freetailchn=asymx;}  // free chain may have permanent flags   save addr of the very first freed item
+   freetailchn->next=wv[j]; freetailchn=&jtsympv[lastk];  // append new chain to growing chain, remember end of growing chain
   }
  }
- if(likely(freeroot!=0)){*freetailchn=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
+// obsolete  if(likely(freeroot!=0)){freetailchn->next=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
+ if(likely(freeroot!=0)){jtsymreturn(jt,freeroot,lastk,nfreed);}  // put all blocks freed here onto the free chain
 }
 
 // free the symbol table (i. e. locale) w.  AR(w) has been loaded.  We return w so caller doesn't have to save it
@@ -647,7 +655,8 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
    fr(LOCNAME(w));
    // clear the data fields in symbol SYMLINFO   kludge but this is how it was done (should be done in symnew)
    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-   jtsympv[k].next=SYMLOCALROOT;SYMLOCALROOT=k;  // put symbol on the free list.  SYMLOCALROOT is the base of the free chain
+// obsolete    jtsympv[k].next=SYMLOCALROOT;SYMLOCALROOT=k;  // put symbol on the free list.  SYMLOCALROOT is the base of the free chain
+   jtsymreturn(jt,k,k,1);  // return symbol to free lists
   }
  }
  // continue to free the table itself

@@ -446,6 +446,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
     if(unlikely((err=f(jt,ctx,jobns))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
    }
    // This block is done.  Since we will need the lock when we go to look for work, we take it now.
+   jttpop(jt,old);  // release any resources used by internal job
    JOB *nextjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
    ++job->internal.nf;  // account that this task has finished
    job=nextjob;  // set up for loop
@@ -458,7 +459,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // set up jt state here only; for internal tasks, such setup is not needed
    A *old=jt->tnextpushp;  // we leave a clear stack when we go
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
-   memset(&jt->uflags.us.uq,0,offsetof(JTT,locsyms)-offsetof(JTT,uflags.us.uq));    // clear what should be cleared - up to locsyms
+   memset(&jt->uflags.us.uq,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.us.init0area));    // clear what should be cleared - up to locsyms
    A startloc=jt->global;  // extract the globals from the job
 // obsolete   jt->iepdo=0; jt->xmode=0;
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATEBUSY;  // init what needs initing.  Notably clear the local symbols
@@ -576,12 +577,14 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
  }
  // We have started all the threads, but we pitch and and process tasks ourselves, starting with task 0
  // In our job setup we have accounted for the fact that we are taking the first task, so that we need nothing more from the job block to start running the first task
+ A *old=jt->tnextpushp;  // we leave a clear stack when we go
  UI4 i=0; C err=0;  // the number of the block we are working on, and the current error status
  while(1){  // at top of loop we have a lock on the jobq mutex, i is the task# to take, err is error status so far
   // run the user's function on one thread.  If there are errors, we skip after the first
   if(!err){   //  If an error has been signaled, skip over it and immediately mark it finished
    if(unlikely((err=f(jt,ctx,i))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
   }
+  jttpop(jt,old);  // free anything allocated within the task
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   ++job->internal.nf;  // we have finished a block - account for it
   i=job->ns; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status

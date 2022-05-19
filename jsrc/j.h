@@ -1786,9 +1786,9 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define SYMSETLOCAL(l) (AKGST(l)=jt->global, jt->locsyms=(l))  // change the locals to l
 #define SYMPUSHLOCAL(l) (AM(l)=(I)jt->locsyms, SYMSETLOCAL(l))  // push l onto locals stack
 #define SYMORIGIN JT(jt,sympv)  // the origin of the global symbol table
-#define SYMLOCALROOT jt->symfreeroot   // the root of the local free-symbol chain
+// obsolete #define SYMLOCALROOT jt->symfreeroot   // the root of the local free-symbol chain
 #define SYMGLOBALROOT SYMORIGIN[0].next   // the root of the shared free-symbol chain
-#define SYMRESERVEPREFSUFF(n,pref,suff) if(unlikely(SYMNEXT(SYMLOCALROOT)==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(SYMLOCALROOT)].next)==0))){pref RZ(jtreservesym(jt,n)) suff}   // if call to reserve needed, bracket with pref/suff
+#define SYMRESERVEPREFSUFF(n,pref,suff) if(unlikely(SYMNEXT(jt->symfreehead[0])==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(jt->symfreehead[0])].next)==0))){pref RZ(jtreservesym(jt,n)) suff}   // if call to reserve needed, bracket with pref/suff
 #define SYMRESERVE(n) SYMRESERVEPREFSUFF(n,,)   // called outside of lock to make sure n symbols are available for assignment
 // fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1 so that it may be freed by the caller as abandoned
 // Implies that AM must not be modified when abandoned block is assigned to x/y.

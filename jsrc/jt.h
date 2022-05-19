@@ -87,6 +87,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
     } cx_c;        // accessing as bytes
    } cx;   // flags needed by unquote and jtxdefn   inherit for task
 // ************************************** here starts the area that is initialized to 0 when task starts 0x16
+   C init0area[0];  // label for initializing
    union {
     US uq_us;       // accessing both flags at once
     struct {
@@ -114,6 +115,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // end of cacheline 0
  C _cl1[0];
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
+ C initnon0area[0];
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
@@ -122,14 +124,21 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define RECSTATEBUSY    1  // JE is running a call from JDo
 #define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
-// 3 bytes free
 // **************************************  end of initialized part
 
 // ************************************** everything after here persists over the life of the thread
- LX symfreeroot;   // symbol # of head of local free-symbol queue (0=end)
+ C persistarea[0];  // label for initializing
+ C fillv0len;   // length of fill installed in fillv0
+ S taskstate;  // task state: modified by other tasks on a system lock
+#define TASKSTATERUNNINGX 0   // task has started
+#define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
+#define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
+#define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
+ US symfreect[2];  // number of symbols in main and overflow local symbol free chains
+ LX symfreehead[2];   // head of main and overflow free chains
  UI cstackinit;       // C stack pointer at beginning of execution
  UI cstackmin;        // red warning for C stack pointer
- A filler1[3];
+ A filler1[2];
 // end of cacheline 1
 
  C _cl2[0];
@@ -146,8 +155,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A curname;          // current name, an A block containing an NM
  US fcalln;           /* named fn calls: maximum permissible depth     */
  US callstacknext;    // current stack pointer into callstack.  Could be elided if callstack put on a 16K boundary, not a bad idea anyway
- C fillv0len;   // length of fill installed in fillv0
-// 3 bytes free
+ LX symfreetail1;  // tail pointer for overflow chain
  DC sitop;            /* pointer to top of SI stack                                 */
  I bytes;            // bytes currently in use - used only during 7!:1
 // end of cacheline 3
@@ -179,19 +187,13 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  PSTK initparserstack[1];  // stack used for messages when we don't have a real one
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
- S taskstate;  // task state: modified by other tasks on a system lock
-#define TASKSTATERUNNINGX 0   // task has started
-#define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
-#define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
-#define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
- C filler70[6];
- // 6 bytes free
 #if PYXES
  pthread_t pthreadid;  // OS-dependent thread ID.  We need it only for destroying tasks.
  C filler7[16-sizeof(pthread_t)];  // trouble if it's bigger than this!
 #else
  I filler7[2];
 #endif
+ I filler71[1];
 // end of cacheline 6
 
  C _cl7[0];

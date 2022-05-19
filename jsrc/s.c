@@ -61,38 +61,65 @@ DQ(m-n-1, /*testing u->scafthread=~0;*/ u++->next=(LX)(j++););    // for each ne
 
 // Make sure there are n symbols available for allocation.  Extend the symbol table if not.
 // This must be called outside of any lock and only when the local free-symbol queue has fewer than n values
-I jtreservesym(J jt,I n){
+I jtreservesym(J jt,I n){L *sympv=SYMORIGIN;// start of symbol block
+ // add the overflow chain to the main chain, if it is not empty
+ if(SYMNEXT(jt->symfreehead[1])!=0){
+  sympv[SYMNEXT(jt->symfreetail1)].next=SYMNEXT(jt->symfreehead[0]); jt->symfreehead[0]=jt->symfreehead[1];  // install overflow at start of main
+  jt->symfreect[0]+=jt->symfreect[1]; jt->symfreehead[1]=0; jt->symfreect[1]=0;  // move symbol count to main, mark overflow empty
+ }
  // loop till we get the number of symbols required
- I nsymadded=0;  // number of symbols we have added.  We ignore any symbols we actually have, since there can't be many of them
+ if(jt->symfreect[0]>=n)R 1;  // if the overflow gave us enough, we are done
  while(1){
   // count off symbols from the global area, up to a fair number (we need to get enough to justify the lock overhead)
-  I ninlock;
+  I ninlock; I nwanted=MAX(100,n-jt->symfreect[0]);  // number taken fro shared, number we would like to get
   WRITELOCK(JT(jt,symlock))   // scaf not needed in system lock?
-  L *sympv=SYMORIGIN; LX sprev;    // start of symbol block, sym# of a symbol in the chain, starts at the symbol holding SYMGLOBALROOT
-  NOUNROLL for(ninlock=0, sprev=0;ninlock<100&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next))/*testing sympv[sprev].scafthread=THREADID(jt)*/;  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
-  if(ninlock!=0){  // if the global chain is not empty...
+  LX sprev;    // sym# of a symbol in the chain, starts at the symbol holding SYMGLOBALROOT
+  NOUNROLL for(ninlock=0, sprev=0;ninlock<nwanted&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next))/*testing sympv[sprev].scafthread=THREADID(jt)*/;  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
+  if(likely(ninlock!=0)){  // if the global chain is not empty...
    // transfer what we got to our local table
-   LX localhead=SYMNEXT(SYMLOCALROOT);   // start of the local chain
-   SYMLOCALROOT=SYMGLOBALROOT;   // make the new symbols the head of the local chain
+   LX localhead=SYMNEXT(jt->symfreehead[0]);   // start of the local chain
+   jt->symfreehead[0]=SYMGLOBALROOT;   // make the new symbols the head of the local chain
    SYMGLOBALROOT=SYMNEXT(sympv[sprev].next);  // restore the rest of the global symbols to the global chain
    sympv[sprev].next=localhead;  // restore our preexisting local symbols to the local chain
   }
   WRITEUNLOCK(JT(jt,symlock))
   // if we didn't get enough, call a system lock and extend/relocate the table
-  if((nsymadded+=ninlock)>=n)break;  // incr total symbols added; success if we got enough
+  if((jt->symfreect[0]+=ninlock)>=n)break;  // incr total symbols in main; success if we got enough
   RZ(jtsystemlock(jt,LOCKPRISYM,jtsymext))  // 
+  sympv=SYMORIGIN;  // refresh pointer after system lock
  }
  R 1;
+}
+
+#define SYMTABMAINFULL 100   // when the main table has this many frees, put new frees on overflow
+#define SYMTABOFLOFULL 200   // when the overflow has this many frees, return them to the shared area
+// free the chain of symbols starting with h, ending with t, which contans n symbols.  The chain of t is garbage.
+// we put them on the main chain unless that is already overfull; in that case we add to the overflow.  If the overflow
+// becomes too big, move it to the shared symbol table (under lock)
+void jtsymreturn(J jt, LX h, LX t, I n){L *sympv=SYMORIGIN;  // base of symbol table
+ I qno=(jt->symfreect[0]>SYMTABMAINFULL);  // chain number to add to
+ I qhead=SYMNEXT(jt->symfreehead[qno]); I qct=jt->symfreect[qno]+=n;  // fetch selected queue head pointer, and the updated count in the selected queue
+ sympv[SYMNEXT(t)].next=qhead; jt->symfreehead[qno]=SYMNEXT(h);  // install the blocks-to-free at the head of the selected queue
+ if(unlikely(qno==1)){  // if we are adding to the overflow...
+  if(unlikely(qhead==0))jt->symfreetail1=SYMNEXT(t);  // if the overflow was empty, remember where it ends
+  if(qct>SYMTABOFLOFULL){
+   // the overflow filled up.  Transfer it to the shared area.  The caller might have a lock on a hashchain but never on the symbol table
+   WRITELOCK(JT(jt,symlock))
+   sympv[jt->symfreetail1].next=SYMGLOBALROOT; SYMGLOBALROOT=SYMNEXT(h);  // we must have added to overflow; move the entire overflow to head of shared area
+   jt->symfreehead[1]=0; jt->symfreect[1]=0;  // mark the overflow as empty
+   WRITEUNLOCK(JT(jt,symlock))
+  }
+ }
 }
 
 // hv->hashtable slot; allocate new symbol, install as head/tail of hash chain, with previous chain appended
 // if SYMNEXT(tailx)==0, append at head (immediately after *hv); if SYMNEXT(tailx)!=0, append after tailx.  If queue is empty, tailx is always 0
 // The stored chain pointer to the new record is given the non-PERMANENT status from the sign of tailx
 // result is new symbol
-// Caller must ensure, by prior use of SYMRESERVE, that the symbol is available. This routine takes no locks
+// Caller must ensure, by prior use of SYMRESERVE, that the symbol is available in the main chain. This routine takes no locks
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
- j=SYMNEXT(SYMLOCALROOT);
- SYMLOCALROOT=SYMORIGIN[j].next;       /* new top of stack            */
+ j=SYMNEXT(jt->symfreehead[0]); jt->symfreehead[0]=SYMORIGIN[j].next; --jt->symfreect[0];  // remove symbol from list & account for it
+// obsolete  SYMLOCALROOT=SYMORIGIN[j].next;       /* new top of stack            */
  u=j+SYMORIGIN;  // the new symbol.  u points to it, j is its index
 // testing u->scafthread=THREADID(jt);
  if(likely(SYMNEXT(tailx)!=0)) {L *t=SYMNEXT(tailx)+SYMORIGIN;
@@ -111,16 +138,17 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
 // Reset the fields in the deleted blocks.
 // This is used only for freeing local symbol tables, thus does not need to clear the name/path or worry about CACHED values
 extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
- LX freeroot=0; LX *freetailchn=(LX *)jt->shapesink;  // sym index of first freed ele; addr of chain field in last freed ele
+ LX freeroot=0; L *freetailchn=(L*)((I)jt->shapesink-offsetof(L,next));  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=SYMORIGIN;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free an explicit locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // loop through each hash chain, clearing the blocks in the chain.  Do not clear chain 0, which holds x/y bucket numbers
- // There cannot be any CACHED blocks here,  since they exist only in named locales
+ I nfreed=0;  // count of # blocks freed
+ LX lastk;  // last block freed, valid only if something was freed
  for(j=SYMLINFOSIZE;j<wn;++j){
   LX *aprev=&wv[j];  // this points to the predecessor of the last block we processed
   // process the chain
-  if(k=*aprev){
+  if(k=*aprev){  // process only chains with values
    // first, free the PERMANENT values (if any), but not the names
    NOUNROLL do{
     if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit if it is not permanent
@@ -143,16 +171,19 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     NOUNROLL do{
      k=SYMNEXT(k);  // remove address flagging
      I nextk=jtsympv[k].next;  // unroll loop once
-     aprev=&jtsympv[k].next;  // save last item we processed here
+// obsolete      aprev=&jtsympv[k].next;  // save last item we processed here
      fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].valtype=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     lastk=k;  // remember index of last block
+     ++nfreed;  // ince count of block in chain-to-free
      k=nextk;
     }while(k);
     // make the non-PERMANENTs the base of the free pool & chain previous pool from them
-    *freetailchn=k1; freetailchn=aprev;  // free chain may have permanent flags
+    freetailchn->next=k1; freetailchn=&jtsympv[lastk];  // free chain may have permanent flags
    }
   }
  }
- if(likely(freeroot!=0)){*freetailchn=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
+// obsolete  if(likely(freeroot!=0)){freetailchn->next=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
+ if(likely(freeroot!=0)){jtsymreturn(jt,freeroot,lastk,nfreed);}  // put all blocks freed here onto the free chain
 }
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
@@ -197,7 +228,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  }
  // box 3: # free symbols for each thread
  GATV0E(x,INT,JT(jt,nwthreads)+1,1,goto exit;); xv=AV(x); zv[3]=incorp(x);  // box 0: sym info
- DO(JT(jt,nwthreads)+1, J jt0=JTFORTHREAD(jt,i); I nfreesym=0; for(j=jt0->symfreeroot;j=SYMNEXT(j),j;j=SYMORIGIN[j].next)++nfreesym; xv[i]=nfreesym;)
+ DO(JT(jt,nwthreads)+1, J jt0=JTFORTHREAD(jt,i); I nfreesym=0; DO(2, for(j=jt0->symfreehead[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next)++nfreesym;) xv[i]=nfreesym;)
  zz=z;
 exit: ;
  READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock))
@@ -221,9 +252,13 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
   LX nextdelblockx=sym->next;  // unroll loop once
   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
     {
-      SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
-      if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=SYMLOCALROOT; SYMLOCALROOT=delblockx;}  // add to symbol free list
-      ret=0;  // normal return
+     SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
+// obsolete       if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=SYMLOCALROOT; SYMLOCALROOT=delblockx;}  // add to symbol free list
+     if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
+      *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
+      jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
+     }  // add to symbol free list
+     ret=0;  // normal return
      break;  // name match - return
     }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)

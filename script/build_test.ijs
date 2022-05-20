@@ -158,7 +158,7 @@ echo done
 )
 
 same=: 'SUFFIX';suffix;'PLATFORM';platform;'MAKE2';pmake2;'CLEAN';clean;'COMPILER';compiler
-shlibj    =: shtemplate rplc 'TARGET';'libj'    ;'TYPE';'';    ;same
+shlibj    =: shtemplate rplc 'TARGET';'libj'    ;'TYPE';''    ;same
 shlibjavx =: shtemplate rplc 'TARGET';'libjavx' ;'TYPE';'avx' ;same
 shlibjavx2=: shtemplate rplc 'TARGET';'libjavx2';'TYPE';'avx2';same
 

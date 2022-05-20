@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gj.ijs'
+prolog './gj.ijs'
 NB. j. ------------------------------------------------------------------
 
 jdot =. 0j1&*
@@ -59,4 +59,7 @@ t      -: *t=.0 0j1 _1 0j_1 1
 
 4!:55 ;:'a b jdot t'
 
+
+
+epilog''
 

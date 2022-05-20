@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g128x3.ijs'
+prolog './g128x3.ijs'
 NB. 128!:3 crc-32 -------------------------------------------------------
 
 NB. modified from Henry Rich msg to J forum 2005-01-10
@@ -150,4 +150,7 @@ f =: 3!:11
 4!:55 ;:'f g mask32 p prep shift x '
 
 
+
+
+epilog''
 

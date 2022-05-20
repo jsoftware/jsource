@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp600a.ijs'
+prolog './gsp600a.ijs'
 NB. " agreement ---------------------------------------------------------
 
 f=: 4 : 0
@@ -97,4 +97,7 @@ c f&>/d
 
 4!:55 ;:'c cat d f q r s t xx yy'
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g3x.ijs'
+prolog './g3x.ijs'
 NB. 3!:0 ----------------------------------------------------------------
 
 randuni''
@@ -368,6 +368,8 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'domain error' -: ex '(3!:3)&0  ^: _1 ] 9'
 'domain error' -: ex '(3!:3)&1  ^: _1 ] 9'
 
+2e10 > {:7!:1''
+
 'domain error' -: unbin etx '02' (<_2;0 1)}3!:3 x=: ?8$2
 'domain error' -: unbin etx '10' (<_2;6 7)}3!:3 x=: ?8$2
 
@@ -563,4 +565,7 @@ NB. Verify they don't check syntax
 4!:55 ;:'adot1 adot2 sdot0 bhdr_pre601 binrep binrep_pre601 br f g H hbr hexrep hrx Indirect'
 4!:55 ;:'rb rbi rx test unbin WS x xr xrh y'
 randfini''
+
+
+epilog''
 

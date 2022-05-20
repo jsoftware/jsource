@@ -1,4 +1,4 @@
-/* Copyright 1990-2009, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Forks                                                     */
@@ -11,10 +11,10 @@
 
 // 9!:63 return [((AC of x) ; x) ;] inplacingflags ; < (AC of y) ; y
 F1(jtshowinplacing1){F1PREFIP;
-R link(sc((I)jtinplace&JTFLAGMSK),box(link(sc(AC(w)),w)));
+R jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w)));
 }
 F2(jtshowinplacing2){F2PREFIP;
-R link(link(sc(AC(a)),a),link(sc((I)jtinplace&JTFLAGMSK),box(link(sc(AC(w)),w))));
+R jlink(jlink(sc(AC(a)),a),jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w))));
 }
 
 FORK1(fork100,0x00) FORK1(fork101,0x01) FORK1(fork110,0x10) FORK1(fork111,0x11) FORK1(fork120,0x20) FORK1(fork121,0x21) 
@@ -36,7 +36,6 @@ FORK2(jtfolk2,0x1000)    // this version used by reversions, where localuse may 
 
 // see if f is defined as [:, as a single name
 static B jtcap(J jt,A x){V*v;
-// obsolete  if(v=VAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(l=syrd(v->fgh[0],jt->locsyms))&&(x=l->val))v=VAV(x);  // don't go through chain of names, since it might loop (on u) and it's ugly to chase the chain
  if(v=VAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(x=QCWORD(syrd(v->fgh[0],jt->locsyms)))){v=VAV(x); fa(x);}  // don't go through chain of names, since it might loop (on u) and it's ugly to chase the chain   syrd ra()s the value
  R CCAP==v->id;  //
 }
@@ -199,25 +198,25 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
 }
 
 // Handlers for trains
-static DF1(taAV){TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,mark);}  // adv A A/V
-static DF2(tca){TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,mark);}  // conj C A
-static DF1(tNVc){TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
-static DF1(tac){TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
-static DF1(tcNV){TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
-static DF2(tcc){TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,mark);}  // conj C C
+static DF1(taAV){F1PREFIP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,mark);}  // adv A A/V
+static DF2(tca){F2PREFIP;TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,mark);}  // conj C A
+static DF1(tNVc){F1PREFIP;TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
+static DF1(tac){F1PREFIP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
+static DF1(tcNV){F1PREFIP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
+static DF2(tcc){F2PREFIP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,mark);}  // conj C C
 
-static DF1(taaa){TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
-static DF2(tvvc){TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
-static DF2(tcVCc){TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
-static DF2(taav){TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
-static DF2(tcaa){TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
-static DF1(tNVca){TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
-static DF2(tNVcc){TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
-static DF1(taVCNV){TDECL; A z,t; RZ(df1(t,w,fs)); R hook(t,gs,hs);}  // adv A V/C N/V
-static DF2(taca){TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj A C A
-static DF2(tacc){TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj A C C
-static DF2(tcVCNV){TDECL; A z,t; RZ(df2(t,a,w,fs)); R hook(t,gs,hs);}  // conj C V/C N/V
-static DF2(tcca){TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj C C A
+static DF1(taaa){F1PREFIP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
+static DF2(tvvc){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
+static DF2(tcVCc){F2PREFIP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
+static DF2(taav){F2PREFIP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
+static DF2(tcaa){F1PREFIP;TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
+static DF1(tNVca){F1PREFIP;TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
+static DF2(tNVcc){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
+static DF1(taVCNV){F1PREFIP;TDECL; A z,t; RZ(df1(t,w,fs)); R hook(t,gs,hs);}  // adv A V/C N/V
+static DF2(taca){F2PREFIP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj A C A
+static DF2(tacc){F2PREFIP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj A C C
+static DF2(tcVCNV){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,fs)); R hook(t,gs,hs);}  // conj C V/C N/V
+static DF2(tcca){F2PREFIP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj C C A
 
 
 
@@ -289,8 +288,8 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    if(d==CCOMMA)switch(c){   // all of this except for ($,) is handled by virtual blocks
     case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
    }else if(d==CBOX){
-    if(c==CRAZE){f2=jtlink; linktype=ACINPLACE;  // (;<)
-    }else if(c==CCOMMA){f2=jtlink; linktype=ACINPLACE+1;  // (,<)
+    if(c==CRAZE){f2=jtjlink; linktype=ACINPLACE;  // (;<)
+    }else if(c==CCOMMA){f2=jtjlink; linktype=ACINPLACE+1;  // (,<)
     }
    }else if(d==CLDOT){   // (compare L.)
     I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;

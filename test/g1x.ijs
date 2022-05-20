@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x.ijs'
+prolog './g1x.ijs'
 NB. 1!: -----------------------------------------------------------------
 
 read   =. 1!:1
@@ -148,4 +148,7 @@ erase  =. 1!:55
 
 4!:55 ;:'append erase in mtm out read size t write x'
 
+
+
+epilog''
 

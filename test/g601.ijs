@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g601.ijs'
+prolog './g601.ijs'
 NB. ".y -----------------------------------------------------------------
 
 p  -: (".'p=:20?20')
@@ -344,4 +344,7 @@ assert. 8 -: type ". '_9223372036854775809'  NB. below imin stays float
 4!:55 ;: 'p'
 
 
+
+
+epilog''
 

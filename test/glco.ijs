@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './glco.ijs'
+prolog './glco.ijs'
 NB. f L: n --------------------------------------------------------------
 
 Level =: 2 : 0
@@ -54,4 +54,7 @@ a=: (?3 5$10) f"0 ?3 5$30
 
 4!:55 ;:'a f Level test totient'
 
+
+
+epilog''
 

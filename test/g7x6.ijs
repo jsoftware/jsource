@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g7x6.ijs'
+prolog './g7x6.ijs'
 NB. 7!:6 ----------------------------------------------------------------
 
 (7!:6 <'') -: 7!:6 <'base'
@@ -63,4 +63,7 @@ NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/
 
 4!:55 ;:'h p sp_z_ spl spn'
 
+
+
+epilog''
 

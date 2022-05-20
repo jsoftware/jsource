@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g310a.ijs'
+prolog './g310a.ijs'
 NB. : -------------------------------------------------------------------
 
 jnc   =: 4!:0
@@ -73,3 +73,6 @@ f=:(#:1 3)&(+/ .*)
 
 
 4!:55 ;:'boxed f g inv jnc n open pow powg pown powv verb' 
+
+epilog''
+

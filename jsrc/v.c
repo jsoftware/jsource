@@ -1,4 +1,4 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs                                                                   */
@@ -92,7 +92,7 @@ F2(jtright2){F2PREFIP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(w)
 
 F1(jtright1){RETF(RETARG(w));}
 // lev, dex, and ident - identity adverb/conjunction  (ident uses the same code as lev)
-F2(jtlev){RETF(RETARG(a));}  F2(jtdex){RETF(RETARG(w));}
+F2(jtlev){F2PREFIP;RETF(RETARG(a));}  F2(jtdex){F2PREFIP;RETF(RETARG(w));}
 
 
 

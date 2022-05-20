@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g631.ijs'
+prolog './g631.ijs'
 NB. u&.v ----------------------------------------------------------------
 
 12 _12 _12 12 = 3 3 _3 _3 +&.^. 4 _4 4 _4
@@ -427,4 +427,6 @@ isip 13!:83 {{ i. y }} 1e6
 1: 00 * {{ i. y }} 7
 0 1 2 3 4 5 6 7 8 9 -: i.10
 
-4!:55 ;:'a ckprist countis e exx_z_ gname isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '
+4!:55 ;:'a ckprist countis e exx_z_ gname isip isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '
+
+epilog''

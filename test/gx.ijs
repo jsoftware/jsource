@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gx.ijs'
+prolog './gx.ijs'
 NB. x. ------------------------------------------------------------------
 1: (0 : 0)
 old=: 9!:48 ''
@@ -33,4 +33,7 @@ _1 -: jnc <'x.'
 
 4!:55 ;:'jnc jnl old'
 )
+
+
+epilog''
 

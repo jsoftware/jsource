@@ -1,4 +1,4 @@
-/* Copyright 1990-2011, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /*
@@ -119,15 +119,16 @@ user doc at: https://code.jsoftware.com/wiki/Guides/Interrupt
 
 JE uses JATTN and JBREAK0 to stop execution of sentences with an error
 
-JATTN signals an attention at the start of a line
-JBREAK0 signals an interrupt in a long compute, 6!:3, socket select, ...
+JATTN signals an attention at the start of a line.  The system can resume execution after JATTN
+JBREAK0 signals an interrupt in a long compute, 6!:3, socket select, ... Since the lowest sentence was interrupted resumption is not guaranteed
 
 JATTN and JBREAK0 poll a breakbyte
  the value can be 0 continue, 1 signal in JATTN, or >1 signal in JBREAK0
 
-NOTE: some JEs define a multi-byte breakarea.  ONLY THE FIRST BYTE can be changed by break processing
+NOTE: some JEs define a multi-byte breakarea.  ONLY THE FIRST BYTE can be changed by break processing.
+Later bytes are used for internal break processing
 
-the first word in jt (jt->adbreak) is a pointer to the breakbyte
+the first word in jt (jt->adbreak) is a pointer to the breakbyte.  
 
 a separate task or thread increments the breakbyte to request a break
  JE resets to 0 on new user input or on processing an error (including the one caused by ATTN/BREAK0)
@@ -159,7 +160,7 @@ JHS has the additional complication of critical sections of J code
 
  this is done by having TWO pointers to the breakbyte: one for requesting a break (jt->adbreak)
  and another for testing (jt->adbreakr).  Normally these are the same, but to disable break adbreakr is
- set to a pointer to a fixed 0 byte; it at the end of the critical section adbreakr is set back to equal adbreak.
+ set to a pointer to a fixed 0 byte; at the end of the critical section adbreakr is set back to equal adbreak.
 
 */
 
@@ -235,7 +236,7 @@ static A jtinpl(JJ jt,B b,I n,C*s){C c;I k=0;
 #if _WIN32
  if(n&&(c=s[n-1],CCR==c))--n;
 #endif
- ASSERT(!*IJT(jt,adbreakr),EVINPRUPT);
+ ASSERT(!__atomic_load_n(IJT(jt,adbreakr),__ATOMIC_ACQUIRE),EVINPRUPT);
  if(!b){ /* 1==b means literal input */
   if(n&&COFF==s[n-1])joff(num(0));
   c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});  // discard stuff that looks like error typeout
@@ -268,7 +269,7 @@ static C* nfeinput(JS jt,C* s){A y;
 // otherwise processed in inpl
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
 A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
- *IJT(jt,adbreak)=0;  // turn off any pending break
+ __atomic_store_n(IJT(jt,adbreak),0,__ATOMIC_RELEASE);  // turn off any pending break
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
@@ -362,13 +363,7 @@ static void jtimmexexecct(JJ jt, A x){
  I4 savcallstack = jt->callstacknext;   // starting callstack
  A startloc=jt->global;  // point to current global locale
  if(likely(startloc!=0))INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
-#if 0 // obsolete
-printf("immex startloc=%p, execct=%x\n",startloc,startloc?LXAV0(startloc)[SYMLEXECCT]:0);  // scaf
-#endif
  jtimmex(jt,x);   // run the sentence
-#if 0 // obsolete
-printf("immex return startloc=%p, execct=%x, jt->global=%p, stacksize=%d\n",startloc,startloc?LXAV0(startloc)[SYMLEXECCT]:0,jt->global,jt->callstacknext-savcallstack);  // scaf
-#endif
  if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
  jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
 }
@@ -394,9 +389,9 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  I4 savcallstack = jm->callstacknext;
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
- *JT(jt,adbreak)=0;  // remove pending ATTN before executing the sentence
+ __atomic_store_n(JT(jt,adbreak),0,__ATOMIC_RELEASE);  // remove pending ATTN before executing the sentence
  x=jtinpl(jm,0,(I)strlen(lp),lp);
- I taskstate=jm->taskstate; if(likely(!(taskstate&TASKSTATERUNNING)))jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
+ I wasidle=jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
       // but if the master task is already running, this is a recursion, and just stay in running state
  // if there is an immex latent expression (9!:27), execute it before prompting
  // All these immexes run with result-display enabled (jt flags=0)
@@ -406,10 +401,9 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE)); if(!jm->jerr)jtimmexexecct(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
  e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm) jm->jerr=0;
-// obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
- if(likely(!(taskstate&TASKSTATERUNNING)))jtclrtaskrunning(jm);  //  when we finally return to FE, clear running state in case other tasks are running and need system lock
- jtshowerr(jm);   // jt flags=0 to force typeout
+ if(likely(wasidle))jtclrtaskrunning(jm);  //  when we finally return to FE, clear running state in case other tasks are running and need system lock - but not if recursion
+ jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
  jtspfree(jm);
  jttpop(jm,old);
  R e;
@@ -749,8 +743,10 @@ int _stdcall JFree(JS jt){
   SETJTJM(jt,jt,jm)
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
-// obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
   dllquit(jm);  // clean up call dll
+#if PYXES
+  aligned_free(JT(jt,jobqueue));
+#endif
   free(JT(jt,heap));  // free the initial allocation
   R 0;
 }

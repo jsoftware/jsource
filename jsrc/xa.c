@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Xenos: Miscellaneous                                                    */
@@ -8,6 +8,7 @@
 
 #include "cpuinfo.h"
 extern uint64_t g_cpuFeatures;
+extern int numberOfCores;
 
 #include <string.h>
 #ifdef _WIN32
@@ -79,7 +80,7 @@ F1(jtevms){A t,*tv,*wv;
 }
 
 // 5!:0, return ((>u)~)f. 
-F1(jtfxx){
+F1(jtfxx){F1PREFIP;
  ARGCHK1(w);
  ASSERT(AT(w)&LIT+BOX,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
@@ -95,12 +96,9 @@ F1(jtiepdos){B b; RE(b=b0(w)); jt->iepdo=b; R mtm;}
 // 9!:26, immex sentence
 F1(jtiepq){
  ASSERTMTV(w); 
-// obsolete  ASSERT(1==AR(w),EVRANK);
-// obsolete  ASSERT(!AN(w),EVDOMAIN);
  // we must read & protect the sentence under lock in case another thread is changing it
  READLOCK(JT(jt,felock)) A iep=JT(jt,iep); if(iep)ras(iep); READUNLOCK(JT(jt,felock))  // must ra() while under lock
  if(iep){tpushnr(iep);}else iep=mtv;  // if we did ra(), stack a fa() on the tpop stack
-// obsolete R JT(jt,iep)?JT(jt,iep):mtv;
  R iep;
 }
 
@@ -112,7 +110,6 @@ F1(jtieps){
  RZ(ras(w));
  WRITELOCK(JT(jt,felock)) A iep=JT(jt,iep); JT(jt,iep)=w; WRITEUNLOCK(JT(jt,felock))  // swap addresses under lock
  fa(iep);  // undo the ra() done when value was stored - null ok
-// obsolete  RZ(JT(jt,iep)=w); 
  R mtm;
 }
 
@@ -159,13 +156,14 @@ F1(jtposs){I n,p,q,*v;
 
 F1(jtppq){C*end;I k;
  ASSERTMTV(w);
- k = strtoI(3+jt->pp, (char**)&end, 10);
- R sc(k);
+// obsolete  k = strtoI(3+jt->pp, (char**)&end, 10);
+ R sc(jt->ppn);
 }
 
 F1(jtpps){I k;
  RE(sc(k=i0(w))); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
- snprintf(3+jt->pp,sizeof(jt->pp)-3,FMTI"g", k);
+// obsolete  snprintf(3+jt->pp,sizeof(jt->pp)-3,FMTI"g", k);
+ jt->ppn=k;
  R mtv;
 }
 
@@ -236,7 +234,7 @@ F1(jtasgzombs){I k;
 }
 
 // display deprecation message mno with text mtxt, if enabled
-// if mno<0, take complement and write willy-nilly
+// if mno<0, take complement and write willy-nilly; and no error (it's a pee)
 // return 0 to signal error, 1 to continue
 I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  READLOCK(JT(jt,startlock))
@@ -244,7 +242,8 @@ I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  if(mno>=0){if(JT(jt,deprecct)==0)goto exitok;}else{JT(jt,deprecct)+=JT(jt,deprecct)==0;}  // if msgs disabled, return; but force msg out if neg
  // code to write output line copied from jtpr1
  // extract the output type buried in jt
- ASSERTGOTO(JT(jt,deprecct)>0,mno<0?EVNONNOUN:EVNONCE,exiterr);  // if fail on warning, do so
+ if(JT(jt,deprecct)<0&&mno<0)goto exiterr;  // non-noun is a pee; don't set error info here
+ ASSERTGOTO(JT(jt,deprecct)>0,EVNONCE,exiterr);  // if fail on warning, do so
  if(JT(jt,deprecct)!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
  JT(jt,deprecct)-=JT(jt,deprecct)!=0;  // decrment # of messages to allow
 exitok: ;
@@ -278,7 +277,7 @@ F1(jtdeprecxs){A ct, excl;
 //9!:54
 F1(jtdeprecxq){
  READLOCK(JT(jt,startlock))
- A z=link(sc(JT(jt,deprecct)),JT(jt,deprecex)?JT(jt,deprecex):mtv);  // return current status
+ A z=jlink(sc(JT(jt,deprecct)),JT(jt,deprecex)?JT(jt,deprecex):mtv);  // return current status
  READUNLOCK(JT(jt,startlock))
  RETF(z);
 }
@@ -325,6 +324,10 @@ F1(jtcpufeature){
 #else
   R cstr("unknown");
 #endif
+ } else if (!strcasecmp(CAV(w),"CORES")) {
+  R sc(numberOfCores);
+ } else if (!strcasecmp(CAV(w),"MAXTASKS")) {
+  R sc(MAXTASKS);
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

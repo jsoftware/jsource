@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gpoly.ijs'
+prolog './gpoly.ijs'
 NB. p. y ----------------------------------------------------------------
 
 NB. test failed on small ct
@@ -378,4 +378,7 @@ NB. (c;r) (p. -: pdot) z
 4!:55 ;:'lg mt n p pc pdot pdot1 pdot2 pm pr ptimes r r1'
 4!:55 ;:'rem rfc root rou rov rs s sq step test x y xx yy z '
 
+
+
+epilog''
 

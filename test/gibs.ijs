@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gibs.ijs'
+prolog './gibs.ijs'
 NB. i.!.0 and associates ------------------------------------------------
 
 NB. i.!.0 using grading and binary search
@@ -112,4 +112,7 @@ r=: y=: (547 2 ?@$ #u){u
 
 4!:55 ;:'a b f f1 g mean q r test u x y'
 
+
+
+epilog''
 

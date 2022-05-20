@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g211.ijs'
+prolog './g211.ijs'
 NB. $.y -----------------------------------------------------------------
 
 f=: 3 : 0
@@ -367,4 +367,7 @@ scheck |.x
 
 4!:55 ;:'a b c d e f g h i ieq iso m mksa n perm r s x y yy '
 
+
+
+epilog''
 

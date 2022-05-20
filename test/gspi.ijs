@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gspi.ijs'
+prolog './gspi.ijs'
 NB. (dense vector) i. sparse , also i: ----------------------------------
 
 df=: $.^:_1
@@ -301,4 +301,7 @@ f&> c
 
 4!:55 ;:'b c d df f f0 f1 f2 f3 f4 p pe ps q qe qs r s t x'
 
+
+
+epilog''
 

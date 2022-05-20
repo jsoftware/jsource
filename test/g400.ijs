@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g400.ijs'
+prolog './g400.ijs'
 NB. #y ------------------------------------------------------------------
 
 randuni''
@@ -684,4 +684,7 @@ NB. zapped virtual block - used to corrupt memory
 
 4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g l0 l1 m n siz1200 siz12002 tally x xx y '
 randfini''
+
+
+epilog''
 

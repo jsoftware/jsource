@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g8x.ijs'
+prolog './g8x.ijs'
 NB. 8!:n ----------------------------------------------------------------
 
 NB. require 'numeric'           NB. for round
@@ -805,4 +805,7 @@ NB. left justify.  same deal for fmt2.
 
 4!:55 ;:'afzrnd f fmt fmt1 fmt2 round s t x y'
 
+
+
+epilog''
 

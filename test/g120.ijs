@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g120.ijs'
+prolog './g120.ijs'
 NB. -y ------------------------------------------------------------------
 
 'domain error' -: - etx 'abc'
@@ -103,4 +103,7 @@ y     =: IF64{:: _2147483648; _9223372036854775808
 
 4!:55 ;:'test testa testb testc x y'
 
+
+
+epilog''
 

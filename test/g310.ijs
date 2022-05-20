@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g310.ijs'
+prolog './g310.ijs'
 NB. : -------------------------------------------------------------------
 
 p =: ?4 10$500
@@ -361,4 +361,7 @@ NB. obsolete 9!:49 svxy
 4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'
 4!:55 ;:'minors monad nln p q svxy Tv ws x'
 
+
+
+epilog''
 

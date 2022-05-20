@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gthrow.ijs'
+prolog './gthrow.ijs'
 NB. throw./catcht. ------------------------------------------------------
 
 f=: 3 : 0
@@ -157,4 +157,7 @@ NB. '10 not cut back' -: main5 10
 
 4!:55 ;:'f main main1 main2 main3 main4 main5 sub t'
 
+
+
+epilog''
 

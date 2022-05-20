@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g0x.ijs'
+prolog './g0x.ijs'
 NB. 0!: -----------------------------------------------------------------
 
 'domain error' -: ". etx 'undefname!:4'
@@ -47,4 +47,7 @@ b -: i.3 4
 4!:55 ;:'a b c l0 '
 4!:55 ;:'l1 l2 lf mtm mtv s sc00 t x '
 
+
+
+epilog''
 

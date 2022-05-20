@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g5x2.ijs'
+prolog './g5x2.ijs'
 NB. 5!:2 ----------------------------------------------------------------
 
 ar     =: 5!:1
@@ -29,6 +29,7 @@ test =: 1 : '(br -: brep) <''u'''
 i.  test
 0:  test
 -   test
++ t. '' test
 
 1 2 3&+      test
 ,&'abcd'     test
@@ -280,4 +281,7 @@ f =: g@.*
 4!:55 ;:'fork fvv fx g gd ger hook inv ip n1 '
 4!:55 ;:'n12 n2 oarg or plus pow r t test test1 th tv '
 
+
+
+epilog''
 

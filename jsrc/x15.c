@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Xenos: DLL call driver                                                  */
@@ -176,11 +176,9 @@ typedef struct {
  HMODULE h;                     /* library (module) handle              */
  I4 ai;                          /* argument string index in cdstr      */
  I4 li;                          // library name index in cdstr - set nonzero in cdlookup to indicate that the current cc has a new libary name
-// obsolete  I4 pi;                          /* proc name index in cdhash             */
  UI4 zt;                          /* result jtype                         */
  US an;                          /* argument string length               */
  US ln;                          // library name length
-// obsolete  US pn;                          /* proc name length                     */
  S n;                           /* number of arguments (excl. result)   */
  C cc;                          /* call class: 0x00 or '0' or '1'       */
  C zl;                          /* result type letter                   */
@@ -710,7 +708,6 @@ static A jtcdgahash(J jt,I n){A z;I hn;
 }
 
 B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
-// obsolete  RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdarg)=x;
  RZ(x=exta(BOX,0L,1L,100L )); ACINITZAP(x) INITJT(jjt,cdarg)=x;  // allocate indirect pointers to CCT blocks
  RZ(INITJT(jjt,cdhash) =cdgahash(4*AN(INITJT(jjt,cdarg))));  // start with 4x allocation for the strings.  We will reallocate when it gets to 2x.
  RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
@@ -728,8 +725,6 @@ B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
 
 // see if v->string (length nn) is in hashtable tbl.  The hash in tbl contains indexes into cdarg, or -1 for empty slot.
 // return retval, where pv[k] is the address of the found slot in cdarg
-// obsolete #define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); CCT*pv=(CCT*)CAV2(JT(jt,cdarg)); \
-// obsolete  NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
 #define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); A *pv=AAV0(JT(jt,cdarg)); \
  NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==((CCT*)IAV1(pv[k]))->pvklett##n&&!memcmpne(vv,s+((CCT*)IAV1(pv[k]))->pvklett##i,nn))R retval; if(unlikely(--j<0))j+=AN(tbl);}
 
@@ -766,12 +761,10 @@ static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;A z;I an,hn,k;
  WRITELOCK(JT(jt,cdlock));
 
  NOUNROLL while(AM(JT(jt,cdstr)) > AN(JT(jt,cdstr))-an)RZ(jtextendunderlock(jt,&JT(jt,cdstr),&JT(jt,cdlock),0))
-// obsolete I oldm=AM(JT(jt,cdstr)); RZ(JT(jt,cdstr)=ext(1,JT(jt,cdstr))); AM(JT(jt,cdstr))=oldm;  // double allocations as needed, keep count
  C *s=CAV0(JT(jt,cdstr)); 
  cc->ai=AM(JT(jt,cdstr)); MC(s+AM(JT(jt,cdstr)),CAV(a),an); AM(JT(jt,cdstr))+=an;  // put addr of next string ito cc; move the string; add its length to table len
  // add the pointer to the new cc - under lock
  NOUNROLL while(AM(JT(jt,cdarg))==AN(JT(jt,cdarg))){RZ(jtextendunderlock(jt,&JT(jt,cdarg),&JT(jt,cdlock),0)) s=CAV0(JT(jt,cdstr));}
-// obsolete {I oldm=AM(JT(jt,cdarg)); RZ(JT(jt,cdarg)=ext(1,JT(jt,cdarg))); AM(JT(jt,cdarg))=oldm;}
  k=AM(JT(jt,cdarg));   // index of the string to be inserted
  A *pv=AAV0(JT(jt,cdarg));
  pv[k]=z;   // copy the cc to a new block.
@@ -785,10 +778,8 @@ static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;A z;I an,hn,k;
    cc->li+=cc->ai; HASHINSERT(JT(jt,cdhashl),cc->ln,s+cc->li,k)   // convert string offset to offset inside strings table; hash the library
   }else cc=0;  // no room to insert - we will have to fail the operation.  This sucks, because we wait for the table to totally fill
  }else cc->hloaded=0;
-// obsolete z=pv+AM(JT(jt,cdarg));
  // hash the new string into cdhash, possibly resizing the hashtable - under lock
  if(AN(JT(jt,cdhash))<=2*AM(JT(jt,cdarg))){RZ(jtextendunderlock(jt,&JT(jt,cdhash),&JT(jt,cdlock),1)) s=CAV0(JT(jt,cdstr)); pv=AAV0(JT(jt,cdarg)); k=AM(JT(jt,cdarg));}
-// obsolete {RZ(x=cdgahash(2*AM(JT(jt,cdarg)))); fa(JT(jt,cdhash)); JT(jt,cdhash)=x; AM(JT(jt,cdarg))=k; AM(JT(jt,cdhash))=0; k=0;}  // reallo if needed, and signal to rehash all
  // insert any elements into the hash that aren't there already.  The strings are in cdarg.  Usually the only string to add is
  // the last one, but it is also possible that there are none to add (if someone else got in and resized/rehashed the array), or perhaps
  // we have to hash everything (if we ourselves just did a resize).  AM(cdhash) tells how many atoms are valid, and we install any others
@@ -904,7 +895,6 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
  s=p+1+(I )(*p=='"');
  NOUNROLL while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0;
  I procnamelen=p-s;  // length of proc name
-// obsolete  cc->pn=p-s;
  CDASSERT(NPATH>procnamelen,DEBADFN);
  /* > + % */
  s=p+1;
@@ -968,7 +958,6 @@ strcpy(proc,"x15lseek32");
  RZ(cc=cdload(cc,lib,proc));  // cc doesn't change: load the library if necessary and fill in cc with its info.
  // if the library name is found, cdload will set cc->li negative to suppress adding the name to cdhashl
  cc->n=1+i; RZ(cc=cdinsert(a,cc));  // save # args(+1); add cc to hash and get its permanent address
-// obsolete  cc->pi=pi+cc->ai;
  R cc;
 }
 
@@ -1011,7 +1000,7 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
 // will be the result of 15!:0.  z is always nonrecursive
 static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B zbx;
     C c,cipt[NCDARGS],*u;FARPROC fp;float f;I cipcount=0,cipn[NCDARGS],*cipv[NCDARGS],cv0[2],
-    data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,t,xn,xr,xt,*xv; DoF dd[NCDARGS];
+    data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,xn,xr,xt,*xv; DoF dd[NCDARGS]; I t;
 #if defined(__aarch64__)
 // parameter in stack is not fixed size
  char *dvc;        // character pointer to data[]
@@ -1282,7 +1271,6 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}  // if fast form, just allocate the return value
  // z is always nonrecursive
  if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){   // if w is NOT boxed, and a and w arenot both empty
-// obsolete   t=0; tv=cc->tletter; DQ(n, k=cdjtype(*tv++); t=MAX(t,k););
   t=0; DQ(n, k=cdjtype(cc->starlett[i].tletter); t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!ISDENSETYPE(wt,B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));  // if w sparse or not DIRECT, convert it
@@ -1303,13 +1291,9 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 
 void dllquit(J jt){I j,*v;
  if(!JT(jt,cdstr))R;   // if we never initialized, don't free
-// obsolete  v=AV(JT(jt,cdhashl));
  A *av=AAV0(JT(jt,cdarg));  // point to A blocks for CCTs
-// obsolete  av=(CCT*)AV(JT(jt,cdarg));
-// obsolete  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(((CCT*)IAV1(av[j]))->h); fr(av[j]));   // unload all libraries, and free the CCT blocks
  DQ(AM(JT(jt,cdarg)), if(((CCT*)IAV0(av[i]))->hloaded)FREELIB(((CCT*)IAV0(av[i]))->h); fr(av[i]));   // unload all libraries, and free the CCT blocks
  mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00);
-// obsolete  mvc(AN(JT(jt,cdarg)),CAV(JT(jt,cdarg)),1,MEMSET00); 
  mvc(SZI*AN(JT(jt,cdhash)),CAV(JT(jt,cdhash)),1,MEMSETFF); mvc(SZI*AN(JT(jt,cdhashl)),CAV(JT(jt,cdhashl)),1,MEMSETFF); 
  AM(JT(jt,cdstr))=AM(JT(jt,cdarg))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // reset all tables to empty
  // leave the tables allocated
@@ -1319,11 +1303,11 @@ F1(jtcdf){ASSERTMTV(w); dllquit(jt); R mtm;}
      /* 15!:5 */
 
 /* return error info from last cd domain error - resets to DEOK */
-F1(jtcder){I t; ASSERTMTV(w); t=jt->dlllasterror; jt->dlllasterror=DEOK; R v2(t&0xff,t>>8);}
+F1(jtcder){I4 t; ASSERTMTV(w); t=jt->dlllasterror; jt->dlllasterror=DEOK; R v2(t&0xff,t>>8);}
      /* 15!:10 */
 
 /* return errno info from last cd with errno not equal to 0 - resets to 0 */
-F1(jtcderx){I t;C buf[1024];
+F1(jtcderx){I4 t;C buf[1024];
  ASSERTMTV(w); t=jt->getlasterror; jt->getlasterror=0;
 
 #if SY_WIN32 && !SY_WINCE
@@ -1349,7 +1333,7 @@ F1(jtcderx){I t;C buf[1024];
 #if SYS&SYS_UNIX
  {const char *e = dlerror(); strcpy (buf, e?e:"");}
 #endif
- R link(sc(t),cstr(buf));
+ R jlink(sc(t),cstr(buf));
 }    /* 15!:11  GetLastError information */
 
 F1(jtmema){I k; RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */
@@ -1403,7 +1387,6 @@ F2(jtmemw){C*u;I m,n,t,*v;
 // ASSERT(!IsBadWritePtr(u,m*k),EVDOMAIN);
 #endif
  I mvlen=AN(a)<<bplg(t);
-// obsolete MC(u,AV(a),m<<bplg(t));
  MC(u,AV(a),mvlen);   // copy the valid bytes of a
  if(m>AN(a))mvc(1LL<<bplg(t),u+mvlen,1,MEMSET00);  // append zero if called for
  R mtm;

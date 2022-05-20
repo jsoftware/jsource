@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gtrain.ijs'
+prolog './gtrain.ijs'
 NB. (# i.@#) ------------------------------------------------------------
 
 randuni''
@@ -118,4 +118,7 @@ b =: + ((1 : '/') \)
 
 4!:55 ;:'adot1 adot2 sdot0 b f g i x'
 randfini''
+
+
+epilog''
 

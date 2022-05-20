@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g121.ijs'
+prolog './g121.ijs'
 NB. -.y -----------------------------------------------------------------
 
 randuni''
@@ -453,4 +453,7 @@ yy =: 1e6 $ 1.0
 
 4!:55 ;:'adot1 adot2 sdot0 dr f intersect less not rank res s t x xx yy'
 randfini''
+
+
+epilog''
 

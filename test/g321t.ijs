@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g321t.ijs'
+prolog './g321t.ijs'
 NB. ,.&.>/y timing tests ------------------------------------------------
 
 f  =: >@(,.&.>/)
@@ -23,4 +23,7 @@ THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
 4!:55 ;:'f rsq ss t x y '
 
+
+
+epilog''
 

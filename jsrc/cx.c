@@ -1,4 +1,4 @@
-/* Copyright 1990-2016, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Explicit Definition : and Associates                      */
@@ -49,12 +49,35 @@
 #else
 #define SETTRACK
 #endif
-#define parseline(z,lbl) {S attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
+
+#define NOUNERR(t,ti) \
+    /* Signal post-exec error*/ \
+    {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
+    /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
+    i=cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
+    break;}
+
+#define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
+
+// run one line.  If we see break request, accept it as ATTN but promote it to BREAK in other cores if debug off
+#if 0 // obsolete 
+#define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
- if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIDEBUG); goto lbl;} jsignal(EVATTN); z=0;} \
+ if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); goto lbl;} if(!((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2; jsignal(EVATTN); z=0;} \
  else{lbl: if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}   /* debug parse if debug/pm */ \
- if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200))if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)z=0;}} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
+ if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
+   if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \
+ }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
+#else
+#define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
+ SETTRACK \
+ if(likely(!(attnval+(nGpysfctdl&128+16))))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,(nGpysfctdl&128+16)?callframe:0);} \
+ if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
+   if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \
+ }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
+ }
+#endif
 
 /* for_xyz. t do. control data   */
 typedef struct CDATA {
@@ -121,10 +144,8 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // Calculate the item size and save it
   I isz; I r=AR(t)-1; r=r<0?0:r; PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
   // Allocate a virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
-// obsolete   A svb; GA(svb,tt,isz,r,AS(t)+1); // one item
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=&asym->val; A svb=virtual(t,0,r); jt->tnextpushp=pushxsave;  // since we can't ZAP a virtual, allocate this offstack to take ownership
   RZ(svb) AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINIT(svb,2); AN(svb)=isz; MCISH(AS(svb),AS(t)+1,r)  // AC=2 since we store in symbol and cv
-// obsolete  AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINITZAP(svb); ACINIT(svb,2); AFLAGINIT(svb,(tt&RECURSIBLE)|AFVIRTUAL); ABACK(svb)=t;  // We DO NOT raise the backer because this is sorta-virtual
   // Install the virtual block as xyz, and remember its address
   cv->item=svb; asym->valtype=ATYPETOVALTYPE(tt);  // save in 2 places (already in asym->val), commensurate with AC of 2
  }
@@ -184,13 +205,6 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
  R tdi;
 }
 
-#define CHECKNOUN if (unlikely(!(NOUN&AT(t)))){   /* error, T block not creating noun */ \
-    /* Signal post-exec error*/ \
-    t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
-    /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
-    break; }
-
 // Return next line to execute, in case debug changed it
 // If debug is running we have to check for a new line to run, after any execution with error or on any line in case the debugger interrupted something
 // result is line to continue on
@@ -212,12 +226,10 @@ static I debugnewi(I i, DC thisframe, A self){
 
 // Processing of explicit definitions, line by line.  Bivalent, called as y vb or x y vb.  If JTXDEFMODIFIER is set,
 // it's a modifier, called as u adv or u v conj
-DF2(jtxdefn){F2PREFIP;PROLOG(0048);
-#if 1
+DF2(jtxdefn){
+ V *sv=FAV(self); I sflg=sv->flag;   // pointer to definition, and flags therefrom
+ F2PREFIP;PROLOG(0048);
  ARGCHK2(a,w);
-#else  // obsolete 
- RE(0);
-#endif
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8 unused 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
@@ -242,27 +254,15 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  {A *hv;  // will hold pointer to the precompiled parts
   A u,v;  // pointers to args
-  V *sv; I sflg;   // pointer to definition, and flags therefrom
-#if 1
+ nGpysfctdl=w!=self?64:0;  // set if dyad
  if(((I)jtinplace&JTXDEFMODIFIER)==0){
   // we are executing a verb.  It may be an operator
-  nGpysfctdl=64&~(AT(w)>>(VERBX-6)); self=nGpysfctdl&64?self:w; w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
-  sv=FAV(self); sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
-  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;
+   w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
+  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // flags don't change
  }else{
   // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
-  nGpysfctdl=AT(w)&(ADV|CONJ)?0:64; self=nGpysfctdl&64?self:w; v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
-  sv=FAV(self); sflg=sv->flag;   // fetch flags
+  v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
  }
-#else  // obsolete 
-  nGpysfctdl=((I)(a!=0)&(I)(w!=0))<<6;   // relieve pressure on a and w
-  V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
-  // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
-  u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
-  a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;    // leave x and y undefined in modifier execution
-  // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved modifier (f=type, g=compiled text).  The flags don't change
-  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}
-#endif
   nGpysfctdl|=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
   // Read the info for the parsed definition, including control table and number of lines
   LINE(sv);
@@ -270,7 +270,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
   locsym=hv[3];  // fetch pointer to preallocated symbol table
   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
-  if(likely(!(AR(locsym)&ARLSYMINUSE))){AR(locsym)|=ARLSYMINUSE;nGpysfctdl|=32;}  // remember if we are using the original symtab
+  if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){nGpysfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
   if(unlikely((jt->uflags.us.cx.cx_us | (sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.
@@ -296,7 +296,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sv->flag&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
+   if(sflg&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
   }
   // End of unusual processing
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -336,7 +336,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     // not abandoned; but it could be VIRTUAL and even UNINCORPABLE!  We know that those blocks have valid usecounts inited to 1, so if we
     // keep the usecount right the block will never be freed except when it goes out of scope in the originator
     ra(w);  // not abandoned: raise the block.  No need for AFKNOWNNAMED since usecount will preclude virtual extension
-// obsolete     if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
    }
   }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
@@ -348,7 +347,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(a); ramkrecursv(a);
    }else{ra(a);}
-// obsolete  if((likely(!(AFLAG(a)&AFVIRTUAL+AFNJA)))){AMNVRCINI(a)}
   }
   // Do the other assignments, which occur less frequently, with symbis
   if(unlikely(((I)u|(I)v)!=0)){
@@ -442,8 +440,8 @@ dobblock:
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
-   }else if(jt->jerr==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status
-   }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // error in debug mode
+   }else if((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+   }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
    }else if(jt->jerr==EVTHROW){
@@ -645,7 +643,7 @@ docase:
    if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
-   if(unlikely(2<=*JT(jt,adbreakr))) {BASSERT(0,EVBREAK);} 
+   if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
    i=cw[i].go;  // Go to the next sentence, whatever it is
   }
@@ -718,10 +716,6 @@ bodyend: ;  // we branch to here on fatal error, with z=0
 static DF1(xv1){A z; R df1(z,  w,FAV(self)->fgh[0]);}
 static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
 
-// obsolete static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code - inplaceable
-// obsolete static DF1(xadv){R xdefn(w, 0L,self);}  // inplaceable
-// modifier not referring to x/y.  Bivalent (adv/conj). Flag it as non-verb in jt
-static DF2(jtxmod){R jtxdefn((J)((I)jt+JTXDEFMODIFIER),a,w,self);}  // inplaceable and bivalent
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
@@ -732,15 +726,12 @@ static F1(jtxopcall){R jt->uflags.us.cx.cx_us&&jt->sitop&&DCCALL==jt->sitop->dct
 // point g in the derived verb to the original self
 // If we have to add a name for debugging purposes, do so
 // Flag the operator with VOPR, and remove VFIX for it so that the compound can be fixed
-DF2(jtxop2){A ff,x;
+DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
  RZ(ff=fdef(0,CCOLON,VERB, jtxdefn,jtxdefn, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX));  // inherit other flags
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
-// obsolete static DF1(xop1){
-// obsolete  R xop2(w,0,self);
-// obsolete }
 
 
 // w is a box containing enqueued words for the sentences of a definition, jammed together
@@ -1137,7 +1128,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  R z;
 }
 
-F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
+F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  ARGCHK2(a,w);PROLOG(778);
  if(VERB&AT(a)){  // v : v case
   ASSERT(AT(w)&VERB,EVDOMAIN);   // v : noun is an error
@@ -1223,8 +1214,8 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  A z;
  switch(n){
  case 3:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxmod,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxmod, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxdefn,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
  case 4:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
  case 13: z=vtrans(w); break;
  default: ASSERT(0,EVDOMAIN);

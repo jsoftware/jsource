@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gxinf.ijs'
+prolog './gxinf.ijs'
 NB. x: and infinity -----------------------------------------------------
 
 match=: -:&(3!:1)
@@ -251,4 +251,7 @@ _ 2x match ! __ 2r1
 
 4!:55 ;:'match ninf pinf x xi y'
 
+
+
+epilog''
 

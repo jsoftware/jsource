@@ -1,4 +1,25 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g000.ijs'
+prolog './g000.ijs'
+
+NB. Early in the testing, verify that local assignments relocate the symbol table correctly
+
+3 : 0 ''
+st =. 0
+st =. 15!:6 <'st'
+for_l1. 'abcdefghijklmnopqrstuvwxyz' do.
+  for_l2. 'abcdefghijklmnopqrstuvwxyz' do.
+    (l1,l2) =. 26 #: l1_index,l2_index
+  end.
+end.
+for_l1. 'abcdefghijklmnopqrstuvwxyz' do.
+  for_l2. 'abcdefghijklmnopqrstuvwxyz' do.
+    assert (l1,l2)~ = 26 #: l1_index,l2_index
+  end.
+end.
+est =. 15!:6 <'st'
+NB. This relocates when run early  if. st ~: est do. smoutput 'symbols relocated' end.
+1
+)
+
 NB. =y ------------------------------------------------------------------
 
 randuni''
@@ -116,3 +137,5 @@ NB. boxed
 4!:55 ;:'a adot1 adot2 sdot0 b n t test x'
 randfini''
 
+
+epilog''

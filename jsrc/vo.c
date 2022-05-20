@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Box & Open                                                       */
@@ -25,7 +25,7 @@ I levelle(J jt,A w,I l){
  R 1;  // if it never gets big enough, say so, keep looking
 }
 
-F1(jtlevel1){ARGCHK1(w); R sc(level(jt,w));}
+F1(jtlevel1){ARGCHK1(w); I z=level(jt,w); RE(0) R sc(z);}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
@@ -107,7 +107,7 @@ F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinp
 // This verb propagates WILLOPEN, so it must not raise usecounts or EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
 // As a result of this we support both recursive and nonrecursive y inputs.  If y is unboxed, we create a recursive block if WILLOPEN is
 // not set, or a nonrecursive block if WILLOPEN is set
-DF2(jtlink){
+DF2(jtjlink){
 F2PREFIP;ARGCHK2(a,w);
 #if FORCEVIRTUALINPUTS
  // to allow mapped-boxed tests to run, we detect when the virtual block being realized is at offset 0 from its

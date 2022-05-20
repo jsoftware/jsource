@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g430fin.ijs'
+prolog './g430fin.ijs'
 NB. x +/\ y -------------------------------------------------------------
 
 test=: 1 : 0
@@ -123,4 +123,7 @@ _3000 3000 10000 ((cr 3&u:) -: 13!:82) }. yy
 
 4!:55 ;:'cr f g mm sum test yy yy1 yy2 yy3'
 
+
+
+epilog''
 

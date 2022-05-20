@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x5.ijs'
+prolog './g1x5.ijs'
 NB. 1!:5 ----------------------------------------------------------------
 
 dir   =: 1!:0
@@ -54,4 +54,7 @@ erase <'conflict'
 4!:55 ;:'att bada badf d dir erase f mac mkdir ocwd p pc '
 4!:55 ;:'read unix win write x '
 
+
+
+epilog''
 

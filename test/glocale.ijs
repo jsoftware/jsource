@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './glocale.ijs'
+prolog './glocale.ijs'
 
 NB. locatives -----------------------------------------------------------
 
@@ -756,4 +756,7 @@ f ''
 4!:55 ;:'not_a_locative s1 s2 s3 spnow t test x xx xy_z_ xy_nonlocale_ y '
 18!:55 ;:'abcpristloc nonlocale'
 
+
+
+epilog''
 

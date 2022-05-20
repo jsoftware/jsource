@@ -1,4 +1,4 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Under and Each                                            */
@@ -87,7 +87,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    ACIPNO(virtw);
    // if x=virtw, or the usecount of virtw changed, virtw has escaped and w must be marked as not PRISTINE
    flags|=(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
-// obsolete    AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
   }
 
   // prepare the result so that it can be incorporated into the overall boxed result
@@ -226,8 +225,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // Now that we have looked at the original usecount of x (in case it is =virtaw), remove inplacing from virtaw to restore its proper status
   ACIPNO(virtw); ACIPNO(virta);
   // if x=virtaw, or the usecount of virtw changed, virtaw has escaped and w must be marked as not PRISTINE
-// obsolete   AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
-// obsolete   AFLAGAND(a,~(((acbefore!=AC(virta))|(x==virta))<<AFPRISTINEX))
   flags|=(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
   flags|=(((acbefore!=AC(virta))|(x==virta))<<(AFPRISTINEX+1));
 
@@ -303,7 +300,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 }    /* f&.(a.&i.) w */
 
 // u&.v
-F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
+F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  ARGCHK2(a,w);
  if(AT(w)&BOX){
   // Must be the gerund form.  Extract v and remember which argument it will apply to
@@ -363,7 +360,7 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  R h;
 }
 
-F2(jtundco){AF f1=0,f2;I gside=-1, flag=0;
+F2(jtundco){F2PREFIP;AF f1=0,f2;I gside=-1, flag=0;
  ARGCHK2(a,w);
  A wvb=w;  // the verb we will take the inverse of
  if(AT(w)&BOX){

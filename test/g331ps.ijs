@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g331ps.ijs'
+prolog './g331ps.ijs'
 NB. special code for [: ; <@(f/\);.n and [: ; <@(f/\.);.n ---------------
 
 test=: 1 : 0
@@ -133,4 +133,7 @@ x=: 1 (0)}0=1019 ?@$ 4
 
 4!:55 ;:'f n P test testb testbw testi testn testov x y'
 
+
+
+epilog''
 

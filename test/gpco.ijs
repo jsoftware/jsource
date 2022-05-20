@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gpco.ijs'
+prolog './gpco.ijs'
 NB. p: ------------------------------------------------------------------
 
 pt =. 1&< *. *./@(0&~:)@(2&}.@i.@>:@<.@%: |/ ]) 
@@ -99,4 +99,7 @@ t=: Goldbach n=: 4+2*?1e5
 
 4!:55 ;:'Goldbach mask n P100 plt plt1 plt100 pt sieve t v'
 
+
+
+epilog''
 

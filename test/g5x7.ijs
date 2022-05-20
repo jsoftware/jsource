@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g5x7.ijs'
+prolog './g5x7.ijs'
 NB. 5!:7 ----------------------------------------------------------------
 
 xr=: 5!:7
@@ -176,4 +176,7 @@ a3=: /\
 
 4!:55 ;:'a1 a2 a3 c1 c2 chk f1 f2 f3 f4 f5 mean perm ww xr'
 
+
+
+epilog''
 

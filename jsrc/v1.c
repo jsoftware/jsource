@@ -1,4 +1,4 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Match Associates                                                 */
@@ -13,7 +13,7 @@
 
 // To reduce parameter overhead, we call matchsub with trailing parameters omitted if x==0.  This is fine for clang.  In MSVC, the parameter area
 // is used as a workarea by the routine, and thus omitting the parms makes for a segfault.
-#if defined(__clang__)
+#if defined(__clang__)&&SY_64
 #define MATCHSUBDEFAULTS
 #else
 #define MATCHSUBDEFAULTS ,0,0,1,1,1
@@ -321,7 +321,7 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  ((-(C(a)!=C(w))&((AN(C(a))^AN(C(w)))-1))>=0?(C(a)==C(w)):((B (*)())jtmatchsub)(jt,C(a),C(w),0   MATCHSUBDEFAULTS))
 #else
 #define EQA(a,w) \
- (((!ISSPARSE(AT(a)|AT(w)))&&((-(a!=w)&((AN(a)^AN(w))-1))>=0))?(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
+ (((!ISSPARSE(AT(C(a))|AT(C(w))))&&((-(C(a)!=C(w))&((AN(C(a))^AN(C(w)))-1))>=0))?(C(a)==C(w)):((B (*)())jtmatchsub)(jt,C(a),C(w),0   MATCHSUBDEFAULTS))
 #endif
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))

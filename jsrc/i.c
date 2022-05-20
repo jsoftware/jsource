@@ -1,4 +1,4 @@
-/* Copyright 1990-2017, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Initializations                                                         */
@@ -26,7 +26,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  zv->m   =(UC)m; 
  zv->bucket=0;
  zv->bucketx=0;
- zv->flag=NMDOT+NMXY;
+ zv->flag=NMDOT;
  zv->hash=(UI4)nmhash(m,s);
  ACX(z);
  R z;
@@ -38,10 +38,6 @@ tasks are easier than threads
 global memory is distinct between tasks but is shared between threads
 
 JE support for multiple tasks is good
-
-JE support for threads has a few problems
- there are a few global constants not handled in globinit
- they need to be found and sorted out
 
  global storage that changes after globinit is a bad bug waiting to happen
 
@@ -171,7 +167,8 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 #endif
  I threadno; for(threadno=0;threadno<nthreads;++threadno){jt=&jjt->threaddata[threadno];
   RESETRANK;  // init both ranks to RMAX
-  strcpy(jt->pp,"%0.6g");
+// obsolete   strcpy(jt->pp,"%0.6g");
+  jt->ppn=6;  // default precision for printf
   jt->fcalln=NFCALL;
   jt->cct= 1.0-FUZZ;
   jt->xmode=XMEXACT;
@@ -220,6 +217,11 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
  fpsetmask(0);
 #endif
  INITJT(jjt,tssbase)=tod();  // starting time for all threads
+#if PYXES
+ INITJT(jjt,jobqueue)=aligned_malloc(sizeof(JOBQ),CACHELINESIZE); // job queue, cache-line aligned
+ *INITJT(jjt,jobqueue)=(JOBQ){.mutex=PTHREAD_MUTEX_INITIALIZER,.cond=PTHREAD_COND_INITIALIZER};
+ JT(jjt,jobqueue)->ht[1]=(JOB *)&JT(jjt,jobqueue)->ht[0];  // when q is empty, tail points to head
+#endif
 // only crashing on startup INITJT(jjt,peekdata)=1;  // wake up auditing
  // Initialize subsystems in order.  Each initializes all threads, if there are thread variables
  RZ(jtbufferinit(jjt,MAXTASKS)); // init the buffers pointed to by jjt

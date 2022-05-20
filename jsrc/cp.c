@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Power Operator ^: and Associates                          */
@@ -226,9 +226,9 @@ static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
 // here for u^:v y
 DF1(jtpowv1cell){F1PREFIP;DECLFG;A z;PROLOG(0108);
 A u; A v; RZ(u=CALL1(g1,  w,gs));  /* execute v */
-if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;}
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs,fs):w;}
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);}
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);
 }
 static DF1(fjtpowv1){PREF1(jtpowv1cell); R jtpowv1cell(jt,w,self);}
@@ -244,9 +244,9 @@ static DF2(jtpowv2){PREF2(jtpowv2cell); R jtpowv2cell(jt,a,w,self);}
 static DF2(jtpowv2acell){F2PREFIP;DECLFG;A z;PROLOG(0110);
 jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */
 A u; A v; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */
-if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;}
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs,fs):w;}
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);}
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);}
 static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
 
@@ -257,7 +257,7 @@ static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
 // kibosh on it by setting self (otherwise unused, and set to nonzero in the initial invocation
 // from parse) to 0 in all calls resulting from execution of gerund v.  Then we fail any gerund
 // if self is 0.
-DF2(jtpowop){A hs;B b;V*v;
+DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  if(AT(w)&VERB){

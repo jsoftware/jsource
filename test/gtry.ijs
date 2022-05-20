@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gtry.ijs'
+prolog './gtry.ijs'
 NB. try/catch -----------------------------------------------------------
 
 fa =: 3 : 'try. 3+y catch. ''bad'' end.'
@@ -535,4 +535,7 @@ end.
 
 4!:55 ;:'erase f fa fb fc fd fe ff fg fh fi fj goo sub t write x y'
 
+
+
+epilog''
 

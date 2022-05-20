@@ -1,4 +1,4 @@
-/* Copyright 1990-2014, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Global Definitions                                                      */
@@ -206,9 +206,11 @@ static inline omp_int_t omp_get_max_threads() { return 1;}
 #ifndef unlikely
 #define unlikely(x) __builtin_expect((x),0)
 #endif
+#define often(x) __builtin_expect_with_probability((x),1,0.6)
 #else
 #define likely(x) (x)
 #define unlikely(x) (x)
+#define often(x) (x)
 #endif
 
 #if 1
@@ -484,7 +486,7 @@ extern unsigned int __cdecl _clearfp (void);
 //The named-function stack is intelligent
 // and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
 // The depth of J function calls will probably limit stack use.
-#define NFCALL          (1000L)      // call depth for named calls, not important
+#define NFCALL          (1000L)      // call depth for named calls, not important.  Must fit into an S
 
 // start and length for the stored vector of ascending integers
 #define IOTAVECBEGIN (-20)
@@ -581,17 +583,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
 // Tuning options for cip.c
-#if C_AVX2 && defined(_WIN32)
-// tuned for windows
-#if _OPENMP
-#define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
-#define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
-#else
+#if (C_AVX2 && PYXES) || !defined(_OPENMP)
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#endif
+#elif defined(_WIN32)
+// tuned for windows
+#define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
 #else
 // tuned for linux
 #define IGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS
@@ -604,7 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00          // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00 // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -620,11 +620,14 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
-// obsolete #define MAXTHREADS 1  // maximum number of threads
-// obsolete 
-#define MAXTASKS 15    // maximum number of tasks running at once, including the master thread
-#define MAXTASKSRND 16  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
-
+#define MAXTASKS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
+                       // threads will be paged out
+#define MAXTASKSRND 64  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
+#if MAXTASKS>255
+#define WLOCKBIT 0x8000  // the LSB of the part of a 16-bit lock used for write locks.
+#else
+#define WLOCKBIT 0x100  // With <256 threads, we split the lock into 2 8-bit sections so we can use LOCK XADD instructions
+#endif
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
@@ -649,9 +652,18 @@ extern unsigned int __cdecl _clearfp (void);
 #undef MAXTASKS
 #define MAXTASKS 1  // override to no tasks if no pyxes
 #endif
+#if defined(ANDROID) && defined(__x86_64__)
+#undef MAXTASKS
+#define MAXTASKS 1  // workaround for android x86_64
+#endif
 
+#if PYXES
+// equivalent to atomic_fetch_add(aptr,val,__ATOMIC_ACQ_REL), except without the atomicity guarantee
+// what it does provide is the ordering guarantee; it is is intended to be used under lock
+// see boehm, 'threads cannot be implemented as a library', esp. sec. 4.3
+#define atomic_fetch_add_weak(aptr,val) ({ I rrres=__atomic_load_n(aptr,__ATOMIC_ACQUIRE);__atomic_store_n(aptr,val+rrres,__ATOMIC_RELEASE);rrres; })
+#else
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
-#if !PYXES
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
 #define __atomic_load_n(aptr, memorder) *aptr
 #define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
@@ -659,6 +671,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=*aptr; *aptr-=val; rrres;})
 #define __atomic_fetch_add(aptr, val, memorder) ({I rrres=*aptr; *aptr+=val; rrres;})
 #define __atomic_fetch_and(aptr, val, memorder) ({I rrres=*aptr; *aptr&=val; rrres;})
+#define atomic_fetch_add_weak __atomic_fetch_add
 #define __atomic_add_fetch(aptr, val, memorder) (*aptr+=val)
 #define __atomic_sub_fetch(aptr, val, memorder) (*aptr-=val)
 #define __atomic_and_fetch(aptr, val, memorder) (*aptr&=val)
@@ -703,6 +716,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); goto lbl;}}  // set name for display (only if error)
 #define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); R 0;}}
+#define ASSERTSYSV(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s);}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
@@ -756,10 +770,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
 #if PYXES
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely((res=jtpyxval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
-#define READLOCK(lock) {S prev; if(unlikely((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))<0))readlock(&lock,prev); }
-#define WRITELOCK(lock)  { S prev; if(prev=__atomic_fetch_or(&lock,(S)0x8000,__ATOMIC_ACQ_REL)!=0)writelock(&lock,prev); }
-#define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // bits 0-14 belong to read
-#define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,0x7fff, __ATOMIC_ACQ_REL);  // bit 15 belongs to write
+#define READLOCK(lock) {S prev; if(unlikely(((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))&(S)-WLOCKBIT)!=0))readlock(&lock,prev);}
+#if WLOCKBIT==0x8000
+#define WRITELOCK(lock)  {S prev; if(unlikely((prev=__atomic_fetch_or(&lock,(S)WLOCKBIT,__ATOMIC_ACQ_REL))!=0))writelock(&lock,prev);}
+#else
+#define WRITELOCK(lock)  {S prev; if(unlikely((prev=__atomic_fetch_add(&lock,WLOCKBIT,__ATOMIC_ACQ_REL))!=0))writelock(&lock,prev);}
+#endif
+#define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // decrement the read bits
+#define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,WLOCKBIT-1, __ATOMIC_ACQ_REL);  // clear all the write bits
 #else
 #define CCOMMON(x,pref,err) (x)
 #define READLOCK(lock) ;
@@ -772,9 +790,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define CNOERR(x) CCOMMON(x,,)  // value has been resolved before & there cannot be an error
 #define CNULL(x) CCOMMON(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
 #define CNULLNOERR(x) CCOMMON(x,if(likely(res!=0)),)  // if x is 0, keep it 0; ignore error
-#define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
+#define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
-#define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
+#define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
@@ -895,7 +913,7 @@ if(opt&0x1){hx=w; \
 }else{J jtf; \
  I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
- RZ(hx=(fghfn)(jtf,PTR(w),hs)); \
+ RZ(hx=(fghfn)(jtf,PTR(w),hs,hs)); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
 } \
@@ -908,7 +926,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
   fghfn=FAVV(fs)->valencefns[0]; \
   I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
-  RZ(fx=(fghfn)(jtf,PTR(w),fs)); \
+  RZ(fx=(fghfn)(jtf,PTR(w),fs,fs)); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \
  } \
@@ -922,9 +940,9 @@ if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); if(!(opt&0x40))c=(UI)c>>(w==fx
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if(opt&0x40){ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs)); \
+ RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs)); \
 }else{ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+ RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs,gs)); \
 } \
 /* EPILOG to free up oddments from f and g, but not if we may be returning a virtual block */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
@@ -967,11 +985,11 @@ if(opt&0x2){hx=w; \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
   /* the flags in gh@][ are passed through from gh */ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs)); \
+  RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs,hs)); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(hx=(fghfn)(jtf,PTR(a),PTR(w),hs)); \
+  RZ(hx=(fghfn)(jtf,PTR(a),PTR(w),hs,hs)); \
   hx=PTROP(hx,+,(I)((hx!=w)&(hx!=a))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  } \
  ARGCHK1D(hx) \
@@ -991,11 +1009,11 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
    jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
    if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){*tpopw=0; if(likely(c&1)){fanapop(w,AFLAG(w));}else{AC(w)=c-1;}}}} \
    else{if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){*tpopa=0; if(likely(c&1)){fanapop(a,AFLAG(a));}else{AC(a)=c-1;}}}} \
-   RZ(fx=(fghfn)(jtf,PTR(opt&0x40?a:w),fs)); \
+   RZ(fx=(fghfn)(jtf,PTR(opt&0x40?a:w),fs,fs)); \
    hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   }else{ \
    jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-   RZ(fx=(fghfn)(jtf,PTR(a),PTR(w),fs)); \
+   RZ(fx=(fghfn)(jtf,PTR(a),PTR(w),fs,fs)); \
    hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   } \
   ARGCHK2D(fx,hx) \
@@ -1012,7 +1030,7 @@ if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if((opt&0xc0)==0xc0){ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs)); \
+ RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs)); \
 }else{ \
  RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
 } \
@@ -1137,7 +1155,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GA0(v,t,n,r) {GA00(v,t,n,r) *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 and must fill in with AN if so - never for sparse blocks
 #define GA10(v,t,n) {GA00(v,t,n,1) AS(v)[0]=(n);}  // used when rank is known to be 1
 
-// GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
+// GAT[^V]*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
@@ -1312,8 +1330,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #endif
 
 #define IX(n)           apv((n),0L,1L)
-#define JATTN           {if(unlikely(JT(jt,adbreakr)[0]!=0)){jsignal(EVATTN); R 0;}}
-#define JBREAK0         {if(unlikely(2<=JT(jt,adbreakr)[0])){jsignal(EVBREAK); R 0;}}
+#define JATTN           {if(unlikely(JT(jt,adbreakr)[0]!=0)){jsignal(EVATTN); R 0;}}   // requests orderly termination at start of sentence
+#define JBREAK0         {if(unlikely(2<=JT(jt,adbreakr)[0])){jsignal(EVBREAK); R 0;}}  // requests immediate stop
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
@@ -1759,6 +1777,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define SYMHASH(h,n)    ((UI)(((D)(h)*(D)(n)*(1.0/4294967296.0))+SYMLINFOSIZE))   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
 #endif
 // symbol tables.   jt->locsyms is locals and jt->global is globals.  AN(table) gives #hashchains+1; if it's 1 we have an empty table, used to indicate that there are no locals
+// (the empty table can also be recognized by its address which is not on a cacheline boundary)
 // At all times we keep the k field of locsyms as a copy of jt->global so that if we need it for u./v. we know what the symbol tables were.  We could remove jt->global but that would cost
 // some load instructions sometimes.  AM(local table) points to the previous local table in the stack, looping to self at end
 #define SYMSETGLOBAL(l,g) (jt->global=(g), AKGST(l)=(g))  // l is jt->locsyms, g is new global value
@@ -1767,16 +1786,17 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define SYMSETLOCAL(l) (AKGST(l)=jt->global, jt->locsyms=(l))  // change the locals to l
 #define SYMPUSHLOCAL(l) (AM(l)=(I)jt->locsyms, SYMSETLOCAL(l))  // push l onto locals stack
 #define SYMORIGIN JT(jt,sympv)  // the origin of the global symbol table
-#define SYMLOCALROOT jt->symfreeroot   // the root of the local free-symbol chain
+// obsolete #define SYMLOCALROOT jt->symfreeroot   // the root of the local free-symbol chain
 #define SYMGLOBALROOT SYMORIGIN[0].next   // the root of the shared free-symbol chain
-// obsolete #define SYMRESERVE(n) if(unlikely(SYMNEXT(SYMLOCALROOT)==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(SYMLOCALROOT)].next)==0)))RZ(jtreservesym(jt,n))   // called outside of lock to make sure n symbols are available for assignment
-#define SYMRESERVEPREFSUFF(n,pref,suff) if(unlikely(SYMNEXT(SYMLOCALROOT)==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(SYMLOCALROOT)].next)==0))){pref RZ(jtreservesym(jt,n)) suff}   // if call to reserve needed, bracket with pref/suff
+#define SYMRESERVEPREFSUFF(n,pref,suff) if(unlikely(SYMNEXT(jt->symfreehead[0])==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(jt->symfreehead[0])].next)==0))){pref RZ(jtreservesym(jt,n)) suff}   // if call to reserve needed, bracket with pref/suff
 #define SYMRESERVE(n) SYMRESERVEPREFSUFF(n,,)   // called outside of lock to make sure n symbols are available for assignment
-// fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1.
+// fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1 so that it may be freed by the caller as abandoned
 // Implies that AM must not be modified when abandoned block is assigned to x/y.
 // Clear KNOWNNAMED since we are removing the value from a name
-// obsolete #define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGAND(v,~AFKNOWNNAMED); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGAND(v,~AFKNOWNNAMED););}}}
-#define SYMVALFA(l) {A v=(l).val; if(v){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(v); ACOR(v,ACINPLACE&(AC(v)-2));}else{faaction(jt,v,AFLAGCLRKNOWN(v));}}}
+// split into two parts: the symbol-dependent and not, so we can move the expensive part outside of lock
+#define SYMVALFA1(l,faname) {if(faname!=0){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(faname); if(likely(AC(faname)<2))ACRESET(faname,ACINPLACE|ACUC1); faname=0;}}}
+#define SYMVALFA2(faname) if(faname!=0){faaction(jt,faname,AFLAGCLRKNOWN(faname));}
+#define SYMVALFA(l) {A v=(l).val; SYMVALFA1(l,v) SYMVALFA2(v)}
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))
@@ -1867,6 +1887,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 
 
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
+#define VIRTPAGESIZE 4096  // size of the memory mapped by a single TLB entry
 
 
 // flags in call to cachedmmult and blockedmmult

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gmbx2.ijs'
+prolog './gmbx2.ijs'
 NB. mapped boxed arrays -------------------------------------------------
 
 0!:0 <testpath,'gmbx.ijs'
@@ -653,4 +653,7 @@ mbxcheck_jmf_ q
 
 4!:55 ;:'f f1 g j mean q r t x y'
 
+
+
+epilog''
 

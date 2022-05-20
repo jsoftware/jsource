@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp530i.ijs'
+prolog './gsp530i.ijs'
 NB. } integer indices ----------------------------------------------------
 
 d=: ?11 5 7 3 2$4
@@ -134,6 +134,9 @@ s -: d
 'length error' -: (i.2 3)   2 0} etx $.i.4 3 2
 
 
-4!:55 ;:'a b c d f g h i m r s t x'
+4!:55 ;:'a b c d f fs g h i m r s t x'
 
+
+
+epilog''
 

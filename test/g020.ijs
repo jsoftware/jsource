@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g020.ijs'
+prolog './g020.ijs'
 NB. >y ------------------------------------------------------------------
 
 rank   =. #@$
@@ -108,4 +108,7 @@ NB. symbol
 4!:55 ;:'b crank crk cshape ctype f fill mrk msh mt '
 4!:55 ;:'mtype ope rank t x '
 
+
+
+epilog''
 

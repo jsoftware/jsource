@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gx132.ijs'
+prolog './gx132.ijs'
 NB. %: on extended integers ---------------------------------------------
 
 0 1 _ -: 0x %: 0 1 2x
@@ -36,4 +36,7 @@ test/ 1+2 1*1+?100 1000x
 
 4!:55 ;:'n r test yy'
 
+
+
+epilog''
 

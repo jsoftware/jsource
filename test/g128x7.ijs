@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g128x7.ijs'
+prolog './g128x7.ijs'
 NB. 128!:7 AES -------------------------------------------------------
 
 fhex=: a. {~ [: ". '16b' (,"1) _2 ]\ ]
@@ -293,3 +293,6 @@ t=. (1;key;iv;mode) 128!:7 s
 
 4!:55 ;:'f msg pkcs fhex Key IV Plaintext Ciphertext'
 4!:55 ;:'test_encrypt_ecb test_decrypt_ecb test_encrypt_cbc test_decrypt_cbc test_xcrypt_ctr test_1'
+
+epilog''
+

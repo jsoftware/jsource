@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g128x.ijs'
+prolog './g128x.ijs'
 NB. 128!:0 and 128!:1 ---------------------------------------------------
 
 a  =. ?19 4$100
@@ -77,4 +77,7 @@ dm =.lrtoa@:(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~) 1000
 
 4!:55 ;:'a i q qr r todiag lrtoa s x'
 
+
+
+epilog''
 

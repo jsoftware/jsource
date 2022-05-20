@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g602.ijs'
+prolog './g602.ijs'
 NB. ":y on non-empty numeric array y ------------------------------------
 
 sprintf =: ":
@@ -446,4 +446,7 @@ _14  (": -: (": x:)) 999996
 4!:55 ;:'pi pp ppq rc real right rows sh sp sprintf '        
 4!:55 ;:'sqz t take tcorn test th thbox thorn1 tint top '
 4!:55 ;:'topleft ubar width x y z ' 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Xenos: Files                                                            */
@@ -74,8 +74,8 @@ static I fsize(F f){
 }
 #endif
 
-static A jtrdns(J jt,F f){A za,z;I n=1024;size_t r,tr=0;
- GAT0(za,LIT,1024,1); clearerr(f);
+static A jtrdns(J jt,F f){A za,z;I n=512;size_t r,tr=0;
+ GAT0(za,LIT,512,1); clearerr(f);
  NOUNROLL while(!feof(f) && (r=fread(CAV(za)+tr,sizeof(C),n-tr,f))){
   tr+=r; if(tr==(U)n){RZ(za=ext(0,za));n*=2;}
  }

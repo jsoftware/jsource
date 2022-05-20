@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp422.ijs'
+prolog './gsp422.ijs'
 NB. /: monad ------------------------------------------------------------
 
 f=: 4 : 0
@@ -66,4 +66,7 @@ c f&> <y [ a=: $.?(n,4)$1000
 
 
 4!:55 ;:'a c f n r s x xx y'
+
+
+epilog''
 

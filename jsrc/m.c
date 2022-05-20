@@ -1,4 +1,4 @@
-/* Copyright 1990-2010, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Memory Management                                                       */
@@ -210,8 +210,8 @@ F1(jtspcount){A z;I c=0,i,j,*v;A x;
 // Garbage collector.  Called when free has decided a call is needed
 B jtspfree(J jt){I i;A p;
  for(i = 0;i<=PLIML-PMINL;++i) {
-  // Check each chain to see if it is ready to coalesce
-  if(jt->mfree[i].ballo<=0) {
+  // Check each chain to see if it is ready to coalesce.  If the repatq is calling for the gc, process all queues
+  if((jt->mfree[i].ballo|(SBFREEB-jt->repatbytes))<=0) {
    // garbage collector: coalesce blocks in chain i
    // pass through the chain, incrementing the j field in the base allo for each
    // Also create a 'proxy chain' - one element for each base block processed, not necessarily the base block (because the base block may not be free)
@@ -237,10 +237,7 @@ B jtspfree(J jt){I i;A p;
     ++nexpats;  // keep track of # blocks of this size repatriated
     if(p==0){
      // We have exhausted the main chain.  See if there are expats to process.  We may take expats more than once
-     if((p=__atomic_load_n(&jt->repatq[i],__ATOMIC_ACQUIRE))!=0){
-      //  there are expats.  Take them off the expatq
-      while(!__atomic_compare_exchange_n(&jt->repatq[i], &p, (A)0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // clear expatq and take its address.  No ABA problem since we take entire q
-     }
+     p=__atomic_exchange_n(&jt->repatq[i], 0, __ATOMIC_ACQ_REL);  // Get the current list and mark list empty
      AFCHAIN(prevp)=p;  // extend the freed chain to include the new blocks, so we will process them all in later steps
      nexpats=nexpats<0?0:nexpats;  // if this is the first time we find expats, set count to 0 and we go up from there
     }
@@ -274,12 +271,12 @@ B jtspfree(J jt){I i;A p;
     if(FHRHISROOTALLOFREE(AFHRH(baseblock))){ // Free fully-unused base blocks;
 #if 1 || ALIGNTOCACHE   // with short headers, always align to cache bdy
      FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
-     jt->malloctotal-=PSIZE+TAILPAD+CACHELINESIZE;  // return storage+bdy
-     jt->mfreegenallo-=TAILPAD+CACHELINESIZE;  // remove pad from the amount we report allocated
+     jt->malloctotal-=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // return storage+bdy
+     jt->mfreegenallo-=TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // only the pad is net allocation
 #else
      FREECHK(baseblock);
-     jt->malloctotal-=PSIZE+TAILPAD;  // return storage
-     jt->mfreegenallo-=TAILPAD;  // remove pad from the amount we report allocated
+     jt->malloctotal-=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // return storage
+     jt->mfreegenallo-=TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // remove pad from the amount we report allocated
 #endif
     }else{AFHRH(baseblock) = virginbase;}   // restore the count to 0 in the rest
     p=np;   //  step to next base block
@@ -292,13 +289,15 @@ B jtspfree(J jt){I i;A p;
    // compensated for by a change to mfreegenallo.  mfreegenallo must also account for the excess padding that is now being returned
    // This elides the step of subtracting coalesced buffers from the number of allocated buffers of size i, followed by
    // adding the bytes for those blocks to mfreebgenallo
-   jt->mfreegenallo -= SBFREEB - (jt->mfree[i].ballo & ~MFREEBCOUNTING);  // subtract diff between current mfreeb[] and what it will be set to
+   jt->mfreegenallo-=SBFREEB - (jt->mfree[i].ballo & ~MFREEBCOUNTING);  // subtract diff between current mfreeb[] and what it will be set to
    jt->mfree[i].ballo = SBFREEB + (jt->mfree[i].ballo & MFREEBCOUNTING);  // set so we trigger rescan when we have allocated another SBFREEB bytes
   }
  }
  jt->uflags.us.uq.uq_c.spfreeneeded = 0;  // indicate no check needed yet
+ jt->repatbytes=0;   // clear coubnt of repatriated bytes for triggering next GC
+// audit free list {I xxi,xxj;A xxx; {for(xxi=PMINL;xxi<=PLIML;++xxi){xxj=0; xxx=(jt->mfree[-PMINL+xxi].pool); while(xxx){xxx=xxx->kchain.chain; ++xxj;}}}}
  R 1;
-}    /* free unused blocks */
+}
 
 // return space used by w and its descendants
 static D jtspfor1(J jt, A w){D tot=0.0;
@@ -418,7 +417,7 @@ R totalallo;
 // Also count current space, and set that into jt->bytes and the result of this function
 I jtspstarttracking(J jt){I i;
  for(i=PMINL;i<=PLIML;++i){jt->mfree[-PMINL+i].ballo |= MFREEBCOUNTING;}
- jt->mfreegenallo |= MFREEBCOUNTING;  // same for non-pool alloc
+ jt->mfreegenallo|=MFREEBCOUNTING;  // same for non-pool alloc
  R jt->bytes = spbytesinuse();
 }
 
@@ -539,7 +538,6 @@ void audittstack(J jt){F1PREFIP;
 #if BW==64 && MEMAUDIT&2
  if(JT(jt,audittstackdisabled)&1)R;
  A *ttop;
-// obsolete A *nvrav=AAV1(jt->nvra);
  // verify counts start clear
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain
@@ -549,8 +547,6 @@ void audittstack(J jt){F1PREFIP;
   // back up to previous block
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
-// obsolete  // Process the NVR stack as well
-// obsolete  DO(jt->parserstackframe.nvrtop, auditsimverify0(jt,nvrav[i]);)
  // loop through each block of stack
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -558,9 +554,6 @@ void audittstack(J jt){F1PREFIP;
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
-// obsolete  // simulate nvr-stack frees
-// obsolete  DO(jt->parserstackframe.nvrtop, if((AM(nvrav[i])-=AMNVRCT)==AMFREED){auditsimdelete(jt,nvrav[i]);})
-// obsolete  DO(jt->parserstackframe.nvrtop, AM(nvrav[i])+=AMNVRCT;)  // restore AMs
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -568,36 +561,73 @@ void audittstack(J jt){F1PREFIP;
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
-// obsolete  DO(jt->parserstackframe.nvrtop, auditsimreset(jt,nvrav[i]);)
 #endif
 }
 
+// x 13!:84 y  audit a recursive pyx array y 
+// result 0=ok, 1=pyx found with usecount<x 2=pyx found with usecount<0 (maybe deadbeef) 3=nonrecursive block found 4=dead value found
+F2(jtauditpyx){I mindepth;
+ ARGCHK2(a,w);
+ RE(mindepth=i0(a));   // minimum expected depth
+ I n=AN(w); // number of boxes
+ ASSERT(n==0||AT(w)&BOX,EVDOMAIN)
+ if(!AFLAG(w)&BOX)R num(3);
+ // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+ A* RESTRICT wv=AAV(w);  // pointer to box pointers
+ if(unlikely(n==0))R num(0);  // Can't be mapped boxed; skip everything if no boxes
+ NOUNROLL while(--n>=0){  // n is always >0 to start.
+  A np=*wv++;
+  // inspect the cell.  If it is a pyx, verify that its usecount is sufficient and that its value, if given, has not been freed
+  // if not a pyx, recur if it is a box
+  if((np=QCWORD(np))!=0){
+   if(AC(np)<0)R num(2);  // the value has been freed - error
+   if(AT(np)&BOX){
+    if(AT(np)&PYX){
+     if(AC(np)<mindepth)R num(1);
+     if(AAV(np)[0]!=0 && AC(AAV(np)[0])<0)R num(4);  // dead contents
+    }else{
+     A z=jtauditpyx(jt,a,np);
+     if(BIV0(z)!=0)R z;  // if recursion found error, pass it up
+    }
+   }
+  }
+ }
+ R num(0);
+}
+
+
 // Free all symbols pointed to by the SYMB block w, including PERMANENT ones.  But don't return CACHED values to the symbol pool
 void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
- LX freeroot=0; LX *freetailchn=(LX *)jt->shapesink;  // sym index of first freed ele; addr of chain field in last freed ele
+ LX freeroot=0; L *freetailchn=(L*)((I)jt->shapesink-offsetof(L,next));  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=SYMORIGIN;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // loop through each hash chain, clearing the blocks in the chain
+ I nfreed=0;  // total count of blocks accumulated into free list
+ LX lastk;  // last in chain of freed blocks
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
-  if(k=wv[j]){LX *asymx=&wv[j];  // pointer to previous chain
+  if(k=wv[j]){
+// obsolete LX *asymx=&wv[j];  // pointer to root of chain
+   freeroot=freeroot?freeroot:SYMNEXT(k);  // chain is nonempty; if first time, it becomes the head of the growing free chain
    do{
     k=SYMNEXT(k);
+    ++nfreed;  // k is a valid free; count it
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
-// obsolete     if(likely(!(jtsympv[k].flag&LCACHED))){
     SYMVALFA(jtsympv[k]);    // free value
     jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-    asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
-// obsolete    }else{*asymx=SYMNEXT(jtsympv[k].next);}  // for cached value, remove from list to be freed.  It becomes unmoored.
+// obsolete    asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
+    lastk=k;  // remember end-of-chain
     k=nextk;  // advance to next block in chain
    }while(k);
-   // if the chain is not (now) empty, make it the base of the free pool & chain previous pool from it.  CACHED items have been removed
-   if(likely(wv[j]!=0)){freeroot=freeroot?freeroot:wv[j]; *freetailchn=wv[j]; freetailchn=asymx;}  // free chain may have permanent flags   save addr of the very first freed item
+   // chain the new chain (starting at wv[j]) to the growing free chain
+// obsolete    if(likely(wv[j]!=0)){freeroot=freeroot?freeroot:wv[j]; *freetailchn=wv[j]; freetailchn=asymx;}  // free chain may have permanent flags   save addr of the very first freed item
+   freetailchn->next=wv[j]; freetailchn=&jtsympv[lastk];  // append new chain to growing chain, remember end of growing chain
   }
  }
- if(likely(freeroot!=0)){*freetailchn=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
+// obsolete  if(likely(freeroot!=0)){freetailchn->next=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
+ if(likely(freeroot!=0)){jtsymreturn(jt,freeroot,lastk,nfreed);}  // put all blocks freed here onto the free chain
 }
 
 // free the symbol table (i. e. locale) w.  AR(w) has been loaded.  We return w so caller doesn't have to save it
@@ -605,9 +635,9 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
  if(likely(arw&ARLOCALTABLE)){
   // local tables have no path or name, and are not listed in any index.  Just delete the local names
   freesymb(jt,w);   // delete all the names/values
- }else{
+ }else if(likely(!(arw&ARINVALID))){  // INVALID means there was an error filling in the locale - don't look at LOCNAME etc
   // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
-  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
+  // First, free the name (in the SYMLINFO block), and then free the SYMLINFO block itself
   LX k,* RESTRICT wv=LXAV0(w);
   L *jtsympv=SYMORIGIN;
   if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...
@@ -615,16 +645,18 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
    NM *locname=NAV(LOCNAME(w));  // NM block for name
    if(likely(!(arw&ARNAMED))){
     // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
-    jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+// obsolete     jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+    jterasenl(jt,LOCNUM(w));  // remove the locale from the hash table.
    } else {
     // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
     ACINIT(w,2) WRITELOCK(JT(jt,stloc)->lock) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc)); WRITEUNLOCK(JT(jt,stloc)->lock)   // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
    }
    // Free the name
    fr(LOCNAME(w));
-   // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
+   // clear the data fields in symbol SYMLINFO   kludge but this is how it was done (should be done in symnew)
    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-   jtsympv[k].next=SYMLOCALROOT;SYMLOCALROOT=k;  // put symbol on the free list.  SYMLOCALROOT is the base of the free chain
+// obsolete    jtsympv[k].next=SYMLOCALROOT;SYMLOCALROOT=k;  // put symbol on the free list.  SYMLOCALROOT is the base of the free chain
+   jtsymreturn(jt,k,k,1);  // return symbol to free lists
   }
  }
  // continue to free the table itself
@@ -845,7 +877,7 @@ A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
 #if AUDITEXECRESULTS
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
-   if((np=QCWORD(np))!=0){ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags
+   if((np=QCWORD(np))!=0){ra(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.  scaf count cannot be <0, don't need to test
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
@@ -900,7 +932,7 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
      if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
       if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
       else{I c=AC(np);
-       // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
+       // virtual block.  Must be the contents of a WILLBEOPENED, but it may have other aliases so the usecount must be checked
        if(--c<=0){
         A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
        }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
@@ -920,7 +952,6 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
     }
    }
   } else if(t&NAME){A ref;
-// obsolete    if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
    if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference
     // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
     // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
@@ -993,7 +1024,7 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
     jt->tnextpushp = pushp;  // set the push pointer so we can back out the last allocation
     ASSERT(0,EVWSFULL);   // fail
    }
-   jt->malloctotal += NTSTACK+NTSTACKBLOCK;  // add to total allocated
+   jt->malloctotal+=NTSTACK+NTSTACKBLOCK;  // add to total allocated
    // chain previous allocation to the new one
    *v = (A)jt->tstackcurr;   // backchain old buffers to new, including bias
    jt->tstackcurr = (A*)v;    // set new buffer as the one to use, biased so we can index it from pushx
@@ -1063,7 +1094,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
    // There is no way two allocations could back up so as to make the end of one exactly the beginning of the other
    if((A*)np!=pushp-1){
     // if there is another block in this allocation, step to it.  Otherwise:
-    if(jt->tstacknext){FREECHK(jt->tstacknext); jt->malloctotal-=NTSTACK+NTSTACKBLOCK;}   // account for malloc'd memory
+    if(jt->tstacknext){FREECHK(jt->tstacknext); __atomic_fetch_sub(&jt->malloctotal,NTSTACK+NTSTACKBLOCK,__ATOMIC_ACQ_REL);}   // account for malloc'd memory
   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
     jt->tstacknext=jt->tstackcurr;  // save the next-to-use, after removing bias
     jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
@@ -1114,7 +1145,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
  I nt=jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
- jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // ...add them to the total bytes allocated drom OS
+ jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // add to total from OS
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
  // we visit them in back-to-front order so the first-allocated headers are in cache
@@ -1135,7 +1166,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
 #endif
  jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
  if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
-  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+ I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
  }
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  R z;
@@ -1154,13 +1185,15 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 #endif
  AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
  if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
-  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+  I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
+// obsolete   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
  }
  I nt=jt->malloctotal+=n;
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
 #if PYXES
- z->lock=0;  // init lock on the block to 'available'
+ *(I4 *)&z->origin=THREADID(jt);  // init allocating thread# and clear the lock
+// obsolete  z->lock=0;  // init lock on the block to 'available'
 #endif
  R z;
 }
@@ -1170,7 +1203,7 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 RESTRICTF A jtgaf(J jt,I blockx){A z;
 // audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
-// use 6!:5 to start audit I i,j;MS *x; if(JT(jt,peekdata)){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
+// audit free chain {I xxi,xxj;A xxx; {for(xxi=PMINL;xxi<=PLIML;++xxi){xxj=0; xxx=(jt->mfree[-PMINL+xxi].pool); while(xxx){xxx=xxx->kchain.chain; ++xxj;}}}}  // scaf
 #if MEMAUDIT&16
 auditmemchains();
 #endif
@@ -1191,6 +1224,7 @@ if((I)jt&3)SEGFAULT;
    jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
    if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
+// obsolete     I jtbytes=__atomic_add_fetch(&jt->bytes,n,__ATOMIC_ACQ_REL); if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
     jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
    }
    // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
@@ -1273,7 +1307,8 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
-void jtmf(J jt,A w,I hrh){I mfreeb;
+void jtmf(J jt,A w,I hrh){
+// obsolete I mfreeb;
 #if MEMAUDIT&16
 auditmemchains();
 #endif
@@ -1303,36 +1338,45 @@ printf("%p-\n",w);
 #endif
 #endif
  I allocsize;  // size of full allocation for this block
+#if PYXES
+ I origthread=w->origin;
+#endif
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   allocsize = FHRHPOOLBINSIZE(hrh);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
 #if PYXES
-  I origthread=w->origin; if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
+ if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
 #endif
-  jt->bytes -= allocsize;  // keep track of total allocation
-  mfreeb = jt->mfree[blockx].ballo;   // number of bytes allocated at this size (biased zero point)
+  jt->bytes-=allocsize;  // keep track of total allocation
+  I mfreeb = __atomic_fetch_sub(&jt->mfree[blockx].ballo,allocsize,__ATOMIC_ACQ_REL);   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
-  if(unlikely(0 > (mfreeb-=allocsize)))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
+  if(unlikely(mfreeb<0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
-  jt->mfree[blockx].ballo=mfreeb;
+// obsolete   jt->mfree[blockx].ballo=mfreeb;
 #if PYXES
   }else{
    // repatriate a block allocated in another thread
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
    A expval=jt->repatq[blockx]; do AFCHAIN(w)=expval; while(!__atomic_compare_exchange_n(&jt->repatq[blockx], &expval, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // atomic install at head of chain
+   I4 oldrepatbytes=__atomic_fetch_add(&jt->repatbytes,allocsize,__ATOMIC_ACQ_REL);  // Get total # bytes freed in the repat thread
+   if(unlikely(((oldrepatbytes-SBFREEB)^(oldrepatbytes+allocsize-SBFREEB))<0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // If amt freed crosses boundary, request GC in the repat thread
+   //  ********************* jt is corrupt *************************
   }
 #endif
  }else{                // buffer allocated from malloc
-  mfreeb = jt->mfreegenallo;
+// obsolete   mfreeb = jt->mfreegenallo;
   allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
-  jt->bytes -= allocsize;  // keep track of total allocation
+#if PYXES
+  jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block came from
+#endif
+  jt->bytes-=allocsize;  // keep track of total allocation
   jt->malloctotal-=allocsize;
   jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
 #if ALIGNTOCACHE
@@ -1371,7 +1415,7 @@ F1(jtca){A z;I t;P*wp,*zp;
  }else{
   if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
   else {
-   n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for 
+   n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for minimum rank, someday
    GA(z,t,n,AR(w),AS(w));
    AN(z)=AN(w);  // copy AN, which has its own meaning in FUNC
   }

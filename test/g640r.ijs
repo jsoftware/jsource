@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g640r.ijs'
+prolog './g640r.ijs'
 NB. ? different RNGs ----------------------------------------------------
 
 NRNG=: 5  NB. number of RNGs
@@ -107,4 +107,7 @@ test2a"0 i.NRNG
 4!:55 ;:'j NRNG p0 p1 p2 q0 q1 q2 s t '
 4!:55 ;:'test0 test1 test2 test2a u xx yarg yy'
 
+
+
+epilog''
 

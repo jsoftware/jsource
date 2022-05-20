@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g420.ijs'
+prolog './g420.ijs'
 NB. f/y for atomic verbs ------------------------------------------------
 
 randuni''
@@ -831,4 +831,7 @@ t -: 1000  NB. quit after 1000 tries
 4!:55 ;:'A adot1 adot2 sdot0 a c ct f g i insert iota k MC n p pl q '
 4!:55 ;:'rand s t test x y z'
 randfini''
+
+
+epilog''
 

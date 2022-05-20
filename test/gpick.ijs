@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gpick.ijs'
+prolog './gpick.ijs'
 NB. {:: -----------------------------------------------------------------
 
 boxed=: (32&=)@(3!:0)
@@ -62,4 +62,7 @@ t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
 
 4!:55 ;:'boxed cat map mapp pick S sc spread_temp si sz t'
 
+
+
+epilog''
 

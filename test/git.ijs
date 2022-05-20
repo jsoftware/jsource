@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './git.ijs'
+prolog './git.ijs'
 NB. x i. y timing tests -------------------------------------------------
 
 ss =: +/ @: *:
@@ -61,4 +61,7 @@ THRESHOLD +. threshold < (+/ % #), y rsq"1 y1
 
 4!:55 ;:'f f1 f2 n rsq ss x y y1' 
 
+
+
+epilog''
 

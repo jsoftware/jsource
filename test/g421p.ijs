@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g421p.ijs'
+prolog './g421p.ijs'
 NB.  x +//.@(*/) y special code -----------------------------------------
 
 NB. test failed on small ct
@@ -20,4 +20,7 @@ test&>/~ 0 1;(_500+?@$~1000);(100 ?@$ 0); j./2 100 ?@$ 0
 
 4!:55 ;:'ct test xx yy'
 
+
+
+epilog''
 

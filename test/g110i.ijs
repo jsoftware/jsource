@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g110i.ijs'
+prolog './g110i.ijs'
 NB. */ B ----------------------------------------------------------------
 
 times=: 4 : 'x*y'
@@ -58,4 +58,7 @@ times=: 4 : 'x*y'
 
 4!:55 ;:'f times x'
 
+
+
+epilog''
 

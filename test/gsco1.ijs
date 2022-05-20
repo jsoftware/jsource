@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsco1.ijs'
+prolog './gsco1.ijs'
 NB. s: ------------------------------------------------------------------
 
 0 s: 11
@@ -68,4 +68,7 @@ NB. IF64 +. s0 -: s1
 
 4!:55 ;:'a b b0 b1 c d data e p q s s0 s1 t'
 
+
+
+epilog''
 

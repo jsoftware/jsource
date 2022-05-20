@@ -1,4 +1,4 @@
-/* Copyright 1990-2010, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Adverbs: Inverse & Identity Functions                                   */
@@ -97,7 +97,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  RETF(ope(z));
 }    /* <;.1 or <;.2 inverse on matrix argument */
 
-
+// find inverse of f&g when one arg is a noun and the other a verb
 static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  ARGCHK1(w);
  v=FAV(w);
@@ -202,12 +202,14 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CBSLASH:
    if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT
    break;
-  case CIBEAM:
-   x=FAV(h)->fgh[0]; y=FAV(h)->fgh[1];
-   if(NOUN&AT(x)&&equ(x,num(3))&&NOUN&AT(y)){
-    RE(n=i0(f));
-    if(all1(eps(y,v2(4L,5L)))){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(sc(-n),g);}
-    if(all1(eps(y,v2(1L,3L)))){ASSERT(0==n||1==n||10==n||11==n,EVDOMAIN); R foreign(x,num(2));}
+  case CIBEAM:  // h is x!:y
+   if(likely(nf!=0)){   // n&(x!:y)
+    x=FAV(h)->fgh[0]; y=FAV(h)->fgh[1];
+    if(NOUN&AT(x)&&equ(x,num(3))&&NOUN&AT(y)){  // 3!:y
+     RE(n=i0(f));
+     if(all1(eps(y,v2(4L,5L)))){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(sc(-n),g);}  // inverse of _2..2&(3!:(4..5)) is (-n)&(3!:(4..5))
+     if(all1(eps(y,v2(1L,3L)))){ASSERT(0==n||1==n||10==n||11==n,EVDOMAIN); R foreign(x,num(2));}  // inverse of [0/1/10/11]&(3!:[1/3]) is 3!:2
+    }
    }
    break;
   case CBDOT:
@@ -265,7 +267,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
   case CUCO:     R amp(num(3),w);
   case CUNDER:   R under(invrecur(f),g);
   case CFORK:    R invfork(w);
-  case CAMP:     if(nf!=ng){A z=invamp(w); if(nf^ng)R z;}  // may fall through... but avoid tail-recursion so we get out of loop
+  case CAMP:     if(nf!=ng){A z=invamp(w); if(nf^ng)R z;}  // may fall through... but avoid tail-recursion so we get out of loop  scaf why ^?
   case CAT:      if(vf&&vg)R atop(invrecur(g),invrecur(f));   break;
   case CAMPCO:
   case CATCO:    if(vf&&vg)R atco(invrecur(g),invrecur(f));   break;

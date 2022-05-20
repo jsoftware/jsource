@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g421i.ijs'
+prolog './g421i.ijs'
 NB.  x f//. y special code for + +. *. >. <. = ~: -----------------------
 
 randuni''
@@ -165,3 +165,6 @@ x (>.//. -: 3 : '>./y'/.) y=: sdot0{~  ?($x)$$sdot0
 
 4!:55 ;:'adot1 adot2 bigval sdot0 test v x xx y yy'
 randfini''
+
+epilog''
+

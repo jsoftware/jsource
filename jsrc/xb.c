@@ -1,4 +1,4 @@
-/* Copyright 1990-2014, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Xenos: Binary Representation                                            */
@@ -335,7 +335,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
  R unbinr(b,d,1,m,q);
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
-
+// 3!:4
 F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);
@@ -364,6 +364,7 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
   case  0: u=(U short*)x; DQ(m, *v++=    *u++;); {RETF(z);}
 }}
 
+// 3!:5
 F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);

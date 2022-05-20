@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gcompsc.ijs'
+prolog './gcompsc.ijs'
 NB. fork special code for the following cases: --------------------------
 NB.    comp i. 0:          i.&0@:comp
 NB.    comp i. 1:          i.&1@:comp
@@ -542,4 +542,7 @@ NB. empty-arg detection
 4!:55 ;:'ya yb yb1 yb2 yb3 yb4 yb5 yb6 yb7 yc yd yi yj ys yy'
 4!:55 ;:'zb zd zi zs'
 
+
+
+epilog''
 

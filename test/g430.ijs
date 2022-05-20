@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g430.ijs'
+prolog './g430.ijs'
 NB. f/. f\  f\. models --------------------------------------------------
 
 randuni''
@@ -586,4 +586,7 @@ a =: i. 1000 1000
 4!:55 ;:'infix inv k kay key n ob oind omask osub '
 4!:55 ;:'outfix prefix sd seg suffix t test w x y'
 randfini''
+
+
+epilog''
 

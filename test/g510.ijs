@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g510.ijs'
+prolog './g510.ijs'
 NB. ] --------------------------------------------------------------------
 
 xb =: ?2 3 4$2
@@ -106,4 +106,7 @@ g=: 0&+^:(2&|)
 
 4!:55 ;:'dex f g t x xa xb xd xi xj xu xw y'
 
+
+
+epilog''
 

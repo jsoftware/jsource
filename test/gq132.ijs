@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gq132.ijs'
+prolog './gq132.ijs'
 NB. %: ------------------------------------------------------------------
 
 rat =: 128&=@type
@@ -59,4 +59,7 @@ test=: 3 : 0
 
 4!:55 ;:'cfsqrt N rat t test v xx yy'
 
+
+
+epilog''
 

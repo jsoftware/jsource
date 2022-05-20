@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp331.ijs'
+prolog './gsp331.ijs'
 NB. #;.n ----------------------------------------------------------------
 
 f=: 3 : 0
@@ -69,4 +69,7 @@ q=: x j}1$.2e9;0;2-2
 
 4!:55 ;:'classify cut1 f i j n p q qs s t x'
 
+
+
+epilog''
 

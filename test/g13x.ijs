@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g13x.ijs'
+prolog './g13x.ijs'
 NB. 13!: ----------------------------------------------------------------
 
 original=: 9!:6''
@@ -343,4 +343,7 @@ m;n;x;y
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '
 4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '
 
+
+
+epilog''
 

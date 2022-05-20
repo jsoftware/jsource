@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g600.ijs'
+prolog './g600.ijs'
 NB. " -------------------------------------------------------------------
 
 randuni''
@@ -1018,4 +1018,7 @@ f =: ^
 4!:55 ;:'a adot1 adot2 sdot0 agree appcyc asm b boxr c c1 c2 cells crank cs cshape cycinit dr er f fr frame '
 4!:55 ;:'ger glob lag minus mm mrk msh prevmod ops pfx rag rank rk savger s1 svy t testlen x xx y '
 randfini''
+
+
+epilog''
 

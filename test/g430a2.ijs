@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g430a2.ijs'
+prolog './g430a2.ijs'
 NB. 2 f/\y and 2 f~/\y for vector y -------------------------------------
 
 randuni''
@@ -191,4 +191,7 @@ NB. Cases that failed once
 
 4!:55 ;:'adot1 adot2 sdot0 f t y'
 randfini''
+
+
+epilog''
 

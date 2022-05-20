@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g220t.ijs'
+prolog './g220t.ijs'
 NB. ~ timing tests ------------------------------------------------------
 
 ratio =: >./ % <./
@@ -27,4 +27,7 @@ test1 ''
 
 4!:55 ;:'i ratio t test0 test1 xx yy'
 
+
+
+epilog''
 

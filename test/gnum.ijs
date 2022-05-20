@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gnum.ijs'
+prolog './gnum.ijs'
 NB. numeric constants ---------------------------------------------------
 
 3j4      -: ". '3j4'
@@ -89,4 +89,7 @@ assert. (0 ". '16b123456789abcdef 3') = 81985529216486896 3
 
 4!:55 ;:'eq x y'
 
+
+
+epilog''
 

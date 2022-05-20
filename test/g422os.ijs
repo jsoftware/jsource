@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g422os.ijs'
+prolog './g422os.ijs'
 NB. x{/:~y (order statistics) -------------------------------------------
 
 (/:~y) -: (i.#y) ({/:~)"0 1 y=:       100 ?@$ 60
@@ -29,4 +29,7 @@ THRESHOLD +. 0.75 > %/ 10000&(6!:2) '5 ({ /:~) y' ,: '5 ({ /:~"]) y' NB. 0.71 on
 
 
 4!:55 ;:'n x y'
+
+
+epilog''
 

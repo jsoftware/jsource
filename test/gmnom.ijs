@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gmnom.ijs'
+prolog './gmnom.ijs'
 NB. x p. y multinomials -------------------------------------------------
 
 p1=: 4 : 0 " 1 0
@@ -142,3 +142,6 @@ NB. x p.!.s y -----------------------------------------------------------
 
 
 4!:55 ;:'x y p1 pn'
+
+epilog''
+

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g001.ijs'
+prolog './g001.ijs'
 NB. =. and =: -----------------------------------------------------------
 
 erase  =: 4!:55
@@ -373,4 +373,7 @@ neg p
 4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r s second sscript gval_z_'
 4!:55 ;:'sum t third write x y'
 
+
+
+epilog''
 

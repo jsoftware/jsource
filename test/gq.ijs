@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gq.ijs'
+prolog './gq.ijs'
 NB. rational numbers ----------------------------------------------------
 
 NB. test failed on small ct
@@ -662,4 +662,7 @@ NB. q: ------------------------------------------------------------------
 4!:55 ;:'a b c cmpx ct f g fl h hex Hilbert ir'
 4!:55 ;:'r rat ri stope x xint y'
 
+
+
+epilog''
 

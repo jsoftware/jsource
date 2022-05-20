@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gt.ijs'
+prolog './gt.ijs'
 
 1: 0 : 0  NB. removed from 901
 NB. t. ------------------------------------------------------------------
@@ -240,3 +240,6 @@ phi=: -:%:5
 4!:55 ;:'m n p phi pp q r rp s sin sinh tangent taysqrt x y '
 
 )
+
+epilog''
+

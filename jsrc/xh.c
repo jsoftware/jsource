@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Xenos: Host Command Facilities                                          */
@@ -194,6 +194,6 @@ F1(jtcerrno){C buf[1024],ermsg[1024];
 #else
  if(errno&&!strerror_r(errno,ermsg,1024)) strcpy (buf, ermsg); else strcpy (buf, "");
 #endif
- R link(sc(errno),cstr(buf));
+ R jlink(sc(errno),cstr(buf));
 }    /* 2!:8  errno information */
 

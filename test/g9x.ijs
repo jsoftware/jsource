@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g9x.ijs'
+prolog './g9x.ijs'
 NB. 9!:0 and 9!:1 -------------------------------------------------------
 
 rlq =: 9!:0
@@ -418,4 +418,7 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 4!:55 ;:'drop1 erase evmq evms initspace namedvb nub old p ppq pps promptq '
 4!:55 ;:'prompts q read rlq rls s t v '
 
+
+
+epilog''
 

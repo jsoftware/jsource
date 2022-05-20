@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g202b.ijs'
+prolog './g202b.ijs'
 NB. ^: with boxed right argument ----------------------------------------
 
 (>:   ^:(i.1000)  1     ) -: >:   ^:(<1000)  1
@@ -108,4 +108,7 @@ test"0 ] 10^i.4
 4!:55 ;:'boxed_rec f indexlim r randomfile rec rec1 spleak'
 4!:55 ;:'test x x2288 y2288'
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gfor.ijs'
+prolog './gfor.ijs'
 NB. for. ----------------------------------------------------------------
 
 f0=: 3 : 0
@@ -438,4 +438,7 @@ g0 =: 7!:0''
 4!:55 ;:'a C comp f f0 f1 f1a f2 f2a f3 f3a f4 f5 f6 f7 f8 f9 f10 f11 f12'
 4!:55 ;:'g0 g1 n queens x '
 
+
+
+epilog''
 

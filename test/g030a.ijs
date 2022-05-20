@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g030a.ijs'
+prolog './g030a.ijs'
 NB. _ locales -----------------------------------------------------------
 
 f=. f_a_ /
@@ -14,4 +14,7 @@ f_a_ =. >.
 
 4!:55 ;:'f x'
 
+
+
+epilog''
 

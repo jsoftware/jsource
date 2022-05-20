@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './ga.ijs'
+prolog './ga.ijs'
 NB. a. ------------------------------------------------------------------
 
 randuni''
@@ -150,4 +150,7 @@ p4 =: 3 : 0
 4!:55 ;:'Adot1 Adot2 adot1 adot2 sdot0 base boxed dfr grow j ord p p0 '
 4!:55 ;:'p1 p2 p3 p4 pfill pind rfd x y z '
 randfini''
+
+
+epilog''
 

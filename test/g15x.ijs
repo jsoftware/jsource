@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g15x.ijs'
+prolog './g15x.ijs'
 NB. 15!: ----------------------------------------------------------------
 
 NB. runs as noop as winapi.ijs is no longer supported - might be resurrected some day
@@ -159,4 +159,7 @@ NB. 0 ~: h 15!:21 'gethostname'
 4!:55 ;:'fopen fread fsetptr fsize fwrite '
 4!:55 ;:'h i jt pc s sbp t test winset'
 
+
+
+epilog''
 

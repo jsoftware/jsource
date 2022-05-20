@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g300.ijs'
+prolog './g300.ijs'
 NB. +/ .* ---------------------------------------------------------------
 
 NB. test failed on small ct
@@ -270,4 +270,7 @@ eqf=: 4 : 0
 
 4!:55 ;:'arch ct eqf f g h m sh test x xx yy'
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gesc.ijs'
+prolog './gesc.ijs'
 NB. e. special code -----------------------------------------------------
 
 E=: 1 : 0
@@ -128,4 +128,7 @@ A1~ 3 4 0 5$-~3j4
 4!:55 ;:'A0 A1 E f g h uu xx yy'
 
 
+
+
+epilog''
 

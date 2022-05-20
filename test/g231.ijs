@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g231.ijs'
+prolog './g231.ijs'
 NB. |.y -----------------------------------------------------------------
 
 randuni''
@@ -437,4 +437,7 @@ _2 3 (|.!.f"1 2 -: rot"1 2) j./?2 2 3 7$1000 [ f=:0
 
 4!:55 ;:'a adot1 adot2 sdot0 f f1 rank rev rot x'
 randfini''
+
+
+epilog''
 

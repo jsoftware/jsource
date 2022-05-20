@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g320ip.ijs'
+prolog './g320ip.ijs'
 NB. ,y ravel in place -----------------------------------------------
 
 (i. 1000) -: , i. 1000
@@ -971,10 +971,10 @@ y =. y
 
 NB. Inplaceable result of explicit definition stays inplaceable after exit
 f3 =: 3 : '10000 # a'
-(dbq'') +. 170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 NB. Even if named
 f3 =: 3 : 'p =. 10000 # a'
-(dbq'') +. 170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 NB. Inplacing forks
 NB. The code to generate the testcases:
@@ -1183,4 +1183,7 @@ assert. ((<P;0),(<01),<(<I),(<00),<P;0) -: (* ] ((9!:63) (9!:63))) 0
 
 4!:55 ;:'a a1 aad aad2 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast l0 l1 local max min nmm nb qd t test testa unsafename undefinedname x'
 
+
+
+epilog''
 

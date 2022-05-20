@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g331ins.ijs'
+prolog './g331ins.ijs'
 NB. f/;.n ---------------------------------------------------------------
 
 sp =: 7!:2 
@@ -96,4 +96,7 @@ testb i.2000
 
 4!:55 ;:'a b c f j p q sp spa t test testb xx yy'
 
+
+
+epilog''
 

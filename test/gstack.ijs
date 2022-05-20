@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gstack.ijs'
+prolog './gstack.ijs'
 NB. stack issues (function call limit) ----------------------------------
 
 0 0 $  0 : 0
@@ -90,7 +90,7 @@ for_loc. i. y do.
 end.
 )
 f 10000
-NB. test for self-repplicating gerund
+NB. test for self-replicating gerund
 {{ J=. ((<@:((":0) ,&:< ]) , ])([.].))(`:6)
  CRASH=. 5!:1@<'J'
 try.
@@ -101,6 +101,9 @@ catch.
 end.
 }} ''
 
-4!:55 ;:'c f f5 f6 g t p'
+4!:55 ;:'c f f5 f6 t p'
 
+
+
+epilog''
 

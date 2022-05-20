@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gmemo.ijs'
+prolog './gmemo.ijs'
 NB. M. ------------------------------------------------------------------
 
 fib=: 3 : 0 M.
@@ -52,4 +52,7 @@ r"0 i. 10000
  
 4!:55 ;:'coeffs combr f fib fibr hwmk params pn pnx rec t'
 
+
+
+epilog''
 

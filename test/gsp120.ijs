@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp120.ijs'
+prolog './gsp120.ijs'
 NB. - monad -------------------------------------------------------------
 
 f=: 3 : '(scheck q) *. (-xx) -: q=. -s=:         (2;y)$.xx'
@@ -103,4 +103,7 @@ d f&>/c
 
 4!:55 ;:'a c d f g h p q r s t xx yy'
 
+
+
+epilog''
 

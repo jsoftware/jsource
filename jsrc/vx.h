@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Extended Precision                                                      */
@@ -29,7 +29,7 @@
 #define XMCEIL          1                    /* ceiling, round up          */
 #define XMEXACT         2                    /* exact, error if impossible */
 #define XMEXMT          3                    /* exact, empty if impossible */
-#define XMRND           4                    /* round,   round to nearest  */
+// obsolete #define XMRND           4                    /* round,   round to nearest  */
 
 
 extern XF1(jtxfact);

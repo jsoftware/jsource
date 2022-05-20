@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g110.ijs'
+prolog './g110.ijs'
 NB. *y ------------------------------------------------------------------
 
 qct  =: 2^_44
@@ -245,4 +245,7 @@ NB. tests for correct generation of AVX2 instructions.  Verifies that the compil
 
 4!:55 ;:'dr eq exp f qct rk s sgn t test testa testb testc times x y'
 
+
+
+epilog''
 

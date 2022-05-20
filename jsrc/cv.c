@@ -1,4 +1,4 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Variants (!.)                                             */
@@ -49,10 +49,12 @@ static DF2(jtfitpoly2){I j;
 static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
 static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
 
-static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
- MC(d,s,sizeof(jt->pp)-3);   // stack default jy->pp over call
- snprintf(s,sizeof(jt->pp)-3,FMTI"g",AV(gs)[0]); 
- z=CALL1(f1,w,fs); MC(s,d,sizeof(jt->pp)-3);  // fs is ": f1 is thorn1
+static DF1(jtfitpp1){DECLFG;A z;
+// obsolete C d[8],*s=3+jt->pp;
+// obsolete  MC(d,s,sizeof(jt->pp)-3);   // stack default jy->pp over call
+// obsolete  snprintf(s,sizeof(jt->pp)-3,FMTI"g",AV(gs)[0]); 
+ I stkppn=jt->ppn; jt->ppn=AV(gs)[0]; z=CALL1(f1,w,fs); jt->ppn=stkppn;
+// MC(s,d,sizeof(jt->pp)-3);  // fs is ": f1 is thorn1
  RETF(z);
 }
 
@@ -63,7 +65,7 @@ static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroione
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
 // Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
 // Preserve comparison-combination flags for tolerance fit, in case this is a fit-allowing primitive that uses them
-F2(jtfit){A f;C c;I k,l,m,r;V*sv;
+F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
  ASSERTVN(a,w);  // a must be a verb, w a noun
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
  I cno=0;

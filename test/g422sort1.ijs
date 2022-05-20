@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g422sort1.ijs'
+prolog './g422sort1.ijs'
 NB. y/:y and y\:y -------------------------------------------------------
 NB. 65536<#elements 
 
@@ -126,4 +126,7 @@ NB. Include negative numbers
 
 4!:55 ;:'adot1 adot2 sdot0 b n test test1'
 randfini''
+
+
+epilog''
 

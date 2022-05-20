@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gfft.ijs'
+prolog './gfft.ijs'
 NB. FFT addon -----------------------------------------------------------
 
 NB. obsolete s48=: 9!:48 ''
@@ -13,4 +13,7 @@ NB. obsolete 9!:49 s48
 
 4!:55 ;:'s48 x'
 
+
+
+epilog''
 

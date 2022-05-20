@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g640.ijs'
+prolog './g640.ijs'
 NB. ?y ------------------------------------------------------------------
 
 tick =: [ <.@%~ (* 3 : 'qrl=:(<:2^31)|(7^5)*qrl')@]
@@ -312,4 +312,7 @@ test_dx 1
 4!:55 ;:'i lcg M m mean mod_diff n qrl r r1597 rix roll roll0 seed'
 4!:55 ;:'t test test_dx test_lcg test1 testmean tick var x zz'
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gb.ijs'
+prolog './gb.ijs'
 NB. n b. ----------------------------------------------------------------
 
 0 0 0 1 -: 0 0 1 1 (1 b.) 0 1 0 1
@@ -261,4 +261,7 @@ x -: ]&.(28 b.&12345) x
 
 4!:55 ;:'B d f g g0 g1 g2 l N p test u x xx y yy'
 
+
+
+epilog''
 

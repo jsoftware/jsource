@@ -1,4 +1,4 @@
-/* Copyright 1990-2010, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Cuts                                                      */
@@ -1189,7 +1189,7 @@ static DF1(jttess1){A s;I m,r,*v;
 }
 
 
-F2(jtcut){A h=0,z;I flag=0,k;
+F2(jtcut){F2PREFIP;A h=0,z;I flag=0,k;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.  For the shared case, inplacing is OK
  ARGCHK2(a,w);

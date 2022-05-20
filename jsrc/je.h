@@ -1,4 +1,4 @@
-/* Copyright 1990-2009, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Extern Declarations                                                     */
@@ -66,6 +66,7 @@ extern F1(jtdbc);
 extern F1(jtdbcall);
 extern F1(jtdbcutback);
 extern F1(jtdberr);
+extern F2(jtdberr2);
 extern F1(jtdbetx);
 extern F1(jtdbjump);
 extern F1(jtdbnext);
@@ -91,6 +92,7 @@ extern F1(jtdispq);
 extern F1(jtdisps);
 extern F1(jtdl);
 extern F1(jtdllsymdat);
+extern F1(jtdllvaladdr);
 extern F1(jtdllsymhdr);
 extern F1(jtdllsymget);
 extern F1(jtdllsymset);
@@ -238,6 +240,8 @@ extern F1(jtnubind);
 extern F1(jtnubind0);
 extern F1(jtnubsieve);
 extern F1(jtnubsievesp);
+extern F1(jtnulljob);
+extern F1(jtnulljob);
 extern DF1(on1);
 extern DF1(on1cell);
 extern F1(jtonm);
@@ -331,6 +335,7 @@ extern F1(jtspfor);
 extern F1(jtspforloc);
 extern F1(jtsphwmk);
 extern F1(jtspit);
+extern F1(jtspresident);
 extern F1(jtsqroot);
 extern F1(jtsquare);
 extern F1(jtstackfault);
@@ -392,8 +397,6 @@ extern F1(jtvtrans);
 extern F1(jtwordil);
 extern DF1(jtwords);
 extern F1(jtxco1);
-// obsolete extern F1(jtxepq);
-// obsolete extern F1(jtxeps);
 
 // extern F1(jttest1);
 
@@ -409,6 +412,7 @@ extern F2(jtanyebar);
 extern F2(jtapplystr);
 extern F2(jtatco);
 extern F2(jtatop);
+extern F2(jtauditpyx);
 extern F2(jtbase2);
 extern F2(jtbinrep2);
 extern F2(jtbit);
@@ -500,7 +504,7 @@ extern F2(jtless);
 extern DF2(jtintersect);
 #endif
 extern F2(jtlev);
-extern DF2(jtlink);
+extern DF2(jtjlink);
 extern F2(jtloccre2);
 extern F2(jtlock2);
 extern F2(jtlocnl2);
@@ -724,6 +728,7 @@ extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtpyxval(J,A);
+extern C        jtjobrun(J,unsigned char(*)(J,void*,UI4),void(*)(J,void*),void*,UI4);
 extern A        jtfxeachv(J,I,A);
 #if SY_64
 extern RESTRICTF A jtga0(J,I,I);
@@ -764,6 +769,7 @@ extern F        jtjope(J,A,C*);
 extern I       jtjset(J,C*,A);
 extern void     jtjsigd(J,C*);
 extern void     jtjsignal(J,I);
+extern void     jtjsignal2(J,I,A);
 extern void     jtjsignal3(J,I,A,I);
 extern A        jtleakblockread(J,A);
 extern A        jtleakblockreset(J,A);
@@ -778,7 +784,6 @@ extern A        jtmkwris(J, A);
 extern I        jtmult(J,I,I);
 extern A        jtnamerefacv(J, A, A);
 extern A        jtnfs(J,I,C*);
-// obsolete extern I        jtnotonupperstack(J,A);
 extern A        jtodom(J,I,I,I* RESTRICT);
 extern A        jtparsea(J,A*,I);
 extern B        jtparseinit(JS,I);
@@ -823,7 +828,7 @@ extern D        jtremdd(J,D,D);
 extern I        jtremid(J,I,D);
 extern I        jtreservesym(J,I);
 extern A        jtrifvs(J,AD* RESTRICT);
-extern B        jtredef(J,A,A);
+extern A        jtredef(J,A,A);
 extern B        jtrnginit(JS,I);
 extern B        jtsbtypeinit(JS,I);
 extern void     jtsbtypeglobinit();
@@ -838,7 +843,7 @@ extern A        jtscx(J,X);
 extern A        jtscib(J,I);
 extern B        jtsesminit(JS,I);
 #if PYXES
-extern void jtsettaskrunning(J);
+extern I jtsettaskrunning(J);
 extern void jtclrtaskrunning(J);
 #else
 #define jtsettaskrunning(jt) (jt->taskstate|=TASKSTATERUNNING)
@@ -876,6 +881,7 @@ extern I       jtsymbisdel(J,A,A,A);
 extern A        jtsymext(J);
 extern void     jtsymfreeha(J,A);
 extern L*       jtsymnew(J,LX*,LX);
+extern void     jtsymreturn(J,LX,LX,I);
 extern A        jtsybaseloc(J,A);
 extern A       jtsyrd(J,A,A);
 extern A       jtsyrd1(J,C*,UI4,A);

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gwhile.ijs'
+prolog './gwhile.ijs'
 NB. while ---------------------------------------------------------------
 
 fa =: 3 : 0
@@ -141,4 +141,7 @@ ge =: 3 : 0
 
 4!:55 ;:'fa fb fc fd fe ga gb gc gcd gd ge x'
 
+
+
+epilog''
 

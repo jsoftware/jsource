@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './glapack.ijs'
+prolog './glapack.ijs'
 NB. LAPACK --------------------------------------------------------------
 
 NB. obsolete s48=: 9!:48 ''
@@ -85,4 +85,7 @@ NB. obsolete 9!:49 s48
 
 4!:55 ;:'A e L mp n R s0 s1 s48 test tol'
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Adverbs: Utilities                                                      */
@@ -28,11 +28,11 @@ F1(jtfdepadv){ARGCHK1(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 #endif
 
 
-DF1(jtdfs1){F1PREFIP;A s=jt->parserstackframe.sf,z; RZ(self); z=CALL1IP(FAV(self)->valencefns[0],  w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; RETF(z);}
+DF1(jtdfs1){F1PREFIP;A s=jt->parserstackframe.sf,z; RZ(self); df1(z,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
 A s=jt->parserstackframe.sf,z; 
 RZ(self); 
-z=CALL2IP(FAV(self)->valencefns[1],a,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; 
+df2(z,a,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; 
 RETF(z);}    
      /* for monads and dyads that can possibly involve $: */
 
@@ -53,7 +53,11 @@ F2(jtdomainerr2){F2PREFIP; ASSERT(0,EVDOMAIN);}
 A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
  GAT0(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will be all filled in
+// obsolete #if SY_64
  AN(z)=0xdeadbeef;  // AN field of function is used for actual rank
+// obsolete #else
+// obsolete  AN(z)=0xdeadbeef;  // AN field of function is used for actual rank
+// obsolete #endif
  if(fs)INCORPRA(fs); if(gs)INCORPRA(gs); if(hs)INCORPRA(hs);   // indicate fgh are about to be incorporated, and raise
  v->localuse.clr[0]=v->localuse.clr[1]=v->localuse.clr[2]=v->localuse.clr[3]=0;  // clear the private field
  v->valencefns[0]    =f1?f1:jtdomainerr1;  /* monad C function */

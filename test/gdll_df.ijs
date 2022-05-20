@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gdll_df.ijs'
+prolog './gdll_df.ijs'
 NB. DLL call with d f declarations
 NB. these will fail on builds with C_DF=0
 NB. as cd on these platforms can not handle f results
@@ -303,3 +303,6 @@ obj_add=:    <>{.'obj_add x' dcd ''
 4!:55 ;:'a add address b d2f2d dcd f j2z2j lib obj_add pc s0 s1 td td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xx yy z'
 4!:55 ;:'cdrc i s' 
+
+epilog''
+

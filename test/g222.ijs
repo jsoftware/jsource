@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g222.ijs'
+prolog './g222.ijs'
 NB. ~:y -----------------------------------------------------------------
 
 randuni''
@@ -309,4 +309,7 @@ NB. boxed
 
 4!:55 ;:'a adot1 adot2 sdot0 b g t test x y yy'
 randfini''
+
+
+epilog''
 

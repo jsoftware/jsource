@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gintdiv.ijs'
+prolog './gintdiv.ijs'
 NB. integer division and remainder --------------------------------------
 
 f1=: 4 : 0
@@ -80,4 +80,7 @@ f3=: 4 : 0
 4!:55 ;:'f f1 f2 f3 y'
 
 
+
+
+epilog''
 

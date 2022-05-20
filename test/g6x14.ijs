@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g6x14.ijs'
+prolog './g6x14.ijs'
 
 NB. epoch datetime is nanoseconds from 2000-01-01
 NB. foreigns convert between epochdt and iso 8601 extended format
@@ -155,3 +155,6 @@ NB. rank
 (2 10$'1970-10-11') -: ', d' sfe 2#_922189605876543211
 
 4!:55 ;:'IMIN efs sfe a e t '
+
+epilog''
+

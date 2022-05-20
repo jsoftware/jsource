@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gbpar.ijs'
+prolog './gbpar.ijs'
 NB. byte parallel -------------------------------------------------------
 NB. m-bytes-at-a-time operations on boolean functions
 
@@ -103,3 +103,6 @@ s ~: S"1 0 >:i.17
 
 4!:55 ;:'A b c f g I P S s xx yy'
  
+
+epilog''
+

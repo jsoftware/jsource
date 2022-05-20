@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g010.ijs'
+prolog './g010.ijs'
 NB. < y -----------------------------------------------------------------
 
 test =: 3 : '(0=#$t), (-.t-:y),  y-:>t=.<y'
@@ -70,4 +70,7 @@ NB. symbol
 
 4!:55 ;:'test x'
 
+
+
+epilog''
 

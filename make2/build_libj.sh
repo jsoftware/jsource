@@ -92,7 +92,7 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
-common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fno-stack-protector  \
+common="$OPENMP -fPIC -O2 -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector  \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wno-cast-function-type \
  -Wno-clobbered \
@@ -118,7 +118,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fno-stack-pr
 
 else
 # clang
-common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
+common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fwrapv \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wsign-compare \
  -Wtautological-constant-out-of-range-compare \

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g3x4.ijs'
+prolog './g3x4.ijs'
 NB. 3!:4 ----------------------------------------------------------------
 
 ic =: 3!:4
@@ -123,4 +123,7 @@ g3 imin,0,imax
 
 4!:55 ;:'g1 g2 g3 ic x'
 
+
+
+epilog''
 

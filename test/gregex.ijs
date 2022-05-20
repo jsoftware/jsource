@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gregex.ijs'
+prolog './gregex.ijs'
 NB. regex ------------------------------------------------------------------
 
 load 'regex'
@@ -20,3 +20,6 @@ E=: '\x{306f}' NB. codepoint of D
 (,:6 3) -: E rxmatch A
 
 4!:55 ;:'A B C D E'
+
+epilog''
+

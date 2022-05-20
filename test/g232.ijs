@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g232.ijs'
+prolog './g232.ijs'
 NB. |: ------------------------------------------------------------------
 
 randuni''
@@ -494,4 +494,7 @@ sym1=: (-: 0&|:) *. (-: _2&|:)
 4!:55 ;:'ind magic magicprop mask mi p perm pfill '
 4!:55 ;:'rank rho sym0 sym1 t vfy X x y'
 randfini''
+
+
+epilog''
 

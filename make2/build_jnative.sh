@@ -110,6 +110,23 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
 
 fi
 
+USE_PYXES="${USE_PYXES:=1}"
+if [ $USE_PYXES -eq 1 ] ; then
+common="$common -DPYXES=1"
+LDTHREAD=" -pthread "
+else
+common="$common -DPYXES=0"
+fi
+
+if [ -z "${j64x##*32*}" ]; then
+USE_EMU_AVX=0
+else
+USE_EMU_AVX="${USE_EMU_AVX:=1}"
+fi
+if [ $USE_EMU_AVX -eq 1 ] ; then
+common="$common -DEMU_AVX=1"
+fi
+
 case $jplatform\_$j64x in
 
 linux_j32)

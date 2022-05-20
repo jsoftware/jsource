@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Adverbs: Oblique and Key                                                */
@@ -523,7 +523,6 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  // If the operation turned off pristinity of wperm, do the same for w.  Pristinity only matters if the block is inplaceable, but our tests expect that
  // assigned values retain their pristinity, so we have to clear pristinity of w whenever wperm ends non-prist
-// obsolete AFLAGAND(w,AFLAG(wperm)|~AFPRISTINE)
  if(unlikely(wprist>(AFLAG(wperm)&AFPRISTINE)))AFLAGCLRPRIST(w)  // if pristinity of wperm was turned off, do the same in w
  EPILOG(z);
 }    /* a f/. w for dense x & w */
@@ -811,7 +810,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
 }    /* x ({.,#)/.y or x (#,{.)/. y */
 
 
-F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
+F1(jtsldot){F1PREFIP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);

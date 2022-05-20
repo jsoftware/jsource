@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Words: Word Formation                                                   */
@@ -156,7 +156,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     if(e==CASGN && (env==1 || (i && AT(QCWORD(x[-1]))&NAME && (NAV(QCWORD(x[-1]))->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.
     if(i&& AT(QCWORD(x[-1]))&NAME){y= y==asgnforceglo?asgnforcegloname:y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
    }
-   if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}}  // The inflected names are the old-fashioned x. y. etc.  They must be cloned lest we modify the shared copy
+   if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y));}     // The inflected names are the old-fashioned x. y. etc.  They must be cloned lest we modify the shared copy
    *x=y;   // install the value
   } else if(e==CFCONS){RZ(*x=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
   } else {
@@ -168,7 +168,6 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
      wl-=2;  // remove _: from name; leave b set to indicate inflection
     }
     ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));  // error if invalid name; create name block and install it in result
-    if(unlikely((env==2)&&(NAV(*x)->flag&NMXY))){AT(*x)|=NAMEBYVALUE;}     // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition
     if(unlikely(b)){AT(*x)|=NAMEBYVALUE|NAMEABANDON;}  // flag name:: for stack processing
    }else if(unlikely(b)){jsignal3(EVSPELL,w,wi-s); R 0;
    }else if(p==C9){if(unlikely(!(*x=connum(wl,wi)))){I lje=jt->jerr; RESETERR; jsignal3(lje,w,u[0]); R 0;}   // starts with numeric, create numeric constant.  If error, give a message showing the bad number

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g5x0.ijs'
+prolog './g5x0.ijs'
 NB. 5!:0 ----------------------------------------------------------------
 
 fx =: 5!:0
@@ -166,4 +166,7 @@ f=:+,*
 
 4!:55 ;:'a ar cn cv eachh eq f fx g noun pow tv verb '
 
+
+
+epilog''
 

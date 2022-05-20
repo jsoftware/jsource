@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g502.ijs'
+prolog './g502.ijs'
 NB. [: ------------------------------------------------------------------
 
 ss =: [: +/ *:
@@ -50,4 +50,7 @@ NB. no longer honored ((%:x)+/*:x) -: f x
 
 4!:55 ;:'c1 c2 cc cc f ss t x y'
 
+
+
+epilog''
 

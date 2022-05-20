@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g402.ijs'
+prolog './g402.ijs'
 NB. #:y -----------------------------------------------------------------
 
 max    =: >./@:|@,
@@ -119,4 +119,7 @@ g=: 3 : 'y#:i.*/y'
 
 4!:55 ;:'abase1 abase2 bits f g max t x '
 
+
+
+epilog''
 

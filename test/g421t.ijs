@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g421t.ijs'
+prolog './g421t.ijs'
 NB. x #/. y -------------------------------------------------------------
 
 randuni''
@@ -41,3 +41,6 @@ test <"0 ?40$100
 
 4!:55 ;:'adot1 adot2 sdot0 tally test xx'
 randfini''
+
+epilog''
+

@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Format: ": Monad                                                        */
@@ -53,7 +53,7 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
  if(_isnan(*v)          ){strcpy(s,"_."); R;}
 // x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
  x=*v; x=x==(-1)*0.0?0.0:x;  /* -0 to 0*/
- sprintf(buf,jt->pp,x);
+ sprintf(buf,"%0.*g",jt->ppn,x);
  c=*buf; if(q=c=='-')*s++=CSIGN; q=q|(c=='+');
  if('.'==buf[q])*s++='0';
  MC(s,buf+q,WD+1-q);

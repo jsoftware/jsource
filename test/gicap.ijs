@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gicap.ijs'
+prolog './gicap.ijs'
 NB. I.y -----------------------------------------------------------------
 
 ifb=: (# i.@#)
@@ -57,4 +57,7 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: 10&u: 65536+a.i. ' miasma cht
 
 4!:55 ;:'f ifb n t test yy'
 
+
+
+epilog''
 

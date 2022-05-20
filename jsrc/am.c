@@ -1,4 +1,4 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Adverbs: Amend                                                          */
@@ -288,8 +288,8 @@ do{ \
 }while(--i0);
 #define CP1n(t)  /* each index copies the same cell to the result */ \
 do{ \
- case (4+CTTZI(sizeof(t)))*8+0: ((t*)base)[scan0[0]]=(t)av; case (4+CTTZI(sizeof(t)))*8+1: ((t*)base)[scan0[1]]=(t)av;  /* copy cells */ \
- case (4+CTTZI(sizeof(t)))*8+2: ((t*)base)[scan0[2]]=(t)av; case (4+CTTZI(sizeof(t)))*8+3: ((t*)base)[scan0[3]]=(t)av; \
+ case (4+CTTZI(sizeof(t)))*8+0: ((t*)base)[scan0[0]]=(t)(I)av; case (4+CTTZI(sizeof(t)))*8+1: ((t*)base)[scan0[1]]=(t)(I)av;  /* copy cells */ \
+ case (4+CTTZI(sizeof(t)))*8+2: ((t*)base)[scan0[2]]=(t)(I)av; case (4+CTTZI(sizeof(t)))*8+3: ((t*)base)[scan0[3]]=(t)(I)av; \
  scan0+=4;  /* advance pointers - but av is the value and does not advance */ \
 }while(--i0);
 #define CP1xv(bytelen,inc) case 0b100110+(bytelen<<3)-(inc<<1): DQNOUNROLL(n0, JMCR(base+cellsize**scan0++,av,cellsize,bytelen,endmask) if(inc)av+=cellsize;)  // copy 1 odd-length cell, advancing pointers to next input & output
@@ -664,7 +664,7 @@ B jtgerexact(J jt, A w){A*wv;
 
 
 // u} handling.  This is not inplaceable but the derived verb is
-F1(jtamend){
+F1(jtamend){F1PREFIP;
  ARGCHK1(w);
  if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,amccv2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(ger(jt,w))R gadv(w,CRBRACE);   // v0`v1`v2}
@@ -673,7 +673,7 @@ F1(jtamend){
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}
 
-F1(jtemend){
+F1(jtemend){F1PREFIP;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  R ADERIV(CEMEND,0L,jtamen2,VFLAGNONE, RMAX,RMAX,RMAX);
 }

@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Xenos: time and space                                                   */
@@ -40,12 +40,22 @@
 #endif
 #endif
 
+#if defined(_WIN32)
+#include <psapi.h>
+#elif defined(__APPLE__)
+#include <mach/mach.h>
+#include <mach/message.h>  // for mach_msg_type_number_t
+#include <mach/kern_return.h>  // for kern_return_t
+#include <mach/task_info.h>
+#else
+#include <sys/resource.h>
+#endif
 
 F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}  //  7!:0
 
 // 7!:1
 // Return (current allo),(max since reset)
-// If arg is an atom, reset to it
+// If arg is an atom, reset hwmk to it
 F1(jtsphwmk){
   I curr = jt->malloctotal; I hwmk = jt->malloctotalhwmk;
   if(AN(w)){I new; RE(new=i0(w)); jt->malloctotalhwmk=new;}
@@ -60,6 +70,31 @@ F1(jtspit){A z;I k;
  RZ(z);
  R sc(jt->bytesmax-k);
 }   // 7!:2, calculate max space used
+
+// 7!:7
+// Return resident memory of the current process
+F1(jtspresident){
+ASSERTMTV(w);
+#if defined(_WIN32)
+ PROCESS_MEMORY_COUNTERS mem;
+ BOOL res = GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem));
+ ASSERT(res != 0,EVFACE);
+ R v2((I)mem.WorkingSetSize, (I)mem.PeakWorkingSetSize);
+#elif defined(__APPLE__)
+ mach_task_basic_info_data_t info;
+ info.virtual_size = 0;
+ mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+ kern_return_t res = task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &count);
+ ASSERT(res == KERN_SUCCESS,EVFACE);
+ R v2((I)info.resident_size, (I)info.resident_size_max);
+#else
+// posix
+ struct rusage mem;
+ int res = getrusage(RUSAGE_SELF, &mem);
+ ASSERT(res == 0,EVFACE);
+ R v2(1024*(I)mem.ru_maxrss, 1024*(I)mem.ru_maxrss);   // linux only implemented max rss
+#endif
+}
 
 F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 
@@ -196,6 +231,7 @@ F1(jttsit1){R tsit2(num(1),w);}
 #define sleepms(i) usleep(i*1000)
 #endif
 
+// 6!:3
 F1(jtdl){D m,n,*v;UINT ms,s;
  RZ(w=cvt(FL,w));
  n=0; v=DAV(w); DQ(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gi0.ijs'
+prolog './gi0.ijs'
 NB. x i.y on boolean scalar y -------------------------------------------
 
 f0=: 4 : 0 " 0
@@ -19,4 +19,7 @@ f1=: 4 : 0 " 0
 
 4!:55 ;:'b f0 f1 i n v'
 
+
+
+epilog''
 

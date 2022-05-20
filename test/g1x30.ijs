@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x30.ijs'
+prolog './g1x30.ijs'
 NB. 1!:30 ---------------------------------------------------------------
 
 sys=: 9!:12 ''
@@ -69,4 +69,7 @@ end.
 
 4!:55 ;:'close f h k lock locks open sys unlock write '
 
+
+
+epilog''
 

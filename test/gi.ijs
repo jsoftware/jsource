@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gi.ijs'
+prolog './gi.ijs'
 NB. i.y -----------------------------------------------------------------
 
 randuni''
@@ -822,4 +822,7 @@ b =: 0. + i. 3 4
 4!:55 ;:'xop yop1 yopn'
 4!:55 ;: 'mtchontally mtchonreshape mtchontally0 mtchonreshape0'
 randfini''
+
+
+epilog''
 

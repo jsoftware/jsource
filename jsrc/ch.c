@@ -1,4 +1,4 @@
-/* Copyright 1990-2008, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Hypergeometric Series                                     */
@@ -70,10 +70,10 @@ static F2(jtcancel){A c,d,f,x,y;
  w=ravel(w); y=nub(w); df1(d,w,f);
  a=repeat(maximum(num(0),minus(c,from(indexof(y,x),over(d,zeroionei(0))))),x);
  w=repeat(maximum(num(0),minus(d,from(indexof(x,y),over(c,zeroionei(0))))),y);
- R link(a,w);
+ R jlink(a,w);
 }
 
-F2(jthgeom){A c,d,h=0;B p,q;I at,wt;
+F2(jthgeom){F2PREFIP;A c,d,h=0;B p,q;I at,wt;
  ARGCHK2(a,w);
  at=AT(a); p=1&&at&NOUN; c=d=mtv;
  wt=AT(w); q=1&&wt&NOUN;

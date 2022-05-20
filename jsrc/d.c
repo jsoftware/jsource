@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Debug: Error Signalling and Display                                     */
@@ -227,7 +227,6 @@ void jtjsigd(J jt,C*s){C buf[100],*d="domain error: ";I m,n,p;
 
 // here for errors coming from explicit definition
 void jtjsignal(J jt,I e){A x;
- if(EVATTN==e||EVBREAK==e||e==EVINPRUPT) *JT(jt,adbreak)=0;
 // template for debug break point
 // if(EVDOMAIN==e){
 // fprintf(stderr,"domain error\n");
@@ -237,6 +236,9 @@ void jtjsignal(J jt,I e){A x;
  x=BETWEENC(e,1,NEVM)?AAV(JT(jt,evm))[e]:mtv; jsigstr(e,AN(x),CAV(x));
 }
 
+void jtjsignal2(J jt,I e,A dummy){jtjsignal(jt,e);}  // used in unquote to reschedule instructions
+
+// display the failing sentence. e=error message#, w holds sentence text, j is column# of error
 void jtjsignal3(J jt,I e,A w,I j){
  if(jt->jerr)R; 
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it

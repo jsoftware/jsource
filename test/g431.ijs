@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g431.ijs'
+prolog './g431.ijs'
 NB. f/. f\  f\. models --------------------------------------------------
 en     =: #@]
 
@@ -301,4 +301,7 @@ xover =: 3 : '~:/y'
 4!:55 ;:'kay key max maxover n ob oind omask osub outfix '
 4!:55 ;:'plus prefix product sd seg suffix sum t times x xor xover z zzz'
 randfini''
+
+
+epilog''
 

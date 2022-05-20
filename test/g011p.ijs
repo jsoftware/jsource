@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g011p.ijs'
+prolog './g011p.ijs'
 randuni''
 
 NB. <./\ B ---------------------------------------------------------------
@@ -102,4 +102,7 @@ min=: 4 : 'x<.y'
 
 4!:55 ;:'adot1 adot2 sdot0 f min x'
 randfini''
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp1.ijs'
+prolog './gsp1.ijs'
 NB. -. ------------------------------------------------------------------
 
 (scheck -. $.x), (-. -: -.&.$.) x=:     _10+?    405$2
@@ -89,4 +89,7 @@ f&>/~c
 
 4!:55 ;:'a c d f g h p q r s t ti x y'
 
+
+
+epilog''
 

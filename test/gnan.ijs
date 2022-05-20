@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gnan.ijs'
+prolog './gnan.ijs'
 NB. NaN -----------------------------------------------------------------
 
 t1=. }.&.> 3.4 _ __; 3j4 _ __; 34x _ __ ; 3r4 _ __
@@ -290,4 +290,7 @@ _1 1 = 7 o. __ _
 
 4!:55 ;:'d det f i inf ninf pinf t t1 x y zero znan'
 
+
+
+epilog''
 

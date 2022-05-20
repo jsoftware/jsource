@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gxco1.ijs'
+prolog './gxco1.ijs'
 NB. extended precision integers -----------------------------------------
 
 NB. create test data
@@ -868,4 +868,7 @@ det=: -/ .*
 4!:55 ;:'arg bc bc2 bct c den det e e0 e1 exp f H ind min n'
 4!:55 ;:'num pf root t test x x1 x2 x3 y y1 y2 y3'
 
+
+
+epilog''
 

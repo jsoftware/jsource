@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g410.ijs'
+prolog './g410.ijs'
 NB. !y ------------------------------------------------------------------
 
 fac=: 1:`(* $:@<:) @. * " 0
@@ -450,4 +450,7 @@ NB. Types, for singleton and not
 4!:55 ;:'recur rm sbase scorr seed seed5 sinh start stirlf stirlg Stirling '
 4!:55 ;:'t test x y z '
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g210a.ijs'
+prolog './g210a.ijs'
 NB. $ shape overflow ----------------------------------------------------
 
 NB. Some tests fail because memory is obtained in 65536 word increments, 
@@ -370,4 +370,7 @@ f=: 4 : 'x>.y'
 
 4!:55 ;:'f m m2 m4 test'
 
+
+
+epilog''
 

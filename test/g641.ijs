@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g641.ijs'
+prolog './g641.ijs'
 NB. ?.y -----------------------------------------------------------------
 
 seed =. 9!:0 ''
@@ -53,4 +53,7 @@ seed -: 9!:0 ''
 
 4!:55 ;:'a b s seed x'
 
+
+
+epilog''
 

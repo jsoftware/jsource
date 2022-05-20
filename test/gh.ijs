@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gh.ijs'
+prolog './gh.ijs'
 NB. H. ------------------------------------------------------------------
 
 (^ -: '' H. '') x=:0.01*_100+?40$200
@@ -326,4 +326,7 @@ n01cdf=: -: @: >: @: erf @: ((%:0.5)&*)   NB. CDF of N(0,1)
 4!:55 ;:'g17 g7 g8 h h13 h7 h8 k L1 L2 n n n01cdf p '
 4!:55 ;:'prf q r rf roots sin sinb sinh sinhb test x z '
 
+
+
+epilog''
 

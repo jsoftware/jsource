@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g0.ijs'
+prolog './g0.ijs'
 NB. handling -0 (-0 on some systems) ------------------------------------
 
 test=: 3 : 0
@@ -371,4 +371,7 @@ f =: &&&
 4!:55 ;:'ar dr eight eq f five four fx g lr '
 4!:55 ;:'mac nine one rk seven six test three tr two x z zero '
 
+
+
+epilog''
 

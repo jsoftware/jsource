@@ -1,4 +1,4 @@
-/* Copyright 1990-2014, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Adverbs: Reduce (Insert), Outer Product, and Fold                              */
@@ -1002,7 +1002,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
 static DF2(jtoprod){A z; R df2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
-F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
+F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;I flag=0;
  ARGCHK1(w);
  if(NOUN&AT(w))R evger(w,sc(GINSERT));  // treat m/ as m;.6.  This means that a node with CSLASH never contains gerund u
  v=FAV(w); 
@@ -1053,10 +1053,10 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
 }
 
 // entry point for monad and dyad F. F.. F.: F: F:. F::
-DF2(jtfold){
+DF2(jtfold){F2PREFIP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
- A derivvb; RZ(derivvb=unquote(a,w,foldconj));
+ A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),a,w,foldconj));
  // Modify the derived verb to go to our preparatory stub.  Save the dyadic entry point for the derived verb so the stub can call it
  FAV(derivvb)->localuse.lu1.foldfn=FAV(derivvb)->valencefns[1];
  FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;

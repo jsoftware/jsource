@@ -1,4 +1,4 @@
-/* Copyright 1990-2018, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Global Variables                                                        */
@@ -73,6 +73,7 @@ DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 I   iotavec[IOTAVECLEN];  // return values for i. small
 uint64_t g_cpuFeatures;   // blis
+int numberOfCores;        // number of cpu cores
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
 I fortesting=0;   // used for measurements

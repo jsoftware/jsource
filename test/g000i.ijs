@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g000i.ijs'
+prolog './g000i.ijs'
 NB. =/ B ---------------------------------------------------------------
 
 0 = {{x=y}}/ 0 1  NB. smoke test, 32-bit arm crash on unaligned access of 8-byte double
@@ -46,4 +46,7 @@ f=: 3 : '(=/ -: eq/) ?y$2'
 
 4!:55 ;:'f eq x'
 
+
+
+epilog''
 

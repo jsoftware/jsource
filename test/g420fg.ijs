@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g420fg.ijs'
+prolog './g420fg.ijs'
 NB. f/@:g for atomic verbs ----------------------------------------------
 
 f=: ;: '! % * + - < = > ^ | <. <: >. >: +. +: *. *: ~: o.'
@@ -223,4 +223,7 @@ NB. Test for NaN
 
 4!:55 ;:'f p q space test testsub x xx y yy x0 y0'
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g130.ijs'
+prolog './g130.ijs'
 NB. %y ------------------------------------------------------------------
 
 _       -: % 0
@@ -48,4 +48,7 @@ _ __ -: 3 _4 % 0
 'length error' -: 3 4   % etx ?4 2$183164
 'length error' -: 3 4   %~etx ?4 2$183164
 
+
+
+epilog''
 

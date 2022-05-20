@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gdll.ijs'
+prolog './gdll.ijs'
 NB. DLL call ------------------------------------------------------------
 
 load'dll'
@@ -191,4 +191,7 @@ f''
 
 4!:55 ;:'a a1 add address b b1 cdrc dcd f i lib n obj_add pc s s0 s1 td td1a td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xbasic_add xx yy z'
+
+
+epilog''
 

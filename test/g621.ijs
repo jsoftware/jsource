@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g621.ijs'
+prolog './g621.ijs'
 NB. @. ------------------------------------------------------------------
 
 f=: 1:`(* $:@<:) @. *
@@ -171,4 +171,7 @@ NB. Inplacing
 4!:55 ;:'n01cdf n01cdfa n01cdfh n01cdfn n01cdfp n01cdfr n01pdf '
 4!:55 ;:'part pfx recur square start t test x z '
 
+
+
+epilog''
 

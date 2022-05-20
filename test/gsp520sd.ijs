@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp520sd.ijs'
+prolog './gsp520sd.ijs'
 NB. x{y for sparse x, dense y -------------------------------------------
 
 p=: (?7 3 5$2) * ?7 3 5 4$10
@@ -41,4 +41,7 @@ f&> c [ q=: 2 1 1 3$j./?2$2e6
 
 4!:55 ;:'c f p q r'
 
+
+
+epilog''
 

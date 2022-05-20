@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g600ip.ijs'
+prolog './g600ip.ijs'
 
 NB. atomic"n in-place and not -------------------------------
 randuni''
@@ -507,4 +507,7 @@ p1''   NB. Fails on the second call
 4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'
 4!:55 ;:'svix sviy svxy testinplace testinplacer tr tx ty vb xs xyzs ys IMIN IMAX'
 randfini''
+
+
+epilog''
 

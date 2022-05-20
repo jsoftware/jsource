@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g530.ijs'
+prolog './g530.ijs'
 NB. m}y and u}y ---------------------------------------------------------
 
 randuni''
@@ -758,3 +758,6 @@ IGNOREIFFVI 10000 > 7!:2 'a =: (#a) 0} a'
 4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 test2 x xx xyz y yy z z1 zz '
 4!:55 ;:'lim lm mody rx ry selshape tm tx ty' 
 randfini''
+
+epilog''
+

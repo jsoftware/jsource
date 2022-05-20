@@ -1,4 +1,4 @@
-/* Copyright 1990-2009, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Rank Associates                                           */
@@ -683,7 +683,7 @@ static DF1(rank1){DECLF;I m,wr;
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
-static DF1(jtrank10atom){ A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[0])(jt,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
+static DF1(jtrank10atom){ A fs=FAV(self)->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceability through.
 
 
@@ -727,7 +727,7 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 
 
 // a"w; result is a verb
-F2(jtqq){AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
+F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  ARGCHK2(a,w);
  // The localuse value in the function will hold the ranks from w.
  if(unlikely(VERB&AT(w))){
@@ -756,7 +756,6 @@ F2(jtqq){AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   } else {
    RESETERR;  // the gerund check may have raised an error
    f1=cons1; f2=cons2;    // use the constant routines for nouns
-// obsolete ACIPNO(a);// use the constant routines for nouns; mark the constant non-inplaceable since it may be reused;
    // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
    // assigned to a name, which will protects values inside it.
    ACIPNO(a);

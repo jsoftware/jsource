@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g412.ijs'
+prolog './g412.ijs'
 NB. !: treatement of placeholder argument -------------------------------
 
 F=: 2 : 0
@@ -54,4 +54,7 @@ pc=: (9!:12 '') e. 0 1 2 6 7
 
 4!:55 ;:'F pc'
 
+
+
+epilog''
 

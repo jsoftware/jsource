@@ -11,7 +11,7 @@ NB. create SystemFolders
 bin=. BINPATH
 install=. (bin i: '/'){.bin
 fhs=. (FHS"_)^:(0=4!:0<'FHS')(5=systype)*.0=#1!:0<BINPATH,'/../system/util/boot.ijs'
-install=. (0&~:fhs){::install;install,'/share/j/',omitversion{::'9.03';'0'
+install=. (0&~:fhs){::install;install,'/share/j/',omitversion{::'9.04';'0'
 install=. (INSTALLROOT"_)^:(0=4!:0<'INSTALLROOT') install
 addons=. install,'/addons'
 system=. install,'/system'
@@ -19,7 +19,7 @@ tools=. install,'/tools'
 home=. >(systype-5){(2!:5'HOME');2!:5'USERPROFILE'
 home=. >(0-:home){home;,'/'
 isroot=. (0=#1!:0'/data') *. ('root'-:2!:5'USER') +. (<home) e. '/var/root';'/root';'';,'/'
-userx=. omitversion{::'/j903-user';'/j-user'
+userx=. omitversion{::'/j904-user';'/j-user'
 user=. home,userx
 user=. >isroot{user;install,'/user'
 home=. >isroot{home;install

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './go.ijs'
+prolog './go.ijs'
 NB. x o.y for x e.i.13 --------------------------------------------------
 
 NB. test failed on small ct
@@ -360,4 +360,7 @@ _1.5707963267949 = _1 o. _1
 4!:55 ;:'tan tanh x y z zacos zacosh zarc zasin zasinh zatan '
 4!:55 ;:'zatanh zcos zcosh zm4 zp4 zp8 zsin zsinh ztan ztanh '
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g9x40.ijs'
+prolog './g9x40.ijs'
 NB. 9!:40 and 9!:41 -----------------------------------------------------
 
 ws=: 9!:40 ''
@@ -160,4 +160,7 @@ x=: (i{.t),(3+i)}.t [ i=: ('   :' E. t)i.1
 
 4!:55 ;:'f i lf nn t x ws'
 
+
+
+epilog''
 

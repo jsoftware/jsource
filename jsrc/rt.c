@@ -1,4 +1,4 @@
-/* Copyright 1990-2004, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Representations: Tree                                                   */
@@ -26,7 +26,7 @@ static F1(jttrc){A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
     bv[k]=pv[AN(p)-m];
    }else bv[k]=' ';
   }
- R link(x,y);
+ R jlink(x,y);
 }
 
 static I jtpad(J jt,A a,A w,C*zv){C dash,*u,*v,*wv;I c,d,r,*s;
@@ -84,7 +84,7 @@ static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
  t=C(AAV(w)[0]); s=AS(t); m=s[0]; n=s[1];
  u=CAV(t);         DO(m, if(' '!=*u){j=i; break;} u+=n;);
  u=CAV(t)+(m-1)*n; DO(m, if(' '!=*u){k=i; break;} u-=n;);
- R link(center(x,j,k,m),w);
+ R jlink(center(x,j,k,m),w);
 }
 
 static F1(jttleaf){A t,z;C*v;I n,*s;
@@ -128,6 +128,7 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  if(AT(w)&NOUN+NAME){RETF(tleaf(lrep(w)));}
  v=FAV(w); id=v->id; fl=v->flag;
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
+ if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R trr(gs);  // if <@:t. discard the <@:
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL){RETF(trr(hs));}

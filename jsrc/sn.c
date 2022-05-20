@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Symbol Table: Names                                                     */
@@ -45,6 +45,7 @@ B vlocnm(I n,C*s){
 
 static const C argnames[7]={'m','n','u','v','x','y',0};
 // s-> a string of length n.  Make a NAME block for the name.  It might not be valid; use our best efforts then.  We ALWAYS look at the first and last character, even if length is 0
+// If the name is mnuvxy (NOT u. v.), use the canned block for it
 // Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
 A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  // Discard leading and trailing blanks.  Leave t pointing to the last character
@@ -52,9 +53,9 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  t=s+n-1;
  DQ(n, if(' '!=*t)break; --t; --n;);
  ASSERT(n!=0,EVILNAME);   // error if name is empty  (? not required since name always valid?
- // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
+ // If the name is the special mnuvxy, return a copy of the preallocated block for that name (we may have to add flags to it)
  if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
-  R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags may be added)
+  R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags/buckets may be added)
  }
  // The name may not be valid, but we will allocate a NAME block for it anyway
  GATV0(z,NAME,n,1); zv=NAV(z);   // the block is cleared to 0
@@ -117,7 +118,6 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(C(wv[i])));  // point to name, audit for validity
-// obsolete   if(y){if(v=syrd(y,jt->locsyms)){x=v->val; t=AT(x); fa(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
   if(y){if(x=QCWORD(syrd(y,jt->locsyms))){t=AT(x); fa(x);}else{if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
   // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
@@ -169,7 +169,6 @@ F2(jtnl2){UC*u;
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  ARGCHK1(w);
  wn=AN(w); e=LXAV0(w);                               // w is locale, e->hashchains
-// obsolete  x=(A)(*e+SYMORIGIN)->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
  x=LOCNAME(w); p=AN(x); s=NAV(x)->s;  /* locale name/number           */
  m=*pm; v=AAV(ch)+m;                               /* result to append to */
  for(i=SYMLINFOSIZE;i<wn;++i)if(e[i]){
@@ -230,32 +229,10 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
   // If the name is assigned in a local symbol table, we ASSUME it is at large in the stacks and incr/deferred-free it.  We sidestep the nvr stack for local nouns
   A locfound;  // get the locale in which the name is defined - must exist
   if(y&&(locfound=syrdforlocale(y))){
-// obsolete fa(v->val); // undo syrd
    // if debug turned on, see if the value is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.
-   if(jt->uflags.us.cx.cx_c.db){READLOCK(locfound->lock) A v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); I rres=1; if(v)rres=redef(mark,v); READUNLOCK(locfound->lock) RZ(rres)}
-#if 0  // obsolete 
-   if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){I am,nam;  // If the AM field is not under name semantics, just go free the name immediately.  Virtuals cannot be on the NVR stack
-    // it is still possible that the value is LABANDONED, if it has never been reassigned.  We are about to delete it, so it is safe to switch to NVR semantics
-    AMNVRCINI(v->val);  // establish NCR semantics in AM field.  If this block is LABANDONED it MUST go away when the sentence ends
-    // process the AM field as if for an assignment.  Since we must free the name & value below, here we do ras() to protect the value where the assignment code does NOT free the value
-    // we treat assignment to local sym as a NON-FINAL assignment so that it will be deferred
-    AMNVRFREEACT(v->val,locfound!=jt->locsyms,am,nam)   // analyze AM
-    if(!(am==nam)){  // look at AM field, loaded into AM.  If value is on NVR and already deferred-free, OR if not on NVR and this is final assignment, we can free the value.  skip the next block
-     // Here the free must be deferred.
-     if(unlikely((am&-AMNVRCT)==0)){  // deferral needed, but NVR stack empty.  push then
-      A nvra=jt->nvra;
-      if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra))){RZ(extnvr((L*)1)); nvra=jt->nvra;}  // Extend nvr stack if necessary.  copied from parser
-      AAV1(nvra)[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
-     }
-     // if the block was on the NVR stack and not freed, we have marked it freed and we will just wait for the eventual deletion
-     ras(v->val);
-    }
-   }
-#endif
+   if(jt->uflags.us.cx.cx_c.db){READLOCK(locfound->lock) A v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); A rres=(A)1; if(v)rres=redef(mark,v); READUNLOCK(locfound->lock) RZ(rres)}
    WRITELOCK(locfound->lock)
-// obsolete    L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
    jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
-// obsolete              // if the probe returns nonzero, it was a cached value which is now unmoored: we must free the name.  The name may have been deleted since we found the locale
    WRITEUNLOCK(locfound->lock)
   }
  }

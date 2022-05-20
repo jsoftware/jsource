@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gif.ijs'
+prolog './gif.ijs'
 NB. if/else -------------------------------------------------------------
 
 fa =. 3 : 'if. y do. 1 else. 0 end.'
@@ -295,4 +295,7 @@ THRESHOLD+. (6!:2 'slow 0') > 1.5 * (6!:2 'fast2 0')
 
 4!:55 ;:'a f fib fa fb fc fd fe ff fg fi fj fk fl fm t slow slow2 fast fast2 '
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gqco.ijs'
+prolog './gqco.ijs'
 NB. q: ------------------------------------------------------------------
 
 f =: = */
@@ -154,4 +154,7 @@ f x=: 252097800629
 4!:55 ;:'b d0 d1 d2 d3 divisors f g max n odometer p pa phi pn primes'
 4!:55 ;:'qa qco t2 x y '
 
+
+
+epilog''
 

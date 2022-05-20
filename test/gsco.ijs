@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsco.ijs'
+prolog './gsco.ijs'
 NB. s: ------------------------------------------------------------------
 initsymbolstate =: 0 s: 10
 
@@ -480,4 +480,7 @@ NB. s: errors -----------------------------------------------------------
 
 4!:55 ;:'c i m offset s sbase sn t uv x x0 x1 x2 y y0 y1 y2 z0 z1'
 randfini''
+
+
+epilog''
 

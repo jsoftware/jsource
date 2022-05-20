@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsco2w.ijs'
+prolog './gsco2w.ijs'
 NB. s: unicode ------------------------------------------------------------------
 
 NB. create test data set 
@@ -844,4 +844,7 @@ NB. x: ------------------------------------------------------------------
 
 4!:55 ;:'a f i j k p q s t u v x y'
 
+
+
+epilog''
 

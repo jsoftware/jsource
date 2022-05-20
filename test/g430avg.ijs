@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g430avg.ijs'
+prolog './g430avg.ijs'
 NB. x (+/ % #)\ y -------------------------------------------------------
 
 avg=: 3 : '(+/y)%#y'
@@ -44,4 +44,7 @@ test 256%~j./?2 1000$5000  NB. complex
 
 4!:55 ;:'avg m test yy'
 
+
+
+epilog''
 

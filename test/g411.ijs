@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g411.ijs'
+prolog './g411.ijs'
 NB. ":!.n ---------------------------------------------------------------
 
 randuni''
@@ -351,4 +351,7 @@ NB. x v!.f y where x is extended and v requires fill --------------------
 
 4!:55 ;:'adot1 adot2 sdot0 f i k n p v x y'
 randfini''
+
+
+epilog''
 

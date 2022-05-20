@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gmbx.ijs'
+prolog './gmbx.ijs'
 NB. mapped boxed arrays -------------------------------------------------
 
 load 'jmf'
@@ -22,3 +22,4 @@ mean=: +/ % #
 
 NB. do not erase names
 NB. 4!:55 ;:'f f1 g mean q r'
+

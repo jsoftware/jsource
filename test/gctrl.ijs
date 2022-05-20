@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gctrl.ijs'
+prolog './gctrl.ijs'
 NB. control word parsing ------------------------------------------------
 
 f0 =. 3 : 'if. if. 1 do. 2 end. do. 3 else. 4 end.'
@@ -542,4 +542,7 @@ f0 =. {{ (u. f. b. 0) }}   NB. u. does not invoke PPPP
 
 4!:55 ;:'f0 f1 f2 f3 g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test vb__ vb_z_'
 
+
+
+epilog''
 

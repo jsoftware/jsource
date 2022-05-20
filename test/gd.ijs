@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gd.ijs'
+prolog './gd.ijs'
 
 1: 0 : 0  NB. removed from 901
 NB. D. scalar functions -------------------------------------------------
@@ -100,3 +100,6 @@ _0.5 1&p. eq (2&! d. 1)
 4!:55 ;:'cube D E b dc eq f g h t test x y '
 
 )
+
+epilog''
+

@@ -1,4 +1,4 @@
-/* Copyright 1990-2016, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 // Verbs: Atomic (Scalar) Monadic when arguments have one atom
@@ -21,7 +21,6 @@ A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
  I ar=AR(w);
  // Calculate inplaceability
  // Inplaceable if: count=2 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE.  No inplace if on NVR stack (AM is NVR and count>0)
-// obsolete  I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ((AM(w)&SGNTO0(AM(w)-AMNVRCT))^1);
  I wipok = ((w==jt->zombieval)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO);
 // Allocate the result area
  if(wipok){ z=w; zv=voidAV(w); } else if(likely(ar==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,ar); zv=voidAVn(z,ar);}

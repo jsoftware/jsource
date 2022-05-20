@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp5x5.ijs'
+prolog './gsp5x5.ijs'
 NB. 5!:5 sparse arrays --------------------------------------------------
 
 test=: 3 : 0
@@ -48,4 +48,7 @@ test 1$.s;(5?#s);-~4j1
 
 4!:55 ;:'c d r s test x xx yy'
 
+
+
+epilog''
 

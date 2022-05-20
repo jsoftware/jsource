@@ -1,4 +1,4 @@
-/* Copyright 1990-2009, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Inner Product                                             */
@@ -7,7 +7,7 @@
 #include "vasm.h"
 #include "gemm.h"
 
-#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
+#define MAXAROWS 64  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
 
 // Analysis for inner product
 // a,w are arguments
@@ -223,6 +223,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  R NANTEST==0;  // return with error (0) if any FP error
 }
 // cache-blocking code
+typedef struct { D*av,*wv,*zv;I m,n,p,flgs; I nanerr; } CACHEMMSTATE;
 #define OPHEIGHTX 2
 #define OPHEIGHT ((I)1<<OPHEIGHTX)  // height of outer-product block
 #define OPWIDTHX 3
@@ -235,7 +236,17 @@ static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
 // m must not exceed MAXAROWS.  mfull is the number of rows from the actual starting row to the end of a
 // Result is 0 if NaN error, 1 if OK
-static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
+static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
+ I flgs=pd->flgs;
+ I m=MIN(MAXAROWS,pd->m-ti*MAXAROWS);
+ I n=pd->n;
+ I pnom=pd->p-(((ti*MAXAROWS)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP));
+ I pstored=pd->p;
+ D *av=pd->av+(ti*MAXAROWS*(pd->p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP))));
+ D *wv=pd->wv+((n*ti*MAXAROWS)&-((flgs>>FLGAUTRIX)&1));
+ D *zv=pd->zv+(n*ti*MAXAROWS);
+ 
+ D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // Allocate a temporary result area for the stripe of z results
  D zt[((MAXAROWS+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH+5*CACHELINESIZE/SZD];
  D *zblock=(D*)(((I)zt+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // cache-aligned area to hold z values
@@ -488,7 +499,8 @@ _mm256_zeroupperx(VOIDARG)
    flgs&=~(FLGZFIRST|FLGZLAST);  // we have finished a 16x64 cache section.  That touched all the columns of z.  For the remaining sections we must accumulate into the z values.  If this was the last pass, clear that flag too, since we're finished
   }  // end of loop for each 16x64 section of w
  }  // end of loop for each 64-col slice of w
- R NANTEST==0;  // return with error (0) if any FP error
+ __atomic_fetch_add(&pd->nanerr,!!NANTEST,__ATOMIC_RELAXED);//could be _fetch_or, but x86 has lock xadd
+ R 0;
 }
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
@@ -496,34 +508,14 @@ _mm256_zeroupperx(VOIDARG)
 // For historical reason (i. e. to match the non-AVX2 version) n and p have been multiplied by 2 for complex multiplies
 I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 // TODO: bug when EMU_AVX
- int rc=1,i;
- I blocksize,nblocks,(*fn)();  // loop controls
  if(((((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
   // blocked algorithm.  there is no size limit on the blocks
-  fn=blockedmmult;  // select function
-  nblocks=1; blocksize=m; // do it all in a single block
- }else{
-  // cached algorithm.  blocks must not exceed MAXAROWS lines
-  fn=cachedmmultx;  // select function
-  // Figure out the number of blocks we will use, and the size of each.  We make the number of blocks a multiple of the number of threads, and round the
-  // block size up to a multiple of OPHEIGHT
-  nblocks = ((m+MAXAROWS)*0x55555555)>>(32+7);  // minimum number of blocks needed
-  blocksize=MAXAROWS;   // max size of each
- }
- for(i=0;i<nblocks;++i){
-  // if AUTRI, bring a in from the left and w down from the top as we proceed.  And shorten p.
-  if(0==(*fn)(jt,
-              av+(i*MAXAROWS*(p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP)))),
-              wv+((n*i*MAXAROWS)&-((flgs>>FLGAUTRIX)&1)),
-              zv+(n*i*MAXAROWS),
-              MIN(blocksize,m-i*MAXAROWS),
-              n,
-              p-(((i*MAXAROWS)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP)),
-              p,flgs)){rc=0; break;}  // set error if one was found
- }
- R rc;
-}
-
+  R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
+ CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs};
+// obsolete  DO(((m+MAXAROWS)*0x55555555)>>(32+7),cachedmmultx(jt,&ctx,i););
+ jtjobrun(jt,cachedmmultx,0,&ctx,(m+MAXAROWS-1)/MAXAROWS);
+ R !ctx.nanerr;}
+ 
 #else
 // cache-blocking code
 #define OPHEIGHT 2  // height of outer-product block
@@ -757,7 +749,7 @@ oflo2:
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-     if((UI)probsize < (UI)JT(jt,igemm_thres)){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}  // Do our matrix multiply - converting   TUNE
+     if((UI)probsize < (UI)(I)JT(jt,igemm_thres)){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}  // Do our matrix multiply - converting   TUNE
      else {
       // for large problem, use BLAS
       mvc(m*n*sizeof(D),DAV(z),1,MEMSET00);
@@ -890,7 +882,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     smallprob=0;  // never use Dic method; but used to detect pick up NaN errors
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w
-    if((UI)(m*n*(IL)p)>=(UI)JT(jt,dgemm_thres)){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
+    if((UI)(m*n*(IL)p)>=(UI)(I)JT(jt,dgemm_thres)){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
      mvc(m*n*sizeof(D),DAV(z),1,MEMSET00);
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
     } else {
@@ -899,7 +891,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 #else
     I probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
     if(!(smallprob = (m<=4||probsize<1000LL))){  // if small problem, avoid the startup overhead of the matrix version  TUNE
-     if((UI)probsize < (UI)JT(jt,dgemm_thres))
+     if((UI)probsize < (UI)(I)JT(jt,dgemm_thres))
       cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI));  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
      else{
       // If the problem is really big, use BLAS
@@ -928,7 +920,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
    I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
    I smallprob=probsize<1000;  // set if we do the old-fashioned way, possibly after error
    if(!smallprob){  // use old-fashioned way if small.  16b3.4 comes though here
-    if((UI)probsize<(UI)JT(jt,zgemm_thres)){smallprob=1^cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)|FLGCMP);}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
+    if((UI)probsize<(UI)(I)JT(jt,zgemm_thres)){smallprob=1^cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)|FLGCMP);}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
     else {
       // Large problem - start up BLAS
       mvc(2*m*n*sizeof(D),DAV(z),1,MEMSET00);
@@ -1059,7 +1051,7 @@ static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
 DF1(jtdetxm){A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}
      /* determinant via expansion by minors. w is matrix with >1 columns */
 
-F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
+F2(jtdot){F2PREFIP;A f,h=0;AF f2=jtdotprod;C c,d;
  ASSERTVV(a,w);
  if(CSLASH==FAV(a)->id){
   f=FAV(a)->fgh[0]; c=FAV(f)->id; d=FAV(w)->id;  // op was c/ . d
@@ -1108,7 +1100,7 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
  if(unlikely(!(AT(w)&FL)))RZ(w=cvt(FL,w));
  I wn=AS(w)[0];  // n=size of square matrix
  // Allocate the result (possibly inplace)
- A z; GA(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R link(mtv,z);  // if empty result, return fast.  Now nr must be >0
+ A z; GA(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R jlink(mtv,z);  // if empty result, return fast.  Now nr must be >0
  I resultoffset=CAV(z)-CAV(w);  // distance between result & input data areas
  I nr=(wn+BLKSZ-1)>>LGBLKSZ;  // nr=total # blocks on a side (including partial ones)
 #define CORNERBLOCK(rc) (cb+(rc)*(nr+1))  // address of corner cblock in row&col rc
@@ -1369,7 +1361,7 @@ finrle: ;
   wclv+=BLKSZ*(wn+1);  // move input pointer to corner block of next ring
   scv0+=nr+1; suv0-=nr;  // advance storage pointers to next ring.
  }
- EPILOG(link(IX(wn),z));
+ EPILOG(jlink(IX(wn),z));
 #endif
  // here if fast FP code not supported, either because we don't have AVX or the input is not float.  Fall back to general version
  R jtludecompg(jt,w);

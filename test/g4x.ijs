@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g4x.ijs'
+prolog './g4x.ijs'
 NB. 4!:0 ----------------------------------------------------------------
 
 jnc   =: 4!:0
@@ -228,7 +228,7 @@ a =: 5
 4!:55 <'a'
 '|value error|   a:+    a_:' -: ". eftx 'a: + a_:'
 
-a=.b=.0
+a=:b=:0
 4!:55 ;:'a undefname b'
 _1 = 4!:0 ;:'a undefname b'
 13!:0 (1)
@@ -301,6 +301,8 @@ _2 -: jnc    <''
 'rank error'      -: scind etx <,:'xab'
 
  0 < x =: 3 : '4!:4 <y' 'y'
+
+_1 = 4!:4 <'a__undefname'
 
 NB. locales -------------------------------------------------------------
 
@@ -415,4 +417,7 @@ end.
 4!:55 ;:'g gamma jnc jnc_z_ jnl jnl_z_ nm nounx plus scind si_g4x si_sn sn sum '
 4!:55 ;:'sum__ sum_z_ t ttt this1 this2 v verbx x y '
 
+
+
+epilog''
 

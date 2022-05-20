@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './giscode.ijs'
+prolog './giscode.ijs'
 NB. i. special code -----------------------------------------------------
 
 test=: 2 : 0
@@ -20,4 +20,7 @@ test=: 2 : 0
 
 4!:55 ;:'test'
 
+
+
+epilog''
 

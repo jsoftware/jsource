@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x55.ijs'
+prolog './g1x55.ijs'
 NB. 1!:55 ---------------------------------------------------------------
 
 write =. 1!:2
@@ -65,4 +65,7 @@ f   =. mac{'no/such/dir/or/file';':no:such:dir:or:file'
 
 4!:55 ;:'erase f files g h mac open q write '
 
+
+
+epilog''
 

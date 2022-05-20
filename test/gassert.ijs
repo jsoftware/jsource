@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gassert.ijs'
+prolog './gassert.ijs'
 NB. assert --------------------------------------------------------------
 
 ws=: 9!:40 ''
@@ -91,4 +91,7 @@ _2 -: f _2
 9!:41 ws
 
 4!:55 ;:'f lf s word ws'
+
+
+epilog''
 

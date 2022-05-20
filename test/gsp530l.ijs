@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp530l.ijs'
+prolog './gsp530l.ijs'
 NB. } index list ---------------------------------------------------------
 
 d=: (?23 5$2)*?23 5 7 3 2$4
@@ -159,4 +159,7 @@ s -: d
 
 4!:55 ;:'a b c d f g i r s t x'
 
+
+
+epilog''
 

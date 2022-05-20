@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g6x.ijs'
+prolog './g6x.ijs'
 NB. 6!: -----------------------------------------------------------------
 
 ts   =: 6!:0
@@ -392,4 +392,7 @@ _1 0 1 2 5 6 9 10 13 15 _2 -: 3 {:: 6!:11''
 4!:55 ;:'pmctr pmdata pmstats pmunpack qpc qpf '
 4!:55 ;:'s sp sum_z_ t time ts tss tv x xop xx '
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gsp420.ijs'
+prolog './gsp420.ijs'
 NB. / -------------------------------------------------------------------
 
 (=/x  ) Nearmt =/$.x=: ?1000$2
@@ -264,4 +264,7 @@ NB. obsolete 'domain error' -: f etx 1 2
 4!:55 ;:'b c d e f g r s t x'
 4!:55 ;:'a1 a2 ' 
 
+
+
+epilog''
 

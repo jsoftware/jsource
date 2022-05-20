@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g330t.ijs'
+prolog './g330t.ijs'
 NB. ;y timing tests -----------------------------------------------------
 
 ss   =: +/ @: *:
@@ -32,4 +32,7 @@ THRESHOLD +. 5>ratio t=:100 timer&>';x';';y'
 
 4!:55 ;:'a ratio rsq ss t x y'
 
+
+
+epilog''
 

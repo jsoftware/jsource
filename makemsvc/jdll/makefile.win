@@ -252,7 +252,7 @@ DEF= ../../dllsrc/jdll.def
 RCS= ../../dllsrc/jdll.rc
 
 !ifndef LD
-LD=link
+LD=lld-link
 !endif
 
 .c.o:

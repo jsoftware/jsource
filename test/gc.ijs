@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gc.ijs'
+prolog './gc.ijs'
 NB. C.y -----------------------------------------------------------------
 
 boxed =: 32&=@type
@@ -167,4 +167,7 @@ k = p log"1 p pow"1 0 k=:?2 10$n
 4!:55 ;:'isperm it k log mr n ord p p1 parity pfill '
 4!:55 ;:'pind pow t wh where x '
 
+
+
+epilog''
 

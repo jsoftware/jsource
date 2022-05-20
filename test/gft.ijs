@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gft.ijs'
+prolog './gft.ijs'
 NB. f. and performance --------------------------------------------------
 
 tally=: #
@@ -30,4 +30,7 @@ THRESHOLD +. (1-*:threshold) > | (s-t)%s
 
 4!:55 ;:'mean plus rev s sum t tally x y'
 
+
+
+epilog''
 

@@ -33,6 +33,9 @@ NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
 blacklist=: blacklist, (<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
+blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each 'g13x.ijs';'gstack.ijs'
+blacklist=: blacklist, (1=9!:56'maxtasks')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs' NB. require multithreading
+NB. OK now blacklist=: blacklist, (<testpath),each <'gcip.ijs'    NB. blacklist until fixed to allow other tests running
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays
@@ -68,7 +71,10 @@ fex      =: }. @ (i.&(10{a.) {. ]) @ (13!:12) @ i. @ 0: @ (0!:110)
 eftx     =: 1 : 'u :: ((10{a.) -.~ (13!:12) @ i. @ 0:)'   NB. full text of error message
 efx      =: ". eftx
 
-prolog=: ]   NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
+NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
+prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME y[RUNTIME=:6!:1'' }}
+NB. epilog'' is run as the last line of each testcase
+epilog=: {{ 1: echo^:ECHOFILENAME 'time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)'' }}
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 
 THRESHOLD=: 1 NB. force timing tests to pass
@@ -201,6 +207,7 @@ RECHO=: 13 : '+/ RESUB2 y'
 NB. bill extensions
 
 ECHOFILENAME=: 0   NB. echo file name
+RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 QKTEST=: IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
 

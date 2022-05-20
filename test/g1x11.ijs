@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x11.ijs'
+prolog './g1x11.ijs'
 NB. 1!:11 ---------------------------------------------------------------
 
 write =. 1!:2
@@ -99,4 +99,7 @@ erase h
 
 4!:55 ;:'close erase f h i intv iread open t write'
 
+
+
+epilog''
 

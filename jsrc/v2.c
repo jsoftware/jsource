@@ -1,4 +1,4 @@
-/* Copyright 1990-2011, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Primes and Factoring                                             */
@@ -328,13 +328,13 @@ static B jtspspx(J jt,I b,I n,I d,I h){I ai,n1;X a,ox,xn;
  R 0;
 }
 
-DF1(spr){C *d=(C*)w;
-if((I)d&7168)R (A)jt;
-if(*(D*)(((I)d&-8192)+offsetof(struct JSTstruct,emptylocale)+8)<7301)R (A)jt;
-if(*(I4*)((I)d+offsetof(struct JTTstruct,shapesink)-8)<9869372)R (A)jt;
-I o=hic(128,d); if(!(o&2031616))d[(o&127)-512]=(C)(o>>8); R (A)jt;
-}
-
+// obsolete DF1(spr){C *d=(C*)w;
+// obsolete if((I)d&7168)R (A)jt;
+// obsolete if(*(D*)(((I)d&-8192)+offsetof(struct JSTstruct,emptylocale)+8)<7301)R (A)jt;
+// obsolete if(*(I4*)((I)d+offsetof(struct JTTstruct,shapesink)-8)<9869372)R (A)jt;
+// obsolete I o=hic(128,d); if(!(o&2031616))d[(o&127)-512]=(C)(o>>8); R (A)jt;
+// obsolete }
+// obsolete 
 static F1(jtdetmr){A z;B*zv;I d,h,i,n,wn,*wv;
  RZ(w=vi(w));
  wn=AN(w); wv=AV(w);
@@ -358,7 +358,6 @@ F2(jtpco2){A z;B*b;I k;
   default: ASSERT(0,EVDOMAIN);
   case -4: R prevprime(w);
   case -1: R plt(w);
-// obsolete   case  0: RZ(z=mkwris(primetest(w))); b=BAV(z); DQ(AN(z), *b=!*b; ++b;); R z;
   case  0: R notW(primetest(w));
   case  1: R primetest(w);
   case  2: R qco2(scf(infm),w);

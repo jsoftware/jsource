@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g5x.ijs'
+prolog './g5x.ijs'
 NB. 5!: -----------------------------------------------------------------
 
 ar =. 5!:1
@@ -63,4 +63,7 @@ pr =. 5!:6
 
 4!:55 ;:'ar dr pr lr tr'
 
+
+
+epilog''
 

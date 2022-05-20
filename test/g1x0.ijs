@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x0.ijs'
+prolog './g1x0.ijs'
 NB. 1!:0 ----------------------------------------------------------------
 
 dir  =: 1!:0
@@ -42,4 +42,7 @@ s -: size   p,&.>{."1 d
 
 4!:55 ;:'d dir read mac p pc s size t test unix win x'
 
+
+
+epilog''
 

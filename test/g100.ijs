@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g100.ijs'
+prolog './g100.ijs'
 NB. +y ------------------------------------------------------------------
 
 t -: +t=.1=?100$2
@@ -209,4 +209,7 @@ y     =: <.  -2^IF64{31 62
 
 4!:55 ;:'a b f t test testa testb testc x y'
 
+
+
+epilog''
 

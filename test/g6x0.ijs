@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g6x0.ijs'
+prolog './g6x0.ijs'
 NB. 6!:0 ----------------------------------------------------------------
 
 ts=: 6!:0
@@ -32,3 +32,6 @@ t -:&((-.x e. 'YMDhms')&#) x
 
 
 4!:55 ;:'t ts x'
+
+epilog''
+

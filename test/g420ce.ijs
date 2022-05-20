@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g420ce.ijs'
+prolog './g420ce.ijs'
 NB. ,&.>/"r y -----------------------------------------------------------
 
 c=: ,
@@ -57,4 +57,7 @@ f y=: s:@<"0 'a'
 
 4!:55 ;:'a c f r y'
 
+
+
+epilog''
 

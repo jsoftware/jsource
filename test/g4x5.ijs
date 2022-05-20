@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g4x5.ijs'
+prolog './g4x5.ijs'
 NB. 4!:5 ----------------------------------------------------------------
 
 nch     =: 4!:5
@@ -61,4 +61,7 @@ nch 0
 
 4!:55 ;:'abc boo erase f foo nch t'
 
+
+
+epilog''
 

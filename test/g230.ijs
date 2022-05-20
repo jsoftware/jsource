@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g230.ijs'
+prolog './g230.ijs'
 NB. |y ------------------------------------------------------------------
 
 complex =: 16&=@(3!:0)
@@ -82,4 +82,7 @@ y=: j./ _5000 + 2 10000 ?@$ 10000
 
 4!:55 ;:'complex f mag t test x y'
 
+
+
+epilog''
 

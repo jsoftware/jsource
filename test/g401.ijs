@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g401.ijs'
+prolog './g401.ijs'
 NB. #.y -----------------------------------------------------------------
 
 base1 =. 2&#.
@@ -161,4 +161,7 @@ NB. complex
 
 4!:55 ;:'base1 base2 ext f n rank x'
 
+
+
+epilog''
 

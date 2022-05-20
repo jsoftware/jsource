@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './gibst.ijs'
+prolog './gibst.ijs'
 NB. i.!.0 and associates timing tests -----------------------------------
 
 randuni''
@@ -89,4 +89,7 @@ NB. x (   I. @(e.!.0)) R y
 
 4!:55 ;:'adot1 adot2 sdot0 f L R t x y'
 randfini''
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g7x5.ijs'
+prolog './g7x5.ijs'
 NB. 7!:5 ----------------------------------------------------------------
 
 randuni''
@@ -205,4 +205,7 @@ NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 
 4!:55 ;:'adot1 adot2 fmapped gmapped sdot0 bp f g q sp x a foo goo'
 randfini''
+
+
+epilog''
 

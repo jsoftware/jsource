@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g310names.ijs'
+prolog './g310names.ijs'
 NB. names ----------------------------------------------------------------
 
 abc_xyz_ -: p: i._5 [ 3 : '    abc_xyz_  =. p: i._5  ' 0
@@ -20,4 +20,7 @@ a -: 99 ?.@$ 1e6
 18!:55 <'xyz'
 4!:55 ;:'a c'
 
+
+
+epilog''
 

@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g1x7.ijs'
+prolog './g1x7.ijs'
 NB. 1!:7 ----------------------------------------------------------------
 
 write =: 1!:2
@@ -78,4 +78,7 @@ perm =: 1!:7
 
 4!:55 ;:'close d erase f h mkdir nn open perm test unix write '
 
+
+
+epilog''
 

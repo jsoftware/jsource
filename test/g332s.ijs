@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g332s.ijs'
+prolog './g332s.ijs'
 NB. x;:y ----------------------------------------------------------------
 
 NB. example 0: English words
@@ -219,4 +219,7 @@ x testj y
 4!:55 ;:'A f me mh mj mj1 mq mv remq remq1 remq2 se sh sj sq sqx sv'
 4!:55 ;:'t t testj x y STATE Y map FSM'
 
+
+
+epilog''
 

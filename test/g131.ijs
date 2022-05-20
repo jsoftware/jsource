@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './g131.ijs'
+prolog './g131.ijs'
 NB. %. ------------------------------------------------------------------
 
 NB. mdiv failed on small ct
@@ -155,4 +155,7 @@ _13.9    f =i.9
 4!:55 ;:'em en f id m mdiv minv mm n norm '
 4!:55 ;:'q0 q1 q2 qr r0 r1 r4 rinv splitm test x '
 
+
+
+epilog''
 

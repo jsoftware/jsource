@@ -1,4 +1,4 @@
-1:@:(dbr bind Debug)@:(9!:19)2^_44[(prolog [ echo^:ECHOFILENAME) './giph.ijs'
+prolog './giph.ijs'
 NB. prehashed i. family of functions ------------------------------------
 
 randuni''
@@ -149,3 +149,6 @@ NB. no more 'length error' -: (i.3 4)&i. etx i.2 5
 randfini''
 
  
+
+epilog''
+

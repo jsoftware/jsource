@@ -1,4 +1,4 @@
-/* Copyright 1990-2009, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Execute and Associates                                                  */
@@ -42,8 +42,10 @@ F1(jtexec1){A z;
 // execute w, which is either a string or the boxed words of a string (as if from tokens())
 // JT flags controlling print are passed through to jpr
 // Result has assignment flag
+// We check for system locks before executing the sentence
 F1(jtimmex){F1PREFJT;A z;
  if(!w)R A0;  // if no string, return error
+ if(unlikely(JT(jt,adbreak)[1])!=0)jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);
  // When we start a sentence, we need to establish AKGST in locsyms as a shadow of jt->global, because that's
  // the normal condition and u./v. will rely on it.  This is not needed for a recursive call, but it doesn't hurt either,
  // because if AKGST has been set it will already hold jt->global.  Of course, any event code must restore everything

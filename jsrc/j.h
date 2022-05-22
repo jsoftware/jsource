@@ -667,6 +667,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
 #define __atomic_load_n(aptr, memorder) *aptr
 #define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
+#define __atomic_exchange_n(aptr, val, memorder) ({I rrres=*aptr; *aptr=val; rrres;})
 #define __atomic_fetch_or(aptr, val, memorder) ({I rrres=*aptr; *aptr|=val; rrres;})
 #define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=*aptr; *aptr-=val; rrres;})
 #define __atomic_fetch_add(aptr, val, memorder) ({I rrres=*aptr; *aptr+=val; rrres;})

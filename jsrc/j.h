@@ -206,7 +206,11 @@ static inline omp_int_t omp_get_max_threads() { return 1;}
 #ifndef unlikely
 #define unlikely(x) __builtin_expect((x),0)
 #endif
+#if (!defined(__has_builtin) || __has_builtin(__builtin_expect_with_probability)) || (!defined(__clang__) && __GNUC__ >= 9)
 #define often(x) __builtin_expect_with_probability((x),1,0.6)
+#else
+#define often(x) likely(x)
+#endif
 #else
 #define likely(x) (x)
 #define unlikely(x) (x)
@@ -583,7 +587,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
 // Tuning options for cip.c
-#if (C_AVX2 && PYXES) || !defined(_OPENMP)
+#if ((C_AVX || EMU_AVX) && PYXES) || !defined(_OPENMP)
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'

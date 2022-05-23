@@ -662,6 +662,7 @@ extern unsigned int __cdecl _clearfp (void);
 // what it does provide is the ordering guarantee; it is is intended to be used under lock
 // see boehm, 'threads cannot be implemented as a library', esp. sec. 4.3
 #define atomic_fetch_add_weak(aptr,val) ({ I rrres=__atomic_load_n(aptr,__ATOMIC_ACQUIRE);__atomic_store_n(aptr,val+rrres,__ATOMIC_RELEASE);rrres; })
+#define REPATGCLIM 0x100000   // When this many bytes have been repatriated to a thread, call a GC in that thread
 #else
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
@@ -1787,7 +1788,6 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define SYMSETLOCAL(l) (AKGST(l)=jt->global, jt->locsyms=(l))  // change the locals to l
 #define SYMPUSHLOCAL(l) (AM(l)=(I)jt->locsyms, SYMSETLOCAL(l))  // push l onto locals stack
 #define SYMORIGIN JT(jt,sympv)  // the origin of the global symbol table
-// obsolete #define SYMLOCALROOT jt->symfreeroot   // the root of the local free-symbol chain
 #define SYMGLOBALROOT SYMORIGIN[0].next   // the root of the shared free-symbol chain
 #define SYMRESERVEPREFSUFF(n,pref,suff) if(unlikely(SYMNEXT(jt->symfreehead[0])==0||((n)>1&&SYMNEXT(SYMORIGIN[SYMNEXT(jt->symfreehead[0])].next)==0))){pref RZ(jtreservesym(jt,n)) suff}   // if call to reserve needed, bracket with pref/suff
 #define SYMRESERVE(n) SYMRESERVEPREFSUFF(n,,)   // called outside of lock to make sure n symbols are available for assignment

@@ -237,7 +237,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  S prevthread=__atomic_exchange_n(&((PYXBLOK*)AAV0(pyx))->pyxorigthread,-1,__ATOMIC_ACQ_REL);  // set pyx no longer running
  if(unlikely(prevthread<0))R 0;  // the pyx is read-only once written
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->errcode,errcode,__ATOMIC_RELEASE);  // copy failure code.  Must be non0 - if not that is itself an error
- if(likely(z!=0))ra(z);  // since the pyx is recursive, we must ra the result we store into it
+ if(likely(z!=0))ra(z);  // since the pyx is recursive, we must ra the result we store into it.  Could zap if inplaceable
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
  // broadcast to wake up any tasks waiting for the result
  WAITBLOKFLAG(&((PYXBLOK*)AAV0(pyx))->pyxwb);
@@ -253,7 +253,7 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
  WAITBLOKINIT(&((PYXBLOK*)AAV0(pyx))->pyxwb);
  // Init the pyx to a recursive box, with raised usecount.  AN=1 always.  But set the value/errcode to NULL/no error and the thread# to the executing thread
  AT(pyx)=BOX+PYX; AFLAG(pyx)=BOX; ACINIT(pyx,ACUC2); AN(pyx)=1; ((PYXBLOK*)AAV0(pyx))->pyxvalue=0; ((PYXBLOK*)AAV0(pyx))->pyxorigthread=thread; ((PYXBLOK*)AAV0(pyx))->errcode=0;  ((PYXBLOK*)AAV0(pyx))->pyxmaxwt=timeout;
- // The pyx's usecount of 2 is one for the owning thread and one for the current thread, which has a tpop for the pyx.  When the pyx is filled in the owner will fa().
+ // The pyx's usecount of 2 is one for the owning thread and one for the current thread, which has a tpop for the pyx that protects it until it is put into its box.  When the pyx is filled in the owner will fa().
  R pyx;
 }
 
@@ -340,18 +340,18 @@ void writelock(S *alock, S prev){
 
 // The RUNNING flag must not be changed while a system lock is in progress, because the lock owner knows how many active tasks there are
 // set running, returning 1 if it wasn't set already
-I jtsettaskrunning(J jt){
+I jtsettaskrunning(J jt){C oldstate;
  // go to RUNNING state; but we are not allowed to change state if LOCKACTIVE has been set in our task.  In that
  // case someone has started a system lock and our running status has been captured.  LOCKACTIVE is set in state 1 and removed in state 5.  We must
  // first wait for the lock to clear and then wait to get out of state 5 (so that we don't do a systemlock request and think we are single-threaded)
- S oldstate; while(oldstate=0, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+ while(oldstate=0, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
   if(unlikely(oldstate&TASKSTATERUNNING))R 0;   // if for some reason we are called with the bit already set, keep it set and indicate it wasn't us that set it
   if(unlikely(oldstate&TASKSTATELOCKACTIVE)){YIELD delay(1000);}
  }
  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
  R 1;
 }
-void jtclrtaskrunning(J jt){S oldstate;
+void jtclrtaskrunning(J jt){C oldstate;
  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
  while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
   if(unlikely(!(oldstate&TASKSTATERUNNING)))R;   // if for some reason we are called with the bit already off, keep it off
@@ -366,7 +366,7 @@ typedef struct jobstruct {
  union {
   struct {
    A args[3];  // w,u,u if monad; a,w,u if dyad
-   I inherited[(offsetof(JTT,uflags.us.uq)+SZI-1)>>LGSZI]; // inherited sections of JT, plus a bit.  The pyx is stored in AM
+   I inherited[(offsetof(JTT,uflags.us.uq.uq_c.init0area)+SZI-1)>>LGSZI]; // inherited sections of JT, plus a bit.  The pyx is stored in AM
   } user;
   struct uiint {
    unsigned char (*f)(J jt,void *ctx,UI4 i);  // function to do 1 internal task. C is the error code, 0=OK. i is the task# within this job
@@ -405,9 +405,6 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // init stack as for main thread
  // Note: we use cstackinit as an indication that this thread is ready to use.
  JOBQ *jobq=JT(jt,jobqueue); 
-// obsolete   pthread_mutex_lock(&jobq->mutex);
-// obsolete   ++jobq->uavail;  // add this new thread to the count of threads eligible for user tasks
-// obsolete   goto nexttasklocked;
 
  // loop forever executing tasks
 nexttask: ; 
@@ -417,18 +414,17 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
   if(unlikely(job==0)){
    // No job to run.  Wait for one
    // acquire the job lock before the mutex.  Modify the wait count only when we hold the mutex
-   do{pthread_mutex_lock(&jobq->mutex); ++jobq->waiters; JOBUNLOCK(jobq,job); pthread_cond_wait(&jobq->cond,&jobq->mutex); --jobq->waiters; pthread_mutex_unlock(&jobq->mutex); job=JOBLOCK(jobq);}
-   while(job==0); // wait till we get a job to run; exit holding the job lock but not the mutex
+   if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
+   if(likely(job==0)){
+    do{pthread_mutex_lock(&jobq->mutex); ++jobq->waiters; JOBUNLOCK(jobq,job); pthread_cond_wait(&jobq->cond,&jobq->mutex); --jobq->waiters; pthread_mutex_unlock(&jobq->mutex); job=JOBLOCK(jobq);}
+    while(job==0); // wait till we get a job to run; exit holding the job lock but not the mutex
+   }
   }
   // We have a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
   UI jobns=job->ns; JOB *jobnext=job->next; UI jobn=job->n;   // fetch what we know we will need.  jobns is the piece we are taking here
-   // The ATOMIC seems to be needed to force the compiler to read and not generate a conditional branch
   unsigned char (*f)(J jt,void *ctx,UI4 i)=job->internal.f; void *ctx=job->internal.ctx; C err=job->internal.err;  // also fetch what internal job will need
    // The compiler defers these reads but the read delay is so long that they will get executed early anyway
   // increment the # starts; if that equals or exceeds the # of tasks, dequeue the job
-// obsolete   JOB **writeptr=&jobq->ht[0]; job->ns=++jobns; writeptr=jobns>=jobn?writeptr:(JOB**)&jt->shapesink[0]; writeptr[0]=jobnext;  // if task count not met, divert writes; if not diverted, deq the job
-// obsolete   writeptr=jobnext==0?writeptr:(JOB**)&jt->shapesink[0]; writeptr[1]=(JOB *)writeptr;  // if there is a next job, divert the writes; otherwise point tail to head indicating empty chain
-// obsolete   jobq->queued=jobqqueued-=(jobn==0);   // if this is a user job, decr count of queued jobs
   job->ns=jobns+1;   // increment task counter for next owner
   JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobns+1<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobns+1<jobn?job:jobnext;  // calc head & tail ptrs
       // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns+1<jobn), divert write of tail; otherwise leave it.  If job finishing, set new headptr in jobnext
@@ -453,20 +449,18 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    goto nexttasklocked; // loop for work, holding the lock
   }else{
    // user job.  There is no thundering herd, so we can read from the job block undisturbed.  We know it has been dequeued
-// obsolete    __atomic_store_n(&((PYXBLOK*)AAV0(job->user.pyx))->pyxorigthread,jt-JT(jt,threaddata),__ATOMIC_SEQ_CST);
    A pyx=(UNvoidAV1(job))->mback.jobpyx;  // extract the pyx from the job
    ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
    // set up jt state here only; for internal tasks, such setup is not needed
    A *old=jt->tnextpushp;  // we leave a clear stack when we go
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
-   memset(&jt->uflags.us.uq,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.us.init0area));    // clear what should be cleared - up to locsyms
+   memset(&jt->uflags.us.uq.uq_c.init0area,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.us.uq.uq_c.init0area));    // clear what should be cleared - up to locsyms
    A startloc=jt->global;  // extract the globals from the job
-// obsolete   jt->iepdo=0; jt->xmode=0;
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATEBUSY;  // init what needs initing.  Notably clear the local symbols
+   __atomic_store_n(&jt->uflags.us.uq.uq_c.spfreeneeded,0,__ATOMIC_RELEASE); if(unlikely((__atomic_load_n(&jt->repatbytes,__ATOMIC_ACQUIRE)&-REPATGCLIM)!=0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // if gc needed, set so
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
    I4 savcallstack = jt->callstacknext;   // starting callstack
-// obsolete    A startloc=jt->global;  // point to current global locale
    if(likely(startloc!=0)){INCREXECCT(startloc); fa(startloc);}  // raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    A arg1=job->user.args[0],arg2=job->user.args[1],arg3=job->user.args[2];
    fa(UNvoidAV1(job));  // job is no longer needed
@@ -531,12 +525,10 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue)
    // We know there is a thread that can take the user task (possibly after finishing internal tasks), or the user insists on queueing.  Queue the task
    raposacv(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
    pthread_mutex_lock(&jobq->mutex);
-// obsolete   jobq->queued++; --jobq->uavail;  // once we commit to queueing the job, decr #avail
    ++jobq->nuunfin;  // add the new user job to the unfinished count
    _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun &JOBQ->ht[1] as a JOB, when the q is empty
    job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
    oldjob=(oldjob==0)?job:oldjob; JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.  Keep old head unless it was empty
-// obsolete    if(oldjob!=0){tailptr->next=job; JOBUNLOCK(jobq,oldjob);}else JOBUNLOCK(jobq,job)   // Insert job at the tail and unlock.  if q is empty, tail points to itself. 
    pthread_cond_signal(&jobq->cond);  // Wake just one waiting thread (if there are any)
    pthread_mutex_unlock(&jobq->mutex);
    R pyx;
@@ -544,7 +536,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue)
   // No thread for the job.  Run it here
   fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now in case they were virtual
  }
- fa(jobA); ACINITZAP(pyx); fa(pyx); // better to allocate then conditionally free than to perform the allocation under lock.  The pyx has 2 owners: the job and the tpop stack.  We remove the job
+ fa(jobA); ACINITZAP(pyx); fa(pyx); // better to allocate then conditionally free than to perform the allocation under lock.  The pyx has 2 owners: the job and the tpop stack.  We remove both
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;
  // u always starts a recursion point, whether in a new task or not
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
@@ -568,8 +560,6 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
   // (all tasks finished and waited for here).  We fa explicitly rather than calling tpop
   job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
   oldjob=(oldjob==0)?job:oldjob; JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.  Keep old head unless it was empty
-// obsolete   job->next=0; JOB *tailptr=jobq->ht[1]; jobq->ht[1]=job;
-// obsolete   if(oldjob!=0){tailptr->next=job; JOBUNLOCK(jobq,oldjob);}else JOBUNLOCK(jobq,job)   // Insert job at the tail and unlock.  if q is empty, tail points to head. 
   ACINIT(jobA,ACUC2);  // Raise the usecount to match the fa() that will happen when the job ends
   if(jobq->waiters!=0)pthread_cond_broadcast(&jobq->cond);  // if there are waiting threads, wake them up  scaf why test?
    // todo scaf: would be nice to wake only as many as we have work for

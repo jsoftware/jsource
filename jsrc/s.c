@@ -52,7 +52,7 @@ A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
  mvc(SZI*(xn-yn),v+yn,1,MEMSET00);               /* 0 unused area for safety  kludge  */
  // dice the added area into symbols, chain them together, add to free chain
  u=n+(L*)v; j=1+n;    // u->start of new area  j=sym# of (1st new sym+1), will always chain each symbol to the next
-DQ(m-n-1, /*testing u->scafthread=~0;*/ u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
+DQ(m-n-1, u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
  if(SYMORIGIN!=0){u->next=SYMGLOBALROOT; fa(y);}   // if there is an old chain, transfer it to the end of the new chain, then free the old area
  ACINITZAP(x); SYMORIGIN=LAV0(x);           // preserve new array and switch to it
  SYMGLOBALROOT=(LX)n;  // start the new free chain with the first added ele
@@ -74,7 +74,7 @@ I jtreservesym(J jt,I n){L *sympv=SYMORIGIN;// start of symbol block
   I ninlock; I nwanted=MAX(100,n-jt->symfreect[0]);  // number taken fro shared, number we would like to get
   WRITELOCK(JT(jt,symlock))   // scaf not needed in system lock?
   LX sprev;    // sym# of a symbol in the chain, starts at the symbol holding SYMGLOBALROOT
-  NOUNROLL for(ninlock=0, sprev=0;ninlock<nwanted&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next))/*testing sympv[sprev].scafthread=THREADID(jt)*/;  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
+  NOUNROLL for(ninlock=0, sprev=0;ninlock<nwanted&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next));  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
   if(likely(ninlock!=0)){  // if the global chain is not empty...
    // transfer what we got to our local table
    LX localhead=SYMNEXT(jt->symfreehead[0]);   // start of the local chain
@@ -119,9 +119,7 @@ void jtsymreturn(J jt, LX h, LX t, I n){L *sympv=SYMORIGIN;  // base of symbol t
 // Caller must ensure, by prior use of SYMRESERVE, that the symbol is available in the main chain. This routine takes no locks
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
  j=SYMNEXT(jt->symfreehead[0]); jt->symfreehead[0]=SYMORIGIN[j].next; --jt->symfreect[0];  // remove symbol from list & account for it
-// obsolete  SYMLOCALROOT=SYMORIGIN[j].next;       /* new top of stack            */
  u=j+SYMORIGIN;  // the new symbol.  u points to it, j is its index
-// testing u->scafthread=THREADID(jt);
  if(likely(SYMNEXT(tailx)!=0)) {L *t=SYMNEXT(tailx)+SYMORIGIN;
   // appending to tail, must be a symbol.  Queue is known to be nonempty
   u->next=t->next;t->next=j|(tailx&SYMNONPERM);  // it's always the end: point to next & prev, and chain from prev.  Everything added here is non-PERMANENT
@@ -171,7 +169,6 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     NOUNROLL do{
      k=SYMNEXT(k);  // remove address flagging
      I nextk=jtsympv[k].next;  // unroll loop once
-// obsolete      aprev=&jtsympv[k].next;  // save last item we processed here
      fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].valtype=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      lastk=k;  // remember index of last block
      ++nfreed;  // ince count of block in chain-to-free
@@ -182,7 +179,6 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    }
   }
  }
-// obsolete  if(likely(freeroot!=0)){freetailchn->next=SYMLOCALROOT;SYMLOCALROOT=freeroot;}  // put all blocks freed here onto the free chain
  if(likely(freeroot!=0)){jtsymreturn(jt,freeroot,lastk,nfreed);}  // put all blocks freed here onto the free chain
 }
 
@@ -203,7 +199,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   *xv++=pv->flag+(pv->name?LHASNAME:0)+(!(pv->flag&LINFO)&&pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    // script index
   *xv++=SYMNEXT(pv->next);  // chain
-  *xv++=/*testing pv->scafthread*/0;  // for debug, the thread# that allocated the symbol
+  *xv++=0;  // for debug, the thread# that allocated the symbol
   RZGOTO(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv,exit);  // simple name
  }
  // Allocate box 2: locale name
@@ -253,7 +249,6 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
     {
      SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
-// obsolete       if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=SYMLOCALROOT; SYMLOCALROOT=delblockx;}  // add to symbol free list
      if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
       *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
       jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains

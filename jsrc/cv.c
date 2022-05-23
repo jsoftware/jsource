@@ -49,12 +49,9 @@ static DF2(jtfitpoly2){I j;
 static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
 static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
 
+// print precision, just the number of fractional digits requested from sprintf
 static DF1(jtfitpp1){DECLFG;A z;
-// obsolete C d[8],*s=3+jt->pp;
-// obsolete  MC(d,s,sizeof(jt->pp)-3);   // stack default jy->pp over call
-// obsolete  snprintf(s,sizeof(jt->pp)-3,FMTI"g",AV(gs)[0]); 
  I stkppn=jt->ppn; jt->ppn=AV(gs)[0]; z=CALL1(f1,w,fs); jt->ppn=stkppn;
-// MC(s,d,sizeof(jt->pp)-3);  // fs is ": f1 is thorn1
  RETF(z);
 }
 

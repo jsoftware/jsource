@@ -405,7 +405,7 @@ _mm256_zeroupperx(VOIDARG)
       }
 
 // for some reason, storing into z slows down processing by a factor of 2 when m exceeds 500 and n,p are 16 64 - even if we don't load
-// it appears that this is because the Z strip exceeds L2 cache and the bandwidth of L# is not enough to support the traffic.  So we
+// it appears that this is because the Z strip exceeds L2 cache and the bandwidth of L3 is not enough to support the traffic.  So we
 // ask the caller to split a up in units of 500 rows or less.  This might obviate the need for the Z buffer, but we keep it because
 // it allows the result to be inplaced if a doesn't have to be split, and might use cache bandwidth better since it's aligned
       if(!(flgs&FLGZLAST)){

@@ -247,13 +247,6 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
 /* c  - stack entry for dbunquote for this function */
 A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
  movesentencetosi(jt,queue,m,0);  // install sentence-to-be-executed for stop purposes
-#if 0  // obsolete 
-// we can stop before the sentence, or after it if it fails
- if(dbstop(c,ci->source)){z=parsez=0; jsignal(EVSTOP);
- }else{  // cx adds a stack entry for PARSE, needed to get anonymous operators right
-  z=PARSERVALUE(parsez=parsea(queue,m));  // make sure we preserve ASGN flag in parsez
- }
-#else
  // if there is a system lock to take, take it and continue
  S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE);
  if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}
@@ -268,7 +261,6 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
  // xdefn adds a stack entry for PARSE, needed to get anonymous operators right
  z=PARSERVALUE(parsez=parsea(queue,m));  // make sure we preserve ASGN flag in parsez
 noparse: ;
-#endif
  // If we hit a stop or ATTN, or if we hit an error (outside of try./catch., which turns debug off), enter debug suspension if enabled.  But if debug mode is off now, we must have just
  // executed 13!:0]0 or a suspension-ending command, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
  if(!z&&c&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens

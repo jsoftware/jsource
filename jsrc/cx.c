@@ -50,26 +50,18 @@
 #define SETTRACK
 #endif
 
+#define POPTRYSTK if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;}
+#define POPIFTRYSTK if(unlikely(nGpysfctdl&4))POPTRYSTK
 #define NOUNERR(t,ti) \
     /* Signal post-exec error*/ \
     {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i=cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} } }else z=0; \
+    i=cw[ti].go; if(unlikely(i<SMAX)){ RESETERR; z=mtm; POPIFTRYSTK}else z=0; \
     break;}
 
 #define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
 
 // run one line.  If we see break request, accept it as ATTN but promote it to BREAK in other cores if debug off
-#if 0 // obsolete 
-#define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
- SETTRACK \
- if(unlikely(attnval)){if(attnval>>8){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); goto lbl;} if(!((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)))*JT(jt,adbreak)=2; jsignal(EVATTN); z=0;} \
- else{lbl: if(likely(!(nGpysfctdl&128+16)))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,callframe);}}   /* debug parse if debug/pm */ \
- if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
-   if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \
- }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
- }
-#else
 #define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
  if(likely(!(attnval+(nGpysfctdl&128+16))))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,(nGpysfctdl&128+16)?callframe:0);} \
@@ -77,7 +69,6 @@
    if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
-#endif
 
 /* for_xyz. t do. control data   */
 typedef struct CDATA {
@@ -452,7 +443,7 @@ dobblock:
    // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
    // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
    // was when the try. was encountered
-   }else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; if(nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+   }else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
    }
    break;
 
@@ -482,7 +473,7 @@ tblockcase:
    }else if(jt->jerr==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status
    }else if((nGpysfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
    else if(EVTHROW==jt->jerr){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
-   else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; if(nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;}}}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+   else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
    break;
 
@@ -525,7 +516,7 @@ docase:
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
    // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-   if(nGpysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;} i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
+   if(likely(nGpysfctdl&4)){POPTRYSTK i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
   case CTHROW:
    // throw.  Create a throw error
    BASSERT(0,EVTHROW);

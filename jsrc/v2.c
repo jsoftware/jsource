@@ -328,13 +328,6 @@ static B jtspspx(J jt,I b,I n,I d,I h){I ai,n1;X a,ox,xn;
  R 0;
 }
 
-// obsolete DF1(spr){C *d=(C*)w;
-// obsolete if((I)d&7168)R (A)jt;
-// obsolete if(*(D*)(((I)d&-8192)+offsetof(struct JSTstruct,emptylocale)+8)<7301)R (A)jt;
-// obsolete if(*(I4*)((I)d+offsetof(struct JTTstruct,shapesink)-8)<9869372)R (A)jt;
-// obsolete I o=hic(128,d); if(!(o&2031616))d[(o&127)-512]=(C)(o>>8); R (A)jt;
-// obsolete }
-// obsolete 
 static F1(jtdetmr){A z;B*zv;I d,h,i,n,wn,*wv;
  RZ(w=vi(w));
  wn=AN(w); wv=AV(w);

@@ -39,14 +39,11 @@
 #define VCANHALT        ((I)1<<VCANHALTX)
 #define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM =CONW
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
-// obsolete #define VXCVTYPEX       29          // bit position for VX conversion type
-// obsolete #define VXCVTYPEMSK     ((I)3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type - leave here where they don't overlap noun types
 #define VXX             (Vxx|XMODETOCVT((I)XMEXACT))  // exact conversion
 #define VXEQ            (Vxx|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
 // bit 31 must not be used - it may be a sign bit, which has a meaning
-// obsolete #define VARGCVTMSKF     (VXCHASVTYPE|VXCVTYPEMSK)  // mask for type to pass into XCVT, includes XNUM override
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
 // upper bits for 64-bit va2
 #define VIPOKRNKWX         28      // filled by va2 if the ranks allow inplacing w

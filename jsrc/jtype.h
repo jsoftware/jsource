@@ -433,9 +433,6 @@ typedef I SI;
 #define XCVTXNUMORIDEX  CONWX   // in cvt(), indicates that forced precision for result is present
 #define XMODETOCVT(x) (((((x)+2)&5)<<MARKX)|CONW)  // convert XMODE to a request to cvt to convert to that mode
 #define CVTTOXMODE(x) ((((x)+MARK)>>(MARKX+1))&3) // convert cvt request back to xmode
-// obsolete #define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
-// obsolete #define XCVTXNUMCVX     CONJX
-// obsolete #define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
 
 
 #define ANY             -1L
@@ -795,7 +792,6 @@ typedef struct {
  C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCGLOBAL is set in global tables
  S sn;  // script index the name was defined in.  Not used for LINFO
  LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT.  Not used in LINFO
-// testing US scafthread;  // the thread this symbol was allocated from
 } L;  // name must come first because of the way we use validitymask[11]
 
 // FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
@@ -813,13 +809,10 @@ typedef struct {
 #define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:31
 #define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:31
 #define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
-// obsolete // in LINFO entry
-// obsolete #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
 #define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
-// obsolete #define LOCNUMW(g) (NAV(LOCNAME(g))->bucketx)  // locale number, for numbered locales   scaf should move this to SYMLINFO or to ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)
 #define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)  // locale number, for numbered locales
 #define LOCNUM(g) (I)LOCNUMW(g)
 #define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted

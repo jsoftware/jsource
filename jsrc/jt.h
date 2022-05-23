@@ -86,13 +86,13 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
      UC   db;               /* debug flag; see 13!:0 inherit                          */
     } cx_c;        // accessing as bytes
    } cx;   // flags needed by unquote and jtxdefn   inherit for task
-// ************************************** here starts the area that is initialized to 0 when task starts 0x16
-   C init0area[0];  // label for initializing
    union {
     US uq_us;       // accessing both flags at once
     struct {
+     B    spfreeneeded;     // When set, we should perform a garbage-collection pass  persistent    combine w/pmctr & db
+     C init0area[0];  // label for initializing
+// ************************************** here starts the area that is initialized to 0 when task starts 0x16
      C    bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
-     B    spfreeneeded;     // When set, we should perform a garbage-collection pass should be persistent    combine w/pmctr & db
     } uq_c;        // accessing as bytes
    } uq;   // flags needed only by unquote  clear for task
   } us;   // access as US
@@ -126,16 +126,17 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
 // **************************************  end of initialized part
 
+ C persistarea[0];  // end of area set at startup
 // ************************************** everything after here persists over the life of the thread
- C persistarea[0];  // label for initializing
  C fillv0len;   // length of fill installed in fillv0
- S taskstate;  // task state: modified by other tasks on a system lock
+ C taskstate;  // task state: modified by other tasks on a system lock
 #define TASKSTATERUNNINGX 0   // task has started
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
 #define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
 #define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
+// 1 byte free
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
- LX symfreehead[2];   // head of main and overflow free chains
+ LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution
  UI cstackmin;        // red warning for C stack pointer
  A filler1[2];
@@ -293,7 +294,7 @@ typedef struct JSTstruct {
  C baselocale[4];    // will be "base"
  UI4 baselocalehash;   // name hash for base locale
  UC seclev;           /* security level                                  */
- UC dbuser;           /* user-entered value for db             */
+ UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script
  B assert;           /* 1 iff evaluate assert. statements               */
  // rest of cacheline used only in exceptional paths
 // 2 bytes free

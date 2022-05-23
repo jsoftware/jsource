@@ -167,7 +167,6 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 #endif
  I threadno; for(threadno=0;threadno<nthreads;++threadno){jt=&jjt->threaddata[threadno];
   RESETRANK;  // init both ranks to RMAX
-// obsolete   strcpy(jt->pp,"%0.6g");
   jt->ppn=6;  // default precision for printf
   jt->fcalln=NFCALL;
   jt->cct= 1.0-FUZZ;

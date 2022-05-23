@@ -344,18 +344,19 @@
 #define extnvr(x)                    jtextnvr(jt,(x))
 // Handle top level of fa(), which decrements use count and decides whether recursion is needed.  We recur if the contents are traversible and
 // the current block is being decremented to 0 usecount or does not have recursive usecount
-// fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
+// fa() audits the tstack, for use outside the tpop system.
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
-#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL); nomfaction}}}  // call if sparse or ending; never touch a PERM
+// We don't mark the free as likely because we use ra/fa liberally to protect values on the execution stack
+#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
 #define falikely(x) fa(x)  // when the block will usually be deleted  (not used yet)
-#define faacv(x) {I Zc=AC(x); if(Zc<2){jtfamf(jt,x,AT(x));}else{if(likely(!ACISPERM(Zc)))__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL);}} // block is known to be ACV
+#define faacv(x) {I Zc=AC(x); if(Zc<2){jtfamf(jt,x,AT(x));}else{if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));}} // block is known to be ACV
 // when x is known to be valid and usecount has gone to 0
-#define fanano0(x)                  faaction(jt,(x),)
+#define fanano0(x)                  faaction(jt,(x),;)
 // Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.
-#define fana(x)                     {if(likely((x)!=0))faaction(jt,(x),)}
+#define fana(x)                     {if(likely((x)!=0))faaction(jt,(x),;)}
 // Within tpop, no need to check ACISPERM; usecount has gone to 0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              jtfamf(jt,(x),(flg)&RECURSIBLE);
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
@@ -863,7 +864,7 @@
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block.  ras() does include rifv
-#define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // better a misbranch than an atomic instruction if c<0
+#define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
 // In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount);
 // sv means the last arg is saved/restored through the call; qcg means the name is known to have qcglobal semantics (we use the constituents) uncond means the arg cannot be perm/sparse/need recurson, so just increment
 #define rapos(x)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))jtra((x),SPARSE,0);}}  // better a misbranch than an atomic instruction if c<0

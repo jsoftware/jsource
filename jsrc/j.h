@@ -681,6 +681,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define __atomic_add_fetch(aptr, val, memorder) (*aptr+=val)
 #define __atomic_sub_fetch(aptr, val, memorder) (*aptr-=val)
 #define __atomic_and_fetch(aptr, val, memorder) (*aptr&=val)
+#define REPATGCLIM 0   // no repat
 #endif
 
 #define ADDBYTESINI1(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff

@@ -316,14 +316,18 @@ _mm256_zeroupperx(VOIDARG)
     _mm256_store_pd(&(*cva)[0][0][2*NPAR],t2);  _mm256_store_pd(&(*cva)[0][0][3*NPAR],t3); _mm256_store_pd(&(*cva)[0][1][2*NPAR],t4);  _mm256_store_pd(&(*cva)[0][1][3*NPAR],t5);
     _mm256_store_pd(&(*cva)[0][2][2*NPAR],t6);  _mm256_store_pd(&(*cva)[0][2][3*NPAR],t7); _mm256_store_pd(&(*cva)[0][3][2*NPAR],t0);  _mm256_store_pd(&(*cva)[0][3][3*NPAR],t1);
    }else{  // partial block
-    for(i=0;i<OPHEIGHT;++i){I j;  // for each row (i. e. for the length of the outer product)
+    if(often(!(flgs&FLGCMP))){ //real case; contiguous, so simpler
+     for(I i=0;i<OPHEIGHT;i++){
       D *a0x=a2base0+pstored*i; a0x=i>=a2rem?missingrow:a0x;  // start of samples for the row, or a repeated row if past the end
-      if(!(flgs&(FLGCMP))){
-       for(j=0;j<(nvalidops&-NPAR);j+=NPAR){_mm256_store_pd(&(*cva)[0][i][j],_mm256_loadu_pd(a0x)); a0x+=NPAR;}  // quads as long as possible
-       for(;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x;}  // float
-      }else {for(j=0;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x; (*cva)[1][i][j]=*a0x; ++a0x;}}  // complex: real and imaginary
-     }
-    }
+      if(often(nvalidops>=4)){ //fast path: handle using overlapping accesses
+       for(I j=0;j<(nvalidops-NPAR);j+=NPAR){_mm256_store_pd(&(*cva)[0][i][j],_mm256_loadu_pd(a0x+j));}  //round down if not a whole number of quads, otherwise subtract one full quad
+       _mm256_storeu_pd(&(*cva)[0][i][nvalidops-NPAR],_mm256_loadu_pd(a0x+nvalidops-NPAR)); //to avoid doing redundant work here
+      }else{ //uncommon case; handle using scalar ops
+       for(I j=0;j<nvalidops;++j){(*cva)[0][i][j]=a0x[j];}}}}  // float
+    else{ //complex case; could be optimised
+     for(I i=0;i<OPHEIGHT;i++){
+      D *a0x=a2base0+pstored*i; a0x=i>=a2rem?missingrow:a0x;  // start of samples for the row, or a repeated row if past the end
+      for(I j=0;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x; (*cva)[1][i][j]=*a0x; ++a0x;}}}}  // complex: real and imaginary
 
     // While we are processing the sections of a, move the next cache block of w into L2 (not L1, so we don't overrun it)
     // We would like to do all the prefetches for a CACHEWIDTH at once to stay in page mode

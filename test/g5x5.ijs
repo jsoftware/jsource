@@ -444,6 +444,18 @@ c test1
 
 a=: /
 test2 <'a' 
+a=: @
+test2 <'a' 
+a=: @:
+test2 <'a' 
+a=: &
+test2 <'a' 
+a=: &:
+test2 <'a' 
+a=: &.
+test2 <'a' 
+a=: &.:
+test2 <'a' 
 a=: /.
 test2 <'a'
 

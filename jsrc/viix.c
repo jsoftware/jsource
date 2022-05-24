@@ -101,6 +101,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
 #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
 
+// x I. y
 F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  ARGCHK2(a,w);
  ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a

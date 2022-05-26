@@ -459,7 +459,7 @@ t1done=: 0
 'a_l1_ a_l2_ a_l3_ b_l1_ b_l2_ b_l3_' =: i. 6
 ; }. shrxno =: 1 ; s1 0 1
 t1done=: 0
-; }. shrxno =: 1 ; s1 0 0 1 1
+NB. scaf test ; }. shrxno =: 1 ; s1 0 0 1 1
 
 
 NB. x is number of iterations
@@ -497,7 +497,7 @@ s1=: 3 : 0
 t1done=: 0
 ; }. shrxno =: 2 ; s1 0 1
 t1done=: 0
-; }. shrxno =: 2 ; s1 0 0 1 1
+NB. scaf test ; }. shrxno =: 2 ; s1 0 0 1 1
 
 (<'z') 18!:2 <'base'
 18!:55 ;:'l1 l2 l3'

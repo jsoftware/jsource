@@ -134,6 +134,10 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
 #define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
 #define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
+#define TASKSTATEACTIVEX 2  // thread is running on this JTT.  Changed under job lock.
+#define TASKSTATEACTIVE (1LL<<TASKSTATEACTIVEX)
+#define TASKSTATETERMINATEX 3  // thread has been signaled to terminate.  Changed under job lock.
+#define TASKSTATETERMINATE (1LL<<TASKSTATETERMINATEX)
 // 1 byte free
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
  LX symfreehead[2];   // head of main and overflow symbol free chains

@@ -344,7 +344,7 @@ I jtsettaskrunning(J jt){C oldstate;
  // go to RUNNING state; but we are not allowed to change state if LOCKACTIVE has been set in our task.  In that
  // case someone has started a system lock and our running status has been captured.  LOCKACTIVE is set in state 1 and removed in state 5.  We must
  // first wait for the lock to clear and then wait to get out of state 5 (so that we don't do a systemlock request and think we are single-threaded)
- while(oldstate=0, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+ while(oldstate=jt->taskstate&~TASKSTATELOCKACTIVE, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, oldstate|TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
   if(unlikely(oldstate&TASKSTATERUNNING))R 0;   // if for some reason we are called with the bit already set, keep it set and indicate it wasn't us that set it
   if(unlikely(oldstate&TASKSTATELOCKACTIVE)){YIELD delay(1000);}
  }
@@ -353,7 +353,7 @@ I jtsettaskrunning(J jt){C oldstate;
 }
 void jtclrtaskrunning(J jt){C oldstate;
  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
- while(oldstate=TASKSTATERUNNING, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+ while(oldstate=jt->taskstate&~TASKSTATELOCKACTIVE, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, oldstate&~TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
   if(unlikely(!(oldstate&TASKSTATERUNNING)))R;   // if for some reason we are called with the bit already off, keep it off
   if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG+LOCKPRIPATH+LOCKPRISYM);}else{YIELD delay(1000);}
  }
@@ -416,8 +416,10 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // acquire the job lock before the mutex.  Modify the wait count only when we hold the mutex
    if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
    if(likely(job==0)){
-    do{pthread_mutex_lock(&jobq->mutex); ++jobq->waiters; JOBUNLOCK(jobq,job); pthread_cond_wait(&jobq->cond,&jobq->mutex); --jobq->waiters; pthread_mutex_unlock(&jobq->mutex); job=JOBLOCK(jobq);}
-    while(job==0); // wait till we get a job to run; exit holding the job lock but not the mutex
+    do{pthread_mutex_lock(&jobq->mutex); ++jobq->waiters; JOBUNLOCK(jobq,job); pthread_cond_wait(&jobq->cond,&jobq->mutex); --jobq->waiters; pthread_mutex_unlock(&jobq->mutex);
+     job=JOBLOCK(jobq);
+     if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
+    }while(job==0); // wait till we get a job to run; exit holding the job lock but not the mutex
    }
   }
   // We have a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
@@ -446,6 +448,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    JOB *nextjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
    ++job->internal.nf;  // account that this task has finished
    job=nextjob;  // set up for loop
+   if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
    goto nexttasklocked; // loop for work, holding the lock
   }else{
    // user job.  There is no thundering herd, so we can read from the job block undisturbed.  We know it has been dequeued
@@ -481,9 +484,14 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    RESETERR  // we had to keep the error till now; remove it for next task
    job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
    --jobq->nuunfin; // mark that we have finished the job we were working on
+   if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
    goto nexttasklocked;  // loop for next task
   }
  // end of loop forever
+terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
+ __atomic_fetch_and(&jt->taskstate,~TASKSTATEACTIVE,__ATOMIC_ACQ_REL);  // ack the terminate request
+ JOBUNLOCK(jobq,job); 
+ R 0;  // return to OS, closing the thread
 }
 
 // Create worker thread n, and call its threadmain to start it in wait state
@@ -731,15 +739,21 @@ ASSERT(0,EVNONCE)
   break;}
  case 0:  { // create a thread and start it
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  // reserve a thread#, verify we have enough thread blocks for it
-  I resthread=__atomic_add_fetch(&JT(jt,nwthreads),1,__ATOMIC_ACQ_REL);
-  if(resthread>=MAXTASKS){__atomic_store_n(&JT(jt,nwthreads),MAXTASKS-1,__ATOMIC_RELEASE); ASSERT(0,EVLIMIT);} //  this leaves the tiniest of timing windows, bfd
-  // Try to allocate a thread in the OS and start it running
-  I threadstatus=jtthreadcreate(jt,resthread);
-  if(threadstatus==0){__atomic_add_fetch(&JT(jt,nwthreads),-1,__ATOMIC_ACQ_REL); z=0;  // if error, restore thread count; error signaled earlier
-  }else{
-   RZ(z=sc(resthread))  // thread# is result.  The thread installs itself into the idleq when it waits
-  }
+  JOBQ *jobq=JT(jt,jobqueue);
+  JOB *job=JOBLOCK(jobq);  // must modify thread info under lock
+  I resthread=JT(jt,nwthreads);  // number of thread to stop.  It will always be ACTIVE
+  ASSERTSUFF(resthread<MAXTASKS-1,EVLIMIT,JOBUNLOCK(jobq,job); R 0;); //  error if thread limit exceeded
+  // Mark the last thread for deletion, wake up all the threads
+  JT(jt,nwthreads)=resthread+=1;   // set new # threads, counting this thread as started
+  C origstate=__atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATEACTIVE,__ATOMIC_ACQ_REL);  // put into ACTIVE state
+  __atomic_fetch_and(&JTFORTHREAD(jt,resthread)->taskstate,~TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // clear pending term request, leaving our ACTIVE
+  JOBUNLOCK(jobq,job);  // We don't add a job - just unlock
+  if(likely(!(origstate&TASKSTATEACTIVE))){
+   // Try to allocate a thread in the OS and start it running
+   I threadstatus=jtthreadcreate(jt,resthread);
+   if(threadstatus==0){job=JOBLOCK(jobq); --JT(jt,nwthreads); JOBUNLOCK(jobq,job); resthread=0;}  // if error, restore thread count; error signaled earlier
+  } // if thread already active, don't restart
+  z=resthread?sc(resthread):0;  // if no error, return thread# started
   break;}
  case 10: {  // create a mutex.  w indicates recursive status
 #if PYXES
@@ -805,6 +819,34 @@ ASSERT(0,EVNONCE)
   ASSERT(pthread_mutex_destroy((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
   AM(mutex)=0;  // remove credential from modified mutex
   fa(mutex);  // undo the initial INITZAP
+  z=mtm;
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
+ case 55: {  // destroy thread.  w is thread# to destroy, or '' for last thread
+  // A thread is set to ACTIVE state when it is created.  It sets itself !ACTIVE when it returns.
+  // ACTIVE is changed only under the job lock.
+  // To kill a thread, we set TERMINATE which causes the thread to return when it notices.
+  // JT(jt,nwthreads) is the number of threads we have in the long run.  Terminated threads that are
+  // still running are not counted in nwthreads.
+  // If we create a thread and the next thread is still ACTIVE, we simply remove TERMINATE.  Thus,
+  // TERMINATE is changed only under the job lock.
+  // We return from the terminate request with the thread possibly still running a task.  After all, we could be terminating ourselves!
+#if PYXES
+  ASSERTMTV(w);  // only the last thread is supported for now
+  JOBQ *jobq=JT(jt,jobqueue);
+  JOB *job=JOBLOCK(jobq);
+  I resthread=JT(jt,nwthreads);  // number of thread to stop.  It will always be ACTIVE
+  ASSERTSUFF(resthread>=1,EVLIMIT,JOBUNLOCK(jobq,job); R 0;); //  error if no thread to delete
+  // Mark the last thread for deletion, wake up all the threads
+  JT(jt,nwthreads)=resthread-1;   // set new # threads - prematurely calling this thread stopped
+  __atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
+  pthread_mutex_lock(&jobq->mutex);
+  JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
+  pthread_cond_broadcast(&jobq->cond);
+  pthread_mutex_unlock(&jobq->mutex);
+  // The thread will eventually clear ACTIVE
   z=mtm;
 #else
   ASSERT(0,EVNONCE)

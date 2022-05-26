@@ -59,10 +59,10 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   ws=AS(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(wt); wv=CAV(w);
-  // Since we are allocating the new boxes, the result will ipso facto be PRISTINE, as long as w is DIRECT.  If w is not DIRECT, we can be PRISTINE if we ensure that
-  // w is PRISTINE inplaceable, but we don't bother to do that because PRISTINE is used only for DIRECT contents
+  // Since we are allocating the new boxes, the result will ipso facto be PRISTINE, as long as w is DIRECT and the result does not contain virtuals.  If w is not DIRECT, we can be PRISTINE if we ensure that
+  // w is PRISTINE inplaceable, but we don't bother to do that because PRISTINE is used only for DIRECT contents.
   // If the input is DIRECT, mark the result as PRISTINE
-  GATV(z,BOX,n,f,ws); AFLAGINIT(z,BOX+((-(wt&DIRECT))&AFPRISTINE)) if(unlikely(n==0)){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  GATV(z,BOX,n,f,ws); AFLAGINIT(z,BOX+((((I)jtinplace&JTWILLBEOPENED)-1)&(-(wt&DIRECT))&AFPRISTINE)) if(unlikely(n==0)){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  If WILLOPEN is given, we synthesize a virtual block and leave
   // that in the result - it will be freed when the result is, since result is recursive
 
@@ -73,7 +73,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
   JMCDECL(endmask) JMCSETMASK(endmask,k,0)   // set mask for JMCR - OK to copy SZIs
-  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself sirtual
+  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
   while(n--){
    if(!((I)jtinplace&JTWILLBEOPENED)){
     GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k,0,endmask); INCORPRAZAPPED(y,wt);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++

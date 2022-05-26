@@ -870,7 +870,7 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
     A oldtv=tv;
     if(likely(!(AT(tv)&NAMEABANDON))){  // not name::
      tv=sympv[k].name;  // use shared copy
-     if(recur){ras(tv); fa(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old
+     if(recur){ras(tv); fana(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old.  No audit on the fa() since tstack is temporarily invalid
      NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared
     }
     // Remember the exact location of the symbol.  It will not move as long as this symbol table is alive.  We can

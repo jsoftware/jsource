@@ -608,7 +608,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00 // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -941,7 +941,9 @@ if(!(opt&0x40)){  /* f produces a result */ \
 if(opt&0x40)fghfn=FAVV(gs)->valencefns[0];else fghfn=FAVV(gs)->valencefns[1]; /* monad if no f result, else dyad */ \
 /* Before executing g, free any now-unused arguments */ \
 if(!((opt&1)||((opt&0x10)&&!(opt&0x20)))) \
-if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); if(!(opt&0x40))c=(UI)c>>(w==fx); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){*tpopw=0; if(likely(c2&1)){fanapop(w,AFLAG(w));}else{AC(w)=c2-1;}}} \
+ /* free only if c<0.  Shift (UI)c>>1 to disable the free.  Special case: PRISTINE blocks can generate AC=8..xx where xx is anything, if the block is abandoned & picked up multiple times. */ \
+ /* Check AC and zap/free only if the block can be freed; zapping otherwise would leave no way to make the usecount positive in every() */ \
+ if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); if(!(opt&0x40))c=(UI)c>>(w==fx); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){if(likely(c2==(ACINPLACE+ACUC1))){*tpopw=0; fanapop(w,AFLAG(w));}}} \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y (passed in the hx value here).  Pass in WILLOPEN from the input */ \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* pass flags from the next prim from the input flags */ \
@@ -1014,8 +1016,10 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
   if(opt&0xc0){ \
    /* f@][.  Before we execute, free the argument we don't need (unless it equals the other argument or hx) */ \
    jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-   if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){*tpopw=0; if(likely(c&1)){fanapop(w,AFLAG(w));}else{AC(w)=c-1;}}}} \
-   else{if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){*tpopa=0; if(likely(c&1)){fanapop(a,AFLAG(a));}else{AC(a)=c-1;}}}} \
+   /* free only if c<0.  Shift (UI)c>>1 to disable the free.  Special case: PRISTINE blocks can generate AC=8..xx where xx is anything, if the block is abandoned & picked up multiple times.  So check AC */ \
+   /* Check AC and zap/free only if the block can be freed; zapping otherwise would leave no way to make the usecount positive in every() */ \
+   if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){if(likely(c==(ACINPLACE+ACUC1))){*tpopw=0; fanapop(w,AFLAG(w));}}}} \
+   else{if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){if(likely(c==(ACINPLACE+ACUC1))){*tpopa=0; fanapop(a,AFLAG(a));}}}} \
    RZ(fx=(fghfn)(jtf,PTR(opt&0x40?a:w),fs,fs)); \
    hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   }else{ \
@@ -1029,9 +1033,9 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
 if((opt&0xc0)==0xc0)fghfn=FAVV(gs)->valencefns[0];else fghfn=FAVV(gs)->valencefns[1];  /* dyad for g unless f is suppressed */  \
 /* Before executing g, free any now-unused arguments */ \
 if(!((opt&2)||((opt&0x20)&&!(opt&0x10)))) \
-if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); if((opt&0xc0)!=0xc0&&(opt&0x30)!=0x30)c=(UI)c>>(w==fx); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){*tpopw=0; if(likely(c2&1)){fanapop(w,AFLAG(w));}else{AC(w)=c2-1;}}} \
+if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); if((opt&0xc0)!=0xc0&&(opt&0x30)!=0x30)c=(UI)c>>(w==fx); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){if(likely(c2==(ACINPLACE+ACUC1))){*tpopw=0; fanapop(w,AFLAG(w));}}} \
 if(!((opt&1)||((opt&0x10)&&!(opt&0x20)))) \
-if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30)!=0x30)c=(UI)c>>(a==fx); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){*tpopa=0; if(likely(c2&1)){fanapop(a,AFLAG(a));}else{AC(a)=c2-1;}}} \
+if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30)!=0x30)c=(UI)c>>(a==fx); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){if(likely(c2==(ACINPLACE+ACUC1))){*tpopa=0; fanapop(a,AFLAG(a));}}} \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y (passed in the hx value here).  Pass in WILLOPEN from the input */ \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* pass flags from the next prim from the input flags */ \
@@ -1042,6 +1046,7 @@ if((opt&0xc0)==0xc0){ \
  RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
 } \
 /* EPILOG to free up oddments from f and g, but not if we may be returning a virtual block */ \
+if(MEMAUDIT&0x2)audittstack(jt); /* scaf */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 
@@ -1255,7 +1260,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // This also guarantees that z has recursive usecount whenever x does, and that z is realized
 #define INSTALLBOX(x,xv,k,z) rifv(z); if(likely((UCISRECUR(x))!=0)){A zzZ=xv[k]; ra(z); fa(zzZ);} xv[k]=z  // we could be reinstalling the same value, so must ra before fa
 #define INSTALLBOXNF(x,xv,k,z) rifv(z); if(likely((UCISRECUR(x))!=0)){ra(z);} xv[k]=z   // Don't do the free - if we are installing into known 0 or known nonrecursive
-#define INSTALLBOXNVRECUR(xv,k,z) {I zzK=(k); {A zzZ=(xv)[zzK]; ra(z); fa(zzZ);} (xv)[zzK]=(z);}  // z is known non-virtual.  Don't test - we know we are installing into a recursive block
+#define INSTALLBOXNVRECUR(xv,k,z) {I zzK=(k); A zzZ=(xv)[zzK]; (xv)[zzK]=(z); ra(z); fa(zzZ);}  // z is known non-virtual.  Don't test - we know we are installing into a recursive block
 #define INSTALLBOXRECUR(xv,k,z) rifv(z); INSTALLBOXNVRECUR(xv,k,z)  // Don't test - we know we are installing into a recursive block
 // Same thing for RAT type.  z is a Q, xv[k] is a Q
 #define INSTALLRAT(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[k]=z

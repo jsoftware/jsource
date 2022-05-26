@@ -202,6 +202,8 @@ assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.1)
 assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.3), 0.1 
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 0.6 0.4  NB. last thread should run in master; earlier ones complete first
 while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
+(nwthreads-1) = 1 T. '' [ 55 T. ''
+nwthreads = 1 T. '' [ 0 T. ''
 NB. Verify forcetask arg
 pyx =. 6!:3 t. ''"0 N # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''

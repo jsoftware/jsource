@@ -739,6 +739,7 @@ ASSERT(0,EVNONCE)
   break;}
  case 0:  { // create a thread and start it
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
+#if PYXES
   JOBQ *jobq=JT(jt,jobqueue);
   JOB *job=JOBLOCK(jobq);  // must modify thread info under lock
   I resthread=JT(jt,nwthreads);  // number of thread to stop.  It will always be ACTIVE
@@ -754,6 +755,9 @@ ASSERT(0,EVNONCE)
    if(threadstatus==0){job=JOBLOCK(jobq); --JT(jt,nwthreads); JOBUNLOCK(jobq,job); resthread=0;}  // if error, restore thread count; error signaled earlier
   } // if thread already active, don't restart
   z=resthread?sc(resthread):0;  // if no error, return thread# started
+#else
+  ASSERT(0,EVLIMIT)
+#endif
   break;}
  case 10: {  // create a mutex.  w indicates recursive status
 #if PYXES

@@ -1192,6 +1192,8 @@
     <ClCompile Include="..\..\jsrc\xsha.c" />
     <ClCompile Include="..\..\jsrc\xt.c" />
     <ClCompile Include="..\..\jsrc\xu.c" />
+    <ClCompile Include="..\..\jsrc\crc32c.c" />
+    <ClCompile Include="..\..\jsrc\str.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\keccak1600.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\md4_dgst.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\md4_one.c" />
@@ -1202,6 +1204,20 @@
     <ClCompile Include="..\..\jsrc\openssl\sha\sha256.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\sha3.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\sha512.c" />
+    <ClCompile Include="..\..\sleef\src\common\arraymap.c" />
+    <ClCompile Include="..\..\sleef\src\common\common.c" />
+    <ClCompile Include="..\..\sleef\src\libm\rempitab.c" />
+    <ClCompile Include="..\..\sleef\src\libm\sleefsimddp.c" />
+    <ClCompile Include="..\..\base64\lib\arch\avx2\codec-avx2.c" />
+    <ClCompile Include="..\..\base64\lib\arch\generic\codec-generic.c" />
+    <ClCompile Include="..\..\base64\lib\arch\neon64\codec-neon64.c" />
+    <ClCompile Include="..\..\base64\lib\arch\ssse3\codec-ssse3.c" />
+    <ClCompile Include="..\..\base64\lib\arch\sse41\codec-sse41.c" />
+    <ClCompile Include="..\..\base64\lib\arch\sse42\codec-sse42.c" />
+    <ClCompile Include="..\..\base64\lib\arch\avx\codec-avx.c" />
+    <ClCompile Include="..\..\base64\lib\lib.c" />
+    <ClCompile Include="..\..\base64\lib\codec_choose.c" />
+    <ClCompile Include="..\..\base64\lib\tables\tables.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\dllsrc\jdll.def" />

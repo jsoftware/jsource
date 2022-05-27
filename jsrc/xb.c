@@ -6,6 +6,10 @@
 #include "j.h"
 #include "x.h"
 
+#include <ctype.h>
+extern void StringToLower(char *str,size_t len);
+extern void StringToUpper(char *str,size_t len);
+
 #ifdef MMSC_VER
 #pragma warning(disable: 4101)
 #endif
@@ -381,6 +385,20 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
   case -1: s=(float*)x; DQ(m, *v++=       *s++;); {RETF(z);}
   case  1: s=(float*)v; DQ(n, *s++=(float)*x++;); {RETF(z);}
 }}
+
+// a  0: tolower  1: toupper
+// w  only process LIT
+F2(jtlowerupper){I k,n;A z;
+ ARGCHK2(a,w);
+ ASSERT(1==AN(a),EVDOMAIN);
+ RE(k=i0(a));
+ ASSERT(BETWEENC(k,0,1),EVDOMAIN);
+ ASSERT(!ISSPARSE(AT(w)),EVNONCE);
+ z=ca(w);
+ if(!(LIT&AT(w))) RETF(z);
+ if(k) StringToUpper(CAV(z),AN(w)); else StringToLower(CAV(z),AN(w));
+ RETF(z);
+}    /* a 3!:12 w */
 
 // w is a box, result is 1 if it contains a  NaN
 static B jtisnanq(J jt,A w){

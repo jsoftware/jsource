@@ -637,6 +637,7 @@
 #define locname(x)                  jtlocname(jt,(x))
 #define locnlx(x,y)                 jtlocnlx(jt,(x),(y))
 #define logar1(x)                   jtatomic1(jt,(x),ds(CLOG))  
+#define lowerupper(x,y)             jtlowerupper(jt,(x),(y))
 #define lp(x)                       jtlp(jt,(x))
 #define lrv(x)                      ((UI)((x)->lrr)>>RANKTX)  // left rank of V
 #define lr(x)                       lrv(FAV(x))  // left rank of A

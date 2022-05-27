@@ -201,6 +201,7 @@ OBJS=  \
  ../../jsrc/xt.o \
  ../../jsrc/xu.o \
  ../../jsrc/crc32c.o \
+ ../../jsrc/str.o \
  ../../jsrc/openssl/sha/keccak1600.o \
  ../../jsrc/openssl/sha/md4_dgst.o \
  ../../jsrc/openssl/sha/md4_one.o \

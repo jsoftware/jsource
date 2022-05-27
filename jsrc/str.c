@@ -3,6 +3,7 @@
 /*                                                                         */
 /* string utiliy                                                           */
 
+#include <stddef.h>
 #include <ctype.h>
 
 extern void StringToLower(char *str,size_t len);

@@ -6,6 +6,7 @@
 #include "j.h"
 #include "x.h"
 
+#include <stddef.h>
 #include <ctype.h>
 extern void StringToLower(char *str,size_t len);
 extern void StringToUpper(char *str,size_t len);

@@ -728,7 +728,7 @@ extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtpyxval(J,A);
-extern C        jtjobrun(J,unsigned char(*)(J,void*,UI4),void(*)(J,void*),void*,UI4);
+extern C        jtjobrun(J,unsigned char(*)(J,void*,UI4),void*,UI4);
 extern A        jtfxeachv(J,I,A);
 #if SY_64
 extern RESTRICTF A jtga0(J,I,I);

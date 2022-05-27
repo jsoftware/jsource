@@ -4,13 +4,6 @@
 // Threads and Tasks
 #include "j.h"
 
-#if !PYXES
-C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4 n){
- DO(n,C c=f(jt,ctx,i);if(c)R c;);
- end(jt,ctx);
- R 0;}
-#endif
-
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
@@ -554,7 +547,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue)
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
 // execute an internal job made up of n tasks.  f is the function to run, end is the function to call at end, ctx is parms to pass to each task
-C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4 n){JOBQ *jobq=JT(jt,jobqueue);
+C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n){JOBQ *jobq=JT(jt,jobqueue);
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
  if(likely((-(I)JT(jt,nwthreads)&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
@@ -593,7 +586,6 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void(*end)(J,void*),void *ctx,UI4
  }
  // There are no more tasks to start.  Wait for all to finish, then call the ending routine.
  while(__atomic_load_n(&job->internal.nf,__ATOMIC_ACQUIRE)<n){_mm_pause(); YIELD}  // scaf  should we have a mutex & wait for a wakeup from the finisher?
- if(end)end(jt,ctx);   // scaf should this return the final error value?  should the function just be left to the caller, and removed from here?
  C r=__atomic_load_n(&job->internal.err,__ATOMIC_ACQUIRE); fa(jobA); R r;  // extract return code from the job, then free the job and return the error code
  // job may still be in the job list - if so it will be fa()d when it reaches the top
 }
@@ -604,7 +596,7 @@ F1(jtnulljob){
   ASSERT(AR(w)==1,EVRANK); ASSERT(AN(w)==2,EVLENGTH); if(!(AT(w)&INT))RZ(w=cvt(INT,w));
   I nspins=IAV(w)[0], ntasks=IAV(w)[1];  // extract parms
   I ctx=nspins;
-  jtjobrun(jt,&nulljohnson,0,&ctx,ntasks);
+  jtjobrun(jt,&nulljohnson,&ctx,ntasks);
   R mtm;
 }
 
@@ -618,6 +610,10 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  R pyx;
 }
 static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
+C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n){
+ DO(n,C c=f(jt,ctx,i);if(c)R c;);
+ R 0;}
+
 #endif
 
 // u t. n - start a task.  We just create a verb to handle the arguments, performing <@u

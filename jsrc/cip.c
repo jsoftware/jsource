@@ -7,7 +7,7 @@
 #include "vasm.h"
 #include "gemm.h"
 
-#define MAXAROWS 64  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
+#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
 
 // Analysis for inner product
 // a,w are arguments
@@ -223,28 +223,40 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  R NANTEST==0;  // return with error (0) if any FP error
 }
 // cache-blocking code
-typedef struct { D*av,*wv,*zv;I m,n,p,flgs; I nanerr; } CACHEMMSTATE;
+// ctx block passed in from the task code
+typedef struct {
+ D*av,*wv,*zv;  // arg pointers into cachedmmultx, defined below
+ I m,n,p;  // dimensions ((mxp) x (pxn)) defined below
+ I flgs;   // complex, triangular processing flags
+ I nbigtasks[2];  // number of tasks using taskm[0]; number of tasks that are not in the shortened tail
+ I4 taskm[2];  // number of rows in leading tasks, unshortened trailing tasks
+ I nanerr;
+} CACHEMMSTATE;
 #define OPHEIGHTX 2
 #define OPHEIGHT ((I)1<<OPHEIGHTX)  // height of outer-product block
 #define OPWIDTHX 3
 #define OPWIDTH ((I)1<<OPWIDTHX)  // width of outer-product block
 #define CACHEWIDTH 64  // width of resident cache block (in D atoms)
-#define CACHEHEIGHT 16  // height of resident cache block
+#define CACHEHEIGHTX 4
+#define CACHEHEIGHT ((I)1<<CACHEHEIGHTX)  // height of resident cache block
 static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
-// m must not exceed MAXAROWS.  mfull is the number of rows from the actual starting row to the end of a
+// m must not exceed MAXAROWS.
 // Result is 0 if NaN error, 1 if OK
 static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
  I flgs=pd->flgs;
- I m=MIN(MAXAROWS,pd->m-ti*MAXAROWS);
+ I tishort=ti-pd->nbigtasks[0]; I m=pd->taskm[REPSGN(tishort)+1];
+ I mtailct=pd->nbigtasks[1]-ti;
+ I moffset=ti*pd->taskm[0]+tishort*(m-pd->taskm[0])+((mtailct&REPSGN(mtailct))<<CACHEHEIGHTX);
+ m+=REPSGN(mtailct-1)<<CACHEHEIGHTX; m=MIN(m,pd->m-moffset);
  I n=pd->n;
- I pnom=pd->p-(((ti*MAXAROWS)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP));
+ I pnom=pd->p-(((moffset)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP));
  I pstored=pd->p;
- D *av=pd->av+(ti*MAXAROWS*(pd->p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP))));
- D *wv=pd->wv+((n*ti*MAXAROWS)&-((flgs>>FLGAUTRIX)&1));
- D *zv=pd->zv+(n*ti*MAXAROWS);
+ D *av=pd->av+(moffset*(pd->p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP))));
+ D *wv=pd->wv+((n*moffset)&-((flgs>>FLGAUTRIX)&1));
+ D *zv=pd->zv+(n*moffset);
  
  D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // Allocate a temporary result area for the stripe of z results
@@ -515,11 +527,19 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  if(((((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
   // blocked algorithm.  there is no size limit on the blocks
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
- CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs};
-// obsolete  DO(((m+MAXAROWS)*0x55555555)>>(32+7),cachedmmultx(jt,&ctx,i););
- jtjobrun(jt,cachedmmultx,0,&ctx,(m+MAXAROWS-1)/MAXAROWS);
+ // not blocked - use the cached algorithm
+ UI nthreads=__atomic_load_n(&JT(jt,nwthreads),__ATOMIC_ACQUIRE)+1;  // get # running threads, just once so we have a consistent view
+ UI ncache=(m+CACHEHEIGHT-1)>>CACHEHEIGHTX;  // number of pieces of a, including remnant
+ UI nperthread=ncache/nthreads; UI nremnant=ncache%nthreads;  // # pieces in all threads, #threads with an extra piece
+ UI nfulltasks=nperthread/(MAXAROWS/CACHEHEIGHT); UI nendcache=nperthread%(MAXAROWS/CACHEHEIGHT); // # full tasks per thread, # cacheblocks in final task in each thread
+ UI tailtasks=nremnant; tailtasks=nendcache!=0?nthreads:tailtasks;  // number of tasks in the tail: if there is at least one block in all threads, nthreads; otherwise the number of single blocks in the remnant
+ nendcache++;  // if there is an extra cacheblock in some threads, extend the length of the last blocks to account for it.  If there is no extra cache block, tailtasks will be 0 and this won't matter
+ CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs,.nbigtasks={nfulltasks*nthreads,nfulltasks*nthreads+nremnant},.taskm={MAXAROWS,nendcache<<CACHEHEIGHTX}};
+  // number of full tasks, followed by number that have size 'nendcache'.  Later tasks have size nendcache-CACHEHEIGHT
+  // scaf todo: use blockedmmult for the runt task?
+ jtjobrun(jt,cachedmmultx,&ctx,nfulltasks*nthreads+tailtasks);  // go run the tasks
  R !ctx.nanerr;}
- 
+
 #else
 // cache-blocking code
 #define OPHEIGHT 2  // height of outer-product block

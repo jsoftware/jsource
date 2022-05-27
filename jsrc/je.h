@@ -510,6 +510,7 @@ extern F2(jtlock2);
 extern F2(jtlocnl2);
 extern F2(jtlocpath2);
 extern F2(jtlogar2);
+extern F2(jtlowerupper);
 extern F2(jtmatch);
 extern F2(jtmdiv);
 extern F2(jtmemu2);

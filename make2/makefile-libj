@@ -149,6 +149,7 @@ OBJS=  \
  xt.o \
  xu.o \
  crc32c.o \
+ str.o \
  keccak1600.o \
  md4_dgst.o \
  md4_one.o \

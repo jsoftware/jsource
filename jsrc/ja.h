@@ -875,7 +875,7 @@
 #define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
-#define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);} \
+#define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);} \
                                     radescend(x)}}
                                     // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame
                                     // cond must be true only if c<0

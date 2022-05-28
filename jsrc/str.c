@@ -8,6 +8,10 @@
 
 extern void StringToLower(char *str,size_t len);
 extern void StringToUpper(char *str,size_t len);
+extern void StringToLowerUCS2(unsigned short *str,size_t len);
+extern void StringToUpperUCS2(unsigned short *str,size_t len);
+extern void StringToLowerUCS4(unsigned int *str,size_t len);
+extern void StringToUpperUCS4(unsigned int *str,size_t len);
 
 /* msvc does not define __SSE2__ */
 #if !defined(__SSE2__)
@@ -26,22 +30,14 @@ extern void StringToUpper(char *str,size_t len);
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLower(char *str,size_t len)
 {
- const __m128i asciiA = _mm_set1_epi8('A' - 1);
- const __m128i asciiZ = _mm_set1_epi8('Z' + 1);
- const __m128i diff = _mm_set1_epi8('a' - 'A');
  while (len >= 16) {
-  __m128i inp = _mm_loadu_si128((__m128i*)str);
-  /* > 'A': 0xff, < 'A': 0x00 */
-  __m128i greaterThanA = _mm_cmpgt_epi8(inp, asciiA);
-  /* <= 'Z': 0xff, > 'Z': 0x00 */
-  __m128i lessEqualZ = _mm_cmplt_epi8(inp, asciiZ);
-  /* 'Z' >= x >= 'A': 0xFF, else 0x00 */
-  __m128i mask = _mm_and_si128(greaterThanA, lessEqualZ);
-  /* 'Z' >= x >= 'A': 'a' - 'A', else 0x00 */
-  __m128i toAdd = _mm_and_si128(mask, diff);
-  /* add to change to lowercase */
-  __m128i added = _mm_add_epi8(inp, toAdd);
-  _mm_storeu_si128((__m128i *)str, added);
+  __m128i sv = _mm_load_si128(( __m128i*)str);
+  /* From A */
+  __m128i rangeshift = _mm_sub_epi8(sv, _mm_set1_epi8((char)('A'+128)));
+  /* To Z */
+  __m128i nomodify = _mm_cmpgt_epi8(rangeshift, _mm_set1_epi8(-128 + 25));
+  /* ^ ' ' */
+  _mm_storeu_si128((__m128i*)str, _mm_xor_si128(sv, _mm_andnot_si128(nomodify, _mm_set1_epi8(0x20))));
   len -= 16;
   str += 16;
  }
@@ -54,22 +50,16 @@ void StringToLower(char *str,size_t len)
 /* Same, but to uppercase. */
 void StringToUpper(char *str,size_t len)
 {
- const __m128i asciia = _mm_set1_epi8('a' - 1);
- const __m128i asciiz = _mm_set1_epi8('z' + 1);
- const __m128i diff = _mm_set1_epi8('a' - 'A');
  while (len >= 16) {
-  __m128i inp = _mm_loadu_si128((__m128i*)str);
-  /* > 'a': 0xff, < 'a': 0x00 */
-  __m128i greaterThana = _mm_cmpgt_epi8(inp, asciia);
-  /* <= 'z': 0xff, > 'z': 0x00 */
-  __m128i lessEqualz = _mm_cmplt_epi8(inp, asciiz);
-  /* 'z' >= x >= 'a': 0xFF, else 0x00 */
-  __m128i mask = _mm_and_si128(greaterThana, lessEqualz);
-  /* 'z' >= x >= 'a': 'a' - 'A', else 0x00 */
-  __m128i toSub = _mm_and_si128(mask, diff);
-  /* subtract to change to uppercase */
-  __m128i added = _mm_sub_epi8(inp, toSub);
-  _mm_storeu_si128((__m128i *)str, added);
+ // Unaligned load.
+ __m128i r0 = _mm_loadu_si128((__m128i*)str);
+ // It is also possible to perform aligned loads by skipping enough characters in the front
+
+ // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+ __m128i maskaz = _mm_or_si128(_mm_cmplt_epi8(r0, _mm_set1_epi8( 'a' )), _mm_cmpgt_epi8(r0, _mm_set1_epi8( 'z' )));
+
+ // Set the 6th bit to 0 only for lowercase characters.
+ _mm_storeu_si128((__m128i*)str, _mm_andnot_si128(_mm_andnot_si128(maskaz, _mm_set1_epi8(0x20)),r0));
   len -= 16;
   str += 16;
  }
@@ -144,3 +134,40 @@ void StringToUpper(char *str,size_t len)
  }
 }
 #endif
+
+void StringToLowerUCS2(unsigned short *str,size_t len)
+{
+ const char OFFSET = 'a' - 'A';
+ while (len-- > 0) {
+  *str= (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
+  ++str;
+ }
+}
+
+void StringToUpperUCS2(unsigned short *str,size_t len)
+{
+ const char OFFSET = 'a' - 'A';
+ while (len-- > 0) {
+  *str= (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
+  ++str;
+ }
+}
+
+void StringToLowerUCS4(unsigned int *str,size_t len)
+{
+ const char OFFSET = 'a' - 'A';
+ while (len-- > 0) {
+  *str= (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
+  ++str;
+ }
+}
+
+void StringToUpperUCS4(unsigned int *str,size_t len)
+{
+ const char OFFSET = 'a' - 'A';
+ while (len-- > 0) {
+  *str= (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
+  ++str;
+ }
+}
+

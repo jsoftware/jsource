@@ -10,6 +10,10 @@
 #include <ctype.h>
 extern void StringToLower(char *str,size_t len);
 extern void StringToUpper(char *str,size_t len);
+extern void StringToLowerUCS2(unsigned short *str,size_t len);
+extern void StringToUpperUCS2(unsigned short *str,size_t len);
+extern void StringToLowerUCS4(unsigned int *str,size_t len);
+extern void StringToUpperUCS4(unsigned int *str,size_t len);
 
 #ifdef MMSC_VER
 #pragma warning(disable: 4101)
@@ -396,8 +400,13 @@ F2(jtlowerupper){I k,n;A z;
  ASSERT(BETWEENC(k,0,1),EVDOMAIN);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  z=ca(w);
- if(!(LIT&AT(w))) RETF(z);
+ if(LIT&AT(w)){
  if(k) StringToUpper(CAV(z),AN(w)); else StringToLower(CAV(z),AN(w));
+ }else if(C2T&AT(w)){
+ if(k) StringToUpperUCS2(USAV(z),AN(w)); else StringToLowerUCS2(USAV(z),AN(w));
+ }else if(C4T&AT(w)){
+ if(k) StringToUpperUCS4(UI4AV(z),AN(w)); else StringToLowerUCS4(UI4AV(z),AN(w));
+ }
  RETF(z);
 }    /* a 3!:12 w */
 

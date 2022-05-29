@@ -3,6 +3,8 @@
 /*                                                                         */
 /* string utiliy                                                           */
 
+#include "j.h"
+
 #include <stddef.h>
 #include <ctype.h>
 
@@ -12,24 +14,69 @@ extern void StringToLowerUCS2(unsigned short *str,size_t len);
 extern void StringToUpperUCS2(unsigned short *str,size_t len);
 extern void StringToLowerUCS4(unsigned int *str,size_t len);
 extern void StringToUpperUCS4(unsigned int *str,size_t len);
+extern size_t Stringrchr(char *str,char ch, size_t stride,size_t len);
+extern size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len);
+extern size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len);
 
-/* msvc does not define __SSE2__ */
-#if !defined(__SSE2__)
-#if defined(_MSC_VER) && defined(_WIN32)
-#if (defined(_M_AMD64) || defined(_M_X64))
-#define __SSE2__ 1
-#elif _M_IX86_FP==2
-#define __SSE2__ 1
+#if defined(__SSE2__) || EMU_AVX
+
+static size_t srchr(char* str, char ch, size_t len){
+ size_t i=len;
+ // align to 16 bytes
+ while ((i>0) && ((((intptr_t)str+i) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ if(!i) return 0;
+/* don't test i>=0 which is always true because size_t is unsigned */
+ const __m128i xmm0 = _mm_set1_epi8( ch );
+ const __m128i xmm2 = _mm_set1_epi8( 0xff );
+ while (i > 16) {
+  // search for ch
+  int mask = 0;
+   __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-16));
+   xmm1 = _mm_andnot_si128(_mm_cmpeq_epi8(xmm1, xmm0),xmm2);
+   if ((mask = _mm_movemask_epi8(xmm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 16 bytes in xmm1, or within 16 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanBackward(&pos, mask);
+    i -= (size_t)pos-16;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+    i -= __builtin_clz(mask)-16;  // mask is 32-bits but only lower 16-bits are significant
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_clz
 #endif
-#endif
+    return i;
+  }
+  i -= 16;
+ }
+
+ while (i>0){if (ch!=str[i-1]) return i; else --i;}
+ return 0;
+}
+#else
+static size_t srchr(char* str, char ch, size_t len){
+/* don't test i>=0 which is always true because size_t is unsigned */
+ for(size_t i=len; i>0; i--) if (ch!=str[i-1]) return i;
+ return 0;
+}
 #endif
 
-#ifdef __SSE2__
-#include <immintrin.h>
+static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
+/* don't test i>=0 which is always true because size_t is unsigned */
+ for(size_t i=len; i>0; i--) if (ch!=str[i-1]) return i;
+ return 0;
+}
+
+static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
+/* don't test i>=0 which is always true because size_t is unsigned */
+ for(size_t i=len; i>0; i--) if (ch!=str[i-1]) return i;
+ return 0;
+}
+
+#if defined(__SSE2__) || EMU_AVX
 
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
-void StringToLower(char *str,size_t len)
-{
+void StringToLower(char *str,size_t len){
  while (len >= 16) {
   __m128i sv = _mm_load_si128(( __m128i*)str);
   /* From A */
@@ -48,8 +95,7 @@ void StringToLower(char *str,size_t len)
 }
 
 /* Same, but to uppercase. */
-void StringToUpper(char *str,size_t len)
-{
+void StringToUpper(char *str,size_t len){
  while (len >= 16) {
  // Unaligned load.
  __m128i r0 = _mm_loadu_si128((__m128i*)str);
@@ -72,8 +118,7 @@ void StringToUpper(char *str,size_t len)
 #include <arm_neon.h>
 
 /* Literally the exact same code as above, but for NEON. */
-void StringToLower(char *str,size_t len)
-{
+void StringToLower(char *str,size_t len){
  const uint8x16_t asciiA = vdupq_n_u8('A' - 1);
  const uint8x16_t asciiZ = vdupq_n_u8('Z' + 1);
  const uint8x16_t diff = vdupq_n_u8('a' - 'A');
@@ -95,8 +140,7 @@ void StringToLower(char *str,size_t len)
 }
 
 /* Literally the exact same code as above, but for NEON. */
-void StringToUpper(char *str,size_t len)
-{
+void StringToUpper(char *str,size_t len){
  const uint8x16_t asciia = vdupq_n_u8('a' - 1);
  const uint8x16_t asciiz = vdupq_n_u8('z' + 1);
  const uint8x16_t diff = vdupq_n_u8('a' - 'A');
@@ -118,16 +162,14 @@ void StringToUpper(char *str,size_t len)
 }
 #else
 /* Just go scalar. */
-void StringToLower(char *str,size_t len)
-{
+void StringToLower(char *str,size_t len){
  while (len-- > 0) {
   *str = tolower(*str);
   ++str;
  }
 }
 
-void StringToUpper(char *str,size_t len)
-{
+void StringToUpper(char *str,size_t len){
  while (len-- > 0) {
   *str = toupper(*str);
   ++str;
@@ -135,8 +177,7 @@ void StringToUpper(char *str,size_t len)
 }
 #endif
 
-void StringToLowerUCS2(unsigned short *str,size_t len)
-{
+void StringToLowerUCS2(unsigned short *str,size_t len){
  const char OFFSET = 'a' - 'A';
  while (len-- > 0) {
   *str= (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -144,8 +185,7 @@ void StringToLowerUCS2(unsigned short *str,size_t len)
  }
 }
 
-void StringToUpperUCS2(unsigned short *str,size_t len)
-{
+void StringToUpperUCS2(unsigned short *str,size_t len){
  const char OFFSET = 'a' - 'A';
  while (len-- > 0) {
   *str= (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
@@ -153,8 +193,7 @@ void StringToUpperUCS2(unsigned short *str,size_t len)
  }
 }
 
-void StringToLowerUCS4(unsigned int *str,size_t len)
-{
+void StringToLowerUCS4(unsigned int *str,size_t len){
  const char OFFSET = 'a' - 'A';
  while (len-- > 0) {
   *str= (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -162,8 +201,7 @@ void StringToLowerUCS4(unsigned int *str,size_t len)
  }
 }
 
-void StringToUpperUCS4(unsigned int *str,size_t len)
-{
+void StringToUpperUCS4(unsigned int *str,size_t len){
  const char OFFSET = 'a' - 'A';
  while (len-- > 0) {
   *str= (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
@@ -171,3 +209,35 @@ void StringToUpperUCS4(unsigned int *str,size_t len)
  }
 }
 
+size_t Stringrchr(char *str, char ch, size_t stride, size_t len){
+ size_t i=len,ln=0;
+ while (i-- > 0) {
+  size_t l=srchr(str,ch,stride);
+  ln=(ln<l)?l:ln;
+  if(ln==stride) return ln;
+  str+=stride;
+ }
+ return ln;
+}
+
+size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride, size_t len){
+ size_t i=len,ln=0;
+ while (i-- > 0) {
+  size_t l=srchr2(str,ch,stride);
+  ln=(ln<l)?l:ln;
+  if(ln==stride) return ln;
+  str+=stride;
+ }
+ return ln;
+}
+
+size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride, size_t len){
+ size_t i=len,ln=0;
+ while (i-- > 0) {
+  size_t l=srchr4(str,ch,stride);
+  ln=(ln<l)?l:ln;
+  if(ln==stride) return ln;
+  str+=stride;
+ }
+ return ln;
+}

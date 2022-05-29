@@ -988,6 +988,7 @@
 #define rrv(x)                      ((UI)((x)->lrr)&RANKTMSK)  // rr of V
 #define rr(x)                       rrv(FAV(x))  // rr of A
 #define rsh0(x)                     jtrsh0(jt,(x))
+#define rtrim(x)                    jtrtrim(jt,(x))
 #define rsort(x)                    jtrsort(jt,(x))
 #define sb2(x,y)                    jtsb2(jt,(x),(y))
 #define sbbox(x)                    jtsbbox(jt,(x))

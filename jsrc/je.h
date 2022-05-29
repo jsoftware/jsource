@@ -303,6 +303,7 @@ extern F1(jtrngstateq);
 extern F1(jtrngstates);
 extern F1(jtroll);
 extern F1(jtrollx);
+extern F1(jtrtrim);
 extern F1(jtsb1);
 extern F1(jtsborder);
 extern F1(jtscind);

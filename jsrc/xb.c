@@ -8,12 +8,16 @@
 
 #include <stddef.h>
 #include <ctype.h>
+
 extern void StringToLower(char *str,size_t len);
 extern void StringToUpper(char *str,size_t len);
 extern void StringToLowerUCS2(unsigned short *str,size_t len);
 extern void StringToUpperUCS2(unsigned short *str,size_t len);
 extern void StringToLowerUCS4(unsigned int *str,size_t len);
 extern void StringToUpperUCS4(unsigned int *str,size_t len);
+extern size_t Stringrchr(char *str,char ch, size_t stride,size_t len);
+extern size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len);
+extern size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len);
 
 #ifdef MMSC_VER
 #pragma warning(disable: 4101)
@@ -392,7 +396,7 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
 }}
 
 // a  0: tolower  1: toupper
-// w  only process LIT
+// w  only process LIT C2T C4T
 F2(jtlowerupper){I k,n;A z;
  ARGCHK2(a,w);
  ASSERT(1==AN(a),EVDOMAIN);
@@ -409,6 +413,52 @@ F2(jtlowerupper){I k,n;A z;
  }
  RETF(z);
 }    /* a 3!:12 w */
+
+// right trim space
+// w  only process LIT C2T C4T
+F1(jtrtrim){I stride,ln,n,ar;A z=0;C *u,*v;I as[63];
+ ARGCHK1(w);
+ ASSERT(!ISSPARSE(AT(w)),EVNONCE);
+ if(!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
+ // Allocate result area
+ if(AR(w)){
+  PROD(n,AR(w)-1,AS(w)); if(!n) RETF(ca(w));
+  stride=AS(w)[AR(w)-1];
+ }else stride=n=1;
+
+ if(LIT&AT(w)){
+  ln=Stringrchr(CAV(w),' ',stride,n);
+ }else if(C2T&AT(w)){
+  ln=Stringrchr2(USAV(w),' ',stride,n);
+ }else if(C4T&AT(w)){
+  ln=Stringrchr4(UI4AV(w),' ',stride,n);
+ }
+ // Allocate result area
+ if(AR(w)){
+  DO(AR(w),as[i]=AS(w)[i];); as[AR(w)-1]=ln;
+  ar=AR(w);
+ } else {
+  as[0]=ln;
+  ar=1;
+ }
+ if(LIT&AT(w)){
+  GATV(z,LIT,n*ln,ar,as);
+ }else if(C2T&AT(w)){
+  GATV(z,C2T,n*ln,ar,as);
+ }else if(C4T&AT(w)){
+  GATV(z,C4T,n*ln,ar,as);
+ }
+ if(!ln)RETF(z);
+ u=CAV(w); v=CAV(z);
+ if(LIT&AT(w)){
+  DO(n, memcpy(v,u,ln); v+=ln; u+=stride;);
+ }else if(C2T&AT(w)){
+  DO(n, memcpy(v,u,ln*2); v+=ln*2; u+=stride*2;);
+ }else if(C4T&AT(w)){
+  DO(n, memcpy(v,u,ln*4); v+=ln*4; u+=stride*4;);
+ }
+ RETF(z);
+}    /* 128!:11 w */
 
 // w is a box, result is 1 if it contains a  NaN
 static B jtisnanq(J jt,A w){

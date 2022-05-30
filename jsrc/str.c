@@ -78,7 +78,7 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLower(char *str,size_t len){
  while (len >= 16) {
-  __m128i sv = _mm_load_si128(( __m128i*)str);
+  __m128i sv = _mm_loadu_si128(( __m128i*)str);
   /* From A */
   __m128i rangeshift = _mm_sub_epi8(sv, _mm_set1_epi8((char)('A'+128)));
   /* To Z */

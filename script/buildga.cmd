@@ -16,6 +16,8 @@ echo #define jbuilder  "www.jsoftware.com" >> jsrc\jversion.h
 cd makemsvc\jconsole
 nmake -f makefile.win CC=clang-cl x64=1 USE_PYXES=1 clean
 nmake -f makefile.win CC=clang-cl x64=1 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=0 USE_PYXES=1
 cd ..
 cd jdll
 nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1 clean
@@ -24,10 +26,14 @@ nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 USE_PYXES=1 clean
 nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 USE_PYXES=1
 nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1 clean
 nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1
 cd ..
 cd tsdll
 nmake -f makefile.win CC=clang-cl x64=1 clean
 nmake -f makefile.win CC=clang-cl x64=1
+nmake -f makefile.win CC=clang-cl x64=0 clean
+nmake -f makefile.win CC=clang-cl x64=0
 cd ..
 
 copy jconsole\jconsole.exe ..\j64

@@ -38,9 +38,12 @@ pyx=. x&g1@y t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
  if. *./0>r do. break. end.
+echo 'f1 a ', ":6!:0''
  6!:3[0.001
+echo 'f1 b ', ":6!:0''
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
+echo 'f1 c ', ":6!:0''
 ]&> pyx
 )
 
@@ -165,10 +168,14 @@ N = 1 T.''
 1: 6!:3[0.5
 N = {. 2 T.''    NB. all should be waiting
 
+echo 'c1 ', ":6!:0''
 1 f1 N2          NB. queued job
+echo 'c2 ', ":6!:0''
 
 N = 1 T.''
+echo 'c3 ', ":6!:0''
 1: 6!:3[0.5
+echo 'c4 ', ":6!:0''
 N = {. 2 T.''    NB. all should be waiting
 
 0 f2 N2          NB. run in master thread

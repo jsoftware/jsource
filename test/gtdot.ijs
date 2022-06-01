@@ -35,7 +35,7 @@ echo^:ECHOFILENAME 'test ',(":1),' f ',(":y),' finish: ',":6!:0''
 )
 
 f1=: 4 : 0
-if. x*GITHUBCI*.IFWIN do. y=. 2 <. y end.    NB. temp workaround
+if. x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
 echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 while. do.
@@ -49,7 +49,7 @@ echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' finish: ',":6!:0''
 )
 
 f2=: 4 : 0
-if. x*GITHUBCI*.IFWIN do. y=. 2 <. y end.    NB. temp workaround
+if. x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
 echo^:ECHOFILENAME 'test ',(":1),' f2 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 pyx0=. g t. (<'worker';x) "0 i.y

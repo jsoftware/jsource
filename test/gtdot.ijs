@@ -22,6 +22,7 @@ NB. no more thread can be created
 'limit error' -: 0&T. etx ''
 
 f=: 4 : 0
+echo^:ECHOFILENAME 'test ',(":1),' f ',(":y),' start: ',":6!:0''
 pyx=. g t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
@@ -29,10 +30,12 @@ while. do.
  6!:3[0.001
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
+echo^:ECHOFILENAME 'test ',(":1),' f ',(":y),' finish: ',":6!:0''
 ]&> pyx
 )
 
 f1=: 4 : 0
+echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
@@ -40,10 +43,12 @@ while. do.
  6!:3[0.001
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
+echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' finish: ',":6!:0''
 ]&> pyx
 )
 
 f2=: 4 : 0
+echo^:ECHOFILENAME 'test ',(":1),' f2 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 pyx0=. g t. (<'worker';x) "0 i.y
 while. do.
@@ -52,6 +57,7 @@ while. do.
  6!:3[0.001
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
+echo^:ECHOFILENAME 'test ',(":1),' f2 ',(":y),' finish: ',":6!:0''
 (,]&> pyx), ]&>pyx0
 )
 
@@ -156,45 +162,37 @@ N = 1 T.''
 1: 6!:3[0.5
 N = {. 2 T.''    NB. all should be waiting
 
-1 f1 N2          NB. queued job
+1 f1 N2          NB. queued job stress test
 
 N = 1 T.''
 1: 6!:3[0.5
 N = {. 2 T.''    NB. all should be waiting
 
-echo^:ECHOFILENAME 'stress test 1 f1 30 start: ',":6!:0''
-1 f1 30          NB. queued job stress test
-
-N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
-
-echo^:ECHOFILENAME 'stress test 1 f1 40 start: ',":6!:0''
 1 f1 40          NB. queued job stress test
 
 N = 1 T.''
 1: 6!:3[0.5
 N = {. 2 T.''    NB. all should be waiting
 
-echo^:ECHOFILENAME 'stress test 1 f1 50 start: ',":6!:0''
+1 f1 45          NB. queued job stress test
+
+N = 1 T.''
+1: 6!:3[0.5
+N = {. 2 T.''    NB. all should be waiting
+
 1 f1 50          NB. queued job stress test
 
 N = 1 T.''
 1: 6!:3[0.5
 N = {. 2 T.''    NB. all should be waiting
 
-echo^:ECHOFILENAME 'stress test 1 f1 55 start: ',":6!:0''
 1 f1 55          NB. queued job stress test
 
 N = 1 T.''
 1: 6!:3[0.5
 N = {. 2 T.''    NB. all should be waiting
 
-echo^:ECHOFILENAME 'stress test 1 f1 60 start: ',":6!:0''
 1 f1 60          NB. queued job stress test
-
-echo^:ECHOFILENAME 'stress test finish: ',":6!:0''
-
 
 N = 1 T.''
 1: 6!:3[0.5

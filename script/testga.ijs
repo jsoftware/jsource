@@ -10,8 +10,7 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-NB. RES=: RUN ddall
-RES=: '' [ RUN1 'gtdot'
+RES=: RUN ddall
 
 3 : 0''
 msg=. 9!:14''

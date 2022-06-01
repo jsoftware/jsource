@@ -402,7 +402,7 @@ F2(jtlowerupper){I k,n;A z;
  ASSERT(1==AN(a),EVDOMAIN);
  RE(k=i0(a));
  ASSERT(BETWEENC(k,0,1),EVDOMAIN);
- ASSERT(!ISSPARSE(AT(w)),EVNONCE);
+// ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  z=ca(w);
  if(LIT&AT(w)){
  if(k) StringToUpper(CAV(z),AN(w)); else StringToLower(CAV(z),AN(w));

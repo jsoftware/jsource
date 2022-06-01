@@ -38,6 +38,7 @@ pyx=. x&g1@y t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
  if. *./0>r do. break. end.
+echo r
 echo 'f1 a ', ":6!:0''
  6!:3[0.001
 echo 'f1 b ', ":6!:0''
@@ -48,14 +49,19 @@ echo 'f1 c ', ":6!:0''
 )
 
 f2=: 4 : 0
+echo 'f2 ', ":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 pyx0=. g t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx,pyx0               NB. echo r for debug
  if. *./0>r do. break. end.
+echo r
+echo 'f2 a ', ":6!:0''
  6!:3[0.001
+echo 'f2 b ', ":6!:0''
 end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
+echo 'f2 c ', ":6!:0''
 (,]&> pyx), ]&>pyx0
 )
 

@@ -35,6 +35,7 @@ echo^:ECHOFILENAME 'test ',(":1),' f ',(":y),' finish: ',":6!:0''
 )
 
 f1=: 4 : 0
+if. GITHUBCI*.IFWIN do. y=. 2 <. y end.    NB. temp workaround
 echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 while. do.

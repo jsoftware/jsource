@@ -7,8 +7,6 @@
 #include "vasm.h"
 #include "gemm.h"
 
-#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
-
 // Analysis for inner product
 // a,w are arguments
 // zt is type of result
@@ -230,7 +228,8 @@ typedef struct {
  I flgs;   // complex, triangular processing flags
  I nbigtasks[2];  // number of tasks using taskm[0]; number of tasks that are not in the shortened tail
  I4 taskm[2];  // number of rows in leading tasks, unshortened trailing tasks
- I nanerr;
+ I nanerr; // nonzero whenever a nan was encountered; could indicate we should throw an error (_+__) or a case where we disagree with ieee (_*0)
+// scaf should deal with this case better; for the former case, should abort immediately (ideally siglonjmp or so but...); for the latter case, don't fall back to +/@(*"1 _), but rather recalculate the block with extra checks, maybe tell other threads about row/col containing inf/0
 } CACHEMMSTATE;
 #define OPHEIGHTX 2
 #define OPHEIGHT ((I)1<<OPHEIGHTX)  // height of outer-product block
@@ -239,6 +238,7 @@ typedef struct {
 #define CACHEWIDTH 64  // width of resident cache block (in D atoms)
 #define CACHEHEIGHTX 4
 #define CACHEHEIGHT ((I)1<<CACHEHEIGHTX)  // height of resident cache block
+#define MAXAROWS ((L2CACHESIZE/CACHEWIDTH/sizeof(D))*3/4)  // max #rows of a/z that we can process while staying in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH
 static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
@@ -328,10 +328,10 @@ _mm256_zeroupperx(VOIDARG)
     _mm256_store_pd(&(*cva)[0][0][2*NPAR],t2);  _mm256_store_pd(&(*cva)[0][0][3*NPAR],t3); _mm256_store_pd(&(*cva)[0][1][2*NPAR],t4);  _mm256_store_pd(&(*cva)[0][1][3*NPAR],t5);
     _mm256_store_pd(&(*cva)[0][2][2*NPAR],t6);  _mm256_store_pd(&(*cva)[0][2][3*NPAR],t7); _mm256_store_pd(&(*cva)[0][3][2*NPAR],t0);  _mm256_store_pd(&(*cva)[0][3][3*NPAR],t1);
    }else{  // partial block
-    if(often(!(flgs&FLGCMP))){ //real case; contiguous, so simpler
+    if(common(!(flgs&FLGCMP))){ //real case; contiguous, so simpler
      for(I i=0;i<OPHEIGHT;i++){
       D *a0x=a2base0+pstored*i; a0x=i>=a2rem?missingrow:a0x;  // start of samples for the row, or a repeated row if past the end
-      if(often(nvalidops>=4)){ //fast path: handle using overlapping accesses
+      if(common(nvalidops>=4)){ //fast path: handle using overlapping accesses
        for(I j=0;j<(nvalidops-NPAR);j+=NPAR){_mm256_store_pd(&(*cva)[0][i][j],_mm256_loadu_pd(a0x+j));}  //round down if not a whole number of quads, otherwise subtract one full quad
        _mm256_storeu_pd(&(*cva)[0][i][nvalidops-NPAR],_mm256_loadu_pd(a0x+nvalidops-NPAR)); //to avoid doing redundant work here
       }else{ //uncommon case; handle using scalar ops

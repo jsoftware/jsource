@@ -14,31 +14,6 @@ NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1)
 //36ns TUNE; ~60clk on zen, ~160clk on intel; consider adding more general uarch tuning capabilities (eg for cache size)
 //7ns mispredict penalty (15-20clk) + mul latency (3clk)
 
-#if PYXES
-#if !defined(_WIN32) && !defined(__linux__)
-#include <sys/time.h>
-int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex, const struct timespec *restrict abs_timeout)
-{
- if(!abs_timeout) R pthread_mutex_trylock(mutex);
- if(abs_timeout->tv_nsec >= 1000000000) R EINVAL;
- int pthread_rc;
- while ((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY) {
-  struct timeval nowtime;
-  gettimeofday(&nowtime,0);
-  if(abs_timeout->tv_sec < nowtime.tv_sec
-    || abs_timeout->tv_sec == nowtime.tv_sec && abs_timeout->tv_nsec <= 1000*nowtime.tv_usec) R ETIMEDOUT;
-  struct timespec ts;
-  ts.tv_sec = 0;
-  ts.tv_nsec = nowtime.tv_sec   == abs_timeout->tv_sec ? MIN(10000000,abs_timeout->tv_nsec - 1000*nowtime.tv_usec) :
-               nowtime.tv_sec+1 == abs_timeout->tv_sec ? MIN(10000000,abs_timeout->tv_nsec - 1000*nowtime.tv_usec + 1000000000) :
-               10000000;
-  nanosleep(&ts,0);
- }
- return pthread_rc;
-}
-#endif
-#endif
-
 #if SY_WIN32
 struct timezone {
     int tz_minuteswest;
@@ -759,8 +734,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
   I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
   GAT0(z,INT,(sizeof(pthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AN(z)=1; AM(z)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
-  pthread_mutexattr_t mutexattr; ASSERT(pthread_mutexattr_init(&mutexattr)==0,EVFACE) if(recur)ASSERT(pthread_mutexattr_settype(&mutexattr,PTHREAD_MUTEX_RECURSIVE)==0,EVFACE)
-  pthread_mutex_init((pthread_mutex_t*)IAV0(z),&mutexattr);
+  jtpthread_mutex_init((jtpthread_mutex_t*)IAV0(z),recur);
 #else
   ASSERT(0,EVNONCE)
 #endif
@@ -774,28 +748,15 @@ ASSERT(0,EVNONCE)
   }
   ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
   if(timeout==inf){  // is there a max timeout?
-   ASSERT(pthread_mutex_lock((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
+   C c=jtpthread_mutex_lock(jt,(jtpthread_mutex_t*)IAV0(mutex),1+THREADID(jt));ASSERT(!c,c); //1+ is to ensure nonzero id.  TODO id should be unique per-task, not just per-thread
   }else if(timeout==0.0){
-   I lockrc=pthread_mutex_trylock((pthread_mutex_t*)IAV0(mutex));
-   lockfail=lockrc==EBUSY;  // busy is a soft failure
-   ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure
+   I lockrc=jtpthread_mutex_trylock((jtpthread_mutex_t*)IAV0(mutex),1+THREADID(jt));
+   lockfail=lockrc==-1;  // -1 is a soft failure
+   ASSERT(lockrc<=0,lockrc);  // positive is a hard failure
   }else{
-   struct timeval nowtime;
-   gettimeofday(&nowtime,0);  // system time now
-   I tosec=floor(timeout)+nowtime.tv_sec;
-#if _WIN32
-   I tousec=(I)(1000000.*(timeout-floor(timeout)))+nowtime.tv_usec;
-   struct timespec endtime={tosec+(tousec>=1000000),tousec-1000000*(tousec>=1000000)};  // system time when we give up.  The struct says it uses nsec but it seems to use usec
-#else
-   I tonsec=(I)(1000000000.*(timeout-floor(timeout)))+1000*nowtime.tv_usec;
-   struct timespec endtime;
-   endtime.tv_sec=tosec+(tonsec>=1000000000L);
-   endtime.tv_nsec=tonsec-1000000000L*(tonsec>=1000000000L);
-#endif
-//   fprintf(stderr,"nowtime %ld %d endtime %ld %ld timeout %f \n",nowtime.tv_sec,nowtime.tv_usec,endtime.tv_sec,endtime.tv_nsec,timeout);
-   I lockrc=pthread_mutex_timedlock((pthread_mutex_t*)IAV0(mutex),&endtime);
-   lockfail=lockrc==ETIMEDOUT;  // timeout is a soft failure
-   ASSERT((lockrc&(lockfail-1))==0,EVFACE);  // any other non0 is a hard failure
+   I lockrc=jtpthread_mutex_timedlock(jt,(jtpthread_mutex_t*)IAV0(mutex),1e9*timeout,1+THREADID(jt));
+   lockfail=lockrc==-1;  // -1 is a soft failure
+   ASSERT(lockrc<=0,lockrc);  // positive is a hard failure
   }
   z=num(lockfail);
 #else
@@ -806,19 +767,8 @@ ASSERT(0,EVNONCE)
 #if PYXES
   A mutex=w;
   ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
-  ASSERT(pthread_mutex_unlock((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
-  z=mtm;
-#else
-  ASSERT(0,EVNONCE)
-#endif
-  break;}
- case 14: {  // destroy mutex.  w is mutex
-#if PYXES
-  A mutex=w;
-  ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
-  ASSERT(pthread_mutex_destroy((pthread_mutex_t*)IAV0(mutex))==0,EVFACE);
-  AM(mutex)=0;  // remove credential from modified mutex
-  fa(mutex);  // undo the initial INITZAP
+  C c=jtpthread_mutex_unlock((jtpthread_mutex_t*)IAV0(mutex),1+THREADID(jt));
+  ASSERT(!c,c);
   z=mtm;
 #else
   ASSERT(0,EVNONCE)

@@ -13,9 +13,6 @@
 
 #if PYXES
 #include <pthread.h>
-#if !defined(_WIN32) && !defined(__linux__)
-extern int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex, const struct timespec *restrict abs_timeout);
-#endif
 #endif
 
 /*
@@ -59,9 +56,9 @@ typedef struct {
  UI4 nuunfin;   // Number of unfinished user jobs, queued and running.  Modified only when the job lock is held
  US waiters;  // Number of waiting threads.  Modified only when mutex is held
 // 2 bytes free
- pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to hold the
-// on UNIX, first cacheline ends here.  On windows this is still in the first cacheline
- pthread_cond_t cond;   // hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
+ pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to...
+// (on glibc, first cacheline ends here.  On windows this is still in the first cacheline)
+ pthread_cond_t cond;   // ...hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
 } JOBQ;
 #endif
 

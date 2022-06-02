@@ -66,6 +66,7 @@ OBJS=  \
  k.o \
  m.o \
  mbx.o \
+ mt.o \
  p.o \
  pv.o \
  px.o \

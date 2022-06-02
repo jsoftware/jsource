@@ -206,15 +206,18 @@ static inline omp_int_t omp_get_max_threads() { return 1;}
 #ifndef unlikely
 #define unlikely(x) __builtin_expect((x),0)
 #endif
-#if (!defined(__has_builtin) || __has_builtin(__builtin_expect_with_probability)) || (!defined(__clang__) && __GNUC__ >= 9)
-#define often(x) __builtin_expect_with_probability((x),1,0.6)
+#if (defined(__has_builtin) && __has_builtin(__builtin_expect_with_probability)) || (!defined(__clang__) && __GNUC__ >= 9)
+#define common(x) __builtin_expect_with_probability((x),1,0.6)
+#define uncommon(x) __builtin_expect_with_probability((x),1,0.4)
 #else
-#define often(x) likely(x)
+#define common(x) likely(x)
+#define uncommon(x) unlikely(x)
 #endif
 #else
 #define likely(x) (x)
 #define unlikely(x) (x)
-#define often(x) (x)
+#define common(x) (x)
+#define uncommon(x) (x)
 #endif
 
 #if 1
@@ -662,10 +665,6 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 #if PYXES
-// equivalent to atomic_fetch_add(aptr,val,__ATOMIC_ACQ_REL), except without the atomicity guarantee
-// what it does provide is the ordering guarantee; it is is intended to be used under lock
-// see boehm, 'threads cannot be implemented as a library', esp. sec. 4.3
-#define atomic_fetch_add_weak(aptr,val) ({ I rrres=__atomic_load_n(aptr,__ATOMIC_ACQUIRE);__atomic_store_n(aptr,val+rrres,__ATOMIC_RELEASE);rrres; })
 #define REPATGCLIM 0x100000   // When this many bytes have been repatriated to a thread, call a GC in that thread
 #else
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
@@ -677,11 +676,26 @@ extern unsigned int __cdecl _clearfp (void);
 #define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=*aptr; *aptr-=val; rrres;})
 #define __atomic_fetch_add(aptr, val, memorder) ({I rrres=*aptr; *aptr+=val; rrres;})
 #define __atomic_fetch_and(aptr, val, memorder) ({I rrres=*aptr; *aptr&=val; rrres;})
-#define atomic_fetch_add_weak __atomic_fetch_add
 #define __atomic_add_fetch(aptr, val, memorder) (*aptr+=val)
 #define __atomic_sub_fetch(aptr, val, memorder) (*aptr-=val)
 #define __atomic_and_fetch(aptr, val, memorder) (*aptr&=val)
 #define REPATGCLIM 0   // no repat
+#endif
+//convenient abbreviations
+#define casa(p,e,d) __atomic_compare_exchange_n(p,e,d,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED)
+#define cass(p,e,d) __atomic_compare_exchange_n(p,e,d,0,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)
+#define aadd(p,v) __atomic_fetch_add(p,v,__ATOMIC_ACQ_REL)
+#define adda(p,v) __atomic_add_fetch(p,v,__ATOMIC_ACQ_REL)
+#define lda(p) __atomic_load_n(p,__ATOMIC_ACQUIRE)
+#define lds(p) __atomic_load_n(p,__ATOMIC_SEQ_CST)
+#define sta(p,v) __atomic_store_n(p,v,__ATOMIC_RELEASE) //technically not 'a'
+#define sts(p,v) __atomic_store_n(p,v,__ATOMIC_SEQ_CST)
+#define xchga(p,n) __atomic_exchange_n(p,n,__ATOMIC_ACQ_REL)
+
+#ifdef __x86_64__
+#define FAST_AADD 1
+#else
+#define FAST_AADD 0
 #endif
 
 #define ADDBYTESINI1(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
@@ -1925,10 +1939,11 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define C_CRC32C 1
 #endif
 
-#define J struct JSTstruct * 
+#define J struct JSTstruct *
 #include "ja.h" 
 #include "jc.h" 
 #include "jtype.h" 
+#include "mt.h"
 #include "m.h"
 #include "jt.h" 
 #include "jlib.h"

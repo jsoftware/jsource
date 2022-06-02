@@ -249,9 +249,7 @@ mtx =. 10 T. 0
 13 T. mtx
 0 = 11 T. mtx
 'domain error' -: 11 T. etx >: mtx
-'interface error' -: 14 T. etx mtx
 13 T. mtx
-14 T. mtx
 mtx =. 10 T. 0
 tod =. 6!:1''
 0 = 11 T. <mtx  NB. boxed mtx OK
@@ -264,12 +262,10 @@ tod =. 6!:1''
 1 = 11 T. mtx;0
 (0.005 > dly) *. 0 < dly =. tod-~6!:1''  NB. verify no delay
 13 T. mtx
-14 T. mtx
 mtx=.10 T. 1  NB. recursive
 0 = 11 T. mtx
 0 = 11 T. mtx  NB. lock count=2
 13 T. mtx
-'interface error' -: 14 T. etx mtx
 13 T. mtx
 '' -: $ mtx  NB. mtx looks atomic
 1 = #mtx
@@ -278,7 +274,6 @@ mtx=.10 T. 1  NB. recursive
 'length error' -: 11 T. etx mtx;1 2
 'length error' -: 11 T. etx mtx;1;2
 'rank error' -: 11 T. etx 2 2 $<mtx
-14 T. mtx
 end.
 1
 )

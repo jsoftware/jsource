@@ -405,6 +405,17 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 
+#if SY_WIN32
+struct jtimeval { long tv_sec, tv_usec; };
+struct jtimezone { int tz_minuteswest, tz_dsttime; };
+int jgettimeofday(struct jtimeval*, struct jtimezone*);
+#else
+#include <sys/time.h>
+#define jtimeval timeval
+#define jtimezone timezone
+#define jgettimeofday gettimeofday
+#endif
+
 #if SY_64
 #if defined(MMSC_VER)  // SY_WIN32
 // RESTRICTI (for in-place) is used for things like *z++=*x++ - *y++;  Normally you wouldn't store to a z unless you were done reading
@@ -2256,4 +2267,3 @@ extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
 #endif
 #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
 #endif
-

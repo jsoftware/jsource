@@ -14,23 +14,6 @@ NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1)
 //36ns TUNE; ~60clk on zen, ~160clk on intel; consider adding more general uarch tuning capabilities (eg for cache size)
 //7ns mispredict penalty (15-20clk) + mul latency (3clk)
 
-#if SY_WIN32
-struct timezone {
-    int tz_minuteswest;
-    int tz_dsttime;
-};
-
-// Tip o'hat to Michaelangel007 on StackOverflow
-// MSVC defines this in winsock2.h!?
-typedef struct timeval {
-    long tv_sec;
-    long tv_usec;
-} timeval;
-extern int gettimeofday(struct timeval * tp, struct timezone * tzp);
-#else
-#include <sys/time.h>
-#endif
-
 // Extend a hashtable/data table under lock.  abuf is the pointer to the block to be extended (*abuf will hold the new block address).
 // *alock is the lock to use.  We hold a writelock on *alock on entry, but we may relinquish inside this routine.
 // On exit we hold the write lock UNLESS there was an error, in which case we return NOT holding the lock (to allow the caller to abort on error)
@@ -241,8 +224,8 @@ A jtpyxval(J jt,A pyx){A res; C errcode;
   if(unlikely(maxtime<tod())){errcode=EVTIME; break;}  // timeout: fail the pyx and exit
   pthread_mutex_lock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
   if((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){
-   struct timeval nowtime;
-   gettimeofday(&nowtime,0);  // system time now
+   struct jtimeval nowtime;
+   jgettimeofday(&nowtime,0);  // system time now
    I tousec=nowtime.tv_usec+200000;
    struct timespec endtime={nowtime.tv_usec+(tousec>=1000000),tousec-1000000*(tousec>=1000000)};  // system time when we give up.  The struct says it uses nsec but it seems to use usec
    pthread_cond_timedwait(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex,&endtime);

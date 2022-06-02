@@ -19,11 +19,7 @@ static inline C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
  R EVFACE;}
 static inline I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
 #if SY_WIN32
- // Tip o'hat to Michaelangel007 on StackOverflow
- // MSVC defines this in winsock2.h!?
- struct timeval { long tv_sec; long tv_usec; }; struct timezone;
- extern int gettimeofday(struct timeval * tp, struct timezone * tzp);
- struct timeval now;gettimeofday(&now,0);
+ struct jtimeval now;jgettimeofday(&now,0);
  struct timespec t;
  t.tv_sec=now.tv_sec+ns/1000000000;t.tv_nsec=1000*now.tv_usec+ns%1000000000;if(t.tv_nsec>=1000000000){t.tv_sec++;t.tv_nsec-=1000000000;}
 #else

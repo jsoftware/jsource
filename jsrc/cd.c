@@ -3,23 +3,15 @@
 /*                                                                         */
 // emulation of Unix functions on Windows
 #ifdef _WIN32
-struct timezone {
-    int tz_minuteswest;
-    int tz_dsttime;
-};
-
 // Tip o'hat to Michaelangel007 on StackOverflow
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <stdint.h> // portable: uint64_t   MSVC: __int64 
 
-// MSVC defines this in winsock2.h!?
-typedef struct timeval {
-    long tv_sec;
-    long tv_usec;
-} timeval;
+struct jtimeval { long tv_sec, tv_usec; };
+struct jtimezone { int tz_minuteswest, tz_dsttime; };
 
-extern int gettimeofday(struct timeval * tp, struct timezone * tzp)
+int jgettimeofday(struct jtimeval *tp, struct jtimezone * tzp)
 {
     // Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
     // This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
@@ -40,4 +32,3 @@ extern int gettimeofday(struct timeval * tp, struct timezone * tzp)
     return 0;
 }
 #endif
-

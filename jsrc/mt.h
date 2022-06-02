@@ -26,7 +26,7 @@ static inline I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self
  if(r==EDEADLK)R EVCONCURRENCY;
  R EVFACE;}
 static inline I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
- I4 r=pthread_mutex_timedlock(m);
+ I4 r=pthread_mutex_trylock(m);
  if(!r)R 0;
  if(r==ETIMEDOUT)R -1;
  if(r==EDEADLK||r==EOWNERDEAD)R EVCONCURRENCY;

@@ -60,6 +60,8 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2 (one
   // of which is the tpop).  Then we create a block with usecount 8..2: That's OK, but it must not be fa'd unless it is ra'd first, so that the ra will wipe out the inplaceability; if it is zapped or fa'd without
   // ra (as when FORK frees an unused block), the count must be tested so that it is zapped only if it is 8..1.  We do need to keep the usecount accurate after the return, though.
+  // In fact the usecount of a pristine contents may be anything.  Consider ]&.> ]&.> y.  The first execution produces a recursive pristine block containing usecount 2.  The second
+  // execution raises the usecount to 3 but the block is still inplaceable and has no other owner except the tstack.
   I wcbefore=AC(virtw); // get (always non-inplaceable) usecount before the call
   if(((AC(virtw)-(flags&ACPERMANENT))&ACINPLACE)<0){  // AC(virtw) always has sign 0, but may be PERMANENT
    ACIPYESLOCAL(virtw);  // make the block inplaceable
@@ -92,10 +94,8 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
-   realizeifvirtual(x); ra(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
-     // not razap, because the result may be an inplaceable explicit result that was allocated up the stack
-   // We have to see if virtw escaped.  If so, we must mark w non-PRISTINE.  Since we are concerned about virtw itself escaping, rather than a part of it,
-   // we can look at its usecount after it the result is incorporated into the new result
+   realizeifvirtual(x); razap(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
+     // razap OK, because if the result is inplaceable it must be newly created or an input from here; in either case the value is not up the tstack
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
@@ -200,6 +200,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
+  // it is possible for the usecount of a pristine contents to be anything.  Consider (]&.>@:hrecur)
   I wcbefore=AC(virtw); // get (always non-inplaceable) usecount before the call
   if(((AC(virtw)-((flags<<1)&ACPERMANENT))&ACINPLACE)<0){  // AC(virtw) always has sign 0
    ACIPYESLOCAL(virtw);  // make the block inplaceable
@@ -235,8 +236,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
    flags&=~(((((wcbefore!=AC(virtw))|(x==virtw))&flags)|(((acbefore!=AC(virta))|(x==virta))&(flags>>1)))<<ACINPLACEX);
    // normal case where we are creating the result box.  Must incorp the result
    realizeifvirtual(x); razap(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
-   // We have to see if virtw escaped.  If so, we must mark w non-PRISTINE.  Since we are concerned about virtw itself escaping, rather than a part of it,
-   // we can look at its usecount after it the result is incorporated into the new result
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}

@@ -206,6 +206,7 @@ RECHO=: 13 : '+/ RESUB2 y'
 
 NB. bill extensions
 
+GITHUBCI=: 0       NB. running on github action
 ECHOFILENAME=: 0   NB. echo file name
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0

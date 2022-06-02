@@ -21,6 +21,7 @@ x=. I. 26 > n=. ((97+i.26){a.) i. t=. ,y
 (ToLower -: 0&(3!:12)) 0.5 + i. 3 4
 (ToLower -: 0&(3!:12)) 1j1 + i. 3 4
 (ToLower -: 0&(3!:12)) x: i. 3 4
+(ToLower -: 0&(3!:12)) 1r2 3r4
 (ToLower -: 0&(3!:12)) <a.
 (ToLower -: 0&(3!:12)) <123 456$a.
 (ToLower -: 0&(3!:12)) 3 4$<a.
@@ -38,6 +39,7 @@ x=. I. 26 > n=. ((97+i.26){a.) i. t=. ,y
 (ToUpper -: 1&(3!:12)) 0.5 + i. 3 4
 (ToUpper -: 1&(3!:12)) 1j1 + i. 3 4
 (ToUpper -: 1&(3!:12)) x: i. 3 4
+(ToUpper -: 1&(3!:12)) 1r2 3r4
 (ToUpper -: 1&(3!:12)) <a.
 (ToUpper -: 1&(3!:12)) <123 456$a.
 (ToUpper -: 1&(3!:12)) 3 4$<a.
@@ -45,10 +47,13 @@ x=. I. 26 > n=. ((97+i.26){a.) i. t=. ,y
 (ToUpper -: 1&(3!:12))&> 3 4$<a.
 (ToUpper -: 1&(3!:12))&> 3 4$<123 456$a.
 
+(] -: 0&(3!:12)) $. i. 3 4
+(] -: 1&(3!:12)) $. i. 3 4
+'nonce error' -: ToLower etx $. i. 3 4
+'nonce error' -: ToUpper etx $. i. 3 4
+
 'domain error' -: _1&(3!:12) etx ''
 'domain error' -: 2&(3!:12) etx ''
-'nonce error' -: 0&(3!:12) etx $. i. 3 4
-'nonce error' -: 1&(3!:12) etx $. i. 3 4
 
 4!:55 ;:'ToLower ToUpper'
 

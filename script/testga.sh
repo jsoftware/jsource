@@ -7,6 +7,8 @@
 # current macOS github builder only supports avx
 # cpu is Xeon E5-1650 v2 (from 2013)
 
+set -e
+
 if [ $1 == "linux" ]; then
   ext="so"
 elif [ "$1" == "darwin" ]; then

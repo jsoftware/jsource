@@ -426,4 +426,4 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 )
 
 echo 9!:14''
-
+echo 'cpu ',(9!:56'cpu'),' cores ',":9!:56'cores'

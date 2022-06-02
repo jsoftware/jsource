@@ -751,12 +751,12 @@ ASSERT(0,EVNONCE)
    C c=jtpthread_mutex_lock(jt,(jtpthread_mutex_t*)IAV0(mutex),1+THREADID(jt));ASSERT(!c,c); //1+ is to ensure nonzero id.  TODO id should be unique per-task, not just per-thread
   }else if(timeout==0.0){
    I lockrc=jtpthread_mutex_trylock((jtpthread_mutex_t*)IAV0(mutex),1+THREADID(jt));
-   lockfail=lockrc==-1;  // -1 is a soft failure
    ASSERT(lockrc<=0,lockrc);  // positive is a hard failure
+   lockfail=lockrc==-1;  // -1 is a soft failure
   }else{
    I lockrc=jtpthread_mutex_timedlock(jt,(jtpthread_mutex_t*)IAV0(mutex),1e9*timeout,1+THREADID(jt));
-   lockfail=lockrc==-1;  // -1 is a soft failure
    ASSERT(lockrc<=0,lockrc);  // positive is a hard failure
+   lockfail=lockrc==-1;  // -1 is a soft failure
   }
   z=num(lockfail);
 #else

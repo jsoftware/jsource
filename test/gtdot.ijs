@@ -282,23 +282,23 @@ assert. remote_stuff=2
 assert. remote_stuff=4
 NB. mutex
 mtx =. 10 T. 0
-0 = 11 T. mtx;0
+0 = >{{11 T. mtx;0}}t.''0
 1 = 11 T. mtx;0
-13 T. mtx
+mtx =. 10 T. 0
 0 = 11 T. mtx
 'domain error' -: 11 T. etx >: mtx
 13 T. mtx
 mtx =. 10 T. 0
 tod =. 6!:1''
-0 = 11 T. <mtx  NB. boxed mtx OK
+0 = >{{11 T. <mtx}}t.''0  NB. boxed mtx OK
 1 = 11 T. mtx;2.0
-(2.005 > dly) *. 2 < dly =. tod-~6!:1''  NB. verify delay
+(2.005 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 1 = 11 T. mtx;0.1
-(0.105 > dly) *. 0.1 < dly =. tod-~6!:1''  NB. verify delay
+(0.105 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 1 = 11 T. mtx;0
-(0.005 > dly) *. 0 < dly =. tod-~6!:1''  NB. verify no delay
+(0.005 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
 13 T. mtx
 mtx=.10 T. 1  NB. recursive
 0 = 11 T. mtx

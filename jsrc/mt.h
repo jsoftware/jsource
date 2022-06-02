@@ -23,8 +23,13 @@ static inline I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self
  if(r==ETIMEDOUT)R -1;
  if(r==EDEADLK)R EVCONCURRENCY;
  R EVFACE;}
-static inline B jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){R !pthread_mutex_trylock(m);}
-static inline B jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
+static inline I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
+ I4 r=pthread_mutex_timedlock(m);
+ if(!r)R 0;
+ if(r==ETIMEDOUT)R -1;
+ if(r==EDEADLK||r==EOWNERDEAD)R EVCONCURRENCY;
+ R EVFACE;}
+static inline C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
  I4 r=pthread_mutex_unlock(m);
  if(likely(!r))R 0;
  if(r==EPERM)R EVCONCURRENCY;
@@ -71,8 +76,8 @@ typedef struct {
 
 void jtpthread_mutex_init(jtpthread_mutex_t*,B recursive);
 struct JTTstruct; C jtpthread_mutex_lock(struct JTTstruct *jt,jtpthread_mutex_t *m,I self);
-I jtpthread_mutex_timedlock(struct JTTstruct *jt,jtpthread_mutex_t*,UI ns,I self); //absolute timers suck; correct the interface.  Negative result means failure; 0 is success; positive is error code
-B jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=failure 1=success, opposite posix
+I jtpthread_mutex_timedlock(struct JTTstruct *jt,jtpthread_mutex_t*,UI ns,I self); //absolute timers suck; correct the interface.  -1=failure; 0=success; positive=error
+I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure positive=error
 C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
 
 //note: self must be non-zero

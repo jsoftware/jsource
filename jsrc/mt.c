@@ -62,10 +62,10 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
   if(now.tv_nsec<=tgt.tv_nsec)ns+=tgt.tv_nsec-now.tv_nsec;
   else ns+=1000000000-(now.tv_nsec-tgt.tv_nsec);}
 success:m->ct+=m->recursive;m->owner=self; R 0;}
-B jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
- if(uncommon(m->recursive)){if(m->owner!=self)R 0; m->ct++;R 1;}
- if(m->owner==self)R 0;
- if(casa(&m->v,&(UI4){FREE},LOCK)){m->owner=self;R 1;}   R 0;}
+I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
+ if(uncommon(m->recursive)&&m->owner){if(m->owner!=self)R -1; m->ct++;R 0;}
+ if(m->owner==self)R EVCONCURRENCY;
+ if(casa(&m->v,&(UI4){FREE},LOCK)){m->ct+=m->recursive;m->owner=self;R 0;}   R -1;}
 C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
  if(unlikely(m->owner!=self))R EVCONCURRENCY;
  if(uncommon(m->recursive)){if(--m->ct)R 0;} //need to be released more times on this thread

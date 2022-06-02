@@ -2564,8 +2564,8 @@ FORCE_INLINE __m256 _mm256_castpd_ps(__m256d a)
 {
     __m256 b;
 
-    b.vect_f32[0] = vreinterpretq_f64_f32(a.vect_f64[0]);
-    b.vect_f32[1] = vreinterpretq_f64_f32(a.vect_f64[1]);
+    b.vect_f32[0] = vreinterpretq_f32_f64(a.vect_f64[0]);
+    b.vect_f32[1] = vreinterpretq_f32_f64(a.vect_f64[1]);
 
     return b;
 }
@@ -2574,8 +2574,8 @@ FORCE_INLINE __m256i _mm256_castpd_si256(__m256d a)
 {
     __m256i b;
 
-    b.vect_s64[0] = vreinterpretq_f64_s64(a.vect_f64[0]);
-    b.vect_s64[1] = vreinterpretq_f64_s64(a.vect_f64[1]);
+    b.vect_s64[0] = vreinterpretq_s64_f64(a.vect_f64[0]);
+    b.vect_s64[1] = vreinterpretq_s64_f64(a.vect_f64[1]);
 
     return b;
 }
@@ -2584,8 +2584,8 @@ FORCE_INLINE __m256d _mm256_castps_pd(__m256 a)
 {
     __m256d b;
 
-    b.vect_f64[0] = vreinterpretq_f32_f64(a.vect_f32[0]);
-    b.vect_f64[1] = vreinterpretq_f32_f64(a.vect_f32[1]);
+    b.vect_f64[0] = vreinterpretq_f64_f32(a.vect_f32[0]);
+    b.vect_f64[1] = vreinterpretq_f64_f32(a.vect_f32[1]);
 
     return b;
 }

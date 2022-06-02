@@ -1098,8 +1098,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #if 1
 #if defined(__aarch64__)
-#define  CVTEPI64(z,u)   z.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[0])); \
-                         z.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[1]));
+#define  CVTEPI64(z,u)   z.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_s64_f64(u.vect_f64[0])); \
+                         z.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_s64_f64(u.vect_f64[1]));
 #else
 
 #define  CVTEPI64(z,u) { __m256i u_lo = _mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(magic_i_lo),_mm256_castpd_ps(u),0b01010101));         /* Blend the 32 lowest significant bits of u with magic_int_lo */ \

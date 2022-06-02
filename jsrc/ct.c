@@ -716,7 +716,7 @@ ASSERT(0,EVNONCE)
  case 10: {  // create a mutex.  w indicates recursive status
 #if PYXES
   I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
-  GAT0(z,INT,(sizeof(pthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AN(z)=1; AM(z)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
+  GAT0(z,INT,(sizeof(jtpthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AN(z)=1; AM(z)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
   jtpthread_mutex_init((jtpthread_mutex_t*)IAV0(z),recur);
 #else
   ASSERT(0,EVNONCE)

@@ -6,7 +6,7 @@
 
 #include"j.h"
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__linux__)
 enum{FREE=0,LOCK=1,WAIT=2};//values for mutex->v
 //todo consider storing owner in the high bits of v.  apple pthreads does this.  But it means we can't use xadd to unlock.  On the other hand, apple is mostly arm now, which doesn't have xadd anyway.
 //Also, I just realised you _can_ use xadd to unlock--subtract the top bits at the same time as the bottom one--it just adds a weird state where the low bit is 1, but the high bits don't denote any task--but that's ok
@@ -20,11 +20,15 @@ enum{FREE=0,LOCK=1,WAIT=2};//values for mutex->v
 void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){*m=(jtpthread_mutex_t){.recursive=recursive};}
 C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
- UI4 e=0;if(!(e=lda(&m->v))&&((e=FREE),casa(&m->v,&e,LOCK))){m->ct+=m->recursive;m->owner=self;R 0;} //success
- if(common(e!=WAIT))e=xchga(&m->v,WAIT); //penalise the multi-waiters case, since it's slower anyway
+ UI4 e;if(likely((!(e=lda(&m->v)))&&((e=FREE),casa(&m->v,&e,LOCK)))){m->ct+=m->recursive;m->owner=self;R 0;} //success.  test-and-test-and-set is from glibc, mildly optimises the case when many threads swarm a locked mutex
+ if(e!=WAIT)e=xchga(&m->v,WAIT); //penalise the multi-waiters case, since it's slower anyway
  while(e!=FREE){
-  I i=__ulock_wait(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,&m->v,WAIT,0);
-  if(unlikely(i<0)){
+#if __linux__
+  I i=_jfutex_waitn(&m->v,WAIT,(UI)-1); //bug? jfutex_wait doesn't get interrupted by signals on linux
+#else
+  I i=jfutex_wait(&m->v,WAIT);
+#endif
+  if(uncommon(i<0)){
    if(i==-EINTR){if(JT(jt,adbreakr)[0])R EVATTN;}
    else if(i==-EOWNERDEAD)R EVCONCURRENCY;
    else if(i==-ENOMEM)R EVWSFULL;//lol
@@ -38,20 +42,12 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
  tgt.tv_sec=now.tv_sec+ns/1000000000;tgt.tv_nsec=now.tv_nsec+ns%1000000000;if(tgt.tv_nsec>=1000000000){tgt.tv_nsec-=1000000000;tgt.tv_sec++;};
  if(common(e!=WAIT)){e=xchga(&m->v,WAIT);if(e==FREE)goto success;} //penalise the multi-waiters case, since it's slower anyway
  while(1){
-#if __arm64__
-  // wait2 takes an ns timeout, but it's only available from macos 11 onward; coincidentally, arm macs only support macos 11+
-  // so we can count on having this
-  I i=__ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,&m->v,WAIT,ns,0);
-#else
-  // but for the x86 case, we keep compatibility
-  I i=__ulock_wait(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,&m->v,WAIT,ns/1000);
-#endif
+  I i=_jfutex_waitn(&m->v,WAIT,ns);
   if(uncommon(i==-ETIMEDOUT)); //don't penalise this case too harshly
   else if(unlikely(i<0)){
    if(i==-EINTR){if(JT(jt,adbreakr)[0])R EVATTN;}
    else if(i==-EOWNERDEAD)R EVCONCURRENCY;
    else if(i==-ENOMEM)R EVWSFULL;
-   else if(i==-ETIMEDOUT);
    else R EVFACE;}
   e=xchga(&m->v,WAIT);
   if(e==FREE)goto success; //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
@@ -70,9 +66,9 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
  if(unlikely(m->owner!=self))R EVCONCURRENCY;
  if(uncommon(m->recursive)){if(--m->ct)R 0;} //need to be released more times on this thread
  m->owner=0;
- if(!casa(&m->v,&(UI4){LOCK},FREE)){sta(&m->v,FREE);__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,&m->v,0);}
+ if(!casa(&m->v,&(UI4){LOCK},FREE)){sta(&m->v,FREE);jfutex_wake1(&m->v);}
  //below is what drepper does; I think the above is always faster, but it should definitely be faster without xadd
  //agner sez lock xadd has one cycle better latency vs lock cmpxchg on intel ... ??
- //if(adda(&m->v,-1)){sta(&m->v,FREE);__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,&m->v,0);}
+ //if(adda(&m->v,-1)){sta(&m->v,FREE);jfutex_wake1(&m->v);}
  R 0;}
 #endif //__APPLE__

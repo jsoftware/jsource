@@ -34,7 +34,8 @@ static inline I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self
 static inline I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
  I4 r=pthread_mutex_trylock(m);
  if(!r)R 0;
- if(r==ETIMEDOUT)R -1;
+ if(r==EBUSY)R -1;
+ if(r==EAGAIN)R EVLIMIT; //'max recursive locks exceeded'
  if(r==EDEADLK||r==EOWNERDEAD)R EVCONCURRENCY;
  R EVFACE;}
 static inline C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){

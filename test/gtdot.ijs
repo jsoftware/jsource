@@ -282,7 +282,7 @@ assert. remote_stuff=2
 assert. remote_stuff=4
 NB. mutex
 mtx =. 10 T. 0
-0 = >{{11 T. mtx;0}}t.''0
+0 = >{{11 T. y;0}}t.''mtx
 1 = 11 T. mtx;0
 mtx =. 10 T. 0
 0 = 11 T. mtx
@@ -290,7 +290,7 @@ mtx =. 10 T. 0
 13 T. mtx
 mtx =. 10 T. 0
 tod =. 6!:1''
-0 = >{{11 T. <mtx}}t.''0  NB. boxed mtx OK
+0 = >{{11 T. <y}}t.''mtx  NB. boxed mtx OK
 1 = 11 T. mtx;2.0
 (2.005 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''

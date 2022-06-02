@@ -1,7 +1,9 @@
 // jtpthread_mutex*: mutex implementation for macos/ios/..
 // see mt.c
 
+#if PYXES
 #ifndef __APPLE__
+#include <pthread.h>
 typedef pthread_mutex_t jtpthread_mutex_t;
 static inline void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){
  if(likely(!recursive)){pthread_mutex_init(m,0);}
@@ -82,3 +84,4 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
 
 //note: self must be non-zero
 #endif //__APPLE__
+#endif //PYXES

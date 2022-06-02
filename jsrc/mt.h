@@ -4,20 +4,6 @@
 #if PYXES
 #ifndef __APPLE__
 #include <pthread.h>
-#if SY_WIN32
-struct timezone {
-    int tz_minuteswest;
-    int tz_dsttime;
-};
-
-// Tip o'hat to Michaelangel007 on StackOverflow
-// MSVC defines this in winsock2.h!?
-typedef struct timeval {
-    long tv_sec;
-    long tv_usec;
-} timeval;
-extern int gettimeofday(struct timeval * tp, struct timezone * tzp);
-#endif
 typedef pthread_mutex_t jtpthread_mutex_t;
 static inline void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){
  if(likely(!recursive)){pthread_mutex_init(m,0);}
@@ -32,7 +18,11 @@ static inline C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
  if(r==EDEADLK)R EVCONCURRENCY;
  R EVFACE;}
 static inline I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
-#if _WIN32
+#if SY_WIN32
+ // Tip o'hat to Michaelangel007 on StackOverflow
+ // MSVC defines this in winsock2.h!?
+ struct timeval { long tv_sec; long tv_usec; }; struct timezone;
+ extern int gettimeofday(struct timeval * tp, struct timezone * tzp);
  struct timeval now;gettimeofday(&now,0);
  struct timespec t;
  t.tv_sec=now.tv_sec+ns/1000000000;t.tv_nsec=1000*now.tv_usec+ns%1000000000;if(t.tv_nsec>=1000000000){t.tv_sec++;t.tv_nsec-=1000000000;}

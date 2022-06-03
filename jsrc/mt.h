@@ -6,6 +6,11 @@ struct jtimespec jtmtil(UI ns); //returns a time ns ns in the future
 I jtmdif(struct jtimespec when); //returns the time in ns between now and when.  If when is not in the future, the result will be -1
 //both of these are implemented in terms of mtclk and use its clock
 
+__attribute__((cold)) C jfutex_wait(UI4 *p,UI4 v); //atomically, compare v to *p and go to sleep if they are equal.  Return error code
+__attribute__((cold)) I jfutex_waitn(UI4 *p,UI4 v,UI ns); //ditto, but wake up after at most ns ns.  Result -1 means timeout definitely exceeded; other result is an error code
+__attribute__((cold)) void jfutex_wake1(UI4 *p); //wake 1 thread waiting on p
+__attribute__((cold)) void jfutex_wakea(UI4 *p); //wake all threads waiting on p
+
 #if !defined(__APPLE__) && !defined(__linux__)
 #include <pthread.h>
 typedef pthread_mutex_t jtpthread_mutex_t;
@@ -65,36 +70,6 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
 #if defined(__linux__)
 #include <linux/futex.h>
 #include <sys/syscall.h>
-//glibc 'syscall': stupid errno
-static inline void jfutex_wake1(UI4 *p){
- __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
-                               "D" (p), //rdi: ptr
-                               "S" (FUTEX_WAKE), //rsi: op
-                               "d" (1));} //rdx: count
-static inline void jfutex_wakea(UI4 *p){
- __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
-                               "D" (p), //rdi: ptr
-                               "S" (FUTEX_WAKE), //rsi: op
-                               "d" (0xffffffff));} //rdx: count
-static inline int jfutex_wait(UI4 *p,UI4 v){
- register struct timespec *pts asm("r10") = 0;
- int r;__asm__ volatile("syscall" : "=a"(r) //result in rax
-                                  : "a" (SYS_futex), //eax: syscall#
-                                    "D" (p), //rdi: ptr
-                                    "S" (FUTEX_WAIT), //rsi: op
-                                    "d" (v), //rdx: espected
-                                    "r" (pts)); //r10: timeout (null=no timeout)
- R r;}
-static inline int _jfutex_waitn(UI4 *p,UI4 v,UI ns){
- struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
- register struct timespec *pts asm("r10") = &ts;
- int r;__asm__ volatile("syscall" : "=a"(r) //result in rax
-                                  : "a" (SYS_futex), //eax: syscall#
-                                    "D" (p), //rdi: ptr
-                                    "S" (FUTEX_WAIT), //rsi: op
-                                    "d" (v), //rdx: espected
-                                    "r" (pts)); //r10: timeout (relative!)
- R r;}
 #elif defined(__APPLE__)
 // ulock (~futex) junk from xnu.  timeout=0 means wait forever
 extern int __ulock_wait(uint32_t operation, void *addr, uint64_t value, uint32_t timeout);             // timeout in us
@@ -128,32 +103,9 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 
 //positive (or just 1?) result from wait means someone else is waiting on this too?
 
-static inline void jfutex_wake1(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,0);}
-static inline void jfutex_wakea(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO|ULF_WAKE_ALL,p,0);}
-static inline int jfutex_wait(UI4 *p,UI4 v){R __ulock_wait(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,0);}
-#if __arm64__
-// wait2 takes an ns timeout, but it's only available from macos 11 onward; coincidentally, arm macs only support macos 11+
-// so we can count on having this
-static inline int _jfutex_waitn(UI4 *p,UI4 v,UI ns){R __ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,ns,0);}
-#else
-// but for the x86 case, we keep compatibility with older macos.  Revisit in the future
-// deal with >32 bits; 2^32us is just a little over an hour; just too close for comfort
-static inline int _jfutex_waitn(UI4 *p,UI4 v,UI ns){
- UI us=ns/1000;
- while(us>0xfffffff){
-  I4 r=__ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,0xffffffff,0);
-  if(r!=-ETIMEDOUT)R r;
-  us-=0xffffffff;}
- R __ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,us,0);}
-#endif
 #elif defined(_WIN32)
 // untested windows path; make henry test it when he gets back from vacation
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-static inline int jfutex_wait(UI4 *p,UI4 v){R WaitOnAddress(p,&v,4,INFINITE);} //todo return wrong
-static inline int _jfutex_waitn(UI4 *p,UI4 v,UI ns){R WaitOnAddress(p,&v,4,ns/1000000);} //ditto
-static inline void jfutex_wake1(UI4 *p){WakeByAddressSingle(p);}
-static inline void jfutex_wakea(UI4 *p){WakeByAddressAll(p);}
+// don't pollute everybody with windows.h.  win api is fairly basic anyway, so there is not much to take advantage of
 #endif //_WIN32
 #endif //__APPLE__ || __linux__
 #endif //PYXES

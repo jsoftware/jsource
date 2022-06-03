@@ -176,10 +176,14 @@ typedef struct pyxcondmutex{
  S pyxorigthread;  // thread number that is working on this pyx, or _1 if the value is available
  C errcode;  // 0 if no error, or error code
 #if PYXES
- WAITBLOK pyxwb;  // sync info
+ //WAITBLOK pyxwb;  // sync info
+ UI4 state;//one of the below pyx states.  Monotonically increases
 #endif
 } PYXBLOK;
-
+enum{
+ PYXEMPTY, //the pyx is not filled in, and no one is waiting
+ PYXWAIT,  //at least 1 thread is waiting, and the pyx is not filled in
+ PYXFULL}; //the pyx is filled in
 #if PYXES
 
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.  fa() the pyx to indicate that the thread has released the pyx
@@ -191,7 +195,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  if(likely(z!=0))ra(z);  // since the pyx is recursive, we must ra the result we store into it.  Could zap if inplaceable
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
  // broadcast to wake up any tasks waiting for the result
- WAITBLOKFLAG(&((PYXBLOK*)AAV0(pyx))->pyxwb);
+ if(PYXWAIT==xchga(&((PYXBLOK*)AAV0(pyx))->state,PYXFULL))jfutex_wakea(&((PYXBLOK*)AAV0(pyx))->state);
  // unprotect pyx.  It was raised when it was assigned to this owner; now it belongs to the system
  fa(pyx);
  R 1;
@@ -201,7 +205,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
 static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
  // Allocate.  Init value, cond, and mutex to idle
  GAT0(pyx,INT,((sizeof(PYXBLOK)+(SZI-1))>>LGSZI)+1,0); AAV0(pyx)[0]=0; // allocate the result pointer (1), and the cond/mutex for the pyx.
- WAITBLOKINIT(&((PYXBLOK*)AAV0(pyx))->pyxwb);
+ ((PYXBLOK*)AAV0(pyx))->state=PYXEMPTY;
  // Init the pyx to a recursive box, with raised usecount.  AN=1 always.  But set the value/errcode to NULL/no error and the thread# to the executing thread
  AT(pyx)=BOX+PYX; AFLAG(pyx)=BOX; ACINIT(pyx,ACUC2); AN(pyx)=1; ((PYXBLOK*)AAV0(pyx))->pyxvalue=0; ((PYXBLOK*)AAV0(pyx))->pyxorigthread=thread; ((PYXBLOK*)AAV0(pyx))->errcode=0;  ((PYXBLOK*)AAV0(pyx))->pyxmaxwt=timeout;
  // The pyx's usecount of 2 is one for the owning thread and one for the current thread, which has a tpop for the pyx that protects it until it is put into its box.  When the pyx is filled in the owner will fa().
@@ -209,33 +213,25 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
 }
 
 // w is an A holding a pyx value.  Return its value when it has been resolved.  If it times out
-A jtpyxval(J jt,A pyx){A res; C errcode;
- D maxtime=tod()+((PYXBLOK*)AAV0(pyx))->pyxmaxwt+0.000001;  // get the time when we have to give up on this pyx, min 1usec
- // read the pyx value.  Since the creating thread has a release barrier after creation and another after final resolution, we can be sure
- // that if we read nonzero the pyx has been resolved, even without an acquire barrier
- while((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){  // repeat till defined
-  I adbreak=__atomic_load_n((US*)&JT(jt,adbreak)[0],__ATOMIC_ACQUIRE);  // break requests
+A jtpyxval(J jt,A pyx){ UI4 state;
+ if(PYXFULL==(state=lda(&((PYXBLOK*)AAV0(pyx))->state)))goto done;
+ if(state!=PYXWAIT)if(!casa(&((PYXBLOK*)AAV0(pyx))->state,&state,PYXWAIT))goto done;
+ UI ns=({D mwt=((PYXBLOK*)AAV0(pyx))->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);});
+ struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
+ while(1){ // repeat till defined
+  _jfutex_waitn(&((PYXBLOK*)AAV0(pyx))->state,PYXWAIT,ns);
+  if(lda(&((PYXBLOK*)AAV0(pyx))->state)==PYXFULL)break; // if pyx was filled, exit and return its value
+  I adbreak=lda((US*)&JT(jt,adbreak)[0]);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
   if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
   // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution.  In that case fail the pyx.  It will not be deleted until the value has been stored
-  if(unlikely((adbreak&0xff)>1)){errcode=EVBREAK; break;}  // JBREAK: fail the pyx and exit
-  // if the pyx has a max time, see if that is exceeded
-  if(unlikely(maxtime<tod())){errcode=EVTIME; break;}  // timeout: fail the pyx and exit
-  pthread_mutex_lock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
-  if((res=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,__ATOMIC_ACQUIRE))==0&&(errcode=__atomic_load_n(&((PYXBLOK*)AAV0(pyx))->errcode,__ATOMIC_ACQUIRE))==0){
-   struct jtimeval nowtime;
-   jgettimeofday(&nowtime,0);  // system time now
-   I tousec=nowtime.tv_usec+200000;
-   struct timespec endtime={nowtime.tv_usec+(tousec>=1000000),tousec-1000000*(tousec>=1000000)};  // system time when we give up.  The struct says it uses nsec but it seems to use usec
-   pthread_cond_timedwait(&((PYXBLOK*)AAV0(pyx))->pyxwb.cond,&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex,&endtime);
-  }
-  pthread_mutex_unlock(&((PYXBLOK*)AAV0(pyx))->pyxwb.mutex);
+  if(unlikely(adbreak&0xff))ASSERT(0,adbreak&0xff);  // JBREAK: fail the pyx and exit
+  ASSERT(-1!=(ns=jtmdif(end)),EVTIME);  // update timeout; potentially fail the pyx and exit
  }
- // res now contains the certified value of the pyx.
- if(likely(res!=0))R res;   // valid value, use it
- ASSERT(0,errcode)   // if error, return the error code
-}
+done:
+ if(likely(!!((PYXBLOK*)AAV0(pyx))->pyxvalue))R ((PYXBLOK*)AAV0(pyx))->pyxvalue; // valid value, use it
+ ASSERT(0,((PYXBLOK*)AAV0(pyx))->errcode);} // if error, return the error code
 
 // ************************************* Locks **************************************
 // take a readlock on *alock.  We come here only if a writelock was requested or running.  We have incremented the readlock
@@ -642,8 +638,9 @@ F2(jttcapdot2){A z;
   break;}
  case 5: { // create a user pyx.  y is the timeout in seconds
 #if PYXES
-  ASSERT(AN(w)==1,EVLENGTH) w=cvt(FL,w); D *atimeout=DAV(w); atimeout=*atimeout==0?&inf:atimeout;  // get the timeout value.  If 0, use infinity
-  z=box(jtcreatepyx(jt,THREADID(jt),*atimeout));  // create the recursive pyx, owned by this thread
+  ASSERT(AN(w)==1,EVLENGTH) w=cvt(FL,w); D atimeout=*DAV(w); // get the timeout value
+  ASSERT(atimeout==inf||atimeout<=9e9,EVLIMIT); // 9e9 is approx 63 bits of ns.  This leaves ~300y; should be ok
+  z=box(jtcreatepyx(jt,THREADID(jt),atimeout));  // create the recursive pyx, owned by this thread
 #else
 ASSERT(0,EVNONCE)
 #endif
@@ -737,6 +734,7 @@ ASSERT(0,EVNONCE)
    ASSERT(lockrc<=0,lockrc);  // positive is a hard failure
    lockfail=lockrc==-1;  // -1 is a soft failure
   }else{
+   ASSERT(timeout<=9e9,EVLIMIT); // 9e9 is approx 63 bits of ns.  This leaves ~300y; should be ok
    I lockrc=jtpthread_mutex_timedlock(jt,(jtpthread_mutex_t*)IAV0(mutex),1e9*timeout,1+THREADID(jt));
    ASSERT(lockrc<=0,lockrc);  // positive is a hard failure
    lockfail=lockrc==-1;  // -1 is a soft failure

@@ -1,10 +1,32 @@
-// jtpthread_mutex*: mutex implementation for macos/ios/..
-// loosly modeled after apple pthreads version 486.100.11 and ulrich drepper 'futexes are tricky', plus recursive mutexes
-// needed for T. because the mainline version does not support pthread_mutex_timedlock; glibc/pthreads4w are ok
-// _does not_ support condition variables (yet); so, use jtpthread_mutex_t if you need timedwait, but pthread_mutex_t if you need condition variables
-// _not_ signal-safe
+// concurrency primitives, including mutexes
+// a raft of reasons for this:
+// - return EINTR when interrupted
+// mutexes:
+//  - fast timedlock and recursive mutexes on macos
+//  - robust by default
+//    - various edge cases like lock on one thread/release on another, or acquire a lock you already hold, are UB in posix!
+//  - mutex requisition can be associated with a task, rather than a thread
+// condvars:
+//  - don't reacquire mutex on wake (_very_ slow)
+//  - wake n on linux
+// novel primitives, faster than would be possible with pthreads
+//  - mutex tokens
+//  - queue
+//  - pyx
+
+// mutexs are loosely modeled after ulrich drepper 'futexes are tricky'
 
 #include"j.h"
+
+struct jtimespec jtmtil(UI ns){
+ struct jtimespec r=jmtclk();
+ r.tv_sec+=ns/1000000000;r.tv_nsec+=ns%1000000000;
+ if(r.tv_nsec>=1000000000){r.tv_sec++;r.tv_nsec-=1000000000;}
+ R r;}
+I jtmdif(struct jtimespec w){
+ struct jtimespec t=jmtclk();
+ if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1;
+ R (w.tv_sec-t.tv_sec)*1000000000+w.tv_nsec-t.tv_nsec;}
 
 #if defined(__APPLE__) || defined(__linux__)
 enum{FREE=0,LOCK=1,WAIT=2};//values for mutex->v
@@ -15,16 +37,17 @@ enum{FREE=0,LOCK=1,WAIT=2};//values for mutex->v
 
 // there is a flaw.  If t0 holds lock, t1 attempts to acquire it; when it eventually does, it will leave WAIT in v instead of LOCK, 
 
-// todo figure out ULF_WAIT_CANCEL_POINT (I think it allows implementing the desired behaviour for EVATTN)
+// todo what is ULF_WAIT_CANCEL_POINT?
 
 void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){*m=(jtpthread_mutex_t){.recursive=recursive};}
 C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
- UI4 e;if(likely((!(e=lda(&m->v)))&&((e=FREE),casa(&m->v,&e,LOCK)))){m->ct+=m->recursive;m->owner=self;R 0;} //success.  test-and-test-and-set is from glibc, mildly optimises the case when many threads swarm a locked mutex
+ UI4 e;if(likely((!(e=lda(&m->v)))&&((e=FREE),casa(&m->v,&e,LOCK))))goto success; //fast path.  test-and-test-and-set is from glibc, mildly optimises the case when many threads swarm a locked mutex.  Not sure if this is for the best, but after waffling for a bit I think it is
  if(e!=WAIT)e=xchga(&m->v,WAIT); //penalise the multi-waiters case, since it's slower anyway
  while(e!=FREE){
 #if __linux__
-  I i=_jfutex_waitn(&m->v,WAIT,(UI)-1); //bug? jfutex_wait doesn't get interrupted by signals on linux
+  I i=_jfutex_waitn(&m->v,WAIT,(UI)-1);
+  //bug? futex wait doesn't get interrupted by signals on linux if timeout is null
 #else
   I i=jfutex_wait(&m->v,WAIT);
 #endif
@@ -34,12 +57,11 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
    else if(i==-ENOMEM)R EVWSFULL;//lol
    else R EVFACE;}
   e=xchga(&m->v,WAIT);} //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
- m->ct+=m->recursive;m->owner=self;  R 0;}
+success:m->ct+=m->recursive;m->owner=self;  R 0;}
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
- UI4 e=0;if((e=lda(&m->v))!=FREE&&((e=FREE),casa(&m->v,&e,LOCK))){m->ct+=m->recursive;m->owner=self;R 0;} //success
- struct timespec tgt,now;if(clock_gettime(CLOCK_MONOTONIC,&now))R EVFACE;
- tgt.tv_sec=now.tv_sec+ns/1000000000;tgt.tv_nsec=now.tv_nsec+ns%1000000000;if(tgt.tv_nsec>=1000000000){tgt.tv_nsec-=1000000000;tgt.tv_sec++;};
+ UI4 e=0;if((e=lda(&m->v))!=FREE&&((e=FREE),casa(&m->v,&e,LOCK)))goto success;
+ struct timespec tgt=jtmtil(ns);
  if(common(e!=WAIT)){e=xchga(&m->v,WAIT);if(e==FREE)goto success;} //penalise the multi-waiters case, since it's slower anyway
  while(1){
   I i=_jfutex_waitn(&m->v,WAIT,ns);
@@ -52,11 +74,7 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
   e=xchga(&m->v,WAIT);
   if(e==FREE)goto success; //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
   if(i==-ETIMEDOUT)R -1; //if the kernel says we timed out, trust it rather than doing another syscall to check the time
-  clock_gettime(CLOCK_MONOTONIC,&now);
-  if(now.tv_sec>=tgt.tv_sec || now.tv_sec==tgt.tv_sec&&now.tv_nsec>=tgt.tv_nsec)R -1;//timed out
-  ns=1000000000*(tgt.tv_sec-now.tv_sec);
-  if(now.tv_nsec<=tgt.tv_nsec)ns+=tgt.tv_nsec-now.tv_nsec;
-  else ns+=1000000000-(now.tv_nsec-tgt.tv_nsec);}
+  if(-1==(ns=jtmdif(tgt)))R -1;} //update delta, abort if timed out
 success:m->ct+=m->recursive;m->owner=self; R 0;}
 I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
  if(uncommon(m->recursive)&&m->owner){if(m->owner!=self)R -1; m->ct++;R 0;}

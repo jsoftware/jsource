@@ -1,7 +1,11 @@
-// jtpthread_mutex*: mutex implementation for macos/ios/..
+// mt.h: mutex, sync, timing related interfaces
 // see mt.c
 
 #if PYXES
+struct jtimespec jtmtil(UI ns); //returns a time ns ns in the future
+I jtmdif(struct jtimespec when); //returns the time in ns between now and when.  If when is not in the future, the result will be -1
+//both of these are implemented in terms of mtclk and use its clock
+
 #if !defined(__APPLE__) && !defined(__linux__)
 #include <pthread.h>
 typedef pthread_mutex_t jtpthread_mutex_t;
@@ -56,11 +60,12 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self);
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t*,UI ns,I self); //absolute timers suck; correct the interface.  -1=failure; 0=success; positive=error
 I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure positive=error
 C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
-
 //note: self must be non-zero
+
 #if defined(__linux__)
 #include <linux/futex.h>
 #include <sys/syscall.h>
+//glibc 'syscall': stupid errno
 static inline void jfutex_wake1(UI4 *p){
  __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
                                "D" (p), //rdi: ptr
@@ -77,9 +82,9 @@ static inline int jfutex_wait(UI4 *p,UI4 v){
                                   : "a" (SYS_futex), //eax: syscall#
                                     "D" (p), //rdi: ptr
                                     "S" (FUTEX_WAIT), //rsi: op
-                                    "d" (v), //rdx: val, espected
+                                    "d" (v), //rdx: espected
                                     "r" (pts)); //r10: timeout (null=no timeout)
- return r;}
+ R r;}
 static inline int _jfutex_waitn(UI4 *p,UI4 v,UI ns){
  struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
  register struct timespec *pts asm("r10") = &ts;
@@ -87,7 +92,7 @@ static inline int _jfutex_waitn(UI4 *p,UI4 v,UI ns){
                                   : "a" (SYS_futex), //eax: syscall#
                                     "D" (p), //rdi: ptr
                                     "S" (FUTEX_WAIT), //rsi: op
-                                    "d" (v), //rdx: val, espected
+                                    "d" (v), //rdx: espected
                                     "r" (pts)); //r10: timeout (relative!)
  R r;}
 #elif defined(__APPLE__)

@@ -406,15 +406,18 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 #if SY_WIN32
-struct jtimeval { long tv_sec, tv_usec; };
+struct jtimespec { long long tv_sec, tv_nsec; };
+struct jtimeval { long long tv_sec, tv_usec; };
 struct jtimezone { int tz_minuteswest, tz_dsttime; };
 int jgettimeofday(struct jtimeval*, struct jtimezone*);
 #else
 #include <sys/time.h>
+#define jtimespec timespec
 #define jtimeval timeval
 #define jtimezone timezone
 #define jgettimeofday gettimeofday
 #endif
+struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions when sleeping; has poor granularity and slow on windows
 
 #if SY_64
 #if defined(MMSC_VER)  // SY_WIN32

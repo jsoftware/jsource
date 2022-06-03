@@ -131,7 +131,72 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
  return 0;
 }
 
-#if defined(__SSE2__) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
+
+/* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
+void StringToLower(char *str,size_t len){
+ while (len >= 32) {
+  __m256i sv = _mm256_loadu_si256(( __m256i*)str);
+  /* From A */
+  __m256i rangeshift = _mm256_sub_epi8(sv, _mm256_set1_epi8((char)('A'+256)));
+  /* To Z */
+  __m256i nomodify = _mm256_cmpgt_epi8(rangeshift, _mm256_set1_epi8(-256 + 25));
+  /* ^ ' ' */
+  _mm_storeu_si256((__m256i*)str, _mm256_xor_si256(sv, _mm256_andnot_si256(nomodify, _mm256_set1_epi8(0x20))));
+  len -= 32;
+  str += 32;
+ }
+ while (len >= 16) {
+  __m128i sv = _mm_loadu_si128(( __m128i*)str);
+  /* From A */
+  __m128i rangeshift = _mm_sub_epi8(sv, _mm_set1_epi8((char)('A'+128)));
+  /* To Z */
+  __m128i nomodify = _mm_cmpgt_epi8(rangeshift, _mm_set1_epi8(-128 + 25));
+  /* ^ ' ' */
+  _mm_storeu_si128((__m128i*)str, _mm_xor_si128(sv, _mm_andnot_si128(nomodify, _mm_set1_epi8(0x20))));
+  len -= 16;
+  str += 16;
+ }
+ while (len-- > 0) {
+  *str = tolower(*str);
+  ++str;
+ }
+}
+
+/* Same, but to uppercase. */
+void StringToUpper(char *str,size_t len){
+ while (len >= 32) {
+ // Unaligned load.
+ __m256i r0 = _mm256_loadu_si256((__m256i*)str);
+ // It is also possible to perform aligned loads by skipping enough characters in the front
+
+ // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+ __m256i maskaz = _mm256_or_si256(_mm256_cmplt_epi8(r0, _mm256_set1_epi8( 'a' )), _mm256_cmpgt_epi8(r0, _mm256_set1_epi8( 'z' )));
+
+ // Set the 6th bit to 0 only for lowercase characters.
+ _mm_storeu_si256((__m256i*)str, _mm256_andnot_si256(_mm256_andnot_si256(maskaz, _mm256_set1_epi8(0x20)),r0));
+  len -= 32;
+  str += 32;
+ }
+ while (len >= 16) {
+ // Unaligned load.
+ __m128i r0 = _mm_loadu_si128((__m128i*)str);
+ // It is also possible to perform aligned loads by skipping enough characters in the front
+
+ // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+ __m128i maskaz = _mm_or_si128(_mm_cmplt_epi8(r0, _mm_set1_epi8( 'a' )), _mm_cmpgt_epi8(r0, _mm_set1_epi8( 'z' )));
+
+ // Set the 6th bit to 0 only for lowercase characters.
+ _mm_storeu_si128((__m128i*)str, _mm_andnot_si128(_mm_andnot_si128(maskaz, _mm_set1_epi8(0x20)),r0));
+  len -= 16;
+  str += 16;
+ }
+ while (len-- > 0) {
+  *str = toupper(*str);
+  ++str;
+ }
+}
+#elif defined(__SSE2__) || EMU_AVX
 
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLower(char *str,size_t len){

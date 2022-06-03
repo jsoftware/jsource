@@ -412,6 +412,7 @@ struct jtimezone { int tz_minuteswest, tz_dsttime; };
 int jgettimeofday(struct jtimeval*, struct jtimezone*);
 #else
 #include <sys/time.h>
+#include <time.h>
 #define jtimespec timespec
 #define jtimeval timeval
 #define jtimezone timezone

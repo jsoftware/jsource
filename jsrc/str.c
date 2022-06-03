@@ -18,7 +18,65 @@ extern size_t Stringrchr(char *str,char ch, size_t stride,size_t len);
 extern size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len);
 extern size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len);
 
-#if defined(__SSE2__) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
+
+static size_t srchr(char* str, char ch, size_t len){
+ size_t i=len;
+ // align to 32 bytes
+ while ((i>0) && ((((intptr_t)str+i) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ if(!i) return 0;
+/* don't test i>=0 which is always true because size_t is unsigned */
+ const __m256i xmm0 = _mm256_set1_epi8( ch );
+ const __m256i xmm2 = _mm256_set1_epi8( 0xff );
+ while (i > 32) {
+  // search for ch
+  int mask = 0;
+   __m256i xmm1 = _mm256_load_si256((__m256i *)(str+i-32));
+   xmm1 = _mm256_andnot_si256(_mm256_cmpeq_epi8(xmm1, xmm0),xmm2);
+   if ((mask = _mm256_movemask_epi8(xmm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 32 bytes in xmm1, or within 32 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanBackward(&pos, mask);
+    i -= (size_t)pos;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+    i -= __builtin_clz(mask);
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_clz
+#endif
+    return i;
+  }
+  i -= 32;
+ }
+ while (i > 16) {
+  const __m128i xmm0 = _mm_set1_epi8( ch );
+  const __m128i xmm2 = _mm_set1_epi8( 0xff );
+  // search for ch
+  int mask = 0;
+   __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-16));
+   xmm1 = _mm_andnot_si128(_mm_cmpeq_epi8(xmm1, xmm0),xmm2);
+   if ((mask = _mm_movemask_epi8(xmm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 16 bytes in xmm1, or within 16 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanBackward(&pos, mask);
+    i -= (size_t)pos-16;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+    i -= __builtin_clz(mask)-16;  // mask is 32-bits but only lower 16-bits are significant
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_clz
+#endif
+    return i;
+  }
+  i -= 16;
+ }
+
+ while (i>0){if (ch!=str[i-1]) return i; else --i;}
+ return 0;
+}
+#elif defined(__SSE2__) || EMU_AVX
 
 static size_t srchr(char* str, char ch, size_t len){
  size_t i=len;

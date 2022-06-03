@@ -133,7 +133,7 @@ success:m->ct+=m->recursive;m->owner=self;  R 0;}
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
  UI4 e=0;if((e=lda(&m->v))!=FREE&&((e=FREE),casa(&m->v,&e,LOCK)))goto success;
- struct timespec tgt=jtmtil(ns);
+ struct jtimespec tgt=jtmtil(ns);
  if(common(e!=WAIT)){e=xchga(&m->v,WAIT);if(e==FREE)goto success;} //penalise the multi-waiters case, since it's slower anyway
  while(1){
   if(JT(jt,adbreakr)[0])R EVATTN;

@@ -101,19 +101,9 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  if(r==-EAGAIN||r==-EINTR)R 0;
  R EVFACE;}
 #elif defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-void jfutex_wake1(UI4 *p){WakeByAddressSingle(p);}
-void jfutex_wakea(UI4 *p){WakeByAddressAll(p);}
-C jfutex_wait(UI4 *p,UI4 v){R WaitOnAddress(p,&v,4,INFINITE)?0:EVFACE;}
-I jfutex_waitn(UI4 *p,UI4 v,UI ns){
- if(WaitOnAddress(p,&v,4,ns/1000000))R 0;
- if(GetLastError()==ERROR_TIMEOUT)R -1;
- //is there EINTR on windows?  Does it manifest as a spurious wake with no error?
- R EVFACE;}
+// defined in cd.c to avoid name collisions between j.h and windows.h
 #endif
 
-#if defined(__APPLE__) || defined(__linux__)
 enum{FREE=0,LOCK=1,WAIT=2};//values for mutex->v
 //todo consider storing owner in the high bits of v.  apple pthreads does this.  But it means we can't use xadd to unlock.  On the other hand, apple is mostly arm now, which doesn't have xadd anyway.
 //Also, I just realised you _can_ use xadd to unlock--subtract the top bits at the same time as the bottom one--it just adds a weird state where the low bit is 1, but the high bits don't denote any task--but that's ok
@@ -168,4 +158,3 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
  //(probably that's only in the uncontended case)
  //if(adda(&m->v,-1)){sta(&m->v,FREE);jfutex_wake1(&m->v);}
  R 0;}
-#endif //__APPLE__

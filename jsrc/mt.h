@@ -11,48 +11,6 @@ __attribute__((cold)) I jfutex_waitn(UI4 *p,UI4 v,UI ns); //ditto, but wake up a
 __attribute__((cold)) void jfutex_wake1(UI4 *p); //wake 1 thread waiting on p
 __attribute__((cold)) void jfutex_wakea(UI4 *p); //wake all threads waiting on p
 
-#if !defined(__APPLE__) && !defined(__linux__)
-#include <pthread.h>
-typedef pthread_mutex_t jtpthread_mutex_t;
-static inline void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){
- if(likely(!recursive)){pthread_mutex_init(m,0);}
- else{
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
-  pthread_mutex_init(m,&attr);}}
-static inline C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
- I4 r=pthread_mutex_lock(m);
- if(likely(r==0))R 0;
- if(r==EDEADLK)R EVCONCURRENCY;
- R EVFACE;}
-static inline I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
-#if SY_WIN32
- struct jtimeval now;jgettimeofday(&now,0);
- struct timespec t;
- t.tv_sec=now.tv_sec+ns/1000000000;t.tv_nsec=1000*now.tv_usec+ns%1000000000;if(t.tv_nsec>=1000000000){t.tv_sec++;t.tv_nsec-=1000000000;}
-#else
- struct timespec t;clock_gettime(CLOCK_REALTIME,&t);
- t.tv_sec+=ns/1000000000;t.tv_nsec+=ns%1000000000;if(t.tv_nsec>=1000000000){t.tv_sec++;t.tv_nsec-=1000000000;}
-#endif
- I4 r=pthread_mutex_timedlock(m,&t);
- if(r==0)R 0;
- if(r==ETIMEDOUT)R -1;
- if(r==EDEADLK)R EVCONCURRENCY;
- R EVFACE;}
-static inline I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
- I4 r=pthread_mutex_trylock(m);
- if(!r)R 0;
- if(r==EBUSY)R -1;
- if(r==EAGAIN)R EVLIMIT; //'max recursive locks exceeded'
- if(r==EDEADLK||r==EOWNERDEAD)R EVCONCURRENCY;
- R EVFACE;}
-static inline C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
- I4 r=pthread_mutex_unlock(m);
- if(likely(!r))R 0;
- if(r==EPERM)R EVCONCURRENCY;
- R EVFACE;}
-#else
 typedef struct {
  B recursive;
  I owner; //user-provided; task id
@@ -107,5 +65,4 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 // untested windows path; make henry test it when he gets back from vacation
 // don't pollute everybody with windows.h.  win api is fairly basic anyway, so there is not much to take advantage of
 #endif //_WIN32
-#endif //__APPLE__ || __linux__
 #endif //PYXES

@@ -227,8 +227,9 @@ A jtpyxval(J jt,A pyx){ UI4 state;
   if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
   // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution.  In that case fail the pyx.  It will not be deleted until the value has been stored
   if(unlikely(adbreak&0xff))ASSERT(0,adbreak&0xff);  // JBREAK: fail the pyx and exit
-  ASSERT(-1!=(ns=jtmdif(end)),EVTIME);  // update timeout; potentially fail the pyx and exit
- }
+  if(uncommon(-1==(ns=jtmdif(end)))){ //update timeout
+   if(unlikely(inf==((PYXBLOK*)AAV0(pyx))->pyxmaxwt))ns=IMAX;
+   else ASSERT(0,EVTIME);}}  // fail the pyx and exit
 done:
  if(likely(!!((PYXBLOK*)AAV0(pyx))->pyxvalue))R ((PYXBLOK*)AAV0(pyx))->pyxvalue; // valid value, use it
  ASSERT(0,((PYXBLOK*)AAV0(pyx))->errcode);} // if error, return the error code

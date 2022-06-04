@@ -172,6 +172,7 @@ typedef double float64x2_t __attribute__ ((vector_size (16)));
 typedef int omp_int_t;
 static inline omp_int_t omp_get_thread_num() { return 0;}
 static inline omp_int_t omp_get_max_threads() { return 1;}
+static inline omp_int_t omp_get_num_threads() { return 1;}
 #endif
 
 #ifndef SYS // include js.h only once - dtoa.c

@@ -537,9 +537,9 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
   len -= 4;
   str += 4;
  }
- while (len-- > 0) {
 #endif
 
+ while (len-- > 0) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
   ++str;
  }

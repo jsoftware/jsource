@@ -42,7 +42,7 @@ C jfutex_wait(UI4 *p,UI4 v){
 // wait2 takes an ns timeout, but it's only available from macos 11 onward; coincidentally, arm macs only support macos 11+
 // so we can count on having this
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){
- I r=R __ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,ns,0);
+ I r=__ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,ns,0);
  if(r>=0)R 0;
  if(r==-ETIMEDOUT)R -1;
  if(r==-EINTR||r==-EFAULT)R 0;

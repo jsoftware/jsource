@@ -19,8 +19,8 @@ x=. I. 26 > n=. ((97+i.26){a.) i. t=. ,y
 (ToLower -: 0&(3!:12)) 10&u: 123 456$a.
 (ToLower -: 0&(3!:12)) 7&u: 16b1ffff+i.256
 (ToLower -: 0&(3!:12)) 123 456$ 7&u: 16b1ffff+i.256
-(ToLower -: 0&(3!:12)) 9&u: 16b1ffffffff +i.256
-(ToLower -: 0&(3!:12)) 123 456$ 9&u: 16b1ffffffff +i.256
+(ToLower -: 0&(3!:12)) 9&u: 1bf7fff000 +i.256
+(ToLower -: 0&(3!:12)) 123 456$ 9&u: 1bf7fff000 +i.256
 (ToLower -: 0&(3!:12)) i. 3 4
 (ToLower -: 0&(3!:12)) 0.5 + i. 3 4
 (ToLower -: 0&(3!:12)) 1j1 + i. 3 4
@@ -41,8 +41,8 @@ x=. I. 26 > n=. ((97+i.26){a.) i. t=. ,y
 (ToUpper -: 1&(3!:12)) 10&u: 123 456$a.
 (ToLower -: 0&(3!:12)) 7&u: 16b1ffff+i.256
 (ToLower -: 0&(3!:12)) 123 456$ 7&u: 16b1ffff+i.256
-(ToLower -: 0&(3!:12)) 9&u: 16b1ffffffff +i.256
-(ToLower -: 0&(3!:12)) 123 456$ 9&u: 16b1ffffffff +i.256
+(ToLower -: 0&(3!:12)) 9&u: 1bf7fff000 +i.256
+(ToLower -: 0&(3!:12)) 123 456$ 9&u: 1bf7fff000 +i.256
 (ToUpper -: 1&(3!:12)) i. 3 4
 (ToUpper -: 1&(3!:12)) 0.5 + i. 3 4
 (ToUpper -: 1&(3!:12)) 1j1 + i. 3 4

@@ -25,15 +25,15 @@ static size_t srchr(char* str, char ch, size_t len){
  // align to 32 bytes
  while ((i>0) && ((((intptr_t)str+i) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
 /* don't test i>=0 which is always true because size_t is unsigned */
- const __m256i xmm0 = _mm256_set1_epi8( ch );
- const __m256i xmm2 = _mm256_set1_epi8( 0xff );
+ const __m256i mm0 = _mm256_set1_epi8( ch );
+ const __m256i mm2 = _mm256_set1_epi8( 0xff );
  while (i > 32) {
   // search for ch
   int mask = 0;
-   __m256i xmm1 = _mm256_load_si256((__m256i *)(str+i-32));
-   xmm1 = _mm256_andnot_si256(_mm256_cmpeq_epi8(xmm1, xmm0),xmm2);
-   if ((mask = _mm256_movemask_epi8(xmm1)) != 0) {   // some character is not ch
-    // got 0 somewhere within 32 bytes in xmm1, or within 32 bits in mask
+   __m256i mm1 = _mm256_load_si256((__m256i *)(str+i-32));
+   mm1 = _mm256_andnot_si256(_mm256_cmpeq_epi8(mm1, mm0),mm2);
+   if ((mask = _mm256_movemask_epi8(mm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 32 bytes in mm1, or within 32 bits in mask
     // find index of last set bit
 #if (MMSC_VER)   // make sure <intrin.h> is included
     unsigned long pos;
@@ -53,9 +53,9 @@ static size_t srchr(char* str, char ch, size_t len){
 #if defined(__SSE2__) || EMU_AVX
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)str+i) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ const __m128i xmm0 = _mm_set1_epi8( ch );
+ const __m128i xmm2 = _mm_set1_epi8( 0xff );
  while (i > 16) {
-  const __m128i xmm0 = _mm_set1_epi8( ch );
-  const __m128i xmm2 = _mm_set1_epi8( 0xff );
   // search for ch
   int mask = 0;
    __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-16));
@@ -89,20 +89,20 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
  // align to 32 bytes
  while ((i>0) && ((((intptr_t)str+i) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
 /* don't test i>=0 which is always true because size_t is unsigned */
- const __m256i xmm0 = _mm256_set1_epi16( ch );
- const __m256i xmm2 = _mm256_set1_epi16( 0xffff );
+ const __m256i mm0 = _mm256_set1_epi16( ch );
+ const __m256i mm2 = _mm256_set1_epi16( 0xffff );
  while (i > 16) {
   // search for ch
   int mask = 0;
-   __m256i xmm1 = _mm256_load_si256((__m256i *)(str+i-16));
-   xmm1 = _mm256_andnot_si256(_mm256_cmpeq_epi16(xmm1, xmm0),xmm2);
+   __m256i mm1 = _mm256_load_si256((__m256i *)(str+i-16));
+   mm1 = _mm256_andnot_si256(_mm256_cmpeq_epi16(mm1, mm0),mm2);
    // no such thing as _mm256_movemask_epi16
    // Shift each 16-bit element to the right by 8 bits, zero-filling the upper
    // bits.  This will remove the leading high byte from coming up in the mask
    // we generate below, allowing us to use popcount to get the number of slots
    // to compare in the subsequent step.
-   if ((mask = _mm256_movemask_epi8(_mm256_srli_epi16(xmm1, 8))) != 0) {   // some character is not ch
-    // got 0 somewhere within 32 bytes in xmm1, or within 32 bits in mask
+   if ((mask = _mm256_movemask_epi8(_mm256_srli_epi16(mm1, 8))) != 0) {   // some character is not ch
+    // got 0 somewhere within 32 bytes in mm1, or within 32 bits in mask
     // find index of last set bit
 #if (MMSC_VER)   // make sure <intrin.h> is included
     unsigned long pos;
@@ -122,9 +122,9 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
 #if defined(__SSE2__) || EMU_AVX
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)str+i) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ const __m128i xmm0 = _mm_set1_epi16( ch );
+ const __m128i xmm2 = _mm_set1_epi16( 0xffff );
  while (i > 8) {
-  const __m128i xmm0 = _mm_set1_epi16( ch );
-  const __m128i xmm2 = _mm_set1_epi16( 0xffff );
   // search for ch
   int mask = 0;
    __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-8));
@@ -158,20 +158,20 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
  // align to 32 bytes
  while ((i>0) && ((((intptr_t)str+i) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
 /* don't test i>=0 which is always true because size_t is unsigned */
- const __m256i xmm0 = _mm256_set1_epi32( ch );
- const __m256i xmm2 = _mm256_set1_epi32( 0xffffffff );
+ const __m256i mm0 = _mm256_set1_epi32( ch );
+ const __m256i mm2 = _mm256_set1_epi32( 0xffffffff );
  while (i > 8) {
   // search for ch
   int mask = 0;
-   __m256i xmm1 = _mm256_load_si256((__m256i *)(str+i-8));
-   xmm1 = _mm256_andnot_si256(_mm256_cmpeq_epi32(xmm1, xmm0),xmm2);
+   __m256i mm1 = _mm256_load_si256((__m256i *)(str+i-8));
+   mm1 = _mm256_andnot_si256(_mm256_cmpeq_epi32(mm1, mm0),mm2);
    // no such thing as _mm256_movemask_epi32
    // Shift each 16-bit element to the right by 8 bits, zero-filling the upper
    // bits.  This will remove the leading high byte from coming up in the mask
    // we generate below, allowing us to use popcount to get the number of slots
    // to compare in the subsequent step.
-   if ((mask = _mm256_movemask_epi8(_mm256_srli_epi32(xmm1, 24))) != 0) {   // some character is not ch
-    // got 0 somewhere within 32 bytes in xmm1, or within 32 bits in mask
+   if ((mask = _mm256_movemask_epi8(_mm256_srli_epi32(mm1, 24))) != 0) {   // some character is not ch
+    // got 0 somewhere within 32 bytes in mm1, or within 32 bits in mask
     // find index of last set bit
 #if (MMSC_VER)   // make sure <intrin.h> is included
     unsigned long pos;
@@ -191,9 +191,9 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
 #if defined(__SSE2__) || EMU_AVX
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)str+i) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ const __m128i xmm0 = _mm_set1_epi32( ch );
+ const __m128i xmm2 = _mm_set1_epi32( 0xffffffff );
  while (i > 4) {
-  const __m128i xmm0 = _mm_set1_epi32( ch );
-  const __m128i xmm2 = _mm_set1_epi32( 0xffffffff );
   // search for ch
   int mask = 0;
    __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-4));
@@ -230,12 +230,15 @@ void StringToLower(char *str,size_t len){
   len--;
   ++str;
  }
+ const __m128i xmm1 = _mm_set1_epi8( 'A' );
+ const __m128i xmm2 = _mm_set1_epi8( 'Z' );
+ const __m128i xmm3 = _mm_set1_epi8( 0x20 );
  while (len >= 16) {
- __m128i r0 = _mm_load_si128((__m128i*)str);
- // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
- __m128i maskaz = _mm_or_si128(_mm_cmplt_epi8(r0, _mm_set1_epi8( 'A' )), _mm_cmpgt_epi8(r0, _mm_set1_epi8( 'Z' )));
- // flip the 6th bit to 0 only for uppercase characters.
-  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, _mm_set1_epi8(0x20))));
+  __m128i r0 = _mm_load_si128((__m128i*)str);
+  // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
+  __m128i maskaz = _mm_or_si128(_mm_cmplt_epi8(r0, xmm1), _mm_cmpgt_epi8(r0, xmm2));
+  // flip the 6th bit to 0 only for uppercase characters.
+  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, xmm3)));
   len -= 16;
   str += 16;
  }
@@ -253,12 +256,15 @@ void StringToUpper(char *str,size_t len){
   len--;
   ++str;
  }
+ const __m128i xmm1 = _mm_set1_epi8( 'a' );
+ const __m128i xmm2 = _mm_set1_epi8( 'z' );
+ const __m128i xmm3 = _mm_set1_epi8( 0x20 );
  while (len >= 16) {
- __m128i r0 = _mm_load_si128((__m128i*)str);
- // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
- __m128i maskaz = _mm_or_si128(_mm_cmplt_epi8(r0, _mm_set1_epi8( 'a' )), _mm_cmpgt_epi8(r0, _mm_set1_epi8( 'z' )));
- // flip the 6th bit to 0 only for lowercase characters.
- _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, _mm_set1_epi8(0x20))));
+  __m128i r0 = _mm_load_si128((__m128i*)str);
+  // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+  __m128i maskaz = _mm_or_si128(_mm_cmplt_epi8(r0, xmm1), _mm_cmpgt_epi8(r0, xmm2));
+  // flip the 6th bit to 0 only for lowercase characters.
+  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, xmm3)));
   len -= 16;
   str += 16;
  }
@@ -341,12 +347,15 @@ void StringToLowerUCS2(unsigned short *str,size_t len){
   len--;
   ++str;
  }
+ const __m128i xmm1 = _mm_set1_epi16( 'A' );
+ const __m128i xmm2 = _mm_set1_epi16( 'Z' );
+ const __m128i xmm3 = _mm_set1_epi16( 0x20 );
  while (len >= 8) {
- __m128i r0 = _mm_load_si128((__m128i*)str);
- // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
- __m128i maskaz = _mm_or_si128(_mm_cmplt_epi16(r0, _mm_set1_epi16( 'A' )), _mm_cmpgt_epi16(r0, _mm_set1_epi16( 'Z' )));
- // flip the 6th bit to 0 only for uppercase characters.
-  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, _mm_set1_epi16(0x20))));
+  __m128i r0 = _mm_load_si128((__m128i*)str);
+  // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
+  __m128i maskaz = _mm_or_si128(_mm_cmplt_epi16(r0, xmm1), _mm_cmpgt_epi16(r0, xmm2));
+  // flip the 6th bit to 0 only for uppercase characters.
+  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, xmm3)));
   len -= 8;
   str += 8;
  }
@@ -365,12 +374,15 @@ void StringToUpperUCS2(unsigned short *str,size_t len){
   len--;
   ++str;
  }
+ const __m128i xmm1 = _mm_set1_epi16( 'a' );
+ const __m128i xmm2 = _mm_set1_epi16( 'z' );
+ const __m128i xmm3 = _mm_set1_epi16( 0x20 );
  while (len >= 8) {
- __m128i r0 = _mm_load_si128((__m128i*)str);
- // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
- __m128i maskaz = _mm_or_si128(_mm_cmplt_epi16(r0, _mm_set1_epi16( 'a' )), _mm_cmpgt_epi16(r0, _mm_set1_epi16( 'z' )));
- // flip the 6th bit to 0 only for lowercase characters.
- _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, _mm_set1_epi16(0x20))));
+  __m128i r0 = _mm_load_si128((__m128i*)str);
+  // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+  __m128i maskaz = _mm_or_si128(_mm_cmplt_epi16(r0, xmm1), _mm_cmpgt_epi16(r0, xmm2));
+  // flip the 6th bit to 0 only for lowercase characters.
+  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, xmm3)));
   len -= 8;
   str += 8;
  }
@@ -408,12 +420,15 @@ void StringToLowerUCS4(unsigned int *str,size_t len){
   len--;
   ++str;
  }
+ const __m128i xmm1 = _mm_set1_epi32( 'A' );
+ const __m128i xmm2 = _mm_set1_epi32( 'Z' );
+ const __m128i xmm3 = _mm_set1_epi32( 0x20 );
  while (len >= 4) {
- __m128i r0 = _mm_load_si128((__m128i*)str);
- // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
- __m128i maskaz = _mm_or_si128(_mm_cmplt_epi32(r0, _mm_set1_epi32( 'A' )), _mm_cmpgt_epi32(r0, _mm_set1_epi32( 'Z' )));
- // flip the 6th bit to 0 only for uppercase characters.
-  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, _mm_set1_epi32(0x20))));
+  __m128i r0 = _mm_load_si128((__m128i*)str);
+  // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
+  __m128i maskaz = _mm_or_si128(_mm_cmplt_epi32(r0, xmm1), _mm_cmpgt_epi32(r0, xmm2));
+  // flip the 6th bit to 0 only for uppercase characters.
+  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, xmm3)));
   len -= 4;
   str += 4;
  }
@@ -432,12 +447,15 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
   len--;
   ++str;
  }
+ const __m128i xmm1 = _mm_set1_epi32( 'a' );
+ const __m128i xmm2 = _mm_set1_epi32( 'z' );
+ const __m128i xmm3 = _mm_set1_epi32( 0x20 );
  while (len >= 4) {
- __m128i r0 = _mm_load_si128((__m128i*)str);
- // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
- __m128i maskaz = _mm_or_si128(_mm_cmplt_epi32(r0, _mm_set1_epi32( 'a' )), _mm_cmpgt_epi32(r0, _mm_set1_epi32( 'z' )));
- // flip the 6th bit to 0 only for lowercase characters.
- _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, _mm_set1_epi32(0x20))));
+  __m128i r0 = _mm_load_si128((__m128i*)str);
+  // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+  __m128i maskaz = _mm_or_si128(_mm_cmplt_epi32(r0, xmm1), _mm_cmpgt_epi32(r0, xmm2));
+  // flip the 6th bit to 0 only for lowercase characters.
+  _mm_store_si128((__m128i*)str, _mm_xor_si128(r0, _mm_andnot_si128(maskaz, xmm3)));
   len -= 4;
   str += 4;
  }

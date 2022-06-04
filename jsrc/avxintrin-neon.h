@@ -705,6 +705,20 @@ FORCE_INLINE void _mm256_zeroupper(void)
     result_m256i; \
 })
 
+// FORCE_INLINE __m256i _mm256_slli_epi16(__m256i a, int imm8)
+#define _mm256_slli_epi16( a,  imm8) \
+({ \
+    __m256i result_m256i; \
+    if (likely(imm8 >= 0 && imm8 < 16)) { \
+        result_m256i.vect_s16[0] = vshlq_n_s16(a.vect_s16[0], imm8); \
+        result_m256i.vect_s16[1] = vshlq_n_s16(a.vect_s16[1], imm8); \
+    } else { \
+        result_m256i.vect_s16[0] = vdupq_n_s16(0); \
+        result_m256i.vect_s16[1] = vdupq_n_s16(0); \
+    }  \
+    result_m256i; \
+})
+
 // FORCE_INLINE __m256i _mm256_slli_epi32(__m256i a, int imm8)
 #define _mm256_slli_epi32( a,  imm8) \
 ({ \
@@ -1544,6 +1558,14 @@ FORCE_INLINE __m256i _mm256_cmpgt_epi32 (__m256i a, __m256i b)
     return res;
 }
 
+FORCE_INLINE __m256i _mm256_cmpgt_epi16 (__m256i a, __m256i b)
+{
+    __m256i res;
+    res.vect_u16[0] = vcgtq_s16(a.vect_s16[0], b.vect_s16[0]);
+    res.vect_u16[1] = vcgtq_s16(a.vect_s16[1], b.vect_s16[1]);
+    return res;
+}
+
 FORCE_INLINE __m256i _mm256_cmpgt_epi8 (__m256i a, __m256i b)
 {
     __m256i result_m256i;
@@ -1557,6 +1579,14 @@ FORCE_INLINE __m256i _mm256_cmpeq_epi32 (__m256i a, __m256i b)
     __m256i result_m256i;
     result_m256i.vect_u32[0] = vceqq_s32(a.vect_s32[0], b.vect_s32[0]);
     result_m256i.vect_u32[1] = vceqq_s32(a.vect_s32[1], b.vect_s32[1]);
+    return result_m256i;
+}
+
+FORCE_INLINE __m256i _mm256_cmpeq_epi16 (__m256i a, __m256i b)
+{
+    __m256i result_m256i;
+    result_m256i.vect_u16[0] = vceqq_s16(a.vect_s16[0], b.vect_s16[0]);
+    result_m256i.vect_u16[1] = vceqq_s16(a.vect_s16[1], b.vect_s16[1]);
     return result_m256i;
 }
 

@@ -57,6 +57,8 @@
 #define dump_m128i(a,x) {__m128i _b=x;fprintf(stderr,"%s %x %x %x %x \n", a, ((unsigned int*)(&_b))[0], ((unsigned int*)(&_b))[1], ((unsigned int*)(&_b))[2], ((unsigned int*)(&_b))[3]);}
 #define dump_m128i64(a,x) {__m128i _b=x;fprintf(stderr,"%s %lli %lli \n", a, ((long long*)(&_b))[0], ((long long*)(&_b))[1]);}
 #define dump_m256i(a,x) {__m256i _b=x;fprintf(stderr,"%s %lli %lli %lli %lli \n", a, ((long long*)(&_b))[0], ((long long*)(&_b))[1], ((long long*)(&_b))[2], ((long long*)(&_b))[3]);}
+#define dump_m256i16(a,x) {__m256i _b=x;fprintf(stderr,"%s %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x \n", a, ((unsigned short*)(&_b))[0], ((unsigned short*)(&_b))[1], ((unsigned short*)(&_b))[2], ((unsigned short*)(&_b))[3], ((unsigned short*)(&_b))[4], ((unsigned short*)(&_b))[5], ((unsigned short*)(&_b))[6], ((unsigned short*)(&_b))[7],((unsigned short*)(&_b))[8], ((unsigned short*)(&_b))[9], ((unsigned short*)(&_b))[10], ((unsigned short*)(&_b))[11], ((unsigned short*)(&_b))[12], ((unsigned short*)(&_b))[13], ((unsigned short*)(&_b))[14], ((unsigned short*)(&_b))[15]);}
+#define dump_m256i32(a,x) {__m256i _b=x;fprintf(stderr,"%s %x %x %x %x %x %x %x %x \n", a, ((unsigned int*)(&_b))[0], ((unsigned int*)(&_b))[1], ((unsigned int*)(&_b))[2], ((unsigned int*)(&_b))[3], ((unsigned int*)(&_b))[4], ((unsigned int*)(&_b))[5], ((unsigned int*)(&_b))[6], ((unsigned int*)(&_b))[7]);}
 #define dump_m256d(a,x) {__m256d _b=x;fprintf(stderr,"%s %f %f %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1], ((double*)(&_b))[2], ((double*)(&_b))[3]);}
 #define dump_m128d(a,x) {__m128d _b=x;fprintf(stderr,"%s %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1]);}
 

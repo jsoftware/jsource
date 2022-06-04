@@ -220,10 +220,33 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
  return 0;
 }
 
-#if defined(__SSE2__) || EMU_AVX
-
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLower(char *str,size_t len){
+#if C_AVX2 || EMU_AVX2
+
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+  *str = tolower(*str);
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi8( 'A'-1 );
+ const __m256i mm2 = _mm256_set1_epi8( 'Z' );
+ const __m256i mm3 = _mm256_set1_epi8( 0x20 );
+ const __m256i mm4 = _mm256_cmpeq_epi8( mm3, mm3 );
+ while (len >= 32) {
+  __m256i r0 = _mm256_load_si256((__m256i*)str);
+  // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
+  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi8(r0, mm1),mm4), _mm256_cmpgt_epi8(r0, mm2));
+  // flip the 6th bit to 0 only for uppercase characters.
+  _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
+  len -= 32;
+  str += 32;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = tolower(*str);
@@ -242,6 +265,8 @@ void StringToLower(char *str,size_t len){
   len -= 16;
   str += 16;
  }
+#endif
+
  while (len-- > 0) {
   *str = tolower(*str);
   ++str;
@@ -250,6 +275,31 @@ void StringToLower(char *str,size_t len){
 
 /* Same, but to uppercase. */
 void StringToUpper(char *str,size_t len){
+#if C_AVX2 || EMU_AVX2
+
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+  *str = tolower(*str);
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi8( 'a'-1 );
+ const __m256i mm2 = _mm256_set1_epi8( 'z' );
+ const __m256i mm3 = _mm256_set1_epi8( 0x20 );
+ const __m256i mm4 = _mm256_cmpeq_epi8( mm3, mm3 );
+ while (len >= 32) {
+  __m256i r0 = _mm256_load_si256((__m256i*)str);
+  // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi8(r0, mm1),mm4), _mm256_cmpgt_epi8(r0, mm2));
+  // flip the 6th bit to 0 only for lowercase characters.
+  _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
+  len -= 32;
+  str += 32;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = toupper(*str);
@@ -268,79 +318,42 @@ void StringToUpper(char *str,size_t len){
   len -= 16;
   str += 16;
  }
- while (len-- > 0) {
-  *str = toupper(*str);
-  ++str;
- }
-}
-#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
-#include <arm_neon.h>
-
-/* Literally the exact same code as above, but for NEON. */
-void StringToLower(char *str,size_t len){
- const uint8x16_t asciiA = vdupq_n_u8('A' - 1);
- const uint8x16_t asciiZ = vdupq_n_u8('Z' + 1);
- const uint8x16_t diff = vdupq_n_u8('a' - 'A');
- while (len >= 16) {
-  uint8x16_t inp = vld1q_u8((uint8_t *)str);
-  uint8x16_t greaterThanA = vcgtq_u8(inp, asciiA);
-  uint8x16_t lessEqualZ = vcltq_u8(inp, asciiZ);
-  uint8x16_t mask = vandq_u8(greaterThanA, lessEqualZ);
-  uint8x16_t toAdd = vandq_u8(mask, diff);
-  uint8x16_t added = vaddq_u8(inp, toAdd);
-  vst1q_u8((uint8_t *)str, added);
-  len -= 16;
-  str += 16;
- }
- while (len-- > 0) {
-  *str = tolower(*str);
-  ++str;
- }
-}
-
-/* Literally the exact same code as above, but for NEON. */
-void StringToUpper(char *str,size_t len){
- const uint8x16_t asciia = vdupq_n_u8('a' - 1);
- const uint8x16_t asciiz = vdupq_n_u8('z' + 1);
- const uint8x16_t diff = vdupq_n_u8('a' - 'A');
- while (len >= 16) {
-  uint8x16_t inp = vld1q_u8((uint8_t *)str);
-  uint8x16_t greaterThana = vcgtq_u8(inp, asciia);
-  uint8x16_t lessEqualz = vcltq_u8(inp, asciiz);
-  uint8x16_t mask = vandq_u8(greaterThana, lessEqualz);
-  uint8x16_t toSub = vandq_u8(mask, diff);
-  uint8x16_t added = vsubq_u8(inp, toSub);
-  vst1q_u8((uint8_t *)str, added);
-  len -= 16;
-  str += 16;
- }
- while (len-- > 0) {
-  *str = toupper(*str);
-  ++str;
- }
-}
-#else
-/* Just go scalar. */
-void StringToLower(char *str,size_t len){
- while (len-- > 0) {
-  *str = tolower(*str);
-  ++str;
- }
-}
-
-void StringToUpper(char *str,size_t len){
- while (len-- > 0) {
-  *str = toupper(*str);
-  ++str;
- }
-}
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+ while (len-- > 0) {
+  *str = toupper(*str);
+  ++str;
+ }
+}
 
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLowerUCS2(unsigned short *str,size_t len){
  const char OFFSET = 'a' - 'A';
+#if C_AVX2 || EMU_AVX2
+
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+  *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi16( 'A'-1 );
+ const __m256i mm2 = _mm256_set1_epi16( 'Z' );
+ const __m256i mm3 = _mm256_set1_epi16( 0x20 );
+ const __m256i mm4 = _mm256_cmpeq_epi16( mm3, mm3 );
+ while (len >= 16) {
+  __m256i r0 = _mm256_load_si256((__m256i*)str);
+  // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
+  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi16(r0, mm1),mm4), _mm256_cmpgt_epi16(r0, mm2));
+  // flip the 6th bit to 0 only for uppercase characters.
+  _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
+  len -= 16;
+  str += 16;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -359,6 +372,8 @@ void StringToLowerUCS2(unsigned short *str,size_t len){
   len -= 8;
   str += 8;
  }
+#endif
+
  while (len-- > 0) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
   ++str;
@@ -368,6 +383,31 @@ void StringToLowerUCS2(unsigned short *str,size_t len){
 /* Same, but to uppercase. */
 void StringToUpperUCS2(unsigned short *str,size_t len){
  const char OFFSET = 'a' - 'A';
+#if C_AVX2 || EMU_AVX2
+
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+  *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi16( 'a'-1 );
+ const __m256i mm2 = _mm256_set1_epi16( 'z' );
+ const __m256i mm3 = _mm256_set1_epi16( 0x20 );
+ const __m256i mm4 = _mm256_cmpeq_epi16( mm3, mm3 );
+ while (len >= 16) {
+  __m256i r0 = _mm256_load_si256((__m256i*)str);
+  // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi16(r0, mm1),mm4), _mm256_cmpgt_epi16(r0, mm2));
+  // flip the 6th bit to 0 only for lowercase characters.
+  _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
+  len -= 16;
+  str += 16;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
@@ -386,34 +426,42 @@ void StringToUpperUCS2(unsigned short *str,size_t len){
   len -= 8;
   str += 8;
  }
+#endif
+
  while (len-- > 0) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
   ++str;
  }
 }
-#else
-void StringToLowerUCS2(unsigned short *str,size_t len){
- const char OFFSET = 'a' - 'A';
- while (len-- > 0) {
-  *str= (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
-  ++str;
- }
-}
-
-void StringToUpperUCS2(unsigned short *str,size_t len){
- const char OFFSET = 'a' - 'A';
- while (len-- > 0) {
-  *str= (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
-  ++str;
- }
-}
-#endif
-
-#if defined(__SSE2__) || EMU_AVX
 
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLowerUCS4(unsigned int *str,size_t len){
  const char OFFSET = 'a' - 'A';
+#if C_AVX2 || EMU_AVX2
+
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+  *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi32( 'A'-1 );
+ const __m256i mm2 = _mm256_set1_epi32( 'Z' );
+ const __m256i mm3 = _mm256_set1_epi32( 0x20 );
+ const __m256i mm4 = _mm256_cmpeq_epi32( mm3, mm3 );
+ while (len >= 8) {
+  __m256i r0 = _mm256_load_si256((__m256i*)str);
+  // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
+  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi32(r0, mm1),mm4), _mm256_cmpgt_epi32(r0, mm2));
+  // flip the 6th bit to 0 only for uppercase characters.
+  _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
+  len -= 8;
+  str += 8;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -432,6 +480,8 @@ void StringToLowerUCS4(unsigned int *str,size_t len){
   len -= 4;
   str += 4;
  }
+#endif
+
  while (len-- > 0) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
   ++str;
@@ -441,6 +491,31 @@ void StringToLowerUCS4(unsigned int *str,size_t len){
 /* Same, but to uppercase. */
 void StringToUpperUCS4(unsigned int *str,size_t len){
  const char OFFSET = 'a' - 'A';
+#if C_AVX2 || EMU_AVX2
+
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+  *str = (*str>= 'a' && *str<= 'z') ? *str += OFFSET : *str;
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi32( 'a'-1 );
+ const __m256i mm2 = _mm256_set1_epi32( 'z' );
+ const __m256i mm3 = _mm256_set1_epi32( 0x20 );
+ const __m256i mm4 = _mm256_cmpeq_epi32( mm3, mm3 );
+ while (len >= 8) {
+  __m256i r0 = _mm256_load_si256((__m256i*)str);
+  // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
+  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi32(r0, mm1),mm4), _mm256_cmpgt_epi32(r0, mm2));
+  // flip the 6th bit to 0 only for lowercase characters.
+  _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
+  len -= 8;
+  str += 8;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
@@ -460,30 +535,15 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
   str += 4;
  }
  while (len-- > 0) {
+#endif
+
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
   ++str;
  }
 }
-#else
-void StringToLowerUCS4(unsigned int *str,size_t len){
- const char OFFSET = 'a' - 'A';
- while (len-- > 0) {
-  *str= (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
-  ++str;
- }
-}
-
-void StringToUpperUCS4(unsigned int *str,size_t len){
- const char OFFSET = 'a' - 'A';
- while (len-- > 0) {
-  *str= (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
-  ++str;
- }
-}
-#endif
 
 size_t Stringrchr(char *str, char ch, size_t stride, size_t len){
- size_t i=len,ln=0;
+ size_t i=0,ln=0;
  while (i-- > 0) {
   size_t l=srchr(str,ch,stride);
   ln=(ln<l)?l:ln;

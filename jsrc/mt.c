@@ -69,19 +69,19 @@ out:
 void jfutex_wake1(UI4 *p){
  __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
                                "D" (p), //rdi: ptr
-                               "S" (FUTEX_WAKE), //rsi: op
+                               "S" (FUTEX_WAKE_PRIVATE), //rsi: op
                                "d" (1));} //rdx: count
 void jfutex_wakea(UI4 *p){
  __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
                                "D" (p), //rdi: ptr
-                               "S" (FUTEX_WAKE), //rsi: op
+                               "S" (FUTEX_WAKE_PRIVATE), //rsi: op
                                "d" (0xffffffff));} //rdx: count
 C jfutex_wait(UI4 *p,UI4 v){
  register struct timespec *pts asm("r10") = 0;
  int r;__asm__ volatile("syscall" : "=a"(r) //result in rax
                                   : "a" (SYS_futex), //eax: syscall#
                                     "D" (p), //rdi: ptr
-                                    "S" (FUTEX_WAIT), //rsi: op
+                                    "S" (FUTEX_WAIT_PRIVATE), //rsi: op
                                     "d" (v), //rdx: espected
                                     "r" (pts)); //r10: timeout (null=no timeout)
  if(r>=0)R 0;
@@ -93,7 +93,7 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  int r;__asm__ volatile("syscall" : "=a"(r) //result in rax
                                   : "a" (SYS_futex), //eax: syscall#
                                     "D" (p), //rdi: ptr
-                                    "S" (FUTEX_WAIT), //rsi: op
+                                    "S" (FUTEX_WAIT_PRIVATE), //rsi: op
                                     "d" (v), //rdx: espected
                                     "r" (pts)); //r10: timeout (relative!)
  if(r>=0)R 0;

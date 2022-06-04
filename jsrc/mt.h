@@ -64,5 +64,7 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 #elif defined(_WIN32)
 // untested windows path; make henry test it when he gets back from vacation
 // don't pollute everybody with windows.h.  win api is fairly basic anyway, so there is not much to take advantage of
+#else
+#error no futex support for your platform
 #endif //_WIN32
 #endif //PYXES

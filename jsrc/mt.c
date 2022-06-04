@@ -29,6 +29,7 @@ I jtmdif(struct jtimespec w){
  if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1;
  R (w.tv_sec-t.tv_sec)*1000000000ull+w.tv_nsec-t.tv_nsec;}
 
+#if PYXES
 #ifdef __APPLE__
 void jfutex_wake1(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,0);}
 void jfutex_wakea(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO|ULF_WAKE_ALL,p,0);}
@@ -158,3 +159,4 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
  //(probably that's only in the uncontended case)
  //if(adda(&m->v,-1)){sta(&m->v,FREE);jfutex_wake1(&m->v);}
  R 0;}
+#endif //PYXES

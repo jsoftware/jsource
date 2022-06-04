@@ -18,6 +18,9 @@ extern size_t Stringrchr(char *str,char ch, size_t stride,size_t len);
 extern size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len);
 extern size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len);
 
+#define OMP_THRESHOLD 64
+#define OMP_THREADS 4      /* bottleneck is memory bus contention */
+
 static size_t srchr(char* str, char ch, size_t len){
  size_t i=len;
 
@@ -542,8 +545,106 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
  }
 }
 
+static size_t Stringrchr_omp(char *str, char ch, size_t stride, size_t len){
+ size_t i,ln=0,rlen,num_threads;
+ volatile short flag=0;
+#pragma omp parallel
+ {
+#pragma omp single
+ {
+  num_threads = omp_get_num_threads();
+  num_threads = (num_threads>OMP_THREADS) ? OMP_THREADS : num_threads;
+  rlen = len / num_threads;
+ }
+#pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
+ for(i=0; i<num_threads; i++) {
+  if(flag) continue;
+  size_t l=srchr(str+i*rlen*stride,ch,stride);
+  #pragma omp critical
+  {
+   ln=(ln<l)?l:ln;
+  }
+  if(ln==stride) flag=1;
+ }
+ }
+ if(ln==stride) return ln;
+ for(i=num_threads * rlen; i<len; i++) {
+  size_t l=srchr(str+i*stride,ch,stride);
+  ln=(ln<l)?l:ln;
+  if(ln==stride) return ln;
+ }
+ return ln;
+}
+
+static size_t Stringrchr2_omp(unsigned short *str, unsigned short ch, size_t stride, size_t len){
+ size_t i,ln=0,rlen,num_threads;
+ volatile short flag=0;
+#pragma omp parallel
+ {
+#pragma omp single
+ {
+  num_threads = omp_get_num_threads();
+  num_threads = (num_threads>OMP_THREADS) ? OMP_THREADS : num_threads;
+  rlen = len / num_threads;
+ }
+#pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
+ for(i=0; i<num_threads; i++) {
+  if(flag) continue;
+  size_t l=srchr2(str+i*rlen*stride,ch,stride);
+  #pragma omp critical
+  {
+   ln=(ln<l)?l:ln;
+  }
+  if(ln==stride) flag=1;
+ }
+ }
+ if(ln==stride) return ln;
+ for(i=num_threads * rlen; i<len; i++) {
+  size_t l=srchr2(str+i*stride,ch,stride);
+  ln=(ln<l)?l:ln;
+  if(ln==stride) return ln;
+ }
+ return ln;
+}
+
+static size_t Stringrchr4_omp(unsigned int *str, unsigned int ch, size_t stride, size_t len){
+ size_t i,ln=0,rlen,num_threads;
+ volatile short flag=0;
+#pragma omp parallel
+ {
+#pragma omp single
+ {
+  num_threads = omp_get_num_threads();
+  num_threads = (num_threads>OMP_THREADS) ? OMP_THREADS : num_threads;
+  rlen = len / num_threads;
+ }
+#pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
+ for(i=0; i<num_threads; i++) {
+  if(flag) continue;
+  size_t l=srchr4(str+i*rlen*stride,ch,stride);
+  #pragma omp critical
+  {
+   ln=(ln<l)?l:ln;
+  }
+  if(ln==stride) flag=1;
+ }
+ }
+ if(ln==stride) return ln;
+ for(i=num_threads * rlen; i<len; i++) {
+  size_t l=srchr4(str+i*stride,ch,stride);
+  ln=(ln<l)?l:ln;
+  if(ln==stride) return ln;
+ }
+ return ln;
+}
+
 size_t Stringrchr(char *str, char ch, size_t stride, size_t len){
- size_t i=0,ln=0;
+#ifdef _OPENMP
+ if (len >= OMP_THRESHOLD) {
+  return Stringrchr_omp(str, ch, stride, len);
+ }
+#endif
+ size_t i=len,ln=0;
  while (i-- > 0) {
   size_t l=srchr(str,ch,stride);
   ln=(ln<l)?l:ln;
@@ -554,6 +655,11 @@ size_t Stringrchr(char *str, char ch, size_t stride, size_t len){
 }
 
 size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride, size_t len){
+#ifdef _OPENMP
+ if (len >= OMP_THRESHOLD) {
+  return Stringrchr2_omp(str, ch, stride, len);
+ }
+#endif
  size_t i=len,ln=0;
  while (i-- > 0) {
   size_t l=srchr2(str,ch,stride);
@@ -565,6 +671,11 @@ size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride, size_t
 }
 
 size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride, size_t len){
+#ifdef _OPENMP
+ if (len >= OMP_THRESHOLD) {
+  return Stringrchr4_omp(str, ch, stride, len);
+ }
+#endif
  size_t i=len,ln=0;
  while (i-- > 0) {
   size_t l=srchr4(str,ch,stride);

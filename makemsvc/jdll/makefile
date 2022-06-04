@@ -202,7 +202,6 @@ OBJS=  \
  ../../jsrc/xu.o \
  ../../jsrc/crc32c.o \
  ../../jsrc/str.o \
- ../../jsrc/mt.o \
  ../../jsrc/openssl/sha/keccak1600.o \
  ../../jsrc/openssl/sha/md4_dgst.o \
  ../../jsrc/openssl/sha/md4_one.o \
@@ -281,7 +280,7 @@ TARGET= j32.dll
 endif
 
 $(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib synchronization.lib
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)

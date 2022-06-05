@@ -30,4 +30,5 @@ if. (os -: 'win') *. 1 e. 'avx/' E. 9!:14'' do.
 end.
 )
 
+echo^:(*@#RES) RES
 exit *@#RES

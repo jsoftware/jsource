@@ -81,7 +81,11 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 // wake all threads currently waiting on a futex.  wakea can do extraneous work; mac/linux have a way to wake just one thread.  But we want to wake up everybody anyway, so it makes not much difference
 // there is a race: we can call wake after the thread sets futexwt, but before it actually goes to sleep.  We could get around that by restricting the range of valid futex values and uses, but systemlock is rare, so instead we just hammer them until they all wake up
 // a much _nicer_ solution would be to hit everybody with SIGUSR1 or similar, but there is no SIGUSR1 on windows...
+#if PYXES
 static void wakeall(J jt){DONOUNROLL(MAXTASKS,if(JTTHREAD0(jt)[i].futexwt)jfutex_wakea(JTTHREAD0(jt)[i].futexwt);)}
+#else
+static void wakeall(J jt){}
+#endif
 
 // Take lock on the entire system, waiting till all threads acknowledge
 // priority is the priority of the request.  lockedfunction is the function to call when the lock has been agreed.

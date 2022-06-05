@@ -1,49 +1,34 @@
-// jtpthread_mutex*: mutex implementation for macos/ios/..
+// mt.h: mutex, sync, timing related interfaces
 // see mt.c
 
 #if PYXES
-#ifndef __APPLE__
-#include <pthread.h>
-typedef pthread_mutex_t jtpthread_mutex_t;
-static inline void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){
- if(likely(!recursive)){pthread_mutex_init(m,0);}
- else{
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
-  pthread_mutex_init(m,&attr);}}
-static inline C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
- I4 r=pthread_mutex_lock(m);
- if(likely(r==0))R 0;
- if(r==EDEADLK)R EVCONCURRENCY;
- R EVFACE;}
-static inline I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
-#if SY_WIN32
- struct jtimeval now;jgettimeofday(&now,0);
- struct timespec t;
- t.tv_sec=now.tv_sec+ns/1000000000;t.tv_nsec=1000*now.tv_usec+ns%1000000000;if(t.tv_nsec>=1000000000){t.tv_sec++;t.tv_nsec-=1000000000;}
-#else
- struct timespec t;clock_gettime(CLOCK_REALTIME,&t);
- t.tv_sec+=ns/1000000000;t.tv_nsec+=ns%1000000000;if(t.tv_nsec>=1000000000){t.tv_sec++;t.tv_nsec-=1000000000;}
-#endif
- I4 r=pthread_mutex_timedlock(m,&t);
- if(r==0)R 0;
- if(r==ETIMEDOUT)R -1;
- if(r==EDEADLK)R EVCONCURRENCY;
- R EVFACE;}
-static inline I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
- I4 r=pthread_mutex_trylock(m);
- if(!r)R 0;
- if(r==EBUSY)R -1;
- if(r==EAGAIN)R EVLIMIT; //'max recursive locks exceeded'
- if(r==EDEADLK||r==EOWNERDEAD)R EVCONCURRENCY;
- R EVFACE;}
-static inline C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
- I4 r=pthread_mutex_unlock(m);
- if(likely(!r))R 0;
- if(r==EPERM)R EVCONCURRENCY;
- R EVFACE;}
-#else
+struct jtimespec jtmtil(UI ns); //returns a time ns ns in the future
+I jtmdif(struct jtimespec when); //returns the time in ns between now and when.  If when is not in the future, the result will be -1
+//both of these are implemented in terms of mtclk and use its clock
+
+__attribute__((cold)) C jfutex_wait(UI4 *p,UI4 v); //atomically, compare v to *p and go to sleep if they are equal.  Return error code
+__attribute__((cold)) I jfutex_waitn(UI4 *p,UI4 v,UI ns); //ditto, but wake up after at most ns ns.  Result -1 means timeout definitely exceeded; other result is an error code
+__attribute__((cold)) void jfutex_wake1(UI4 *p); //wake 1 thread waiting on p
+__attribute__((cold)) void jfutex_wakea(UI4 *p); //wake all threads waiting on p
+
+typedef struct {
+ B recursive;
+ I owner; //user-provided; task id
+ UI4 v;
+ UI4 ct; //for recursive locks
+}jtpthread_mutex_t;//todo should split into multiple cache lines?
+
+void jtpthread_mutex_init(jtpthread_mutex_t*,B recursive);
+C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self);
+I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t*,UI ns,I self); //absolute timers suck; correct the interface.  -1=failure; 0=success; positive=error
+I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure positive=error
+C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
+//note: self must be non-zero
+
+#if defined(__linux__)
+#include <linux/futex.h>
+#include <sys/syscall.h>
+#elif defined(__APPLE__)
 // ulock (~futex) junk from xnu.  timeout=0 means wait forever
 extern int __ulock_wait(uint32_t operation, void *addr, uint64_t value, uint32_t timeout);             // timeout in us
 extern int __ulock_wait2(uint32_t operation, void *addr, uint64_t value, uint64_t timeout, uint64_t value2); // timeout in ns.  only available as of macos 11?
@@ -76,19 +61,10 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 
 //positive (or just 1?) result from wait means someone else is waiting on this too?
 
-typedef struct {
- B recursive;
- I owner; //user-provided; task id
- UI4 v;
- UI4 ct; //for recursive locks
-}jtpthread_mutex_t;//todo should split into multiple cache lines?
-
-void jtpthread_mutex_init(jtpthread_mutex_t*,B recursive);
-struct JTTstruct; C jtpthread_mutex_lock(struct JTTstruct *jt,jtpthread_mutex_t *m,I self);
-I jtpthread_mutex_timedlock(struct JTTstruct *jt,jtpthread_mutex_t*,UI ns,I self); //absolute timers suck; correct the interface.  -1=failure; 0=success; positive=error
-I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure positive=error
-C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
-
-//note: self must be non-zero
-#endif //__APPLE__
+#elif defined(_WIN32)
+// untested windows path; make henry test it when he gets back from vacation
+// don't pollute everybody with windows.h.  win api is fairly basic anyway, so there is not much to take advantage of
+#else
+#error no futex support for your platform
+#endif //_WIN32
 #endif //PYXES

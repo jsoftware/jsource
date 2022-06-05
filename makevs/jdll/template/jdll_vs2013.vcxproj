@@ -1188,6 +1188,7 @@
     <ClCompile Include="..\..\jsrc\xu.c" />
     <ClCompile Include="..\..\jsrc\crc32c.c" />
     <ClCompile Include="..\..\jsrc\str.c" />
+    <ClCompile Include="..\..\jsrc\mt.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\keccak1600.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\md4_dgst.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\md4_one.c" />

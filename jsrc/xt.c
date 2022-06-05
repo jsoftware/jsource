@@ -71,6 +71,21 @@ F1(jtspit){A z;I k;
  R sc(jt->bytesmax-k);
 }   // 7!:2, calculate max space used
 
+#if defined(__linux__)
+typedef struct {
+ unsigned long size,resident,share,text,lib,data,dt;
+} statm_t;
+
+static int read_off_memory_status(statm_t *result)
+{
+ const char* statm_path = "/proc/self/statm";
+ FILE *f = fopen(statm_path,"r");
+ if(!f) R 1;
+ if(7 != fscanf(f,"%ld %ld %ld %ld %ld %ld %ld", &result->size,&result->resident,&result->share,&result->text,&result->lib,&result->data,&result->dt)) { fclose(f); R 1; }
+ fclose(f); R 0;
+}
+#endif
+
 // 7!:7
 // Return resident memory of the current process
 F1(jtspresident){
@@ -92,7 +107,15 @@ ASSERTMTV(w);
  struct rusage mem;
  int res = getrusage(RUSAGE_SELF, &mem);
  ASSERT(res == 0,EVFACE);
+#if defined(__linux__)
+ statm_t result;
+ if (read_off_memory_status(&result))
+  R v2(1024*(I)mem.ru_maxrss, 1024*(I)mem.ru_maxrss);   // linux only implemented max rss
+ else
+  R v2(4096*(I)result.resident, 1024*(I)mem.ru_maxrss);
+#else
  R v2(1024*(I)mem.ru_maxrss, 1024*(I)mem.ru_maxrss);   // linux only implemented max rss
+#endif
 #endif
 }
 

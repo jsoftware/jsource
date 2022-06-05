@@ -121,31 +121,41 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
  UI4 e;if(likely((!(e=lda(&m->v)))&&((e=FREE),casa(&m->v,&e,LOCK))))goto success; //fast path.  test-and-test-and-set is from glibc, mildly optimises the case when many threads swarm a locked mutex.  Not sure if this is for the best, but after waffling for a bit I think it is
  if(e!=WAIT)e=xchga(&m->v,WAIT); //penalise the multi-waiters case, since it's slower anyway
+ I r;
+ sta(&jt->futexwt,&m->v);
  while(e!=FREE){
-  if(JT(jt,adbreakr)[0])R EVATTN;
+  S attn=lda((S*)&JT(jt,adbreakr)[0]);
+  if(attn>>8)jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);
+  if(attn&0xff){r=attn&0xff;goto fail;}
 #if __linux__
   I i=jfutex_waitn(&m->v,WAIT,(UI)-1);
   //bug? futex wait doesn't get interrupted by signals on linux if timeout is null
 #else
   I i=jfutex_wait(&m->v,WAIT);
 #endif
-  if(i>0)R i;
+  if(i>0){r=i;goto fail;}
   e=xchga(&m->v,WAIT);} //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
-success:m->ct+=m->recursive;m->owner=self;  R 0;}
+success:sta(&jt->futexwt,0);m->ct+=m->recursive;m->owner=self;R 0;
+fail:sta(&jt->futexwt,0);R r;}
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
  UI4 e=0;if((e=lda(&m->v))!=FREE&&((e=FREE),casa(&m->v,&e,LOCK)))goto success;
  struct jtimespec tgt=jtmtil(ns);
  if(common(e!=WAIT)){e=xchga(&m->v,WAIT);if(e==FREE)goto success;} //penalise the multi-waiters case, since it's slower anyway
+ I r;
+ sta(&jt->futexwt,&m->v);
  while(1){
-  if(JT(jt,adbreakr)[0])R EVATTN;
+  S attn=lda((S*)&JT(jt,adbreakr)[0]);
+  if(attn>>8)jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);
+  if(attn&0xff){r=attn&0xff;goto fail;}
   I i=jfutex_waitn(&m->v,WAIT,ns);
-  if(unlikely(i>0))R i;
+  if(unlikely(i>0)){r=i;goto fail;}
   e=xchga(&m->v,WAIT);
   if(e==FREE)goto success; //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
-  if(i==-1)R -1; //if the kernel says we timed out, trust it rather than doing another syscall to check the time
-  if(-1ull==(ns=jtmdif(tgt)))R -1;} //update delta, abort if timed out
-success:m->ct+=m->recursive;m->owner=self; R 0;}
+  if(i==-1){r=-1;goto fail;} //if the kernel says we timed out, trust it rather than doing another syscall to check the time
+  if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;}} //update delta, abort if timed out
+success:sta(&jt->futexwt,0);m->ct+=m->recursive;m->owner=self; R 0;
+fail:sta(&jt->futexwt,0);R r;}
 I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
  if(uncommon(m->recursive)&&m->owner){if(m->owner!=self)R -1; m->ct++;R 0;}
  if(m->owner==self)R EVCONCURRENCY;

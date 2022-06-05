@@ -89,14 +89,15 @@ C jfutex_wait(UI4 *p,UI4 v){
  if(r==-EAGAIN||r==-EINTR)R 0;
  R EVFACE;}
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){
- struct timespec ts={.tv_sec=ns/1000000000ull, .tv_nsec=ns%1000000000ull};
+ struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
  register struct timespec *pts asm("r10") = &ts;
  int r;__asm__ volatile("syscall" : "=a"(r) //result in rax
                                   : "a" (SYS_futex), //eax: syscall#
                                     "D" (p), //rdi: ptr
                                     "S" (FUTEX_WAIT_PRIVATE), //rsi: op
                                     "d" (v), //rdx: espected
-                                    "r" (pts)); //r10: timeout (relative!)
+                                    "r" (pts), //r10: timeout (relative!)
+                                    "m" (*pts)); //dummy memory clobber to keep from optimising out the initialisation of ts
  if(r>=0)R 0;
  if(r==-ETIMEDOUT)R -1;
  if(r==-EAGAIN||r==-EINTR)R 0;

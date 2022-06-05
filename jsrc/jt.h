@@ -195,7 +195,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #else
  I filler7[2];
 #endif
- I filler71[1];
+ UI4*futexwt; // value this thread is currently waiting on, if applicable.  Used to wake sleeping threads during systemlock
 // end of cacheline 6
 
  C _cl7[0];

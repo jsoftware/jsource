@@ -71,14 +71,18 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 
 // perform the action for state n.  In the leader, set ct/advance/act/wait  In others, wait/act/decr ct.  When we finish all actors have performed the action for state n
 #define DOINSTATE(l,n,expr) \
- {if(l){__atomic_store_n(&JT(jt,systemlocktct),nrunning-1,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),(n),__ATOMIC_RELEASE);}else while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n))YIELD  \
+ {if(l){__atomic_store_n(&JT(jt,systemlocktct),nrunning-1,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),(n),__ATOMIC_RELEASE);}else while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n)){wakeall(jt);YIELD}  \
   expr \
-  if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0)YIELD else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
+  if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0){wakeall(jt);YIELD} else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
  }
 
 // Similar function, for systemlockaccept
 #define DOINSTATEA(n,expr) {while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n))YIELD expr __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);}
- 
+// wake all threads currently waiting on a futex.  wakea can do extraneous work; mac/linux have a way to wake just one thread.  But we want to wake up everybody anyway, so it makes not much difference
+// there is a race: we can call wake the thread sets futexwt, but before it actually goes to sleep.  We could get around that by restricting the range of valid futex values, but systemlock is rare, so instead we just hammer them until they all wake up
+// a much _nicer_ solution would be to hit everybody with SIGUSR1, but there is no SIGUSR1 on windows...
+static void wakeall(J jt){DONOUNROLL(MAXTASKS,if(JTTHREAD0(jt)[i].futexwt)jfutex_wakea(JTTHREAD0(jt)[i].futexwt);)}
+
 // Take lock on the entire system, waiting till all threads acknowledge
 // priority is the priority of the request.  lockedfunction is the function to call when the lock has been agreed.
 // if multiple requesters ask for a lock, the function will be called in only one of them
@@ -94,8 +98,8 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
  while(priority!=0){
   S xxx=0; I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
-  // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
-  if(leader){DONOUNROLL(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;)}
+  // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set.  
+  if(leader){DONOUNROLL(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) wakeall(jt);}
   // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop
   C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);)  // remember priority before we made our request
   // state 3: all threads get the final request priorities
@@ -219,7 +223,7 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
  UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);});
  struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
  while(1){ // repeat till defined
-  I wr=jfutex_waitn(&blok->state,PYXWAIT,ns);ASSERT(wr<=0,wr);
+  sta(&jt->futexwt,&blok->state);I wr=jfutex_waitn(&blok->state,PYXWAIT,ns);sta(&jt->futexwt,0);ASSERT(wr<=0,wr);
   if(lda(&blok->state)==PYXFULL)break; // if pyx was filled, exit and return its value
   I adbreak=lda((US*)&JT(jt,adbreak)[0]);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved

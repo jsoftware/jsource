@@ -4,6 +4,8 @@
 #
 # argument is linux|darwin
 
+set -e
+
 if [ "$1" == "linux" ]; then
   ext="so"
 elif [ "$1" == "darwin" ]; then

@@ -16,14 +16,14 @@ realpath()
 cd "$(realpath "$0")"
 echo "entering `pwd`"
 
-find ../jsrc -name "*.o" -type f -delete
-find ../dllsrc -name "*.o" -type f -delete
-find ../sleef/src -name "*.o" -type f -delete
-find ../base64 -name "*.o" -type f -delete
+find ../jsrc -name "*.o" -type f -delete || true
+find ../dllsrc -name "*.o" -type f -delete || true
+find ../sleef/src -name "*.o" -type f -delete || true
+find ../base64 -name "*.o" -type f -delete || true
 find obj -name "*.o" -type f -delete || true
 
-find ../jsrc -name "*.tmp" -type f -delete
-find ../dllsrc -name "*.tmp" -type f -delete
-find ../sleef/src -name "*.tmp" -type f -delete
-find ../base64 -name "*.tmp" -type f -delete
-find obj -name "*.tmp" -type f -delete || true
+find ../jsrc -name "*.tmp" -type f -delete || true
+find ../dllsrc -name "*.tmp" -type f -delete || true
+find ../sleef/src -name "*.tmp" -type f -delete || true
+find ../base64 -name "*.tmp" -type f -delete || true
+find obj -name "*.tmp" -type f -delete || true || true

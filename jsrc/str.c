@@ -26,11 +26,11 @@ static size_t srchr(char* str, char ch, size_t len){
 
 #if C_AVX2 || EMU_AVX2
  // align to 32 bytes
- while ((i>0) && ((((intptr_t)str+i) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ while ((i>0) && ((((intptr_t)(str+i)) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
 /* don't test i>=0 which is always true because size_t is unsigned */
  const __m256i mm0 = _mm256_set1_epi8( ch );
  const __m256i mm2 = _mm256_set1_epi8( 0xff );
- while (i > 32) {
+ while (i >= 32) {
   // search for ch
   int mask = 0;
    __m256i mm1 = _mm256_load_si256((__m256i *)(str+i-32));
@@ -55,10 +55,10 @@ static size_t srchr(char* str, char ch, size_t len){
 
 #if defined(__SSE2__) || EMU_AVX
  // align to 16 bytes
- while ((i>0) && ((((intptr_t)str+i) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi8( ch );
  const __m128i xmm2 = _mm_set1_epi8( 0xff );
- while (i > 16) {
+ while (i >= 16) {
   // search for ch
   int mask = 0;
    __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-16));
@@ -90,11 +90,11 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
 
 #if C_AVX2 || EMU_AVX2
  // align to 32 bytes
- while ((i>0) && ((((intptr_t)str+i) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ while ((i>0) && ((((intptr_t)(str+i)) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
 /* don't test i>=0 which is always true because size_t is unsigned */
  const __m256i mm0 = _mm256_set1_epi16( ch );
  const __m256i mm2 = _mm256_set1_epi16( 0xffff );
- while (i > 16) {
+ while (i >= 16) {
   // search for ch
   int mask = 0;
    __m256i mm1 = _mm256_load_si256((__m256i *)(str+i-16));
@@ -124,10 +124,10 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
 
 #if defined(__SSE2__) || EMU_AVX
  // align to 16 bytes
- while ((i>0) && ((((intptr_t)str+i) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi16( ch );
  const __m128i xmm2 = _mm_set1_epi16( 0xffff );
- while (i > 8) {
+ while (i >= 8) {
   // search for ch
   int mask = 0;
    __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-8));
@@ -159,11 +159,11 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
 
 #if C_AVX2 || EMU_AVX2
  // align to 32 bytes
- while ((i>0) && ((((intptr_t)str+i) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ while ((i>0) && ((((intptr_t)(str+i)) & 31) != 0)){if (ch!=str[i-1]) return i; else --i;}
 /* don't test i>=0 which is always true because size_t is unsigned */
  const __m256i mm0 = _mm256_set1_epi32( ch );
  const __m256i mm2 = _mm256_set1_epi32( 0xffffffff );
- while (i > 8) {
+ while (i >= 8) {
   // search for ch
   int mask = 0;
    __m256i mm1 = _mm256_load_si256((__m256i *)(str+i-8));
@@ -193,10 +193,10 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
 
 #if defined(__SSE2__) || EMU_AVX
  // align to 16 bytes
- while ((i>0) && ((((intptr_t)str+i) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
+ while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi32( ch );
  const __m128i xmm2 = _mm_set1_epi32( 0xffffffff );
- while (i > 4) {
+ while (i >= 4) {
   // search for ch
   int mask = 0;
    __m128i xmm1 = _mm_load_si128((__m128i *)(str+i-4));

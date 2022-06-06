@@ -65,47 +65,26 @@ out:
  if(r==-ENOMEM)R EVWSFULL;
  R EVFACE;}
 #endif
-#elif defined(__linux__)&&!defined(ANDROID)
-//glibc 'syscall': stupid errno
-// ??? asm applicable to arm64
-// #if defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
-void jfutex_wake1(UI4 *p){
- __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
-                               "D" (p), //rdi: ptr
-                               "S" (FUTEX_WAKE_PRIVATE), //rsi: op
-                               "d" (1));} //rdx: count
-void jfutex_wakea(UI4 *p){
- __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
-                               "D" (p), //rdi: ptr
-                               "S" (FUTEX_WAKE_PRIVATE), //rsi: op
-                               "d" (0xffffffff));} //rdx: count
+#elif defined(__linux__)
+#include<unistd.h>
+#if defined(__NR_futex) && !defined(SYS_futex) //android seemingly defines the former, but not the latter
+#define SYS_futex __NR_futex
+#endif
+void jfutex_wake1(UI4 *p){syscall(SYS_futex,p,FUTEX_WAKE_PRIVATE,1);}
+void jfutex_wakea(UI4 *p){syscall(SYS_futex,p,FUTEX_WAKE_PRIVATE,0xffffffff);}
 C jfutex_wait(UI4 *p,UI4 v){
- register struct timespec *pts asm("r10") = 0;
- int r;__asm__ volatile("syscall" : "=a"(r) //result in rax
-                                  : "a" (SYS_futex), //eax: syscall#
-                                    "D" (p), //rdi: ptr
-                                    "S" (FUTEX_WAIT_PRIVATE), //rsi: op
-                                    "d" (v), //rdx: espected
-                                    "r" (pts)); //r10: timeout (null=no timeout)
+ struct timespec *pts = 0;
+ int r=syscall(SYS_futex,p,FUTEX_WAIT_PRIVATE,v,pts);
  if(r>=0)R 0;
- if(r==-EAGAIN||r==-EINTR)R 0;
+ if(errno==-EAGAIN||r==-EINTR)R 0;
  R EVFACE;}
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
- register struct timespec *pts asm("r10") = &ts;
- int r;__asm__ volatile("syscall" : "=a"(r) //result in rax
-                                  : "a" (SYS_futex), //eax: syscall#
-                                    "D" (p), //rdi: ptr
-                                    "S" (FUTEX_WAIT_PRIVATE), //rsi: op
-                                    "d" (v), //rdx: espected
-                                    "r" (pts), //r10: timeout (relative!)
-                                    "m" (*pts)); //dummy memory clobber to keep from optimising out the initialisation of ts
+ int r=syscall(SYS_futex,p,FUTEX_WAIT_PRIVATE,v,&ts);
  if(r>=0)R 0;
- if(r==-ETIMEDOUT)R -1;
- if(r==-EAGAIN||r==-EINTR)R 0;
+ if(errno==-ETIMEDOUT)R -1;
+ if(errno==-EAGAIN||r==-EINTR)R 0;
  R EVFACE;}
-#elif defined(ANDROID)
-// TODO
 #elif defined(_WIN32)
 // defined in cd.c to avoid name collisions between j.h and windows.h
 #endif

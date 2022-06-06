@@ -25,11 +25,9 @@ I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure pos
 C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
 //note: self must be non-zero
 
-#if defined(__linux__)&&!defined(ANDROID)
+#if defined(__linux__)
 #include <linux/futex.h>
 #include <sys/syscall.h>
-#elif defined(ANDORID)
-#error no futex support for your platform
 #elif defined(__APPLE__)
 // ulock (~futex) junk from xnu.  timeout=0 means wait forever
 extern int __ulock_wait(uint32_t operation, void *addr, uint64_t value, uint32_t timeout);             // timeout in us

@@ -30,7 +30,7 @@ I jtmdif(struct jtimespec w){
  R (w.tv_sec-t.tv_sec)*1000000000ull+w.tv_nsec-t.tv_nsec;}
 
 #if PYXES
-#ifdef __APPLE__
+#if defined(__APPLE__)
 void jfutex_wake1(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,0);}
 void jfutex_wakea(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO|ULF_WAKE_ALL,p,0);}
 C jfutex_wait(UI4 *p,UI4 v){
@@ -38,7 +38,7 @@ C jfutex_wait(UI4 *p,UI4 v){
  if(r>=0)R 0;
  if(r==-EINTR||r==-EFAULT)R 0; //EFAULT means the address needed to be paged in, not that it wasn't mapped?
  R EVFACE;} //should never happen?
-#if __arm64__
+#if defined(__arm64__)||defined(__aarch64__)
 // wait2 takes an ns timeout, but it's only available from macos 11 onward; coincidentally, arm macs only support macos 11+
 // so we can count on having this
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){
@@ -65,8 +65,10 @@ out:
  if(r==-ENOMEM)R EVWSFULL;
  R EVFACE;}
 #endif
-#elif defined(__linux__)
+#elif defined(__linux__)&&!defined(ANDROID)
 //glibc 'syscall': stupid errno
+// ??? asm applicable to arm64
+// #if defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 void jfutex_wake1(UI4 *p){
  __asm__ volatile("syscall" :: "a" (SYS_futex), //eax: syscall#
                                "D" (p), //rdi: ptr
@@ -102,6 +104,8 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  if(r==-ETIMEDOUT)R -1;
  if(r==-EAGAIN||r==-EINTR)R 0;
  R EVFACE;}
+#elif defined(ANDROID)
+// TODO
 #elif defined(_WIN32)
 // defined in cd.c to avoid name collisions between j.h and windows.h
 #endif

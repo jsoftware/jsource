@@ -76,14 +76,14 @@ C jfutex_wait(UI4 *p,UI4 v){
  struct timespec *pts = 0;
  int r=syscall(SYS_futex,p,FUTEX_WAIT_PRIVATE,v,pts);
  if(r>=0)R 0;
- if(errno==-EAGAIN||r==-EINTR)R 0;
+ if(errno==EAGAIN||errno==EINTR)R 0;
  R EVFACE;}
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
  int r=syscall(SYS_futex,p,FUTEX_WAIT_PRIVATE,v,&ts);
  if(r>=0)R 0;
- if(errno==-ETIMEDOUT)R -1;
- if(errno==-EAGAIN||r==-EINTR)R 0;
+ if(errno==ETIMEDOUT)R -1;
+ if(errno==EAGAIN||errno==EINTR)R 0;
  R EVFACE;}
 #elif defined(_WIN32)
 // defined in cd.c to avoid name collisions between j.h and windows.h

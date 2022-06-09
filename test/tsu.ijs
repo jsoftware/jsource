@@ -3,6 +3,7 @@ NB. test script utilities -----------------------------------------------
 cocurrent 'base'
 9!:19[2^_44   NB. default but some tests require a larger ct
 NB. set NORESETSTABLE to 1 to prevent restoring symbol table between files
+GLOBALSYMBOL=: 0 s: 10
 
 NB. settings to change when compiling the JE in a debug mode
 NB. If FORCEVIRTUALINPUTS is set, space consumption changes.  Set IGNOREIFFVI to 1: in that case
@@ -74,7 +75,10 @@ efx      =: ". eftx
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
 prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME y[RUNTIME=:6!:1'' }}
 NB. epilog'' is run as the last line of each testcase
-epilog=: {{ 1: echo^:ECHOFILENAME 'time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)'' }}
+epilog=: 3 :  0
+10 s: GLOBALSYMBOL
+1: echo^:ECHOFILENAME 'time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
+)
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 
 THRESHOLD=: 1 NB. force timing tests to pass

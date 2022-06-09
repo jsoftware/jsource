@@ -223,7 +223,7 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
 // w is an A holding a pyx value.  Return its value when it has been resolved.  If it times out
 A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
  if(PYXFULL==(state=lda(&blok->state)))goto done;
- if(state!=PYXWAIT)if(!casa(&blok->state,&state,PYXWAIT))goto done;
+ if(state!=PYXWAIT)if(uncommon(!casa(&blok->state,&state,PYXWAIT)&&state==PYXFULL))goto done;
  UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);});
  struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
  while(1){ // repeat till defined

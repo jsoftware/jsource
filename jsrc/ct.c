@@ -222,25 +222,31 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
 
 // w is an A holding a pyx value.  Return its value when it has been resolved.  If it times out
 A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
- if(PYXFULL==(state=lda(&blok->state)))goto done;
- if(state!=PYXWAIT)if(uncommon(!casa(&blok->state,&state,PYXWAIT)&&state==PYXFULL))goto done;
- UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);});
+ if(PYXFULL==(state=lda(&blok->state)))goto done; // if pyx already full, return result
+ if(state!=PYXWAIT)if(uncommon(!casa(&blok->state,&state,PYXWAIT)&&state==PYXFULL))goto done; // if not currently in WAIT state, mark it as such so the filler can wake us up.  If it filled in the mean time, return result
+ UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait
  struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
+ I err;
+ sta(&jt->futexwt,&blok->state); // make sure systemlock knows how to wake us up
  while(1){ // repeat till defined
-  sta(&jt->futexwt,&blok->state);I wr=jfutex_waitn(&blok->state,PYXWAIT,ns);sta(&jt->futexwt,0);ASSERT(wr<=0,wr);
+  I wr=jfutex_waitn(&blok->state,PYXWAIT,ns);if(unlikely(wr>0)){err=wr;goto fail;} // wait on futex
   if(lda(&blok->state)==PYXFULL)break; // if pyx was filled, exit and return its value
   I adbreak=lda((US*)&JT(jt,adbreak)[0]);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
   if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
   // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution
-  if(unlikely((adbreak&0xff)!=0))ASSERT(0,adbreak&0xff);  // JBREAK: give up on the pyx and exit
+  if(unlikely((adbreak&0xff)!=0)){err=adbreak&0xff;goto fail;}  // JBREAK: give up on the pyx and exit
   if(uncommon(-1ull==(ns=jtmdif(end)))){ //update timeout
    if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;
-   else ASSERT(0,EVTIME);}}  // fail the pyx and exit
+   else{err=EVTIME;goto fail;}}}  // fail the pyx and exit
+ sta(&jt->futexwt,0);
 done:
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
- ASSERT(0,blok->errcode);} // if error, return the error code
+ ASSERT(0,blok->errcode); // if error, return the error code
+fail:
+ sta(&jt->futexwt,0);
+ ASSERT(0,err);}
 
 // ************************************* Locks **************************************
 // take a readlock on *alock.  We come here only if a writelock was requested or running.  We have incremented the readlock

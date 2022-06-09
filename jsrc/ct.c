@@ -234,9 +234,9 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   I adbreak=lda((US*)&JT(jt,adbreak)[0]);  // break requests
   // wait till the value is defined.  We have to make one last check inside the lock to make sure the value is still unresolved
   // The wait may time out because another thread is requesting a system lock.  If so, we accept it now
-  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); continue;}  // process lock and keep waiting
+  if(unlikely(adbreak>>8)!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}  // process lock and keep waiting
   // or, the user may be requesting a BREAK interrupt for deadlock or other slow execution
-  if(unlikely((adbreak&0xff)!=0)){err=adbreak&0xff;goto fail;}  // JBREAK: give up on the pyx and exit
+  else if(unlikely((adbreak&0xff)!=0)){err=adbreak&0xff;goto fail;}  // JBREAK: give up on the pyx and exit
   if(uncommon(-1ull==(ns=jtmdif(end)))){ //update timeout
    if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;
    else{err=EVTIME;goto fail;}}}  // fail the pyx and exit

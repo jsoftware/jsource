@@ -282,7 +282,7 @@ void StringToUpper(char *str,size_t len){
 
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
-  *str = tolower(*str);
+  *str = toupper(*str);
   len--;
   ++str;
  }
@@ -498,7 +498,7 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
 
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
-  *str = (*str>= 'a' && *str<= 'z') ? *str += OFFSET : *str;
+  *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
   len--;
   ++str;
  }

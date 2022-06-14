@@ -651,6 +651,8 @@
 #define lsymb(x,y)                  jtlsymb(jtinplace,(x),(y),ltext)
 #define lt(x,y)                     jtatomic2(jt,(x),(y),ds(CLT))  
 #define ltie(x)                     jtltie(jt,(x))
+#define ltrim(x)                    jtltrim(jt,(x))
+#define lrtrim(x,y)                 jtlrtrim(jt,(x),(y))
 #define ma(x)                       jtma(jt,(x))
 #define mag(x)                      jtatomic1(jt,(x),ds(CSTILE))     
 #define makename(x)                 jtmakename(jt,(x))  

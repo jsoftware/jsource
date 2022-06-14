@@ -14,12 +14,216 @@ extern void StringToLowerUCS2(unsigned short *str,size_t len);
 extern void StringToUpperUCS2(unsigned short *str,size_t len);
 extern void StringToLowerUCS4(unsigned int *str,size_t len);
 extern void StringToUpperUCS4(unsigned int *str,size_t len);
+extern size_t Stringlchr(char *str,char ch, size_t stride,size_t len,size_t klen,size_t *pi);
+extern size_t Stringlchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len,size_t klen,size_t *pi);
+extern size_t Stringlchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len,size_t klen,size_t *pi);
 extern size_t Stringrchr(char *str,char ch, size_t stride,size_t len);
 extern size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len);
 extern size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len);
 
 #define OMP_THRESHOLD 64
 #define OMP_THREADS 4      /* bottleneck is memory bus contention */
+#undef _OPENMP             /* disable openmp. actually openmp runs slower */
+
+/* use of sse2/avx2 seems negligible improvement, perhaps compiler already has excellent loop optimization */
+
+// -------------------------------------------------------
+// slchr
+
+static size_t slchr(char* str, char ch, size_t len){
+ size_t i=0;
+
+#if C_AVX2 || EMU_AVX2
+ // align to 32 bytes
+ while ((i<len) && ((((intptr_t)(str+i)) & 31) != 0)){if (ch!=str[i]) return i; else ++i;}
+/* don't test i>=0 which is always true because size_t is unsigned */
+ const __m256i mm0 = _mm256_set1_epi8( ch );
+ const __m256i mm2 = _mm256_set1_epi8( 0xff );
+ while (len >= i+32) {
+  // search for ch
+  int mask = 0;
+   __m256i mm1 = _mm256_load_si256((__m256i *)(str+i));
+   mm1 = _mm256_andnot_si256(_mm256_cmpeq_epi8(mm1, mm0),mm2);
+   if ((mask = _mm256_movemask_epi8(mm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 32 bytes in mm1, or within 32 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanForward(&pos, mask);
+    i += (size_t)pos;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
+    i += __builtin_ctz(mask);
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_ctz
+#endif
+    return i;
+  }
+  i += 32;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+ // align to 16 bytes
+ while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
+ const __m128i xmm0 = _mm_set1_epi8( ch );
+ const __m128i xmm2 = _mm_set1_epi8( 0xff );
+ while (len >= i+16) {
+  // search for ch
+  int mask = 0;
+   __m128i xmm1 = _mm_load_si128((__m128i *)(str+i));
+   xmm1 = _mm_andnot_si128(_mm_cmpeq_epi8(xmm1, xmm0),xmm2);
+   if ((mask = _mm_movemask_epi8(xmm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 16 bytes in xmm1, or within 16 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanForward(&pos, mask);
+    i += (size_t)pos;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
+    i += __builtin_ctz(mask);  // mask is 32-bits but only lower 16-bits are significant
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_ctz
+#endif
+    return i;
+  }
+  i += 16;
+ }
+#endif
+
+ while (len>i){if (ch!=str[i]) return i; else ++i;}
+ return len;
+}
+
+static size_t slchr2(unsigned short* str, unsigned short ch, size_t len){
+ size_t i=0;
+
+#if C_AVX2 || EMU_AVX2
+ // align to 32 bytes
+ while ((i<len) && ((((intptr_t)(str+i)) & 31) != 0)){if (ch!=str[i]) return i; else ++i;}
+/* don't test i>=0 which is always true because size_t is unsigned */
+ const __m256i mm0 = _mm256_set1_epi16( ch );
+ const __m256i mm2 = _mm256_set1_epi16( 0xffff );
+ while (len >= i+16) {
+  // search for ch
+  int mask = 0;
+   __m256i mm1 = _mm256_load_si256((__m256i *)(str+i));
+   mm1 = _mm256_andnot_si256(_mm256_cmpeq_epi16(mm1, mm0),mm2);
+   if ((mask = _mm256_movemask_epi8(mm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 32 bytes in mm1, or within 32 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanForward(&pos, mask);
+    i += ((size_t)pos)>>1;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
+    i += (__builtin_ctz(mask))>>1;
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_ctz
+#endif
+    return i;
+  }
+  i += 16;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+ // align to 16 bytes
+ while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
+ const __m128i xmm0 = _mm_set1_epi16( ch );
+ const __m128i xmm2 = _mm_set1_epi16( 0xffff );
+ while (len >= i+8) {
+  // search for ch
+  int mask = 0;
+   __m128i xmm1 = _mm_load_si128((__m128i *)(str+i));
+   xmm1 = _mm_andnot_si128(_mm_cmpeq_epi16(xmm1, xmm0),xmm2);
+   if ((mask = _mm_movemask_epi8(xmm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 16 bytes in xmm1, or within 16 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanForward(&pos, mask);
+    i += ((size_t)pos)>>1;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
+    i += (__builtin_ctz(mask))>>1;  // mask is 32-bits but only lower 16-bits are significant
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_ctz
+#endif
+    return i;
+  }
+  i += 8;
+ }
+#endif
+
+ while (len>i){if (ch!=str[i]) return i; else ++i;}
+ return len;
+}
+
+static size_t slchr4(unsigned int* str, unsigned int ch, size_t len){
+ size_t i=0;
+
+#if C_AVX2 || EMU_AVX2
+ // align to 32 bytes
+ while ((i<len) && ((((intptr_t)(str+i)) & 31) != 0)){if (ch!=str[i]) return i; else ++i;}
+/* don't test i>=0 which is always true because size_t is unsigned */
+ const __m256i mm0 = _mm256_set1_epi32( ch );
+ const __m256i mm2 = _mm256_set1_epi32( 0xffffffff );
+ while (len >= i+8) {
+  // search for ch
+  int mask = 0;
+   __m256i mm1 = _mm256_load_si256((__m256i *)(str+i));
+   mm1 = _mm256_andnot_si256(_mm256_cmpeq_epi32(mm1, mm0),mm2);
+   if ((mask = _mm256_movemask_epi8(mm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 32 bytes in mm1, or within 32 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanForward(&pos, mask);
+    i += ((size_t)pos)>>2;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
+    i += (__builtin_ctz(mask))>>2;
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_ctz
+#endif
+    return i;
+  }
+  i += 8;
+ }
+#endif
+
+#if defined(__SSE2__) || EMU_AVX
+ // align to 16 bytes
+ while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
+ const __m128i xmm0 = _mm_set1_epi32( ch );
+ const __m128i xmm2 = _mm_set1_epi32( 0xffffffff );
+ while (len >= i+4) {
+  // search for ch
+  int mask = 0;
+   __m128i xmm1 = _mm_load_si128((__m128i *)(str+i));
+   xmm1 = _mm_andnot_si128(_mm_cmpeq_epi32(xmm1, xmm0),xmm2);
+   if ((mask = _mm_movemask_epi8(xmm1)) != 0) {   // some character is not ch
+    // got 0 somewhere within 16 bytes in xmm1, or within 16 bits in mask
+    // find index of last set bit
+#if (MMSC_VER)   // make sure <intrin.h> is included
+    unsigned long pos;
+    _BitScanForward(&pos, mask);
+    i += ((size_t)pos)>>2;
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
+    i += (__builtin_ctz(mask))>>2;  // mask is 32-bits but only lower 16-bits are significant
+#else  // none of choices exist, use local BSR implementation
+#error __builtin_ctz
+#endif
+    return i;
+  }
+  i += 4;
+ }
+#endif
+
+ while (len>i){if (ch!=str[i]) return i; else ++i;}
+ return len;
+}
+
+// -------------------------------------------------------
+// srchr
 
 static size_t srchr(char* str, char ch, size_t len){
  size_t i=len;
@@ -42,7 +246,7 @@ static size_t srchr(char* str, char ch, size_t len){
     unsigned long pos;
     _BitScanBackward(&pos, mask);
     i -= (size_t)pos;
-#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
     i -= __builtin_clz(mask);
 #else  // none of choices exist, use local BSR implementation
 #error __builtin_clz
@@ -70,7 +274,7 @@ static size_t srchr(char* str, char ch, size_t len){
     unsigned long pos;
     _BitScanBackward(&pos, mask);
     i -= (size_t)pos-16;
-#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_clz
     i -= __builtin_clz(mask)-16;  // mask is 32-bits but only lower 16-bits are significant
 #else  // none of choices exist, use local BSR implementation
 #error __builtin_clz
@@ -111,7 +315,7 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
     unsigned long pos;
     _BitScanBackward(&pos, mask);
     i -= ((size_t)pos)>>1;
-#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
     i -= (__builtin_clz(mask))>>1;
 #else  // none of choices exist, use local BSR implementation
 #error __builtin_clz
@@ -139,7 +343,7 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
     unsigned long pos;
     _BitScanBackward(&pos, mask);
     i -= ((size_t)pos-16)>>1;
-#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
     i -= (__builtin_clz(mask)-16)>>1;  // mask is 32-bits but only lower 16-bits are significant
 #else  // none of choices exist, use local BSR implementation
 #error __builtin_clz
@@ -180,7 +384,7 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
     unsigned long pos;
     _BitScanBackward(&pos, mask);
     i -= ((size_t)pos)>>2;
-#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
     i -= (__builtin_clz(mask))>>2;
 #else  // none of choices exist, use local BSR implementation
 #error __builtin_clz
@@ -208,7 +412,7 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
     unsigned long pos;
     _BitScanBackward(&pos, mask);
     i -= ((size_t)pos-16)>>2;
-#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in __builtin_ctz
+#elif defined(__clang__) || ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4))) // modern GCC has built-in
     i -= (__builtin_clz(mask)-16)>>2;  // mask is 32-bits but only lower 16-bits are significant
 #else  // none of choices exist, use local BSR implementation
 #error __builtin_clz
@@ -222,6 +426,9 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
  while (i>0){if (ch!=str[i-1]) return i; else --i;}
  return 0;
 }
+
+// -------------------------------------------------------
+// tolower toupper
 
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLower(char *str,size_t len){
@@ -545,6 +752,156 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
  }
 }
 
+// -------------------------------------------------------
+// Stringlchr_omp
+
+static size_t Stringlchr_omp(char *str, char ch, size_t stride, size_t len, size_t klen, size_t *pi){
+ size_t i,ln=stride,rlen,num_threads;
+#pragma omp parallel
+ {
+#pragma omp single
+ {
+  num_threads = omp_get_num_threads();
+  num_threads = (num_threads>OMP_THREADS) ? OMP_THREADS : num_threads;
+  rlen = len / num_threads;
+ }
+#pragma omp parallel for default(none),firstprivate(str,stride,klen,ch,num_threads,rlen),private(i),shared(ln,pi)
+ for(i=0; i<num_threads; i++) {
+  size_t lm=stride;
+  for(size_t j=0; j<rlen; j++) {
+   size_t l=slchr(str+i*rlen*stride+j*stride,ch,klen);
+   pi[i*rlen+j]=l;
+   lm=(lm>l)?l:lm;
+  }
+  #pragma omp critical
+  {
+   ln=(ln>lm)?lm:ln;
+  }
+ }
+ }
+ for(i=num_threads * rlen; i<len; i++) {
+  size_t l=slchr(str+i*stride,ch,klen);
+  pi[i]=l;
+  ln=(ln>l)?l:ln;
+ }
+ return ln;
+}
+
+static size_t Stringlchr2_omp(unsigned short *str, unsigned short ch, size_t stride, size_t len, size_t klen, size_t *pi){
+ size_t i,ln=stride,rlen,num_threads;
+#pragma omp parallel
+ {
+#pragma omp single
+ {
+  num_threads = omp_get_num_threads();
+  num_threads = (num_threads>OMP_THREADS) ? OMP_THREADS : num_threads;
+  rlen = len / num_threads;
+ }
+#pragma omp parallel for default(none),firstprivate(str,stride,klen,ch,num_threads,rlen),private(i),shared(ln,pi)
+ for(i=0; i<num_threads; i++) {
+  size_t lm=stride;
+  for(size_t j=0; j<rlen; j++) {
+   size_t l=slchr2(str+i*rlen*stride+j*stride,ch,klen);
+   pi[i*rlen+j]=l;
+   lm=(lm>l)?l:lm;
+  }
+  #pragma omp critical
+  {
+   ln=(ln>lm)?lm:ln;
+  }
+ }
+ }
+ for(i=num_threads * rlen; i<len; i++) {
+  size_t l=slchr2(str+i*stride,ch,klen);
+  pi[i]=l;
+  ln=(ln>l)?l:ln;
+ }
+ return ln;
+}
+
+static size_t Stringlchr4_omp(unsigned int *str, unsigned int ch, size_t stride, size_t len, size_t klen, size_t *pi){
+ size_t i,ln=stride,rlen,num_threads;
+#pragma omp parallel
+ {
+#pragma omp single
+ {
+  num_threads = omp_get_num_threads();
+  num_threads = (num_threads>OMP_THREADS) ? OMP_THREADS : num_threads;
+  rlen = len / num_threads;
+ }
+#pragma omp parallel for default(none),firstprivate(str,stride,klen,ch,num_threads,rlen),private(i),shared(ln,pi)
+ for(i=0; i<num_threads; i++) {
+  size_t lm=stride;
+  for(size_t j=0; j<rlen; j++) {
+   size_t l=slchr4(str+i*rlen*stride+j*stride,ch,klen);
+   pi[i*rlen+j]=l;
+   lm=(lm>l)?l:lm;
+  }
+  #pragma omp critical
+  {
+   ln=(ln>lm)?lm:ln;
+  }
+ }
+ }
+ for(i=num_threads * rlen; i<len; i++) {
+  size_t l=slchr4(str+i*stride,ch,klen);
+  pi[i]=l;
+  ln=(ln>l)?l:ln;
+ }
+ return ln;
+}
+
+size_t Stringlchr(char *str, char ch, size_t stride, size_t len, size_t klen, size_t *pi){
+#ifdef _OPENMP
+ if (len >= OMP_THRESHOLD) {
+  return Stringlchr_omp(str, ch, stride, len, klen, pi);
+ }
+#endif
+ size_t i=len,ln=stride;
+ while (i-- > 0) {
+  size_t l=slchr(str,ch,klen);
+  *pi++=l;
+  ln=(ln>l)?l:ln;
+  str+=stride;
+ }
+ return ln;
+}
+
+size_t Stringlchr2(unsigned short *str, unsigned short ch, size_t stride, size_t len, size_t klen, size_t *pi){
+#ifdef _OPENMP
+ if (len >= OMP_THRESHOLD) {
+  return Stringlchr2_omp(str, ch, stride, len, klen, pi);
+ }
+#endif
+ size_t i=len,ln=stride;
+ while (i-- > 0) {
+  size_t l=slchr2(str,ch,klen);
+  *pi++=l;
+  ln=(ln>l)?l:ln;
+  str+=stride;
+ }
+ return ln;
+}
+
+size_t Stringlchr4(unsigned int *str, unsigned int ch, size_t stride, size_t len, size_t klen, size_t *pi){
+#ifdef _OPENMP
+ if (len >= OMP_THRESHOLD) {
+  return Stringlchr4_omp(str, ch, stride, len, klen, pi);
+ }
+#endif
+ size_t i=len,ln=stride;
+ while (i-- > 0) {
+  size_t l=slchr4(str,ch,klen);
+  *pi++=l;
+  ln=(ln>l)?l:ln;
+  str+=stride;
+ }
+ return ln;
+}
+
+// -------------------------------------------------------
+// Stringrchr_omp
+
 static size_t Stringrchr_omp(char *str, char ch, size_t stride, size_t len){
  size_t i,ln=0,rlen,num_threads;
  volatile short flag=0;
@@ -558,16 +915,20 @@ static size_t Stringrchr_omp(char *str, char ch, size_t stride, size_t len){
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
  for(i=0; i<num_threads; i++) {
-  if(flag) continue;
-  size_t l=srchr(str+i*rlen*stride,ch,stride);
+  size_t lm=0;
+  for(size_t j=0; j<rlen; j++) {
+   if(flag) continue;
+   size_t l=srchr(str+i*rlen*stride+j*stride,ch,stride);
+   lm=(lm<l)?l:lm;
+   if(l==stride) flag=1;
+  }
   #pragma omp critical
   {
-   ln=(ln<l)?l:ln;
+   ln=(ln<lm)?lm:ln;
   }
-  if(ln==stride) flag=1;
  }
  }
- if(ln==stride) return ln;
+ if(flag||ln==stride) return stride;
  for(i=num_threads * rlen; i<len; i++) {
   size_t l=srchr(str+i*stride,ch,stride);
   ln=(ln<l)?l:ln;
@@ -589,16 +950,20 @@ static size_t Stringrchr2_omp(unsigned short *str, unsigned short ch, size_t str
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
  for(i=0; i<num_threads; i++) {
-  if(flag) continue;
-  size_t l=srchr2(str+i*rlen*stride,ch,stride);
+  size_t lm=0;
+  for(size_t j=0; j<rlen; j++) {
+   if(flag) continue;
+   size_t l=srchr2(str+i*rlen*stride+j*stride,ch,stride);
+   lm=(lm<l)?l:lm;
+   if(l==stride) flag=1;
+  }
   #pragma omp critical
   {
-   ln=(ln<l)?l:ln;
+   ln=(ln<lm)?lm:ln;
   }
-  if(ln==stride) flag=1;
  }
  }
- if(ln==stride) return ln;
+ if(flag||ln==stride) return stride;
  for(i=num_threads * rlen; i<len; i++) {
   size_t l=srchr2(str+i*stride,ch,stride);
   ln=(ln<l)?l:ln;
@@ -620,16 +985,20 @@ static size_t Stringrchr4_omp(unsigned int *str, unsigned int ch, size_t stride,
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
  for(i=0; i<num_threads; i++) {
-  if(flag) continue;
-  size_t l=srchr4(str+i*rlen*stride,ch,stride);
+  size_t lm=0;
+  for(size_t j=0; j<rlen; j++) {
+   if(flag) continue;
+   size_t l=srchr4(str+i*rlen*stride+j*stride,ch,stride);
+   lm=(lm<l)?l:lm;
+   if(l==stride) flag=1;
+  }
   #pragma omp critical
   {
-   ln=(ln<l)?l:ln;
+   ln=(ln<lm)?lm:ln;
   }
-  if(ln==stride) flag=1;
  }
  }
- if(ln==stride) return ln;
+ if(flag||ln==stride) return stride;
  for(i=num_threads * rlen; i<len; i++) {
   size_t l=srchr4(str+i*stride,ch,stride);
   ln=(ln<l)?l:ln;

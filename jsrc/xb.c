@@ -15,6 +15,9 @@ extern void StringToLowerUCS2(unsigned short *str,size_t len);
 extern void StringToUpperUCS2(unsigned short *str,size_t len);
 extern void StringToLowerUCS4(unsigned int *str,size_t len);
 extern void StringToUpperUCS4(unsigned int *str,size_t len);
+extern size_t Stringlchr(char *str,char ch, size_t stride,size_t len,size_t klen,size_t *pi);
+extern size_t Stringlchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len,size_t klen,size_t *pi);
+extern size_t Stringlchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len,size_t klen,size_t *pi);
 extern size_t Stringrchr(char *str,char ch, size_t stride,size_t len);
 extern size_t Stringrchr2(unsigned short *str, unsigned short ch, size_t stride,size_t len);
 extern size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride,size_t len);
@@ -402,7 +405,8 @@ F2(jtlowerupper){I k,n;A z;
  ASSERT(1==AN(a),EVDOMAIN);
  RE(k=i0(a));
  ASSERT(BETWEENC(k,0,1),EVDOMAIN);
-// ASSERT(!ISSPARSE(AT(w)),EVNONCE);
+ ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
+ if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
  z=ca(w);
  if(LIT&AT(w)){
  if(k) StringToUpper(CAV(z),AN(w)); else StringToLower(CAV(z),AN(w));
@@ -414,12 +418,29 @@ F2(jtlowerupper){I k,n;A z;
  RETF(z);
 }    /* a 3!:12 w */
 
+// left/right trim space
+// a  0: rtrim  1: ltrim  2: lrtrim
+// w  only process LIT C2T C4T
+F2(jtlrtrim){I k;
+ ARGCHK2(a,w);
+ ASSERT(1==AN(a),EVDOMAIN);
+ RE(k=i0(a));
+ ASSERT(BETWEENC(k,0,2),EVDOMAIN);
+ if(0==k) R rtrim(w);
+ else if(1==k) R ltrim(w);
+
+ ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
+ if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
+
+ RETF(rtrim(ltrim(w)));   /* must do ltrim first */
+}    /* 2 (128!:12) w */
+
 // right trim space
 // w  only process LIT C2T C4T
 F1(jtrtrim){I stride,ln,n,ar;A z=0;C *u,*v;I as[63];
  ARGCHK1(w);
- ASSERT(!ISSPARSE(AT(w)),EVNONCE);
- if(!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
+ ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
+ if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
  // Allocate result area
  if(AR(w)){
   PROD(n,AR(w)-1,AS(w)); if(!n) RETF(ca(w));
@@ -458,7 +479,59 @@ F1(jtrtrim){I stride,ln,n,ar;A z=0;C *u,*v;I as[63];
   DO(n, memcpy(v,u,ln*4); v+=ln*4; u+=stride*4;);
  }
  RETF(z);
-}    /* 128!:11 w */
+}    /* 1 (128!:12) w */
+
+// left trim space
+// w  only process LIT C2T C4T
+F1(jtltrim){I stride,ln,lh,n,ar,*pi;A z=0;C *u,*v;I as[63];
+ ARGCHK1(w);
+ ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
+ if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
+ // Allocate result area
+ if(AR(w)){
+  PROD(n,AR(w)-1,AS(w)); if(!n) RETF(ca(w));
+  stride=AS(w)[AR(w)-1];
+ }else stride=n=1;
+
+ pi=malloc(n*sizeof(I));
+ if(LIT&AT(w)){
+  ln=Stringlchr(CAV(w),' ',stride,n,stride,(size_t*)pi);
+ }else if(C2T&AT(w)){
+  ln=Stringlchr2(USAV(w),' ',stride,n,stride,(size_t*)pi);
+ }else if(C4T&AT(w)){
+  ln=Stringlchr4(UI4AV(w),' ',stride,n,stride,(size_t*)pi);
+ }
+ lh=stride-ln;
+ // Allocate result area
+ if(AR(w)){
+  DO(AR(w),as[i]=AS(w)[i];); as[AR(w)-1]=lh;
+  ar=AR(w);
+ } else {
+  as[0]=lh;
+  ar=1;
+ }
+ if(LIT&AT(w)){
+  GATV(z,LIT,n*lh,ar,as);
+ }else if(C2T&AT(w)){
+  GATV(z,C2T,n*lh,ar,as);
+ }else if(C4T&AT(w)){
+  GATV(z,C4T,n*lh,ar,as);
+ }
+ if(!lh)RETF(z);
+ u=CAV(w); v=CAV(z);
+ if(LIT&AT(w)) memset(v,' ',n*lh);
+ else if(C2T&AT(w)) {DO(n*lh, ((US*)v)[i]=' ';);}
+ else if(C4T&AT(w)) {DO(n*lh, ((UI4*)v)[i]=' ';);}
+ if(LIT&AT(w)){
+  DO(n, memcpy(v,u+pi[i],(stride-pi[i])); v+=lh; u+=stride;);
+ }else if(C2T&AT(w)){
+  DO(n, memcpy(v,u+pi[i]*2,(stride-pi[i])*2); v+=lh*2; u+=stride*2;);
+ }else if(C4T&AT(w)){
+  DO(n, memcpy(v,u+pi[i]*4,(stride-pi[i])*4); v+=lh*4; u+=stride*4;);
+ }
+ free(pi);
+ RETF(z);
+}    /* 128!:12 w */
 
 // w is a box, result is 1 if it contains a  NaN
 static B jtisnanq(J jt,A w){

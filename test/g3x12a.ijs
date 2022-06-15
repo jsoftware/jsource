@@ -62,8 +62,8 @@ assert. (PA1-:QA1)
 echo 'long literal2',fn
 echo (6!:2) 'PB1=. case1&.> B1'
 echo 2&(6!:2) 'QB1=. case2&.> B1'
-echo (6!:2) 'PB1=. case1&.> C1'
-echo 2&(6!:2) 'QB1=. case2&.> C1'
+echo (6!:2) 'PC1=. case1&.> C1'
+echo 2&(6!:2) 'QC1=. case2&.> C1'
 assert. (PB1-:QB1)
 assert. (PC1-:QC1)
 
@@ -74,8 +74,8 @@ assert. (PA2-:QA2)
 echo 'long literal4',fn
 echo (6!:2) 'PB2=. case1&.> B2'
 echo 2&(6!:2) 'QB2=. case2&.> B2'
-echo (6!:2) 'PB2=. case1&.> C2'
-echo 2&(6!:2) 'QB2=. case2&.> C2'
+echo (6!:2) 'PC2=. case1&.> C2'
+echo 2&(6!:2) 'QC2=. case2&.> C2'
 assert. (PC2-:QC2)
 ''
 )

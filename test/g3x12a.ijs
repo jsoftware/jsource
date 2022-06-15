@@ -43,39 +43,39 @@ case2=. toupper2 f.
 end.
 
 fn=. y{::' lower';' upper'
-echo 'short literal',fn
-echo 20&(6!:2) 'PA=. case1&.> A'
-echo 20&(6!:2) 'QA=. case2&.> A'
+echo^:ECHOFILENAME 'short literal',fn
+echo^:ECHOFILENAME 20&(6!:2) 'PA=. case1&.> A'
+echo^:ECHOFILENAME 20&(6!:2) 'QA=. case2&.> A'
 assert. (PA-:QA)
-echo 'long literal',fn
-echo 5&(6!:2) 'PB=. case1&.> B'
-echo 10&(6!:2) 'QB=. case2&.> B'
-echo 5&(6!:2) 'PC=. case1&.> C'
-echo 10&(6!:2) 'QC=. case2&.> C'
+echo^:ECHOFILENAME 'long literal',fn
+echo^:ECHOFILENAME 5&(6!:2) 'PB=. case1&.> B'
+echo^:ECHOFILENAME 10&(6!:2) 'QB=. case2&.> B'
+echo^:ECHOFILENAME 5&(6!:2) 'PC=. case1&.> C'
+echo^:ECHOFILENAME 10&(6!:2) 'QC=. case2&.> C'
 assert. (PB-:QB)
 assert. (PC-:QC)
 
-echo 'short literal2',fn
-echo (6!:2) 'PA1=. case1&.> A1'
-echo 4&(6!:2) 'QA1=. case2&.> A1'
+echo^:ECHOFILENAME 'short literal2',fn
+echo^:ECHOFILENAME (6!:2) 'PA1=. case1&.> A1'
+echo^:ECHOFILENAME 4&(6!:2) 'QA1=. case2&.> A1'
 assert. (PA1-:QA1)
-echo 'long literal2',fn
-echo (6!:2) 'PB1=. case1&.> B1'
-echo 2&(6!:2) 'QB1=. case2&.> B1'
-echo (6!:2) 'PC1=. case1&.> C1'
-echo 2&(6!:2) 'QC1=. case2&.> C1'
+echo^:ECHOFILENAME 'long literal2',fn
+echo^:ECHOFILENAME (6!:2) 'PB1=. case1&.> B1'
+echo^:ECHOFILENAME 2&(6!:2) 'QB1=. case2&.> B1'
+echo^:ECHOFILENAME (6!:2) 'PC1=. case1&.> C1'
+echo^:ECHOFILENAME 2&(6!:2) 'QC1=. case2&.> C1'
 assert. (PB1-:QB1)
 assert. (PC1-:QC1)
 
-echo 'short literal4',fn
-echo (6!:2) 'PA2=. case1&.> A2'
-echo 4&(6!:2) 'QA2=. case2&.> A2'
+echo^:ECHOFILENAME 'short literal4',fn
+echo^:ECHOFILENAME (6!:2) 'PA2=. case1&.> A2'
+echo^:ECHOFILENAME 4&(6!:2) 'QA2=. case2&.> A2'
 assert. (PA2-:QA2)
-echo 'long literal4',fn
-echo (6!:2) 'PB2=. case1&.> B2'
-echo 2&(6!:2) 'QB2=. case2&.> B2'
-echo (6!:2) 'PC2=. case1&.> C2'
-echo 2&(6!:2) 'QC2=. case2&.> C2'
+echo^:ECHOFILENAME 'long literal4',fn
+echo^:ECHOFILENAME (6!:2) 'PB2=. case1&.> B2'
+echo^:ECHOFILENAME 2&(6!:2) 'QB2=. case2&.> B2'
+echo^:ECHOFILENAME (6!:2) 'PC2=. case1&.> C2'
+echo^:ECHOFILENAME 2&(6!:2) 'QC2=. case2&.> C2'
 assert. (PC2-:QC2)
 ''
 )

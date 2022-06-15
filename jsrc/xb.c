@@ -433,7 +433,7 @@ F2(jtlrtrim){I k;
  if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
 
  RETF(rtrim(ltrim(w)));   /* must do ltrim first */
-}    /* 2 (128!:12) w */
+}    /* 2 (128!:11) w */
 
 // right trim space
 // w  only process LIT C2T C4T
@@ -479,7 +479,7 @@ F1(jtrtrim){I stride,ln,n,ar;A z=0;C *u,*v;I as[63];
   DO(n, memcpy(v,u,ln*4); v+=ln*4; u+=stride*4;);
  }
  RETF(z);
-}    /* 1 (128!:12) w */
+}    /* 0 (128!:11) w */
 
 // left trim space
 // w  only process LIT C2T C4T
@@ -531,7 +531,7 @@ F1(jtltrim){I stride,ln,lh,n,ar,*pi;A z=0;C *u,*v;I as[63];
  }
  free(pi);
  RETF(z);
-}    /* 128!:12 w */
+}    /* 1 (128!:11) w */
 
 // w is a box, result is 1 if it contains a  NaN
 static B jtisnanq(J jt,A w){

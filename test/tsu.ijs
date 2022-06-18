@@ -214,7 +214,7 @@ GITHUBCI=: 0       NB. running on github action
 ECHOFILENAME=: 0   NB. echo file name
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
-QKTEST=: IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
+QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
 
 RUND1=: 4 : 0
 x123=. x>.1

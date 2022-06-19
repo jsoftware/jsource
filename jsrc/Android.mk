@@ -47,6 +47,7 @@ LOCAL_SRC_FILES := a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c am
   openssl/sha/sha3.c openssl/sha/sha512.c \
   ../base64/lib/arch/avx2/codec-avx2.c \
   ../base64/lib/arch/generic/codec-generic.c \
+  ../base64/lib/arch/neon32/codec-neon32.c \
   ../base64/lib/arch/neon64/codec-neon64.c \
   ../base64/lib/arch/ssse3/codec-ssse3.c \
   ../base64/lib/arch/sse41/codec-sse41.c \

@@ -1326,6 +1326,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
     <ClCompile Include="..\..\sleef\src\libm\sleefsimddp.c" />
     <ClCompile Include="..\..\base64\lib\arch\avx2\codec-avx2.c" />
     <ClCompile Include="..\..\base64\lib\arch\generic\codec-generic.c" />
+    <ClCompile Include="..\..\base64\lib\arch\neon32\codec-neon32.c" />
     <ClCompile Include="..\..\base64\lib\arch\neon64\codec-neon64.c" />
     <ClCompile Include="..\..\base64\lib\arch\ssse3\codec-ssse3.c" />
     <ClCompile Include="..\..\base64\lib\arch\sse41\codec-sse41.c" />

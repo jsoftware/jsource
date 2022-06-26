@@ -32,7 +32,7 @@
 #else
 	#include <cpuid.h>
 	#if HAVE_AVX2 || HAVE_AVX
-		#if ((__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 2) || (__clang_major__ >= 3))
+		#if !defined(_xgetbv) && ((__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 2) || (__clang_major__ >= 3))
 			static inline uint64_t _xgetbv (uint32_t index)
 			{
 				uint32_t eax, edx;

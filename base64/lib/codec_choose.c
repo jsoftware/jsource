@@ -16,7 +16,7 @@
 #endif
 
 #ifdef BASE64_X86
-#if defined(_MSC_VER) && !defined(__GNUC__)
+#if defined(_MSC_VER) && !defined(__clang__)
 	#include <intrin.h>
 	#define __cpuid_count(__level, __count, __eax, __ebx, __ecx, __edx) \
 	{						\
@@ -170,7 +170,7 @@ codec_choose_x86 (struct codec *codec)
 	unsigned int eax, ebx = 0, ecx = 0, edx;
 	unsigned int max_level;
 
-	#if defined(_MSC_VER) && !defined(__GNUC__)
+	#if defined(_MSC_VER) && !defined(__clang__)
 	int info[4];
 	__cpuidex(info, 0, 0);
 	max_level = info[0];

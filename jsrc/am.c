@@ -611,7 +611,7 @@ static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 
 // called from m}, m is usually NOT a gerund
 static B ger(J jt,A w){A*wv,x;
- if(!(BOX&AT(w)))R 0;
+ if(!(BOX&AT(w))||!AN(w))R 0;
  wv=AAV(w); 
  DO(AN(w), x=C(wv[i]); if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=C(AAV(x)[0]); if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
  R 1;

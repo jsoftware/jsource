@@ -15,7 +15,7 @@
 static struct codec codec = { NULL, NULL };
 
 void
-base64_stream_encode_init (struct base64_state *state, int flags)
+BASE64_EXPORT base64_stream_encode_init (struct base64_state *state, int flags)
 {
 	// If any of the codec flags are set, redo choice:
 	if (codec.enc == NULL || flags & 0xFF) {
@@ -28,7 +28,7 @@ base64_stream_encode_init (struct base64_state *state, int flags)
 }
 
 void
-base64_stream_encode
+BASE64_EXPORT base64_stream_encode
 	( struct base64_state	*state
 	, const char		*src
 	, size_t		 srclen
@@ -40,7 +40,7 @@ base64_stream_encode
 }
 
 void
-base64_stream_encode_final
+BASE64_EXPORT base64_stream_encode_final
 	( struct base64_state	*state
 	, char			*out
 	, size_t		*outlen
@@ -65,7 +65,7 @@ base64_stream_encode_final
 }
 
 void
-base64_stream_decode_init (struct base64_state *state, int flags)
+BASE64_EXPORT base64_stream_decode_init (struct base64_state *state, int flags)
 {
 	// If any of the codec flags are set, redo choice:
 	if (codec.dec == NULL || flags & 0xFF) {
@@ -78,7 +78,7 @@ base64_stream_decode_init (struct base64_state *state, int flags)
 }
 
 int
-base64_stream_decode
+BASE64_EXPORT base64_stream_decode
 	( struct base64_state	*state
 	, const char		*src
 	, size_t		 srclen
@@ -100,7 +100,7 @@ base64_stream_decode
 #endif
 
 void
-base64_encode
+BASE64_EXPORT base64_encode
 	( const char	*src
 	, size_t	 srclen
 	, char		*out
@@ -133,7 +133,7 @@ base64_encode
 }
 
 int
-base64_decode
+BASE64_EXPORT base64_decode
 	( const char	*src
 	, size_t	 srclen
 	, char		*out

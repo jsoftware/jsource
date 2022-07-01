@@ -4,6 +4,9 @@ NB. T. t. ------------------------------------------------------------------
 NB. **************************************** threads & tasks **********************************
 NB. j904 64-bit only
 
+NB. wait until there are y free threads
+wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
+
 N=: <: 9!:56'maxtasks'
 N > 0
 N1=: <.@%: N
@@ -15,8 +18,7 @@ N2 > 0
 NB. create all available threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''  NB. all should be waiting
+wthr N
 
 NB. no more thread can be created
 'limit error' -: 0&T. etx ''
@@ -35,7 +37,7 @@ echo^:ECHOFILENAME 'test ',(":1),' f ',(":y),' finish: ',":6!:0''
 )
 
 f1=: 4 : 0
-if. x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
+if. 0 [ x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
 echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 while. do.
@@ -49,7 +51,7 @@ echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' finish: ',":6!:0''
 )
 
 f2=: 4 : 0
-if. x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
+if. 0 [ x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
 echo^:ECHOFILENAME 'test ',(":1),' f2 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 pyx0=. g t. (<'worker';x) "0 i.y
@@ -79,138 +81,116 @@ end.
 )
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 NB. number of tasks < number of worker threads
 
 0 f N            NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f N            NB. queued job
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 0 f1 N1          NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 N1          NB. queued job
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 0 f2 N1          NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f2 N1          NB. queued job
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 NB. number of tasks > number of worker threads
 
 0 f 2*N          NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f 2*N          NB. queued job
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 0 f1 N1          NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 N1          NB. queued job
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 0 f2 N1          NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f2 N1          NB. queued job
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 0 f1 N2          NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 N2          NB. queued job stress test
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 40          NB. queued job stress test
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 45          NB. queued job stress test
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 50          NB. queued job stress test
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 55          NB. queued job stress test
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f1 60          NB. queued job stress test
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 0 f2 N2          NB. run in master thread
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 1 f2 N2          NB. queued job
 
 N = 1 T.''
-1: 6!:3[0.5
-N = {. 2 T.''    NB. all should be waiting
+wthr N
 
 NB. mutex
 
@@ -235,11 +215,13 @@ if. IF64 do.
 assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
 assert. 2 <: 1 T. ''
 nwthreads=. 1 T. ''
-while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
-assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.1), 0.3 
-assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (nwthreads # 0.3), 0.1 
+wthr nwthreads
+assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.3 
+wthr nwthreads
+assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.3 #~ <:nwthreads), 0.1 
+wthr nwthreads
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 0.6 0.4  NB. last thread should run in master; earlier ones complete first
-while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
+wthr nwthreads
 (nwthreads-1) = 1 T. '' [ 55 T. ''
 nwthreads = 1 T. '' [ 0 T. ''
 NB. Verify forcetask arg
@@ -247,27 +229,27 @@ pyx =. 6!:3 t. ''"0 N # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
-while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
+wthr nwthreads
 pyx =. 6!:3 t. ''"0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) > 6!:1''  NB. master should wait
-while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
+wthr nwthreads
 pyx =. 6!:3 t. 'worker'"0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
-while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
+wthr nwthreads
 pyx =. 6!:3 t. (<'worker') "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
-while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
+wthr nwthreads
 pyx =. 6!:3 t. (<'worker';1) "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
 assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
-while. nwthreads ~: {. 2 T. '' do. 6!:3[0.001 end.  NB. wait till threads become ready
+wthr nwthreads
 pyx =. 6!:3 t. (<'worker';0) "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
@@ -326,7 +308,7 @@ f ''
 'domain error' -: ". etx '+ t. (<''worker'';2)'
 > ] t. (($0);'worker') 1
 
-4!:55 ;:'N N1 N2 f f1 f2 g g1 aaa__ bbb__ ccc__ sema'
+4!:55 ;:'N N1 N2 f f1 f2 g g1 aaa__ bbb__ ccc__ sema wthr'
 
 epilog''
 

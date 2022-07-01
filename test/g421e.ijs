@@ -5,7 +5,7 @@ randuni''
 
 NB. test with zero tolerance - no, can't, because +/ may reorder the inputs.  In fact, we have to INCREASE the tolerance
 ct   =: 9!:18''
-9!:19[1e_12
+9!:19[1e_11
 
 data=: 4 : 0
  select. x 

@@ -11,6 +11,11 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
+RUN1'gtdot'
+RUN1'gtdot'
+RUN1'gtdot'
+RUN1'gtdot'
+RUN1'gtdot'
 RES=: RUN ddall
 
 3 : 0''

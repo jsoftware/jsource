@@ -165,7 +165,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
   // fill in shape.  s and w may be the same block, so ws is destroyed
   I* RESTRICT ss=AS(s); ss[0]=remlen; MCISH(ss+1,ws+1,MAX(wr-1,0));
   AN(s)=remlen*wcellsize;  // install # atoms
-  // virtual block does not affect pristinity
+  // Any pristinity adjustment would be in virtualip.  But there isn't any
   RETF(s);
  }
 

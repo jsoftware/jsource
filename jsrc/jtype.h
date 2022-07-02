@@ -577,7 +577,7 @@ typedef I SI;
 #define AFKNOWNNAMEDX   C4TX      // matches C4TX 18   *** can be changed when block is shared
 #define AFKNOWNNAMED    ((I)1<<AFKNOWNNAMEDX)      // set (often) in a value when the value is assigned to a name.  It is possible that the name will be deleted, in which case the flag will be cleared
                                   // even if the value is assigned to another name.  The purpose is to allow virtual extension: if you know that a value is assigned to a name, then only one
-                                  // thread can encounter the value with AC=2, and that is safe for virtual extension.  If a block becomes shared, 
+                                  // thread can encounter the value with AC=2, and that is safe for virtual extension.
 
 #define AFVIRTUALBOXEDX XDX   // matches XDX
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements

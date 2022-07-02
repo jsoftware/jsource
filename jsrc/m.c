@@ -706,6 +706,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   // We leave the usecount unchanged, so the block still shows as inplaceable
   AK(w)+=offset; AR(w)=(RANKT)r;
+  // No change to pristinity; and anyway non-DIRECT doesn't come through here.  Inplaceability is inherited
   R w;
  }else{
   // not self-virtual block: allocate a new one
@@ -716,6 +717,10 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   AT(z)=t;
   ACINIT(z,wip+ACUC1)   // transfer inplaceability from original block
   ARINIT(z,(RANKT)r);
+  // ra the backer.  It would be nice to transfer ownership to an abandoned block, but there is a possibility that there is a nonrecursive block N somewhere that got its data
+  // from w which is higher in the stack than N.  In that case zapping w will lose the protection for N which is NOT abandoned.
+  // The rule is that we can zap a result from something we called, but not a block passed in to us.
+#if 0 // obsolete
   if((wip&((wf&(AFVIRTUAL|AFUNINCORPABLE))-1))<0){
     // w (the old block) is abandoned inplaceable and is not UNINCORPABLE or VIRTUAL.  It must still have an entry on the tpop stack.  Rather than incrementing its
     // usecount, we can simply remove its tpop entry.  We must also mark the block as uninplaceable, since it is a backer now (might not be necessary,
@@ -726,10 +731,13 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
     if((t^wf)&RECURSIBLE){AFLAGRESET(w,wf|=(t&RECURSIBLE)) jtra(w,t,0);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
 // when virtuals can be zapped, use that here
   }else{
-   // if we can't transfer ownership, must ra the backer.  UNINCORPORABLEs go through here, and must be virtual so the backer, not the indirect block, is raised
-   // We must also remove inplaceability from w, since it too has an alias at large
-   ACIPNO(w); ra(wback);
   }
+#else
+  // UNINCORPORABLEs go through here, and must be virtual so the backer, not the indirect block, is raised
+  // We must also remove inplaceability from w, since it too has an alias at large
+  ACIPNO(w); ra(wback);
+  // It is not necessary to remove pristinity from the backer, because the backer is not inplaceable and never will be, and pristinity applies only to abandoned blocks
+#endif
 
   // As a result of the above we can say that all backers must have recursive usecount
   R z;

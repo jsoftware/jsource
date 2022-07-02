@@ -131,9 +131,10 @@ F2PREFIP;ARGCHK2(a,w);
  if(likely(!(optype&BOX))){realizeifvirtual(w);}  // it's going into an array, so realize it unless virtual results allowed
  // if (,<) and a is not boxed singleton atom/list, revert
  if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtinplace,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing - WILLOPEN is impossible
- I unboxempty=SGNIFNOT(AT(w),BOXX)|(AN(w)-1)|optype;  // sign set if unboxed or empty, or the operation is (,<) or ,&< or (;<) which will always box w
- I aband=(a!=w)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned.  Must not accept a==w as it could lead to w containing itself
+ I unboxempty=SGNIFNOT(AT(w),BOXX)|(AN(w)-1)|optype;  // sign set if w unboxed or empty, or the operation is (,<) or ,&< or (;<) which will always box w
+ I aband=(a!=w)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // 1 if w is abandoned, 0 otherwise.  Must not accept a==w as it could lead to w containing itself
  if((unboxempty|((AN(w)|AR(w))-2))<0){A neww;   // unboxed/empty or force-boxed w, or AN(w)<2 and AR(w)<2
+  // Here to start building the right-to-left result area.  We can do this is w is a singleton box or w must be boxed here
   // if w is unboxed/empty or is a singleton rank<2, allocate a  vector of 8 boxes, point AK to the next-last, and put w there as the new w.  Vector is recursive unless WILLBEOPENED
   GAT0(neww,BOX,8,1);  // allocate 8 boxes
   AN(neww)=AS(neww)[0]=1; AFLAGORLOCAL(neww,~optype&BOX); AK(neww)+=6*SZI;   // Make neww a singleton list, recursive unless WILLBEOPENED, with AK pointing to the next-last atom
@@ -148,7 +149,9 @@ F2PREFIP;ARGCHK2(a,w);
    // We don't have access to the tpush stack, but if w is abandoned recursive we can use the slot in w as a surrogate location to zap - maybe could even if nonrecursive?
    AFLAGORLOCAL(neww,AFLAG(w)&((aband)<<AFPRISTINEX)) AFLAGPRISTNO(w) // transfer pristinity from abandoned w to neww; clear in w since contents escaping
    AAV(neww)[0]=AAV(w)[0];   // install w as first box
-   if(likely(!(optype&BOX))){if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}}else{ACIPNO(w);}  // if neww recursize, ra.  zappable if abandoned recursive  If not recursive, must be non-inplace
+   if(likely(!(optype&BOX))){   // if neww is recursive...
+    if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}  // ... if w is abandoned recursive box, we zap the pointer in w; otherwise ra() it
+   }else{ACIPNO(AAV(w)[0]);}  // if neww NOT recursive, no ra needed, but must incorp w
   }
   aband=1;  // We can always start adding to the lists created here, UNLESS a and w were the same - 
   w=neww;  // switch to new list

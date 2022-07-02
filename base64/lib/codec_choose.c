@@ -102,8 +102,8 @@ codec_choose_forced (struct codec *codec, int flags)
 		return true;
 	}
 	if (flags & BASE64_FORCE_NEON32) {
-		codec->enc = base64_stream_encode_neon32;
-		codec->dec = base64_stream_decode_neon32;
+     codec->enc = base64_stream_encode_neon32;
+     codec->dec = base64_stream_decode_neon32;
 		return true;
 	}
 	if (flags & BASE64_FORCE_NEON64) {

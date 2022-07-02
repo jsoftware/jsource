@@ -976,6 +976,14 @@ NB. Even if named
 f3 =: 3 : 'p =. 10000 # a'
 (dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
+a =.  'this';'is'  NB. Old bug when tried to zap the backer for a virtual block
+(1;'this') -: ((}. 1: 1:);0&{) a_:
+a =.  'this';'is'
+(1;'this') -: ((1: 1: }.);0&{) a_:
+a =.  'this';'is'
+(1;'this') -: (([: 1: }.);0&{) a_:
+
+
 NB. Inplacing forks
 NB. The code to generate the testcases:
 1: 0 : 0

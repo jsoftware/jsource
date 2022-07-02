@@ -651,14 +651,15 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
 #define MAXTASKS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
-                       // threads will be paged out
+                       // threads will be paged out.  The low bits of the task pointer are used as a lock, so that code will have to be rewritten if MAXTASKS>63 (which is the allocation boundary for the
+                       // task block)
 #define MAXTASKSRND 64  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
 #if MAXTASKS>255
 #define WLOCKBIT 0x8000  // the LSB of the part of a 16-bit lock used for write locks.
 #else
 #define WLOCKBIT 0x100  // With <256 threads, we split the lock into 2 8-bit sections so we can use LOCK XADD instructions
 #endif
-// tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
+// tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTACKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
@@ -976,7 +977,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
  } \
 } \
 if(opt&0x40)fghfn=FAVV(gs)->valencefns[0];else fghfn=FAVV(gs)->valencefns[1]; /* monad if no f result, else dyad */ \
-/* Before executing g, free any now-unused arguments */ \
+/* Before executing g, free any now-unused input arguments */ \
 if(!((opt&1)||((opt&0x10)&&!(opt&0x20)))) \
  /* free only if c<0.  Shift (UI)c>>1 to disable the free.  Special case: PRISTINE blocks can generate AC=8..xx where xx is anything, if the block is abandoned & picked up multiple times. */ \
  /* Check AC and zap/free only if the block can be freed; zapping otherwise would leave no way to make the usecount positive in every() */ \
@@ -990,8 +991,9 @@ if(opt&0x40){ \
 }else{ \
  RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs,gs)); \
 } \
-/* EPILOG to free up oddments from f and g, but not if we may be returning a virtual block */ \
-if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
+/* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
+if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); \
+RETF(z); \
 }
 
 // opt is a bitmask of variants
@@ -1068,7 +1070,7 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
  } \
 } \
 if((opt&0xc0)==0xc0)fghfn=FAVV(gs)->valencefns[0];else fghfn=FAVV(gs)->valencefns[1];  /* dyad for g unless f is suppressed */  \
-/* Before executing g, free any now-unused arguments */ \
+/* Before executing g, free any now-unused input arguments */ \
 if(!((opt&2)||((opt&0x20)&&!(opt&0x10)))) \
 if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); if((opt&0xc0)!=0xc0&&(opt&0x30)!=0x30)c=(UI)c>>(w==fx); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){if(likely(c2==(ACINPLACE+ACUC1))){*tpopw=0; fanapop(w,AFLAG(w));}}} \
 if(!((opt&1)||((opt&0x10)&&!(opt&0x20)))) \
@@ -1082,8 +1084,7 @@ if((opt&0xc0)==0xc0){ \
 }else{ \
  RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
 } \
-/* EPILOG to free up oddments from f and g, but not if we may be returning a virtual block */ \
-if(MEMAUDIT&0x2)audittstack(jt); /* scaf */ \
+/* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 

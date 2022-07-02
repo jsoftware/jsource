@@ -172,12 +172,12 @@ wthr N
 N = 1 T.''
 wthr N
 
-1 f1 55          NB. queued job stress test
+NB. too long on Windows hhr 1 f1 55          NB. queued job stress test
 
 N = 1 T.''
 wthr N
 
-1 f1 60          NB. queued job stress test
+NB. too long on Windows hhr 1 f1 60          NB. queued job stress test
 
 N = 1 T.''
 wthr N

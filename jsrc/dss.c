@@ -9,6 +9,8 @@
 
 /* d->dcss   - single step code in current function                        */
 
+// d points to current stack frame, c is the single-step type
+// install c into dcss of the caller to this function (if any); return address of caller
 DC jtssnext(J jt,DC d,C c){
  d=d->dclnk;
  NOUNROLL while(d&&DCCALL!=d->dctype)d=d->dclnk;      /* find next call                 */
@@ -22,7 +24,7 @@ DC jtssnext(J jt,DC d,C c){
 // (for step into, we will set up the next level when it is created).  We return a flagged value to cause
 // the suspension to terminate
 static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
- RZ(w=vs(w));
+ RZ(w=vs(w));  // w is ignored; must be list or atom
  ASSERT(jt->uflags.us.cx.cx_c.db,EVDOMAIN);
  d=jt->sitop;                               /* cut back to topmost suspension  */
  NOUNROLL while(d&&!d->dcsusp){                      /* do until topmost suspension     */
@@ -37,14 +39,15 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
   case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line (executing it), then stop in this function
   case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line(executing it), then stop in any function
   case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;  // rerun stop line, stop in calling function
-  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb, resume previous fn, stop before executing there
+  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb, resume previous fn, stop after executing there
  }
  // Return a suspension-ending value.  Kludge we also set a flag to process the step because the labs can't route the value correctly
- JT(jt,dbuser)|=DBSUSSS;  // indicate single-step pending
+ JT(jt,dbuser)|=DBSUSSS;  // indicate single-step pending.  This is non-reentrant and may have multithread issues
  A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }
 
 F1(jtdbcutback  ){R ssdo(0L,w,SSCUTBACK );}  /* 13!:19 */
+// should allow w to have the value to return to the function
 
 F1(jtdbstepover1){R ssdo(0L,w,SSSTEPOVER);}  /* 13!:20 */
 F2(jtdbstepover2){R ssdo(a, w,SSSTEPOVER);}

@@ -144,10 +144,48 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 )
 13!:3''  NB. clear stops
 13!:4''  NB. get out of suspension
+NB. Redefine goo* to test cut-back with error
+goo =: 3 : 0
+goo2 =: 5
+goo2 =: goo1 y
+goo2
+)
+goo1 =: 3 : 0
+y + 1
+)
+
+
+7 -: goo 6
+goo2 -: 7
+
+5 -: goo 'a'
+goo2 -: 5
+foo =: foo , (];._2 (0 : 0)) -: ff1 =: ": a: 5}"1 h }. (13!:13)''
++----+-+-+-+-------------------------------------++---+-----+-+
+|goo1|3|0|3|3 : 'y + 1'                          ||+-+|+-+-+|*|
+|    | | | |                                     |||a|||y|a|| |
+|    | | | |                                     ||+-+|+-+-+| |
++----+-+-+-+-------------------------------------++---+-----+-+
+|goo |0|1|3|3 : 0 goo2 =: 5 goo2 =: goo1 y goo2 )||+-+|+-+-+| |
+|    | | | |                                     |||a|||y|a|| |
+|    | | | |                                     ||+-+|+-+-+| |
++----+-+-+-+-------------------------------------++---+-----+-+
+)
+13!:19''  NB. Cut back from error: resumes sentence with error, not with i. 0 0
+foo =: foo , (];._2 (0 : 0)) -: ff2 =: ": a: 5}"1 h }. (13!:13)''
++---+--+-+-+-------------------------------------++---+-----+-+
+|goo|18|1|3|3 : 0 goo2 =: 5 goo2 =: goo1 y goo2 )||+-+|+-+-+|*|
+|   |  | | |                                     |||a|||y|a|| |
+|   |  | | |                                     ||+-+|+-+-+| |
++---+--+-+-+-------------------------------------++---+-----+-+
+)
+13!:4 ''   NB. finish sentences, test result
+foo =: foo , goo2 -: i. 0 0  NB. i. 0 0 is used at the result on resumption
+
 13!:0 ] 0
 13!:0 [1
 i. 0 0 [ 9!:7 original
-foo   NB. Test results of stack checks
+foo   NB. Test results of stack/result checks
 
 foo       =: foo_loc1_
 foo_loc1_ =: foo_loc2_ /

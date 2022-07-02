@@ -351,7 +351,7 @@ typedef struct JSTstruct {
  float dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  float zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A evm;              /* event messages                                  */
- I (*emptylocale)[MAXTASKS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
+ I (*emptylocale)[MAXTHREADS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
  I filler6[2];
 // end of cacheline 6
 
@@ -375,7 +375,7 @@ typedef struct JSTstruct {
 #endif
 // end of cacheline 7
 
- JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
+ JTT threaddata[MAXTHREADS] __attribute__((aligned(JTFLAGMSK+1)));
 } JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed on windows
 typedef JST* JS;  // shared part of struct
 
@@ -390,7 +390,7 @@ typedef JST* JS;  // shared part of struct
 
 #undef J
 #define J JJ
-#if MAXTASKS>1  // for multithreading
+#if MAXTHREADS>1  // for multithreading
 #define JJTOJ(jj) ((JS)((I)(jj)&-JTALIGNBDY))
 #else
 #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)))

@@ -35,7 +35,7 @@ blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gm
 blacklist=: blacklist, (<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each 'g13x.ijs';'gstack.ijs'
-blacklist=: blacklist, (1=9!:56'maxtasks')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs' NB. require multithreading
+blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs' NB. require multithreading
 NB. OK now blacklist=: blacklist, (<testpath),each <'gcip.ijs'    NB. blacklist until fixed to allow other tests running
 
 ddall    =: blacklist -.~ testfiles 'g'
@@ -430,4 +430,4 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 )
 
 echo 9!:14''
-echo 'cpu ',(9!:56'cpu'),' cores ',":9!:56'cores'
+echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''

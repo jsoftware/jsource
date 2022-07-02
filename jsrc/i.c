@@ -224,24 +224,24 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 #endif
 // only crashing on startup INITJT(jjt,peekdata)=1;  // wake up auditing
  // Initialize subsystems in order.  Each initializes all threads, if there are thread variables
- RZ(jtbufferinit(jjt,MAXTASKS)); // init the buffers pointed to by jjt
- RZ(jtmeminit(jjt,MAXTASKS));
- RZ(jtsesminit(jjt,MAXTASKS));  // master only
- RZ(jtcdinit(jjt,MAXTASKS));  // master only
- RZ(jtevinit(jjt,MAXTASKS));  // master only
- RZ(jtconsinit(jjt,MAXTASKS));
- RZ(jtxsinit(jjt,MAXTASKS));  // must be before symbinit  master only
- RZ(jtsymbinit(jjt,MAXTASKS));  // must be after consinit   master only - global/locsyms must init at start of op
- RZ(jtparseinit(jjt,MAXTASKS));
- RZ(jtxoinit(jjt,MAXTASKS));  // master only
- RZ(jtsbtypeinit(jjt,MAXTASKS));  // master only
- RZ(jtrnginit(jjt,MAXTASKS));
+ RZ(jtbufferinit(jjt,MAXTHREADS)); // init the buffers pointed to by jjt
+ RZ(jtmeminit(jjt,MAXTHREADS));
+ RZ(jtsesminit(jjt,MAXTHREADS));  // master only
+ RZ(jtcdinit(jjt,MAXTHREADS));  // master only
+ RZ(jtevinit(jjt,MAXTHREADS));  // master only
+ RZ(jtconsinit(jjt,MAXTHREADS));
+ RZ(jtxsinit(jjt,MAXTHREADS));  // must be before symbinit  master only
+ RZ(jtsymbinit(jjt,MAXTHREADS));  // must be after consinit   master only - global/locsyms must init at start of op
+ RZ(jtparseinit(jjt,MAXTHREADS));
+ RZ(jtxoinit(jjt,MAXTHREADS));  // master only
+ RZ(jtsbtypeinit(jjt,MAXTHREADS));  // master only
+ RZ(jtrnginit(jjt,MAXTHREADS));
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
- RZ(jtxlinit(jjt,MAXTASKS));  // file info, master only
+ RZ(jtxlinit(jjt,MAXTHREADS));  // file info, master only
 #endif
- RZ(jtecvtinit(jjt,MAXTASKS));
- RZ(jtinitfinis(jjt,MAXTASKS));
+ RZ(jtecvtinit(jjt,MAXTHREADS));
+ RZ(jtinitfinis(jjt,MAXTHREADS));
  R 1;
 }
 

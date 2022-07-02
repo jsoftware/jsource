@@ -326,8 +326,8 @@ F1(jtcpufeature){
 #endif
  } else if (!strcasecmp(CAV(w),"CORES")) {
   R sc(numberOfCores);
- } else if (!strcasecmp(CAV(w),"MAXTASKS")) {
-  R sc(MAXTASKS);
+ } else if (!strcasecmp(CAV(w),"MAXTHREADS")) {
+  R sc(MAXTHREADS);
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

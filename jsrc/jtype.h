@@ -134,7 +134,7 @@ typedef AD *A;
 #define JTXDEFMODIFIER       (((I)1)<<JTXDEFMODIFIERX)
 
 #define JTFLAGMSK       511  // mask big enough to cover all defined flags
-#define JTALIGNBDY      MAX(8192,(MAXTASKSRND<<LGTHREADBLKSIZE))  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
+#define JTALIGNBDY      MAX(8192,(MAXTHREADSRND<<LGTHREADBLKSIZE))  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
 
 struct AD {
  union {

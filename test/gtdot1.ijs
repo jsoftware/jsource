@@ -5,7 +5,7 @@ NB. files
 NB. **************************************** threads & tasks **********************************
 NB. j904 64-bit only
 
-TASK=: <: 9!:56'maxtasks'
+TASK=: <: 1 { 8 T. ''  NB. max # worker threads
 TASK1=: 4 ] 12     NB. 12 crash   limit error of 1!:20
 
 1: 0&T."1^:(0 < #) ''$~ (0 >. TASK-1 T. ''),0

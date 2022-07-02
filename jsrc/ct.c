@@ -3,6 +3,7 @@
 /*                                                                         */
 // Threads and Tasks
 #include "j.h"
+extern int numberOfCores;
 
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
@@ -82,7 +83,7 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 // there is a race: we can call wake after the thread sets futexwt, but before it actually goes to sleep.  We could get around that by restricting the range of valid futex values and uses, but systemlock is rare, so instead we just hammer them until they all wake up
 // a much _nicer_ solution would be to hit everybody with SIGUSR1 or similar, but there is no SIGUSR1 on windows...
 #if PYXES
-static void wakeall(J jt){DONOUNROLL(MAXTASKS,if(JTTHREAD0(jt)[i].futexwt)jfutex_wakea(JTTHREAD0(jt)[i].futexwt);)}
+static void wakeall(J jt){DONOUNROLL(MAXTHREADS,if(JTTHREAD0(jt)[i].futexwt)jfutex_wakea(JTTHREAD0(jt)[i].futexwt);)}
 #else
 static void wakeall(J jt){}
 #endif
@@ -103,7 +104,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   S xxx=0; I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
   // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
-  if(leader){DONOUNROLL(MAXTASKS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) wakeall(jt);}
+  if(leader){DONOUNROLL(MAXTHREADS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) wakeall(jt);}
   // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop
   C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);)  // remember priority before we made our request
   // state 3: all threads get the final request priorities
@@ -127,7 +128,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   if(executor){
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],0,__ATOMIC_RELEASE);  // clear the error flag from the interrupt request
    // go through all threads, turning off SYSLOCK in each.  This allows other tasks to run and new tasks to start
-   DO(MAXTASKS, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
+   DO(MAXTHREADS, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
    // set the systemlock to 0, completing the operation
    __atomic_store_n(&JT(jt,systemlock),0,__ATOMIC_RELEASE);
   }else{
@@ -341,7 +342,7 @@ typedef struct jobstruct {
 // we use the 6 LSBs of jobq->ht[0] as the lock, so that when we get the lock we also have the job pointer.  The job is always on a cacheline boundary
 // We take JOBLOCK before taking the mutex, always.  By measurement (20220516 SkylakeX, 4 cores) the job lock keeps contention low until the tasks are < 400ns
 // long, while using the mutex gives out at < 1000ns
-_Static_assert(MAXTASKS<64,"JOBLOCK fails if > 63 threads");
+_Static_assert(MAXTHREADS<64,"JOBLOCK fails if > 63 threads");
 #define JOBLOCK(jobq) ({I z; if(unlikely(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(CACHELINESIZE-1))!=0))z=joblock(jobq); (JOB*)z; })
 #define JOBUNLOCK(jobq,oldh) __atomic_store_n(&jobq->ht[0],oldh,__ATOMIC_RELEASE);
 static NOINLINE I joblock(JOBQ *jobq){I z;
@@ -694,6 +695,10 @@ ASSERT(0,EVNONCE)
 ASSERT(0,EVNONCE)
 #endif
   break;}
+ case 8:  { // system info: (number of cores),(max number of  threads including master)
+  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
+  z=v2(numberOfCores,MAXTHREADS);
+  break;}
  case 3: { // return current thread #
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   RZ(z=sc(THREADID(jt)))
@@ -708,7 +713,7 @@ ASSERT(0,EVNONCE)
   JOBQ *jobq=JT(jt,jobqueue);
   JOB *job=JOBLOCK(jobq);  // must modify thread info under lock
   I resthread=JT(jt,nwthreads);  // number of thread to stop.  It will always be ACTIVE
-  ASSERTSUFF(resthread<MAXTASKS-1,EVLIMIT,JOBUNLOCK(jobq,job); R 0;); //  error if thread limit exceeded
+  ASSERTSUFF(resthread<MAXTHREADS-1,EVLIMIT,JOBUNLOCK(jobq,job); R 0;); //  error if thread limit exceeded
   // Mark the last thread for deletion, wake up all the threads
   JT(jt,nwthreads)=resthread+=1;   // set new # threads, counting this thread as started
   C origstate=__atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATEACTIVE,__ATOMIC_ACQ_REL);  // put into ACTIVE state

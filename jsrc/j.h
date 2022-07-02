@@ -650,11 +650,11 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
-#define MAXTASKS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
-                       // threads will be paged out.  The low bits of the task pointer are used as a lock, so that code will have to be rewritten if MAXTASKS>63 (which is the allocation boundary for the
+#define MAXTHREADS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
+                       // threads will be paged out.  The low bits of the task pointer are used as a lock, so that code will have to be rewritten if MAXTHREADS>63 (which is the allocation boundary for the
                        // task block)
-#define MAXTASKSRND 64  // MAXTASKS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
-#if MAXTASKS>255
+#define MAXTHREADSRND 64  // MAXTHREADS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
+#if MAXTHREADS>255
 #define WLOCKBIT 0x8000  // the LSB of the part of a 16-bit lock used for write locks.
 #else
 #define WLOCKBIT 0x100  // With <256 threads, we split the lock into 2 8-bit sections so we can use LOCK XADD instructions
@@ -678,14 +678,14 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #define HIPIFARTIF(w,f) (w)
 #endif
 
-// if we are not multithreading, the master thread only
+// if we are not multithreading, report the master thread only
 #if !PYXES
-#undef MAXTASKS
-#define MAXTASKS 1  // override to no tasks if no pyxes
+#undef MAXTHREADS
+#define MAXTHREADS 1  // override to no tasks if no pyxes
 #endif
 #if defined(ANDROID) && defined(__x86_64__)
-#undef MAXTASKS
-#define MAXTASKS 1  // workaround for android x86_64
+#undef MAXTHREADS
+#define MAXTHREADS 1  // workaround for android x86_64
 #endif
 
 #if PYXES

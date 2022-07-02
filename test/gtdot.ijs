@@ -7,7 +7,7 @@ NB. j904 64-bit only
 NB. wait until there are y free threads
 wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
 
-N=: <: 9!:56'maxtasks'
+N=: <: 1 { 8 T. ''  NB. max # worker threads
 N > 0
 N1=: <.@%: N
 N1 > 0

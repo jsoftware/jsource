@@ -40,7 +40,7 @@ fi
 if [ -z "${jplatform##*darwin*}" ]; then
 if [ -z "${j64x##*j64arm*}" ]; then
 macmin="-arch arm64 -mmacosx-version-min=11"
-NO_SHA_ASM="${NO_SHA_ASM:=1}"
+# NO_SHA_ASM="${NO_SHA_ASM:=1}"
 else
 macmin="-arch x86_64 -mmacosx-version-min=10.6"
 fi
@@ -227,6 +227,12 @@ SRC_ASM_MAC32=" \
  sha256-586-macho.o \
  sha512-586-macho.o "
 
+SRC_ASM_IOS=" \
+ keccak1600-armv8-ios.o \
+ sha1-armv8-ios.o \
+ sha256-armv8-ios.o \
+ sha512-armv8-ios.o "
+
 OBJS_ASM_WIN=" \
  ../../../../openssl-asm/keccak1600-x86_64-nasm.o \
  ../../../../openssl-asm/sha1-x86_64-nasm.o \
@@ -383,7 +389,7 @@ TARGET=libj.dylib
 CFLAGS="$common $macmin $common -march=armv8-a+crc -DC_CRC32C=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 OBJS_AESARM=" aes-arm.o "
-SRC_ASM=""
+SRC_ASM="${SRC_ASM_IOS}"
 GASM_FLAGS="$macmin"
 FLAGS_SLEEF=" -DENABLE_ADVSIMD "
 FLAGS_BASE64=" -DHAVE_NEON64=1 "

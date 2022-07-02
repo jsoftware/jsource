@@ -54,10 +54,10 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){I r;
  UI us=ns/1000;
  while(us>0xfffffff){
-  r=__ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,0xffffffff,0);
+  r=__ulock_wait(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,0xffffffff);
   if(r!=-ETIMEDOUT)goto out;
   us-=0xffffffff;}
- r=__ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,us,0);
+ r=__ulock_wait(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,us);
 out:
  if(r>=0)R 0;
  if(r==-ETIMEDOUT)R -1;

@@ -327,7 +327,7 @@ FLAGS_BASE64=""
 
 raspberry_j64) # linux arm64
 TARGET=libj.so
-CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
+CFLAGS="$common -march=armv8-a+crc -mno-outline-atomics -DRASPI -DC_CRC32C=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_RASPI}"
@@ -386,7 +386,7 @@ FLAGS_BASE64=" -DHAVE_AVX2=1 "
 
 darwin_j64arm) # darwin arm
 TARGET=libj.dylib
-CFLAGS="$common $macmin $common -march=armv8-a+crc -DC_CRC32C=1 "
+CFLAGS="$common $macmin $common -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_IOS}"

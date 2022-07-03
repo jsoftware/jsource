@@ -13,17 +13,17 @@ __attribute__((cold)) void jfutex_wakea(UI4 *p); //wake all threads waiting on p
 
 typedef struct {
  B recursive;
- I owner; //user-provided; task id
- UI4 v;
- UI4 ct; //for recursive locks
+ I owner; //user-provided; task id.  Must be nonzero
+ UI4 v; //the current state of the mutex; see enumeration in mt.c
+ UI4 ct; //lock count for recursive locks
 }jtpthread_mutex_t;//todo should split into multiple cache lines?
 
+//'self' is a task id (stored in 'owner').  Currently just 1+THREADID(jt), but in the future it should be associated with the task in question (perhaps the pyx pointer).  Must be non-zero (hence the 1+)
 void jtpthread_mutex_init(jtpthread_mutex_t*,B recursive);
 C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self);
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t*,UI ns,I self); //absolute timers suck; correct the interface.  -1=failure; 0=success; positive=error
 I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure positive=error
 C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
-//note: self must be non-zero
 
 #if defined(__linux__)
 #include <linux/futex.h>

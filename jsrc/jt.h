@@ -53,12 +53,14 @@ typedef struct rngdata {
 typedef struct jobstruct JOB;
 typedef struct {
  JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[1].  The job MUST be on a cacheline boundary, because LSBs are used as a lock.  Modified only when the job lock is held
+ UI4 futex;  // futrx used by all threads in this JOBQ
  UI4 nuunfin;   // Number of unfinished user jobs, queued and running.  Modified only when the job lock is held
  US waiters;  // Number of waiting threads.  Modified only when mutex is held
-// 2 bytes free
+#if 0 // obsolete
  pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to...
 // (on glibc, first cacheline ends here.  On windows this is still in the first cacheline)
  pthread_cond_t cond;   // ...hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
+#endif
 } JOBQ;
 #endif
 

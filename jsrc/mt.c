@@ -100,6 +100,7 @@ enum{FREE=0,LOCK=1,WAIT=2};//values for mutex->v
 // todo what is ULF_WAIT_CANCEL_POINT?
 
 void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){*m=(jtpthread_mutex_t){.recursive=recursive};}
+
 C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
  UI4 e;if(likely((!(e=lda(&m->v)))&&((e=FREE),casa(&m->v,&e,LOCK))))goto success; //fast path.  test-and-test-and-set is from glibc, mildly optimises the case when many threads swarm a locked mutex.  Not sure if this is for the best, but after waffling for a bit I think it is
@@ -120,6 +121,7 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){
   e=xchga(&m->v,WAIT);} //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
 success:sta(&jt->futexwt,0);m->ct+=m->recursive;m->owner=self;R 0;
 fail:sta(&jt->futexwt,0);R r;}
+
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
  UI4 e=0;if((e=lda(&m->v))!=FREE&&((e=FREE),casa(&m->v,&e,LOCK)))goto success;
@@ -139,10 +141,13 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){
   if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;}} //update delta, abort if timed out
 success:sta(&jt->futexwt,0);m->ct+=m->recursive;m->owner=self; R 0;
 fail:sta(&jt->futexwt,0);R r;}
+
+
 I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){
  if(uncommon(m->recursive)&&m->owner){if(m->owner!=self)R -1; m->ct++;R 0;}
  if(m->owner==self)R EVCONCURRENCY;
  if(casa(&m->v,&(UI4){FREE},LOCK)){m->ct+=m->recursive;m->owner=self;R 0;}   R -1;}
+
 C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){
  if(unlikely(m->owner!=self))R EVCONCURRENCY;
  if(uncommon(m->recursive)){if(--m->ct)R 0;} //need to be released more times on this thread

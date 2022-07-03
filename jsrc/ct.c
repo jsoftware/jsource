@@ -171,7 +171,7 @@ A jtartiffut(J jt,A w,I aflag){A z;
 }
 #endif
 // ****************************** waiting for values *******************************
-#if PYXES
+#if 0  // obsolete?
 typedef struct { pthread_cond_t cond; pthread_mutex_t mutex; } WAITBLOK;
 #define WAITBLOKINIT(x) {pthread_cond_init(&(x)->cond,0);pthread_mutex_init(&(x)->mutex,0);}
 #define WAITBLOKGRAB(x) {pthread_mutex_lock(&(x)->mutex);}
@@ -185,7 +185,7 @@ typedef struct pyxcondmutex{
  S pyxorigthread;  // thread number that is working on this pyx, or _1 if the value is available
  C errcode;  // 0 if no error, or error code
 #if PYXES
- //WAITBLOK pyxwb;  // sync info
+// obsolete WAITBLOK pyxwb;  // sync info
  UI4 state;//one of the below pyx states.  Monotonically increases
 #endif
 } PYXBLOK;
@@ -241,7 +241,7 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   I adbreak=lda(&JT(jt,adbreak)[0]);
   if(unlikely(adbreak!=0)){err=adbreak;goto fail;}}  // JBREAK: give up on the pyx and exit
  sta(&jt->futexwt,0);
-done:
+done:  // pyx has been filled in.  jt->futexwt must be 0
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
  ASSERT(0,blok->errcode); // if error, return the error code
 fail:
@@ -375,13 +375,17 @@ nexttask: ;
 nexttasklocked: ;  // come here if already holding the lock, and job is set
   if(unlikely(job==0)){
    // No job to run.  Wait for one
-   // acquire the job lock before the mutex.  Modify the wait count only when we hold the mutex
    if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
    if(likely(job==0)){
-    do{pthread_mutex_lock(&jobq->mutex); ++jobq->waiters; JOBUNLOCK(jobq,job); pthread_cond_wait(&jobq->cond,&jobq->mutex); --jobq->waiters; pthread_mutex_unlock(&jobq->mutex);
-     job=JOBLOCK(jobq);
+    do{
+// obsolete pthread_mutex_lock(&jobq->mutex);
+     UI4 futexval=jobq->futex;  // get current value to wait on.  It is updated under lock when a job is added
+     ++jobq->waiters; JOBUNLOCK(jobq,job);
+     jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
+// obsolete  pthread_cond_wait(&jobq->cond,&jobq->mutex);  pthread_mutex_unlock(&jobq->mutex);
+     job=JOBLOCK(jobq); --jobq->waiters;
      if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
-    }while(job==0); // wait till we get a job to run; exit holding the job lock but not the mutex
+    }while(job==0); // wait till we get a job to run; exit holding the job lock
    }
   }
   // We have a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
@@ -494,13 +498,16 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;JOBQ *jobq=JT(jt,jobqueue)
   if((UI)JT(jt,nwthreads)>(forcetask&jobq->nuunfin)){  // recheck after lock
    // We know there is a thread that can take the user task (possibly after finishing internal tasks), or the user insists on queueing.  Queue the task
    raposacv(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
-   pthread_mutex_lock(&jobq->mutex);
+// obsolete    pthread_mutex_lock(&jobq->mutex);
    ++jobq->nuunfin;  // add the new user job to the unfinished count
    _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun &JOBQ->ht[1] as a JOB, when the q is empty
    job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
-   oldjob=(oldjob==0)?job:oldjob; JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.  Keep old head unless it was empty
-   pthread_cond_signal(&jobq->cond);  // Wake just one waiting thread (if there are any)
-   pthread_mutex_unlock(&jobq->mutex);
+   oldjob=(oldjob==0)?job:oldjob;   //  Keep old head unless it was empty
+   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added a job
+   JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.
+// obsolete   pthread_cond_signal(&jobq->cond);  // Wake just one waiting thread (if there are any)
+// obsolete   pthread_mutex_unlock(&jobq->mutex);
+   jfutex_wake1(&jobq->futex);  // wake 1 waiting thread, if there is one
    R pyx;
   } else JOBUNLOCK(jobq,oldjob);  // return lock if there is no task to take the job
   // No thread for the job.  Run it here
@@ -521,7 +528,8 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n){JOBQ *jobq=JT(jt
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
  if(likely((-(I)JT(jt,nwthreads)&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
   JOB *oldjob=JOBLOCK(jobq);  // lock jobq before mutex
-  pthread_mutex_lock(&jobq->mutex);
+  ACINIT(jobA,ACUC2);  // Raise the usecount to match the fa() that will happen when the job ends - must do before job is enqueued, since it might run immediately
+// obsolete   pthread_mutex_lock(&jobq->mutex);
   _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
   // When we finish all tasks, we will have a problem.  The job block is on the jobq somewhere, but not necessarily at the top.
   // We can't dequeue the job or free it.  What we do is leave it on the jobq, with ns=n.  When the job is next taken for a task
@@ -529,13 +537,16 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n){JOBQ *jobq=JT(jt
   // be processing the job, we ra the job now to protect it.  It will be freed at the later of (coming to the top of the job list) and
   // (all tasks finished and waited for here).  We fa explicitly rather than calling tpop
   job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
-  oldjob=(oldjob==0)?job:oldjob; JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.  Keep old head unless it was empty
-  ACINIT(jobA,ACUC2);  // Raise the usecount to match the fa() that will happen when the job ends
-  if(jobq->waiters!=0)pthread_cond_broadcast(&jobq->cond);  // if there are waiting threads, wake them up  scaf why test?
+  oldjob=(oldjob==0)?job:oldjob;   //  Keep old head unless it was empty
+  ++jobq->futex;  // while under lock, advance futex value to indicate that we have added a job
+  JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.
+// obsolete   oldjob=(oldjob==0)?job:oldjob; JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.  Keep old head unless it was empty
+// obsolete   if(jobq->waiters!=0)pthread_cond_broadcast(&jobq->cond);  // if there are waiting threads, wake them up  scaf why test?
+  if(jobq->waiters!=0)jfutex_wakea(&jobq->futex);  // if there are waiting threads, wake them up.  We test in case there are no worker threads
    // todo scaf: would be nice to wake only as many as we have work for
-  pthread_mutex_unlock(&jobq->mutex);
+// obsolete   pthread_mutex_unlock(&jobq->mutex);
  }
- // We have started all the threads, but we pitch and and process tasks ourselves, starting with task 0
+ // We have started all the threads, but we pitch in and and process tasks ourselves, starting with task 0
  // In our job setup we have accounted for the fact that we are taking the first task, so that we need nothing more from the job block to start running the first task
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  UI4 i=0; C err=0;  // the number of the block we are working on, and the current error status
@@ -687,9 +698,11 @@ ASSERT(0,EVNONCE)
 #if PYXES
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   JOBQ *jobq=JT(jt,jobqueue);
-  JOB *oldjob=JOBLOCK(jobq); pthread_mutex_lock(&jobq->mutex);  // lock the jobq and mutex to present a consistent picture
+  JOB *oldjob=JOBLOCK(jobq);  // lock the jobq to present a consistent picture
+// obsolete  pthread_mutex_lock(&jobq->mutex);
   I nw=jobq->waiters, nuu=jobq->nuunfin;  // don't allocate under lock
-  pthread_mutex_unlock(&jobq->mutex); JOBUNLOCK(jobq,oldjob)
+// obsolete   pthread_mutex_unlock(&jobq->mutex);
+  JOBUNLOCK(jobq,oldjob)
   z=v2(nw,nuu);
 #else
 ASSERT(0,EVNONCE)
@@ -792,10 +805,11 @@ ASSERT(0,EVNONCE)
   // Mark the last thread for deletion, wake up all the threads
   JT(jt,nwthreads)=resthread-1;   // set new # threads - prematurely calling this thread stopped
   __atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
-  pthread_mutex_lock(&jobq->mutex);
+// obsolete   pthread_mutex_lock(&jobq->mutex);
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
-  pthread_cond_broadcast(&jobq->cond);
-  pthread_mutex_unlock(&jobq->mutex);
+  jfutex_wakea(&jobq->futex);  // wake em all up
+// obsolete   pthread_cond_broadcast(&jobq->cond);
+// obsolete   pthread_mutex_unlock(&jobq->mutex);
   // The thread will eventually clear ACTIVE
   z=mtm;
 #else

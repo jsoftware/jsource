@@ -2,13 +2,13 @@ OPTION	DOTNAME
 .text$	SEGMENT ALIGN(256) 'CODE'
 ALIGN	16
 
-PUBLIC	md5_block_asm_data_order
+PUBLIC	ossl_md5_block_asm_data_order
 
-md5_block_asm_data_order	PROC PUBLIC
+ossl_md5_block_asm_data_order	PROC PUBLIC
 	mov	QWORD PTR[8+rsp],rdi	;WIN64 prologue
 	mov	QWORD PTR[16+rsp],rsi
 	mov	rax,rsp
-$L$SEH_begin_md5_block_asm_data_order::
+$L$SEH_begin_ossl_md5_block_asm_data_order::
 	mov	rdi,rcx
 	mov	rsi,rdx
 	mov	rdx,r8
@@ -687,8 +687,8 @@ $L$epilogue::
 	mov	rsi,QWORD PTR[16+rsp]
 	DB	0F3h,0C3h		;repret
 
-$L$SEH_end_md5_block_asm_data_order::
-md5_block_asm_data_order	ENDP
+$L$SEH_end_ossl_md5_block_asm_data_order::
+ossl_md5_block_asm_data_order	ENDP
 EXTERN	__imp_RtlVirtualUnwind:NEAR
 
 ALIGN	16
@@ -773,14 +773,14 @@ se_handler	ENDP
 .text$	ENDS
 .pdata	SEGMENT READONLY ALIGN(4)
 ALIGN	4
-	DD	imagerel $L$SEH_begin_md5_block_asm_data_order
-	DD	imagerel $L$SEH_end_md5_block_asm_data_order
-	DD	imagerel $L$SEH_info_md5_block_asm_data_order
+	DD	imagerel $L$SEH_begin_ossl_md5_block_asm_data_order
+	DD	imagerel $L$SEH_end_ossl_md5_block_asm_data_order
+	DD	imagerel $L$SEH_info_ossl_md5_block_asm_data_order
 
 .pdata	ENDS
 .xdata	SEGMENT READONLY ALIGN(8)
 ALIGN	8
-$L$SEH_info_md5_block_asm_data_order::
+$L$SEH_info_ossl_md5_block_asm_data_order::
 DB	9,0,0,0
 	DD	imagerel se_handler
 

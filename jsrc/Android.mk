@@ -60,6 +60,7 @@ LOCAL_SRC_FILES := a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c am
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
 LOCAL_ASMFLAGS += -f elf64 -X gnu -D LINUX
 LOCAL_SRC_FILES += \
+  openssl/sha/asm/md5-aarch64-elf.S \
   openssl/sha/asm/keccak1600-armv8-elf.S \
   openssl/sha/asm/sha1-armv8-elf.S \
   openssl/sha/asm/sha256-armv8-elf.S \
@@ -89,6 +90,7 @@ endif
 ifeq ($(TARGET_ARCH),x86_64)
 LOCAL_ASMFLAGS += -f elf64 -X gnu -D LINUX
 LOCAL_SRC_FILES += \
+  openssl/sha/asm/md5-x86_64-elf.S \
   openssl/sha/asm/keccak1600-x86_64-elf.S \
   openssl/sha/asm/sha1-x86_64-elf.S \
   openssl/sha/asm/sha256-x86_64-elf.S \
@@ -101,10 +103,11 @@ endif
 ifeq ($(TARGET_ARCH),x86)
 LOCAL_ASMFLAGS += -f elf32 -X gnu -D LINUX
 LOCAL_SRC_FILES += \
-  openssl/sha/asm/keccak1600-mmx-elf.S \
-  openssl/sha/asm/sha1-586-elf.S \
-  openssl/sha/asm/sha256-586-elf.S \
-  openssl/sha/asm/sha512-586-elf.S \
+  openssl/sha/asm/md5-586-android.S \
+  openssl/sha/asm/keccak1600-mmx-android.S \
+  openssl/sha/asm/sha1-586-android.S \
+  openssl/sha/asm/sha256-586-android.S \
+  openssl/sha/asm/sha512-586-android.S \
   ../sleef/src/common/arraymap.c \
   ../sleef/src/common/common.c \
   ../sleef/src/libm/rempitab.c \

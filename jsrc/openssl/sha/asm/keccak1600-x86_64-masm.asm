@@ -4,6 +4,7 @@ OPTION	DOTNAME
 
 ALIGN	32
 __KeccakF1600	PROC PRIVATE
+
 	mov	rax,QWORD PTR[60+rdi]
 	mov	rbx,QWORD PTR[68+rdi]
 	mov	rcx,QWORD PTR[76+rdi]
@@ -256,6 +257,7 @@ $L$oop::
 
 	lea	r15,QWORD PTR[((-192))+r15]
 	DB	0F3h,0C3h		;repret
+
 __KeccakF1600	ENDP
 
 

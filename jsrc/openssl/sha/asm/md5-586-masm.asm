@@ -10,8 +10,8 @@ ELSE
 .text$	SEGMENT ALIGN(64) 'CODE'
 ENDIF
 ALIGN	16
-_md5_block_asm_data_order	PROC PUBLIC
-$L_md5_block_asm_data_order_begin::
+_ossl_md5_block_asm_data_order	PROC PUBLIC
+$L_ossl_md5_block_asm_data_order_begin::
 	push	esi
 	push	edi
 	mov	edi,DWORD PTR 12[esp]
@@ -683,6 +683,6 @@ $L000start:
 	pop	edi
 	pop	esi
 	ret
-_md5_block_asm_data_order ENDP
+_ossl_md5_block_asm_data_order ENDP
 .text$	ENDS
 END

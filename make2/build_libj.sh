@@ -191,19 +191,29 @@ common="$common -DNO_SHA_ASM"
 
 else
 
+SRC_ASM_LINUXAVX2=" \
+ md5-x86_64-elf.o \
+ keccak1600-avx2-elf.o \
+ sha1-x86_64-elf.o \
+ sha256-x86_64-elf.o \
+ sha512-x86_64-elf.o "
+
 SRC_ASM_LINUX=" \
+ md5-x86_64-elf.o \
  keccak1600-x86_64-elf.o \
  sha1-x86_64-elf.o \
  sha256-x86_64-elf.o \
  sha512-x86_64-elf.o "
 
 SRC_ASM_LINUX32=" \
+ md5-586-elf.o \
  keccak1600-mmx-elf.o \
  sha1-586-elf.o \
  sha256-586-elf.o \
  sha512-586-elf.o "
 
 SRC_ASM_RASPI=" \
+ md5-aarch64-elf.o \
  keccak1600-armv8-elf.o \
  sha1-armv8-elf.o \
  sha256-armv8-elf.o \
@@ -216,30 +226,35 @@ SRC_ASM_RASPI32=" \
  sha512-armv4-elf.o "
 
 SRC_ASM_MAC=" \
+ md5-x86_64-macho.o \
  keccak1600-x86_64-macho.o \
  sha1-x86_64-macho.o \
  sha256-x86_64-macho.o \
  sha512-x86_64-macho.o "
 
 SRC_ASM_MAC32=" \
+ md5-586-macho.o \
  keccak1600-mmx-macho.o \
  sha1-586-macho.o \
  sha256-586-macho.o \
  sha512-586-macho.o "
 
 SRC_ASM_IOS=" \
+ md5-aarch64-ios.o \
  keccak1600-armv8-ios.o \
  sha1-armv8-ios.o \
  sha256-armv8-ios.o \
  sha512-armv8-ios.o "
 
 OBJS_ASM_WIN=" \
+ ../../../../openssl-asm/md5-x86_64-nasm.o \
  ../../../../openssl-asm/keccak1600-x86_64-nasm.o \
  ../../../../openssl-asm/sha1-x86_64-nasm.o \
  ../../../../openssl-asm/sha256-x86_64-nasm.o \
  ../../../../openssl-asm/sha512-x86_64-nasm.o "
 
 OBJS_ASM_WIN32=" \
+ ../../../../openssl-asm/md5-586-nasm.o \
  ../../../../openssl-asm/keccak1600-mmx-nasm.o \
  ../../../../openssl-asm/sha1-586-nasm.o \
  ../../../../openssl-asm/sha256-586-nasm.o \
@@ -309,7 +324,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
-SRC_ASM="${SRC_ASM_LINUX}"
+SRC_ASM="${SRC_ASM_LINUXAVX2}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_AVX2 "
 FLAGS_BASE64=" -DHAVE_AVX2=1 "

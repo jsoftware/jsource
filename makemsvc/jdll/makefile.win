@@ -230,12 +230,16 @@ CFLAGS1= /DNO_SHA_ASM
 !else
 !if "1"=="$(x64)"
 OBJS_ASM= \
+ ../../openssl-asm/md5-x86_64-nasm.o \
+ ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
  ../../openssl-asm/sha1-x86_64-nasm.o \
  ../../openssl-asm/sha256-x86_64-nasm.o \
  ../../openssl-asm/sha512-x86_64-nasm.o
 !else
 OBJS_ASM= \
+ ../../openssl-asm/md5-586-nasm.o \
+ ../../openssl-asm/md5-586-nasm.o \
  ../../openssl-asm/keccak1600-mmx-nasm.o \
  ../../openssl-asm/sha1-586-nasm.o \
  ../../openssl-asm/sha256-586-nasm.o \

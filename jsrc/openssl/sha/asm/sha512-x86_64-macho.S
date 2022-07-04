@@ -1,7 +1,6 @@
 .text	
 
 
-.private_extern	_OPENSSL_ia32cap_P
 .globl	_sha512_block_data_order
 
 .p2align	4

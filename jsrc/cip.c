@@ -537,7 +537,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs,.nbigtasks={nfulltasks*nthreads,nfulltasks*nthreads+nremnant},.taskm={MAXAROWS,nendcache<<CACHEHEIGHTX}};
   // number of full tasks, followed by number that have size 'nendcache'.  Later tasks have size nendcache-CACHEHEIGHT
   // scaf todo: use blockedmmult for the runt task?
- jtjobrun(jt,cachedmmultx,&ctx,nfulltasks*nthreads+tailtasks);  // go run the tasks
+ jtjobrun(jt,cachedmmultx,&ctx,nfulltasks*nthreads+tailtasks,0);  // go run the tasks - default to threadpool 0
  R !ctx.nanerr;}
 
 #else

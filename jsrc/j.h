@@ -651,14 +651,20 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
 #define MAXTHREADS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
-                       // threads will be paged out.  The low bits of the task pointer are used as a lock, so that code will have to be rewritten if MAXTHREADS>63 (which is the allocation boundary for the
-                       // task block)
+                       // threads will be paged out.
 #define MAXTHREADSRND 64  // MAXTHREADS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
 #if MAXTHREADS>255
 #define WLOCKBIT 0x8000  // the LSB of the part of a 16-bit lock used for write locks.
 #else
 #define WLOCKBIT 0x100  // With <256 threads, we split the lock into 2 8-bit sections so we can use LOCK XADD instructions
 #endif
+
+#define MAXTHREADPOOLS 8  // max # thread pools supported
+#define MAXTHREADSINPOOL 62  // Max threads in a single pool.  The low bits of the task pointer are used as a lock, so that code will have to be rewritten if MAXTHREADSINPOOL+1>63 (which is the allocation boundary for the
+                       // task block).  As of now, this limit is immaterial, because every thread in the system might choose to start a job on a single threadpool, which limits the total number of threads to 63.  But
+                       // we could force job/task/thread creators to serialize on a lock, which would limit the number of waits from outside the pool to 1, and then we could have more threads total as long as
+                       // the number in a single ppol is limited
+
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTACKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary

@@ -4,6 +4,9 @@ NB. files
 
 NB. **************************************** threads & tasks **********************************
 NB. j904 64-bit only
+NB. delete all worker threads
+delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 [ 6!:3 (1) }}
+delth''  NB. make sure we start with an empty system
 
 TASK=: <: 1 { 8 T. ''  NB. max # worker threads
 TASK1=: 4 ] 12     NB. 12 crash   limit error of 1!:20
@@ -508,6 +511,6 @@ t1done=: 0
 1: (2!:0 :: 1:)^:IFUNIX 'rm -rf ',jpath '~temp/tdot'
 1: (1!:55 ::1:)^:IFWIN ((jpath'~temp/tdot/')&,)&.> {."1[ 1!:0 jpath '~temp/tdot/*' 
 
-4!:55 ;:'MINLEN MLEN NX STRIDE TASK1 TASK s1 t1 t1done shrxno '
+4!:55 ;:'MINLEN MLEN NX STRIDE TASK1 TASK delth s1 t1 t1done shrxno '
 epilog''
 

@@ -51,11 +51,13 @@ typedef struct rngdata {
 
 #if PYXES
 typedef struct jobstruct JOB;
-typedef struct {
+// job queue for each threadpool.  ht[0] is used as the job lock, so we align to cacheline boundary to avoid false sharing
+typedef struct __attribute__((aligned(CACHELINESIZE))) {
  JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[1].  The job MUST be on a cacheline boundary, because LSBs are used as a lock.  Modified only when the job lock is held
- UI4 futex;  // futrx used by all threads in this JOBQ
+ UI4 futex;  // futex used by all threads in this JOBQ
  UI4 nuunfin;   // Number of unfinished user jobs, queued and running.  Modified only when the job lock is held
- US waiters;  // Number of waiting threads.  Modified only when mutex is held
+ US nthreads;  // number of threads in this pool
+ US waiters;  // Number of waiting threads.  Modified only when job lock is held, and may be one higher than the actual number of threads waiting
 #if 0 // obsolete
  pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to...
 // (on glibc, first cacheline ends here.  On windows this is still in the first cacheline)
@@ -137,7 +139,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATEACTIVE (1LL<<TASKSTATEACTIVEX)
 #define TASKSTATETERMINATEX 3  // thread has been signaled to terminate.  Changed under job lock.
 #define TASKSTATETERMINATE (1LL<<TASKSTATETERMINATEX)
-// 1 byte free
+ C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution
@@ -312,7 +314,7 @@ typedef struct JSTstruct {
  A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
  S flock;            // r/w lock for flkd/fopa/fopf
  // rest of cacheline used only in exceptional paths
- S nwthreads;    // number of worker threads allocated so far
+ S nwthreads;    // number of worker threads allocated so far - changes protected by flock
  UC sm;               /* sm options set by JSM()                         */
  C smoption;         // wd options, see comment in jtwd
  UC int64rflag;       /* com flag for returning 64-bit integers          */
@@ -373,7 +375,7 @@ typedef struct JSTstruct {
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
  // 6 bytes free
 #if PYXES
- JOBQ *jobqueue;      // accessed indirectly to avoid spilling into the next cache line, as layout is annoying; never changes
+ JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
 #endif
 // end of cacheline 7
 

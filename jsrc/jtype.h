@@ -998,7 +998,7 @@ typedef struct {
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function
     A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
-    I forcetask;  // for t., the flags extracted from n 
+    I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

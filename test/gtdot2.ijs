@@ -4,6 +4,9 @@ NB. locale
 
 NB. **************************************** threads & tasks **********************************
 NB. j904 64-bit only
+NB. delete all worker threads
+delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 [ 6!:3 (1) }}
+delth''  NB. make sure we start with an empty system
 
 TASK=: <: 1 { 8 T. ''  NB. max # worker threads
 
@@ -334,7 +337,7 @@ NB. run & open the futures results
 18!:55 :: 1: "0 -.&' '&.> <"1 'loc',~"1 'f',"1 ": ,. i.TASK*STRIDE   NB. clear all locales
 18!:55 [ 18!:1 [1                   NB. erase residual numbered locales in each task
 
-4!:55 ;:'NX STRIDE TASK s1 t1'
+4!:55 ;:'NX STRIDE TASK delth s1 t1'
 
 epilog''
 

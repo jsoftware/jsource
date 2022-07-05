@@ -2,7 +2,6 @@ OPTION	DOTNAME
 .text$	SEGMENT ALIGN(256) 'CODE'
 EXTERN	OPENSSL_ia32cap_P:NEAR
 
-
 PUBLIC	sha1_block_data_order
 
 ALIGN	16
@@ -1448,10 +1447,10 @@ DB	102,15,56,0,251
 	movaps	xmm9,XMMWORD PTR[((-8-16))+rax]
 	mov	rsp,rax
 $L$epilogue_shaext::
-
 	mov	rdi,QWORD PTR[8+rsp]	;WIN64 epilogue
 	mov	rsi,QWORD PTR[16+rsp]
 	DB	0F3h,0C3h		;repret
+
 $L$SEH_end_sha1_block_data_order_shaext::
 sha1_block_data_order_shaext	ENDP
 

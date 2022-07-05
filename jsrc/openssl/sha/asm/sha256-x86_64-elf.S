@@ -1,7 +1,6 @@
 .text	
 
 
-.hidden	OPENSSL_ia32cap_P
 .globl	sha256_block_data_order
 .type	sha256_block_data_order,@function
 .align	16
@@ -1768,6 +1767,7 @@ K256:
 .align	64
 sha256_block_data_order_shaext:
 _shaext_shortcut:
+.cfi_startproc	
 	leaq	K256+128(%rip),%rcx
 	movdqu	(%rdi),%xmm1
 	movdqu	16(%rdi),%xmm2
@@ -1970,6 +1970,7 @@ _shaext_shortcut:
 	movdqu	%xmm1,(%rdi)
 	movdqu	%xmm2,16(%rdi)
 	.byte	0xf3,0xc3
+.cfi_endproc	
 .size	sha256_block_data_order_shaext,.-sha256_block_data_order_shaext
 .type	sha256_block_data_order_ssse3,@function
 .align	64
@@ -3084,3 +3085,24 @@ sha256_block_data_order_ssse3:
 	.byte	0xf3,0xc3
 .cfi_endproc	
 .size	sha256_block_data_order_ssse3,.-sha256_block_data_order_ssse3
+#	.section .note.gnu.property, #alloc
+	.p2align 3
+	.long 1f - 0f
+	.long 4f - 1f
+	.long 5
+0:
+	# "GNU" encoded with .byte, since .asciz isn't supported
+	# on Solaris.
+	.byte 0x47
+	.byte 0x4e
+	.byte 0x55
+	.byte 0
+1:
+	.p2align 3
+	.long 0xc0000002
+	.long 3f - 2f
+2:
+	.long 3
+3:
+	.p2align 3
+4:

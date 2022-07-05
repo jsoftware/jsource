@@ -1,26 +1,21 @@
 .text	
-.align	16
+.p2align	4
 
-.globl	ossl_md5_block_asm_data_order
-.type	ossl_md5_block_asm_data_order,@function
-ossl_md5_block_asm_data_order:
-.cfi_startproc	
+.globl	_ossl_md5_block_asm_data_order
+
+_ossl_md5_block_asm_data_order:
+
 	pushq	%rbp
-.cfi_adjust_cfa_offset	8
-.cfi_offset	%rbp,-16
+
 	pushq	%rbx
-.cfi_adjust_cfa_offset	8
-.cfi_offset	%rbx,-24
+
 	pushq	%r12
-.cfi_adjust_cfa_offset	8
-.cfi_offset	%r12,-32
+
 	pushq	%r14
-.cfi_adjust_cfa_offset	8
-.cfi_offset	%r14,-40
+
 	pushq	%r15
-.cfi_adjust_cfa_offset	8
-.cfi_offset	%r15,-48
-.Lprologue:
+
+L$prologue:
 
 
 
@@ -40,10 +35,10 @@ ossl_md5_block_asm_data_order:
 
 
 	cmpq	%rdi,%rsi
-	je	.Lend
+	je	L$end
 
 
-.Lloop:
+L$loop:
 	movl	%eax,%r8d
 	movl	%ebx,%r9d
 	movl	%ecx,%r14d
@@ -656,49 +651,28 @@ ossl_md5_block_asm_data_order:
 
 	addq	$64,%rsi
 	cmpq	%rdi,%rsi
-	jb	.Lloop
+	jb	L$loop
 
 
-.Lend:
+L$end:
 	movl	%eax,0(%rbp)
 	movl	%ebx,4(%rbp)
 	movl	%ecx,8(%rbp)
 	movl	%edx,12(%rbp)
 
 	movq	(%rsp),%r15
-.cfi_restore	%r15
+
 	movq	8(%rsp),%r14
-.cfi_restore	%r14
+
 	movq	16(%rsp),%r12
-.cfi_restore	%r12
+
 	movq	24(%rsp),%rbx
-.cfi_restore	%rbx
+
 	movq	32(%rsp),%rbp
-.cfi_restore	%rbp
+
 	addq	$40,%rsp
-.cfi_adjust_cfa_offset	-40
-.Lepilogue:
+
+L$epilogue:
 	.byte	0xf3,0xc3
-.cfi_endproc	
-.size	ossl_md5_block_asm_data_order,.-ossl_md5_block_asm_data_order
-#	.section .note.gnu.property, #alloc
-	.p2align 3
-	.long 1f - 0f
-	.long 4f - 1f
-	.long 5
-0:
-	# "GNU" encoded with .byte, since .asciz isn't supported
-	# on Solaris.
-	.byte 0x47
-	.byte 0x4e
-	.byte 0x55
-	.byte 0
-1:
-	.p2align 3
-	.long 0xc0000002
-	.long 3f - 2f
-2:
-	.long 3
-3:
-	.p2align 3
-4:
+
+

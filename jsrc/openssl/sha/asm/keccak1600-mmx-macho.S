@@ -1,6 +1,11 @@
 .text
 .align	4
 __KeccakF1600:
+	#ifdef __CET__
+
+.byte	243,15,30,251
+	#endif
+
 	movq	60(%esi),%mm0
 	movq	68(%esi),%mm1
 	movq	76(%esi),%mm2
@@ -317,6 +322,11 @@ L000loop:
 .align	4
 _KeccakF1600:
 L_KeccakF1600_begin:
+	#ifdef __CET__
+
+.byte	243,15,30,251
+	#endif
+
 	pushl	%ebp
 	pushl	%ebx
 	pushl	%esi
@@ -343,6 +353,11 @@ L001pic_point:
 .align	4
 _SHA3_absorb:
 L_SHA3_absorb_begin:
+	#ifdef __CET__
+
+.byte	243,15,30,251
+	#endif
+
 	pushl	%ebp
 	pushl	%ebx
 	pushl	%esi
@@ -397,6 +412,11 @@ L004absorbed:
 .align	4
 _SHA3_squeeze:
 L_SHA3_squeeze_begin:
+	#ifdef __CET__
+
+.byte	243,15,30,251
+	#endif
+
 	pushl	%ebp
 	pushl	%ebx
 	pushl	%esi

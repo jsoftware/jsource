@@ -1,7 +1,6 @@
 .text	
 
 
-.private_extern	_OPENSSL_ia32cap_P
 .globl	_sha256_block_data_order
 
 .p2align	4
@@ -1768,6 +1767,7 @@ K256:
 .p2align	6
 sha256_block_data_order_shaext:
 _shaext_shortcut:
+
 	leaq	K256+128(%rip),%rcx
 	movdqu	(%rdi),%xmm1
 	movdqu	16(%rdi),%xmm2
@@ -1970,6 +1970,7 @@ L$oop_shaext:
 	movdqu	%xmm1,(%rdi)
 	movdqu	%xmm2,16(%rdi)
 	.byte	0xf3,0xc3
+
 
 
 .p2align	6

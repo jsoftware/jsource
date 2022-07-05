@@ -2,7 +2,6 @@ OPTION	DOTNAME
 .text$	SEGMENT ALIGN(256) 'CODE'
 
 EXTERN	OPENSSL_ia32cap_P:NEAR
-
 PUBLIC	sha512_block_data_order
 
 ALIGN	16

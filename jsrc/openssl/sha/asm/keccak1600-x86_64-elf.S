@@ -3,6 +3,7 @@
 .type	__KeccakF1600,@function
 .align	32
 __KeccakF1600:
+.cfi_startproc	
 	movq	60(%rdi),%rax
 	movq	68(%rdi),%rbx
 	movq	76(%rdi),%rcx
@@ -255,6 +256,7 @@ __KeccakF1600:
 
 	leaq	-192(%r15),%r15
 	.byte	0xf3,0xc3
+.cfi_endproc	
 .size	__KeccakF1600,.-__KeccakF1600
 
 .type	KeccakF1600,@function
@@ -520,3 +522,24 @@ iotas:
 .quad	0x8000000080008008
 .size	iotas,.-iotas
 .byte	75,101,99,99,97,107,45,49,54,48,48,32,97,98,115,111,114,98,32,97,110,100,32,115,113,117,101,101,122,101,32,102,111,114,32,120,56,54,95,54,52,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
+#	.section .note.gnu.property, #alloc
+	.p2align 3
+	.long 1f - 0f
+	.long 4f - 1f
+	.long 5
+0:
+	# "GNU" encoded with .byte, since .asciz isn't supported
+	# on Solaris.
+	.byte 0x47
+	.byte 0x4e
+	.byte 0x55
+	.byte 0
+1:
+	.p2align 3
+	.long 0xc0000002
+	.long 3f - 2f
+2:
+	.long 3
+3:
+	.p2align 3
+4:

@@ -9,12 +9,15 @@ FoldThrow_j_ =: $0  NB. If nonempty, set to throw type
 if. fwd+rev do.  NB. if forward or reverse...
   nitems =. init + #y  NB. total # items, including init if any
   if. nitems<2 do.
-    emptycell =. 0 # (,:x) [^:init y  NB. fillcell: empty array of x or (item of y)
-    try. res =. u. v./ emptycell  NB. get the neutral for the empty cell, and try applying u to it
-    catcht. 13!:8 (3)  NB. Z: on empty is domain error
-NB. obsolete     catch. 13!:8 (3 3&, {~ 43 44&i.) 13!:11 '' [ FoldZv_j_ =. fzv  NB. if error, pass it through; if no results, error
+    if. nitems=1 do.
+      res =. u. x [^:init {. y   NB. Just one item, apply u to it
+    else.  NB. x not given and y is empty - fill-cell needed
+      emptycell =. 0 # (,:x) [^:init y  NB. fillcell: empty array of x or (item of y)
+      try. res =. u. v./ emptycell  NB. get the neutral for the empty cell, and try applying u to it
+      catcht. 13!:8 (3)  NB. Z: on empty is domain error
+      end.
     end.
-    if. mult do. res =. 0 # ,: res end.  NB. Single result is neutral, Multiple result is empty array of them
+    if. mult do. res =. (<: nitems) # ,: res end.  NB. Single result is x/y/neutral, Multiple result is array of them (error if no items)
   else.  NB. at least 2 cells.  We will run the loop
     if. init do. cellres =. x else. cellres =. (-rev) { y end.  NB. cellres=first cell, either 0 (fwd) or _1 (rev)
     cellx =. -init  NB. 1 less than index of first cell for left side
@@ -27,10 +30,6 @@ NB. obsolete     catch. 13!:8 (3 3&, {~ 43 44&i.) 13!:11 '' [ FoldZv_j_ =. fzv  
         if. 43 -: ft do. break. end.  NB. abort iteration and end
         if. 44 -: ft do. continue. end.  NB. abort iteration and continue
         13!:8 (35) [ FoldZv_j_ =. fzv  NB. not an iteration control, pass the throw. along
-NB. obsolete       catch.
-NB. obsolete         if. 43 = 13!:11'' do. break. end.  NB. abort iteration and end
-NB. obsolete         if. 44 = 13!:11'' do. continue. end.  NB. abort iteration and continue
-NB. obsolete         13!:8 ] 13!:11 '' [ FoldZv_j_ =. fzv  NB. not an iteration control, fail with that error code
       end.
       NB. continuing iteration.  cellres is the u result, vres is the boxed v result
       if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres else. FoldZv_j_ =. FoldZv_j_ 18 b. 1 0 end.
@@ -50,10 +49,6 @@ else.  NB. repeated iteration on y, not related to items
       if. 43 -: ft do. break. end.  NB. abort iteration and end
       if. 44 -: ft do. continue. end.  NB. abort iteration and continue
       13!:8 (35) [ FoldZv_j_ =. fzv  NB. not an iteration control, pass the throw. along
-NB. obsolete     catch.
-NB. obsolete       if. 43 = 13!:11'' do. break. end.  NB. abort iteration and end
-NB. obsolete       if. 44 = 13!:11'' do. continue. end.  NB. abort iteration and continue
-NB. obsolete       13!:8 ] 13!:11 '' [ FoldZv_j_ =. fzv  NB. not an iteration control, fail with that error code
     end.
     NB. continuing iteration.  cellres is the u result, vres is the boxed v result
     if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres else. FoldZv_j_ =. FoldZv_j_ 18 b. 1 0 end.

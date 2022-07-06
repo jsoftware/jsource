@@ -396,7 +396,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
   // increment the # starts; if that equals or exceeds the # of tasks, dequeue the job
   job->ns=jobns+1;   // increment task counter for next owner
   JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobns+1<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobns+1<jobn?job:jobnext;  // calc head & tail ptrs
-      // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns+1<jobn), divert write of tail; otherwise leave it.  If job finishing, set new headptr in jobnext
+      // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns+1<jobn), divert write of tail; otherwise write the empty-queue value into tail.  If job finishing, set new headptr in jobnext
       // If this is a user job, ns is garbage but n=0, so jobns+1<jobn will never be true (because the vbls are unsigned).
   *writeptr=(JOB *)writeptr; JOBUNLOCK(jobq,jobnext);  // Do the writes.  tailptr write, if not diverted, sets tail->itself.  The write of the headptr releases the lock.
   // We have now dequeued the job if it has all started, and extracted what an internal job needs to run.  Let the thundering herd come and fight over the job lock

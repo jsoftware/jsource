@@ -111,22 +111,32 @@ void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){*m=(jtpthread_mutex_
 
 C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;} //handle deadlock and recursive cases
- UI4 e=FREE;if(likely(casa(&m->v,&e,LOCK)))goto success; //fast path: attempt to install LOCK in place of FREE
- if(e!=WAIT)e=xchga(&m->v,WAIT); //nudge m->v towards the WAIT state.  In the unlikely event that e==WAIT&&m->v!=WAIT, fine; we'll catch it in futex_wait, since we won't get put to sleep if m->v!=WAIT
+ if(likely(casa(&m->v,&(UI4){FREE},LOCK)))goto success; //fast and common path: attempt to install LOCK in place of FREE; if so, we have acquired the lock
+// obsolete  if(e!=WAIT)e=xchga(&m->v,WAIT); //nudge m->v towards the WAIT state.  In the unlikely event that e==WAIT&&m->v!=WAIT, fine; we'll catch it in futex_wait, since we won't get put to sleep if m->v!=WAIT
+ // The lock was in use.  We will (almost always) have to wait for it
  I r;
  sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
- while(e!=FREE){ //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
+// obsolete  while(e!=FREE){ //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
+ // It is always safe to move the state of a lock to WAIT using xchg.  There are 2 cases:
+ // (1) if the previous state was FREE, we now own the lock after the xchg...
+ while(xchga(&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
+  // ... (2) the lock had an owner.  By moving state to WAIT, we guaranteed that the owner will wake us on freeing the lock
+  // Before waiting, handle system events if present
   S attn=lda((S*)&JT(jt,adbreakr)[0]);
-  if(attn>>8)jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); //check for systemlock
-  if(attn&0xff){r=attn&0xff;goto fail;} //or attention interrupt
+  if(unlikely(attn>>8))jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); //check for systemlock
+  if(unlikely(attn&0xff)){r=attn&0xff;goto fail;} //or attention interrupt
+  // Now wait for a change.  The futex_wait is atomic, and will wait only if the state is WAIT.  In that case,
+  // the holder is guaranteed to perform a wake after freeing the lock.  If the state is not WAIT, something has happened already and we inspect it forthwith
 #if __linux__
   I i=jfutex_waitn(&m->v,WAIT,(UI)-1);
   //kernel bug? futex wait doesn't get interrupted by signals on linux if timeout is null
 #else
   I i=jfutex_wait(&m->v,WAIT);
 #endif
-  if(i>0){r=i;goto fail;} //handle error (unaligned unmapped interrupted...)
-  e=xchga(&m->v,WAIT);} //attempt to lock again
+  if(unlikely(i>0)){r=i;goto fail;} //handle error (unaligned unmapped interrupted...)
+// obsolete   e=xchga(&m->v,WAIT);
+ }
+ // come out of loop when we have the lock
  //note that we must install WAIT in m->v even in the case when no one is actually waiting, because we can't know if somebody else is waiting
  //ulrich drepper 'futexes are tricky' explains the issue with storing a waiter count in the value
  //a couple of alternatives suggest themselves: store up to k waiters (FREE/LOCK/WAIT is really 0/1/n; we could do eg 0/1/2/3/n); store the waiter count somehow outside of the value
@@ -163,7 +173,8 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){ //release m
  if(unlikely(m->owner!=self))R EVCONCURRENCY; //error to release a lock you don't hold
  if(uncommon(m->recursive)){if(--m->ct)R 0;} //need to be released more times on this thread, so nothing more to do
  m->owner=0;
- if(!casa(&m->v,&(UI4){LOCK},FREE)){sta(&m->v,FREE);jfutex_wake1(&m->v);} //cas is fastpath LOCK->FREE.  If it fails, the state was WAIT, so we need to wake a waiter
+// obsolete  if(!casa(&m->v,&(UI4){LOCK},FREE)){sta(&m->v,FREE);jfutex_wake1(&m->v);} //cas is fastpath LOCK->FREE.  If it fails, the state was WAIT, so we need to wake a waiter
+ if(unlikely(xchga(&m->v,FREE)==WAIT))jfutex_wake1(&m->v);  // move to FREE state; if state was WAIT, wake up a waiter
  //below is what drepper does; I think the above is always faster, but it should definitely be faster without xadd
  //agner sez lock xadd has one cycle better latency vs lock cmpxchg on intel ... ??
  //(probably that's only in the uncontended case)

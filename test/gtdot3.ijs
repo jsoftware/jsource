@@ -135,7 +135,7 @@ f ''
 
 wthr N
 
-4!:55 ;:'N N1 N2 f aaa__ bbb__ ccc__ sema wthr'
+4!:55 ;:'N N1 N2 delth f aaa__ bbb__ ccc__ sema wthr'
 
 epilog''
 

@@ -9,6 +9,7 @@ I jtmdif(struct jtimespec when); //returns the time in ns between now and when. 
 __attribute__((cold)) C jfutex_wait(UI4 *p,UI4 v); //atomically, compare v to *p and go to sleep if they are equal.  Return error code
 __attribute__((cold)) I jfutex_waitn(UI4 *p,UI4 v,UI ns); //ditto, but wake up after at most ns ns.  Result -1 means timeout definitely exceeded; other result is an error code
 __attribute__((cold)) void jfutex_wake1(UI4 *p); //wake 1 thread waiting on p
+__attribute__((cold)) void jfutex_waken(UI4 *p,UI4 n); //wake at least n threads waiting on p (eqv. to waken except on linux, so beware of contention or use with care elsewhere)
 __attribute__((cold)) void jfutex_wakea(UI4 *p); //wake all threads waiting on p
 
 typedef struct {
@@ -62,8 +63,11 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 //positive (or just 1?) result from wait means someone else is waiting on this too?
 
 #elif defined(_WIN32)
-// untested windows path; make henry test it when he gets back from vacation
 // don't pollute everybody with windows.h.  win api is fairly basic anyway, so there is not much to take advantage of
+#elif defined(__OpenBSD__) && 0
+// untested openbsd code; as I recall, openbsd people attempted a port in the past; uncomment this and send a patch if you have tested & it works
+#include <sys/time.h>
+#include <sys/futex.h>
 #else
 #error no futex support for your platform
 #endif //_WIN32

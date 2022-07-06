@@ -595,7 +595,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  R pyx;
 }
 static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
-C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4,I),void *ctx,UI4 n){
+C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){
  DO(n,C c=f(jt,ctx,i);if(c)R c;);
  R 0;}
 

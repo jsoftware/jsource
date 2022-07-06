@@ -462,7 +462,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
 
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch
-  I pull4=0; pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;
+  I pull4=0; if(likely(nwds>2)){pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;}  // avoid fetch underrun if short
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
   pt0ecam += nwds+((0b11LL<<CONJX)<<pull4);

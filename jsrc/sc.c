@@ -17,9 +17,9 @@ DF2(jtunquote){A z;
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVATTN,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
  A savname=jt->curname;  // we stack the executing name
-#define FLGPSEUDOX 16  // operation is dyad
+#define FLGPSEUDOX 16  // operation is pseudo-named function
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
-#define FLGCACHEDX 17  // operation is dyad
+#define FLGCACHEDX 17  // operation is cached, not requiring lookup
 #define FLGCACHED ((I)1<<FLGCACHEDX)
 #define FLGDYADX 19  // operation is dyad
 #define FLGDYAD ((I)1<<FLGDYADX)

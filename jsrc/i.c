@@ -27,7 +27,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  zv->bucket=0;
  zv->bucketx=0;
  zv->flag=NMDOT;
- zv->hash=(UI4)nmhash(m,s);
+ zv->hash=(UI4)nmhash(m,(UC*)&zv->s);  // use copy because hic may overread
  ACX(z);
  R z;
 }

@@ -648,6 +648,7 @@ F2(jttdot){F2PREFIP;
   }
  }
  // set defaults for omitted parms
+poolno=0;  // scaf
  nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0
  // parms read, install them into the block for t. verb
  A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX));
@@ -712,6 +713,7 @@ ASSERT(0,EVNONCE)
    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   }
+poolno=0; // scaf
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
   GAT0(z,INT,3,1)  // allocate result
   JOB *oldjob=JOBLOCK(jobq);  // lock the jobq to present a consistent picture
@@ -743,6 +745,7 @@ ASSERT(0,EVNONCE)
    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   }
+poolno=0;  // scaf
   // if the threadslot we will use is being terminated, we have to wait for termination to finish, so that we can restart it with the correct threadpool
   I resthread;  // thread# we will be allocating
   while(1){

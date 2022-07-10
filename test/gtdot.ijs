@@ -205,34 +205,11 @@ wthr N
 'domain error' -: ". etx '+ t. (<''worker'';2)'
 > ] t. (($0);'worker') 1
 
-NB. threadpools
-delth''
-
-NB. Create 1 thread in pool 1; then verify that jobs in pool 1 are faster than than pool 0
-1: 0 T. 1
-1 -: 2 { 2 T. 1  NB. can't rely on waiters: terminating threads may still be waiting, or not started
-0 -: 2 { 2 T. 0
-stime =: 6!:1''
-1 = > 6!:3 t. 0"0 ] 6 # 1
-5 < stime -~ 6!:1''
-stime =: 6!:1''
-1 = > 6!:3 t. 1"0 ] 6 # 1
-5 > stime -~ 6!:1''
-delth''  NB. clear all threadpools
-0 -: 2 { 2 T. 1
-0 -: 2 { 2 T. 0
-stime =: 6!:1''
-1 = > 6!:3 t. 0"0 ] 6 # 1
-5 < stime -~ 6!:1''
-stime =: 6!:1''
-1 = > 6!:3 t. 1"0 ] 6 # 1
-5 < stime -~ 6!:1''
-
 'limit error' -: 0 T. etx 8
 'limit error' -: 2 T. etx 8
 'limit error' -: ". etx '] t. 8'
 
-4!:55 ;:'delth N N1 N2 f f1 f2 g g1 stime wthr'
+4!:55 ;:'delth N N1 N2 f f1 f2 g g1 wthr'
 
 epilog''
 

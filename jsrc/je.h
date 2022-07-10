@@ -423,6 +423,7 @@ extern F2(jtbitwiserotate);
 extern F2(jtbitwiseshift);
 extern F2(jtbitwiseshifta);
 extern DF2(jtboxcut0);
+extern F2(jtcallback2);
 extern F2(jtcant2);
 extern F2(jtcd);
 extern F2(jtcdot2);

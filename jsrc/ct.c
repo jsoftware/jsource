@@ -472,7 +472,7 @@ static I jtthreadcreate(J jt,I n){
  pthread_attr_t attr;  // attributes for the task we will start
  // create thread
  ASSERT(pthread_attr_init(&attr)==0,EVFACE);
- ASSERT(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED)==0,EVFACE)  // default parms, except for DETACHED (which means we will never join() )
+ //ASSERT(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED)==0,EVFACE)  // default parms, except for DETACHED (which means we will never join() ).  scaf commented out to allow for join in 55&T.
  size_t stksiz=CSTACKSIZE;
 #if defined(__APPLE__)
  stksiz=pthread_get_stacksize_np(pthread_self());
@@ -865,8 +865,10 @@ ASSERT(0,EVNONCE)
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
   jfutex_wakea(&jobq->futex);  // wake em all up
+  UI4*wt=JTFORTHREAD(jt,resthread)->futexwt; if(wt)jfutex_wakea(wt); //if it's waiting on another futex, poke that too
 // obsolete   pthread_cond_broadcast(&jobq->cond);
 // obsolete   pthread_mutex_unlock(&jobq->mutex);
+  pthread_join(JTFORTHREAD(jt,resthread)->pthreadid,0); //scaf
   // The thread will eventually clear ACTIVE and TERMINATE.  If we try to reallocate it we will wait for the thread to terminate before reallocating
   z=mtm;
 #else

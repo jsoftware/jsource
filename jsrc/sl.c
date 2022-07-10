@@ -589,17 +589,17 @@ exitlock:
 }    /* 18!:55 destroy a locale (but only mark for destruction if on stack) */
 
 // destroy symbol table g, which must be named or numbered
-// We cannot delete the symbol table, because it may be extant in paths.  So we empty the locale, and clear its path to 0
+// We cannot simply delete the symbol table, because it may be extant in paths.  So we empty the locale, and clear its path to 0
 // to indicate that it is a zombie.  We reset the Bloom filter to make sure the path doesn't respond to any names.  We also reduce the
-// usecount.  When the locale is no longer in any paths, it will be freed along with the name.
+// usecount.  When the locale is no longer in any paths, it will be freed along with its name.
 B jtlocdestroy(J jt,A g){
  // see if the locale has been deleted already.  Return fast if so
  A path=(A)__atomic_exchange_n((I*)&LOCPATH(g),0,__ATOMIC_ACQ_REL);
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
- if(unlikely(redefg(g)==0)){LOCPATH(g)=path; R 0;}  // abort, restoring the path, if the locale contains the currently-running definition   this checks every symbol!!?  scaf
- freesymb(jt,g);   // delete all the values
+// obsolete  if(unlikely(redefg(g)==0)){LOCPATH(g)=path; R 0;}  // abort, restoring the path, if the locale contains the currently-running definition   this checks every symbol!!?  scaf
+ freesymb(jt,g);   // delete all the names.  Anything executing will have been fa()d
  fa(path);   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  LOCBLOOM(g)=0;

@@ -305,6 +305,7 @@ static int ismatch(J jt,C*pat,C*name,struct stat *dirstatbuf,C *diratts, C *dirm
  raw_stat[sizeof(struct stat)-2]=76;
  raw_stat[sizeof(struct stat)-3]=54;
 #endif
+ strcpy(diratts,"------");
  strcpy(dirbase,name); if(stat(dirnamebuf,dirstatbuf))R 0;
  if('.'!=*pat && ((!strcmp(name,"."))||(!strcmp(name,".."))))R 0;
  if(fnmatch(pat,name,0)) R 0;
@@ -312,7 +313,6 @@ static int ismatch(J jt,C*pat,C*name,struct stat *dirstatbuf,C *diratts, C *dirm
  dirrwx[0]=access(dirnamebuf,R_OK)?'-':'r';
  dirrwx[1]=access(dirnamebuf,W_OK)?'-':'w';
  dirrwx[2]=access(dirnamebuf,X_OK)?'-':'x';
- strcpy(diratts,"------");
  diratts[0]=(dirrwx[0]=='r'&&dirrwx[1]=='-')?'r':'-';
  diratts[1]=('.'==name[0])?'h':'-';
  modebuf(dirstatbuf[0].st_mode,dirmode);

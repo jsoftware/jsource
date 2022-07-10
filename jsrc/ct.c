@@ -72,20 +72,21 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 
 // perform the action for state n.  In the leader, set ct/advance/act/wait  In others, wait/act/decr ct.  When we finish all actors have performed the action for state n
 #define DOINSTATE(l,n,expr) \
- {if(l){__atomic_store_n(&JT(jt,systemlocktct),nrunning-1,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),(n),__ATOMIC_RELEASE);}else while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n)){wakeall(jt);YIELD}  \
+ {if(l){__atomic_store_n(&JT(jt,systemlocktct),nrunning-1,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),(n),__ATOMIC_RELEASE);}else while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n)){YIELD}  \
   expr \
-  if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0){wakeall(jt);YIELD} else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
+  if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0){YIELD} else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
  }
 
 // Similar function, for systemlockaccept
 #define DOINSTATEA(n,expr) {while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n))YIELD expr __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);}
 // wake all threads currently waiting on a futex.  wakea can do extraneous work; mac/linux have a way to wake just one thread.  But we want to wake up everybody anyway, so it makes not much difference
-// there is a race: we can call wake after the thread sets futexwt, but before it actually goes to sleep.  We could get around that by restricting the range of valid futex values and uses, but systemlock is rare, so instead we just hammer them until they all wake up
-// a much _nicer_ solution would be to hit everybody with SIGUSR1 or similar, but there is no SIGUSR1 on windows...
+// we increment the store counter in the futex before we wake, in case a thread has sampled the system info but not yet waited
+// jtsignal calls here when a BREAK/ATTN is seen, to wake up any thread that may be locked up
 #if PYXES
-static void wakeall(J jt){DONOUNROLL(MAXTHREADS,if(JTTHREAD0(jt)[i].futexwt)jfutex_wakea(JTTHREAD0(jt)[i].futexwt);)}
+// scaf bug: futextwt may go away after we sample it
+void wakeall(J jt){DONOUNROLL(MAXTHREADS,if(JTTHREAD0(jt)[i].futexwt){aadd(JTTHREAD0(jt)[i].futexwt,0x10000); jfutex_wakea(JTTHREAD0(jt)[i].futexwt);} )}
 #else
-static void wakeall(J jt){}
+void wakeall(J jt){}
 #endif
 
 // Take lock on the entire system, waiting till all threads acknowledge
@@ -104,8 +105,9 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
   S xxx=0; I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
   // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
+  // Also, wake up all tasks that are in a loop that needs interrupting on system action.  Those loops will honor it when we are in state 1/2
   if(leader){DONOUNROLL(MAXTHREADS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) wakeall(jt);}
-  // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop
+  // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop.  We wake all threads that are waiting on pyx/mutex
   C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);)  // remember priority before we made our request
   // state 3: all threads get the final request priorities
   C finalpriority; DOINSTATE(leader,3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);)
@@ -189,10 +191,10 @@ typedef struct pyxcondmutex{
  UI4 state;//one of the below pyx states.  Monotonically increases
 #endif
 } PYXBLOK;
-enum{
- PYXEMPTY, //the pyx is not filled in, and no one is waiting
- PYXWAIT,  //at least 1 thread is waiting, and the pyx is not filled in
- PYXFULL}; //the pyx is filled in
+enum{  // pyx state is low 2 bytes of state.  High 2 bytes are the wakeup sequence number
+ PYXEMPTY=0, //the pyx is not filled in, and no one is waiting
+ PYXWAIT=3,  //at least 1 thread is waiting, and the pyx is not filled in
+ PYXFULL=1}; //the pyx is filled in.  We can OR FULL into pyx state to move to FULL state
 #if PYXES
 
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.  fa() the pyx to indicate that the thread has released the pyx
@@ -204,7 +206,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  if(likely(z!=0))ra(z);  // since the pyx is recursive, we must ra the result we store into it.  Could zap if inplaceable
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
  // broadcast to wake up any tasks waiting for the result
- if(PYXWAIT==xchga(&((PYXBLOK*)AAV0(pyx))->state,PYXFULL))jfutex_wakea(&((PYXBLOK*)AAV0(pyx))->state);
+ if(PYXWAIT==xchga((US*)&((PYXBLOK*)AAV0(pyx))->state,PYXFULL))jfutex_wakea(&((PYXBLOK*)AAV0(pyx))->state);
  // unprotect pyx.  It was raised when it was assigned to this owner; now it belongs to the system
  fa(pyx);
  R 1;
@@ -221,25 +223,28 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
  R pyx;
 }
 
-// w is an A holding a pyx value.  Return its value when it has been resolved.  If it times out
+// w is an A holding a pyx value.  Return its value when it has been resolved, or 0 if error, with error code set.
+// EVTIME if timeout
 A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx); 
- if(PYXFULL==(state=lda(&blok->state)))goto done; // if pyx already full, return result
- if(state!=PYXWAIT)if(uncommon(!casa(&blok->state,&state,PYXWAIT)&&state==PYXFULL))goto done; // if not currently in WAIT state, mark it as such so the filler can wake us up.  If it filled in the mean time, return result
+ if(PYXFULL==(state=lda((US*)&blok->state)))goto done; // if pyx already full, return result
+ casa((US*)&blok->state,&(US){PYXEMPTY},PYXWAIT);  // if pyx is EMPTY, move it to WAIT
+// obsolete  if(state!=PYXWAIT)if(uncommon(!casa((US*)&blok->state,(US*)&state,PYXWAIT)&&state==PYXFULL))goto done; // if not currently in WAIT state, mark it as such so the filler can wake us up.  If it filled in the mean time, return result
  UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait
  struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
  I err;
- sta(&jt->futexwt,&blok->state); // make sure systemlock knows how to wake us up
- while(1){ // repeat till defined
-  I wr=jfutex_waitn(&blok->state,PYXWAIT,ns);if(unlikely(wr>0)){err=wr;goto fail;} // wait on futex
-  if(lda(&blok->state)==PYXFULL)break; // if pyx was filled, exit and return its value
-  // The wait may time out because another thread is requesting a system lock.  If so, we accept it now...
-  if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}  // process lock and keep waiting
-  if(uncommon(-1ull==(ns=jtmdif(end)))){ //update timeout
-   if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;
-   else{err=EVTIME;goto fail;}} // fail the pyx and exit
+ sta(&jt->futexwt,&blok->state); // make sure systemlock knows how to wake us up.  We check for system events AFTER this store, but before the wait (but wakeall has a window so it is called repeatedly anyway)
+ while(1){ // repeat till state goes to FULL
+  if(lda((US*)&blok->state)==PYXFULL)break; // if pyx was filled, exit and return its value
+  // The wait may time out because of a pending system action (BREAK or system lock).  If so, we accept it now...
+  UI4 state=lda(&blok->state); C breakb;  // get store sequence # before we check for system event
+  if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}  // process systemlock and keep waiting
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
-  I adbreak=lda(&JT(jt,adbreak)[0]);
-  if(unlikely(adbreak!=0)){err=adbreak;goto fail;}}  // JBREAK: give up on the pyx and exit
+  if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){err=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
+  if(uncommon(-1ull==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
+   if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;  // if time wrapped around, reset to infinite
+   else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
+  I wr=jfutex_waitn(&blok->state,state|PYXWAIT,ns);if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
+ } 
  sta(&jt->futexwt,0);
 done:  // pyx has been filled in.  jt->futexwt must be 0
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
@@ -571,7 +576,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   JOBUNLOCK(jobq,oldjob)
   if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()
  }
- // There are no more tasks to start.  Wait for all to finish, then call the ending routine.
+ // There are no more tasks to start.  Wait for all to finish.
  while(__atomic_load_n(&job->internal.nf,__ATOMIC_ACQUIRE)<n){_mm_pause(); YIELD}  // scaf  should we have a mutex & wait for a wakeup from the finisher?
  C r=__atomic_load_n(&job->internal.err,__ATOMIC_ACQUIRE); fa(jobA); R r;  // extract return code from the job, then free the job and return the error code
  // job may still be in the job list - if so it will be fa()d when it reaches the top
@@ -650,7 +655,6 @@ F2(jttdot){F2PREFIP;
   }
  }
  // set defaults for omitted parms
-poolno=0;  // scaf
  nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0
  // parms read, install them into the block for t. verb
  A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX));
@@ -715,7 +719,6 @@ ASSERT(0,EVNONCE)
    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   }
-poolno=0; // scaf
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
   GAT0(z,INT,3,1)  // allocate result
   JOB *oldjob=JOBLOCK(jobq);  // lock the jobq to present a consistent picture
@@ -747,7 +750,6 @@ ASSERT(0,EVNONCE)
    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   }
-poolno=0;  // scaf
   // if the threadslot we will use is being terminated, we have to wait for termination to finish, so that we can restart it with the correct threadpool
   I resthread;  // thread# we will be allocating
   while(1){

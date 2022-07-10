@@ -14,7 +14,7 @@
 DF2(jtunquote){A z;
  A thisname=FAV(self)->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
- {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVATTN,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
+ {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
  A savname=jt->curname;  // we stack the executing name
 #define FLGPSEUDOX 16  // operation is pseudo-named function

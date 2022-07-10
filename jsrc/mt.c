@@ -118,12 +118,12 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
 void jfutex_waken(UI4 *p,UI4 n){jfutex_wakea(p);} //scaf/TUNE: should DO(n,jfutex_wake1(p)) depending on n and the #threads waiting on p
 #endif
 
-//values for mutex->v
+//values for mutex->v.  The upper 16 bits are a wait counter; the state is the low 16 bits, as follows
 //todo consider storing owner in the high bits of v
 enum{
  FREE=0,  //a free mutex
  LOCK=1,  //a mutex which is held, and which no one is waiting on; uncontended mutexes will just move between FREE and LOCK
- WAIT=2}; //a mutex which is held, and which _may_ have threads waiting on it
+ WAIT=3}; //a mutex which is held, and which _may_ have threads waiting on it.  We can OR WAIT into a state to produce WAIT
 
 // macos: can't use UL_UNFAIR_LOCK, as our ids are task ids, not thread ids/mach ports/whatever
 
@@ -131,40 +131,73 @@ enum{
 
 void jtpthread_mutex_init(jtpthread_mutex_t *m,B recursive){*m=(jtpthread_mutex_t){.recursive=recursive};}
 
-C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m
- if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;} //handle deadlock and recursive cases
- if(likely(casa(&m->v,&(UI4){FREE},LOCK)))goto success; //fast and common path: attempt to install LOCK in place of FREE; if so, we have acquired the lock
+C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thread# requesting the lock
+ I r;  // internal return code in case of error
+ if(unlikely(!casa((US*)&m->v,&(US){FREE},LOCK))){    //fast and common path: attempt to install LOCK in place of FREE; if so, we have acquired the lock
+  // The lock was in use.  We will (almost always) have to wait for it
+  // it is barely possible that the lock had its state set to LOCK but the owner has not yet been filled in.  That is possible only if the lock
+  // is owned by another thread, so it is safe even then for us to check whether this thread is the owner
+  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;} //handle deadlock and recursive cases
 // obsolete  if(e!=WAIT)e=xchga(&m->v,WAIT); //nudge m->v towards the WAIT state.  In the unlikely event that e==WAIT&&m->v!=WAIT, fine; we'll catch it in futex_wait, since we won't get put to sleep if m->v!=WAIT
- // The lock was in use.  We will (almost always) have to wait for it
- I r;
- sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
+  sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
 // obsolete  while(e!=FREE){ //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
- // It is always safe to move the state of a lock to WAIT using xchg.  There are 2 cases:
- // (1) if the previous state was FREE, we now own the lock after the xchg...
- while(xchga(&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
-  // ... (2) the lock had an owner.  By moving state to WAIT, we guaranteed that the owner will wake us on freeing the lock
-  // Before waiting, handle system events if present
-  S attn=lda((S*)&JT(jt,adbreakr)[0]);
-  if(unlikely(attn>>8))jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG); //check for systemlock
-  if(unlikely(attn&0xff)){r=attn&0xff;goto fail;} //or attention interrupt
-  // Now wait for a change.  The futex_wait is atomic, and will wait only if the state is WAIT.  In that case,
-  // the holder is guaranteed to perform a wake after freeing the lock.  If the state is not WAIT, something has happened already and we inspect it forthwith
+  // It is always safe to move the state of a lock to WAIT using xchg.  There are 2 cases:
+  // (1) if the previous state was FREE, we now own the lock after the xchg...
+  while(xchga((US*)&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
+   // ... (2) the lock had an owner.  By moving state to WAIT, we guaranteed that the owner will wake us on freeing the lock
+   //note that we must install WAIT in m->v even in the case when no one else is actually waiting, because we can't know if somebody else is waiting
+   //ulrich drepper 'futexes are tricky' explains the issue with storing a waiter count in the value
+   //a couple of alternatives suggest themselves: store up to k waiters (FREE/LOCK/WAIT is really 0/1/n; we could do eg 0/1/2/3/n); store the waiter count somehow outside of the value
+   // Before waiting, handle system events if present
+   UI4 waitval=m->v; C breakb;  // get the serial number before we check
+   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}  // if system lock requested, accept it
+   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
+   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
+   // Now wait for a change.  The futex_wait is atomic, and will wait only if the state is WAIT.  In that case,
+   // the holder is guaranteed to perform a wake after freeing the lock.  If the state is not WAIT, something has happened already and we inspect it forthwith
 #if __linux__
-  I i=jfutex_waitn(&m->v,WAIT,(UI)-1);
-  //kernel bug? futex wait doesn't get interrupted by signals on linux if timeout is null
+   I i=jfutex_waitn(&m->v,WAIT,(UI)-1);
+   //kernel bug? futex wait doesn't get interrupted by signals on linux if timeout is null
 #else
-  I i=jfutex_wait(&m->v,WAIT);
+   I i=jfutex_wait(&m->v,waitval|WAIT);  // if we are out of WAIT state, or the serial number changed since we check for system lock, don't wait at all
 #endif
-  if(unlikely(i>0)){r=i;goto fail;} //handle error (unaligned unmapped interrupted...)
+   if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
 // obsolete   e=xchga(&m->v,WAIT);
+  }
+  // come out of loop when we have the lock
+  sta(&jt->futexwt,0);  // remove wakeup to this thread
  }
- // come out of loop when we have the lock
- //note that we must install WAIT in m->v even in the case when no one is actually waiting, because we can't know if somebody else is waiting
- //ulrich drepper 'futexes are tricky' explains the issue with storing a waiter count in the value
- //a couple of alternatives suggest themselves: store up to k waiters (FREE/LOCK/WAIT is really 0/1/n; we could do eg 0/1/2/3/n); store the waiter count somehow outside of the value
-success:sta(&jt->futexwt,0);m->ct+=m->recursive;m->owner=self;R 0;
-fail:sta(&jt->futexwt,0);R r;}
+ m->ct+=m->recursive;m->owner=self;R 0;  // install ownership info, good return
+fail:sta(&jt->futexwt,0);R r;}  // error return, with our internal errorcode
 
+
+// return positive error code, 0 if got lock, -1 if lock timed out
+I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, with a timeout of ns ns.  Largely the same as lock
+ I r;  // internal return code in case of error
+ if(unlikely(!casa((US*)&m->v,&(US){FREE},LOCK))){    //fast and common path: attempt to install LOCK in place of FREE; if so, we have acquired the lock
+  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;} //handle deadlock and recursive cases
+  struct jtimespec tgt=jtmtil(ns);
+  sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
+  while(xchga((US*)&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
+   UI4 waitval=m->v; C breakb;  // get the serial number before we check
+   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}
+   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
+#if __linux__
+   I i=jfutex_waitn(&m->v,WAIT,(UI)-1);
+   //kernel bug? futex wait doesn't get interrupted by signals on linux if timeout is null
+#else
+   I i=jfutex_waitn(&m->v,waitval|WAIT,ns);
+#endif
+   if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
+   if(i==-1){r=-1;goto fail;} //if the kernel says we timed out, trust it rather than doing another syscall to check the time
+   if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;} //update delta, abort if timed out
+  }
+  sta(&jt->futexwt,0);  // remove wakeup to this thread
+ }
+ m->ct+=m->recursive;m->owner=self;R 0;  // install ownership info, good return
+fail:sta(&jt->futexwt,0);R r;}  // error return, with our internal errorcode or -1 if timeout
+
+#if 0  // obsolete 
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, with a timeout of ns ns.  Largely the same as lock
  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
  UI4 e=FREE;if(casa(&m->v,&e,LOCK))goto success;
@@ -184,22 +217,25 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
   if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;}} //update delta, abort if timed out
 success:sta(&jt->futexwt,0);m->ct+=m->recursive;m->owner=self; R 0;
 fail:sta(&jt->futexwt,0);R r;}
-
+#endif
 
 I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){ //attempt to acquire m
- if(uncommon(m->recursive)&&m->owner){if(m->owner!=self)R -1; m->ct++;R 0;} //recursive case.  If m->owner is set the first time we read it, and clear the second time, fine; we still observed the mutex to be locked, meaning it was locked concurrently with the trylock, so it is fine to declare it locked
- if(unlikely(m->owner==self))R EVCONCURRENCY; //error to trylock a lock you hold.  I deliberated for a long time on this.  One way to see it is that trylock should be the same as timedlock(ns=0), and timedlock should return an error if you already hold the lock.  Another is that this is a concurrency primitive, giving information about concurrent events, but lock and trylock from the same thread are not concurrent events, so no useful information should be created
- if(casa(&m->v,&(UI4){FREE},LOCK)){m->ct+=m->recursive;m->owner=self;R 0;}   R -1;} //fastpath: attempt to acquire the lock
+ if(casa((US*)&m->v,&(US){FREE},LOCK)){m->ct+=m->recursive;m->owner=self;R 0;} //fastpath: attempt to acquire the lock; if free, take it
+ // the lock was held.  owner might not be set yet, if the lock is held by another thread
+ if(unlikely(m->owner==self)){if(!m->recursive)R EVCONCURRENCY; ++m->ct; R 0;}  // if we hold the lock already, that's error if nonrecursive lock; incr recursion count otherwise
+// obsolete  if(uncommon(m->recursive)&&m->owner){if(m->owner!=self)R -1; m->ct++;R 0;} //recursive case.  If m->owner is set the first time we read it, and clear the second time, fine; we still observed the mutex to be locked, meaning it was locked concurrently with the trylock, so it is fine to declare it locked
+// obsolete  if(unlikely(m->owner==self))R EVCONCURRENCY; //error to trylock a lock you hold.  I deliberated for a long time on this.  One way to see it is that trylock should be the same as timedlock(ns=0), and timedlock should return an error if you already hold the lock.  Another is that this is a concurrency primitive, giving information about concurrent events, but lock and trylock from the same thread are not concurrent events, so no useful information should be created
+ R -1;}   // if lock held elsewhere, return busy
 
 C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){ //release m
  if(unlikely(m->owner!=self))R EVCONCURRENCY; //error to release a lock you don't hold
  if(uncommon(m->recursive)){if(--m->ct)R 0;} //need to be released more times on this thread, so nothing more to do
- m->owner=0;
+ m->owner=0;  // clear owner before releasing the lock
 // obsolete  if(!casa(&m->v,&(UI4){LOCK},FREE)){sta(&m->v,FREE);jfutex_wake1(&m->v);} //cas is fastpath LOCK->FREE.  If it fails, the state was WAIT, so we need to wake a waiter
- if(unlikely(xchga(&m->v,FREE)==WAIT))jfutex_wake1(&m->v);  // move to FREE state; if state was WAIT, wake up a waiter
- //below is what drepper does; I think the above is always faster, but it should definitely be faster without xadd
- //agner sez lock xadd has one cycle better latency vs lock cmpxchg on intel ... ??
- //(probably that's only in the uncontended case)
- //if(adda(&m->v,-1)){sta(&m->v,FREE);jfutex_wake1(&m->v);}
+ if(unlikely(xchga((US*)&m->v,FREE)==WAIT))jfutex_wake1(&m->v);  // move to FREE state; if state was WAIT, wake up a waiter
+// obsolete  //below is what drepper does; I think the above is always faster, but it should definitely be faster without xadd
+// obsolete  //agner sez lock xadd has one cycle better latency vs lock cmpxchg on intel ... ??
+// obsolete  //(probably that's only in the uncontended case)
+// obsolete  //if(adda(&m->v,-1)){sta(&m->v,FREE);jfutex_wake1(&m->v);}
  R 0;}
 #endif //PYXES

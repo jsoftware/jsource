@@ -444,7 +444,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  wv=CAV(w); zv=CAV(z); 
  switch(k=d<<bplg(AT(w))){   // k=*bytes in a _2-cell of a cell of w
 #define INNER2(T) {T* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;   \
-   DQ(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;);} break; // n=#_2-cells in a cell of w.
+   DQ(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); break;} // n=#_2-cells in a cell of w.
  case sizeof(I): INNER2(I);
  case sizeof(C): INNER2(C);
  case sizeof(S): INNER2(S);

@@ -39,14 +39,14 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
   case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line (executing it), then stop in this function
   case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line(executing it), then stop in any function
   case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;  // rerun stop line, stop in calling function
-  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb, resume previous fn, stop after executing there
+  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) jt->jerr=EVCUTSTACK; break;  // terminate current verb, resume previous fn, stop after executing there.  Set jerr which will fail sentence and set z=0
  }
  // Return a suspension-ending value.  Kludge we also set a flag to process the step because the labs can't route the value correctly
  JT(jt,dbuser)|=DBSUSSS;  // indicate single-step pending.  This is non-reentrant and may have multithread issues
  A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }
 
-F1(jtdbcutback  ){R ssdo(0L,w,SSCUTBACK );}  /* 13!:19 */
+F1(jtdbcutback  ){R ssdo(0L,w,SSCUTBACK);}  /* 13!:19 */
 // should allow w to have the value to return to the function
 
 F1(jtdbstepover1){R ssdo(0L,w,SSSTEPOVER);}  /* 13!:20 */

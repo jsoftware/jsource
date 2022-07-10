@@ -407,7 +407,7 @@ F2(jtlowerupper){I k,n;A z;
  ASSERT(BETWEENC(k,0,1),EVDOMAIN);
  ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
  if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
- z=ca(w);
+ RZ(z=ca(w));
  if(LIT&AT(w)){
  if(k) StringToUpper(CAV(z),AN(w)); else StringToLower(CAV(z),AN(w));
  }else if(C2T&AT(w)){

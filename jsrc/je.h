@@ -969,6 +969,7 @@ extern D        tod(void);
 extern void     va1primsetup(A);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
+extern void     wakeall(J);
 extern D        xdouble(X);
 #if PYXES
 extern void     readlock(S*,S);

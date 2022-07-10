@@ -40,8 +40,8 @@
 #define EVNONNOUN       34
 #define EVTHROW         35      // uncaught throw.
 #define EVFOLDLIMIT     36      // abort current execution and return the current result
-#define EVCONCURRENCY   37      // eg deadlock, unlocked somebody else's lock
-#define NEVM            37      /* number of event codes       */
+#define NEVM            36      /* number of event codes       */
+#define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user (but may show up in a 13!:12 query)   */
 #define EVFOLDEXIT      43      // abort current execution and return the current result
@@ -62,6 +62,7 @@
 #define EWOVIPMULII     5
 #define EWOVFLOOR0      52   // minor oflo in <./>., can be left as INT
 #define EWOVFLOOR1      53   // major oflo in <./>., must be converted to FL
+#define EVCUTSTACK      60  // set when Cut Stack executed; passed into caller to force its termination; intercepted when terminated line finishes, to revert to suspension
 #define EVDEBUGEND      79  // EVEXIT+64 set when debug wants to fail all avoiding all try blocks
 #define EVSUPPRESS      255  // turn off error reporting: don't change anything.  Not used
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors

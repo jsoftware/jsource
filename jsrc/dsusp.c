@@ -263,7 +263,15 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
 noparse: ;
  // If we hit a stop or ATTN, or if we hit an error (outside of try./catch., which turns debug off), enter debug suspension if enabled.  But if debug mode is off now, we must have just
  // executed 13!:0]0 or a suspension-ending command, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
- if(!z&&c&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ if(!z&&c&&jt->uflags.us.cx.cx_c.db){
+  if(jt->jerr==EVCUTSTACK){
+  // If the line failed with EVCUTSTACK, it must be the caller's line that called the function where Cut Stack ran (the Cut Stack was returned from suspension).  This frame has already been
+  // set up to restart on the same line, so all we have to do is clear the error and return 0 so that debugnewi restarts the line
+   RESETERR parsez=0;  // set to branch to the selected line in this frame
+  }else{
+   DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0; //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+  }
+ }
  // we have come out of suspension (if we went into it).  parsez has the value to return to execution.  It may have a value created by the user, or the value from the non-failing sentence.
  // Or, it may be 0, in which case the definition will fail.  In this case the error-code matters: the error will be printed when the failure reaches console level (in the master thread).  An error code of
  // EVDEBUGEND is used to force quiet failure all the way back to console level (usually in a task); an error code of 0, normal in a single-task system, will cause the failure to go back to

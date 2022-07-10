@@ -62,6 +62,7 @@
 #define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
 
 // run one line.  If we see break request, accept it as ATTN but promote it to BREAK in other cores if debug off
+// if debug mode/perfmon, call parsex which will check for stops and go into suspension on error
 #define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
  if(likely(!(attnval+(nGpysfctdl&128+16))))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,(nGpysfctdl&128+16)?callframe:0);} \
@@ -423,7 +424,7 @@ dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
    tpop(old); parseline(z,lbl1);
-   // if there is no error, or ?? debug mode, step to next line
+   // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bi=i; i+=((cwgroup>>5)&1)+1;  // go to next sentence, or to the one after that if it's harmless end. 
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // end of definition
     if(unlikely(((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)!=0))break;  // not another B block
@@ -433,9 +434,10 @@ dobblock:
     // this means the switch will learn to go to the if.
    }else if((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
    }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
-    z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-   // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
+    if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
+    z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(jt->jerr==EVTHROW){
+    // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
    // for other error, go to the error location; if that's out of range, keep the error; if not,
    // it must be a try. block, so clear the error.  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
@@ -470,9 +472,12 @@ tblockcase:
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // exit if end of defn
     if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)+jt->uflags.us.cx.cx_us)!=0))break;  // break if T block extended
     goto docase;  // avoid indirect-branch overhead on the likely case, if. T do.
-   }else if(jt->jerr==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status
-   }else if((nGpysfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
-   else if(EVTHROW==jt->jerr){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
+   }else if((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+   }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
+    if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
+    z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+// obsolete    }else if((nGpysfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
+   }else if(EVTHROW==jt->jerr){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
    else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
    break;
@@ -1040,7 +1045,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // c is the table of control-word info used in the definition
 // type is the m operand to m : n, indicating part of speech to be produced
 // We preparse what we can in the definition
-static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof(fragbuf)/sizeof(fragbuf[0]);
+static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(fragbuf)/sizeof(fragbuf[0])-1;  // leave 1 pad word before frag to allow for overfetch in parsea
  // Go through the control-word table, looking at each sentence
  I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
  A *lv=AAV(l);  // address of words in sentences

@@ -390,7 +390,9 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
      UI4 futexval=jobq->futex;  // get current value to wait on, before we check for work.  It is updated under lock when a job is added
      if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so.   This counts as work
      ++jobq->waiters; JOBUNLOCK(jobq,job);
+printf("threadmain: thread %d waiting\n",(int)THREADID(jt));  // scaf
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
+printf("threadmain: thread %d waking\n",(int)THREADID(jt));  // scaf
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
 // obsolete  pthread_cond_wait(&jobq->cond,&jobq->mutex);  pthread_mutex_unlock(&jobq->mutex);
      job=JOBLOCK(jobq); --jobq->waiters;
@@ -464,8 +466,9 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
   }
  // end of loop forever
 terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
- __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
  JOBUNLOCK(jobq,job); 
+printf("threadmain clearing TERMINATE in %p thread %d\n",&jt->taskstate,(int)THREADID(jt));  // scaf
+ __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
  R 0;  // return to OS, closing the thread
 }
 
@@ -867,12 +870,16 @@ ASSERT(0,EVNONCE)
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
   int rc;  // check for error returns
+printf("55 T. waking\n");  // scaf
   jfutex_wakea(&jobq->futex);  // wake em all up
   UI4*wt=JTFORTHREAD(jt,resthread)->futexwt; if(wt)jfutex_wakea(wt); //if it's waiting on another futex, poke that too   scaf not needed normally
 // obsolete   pthread_cond_broadcast(&jobq->cond);
 // obsolete   pthread_mutex_unlock(&jobq->mutex);
+printf("55 T. waiting for !TERMINATE in %p thread %d\n",&JTFORTHREAD(jt,resthread)->taskstate,(int)resthread);  // scaf
   while(lda(&JTFORTHREAD(jt,resthread)->taskstate)&TASKSTATETERMINATE)YIELD  // scaf for linux testing - wait till thread terminates
+printf("55 T. !TERMINATE received in %p thread %d\n",&JTFORTHREAD(jt,resthread)->taskstate,(int)resthread);  // scaf
   if(unlikely((rc=pthread_join(JTFORTHREAD(jt,resthread)->pthreadid,0))!=0))printf("error %d in pthread_join\n",rc); //scaf
+printf("55 T. join completed thread %d\n",(int)resthread);  // scaf
   // The thread will eventually clear ACTIVE and TERMINATE.  If we try to reallocate it we will wait for the thread to terminate before reallocating
   z=mtm;
 #else

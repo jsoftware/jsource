@@ -474,6 +474,7 @@ static I jtthreadcreate(J jt,I n){
  pthread_attr_t attr;  // attributes for the task we will start
  // create thread
  ASSERT(pthread_attr_init(&attr)==0,EVFACE);
+ ASSERT(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED)==0,EVFACE);
  size_t stksiz=CSTACKSIZE;
 #if defined(__APPLE__)
  stksiz=pthread_get_stacksize_np(pthread_self());
@@ -866,7 +867,6 @@ ASSERT(0,EVNONCE)
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
   jfutex_wakea(&jobq->futex);  // wake em all up
-  ASSERT(!pthread_join(JTFORTHREAD(jt,resthread)->pthreadid,0),EVFACE); // wait for it to exit
   z=mtm;
 #else
   ASSERT(0,EVNONCE)

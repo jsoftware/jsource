@@ -866,12 +866,13 @@ ASSERT(0,EVNONCE)
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work: not a job, but the thread
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
+  int rc;  // check for error returns
   jfutex_wakea(&jobq->futex);  // wake em all up
   UI4*wt=JTFORTHREAD(jt,resthread)->futexwt; if(wt)jfutex_wakea(wt); //if it's waiting on another futex, poke that too   scaf not needed normally
 // obsolete   pthread_cond_broadcast(&jobq->cond);
 // obsolete   pthread_mutex_unlock(&jobq->mutex);
   while(lda(&JTFORTHREAD(jt,resthread)->taskstate)&TASKSTATETERMINATE)YIELD  // scaf for linux testing - wait till thread terminates
-  pthread_join(JTFORTHREAD(jt,resthread)->pthreadid,0); //scaf
+  if(unlikely((rc=pthread_join(JTFORTHREAD(jt,resthread)->pthreadid,0))!=0))printf("error %d in pthread_join\n",rc); //scaf
   // The thread will eventually clear ACTIVE and TERMINATE.  If we try to reallocate it we will wait for the thread to terminate before reallocating
   z=mtm;
 #else

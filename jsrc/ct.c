@@ -865,7 +865,6 @@ ASSERT(0,EVNONCE)
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work: not a job, but the thread
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
-  int rc;  // check for error returns
   jfutex_wakea(&jobq->futex);  // wake em all up
   ASSERT(!pthread_join(JTFORTHREAD(jt,resthread)->pthreadid,0),EVFACE); // wait for it to exit
   z=mtm;

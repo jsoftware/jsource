@@ -7,7 +7,7 @@ NB. j904 64-bit only
 NB. threadpools
 
 NB. delete all worker threads, then delay to allow all threads to be deleted
-delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 [ 6!:3 (1) }}
+delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}
 delth''  NB. make sure we start with an empty system
 
 NB. Create 1 thread in pool 1; then verify that jobs in pool 1 are faster than than pool 0

@@ -65,7 +65,7 @@ echo "compiler=$compiler"
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
-common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
+common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -flax-vector-conversions \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wno-cast-function-type \
  -Wno-clobbered \

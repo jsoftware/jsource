@@ -390,7 +390,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
      UI4 futexval=jobq->futex;  // get current value to wait on, before we check for work.  It is updated under lock when a job is added
      if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so.   This counts as work
      ++jobq->waiters; JOBUNLOCK(jobq,job);
-printf("threadmain: thread %d waiting\n",(int)THREADID(jt));  // scaf
+printf("threadmain: thread %d waiting on %p\n",(int)THREADID(jt),&jobq->futex);  // scaf
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
 printf("threadmain: thread %d waking\n",(int)THREADID(jt));  // scaf
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
@@ -870,7 +870,7 @@ ASSERT(0,EVNONCE)
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
   int rc;  // check for error returns
-printf("55 T. waking\n");  // scaf
+printf("55 T. waking %p\n",&jobq->futex);  // scaf
   jfutex_wakea(&jobq->futex);  // wake em all up
   UI4*wt=JTFORTHREAD(jt,resthread)->futexwt; if(wt)jfutex_wakea(wt); //if it's waiting on another futex, poke that too   scaf not needed normally
 // obsolete   pthread_cond_broadcast(&jobq->cond);

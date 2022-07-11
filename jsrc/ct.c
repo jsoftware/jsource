@@ -70,7 +70,7 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 #define YIELD ;   // if no other processes, no reason to delay
 #endif
 
-// perform the action for state n.  In the leader, set ct/advance/act/wait  In others, wait/act/decr ct.  When we finish all actors have performed the action for state n
+// perform the action for state n.  In the leader, set ct/advance to state n/action/wait  In others, wait for state n/action/decr ct.  When we finish all actors have performed the action for state n, and state is n
 #define DOINSTATE(l,n,expr) \
  {if(l){__atomic_store_n(&JT(jt,systemlocktct),nrunning-1,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),(n),__ATOMIC_RELEASE);}else while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n)){YIELD}  \
   expr \
@@ -84,7 +84,8 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 // jtsignal calls here when a BREAK/ATTN is seen, to wake up any thread that may be locked up
 #if PYXES
 // wakeallct keeps track of the number of wakealls being processed.  When this is nonzero, a waiter must not allow the block pointed to by futexwt to go away.  And, it must
-// consider that wakeall may have sampled the value before it was cleared.  So, the waiter must wait for wakeallct to go to 0 before exiting.
+// consider that wakeall may have sampled futexwt before it was cleared.  So, the waiter must wait for wakeallct to go to 0 before exiting.
+// Only a couple of threads can call wakeall (the leader, and a JBreak), so 1 byte suffices for wakeallct.
 void wakeall(J jt){aadd(&JT(jt,wakeallct),1); UI4 *wta; DONOUNROLL(MAXTHREADS,if((wta=JTTHREAD0(jt)[i].futexwt)!=0){aadd(wta,0x10000); jfutex_wakea(wta);} ) aadd(&JT(jt,wakeallct),(UC)-1);}
 #else
 void wakeall(J jt){}
@@ -866,9 +867,10 @@ ASSERT(0,EVNONCE)
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
   jfutex_wakea(&jobq->futex);  // wake em all up
-  UI4*wt=JTFORTHREAD(jt,resthread)->futexwt; if(wt)jfutex_wakea(wt); //if it's waiting on another futex, poke that too
+  UI4*wt=JTFORTHREAD(jt,resthread)->futexwt; if(wt)jfutex_wakea(wt); //if it's waiting on another futex, poke that too   scaf not needed normally
 // obsolete   pthread_cond_broadcast(&jobq->cond);
 // obsolete   pthread_mutex_unlock(&jobq->mutex);
+  while(lda(&JTFORTHREAD(jt,resthread)->taskstate)&TASKSTATETERMINATE)YIELD  // scaf for linux testing - wait till thread terminates
   pthread_join(JTFORTHREAD(jt,resthread)->pthreadid,0); //scaf
   // The thread will eventually clear ACTIVE and TERMINATE.  If we try to reallocate it we will wait for the thread to terminate before reallocating
   z=mtm;

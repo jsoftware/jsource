@@ -161,7 +161,7 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
    // Now wait for a change.  The futex_wait is atomic, and will wait only if the state is WAIT.  In that case,
    // the holder is guaranteed to perform a wake after freeing the lock.  If the state is not WAIT, something has happened already and we inspect it forthwith
 #if __linux__
-   I i=jfutex_waitn(&m->v,WAIT,(UI)-1);
+   I i=jfutex_waitn(&m->v,waitval|WAIT,(UI)-1);
    //kernel bug? futex wait doesn't get interrupted by signals on linux if timeout is null
 #else
    I i=jfutex_wait(&m->v,waitval|WAIT);  // if we are out of WAIT state, or the serial number changed since we check for system lock, don't wait at all
@@ -187,12 +187,7 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
    UI4 waitval=m->v; C breakb;  // get the serial number before we check
    if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}
    if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
-#if __linux__
-   I i=jfutex_waitn(&m->v,WAIT,(UI)-1);
-   //kernel bug? futex wait doesn't get interrupted by signals on linux if timeout is null
-#else
    I i=jfutex_waitn(&m->v,waitval|WAIT,ns);
-#endif
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
    if(i==-1){r=-1;goto fail;} //if the kernel says we timed out, trust it rather than doing another syscall to check the time
    if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;} //update delta, abort if timed out

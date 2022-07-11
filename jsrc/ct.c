@@ -83,8 +83,9 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 // we increment the store counter in the futex before we wake, in case a thread has sampled the system info but not yet waited
 // jtsignal calls here when a BREAK/ATTN is seen, to wake up any thread that may be locked up
 #if PYXES
-// scaf bug: futextwt may go away after we sample it
-void wakeall(J jt){DONOUNROLL(MAXTHREADS,if(JTTHREAD0(jt)[i].futexwt){aadd(JTTHREAD0(jt)[i].futexwt,0x10000); jfutex_wakea(JTTHREAD0(jt)[i].futexwt);} )}
+// wakeallct keeps track of the number of wakealls being processed.  When this is nonzero, a waiter must not allow the block pointed to by futexwt to go away.  And, it must
+// consider that wakeall may have sampled the value before it was cleared.  So, the waiter must wait for wakeallct to go to 0 before exiting.
+void wakeall(J jt){aadd(&JT(jt,wakeallct),1); UI4 *wta; DONOUNROLL(MAXTHREADS,if((wta=JTTHREAD0(jt)[i].futexwt)!=0){aadd(wta,0x10000); jfutex_wakea(wta);} ) aadd(&JT(jt,wakeallct),(UC)-1);}
 #else
 void wakeall(J jt){}
 #endif
@@ -245,12 +246,12 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
    else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
   I wr=jfutex_waitn(&blok->state,state|PYXWAIT,ns);if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
  } 
- sta(&jt->futexwt,0);
+ sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;   // wait till pending wakealls complete before we allow this block to be deleted
 done:  // pyx has been filled in.  jt->futexwt must be 0
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
  ASSERT(0,blok->errcode); // if error, return the error code
 fail:
- sta(&jt->futexwt,0);
+ sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;
  ASSERT(0,err);}
 
 // ************************************* Locks **************************************

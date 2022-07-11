@@ -22,6 +22,11 @@
 // - Attempt to detect deadlock, perhaps in a debug mode of some sort (cf freebsd kernel WITNESS)
 
 #include"j.h"
+#if PYXES
+#define YIELD sched_yield();  // if we are spinning on other threads, give them a chance to run in case they might be on this core
+#else
+#define YIELD ;   // if no other processes, no reason to delay
+#endif
 
 // timing shenanigans
 struct jtimespec jtmtil(UI ns){ //returns the time ns ns in the future
@@ -165,10 +170,10 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
 // obsolete   e=xchga(&m->v,WAIT);
   }
   // come out of loop when we have the lock
-  sta(&jt->futexwt,0);  // remove wakeup to this thread
+  sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;  // remove wakeup to this thread
  }
  m->ct+=m->recursive;m->owner=self;R 0;  // install ownership info, good return
-fail:sta(&jt->futexwt,0);R r;}  // error return, with our internal errorcode
+fail:sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD; R r;}  // error return, with our internal errorcode
 
 
 // return positive error code, 0 if got lock, -1 if lock timed out

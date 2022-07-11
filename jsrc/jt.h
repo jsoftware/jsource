@@ -302,7 +302,7 @@ typedef struct JSTstruct {
  UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script
  B assert;           /* 1 iff evaluate assert. statements               */
  // rest of cacheline used only in exceptional paths
-// 2 bytes free
+ UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
  I filler3[3];

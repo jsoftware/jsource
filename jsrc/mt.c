@@ -84,7 +84,7 @@ out:
 #endif
 void jfutex_wake1(UI4 *p){syscall(SYS_futex,p,FUTEX_WAKE_PRIVATE,1);} //_PRIVATE means the address is not shared between multiple processes
 void jfutex_waken(UI4 *p,UI4 n){syscall(SYS_futex,p,FUTEX_WAKE_PRIVATE,n);}
-void jfutex_wakea(UI4 *p){syscall(SYS_futex,p,FUTEX_WAKE_PRIVATE,0xffffffff);}
+void jfutex_wakea(UI4 *p){syscall(SYS_futex,p,FUTEX_WAKE_PRIVATE,0x7fffffff);}
 C jfutex_wait(UI4 *p,UI4 v){
  struct timespec *pts = 0;
  int r=syscall(SYS_futex,p,FUTEX_WAIT_PRIVATE,v,pts);

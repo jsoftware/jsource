@@ -206,7 +206,6 @@ F1(jtdbstackz){A y,z;
 static void jtjsigstr(J jt,I e,I n,C*s){
  if(jt->jerr){jt->curname=0; R;}   // if not first error, ignore: clear error-name and continue
  if(e==EVATTN||e==EVBREAK)wakeall(jt);  // if user break, interrupt all threads that are in wait loops, so they can exit
-if(e==EVSTACK)SEGFAULT;  // scaf
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
  if(e!=EVSTOP)moveparseinfotosi(jt); jt->etxn=0;  // before we display, move error info from parse variables to si; but if STOP, it's already installed
  dhead(0,0L);  // | left-header for the error line

@@ -365,33 +365,21 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
  R z;
 }
 
-static I null(I in){R in;}  // scaf
-static I astack(){I dummy; R null((I)&dummy);}  // scaf
-
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
-static void *jtthreadmain(void *arg){J jt=arg;I dummy=0xdeadbeef;  // scaf
-I *adummy=&dummy;  // scaf
-if(__atomic_fetch_add(&jt->scafrecurct,1,__ATOMIC_ACQ_REL)!=0)SEGFAULT;  // scaf
+static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
  // not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
- __atomic_store_n(&jt->cstackinit,(UI)astack(),__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
+ __atomic_store_n(&jt->cstackinit,(UI)&dummy,__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
  __atomic_store_n(&jt->cstackmin,jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
 // obsolete  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // init stack as for main thread
  // Note: we use cstackmin as an indication that this thread is ready to use.
  JOBQ *jobq=&(*JT(jt,jobqueue))[jt->threadpoolno];   // The jobq block for the threadpool we are in - never changes
-{printf("startup: thread %lld stackpinit=%llx\n",THREADID(jt),jt->cstackinit);}  // scaf
-I oldstack=jt->cstackinit;  // scaf
  // loop forever executing tasks.  First time through, the thread-creation code holds the job lock until the initialization finishes
 nexttask: ; 
   JOB *job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   
 nexttasklocked: ;  // come here if already holding the lock, and job is set
-I stackpbeforewt=astack();  // scaf
-if(ABS(stackpbeforewt-oldstack)>0x1000)  // scaf
-  {printf("before: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpbeforewt,jt->cstackinit); oldstack=stackpbeforewt;}  // scaf
-if(ABS(stackpbeforewt-(I)jt->cstackinit)>0x1000)  // scaf
-  {printf("beforec: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpbeforewt,jt->cstackinit);}  // scaf
   if(unlikely(job==0)){
    // No job to run.  Wait for one
    if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
@@ -402,11 +390,6 @@ if(ABS(stackpbeforewt-(I)jt->cstackinit)>0x1000)  // scaf
      if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so.   This counts as work
      ++jobq->waiters; JOBUNLOCK(jobq,job);
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
-I stackpafterwt=astack();  // scaf
-if(ABS(stackpafterwt-oldstack)>0x1000)  // scaf
-  {printf("after: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpafterwt,jt->cstackinit); oldstack=stackpafterwt;}  // scaf
-if(ABS(stackpafterwt-(I)jt->cstackinit)>0x1000)  // scaf
-  {printf("afterc: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpafterwt,jt->cstackinit);}  // scaf
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
 // obsolete  pthread_cond_wait(&jobq->cond,&jobq->mutex);  pthread_mutex_unlock(&jobq->mutex);
      job=JOBLOCK(jobq); --jobq->waiters;
@@ -482,7 +465,6 @@ if(ABS(stackpafterwt-(I)jt->cstackinit)>0x1000)  // scaf
 terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
  JOBUNLOCK(jobq,job); 
  __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
- __atomic_fetch_sub(&jt->scafrecurct,1,__ATOMIC_ACQ_REL);  // scaf
  R 0;  // return to OS, closing the thread
 }
 
@@ -557,7 +539,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
- if(likely((-(I)JT(jt,nwthreads)&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
+ if(likely((-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
   JOB *oldjob=JOBLOCK(jobq);  // lock jobq before mutex
   ACINIT(jobA,ACUC2);  // Raise the usecount to match the fa() that will happen when the job ends - must do before job is enqueued, since it might run immediately
 // obsolete   pthread_mutex_lock(&jobq->mutex);
@@ -864,7 +846,7 @@ ASSERT(0,EVNONCE)
   // Acquire locks, and make sure that we don't delete the last thread in a pool that has jobs pending.  Wait till the jobs finish
   while(1){
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
-   resthread=JT(jt,nwthreads);  // number of thread to stop.  It will always be ACTIVE
+   resthread=THREADIDFORWORKER(JT(jt,nwthreads)-1);  // number of thread to stop.  It will always be ACTIVE
    ASSERTSUFF(resthread>=1,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if no thread to delete
    jobq=&(*JT(jt,jobqueue))[JTFORTHREAD(jt,resthread)->threadpoolno];
    job=JOBLOCK(jobq);  // must change status under lock for the threadpool
@@ -875,7 +857,7 @@ ASSERT(0,EVNONCE)
   }
   // Now we have locks on the flock and the JOBQ
   // Mark the last thread for deletion, wake up all the threads
-  JT(jt,nwthreads)=resthread-1;   // set new # threads - prematurely calling this thread stopped
+  --JT(jt,nwthreads);   // set new # threads - prematurely calling this thread stopped
   --jobq->nthreads;  // remove thread from count in threadpool
   __atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
 // obsolete   pthread_mutex_lock(&jobq->mutex);

@@ -206,7 +206,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  // Area used for intertask communication of memory allocation
  A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  I4 repatbytes;  // number of bytes repatriated since the last garbage collection, modified by all threads
-UC scafrecurct;  // number of times this block is in use
 // 4 bytes free
  I mfreegenallo;        // Amount allocated through malloc, biased  modified onlt by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified onlt by owning thread

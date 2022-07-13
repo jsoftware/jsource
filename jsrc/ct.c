@@ -365,22 +365,29 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
  R z;
 }
 
+static I null(I in){R in;}  // scaf
+static I astack(){I dummy; R null((I)&dummy);}  // scaf
+
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
-static void *jtthreadmain(void *arg){J jt=arg;I dummy;
+static void *jtthreadmain(void *arg){J jt=arg;I dummy=0xdeadbeef;  // scaf
+I *adummy=&dummy;  // scaf
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
  // not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
- __atomic_store_n(&jt->cstackinit,(UI)&dummy,__ATOMIC_RELAXED);  // use a local as a surrogate for the stack pointer
+ __atomic_store_n(&jt->cstackinit,(UI)astack(),__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
  __atomic_store_n(&jt->cstackmin,jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
 // obsolete  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // init stack as for main thread
- // Note: we use cstackinit as an indication that this thread is ready to use.
+ // Note: we use cstackmin as an indication that this thread is ready to use.
  JOBQ *jobq=&(*JT(jt,jobqueue))[jt->threadpoolno];   // The jobq block for the threadpool we are in - never changes
-
+I oldstack=jt->cstackinit;  // scaf
  // loop forever executing tasks.  First time through, the thread-creation code holds the job lock until the initialization finishes
 nexttask: ; 
   JOB *job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   
 nexttasklocked: ;  // come here if already holding the lock, and job is set
+I stackpbeforewt=astack();  // scaf
+if(ABS(stackpbeforewt-oldstack)>0x1000)
+  {printf("before: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpbeforewt,jt->cstackinit); oldstack=stackpbeforewt;}  // scaf
   if(unlikely(job==0)){
    // No job to run.  Wait for one
    if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
@@ -391,6 +398,9 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
      if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so.   This counts as work
      ++jobq->waiters; JOBUNLOCK(jobq,job);
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
+I stackpafterwt=astack();  // scaf
+if(ABS(stackpafterwt-oldstack)>0x1000)
+  {printf("after: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpafterwt,jt->cstackinit); oldstack=stackpafterwt;}  // scaf
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
 // obsolete  pthread_cond_wait(&jobq->cond,&jobq->mutex);  pthread_mutex_unlock(&jobq->mutex);
      job=JOBLOCK(jobq); --jobq->waiters;

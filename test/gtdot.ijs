@@ -34,6 +34,7 @@ while. do.
  if. *./0>r do. break. end.
  6!:3[0.001
 end.
+if. -. r e. _1000 _1001 do. pyxA =: pyx [ rA =: r end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 echo^:ECHOFILENAME 'test ',(":1),' f ',(":y),' finish: ',":6!:0''
 ]&> pyx
@@ -48,6 +49,7 @@ while. do.
  if. *./0>r do. break. end.
  6!:3[0.001
 end.
+if. -. r e. _1000 _1001 do. pyxA =: pyx [ rA =: r end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 echo^:ECHOFILENAME 'test ',(":1),' f1 ',(":y),' finish: ',":6!:0''
 ]&> pyx
@@ -63,6 +65,7 @@ while. do.
  if. *./0>r do. break. end.
  6!:3[0.001
 end.
+if. -. r e. _1000 _1001 do. pyxA =: pyx [ rA =: r end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 echo^:ECHOFILENAME 'test ',(":1),' f2 ',(":y),' finish: ',":6!:0''
 (,]&> pyx), ]&>pyx0

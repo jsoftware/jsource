@@ -36,7 +36,6 @@ blacklist=: blacklist, (<testpath),each <'gregex.ijs' NB. require libjpcre2 bina
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each 'g13x.ijs';'gstack.ijs'
 blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. require multithreading
-NB. OK now blacklist=: blacklist, (<testpath),each <'gcip.ijs'    NB. blacklist until fixed to allow other tests running
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays

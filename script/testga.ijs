@@ -11,8 +11,22 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-NB. RES=: RUN ddall
-RES=: RUN ddall -. <testpath,'gtdot4.ijs'    NB. temp disable threadpool test
+RUN1'gtdot'
+RUN1'gtdot'
+RUN1'gtdot1'
+RUN1'gtdot1'
+RUN1'gtdot2'
+RUN1'gtdot2'
+RUN1'gtdot3'
+RUN1'gtdot3'
+RUN1'gtdot4'
+RUN1'gtdot4'
+RUN1'gtdot3'
+RUN1'gtdot2'
+RUN1'gtdot1'
+RUN1'gtdot'
+
+RES=: RUN ddall
 
 3 : 0''
 msg=. 9!:14''

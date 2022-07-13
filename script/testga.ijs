@@ -11,20 +11,9 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-RUN1'gtdot'
-RUN1'gtdot'
-RUN1'gtdot1'
-RUN1'gtdot1'
-RUN1'gtdot2'
-RUN1'gtdot2'
-RUN1'gtdot3'
-RUN1'gtdot3'
-RUN1'gtdot4'
-RUN1'gtdot4'
-RUN1'gtdot3'
-RUN1'gtdot2'
-RUN1'gtdot1'
-RUN1'gtdot'
+RES=: RUN (<testpath),each 'gtdot.ijs';'gtdot.ijs';'gtdot1.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot4.ijs';'gtdot3.ijs';'gtdot2.ijs';'gtdot1.ijs';'gtdot.ijs'
+echo^:(*@#RES) RES
+exit *@#RES
 
 RES=: RUN ddall
 

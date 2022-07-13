@@ -11,7 +11,7 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-RES=: RUN (<testpath),each 'gtdot';'gtdot';'gtdot1';'gtdot1';'gtdot2';'gtdot2';'gtdot3';'gtdot3';'gtdot4';'gtdot4';'gtdot3';'gtdot2';'gtdot1';'gtdot'
+RES=: RUN (<testpath),each 'gtdot.ijs';'gtdot.ijs';'gtdot1.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot4.ijs';'gtdot3.ijs';'gtdot2.ijs';'gtdot1.ijs';'gtdot.ijs'
 echo^:(*@#RES) RES
 exit *@#RES
 

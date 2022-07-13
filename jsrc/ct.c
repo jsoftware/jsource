@@ -371,6 +371,7 @@ static I astack(){I dummy; R null((I)&dummy);}  // scaf
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
 static void *jtthreadmain(void *arg){J jt=arg;I dummy=0xdeadbeef;  // scaf
 I *adummy=&dummy;  // scaf
+if(__atomic_fetch_add(&jt->scafrecurct,1,__ATOMIC_ACQ_REL)!=0)SEGFAULT;  // scaf
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
  // not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
@@ -379,6 +380,7 @@ I *adummy=&dummy;  // scaf
 // obsolete  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // init stack as for main thread
  // Note: we use cstackmin as an indication that this thread is ready to use.
  JOBQ *jobq=&(*JT(jt,jobqueue))[jt->threadpoolno];   // The jobq block for the threadpool we are in - never changes
+{printf("startup: thread %lld stackpinit=%llx\n",THREADID(jt),jt->cstackinit);}  // scaf
 I oldstack=jt->cstackinit;  // scaf
  // loop forever executing tasks.  First time through, the thread-creation code holds the job lock until the initialization finishes
 nexttask: ; 
@@ -386,8 +388,10 @@ nexttask: ;
   
 nexttasklocked: ;  // come here if already holding the lock, and job is set
 I stackpbeforewt=astack();  // scaf
-if(ABS(stackpbeforewt-oldstack)>0x1000)
+if(ABS(stackpbeforewt-oldstack)>0x1000)  // scaf
   {printf("before: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpbeforewt,jt->cstackinit); oldstack=stackpbeforewt;}  // scaf
+if(ABS(stackpbeforewt-(I)jt->cstackinit)>0x1000)  // scaf
+  {printf("beforec: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpbeforewt,jt->cstackinit);}  // scaf
   if(unlikely(job==0)){
    // No job to run.  Wait for one
    if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
@@ -399,8 +403,10 @@ if(ABS(stackpbeforewt-oldstack)>0x1000)
      ++jobq->waiters; JOBUNLOCK(jobq,job);
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
 I stackpafterwt=astack();  // scaf
-if(ABS(stackpafterwt-oldstack)>0x1000)
+if(ABS(stackpafterwt-oldstack)>0x1000)  // scaf
   {printf("after: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpafterwt,jt->cstackinit); oldstack=stackpafterwt;}  // scaf
+if(ABS(stackpafterwt-(I)jt->cstackinit)>0x1000)  // scaf
+  {printf("afterc: thread %lld stackp %llx %llx init=%llx\n",THREADID(jt),oldstack,stackpafterwt,jt->cstackinit);}  // scaf
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
 // obsolete  pthread_cond_wait(&jobq->cond,&jobq->mutex);  pthread_mutex_unlock(&jobq->mutex);
      job=JOBLOCK(jobq); --jobq->waiters;
@@ -476,6 +482,7 @@ if(ABS(stackpafterwt-oldstack)>0x1000)
 terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
  JOBUNLOCK(jobq,job); 
  __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
+ __atomic_fetch_sub(&jt->scafrecurct,1,__ATOMIC_ACQ_REL);  // scaf
  R 0;  // return to OS, closing the thread
 }
 
@@ -766,13 +773,12 @@ ASSERT(0,EVNONCE)
   I resthread;  // thread# we will be allocating
   while(1){
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
-   resthread=JT(jt,nwthreads);  // number of current worker threads.  Total # threads is this+1
-   ASSERTSUFF(resthread<MAXTHREADS-1,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if adding a new thread will makes threads+1>MAXTHREADS (resthread+1+1)>MAXTHREADS)
+   resthread=THREADIDFORWORKER(JT(jt,nwthreads));  // number of current worker threads.  Next worker is nwthreads; convert worker# to thread#
+   ASSERTSUFF(resthread<MAXTHREADS,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if new 0-origin thread# exceeds limit
    if(!(__atomic_load_n(&JTFORTHREAD(jt,resthread)->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE))break;
    WRITEUNLOCK(JT(jt,flock))  // release lock for next poll
    if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
   }
-  ++resthread;  // thread# of new thread is worker-thread# + 1
   // we have a lock on the overall thread info; and resthread, the slot we want to fill, is idle.  keep the lock while we fill it
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
   ASSERTSUFF(jobq->nthreads<MAXTHREADSINPOOL,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if threadpool limit exceeded.  OK to CHECK outside of job lock
@@ -784,7 +790,7 @@ ASSERT(0,EVNONCE)
 // obsolete   if(likely(!(origstate&TASKSTATEACTIVE))){
   // Try to allocate a thread in the OS and start it running.  We hold locks while this is happening, so thread startup must be lock-free
   if(jtthreadcreate(jt,resthread)){   // start thread.  thread started normally?
-   JT(jt,nwthreads)=resthread;   // set new # threads, which is same as 1-origin thread#
+   ++JT(jt,nwthreads);   // increment # worker threads
    ++jobq->nthreads;  // incr # threads in pool
   }else resthread=0;  // if error, mark invalid thread#; error signaled earlier
 // obsolete  if(threadstatus==0){job=JOBLOCK(jobq); --JT(jt,nwthreads); --jobq->nthreads; JOBUNLOCK(jobq,job); resthread=0;}  // if error, restore thread counts; error signaled earlier

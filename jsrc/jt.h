@@ -206,6 +206,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  // Area used for intertask communication of memory allocation
  A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  I4 repatbytes;  // number of bytes repatriated since the last garbage collection, modified by all threads
+UC scafrecurct;  // number of times this block is in use
 // 4 bytes free
  I mfreegenallo;        // Amount allocated through malloc, biased  modified onlt by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified onlt by owning thread
@@ -405,6 +406,7 @@ typedef JST* JS;  // shared part of struct
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
+#define THREADIDFORWORKER(n) ((n)+1)  // convert worker# to thread#
 _Static_assert(sizeof(struct JSTstruct)<=JTALIGNBDY,"too many threads");  // assert not too many threads
 _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected
 

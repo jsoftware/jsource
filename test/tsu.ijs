@@ -211,6 +211,7 @@ NB. bill extensions
 
 GITHUBCI=: 0       NB. running on github action
 ECHOFILENAME=: 0   NB. echo file name
+PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test

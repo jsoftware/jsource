@@ -78,25 +78,25 @@ A=. 1#<(7, L0)$x
 B=. 1#<(3, 123*L0)$x
 C=. 1#<(3, 543*L0)$x
 
-echo^:ECHOFILENAME 'short literal'
-echo^:ECHOFILENAME 20&(6!:2) 'PA=.  tobase64_old"1&.> A'
-echo^:ECHOFILENAME 20&(6!:2) 'QA=.  (3!:10)&.> A'
+echo^:PRINTMSG 'short literal'
+echo^:PRINTMSG 20&(6!:2) 'PA=.  tobase64_old"1&.> A'
+echo^:PRINTMSG 20&(6!:2) 'QA=.  (3!:10)&.> A'
 assert. (PA-:QA)
-echo^:ECHOFILENAME 20&(6!:2) 'P=.  frombase64_old"1&.> PA'
-echo^:ECHOFILENAME 20&(6!:2) 'Q=.  (3!:11)&.> QA'
+echo^:PRINTMSG 20&(6!:2) 'P=.  frombase64_old"1&.> PA'
+echo^:PRINTMSG 20&(6!:2) 'Q=.  (3!:11)&.> QA'
 assert. (P-:Q)
-echo^:ECHOFILENAME 'long literal'
-echo^:ECHOFILENAME 1&(6!:2) 'PB=.  tobase64_old"1&.> B'
-echo^:ECHOFILENAME 5&(6!:2) 'QB=.  (3!:10)&.> B'
+echo^:PRINTMSG 'long literal'
+echo^:PRINTMSG 1&(6!:2) 'PB=.  tobase64_old"1&.> B'
+echo^:PRINTMSG 5&(6!:2) 'QB=.  (3!:10)&.> B'
 assert. (PB-:QB)
-echo^:ECHOFILENAME 1&(6!:2) 'P=.  frombase64_old"1&.> PB'
-echo^:ECHOFILENAME 5&(6!:2) 'Q=.  (3!:11)&.> QB'
+echo^:PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PB'
+echo^:PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QB'
 assert. (P-:Q)
-echo^:ECHOFILENAME 1&(6!:2) 'PC=.  tobase64_old"1&.> C'
-echo^:ECHOFILENAME 5&(6!:2) 'QC=.  (3!:10)&.> C'
+echo^:PRINTMSG 1&(6!:2) 'PC=.  tobase64_old"1&.> C'
+echo^:PRINTMSG 5&(6!:2) 'QC=.  (3!:10)&.> C'
 assert. (PC-:QC)
-echo^:ECHOFILENAME 1&(6!:2) 'P=.  frombase64_old"1&.> PC'
-echo^:ECHOFILENAME 5&(6!:2) 'Q=.  (3!:11)&.> QC'
+echo^:PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PC'
+echo^:PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QC'
 assert. (P-:Q)
 ''
 )

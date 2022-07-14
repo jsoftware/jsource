@@ -44,39 +44,39 @@ case2=. toupper2 f.
 end.
 
 fn=. y{::' lower';' upper'
-echo^:ECHOFILENAME 'short literal',fn
-echo^:ECHOFILENAME 20&(6!:2) 'PA=. case1&.> A'
-echo^:ECHOFILENAME 20&(6!:2) 'QA=. case2&.> A'
+echo^:PRINTMSG 'short literal',fn
+echo^:PRINTMSG 20&(6!:2) 'PA=. case1&.> A'
+echo^:PRINTMSG 20&(6!:2) 'QA=. case2&.> A'
 assert. (PA-:QA)
-echo^:ECHOFILENAME 'long literal',fn
-echo^:ECHOFILENAME 5&(6!:2) 'PB=. case1&.> B'
-echo^:ECHOFILENAME 10&(6!:2) 'QB=. case2&.> B'
-echo^:ECHOFILENAME 5&(6!:2) 'PC=. case1&.> C'
-echo^:ECHOFILENAME 10&(6!:2) 'QC=. case2&.> C'
+echo^:PRINTMSG 'long literal',fn
+echo^:PRINTMSG 5&(6!:2) 'PB=. case1&.> B'
+echo^:PRINTMSG 10&(6!:2) 'QB=. case2&.> B'
+echo^:PRINTMSG 5&(6!:2) 'PC=. case1&.> C'
+echo^:PRINTMSG 10&(6!:2) 'QC=. case2&.> C'
 assert. (PB-:QB)
 assert. (PC-:QC)
 
-echo^:ECHOFILENAME 'short literal2',fn
-echo^:ECHOFILENAME (6!:2) 'PA1=. case1&.> A1'
-echo^:ECHOFILENAME 4&(6!:2) 'QA1=. case2&.> A1'
+echo^:PRINTMSG 'short literal2',fn
+echo^:PRINTMSG (6!:2) 'PA1=. case1&.> A1'
+echo^:PRINTMSG 4&(6!:2) 'QA1=. case2&.> A1'
 assert. (PA1-:QA1)
-echo^:ECHOFILENAME 'long literal2',fn
-echo^:ECHOFILENAME (6!:2) 'PB1=. case1&.> B1'
-echo^:ECHOFILENAME 2&(6!:2) 'QB1=. case2&.> B1'
-echo^:ECHOFILENAME (6!:2) 'PC1=. case1&.> C1'
-echo^:ECHOFILENAME 2&(6!:2) 'QC1=. case2&.> C1'
+echo^:PRINTMSG 'long literal2',fn
+echo^:PRINTMSG (6!:2) 'PB1=. case1&.> B1'
+echo^:PRINTMSG 2&(6!:2) 'QB1=. case2&.> B1'
+echo^:PRINTMSG (6!:2) 'PC1=. case1&.> C1'
+echo^:PRINTMSG 2&(6!:2) 'QC1=. case2&.> C1'
 assert. (PB1-:QB1)
 assert. (PC1-:QC1)
 
-echo^:ECHOFILENAME 'short literal4',fn
-echo^:ECHOFILENAME (6!:2) 'PA2=. case1&.> A2'
-echo^:ECHOFILENAME 4&(6!:2) 'QA2=. case2&.> A2'
+echo^:PRINTMSG 'short literal4',fn
+echo^:PRINTMSG (6!:2) 'PA2=. case1&.> A2'
+echo^:PRINTMSG 4&(6!:2) 'QA2=. case2&.> A2'
 assert. (PA2-:QA2)
-echo^:ECHOFILENAME 'long literal4',fn
-echo^:ECHOFILENAME (6!:2) 'PB2=. case1&.> B2'
-echo^:ECHOFILENAME 2&(6!:2) 'QB2=. case2&.> B2'
-echo^:ECHOFILENAME (6!:2) 'PC2=. case1&.> C2'
-echo^:ECHOFILENAME 2&(6!:2) 'QC2=. case2&.> C2'
+echo^:PRINTMSG 'long literal4',fn
+echo^:PRINTMSG (6!:2) 'PB2=. case1&.> B2'
+echo^:PRINTMSG 2&(6!:2) 'QB2=. case2&.> B2'
+echo^:PRINTMSG (6!:2) 'PC2=. case1&.> C2'
+echo^:PRINTMSG 2&(6!:2) 'QC2=. case2&.> C2'
 assert. (PC2-:QC2)
 ''
 )

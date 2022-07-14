@@ -342,7 +342,7 @@ FLAGS_BASE64=""
 
 raspberry_j64) # linux arm64
 TARGET=libj.so
-CFLAGS="$common -march=armv8-a+crc -mno-outline-atomics -DRASPI -DC_CRC32C=1 "
+CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_RASPI}"

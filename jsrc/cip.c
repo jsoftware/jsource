@@ -129,7 +129,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  }
  // not 2x2
  I wskips=pnom-NPAR*4; wskips=flgs&FLGWUTRI?wskips:0; wskips=wskips<0?0:wskips;  // number of known trailing 0s in w, therefore shortening each dp
- while(nrem>=NPAR){  // do 1x4s as long as possible.  The load bandwidth is twice as high
+ while(nrem>=NPAR){  // do ?x4s as long as possible.  The load bandwidth is twice as high
   // create mx16 strip of result
   I mrem=m;  // number of rows of a left
   D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
@@ -244,20 +244,28 @@ static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
 // m must not exceed MAXAROWS.
-// Result is 0 if NaN error, 1 if OK
+// Result is for taskrun: 0=OK, otherwise error#
 static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
+ // The task# ti must be converted to a slice of a to use: height m at offset moffset
  I flgs=pd->flgs;
- I tishort=ti-pd->nbigtasks[0]; I m=pd->taskm[REPSGN(tishort)+1];
- I mtailct=pd->nbigtasks[1]-ti;
- I moffset=ti*pd->taskm[0]+tishort*(m-pd->taskm[0])+((mtailct&REPSGN(mtailct))<<CACHEHEIGHTX);
- m+=REPSGN(mtailct-1)<<CACHEHEIGHTX; m=MIN(m,pd->m-moffset);
+ I tishort=ti-pd->nbigtasks[0]; I m=pd->taskm[REPSGN(tishort)+1];  // tishort is how far ti is into the second set of tasks.  If negative, it's in the first set.  Set m to the appropriate tasksize.
+ I mtailct=pd->nbigtasks[1]-ti;  // mtailct is negative of (how far ti is past the second set of tasks).  The third set is one cacheblock shorter than the second set
+ I moffset=ti*pd->taskm[0]+tishort*(m-pd->taskm[0])+((mtailct&REPSGN(mtailct))<<CACHEHEIGHTX);  // combine to get position of task: size if big blocks, minus adj for blocks in second group, minus single-block adj for third group
+ m+=REPSGN(mtailct-1)<<CACHEHEIGHTX; m=MIN(m,pd->m-moffset);  // if third group, reduce the size by one block; truncate the last task if it goes beyond the overall size
  I n=pd->n;
- I pnom=pd->p-(((moffset)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP));
+ I pnom=pd->p-(((moffset)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP));  // for upper-tri, shorten the rows of a to the nonzero part
  I pstored=pd->p;
- D *av=pd->av+(moffset*(pd->p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP))));
- D *wv=pd->wv+((n*moffset)&-((flgs>>FLGAUTRIX)&1));
+ D *av=pd->av+(moffset*(pd->p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP))));   // for upper-triangular, horizontally skip the zeros of a
+ D *wv=pd->wv+((n*moffset)&-((flgs>>FLGAUTRIX)&1)); // for upper-tri, vertically skip the zeroed-out rows of w
  D *zv=pd->zv+(n*moffset);
- 
+ // Small problems should use a multiplier that does not use full cacheblock.  For jobs, we make the decision for each task
+ if(((((50-m)&(50-n)&(16-pstored)&((DCACHED_THRES-1)-m*n*pnom))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
+  // blocked algorithm.  there is no size limit on the blocks
+  I ok=blockedmmult(jt,av,wv,zv,m,n,pnom,pstored,flgs);  // blockedmult uses normal JE return of 0=error
+  if(unlikely(!ok))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);  //could be _fetch_or, but x86 has lock xadd
+  R 0;  // scaf should return nonzero to abort if error
+ }
+
  D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // Allocate a temporary result area for the stripe of z results
  D zt[((MAXAROWS+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH+5*CACHELINESIZE/SZD];
@@ -275,7 +283,7 @@ _mm256_zeroupperx(VOIDARG)
  D (*cva)[2][OPHEIGHT][CACHEHEIGHT] = (D (*)[2][OPHEIGHT][CACHEHEIGHT])(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
  // If a is upper-triangular, we write out the entire column of z values only when we process the last section of the w stripe.  If w is also upper-triangular,
  // we stop processing sections before we get to the bottom.  So in that case (which never happens currently), clear the entire result areas leaving 0 in the untouched bits
- if((flgs&(FLGWUTRI|FLGAUTRI))==(FLGWUTRI|FLGAUTRI))mvc(m*n*SZD,zv,1,MEMSET00);  // if w is upper-triangular, we will not visit all the z values and we must clear the lower-triangular part.  Here we just clear them all
+ if(unlikely((flgs&(FLGWUTRI|FLGAUTRI))==(FLGWUTRI|FLGAUTRI)))mvc(m*n*SZD,zv,1,MEMSET00);  // if w is upper-triangular, we will not visit all the z values and we must clear the lower-triangular part.  Here we just clear them all
  // process each 64-float vertical stripe of w against the entirety of a, producing the corresponding columns of z
  D* w0base = wv; D* z0base = zv; I w0rem = n;   // w0rem counts doubles
  for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
@@ -515,8 +523,8 @@ _mm256_zeroupperx(VOIDARG)
    flgs&=~(FLGZFIRST|FLGZLAST);  // we have finished a 16x64 cache section.  That touched all the columns of z.  For the remaining sections we must accumulate into the z values.  If this was the last pass, clear that flag too, since we're finished
   }  // end of loop for each 16x64 section of w
  }  // end of loop for each 64-col slice of w
- __atomic_fetch_add(&pd->nanerr,!!NANTEST,__ATOMIC_RELAXED);//could be _fetch_or, but x86 has lock xadd
- R 0;
+ if(unlikely(NANTEST))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);//could be _fetch_or, but x86 has lock xadd
+ R 0;  // scaf should return nonzero to abort if error
 }
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
@@ -524,20 +532,36 @@ _mm256_zeroupperx(VOIDARG)
 // For historical reason (i. e. to match the non-AVX2 version) n and p have been multiplied by 2 for complex multiplies
 I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 // TODO: bug when EMU_AVX
- if(((((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
-  // blocked algorithm.  there is no size limit on the blocks
+ if(((((24-m)&(24-n)&(16-p)&((DCACHED_THRESn-1)-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // TUNE blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
+  // small problem, not worth splitting.  there is no size limit on the blocks
+  // 16x16 multiply takes about 1us; we are guessing task-wakeup takes a similar amount of time.  So it's not worth a split unless the time gets substantially above 1us
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
- // not blocked - use the cached algorithm
- UI nthreads=__atomic_load_n(&JT(jt,nwthreads),__ATOMIC_ACQUIRE)+1;  // get # running threads, just once so we have a consistent view
+ UI nfulltasks, nremnant, tailtasks, endtasksize, fulltasksize;
+ // big problem, split into tasks.  The tasks may be either cached or blocked
+ UI nthreads=__atomic_load_n(&(*JT(jt,jobqueue))[0].nthreads,__ATOMIC_ACQUIRE)+(jt->threadpoolno!=0);  // get # running threads, just once so we have a consistent view.  We count our thread too, if it's not in pool 0, since it runs tasks for the job
  UI ncache=(m+CACHEHEIGHT-1)>>CACHEHEIGHTX;  // number of pieces of a, including remnant
- UI nperthread=ncache/nthreads; UI nremnant=ncache%nthreads;  // # pieces in all threads, #threads with an extra piece
- UI nfulltasks=nperthread/(MAXAROWS/CACHEHEIGHT); UI nendcache=nperthread%(MAXAROWS/CACHEHEIGHT); // # full tasks per thread, # cacheblocks in final task in each thread
- UI tailtasks=nremnant; tailtasks=nendcache!=0?nthreads:tailtasks;  // number of tasks in the tail: if there is at least one block in all threads, nthreads; otherwise the number of single blocks in the remnant
- nendcache++;  // if there is an extra cacheblock in some threads, extend the length of the last blocks to account for it.  If there is no extra cache block, tailtasks will be 0 and this won't matter
- CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs,.nbigtasks={nfulltasks*nthreads,nfulltasks*nthreads+nremnant},.taskm={MAXAROWS,nendcache<<CACHEHEIGHTX}};
-  // number of full tasks, followed by number that have size 'nendcache'.  Later tasks have size nendcache-CACHEHEIGHT
-  // scaf todo: use blockedmmult for the runt task?
- jtjobrun(jt,cachedmmultx,&ctx,nfulltasks*nthreads+tailtasks,0);  // go run the tasks - default to threadpool 0
+ // The cached algorithm works on sections that are a multiple of CACHEHEIGHT high, up to MAXAROWS.  For big arguments, we spread the CACHEHEIGHT sections through the threads as evenly as possible.
+ // for modest arguments, breaking into CACHEHEIGHT blocks may not allow use of all threads.  In that case, use more threads (each of which will use the blocking algorithm)
+ if(unlikely(ncache*4<nthreads*3)){
+  // caching would leave 1/4 of the threads unused.  Do blocking
+#define THR0HEADSTART 0  // if we know the lead thread will keep running, we should assign more work to it
+  endtasksize=(((m-THR0HEADSTART-1)/nthreads)+1+3)&-4;  // # rows per thread, rounded up to multiple of 4; but reserving 8 rows for the lead thread
+  UI effthreads=(m-THR0HEADSTART+endtasksize-1)/endtasksize; nthreads=effthreads<nthreads?effthreads:nthreads;  // get the max number threads we can use
+  nfulltasks=1; fulltasksize=endtasksize+THR0HEADSTART;  // the first task, which will be handled in this thread (presumably without waiting) gets a few extra rows
+  nremnant=tailtasks=nthreads-1;   // the rest of the tasks all have the same size
+ }else{
+  // caching will use all the threads
+  UI nperthread=ncache/nthreads; nremnant=ncache%nthreads;  // # pieces in all threads, #threads with an extra piece
+  nfulltasks=nperthread/(MAXAROWS/CACHEHEIGHT); endtasksize=nperthread%(MAXAROWS/CACHEHEIGHT); // # full tasks per thread, # cacheblocks in final task in each thread
+  tailtasks=nremnant; tailtasks=endtasksize!=0?nthreads:tailtasks;  // number of tasks in the tail: if there is at least one block in all threads, nthreads; otherwise the number of single blocks in the remnant
+  endtasksize++;  // if there is an extra cacheblock in some threads, extend the length of the last blocks to account for it.  If there is no extra cache block, tailtasks will be 0 and this won't matter
+  endtasksize<<=CACHEHEIGHTX;  // convert # blocks at end to #rows at end
+  nfulltasks*=nthreads;  // get total# tasks using the large block
+  fulltasksize=MAXAROWS;  // in this branch, the big block is max for cachedmmult
+ }
+ CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs,.nbigtasks={nfulltasks,nfulltasks+nremnant},.taskm={fulltasksize,endtasksize}};
+   // number of full tasks, followed by number that have size 'endtasksize'.  Later tasks have size endtasksize-CACHEHEIGHT
+ jtjobrun(jt,cachedmmultx,&ctx,nfulltasks+tailtasks,0);  // go run the tasks - default to threadpool 0
  R !ctx.nanerr;}
 
 #else

@@ -166,6 +166,8 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 #else
   jt->fdepn=NFDEP;
 #endif
+ MTHREAD(jjt)->threadpoolno=-1; // the master thread is in no pool, ever
+ 
  I threadno; for(threadno=0;threadno<nthreads;++threadno){jt=&jjt->threaddata[threadno];
   RESETRANK;  // init both ranks to RMAX
   jt->ppn=6;  // default precision for printf

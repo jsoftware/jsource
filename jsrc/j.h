@@ -628,7 +628,8 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #define DGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (60*60*60)      // when m*n*p less than this use cached; when higher, use BLAS  
 #endif
-#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
+#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
+#define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked
 
 
 // Debugging options
@@ -660,10 +661,10 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #endif
 
 #define MAXTHREADPOOLS 8  // max # thread pools supported
-#define MAXTHREADSINPOOL 62  // Max threads in a single pool.  The low bits of the task pointer are used as a lock, so that code will have to be rewritten if MAXTHREADSINPOOL+1>63 (which is the allocation boundary for the
+#define MAXTHREADSINPOOL 63  // Max threads in a single pool.  The low bits of the task pointer are used as a lock, so that code will have to be rewritten if MAXTHREADSINPOOL>63 (which is the allocation boundary for the
                        // task block).  As of now, this limit is immaterial, because every thread in the system might choose to start a job on a single threadpool, which limits the total number of threads to 63.  But
                        // we could force job/task/thread creators to serialize on a lock, which would limit the number of waits from outside the pool to 1, and then we could have more threads total as long as
-                       // the number in a single ppol is limited
+                       // the number in a single pool is limited
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTACKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered

@@ -25,6 +25,13 @@ b=: 200 64 ?@$ 0
   assert.  (a +/@(*"1 _) b) -: a X b
 end. 1 }} ''
 
+NB. Test small sizes, should break into blockedmmults
+b=: 20 64 ?@$ 0 
+{{ for_i. 20+i. 66 * >:N do.
+  a=: (i,20) ?@$ 0
+  assert.  (a +/@(*"1 _) b) -: a X b
+end. 1 }} ''
+
 a=: 1024 1024 ?@$ 0
 b=: 1024 1024 ?@$ 0
 c=: a +/@(*"1 _)t.'' b    NB.test against strawman approach

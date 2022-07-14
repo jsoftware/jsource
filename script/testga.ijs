@@ -13,7 +13,7 @@ stdout LF ,~ 9!:14''
 
 RES=: RUN (<testpath),each 'gtdot.ijs';'gtdot.ijs';'gtdot1.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot4.ijs';'gtdot3.ijs';'gtdot2.ijs';'gtdot1.ijs';'gtdot.ijs'
 echo^:(*@#RES) RES
-exit *@#RES
+exit^:(*@#RES) *@#RES
 
 RES=: RUN ddall
 

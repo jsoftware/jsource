@@ -92,7 +92,7 @@ t -: /:~t
 *./~:{."1 t
 
 
-4!:55 ;:'f g h n old pr s sp space t x y '
+4!:55 ;:'delth f g h n old pr s sp space t x y '
 
 
 

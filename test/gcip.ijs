@@ -2,11 +2,12 @@ prolog './gcip.ijs'
 NB. +/ . * ------------------------------------------------------------------
 
 NB. **************************************** matrix product **********************************
+delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
+delth''  NB. make sure we start with an empty system
 
-N=: 3 <. <: 1 { 8 T. ''  NB. max # worker threads
-1: 0&T.@''^:(0 >. N-1 T.'')''  NB. create tasks if needed
-1: 55&T.@''^:(0 >. N-~1 T.'')''  NB. Destroy tasks as needed
-N = 1 T. ''
+{{
+N=: 3 <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
+for. i. N do.
 
 X=: +/ . *
 XT=: X t.''
@@ -37,10 +38,16 @@ b=: 1024 1024 ?@$ 0
 c=: a +/@(*"1 _)t.'' b    NB.test against strawman approach
 d=: a {{ (<x X y) , (x XT y) , (<x X y) }}t.'' b NB. create user task while queue has internal tasks, and vice versa
 e=: a (XT , XT , XT , XT) b
-*./c=>d
-*./c=e
+assert. *./c=>d
+assert. *./c=e
 
-4!:55 ;:'N X XT a b c d e n'
+if. N < 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
+end.
+1
+}} ''
+delth''
+
+4!:55 ;:'N X XT a b c d delth e n'
 
 epilog''
 

@@ -50,38 +50,51 @@ mdiv =: (%.@] +/ . * [) " _ 2
 
 id=: =&i.&#
 
-4 19 -: $%.?19 4$2
-6 10 -: $%.?10 6$100
-7 11 -: $%.?11 7$100
-5 7  -: $%.j./?2 7 5$100
+delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
+delth''  NB. make sure we start with an empty system
 
-1       -: %.1
-(%4)    -: %.4
-(%3.5)  -: %.3.5
-(%4j_5) -: %.4j_5
+{{
+N=: 3 <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
+for. i. N do.
 
-(%. -: minv) 1
-(%. -: minv) 1+?12369        NB. minv failed on 0
-(%. -: minv) (+ 0&=)o.?1721
-(%. -: minv) j./1+?100 2001
+assert. 4 19 -: $%.?19 4$2
+assert. 6 10 -: $%.?10 6$100
+assert. 7 11 -: $%.?11 7$100
+assert. 5 7  -: $%.j./?2 7 5$100
 
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:_50000+?10 10$10000
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?7 7$10000
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?35 35$10000
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?71 71$10000
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?237 237$10000
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?399 399$10000
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?400 400$10000
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?413 413$10000
-(b-:minv a) *. 1e_5>>./|,(id a)-a X b=:%.a=:j./?2 8 8$1300
-(1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?237 237$10000
+assert. 1       -: %.1
+assert. (%4)    -: %.4
+assert. (%3.5)  -: %.3.5
+assert. (%4j_5) -: %.4j_5
+
+assert. (%. -: minv) 1
+assert. (%. -: minv) 1+?12369        NB. minv failed on 0
+assert. (%. -: minv) (+ 0&=)o.?1721
+assert. (%. -: minv) j./1+?100 2001
+
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:_50000+?10 10$10000
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?7 7$10000
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?35 35$10000
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?71 71$10000
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?237 237$10000
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?399 399$10000
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?400 400$10000
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?413 413$10000
+assert. (b-:minv a) *. 1e_5>>./|,(id a)-a X b=:%.a=:j./?2 8 8$1300
+assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?237 237$10000
 test =: 3 : '(1e_1 > >./ | , b-minv y) *. 1e_1>>./|,(id y)-y X b=:%.a=:y'
-13!:8@8^:-.@test@> (0.01 * _4000 + 100000 ?@$~ ,~)&.> 35 + i. 64
+assert. 13!:8@8^:-.@test@> (0.01 * _4000 + 100000 ?@$~ ,~)&.> 35 + i. 64
 
-(b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:1=?36$2
-(b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:_10+?17$20
-(b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:0.1*_10+?13$20
-(b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:r.?23$20
+assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:1=?36$2
+assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:_10+?17$20
+assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:0.1*_10+?13$20
+assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:r.?23$20
+
+if. N < 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
+end.
+1
+}} ''
+delth''
 
 x -: %. x=:=i.1
 x -: %. x=:=i.2
@@ -151,7 +164,7 @@ _13.9    f =i.9
 
 9!:19 ct
 
-4!:55 ;:'X a a0 a1 ai b bee bx c ct di '
+4!:55 ;:'X a a0 a1 ai b bee bx c ct delth di '
 4!:55 ;:'em en f id m mdiv minv mm n norm '
 4!:55 ;:'q0 q1 q2 qr r0 r1 r4 rinv splitm test x '
 

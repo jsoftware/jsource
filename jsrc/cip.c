@@ -110,7 +110,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  if(((pnom-2)|(pnom-m))==0){  // m=p=2
   // m is 2x2.  preload it, then read pairs of inputs to produce pairs of outputs.  Must allow inplace ops
   D *wv1=wv, *zv1=zv;  // scan pointer through row-pairs of w and z (which may be the same)
-  __m256d z10, a00=_mm256_broadcast_sd(&av[0]), a01=_mm256_broadcast_sd(&av[1]), a10=_mm256_broadcast_sd(&av[2]), a11=_mm256_broadcast_sd(&av[3]);
+  __m256d z10, a00=_mm256_broadcast_sd(&av[0]), a01=_mm256_broadcast_sd(&av[1]), a10=_mm256_broadcast_sd(&av[pstored]), a11=_mm256_broadcast_sd(&av[pstored+1]);
   while(nrem>NPAR){  // guarantee nonempty remnant
    __m256d w0=_mm256_loadu_pd(wv1), w1=_mm256_loadu_pd(wv1+n);
    z00=_mm256_mul_pd(a00,w0); z00=MUL_ACC(z00,a01,w1); z10=_mm256_mul_pd(a10,w0); z10=MUL_ACC(z10,a11,w1);
@@ -539,12 +539,12 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  UI nfulltasks, nremnant, tailtasks, endtasksize, fulltasksize;
  // big problem, split into tasks.  The tasks may be either cached or blocked
  UI nthreads=__atomic_load_n(&(*JT(jt,jobqueue))[0].nthreads,__ATOMIC_ACQUIRE)+(jt->threadpoolno!=0);  // get # running threads, just once so we have a consistent view.  We count our thread too, if it's not in pool 0, since it runs tasks for the job
- UI ncache=(m+CACHEHEIGHT-1)>>CACHEHEIGHTX;  // number of pieces of a, including remnant
+ UI ncache=(m+CACHEHEIGHT-1)>>CACHEHEIGHTX;  // number of cacheblocks of a, including remnant
  // The cached algorithm works on sections that are a multiple of CACHEHEIGHT high, up to MAXAROWS.  For big arguments, we spread the CACHEHEIGHT sections through the threads as evenly as possible.
  // for modest arguments, breaking into CACHEHEIGHT blocks may not allow use of all threads.  In that case, use more threads (each of which will use the blocking algorithm)
  if(unlikely(ncache*4<nthreads*3)){
   // caching would leave 1/4 of the threads unused.  Do blocking
-#define THR0HEADSTART 0  // if we know the lead thread will keep running, we should assign more work to it
+#define THR0HEADSTART 0  // if we know the lead thread will keep running, we should assign more work to it.  But it doesn't seem to.
   endtasksize=(((m-THR0HEADSTART-1)/nthreads)+1+3)&-4;  // # rows per thread, rounded up to multiple of 4; but reserving 8 rows for the lead thread
   UI effthreads=(m-THR0HEADSTART+endtasksize-1)/endtasksize; nthreads=effthreads<nthreads?effthreads:nthreads;  // get the max number threads we can use
   nfulltasks=1; fulltasksize=endtasksize+THR0HEADSTART;  // the first task, which will be handled in this thread (presumably without waiting) gets a few extra rows

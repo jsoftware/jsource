@@ -429,5 +429,6 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
    RECHO ddall NB. echo script names as run and final count of failures
 )
 
+empty 0&T. ::1:''
 echo 9!:14''
 echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''

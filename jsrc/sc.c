@@ -366,7 +366,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
 A jtnameref(J jt,A w,A locsyms){A z;
  ARGCHK1(w); z=syrd(w,locsyms);
  RZ(z=namerefacv(w,z));  // make a reference to the name & fa the value
- if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed, tpush it h & cancel the request
+ if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed, tpush it & cancel the request
  R QCWORD(z);
 }    /* argument assumed to be a NAME */
 

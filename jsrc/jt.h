@@ -56,8 +56,9 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {
  JOB *ht[2];  // queue head/tail.  When empty, ht[0] is 0 and ht[1] points to ht[1] as a harmless store location.  The job MUST be on a cacheline boundary, because LSBs are used as a lock.  Modified only when the job lock is held
  UI4 futex;  // futex used by all threads in this JOBQ
  UI4 nuunfin;   // Number of unfinished user jobs, queued and running.  Modified only when the job lock is held
+ UI4 keepwarmns;  // time in ns to spin-poll this jobq before going into wait state
  US nthreads;  // number of threads in this pool
- US waiters;  // Number of waiting threads.  Modified only when job lock is held, and may be one higher than the actual number of threads waiting
+ US waiters;  // Number of waiting threads.  Modified only when job lock is held, and may be higher than the actual number of threads waiting
 #if 0 // obsolete
  pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to...
 // (on glibc, first cacheline ends here.  On windows this is still in the first cacheline)
@@ -129,7 +130,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 
  C persistarea[0];  // end of area set at startup
 // ************************************** everything after here persists over the life of the thread
- C fillv0len;   // length of fill installed in fillv0
+ C fillv0len;   // length of fill installed in fillv0 (max 16)
  C taskstate;  // task state: modified by other tasks on a system lock
 #define TASKSTATERUNNINGX 0   // task has started
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
@@ -139,7 +140,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATEACTIVE (1LL<<TASKSTATEACTIVEX)
 #define TASKSTATETERMINATEX 3  // thread has been signaled to terminate.  Changed under job lock.
 #define TASKSTATETERMINATE (1LL<<TASKSTATETERMINATEX)
- C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created
+ C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution
@@ -206,7 +207,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  // Area used for intertask communication of memory allocation
  A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
  I4 repatbytes;  // number of bytes repatriated since the last garbage collection, modified by all threads
-// 4 bytes free
+ C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created
+// 3 bytes free
  I mfreegenallo;        // Amount allocated through malloc, biased  modified onlt by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified onlt by owning thread
 // end of cacheline 7

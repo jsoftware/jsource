@@ -3,7 +3,8 @@ NB. 7!: -----------------------------------------------------------------
 
 NB. Testing malloc/free; try  f 200  or  g 40000, etc.
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
-delth''  NB. make sure we start with an empty system
+
+NB. We use whatever threads the ystem defines
 
 sp  =: 7!:0
 space=:7!:2
@@ -56,6 +57,7 @@ x -: y
 
 x =: sp ''
 s =: h 3+?7
+1: 6!:3 ] 0.01  NB. must give the task a chance to be dequeued
 y =: sp ''
 x -: y
 

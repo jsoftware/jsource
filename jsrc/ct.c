@@ -541,7 +541,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
  if(likely((-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
   JOB *oldjob=JOBLOCK(jobq);  // lock jobq before mutex
-  ACINIT(jobA,ACUC2);  // Raise the usecount to match the fa() that will happen when the job ends - must do before job is enqueued, since it might run immediately
+// obsolete   ACINIT(jobA,ACUC2);  // Raise the usecount to match the fa() that will happen when the job ends - must do before job is enqueued, since it might run immediately
 // obsolete   pthread_mutex_lock(&jobq->mutex);
   _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
   // When we finish all tasks, we will have a problem.  The job block is on the jobq somewhere, but not necessarily at the top.
@@ -563,7 +563,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
  // In our job setup we have accounted for the fact that we are taking the first task, so that we need nothing more from the job block to start running the first task
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  UI4 i=0; C err=0;  // the number of the block we are working on, and the current error status
- while(1){  // at top of loop we have a lock on the jobq mutex, i is the task# to take, err is error status so far
+ while(1){  // at top of loop mutex is free, i is the task# to take, err is error status so far
   // run the user's function on one thread.  If there are errors, we skip after the first
   if(!err){   //  If an error has been signaled, skip over it and immediately mark it finished
    if(unlikely((err=f(jt,ctx,i))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
@@ -573,6 +573,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   ++job->internal.nf;  // we have finished a block - account for it
   i=job->ns; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status
   // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
+  if(unlikely(i==n-1))if(i!=0){ACINIT(jobA,ACUC2);}  // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that
   job->ns=i+(i<n);  // we're taking the block if it's not past the end - account for it
   JOBUNLOCK(jobq,oldjob)
   if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()
@@ -736,6 +737,21 @@ ASSERT(0,EVNONCE)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   z=v2(numberOfCores,MAXTHREADS);
   break;}
+ case 9:  { // threadpool keepwarm (in sec): set to y, return previous value
+#if PYXES
+  ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // arg is threadpool# keepwarm
+  if(AT(w)!=FL)RZ(w=cvt(FL,w));  // make arg float type
+  D dpoolno=DAV(w)[0]; I poolno=(I)dpoolno; ASSERT((D)poolno==dpoolno,EVDOMAIN) ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
+  JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
+  D oldval=jobq->keepwarmns*1e-9;
+  D kwtime=DAV(w)[0]; ASSERT(kwtime>=0,EVDOMAIN); if(kwtime>0.003)kwtime=0.003; I kwtimens=(I)kwtime*1000000000;  // limit time to 3ms and convert to ns
+  jobq->keepwarmns=kwtimens;  // store new value
+  z=scf(oldval);  // return old value
+// obsolete   z=v2(nw,nuu);
+#else
+ASSERT(0,EVNONCE)
+#endif
+  break;}
  case 3: { // return current thread #
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   RZ(z=sc(THREADID(jt)))
@@ -769,6 +785,7 @@ ASSERT(0,EVNONCE)
   C origstate=__atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATEACTIVE,__ATOMIC_ACQ_REL);  // put into ACTIVE state
 // obsolete   __atomic_fetch_and(&JTFORTHREAD(jt,resthread)->taskstate,~TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // clear pending term request, leaving our ACTIVE
   JTFORTHREAD(jt,resthread)->threadpoolno=poolno;  // install threadpool number
+  JTFORTHREAD(jt,resthread)->ndxinthreadpool=jobq->nthreads;  // install ndx within pool.  Always ascending in the threads, since we delete only from the end
 // obsolete   if(likely(!(origstate&TASKSTATEACTIVE))){
   // Try to allocate a thread in the OS and start it running.  We hold locks while this is happening, so thread startup must be lock-free
   if(jtthreadcreate(jt,resthread)){   // start thread.  thread started normally?

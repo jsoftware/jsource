@@ -399,7 +399,7 @@ F1(jtmmaxs){I j,m=MLEN,n;
 }    /* 9!:21 space limit set */
 
 
-// Get total # bytes in use.  That's total allocated so far, minus the bytes in the free lists.
+// Get total # bytes in use.  That's total allocated so far, minus the bytes in the free lists and the blocks to be repatriated.
 // mfreeb[] is a negative count of blocks in the free list, and biased so the value goes negative
 // when garbage-collection is required.  All non-pool allocations are accounted for in
 // mfreegenallo
@@ -408,9 +408,9 @@ F1(jtmmaxs){I j,m=MLEN,n;
 // is allocated, mfreeb[] increases; when a big block is allocated, mfreegenallo increases by the
 // amount of the allocation, and mfree[-PMINL+n] decreases by the amount in all the blocks that are now
 // on the free list.
-// At coalescing,
-// mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
+// At coalescing, mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
 I jtspbytesinuse(J jt){I i,totalallo = jt->mfreegenallo&~MFREEBCOUNTING;  // start with bias value
+totalallo-=jt->repatbytes;  // bytes awaiting gc should not be considered inuse
 for(i=PMINL;i<=PLIML;++i){totalallo+=jt->mfree[-PMINL+i].ballo&~MFREEBCOUNTING;}  // add all the allocations
 R totalallo;
 }

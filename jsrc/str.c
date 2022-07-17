@@ -767,8 +767,8 @@ static size_t Stringlchr_omp(char *str, char ch, size_t stride, size_t len, size
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,klen,ch,num_threads,rlen),private(i),shared(ln,pi)
  for(i=0; i<num_threads; i++) {
-  size_t lm=stride;
-  for(size_t j=0; j<rlen; j++) {
+  size_t j,lm=stride;
+  for(j=0; j<rlen; j++) {
    size_t l=slchr(str+i*rlen*stride+j*stride,ch,klen);
    pi[i*rlen+j]=l;
    lm=(lm>l)?l:lm;
@@ -799,8 +799,8 @@ static size_t Stringlchr2_omp(unsigned short *str, unsigned short ch, size_t str
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,klen,ch,num_threads,rlen),private(i),shared(ln,pi)
  for(i=0; i<num_threads; i++) {
-  size_t lm=stride;
-  for(size_t j=0; j<rlen; j++) {
+  size_t j,lm=stride;
+  for(j=0; j<rlen; j++) {
    size_t l=slchr2(str+i*rlen*stride+j*stride,ch,klen);
    pi[i*rlen+j]=l;
    lm=(lm>l)?l:lm;
@@ -831,8 +831,8 @@ static size_t Stringlchr4_omp(unsigned int *str, unsigned int ch, size_t stride,
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,klen,ch,num_threads,rlen),private(i),shared(ln,pi)
  for(i=0; i<num_threads; i++) {
-  size_t lm=stride;
-  for(size_t j=0; j<rlen; j++) {
+  size_t j,lm=stride;
+  for(j=0; j<rlen; j++) {
    size_t l=slchr4(str+i*rlen*stride+j*stride,ch,klen);
    pi[i*rlen+j]=l;
    lm=(lm>l)?l:lm;
@@ -915,8 +915,8 @@ static size_t Stringrchr_omp(char *str, char ch, size_t stride, size_t len){
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
  for(i=0; i<num_threads; i++) {
-  size_t lm=0;
-  for(size_t j=0; j<rlen; j++) {
+  size_t j,lm=0;
+  for(j=0; j<rlen; j++) {
    if(flag) continue;
    size_t l=srchr(str+i*rlen*stride+j*stride,ch,stride);
    lm=(lm<l)?l:lm;
@@ -950,8 +950,8 @@ static size_t Stringrchr2_omp(unsigned short *str, unsigned short ch, size_t str
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
  for(i=0; i<num_threads; i++) {
-  size_t lm=0;
-  for(size_t j=0; j<rlen; j++) {
+  size_t j,lm=0;
+  for(j=0; j<rlen; j++) {
    if(flag) continue;
    size_t l=srchr2(str+i*rlen*stride+j*stride,ch,stride);
    lm=(lm<l)?l:lm;
@@ -985,8 +985,8 @@ static size_t Stringrchr4_omp(unsigned int *str, unsigned int ch, size_t stride,
  }
 #pragma omp parallel for default(none),firstprivate(str,stride,ch,num_threads,rlen),private(i),shared(ln,flag)
  for(i=0; i<num_threads; i++) {
-  size_t lm=0;
-  for(size_t j=0; j<rlen; j++) {
+  size_t j,lm=0;
+  for(j=0; j<rlen; j++) {
    if(flag) continue;
    size_t l=srchr4(str+i*rlen*stride+j*stride,ch,stride);
    lm=(lm<l)?l:lm;

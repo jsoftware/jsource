@@ -90,7 +90,7 @@ assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:_10+?17$20
 assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:0.1*_10+?13$20
 assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:r.?23$20
 
-if. N > 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
+if. IF64 *. N > 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
 end.
 1
 }} ''

@@ -41,7 +41,7 @@ e=: a (XT , XT , XT , XT) b
 assert. *./c=>d
 assert. *./c=e
 
-if. N > 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
+if. IF64 *. N > 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
 end.
 1
 }} ''

@@ -76,6 +76,7 @@ prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME y[RUNTIME=:6!:1
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0
 10 s: GLOBALSYMBOL
+empty 0&T.^:(0=1&T.) ::1:''
 1: echo^:ECHOFILENAME 'time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
 )
 
@@ -429,6 +430,6 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
    RECHO ddall NB. echo script names as run and final count of failures
 )
 
-empty 0&T. ::1:''
+empty 0&T.^:(0=1&T.) ::1:''
 echo 9!:14''
 echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''

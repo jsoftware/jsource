@@ -249,7 +249,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
  movesentencetosi(jt,queue,m,0);  // install sentence-to-be-executed for stop purposes
  // if there is a system lock to take, take it and continue
  S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE);
- if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}
+ if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKALL);}
  // if there is an ATTN/BREAK to take, take it and enter debug suspension
  if(attnval&0xff){
   if(!(jt->uflags.us.cx.cx_c.db&(DB1)))__atomic_store_n(JT(jt,adbreak),2,__ATOMIC_RELEASE);  // if not debug, promote the ATTN to BREAK for other threads to speed it up

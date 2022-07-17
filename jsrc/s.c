@@ -40,7 +40,8 @@
 
 #define symcol ((sizeof(L)+SZI-1)/SZI)
 
-A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
+// extend global symbol table.  Called under system lock
+static A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
  if(SYMORIGIN!=0){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
  else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
  m=j<<1;                     // new size in bytes - 2 * old size

@@ -410,10 +410,25 @@ F1(jtmmaxs){I j,m=MLEN,n;
 // on the free list.
 // At coalescing, mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
 I jtspbytesinuse(J jt){I i,totalallo = jt->mfreegenallo&~MFREEBCOUNTING;  // start with bias value
-totalallo-=jt->repatbytes;  // bytes awaiting gc should not be considered inuse
-for(i=PMINL;i<=PLIML;++i){totalallo+=jt->mfree[-PMINL+i].ballo&~MFREEBCOUNTING;}  // add all the allocations
-R totalallo;
+ totalallo-=jt->repatbytes;  // bytes awaiting gc should not be considered inuse
+ for(i=PMINL;i<=PLIML;++i){totalallo+=jt->mfree[-PMINL+i].ballo&~MFREEBCOUNTING;}  // add all the allocations
+ R totalallo;
 }
+
+// called under systemlock to add up all threads
+static A jtspallthreadsx(J jt){I grandtotal;
+ grandtotal=0; DO(THREADIDFORWORKER(MAXTHREADS), grandtotal+=jtspbytesinuse(JTFORTHREAD(jt,i));)  // add total for all threads, active or not
+ R sc(grandtotal);
+}
+
+// 7!:8 Get total# bytes used in all threads
+// Call a system lock, then get bytes in use for each thread.  Inactive threads may have bytes in use.
+F1(jtspallthreads){A z;
+ ASSERTMTV(w);  // no args allowed
+ do{z=jtsystemlock(jt,LOCK78MEM,jtspallthreadsx);}while(z==(A)1);  // call a lock, and repeat if another thread got the same lock request
+ R z;  // return value/err from call
+}
+
 
 // Start tracking jt->bytes and jt->bytesmax.  We indicate this by setting the LSB of EVERY entry of mfreeb
 // Also count current space, and set that into jt->bytes and the result of this function

@@ -245,7 +245,7 @@ I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  if(JT(jt,deprecct)<0&&mno<0)goto exiterr;  // non-noun is a pee; don't set error info here
  ASSERTGOTO(JT(jt,deprecct)>0,EVNONCE,exiterr);  // if fail on warning, do so
  if(JT(jt,deprecct)!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
- JT(jt,deprecct)-=JT(jt,deprecct)!=0;  // decrment # of messages to allow
+ JT(jt,deprecct)-=JT(jt,deprecct)!=0;  // decrement # of messages to allow
 exitok: ;
  res=1;
 exiterr: ;

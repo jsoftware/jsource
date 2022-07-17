@@ -249,7 +249,9 @@ typedef struct JSTstruct {
  S systemlock;       // lock used for quiescing all tasks.  Bits in order of descending priority:
 #define LOCKPRISYM 1  // lock is requested for symbol extension
 #define LOCKPRIPATH 2  // lock is requested to change a locale path
-#define LOCKPRIDEBUG 4  // lock is requested for debug suspension
+#define LOCK78MEM 4  // lock is requested for 7!:8, total memory in use
+#define LOCKPRIDEBUG 8  // lock is requested for debug suspension
+#define LOCKALL (LOCKPRISYM+LOCKPRIPATH+LOCK78MEM+LOCKPRIDEBUG)  // for lockaccept, when we can accept anything
  S systemlocktct;   // counter field, used for systemlock sync
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
  B stch;             /* enable setting of changed bit                   */

@@ -93,11 +93,11 @@ void wakeall(J jt){}
 
 // Take lock on the entire system, waiting till all threads acknowledge
 // priority is the priority of the request.  lockedfunction is the function to call when the lock has been agreed.
-// if multiple requesters ask for a lock, the function will be called in only one of them
+// if multiple requesters ask for a lock of the same priority, the function will be called in only one of them
 // lockedfunction should return 0 for error, otherwise the value to use.  The return to the caller depends on jerr and
 // whether the thread ran the function: in the thread that ran the function, value/error from lockedfunction is passed through;
 // in other threads, 1 is returned always with no error signaled
-A jtsystemlock(J jt,I priority,A (*lockedfunction)()){A z;C res;
+A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;C res;
  // If the system is already in systemlock, the system is essentially single-threaded.  Just execute the user's function.
  // This would happen if a sentence executed in debug suspension needed symbols, or had an error
  if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2){R (*lockedfunction)(jt);}
@@ -239,7 +239,7 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   if(lda((US*)&blok->state)==PYXFULL)break; // if pyx was filled, exit and return its value
   // The wait may time out because of a pending system action (BREAK or system lock).  If so, we accept it now...
   UI4 state=lda(&blok->state); C breakb;  // get store sequence # before we check for system event
-  if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}  // process systemlock and keep waiting
+  if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // process systemlock and keep waiting
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){err=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
   if(uncommon(-1ull==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
@@ -324,7 +324,7 @@ void jtclrtaskrunning(J jt){C oldstate;
  // go back to non-RUNNING state, but if SYSTEMLOCK has been started with us counted active go handle it
  while(oldstate=jt->taskstate&~TASKSTATELOCKACTIVE, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, oldstate&~TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
   if(unlikely(!(oldstate&TASKSTATERUNNING)))R;   // if for some reason we are called with the bit already off, keep it off
-  if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKPRIDEBUG+LOCKPRIPATH+LOCKPRISYM);}else{YIELD delay(1000);}
+  if(likely(oldstate&TASKSTATELOCKACTIVE)){jtsystemlockaccept(jt,LOCKALL);}else{YIELD delay(1000);}
  }
 }
 
@@ -364,6 +364,12 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
  }while(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(CACHELINESIZE-1))!=0);
  R z;
 }
+// It would be possible to save a little time in going from active to waiting in all threads, by having a 'conditional lock' that
+// would not wait if the lock is held but empty.  Each thread would see the empty and process it simultaneously on the way to waiting.
+// (futexval would have to be sampled before the read of the jobq)
+// This would still require an RFO cycle to read the lock, and it would require that jobq->waiters and job->internal.nf be modified with an atomic instruction since it
+// would not be fully under lock when incremented.  Because this would add an RFO for waiters to the wakeup sequence, where we worry about the thundering herd,
+// we avoid it.  If waiters is eliminated we should revisit.
 
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
 static void *jtthreadmain(void *arg){J jt=arg;I dummy;
@@ -380,42 +386,55 @@ nexttask: ;
   JOB *job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   
 nexttasklocked: ;  // come here if already holding the lock, and job is set
-  if(unlikely(job==0)){
+  if(unlikely(job==0)){  // not really unlikely, but if there's not one we can be as slow as we like
    // No job to run.  Wait for one
    if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
    if(likely(job==0)){
-    do{
+    UI4 warmendns=jobq->keepwarmns; 
+    if(warmendns!=0){struct jtimespec endtime=jtmtil(warmendns);  // time when our keepwarm expires
+     // the user wants us to linger before committing to a wait.  We will spin here in the hope that a job arrives
+     JOBUNLOCK(jobq,job);
+     while(1){
+      if(jtmdif(endtime)<0)break;  // if time expired, exit loop.  Would prefer to deal with ns only rather than timespec, but these are the primitives we have
+      _mm_pause(); _mm_pause(); _mm_pause(); _mm_pause();  // make this a leisurely poll
+      if(__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)!=0)break;  // if a job shows up, exit loop
+     }
+     job=JOBLOCK(jobq);   // reestablish lock, checking in case a job has arrived
+    }
+    if(job==0){  // if still no job has arrived, we have to wait
+     do{
 // obsolete pthread_mutex_lock(&jobq->mutex);
-     UI4 futexval=jobq->futex;  // get current value to wait on, before we check for work.  It is updated under lock when a job is added
-     if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so.   This counts as work
-     ++jobq->waiters; JOBUNLOCK(jobq,job);
-     jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
-     // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
+      UI4 futexval=jobq->futex;  // get current value to wait on, before we check for work.  It is updated under lock when a job is added
+      if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so.   This counts as work
+      ++jobq->waiters; JOBUNLOCK(jobq,job);
+      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
+      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
 // obsolete  pthread_cond_wait(&jobq->cond,&jobq->mutex);  pthread_mutex_unlock(&jobq->mutex);
-     job=JOBLOCK(jobq); --jobq->waiters;
-    }while(job==0); // wait till we get a job to run; exit holding the job lock
+      job=JOBLOCK(jobq); --jobq->waiters;
+     }while(job==0); // wait till we get a job to run; exit holding the job lock
+    }
    }
   }
-  // We have a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
-  UI jobns=job->ns; JOB *jobnext=job->next; UI jobn=job->n;   // fetch what we know we will need.  jobns is the piece we are taking here
-  unsigned char (*f)(J jt,void *ctx,UI4 i)=job->internal.f; void *ctx=job->internal.ctx; C err=job->internal.err;  // also fetch what internal job will need
-   // The compiler defers these reads but the read delay is so long that they will get executed early anyway
+  // We have the job lock, and a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
+  UI jobns=job->ns+1; JOB *jobnext=job->next; UI jobn=job->n;   // fetch what we know we will need.  jobns-1 is the piece we are taking here
+  unsigned char (*f)(J jt,void *ctx,UI4 i)=job->internal.f; void *ctx=job->internal.ctx; C err=job->internal.err;  // also fetch what an internal job will need
+   // The compiler defers these reads but the read delay is so long that they will get executed early anyway - poor instruction model?
   // increment the # starts; if that equals or exceeds the # of tasks, dequeue the job
-  job->ns=jobns+1;   // increment task counter for next owner
-  JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobns+1<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobns+1<jobn?job:jobnext;  // calc head & tail ptrs
-      // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns+1<jobn), divert write of tail; otherwise write the empty-queue value into tail.  If job finishing, set new headptr in jobnext
-      // If this is a user job, ns is garbage but n=0, so jobns+1<jobn will never be true (because the vbls are unsigned).
+  job->ns=jobns;   // increment task counter for next owner
+  JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobns<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobns<jobn?job:jobnext;  // calc head & tail ptrs
+      // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns<jobn), divert write of tail; otherwise write the empty-queue value into tail.  If job finishing, set new headptr in jobnext
+      // If this is a user job, ns is garbage but n=0, so jobns<jobn will never be true (because the vbls are unsigned).
   *writeptr=(JOB *)writeptr; JOBUNLOCK(jobq,jobnext);  // Do the writes.  tailptr write, if not diverted, sets tail->itself.  The write of the headptr releases the lock.
-  // We have now dequeued the job if it has all started, and extracted what an internal job needs to run.  Let the thundering herd come and fight over the job lock
+  // We have now dequeued the job if it has all started, extracted what an internal job needs to run, and released the lock.  Let the thundering herd come and fight over the job lock
   
   // lock released - now process the job
   if(jobn!=0){
    // internal job.  We first have to handle the special case of jobns>n.  This indicates that the job has been entirely started (possibly not finished), but
    // we couldn't free the job block earlier because it might have been in the middle of the job list (in this case it would have been finished in the originating thread).  We can free it now, then look for the next job.
    // Note that if the job is not finished it will still be protected by the originator until all tasks have finished
-   if((unlikely(jobns+1>jobn))){fa(UNvoidAV1(job)); goto nexttask;}
+   if((unlikely(jobns>jobn))){fa(UNvoidAV1(job)); goto nexttask;}
    if(likely(!err)){   //  If an error has been signaled, skip over it and immediately mark it finished
-    if(unlikely((err=f(jt,ctx,jobns))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
+    if(unlikely((err=f(jt,ctx,jobns-1))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
    }
    // This block is done.  Since we will need the lock when we go to look for work, we take it now.
    jttpop(jt,old);  // release any resources used by internal job
@@ -744,7 +763,7 @@ ASSERT(0,EVNONCE)
   D dpoolno=DAV(w)[0]; I poolno=(I)dpoolno; ASSERT((D)poolno==dpoolno,EVDOMAIN) ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
   D oldval=jobq->keepwarmns*1e-9;
-  D kwtime=DAV(w)[0]; ASSERT(kwtime>=0,EVDOMAIN); if(kwtime>0.003)kwtime=0.003; I kwtimens=(I)kwtime*1000000000;  // limit time to 3ms and convert to ns
+  D kwtime=DAV(w)[1]; ASSERT(kwtime>=0,EVDOMAIN); if(kwtime>0.003)kwtime=0.003; I kwtimens=(I)(kwtime*1000000000);  // limit time to 3ms and convert to ns
   jobq->keepwarmns=kwtimens;  // store new value
   z=scf(oldval);  // return old value
 // obsolete   z=v2(nw,nuu);
@@ -775,7 +794,7 @@ ASSERT(0,EVNONCE)
    ASSERTSUFF(resthread<MAXTHREADS,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if new 0-origin thread# exceeds limit
    if(!(__atomic_load_n(&JTFORTHREAD(jt,resthread)->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE))break;
    WRITEUNLOCK(JT(jt,flock))  // release lock for next poll
-   if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
+   if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKALL);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
   }
   // we have a lock on the overall thread info; and resthread, the slot we want to fill, is idle.  keep the lock while we fill it
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
@@ -870,7 +889,7 @@ ASSERT(0,EVNONCE)
    if(job==0||jobq->nthreads>1)break;  // exit if not last thread in a busy pool
    JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
    WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
-   if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
+   if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKALL);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
   }
   // Now we have locks on the flock and the JOBQ
   // Mark the last thread for deletion, wake up all the threads

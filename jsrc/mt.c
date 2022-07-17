@@ -155,7 +155,7 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
    //a couple of alternatives suggest themselves: store up to k waiters (FREE/LOCK/WAIT is really 0/1/n; we could do eg 0/1/2/3/n); store the waiter count somehow outside of the value
    // Before waiting, handle system events if present
    UI4 waitval=m->v; C breakb;  // get the serial number before we check
-   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}  // if system lock requested, accept it
+   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // if system lock requested, accept it
    // the user may be requesting a BREAK interrupt for deadlock or other slow execution
    if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
    // Now wait for a change.  The futex_wait is atomic, and will wait only if the state is WAIT.  In that case,
@@ -185,7 +185,7 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
   sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
   while(xchga((US*)&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
    UI4 waitval=m->v; C breakb;  // get the serial number before we check
-   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);}
+   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}
    if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
    I i=jfutex_waitn(&m->v,waitval|WAIT,ns);
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
@@ -207,7 +207,7 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
  sta(&jt->futexwt,&m->v);
  while(1){
   S attn=lda((S*)&JT(jt,adbreakr)[0]);
-  if(attn>>8)jtsystemlockaccept(jt,LOCKPRISYM+LOCKPRIPATH+LOCKPRIDEBUG);
+  if(attn>>8)jtsystemlockaccept(jt,LOCKALL);
   if(attn&0xff){r=attn&0xff;goto fail;}
   I i=jfutex_waitn(&m->v,WAIT,ns);
   if(unlikely(i>0)){r=i;goto fail;}

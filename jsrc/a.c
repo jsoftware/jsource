@@ -180,10 +180,10 @@ F1(jtmemo){F1PREFIP;PROLOG(300);A h,*hv;I m;
  ARGCHK1(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  V *v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate
- GAT0(h,BOX,3,0); hv=AAV0(h);  // the components of fdef must be recursive if recursible
+ GAT0(h,BOX,3,0); hv=AAV0(h); AFLAGINIT(h,BOX)  // the components of fdef must be recursive if recursible
  // the tables are standard extendible, with # items in AM, thus must be zapped
  // So, we defer initializing them until they have been made recursive inside fdef
- GAT0(hv[0],INT,m,0) GAT0(hv[1],INT,2*(m>>1),2) GAT0(hv[2],BOX,m>>1,0)  // allo hash/keys/results
+ GAT0(hv[0],INT,m,0) ACINITZAP(hv[0]) GAT0(hv[1],INT,2*(m>>1),2) ACINITZAP(hv[1]) GAT0(hv[2],BOX,m>>1,0) ACINITZAP(hv[2])  // allo hash/keys/results
  A z=fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,lrv(v),rrv(v));
  AM(hv[0])=0; mvc(m*SZI,AAV0(hv[0]),1,MEMSETFF);  // clear hash table
  AM(hv[1])=0; AS(hv[1])[0]=m>>1;  // init empty key table, 2 INTs each row

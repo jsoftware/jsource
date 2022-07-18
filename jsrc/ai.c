@@ -267,7 +267,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
   case CUCO:     R amp(num(3),w);
   case CUNDER:   R under(invrecur(f),g);
   case CFORK:    R invfork(w);
-  case CAMP:     if(nf!=ng){A z=invamp(w); if(nf^ng)R z;}  // may fall through... but avoid tail-recursion so we get out of loop  scaf why ^?
+  case CAMP:     if(nf!=ng){R invamp(w);}  // fall through if not m&v or u&n
   case CAT:      if(vf&&vg)R atop(invrecur(g),invrecur(f));   break;
   case CAMPCO:
   case CATCO:    if(vf&&vg)R atco(invrecur(g),invrecur(f));   break;

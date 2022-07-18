@@ -29,7 +29,6 @@
 #define XMCEIL          1                    /* ceiling, round up          */
 #define XMEXACT         2                    /* exact, error if impossible */
 #define XMEXMT          3                    /* exact, empty if impossible */
-// obsolete #define XMRND           4                    /* round,   round to nearest  */
 
 
 extern XF1(jtxfact);

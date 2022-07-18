@@ -167,26 +167,24 @@ wthr N
 N = 1 T.''
 wthr N
 
-NB. too long on Windows hhr 1 f1 45          NB. queued job stress test
-1 f1 45          NB. queued job stress test
+allowlongjobs =. 0 NB. some of these too long on Windows
+
+1 1:`f1@.allowlongjobs 45          NB. queued job stress test
 
 N = 1 T.''
 wthr N
 
-NB. too long on Windows hhr 1 f1 50          NB. queued job stress test
-1 f1 50          NB. queued job stress test
+1 1:`f1@.allowlongjobs 50          NB. queued job stress test
 
 N = 1 T.''
 wthr N
 
-NB. too long on Windows hhr 1 f1 55          NB. queued job stress test
-1 f1 55          NB. queued job stress test
+1 1:`f1@.allowlongjobs 55          NB. queued job stress test
 
 N = 1 T.''
 wthr N
 
-NB. too long on Windows hhr 1 f1 60          NB. queued job stress test
-1 f1 60          NB. queued job stress test
+1 1:`f1@.allowlongjobs 60          NB. queued job stress test
 
 N = 1 T.''
 wthr N
@@ -215,7 +213,7 @@ wthr N
 'limit error' -: 2 T. etx 8
 'limit error' -: ". etx '] t. 8'
 
-4!:55 ;:'delth N N1 N2 f f1 f2 g g1 wthr'
+4!:55 ;:'allowlongjobs delth N N1 N2 f f1 f2 g g1 wthr'
 
 epilog''
 

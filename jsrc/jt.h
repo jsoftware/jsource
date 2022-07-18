@@ -59,11 +59,6 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {
  UI4 keepwarmns;  // time in ns to spin-poll this jobq before going into wait state
  US nthreads;  // number of threads in this pool
  US waiters;  // Number of waiting threads.  Modified only when job lock is held, and may be higher than the actual number of threads waiting
-#if 0 // obsolete
- pthread_mutex_t mutex; // no spinlock; glibc and apparently also msvc mutex is reasonably sophisticated and we have to...
-// (on glibc, first cacheline ends here.  On windows this is still in the first cacheline)
- pthread_cond_t cond;   // ...hold a lock after releasing a condition variable anyway.  Investigate more sophisticated schemes later
-#endif
 } JOBQ;
 #endif
 
@@ -288,7 +283,7 @@ typedef struct JSTstruct {
  S locdellock;  // lock to serialize user request to delete locale
 // 4 bytes free
 // front-end interface info
- C *capture;          // capture output for python->J etc.  scaf could be byte?
+ C *capture;          // capture output for python->J etc.
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
  void *sminput;
  void *smoutput;

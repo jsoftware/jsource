@@ -579,7 +579,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&(EXECCTNOTDELD>>1)),"execct has gone < 0")  // scaf eventually
+   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&(EXECCTNOTDELD>>1)),"execct has gone < 0")  // scaf remove for release
    DELEXECCT(g)  // say that the user doesn't want this locale any more.  Paths etc. still might.
   }
  }
@@ -598,7 +598,6 @@ B jtlocdestroy(J jt,A g){
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
-// obsolete  if(unlikely(redefg(g)==0)){LOCPATH(g)=path; R 0;}  // abort, restoring the path, if the locale contains the currently-running definition   this checks every symbol!!?  scaf
  freesymb(jt,g);   // delete all the names.  Anything executing will have been fa()d
  fa(path);   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used

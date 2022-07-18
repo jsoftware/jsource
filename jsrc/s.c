@@ -41,7 +41,7 @@
 #define symcol ((sizeof(L)+SZI-1)/SZI)
 
 // extend global symbol table.  Called under system lock
-static A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
+A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
  if(SYMORIGIN!=0){y=(A)((I)SYMORIGIN-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)  yn=#Is in old allo
  else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
  m=j<<1;                     // new size in bytes - 2 * old size
@@ -73,7 +73,7 @@ I jtreservesym(J jt,I n){L *sympv=SYMORIGIN;// start of symbol block
  while(1){
   // count off symbols from the global area, up to a fair number (we need to get enough to justify the lock overhead)
   I ninlock; I nwanted=MAX(100,n-jt->symfreect[0]);  // number taken fro shared, number we would like to get
-  WRITELOCK(JT(jt,symlock))   // scaf not needed in system lock?
+  WRITELOCK(JT(jt,symlock))
   LX sprev;    // sym# of a symbol in the chain, starts at the symbol holding SYMGLOBALROOT
   NOUNROLL for(ninlock=0, sprev=0;ninlock<nwanted&&SYMNEXT(sympv[sprev].next);++ninlock,sprev=SYMNEXT(sympv[sprev].next));  // ninlock counts symbols; at end sprev points to a valid one (unless chain is empty)
   if(likely(ninlock!=0)){  // if the global chain is not empty...
@@ -630,7 +630,6 @@ F1(jtsymbrdlock){A y;
 // as modified - xdefn will try to hot-swap to the new definition between lines
 // If the modified name is executing higher on the stack, fail
 // returns v for OK to allow the assignment to proceed, 0 if error
-// User must have a lock on the locale v is in    scaf ??
 A jtredef(J jt,A w,A v){A f;DC c,d;
  // find the most recent DCCALL, exit if none
  d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R v;
@@ -733,11 +732,12 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
-   // This realizes any virtual value, and makes the usecount recursive if the type is recursible
-   // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
+   // Virtual values were realized earlier, and usecounts guaranteed recursive
+   // If the value is abandoned inplaceable, we can just zap it and set its usecount to 1
    // SPARSE nouns must never be inplaceable, because their components are not 
-   _Static_assert(JTFINALASGNX==QCNOUNX,"bit divergence");
-   if((SGNIF((I)jtinplace&valtype,QCNOUNX)&AC(w))<0){  // if final assignment of abandoned noun   scaf why noun?
+// obsolete    _Static_assert(JTFINALASGNX==QCNOUNX,"bit divergence");
+// obsolete    if((SGNIF((I)jtinplace&valtype,QCNOUNX)&AC(w))<0){  // if final assignment of abandoned noun   scaf why noun?
+   if((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w))<0){  // if final assignment of abandoned value
     // We can zap abandoned nouns.  But only if they are final assignment: something like nm:: [ nm=. 4+4 would free the active block if we zapped.
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     *AZAPLOC(w)=0; ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1)

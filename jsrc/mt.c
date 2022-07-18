@@ -143,9 +143,7 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
   // it is barely possible that the lock had its state set to LOCK but the owner has not yet been filled in.  That is possible only if the lock
   // is owned by another thread, so it is safe even then for us to check whether this thread is the owner
   if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;} //handle deadlock and recursive cases
-// obsolete  if(e!=WAIT)e=xchga(&m->v,WAIT); //nudge m->v towards the WAIT state.  In the unlikely event that e==WAIT&&m->v!=WAIT, fine; we'll catch it in futex_wait, since we won't get put to sleep if m->v!=WAIT
   sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
-// obsolete  while(e!=FREE){ //exit when e==FREE; i.e., _we_ successfully installed WAIT in place of FREE
   // It is always safe to move the state of a lock to WAIT using xchg.  There are 2 cases:
   // (1) if the previous state was FREE, we now own the lock after the xchg...
   while(xchga((US*)&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
@@ -167,7 +165,6 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
    I i=jfutex_wait(&m->v,waitval|WAIT);  // if we are out of WAIT state, or the serial number changed since we check for system lock, don't wait at all
 #endif
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
-// obsolete   e=xchga(&m->v,WAIT);
   }
   // come out of loop when we have the lock
   sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;  // remove wakeup to this thread
@@ -197,45 +194,16 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
  m->ct+=m->recursive;m->owner=self;R 0;  // install ownership info, good return
 fail:sta(&jt->futexwt,0);R r;}  // error return, with our internal errorcode or -1 if timeout
 
-#if 0  // obsolete 
-I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, with a timeout of ns ns.  Largely the same as lock
- if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;}
- UI4 e=FREE;if(casa(&m->v,&e,LOCK))goto success;
- struct jtimespec tgt=jtmtil(ns);
- if(e!=WAIT){e=xchga(&m->v,WAIT);if(e==FREE)goto success;}
- I r;
- sta(&jt->futexwt,&m->v);
- while(1){
-  S attn=lda((S*)&JT(jt,adbreakr)[0]);
-  if(attn>>8)jtsystemlockaccept(jt,LOCKALL);
-  if(attn&0xff){r=attn&0xff;goto fail;}
-  I i=jfutex_waitn(&m->v,WAIT,ns);
-  if(unlikely(i>0)){r=i;goto fail;}
-  e=xchga(&m->v,WAIT);
-  if(e==FREE)goto success;
-  if(i==-1){r=-1;goto fail;} //if the kernel says we timed out, trust it rather than doing another syscall to check the time
-  if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;}} //update delta, abort if timed out
-success:sta(&jt->futexwt,0);m->ct+=m->recursive;m->owner=self; R 0;
-fail:sta(&jt->futexwt,0);R r;}
-#endif
-
 I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){ //attempt to acquire m
  if(casa((US*)&m->v,&(US){FREE},LOCK)){m->ct+=m->recursive;m->owner=self;R 0;} //fastpath: attempt to acquire the lock; if free, take it
  // the lock was held.  owner might not be set yet, if the lock is held by another thread
  if(unlikely(m->owner==self)){if(!m->recursive)R EVCONCURRENCY; ++m->ct; R 0;}  // if we hold the lock already, that's error if nonrecursive lock; incr recursion count otherwise
-// obsolete  if(uncommon(m->recursive)&&m->owner){if(m->owner!=self)R -1; m->ct++;R 0;} //recursive case.  If m->owner is set the first time we read it, and clear the second time, fine; we still observed the mutex to be locked, meaning it was locked concurrently with the trylock, so it is fine to declare it locked
-// obsolete  if(unlikely(m->owner==self))R EVCONCURRENCY; //error to trylock a lock you hold.  I deliberated for a long time on this.  One way to see it is that trylock should be the same as timedlock(ns=0), and timedlock should return an error if you already hold the lock.  Another is that this is a concurrency primitive, giving information about concurrent events, but lock and trylock from the same thread are not concurrent events, so no useful information should be created
  R -1;}   // if lock held elsewhere, return busy
 
 C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){ //release m
  if(unlikely(m->owner!=self))R EVCONCURRENCY; //error to release a lock you don't hold
  if(uncommon(m->recursive)){if(--m->ct)R 0;} //need to be released more times on this thread, so nothing more to do
  m->owner=0;  // clear owner before releasing the lock
-// obsolete  if(!casa(&m->v,&(UI4){LOCK},FREE)){sta(&m->v,FREE);jfutex_wake1(&m->v);} //cas is fastpath LOCK->FREE.  If it fails, the state was WAIT, so we need to wake a waiter
  if(unlikely(xchga((US*)&m->v,FREE)==WAIT))jfutex_wake1(&m->v);  // move to FREE state; if state was WAIT, wake up a waiter
-// obsolete  //below is what drepper does; I think the above is always faster, but it should definitely be faster without xadd
-// obsolete  //agner sez lock xadd has one cycle better latency vs lock cmpxchg on intel ... ??
-// obsolete  //(probably that's only in the uncontended case)
-// obsolete  //if(adda(&m->v,-1)){sta(&m->v,FREE);jfutex_wake1(&m->v);}
  R 0;}
 #endif //PYXES

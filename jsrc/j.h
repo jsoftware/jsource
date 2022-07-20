@@ -1499,6 +1499,14 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
 #endif
 
+// can't just emu vblendvb using vblendvps because different sizing => different behaviour; so use BLENDVI when the masks are guaranteed at least 32 bits.
+// Use ps over pd for greater granularity and because old cpus don't have separate single/double domains; newer cpus will have the int blend so don't care
+#if C_AVX2
+#define BLENDVI _mm256_blendv_epi8
+#elif C_AVX || EMU_AVX
+#define BLENDVI(x,y,z) _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(x), _mm256_castsi256_ps(y), _mm256_castsi256_ps(z)))
+#endif
+
 #define NOUNROLL _Pragma("clang loop unroll(disable)") _Pragma("clang loop vectorize(disable)")  // put this just before a loop to disable unroll
 #if (C_AVX&&SY_64) || EMU_AVX
 // j64avx gcc _mm256_zeroupper -O2 failed SLEEF for expression % /\ ^:_1 ,: 1 2 3  => 1 2 0

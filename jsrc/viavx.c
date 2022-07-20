@@ -1548,8 +1548,8 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
 #define TAKEMINOF(z,x)  z = _mm256_min_epi64(z,x);
 #define TAKEMAXOF(z,x)  z = _mm256_max_epi64(z,x);
 #else
-#define TAKEMINOF(z,x)  z = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(z),_mm256_castsi256_pd(x),_mm256_castsi256_pd(_mm256_cmpgt_epi64(z,x))));  // if min>temp, take temp
-#define TAKEMAXOF(z,x)  z = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(x),_mm256_castsi256_pd(z),_mm256_castsi256_pd(_mm256_cmpgt_epi64(z,x))));  // if max>temp, take max
+#define TAKEMINOF(z,x)  z = BLENDVI(z,x,_mm256_cmpgt_epi64(z,x));  // if min>temp, take temp
+#define TAKEMAXOF(z,x)  z = BLENDVI(x,z,_mm256_cmpgt_epi64(z,x));  // if max>temp, take max
 #endif
    UI n2=DUFFLPCT(compn<<LGNPAR,2);  // # turns through duff loop - always at least 1 because compn>=1.  Input to DUFF* is # elements-1
    __m256i temp;
@@ -1589,8 +1589,8 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  // append the last section, 1-4 longs
  TAKEMINOF(min2,min3) TAKEMAXOF(max2,max3)  // free min3/max3
  __m256i temp = _mm256_maskload_epi64(s,endmask);  // read valid values
- min0 = _mm256_blendv_epi8(min0,temp,_mm256_and_si256(_mm256_cmpgt_epi64(min0,temp),endmask));  // masked TAKEMINOF
- max0 = _mm256_blendv_epi8(max0,temp,_mm256_and_si256(_mm256_cmpgt_epi64(temp,max0),endmask));
+ min0 = BLENDVI(min0,temp,_mm256_and_si256(_mm256_cmpgt_epi64(min0,temp),endmask));  // masked TAKEMINOF
+ max0 = BLENDVI(max0,temp,_mm256_and_si256(_mm256_cmpgt_epi64(temp,max0),endmask));
  // make final combination
    // combine the mins into one, and the maxes.  Take the difference & see if it exceeds max allowable range
  TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)

@@ -153,21 +153,11 @@ static int vendorIsIntel = 0, vendorIsAMD = 0;
 
 uint32_t OPENSSL_ia32cap_P[4];
 
-#ifdef MMSC_VER
-#include <windows.h>
-extern void __cpuid(int CPUInfo[4], int InfoType);
-#define x86_cpuid(x,y) __cpuid(y,x)
-#else
 #ifndef _WIN32
 #include <string.h>
 #include <sys/utsname.h>
-#if defined(__x86_64__)||defined(__i386__)
-#ifndef ANDROID
+#endif
 #include <cpuid.h>
-#endif
-#endif
-#endif
-#endif
 
 #if defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 static int check_xcr0_ymm()

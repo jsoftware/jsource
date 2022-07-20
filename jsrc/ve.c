@@ -72,12 +72,18 @@ primop256(minDI,16,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 primop256(minID,8,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 primop256(minBD,0x100,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 primop256(minDB,0x200,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+#if C_AVX512
+primop256(minII,1,,   zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(minBI,0x40,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(minIB,0x80,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+#else
 primop256(minII,1,,
  zz=_mm256_blendv_pd(xx,yy,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(minBI,0x40,,
  zz=_mm256_blendv_pd(xx,yy,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(minIB,0x80,,
  zz=_mm256_blendv_pd(xx,yy,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+#endif
 primop256(maxDI,16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxBD,0x100,,zz=_mm256_max_pd(xx,yy),R EVOK;)

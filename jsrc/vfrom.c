@@ -919,7 +919,7 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
  ((struct mvmctx*)ctx)->abortcolandrow=(bestcol<<32)|(UI4)bestcolrow;  // set unbounded col or col/row of virtual pivot
  R 0;
 }
-#endif
+#endif //C_AVX2
 
 // 128!:9 matrix times sparse vector with optional early exit
 // product mode:

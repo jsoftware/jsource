@@ -2005,6 +2005,8 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // If CTTZ is not defined, the default routine defined in u.c will be used.  You can look there
 // for the complete spec for CTTZ and CTTZZ.
 
+// CTLZ(I) returns the bit position of the highest 1-bit
+
 #if defined(MMSC_VER)  // SY_WIN32
 // do not include intrin.h
 // #include <intrin.h>

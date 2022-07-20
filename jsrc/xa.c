@@ -497,7 +497,9 @@ R mtm;
 // 0 igemm_thres  integer threshold
 // 1 dgemm_thres  real threshold
 // 2 zgemm_thres  complex threshold
+// The values are stored in 16-bit floating-point so they may be truncated
 
+// 9!:58 0/1/2
 F1(jtgemmtune){I k;
  ARGCHK1(w);
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
@@ -505,9 +507,10 @@ F1(jtgemmtune){I k;
  ASSERT(1>=AR(w),EVRANK);
  RE(k=i0(w));  // get arg
  ASSERT(k==0||k==1||k==2,EVDOMAIN);
- R sc((0==k)?JT(jt,igemm_thres):(1==k)?JT(jt,dgemm_thres):JT(jt,zgemm_thres));
+ R sc((I)FLOAT16TOFLOAT((0==k)?JT(jt,igemm_thres):(1==k)?JT(jt,dgemm_thres):JT(jt,zgemm_thres)));
 }
 
+// thresh 9!:58 0/1/2
 F2(jtgemmtune2){I j,k;
  ARGCHK2(a,w);
  ASSERT(AT(a)&(B01+INT),EVDOMAIN);
@@ -516,13 +519,14 @@ F2(jtgemmtune2){I j,k;
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
- RE(j=i0(a));  // get arg
- RE(k=i0(w));  // get arg
+ RE(j=i0(a));  // get arg: limit
+ RE(k=i0(w));  // get arg: selected type
  ASSERT(j>=-1,EVDOMAIN);
  ASSERT(k==0||k==1||k==2,EVDOMAIN);
- if(k==0) JT(jt,igemm_thres)=j;
- else if(k==1) JT(jt,dgemm_thres)=j;
- else JT(jt,zgemm_thres)=j;
+ FLOAT16 j16=FLOATTOFLOAT16(j);
+ if(k==0) JT(jt,igemm_thres)=j16;
+ else if(k==1) JT(jt,dgemm_thres)=j16;
+ else JT(jt,zgemm_thres)=j16;
  R sc(1);
 }
 

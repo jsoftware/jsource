@@ -191,6 +191,13 @@ common="$common -DNO_SHA_ASM"
 
 else
 
+SRC_ASM_LINUXAVX512=" \
+ md5-x86_64-elf.o \
+ keccak1600-avx512-elf.o \
+ sha1-x86_64-elf.o \
+ sha256-x86_64-elf.o \
+ sha512-x86_64-elf.o "
+
 SRC_ASM_LINUXAVX2=" \
  md5-x86_64-elf.o \
  keccak1600-avx2-elf.o \
@@ -337,7 +344,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
-SRC_ASM="${SRC_ASM_LINUXAVX2}" #same for now
+SRC_ASM="${SRC_ASM_LINUXAVX512}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
 FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto

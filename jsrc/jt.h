@@ -349,11 +349,14 @@ typedef struct JSTstruct {
  S dblock;           // lock on dbstops/dbtrap
  B retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
+ B sesm;             /* whether there is a session manager             */
+ C nfe;              /* 1 for J native front end                    */
  // rest of cacheline is essentially read-only
- float igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
- float dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
- float zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
- A evm;              /* event messages                                  */
+ FLOAT16 igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
+ FLOAT16 dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
+ FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
+// 4 bytes free 
+A evm;              /* event messages                                  */
  I (*emptylocale)[MAXTHREADS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
  I filler6[2];
 // end of cacheline 6
@@ -368,14 +371,12 @@ typedef struct JSTstruct {
  C bx[11];               /* box drawing characters                          */
  UC disp[7];          /* # different verb displays                       */
  US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
- B sesm;             /* whether there is a session manager             */
- C nfe;              /* 1 for J native front end                    */
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
- // 6 bytes free
 #if PYXES
  JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
 #endif
+ I filler7[1];
 // end of cacheline 7
 
  JTT threaddata[MAXTHREADS] __attribute__((aligned(JTFLAGMSK+1)));

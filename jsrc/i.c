@@ -156,9 +156,9 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  A vimp=ca(mnuvxynam[3]); NAV(vimp)->flag|=NMIMPLOC;
  INITJT(jjt,implocref)[1] = fdef(0,CTILDE,VERB, 0,0, vimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[1])=ACUC1;  //create 'v.'~
 
- INITJT(jjt,igemm_thres)=IGEMM_THRES;   // tuning parameters for cip.c
- INITJT(jjt,dgemm_thres)=DGEMM_THRES;
- INITJT(jjt,zgemm_thres)=ZGEMM_THRES;
+ INITJT(jjt,igemm_thres)=FLOATTOFLOAT16(IGEMM_THRES);   // tuning parameters for cip.c
+ INITJT(jjt,dgemm_thres)=FLOATTOFLOAT16(DGEMM_THRES);
+ INITJT(jjt,zgemm_thres)=FLOATTOFLOAT16(ZGEMM_THRES);
  INITJT(jjt,deprecex)=num(7);  // scaf suppress msg 7 for the nonce
 #if USECSTACK
  jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address

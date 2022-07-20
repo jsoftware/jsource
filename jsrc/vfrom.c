@@ -652,7 +652,6 @@ static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<row)?(col<
  while(nexlist--)if(*exlist++==colrow)R 0;
  R 1;
 }
-#endif
  
 // everything we need for one core's execution
 struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
@@ -920,6 +919,7 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
  ((struct mvmctx*)ctx)->abortcolandrow=(bestcol<<32)|(UI4)bestcolrow;  // set unbounded col or col/row of virtual pivot
  R 0;
 }
+#endif
 
 // 128!:9 matrix times sparse vector with optional early exit
 // product mode:

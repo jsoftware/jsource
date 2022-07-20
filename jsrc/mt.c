@@ -167,7 +167,7 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
   }
   // come out of loop when we have the lock
-  sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;  // remove wakeup to this thread
+  sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;  // remove wakeup to this thread; if wakeup in progress, wait till it finishes
  }
  m->ct+=m->recursive;m->owner=self;R 0;  // install ownership info, good return
 fail:sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD; R r;}  // error return, with our internal errorcode

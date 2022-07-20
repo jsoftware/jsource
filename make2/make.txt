@@ -19,7 +19,7 @@ jplatform=(..) j64x=(..) ./build_libj.sh
 
 where 
 jplatform : linux darwin raspberry  (default host)
-j64x : j64 j64avx j64avx2 j64arm j32  (default host or j64avx)
+j64x : j64 j64avx j64avx2 j64avx512 j64arm j32  (default host or j64avx)
 
 # binaries generated inside the bin folder under jsource
 

@@ -249,36 +249,3 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 
 // Here we initialize the new jt for a new J instance.
 C jtjinit2(JS jt,int dummy0,C**dummy1){INITJT(jt,sesm)=1; R jinit3();}
-
-
-
-/* unused cpuInfo
-
-#if 0   // Now we detect architecture at installation time, using C_AVX
- // See if processor supports AVX instructions
- // Tip o' hat to InsufficientlyComplicated and the commenter
- // Checking for AVX requires 3 things:
- // 1) CPUID indicates that the OS uses XSAVE and XRSTORE
- //     instructions (allowing saving YMM registers on context
- //     switch)
- // 2) CPUID indicates support for AVX
- // 3) XGETBV indicates the AVX registers will be saved and
- //     restored on context switch
- //
- // Note that XGETBV is only available on 686 or later CPUs, so
- // the instruction needs to be conditionally run.
- int cpuInfo[4];
- __cpuid(cpuInfo, 1);
- 
- I osUsesXSAVE_XRSTORE = cpuInfo[2] & (1L << 27);
- I cpuAVXSuport = cpuInfo[2] & (1L << 28);
- 
- if (osUsesXSAVE_XRSTORE && cpuAVXSuport)
- {
-  // Check if the OS will save the YMM registers
-  unsigned long long xcrFeatureMask = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
-  jt->cpuarchavx = (xcrFeatureMask & 0x6) == 0x6;
- }
-#endif
-*/
-

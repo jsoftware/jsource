@@ -134,17 +134,7 @@ TARGET=libjnative.so
 CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
 ;;
-linux_j64)
-TARGET=libjnative.so
-CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
-LDFLAGS=" -shared -Wl,-soname,libjnative.so "
-;;
-linux_j64avx)
-TARGET=libjnative.so
-CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
-LDFLAGS=" -shared -Wl,-soname,libjnative.so "
-;;
-linux_j64avx2)
+linux_j6*)
 TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
@@ -164,17 +154,7 @@ TARGET=libjnative.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" -m32 $macmin -dynamiclib "
 ;;
-darwin_j64)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib "
-;;
-darwin_j64avx)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib "
-;;
-darwin_j64avx2)
+darwin_j6*)
 TARGET=libjnative.dylib
 CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib "

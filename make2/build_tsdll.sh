@@ -122,19 +122,7 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
 ;;
 
-linux_j64) # linux intel 64bit nonavx
-TARGET=libtsdll.so
-CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
-;;
-
-linux_j64avx) # linux intel 64bit avx
-TARGET=libtsdll.so
-CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
-;;
-
-linux_j64avx2) # linux intel 64bit avx
+linux_j6*) # linux intel 64bit
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
@@ -158,21 +146,9 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl -m32 $macmin"
 ;;
 
-darwin_j64) # darwin intel 64bit nonavx
+darwin_j6*) # darwin intel 64bit
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -lm -ldl $macmin"
-;;
-
-darwin_j64avx) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin "
-LDFLAGS=" -dynamiclib -lm -ldl $macmin"
-;;
-
-darwin_j64avx2) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin "
 LDFLAGS=" -dynamiclib -lm -ldl $macmin"
 ;;
 

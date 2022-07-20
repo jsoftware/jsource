@@ -142,15 +142,7 @@ linux_j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 LDFLAGS=" -m32 -ldl $LDTHREAD"
 ;;
-linux_j64)
-CFLAGS="$common"
-LDFLAGS=" -ldl $LDTHREAD"
-;;
-linux_j64avx)
-CFLAGS="$common"
-LDFLAGS=" -ldl $LDTHREAD"
-;;
-linux_j64avx2)
+linux_j6*)
 CFLAGS="$common"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
@@ -167,15 +159,7 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
 #-mmacosx-version-min=10.5
-darwin_j64)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin_j64avx)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin_j64avx2)
+darwin_j6*)
 CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
@@ -188,17 +172,7 @@ TARGET=jconsole.exe
 CFLAGS="$common -m32 "
 LDFLAGS=" -m32 -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
-windows_j64)
-TARGET=jconsole.exe
-CFLAGS="$common"
-LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
-;;
-windows_j64avx)
-TARGET=jconsole.exe
-CFLAGS="$common"
-LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
-;;
-windows_j64avx2)
+windows_j6*)
 TARGET=jconsole.exe
 CFLAGS="$common"
 LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"

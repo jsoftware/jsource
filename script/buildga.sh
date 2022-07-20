@@ -43,6 +43,8 @@ fi
 j64x=j64avx USE_PYXES=1 ./build_libj.sh
 ./clean.sh
 j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
+./clean.sh
+j64x=j64avx512 USE_PYXES=1 ./build_libj.sh
 
 cd ..
 cp bin/$1/j64/* j64
@@ -53,5 +55,6 @@ lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 fi
 cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
+cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 chmod 644 j64/*
 chmod 755 j64/jconsole

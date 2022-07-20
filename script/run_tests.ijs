@@ -19,6 +19,7 @@ case. 'Win' do.
  javx2=: 'javx2.dll'
 end.
 )
+NB. don't run with avx512 yet due to limited hardware support
 
 output=: jpath'~temp/run_tests.txt'
 

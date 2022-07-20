@@ -114,14 +114,16 @@ TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR
 #define bits "32"
 #endif
 
-#if C_AVX2
+#if C_AVX512
+#define hw "avx512"
+#elif C_AVX2
 #define hw "avx2"
-#else
-#if C_AVX
+#elif C_AVX
 #define hw "avx"
+#elif __arm64__ || __aarch64__
+#define hw "arm"
 #else
 #define hw ""
-#endif
 #endif
 
 const char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;

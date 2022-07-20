@@ -63,14 +63,43 @@
 #define dump_m128d(a,x) {__m128d _b=x;fprintf(stderr,"%s %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1]);}
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+#ifndef C_AVX512
+#define C_AVX512 0
+#endif
+
+#if !C_AVX2
+#if C_AVX512
+#ifdef C_AVX2
+#undef C_AVX2
+#endif
+#define C_AVX2 1
+#endif
 #ifndef C_AVX2
 #define C_AVX2 0
 #endif
+#endif
 
-#if C_AVX2
+#if !C_AVX2
+#if C_AVX512
+#ifdef C_AVX2
+#undef C_AVX2
+#endif
+#define C_AVX2 1
+#endif
+#ifndef C_AVX2
+#define C_AVX2 0
+#endif
+#endif
+
 #if !C_AVX
+#if C_AVX2
+#ifdef C_AVX
 #undef C_AVX
+#endif
 #define C_AVX 1
+#endif
+#ifndef C_AVX
+#define C_AVX 0
 #endif
 #endif
 #endif
@@ -82,6 +111,7 @@
 #if (defined(_MSC_VER))
 #include <intrin.h>
 #endif
+// no EMU_AVX512; avx512 is not widespread yet, and older chips still downclock (so not worth it for small arrays), so still maintain avx2-specific paths
 #if C_AVX2
 #undef EMU_AVX2
 #define EMU_AVX2 0

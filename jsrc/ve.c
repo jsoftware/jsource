@@ -82,12 +82,18 @@ primop256(maxDI,16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxBD,0x100,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxDB,0x200,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+#if C_AVX512
+primop256(maxII,1,,   zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(maxBI,0x40,,zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(maxIB,0x80,,zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+#else
 primop256(maxII,1,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxBI,0x40,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxIB,0x80,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+#endif
 primop256(tymesDI,16,I msav=m; D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){m=msav; z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 primop256(tymesDB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)
 primop256(tymesIB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;) // duplicated fn

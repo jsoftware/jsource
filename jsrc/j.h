@@ -515,7 +515,7 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #endif 
 //The named-function stack is intelligent
 // and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
-// The depth of J function calls will probably limit stack use.
+// The depth of the C stack will normally limit stack use.
 #define NFCALL          (1000L)      // call depth for named calls, not important.  Must fit into an S
 
 // start and length for the stored vector of ascending integers

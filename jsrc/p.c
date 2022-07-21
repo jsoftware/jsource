@@ -384,7 +384,7 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
 // Given that we took an error executing the block starting at jt->parserstackframe.parserstkend1, figure out what the error-token number should be
 I infererrtok(J jt){
  // if the sentence had only one token, that token is the error token
- if(jt->parserstackframe.parserqueuelen==1)R 1;  // lust one token, return it
+ if(jt->parserstackframe.parserqueuelen==1)R 1;  // just one token, return it
  // reparse the fragment to get the line# that was executed
  I pmask=(I)((C*)&jt->parserstackframe.parserstkend1[0].pt)[0] & (I)((C*)&jt->parserstackframe.parserstkend1[1].pt)[1] &(I)((C*)&jt->parserstackframe.parserstkend1[2].pt)[2] &(I)((C*)&jt->parserstackframe.parserstkend1[3].pt)[3];  // parse
  // see if ( was executable
@@ -401,7 +401,7 @@ I infererrtok(J jt){
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 // JT flag is used to indicate execution from ". - we can't honor name:: then, or perhaps some assignments
-A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * stack;A z,*v;
+A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
@@ -752,6 +752,7 @@ RECURSIVERESULTSCHECK
        }
        // repeat for fs
        if(ISSTKFAOWED(arg1=stack[2-(pmask&1)].a)){fa(QCWORD(arg1));}   // 1 2 2
+
        // close up the stack and store the result
        stack[3-(pmask&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
        stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0

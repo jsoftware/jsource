@@ -664,8 +664,11 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  D minimp;
  I ncolsproc;  // number of columns processed
  I ndotprods;  // total # dotproducts evaluated
+ I taskmask;  // a bit for each task as we take it for work
  // the rest is moved into static names
- I nc; I *ndx; I *ndx0; I *ndxe; I n;
+ A ndxa;   // the indexes, always a boxed list of arrays
+// obsolete  I nc; I *ndx; I *ndx0; I *ndxe;
+ I n;  // #rows/cols in M
  I nvirt;
  D *bv;
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
@@ -673,7 +676,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 // obsolete  __m256d oldbk;   // oldbk  minimp 0      0            bk value at previous smallest pivot, best gain available in a previous col (always <=0) 0 0
  I bestcol; I bestcolrow;  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
  D *zv; D *Frow;  // pointer to output for product mode, Frow
- I nfreecols, ncols; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
+ D nfreecolsd, ncolsd; D impfac;  // faction of cols to process before we insist on min improvement; min fraction of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
@@ -689,8 +692,8 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(((struct mvmctx*)ctx)->x) x=((struct mvmctx*)ctx)->x;
- YC(nc)YC(ndx)YC(ndx0)YC(ndxe)YC(n)YC(minimp)YC(nvirt)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecols)
- YC(ncols)YC(impfac)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(mv0)
+ YC(ndxa)YC(n)YC(minimp)YC(nvirt)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)
+ YC(impfac)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(mv0)
 #undef YC
  // perform the operation
 
@@ -733,7 +736,20 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  __m256d oldbk;   // oldbk  minimp 0      0            bk value at previous smallest pivot, best gain available in a previous col (always <=0) 0 0
  D minimpfound=0.0;  // minimum (=best) improvement found so far from a non-dangerous pivot
  I ndotprods=0;  // number of dot-products we perform here
-  
+
+ // Figure out which task to take.  We use the core/thread#, and if somehow that task has been taken we take any other free one
+ I taskno=jt->ndxinthreadpool;  // default task# to try
+ if(unlikely(taskno>=AN(ndxa)))taskno=taskno%AN(ndxa);  // if more processors than tasks, take a value in range
+ I trymask=1LL<<taskno;  // mask we will try to take
+ while(1){
+  I oldmask=__atomic_fetch_or(&((struct mvmctx*)ctx)->taskmask,trymask,__ATOMIC_ACQ_REL);  // try to reserve a task
+  if(!(oldmask&trymask))break;  // if we reserved it, continue
+  trymask=1LL<<(taskno=CTTZI(~oldmask));  // advance to the lowest 0 bit - an untaken task
+ }
+ ndxa=AAV(ndxa)[taskno];  // we have reserved task taskno; point to its indexes
+ I *ndx0=IAV(ndxa), *ndx=ndx0, nc=AN(ndxa), *ndxe=ndx+nc; // pointer to column numbers in the order processed, and end+1, and #cols
+ I nfreecols=(I)(((struct mvmctx*)ctx)->nfreecolsd*nc); I ncols=(I)(((struct mvmctx*)ctx)->ncolsd*nc);  // the prefix and total fractions are fractions of the size & must be adjusted
+ if(unlikely(nc==0))R 0;  // abort with no action if no columns (possible only for DIP)
 
 #define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; D bkold=inf, cold=1.0; I bkle0=1;
 #define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?
@@ -949,7 +965,7 @@ F1(jtmvmsparse){PROLOG(832);
  ASSERT(AR(C(AAV(w)[4]))==2,EVRANK);  // M
  // abort if no columns
  if(AN(C(AAV(w)[0]))==0)R num(6);  // if no cols (which happens at startup, return error indic)
- // check types.  Don't convert - force the user to get it right - except for ndx
+ // check types.  Don't convert - force the user to get it right
  ASSERT(AT(C(AAV(w)[1]))&INT,EVDOMAIN);  // Ax, shape cols,2 1
  ASSERT(AT(C(AAV(w)[2]))&INT,EVDOMAIN);  // Am
  ASSERT(AT(C(AAV(w)[3]))&FL,EVDOMAIN);  // Av
@@ -957,8 +973,16 @@ F1(jtmvmsparse){PROLOG(832);
  // check agreement
  ASSERT(AS(C(AAV(w)[2]))[0]==AS(C(AAV(w)[3]))[0],EVLENGTH);   // Am and Av
  ASSERT(AS(C(AAV(w)[4]))[0]==AS(C(AAV(w)[4]))[1],EVLENGTH);   // M is square
- A ndxa=C(AAV(w)[0]); ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
- I *ndx0=IAV(ndxa), *ndx=ndx0, nc=AN(ndxa), *ndxe=ndx+nc;  // pointer to column numbers in the order processed, and end+1, and #cols
+
+ // indexes must be an atom, a single list of integers, or a list of boxes containing integers
+ // we don't allow conversion so as to force the user to get it right, for speed
+ A ndxa=C(AAV(w)[0]); ASSERT(AT(ndxa)&BOX+INT,EVDOMAIN);
+ if(likely(AT(ndxa)&BOX)){  // if list of boxes, ensure each holds a list of integers, possibly empty
+  DO(AN(ndxa), ASSERT(AT(AAV(ndxa)[i])&BOX,EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) )
+ }
+ if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box
+ ASSERT(AN(ndxa)<=MAXTHREADSINPOOL+1,EVLIMIT)   // if we don't have a bit in trymask for each task, that's too many tasks
+// obsolete  ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
  // extract pointers to tables
  D minimp=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
  I nvirt=0;  // number of virtual rows at the beginning of bkg - give them priority
@@ -969,7 +993,7 @@ F1(jtmvmsparse){PROLOG(832);
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
  I bestcol=1LL<<(BW-1), bestcolrow=1LL<<(32+3);  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
  A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
- I nfreecols, ncols; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
+ D nfreecolsd, ncolsd; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist=0, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
@@ -991,7 +1015,7 @@ F1(jtmvmsparse){PROLOG(832);
   ASSERT(AR(C(AAV(w)[6]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
   if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
   bkmin=DAV(C(AAV(w)[6]))[2];
-  thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],bkmin,inf,DAV(C(AAV(w)[6]))[0]); nfreecols=(I)(nc*DAV(C(AAV(w)[6]))[3]); ncols=(I)(nc*DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; nvirt=(I)DAV(C(AAV(w)[6]))[6];
+  thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],bkmin,inf,DAV(C(AAV(w)[6]))[0]); nfreecolsd=(DAV(C(AAV(w)[6]))[3]); ncolsd=(DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; nvirt=(I)DAV(C(AAV(w)[6]))[6];
   zv=AN(C(AAV(w)[5]))==AN(C(AAV(w)[7]))?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
   if(AN(w)>9){
    ASSERT(AN(w)==11,EVLENGTH); 
@@ -1004,13 +1028,15 @@ F1(jtmvmsparse){PROLOG(832);
   }
  }
 
+
 #define YC(n) .n=n,
-struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(nc)YC(ndx)YC(ndx0)YC(ndxe)YC(n)YC(minimp)YC(nvirt)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecols)
- YC(ncols)YC(impfac)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=(I(*)[2])IAV(C(AAV(w)[1])),.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.mv0=DAV(C(AAV(w)[4])),
- .ndotprods=0,.ncolsproc=0,};
+struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndxa)YC(n)YC(minimp)YC(nvirt)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
+ YC(ncolsd)YC(impfac)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=(I(*)[2])IAV(C(AAV(w)[1])),.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.mv0=DAV(C(AAV(w)[4])),
+ .ndotprods=0,.ncolsproc=0,.taskmask=0};
 #undef YC
 
- jtjobrun(jt,jtmvmsparsex,&opctx,1,0);  // go run the tasks - default to threadpool 0
+ // The number of tasks in the job is the number of boxed lists in ndxa
+ jtjobrun(jt,jtmvmsparsex,&opctx,AN(ndxa),0);  // go run the tasks - default to threadpool 0
 
  // prepare final result
  if(likely(bv!=0)){

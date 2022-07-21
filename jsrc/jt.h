@@ -155,9 +155,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // things needed by name lookup (unquote)
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  A curname;          // current name, an A block containing an NM
- US fcalln;           /* named fn calls: maximum permissible depth     */
+ US fcalln;           // named fn calls: maximum permissible depth   could be a fixed value?
  US callstacknext;    // current stack pointer into callstack.  Could be elided if callstack put on a 16K boundary, not a bad idea anyway
- LX symfreetail1;  // tail pointer for overflow chain
+ LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
  DC sitop;            /* pointer to top of SI stack                                 */
  I bytes;            // bytes currently in use - used only during 7!:1
 // end of cacheline 3
@@ -186,7 +186,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // seldom used,  but contended during system lock 
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  void *dtoa;             /* use internally by dtoa.c                        */
- PSTK initparserstack[1];  // stack used for messages when we don't have a real one
+ PSTK initparserstack[1];  // 2 words stack used for messages when we don't have a real one Only .a and .t are used, leaving 6 bytes free (.pt and .filler)
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
 #if PYXES
@@ -195,7 +195,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #else
  I filler7[2];
 #endif
- UI4*futexwt; // value this thread is currently waiting on, if applicable.  Used to wake sleeping threads during systemlock
+ UI4*futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock
 // end of cacheline 6
 
  C _cl7[0];

@@ -1,8 +1,12 @@
+ifeq (1,${JAVX512})
+FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -DHAVE_AVX512=1 -march=skylake-avx512
+else
 ifeq (1,${JAVX2})
 FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell
 else
 ifeq (1,${JAVX})
 FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1
+endif
 endif
 endif
 ifeq (1,${USE_OPENMP})
@@ -45,7 +49,7 @@ endif
 
 ifeq (1,${x64})
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} ${PTHREADINC} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
+CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FAVX512} ${FOPENMP} ${FSLEEF} ${FBOXEDSPARSE} ${PTHREADINC} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 ASMFLAGS= /Cx
 else
@@ -270,6 +274,9 @@ endif
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
 ifeq (1,${x64})
+ifeq (1,${JAVX512})
+TARGET= javx512.dll
+else
 ifeq (1,${JAVX2})
 TARGET= javx2.dll
 else
@@ -277,6 +284,7 @@ ifeq (1,${JAVX})
 TARGET= javx.dll
 else
 TARGET= j.dll
+endif
 endif
 endif
 else

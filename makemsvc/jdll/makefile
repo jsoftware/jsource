@@ -1,5 +1,5 @@
 ifeq (1,${JAVX512})
-FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -DHAVE_AVX512=1 -march=skylake-avx512
+FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512
 else
 ifeq (1,${JAVX2})
 FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell
@@ -19,6 +19,9 @@ endif
 endif
 USE_SLEEF=1
 ifeq (1,${x64})
+ifeq (1,${JAVX512})
+FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+else
 ifeq (1,${JAVX2})
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
@@ -26,6 +29,7 @@ ifeq (1,${JAVX})
 FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+endif
 endif
 endif
 else

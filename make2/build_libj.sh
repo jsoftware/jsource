@@ -191,6 +191,13 @@ common="$common -DNO_SHA_ASM"
 
 else
 
+SRC_ASM_LINUXAVX512=" \
+ md5-x86_64-elf.o \
+ keccak1600-avx512-elf.o \
+ sha1-x86_64-elf.o \
+ sha256-x86_64-elf.o \
+ sha512-x86_64-elf.o "
+
 SRC_ASM_LINUXAVX2=" \
  md5-x86_64-elf.o \
  keccak1600-avx2-elf.o \
@@ -330,6 +337,19 @@ FLAGS_SLEEF=" -DENABLE_AVX2 "
 FLAGS_BASE64=" -DHAVE_AVX2=1 "
 ;;
 
+linux_j64avx512) # linux intel 64bit avx512
+TARGET=libj.so
+CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
+CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_LINUXAVX512}"
+GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
+FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
+;;
+
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
 CFLAGS="$common -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
@@ -391,6 +411,19 @@ TARGET=libj.dylib
 CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_MAC}"
+GASM_FLAGS="$macmin"
+FLAGS_SLEEF=" -DENABLE_AVX2 "
+FLAGS_BASE64=" -DHAVE_AVX2=1 "
+;;
+
+darwin_j64avx512) # darwin intel 64bit
+TARGET=libj.dylib
+CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
@@ -488,7 +521,7 @@ FLAGS_SLEEF=" -DENABLE_AVX "
 FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
 ;;
 
-windows_j64avx2) # windows intel 64bit avx
+windows_j64avx2) # windows intel 64bit avx2
 jolecom="${jolecom:=0}"
 if [ $jolecom -eq 1 ] ; then
 DOLECOM="-DOLECOM"
@@ -497,6 +530,32 @@ TARGET=j.dll
 CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
 LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
 CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+if [ $jolecom -eq 1 ] ; then
+DLLOBJS=" jdll.o jdllcomx.o "
+LIBJDEF=" ../../../../dllsrc/jdll.def "
+else
+DLLOBJS=" jdll.o "
+LIBJDEF=" ../../../../dllsrc/jdll2.def "
+fi
+LIBJRES=" jdllres.o "
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_WIN}"
+OBJS_ASM="${OBJS_ASM_WIN}"
+GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX2 "
+FLAGS_BASE64=" -DHAVE_AVX2=1 "
+;;
+
+windows_j64avx512) # windows intel 64bit avx512
+jolecom="${jolecom:=0}"
+if [ $jolecom -eq 1 ] ; then
+DOLECOM="-DOLECOM"
+fi
+TARGET=j.dll
+CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
+LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
+CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 if [ $jolecom -eq 1 ] ; then
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" ../../../../dllsrc/jdll.def "

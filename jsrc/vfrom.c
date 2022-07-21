@@ -106,11 +106,13 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    if(m==1){  // the atom { list case is pretty common
     *x=v[j];  // just move the one value
    }else{
-    __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_loadu_si256((__m256i*)&iotavec[-IOTAVECBEGIN]));  // each lane accesses a different cell
+    __m256i lanestride=_mm256_setzero_si256();
+    lanestride=_mm256_insert_epi64(lanestride,p,1);
+    lanestride=_mm256_insert_epi64(lanestride,p+p,2);
+    lanestride=_mm256_insert_epi64(lanestride,p+p+p,3);  // each lane accesses a different cell
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
     v+=j;  // advance base pointer to the column we are fetching
-    wstride=_mm256_slli_epi64(wstride,LGNPAR);  // repurpose wstride to be stride between groups of 4 cells
-    DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,lanestride,ones,SZI)); lanestride=_mm256_add_epi64(lanestride,wstride);  x+=NPAR;)
+    DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,lanestride,ones,SZI)); v+=NPAR*p; x+=NPAR;)
     /* runout, using mask */ 
     _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,lanestride,endmask,SZI));   // must use a different reg for source and index, lest VS2013 create an illegal instruction
    }
@@ -216,7 +218,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    }
   }
  }
-#else
+#else //C_AVX2
  IFROMLOOP(I);
 #endif
   break;

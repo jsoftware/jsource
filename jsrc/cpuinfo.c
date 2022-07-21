@@ -153,21 +153,11 @@ static int vendorIsIntel = 0, vendorIsAMD = 0;
 
 uint32_t OPENSSL_ia32cap_P[4];
 
-#ifdef MMSC_VER
-#include <windows.h>
-extern void __cpuid(int CPUInfo[4], int InfoType);
-#define x86_cpuid(x,y) __cpuid(y,x)
-#else
 #ifndef _WIN32
 #include <string.h>
 #include <sys/utsname.h>
-#if defined(__x86_64__)||defined(__i386__)
-#ifndef ANDROID
+#endif
 #include <cpuid.h>
-#endif
-#endif
-#endif
-#endif
 
 #if defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 static int check_xcr0_ymm()
@@ -182,8 +172,6 @@ static int check_xcr0_ymm()
 }
 #endif
 
-#ifndef MMSC_VER
-#if !defined(ANDROID) && !defined(_WIN32)
 static __inline int
 get_cpuid_count (unsigned int __level, unsigned int __count,
                  unsigned int *__eax, unsigned int *__ebx,
@@ -197,50 +185,7 @@ get_cpuid_count (unsigned int __level, unsigned int __count,
   return 1;
 }
 #define x86_cpuid(func, values) get_cpuid_count(func, 0, values, values+1, values+2, values+3)
-#else
-#ifdef __i386__
-static __inline__ void x86_cpuid(unsigned int func, unsigned int values[4])
-{
-  int a, b, c, d;
-  /* We need to preserve ebx since we're compiling PIC code */
-  /* this means we can't use "=b" for the second output register */
-  __asm__ __volatile__ ( \
-                         "push %%ebx\n"
-                         "xor %%ecx,%%ecx\n"
-                         "cpuid\n" \
-                         "mov %%ebx, %1\n"
-                         "pop %%ebx\n"
-                         : "=a" (a), "=r" (b), "=c" (c), "=d" (d) \
-                         : "a" (func) \
-                       );
-  values[0] = a;
-  values[1] = b;
-  values[2] = c;
-  values[3] = d;
-}
-#elif defined(__x86_64__)
-static __inline__ void x86_cpuid(unsigned int func, unsigned int values[4])
-{
-  int64_t a, b, c, d;
-  /* We need to preserve ebx since we're compiling PIC code */
-  /* this means we can't use "=b" for the second output register */
-  __asm__ __volatile__ ( \
-                         "push %%rbx\n"
-                         "xor %%ecx,%%ecx\n"
-                         "cpuid\n" \
-                         "mov %%rbx, %1\n"
-                         "pop %%rbx\n"
-                         : "=a" (a), "=r" (b), "=c" (c), "=d" (d) \
-                         : "a" (func) \
-                       );
-  values[0] = a;
-  values[1] = b;
-  values[2] = c;
-  values[3] = d;
-}
-#endif
-#endif
-#endif
+#define x86_cpuid_ex(func, subfunc, values) get_cpuid_count(func, subfunc, values, values+1, values+2, values+3)
 
 void cpuInit(void)
 {
@@ -333,6 +278,9 @@ void cpuInit(void)
     if ((regs[1] & (1 << 5)) != 0) {
       g_cpuFeatures |= CPU_X86_FEATURE_AVX2;
     }
+    if ((regs[1] & (1 << 16)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512;
+    }
     if ((regs[1] & (1 << 29)) != 0) {
       g_cpuFeatures |= CPU_X86_FEATURE_SHA_NI;
     }
@@ -381,6 +329,7 @@ void cpuInit(void)
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX;
     g_cpuFeatures &= ~CPU_X86_FEATURE_FMA;
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX2;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512;
   }
 #endif
 
@@ -432,6 +381,7 @@ void OPENSSL_setcap(void)
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX;
     g_cpuFeatures &= ~CPU_X86_FEATURE_FMA;
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX2;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512;
   }
   OPENSSL_ia32cap_P[1] &= ~(1 << 9);
   OPENSSL_ia32cap_P[1] |= (g_cpuFeatures & CPU_X86_FEATURE_SSSE3) ? (1 << 9) : 0;

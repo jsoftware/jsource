@@ -62,7 +62,7 @@ assert. 1e_14 > >./ (ckmat lrtoa)@:((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~
 assert. 1e_14 > >./ (ckmat lrtoa)@:((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.1 * *:)"0 ] 500 + i. 50
 assert. 1e_14 > >./ (ckmat lrtoa)@:((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.001 * *:)"0 ] 500 + i. 50
 1
-}}^:(1 e. 'avx2' E. 9!:14'') 1
+}}^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1 NB.not 9!:56; could be sse build on avx2-supported cpu
 NB. LU rational
 todiag =. ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
 lrtoa =. (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a

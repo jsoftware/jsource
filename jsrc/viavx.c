@@ -1544,15 +1544,20 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
   while(nqw>0){  // at least 2 blocks left - we will always leave the last one for the masked load
    I compn=batchsize; compn=compn+120>nqw?nqw:compn;  // number to read before combining values.  A break+compare costs the same as 30 batches
    nqw-=compn;  // decr for all the reads we will make
-#define TAKEMINOF(z,x)  z = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(z),_mm256_castsi256_pd(x),_mm256_castsi256_pd(_mm256_cmpgt_epi64(z,x))));  // if min>temp, take temp
-#define TAKEMAXOF(z,x)  z = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(x),_mm256_castsi256_pd(z),_mm256_castsi256_pd(_mm256_cmpgt_epi64(z,x))));  // if max>temp, take max
+#if C_AVX512
+#define TAKEMINOF(z,x)  z = _mm256_min_epi64(z,x);
+#define TAKEMAXOF(z,x)  z = _mm256_max_epi64(z,x);
+#else
+#define TAKEMINOF(z,x)  z = BLENDVI(z,x,_mm256_cmpgt_epi64(z,x));  // if min>temp, take temp
+#define TAKEMAXOF(z,x)  z = BLENDVI(x,z,_mm256_cmpgt_epi64(z,x));  // if max>temp, take max
+#endif
    UI n2=DUFFLPCT(compn<<LGNPAR,2);  // # turns through duff loop - always at least 1 because compn>=1.  Input to DUFF* is # elements-1
    __m256i temp;
    UI backoff=DUFFBACKOFF(compn<<LGNPAR,2);
    s+=(backoff+1)*NPAR;
    switch(backoff){
    do{
-   case -1: temp = _mm256_loadu_si256((__m256i const *)s); TAKEMINOF(min0,temp) TAKEMAXOF(max0,temp)
+   case -1: temp = _mm256_loadu_si256((__m256i const *)s);          TAKEMINOF(min0,temp) TAKEMAXOF(max0,temp)
    case -2: temp = _mm256_loadu_si256((__m256i const *)(s+1*NPAR)); TAKEMINOF(min1,temp) TAKEMAXOF(max1,temp)
    case -3: temp = _mm256_loadu_si256((__m256i const *)(s+2*NPAR)); TAKEMINOF(min2,temp) TAKEMAXOF(max2,temp)
    case -4: temp = _mm256_loadu_si256((__m256i const *)(s+3*NPAR)); TAKEMINOF(min3,temp) TAKEMAXOF(max3,temp)
@@ -1566,8 +1571,8 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
    TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min2,min3) TAKEMAXOF(max2,max3) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
    // Convert max to complement so we can do min/max simultaneously
    min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
-   max1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0x33));  // max1 destroyed! now has X n X n
-   min1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0xcc));  // min1 now has n X n X  (X=compl max, n=min)
+   max1=_mm256_blend_epi32(min0,min1,0x33);  // max1 destroyed! now has X n X n
+   min1=_mm256_blend_epi32(min0,min1,0xcc);  // min1 now has n X n X  (X=compl max, n=min)
    max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
    TAKEMINOF(min1,max1);  // min1 is n X n X
    max1=_mm256_permute4x64_epi64(min1,0b11111110);  // max1 has n X - -  from upper min1
@@ -1584,15 +1589,15 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  // append the last section, 1-4 longs
  TAKEMINOF(min2,min3) TAKEMAXOF(max2,max3)  // free min3/max3
  __m256i temp = _mm256_maskload_epi64(s,endmask);  // read valid values
- min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(min0,temp),endmask))));  // masked TAKEMINOF
- max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(temp,max0),endmask))));
+ min0 = BLENDVI(min0,temp,_mm256_and_si256(_mm256_cmpgt_epi64(min0,temp),endmask));  // masked TAKEMINOF
+ max0 = BLENDVI(max0,temp,_mm256_and_si256(_mm256_cmpgt_epi64(temp,max0),endmask));
  // make final combination
    // combine the mins into one, and the maxes.  Take the difference & see if it exceeds max allowable range
  TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
  // Convert max to complement so we can do min/max simultaneously
  min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
- max1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0x33));  // max1 destroyed! now has X n X n
- min1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0xcc));  // min1 now has n X n X  (X=compl max, n=min)
+ max1=_mm256_blend_epi32(min0,min1,0x33);  // max1 destroyed! now has X n X n
+ min1=_mm256_blend_epi32(min0,min1,0xcc);  // min1 now has n X n X  (X=compl max, n=min)
  max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
  TAKEMINOF(min1,max1);  // min1 is n X n X, which includes everything
  max1=_mm256_permute4x64_epi64(min1,0b11111110);  // max1 has n X - -  from upper min1

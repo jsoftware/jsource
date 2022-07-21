@@ -41,13 +41,15 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 #else
 
 // return string indicating which JEs this hardware would run
-// ""         would run j.dll
-// "avx"      would run j.dll or javx.dll
-// "avx avx2" would run j.dll or javx.dll or javx2.dll
+// ""                would run j.dll
+// "avx"             would run j.dll or javx.dll
+// "avx avx2"        would run j.dll or javx.dll or javx2.dll
+// "avx avx2 avx512" would run j.dll or javx.dll or javx2.dll or javx512.dll
 F1(jtjgetx){
 #if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
-if(getCpuFeatures()&CPU_X86_FEATURE_AVX2) R cstr("avx avx2");
-if(getCpuFeatures()&CPU_X86_FEATURE_AVX) R cstr("avx");
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX512) R cstr("avx avx2 avx512");
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX2)   R cstr("avx avx2");
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX)    R cstr("avx");
 #endif
 
 R cstr("");

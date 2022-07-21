@@ -76,6 +76,7 @@ fi
 
 cop j64avx libj.dylib bin libjavx.dylib
 cop j64avx2 libj.dylib bin libjavx2.dylib
+cop j64avx512 libj.dylib bin libjavx512.dylib
 
 else
 
@@ -86,6 +87,7 @@ cop j64 libtsdll.so bin libtsdll.so
 cop j64 libj.so bin libj.so
 cop j64avx libj.so bin libjavx.so
 cop j64avx2 libj.so bin libjavx2.so
+cop j64avx512 libj.so bin libjavx512.so
 
 # linux/raspberry 32-bit
 cop j32 jconsole bin32 jconsole

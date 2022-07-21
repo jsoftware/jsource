@@ -63,14 +63,43 @@
 #define dump_m128d(a,x) {__m128d _b=x;fprintf(stderr,"%s %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1]);}
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+#ifndef C_AVX512
+#define C_AVX512 0
+#endif
+
+#if !C_AVX2
+#if C_AVX512
+#ifdef C_AVX2
+#undef C_AVX2
+#endif
+#define C_AVX2 1
+#endif
 #ifndef C_AVX2
 #define C_AVX2 0
 #endif
+#endif
 
-#if C_AVX2
+#if !C_AVX2
+#if C_AVX512
+#ifdef C_AVX2
+#undef C_AVX2
+#endif
+#define C_AVX2 1
+#endif
+#ifndef C_AVX2
+#define C_AVX2 0
+#endif
+#endif
+
 #if !C_AVX
+#if C_AVX2
+#ifdef C_AVX
 #undef C_AVX
+#endif
 #define C_AVX 1
+#endif
+#ifndef C_AVX
+#define C_AVX 0
 #endif
 #endif
 #endif
@@ -82,6 +111,7 @@
 #if (defined(_MSC_VER))
 #include <intrin.h>
 #endif
+// no EMU_AVX512; avx512 is not widespread yet, and older chips still downclock (so not worth it for small arrays), so still maintain avx2-specific paths
 #if C_AVX2
 #undef EMU_AVX2
 #define EMU_AVX2 0
@@ -1467,6 +1497,14 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // #define NAN1            {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R 0;}}
 // #define NAN1V           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R  ;}}
 // #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
+#endif
+
+// can't just emu vblendvb using vblendvps because different sizing => different behaviour; so use BLENDVI when the masks are guaranteed at least 32 bits.
+// Use ps over pd for greater granularity and because old cpus don't have separate single/double domains; newer cpus will have the int blend so don't care
+#if C_AVX2
+#define BLENDVI _mm256_blendv_epi8
+#elif C_AVX || EMU_AVX
+#define BLENDVI(x,y,z) _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(x), _mm256_castsi256_ps(y), _mm256_castsi256_ps(z)))
 #endif
 
 #define NOUNROLL _Pragma("clang loop unroll(disable)") _Pragma("clang loop vectorize(disable)")  // put this just before a loop to disable unroll

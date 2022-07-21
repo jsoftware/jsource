@@ -290,6 +290,9 @@ i=:p;q;r
 (($p),3 4)    -: $(<<p){a
 (($p),($q),4) -: $(<p;q){a
 
+NB.2 3 -: 7{"1] 3 (<1 7)} 2 5e9$2
+NB.usually not enough memory for ^^
+
 NB. floating point
 a=:o.?2 3 4$10000
 (|.a)      -: 1 0{a

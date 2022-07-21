@@ -106,7 +106,10 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    if(m==1){  // the atom { list case is pretty common
     *x=v[j];  // just move the one value
    }else{
-    __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_loadu_si256((__m256i*)&iotavec[-IOTAVECBEGIN]));  // each lane accesses a different cell
+    __m256i lanestride=_mm256_setzero_si256();
+    lanestride=_mm256_insert_epi64(lanestride,p,1);
+    lanestride=_mm256_insert_epi64(lanestride,p+p,2);
+    lanestride=_mm256_insert_epi64(lanestride,p+p+p,3);  // each lane accesses a different cell
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
     v+=j;  // advance base pointer to the column we are fetching
     wstride=_mm256_slli_epi64(wstride,LGNPAR);  // repurpose wstride to be stride between groups of 4 cells

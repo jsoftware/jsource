@@ -1176,13 +1176,15 @@ typedef struct {
 } PSTK;
 
 // stack frame used by the parser.  There are two stacks in a stack block: the normal execution stack
-// which grows down from stkend1; an error-info stack that grows up from stkbgn.  stkbgn[-1] has the error info.
+// which grows down from stkend1; an original-info stack that grows up from stkbgn.  stkbgn[-1] has the original info.
  typedef struct{
   PSTK* parserstkbgn;     // &start of parser stack
   PSTK* parserstkend1;    // &end+1 of parser stack
   A    sf;   // $: stack in the parser (other users of $: have their own stacks)
-  US   parsercurrtok;   // the token number of the word to flag if there is an error
-  US   filler[3];
+// obsolete  US   parsercurrtok;   // the token number of the word to flag if there is an error
+  US   parseroridetok;  // inited to -1; set to the failing token number+1 to override looking at the exec stack. 0 for no error-line flag.  This is done when pee is detected
+                     // or preemptively for calls to syrd which can fail (kludge)
+  US   filler[2];
  } PFRAME;  // these are stacked en bloc
 
 typedef struct {

@@ -1360,7 +1360,7 @@ printf("%p-\n",w);
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
    A expval=jt->repatq[blockx]; do AFCHAIN(w)=expval; while(!__atomic_compare_exchange_n(&jt->repatq[blockx], &expval, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // atomic install at head of chain
    I4 oldrepatbytes=__atomic_fetch_add(&jt->repatbytes,allocsize,__ATOMIC_ACQ_REL);  // Get total # bytes freed in the repat thread
-   if(unlikely(((oldrepatbytes-REPATGCLIM)^(oldrepatbytes+allocsize-REPATGCLIM))<0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // If amt freed crosses boundary, request GC in the repat thread
+   if(unlikely(((oldrepatbytes-REPATGCLIM)^(oldrepatbytes+allocsize-REPATGCLIM))<0))__atomic_store_n(&jt->uflags.us.uq.uq_c.spfreeneeded,1,__ATOMIC_RELEASE);  // If amt freed crosses boundary, request GC in the repat thread
    //  ********************* jt is corrupt *************************
   }
 #endif

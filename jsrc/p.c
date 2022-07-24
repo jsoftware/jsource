@@ -328,9 +328,13 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
 }
 
 #define FP goto failparse;   // indicate parse failure and exit
+#define FPS goto failparsestack;  // indicate parse failure during stacking
 #define EP(x) {pt0ecam=(x); goto exitparse;}   // exit parser with success; x = 1 if final assignment
 #define FPZSUFF(x,suff) if(unlikely(!(x))){suff FP}   // exit parser w/failure if x==0, doing suff on the way out
+#define FPSZSUFF(x,suff) if(unlikely(!(x))){suff FPS}   // exit parser w/failure if x==0, doing suff on the way out
 #define FPZ(x) FPZSUFF(x,)   // exit parser w/failure if x==0
+#define FPSZ(x) FPSZSUFF(x,)   // exit parser w/failure if x==0
+
 
 #if 0  // keep for commentary
 // An in-place operation requires an inplaceable argument, which is marked as AC<0,
@@ -380,19 +384,20 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
 
-#if 0  // for this to work we would have to rearrange the stack AFTER execution
 // Given that we took an error executing the block starting at jt->parserstackframe.parserstkend1, figure out what the error-token number should be
 I infererrtok(J jt){
+ // if the error was pee, use the error set then
+ if(jt->parserstackframe.parseroridetok!=0xffff)R jt->parserstackframe.parseroridetok;  // Will always be 0 if not -1
  // if the sentence had only one token, that token is the error token
- if(jt->parserstackframe.parserqueuelen==1)R 1;  // just one token, return it
- // reparse the fragment to get the line# that was executed
- I pmask=(I)((C*)&jt->parserstackframe.parserstkend1[0].pt)[0] & (I)((C*)&jt->parserstackframe.parserstkend1[1].pt)[1] &(I)((C*)&jt->parserstackframe.parserstkend1[2].pt)[2] &(I)((C*)&jt->parserstackframe.parserstkend1[3].pt)[3];  // parse
+ if(jt->parserstackframe.parserstkbgn[-1].t==1)R 1;  // just one token, return it
+ // error detected during execution - reparse the fragment to get the line# that was executed
+ I pmask=(I)((C*)&jt->parserstackframe.parserstkend1[0].pt)[0] & (I)((C*)&jt->parserstackframe.parserstkend1[1].pt)[1] &(I)((C*)&jt->parserstackframe.parserstkend1[2].pt)[2];  // emulate parse
+ if(pmask!=0)pmask&=(I)((C*)&jt->parserstackframe.parserstkend1[3].pt)[3];  // if we fail when the stack is empty the only thing one the stack is 3 marks, so we'd better not fetch the fourth.  marks are not executable
  // see if ( was executable
- pmask|=jt->parserstackframe.parserstkend1[0].pt&PTNOTLPAR?0:0x100;  // ( any any any is line 8
+ pmask|=jt->parserstackframe.parserstkend1[0].pt&PTNOTLPAR?0:0x100;  // ( any any any is line 8 - but it couldn't fail
  // Get the number that was executed.  Take the token# from entry (9-0): 2 1 1 1 1 2 2 2 2 1 (line 9 is no match, must be ending syntax error)
  R jt->parserstackframe.parserstkend1[((0x21e>>CTTZI(pmask|0x200))&1)+1].t;  // return failing token#
 }
-#endif
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
@@ -402,9 +407,8 @@ I infererrtok(J jt){
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 // JT flag is used to indicate execution from ". - we can't honor name:: then, or perhaps some assignments
 A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
- // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
- // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
- // so that the information is available for formatting an error display
+ // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragement; the stack will be analyzed
+ // to get the error token.  Errors during the stacking phase will be located from this routine
 
  // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
@@ -412,7 +416,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
  // never look at a stack location until we have moved from the queue to that position.
  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
- // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each execution
+ // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each sentence
  // The stack grows down
  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current stack entry
  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
@@ -426,7 +430,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 
  // the first element of the parser stack is where we save unchanging error info for the sentence
  currstk->a=(A)queue; currstk->t=(US)nwds;  // addr & length of words being parsed
- jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the error info, creating an upward-growing stack at the bottom of the area jt->parserstackframe.parserstkbgn[-1] has the error info
+ jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area jt->parserstackframe.parserstkbgn[-1] has the error info
 
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
@@ -456,6 +460,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 #define GETSTACK0PT stack0pt
 #define STACK0PTISCAVN PTISCAVN(stack0pt)
 #endif
+  jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
   UI pt0ecam = (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl.  locsyms cannot change during this execution
 
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
@@ -536,8 +541,11 @@ rdglob: ;  // here when we tried the buckets and failed
         y=NAV(y)->cachedref; // use the cached address/flags, which has QCFAOWED semantics
         goto endname; // take its type, proceed.  We skip the FAOWED issues (FAOWED must be clear in the cached addr)
        }
-       jt->parserstackframe.parsercurrtok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
-       if(unlikely((y=syrdnobuckets(y))==0))goto undefname;  // do full symbol lookup, knowing that we have checked for buckets already.  Error if not defined
+// obsolete        jt->parserstackframe.parsercurrtok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
+// obsolete        jt->parserstackframe.parseroridetok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
+       y=syrdnobuckets(y);    // do full symbol lookup, knowing that we have checked for buckets already.  Error if not defined
+       if(unlikely(y==0))goto undefname;
+// obsolete        jt->parserstackframe.parseroridetok = 0xffff;  // remove lookup override
       }
       // end of looking at local/global symbol tables.
       // y has QCGLOBAL semantics here, and has the type flags.  When we finish y must have QCFAOWED semantics, still with the type flags
@@ -553,7 +561,7 @@ rdglob: ;  // here when we tried the buckets and failed
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|((I)y&QCNOUN)){   // use value if noun or special name, or name::
-        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){FPZSUFF(y=namecoco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)}  // if name::, go delete the name, leaving the value to be deleted later
+        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){FPSZSUFF(y=namecoco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)}  // if name::, go delete the name, leaving the value to be deleted later
         else y=SETFAOWED(y);
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESSADV)){
         // nameless modifier, and not a locative.  This handles 'each'.  Don't create a reference; maybe cache the value
@@ -569,15 +577,16 @@ rdglob: ;  // here when we tried the buckets and failed
         if(unlikely(FAV(y)->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
          // the value is a non-locative reference to another reference.  It is safe to skip over it.  Leave y holding the value
         }else{y=namerefacv(origname, y);}   // Replace other acv with reference, and fa() looked-up y value
-        FPZ(y)
+        FPSZ(y)
        }
       }else{
 undefname:
        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
        // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
-       if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
+       if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jt->jerr=EVVALUE;FPS}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
+// obsolete        jt->parserstackframe.parseroridetok = 0xffff;  // remove lookup override  kludge - we should suppress calls to signal from lookup
        y=namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:, including flags
-       FPZ(y)   // if syrd gave an error, namerefacv will return 0 (from fdef).  This will have previously signaled an error
+       FPSZ(y)   // if syrd gave an error, namerefacv will return 0 (from fdef).  This will have previously signaled an error
       }
 endname: ;
      }
@@ -609,7 +618,7 @@ endname: ;
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
-     if(GETSTACK0PT!=PTMARK){SETSTACK0PT(PTMARK) break;}  // first time m=0.  realize the virtual mark and use it.  e and ca flags immaterial
+     if(GETSTACK0PT!=PTMARK){SETSTACK0PT(PTMARK) stack[0].pt=PTMARK; break;}  // first time m=0.  realize the virtual mark and use it.  e and ca flags immaterial.  We store the mark only so infererrtok can look at it
      EP(0)       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
      // never fall through here
     }
@@ -635,13 +644,13 @@ endname: ;
     pmask&=GETSTACK0PT;  // finish 1st 3 columns, whiich are enough to decide bit 0
 // too many regs   A fs=*(volatile A *)&stack[2].a; {A fs1=*(volatile A *)&stack[1].a;// Read both possibilities to reduce latency
 // even when forced to calculate   jt->shapesink[0]=(I)(fs=pmask&1?fs1:fs);} // choose correct values of fs
-    PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4
-    // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
     
     if(pmask){  // If all 0, nothing is dispatchable, go push next word
+     PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4
+     // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
      A fs=QCWORD(fsa->a);  // the action to be executed if lines 0-4
      pt0ecam|=(!PTISM(fsa[2]))<<NOTFINALEXECX;  // remember if there is something on the stack after the result of this exec.   Wait till we know not fail, so we don't have to wait for (
-     jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
+// obsolete      jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
@@ -689,7 +698,6 @@ endname: ;
         }
        }
        // There is no need to set the token number in the result, since it must be a noun and will never be executed
-       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
        AF actionfn=FAVV(fs)->valencefns[pmask>>2];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
        A arg2=stack[(pmask>>1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
@@ -811,7 +819,7 @@ RECURSIVERESULTSCHECK
       // Here for lines 5-7 (fork/hook/assign), which branch to a canned routine
       // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
       // We avoid the indirect branch, which is very expensive
-      jt->parserstackframe.parsercurrtok = stack[1].t;   // 1 for hook/fork/assign
+// obsolete       jt->parserstackframe.parsercurrtok = stack[1].t;   // 1 for hook/fork/assign
       if(pmask&0b10000000){  // assign - can't be fork/hook
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
@@ -892,7 +900,7 @@ RECURSIVERESULTSCHECK
       if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
        SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
        stack+=2;  // advance stack pointer to result
-      }else{jt->parserstackframe.parsercurrtok = stack[1].t; jsignal(EVSYNTAX); FP}  // error if contents of ( not valid
+      }else{jt->parserstackframe.parserstkend1=stack; jsignal(EVSYNTAX); FP}  // error if contents of ( not valid.  Set stackpointer so we see the failing exec
       // we fall through to rescan after ( )
      }else{pt0ecam&=~CONJ;  break;}   // parse failed, return to stack next word.  Must clear 'stack 2' flag
     }  // end 'there was a fragment'
@@ -901,7 +909,7 @@ RECURSIVERESULTSCHECK
   }  // break with stack==0 on error to failparse; main exit is when queue is empty (m<0), to exitparse
 
  exitparse:
-  // *** pt0ecam has been repurposed to 1 for final assignment, 0 0therwise
+  // *** pt0ecam has been repurposed to 1 for final assignment, 0 otherwise
 #if MEMAUDIT&0x2
   audittstack(jt);
 #endif
@@ -909,14 +917,17 @@ RECURSIVERESULTSCHECK
   if(1){  // no error on this branch
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
    // stack[1] is the initial mark (not written out), stack[2] is the result, and stack[3] had better be the first ending mark
-   if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); FP}
-   if(unlikely(&stack[3]!=stackend1)){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); FP}
+   if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FP}
+   if(unlikely(&stack[3]!=stackend1)){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FP}
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error.  STKFAOWED semantics
    // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x).  The fa must be deferred till after the result has been used.  We turn it into a tpush
    if(unlikely(ISSTKFAOWED(z))){tpushna(QCWORD(z));}  // if the result needs a free, do it via tpush
-  }else{
-failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
-   // if m=0, the stack contains a virtual mark.  We must step over that so we don't free the garbage mask
+  }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
+failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
+                // we set the error word# for the failing word and then resignal the error to get the spacing right
+   {C olderr=jt->jerr; jt->jerr=0; jt->parserstackframe.parseroridetok=(US)pt0ecam; jsignal(olderr);}  // recreate the error with the correct spacing
+failparse:  
+   // if m=0, the stack contains a virtual mark.  We must step over that so we don't free the garbage mark
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
    // fa() any blocks left on the stack that have FAOWED
    for(;stack!=stackend1;++stack)if(ISSTKFAOWED(stack->a)){fa(QCWORD(stack->a))};  // issue deferred fa for items ra()d and not finished
@@ -942,7 +953,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
    // overhead, because it happens enough to notice.
    // No ASSERT - must get to the end to pop stack
-   jt->parserstackframe.parsercurrtok=0;  // error token if error found
+// obsolete   jt->parserstackframe.parsercurrtok=1;  // error token if error found
    I at=AT(y = QCWORD(queue[0]));  // fetch the word
    if((at&NAME)!=0) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...

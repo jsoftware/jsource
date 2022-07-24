@@ -377,30 +377,36 @@ nexttask: ;
   
 nexttasklocked: ;  // come here if already holding the lock, and job is set
   if(unlikely(job==0)){  // not really unlikely, but if there's not one we can be as slow as we like
-   // No job to run.  Wait for one
-   if(unlikely(jt->uflags.us.uq.uq_c.spfreeneeded!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
+   // No job to run.  Wait for one.  While we're waiting, do a garbage-collection if one is needed.  It could be signaled by a different thread
+   if(unlikely(__atomic_load_n(&jt->uflags.us.uq.uq_c.spfreeneeded,__ATOMIC_ACQUIRE)!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
    if(likely(job==0)){
-    UI4 warmendns=jobq->keepwarmns; 
-    if(warmendns!=0){struct jtimespec endtime=jtmtil(warmendns);  // time when our keepwarm expires
-     // the user wants us to linger before committing to a wait.  We will spin here in the hope that a job arrives
-     JOBUNLOCK(jobq,job);
-     while(1){
-      if(jtmdif(endtime)<0)break;  // if time expired, exit loop.  Would prefer to deal with ns only rather than timespec, but these are the primitives we have
-      _mm_pause(); _mm_pause(); _mm_pause(); _mm_pause();  // make this a leisurely poll
-      if(__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)!=0)break;  // if a job shows up, exit loop
+    // Still no job.  As far as tasks are concerned, we are now waiting.  But don't do an OS wait till we have lingered
+    ++jobq->waiters;  // indicate we are waiting, while under lock
+    UI4 warmendns=jobq->keepwarmns;   // user's keepwarm delay
+    do{   // loop till we get something to process
+     UI4 futexval=__atomic_load_n(&jobq->futex,__ATOMIC_ACQUIRE);  // get current value to wait on, before we check for work.  It is updated under lock when a job is added or if threads are kicked with 15 T.
+                              // we set the value before lingering so that if we are kicked while lingering the wait will fail and we will come back to linger again
+     if(warmendns!=0){struct jtimespec endtime=jtmtil(warmendns);  // time when our keepwarm expires
+      // the user wants us to linger before performing a wait.  We will spin here in the hope that a job arrives
+      JOBUNLOCK(jobq,job);
+      while(1){
+       if(jtmdif(endtime)<0)break;  // if time expired, exit loop.  Would prefer to deal with ns only rather than timespec, but these are the primitives we have
+#define THREADSPERPAUSE 4  // We want to reduce the bus load when all threads are lingering.  With PAUSE at 140 cycles, one read per 35 cycles seems negligible
+       I threadct=jobq->nthreads; do{_mm_pause();}while(threadct-=THREADSPERPAUSE>0);
+       if(__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)!=0)break;  // if a job shows up, exit loop
+      }
+      if((job=JOBLOCK(jobq))!=0)break;   // reestablish lock, checking in case a job has arrived
      }
-     job=JOBLOCK(jobq);   // reestablish lock, checking in case a job has arrived
-    }
-    if(job==0){  // if still no job has arrived, we have to wait
-     do{
-      UI4 futexval=jobq->futex;  // get current value to wait on, before we check for work.  It is updated under lock when a job is added
-      if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so.   This counts as work
-      ++jobq->waiters; JOBUNLOCK(jobq,job);
-      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
-      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
-      job=JOBLOCK(jobq); --jobq->waiters;
-     }while(job==0); // wait till we get a job to run; exit holding the job lock
-    }
+     // still have the lock
+     if(unlikely(jt->taskstate&TASKSTATETERMINATE)){--jobq->waiters; goto terminate;}  // if central has requested this thread to terminate, do so when the queue goes empty.   This counts as work
+     JOBUNLOCK(jobq,job);
+     jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
+     // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
+     // we could check to see if there is a job before doing the RFO; that would reduce contention after a kick but it would increase delay
+     // for real jobs.  Since the threads are idle anyway during a kick, we accept the contention
+     job=JOBLOCK(jobq);  // take a conditional lock to reduce bus traffic when there is no work (as after a kick)
+    }while(job==0); // wait till we get a job to run; exit holding the job lock
+    --jobq->waiters;
    }
   }
   // We have the job lock, and a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
@@ -732,7 +738,7 @@ ASSERT(0,EVNONCE)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   z=v2(numberOfCores,MAXTHREADS);
   break;}
- case 9:  { // threadpool keepwarm (in sec): set to y, return previous value
+ case 14:  { // threadpool keepwarm (in sec): set to y, return previous value
 #if PYXES
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // arg is threadpool# keepwarm
   if(AT(w)!=FL)RZ(w=cvt(FL,w));  // make arg float type
@@ -742,6 +748,23 @@ ASSERT(0,EVNONCE)
   D kwtime=DAV(w)[1]; ASSERT(kwtime>=0,EVDOMAIN); if(kwtime>0.003)kwtime=0.003; I kwtimens=(I)(kwtime*1000000000);  // limit time to 3ms and convert to ns
   jobq->keepwarmns=kwtimens;  // store new value
   z=scf(oldval);  // return old value
+#else
+ASSERT(0,EVNONCE)
+#endif
+  break;}
+ case 15:  { // kick a threadpool
+#if PYXES
+  I poolno=0;  // default to threadpool 0
+  if(AN(w)){   // arg is [threadpool #]
+   ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
+   RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
+  }
+  JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
+  JOB *job=JOBLOCK(jobq);  // must change status under lock for the threadpool
+  ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work, so that if a waiter finishes its keepwarm it will start another one
+  JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
+  jfutex_wakea(&jobq->futex);  // wake em all up
+  z=mtm;
 #else
 ASSERT(0,EVNONCE)
 #endif

@@ -253,7 +253,7 @@ if. 0: y -: 6 do.
   r =. r + 1
 end.
 )
-'|noun result was required: f|       y+undefname' -: efx 'f 4'
+'|noun result was required: f|   y+undefname' -: efx 'f 4'
 
 '|domain error|   a:    +(3 :''+'') ::0:0' -: efx 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside obverse
 

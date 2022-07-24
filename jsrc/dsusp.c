@@ -11,8 +11,7 @@
 // the info for the parse that was interrupted
 static void movesentencetosi(J jt,void *wds,I nwds,I errwd){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)wds; jt->sitop->dcn=(I)nwds; jt->sitop->dcix=(I)errwd; }}
 static void movecurrtoktosi(J jt){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcix=jt->parserstackframe.parserstkbgn[-1].t; }}
-void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkbgn[-1].a,jt->parserstackframe.parserstkbgn[-1].t,jt->parserstackframe.parsercurrtok); }
-
+void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkbgn[-1].a,jt->parserstackframe.parserstkbgn[-1].t,infererrtok(jt)); }
 
 /* deba() and debz() must be coded and executed in pairs */
 /* in particular, do NOT do error exits between them     */
@@ -233,7 +232,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  ASSERT(lk<=0,err);  //  locked fn is totally opaque, with no stack.  Exit with 0 result, indicating error
  // create a parser-stack frame for the old sentence and switch to it
  PFRAME oframe=jt->parserstackframe; PSTK newparseinfo[1]={{.a=(A)(queue+ci->ig.indiv.sentx),.t=ci->ig.indiv.sentn}};
- jt->parserstackframe.parserstkbgn=&newparseinfo[1]; jt->parserstackframe.parsercurrtok=1;  // unless locked, indicate failing-sentence info
+ jt->parserstackframe.parserstkbgn=&newparseinfo[1]; jt->parserstackframe.parseroridetok=0; // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  jt->parserstackframe=oframe;  // restore to the executing sentence
  // enter debug mode if that is enabled

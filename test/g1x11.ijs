@@ -24,6 +24,8 @@ h =. open f
 1000 = 1!:4 h
 (t intv i) -: iread h, i=.(?1000),0
 1000 = 1!:4 h
+(t intv i) -: iread h, i=.(1000),0  NB. 0 bytes at EOF OK
+1000 = 1!:4 h
 
 (i}.t) -: iread h, i=.?1000
 (i}.t) -: iread h; i=.?1000
@@ -65,15 +67,15 @@ h =. open f
 'length error'      -: iread etx ,h
 'length error'      -: iread etx f,<2 3 4
 
-'index error'       -: iread etx h,10
+'index error'       -: iread etx h,10 1
 'index error'       -: iread etx h,9 2
 'index error'       -: iread etx h,_11
 'index error'       -: iread etx h,_1 2
-'index error'       -: iread etx h;10
+'index error'       -: iread etx h;10 1
 'index error'       -: iread etx h;9 2
 'index error'       -: iread etx h;_11
 'index error'       -: iread etx h;_1 2
-'index error'       -: iread etx f,<10
+'index error'       -: iread etx f,<10 1
 'index error'       -: iread etx f,<9 2
 'index error'       -: iread etx f,<_11
 'index error'       -: iread etx f,<_1 2

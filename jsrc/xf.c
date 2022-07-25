@@ -179,13 +179,14 @@ static F jtixf(J jt,A w){F f;
  R f?vfn(f):f;
 }
 
+// s is length of file; return index/length of substr
 static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
  if(AT(w)&BOX){wv=AAV(w);  RZ(in=vi(C(wv[1]))); k=AN(in); u=AV(in);}
  else{in=w; k=AN(in)-1; u=1+AV(in);}
  ASSERT(1>=AR(in),EVRANK);
  ASSERT(k&&k<=(n?2:1),EVLENGTH);
- j=u[0]; j=0>j?s+j:j; m=1==k?s-j:u[1];
- ASSERT(0<=j&&(!n||j<s&&j+m<=s&&0<=m),EVINDEX);
+ j=u[0]; j=0>j?s+j:j; m=1==k?s-j:u[1];  // j is index, m is length
+ ASSERT(0<=j&&(!n||j<=s&&j+m<=s&&0<=m),EVINDEX);
  *i=j; if(n)*n=m;
  R 1;
 }    /* process index file arg for index and length */

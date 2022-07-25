@@ -40,6 +40,13 @@ struct jtimespec jmtclk(){
  long long t=GetTickCount64();
  return (struct jtimespec){.tv_sec=t/1000,.tv_nsec=1000000*(t%1000)};}
 
+// unavailable on older windows
+#if NOSYNCHLIB
+#define WakeByAddressSingle(p)
+#define WakeByAddressAll(p)
+#define WaitOnAddress(p,v,n,ns) 1
+#endif
+
 void jfutex_wake1(unsigned *p){WakeByAddressSingle(p);}
 void jfutex_wakea(unsigned *p){WakeByAddressAll(p);}
 unsigned char jfutex_wait(unsigned *p,unsigned v){return WaitOnAddress(p,&v,4,INFINITE)?0:EVFACE;}

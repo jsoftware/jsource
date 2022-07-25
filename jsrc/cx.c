@@ -1006,7 +1006,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=SYMORIGIN[pfx].next){L *newsym;
    A nm=SYMORIGIN[pfx].name;
-   // If we are transferring a PERMANENT name, we have to clone it, because the name may be local & if it is we may install bucket info or a symbol index
+   // If we are transferring an ACPERMANENT name, we have to clone it, because the name may be local & if it is we may install bucket info or a symbol index
    if(ACISPERM(AC(nm)))RZ(nm=ca(nm));   // only cases are mnuvxy
    RZ(newsym=probeisres(nm,actst));  // create new symbol (or possibly overwrite old argument name)
    newsym->flag = SYMORIGIN[pfx].flag|LPERMANENT;   // Mark as permanent

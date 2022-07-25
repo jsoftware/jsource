@@ -190,6 +190,7 @@ static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
  R 1;
 }    /* process index file arg for index and length */
 
+// 1!:11
 F1(jtjiread){A z=0;B b;F f;I i,n;
  F1RANK(1,jtjiread,DUMMYSELF);
  RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));  // b=filename, not number; if name, open the named file
@@ -198,6 +199,7 @@ F1(jtjiread){A z=0;B b;F f;I i,n;
  R z;
 }
 
+// 1!:12
 F2(jtjiwrite){B b;F f;I i;
  F2RANK(RMAX,1,jtjiwrite,DUMMYSELF);
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);

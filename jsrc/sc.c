@@ -42,8 +42,11 @@ DF2(jtunquote){A z;
    // name was not cached.  Look it up.  The calls to the lookup routines all issue ra() (under lock) on the value if found
    if(likely(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
-    if(likely((fs=probelocal(thisname,jt->locsyms))==0)){fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
-      // this is a pun - probelocal returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
+    // We must not use bucket info for the local lookup, because the reference may have been created in a different context
+// obsolete     if(likely((fs=probelocal(thisname,jt->locsyms))==0)){fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
+    J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
+    if(likely(!(AR(jt->locsyms)&ARHASACV)||(fs=jtprobe(jtx,sx,hashx,jt->locsyms))==0)){fs=jtsyrd1(jtx,sx,hashx,jt->global);  // Try local (if it has an ACV), then look up the name starting in jt->global
+      // this is a pun - probe returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
     }else{raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does.  
     }
    }else{  // locative or u./v.
@@ -55,7 +58,8 @@ DF2(jtunquote){A z;
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
-     if(fs=probelocal(thisname,jt->locsyms)){
+// obsolete      if(fs=probelocal(thisname,jt->locsyms)){
+     if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
       raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does

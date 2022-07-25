@@ -618,7 +618,7 @@ typedef I SI;
 #endif
 #define AFLAGPRISTNO(a) if(unlikely(AFLAG(a)&AFPRISTINE))AFLAGCLRPRIST(a)  // the test is to ensure we don't touch PERMANENT blocks
 
-// Flags in the AR field of symbol tables.  The allocated rank is always 0
+// rank flags in the AR field of symbol tables.  The allocated rank is always 0
 #define ARNAMEDX 0   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 #define ARNAMED ((I)1<<ARNAMEDX)   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 // the rest of the flags apply only to local symbol tables
@@ -626,6 +626,8 @@ typedef I SI;
 #define ARNAMEADDED (1LL<<ARNAMEADDEDX)
 #define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
+#define ARHASACVX 3   // set if this local symbol table contains an ACV
+#define ARHASACV ((I)1<<ARHASACVX)
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original local symbol table when it is in use
 #define ARINVALID 64  // This (named or numbered) symbol table was never filled in and must not be analyzed when freed
@@ -803,7 +805,7 @@ typedef struct {
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LPERMANENTX  1
-#define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
+#define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name is a local name assigned in the definition; these names are never deleted - the value is cleared instead
 #define LINFO           (I)4            // Indicates the symbol-table entry is info only and the value is not a valid pointer (diags only)
 #define LWASABANDONEDX  4
 #define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).

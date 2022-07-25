@@ -697,12 +697,13 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  if(unlikely((valtype&QCNOUN)==0)){
   if(valtype==QCADV)if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))valtype=VALTYPENAMELESSADV;
   if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
+  if((AR(g)&ARLOCALTABLE)!=0)AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up
  }
 
  L *e;  // the symbol we will use
  // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
  // the name was invalid anyway and is subject to having the value removed
- // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is new we won't need the symbol.
+ // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
  if((AR(g)&ARLOCALTABLE)!=0){g=0; e=probeislocal(a);  // probe, reserving 1 symbol
  }else{SYMRESERVE(1)
   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock

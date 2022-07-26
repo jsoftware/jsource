@@ -45,7 +45,7 @@ DF2(jtunquote){A z;
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
 // obsolete     if(likely((fs=probelocal(thisname,jt->locsyms))==0)){fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);  // Try local, then look up the name starting in jt->global
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
-    if(likely(!(AR(jt->locsyms)&ARHASACV)||(fs=jtprobe(jtx,sx,hashx,jt->locsyms))==0)){fs=jtsyrd1(jtx,sx,hashx,jt->global);  // Try local (if it has an ACV), then look up the name starting in jt->global
+    fs=0;if(unlikely(AR(jt->locsyms)&ARHASACV))fs=jtprobe(jtx,sx,hashx,jt->locsyms); if(likely(fs==0)){fs=jtsyrd1(jtx,sx,hashx,jt->global);  // Try local (if local has an ACV), then look up the name starting in jt->global
       // this is a pun - probe returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
     }else{raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does.  
     }

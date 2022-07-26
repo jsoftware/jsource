@@ -106,15 +106,14 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    if(m==1){  // the atom { list case is pretty common
     *x=v[j];  // just move the one value
    }else{
-    __m256i lanestride=_mm256_setzero_si256();
-    lanestride=_mm256_insert_epi64(lanestride,p,1);
-    lanestride=_mm256_insert_epi64(lanestride,p+p,2);
-    lanestride=_mm256_insert_epi64(lanestride,p+p+p,3);  // each lane accesses a different cell
+    wstride=_mm256_insert_epi64(wstride,0,0);  // 0 p p p
+    wstride=_mm256_add_epi64(wstride,_mm256_slli_si256(wstride,8));  // +0 0 0 p -> 0 p p 2p
+    wstride=_mm256_add_epi64(wstride,_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(wstride),0b0000)));  // +0 0 p p -> 0 p 2p 3p
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
     v+=j;  // advance base pointer to the column we are fetching
-    DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,lanestride,ones,SZI)); v+=NPAR*p; x+=NPAR;)
+    DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,wstride,ones,SZI)); v+=NPAR*p; x+=NPAR;)
     /* runout, using mask */ 
-    _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,lanestride,endmask,SZI));   // must use a different reg for source and index, lest VS2013 create an illegal instruction
+    _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,wstride,endmask,SZI));   // must use a different reg for source and index, lest VS2013 create an illegal instruction
    }
   }else{  // Normal case: a list of indexes for each cell
    UI i=m; // loop counter for number of items to process
@@ -671,7 +670,6 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  A ndxa;   // the indexes, always a boxed list of arrays
 // obsolete  I nc; I *ndx; I *ndx0; I *ndxe;
  I n;  // #rows/cols in M
- I nvirt;
  D *bv;
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
 // obsolete  __m256d oldcol;  // oldcol Frow   0      0            col value at previous smallest pivot / Frow of current col (always <=0)  0 0
@@ -679,6 +677,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  I bestcol; I bestcolrow;  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
  D *zv; D *Frow;  // pointer to output for product mode, Frow
  D nfreecolsd, ncolsd; D impfac;  // faction of cols to process before we insist on min improvement; min fraction of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
+ I prirow;  // row to give priority to (virtual if any, else _1)
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
@@ -694,8 +693,8 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(((struct mvmctx*)ctx)->x) x=((struct mvmctx*)ctx)->x;
- YC(ndxa)YC(n)YC(minimp)YC(nvirt)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)
- YC(impfac)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(mv0)
+ YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)
+ YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(mv0)
 #undef YC
  // perform the operation
 
@@ -713,7 +712,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    oldbk=_mm256_blendv_pd(oldbk,bks,tcond); oldcol=_mm256_blendv_pd(oldcol,dotprod,tcond);  /* if valid new smallest pivotratio, update col and bk where the smallest is found */ \
    I rmask=_mm256_movemask_pd(ratios); /*   rmask is new smallest (possibly invalid) pivotratio   !limited gain 0 0 */ \
    bestrow=(tmask&=1)&rmask?imask:bestrow;   /* col>ColThr & new smallest pivotratio: update best-value variables.  This updates even if bk=0, avoiding unbounded */ \
-   if(tmask>(rmask>>1) && (I4)bestrow>=(I4)nvirt)goto abortcol;  /* col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority */ \
+   if(tmask>(rmask>>1) && (I4)bestrow!=(I4)prirow)goto abortcol;  /* col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority */ \
   }else if(Frow!=0){ /* look for nonimproving pivot */  \
    if(_mm256_cvtsd_f64(dotprod)>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  /* any c value>=ColThresh is a pivot row, unless in the exclusion list */ \
   }else{ \
@@ -872,26 +871,27 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    if(bestrow<0){bestcolrow=bestrow; bestcol=*ndx; goto return4;}  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
           // but if we are looking for nonimproving pivots, we don't use F or bk and this is invalid
    // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
+   // Exception: if a nondangerous pivot pivots out a virtual row, we accept it immediately and abort all other processing
    if(likely((bestcol|SGNIF(bestrow,32+3))<0)){  // if this pivot is not dangerous, remember it.  Also remember if it is the first pivot, in case there are only dangerous pivots
-    bestcol=*ndx; bestcolrow=bestrow;
+    bestcol=*ndx; bestcolrow=bestrow;  // update the found position for any nondangerous pivot, or the first time in case we have only dangerous pivots
     // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
     if(likely((bestrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
+     // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
+     if(unlikely((I4)bestrow==(I4)prirow)){++ndx; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
+     I incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
      while(1){  // put the minimum found into the ctx for the job so that all threads can cut off quickly
       minimpfound=(Frow[*ndx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
-      I incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE); D incumbentimpd=*(D*)&incumbentimpi;  // load incumbent best value
-      if(minimpfound>=incumbentimpd)break;  // if not new global best, don't update global
-      if(__atomic_compare_exchange_n((I*)&(((struct mvmctx*)ctx)->minimp),&incumbentimpi,*(I*)&minimpfound,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED))break;  // write; if written exit loop
+      if(minimpfound>=*(D*)&incumbentimpi)break;  // if not new global best, don't update global
+      if(__atomic_compare_exchange_n((I*)&(((struct mvmctx*)ctx)->minimp),&incumbentimpi,*(I*)&minimpfound,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent
      }
      zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
-     // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
-     if((I4)bestrow<(I4)nvirt){++ndx; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
     }
    }
    --bvgrd;  // undo the +1 in the product-accounting below
 abortcol:  // here is column aborted early, possibly on insufficient gain
    if(unlikely(!bv))break;  // if just one product, skip the setup for next column
    ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
-   if(unlikely((--ncols<0)&&zv==0)){++ndx; break;}  // quit if we have made an improvement AND have processed enough columns - include the aborted column in the count
+   if(unlikely((--ncols<0)&&(SGNIF(bestcolrow,32+3)<0))){++ndx; break;}  // quit if we have made a non-dangerous improvement AND have processed enough columns - include the aborted column in the count
    // prepare for next column
    *(I*)&minimp=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // update to find best improvement in any thread, to allot cutoff
    if(unlikely(minimp==infm))break;  // if improvement has been pegged at limit, it's a signal to stop
@@ -907,21 +907,22 @@ abortcol:  // here is column aborted early, possibly on insufficient gain
    }
   }
  }while(++ndx!=ndxe);  // end loop over columns
- // operation complete; transfer results back to ctx.  To redcue stores we jam the col/row together
+ // operation complete; transfer results back to ctx.  To reduce stores we jam the col/row together
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ncolsproc,ndx-ndx0,__ATOMIC_ACQ_REL);  // ...and # columns inspected
  // We store dangerous & normal pivots separately.  Dangerous pivots we take as they come (because their improvement has not been stored);
  // for normal pivots we store only if our best improvement is the best encountered so far
  I bestcolandrow=(bestcol<<32)|(UI4)bestcolrow;  // the pivot we found, with flags removed
- if(unlikely(SGNIF(bestcolrow,32+3)>=0)){((struct mvmctx*)ctx)->bestcolandrow[1]=bestcolandrow;  // if dangerous pivot, just store it willy-nilly
+ if(unlikely((bestcol|SGNIF(bestcolrow,32+3))>=0)){((struct mvmctx*)ctx)->bestcolandrow[1]=bestcolandrow;  // if pivot found and dangerous, just store it willy-nilly
  }else{
   // normal pivot.  We want to pick the best.  We store our best pivot only if it is the best seen in any thread so far.  Unfortunately we need a lock for that
+  // We don't know for sure we found any pivot; if not we will certainly not show an improvement
   if(minimpfound==((struct mvmctx*)ctx)->minimp){  // check outside of lock for perf
    WRITELOCK(((struct mvmctx*)ctx)->ctxlock)
    if(minimpfound==((struct mvmctx*)ctx)->minimp)((struct mvmctx*)ctx)->bestcolandrow[0]=bestcolandrow;  // if we have the best gain, report where we found it
    WRITEUNLOCK(((struct mvmctx*)ctx)->ctxlock)
   }
- }  // scaf it would be faster to store all the threads' info in a vector and reduce it in the caller
+ }
  R 0;
 return2:  // here we found a nonimproving pivot.  Save it, possibly overwriting a value stored in a different thread
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
@@ -980,22 +981,25 @@ F1(jtmvmsparse){PROLOG(832);
  // we don't allow conversion so as to force the user to get it right, for speed
  A ndxa=C(AAV(w)[0]); ASSERT(AT(ndxa)&BOX+INT,EVDOMAIN);
  if(likely(AT(ndxa)&BOX)){  // if list of boxes, ensure each holds a list of integers, possibly empty
-  DO(AN(ndxa), ASSERT(AT(AAV(ndxa)[i])&BOX,EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) )
+  I ncols=0;
+  DO(AN(ndxa), ASSERT(AT(AAV(ndxa)[i])&INT,EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) ncols+=AN(AAV(ndxa)[i]); )
+  if(ncols==0)R num(6);  // if no cols (which happens at startup, return error indic)
  }
  if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box
  ASSERT(AN(ndxa)<=MAXTHREADSINPOOL+1,EVLIMIT)   // if we don't have a bit in trymask for each task, that's too many tasks
 // obsolete  ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
  // extract pointers to tables
  D minimp=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
- I nvirt=0;  // number of virtual rows at the beginning of bkg - give them priority
 
  I n=AS(C(AAV(w)[4]))[0];  // n=#rows/cols in M
  // convert types as needed; set ?v=pointer to data area for ?
  D *bv; // pointer to b values if there are any
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
- I bestcol=1LL<<(BW-1), bestcolrow=1LL<<(32+3);  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
+ I bestcol=1LL<<(BW-1), bestcolrow=0;  // col# and row#+mask for best value found from previous column, init to no col found, and best value 'dangerous or not found'
+// obsolete 1LL<<(32+3);
  A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
  D nfreecolsd, ncolsd; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
+ I prirow;  // row to get priority (virtual)
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist=0, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
@@ -1017,7 +1021,7 @@ F1(jtmvmsparse){PROLOG(832);
   ASSERT(AR(C(AAV(w)[6]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
   if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
   bkmin=DAV(C(AAV(w)[6]))[2];
-  thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],bkmin,inf,DAV(C(AAV(w)[6]))[0]); nfreecolsd=(DAV(C(AAV(w)[6]))[3]); ncolsd=(DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; nvirt=(I)DAV(C(AAV(w)[6]))[6];
+  thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],bkmin,inf,DAV(C(AAV(w)[6]))[0]); nfreecolsd=(DAV(C(AAV(w)[6]))[3]); ncolsd=(DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; prirow=(I)DAV(C(AAV(w)[6]))[6];
   zv=AN(C(AAV(w)[5]))==AN(C(AAV(w)[7]))?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
   if(AN(w)>9){
    ASSERT(AN(w)==11,EVLENGTH); 
@@ -1032,8 +1036,8 @@ F1(jtmvmsparse){PROLOG(832);
 
 
 #define YC(n) .n=n,
-struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndxa)YC(n)YC(minimp)YC(nvirt)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
- YC(ncolsd)YC(impfac)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=(I(*)[2])IAV(C(AAV(w)[1])),.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.mv0=DAV(C(AAV(w)[4])),
+struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
+ YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=(I(*)[2])IAV(C(AAV(w)[1])),.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.mv0=DAV(C(AAV(w)[4])),
  .ndotprods=0,.ncolsproc=0,.taskmask=0};
 #undef YC
 

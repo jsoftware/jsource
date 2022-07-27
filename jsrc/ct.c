@@ -588,7 +588,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
  // job may still be in the job list - if so it will be fa()d when it reaches the top
 }
 
-// 13!:85 run a null job with tasks.  w is #spins per task, # tasks
+// 13!:_7 run a null job with tasks.  w is #spins per task, # tasks
 static C nulljohnson(J jt,void *ctx,UI4 i){R johnson(*(I*)ctx);}  // delay a bit
 F1(jtnulljob){
   ASSERT(AR(w)==1,EVRANK); ASSERT(AN(w)==2,EVLENGTH); if(!(AT(w)&INT))RZ(w=cvt(INT,w));

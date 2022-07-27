@@ -581,7 +581,7 @@ void audittstack(J jt){F1PREFIP;
 #endif
 }
 
-// x 13!:84 y  audit a recursive pyx array y 
+// x 13!:_5 y  audit a recursive pyx array y 
 // result 0=ok, 1=pyx found with usecount<x 2=pyx found with usecount<0 (maybe deadbeef) 3=nonrecursive block found 4=dead value found
 F2(jtauditpyx){I mindepth;
  ARGCHK2(a,w);

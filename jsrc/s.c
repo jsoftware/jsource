@@ -230,7 +230,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
 exit: ;
  READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock))
  RETF(zz);
-}    /* 18!:31 symbol pool */
+}    /* 18!:_2 symbol pool */
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table  l is encoded in low bits of jt
 // the symbol is deleted if found.  Return address of deleted symbol if it was cached - caller must then take responsibility for the name

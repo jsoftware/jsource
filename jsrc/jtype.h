@@ -812,8 +812,8 @@ typedef struct {
                                     // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
                                     // immediately
                                     // This value passes into AFLAGS and must not overlap anything there
-#define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:31
-#define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:31
+#define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:_2
+#define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:_2
 #define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM

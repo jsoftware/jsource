@@ -194,7 +194,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
  // allocate the symbol table itself: we have to give exactly what the user asked for so that cloned tables will hash identically; but a minimum of 1 chain field so hashes can always run
  GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB) LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  //  All SYMB tables are born recursive.  Init EXECCT to 'in use'
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
- // (it is queried by 18!:31)
+ // (it is queried by 18!:_2)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
   case 0:  // named locale - we have a write lock on stloc->lock
@@ -551,7 +551,7 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  DQ(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=incorp((A)*qv++););
  GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=incorp(x); zv[1]=incorp(y);
  R z;
-}    /* 18!:30 locale map */
+}    /* 18!:_1 locale map */
 F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
  SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d->val)))

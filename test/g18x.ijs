@@ -1,11 +1,11 @@
 prolog './g18x.ijs'
-NB. 18!:30 y ------------------------------------------------------------
+NB. 18!:_1 y ------------------------------------------------------------
 
 x=: i.12
 sum=: +/
 adv=: /
 
-t=: 18!:30 <'base'
+t=: 18!:_1 <'base'
 (,2) -: $t
 32 -: type t
 'x y' =: t
@@ -18,20 +18,20 @@ t=: 18!:30 <'base'
 1 3 0 -: (y i. ;:'adv sum x'){ {:"1 x
 
 4!:55 <'sum'
--. (<'sum') e. >1{18!:30 <'base'
+-. (<'sum') e. >1{18!:_1 <'base'
 
-'locale error' -: 18!:30 etx 100
-'domain error' -: 18!:30 etx 2.5
-'domain error' -: 18!:30 etx 2j5
-'domain error' -: 18!:30 etx 2r5
+'locale error' -: 18!:_1 etx 100
+'domain error' -: 18!:_1 etx 2.5
+'domain error' -: 18!:_1 etx 2j5
+'domain error' -: 18!:_1 etx 2r5
 
-'rank error'   -: 18!:30 etx ''
-'rank error'   -: 18!:30 etx ;:'z base'
+'rank error'   -: 18!:_1 etx ''
+'rank error'   -: 18!:_1 etx ;:'z base'
 
-'locale error' -: 18!:30 etx <'nonexistentlocale'
+'locale error' -: 18!:_1 etx <'nonexistentlocale'
 
 
-NB. 18!:31 y ------------------------------------------------------------
+NB. 18!:_2 y ------------------------------------------------------------
 
 pcheck=: 3 : 0
  if. 13!:17'' do. 1 return. end.   NB. parameters not applicable when dbr 1
@@ -81,31 +81,31 @@ NB. testing  scafnfree__   =: f
  1
 )
 
-pcheck 18!:31 ''
+pcheck 18!:_2 ''
 
 k=: 18!:3 ''
 sum__k=: +/
 sam__k=: 'United States of America'
 junk_asdf_ =: 400$'foo'
 
-pcheck 18!:31 ''
+pcheck 18!:_2 ''
 
 18!:55 k,<'asdf'
 
 f=: 3 : 0
  a=. 12
  b=. o. y
- pcheck 18!:31 ''
+ pcheck 18!:_2 ''
 )
 
 f 1 2 3
 
 (<'asdf') -: 18!:3 <'asdf'
-pcheck 18!:31 ''
+pcheck 18!:_2 ''
 (<'asdf') -: 6 (18!:3) <'asdf'
-pcheck 18!:31 ''
+pcheck 18!:_2 ''
 (<'asdf') -: 5 (18!:3) <'asdf'
-pcheck 18!:31 ''
+pcheck 18!:_2 ''
 18!:55 <'asdf'
 
 

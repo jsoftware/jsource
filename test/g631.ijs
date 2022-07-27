@@ -107,26 +107,26 @@ a =: &.o
 NB. Pristinity and inplacing in u&.>
 
 NB. Verify pristine results produced where appropriate
-NB. Tools for 13!:83:
+NB. Tools for 13!:_4:
 isprist =: ([: * 16b1000000 (17 b.) 1&{)
 ispristorunbox =: ([: * 16b1000000 (17 b.) 1&{) +. 32 ~: [: (17 b. -) 3&{
 isvirt =: [: * 16b20000 (17 b.) 1&{
 isro =: [: * 16b1 (17 b.) 1&{
 isip =: 0 > 4&{
 countis =: 4&{
-(isro,-.@isprist) 13!:83 i. 20  NB. Short vec is readonly
-(-.@isprist) 13!:83 < i. 20  NB. not prist when boxed
-(-.@isro,-.@isprist) 13!:83 i. 400  NB. Short vec is readonly
-(isprist) 13!:83 < i. 400  NB. prist when boxed
-(isprist) a =: 13!:83 < i. 400
+(isro,-.@isprist) 13!:_4 i. 20  NB. Short vec is readonly
+(-.@isprist) 13!:_4 < i. 20  NB. not prist when boxed
+(-.@isro,-.@isprist) 13!:_4 i. 400  NB. Short vec is readonly
+(isprist) 13!:_4 < i. 400  NB. prist when boxed
+(isprist) a =: 13!:_4 < i. 400
 ((0>countis),isprist) a   NB. name can be pristine even if not inplaceable
-(isprist) a =: 13!:83 <"0  i. 5
-isprist 13!:83 ;: 'a b c'   NB. Verbs that produce boxes should produce pristine
--. isprist 13!:83 (5 6) ; 3 4 5   NB. Verbs that produce boxes should produce pristine
-isprist 13!:83 ] (+: 5 6) ; (+: 3 4 5)
--. isprist 13!:83 < 5
-isprist 13!:83 < +: 5
-isprist 13!:83 C. 2 3 4 5
+(isprist) a =: 13!:_4 <"0  i. 5
+isprist 13!:_4 ;: 'a b c'   NB. Verbs that produce boxes should produce pristine
+-. isprist 13!:_4 (5 6) ; 3 4 5   NB. Verbs that produce boxes should produce pristine
+isprist 13!:_4 ] (+: 5 6) ; (+: 3 4 5)
+-. isprist 13!:_4 < 5
+isprist 13!:_4 < +: 5
+isprist 13!:_4 C. 2 3 4 5
 
 NB. x is 5!:5 of left arg, y is shape of right arg, u is verb.
 NB. n is (0 if verb produces normal block, 1 if virtual, 2 if self-virtual, 3 if virtual block but not of the input),
@@ -145,10 +145,10 @@ NB. virtprist: produces virtual result leaves pristine set in the arg it came fr
 NB. Verify taking from a pristine loses its pristinity
 a =: <"boxr i. boxs  NB. Sets prist
 1: u a
-assert. ((virtprist +. wprist) = ispristorunbox) 13!:83 a   NB. Making a virtual does not turn off pristinity in the backer
+assert. ((virtprist +. wprist) = ispristorunbox) 13!:_4 a   NB. Making a virtual does not turn off pristinity in the backer
 NB. Verify pristinity is passed to an only successor but not a shared successor
-assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:83@] u) <"boxr i. boxs
-assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:83@[ 0:) <"boxr i. boxs
+assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:_4@] u) <"boxr i. boxs
+assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:_4@[ 0:) <"boxr i. boxs
 1 return. y
 :
 NB. Verify taking from a pristine loses its pristinity
@@ -157,17 +157,17 @@ if. y < 0 do. boxr =. _ [ boxs =. 1000 end.   NB. scalar box, not RO
 'virt prist wprist rprist' =. 4 {. n
 'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
 'wpristx wpristy' =. wprist { _2 ]\ 0 0   1 1   0 1   1 0
-xisprist =. isprist 13!:83 ". x
-yisprist =. isprist 13!:83 <"boxr i. boxs
+xisprist =. isprist 13!:_4 ". x
+yisprist =. isprist 13!:_4 <"boxr i. boxs
 a =: <"boxr i. boxs  NB. Sets prist
 1: (".x) u a
-assert. ((yisprist *. virtprist +. wpristy) = isprist) 13!:83 a [ 'right'
+assert. ((yisprist *. virtprist +. wpristy) = isprist) 13!:_4 a [ 'right'
 a =: ". x  NB. Sets prist
 1: a u <"boxr i. boxs
-assert. ((xisprist *. virtprist +. wpristx) = isprist) 13!:83 a [ 'left'
+assert. ((xisprist *. virtprist +. wpristx) = isprist) 13!:_4 a [ 'left'
 NB. Verify pristinity is passed to an only successor but not a shared successor
-assert. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:83@] u) <"boxr i. boxs
-assert. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:83@[ 0:) <"boxr i. boxs
+assert. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:_4@] u) <"boxr i. boxs
+assert. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) <"boxr i. boxs
 1 return. y
 )
 {. ckprist 0 1 ] 5
@@ -300,10 +300,10 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '2' C. ckprist 0 0  ] 4 5   NB. result is permutation, which is not virtual
 '1' C. ckprist 0 0  ] 4 5
 '1 3' C. ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
-isprist 13!:83 C. 0 2 1 4 3  NB. cyclic perm is always created pristine
+isprist 13!:_4 C. 0 2 1 4 3  NB. cyclic perm is always created pristine
 '2' {:: ckprist 0 1 0 1 ] 5  NB. fetch 
--. isprist 13!:83 (2) {:: <"0 i. 5  NB. Result is not boxed
--. isprist 13!:83 (1;0) {:: (a:;((<<5),<3);3)  NB. Result is not pristine
+-. isprist 13!:_4 (2) {:: <"0 i. 5  NB. Result is not boxed
+-. isprist 13!:_4 (1;0) {:: (a:;((<<5),<3);3)  NB. Result is not pristine
 ] L: 0 ckprist 0 0 ] 5  NB. fauxvirtual block is copied & becomes non-pristine
 ] L: 0 ckprist 0 0 ] 4 5
 '<"0 i. 5' ] L: 0 ckprist 0 0 ] 5
@@ -340,25 +340,25 @@ NB.      (1 if x/y remains pristine or becomes unboxed, 2 if y only, 3 if x only
 NB.      (1 if result pristine/unboxed on noninplaceable input)
 
 NB. Verify pristinity of BOXATOP results
-isprist 13!:83 <@:+:"1 i. 4 5
-isprist 13!:83 <@:+:"1 i. 5
-isprist 13!:83 (i. 5 ) <@:+"1 i. 4 5
-isprist 13!:83 'abcda' </. i. 5   NB. w is permuted before use
-IF64 = isprist 13!:83 'abcda' <@]/. +: i. 5
-isprist 13!:83 'abcda' <@:+:/. i. 5
-isprist 13!:83 (1 0 0 1 0) <;.1 i. 5  NB. i. 5 is not inplaceable but special code does the copy
-isprist 13!:83 (1 0 0 1 0) <;.1 +: i. 5
--. isprist 13!:83 (1 0 0 1 0) <@];._1 i. 5
-IF64 = isprist 13!:83 (1 0 0 1 0) <@];._1 +: i. 5
-isprist 13!:83 (1 0 0 1 0) <@:+:;._2 i. 5
-isprist 13!:83 <;.2 'abcdeabac'   NB. LIT is never inplaceable but special code does the copy
--. isprist 13!:83  <@:];.1 'abcdeabac'
-isprist 13!:83  <@(2&#);.1 'abcdeabac'
-isprist 13!:83 <;.2 (3 1 4 1 5 9 2 5 3 1)
--. isprist 13!:83  <@:];.1 (3 1 4 1 5 9 2 5 3 1)
-isprist 13!:83 <;.2 +: (3 1 4 1 5 9 2 5 3 1)
-IF64 = isprist 13!:83  <@:];.1 +: (3 1 4 1 5 9 2 5 3 1)
-isprist 13!:83  <@(2&#);.1 (3 1 4 1 5 9 2 5 3 1)
+isprist 13!:_4 <@:+:"1 i. 4 5
+isprist 13!:_4 <@:+:"1 i. 5
+isprist 13!:_4 (i. 5 ) <@:+"1 i. 4 5
+isprist 13!:_4 'abcda' </. i. 5   NB. w is permuted before use
+IF64 = isprist 13!:_4 'abcda' <@]/. +: i. 5
+isprist 13!:_4 'abcda' <@:+:/. i. 5
+isprist 13!:_4 (1 0 0 1 0) <;.1 i. 5  NB. i. 5 is not inplaceable but special code does the copy
+isprist 13!:_4 (1 0 0 1 0) <;.1 +: i. 5
+-. isprist 13!:_4 (1 0 0 1 0) <@];._1 i. 5
+IF64 = isprist 13!:_4 (1 0 0 1 0) <@];._1 +: i. 5
+isprist 13!:_4 (1 0 0 1 0) <@:+:;._2 i. 5
+isprist 13!:_4 <;.2 'abcdeabac'   NB. LIT is never inplaceable but special code does the copy
+-. isprist 13!:_4  <@:];.1 'abcdeabac'
+isprist 13!:_4  <@(2&#);.1 'abcdeabac'
+isprist 13!:_4 <;.2 (3 1 4 1 5 9 2 5 3 1)
+-. isprist 13!:_4  <@:];.1 (3 1 4 1 5 9 2 5 3 1)
+isprist 13!:_4 <;.2 +: (3 1 4 1 5 9 2 5 3 1)
+IF64 = isprist 13!:_4  <@:];.1 +: (3 1 4 1 5 9 2 5 3 1)
+isprist 13!:_4  <@(2&#);.1 (3 1 4 1 5 9 2 5 3 1)
 
 
 NB. Verify inplacing of u&.> on pristine
@@ -368,27 +368,27 @@ NB. requires dyad '>.&.>/\.' (7!:2@, (< 1.1&*) 7!:2@]) '<"1 i. 100 1000'
 '(<"_1 i. 100) +&.> <"_1 i. 100 1000' (< 1.1&*)&(7!:2) '(<"_1 i. 100) 0:@] <"_1 i. 100 1000'
 '(<"_1 i. 100 1000) +&.> <"_1 i. 100' (< 1.1&*)&(7!:2) '(<"_1 i. 100 1000) 0:@] <"_1 i. 100'
 '(10 {. 1) 0:@:>:&.>;.1' (7!:2@, (< 1.05&*) 7!:2@]) '<"1 i. 10 10000'
--. isprist 13!:83 (<"0 i. 2) [&.> <"0 i. 2 5
-isprist 13!:83 (<"0 i. 2 5) [&.> <"0 i. 2  NB. arg escapes and is repeated
-isprist 13!:83 (<"0 i. 2) ]&.> <"0 i. 2 5
--. isprist 13!:83 (<"0 i. 2 5) ]&.> <"0 i. 2
-isprist 13!:83 (<"0 i. 2 5) ]&.> <"0 i. 2 5
-isprist 13!:83 (<"0 i. 2 5) [&.> <"0 i. 2 5
+-. isprist 13!:_4 (<"0 i. 2) [&.> <"0 i. 2 5
+isprist 13!:_4 (<"0 i. 2 5) [&.> <"0 i. 2  NB. arg escapes and is repeated
+isprist 13!:_4 (<"0 i. 2) ]&.> <"0 i. 2 5
+-. isprist 13!:_4 (<"0 i. 2 5) ]&.> <"0 i. 2
+isprist 13!:_4 (<"0 i. 2 5) ]&.> <"0 i. 2 5
+isprist 13!:_4 (<"0 i. 2 5) [&.> <"0 i. 2 5
 a =: <"1 i. 100 1000
 5000 > 7!:2 'a =: >:&.> a'
 
 NB. x,y transfers ownership to result if both args are abandoned pristine (but not VIRTUAL).  But not in the first set below: now all exec results are made recursive
-16b20 = 16b20 (17 b.) 1 { 13!:83 (;:'a b c d e f g') , (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
-16b20 = 16b20 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (4) { <"0 i. 6  NB. no apip; new block not recursible
-16b1000020 = 16b1000020 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
-16b1000020 = 16b1000020 (17 b.) 1 { 13!:83 (;:'a b c d e f g h') , (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
-16b0000020 = 16b1000020 (17 b.) 1 { 13!:83 ,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
+16b20 = 16b20 (17 b.) 1 { 13!:_4 (;:'a b c d e f g') , (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
+16b20 = 16b20 (17 b.) 1 { 13!:_4 (;:'a b c d e f g h') , (4) { <"0 i. 6  NB. no apip; new block not recursible
+16b1000020 = 16b1000020 (17 b.) 1 { 13!:_4 (;:'a b c d e f g h') , (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
+16b1000020 = 16b1000020 (17 b.) 1 { 13!:_4 (;:'a b c d e f g h') , (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
+16b0000020 = 16b1000020 (17 b.) 1 { 13!:_4 ,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
 
-16b20 = 16b20 (17 b.) 1 { (;:'a b c d e f g') 13!:83@, (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
-0 = 16b20 (17 b.) 1 {  (2 1 3 2 4 3 5 4&{ 13!:83@, 2 1&{)   <"0 i. 6  NB. no apip; new block not recursible
-16b1000020 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:83@, (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
-16b1000000 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:83@, (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
-16b0000000 = 16b1000020 (17 b.) 1 { 13!:83@,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
+16b20 = 16b20 (17 b.) 1 { (;:'a b c d e f g') 13!:_4@, (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
+0 = 16b20 (17 b.) 1 {  (2 1 3 2 4 3 5 4&{ 13!:_4@, 2 1&{)   <"0 i. 6  NB. no apip; new block not recursible
+16b1000020 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:_4@, (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
+16b1000000 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:_4@, (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
+16b0000000 = 16b1000020 (17 b.) 1 { 13!:_4@,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
 
 
 
@@ -422,8 +422,8 @@ a > _1000 + 7!:0 ''
 (,<,<0) -: ((}: , 0: each@:{:) each) @: (00"_ each each) ,<,<,<97   NB. used to free block prematurely
 
 NB. READONLY result of explicit defn is not inplaceable
-(isro *. -.@isip) 13!:83 {{ i. y }} 7
-isip 13!:83 {{ i. y }} 1e6
+(isro *. -.@isip) 13!:_4 {{ i. y }} 7
+isip 13!:_4 {{ i. y }} 1e6
 1: 00 * {{ i. y }} 7
 0 1 2 3 4 5 6 7 8 9 -: i.10
 

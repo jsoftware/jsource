@@ -9,9 +9,9 @@ dcd=: 4 : '(lib,x) cd y'
 
 NB. Verify 15!:0 turns off pristinity of w
 a =: ]&.> (+:,2);(+:2);(+:3 4)
-0 ~: 16b1000000 (17 b.) 1 { 13!:83 a
+0 ~: 16b1000000 (17 b.) 1 { 13!:_4 a
 1: 'ibasic i *i i *i' dcd a
-0 = 16b1000000 (17 b.) 1 { 13!:83 a
+0 = 16b1000000 (17 b.) 1 { 13!:_4 a
 
 NB. test integer types
 a=: 4 u: +/401 402 403

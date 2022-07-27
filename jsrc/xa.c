@@ -295,7 +295,7 @@ static I recurmsg(J jt, C *msgaddr){
 #endif
  R 0;
 } 
-//13!:99 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
+//13!:_6 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
 F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
  sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%p\n",stackptr,(void *)jt->cstackmin);
  jsto(JJTOJ(jt),MTYOER,buf);

@@ -23,8 +23,8 @@ DF2(jtunquote){A z;
 #define FLGCACHED ((I)1<<FLGCACHEDX)
 #define FLGDYADX 19  // operation is dyad
 #define FLGDYAD ((I)1<<FLGDYADX)
-// bits 0-15 hold the currstackx before execution
- I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad 1=pseudofunction 2=cached lookup 8=execution of dyad bits 8-23=jt->callstacknext at start
+// bits 0-15 hold the callstackx before execution
+ I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad bits 0-15=jt->callstacknext at start
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
@@ -152,7 +152,7 @@ DF2(jtunquote){A z;
   INCREXECCT(explocale);   // we are starting a new execution in explocale.  Protect the locale while it runs
     // scaf if someone deletes the locale before we start it, we are toast
  }
- // ************** errors must pop the stack and unra() before exiting
+ // ************** from here on errors must pop the stack and unra() before exiting
  AF actionfn=FAV(fs)->valencefns[flgd0cpC>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
  w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
@@ -215,6 +215,7 @@ DF2(jtunquote){A z;
  // causes the locale to be half-deleted and the AC decremented, possibly resulting in deletion of the locale.  [A flag prevents half-deletion of the locale more than once.]
  // To prevent half-deletion while the locale is running, we increment the execution count when an execution (including the first) switches into the locale, and decrement the
  // execution count when that execution completes (either by a switch back to the previous locale or a successive 18!:4).
+ // scaf AR is only 8 bits; if we call back & forth between 2 locales we could overflow the count at a call depth of 512.  Should have a longer count field, perhaps using 2 bytes starting at AR.
  //
  // Locale switches through 18!:4 take advantage of the fact that the cover verb does nothing except the 18!:4 function and thus cannot alter locales itself.
  // The 18!:4 is treated as the start of a new execution for execution-count purposes, and always ensures that the last thing in the caller's stack is either CALLSTACKPOPLOCALEFIRST (for the
@@ -224,7 +225,7 @@ DF2(jtunquote){A z;
  // when processing a POP returning from a locative, but if there is a POPFIRST/POPFROM in the frame, the locale that is decremented must be the one in the POPFIRST/CHANGELOCALE (and also
  // the locale in the POPFIRST/CHANGELOCALE must be from the FIRST 18!:4 which will give the starting locale, though we could equally take this value from explocale)
  //
- // Note that the POPFROM after the first propagates back through the stack until it is annihilated by the POPFIRST.  This guarantees that 
+ // Note that the POPFROM after the first propagates back through the stack until it is annihilated by the POPFIRST.
 exitpop: ;
  jt->curname=savname;  // restore the executing name
  I callstackx=(US)flgd0cpC;  // extract the init call stackx, which we will use to analyze

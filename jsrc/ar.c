@@ -529,16 +529,16 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
  k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
  AK(wfaux)+=(n-1)*k; AK(a)+=(n-2)*k; MCISH(AS(wfaux),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // make the virtual block look like the tail, except for the offset
  // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or fs is &.>)
+ // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
  // We include contextual inplaceability (from jtinplace) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
  // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtinplace itself
  I aipok = (SGNIF((I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self),JTINPLACEWX)&AC(w))+ACUC1;   // requires JTINPLACEWX==0.  This is 1 or 8..1
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
- // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
  ACINIT(wfaux,aipok)   // first cell is inplaceable if second is
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
 
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
- // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecusive recursible type.
+ // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecursive recursible type.
  // As a compromise we free every few iterations: at least one per 8 iterations, and at least 8 times through the process
 #define LGMINGCS 3  // lg2 of minimum number of times we call gc
 #define MINGCINTERVAL 8  // max spacing between frees

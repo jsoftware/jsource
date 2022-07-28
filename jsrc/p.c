@@ -581,12 +581,11 @@ rdglob: ;  // here when we tried the buckets and failed
        }
       }else{
 undefname:
-       // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
-       // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
+       // undefined name, possibly because malformed.  If special x. u. etc, that's fatal; otherwise try creating a dummy ref to [: (to have a verb)
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jt->jerr=EVVALUE;FPS}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
 // obsolete        jt->parserstackframe.parseroridetok = 0xffff;  // remove lookup override  kludge - we should suppress calls to signal from lookup
        y=namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:, including flags
-       FPSZ(y)   // if syrd gave an error, namerefacv will return 0 (from fdef).  This will have previously signaled an error
+       FPSZ(y)   // if syrd gave an error (malformed name), namerefacv will return 0 (via fdef).  This will have previously signaled an error, and we abort here
       }
 endname: ;
      }
@@ -708,14 +707,14 @@ endname: ;
        // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
        // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
        // (2) If either arg is FAOWED, it can't be inplaceable & we use tpop[aw] to hold the FAOWED arg, flagged as FAOWED.  We must not duplicate an arg in this case
-       // This calculation should run to completion while the expected misprediction is being processed
+       // This calculation should run to completion while the expected indirect-branch misprediction is being processed
        A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=ISSTKFAOWED((I)arg2&(pmask>>2))?(A*)arg2:tpopw;
               // point to pointer to arg2 (if it is inplace) - only if dyad
        A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISSTKFAOWED(arg1)?(A*)arg1:tpopa;
               // tpopa/tpopw are:  monad: w fs  dyad: a w
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
-       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pmask>>2)))&((pmask>>1)|1))),QCWORD(arg1),QCWORD(arg2),fs);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
-         // could use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  But when we don't break we lose time waiting for jt->fs to settle
+       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pmask>>2)))&((pmask>>1)|1))),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
+         // use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  When we don't break we lose time waiting for jt->fs to settle, but very little
        // expect pipeline break
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
@@ -732,41 +731,42 @@ RECURSIVERESULTSCHECK
        pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
-       // (1) if any of args/fs is FAOWED, the value is now out of execution and can be fa()d.  BUT if the value is y, it remains in execution and we inherit the
+       // (1) if any of args/fs is FAOWED, the value is now out of execution and must be fa()d.  BUT if the value is y, it remains in execution and we inherit the
        // FAOWED status into y (but only once per value).  This is mutually exclusive with
        // (2) free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
        // We free them right here, and zap their tpop entry to avoid an extra free later.
-       // We free using fanapop, which recurs only on recursive blocks, because that's what the tpop we are replacing does
+       // We free using fanapop, which recurs only on recursive blocks, because that's what the tpop we are replacing does.  All blocks are recursive here.
        // We can free all DIRECT blocks, and PRISTINE also.  We mustn't free non-PRISTINE boxes because the contents are at large
        // and might be freed while in use elsewhere.
        // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
-       // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc BEFORE the call
+       // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc from BEFORE the call
+       A freea;  // reg to hold arg we are pobbly freeing
        // first the w arg
-       if(ISSTKFAOWED(tpopw)){arg1=QCWORD(tpopw); tpopw=tpopa; if(unlikely(arg1==y))y=SETSTKFAOWED(y);else fa(arg1);}
-       else if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
-        I c=(UI)AC(arg1)>>(arg1==y);  // get inplaceability; set off if the arg is the result
-        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
-         *tpopw=0; tpopw=tpopa; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
+       if(ISSTKFAOWED(tpopw)){freea=QCWORD(tpopw); tpopw=tpopa; if(unlikely(freea==y))y=SETSTKFAOWED(y);else fa(freea);}
+       else if(freea=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
+        I c=(UI)AC(freea)>>(freea==y);  // get inplaceability; set off if the arg is the result
+        if((c&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
+         *tpopw=0; tpopw=tpopa; fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
         }else tpopw=tpopa;
        }else tpopw=tpopa;
        // repeat for a if any
-       if(ISSTKFAOWED(tpopw)){arg1=QCWORD(tpopw); if(unlikely(arg1==y))y=SETSTKFAOWED(y);else fa(arg1);}
-       else if(arg1=*tpopw){  // if arg1==arg2 this will never load a value requiring action
-        I c=(UI)AC(arg1)>>(arg1==y);   // can remove y here, see above
-        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
-         *tpopw=0; fanapop(arg1,AFLAG(arg1));
+       if(ISSTKFAOWED(tpopw)){freea=QCWORD(tpopw); if(unlikely(freea==y))y=SETSTKFAOWED(y);else fa(freea);}
+       else if(freea=*tpopw){  // if freea==arg2 this will never load a value requiring action
+        I c=(UI)AC(freea)>>(freea==y);   // can remove y here, see above
+        if((c&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
+         *tpopw=0; fanapop(freea,AFLAG(freea));
         }
        }
-       // repeat for fs
-       if(ISSTKFAOWED(arg1=stack[2-(pmask&1)].a)){fa(QCWORD(arg1));}   // 1 2 2
+       // repeat for fs, which we extract from the stack to get the FAOWED flag
+       stack[3-(pmask&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
+       y=NEXTY;  // refetch next-word to save regs
+       if(ISSTKFAOWED(freea=stack[2-(pmask&1)].a)){fa(QCWORD(freea));}   // 1 2 2
 
        // close up the stack and store the result
-       stack[3-(pmask&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
        stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
        stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
-       y=NEXTY;  // refetch next-word to save regs
 
        // Handle early exits: AVN on line (0)12 or (not LPAR on line 02 and finalexec).
        // If line 02 and the current word is (C)AVN and the next is also, stack 2

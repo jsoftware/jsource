@@ -758,7 +758,7 @@ typedef struct {I e,p;X x;} DX;
 #define CLRFAOWED(w) (A)((I)(w)&~QCFAOWED)
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
 #define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part, 0-15 for the syntax units including assignment
-// When the vallue is pushed onto the parser stack, the FAOWED bit moves to bit 0 where is can be distinguished from a tstack pointer
+// When the value is pushed onto the parser stack, the FAOWED bit moves to bit 0 where it can be distinguished from a tstack pointer
 #define STKFAOWEDX 0
 #define STKFAOWED ((I)1<<STKFAOWEDX)  // set in parser stack if value needs to be freed
 #define SETSTKFAOWED(w) (A)((I)(w)|STKFAOWED)

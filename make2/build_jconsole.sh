@@ -159,7 +159,19 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
 #-mmacosx-version-min=10.5
-darwin_j6*)
+darwin_j64)
+CFLAGS="$common $macmin"
+LDFLAGS=" -ldl $LDTHREAD $macmin "
+;;
+darwin_j64avx)
+CFLAGS="$common $macmin"
+LDFLAGS=" -ldl $LDTHREAD $macmin "
+;;
+darwin_j64avx2)
+CFLAGS="$common $macmin"
+LDFLAGS=" -ldl $LDTHREAD $macmin "
+;;
+darwin_j64avx512)
 CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;

@@ -374,7 +374,7 @@ FLAGS_BASE64=" -DHAVE_NEON64=1 "
 darwin_j32) # darwin x86
 TARGET=libj.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
-LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin"
+LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
 GASM_FLAGS="-m32 $macmin"
@@ -385,7 +385,7 @@ FLAGS_BASE64=""
 darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 CFLAGS="$common $macmin -msse3 "
-LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
@@ -396,7 +396,7 @@ FLAGS_BASE64=""
 darwin_j64avx) # darwin intel 64bit
 TARGET=libj.dylib
 CFLAGS="$common $macmin -DC_AVX=1 "
-LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 CFLAGS_SIMD=" -mavx "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
@@ -409,7 +409,7 @@ FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
 darwin_j64avx2) # darwin intel 64bit
 TARGET=libj.dylib
 CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 "
-LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
@@ -422,7 +422,7 @@ FLAGS_BASE64=" -DHAVE_AVX2=1 "
 darwin_j64avx512) # darwin intel 64bit
 TARGET=libj.dylib
 CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
-LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
@@ -435,7 +435,7 @@ FLAGS_BASE64=" -DHAVE_AVX2=1 "
 darwin_j64arm) # darwin arm
 TARGET=libj.dylib
 CFLAGS="$common $macmin $common -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
-LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_IOS}"
 GASM_FLAGS="$macmin"

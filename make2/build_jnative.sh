@@ -152,17 +152,32 @@ LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 darwin_j32)
 TARGET=libjnative.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" -m32 $macmin -dynamiclib "
+LDFLAGS=" -m32 $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
-darwin_j6*)
+darwin_j64)
 TARGET=libjnative.dylib
 CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
+;;
+darwin_j64avx)
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
+;;
+darwin_j64avx2)
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
+;;
+darwin_j64avx512)
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
 darwin_j64arm) # darwin arm
 TARGET=libjnative.dylib
 CFLAGS="$common $macmin -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
 *)
 echo no case for those parameters

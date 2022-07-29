@@ -662,24 +662,23 @@ endname: ;
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
       if(pmask&7){  // lines 0 1 2, verb execution
        // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
+       I notfinalexec=!PTISM(fsa[2]);  // set if there is something on the stack after the result of this exec.  Used after verb exec.  fsa[2] is close to the critical path
        jt->parserstackframe.sf=fs;  // set new recursion point for $:; this frees fs
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
        jt->fillv=(C*)__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  If we do this after the assignment block, jt gets spilled and we have 3 back-to-back dependent loads,
                               // which is more than the runout can cover.  Symbol lookups don't use fillv
-       I notfinalexec=!PTISM(fsa[2]);  // set if there is something on the stack after the result of this exec.  Used after verb exec.  fsa[2] is close to the critical path
-       // We have a long chain of updates to pt0ecam; start them now.
        pt0ecam|=pmask<<PLINESAVEX;  // save pmask over the subroutine calls - also used after the verb execution
-       pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  This ties up the reg while flags settle, but it's mostly used for predictions
-       pt0ecam&=fs1flag|~VASGSAFE;  // include ASGSAFE from V0 (if applicable, otherwise just a duplicate of fsflag)
-       pt0ecam|=notfinalexec<<NOTFINALEXECX;  // remember if this exec is final.   Wait till we know not fail, so we don't have to wait for (
+       pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  Used in the execution
+       fs1flag&=fsflag;  // include ASGSAFE from V0 (if applicable, otherwise just a duplicate of fsflag)
+       pt0ecam|=notfinalexec<<NOTFINALEXECX;  // remember if this exec is final.   Wait till we know not fail, so we don't have to wait for (.  Used after execution
        // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
        // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
 // obsolete        if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!notfinalexec)){A zval;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-       if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(notfinalexec<<NOTFINALEXECX)+(~pt0ecam&VASGSAFE)))){A zval; 
+       if(unlikely(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(notfinalexec<<NOTFINALEXECX)+(~fs1flag&VASGSAFE))))){A zval; 
           // The values on the left are good: function that understands inplacing.
-          // The values on the right are bad, and all bits >= the good bits.  They are: not assignment name; something in the stack to the right of what we are about to execute;
+          // The values on the right are bad, and all bits > the good bits.  They are: not assignment to name; something in the stack to the right of what we are about to execute;
           // ill-behaved function (may change locales).  The > means 'good and no bads' 
 // obsolete         if(pt0ecam&VASGSAFE&&(!(pmask&2)||FAV(QCWORD(stack[1].a))->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
 // obsolete         if(pt0ecam&VASGSAFE){  // if the verb(s) allow execution-in-place for assignment...
@@ -696,7 +695,7 @@ endname: ;
         pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
        }
 // obsolete        }
-       AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the rouutine address early.  This takes 2 fetches, which finishes about when the indirect branch is executed
+       AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg2=stack[(pmask>>1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        A arg1=stack[(pmask&3)+1].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
        // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:

@@ -1081,7 +1081,7 @@ typedef struct {
 #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
 #define VXOPCALL       (I)0x2000000      // 25 : defn derived fn call overlaps SYMB/ASGNLOCAL
 #define VASGSAFEX     26
-#define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path
+#define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path.  Must be > VJTFLGOK2 for parser comparisons
 #define VDDOP           ((I)(1L<<27))     /* derived from a derived operator */
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb

@@ -126,7 +126,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
 #define PTNAMEIFASGN(pt)  ((pt)<<(NAMEX-15))   // we compare against the NAMEX bit
-#define PTISNOTASGNNAME(pt)  ((pt)&0x1000000)
+#define PTISNOTASGNNAME(pt)  ((pt)&0x1000000)  // bit must be >= VJTFLGOK2X because we compare them > to find valid named assignments
 #define PTASGNLOCALX 22  // set in the type-code for local assignment
 #define PTASGNLOCAL (1LL<<PTASGNLOCALX)
 #define PTNOTLPARX 27  // this bit is set for NOT LPAR    used in a register here
@@ -434,18 +434,19 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (  17 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
+  //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (
+  //         25 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  free
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
   //  18-19 AR flags from symtab
   //  16 set if value has been added to NVR stack
   //  0-15 m (word# in sentence)
+#define NOTFINALEXECX 25  // bit must be >= VJTFLGOK2X and less than 32+PTISCAVNX, because we test values 
+#define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define LOCSYMFLGX (18-ARNAMEADDEDX)
 #define PLINESAVEX 20  // 3 bits of pline
 // above #define USEDGLOBALX 21
 // above #define USEDGLOBAL (1LL<<USEDGLOBALX)
-#define NOTFINALEXECX 17
-#define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define NAMEFLAGSX 17  // 17 and 20
 #define NVRSTACKEDX 16
 #define NVRSTACKED (1LL<<NVRSTACKEDX)
@@ -453,12 +454,12 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 #if SY_64
 #define SETSTACK0PT(v) pt0ecam=(UI4)pt0ecam, pt0ecam|=(I)(v)<<32;
 #define GETSTACK0PT (pt0ecam>>32)
-#define STACK0PTISCAVN (pt0ecam&(1LL<<(32+PTISCAVNX)))
+#define STACK0PTISCAVN (pt0ecam&(1LL<<(32+PTISCAVNX)))  // the bit must be > NOTFINALX
 #else
   UI4 stack0pt;
 #define SETSTACK0PT(v) stack0pt=(v);
 #define GETSTACK0PT stack0pt
-#define STACK0PTISCAVN PTISCAVN(stack0pt)
+#define STACK0PTISCAVN (PTISCAVN(stack0pt)<<(NOTFINALX+1-PTISCAVNX))  // move the bit to above NOTFINALX
 #endif
   jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
   UI pt0ecam = (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl.  locsyms cannot change during this execution
@@ -641,63 +642,61 @@ endname: ;
     pmask&=GETSTACK0PT;  // finish 1st 3 columns of parse, which are enough to decide bit 0
     PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4
     pmask&=(I)((C*)&stack[3].pt)[3];  // finish 3d column of parse
+    A fs1=QCWORD(stack[1].a);  // in case of line 1 V0 V1 N2, we will need the flags from V1.  path is fs1,fs->fs1flag to settle before the second assignment check
     A fs=QCWORD(fsa->a);  // the action to be executed if lines 0-4.  Must read early: dependency is pmask[0]->fsa->fs->fsflag to settle before we check assignments
     pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
     
-    if(pmask){  // If all 0, nothing is dispatchable, go push next word
+    if(pmask){  // If all 0, nothing is dispatchable, go push next word after checking for (
 // obsolete      jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
-     // We also have a couple of branches before the indirect branch, and we try to similarly get some computation going before them
-     // Save the stackpointer in case there are calls to parse in the names we execute
-     jt->parserstackframe.parserstkend1=stack;
-     // Fill in the token# (in case of error) based on the line# we are running
-     if(pmask&0x1F){
+      jt->parserstackframe.parserstkend1=stack;    // Save the stackpointer in case there are calls to parse in the names we execute
+// obsolete      // Fill in the token# (in case of error) based on the line# we are running
+     if(pmask&0x1F){  // if lines 0-4
+      I fs1flag=FAV(fs1=pmask&2?fs1:fs)->flag;  // if line 1, fetch V0 flags; otherwise harmless refetch of fs flags.  If line 1 matches, line 0 cannot
       I fsflag=FAV(fs)->flag;  // fetch flags early - we always need them in lines 0-2
       pmask=LOWESTBIT(pmask);   // leave only one bit
       // Here for lines 0-4, which execute the entity pointed to by fs
       // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
       if(pmask&7){  // lines 0 1 2, verb execution
-       jt->parserstackframe.sf=fs;  // set new recursion point for $:; this frees fs
-       // We have a long chain of updates to pt0ecam; start them now.  Also, we need fs and its flags; get them as early as possible
-       I notfinalexec=!PTISM(fsa[2]);  // set if there is something on the stack after the result of this exec.  Used after verb exec.  fsa[2] is close to the critical path
-       pt0ecam|=notfinalexec<<NOTFINALEXECX;  // remember if this exec is final.   Wait till we know not fail, so we don't have to wait for (
        // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
-       // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
-       // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
-       // 2. pline=0 or 2, token 0 not LPAR (might be EDGE): similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
-       // Since if pline is 0 token 0 must be EDGE, this is equivalent to pline!=1 and word 0 not LPAR
-       // we save a pass through the matcher in those cases.  The 8 cycles are worth saving, but more than that it makes the branch prediction tighter
-       // further, if word 0 is (C)AVN, we can pull 2 tokens if the next token is AVN: we have a flag for that
-       pt0ecam|=pmask<<PLINESAVEX;  // lose pline over the subroutine calls to try to prevent a register spill - also used after the verb execution
-       pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  This ties up the reg while flags settle, but it's mostly used for predictions
-       // If it is an inplaceable assignment to a known name that has a value, remember the name and the value
-       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombie we are warranting
-       // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
-       // this may be over two verbs
-       if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!notfinalexec)){A zval;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-        // We have many fetches to do and they will delay the execution of the code in this block.  We will rejoin the non-assignment block with a large slug of
-        // instructions that have to wait.  Probably the frontend will still be emitting blocked instructions even after all the unblocked ones have been executed.  Pity.
-         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
-        if(pt0ecam&VASGSAFE&&(!(pmask&2)||FAV(QCWORD(stack[1].a))->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
-         if(likely(GETSTACK0PT&PTASGNLOCAL)){L *s;
-          // local assignment.  First check for primary symbol.  We expect this to succeed
-          if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
-           zval=(SYMORIGIN+(I)s)->val;  // get value of symbol in primary table.  There may be no value; that's OK
-          }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
-         }else zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));  // global assignment, get slot address
-         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
-         // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace.
-         // The block can be virtual, if it is x/y to xdefn.  We must never inplace to a virtual block
-         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
-         pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
-        }
-       }
-       // There is no need to set the token number in the result, since it must be a noun and will never be executed
+       jt->parserstackframe.sf=fs;  // set new recursion point for $:; this frees fs
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
-       AF actionfn=FAV(jt->parserstackframe.sf)->valencefns[pmask>>2];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory.
+       jt->fillv=(C*)__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  If we do this after the assignment block, jt gets spilled and we have 3 back-to-back dependent loads,
+                              // which is more than the runout can cover.  Symbol lookups don't use fillv
+       I notfinalexec=!PTISM(fsa[2]);  // set if there is something on the stack after the result of this exec.  Used after verb exec.  fsa[2] is close to the critical path
+       // We have a long chain of updates to pt0ecam; start them now.
+       pt0ecam|=pmask<<PLINESAVEX;  // save pmask over the subroutine calls - also used after the verb execution
+       pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  This ties up the reg while flags settle, but it's mostly used for predictions
+       pt0ecam&=fs1flag|~VASGSAFE;  // include ASGSAFE from V0 (if applicable, otherwise just a duplicate of fsflag)
+       pt0ecam|=notfinalexec<<NOTFINALEXECX;  // remember if this exec is final.   Wait till we know not fail, so we don't have to wait for (
+       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
+       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
+       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
+       // this may be over two verbs
+// obsolete        if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!notfinalexec)){A zval;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+       if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(notfinalexec<<NOTFINALEXECX)+(~pt0ecam&VASGSAFE)))){A zval; 
+          // The values on the left are good: function that understands inplacing.
+          // The values on the right are bad, and all bits >= the good bits.  They are: not assignment name; something in the stack to the right of what we are about to execute;
+          // ill-behaved function (may change locales).  The > means 'good and no bads' 
+// obsolete         if(pt0ecam&VASGSAFE&&(!(pmask&2)||FAV(QCWORD(stack[1].a))->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
+// obsolete         if(pt0ecam&VASGSAFE){  // if the verb(s) allow execution-in-place for assignment...
+        if(likely(GETSTACK0PT&PTASGNLOCAL)){L *s;
+         // local assignment.  First check for primary symbol.  We expect this to succeed
+         if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
+          zval=(SYMORIGIN+(I)s)->val;  // get value of symbol in primary table.  There may be no value; that's OK
+         }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
+        }else zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));  // global assignment, get slot address
+        // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
+        // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace.
+        // The block can be virtual, if it is x/y to xdefn.  We must never inplace to a virtual block
+        zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
+        pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
+       }
+// obsolete        }
+       AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the rouutine address early.  This takes 2 fetches, which finishes about when the indirect branch is executed
        A arg2=stack[(pmask>>1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        A arg1=stack[(pmask&3)+1].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
        // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
@@ -763,9 +762,17 @@ RECURSIVERESULTSCHECK
        if(ISSTKFAOWED(freea=stack[2-(pmask&1)].a)){fa(QCWORD(freea));}   // 1 2 2
 
        // close up the stack and store the result
+       // There is no need to set the token number in the result, since it must be a noun and will never be executed
        stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
        stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
+
+       // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
+       // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
+       // 2. pline=0 or 2, token 0 not LPAR (might be EDGE): similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
+       // Since if pline is 0 token 0 must be EDGE, this is equivalent to pline!=1 and word 0 not LPAR
+       // we save a pass through the matcher in those cases.  The 8 cycles are worth saving, but more than that it makes the branch prediction tighter
+       // further, if word 0 is (C)AVN, we can pull 2 tokens if the next token is AVN: we have a flag for that
 
        // Handle early exits: AVN on line (0)12 or (not LPAR on line 02 and finalexec).
        // If line 02 and the current word is (C)AVN and the next is also, stack 2
@@ -899,8 +906,8 @@ RECURSIVERESULTSCHECK
       if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
        SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
        stack+=2;  // advance stack pointer to result
-      }else{jt->parserstackframe.parserstkend1=stack; jsignal(fs!=0?EVSYNTAX:0); FP}  // error if contents of ( not valid.  Set stackpointer so we see the failing exec
-        // the fs!=0 above is to trick the compiler.  We really want to start loading fs as early as possible, even though it is used only in lines 0-4.  By mentioning fs here, we get the load started early
+      }else{jt->parserstackframe.parserstkend1=stack; jsignal(((I)fs|(I)fs1)!=0?EVSYNTAX:0); FP}  // error if contents of ( not valid.  Set stackpointer so we see the failing exec
+        // the fs/fs1!=0 above is to trick the compiler.  We really want to start loading fs as early as possible, even though it is used only in lines 0-4.  By mentioning fs here, we get the load started early
       // we fall through to rescan after ( )
      }else{pt0ecam&=~CONJ;  break;}   // parse failed, return to stack next word.  Must clear 'stack 2' flag
     }  // end 'there was a fragment'
@@ -914,7 +921,7 @@ RECURSIVERESULTSCHECK
   audittstack(jt);
 #endif
    // Prepare the result
-  if(1){  // no error on this branch
+  if(likely(1)){  // no error on this branch
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
    // stack[1] is the initial mark (not written out), stack[2] is the result, and stack[3] had better be the first ending mark
    if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FP}

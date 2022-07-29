@@ -175,7 +175,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A idothash0;        // 2-byte hash table for use by i.
  A idothash1;        // 4-byte hash table for use by i.
  A fill;             // user fill atom
- C* fillv;            /* fill value                                      */
+ C* fillv;            // fill value, during primitive execution - used during parsing to hold pointer to routine to execute
  C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG
 // seldom-used fields

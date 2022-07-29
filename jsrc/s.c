@@ -655,6 +655,7 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
 // the name a may require lookup through the path; once we find the locale, we search only in it
 // Result is &value for symbol, or 0, with no low-order flags
 // We are called for purposes of setting zombieval for inplace assignments.  We do not create the symbol because multiple threads may assign a name
+// We try to create the symbol table (not really needed).  This routine must not modify fillv, which is in use in parsing
 A jtprobequiet(J jt,A a){A g;
  I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale

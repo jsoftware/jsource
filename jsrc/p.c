@@ -666,20 +666,21 @@ endname: ;
        jt->parserstackframe.sf=fs;  // set new recursion point for $:; this frees fs
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
        jt->fillv=(C*)__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  If we do this after the assignment block, jt gets spilled and we have 3 back-to-back dependent loads,
-                              // which is more than the runout can cover.  Symbol lookups don't use fillv
+                              // which is more than the runout can cover.  Symbol lookups don't use fillv.  We put the atomic_load here to encourage early load of notfinalexec
        pt0ecam|=pmask<<PLINESAVEX;  // save pmask over the subroutine calls - also used after the verb execution
-       pt0ecam|=fsflag&VJTFLGOK1+VJTFLGOK2+VASGSAFE;  // insert flags into portmanteau reg.  Used in the execution
        fs1flag&=fsflag;  // include ASGSAFE from V0 (if applicable, otherwise just a duplicate of fsflag)
+       fsflag>>=(pmask>>2); fsflag&=VJTFLGOK1;  // select the monad/dyad bit indicating inplaceability, stored in the monad bit
+       pt0ecam|=fsflag;  // insert flag into portmanteau reg.  Used in the execution
        pt0ecam|=notfinalexec<<NOTFINALEXECX;  // remember if this exec is final.   Wait till we know not fail, so we don't have to wait for (.  Used after execution
        // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
        // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
 // obsolete        if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!notfinalexec)){A zval;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-       if(unlikely(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(notfinalexec<<NOTFINALEXECX)+(~fs1flag&VASGSAFE))))){A zval; 
+       if(unlikely((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(notfinalexec<<NOTFINALEXECX)+(~fs1flag&VASGSAFE)))){A zval; 
           // The values on the left are good: function that understands inplacing.
           // The values on the right are bad, and all bits > the good bits.  They are: not assignment to name; something in the stack to the right of what we are about to execute;
-          // ill-behaved function (may change locales).  The > means 'good and no bads' 
+          // ill-behaved function (may change locales).  The > means 'good and no bads', that is, inplaceable assignment
 // obsolete         if(pt0ecam&VASGSAFE&&(!(pmask&2)||FAV(QCWORD(stack[1].a))->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
 // obsolete         if(pt0ecam&VASGSAFE){  // if the verb(s) allow execution-in-place for assignment...
         if(likely(GETSTACK0PT&PTASGNLOCAL)){L *s;
@@ -696,8 +697,8 @@ endname: ;
        }
 // obsolete        }
        AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
-       A arg2=stack[(pmask>>1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
-       A arg1=stack[(pmask&3)+1].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
+       A arg1=stack[(pmask+1)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
+       A arg2=stack[(pmask>>=1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)    pmask shifted right 1
        // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
        // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
        // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
@@ -705,14 +706,22 @@ endname: ;
        // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
        // (2) If either arg is FAOWED, it can't be inplaceable & we use tpop[aw] to hold the FAOWED arg, flagged as FAOWED.  We must not duplicate an arg in this case
        // This calculation should run to completion while the expected indirect-branch misprediction is being processed
-       A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=ISSTKFAOWED((I)arg2&(pmask>>2))?(A*)arg2:tpopw;
+       A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=(I)arg2&(pmask>>=(1-STKFAOWEDX))?(A*)arg2:tpopw;
               // point to pointer to arg2 (if it is inplace) - only if dyad
+       // pmask is now original pmask>>2
        A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISSTKFAOWED(arg1)?(A*)arg1:tpopa;
               // tpopa/tpopw are:  monad: w fs  dyad: a w
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
-       y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X+(pmask>>2)))&((pmask>>1)|1))),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
+       J jti=(J)((I)jt+(2*pmask)+1); jti=(pt0ecam&VJTFLGOK1)?jti:jt;  // pmask now means 'dyad execution'.  Set args as inplaceable if verb supports inplacing
+// obsolete        y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X))&((pmask>>1)|1))),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
+       y=(*actionfn)(jti,QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
          // use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  When we don't break we lose time waiting for jt->fs to settle, but very little
-       // expect pipeline break
+       // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
+       // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the
+       // load of actionfn will be a single load, completing in 5 cycles, so every instruction after that is money.  The shifting of pmask in place in the code above is needed to prevent the
+       // compiler from spilling actionfn (the compiler doesn't realize that this is going to be a pipeline break, so if it feels moved to spill actionfn, it will end with
+       // call [actionfn] which is as bad as the code can be).
+       // If the compiler does spill actionfn, the best riposte would be to do something to force it to lose its copies of pmask>>1 and pmask>>2, by reassigning pmask in an unlikely branch
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
@@ -756,13 +765,14 @@ RECURSIVERESULTSCHECK
         }
        }
        // repeat for fs, which we extract from the stack to get the FAOWED flag
-       stack[3-(pmask&1)].a=y;  // save result 2 3 2; parsetype is unchanged, token# is immaterial
-       y=NEXTY;  // refetch next-word to save regs
-       if(ISSTKFAOWED(freea=stack[2-(pmask&1)].a)){fa(QCWORD(freea));}   // 1 2 2
+       PSTK *fsa2=&stack[2-(pmask&1)];
+       if(ISSTKFAOWED(freea=fsa2->a)){fa(QCWORD(freea));}   // 1 2 2
 
        // close up the stack and store the result
-       // There is no need to set the token number in the result, since it must be a noun and will never be executed
-       stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
+       fsa2[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
+       y=NEXTY;  // refetch next-word to save regs
+// obsolete        stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
+       fsa2[0]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->2(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
        stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
 

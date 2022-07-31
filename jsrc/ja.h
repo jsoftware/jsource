@@ -346,8 +346,11 @@
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
-// We don't mark the free as likely because we use ra/fa liberally to protect values on the execution stack
-#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(((Zc-2)|tt)<0){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
+// fa() usually results in a free, coming mostly from freeing named values where the usecount is 1
+#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
+// faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
+// Thus we mark the free as unlikely
+#define faowed(x) {I Zc=AC(x); I tt=AT(x); if(unlikely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted

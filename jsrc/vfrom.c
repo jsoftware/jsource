@@ -751,6 +751,8 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  I *ndx0=IAV(ndxa), *ndx=ndx0, nc=AN(ndxa), *ndxe=ndx+nc; // pointer to column numbers in the order processed, and end+1, and #cols
  I nfreecols=(I)(((struct mvmctx*)ctx)->nfreecolsd*nc); I ncols=(I)(((struct mvmctx*)ctx)->ncolsd*nc);  // the prefix and total fractions are fractions of the size & must be adjusted
  if(unlikely(nc==0))R 0;  // abort with no action if no columns (possible only for DIP)
+ if(bv!=0&&prirow>=0)zv=0;  // if we have DIP with a priority row, signal to process ALL rows in bk order.  It's not really needed but it ensures that if the prirow is tied for pivot in the first
+                               // column, we will take it
 
 #define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; D bkold=inf, cold=1.0; I bkle0=1;
 #define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?

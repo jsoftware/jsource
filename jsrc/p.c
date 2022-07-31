@@ -384,6 +384,14 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
 
+#if 0  // for stats gathering
+I statwfaowed=0, statwfainh=0, statwfafa=0, statwpop=0, statwpopfa=0, statwpopnull=0, statwnull=0;  // 39544103  842114 38701989 27774814 9635796 18139018 34965119
+I statafaowed=0, statafainh=0, statafafa=0, statapop=0, statapopfa=0, statapopnull=0, statanull=0;  // 55080814 4924943 50155871 21204293 6262522 14941771 25998929
+#define INCRSTAT(type) {__atomic_fetch_add(&stat##type,1,__ATOMIC_ACQUIRE);}
+#else
+#define INCRSTAT(x)
+#endif
+
 // Given that we took an error executing the block starting at jt->parserstackframe.parserstkend1, figure out what the error-token number should be
 I infererrtok(J jt){
  // if the error was pee, use the error set then
@@ -749,21 +757,35 @@ RECURSIVERESULTSCHECK
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc from BEFORE the call
        A freea;  // reg to hold arg we are possibly freeing
        // first the w arg
-       if(ISSTKFAOWED(tpopw)){freea=QCWORD(tpopw); tpopw=tpopa; if(unlikely(freea==y))y=SETSTKFAOWED(y);else fa(freea);}
-       else if(freea=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
-        I c=(UI)AC(freea)>>(freea==y);  // get inplaceability; set off if the arg is the result
-        if((c&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
-         *tpopw=0; tpopw=tpopa; fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
-        }else tpopw=tpopa;
-       }else tpopw=tpopa;
+       A *afreea=(A*)tpopw; afreea=ISSTKFAOWED(tpopw)?ZAPLOC0:afreea;  // a safe place to read a tpop-stack entry from
+       freea=__atomic_load_n(afreea,__ATOMIC_ACQUIRE);  // load *tpopw before pipeline break if the next test mispredicts
+       A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
+       I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
+         // we are investing 2 cycles here to start the loads for the path where isstkowed is false.  If isstkowed predicts true, these loads will finish during the pipeline break.  Too bad we can't force that prediction
+       if(ISSTKFAOWED(tpopw)){INCRSTAT(wfaowed/*.36*/) freea=QCWORD(tpopw); if(unlikely(freea==y)){INCRSTAT(wfainh/*.02*/) y=SETSTKFAOWED(y);}else{INCRSTAT(wfafa/*.98*/) faowed(freea);}}
+       else if(freea!=0){INCRSTAT(wpop/*.27*/)  // if the arg has a place on the stack, look at it to see if the block is still around
+        I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
+        if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(wpopfa/*0.34 local, 0.9 global*/)   // inplaceable and not return value.  Sparse blocks are never inplaceable
+         *tpopw=0; fanapop(freea,freeaflag);  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
+        }else{INCRSTAT(wpopnull/*0.65 local, 0.18 global*/) }
+       }else{INCRSTAT(wnull/*.34*/)}
+// obsolete if(statwfaowed!=statwfainh+statwfafa)SEGFAULT;
+// obsolete if(statwpop!=statwpopfa+statwpopnull)SEGFAULT;
        // repeat for a if any
-       if(ISSTKFAOWED(tpopw)){freea=QCWORD(tpopw); if(unlikely(freea==y))y=SETSTKFAOWED(y);else fa(freea);}
-       else if(freea=*tpopw){  // if freea==arg2 this will never load a value requiring action
-        I c=(UI)AC(freea)>>(freea==y);   // can remove y here, see above
-        if((c&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
-         *tpopw=0; fanapop(freea,AFLAG(freea));
-        }
-       }
+       afreea=(A*)tpopa; afreea=ISSTKFAOWED(tpopa)?ZAPLOC0:afreea;
+       freea=__atomic_load_n(afreea,__ATOMIC_ACQUIRE);  // load *tpopa before pipeline break if the next test mispredicts
+       freeav=freea; freeav=freeav?freeav:(A)jt;
+       freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
+       if(ISSTKFAOWED(tpopa)){INCRSTAT(afaowed/*.53*/) freea=QCWORD(tpopa); if(unlikely(freea==y)){INCRSTAT(afainh/*.08*/) y=SETSTKFAOWED(y);}else{INCRSTAT(afafa/*.92*/) faowed(freea);}}
+       else if(freea!=0){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
+        I c=(UI)freeac>>(freea==y);   // can remove y here, see above
+        if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // inplaceable, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
+         *tpopa=0; fanapop(freea,freeaflag);
+        }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
+       }else{INCRSTAT(anull/*.25*/)}
+// obsolete if(statafaowed!=statafainh+statafafa)SEGFAULT;
+// obsolete if(statapop!=statapopfa+statapopnull)SEGFAULT;
+// obsolete if(statwfaowed+statwpop+statwnull!=statafaowed+statapop+statanull)SEGFAULT;
        // repeat for fs, which we extract from the stack to get the FAOWED flag
        PSTK *fsa2=&stack[2-(pmask&1)];
        if(ISSTKFAOWED(freea=fsa2->a)){fa(QCWORD(freea));}   // 1 2 2

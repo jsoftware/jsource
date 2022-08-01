@@ -714,10 +714,11 @@ endname: ;
        // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
        // (2) If either arg is FAOWED, it can't be inplaceable & we use tpop[aw] to hold the FAOWED arg, flagged as FAOWED.  We must not duplicate an arg in this case
        // This calculation should run to completion while the expected indirect-branch misprediction is being processed
+       A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISSTKFAOWED(arg1)?(A*)arg1:tpopa;
+        // Note: this line must come before the next one, to free up the reg holding ZAPLOC0
        A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=(I)arg2&(pmask>>=(1-STKFAOWEDX))?(A*)arg2:tpopw;
               // point to pointer to arg2 (if it is inplace) - only if dyad
        // pmask is now original pmask>>2
-       A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISSTKFAOWED(arg1)?(A*)arg1:tpopa;
               // tpopa/tpopw are:  monad: w fs  dyad: a w
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
        J jti=(J)((I)jt+(2*pmask)+1); jti=(pt0ecam&VJTFLGOK1)?jti:jt;  // pmask now means 'dyad execution'.  Set args as inplaceable if verb supports inplacing
@@ -755,17 +756,20 @@ RECURSIVERESULTSCHECK
        // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc from BEFORE the call
-       A freea;  // reg to hold arg we are possibly freeing
+       A freea,freep;  // reg to hold arg we are possibly freeing
        // first the w arg
        // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs)
        // The rule is: loads that contribute to mispredictable test A should be scheduled before the LAST likely-mispredicted branch leading to A.
-       // Those loads will settle during misprediction, reducing the time through A (including its misprediciotn, if it mispredicts)
-       freea=__atomic_load_n((A*)((I)tpopw&-SZI),__ATOMIC_ACQUIRE);  // load *tpopw before pipeline break if the next test mispredicts.  In case it comes from arg2, round to stay in block
+       // Those loads will settle during misprediction, reducing the time through A (including its misprediction, if it mispredicts)
+       freea=__atomic_load_n((A*)((I)tpopw&-SZI),__ATOMIC_RELAXED);  // load *tpopw before pipeline break if the next test mispredicts.  In case it comes from arg2, round to stay in block
          // we are investing a cycle here to start the load for the path where isstkowed is false.  If isstkowed predicts true, this loads will finish during the pipeline break.  Too bad we can't force that prediction
-       if(ISSTKFAOWED(tpopw)){INCRSTAT(wfaowed/*.36*/) freea=QCWORD(tpopw); if(unlikely(freea==y)){INCRSTAT(wfainh/*.02*/) y=SETSTKFAOWED(y);}else{INCRSTAT(wfafa/*.98*/) faowed(freea);}}
+       freep=(A)QCWORD(tpopw); freep=ISSTKFAOWED(tpopw)?freep:(A)jt;
+       I freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
+         // we are investing another cycle to get an early start on the values needed to free an owed block.  This free will usually result in an RFO cycle, which cannot start until the branch is retired
+       if(ISSTKFAOWED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=SETSTKFAOWED(y);}else{INCRSTAT(wfafa/*.98*/) faowed(freep,freepc,freept);}}
        else{
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
-        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
+        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
          // we start these loads here because the next branch will probably mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
         if(unlikely(freea!=0)){INCRSTAT(wpop/*.27*/)  // if the arg has a place on the stack, look at it to see if the block is still around
          I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
@@ -777,11 +781,14 @@ RECURSIVERESULTSCHECK
 // obsolete if(statwfaowed!=statwfainh+statwfafa)SEGFAULT;
 // obsolete if(statwpop!=statwpopfa+statwpopnull)SEGFAULT;
        // repeat for a if any
-       freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_ACQUIRE);
-       if(ISSTKFAOWED(tpopa)){INCRSTAT(afaowed/*.53*/) freea=QCWORD(tpopa); if(unlikely(freea==y)){INCRSTAT(afainh/*.08*/) y=SETSTKFAOWED(y);}else{INCRSTAT(afafa/*.92*/) faowed(freea);}}
+       freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_RELAXED);
+       freep=(A)QCWORD(tpopa); freep=ISSTKFAOWED(tpopa)?freep:(A)jt;
+       freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
+         // we are investing another cycle to get an early start on the values needed to free an owed block.  This free will usually result in an RFO cycle, which cannot start until the branch is retired
+       if(ISSTKFAOWED(tpopa)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=SETSTKFAOWED(y);}else{INCRSTAT(wfafa/*.98*/) faowed(freep,freepc,freept);}}
        else{
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
-        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
+        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
         if(unlikely(freea!=0)){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
          I c=(UI)freeac>>(freea==y);   // scaf can remove y here, see above
          if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // inplaceable, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
@@ -794,7 +801,8 @@ RECURSIVERESULTSCHECK
 // obsolete if(statwfaowed+statwpop+statwnull!=statafaowed+statapop+statanull)SEGFAULT;
        // repeat for fs, which we extract from the stack to get the FAOWED flag
        PSTK *fsa2=&stack[2-(pmask&1)];
-       if(ISSTKFAOWED(freea=fsa2->a)){faowed(QCWORD(freea));}   // 1 2 2
+       freep=fsa2->a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+       if(ISSTKFAOWED(freep)){faowed(QCWORD(freep),freepc,freept);}   // 1 2 2
 
        // close up the stack and store the result
        fsa2[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
@@ -828,10 +836,11 @@ RECURSIVERESULTSCHECK
       }else{
        // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
        pmask>>=3; // 1 for adj, 2 for conj
-       AF actionfn=FAV(fs)->valencefns[pmask-1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
+       AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
+// obsolete        AF actionfn=FAV(fs)->valencefns[pmask-1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
        A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
-       A arg3=stack[2].a; arg3=pmask&2?arg3:0;  // fs, if this is a conjunction, for FAOWED testing
+       A arg3=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED); arg3=pmask&2?arg3:(A)jt;  // fs, if this is a conjunction, for FAOWED testing.  If not conj, set to jt which has FAOWED clear but allows reads.  Atomic to avoid branch
        UI4 restok=stack[1].t;  // save token # to use for result
        // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
        A yy=(*actionfn)((J)((I)jt|JTXDEFMODIFIER),QCWORD(arg1),QCWORD(arg2),fs);
@@ -850,9 +859,14 @@ RECURSIVERESULTSCHECK
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecursv(yy);  // force recursive y
-       if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-       if(ISSTKFAOWED(arg1=stack[pmask+1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-       if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+       A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+       freep=stack[pmask+1].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+// obsolete        if(ISSTKFAOWED(arg1=stack[pmask+1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+       freep=arg3; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+// obsolete        if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
@@ -899,25 +913,37 @@ RECURSIVERESULTSCHECK
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
-        if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-        if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
-        if(ISSTKFAOWED(arg1=stack[3].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
+        A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+        freep=stack[2].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+        freep=stack[3].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+// obsolete         if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+// obsolete         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
+// obsolete         if(ISSTKFAOWED(arg1=stack[3].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
         y=NEXTY;  // refetch next-word to save regs
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
         // hook and non-fork tridents
         A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
-        I trident=PTISCAVN(stack[3].pt)?3:2; arg3=PTISCAVN(stack[3].pt)?arg3:mark;  // beginning of stack after execution; a is invalid in end-of-stack
+        I trident=PTISCAVN(stack[3].pt)?3:2; arg3=PTISCAVN(stack[3].pt)?arg3:mark;  // beginning of stack after execution; a is invalid in end-of-stack.  mark suffices to show not FAOWED
         A yy=hook(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the hook
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
         //  so that it is safe to remove its protection
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
-        if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-        if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-        if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+        A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+        freep=stack[2].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+        freep=arg3; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+// obsolete         if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+// obsolete         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+// obsolete         if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
         y=NEXTY;  // refetch next-word to save regs
         PTFROMTYPE(stack[trident].pt,AT(yy)) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
@@ -974,7 +1000,7 @@ failparse:
    // if m=0, the stack contains a virtual mark.  We must step over that so we don't free the garbage mark
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
    // fa() any blocks left on the stack that have FAOWED
-   for(;stack!=stackend1;++stack)if(ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a))};  // issue deferred fa for items ra()d and not finished
+   for(;stack!=stackend1;++stack)if(ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
   }
 #if MEMAUDIT&0x2
   audittstack(jt);

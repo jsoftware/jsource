@@ -346,16 +346,16 @@
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
-// fa() usually results in a free, coming mostly from freeing named values where the usecount is 1
+// fa() usually results in a free, coming mostly from freeing named values where the usecount is 1, and the RFO cycle is unnecessary
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
-// Thus we mark the free as unlikely
-#define faowed(x) {I Zc=AC(x); I tt=AT(x); if(unlikely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
+// Thus we mark the free as unlikely, and it will usually do the RFO cycle.  The block must be recursive if it is recursible
+#define faowed(x,Zc,tt) {if(unlikely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
 #define falikely(x) fa(x)  // when the block will usually be deleted  (not used yet)
-#define faacv(x) {I Zc=AC(x); if(Zc<2){jtfamf(jt,x,AT(x));}else{if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));}} // block is known to be ACV
+#define faacv(x) {I Zc=AC(x); if(Zc<2){jtfamf(jt,x,AT(x));}else{if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));}} // block is known to be ACV and recursive
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x),;)
 // Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.

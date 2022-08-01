@@ -467,7 +467,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
   UI4 stack0pt;
 #define SETSTACK0PT(v) stack0pt=(v);
 #define GETSTACK0PT stack0pt
-#define STACK0PTISCAVN (PTISCAVN(stack0pt)<<(NOTFINALX+1-PTISCAVNX))  // move the bit to above NOTFINALX
+#define STACK0PTISCAVN (PTISCAVN(stack0pt)<<(NOTFINALEXECX+1-PTISCAVNX))  // move the bit to above NOTFINALX
 #endif
   jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
   UI pt0ecam = (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl.  locsyms cannot change during this execution
@@ -757,38 +757,44 @@ RECURSIVERESULTSCHECK
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc from BEFORE the call
        A freea;  // reg to hold arg we are possibly freeing
        // first the w arg
-       A *afreea=(A*)tpopw; afreea=ISSTKFAOWED(tpopw)?ZAPLOC0:afreea;  // a safe place to read a tpop-stack entry from
-       freea=__atomic_load_n(afreea,__ATOMIC_ACQUIRE);  // load *tpopw before pipeline break if the next test mispredicts
-       A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
-       I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
-         // we are investing 2 cycles here to start the loads for the path where isstkowed is false.  If isstkowed predicts true, these loads will finish during the pipeline break.  Too bad we can't force that prediction
+       // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs)
+       // The rule is: loads that contribute to mispredictable test A should be scheduled before the LAST likely-mispredicted branch leading to A.
+       // Those loads will settle during misprediction, reducing the time through A (including its misprediciotn, if it mispredicts)
+       freea=__atomic_load_n((A*)((I)tpopw&-SZI),__ATOMIC_ACQUIRE);  // load *tpopw before pipeline break if the next test mispredicts.  In case it comes from arg2, round to stay in block
+         // we are investing a cycle here to start the load for the path where isstkowed is false.  If isstkowed predicts true, this loads will finish during the pipeline break.  Too bad we can't force that prediction
        if(ISSTKFAOWED(tpopw)){INCRSTAT(wfaowed/*.36*/) freea=QCWORD(tpopw); if(unlikely(freea==y)){INCRSTAT(wfainh/*.02*/) y=SETSTKFAOWED(y);}else{INCRSTAT(wfafa/*.98*/) faowed(freea);}}
-       else if(freea!=0){INCRSTAT(wpop/*.27*/)  // if the arg has a place on the stack, look at it to see if the block is still around
-        I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
-        if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(wpopfa/*0.34 local, 0.9 global*/)   // inplaceable and not return value.  Sparse blocks are never inplaceable
-         *tpopw=0; fanapop(freea,freeaflag);  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
-        }else{INCRSTAT(wpopnull/*0.65 local, 0.18 global*/) }
-       }else{INCRSTAT(wnull/*.34*/)}
+       else{
+        A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
+        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
+         // we start these loads here because the next branch will probably mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
+        if(unlikely(freea!=0)){INCRSTAT(wpop/*.27*/)  // if the arg has a place on the stack, look at it to see if the block is still around
+         I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
+         if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(wpopfa/*0.34 local, 0.9 global*/)   // inplaceable and not return value.  Sparse blocks are never inplaceable
+          *tpopw=0; fanapop(freea,freeaflag);  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
+         }else{INCRSTAT(wpopnull/*0.65 local, 0.18 global*/) }
+        }else{INCRSTAT(wnull/*.34*/)}
+       }
 // obsolete if(statwfaowed!=statwfainh+statwfafa)SEGFAULT;
 // obsolete if(statwpop!=statwpopfa+statwpopnull)SEGFAULT;
        // repeat for a if any
-       afreea=(A*)tpopa; afreea=ISSTKFAOWED(tpopa)?ZAPLOC0:afreea;
-       freea=__atomic_load_n(afreea,__ATOMIC_ACQUIRE);  // load *tpopa before pipeline break if the next test mispredicts
-       freeav=freea; freeav=freeav?freeav:(A)jt;
-       freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
+       freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_ACQUIRE);
        if(ISSTKFAOWED(tpopa)){INCRSTAT(afaowed/*.53*/) freea=QCWORD(tpopa); if(unlikely(freea==y)){INCRSTAT(afainh/*.08*/) y=SETSTKFAOWED(y);}else{INCRSTAT(afafa/*.92*/) faowed(freea);}}
-       else if(freea!=0){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
-        I c=(UI)freeac>>(freea==y);   // can remove y here, see above
-        if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // inplaceable, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
-         *tpopa=0; fanapop(freea,freeaflag);
-        }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
-       }else{INCRSTAT(anull/*.25*/)}
+       else{
+        A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
+        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_ACQUIRE); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_ACQUIRE); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_ACQUIRE);
+        if(unlikely(freea!=0)){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
+         I c=(UI)freeac>>(freea==y);   // scaf can remove y here, see above
+         if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // inplaceable, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
+          *tpopa=0; fanapop(freea,freeaflag);
+         }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
+        }else{INCRSTAT(anull/*.25*/)}
+       }
 // obsolete if(statafaowed!=statafainh+statafafa)SEGFAULT;
 // obsolete if(statapop!=statapopfa+statapopnull)SEGFAULT;
 // obsolete if(statwfaowed+statwpop+statwnull!=statafaowed+statapop+statanull)SEGFAULT;
        // repeat for fs, which we extract from the stack to get the FAOWED flag
        PSTK *fsa2=&stack[2-(pmask&1)];
-       if(ISSTKFAOWED(freea=fsa2->a)){fa(QCWORD(freea));}   // 1 2 2
+       if(ISSTKFAOWED(freea=fsa2->a)){faowed(QCWORD(freea));}   // 1 2 2
 
        // close up the stack and store the result
        fsa2[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
@@ -829,7 +835,6 @@ RECURSIVERESULTSCHECK
        UI4 restok=stack[1].t;  // save token # to use for result
        // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
        A yy=(*actionfn)((J)((I)jt|JTXDEFMODIFIER),QCWORD(arg1),QCWORD(arg2),fs);
-       y=NEXTY;  // refetch next-word to save regs
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
@@ -845,9 +850,10 @@ RECURSIVERESULTSCHECK
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecursv(yy);  // force recursive y
-       if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
-       if(ISSTKFAOWED(arg1=stack[pmask+1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
-       if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
+       if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+       if(ISSTKFAOWED(arg1=stack[pmask+1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+       if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+       y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
        PTFROMTYPE(stack[1].pt,AT(yy)) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
@@ -893,10 +899,10 @@ RECURSIVERESULTSCHECK
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
-        y=NEXTY;  // refetch next-word to save regs
-        if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
+        if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
         if(ISSTKFAOWED(arg1=stack[3].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
+        y=NEXTY;  // refetch next-word to save regs
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
@@ -909,10 +915,10 @@ RECURSIVERESULTSCHECK
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
+        if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+        if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
+        if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
         y=NEXTY;  // refetch next-word to save regs
-        if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
-        if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
-        if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else fa(arg1);}
         PTFROMTYPE(stack[trident].pt,AT(yy)) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
        }
@@ -968,7 +974,7 @@ failparse:
    // if m=0, the stack contains a virtual mark.  We must step over that so we don't free the garbage mark
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
    // fa() any blocks left on the stack that have FAOWED
-   for(;stack!=stackend1;++stack)if(ISSTKFAOWED(stack->a)){fa(QCWORD(stack->a))};  // issue deferred fa for items ra()d and not finished
+   for(;stack!=stackend1;++stack)if(ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a))};  // issue deferred fa for items ra()d and not finished
   }
 #if MEMAUDIT&0x2
   audittstack(jt);

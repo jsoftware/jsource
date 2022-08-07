@@ -691,6 +691,7 @@ endname: ;
           // ill-behaved function (may change locales).  The > means 'good and no bads', that is, inplaceable assignment
 // obsolete         if(pt0ecam&VASGSAFE&&(!(pmask&2)||FAV(QCWORD(stack[1].a))->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
 // obsolete         if(pt0ecam&VASGSAFE){  // if the verb(s) allow execution-in-place for assignment...
+        // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
         if(likely(GETSTACK0PT&PTASGNLOCAL)){L *s;
          // local assignment.  First check for primary symbol.  We expect this to succeed
          if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
@@ -698,7 +699,7 @@ endname: ;
          }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
         }else zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));  // global assignment, get slot address
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
-        // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is to be operated on inplace.
+        // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is named and to be operated on inplace.
         // The block can be virtual, if it is x/y to xdefn.  We must never inplace to a virtual block
         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
         pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
@@ -707,13 +708,15 @@ endname: ;
        AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[(pmask+1)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
        A arg2=stack[(pmask>>=1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)    pmask shifted right 1
-       // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
+       // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away
+       // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  Those can be freed right away, returning them to the
+//     // pool and allowing their cache space gto be reused.  But there is a problem:
        // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
        // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
        // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
-       // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
-       // (2) If either arg is FAOWED, it can't be inplaceable & we use tpop[aw] to hold the FAOWED arg, flagged as FAOWED.  We must not duplicate an arg in this case
-       // This calculation should run to completion while the expected indirect-branch misprediction is being processed
+       // has been zapped.
+       // (2) If either arg is FAOWED, it can't be inplaceable & we use tpop[aw] to hold the FAOWED arg, flagged as STKFAOWED.  We must either fa() the arg, paying the debt, or flag the result as STKFAOWED
+       // The calculation of tpopa/w will run to completion while the expected indirect-branch misprediction is being processed
        A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISSTKFAOWED(arg1)?(A*)arg1:tpopa;
         // Note: this line must come before the next one, to free up the reg holding ZAPLOC0
        A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=(I)arg2&(pmask>>=(1-STKFAOWEDX))?(A*)arg2:tpopw;
@@ -730,7 +733,8 @@ endname: ;
        // load of actionfn will be a single load, completing in 5 cycles, so every instruction after that is money.  The shifting of pmask in place in the code above is needed to prevent the
        // compiler from spilling actionfn (the compiler doesn't realize that this is going to be a pipeline break, so if it feels moved to spill actionfn, it will end with
        // call [actionfn] which is as bad as the code can be).
-       // If the compiler does spill actionfn, the best riposte would be to do something to force it to lose its copies of pmask>>1 and pmask>>2, by reassigning pmask in an unlikely branch
+       // The generated code is maddeningly brittle.  As of 20220802 actionfn is loaded early and kept in a register, while jt->parserstackframe.sf resides in r9 for the duration of the function.  But if you do an atomic_load of jt->parserstackframe.sf
+       // in the function call, which frees up r9, the whole allocation changes and actionfn gets dumped to memory.  All would be better (including switch statements) if the compiler recognized the need to load indirect-branch targets early.
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
@@ -742,13 +746,11 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x2
        if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
 #endif
-       ramkrecursv(y);  // force recursive y
-       pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
-       // (1) if any of args/fs is FAOWED, the value is now out of execution and must be fa()d.  BUT if the value is y, it remains in execution and we inherit the
-       // FAOWED status into y (but only once per value).  This is mutually exclusive with
-       // (2) free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
+       ramkrecursv(y);  // force recursive y
+       pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
+       // (1) free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
        // We free them right here, and zap their tpop entry to avoid an extra free later.
        // We free using fanapop, which recurs only on recursive blocks, because that's what the tpop we are replacing does.  All blocks are recursive here.
        // We can free all DIRECT blocks, and PRISTINE also.  We mustn't free non-PRISTINE boxes because the contents are at large
@@ -756,6 +758,8 @@ RECURSIVERESULTSCHECK
        // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc from BEFORE the call
+       // (2) if any of args/fs is FAOWED, the value is now out of execution and must be fa()d.  BUT if the value is y, it remains in execution and we inherit the
+       // FAOWED status into y (but only once per value).  This is mutually exclusive with
        A freea,freep;  // reg to hold arg we are possibly freeing
        // first the w arg
        // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs)
@@ -784,13 +788,12 @@ RECURSIVERESULTSCHECK
        freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_RELAXED);
        freep=(A)QCWORD(tpopa); freep=ISSTKFAOWED(tpopa)?freep:(A)jt;
        freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
-         // we are investing another cycle to get an early start on the values needed to free an owed block.  This free will usually result in an RFO cycle, which cannot start until the branch is retired
-       if(ISSTKFAOWED(tpopa)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=SETSTKFAOWED(y);}else{INCRSTAT(wfafa/*.98*/) faowed(freep,freepc,freept);}}
+       if(ISSTKFAOWED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(afainh/*.02*/) y=SETSTKFAOWED(y);}else{INCRSTAT(afafa/*.98*/) faowed(freep,freepc,freept);}}
        else{
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
         if(unlikely(freea!=0)){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
-         I c=(UI)freeac>>(freea==y);   // scaf can remove y here, see above
+         I c=(UI)freeac>>(freea==y);
          if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // inplaceable, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
           *tpopa=0; fanapop(freea,freeaflag);
          }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
@@ -870,7 +873,7 @@ RECURSIVERESULTSCHECK
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
-       PTFROMTYPE(stack[1].pt,AT(yy)) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
+       PTFROMTYPE(stack[1].pt,AT(QCWORD(yy))) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
       }
      }else{
       // Here for lines 5-7 (fork/hook/assign), which branch to a canned routine
@@ -945,7 +948,7 @@ RECURSIVERESULTSCHECK
 // obsolete         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
 // obsolete         if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
         y=NEXTY;  // refetch next-word to save regs
-        PTFROMTYPE(stack[trident].pt,AT(yy)) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
+        PTFROMTYPE(stack[trident].pt,AT(QCWORD(yy))) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
        }
       }

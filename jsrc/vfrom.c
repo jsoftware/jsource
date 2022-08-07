@@ -984,7 +984,7 @@ F1(jtmvmsparse){PROLOG(832);
  A ndxa=C(AAV(w)[0]); ASSERT(AT(ndxa)&BOX+INT,EVDOMAIN);
  if(likely(AT(ndxa)&BOX)){  // if list of boxes, ensure each holds a list of integers, possibly empty
   I ncols=0;
-  DO(AN(ndxa), ASSERT(AT(AAV(ndxa)[i])&INT,EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) ncols+=AN(AAV(ndxa)[i]); )
+  DO(AN(ndxa), ASSERT(AN(AAV(ndxa)[i])==0||(AT(AAV(ndxa)[i])&INT),EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) ncols+=AN(AAV(ndxa)[i]); )
   if(ncols==0)R num(6);  // if no cols (which happens at startup, return error indic)
  }
  if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box

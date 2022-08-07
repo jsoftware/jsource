@@ -753,7 +753,7 @@ typedef struct {I e,p;X x;} DX;
 #define QCNAMED ((I)1<<QCNAMEDX)  // set if the value was found in a named locale, clear if numbered
 // After the named value has been processed, bit 4 changes meaning to:
 #define QCFAOWEDX 4
-#define QCFAOWED 0x10  // when this bit is set in an address in stack.a, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution
+#define QCFAOWED 0x10  // when this bit is set in an address returned from lookup, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution
 #define SETFAOWED(w) (A)((I)(w)|QCFAOWED)
 #define CLRFAOWED(w) (A)((I)(w)&~QCFAOWED)
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?

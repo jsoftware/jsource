@@ -158,6 +158,11 @@ NB. check the special names must be assigned if used in explicit defs
 'noun result was required' -: 3 : 'zz&(4!:55 <''y'')' etx 4
 NB. t =. * x  NB. OK from console - can't really check without breaking tests when run inside explicit def
 
+a =: 1
+1 = a ]:  NB. failed when arg returned modifier
+a ]:
+
+
 4!:55 ;:'a aa bc locnm multi swd t '
 
 

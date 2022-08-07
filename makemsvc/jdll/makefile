@@ -64,7 +64,7 @@ CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-c
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
 CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FSLEEF} ${FNOSYNCHLIB} ${FBOXEDSPARSE} ${PTHREADINC} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
-FLAGS= ${LDEBUG} /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
+FLAGS= ${LDEBUG} psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 endif
 

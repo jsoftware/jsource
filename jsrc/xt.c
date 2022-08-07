@@ -6,6 +6,12 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
+#ifndef _WIN64
+#ifndef PSAPI_VERSION
+#define PSAPI_VERSION 1
+#endif
+#include <psapi.h>
+#endif
 #ifndef __MINGW32__
 #include <time.h>
 #else

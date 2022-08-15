@@ -98,9 +98,13 @@ F1(jtspresident){
 ASSERTMTV(w);
 #if defined(_WIN32)
  PROCESS_MEMORY_COUNTERS mem;
+#if SY_64
  BOOL res = GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem));
  ASSERT(res != 0,EVFACE);
  R v2((I)mem.WorkingSetSize, (I)mem.PeakWorkingSetSize);
+#else
+ R v2(0,0);  // not supported in 32-bit
+#endif
 #elif defined(__APPLE__)
  mach_task_basic_info_data_t info;
  info.virtual_size = 0;

@@ -41,6 +41,8 @@ assert. 0 0 1 4 13 _4 -: (128!:9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;b
 assert. 1 3 1 1 4 0 -: (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. dangerous pivot
 NB. empty
 assert. 6 -: (128!:9) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. no columns
+assert. 6 -: (128!:9) (0$0);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. no columns
+assert. 6 -: (128!:9) ((0$0);0$0);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. no columns
 assert. 6 -: (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;($0);cons;bk;Frow  NB. no rows
 assert. 6 -: (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);(0 0$0.);bkg;cons;(0$0.);(1$0.)  NB. empty M
 bkg=.i.-#M

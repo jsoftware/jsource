@@ -708,7 +708,7 @@ for. i. 10000 do.
   end.
 end.
 NB. Verify our locale list matches the system
-assert. allos -:&(/:~) 0&".@> fnm =. 18!:1 (1) [ 1
+assert. allos -:&(/:~) , 0&".@> fnm =. 18!:1 (1) [ 1
 18!:55 allos -. initallo  NB. clean up
 1
 )

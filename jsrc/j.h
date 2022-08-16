@@ -1155,10 +1155,10 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
       __m256i magic_i_hi32 = _mm256_castpd_si256(_mm256_broadcast_sd(&two_84_63)); /* 2^84+2^63 */  \
       __m256i magic_i_all  = _mm256_castpd_si256(_mm256_broadcast_sd(&two_84_63_52)); /* 2^84 + 2^63 + 2^52 */ \
       __m256d zero=_mm256_broadcast_sd(&zone.imag); __m256d oned=_mm256_broadcast_sd(&zone.real);  __m256d onei=_mm256_broadcast_sd((const double *)&oneone[0]);    \
-      __m256i dts=_mm256_castpd_si256(_mm256_loadu_pd((D*)disttosign));  \
-// AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
-#if 1
-#if defined(__aarch64__)
+      __m256i dts=_mm256_castpd_si256(_mm256_loadu_pd((D*)disttosign));
+#if C_AVX512
+#define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
+#elif defined(__aarch64__)
 #define  CVTEPI64(z,u)   z.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_s64_f64(u.vect_f64[0])); \
                          z.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_s64_f64(u.vect_f64[1]));
 #else
@@ -1168,10 +1168,6 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
                           u_hi = _mm256_xor_si256(u_hi, magic_i_hi32); /* Flip the msb of u_hi and blend with 0x45300000 */ \
                         __m256d u_hi_dbl = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), _mm256_castsi256_pd(magic_i_all)); /* Compute in double precision:  */ \
                          z = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));}  /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !! */
-#endif
-#else
-// Here for native instruction support
-#define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #endif
 // # turns through a Duff loop of m1+1 elements, with 1<<lgduff instances in the loop.  We assume we are handling [1,NPAR] elements at the end
 #define DUFFLPCTV(m1,lgduff,lgeleperiter) ((((m1)+((((I)1<<(lgduff))-1)<<(lgeleperiter)))>>((lgeleperiter)+(lgduff))))

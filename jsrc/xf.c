@@ -55,11 +55,19 @@ static I fsize(F f){
  if(!f)R 0;
 #if SY_WIN32
  R _filelengthi64(_fileno(f));
+#elif defined(__linux__)
+ //work around strange linux issue: for certain files in /proc (eg /proc/meminfo), fstat will return with S_ISREG set, but a size of 0 (even
+ //though the file is not empty), and glibc gets confused; work around it by prodding the fd directly
+ int fd=fileno(f);
+ off_t c=lseek(fd,0,SEEK_CUR);if(c<0)R -1; //save current fd position, to avoid messing with libc internal state
+ off_t z=lseek(fd,0,SEEK_END);if(z<0)R -1;
+ lseek(fd,c,SEEK_SET); //restore fd position.  Nothing really to be done if this fails...
+ R z;
 #else
- fpos_t z;
- fseek(f,0L,SEEK_END);
- fgetpos(f,&z);
- R *(I*)&z;
+ struct stat stat;
+ if(fstat(fileno(f),&stat))R -1;
+ if(!S_ISREG(stat.st_mode))R -1;
+ R stat.st_size;
 #endif
 }
 #else
@@ -122,13 +130,19 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
 }    /* write/append string w to file f at j */
 
 
-F1(jtjfread){A z;F f;
+F1(jtjfread){A z;F f,fp;
  F1RANK(0,jtjfread,DUMMYSELF);
  RE(f=stdf(w));  // f=file#, or 0 if w is a filename
- if(f)R 1==(I)f?jgets("\001"):3==(I)f?rdns(stdin):jtunvfn(jt,f,rd(vfn(f),0L,-1L));  // if special file, read it all, possibly with error
- RZ(f=jope(w,FREAD_O)); z=rd(f,0L,-1L); fclose(f);  // otherwise open/read/close named file
- RETF(z);
-}
+ if(f){ // if special file, read it all, possibly with error
+  if(1==(I)f)R jgets("\001");
+  if(3==(I)f)R rdns(stdin);
+  RZ(fp=vfn(f));} //ensure actual file pointer
+ else{RZ(fp=jope(w,FREAD_O));} //otherwise open named file
+ I fl=fsize(fp);
+ z=fl<0?rdns(fp):rd(fp,0,fl);
+ if(!f){fclose(fp);} //if we opened the file, close it
+ else{jtunvfn(jt,f,0);} //otherwise, release the lock on it
+ RETF(z);}
 
 // 1!:2
 F2(jtjfwrite){B b;F f;

@@ -15,7 +15,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
  r=AR(w);  // r = rank of w
  // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
  RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
- // Create x=+"0 1&i./ 2 {. $y
+ // Create x=+"0 1&i./ 2 {. $w
  A xm; RZ(xm=IX(m)); A xn; RZ(xn=IX(n));
  RZ(x=ATOMIC2(jt,xm,xn,rkblk,0L,1L,CPLUS)); AR(x)=1; AS(x)[0]=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys

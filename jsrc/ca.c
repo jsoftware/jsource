@@ -45,7 +45,8 @@ static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
 static I dmodpow(D x,I n,D m){D z=1; while(n){if(1&n)z=fmod(z*x,m); x=fmod(x*x,m); n>>=1;} R(I)z;}
 #endif
 
-static I imodpow(I x,I n,I m){I z=1; while(n){if(1&n)z=(z*x)%m;     x=(x*x)%m;     n>>=1;} R   z;}
+// m|x^n by repeated squaring.  m>0, 0<=x<m
+static I imodpow(I x,I n,I m){I z=m>1; while(n){if(1&n)z=(z*x)%m; x=(x*x)%m; n>>=1;} R   z;}  // if n=0 result is 1 unless m=1, then 0
 
 static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  PREF2(jtmodpow2);

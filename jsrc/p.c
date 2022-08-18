@@ -590,8 +590,8 @@ rdglob: ;  // here when we tried the buckets and failed
        }
       }else{
 undefname:
-       // undefined name, possibly because malformed.  If special x. u. etc, that's fatal; otherwise try creating a dummy ref to [: (to have a verb)
-       if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))){jt->jerr=EVVALUE;FPS}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
+       // undefined name, possibly because malformed (in which case error is already set).  If a_:, or special u v x. y. in an explicit definition etc, that's fatal; otherwise try creating a dummy ref to [: (to have a verb)
+       if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))&&(pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))||EXPLICITRUNNING)){jt->jerr=EVVALUE;FPS}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
 // obsolete        jt->parserstackframe.parseroridetok = 0xffff;  // remove lookup override  kludge - we should suppress calls to signal from lookup
        y=namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:, including flags
        FPSZ(y)   // if syrd gave an error (malformed name), namerefacv will return 0 (via fdef).  This will have previously signaled an error, and we abort here

@@ -93,14 +93,11 @@ f0=. {{     NB. empty first line
 r =: {{ y }} :. {{ y }}
 '3 : ''y '' :.(3 : ''y '')' -: 5!:5 <'r'
 
-r =: {{ u
-(".'x')
+r =: {{
+_1 = 4!:0 u
 }}
-'value error' -: ". etx '4 r'  NB. x/y not defined in non-operator modifier execution
-r =: {{ u
-(".'y')
-}}
-'value error' -: ". etx '4 r'
+(<'x') r  NB. x/y not defined in non-operator modifier execution
+(<'y') r  NB. x/y not defined in non-operator modifier execution
 
 NB. {{ }} in single-line defs
 f0 =. 3 : ' 5 {{ x + y }} y'

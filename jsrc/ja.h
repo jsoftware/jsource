@@ -658,7 +658,7 @@
 #define lrtrim(x,y)                 jtlrtrim(jt,(x),(y))
 #define ma(x)                       jtma(jt,(x))
 #define mag(x)                      jtatomic1(jt,(x),ds(CSTILE))     
-#define makename(x)                 jtmakename(jt,(x))  
+#define makename(x,y)               jtmakename(jt,(x),(y))  
 #define map(x)                      jtmap(jt,(x))  
 #define mapx(x,y)                   jtmapx(jt,(x),(y))  
 #define mat(x)                      jtmat(jt,(x))   

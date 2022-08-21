@@ -148,13 +148,10 @@ NB. Verify noun assignments to all parts of speech are honored
 _6 = ('aa'=: -) 6
 1 2 3 -: 'aa' =: 1 2 3
 
-NB. check the special names must be assigned if used in explicit defs
-'value error' -: 3 : '* x' etx 4
+NB. check uv must be assigned if used in explicit defs, but xymn ok
+3 : 'x ] y&(4!:55 <''y'') ] m ] n if. do. end. 1' 4
 'value error' -: 3 : '* u' etx 4
 'value error' -: 3 : '* v' etx 4
-'value error' -: 3 : '* m' etx 4
-'value error' -: 3 : '* n' etx 4
-'value error' -: 3 : 'y&(4!:55 <''y'')' etx 4
 'noun result was required' -: 3 : 'zz&(4!:55 <''y'')' etx 4
 NB. t =. * x  NB. OK from console - can't really check without breaking tests when run inside explicit def
 

@@ -423,7 +423,7 @@ typedef I SI;
 #define SPARSEX 31  // NOTE this extends to the sign bit
 #define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
 // ** NAME type can have the following information flags set
-#define NAMEBYVALUEX    MARKX     // set if the name is one of x x. m m. etc that is always passed by value, never by name
+#define NAMEBYVALUEX    MARKX     // set if the name is one of u v u. v. that is always passed by value, never by reference
 #define NAMEBYVALUE     ((I)1L<<NAMEBYVALUEX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name
 #define NAMEABANDONX SYMBX
 #define NAMEABANDON            ((I)1L<<NAMEABANDONX)     // name is name::, which will be deassigned after the value is stacked.  NAMEBYVALUE must also be set

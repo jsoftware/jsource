@@ -278,16 +278,16 @@ noparse: ;
  R parsez;
 }
 
-A jtdbunquote(J jt,A a,A w,A self,DC d){A t,z;B s;V*sv;
+A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
  sv=FAV(self); t=sv->fgh[0]; 
  if(CCOLON==sv->id&&(sv->flag&VXOP||t&&NOUN&AT(t))){  // : and executable body: either OP (adv/conj now with noun operands) or m : n
-  ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
+  ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); fa(self);
  }else{                              /* tacit    */
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 
   while(1){
    d->dcnewlineno=0;  // turn off 'reexec requested' flag
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}  // if first line is a stop
-   else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
+   else              {ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outside of debug mode
    if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}

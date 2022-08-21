@@ -18,10 +18,10 @@
 #endif
 
 
-// create name block for xyuvmn
-static A jtmakename(J jt,C*s){A z;I m;NM*zv;
+// create name block for xyuvmn.  flags is type flags to use, either 0 or NAMEBYVALUE
+static A jtmakename(J jt,C*s,I flags){A z;I m;NM*zv;
  m=strlen(s);
- GATV0(z,NAME,m,1); AT(z)=NAME|NAMEBYVALUE; zv=NAV(z);  // Use GATV because GA doesn't support NAME type; but we must have NAMEBYVALUE set
+ GATV0(z,NAME,m,1); AT(z)=NAME|flags; zv=NAV(z);  // Use GATV because GA doesn't support NAME type; but we must have NAMEBYVALUE set
  MC(zv->s,s,m); zv->s[m]=0;
  zv->m   =(UC)m; 
  zv->bucket=0;
@@ -55,12 +55,12 @@ JS gjt=0; // JPF debug - convenience debug single process - points to shared are
 // into jt will never be used.  jinit3 will later be called with the real jt, to initialize it
 B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
  jtmeminit(jjt,1);  // init allocation queues & tpop stack, master thread only
- RZ(mnuvxynam[0]=makename("m"));
- RZ(mnuvxynam[1]=makename("n"));
- RZ(mnuvxynam[2]=makename("u"));
- RZ(mnuvxynam[3]=makename("v"));
- RZ(mnuvxynam[4]=makename("x"));
- RZ(mnuvxynam[5]=makename("y"));
+ RZ(mnuvxynam[0]=makename("m",0));
+ RZ(mnuvxynam[1]=makename("n",0));
+ RZ(mnuvxynam[2]=makename("u",NAMEBYVALUE));  // uv (and thus u. v.) must be defined when used in an explicit def.  Otherwise OK
+ RZ(mnuvxynam[3]=makename("v",NAMEBYVALUE));
+ RZ(mnuvxynam[4]=makename("x",0));
+ RZ(mnuvxynam[5]=makename("y",0));
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
  pf=qpf();  // init performance monitor count info
  pinit();  // init block for a.

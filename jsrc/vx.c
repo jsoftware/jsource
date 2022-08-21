@@ -35,11 +35,12 @@ D xdouble(X w){D z=0;I c,n,*v;
  R z;   
 }
 
+// convert w to integer
 I jtxint(J jt,X w){I c,n,*v,z;
  n=AN(w); v=AV(w); v+=n; c=z=*--v;
  ASSERT(n<=XIDIG&&c!=XPINF&&c!=XNINF,EVDOMAIN);
  DQ(n-1, z=*--v+z*XBASE;);
- ASSERT((c^z)>=0,EVDOMAIN);
+ ASSERT((c^z)>=0,EVDOMAIN);  // bug error this does not detect overflow correctly
  R z;
 }
 
@@ -245,18 +246,19 @@ XF2(jtxpow){PROLOG(0097);I c,d,e,r;X m,t,z;
   ASSERT(0<=c||d==XNINF,EVDOMAIN); 
   R rifvsdebug(vci(1==c&&1==AN(a)?1L:!c&&0>d||c&&0<d?XPINF:0L));
  }
- if(1==AN(a)&&(1==c||-1==c))R 1==c||0==(e&1)?iv1:xc(-1L); 
- if(!c){ASSERT(0<=d,EWRAT); R d?iv0:iv1;}
+ m=jt->xmod?XAV(jt->xmod)[0]:0; z=iv1;
+ if(1==AN(a)&&(1==c||-1==c))R (m&&XDIG(m)==1)?iv0:1==c||0==(e&1)?iv1:xc(-1L);   // base is 1; power is +-1; return that unless mod is 1: then return 0
+ if(!c){ASSERT(0<=d,EWRAT); R d||(m&&XDIG(m)==1)?iv0:iv1;}  // base is 0 - power is 1, return 1 unless mod is 1, then 0
  if(0>d){
   ASSERT(!jt->xmod,EVDOMAIN); 
   ASSERT(jt->xmode!=XMEXACT,EWRAT); 
   r=jt->xmode==XMCEIL; R rifvsdebug(xc(0<c?r:1&e?r-1:r));
  }
- t=a; z=iv1; m=jt->xmod?XAV(jt->xmod)[0]:0;
+ t=a;
  if(!m||1>xcompare(w,xc(IMAX))){
   ASSERT(m||2>=AN(w),EVLIMIT);
   RE(e=xint(w));
-  if(m)while(e){if(1&e)RZ(z=xrem(m,xtymes(z,t))); RZ(t=xrem(m,xsq(t))); e>>=1;}
+  if(m){if(!e&&1==AN(a)&&1==c)z=iv0; while(e){if(1&e)RZ(z=xrem(m,xtymes(z,t))); RZ(t=xrem(m,xsq(t))); e>>=1;}}
   else while(e){if(1&e)RZ(z=       xtymes(z,t) ); RZ(t=       xsq(t) ); e>>=1;}
  }else{B b;I n,*u,*v;X e;
   RZ(e=ca(w)); n=AN(e); v=AV(e);

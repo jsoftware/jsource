@@ -11,7 +11,12 @@ ODIR=../../../../bin/$(jplatform)/$(j64x)
 
 .SUFFIXES: .o
 
+# note: the slowest builds have been placed at the top, to avoid starvation in parallel builds
+# (viavx is still longer than everything else combined--should maybe be broken up into multiple tus...)
 OBJS=  \
+ viavx.o \
+ vi.o \
+ vcompsc.o \
  a.o \
  ab.o \
  aes-c.o \
@@ -97,7 +102,6 @@ OBJS=  \
  vcatsp.o \
  vchar.o \
  vcomp.o \
- vcompsc.o \
  vd.o \
  vdx.o \
  ve.o \
@@ -111,8 +115,6 @@ OBJS=  \
  vgranking.o \
  vgsort.o \
  vgsp.o \
- vi.o \
- viavx.o \
  viix.o \
  visp.o \
  vm.o \

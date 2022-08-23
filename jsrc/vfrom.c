@@ -292,6 +292,9 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,*u=0,wcr,wf,wk,wn,wr,*
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
  p=wcr?ws[wf]:1;   // p=# items of w
+#if !SY_64 && SY_WIN32
+ I q=an>>LGSZI; I r=an&(SZI-1); 
+#endif
  ASSERT(((p-2)&-(p|an))>=0||(p&all0(a)),EVINDEX);  // OK if p has >1 item, or if it has 0 but an is 0, or is a is all 0 and p has 1 item
  // We always need zn, the number of result atoms
  if(wn){

@@ -396,8 +396,9 @@ typedef JST* JS;  // shared part of struct
 
 #undef J
 #define J JJ
+#define JorJJTOJ(jj)  ((JS)((I)(jj)&-JTALIGNBDY))
 #if MAXTHREADS>1  // for multithreading
-#define JJTOJ(jj) ((JS)((I)(jj)&-JTALIGNBDY))
+#define JJTOJ(jj) JorJJTOJ(jj)
 #else
 #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)))
 #endif

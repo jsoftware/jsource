@@ -626,7 +626,7 @@ CDPROC int _stdcall JSetB(JS jt, C* name, VARIANT* v)
 CDPROC int _stdcall JErrorText(JS jt, long ec, VARIANT* v)
 {
 // obsolete  SETJTJM(jt,jt,jm)
-    jt=JJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
+    jt=JorJJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
 	C* p;
 	SAFEARRAY FAR* psa; 
 	SAFEARRAYBOUND rgsabound;
@@ -649,7 +649,7 @@ CDPROC int _stdcall JClear(JS jt){ return 0;};
 CDPROC int _stdcall JInt64R(JS jt, long b)
 {
 // obsolete  SETJTJM(jt,jt,jm)
-    jt=JJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
+    jt=JorJJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
 #if SY_64
 	JT(jt,int64rflag) = b;
 #endif
@@ -659,7 +659,7 @@ CDPROC int _stdcall JInt64R(JS jt, long b)
 CDPROC int _stdcall JTranspose(JS jt, long b)
 {
 // obsolete  SETJTJM(jt,jt,jm)
-    jt=JJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
+    jt=JorJJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
 	JT(jt,transposeflag) = b;
 	return 0;
 }
@@ -667,7 +667,7 @@ CDPROC int _stdcall JTranspose(JS jt, long b)
 CDPROC int _stdcall JErrorTextB(JS jt, long ec, VARIANT* v)
 {
 // obsolete  SETJTJM(jt,jt,jm)
-    jt=JJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
+    jt=JorJJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
 	C* p;
 	BSTR bstr;
 
@@ -682,7 +682,7 @@ CDPROC int _stdcall JErrorTextB(JS jt, long ec, VARIANT* v)
 CDPROC int _stdcall JDoR(JS jt, C* p, VARIANT* v)
 {
 // obsolete  SETJTJM(jt,jt,jm)
-    jt=JJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
+    jt=JorJJTOJ(jt);  // point jt to shared block if we were pointing to a LTT
 	int e;
 	
 	JT(jt,oleop)=1;	// capture output

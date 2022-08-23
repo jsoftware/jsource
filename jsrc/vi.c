@@ -115,12 +115,12 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
 }
 
 // Hash y, which is not a singleton.  Integral types do not hash bytes that equal 0 or 255 (why??).
-static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
+static UI jthiau(J jt,A y){I m,n;UI z=2038074751;X*u,x;
  m=n=AN(y);
  if(!n)R 0;
  switch(CTTZ(AT(y))){
   case RATX:  m+=n;  /* fall thru */
-  case XNUMX: u=XAV(y); DQ(m, x=*u++; v=UAV(x); z+=hicnz(AN(x)*SZI,UAV(x));); R z;
+  case XNUMX: u=XAV(y); DQ(m, x=*u++; z+=hicnz(AN(x)*SZI,UAV(x));); R z;
   case INTX:                                    z =hicnz(n    *SZI,UAV(y));   R z;
   default:   R hic(n<<bplg(AT(y)),UAV(y));
 }}
@@ -905,9 +905,9 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
    case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 
-static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
+static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,*zv;
  p=1<ac?m:0; q=1<wc||1<c;
- zn=AN(z); 
+// obsolete  zn=AN(z); 
  zv=AV(z); zb=(B*)zv; u=AV(a); v=AV(w); 
  switch(CTTZ(AT(a))){
   default:                SCDO(C, *wv,x!=av[j]      ); break;

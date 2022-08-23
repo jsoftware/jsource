@@ -59,7 +59,9 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
  // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
+#if ((C_AVX2&&SY_64) || EMU_AVX)
  I exactlen;  // will be 1 if overstore is not allowed on copy
+#endif
  if(!ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
@@ -67,7 +69,9 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   zvv=voidAV(z);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later
+#if ((C_AVX2&&SY_64) || EMU_AVX)
   exactlen=0;  // OK to overstore when copying to new buffer
+#endif
   n=0;  // cannot skip prefix of 1s if not inplace
  }else{
   z=w; // inplace
@@ -80,7 +84,9 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
+#if ((C_AVX2&&SY_64) || EMU_AVX)
   exactlen=!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
+#endif
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
  }
  AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell

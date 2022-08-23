@@ -295,7 +295,7 @@ do{
       // if the items of the new 
       I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
       diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
-#if !ZZASSUMEBOXATOP  // ASSUMEBOXATOP is set for cg, which never checks counteditems
+#if !ZZASSUMEBOXATOP  // ASSUMEBOXATOP is set only for m@.v, which never checks counteditems
       I nitems=zs[0]; nitems=(zr==0)?1:nitems; zzcounteditems+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
 #endif
      }

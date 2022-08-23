@@ -209,7 +209,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;
-// the following lines are engaged only for low-performance builds
+// the following lines are engaged only for low-performance builds, and must not be set in 64-bit builds lest blocks get too big
+#if !SY_64
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
@@ -224,6 +225,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4   fdepi;            /* fn calls: current depth                         */
  I4   fdepn;            /* fn calls: maximum permissible depth             */
 #else
+#endif
 #endif
 
 };

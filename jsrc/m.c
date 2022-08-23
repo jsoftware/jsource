@@ -183,7 +183,7 @@ I Wi,Wj;A Wx,prevWx=0; if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdat
 //  atom 1 is lg of failing blocksize
 // if arg is not empty, crash on any error
 F1(jtcheckfreepool){
- I Wi,Wj,ecode=0;A Wx,prevWx=0; 
+ I Wi,Wj,ecode=0;A Wx; 
  for(Wi=PMINL;Wi<=PLIML;++Wi){  // for each free list
   Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool);  // get head of chain, init count of # eles
   NOUNROLL while(Wx){
@@ -192,7 +192,8 @@ F1(jtcheckfreepool){
    if(AC(Wx)!=(I)0xdeadbeefdeadbeefLL){ecode=3; break;}
 #endif
    if(Wj>0x10000000){ecode=4; break;}
-   prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;  // prevwx saves previous value in case of wild pointer
+// debug   prevWx=Wx;
+ Wx=AFCHAIN(Wx); ++Wj;  // prevwx saves previous value in case of wild pointer
   }
  }
  if(ecode&&AN(w))SEGFAULT;  // if arg not empty, crash on all errors

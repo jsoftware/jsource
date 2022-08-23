@@ -97,7 +97,7 @@ void wakeall(J jt){}
 // lockedfunction should return 0 for error, otherwise the value to use.  The return to the caller depends on jerr and
 // whether the thread ran the function: in the thread that ran the function, value/error from lockedfunction is passed through;
 // in other threads, 1 is returned always with no error signaled
-A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;C res;
+A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
  // If the system is already in systemlock, the system is essentially single-threaded.  Just execute the user's function.
  // This would happen if a sentence executed in debug suspension needed symbols, or had an error
  if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2){R (*lockedfunction)(jt);}
@@ -125,7 +125,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;C res;
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],jt->jerr,__ATOMIC_RELEASE);  // make the error status available to all threads
   }
   // state 5: everybody gets the result of the operation
-  DOINSTATE(executor,5,res=__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)
+  DOINSTATE(executor,5,__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);)
   // Now wind down the lock.  taskct is known to be 0.  Turn off all the LOCK bits and then set state to 0.  Other tasks will
   // wait for state to move off 5.  There is no guarantee they will see state 0 of the next systemlock, but state cannot advance beyond 1 until they have finished this one.
   // There is also no guarantee they will see their LOCK removed

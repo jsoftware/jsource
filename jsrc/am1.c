@@ -29,7 +29,7 @@ static A jtistd1(J jt,A z,A ind){A*iv,j,*jv,x;I d,i,n,r,*s;
  R j;
 }    /* convert index list ind into standard form */
 
-static A jtastd1(J jt,A a,A z,A ind){A*iv,q,r,s,s1,*sv,x;B b;I ar,*as,d,j,m,n,*rv,zr,*zs;P*zp;  I*s1v;
+static A jtastd1(J jt,A a,A z,A ind){A*iv,q,r,s,s1,*sv,x;B b;I ar,*as,d,j,m,n,*rv,zr,*zs;P*zp;
  ar=AR(a); as=AS(a);
  zr=AR(z); zs=AS(z); zp=PAV(z);
  if(!ar)R a;
@@ -40,7 +40,7 @@ static A jtastd1(J jt,A a,A z,A ind){A*iv,q,r,s,s1,*sv,x;B b;I ar,*as,d,j,m,n,*r
  DO(n, x=C(iv[i]); b=x==ds(CACE); m+=rv[i]=b?1:AR(x); RZ(sv[i]=b?sc(zs[i]):shape(x));); 
  DQ(zr-n, rv[j]=1; RZ(sv[j]=sc(zs[j])); ++j;);
  d=m+zr-n; ASSERT(ar<=d,EVRANK);
- RZ(s1=raze(s)); s1v=AV(s1);
+ RZ(s1=raze(s));
  ASSERT(!ICMP(as,AV(s1)+d-ar,ar),EVLENGTH);
  if(ar<d)RZ(a=reshape(s1,a));
  RZ(q=dgrade1(eps(repeat(r,IX(zr)),SPA(zp,a))));
@@ -173,9 +173,9 @@ static B mtind(J jt,A ind){A*iv,x;
  R 0;
 }    /* 1 iff standardized index ind is an empty selection */
 
-A jtam1e(J jt,A a,A z,A ind,B ip){A e,i1,i2,p,x,y;B*pv;C*u,*v;I*iv,k,m,n,r,*s,vk,xk;P*zp;
+A jtam1e(J jt,A a,A z,A ind,B ip){A e,i1,i2,p,x;B*pv;C*u,*v;I*iv,k,m,n,r,*s,vk,xk;P*zp;
  RZ(a&&(ind=istd1(z,ind)));
- r=AR(z); zp=PAV(z); x=SPA(zp,x); y=SPA(zp,i); e=SPA(zp,e);
+ r=AR(z); zp=PAV(z); x=SPA(zp,x); e=SPA(zp,e);
  RZ(p=ssel(z,ind)); pv=BAV(p);
  RZ(ipart(z,ind,&i1,&i2));
  m=AN(p); n=AN(i2); u=CAV(e); v=CAV(x);
@@ -188,13 +188,13 @@ A jtam1e(J jt,A a,A z,A ind,B ip){A e,i1,i2,p,x,y;B*pv;C*u,*v;I*iv,k,m,n,r,*s,vk
  R z;
 }    /* a (<ind)}z; sparse z; ind is index list; sparse element a replacement */
 
-A jtam1a(J jt,A a,A z,A ind,B ip){A a0=a,a1,e,i1,i2,t,x,y;C*u,*v,*xv;I ar,c,*iv,*jv,k,m,n,r,*s,uk,vk,xk;P*zp;
+A jtam1a(J jt,A a,A z,A ind,B ip){A a0=a,a1,e,i1,i2,t,x;C*u,*v,*xv;I ar,c,*iv,*jv,k,m,n,r,*s,uk,vk,xk;P*zp;
  RZ(a&&(ind=istd1(z,ind)));
  RZ(a=astd1(a,z,ind));
  if(mtind(jt,ind))R z;
  RZ(ipart(z,ind,&i1,&i2));
  RZ(z=zpad1(z,scube(z,i1,ssel(z,ind)),ip));
- zp=PAV(z); x=SPA(zp,x); y=SPA(zp,i); e=SPA(zp,e);
+ zp=PAV(z); x=SPA(zp,x); e=SPA(zp,e);
  ar=AR(a); n=AN(i2); r=AR(x); s=AS(x);
  k=bpnoun(AT(x)); xk=k*prod(r-1-n,s+1+n); vk=k*prod(r-1,s+1); uk=!ar?k:n?xk:vk;
  u=CAV(a); xv=v=CAV(x);

@@ -10,7 +10,7 @@
 #define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(BETWEENO(j,0,m),EVINDEX);}
 
 // m} y
-static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
+static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  ARGCHK2(w,ind);
  r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); SETIC(w,m); c=aii(w);  // m = # items of w
  ASSERT(!ISSPARSE(t),EVNONCE);
@@ -20,8 +20,11 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
  if(!ISDENSETYPE(AT(ind),B01+INT))RZ(ind=cvt(INT,ind));
  it=AT(ind); u=AV(ind); b=(B*)u;
  ASSERT((-c&(m-2))>=0||(!c||(m==1&&!memchr(b,C1,c))),EVINDEX);  // unless items are empty, m must have items.  if m is 1 all selectors must be 0.  INT will be checked individually, so we just look at the first c bytes
- zi=AV(z); zc=(C*)zi; zd=(D*)zc;
- wi=AV(w); wc=(C*)wi; wd=(D*)wc;
+ zi=AV(z); zc=(C*)zi;
+ wi=AV(w); wc=(C*)wi;
+#if !SY_64
+D*wd=(D*)wc,*zd=(D*)zc;
+#endif
  switch(MCASE(CTTZ(it),k)){
   case MCASE(B01X,sizeof(I)): DO(c,         *zi++=wi[i+c*(I)*b++];); break;
   case MCASE(B01X,sizeof(C)): DO(c,         *zc++=wc[i+c*(I)*b++];); break;

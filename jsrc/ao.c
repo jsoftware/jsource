@@ -39,13 +39,13 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
  }
 
 // Derived verb for f//. y for atomic f
-static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
+static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
  if((-AN(w)&(1-r)&SGNIFDENSE(wt))>=0)R oblique(w,self);  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
  y=FAV(self)->fgh[0]; y=FAV(y)->fgh[0]; id=FAV(y)->id;
  m=s[0]; m1=m-1;
- n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
+ n=s[1]; n1=n-1; d=m+n-1; PROD(c,r-2,2+s);
  if(((1-m)&(1-n))>=0){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}  // m=1 or n=1, return item of input
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){
@@ -183,7 +183,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  x=SPA(p,x); u=AV(x); I c=AN(x);  // u-> values of i.~ w
  y=SPA(p,i); v=AV(y);  // v-> indexes of i.~ w
  e=SPA(p,e); k=i0(e); // k is the sparse element in the rep of i.~ a sc. the index of the first occurrence of a sparse element in a
- j=0; I sparsefound=0; DO(c, if(u[i]>=k){sparsefound=1; break;} if(u[i]==v[i])++j;);  // j = # unique values in w before the first fill element
+ j=0; DO(c, if(u[i]>=k){break;} if(u[i]==v[i])++j;);  // j = # unique values in w before the first fill element
  RZ(b=ne(e,x));  // b = mask of values in i.~ w that are different from the sparse element  ?? can't be any
  RZ(by=repeat(b,y));   // by=indexes of values in i.~ a that are different from the sparse element 
  RZ(z=key(repeat(b,x),from(ravel(by),w),self));  // run the key operation on the non-sparse elements

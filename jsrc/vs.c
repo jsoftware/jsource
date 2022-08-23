@@ -124,9 +124,9 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
 }
 
 // convert w to sparse, with sparse element e (which must be a dense atom)
-A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*s,t,*u,*v,wn;P*p;
+A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*s,t,*u,*v;P*p;
  RZ(w&&a&&e);
- r=AR(w); t=AT(w); wn=AN(w); n=AN(a);
+ r=AR(w); t=AT(w); n=AN(a);
  ASSERT(!(t&LIT+BOX),EVNONCE);  // must not be LIT or BOX
  ASSERT(ISDENSETYPE(t,SPARSABLE),EVDOMAIN);  // w must be dense
  if(!r){ASSERT(!AN(a),EVINDEX); R ca(w);}
@@ -253,9 +253,9 @@ static F2(jtaxbytes){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
  R axbytes(a1,reaxis(over(a,less(a1,a)),w));
 }    /* bytes required for (2;a)$.w */
 
-static F2(jtaxtally){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
+static F2(jtaxtally){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,wt;P*wp;
  ARGCHK2(a,w);
- r=AR(w); ws=AS(w); wt=AT(w); 
+ r=AR(w); wt=AT(w); 
  GATV0(q,INT,r,1); u=AV(q); j=0;
  RZ(a1=vaxis(r,a)); d=AN(a1);  
  if(ISSPARSE(wt)){wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e);    x=SPA(wp,x); c=1;}

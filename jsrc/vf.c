@@ -236,7 +236,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  R z;
 }    /* a ($,)"wcr w for sparse w and scalar or vector a */
 
-F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wcr,wf,wn,wr,* RESTRICT ws,zn;
+F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wcr,wf,wr,* RESTRICT ws,zn;
  F2PREFIP;
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
@@ -245,7 +245,8 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  // now a is an atom or a list.  w can have any rank
  RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
  if(unlikely(ISSPARSE(AT(w)))){RETF(reshapesp(a,w,wf,wcr));}
- wn=AN(w); PRODX(m,r,u,1) CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
+ PRODX(m,r,u,1)  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
+ CPROD(,c,wf,ws); CPROD(,n,wcr,wf+ws);
  ASSERT(n||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
  t=AT(w); filling = 0;
  if(m<=n){  // no wraparound
@@ -298,15 +299,16 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
    DQ(an, I abit=*av++; T *uv=abit?u:&x; *v++=*uv; u+=abit;);  \
   }
 
-F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
+F2(jtexpand){A z;B*av;C*wv,*zv;I an,i,k,p,wc,wk,wt,zn;
  ARGCHK2(a,w);
  if(!ISDENSETYPE(AT(a),B01))RZ(a=cvt(B01,a));
  ASSERT(1==AR(a),EVRANK);
  RZ(w=setfv(w,w)); 
  if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w
- av=BAV(a); an=AN(a); au=(I*)av;
+ av=BAV(a); an=AN(a);
+// obsolete  au=(I*)av;
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once
- wv=CAV(w); wn=AN(w); PROD(wc,AR(w)-1,AS(w)+1) wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk*AS(w)[0];  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
+ wv=CAV(w); PROD(wc,AR(w)-1,AS(w)+1) wt=AT(w); k=bpnoun(wt); wk=k*wc;  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
  DPMULDE(an,wc,zn);
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAV(z);
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats

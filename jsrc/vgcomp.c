@@ -121,12 +121,12 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
     case  0: DO(n, if(xa[i] <xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;          \
  }}}
 
-COMPSPDS(compspdsB,B,0,                   e       )
-COMPSPDS(compspdsI,I,0,                   e       )
-COMPSPDS(compspdsD,D,0,                   e       )
+COMPSPDS(compspdsB,B,0,                   (e1,e)       )
+COMPSPDS(compspdsI,I,0,                   (e1,e)       )
+COMPSPDS(compspdsD,D,0,                   (e1,e)       )
 COMPSPDS(compspdsZ,D,*(1+(D*)spblok->sev),(i&1)?e1:e)
 
-COMPSPSS(compspssB,B,0,                   e       )
-COMPSPSS(compspssI,I,0,                   e       )
-COMPSPSS(compspssD,D,0,                   e       )
+COMPSPSS(compspssB,B,0,                   (e1,e)       )
+COMPSPSS(compspssI,I,0,                   (e1,e)       )
+COMPSPSS(compspssD,D,0,                   (e1,e)       )
 COMPSPSS(compspssZ,D,*(1+(D*)spblok->sev),(i&1)?e1:e)

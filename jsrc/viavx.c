@@ -360,12 +360,13 @@ static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
 
 // Hash y, which is not a singleton.
 static UI jthiau(J jt,A y){I m,n;UI z;X*u,x;
- m=n=AN(y); UC*v=UAV(y);
+ m=n=AN(y);
+// obsolete  UC*v=UAV(y);
  if(!n)R 0;
  switch(AT(y)){
  case INT:  R hici(n,AV(y));
  case RAT:  m+=n;  /* fall thru */
- case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
+ case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
  default:   R hic(n<<bplg(AT(y)),UAV(y));
  }
 }
@@ -663,7 +664,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // set dx to the 'other' interval from *v.
 #define SETXVAL  xval=_mm256_castpd256_pd128(_mm256_broadcast_sd((D*)v)); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UIL dx; x=*(D*)v;                                                                            \
+ {UIL dx; /* obsolete x=*(D*)v;*/                                                                            \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
   SETXVAL \
   HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,asct==hj,fstmt0); il=hj; \
@@ -673,7 +674,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // we know that there will be a match in the first search, which simplifies that search.
 // For this routine expa MUST be an intolerant comparison
 #define TFINDY1T(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UIL dx; x=*(D*)v;                                                                             \
+ {UIL dx; /* obsolete x=*(D*)v;*/                                                                             \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
   SETXVAL \
   FINDWR(TH,expa);  \
@@ -682,7 +683,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
  }
 // This version for nub/key.  We read first, and add to the table only if the value was not found
 #define TFINDY1TKEY(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UIL dx; x=*(D*)v;                                                                             \
+ {UIL dx; /* obsolete x=*(D*)v;*/                                                                             \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; /* j=jx=main interval */ \
   SETXVAL \
   FINDRD(expw,jx,asct==hj,fstmt0); il=hj; /* read main interval */ \
@@ -739,21 +740,26 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
              }else{DO(wsct, FYY(TH,expa,expw,{},hj==asct,il=hj;); if(il==i){MC(zc,v,k); zc+=k;}; v=(T*)((C*)v+k); );}   \
  }
 
-#define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_setzero_pd();
+// put these in dcls to declare names that will be used
+#define INITXVAL  __m128d xval=_mm_setzero_pd();
+#define INITTLTR __m128d tltr=_mm_set_pd(tl,tr);
+#define INITXNEW   __m128d xnew=xval;
+#define INITXROT  __m128d xrot=xval;
+
 // Do the operation.  Build a hash for a except when self-index
 // FXY is a TFIND macro, charged with setting il.
 // FYY similar, for reflexive searches
 // FYYKEY similar for nub/key - they add to the hash only if noun found
 // expa - test for matches during hashing.  expa is true for NO match.  n v av hj are available as parameters
 // expw - test for matches during lookup, i. e. reading hashtable.  expw is true for NO match.  n v av hj are available as parameters
-#define IOFT(T,TH,f,hash,FXY,FYY,FYYKEY,expa,expw)   \
+#define IOFT(T,TH,f,hash,FXY,FYY,FYYKEY,expa,expw,dcls)   \
  IOF(f){I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* zv=AV(z);T* RESTRICT av=(T*)AV(a),* wv=(T*)AV(w);I md; \
-        D tl=jt->cct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
+        D tl=jt->cct,tr=1/tl;I il,jx;   \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=calcctmask(jt->cct);   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupperx(VOIDARG)  \
-  __m128d xval, xnew, xrot; SETXNEW \
+  INITXVAL dcls; \
   vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
@@ -801,31 +807,31 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 
 // hashes using the 2-byte hashtable
 // CMPLX array
-static IOFT(Z,US,jtioz, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
+static IOFT(Z,US,jtioz, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x)
 // CMPLX atom
-static IOFT(Z,US,jtioz1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
+static IOFT(Z,US,jtioz1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // FL array
-static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl)               )
+static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl),INITTLTR INITXNEW INITXROT D x)
 // FL atom
-static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
+static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // boxed array with more than 1 box
-static IOFT(A,US,jtioa, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
+static IOFT(A,US,jtioa, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj),)
 // singleton box
-static IOFT(A,US,jtioa1,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])))
+static IOFT(A,US,jtioa1,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])),)
 
 // hashes using the 4-byte hashtable
 // CMPLX array
-static IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
+static IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x)
 // CMPLX atom
-static IOFT(Z,UI4,jtioz12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
+static IOFT(Z,UI4,jtioz12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // FL array
-static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl)               )
+static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl),INITTLTR INITXNEW INITXROT D x)
 // FL atom
-static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
+static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // boxed array with more than 1 box
-static IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
+static IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj), D x)
 // singleton box
-static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])))
+static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])),  D x)
 
 // ********************* third class: small-range arguments ****************************
 
@@ -2288,10 +2294,10 @@ F1(jtnub){
 }    /* ~.w */
 
 // x -. y.  does not have IRS
-F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
+F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
- wt=AT(w); wr=AR(w); r=MAX(1,ar);
+ wr=AR(w); r=MAX(1,ar);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
@@ -2305,10 +2311,10 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 }    /* a-.w */
 
 // x ([ -. -.[!.f]) y.  does not have IRS
-DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
+DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
  F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
- wt=AT(w); wr=AR(w); r=MAX(1,ar);
+ wr=AR(w); r=MAX(1,ar);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here

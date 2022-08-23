@@ -399,8 +399,8 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
 /* a is jtfmtprecomp result */
 /* w is argument to format, but with BO1, INT, or FL type. */
 static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
-    B *bits,*bv;C*cB,*cD,*cM,*cN,*cP,*cQ,*cR,*cI,*cJ,*cK,*cv,**cvv,*cx,*subs;D dtmp,*dv;
-    I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,nB,nD,nM,nN,nP,nQ,nR,nI,nJ,nK,n,nc,nf,t,wr,*ws,y,zs[2];
+    B *bits,*bv;C*cB,*cD,*cM,*cN,*cP,*cQ,*cR,*cI,*cv,**cvv,*cx,*subs;D dtmp,*dv;
+    I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,nB,nD,nM,nN,nP,nQ,nR,nI,n,nc,nf,t,wr,*ws,y,zs[2];
  ARGCHK1(a); u=AAV(a); base=*u++; strs=*u++; len=*u++; fb=*u++; u=0; subs=0;  // extract components: len->lengths of the values
  ARGCHK1(w); n=AN(w); t=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc); 
  ASSERT(ISDENSETYPE(t,B01+INT+FL), EVDOMAIN);
@@ -455,8 +455,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
   }
   if(j==nc) j=0;
   k=l=ib[0]; d=ib[1]; mods=ib[2]; coll=ib[3+(I )(1==nf)*j];
-  nB= AN(uB); nD= AN(uD); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR); nI= AN(uI); nJ= AN(uJ); nK= AN(uK);
-  cB=CAV(uB); cD=CAV(uD); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR); cI=CAV(uI); cJ=CAV(uJ); cK=CAV(uK);
+  nB= AN(uB); nD= AN(uD); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR); nI= AN(uI); // obsolete nJ= AN(uJ); nK= AN(uK);
+  cB=CAV(uB); cD=CAV(uD); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR); cI=CAV(uI); // obsolete cJ=CAV(uJ); cK=CAV(uK);
   subs=AN(uS)?CAV(uS):(C*)"e,.-*";
   switch(mode) {
    case 0: v=*a1v; cv=CAV(v); break;

@@ -346,7 +346,7 @@ exit: ;
 // if bit 0 set, just returns -1; otherwise inserts the symbol and returns the symbol# found
 // bit 1 of 'test' is set if this call is from sbinsert, and we already have a write lock on the tables
 // c2 is 0/1/2 indicating input is 1/2/4-byte chars
-static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*us=(UC*)s;
+static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h;UC*us=(UC*)s;
  if(!n)R(SB)0;   // sentinel
 // optimize storage if ascii or short
  S c0=c2;  // save original flag
@@ -359,7 +359,7 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
 
  // lock the table while we are reading from it, unless we already have a lock
  if(!(test&2))READLOCK(JT(jt,sblock)); 
- hn=AN(HASHTABLE);                        /* size of hash table           */
+// obsolete  hn=AN(HASHTABLE);                        /* size of hash table           */
  hi=INITHASH(h);                               /* index into hash table        */
  while(1){   // loop till empty hash slot or match
   ui=IAV1(HASHTABLE)[hi];                    /* index into unique symbols    */
@@ -572,9 +572,9 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 }    /* literal array for symbol array w padded with c */
 
 
-static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
+static F1(jtsbhashstat){A z;I j,k,n,*zv;SBU*v;
  READLOCK(JT(jt,sblock))
- n=AM(JT(jt,sbu)); v=SBUV4(JT(jt,sbu)); p=AN(HASHTABLE);
+ n=AM(JT(jt,sbu)); v=SBUV4(JT(jt,sbu));
  GATV0E(z,INT,n,1,goto exit;); zv=AV(z);
  DO(n, j=INITHASH(v++->h); k=1; while(i!=IAV1(HASHTABLE)[j]){if(unlikely(--j<0))j+=AN(HASHTABLE); ++k;} *zv++=k;);
 exit: ;
@@ -661,7 +661,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp,I intcall){PR
 
 // minimal check for sbsetdata2
 static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
-     C*sv;I c,i,sn,un,offset=0;SBU*uv,*v;
+     I c,i,sn,un,offset=0;SBU*uv,*v;
  RZ(una&&sna&&u&&s);
  if(1==AN(una)){ASSERTD(!AR(una),"c atom");}            /* cardinality    */
  else {ASSERTD(2==AN(una)&&1==AR(una),"c/offset vector");}
@@ -674,7 +674,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  ASSERTD(INT&AT(sna),"sn integer");
  sn=AV(sna)[0];
  ASSERTD(0<=sn,"sn non-negative");
- sv=CAV(s);
+// obsolete  sv=CAV(s);
  un=AS(u)[0]; uv=(SBU*)AV(u);
  ASSERTD(4==AR(u),"u matrix");
  ASSERTD(INT&AT(u),"u integer");
@@ -683,11 +683,11 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  ASSERTD(1==AR(s),"s vector");
  ASSERTD(LIT&AT(s),"s literal");
  ASSERTD(sn<=AN(s),"sn bounded by #s");
- for(i=MAX(offset,1),v=((offset)?0:1)+uv;i<c;++i,++v){S c2;I vi,vn;UC*vc;  // i==0 is sentinel
+ for(i=MAX(offset,1),v=((offset)?0:1)+uv;i<c;++i,++v){S c2;I vi,vn;  // i==0 is sentinel
   c2=v->flag&SBC2+SBC4;
   vi=v->i;
   vn=v->n;
-  vc=(UC*)(sv+vi);
+ // obsolete  vc=(UC*)(sv+vi);
   ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
   ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
   ASSERTD(BETWEENC(vi,0,sn),"u index");
@@ -738,7 +738,7 @@ static void resetdata(J jt){
  WRITEUNLOCK(JT(jt,sblock))
 }    /* re-initialize global symbol table */
 
-static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
+static F1(jtsbsetdata2){A *wv;I c,i,offset=0;SBU*uv,*v;C*sv;
  ARGCHK1(w);
  ASSERTD(!AN(w)||BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
@@ -748,7 +748,7 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
  RZ(sbcheck2(C(wv[0]),C(wv[1]),C(wv[2]),C(wv[3])));
  c=AV(C(wv[0]))[0];                         // cardinality
  if(1<AN(C(wv[0])))offset=AV(C(wv[0]))[1];// offset
- sn=AV(C(wv[1]))[0];                        // string length
+// obsolete  sn=AV(C(wv[1]))[0];                        // string length
  uv=(SBU*)AV(C(wv[2]));                   // table of symbols
  sv=CAV(C(wv[3]));                        // global string table
  if(!offset)resetdata(jt);

@@ -147,10 +147,10 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
  R 1;
 }
 
-A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,mm,n,r,*u,*v,wr;P*ap,*wp,*zp;
+A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,mm,n,r,*u,*v,wr;P*zp;
  ARGCHK2(a,w);
- ar=AR(a); ap=PAV(a);
- wr=AR(w); wp=PAV(w); r=1+wr-ar;
+ ar=AR(a); // obsolete  ap=PAV(a);
+ wr=AR(w); r=1+wr-ar; // obsolete wp=PAV(w);
  RZ(ioresparse(aw,&a,&w));
  v=AS(a); n=*v++; mm=-1; DO(ar-1, mm=MAX(mm,v[i]););
  c=-1; RZ(iopart(a,ar-1,mm,&c,&ai,&aj,&ax));

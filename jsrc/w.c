@@ -56,9 +56,9 @@ static const ST state[SDDD+1][16]={
 // result is word index & length; z is (i0,end0+1),(i1,end1+1),...
 // AM(z) gives # of words not counting a final comment, ({.$z) - hascomment
 // If there are mismatched quotes, AM(z) is set to -1 and the number of valid tokens is in AS(z)[0]
-F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
+F1(jtwordil){A z;I s,i,m,n,*x;UC*v;
  ARGCHK1(w);  // if no string, could be empty line from keyboard; return null A in that case
- nv=0;    // set not creating numeric constant
+// obsolete nv=0;    // set not creating numeric constant
  n=AN(w); v=UAV(w); GATV0(z,INT,n+n,3); x=AV(z); AS(z)[1]=2; AS(z)[2]=1;  // get count of characters n and address v; turn into suitable shape for ;.0 (x 2 1)
   // allocate absolute worst-case output area (each char is 1 word); point x to output indexes
  s=SE(SS,0);
@@ -274,11 +274,11 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 #define ZVAx                {}
 #define ZVA5                {*zv++=i; *zv++=j; *zv++=r; *zv++=c; *zv++=v[0]; *zv++=v[1];}
 
-#define FSMF(T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
- {T*u,*uu;                                                                  \
+#define FSMF(dcls,T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
+ {/* obsolete T*u,*uu;*/                                                                  \
   RZ(z=exta((zt),(zr),(zm),(f|4)==5?n+4*f:n/3));                              \
   if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCISH(1+s,1+AS(w0),wr-1);}  \
-  zv=AV(z); u=(T*)zv; uu=u+AN(z);                                           \
+  zv=AV(z); dcls /* obsolete u=(T*)zv; uu=u+AN(z);*/                                           \
   for(;i<n;++i,r=*v){c=(cexp); v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
   if(6!=e){                                                                 \
    if(0<=d)         {c=d;      v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
@@ -298,26 +298,26 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  i=ijrd[0]; j=ijrd[1]; r=ijrd[2]; d=ijrd[3]; vi=vj=vr=vc=-1;
  if(t&INT){t0=AT(w0); wr=AR(w0); PROD(wm,AR(w0)-1,AS(w0)+1) wk=wm<<bplg(AT(w0)); wv0=CAV(w0);}
  switch(f+(t&(B01+LIT))*6){
-  case 0+0: {I *wv= AV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break; // other
-  case 0+1: {I *wv= AV(w); FSMF(C,bpnoun(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
-  case 0+2: {I *wv= AV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case 0+3: {I *wv= AV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case 0+4: {I *wv= AV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case 0+5: {I *wv= AV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
+  case 0+0: {I *wv= AV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break; // other
+  case 0+1: {I *wv= AV(w); FSMF(C *u=(C*)AV(z); C*uu=u+AN(z);,C,bpnoun(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
+  case 0+2: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+  case 0+3: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+  case 0+4: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+  case 0+5: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
 
-  case 6+0: {B *wv=BAV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;  // B01
-  case 6+1: {B *wv=UAV(w); FSMF(B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
-  case 6+2: {B *wv=BAV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case 6+3: {B *wv=BAV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case 6+4: {B *wv=BAV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case 6+5: {B *wv=BAV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
+  case 6+0: {B *wv=BAV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;  // B01
+  case 6+1: {B *wv=UAV(w); FSMF(B *u=(B*)AV(z); B*uu=u+AN(z);,B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
+  case 6+2: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+  case 6+3: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+  case 6+4: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+  case 6+5: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
 
-  case 12+0: {UC*wv=UAV(w); FSMF(A,1,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;  // LIT
-  case 12+1: {UC*wv=UAV(w); FSMF(C,1,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
-  case 12+2: {UC*wv=UAV(w); FSMF(I,1,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
-  case 12+3: {UC*wv=UAV(w); FSMF(I,1,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
-  case 12+4: {UC*wv=UAV(w); FSMF(I,1,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
-  case 12+5: {UC*wv=UAV(w); FSMF(I,1,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
+  case 12+0: {UC*wv=UAV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;  // LIT
+  case 12+1: {UC*wv=UAV(w); FSMF(C *u=(B*)AV(z); C*uu=u+AN(z);,C,1,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
+  case 12+2: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
+  case 12+3: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
+  case 12+4: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
+  case 12+5: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
  }
  R z;
 }
@@ -356,12 +356,13 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  EPILOG(z);
 }    /* check left argument of x;:y */
 
-static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijrd,k,n,p,q,*v;
+static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijrd,k,n,q,*v;
  ARGCHK2(a,w);
  if(chka)RZ(a=fsmvfya(a)); 
  av=AAV(a); 
  f=i0(C(av[0])); s=C(av[1]); m=C(av[2]); ijrd=AV(C(av[3]));
- n=AN(w); v=AS(s); p=v[0]; q=v[1];
+ n=AN(w); v=AS(s); // obsolete p=v[0];
+ q=v[1];
  ASSERT((UI)ijrd[0]<(UI)n,EVINDEX);
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // b=w is atom/list, either literal or empty; c is # columns mapped to input through m
  if(((c-1)&((AR(m)^1)-1))<0){  // m is omitted or empty, use column numbers in y; audit them first   m is empty list

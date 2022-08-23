@@ -276,12 +276,12 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
 }
 
 // create A from 3!:1 form
-static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p,r,*s,t,*vv;
+static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,n,p,r,*s,t,*vv;
  ASSERT(m>BH(d),EVLENGTH);
  RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d));
  RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
  RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
- kk=WS(d); v=BV(d,w,r);
+ v=BV(d,w,r);
  ASSERT(t==LOWESTBIT(t),EVDOMAIN);
  t=fromonehottype(t);
  ASSERT(t&NOUN,EVDOMAIN);

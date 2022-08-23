@@ -265,6 +265,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
      virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace from VJTFLGOK1/2 depending on valence
 
 #define ZZBODY  // assemble results
+#define ZZASSUMEBOXATOP 1
 #include "result.h"
 
     //  verify input itemcount is a prefix of result-shape

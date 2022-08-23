@@ -338,7 +338,7 @@ AHDR2(remII,I,I,I){I u,v;
     // add in correction for the remaining precision.  The result will still never be higher than the true reciprocal
     I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
     // because of rounding during the divide, deficitprec may be positive or negative, so we must 2's-comp-correct the product
-    UI xx; UI himul; DPUMUL(uarecip,(UI)deficitprec,xx,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
+    UI himul; DPUMULH(uarecip,(UI)deficitprec,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
     // Now loop through each input value.  It is possible that the quotient coming out of the multiplication will be
     // low by at most 1; we correct it if it is
     // The computations here are unsigned, because if signed the binary point gets offset and the upper significance requires a 128-bit shift.
@@ -346,7 +346,7 @@ AHDR2(remII,I,I,I){I u,v;
     DQC(n, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
       // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
-      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+      DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range
@@ -453,22 +453,22 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
 
 static F2(jtweight){ARGCHK2(a,w); A z; R df1(z,behead(over(AR(w)?w:reshape(a,w),num(1))),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
-F1(jtbase1){A z;B*v;I c,m,n,p,r,*s,t,*x;
+F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;
  ARGCHK1(w);
- n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
+ t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
  ASSERT(!ISSPARSE(t),EVNONCE);
  if(((c-BW)&SGNIF(t,B01X))>=0)R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num(2)):num(2)));  // 
- CPROD(n,m,r-1,s);
+ CPROD(,m,r-1,s);
  GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
  if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
  else mvc(m*SZI,x,1,MEMSET00);
  RETF(z);
 }
 
-F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
+F2(jtbase2){I ar,at,c,t,wr,wt;
  ARGCHK2(a,w);
- at=AT(a); ar=AR(a); as=AS(a);
- wt=AT(w); wr=AR(w); ws=AS(w); c=AS(w)[wr-1]; c=wr?c:1;
+ at=AT(a); ar=AR(a);
+ wt=AT(w); wr=AR(w); c=AS(w)[wr-1]; c=wr?c:1;
  ASSERT(!ISSPARSE(at|wt),EVNONCE); t=maxtyped(at,wt);
  if(!(t&at))RZ(a=cvt(t,a));
  if(!(t&wt))RZ(w=cvt(t,w));

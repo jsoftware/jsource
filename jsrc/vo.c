@@ -633,7 +633,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
 }    /* raze general case */
 
 // ; y
-F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
+F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
  ARGCHK1(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
@@ -669,7 +669,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 
   GA0(z,t,m,r);  // allocate the result area (rank 1)
-  zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
+  zu=CAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying
   for(i=0;i<n;++i){
    y=C(v[i]); if(AN(y)){if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;}
@@ -681,7 +681,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   PROD(m,r-1,wws+1);  // get #atoms in an item of w
   I nitems=AS(w)[0];  // total # result items is stored in w
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
-  zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
+  zu=CAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying the data into sequential output positions.  pyx impossible
   DO(n, y=v[i]; d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;)
  }

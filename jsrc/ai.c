@@ -53,11 +53,12 @@ static DF1(jtexpandg){A f,g,z;V*v;
  R z;
 }
 
-static F2(jtdiag){I d,m,p,r,t,*v;
+static F2(jtdiag){I m,p,r,t,*v;
  ARGCHK2(a,w);
  r=AR(w); t=AT(w);
  v=AS(w);   m=0;      DO(r, m=MIN(m,v[i]););
- v=AS(w)+r; p=1; d=0; DQ(r, d+=p; p*=*--v;);
+ v=AS(w)+r;
+// obsolete  p=1; DQ(r, p*=*--v;);
  if(TYPESNE(t,AT(a)))RZ(a=cvt(t,a));
  if(AR(a)){
   ASSERT(m==AN(a),EVLENGTH);
@@ -382,9 +383,9 @@ F1(jtiden){A f,g,x=0;V*u,*v;
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
 }
 
-F1(jtidensb){A f,g,x=0,w0=w;V*v;
+F1(jtidensb){A x=0,w0=w;V*v;
  RZ(w=fix(w,zeroionei(0))); ASSERT(VERB&AT(w),EVDOMAIN);
- v=FAV(w); f=v->fgh[0]; g=v->fgh[1];
+ v=FAV(w);
  switch(v->id){
   default:      R iden(w0);
   case CMAX:    GATV0(x,SBT,1,0);SBAV(x)[0]=0; break;

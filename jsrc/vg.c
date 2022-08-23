@@ -635,7 +635,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 
 
 #define DOCOL1(p,iicalc0,iicalc1,ind,vinc)  \
- {I*g,*h,   j=p-1,k,s=0;UC*v;                          \
+ {I j=p-1,k,s=0;UC*v;                          \
   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}        \
   mvc(ps,yv,1,MEMSET00);                                    \
   v=vv; DQ(n, ++yv[iicalc0]; v+=ai;);                   \
@@ -645,7 +645,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  }
 
 #define DOCOL4(p,iicalc0,iicalc1,ind,vinc)  \
- {I*g,*h,ii,j=p-1,k,s=0;UC*v;                          \
+ {I ii,j=p-1,k,s=0;UC*v;                          \
   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}        \
   mvc(ps,yv,1,MEMSET00);                                    \
   v=vv; DQ(n, IND4(iicalc0); ++yv[ii]; v+=ai;);         \
@@ -654,7 +654,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
   v=vv; DO(n, IND4(iicalc1); h[yv[ii]++]=ind; vinc;);  \
  }
 
-static GF(jtgrb){F1PREFJT;A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
+static GF(jtgrb){F1PREFJT;A x;B b,up;I *g,*h,i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
  q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
@@ -668,7 +668,7 @@ static GF(jtgrb){F1PREFJT;A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  R 1;
 }    /* grade"r w on boolean w, works 4 columns at a time (d%4 guaranteed to be 0)*/
 
-static GF(jtgrc){F1PREFJT;A x;B b,q,up;I e,i,p,ps,*xv,yv[256];UC*vv,*wv;
+static GF(jtgrc){F1PREFJT;A x;B b,q,up;I *g,*h,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
  ai<<=((AT(w)>>C2TX)&1);
@@ -710,14 +710,14 @@ static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
 [B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [C2TX]=jtgrc, [C4TX]=jtgru, [SBTX]=jtgrs};
 
 // /: and \: with IRS support
-A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
+A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I f,ai,m,n,r,*s,t,wn,wr,zn;
  ARGCHK1(w);
  t=AT(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-r; s=AS(w);
  // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  
  SETICFR(w,f,r,n);  if(wn=AN(w)){
   // If w is not empty, it must have an acceptable number of cells
-  PROD(m,f,s); PROD(ai,r-1,f+s+1); c=ai*n; zn=m*n;
+  PROD(m,f,s); PROD(ai,r-1,f+s+1); zn=m*n;
  }else{
   // empty w.  The number of cells may overflow, but reshape will catch that
   DPMULDE(prod(f,s),n,zn);

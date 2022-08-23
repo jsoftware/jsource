@@ -78,7 +78,9 @@
 // ZZINSTALLFRAME(zzs) code to initialize frame into *zzs++
  A zzbox=0;  // place where we will save boxed inhomogeneous result cells
  I zzresultpri = 0;  // highest priority of boxed result-cells (bit 8=nonempty flag)
+#ifndef ZZASSUMEBOXATOP  // Set in grade - we never do epilog & thus don't need to count items
  I zzcounteditems=0;  // if we count the number of items in the result, this is where we do it
+#endif
  A *zzboxp;  // pointer to next slot in zzbox.  Before zzbox is allocated, this is used to count the number of cells processed.
  I zzcellp;  // offset (in bytes) of the next homogeneous result cell.  No gaps are left when an inhomogeneous cell is encountered.
  I zzcelllen;  // length in bytes of a homogeneous result cell.
@@ -286,13 +288,16 @@ do{
      {
 #endif
 #if !ZZSTARTATEND  // going forwards
-      A result0=AAV(zz)[0];   // fetch pointer to the first 
+       A result0=AAV(zz)[0];   // fetch pointer to the first 
 #else
-      A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
+       A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
 #endif
+      // if the items of the new 
       I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
       diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
+#if !ZZASSUMEBOXATOP  // ASSUMEBOXATOP is set for cg, which never checks counteditems
       I nitems=zs[0]; nitems=(zr==0)?1:nitems; zzcounteditems+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+#endif
      }
      ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if we can't say the items are homogeneous
     }

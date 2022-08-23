@@ -2201,6 +2201,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULDZ(x,y,z) DPMULD(x,y,z,z=0;)
 #define DPMULDE(x,y,z)  DPMULD(x,y,z,ASSERT(0,EVLIMIT))
 #define DPUMUL(x,y,z,h) {z=_umul128((x),(y),&(h));}  // product in z and h
+#define DPUMULH(x,y,h) {_umul128((x),(y),&(h));}  // high product in h
 #else
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,z))){s}
@@ -2209,6 +2210,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULDZ(x,y,z) z=__builtin_smulll_overflow(x,y,&z)?0:z;
 #define DPMULDE(x,y,z) ASSERT(!__builtin_smulll_overflow(x,y,&z),EVLIMIT)
 #define DPUMUL(x,y,z,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); z=(I)_t; h=(I)(_t>>64);}  // product in z and h
+#define DPUMULH(x,y,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); h=(I)(_t>>64);}  // high product in h
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (64-bit)
 #define DPMULDECLS

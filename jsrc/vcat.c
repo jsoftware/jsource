@@ -214,7 +214,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
-F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
+F2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  F2PREFIP;ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
@@ -281,7 +281,7 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
  DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
- GA(z,t,zn,f+r,s); if(unlikely(zn==0))RETF(z); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops
+ GA(z,t,zn,f+r,s); if(unlikely(zn==0))RETF(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops
  if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
  I klg=bplg(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)

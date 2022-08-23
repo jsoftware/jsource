@@ -136,25 +136,25 @@
 
 #define BOV(exp)        if(exp){er=EWOV; break;}
 
-#define BW0000(x,y)     (0)
+#define BW0000(x,y)     (0&(x)&(y))
 #define BW0001(x,y)     (   (x)& (y) )
 #define BW0010(x,y)     (   (x)&~(y) )
-#define BW0011(x,y)     (x)
+#define BW0011(x,y)     (x|(0&(y)))
 
 #define BW0100(x,y)     (  ~(x)& (y) )
-#define BW0101(x,y)     (y)
+#define BW0101(x,y)     (y|(0&(x)))
 #define BW0110(x,y)     (   (x)^ (y) )
 #define BW0111(x,y)     (   (x)| (y) )
 
 #define BW1000(x,y)     (~( (x)| (y)))
 #define BW1001(x,y)     (~( (x)^ (y)))
-#define BW1010(x,y)     (       ~(y) )
+#define BW1010(x,y)     ( ~(y)|(0&x) )
 #define BW1011(x,y)     (   (x)|~(y) )
 
-#define BW1100(x,y)     (  ~(x)      )
+#define BW1100(x,y)     (  ~(x)|(0&y)      )
 #define BW1101(x,y)     (  ~(x)| (y) )
 #define BW1110(x,y)     (~( (x)& (y)))
-#define BW1111(x,y)     (-1)
+#define BW1111(x,y)     (-1|(x)|(y))
 
 typedef I AHDR1FN(J RESTRICT jt,I n,void* z,void* x);  // negative return is offset to failure point in >. or <.
 typedef I AHDR2FN(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt);  // negative return is failure point for integer multiply

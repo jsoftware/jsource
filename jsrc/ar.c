@@ -946,9 +946,9 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  }
 }    /* ,/"r w */
 
-static DF1(jtredsemi){I f,n,r,*s,wr;
+static DF1(jtredsemi){I f,n,r,wr;
  ARGCHK1(w);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); SETICFR(w,f,r,n);   // let the rank run into tail   n=#items  in a cell of w
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);   // let the rank run into tail   n=#items in a cell of w
  if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(w);}  // rank still set
  if(BOX&AT(w))R jtredg(jt,w,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
  else{A z; R IRS1(w,0L,r-1,jtbox,z);}  // unboxed, just box the cells

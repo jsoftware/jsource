@@ -2,7 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Fast Fourier Transform and Friends                               */
-
+#if 0
 #include "j.h"
 
 
@@ -65,3 +65,4 @@ static F1(jtravtranspose){I i,n,s;Z t,*v;UC*iv,*jv;UI j;
 static A jtfloop(J jt,A w,I k,B inv){
 R 0;
 }
+#endif

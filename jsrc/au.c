@@ -6,10 +6,11 @@
 #include "j.h"
 
 
-static I jtfdepger(J jt,A w){A*wv;I d=0,k; 
- wv=AAV(w);  
- DO(AN(w), k=fdep(fx(C(wv[i]))); d=MAX(d,k);); 
- R d;
+static I jtfdepger(J jt,A w){R 0;
+// obsolete A*wv;I d=0,k; 
+// obsolete wv=AAV(w);  
+// obsolete  DO(AN(w), k=fdep(fx(C(wv[i]))); d=MAX(d,k);); 
+// obsolete R d;
 }
 
 #if !USECSTACK

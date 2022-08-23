@@ -290,9 +290,9 @@ STDMETHODIMP CJServer::Invoke(DISPID dispID, REFIID riid
 // JDLLServer methods
 BOOL CJServer::Init(void)
 {
-    LPUNKNOWN       pIUnknown=this;
+//?    LPUNKNOWN       pIUnknown=this;
 
-    if (NULL!=m_pUnkOuter) pIUnknown=m_pUnkOuter;
+//?    if (NULL!=m_pUnkOuter) pIUnknown=m_pUnkOuter;
 	m_pjst = JInit();
 	return m_pjst ? 1 : 0;
 }

@@ -69,7 +69,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   zvv=voidAV(z);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later
-#if ((C_AVX2&&SY_64) || EMU_AVX)
+#if ((C_AVX2&&SY_64) || EMU_AVX2)
   exactlen=0;  // OK to overstore when copying to new buffer
 #endif
   n=0;  // cannot skip prefix of 1s if not inplace
@@ -84,7 +84,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
-#if ((C_AVX2&&SY_64) || EMU_AVX)
+#if ((C_AVX2&&SY_64) || EMU_AVX2)
   exactlen=!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
 #endif
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
@@ -97,7 +97,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
-#if ((C_AVX2&&SY_64) || EMU_AVX)
+#if ((C_AVX2&&SY_64) || EMU_AVX2)
   C *avv=CAV(a)+n; n=m-n;   // prime the pipeline for top of loop.
   __m256i i1=_mm256_set1_epi8(1);
   __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits

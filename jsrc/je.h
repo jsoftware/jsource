@@ -459,6 +459,7 @@ extern DF2(jtexpn2);
 extern F2(jtfc2);
 extern F2(jtfetch);
 extern F2(jtfit);
+extern DF2(jtfitcteq);
 extern F2(jtfixrecursive);
 extern F2(jtfmt02);
 extern F2(jtfmt12);

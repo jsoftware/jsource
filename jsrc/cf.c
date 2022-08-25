@@ -250,6 +250,12 @@ static DF2(jthklvl2){
  RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(jt,w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
+// (compare |) dyadic
+static DF2(jthkcmpabs){DECLFG;F2PREFIP;A z; if(1||unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self); jt->cmpabs=1; z=jtatomic2(jtinplace,a,w,fs); jt->cmpabs=0; RETF(z);}
+// (compare!.n |) dyadic
+static DF2(jthkcmpfitabs){DECLFG;F2PREFIP;A z; if(1||unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self); jt->cmpabs=1; PUSHCCT(FAV(self)->localuse.lu1.cct) z=jtatomic2(jtinplace,a,w,fs); POPCCT jt->cmpabs=0; RETF(z);}
+
+
 #define TYPETEST(t) ((((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ((((t)&CONJ+ADV+VERB)|(1LL<<31))>>ADVX)))&3)  // type class: noun adv conj vecb
 #define TYPE3(t0,t1,t2) (TYPETEST(t0)+4*TYPETEST(t1)+16*TYPETEST(t2))
 #define TYPE2(t0,t1) (TYPETEST(t0)+4*TYPETEST(t1))
@@ -275,7 +281,7 @@ static struct {
 };
 
 // This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident
-A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
+A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;D abscct=0.;
  ARGCHK3(a,w,h);
  if(likely(!(LOWESTBIT(AT(h))&NOUN+VERB+ADV+CONJ))){
   // bident.
@@ -285,8 +291,8 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    v=FAV(w); d=v->id; e=ID(v->fgh[0]);
    // Set flag to use: ASGSAFE if both operands are safe; and FLGOK init to OK as for hook, but change as needed to match f1,f2
    flag=((u->flag&v->flag)&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2);  // start with in-place enabled, as befits hook1/hook2
-   if(d==CCOMMA)switch(c){   // all of this except for ($,) is handled by virtual blocks
-    case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
+   if(d==CCOMMA){   // all forms except for ($,) is handled by virtual blocks
+    if(c==CDOLLAR){f2=jtreshape; flag+=VIRS2;}  // ($,) is inplace
    }else if(d==CBOX){
     if(c==CRAZE){f2=jtjlink; linktype=ACINPLACE;  // (;<)
     }else if(c==CCOMMA){f2=jtjlink; linktype=ACINPLACE+1;  // (,<)
@@ -294,6 +300,9 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    }else if(d==CLDOT){   // (compare L.)
     I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;
     if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
+   }else if(d==CSTILE){   // (compare |) and (compare!.n |)
+    if(BETWEENC(c,CEQ,CGT)){f2=jthkcmpabs;  flag &=~VJTFLGOK2;}  // (compare |) - go to routine handling it
+    else if(u->valencefns[1]==jtfitcteq){f2=jthkcmpfitabs; abscct=u->localuse.lu1.cct;  flag &=~VJTFLGOK2;}  // (compare!.n |) - go 
    }else{
     switch(c){
     case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){  // (f/. i.@#)  or @: & &:
@@ -309,7 +318,9 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    }
    // Return the derived verb
    A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
-   FAV(z)->localuse.lu1.linkvb=linktype; R z;  // if it's a form of ;, install the form
+   if(unlikely(linktype!=0))FAV(z)->localuse.lu1.linkvb=linktype;  // if it's a form of ;, install the form
+   else if(unlikely(abscct!=0.))FAV(z)->localuse.lu1.cct=abscct;  // if (compare!>n |), inherit the n
+   R z;
   // All other cases produce a modifier unless they are immediately executable (V N or N/V A)
   }else{A z;
   // we might enter here with an executable: V N or N/V A, as a result of executing an invisible modifier.  V V was handled above

@@ -59,7 +59,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
  // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
-#if ((C_AVX2&&SY_64) || EMU_AVX)
+#if ((C_AVX2&&SY_64) || EMU_AVX2)
  I exactlen;  // will be 1 if overstore is not allowed on copy
 #endif
  if(!ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {

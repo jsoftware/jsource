@@ -8,8 +8,8 @@
 
 static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
 
-#define fitctvector(name,vector) static DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
-fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
+#define fitctvector(name,vector) DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
+static fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
 fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 
 // for key, we pass in the tolerance to use for the classification

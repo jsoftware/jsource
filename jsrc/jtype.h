@@ -984,7 +984,7 @@ typedef struct {
   // start with the larger localuse, which requires a second cacheline.  This is 16 bytes, the first 8 of which are in the excess (first) cacheline
 // obsolete   I4 clr[4];   // used to init to 0 - extends the union for 32-bit
   struct {AF func; I parm;} boxcut0;  // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, .parm is ~0 for first, 0 for second, and .func points to failover routine (seldom used).  func in first cacheline
-  US srank[4];   // for RANK conj, the signed ranks
+  S srank[4];   // for RANK conj, the signed ranks
   // the rest do not require both cachelines in 64-bit
   struct {
    union {

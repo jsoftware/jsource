@@ -982,9 +982,9 @@ typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
  union {
   // start with the larger localuse, which requires a second cacheline.  This is 16 bytes, the first 8 of which are in the excess (first) cacheline
-  I4 clr[4];   // used to init to 0 - extends the union for 32-bit
+// obsolete   I4 clr[4];   // used to init to 0 - extends the union for 32-bit
   struct {AF func; I parm;} boxcut0;  // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, .parm is ~0 for first, 0 for second, and .func points to failover routine (seldom used).  func in first cacheline
-  I4 srank[4];   // for RANK conj, the signed ranks - extends the union in 32-bit
+  US srank[4];   // for RANK conj, the signed ranks
   // the rest do not require both cachelines in 64-bit
   struct {
    union {
@@ -992,7 +992,7 @@ typedef struct {
     A cachedloc;   //  for namerefs ('name'~), the locale address if the name is a direct named lookup (after the first reference)
    } lu0;
    // end of first cacheline, which is not used much during execution
-   union {  // 8 bytes in the second (main) cacheline
+   union {  // 8 bytes in the second (main) cacheline.  Aligned to 8-byte bdy even on 32-bit system
     D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e. i. ([-.-.)]&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
     struct {
      I4 cgerx; // For cyclic iterators, the index of the next gerund to execute.  Here to avoid conflict with cut
@@ -1025,8 +1025,19 @@ typedef struct {
 typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
  union {  // 8 bytes in the second (main) cacheline
-  US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
-  I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
+    D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e. i. ([-.-.)]&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
+    struct {
+     I4 cgerx; // For cyclic iterators, the index of the next gerund to execute.  Here to avoid conflict with cut
+     I4 cutn;  // for u;.n where n is nonzero, n.  u/. also goes through this code.  There could be cyclic iterators but not boxcut
+    } gercut;
+    VARPSA *redfn;  // for reductions (u/ u/\ u/\.) address of rps block (may be dummy block)
+    US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
+    AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
+    A wvb;  // for u&.[:]v, the verb whose inverse is needed
+    I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
+    A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
+    AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
+    I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
  } lu1;  // this is the high-use stuff in the second cacheline
  AF valencefns[2];   // function to call for monad,dayd
  A fgh[3];  // operands of modifiers.  h is used for forks and also as a storage spot for parms.  all 3 are freed when the V block is freed

@@ -412,6 +412,21 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
   } \
   R EVOK; \
  }
+// support intolerant comparisons explicitly, with absolute value of y
+#define ACMP0ABS(f,Tz,Tx,Ty,pfx,pfx0)   \
+ AHDR2(f,B,Tx,Ty){D u,v;                                             \
+  if(jt->cct!=1.0){ \
+   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++; )    \
+   else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++;))    \
+   else      DQ(m, v=(D)*y++; v=ABS(v); DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+  }else{ \
+   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++; )    \
+   else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++;))    \
+   else      DQ(m, v=(D)*y++; v=ABS(v); DQ(n, u=(D)*x++; *z=u pfx0 v; z++;));   \
+  } \
+  R EVOK; \
+ }
+
 
 
 // n and m are never 0.

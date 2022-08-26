@@ -164,8 +164,8 @@ a =. u"u |  NB. no prim support
 b =. u |  NB. tolerant
 c =. u!.0"u |  NB. intolerant, no prim
 d =. u!.0 |  NB. intolerant prim
-assert. (a -: b)/~ y
-assert. (c -: d)/~ y
+assert. (a -: b)"0/~ y
+assert. (c -: d)"0/~ y
 assert. (7!:2 'a~ x') > 2 * (7!:2 'b~ x')
 assert. (10000 (6!:2) 'b~ x') > 1.3 * (10000 (6!:2) 'd~ x')
 1 return.

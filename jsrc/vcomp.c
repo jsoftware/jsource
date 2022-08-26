@@ -87,30 +87,34 @@ APFX(gtQQ, B,Q,Q, QGT,, R EVOK;)
 APFX(gtSS, B,SB,SB, SBGT,, R EVOK;)
 
 // 
-#define PCOMPDO(zzop,xy,lineno)  if(xy&2)u=_mm256_loadu_pd(x+(lineno)*NPAR); if(xy&1)v=_mm256_loadu_pd(y+(lineno)*NPAR); \
+#define PCOMPDO(zzop,xy,lineno,LOADFN)  if(xy&2)u=_mm256_loadu_pd(x+(lineno)*NPAR); if(xy&1)v=LOADFN(_mm256_loadu_pd(y+(lineno)*NPAR)); \
      *(I4*)(z+(lineno)*NPAR)=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(zzop));
 
 #define PCOMPINCR(ct,xy) if(xy&2)x+=(ct); if(xy&1)y+=(ct); z+=(ct);
 
-#define PCOMPDUFF(zzop,len,xy) \
+#define PCOMPDUFF(zzop,len,xy,LOADFN) \
       UI n2=DUFFLPCT((len)-1,3);  /* # turns through duff loop */ \
       if(n2>0){ \
        UI backoff=DUFFBACKOFF((len)-1,3); \
        PCOMPINCR((backoff+1)*NPAR,xy) \
        switch(backoff){ \
        do{ \
-       case -1: PCOMPDO(zzop,xy,0) case -2: PCOMPDO(zzop,xy,1) case -3: PCOMPDO(zzop,xy,2) case -4: PCOMPDO(zzop,xy,3) case -5: PCOMPDO(zzop,xy,4) case -6: PCOMPDO(zzop,xy,5) case -7: PCOMPDO(zzop,xy,6) case -8: PCOMPDO(zzop,xy,7) \
+       case -1: PCOMPDO(zzop,xy,0,LOADFN) case -2: PCOMPDO(zzop,xy,1,LOADFN) case -3: PCOMPDO(zzop,xy,2,LOADFN) case -4: PCOMPDO(zzop,xy,3,LOADFN) \
+       case -5: PCOMPDO(zzop,xy,4,LOADFN) case -6: PCOMPDO(zzop,xy,5,LOADFN) case -7: PCOMPDO(zzop,xy,6,LOADFN) case -8: PCOMPDO(zzop,xy,7,LOADFN) \
        PCOMPINCR(8*NPAR,xy) \
        }while(--n2!=0); \
        } \
       } 
 
 
-#define PCOMPMASK(zzop,xy,len) if(xy&2)u=_mm256_maskload_pd(x,endmask); if(xy&1)v=_mm256_maskload_pd(y,endmask); \
-   STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(zzop)),((-(len))&(NPAR-1))+NPAR);  /* could just overstore */ \
+#define PCOMPMASK(zzop,xy,len,LOADFN) if(xy&2)u=_mm256_maskload_pd(x,endmask); if(xy&1)v=LOADFN(_mm256_maskload_pd(y,endmask)); \
+   STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(zzop)),((-(len))&(NPAR-1))+NPAR);  /* could just overstore */
+
+#define PCOMPID(y) y
+#define PCOMPABS(y) _mm256_and_pd(y,absmask)
 
 #if (C_AVX2&&SY_64) || EMU_AVX2
-#define primcmpD256(name,tolres,intolres,decls) \
+#define primcmpD256(name,tolres,intolres,decls,LOADFN) \
 AHDR2(name,B,D,D){ \
  __m256i endmask; /* length mask for the last word */ \
  __m256d u,v,cct,ctop,eq; /* args, ct, eq result and also main result */ \
@@ -122,13 +126,13 @@ AHDR2(name,B,D,D){ \
    /* vector op vector, no repetitions */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    DQ((m-1)>>LGNPAR, \
-     u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
+     u=_mm256_loadu_pd(x);v=LOADFN(_mm256_loadu_pd(y)); \
      eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
      eq=tolres; \
      *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
      x+=NPAR; y+=NPAR; z+=NPAR;) \
    /* runout, using mask */ \
-   u=_mm256_maskload_pd(x,endmask);v=_mm256_maskload_pd(y,endmask); \
+   u=_mm256_maskload_pd(x,endmask);v=LOADFN(_mm256_maskload_pd(y,endmask)); \
    eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
    eq=tolres; \
    STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
@@ -140,12 +144,12 @@ AHDR2(name,B,D,D){ \
     DQ(m, u=_mm256_broadcast_sd(x); ++x; \
       ctop=_mm256_mul_pd(u,cct); \
       DQ((n-1)>>LGNPAR, \
-        v=_mm256_loadu_pd(y); \
+        v=LOADFN(_mm256_loadu_pd(y)); \
         eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,ctop,_CMP_LE_OQ)); \
         eq=tolres; \
         *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
         y+=NPAR; z+=NPAR;) \
-      v=_mm256_maskload_pd(y,endmask); \
+      v=LOADFN(_mm256_maskload_pd(y,endmask)); \
       eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,ctop,_CMP_LE_OQ)); \
       eq=tolres; \
       STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
@@ -154,7 +158,7 @@ AHDR2(name,B,D,D){ \
     /* vector op atom */ \
     if(m==1 && *y==0.0)goto name##va0;  /* if comparing against 0, switch to intolerant */ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-    DQ(m, v=_mm256_broadcast_sd(y); ++y; \
+    DQ(m, v=LOADFN(_mm256_broadcast_sd(y)); ++y; \
       ctop=_mm256_mul_pd(v,cct); \
       DQ((n-1)>>LGNPAR, \
         u=_mm256_loadu_pd(x); \
@@ -173,23 +177,23 @@ AHDR2(name,B,D,D){ \
   if(n-1==0){ \
    /* vector op!.0 vector, no repetitions */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-   PCOMPDUFF(intolres,m,3) \
-   PCOMPMASK(intolres,3,m) /* runout, using mask */ \
+   PCOMPDUFF(intolres,m,3,LOADFN) \
+   PCOMPMASK(intolres,3,m,LOADFN) /* runout, using mask */ \
   }else{ \
    if(n-1<0){n=~n; \
     name##av0: /* atom op!.0 vector */ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m, u=_mm256_broadcast_sd(x); ++x; \
-     PCOMPDUFF(intolres,n,1) \
-     PCOMPMASK(intolres,1,n) /* runout, using mask */ \
+     PCOMPDUFF(intolres,n,1,LOADFN) \
+     PCOMPMASK(intolres,1,n,LOADFN) /* runout, using mask */ \
      PCOMPINCR(((n-1)&(NPAR-1))+1,1) \
     ) \
    }else{ \
     name##va0: /* vector op!.0 atom */ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-    DQ(m, v=_mm256_broadcast_sd(y); ++y; \
-     PCOMPDUFF(intolres,n,2) \
-     PCOMPMASK(intolres,2,n) /* runout, using mask */ \
+    DQ(m, v=LOADFN(_mm256_broadcast_sd(y)); ++y; \
+     PCOMPDUFF(intolres,n,2,LOADFN) \
+     PCOMPMASK(intolres,2,n,LOADFN) /* runout, using mask */ \
      PCOMPINCR(((n-1)&(NPAR-1))+1,2) \
     ) \
    } \
@@ -249,12 +253,18 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
  }else{ \
 
 #endif
-primcmpD256(geDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_GE_OQ)) , _mm256_cmp_pd(u,v,_CMP_GE_OQ) , )
-primcmpD256(gtDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GT_OQ) , )
-primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LE_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) , )
-primcmpD256(ltDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LT_OQ) , )
-primcmpD256(eqDD, eq , _mm256_cmp_pd(u,v,_CMP_EQ_OQ) , )
-primcmpD256(neDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(u,v,_CMP_NEQ_OQ) , __m256d one=_mm256_broadcast_sd((D*)&validitymask);)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);
+primcmpD256(geDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_GE_OQ)) , _mm256_cmp_pd(u,v,_CMP_GE_OQ) , , PCOMPID)
+primcmpD256(gtDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GT_OQ) ,  , PCOMPID)
+primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LE_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) ,  , PCOMPID)
+primcmpD256(ltDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LT_OQ) ,  , PCOMPID)
+primcmpD256(eqDD, eq , _mm256_cmp_pd(u,v,_CMP_EQ_OQ) ,  , PCOMPID)
+primcmpD256(neDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(u,v,_CMP_NEQ_OQ) , __m256d one=_mm256_broadcast_sd((D*)&validitymask); , PCOMPID)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);
+primcmpD256(geabsDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_GE_OQ)) , _mm256_cmp_pd(u,v,_CMP_GE_OQ) , __m256d absmask=_mm256_broadcast_sd((D*)&Iimax); , PCOMPABS)
+primcmpD256(gtabsDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GT_OQ) , __m256d absmask=_mm256_broadcast_sd((D*)&Iimax); , PCOMPABS)
+primcmpD256(leabsDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LE_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) , __m256d absmask=_mm256_broadcast_sd((D*)&Iimax); , PCOMPABS)
+primcmpD256(ltabsDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LT_OQ) , __m256d absmask=_mm256_broadcast_sd((D*)&Iimax); , PCOMPABS)
+primcmpD256(eqabsDD, eq , _mm256_cmp_pd(u,v,_CMP_EQ_OQ) , __m256d absmask=_mm256_broadcast_sd((D*)&Iimax); , PCOMPABS)
+primcmpD256(neabsDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(u,v,_CMP_NEQ_OQ) , __m256d one=_mm256_broadcast_sd((D*)&validitymask); __m256d absmask=_mm256_broadcast_sd((D*)&Iimax); , PCOMPABS)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);
 
 #define primcmpI256(name,result,decls) \
 AHDR2(name,B,I,I){ \

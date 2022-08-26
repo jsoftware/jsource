@@ -97,8 +97,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4 parsercalls;      // # times parser was called clear for task
  B iepdo;            // 1 iff do iep on going to immex   init for task to 0   should be shared?
  C xmode;            // extended integer operating mode init for task to 0
- B cmpabs;   // set while running (compare[!.n] |) - only 1 bit
-//  byte free
+// 2 bytes free
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
  S etxn1;            // last non-zero etxn    clear for task

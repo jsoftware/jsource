@@ -155,6 +155,29 @@ y=: o._1e5+?100$2e5
 1 -: (o.1) > ^1
 0 -: 1x1 > 1p1
 
+NB. D (compare[!.0] |) D
+
+y =. , (i: 5) +/ _5e_15 _1e_15 0 1e_15 5e_15
+x =. 2048 ?@$ 0
+f =. {{
+a =. u"u |  NB. no prim support
+b =. u |  NB. tolerant
+c =. u!.0"u |  NB. intolerant, no prim
+d =. u!.0 |  NB. intolerant prim
+assert. (a -: b)/~ y
+assert. (c -: d)/~ y
+assert. (7!:2 'a~ x') > 2 * (7!:2 'b~ x')
+assert. (10000 (6!:2) 'b~ x') > 1.3 * (10000 (6!:2) 'd~ x')
+1 return.
+x
+}}
+x = f y
+x ~: f y
+x < f y
+x <: f y
+x >: f y
+x > f y
+
 NB. SB > SB ---------------------------------------------------------------
 
 1 0 0 1 -: (s:' a b c d') > (s:' A b c D')
@@ -179,7 +202,7 @@ NB. SB > SB ---------------------------------------------------------------
 (((4, 8%~#sdot0)$1),:((4, 8%~#sdot0)$0)) -: ((2 4, 8%~#sdot0)$ |.sdot0) > ((2 4, 8%~#sdot0)$ sdot0)
 (((4, 8%~#sdot0)$0),:((4, 8%~#sdot0)$1)) -: ((2 4, 8%~#sdot0)$ sdot0) > ((2 4, 8%~#sdot0)$ |.sdot0)
 
-4!:55 ;:'adot1 adot2 sdot0 x y z'
+4!:55 ;:'adot1 adot2 f sdot0 x y z'
 randfini''
 
 

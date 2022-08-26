@@ -497,7 +497,7 @@ docase:
      if(AT(tt)&CMPX){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
      if(AT(tt)&(RAT|XNUM)){i=1<AN(XAV(tt)[0])||IAV(XAV(tt)[0])[0]?i:nexti; break;}
      if(!(AT(tt)&NOUN)){CHECKNOUN}  // will take error
-     // other types test true, which is how i is set
+     // other nonnumeric types (BOX, char) test true: i is set for that
      if(!ISSPARSE(AT(tt)))break;
      BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
     }

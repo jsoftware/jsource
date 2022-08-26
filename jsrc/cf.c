@@ -250,10 +250,28 @@ static DF2(jthklvl2){
  RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(jt,w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
-// (compare |) dyadic
-static DF2(jthkcmpabs){DECLFG;F2PREFIP;A z; if(1||unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self); jt->cmpabs=1; z=jtatomic2(jtinplace,a,w,fs); jt->cmpabs=0; RETF(z);}
-// (compare!.n |) dyadic
-static DF2(jthkcmpfitabs){DECLFG;F2PREFIP;A z; if(1||unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self); jt->cmpabs=1; PUSHCCT(FAV(self)->localuse.lu1.cct) z=jtatomic2(jtinplace,a,w,fs); POPCCT jt->cmpabs=0; RETF(z);}
+// table of half-verbs for executing (compare |).  We back the address to the phantom start of the verb block.
+// each half-verb is valid ONLY for DD functions, and thepointers to those functions are next to each other in the block nominally for (=|)
+static exeV cmpabsblk[6] = {
+ {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CEQABS-VA2CGTABS)),.lc=VA2CEQABS},  // =
+ {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CNEABS-VA2CGTABS)),.lc=VA2CNEABS},  // ~:
+ {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CLTABS-VA2CGTABS)),.lc=VA2CLTABS},  // <
+ {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CLEABS-VA2CGTABS)),.lc=VA2CLEABS},  // <:
+ {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CGEABS-VA2CGTABS)),.lc=VA2CGEABS},  // >:
+ {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CGTABS-VA2CGTABS)),.lc=VA2CGTABS},  // >
+};
+
+
+// (compare |) dyadic, reverting if not float
+static DF2(jthkcmpabs){DECLFG;F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
+ z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
+ RETF(z);
+}
+// (compare!.n |) dyadic, reverting if not float
+static DF2(jthkcmpfitabs){DECLFG;F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
+ PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
+ POPCCT RETF(z);
+}
 
 
 #define TYPETEST(t) ((((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ((((t)&CONJ+ADV+VERB)|(1LL<<31))>>ADVX)))&3)  // type class: noun adv conj vecb
@@ -281,7 +299,7 @@ static struct {
 };
 
 // This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident
-A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;D abscct=0.;
+A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
  ARGCHK3(a,w,h);
  if(likely(!(LOWESTBIT(AT(h))&NOUN+VERB+ADV+CONJ))){
   // bident.
@@ -301,8 +319,8 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
     I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;
     if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
    }else if(d==CSTILE){   // (compare |) and (compare!.n |)
-    if(BETWEENC(c,CEQ,CGT)){f2=jthkcmpabs;  flag &=~VJTFLGOK2;}  // (compare |) - go to routine handling it
-    else if(u->valencefns[1]==jtfitcteq){f2=jthkcmpfitabs; abscct=u->localuse.lu1.cct;  flag &=~VJTFLGOK2;}  // (compare!.n |) - go 
+    if(BETWEENC(c,CEQ,CGT)){f2=jthkcmpabs; linktype=c-CEQ; flag &=~VJTFLGOK2;}  // (compare |) - go to routine handling it; linktype is compare routine#
+    else if(u->valencefns[1]==jtfitcteq){f2=jthkcmpfitabs; linktype=FAV(u->fgh[0])->id-CEQ; flag &=~VJTFLGOK2;}  // (compare!.n |) - go 
    }else{
     switch(c){
     case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){  // (f/. i.@#)  or @: & &:
@@ -319,7 +337,6 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    // Return the derived verb
    A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
    if(unlikely(linktype!=0))FAV(z)->localuse.lu1.linkvb=linktype;  // if it's a form of ;, install the form
-   else if(unlikely(abscct!=0.))FAV(z)->localuse.lu1.cct=abscct;  // if (compare!>n |), inherit the n
    R z;
   // All other cases produce a modifier unless they are immediately executable (V N or N/V A)
   }else{A z;

@@ -295,6 +295,7 @@ typedef I SI;
 #define voidAV1(x)       voidAVn(x,1)  // unknown, but list
 #define voidAV2(x)       voidAVn(x,2)  // unknown, but table
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
+#define UNvoidAV0(x)     ((A)((I)(x)-AKXR(0)))   // go from a pointer to *AV0 back to the base of the A block
 #define UNvoidAV1(x)     ((A)((I)(x)-AKXR(1)))   // go from a pointer to *AV1 back to the base of the A block
 
 #if C_LE
@@ -1001,7 +1002,7 @@ typedef struct {
     US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
     AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
-    I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function
+    I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
     A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
@@ -1019,6 +1020,24 @@ typedef struct {
 // 3 bytes free
 } V;  // two cachelines in 64-bit (16 Is); 20 I4s in 32-bit
 // The AN and AR fields of functions are not used
+
+// cut-down version of V, used only for executing atomic combinations
+typedef struct {
+ // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
+ union {  // 8 bytes in the second (main) cacheline
+  US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
+  I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
+ } lu1;  // this is the high-use stuff in the second cacheline
+ AF valencefns[2];   // function to call for monad,dayd
+ A fgh[3];  // operands of modifiers.  h is used for forks and also as a storage spot for parms.  all 3 are freed when the V block is freed
+ I4 flag;
+ UI4 flag2;
+ RANK2T lrr;  // combining dyad ranks: (left<<RANKTX)|right
+ RANKT mr;  // combining monad rank
+ C id;  // pseudochar for the function encoded here
+ C lc;  // lc is a local-use byte.  Used in atomic verbs to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
+// 3 bytes free
+} exeV;  //one cacheline
 
 
 #define ID(f)  FAV(AT(f?f:FUNCTYPE0)&FUNC?f:FUNCID0)->id  // can be branchless, if compiler can manage it

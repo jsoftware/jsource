@@ -217,6 +217,13 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define VA2CSTILE 34
 #define VA2CBANG 35
 #define VA2CCIRCLE 36
+// the following are used only for execution, not definition, and only for singletons
+#define VA2CEQABS 37  // all the entires in va[] share this block
+#define VA2CNEABS 38
+#define VA2CLTABS 39
+#define VA2CLEABS 40
+#define VA2CGEABS 41
+#define VA2CGTABS 42
 // end of the dyads
 #define VA1ORIGIN 29 // the start of the monadic section
 #define VA1CMIN 29

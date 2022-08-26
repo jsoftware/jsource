@@ -416,6 +416,16 @@ VA va[]={
   {(VF)cirZZ,VCVTIP+VZ+VZZ+VRD}, {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD+VDD}, {0,0}},
   &rpsnull},
 
+
+/* -- (compare |) */ {
+// these routines are used only for floating-point types (DD), so they overlap
+ {{0,0}, {0,0}, {0,0},
+  {(VF)eqabsDD,VCVTIP+VB}, {(VF)neabsDD,VCVTIP+VB}, {(VF)ltabsDD,VCVTIP+VB},
+  {(VF)leabsDD,VCVTIP+VB}, {(VF)geabsDD,VCVTIP+VB}, {(VF)gtabsDD,VCVTIP+VB}, 
+  {0,0}, {0,0}, {0,0}, {0,0}},
+  &rpsnull},
+
+
 };
 
 A jtcvz(J jt,I cv,A w){I t;

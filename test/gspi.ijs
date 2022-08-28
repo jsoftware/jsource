@@ -167,6 +167,11 @@ d=: df s=: 0(2)}$. i.5
 (s i. 0) -: d i. 0
 (s i: 0) -: d i: 0
 
+s =. $.,1
+s =. 0 (0}) s
+1 = s i. 1
+1 = (8 $. s) i. 1
+
 
 NB. i. and i: on general dense or sparse arguments ----------------------
 

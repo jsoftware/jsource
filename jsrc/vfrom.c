@@ -672,7 +672,8 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  A ndxa;   // the indexes, always a boxed list of arrays
 // obsolete  I nc; I *ndx; I *ndx0; I *ndxe;
  I n;  // #rows/cols in M
- D *bv;
+ D *bv;  // pointer to bk.  If 0, this is either a column extraction (if zv!=0) or a Dpiv operation (if zv=0)
+                  // 0      1       2      3
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
 // obsolete  __m256d oldcol;  // oldcol Frow   0      0            col value at previous smallest pivot / Frow of current col (always <=0)  0 0
 // obsolete  __m256d oldbk;   // oldbk  minimp 0      0            bk value at previous smallest pivot, best gain available in a previous col (always <=0) 0 0
@@ -701,7 +702,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  // perform the operation
 
 #define PROCESSROWRATIOS /* We run this after the dot-product has been loaded into dotprod */ \
- if(likely(bv!=0)){ \
+ if(bv!=0){ \
   /* DIP processing.  col data is in dotprod as col col col col */ \
   if(likely(exlist==0)){ /* normal look for improving pivot */  \
    __m256d ratios=_mm256_mul_pd(oldbk,dotprod);  /* ratios is col*oldbk col*minimp 0 0 */ \
@@ -733,6 +734,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
     }else if(c>0)goto abortcol;  /* possible dangerous pivot: skip the column */ \
    } \
   } \
+ }else if(zv==0){bestrow+=_mm256_cvtsd_f64(thresh)<=_mm256_cvtsd_f64(dotprod);  /* counting eligibles for Dpiv */ \
  }else{zv[i]=_mm256_cvtsd_f64(dotprod); /* just fetching the column: do it */ \
  }
  __m256d oldcol;  // oldcol Frow   0      0            col value at previous smallest pivot / Frow of current col (always <=0)  0 0
@@ -761,7 +763,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
 #define COLLPE }while(++bvgrd!=bvgrde);
  do{
   I colx=*ndx;  // get next column# to work on
-  I bestrow;  // the best row to use as a pivot for this column
+  I bestrow;  // the best row to use as a pivot for this column; or # qualifying Dpiv found.
   if(likely(bv!=0)){
    if(exlist==0){
     // col init
@@ -769,7 +771,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
     oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0);
    }
    bestrow=-1;  // init no eligible row found
-  }
+  }else bestrow=0;  // for Dpiv, init to none found
   COLLPINIT
   // if the column is just to be fetched from M, do so without dot-product.  We can use gather down the column, but there's no gain
   __m256d dotprod;  // place where product is assembled or read into
@@ -868,8 +870,11 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    }  // end 'long product'
   } // end 'needed dot-product'
   // done with one column.  Collect stats and update parms for the next column
-  if(unlikely(!bv))break;  // if just one product, skip the setup for next column
-  if(exlist==0){  // looking for nonimproving pivots?
+  if(bv==0){  // one product, or Dpiv
+   if(zv)break;  // if just one product, skip the setup for next column
+   // here for Dpiv.  bestrow+1 is the # pivots found; we add/sub/store that in the Dpiv block based on 'prirow'
+   exlist[colx]=exlist[colx]*!!prirow+bestrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column 
+  }else if(exlist==0){  // looking for nonimproving pivots?
    // not looking for nonimproving pivots.  Do a normal pivot-pick
    // column ran to completion.  Detect unbounded
    if(bestrow<0){bestcolrow=bestrow; bestcol=*ndx; goto return4;}  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
@@ -892,7 +897,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
     }
    }
    --bvgrd;  // undo the +1 in the product-accounting below
-abortcol:  // here is column aborted early, possibly on insufficient gain
+abortcol:  // here if column aborted early, possibly on insufficient gain
    if(unlikely(!bv))break;  // if just one product, skip the setup for next column
    ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
    if(unlikely((--ncols<0)&&(SGNIF(bestcolrow,32+3)<0))){++ndx; break;}  // quit if we have made a non-dangerous improvement AND have processed enough columns - include the aborted column in the count
@@ -911,6 +916,7 @@ abortcol:  // here is column aborted early, possibly on insufficient gain
    }
   }
  }while(++ndx!=ndxe);  // end loop over columns
+ if(bv==0)R 0;  // if Dpiv or single column, ctx is unused for return
  // operation complete; transfer results back to ctx.  To reduce stores we jam the col/row together
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ncolsproc,ndx-ndx0,__ATOMIC_ACQ_REL);  // ...and # columns inspected
@@ -950,14 +956,14 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 // if ndx<m, the column is ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
 // Result for product mode (exitvec is scalar) is the product
 // DIP mode
-// y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Nvirt);bk;Frow[;exclusion list;Yk]
+// y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold/PivTol,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Virtx/Dpivdir);bk/'';Frow[;exclusion list/Dpiv;Yk]
 // Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
 //           rc,failing column of NTT, an element of ndx (if rc=4)
 //  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //  rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // if the exclusion list is given, we stop on the first nonimproving pivot, and the exclusion list is used to prevent repetition of basis
 // If Frow is empty, we are looking for nonimproving pivots in rows where the selector is 0.  In that case the bkgrd puts the bk values in descending order.  We return the first column that will make more 0 B rows non0 than non0 B rows 0.
-//
+// If bk is empty, we are counting the #places where c>=PivTol and accumulating into Dpiv under control of Dpivdir (-1=decr, 1=incr; init to 0 if neg)
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
 #if C_AVX2
@@ -1009,32 +1015,45 @@ F1(jtmvmsparse){PROLOG(832);
  D bkmin;  // the largest value for which bk is considered close enough to 0
 
  if(AR(C(AAV(w)[0]))==0){
-  // single index value.  set bv=0 as a flag that we are storing the column
+  // single index value.  set bv=0, zv non0 as a flag that we are storing the column
   bv=0; ASSERT(AN(w)==5,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
   if(unlikely(n==0)){R reshape(sc(n),zeroionei(0));}   // empty M, each product is 0
   GATV0(z,FL,n,1); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
   bvgrd0=0; bvgrde=bvgrd0+AS(C(AAV(w)[4]))[0];  // length of column is #M
  }else{
-  // A list of index values.  We are doing the DIP calculation
+  // A list of index values.  We are doing the DIP calculation or Dpiv
   ASSERT(AR(C(AAV(w)[5]))==1,EVRANK); ASSERT(AN(C(AAV(w)[5]))==0||AT(C(AAV(w)[5]))&INT,EVDOMAIN); bvgrd0=IAV(C(AAV(w)[5])); bvgrde=bvgrd0+AN(C(AAV(w)[5]));  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
   if(AN(C(AAV(w)[5]))==0){RETF(num(6))}  // empty bk - give error/empty result 6
   ASSERT(BETWEENC(AN(w),8,11),EVLENGTH); 
-  ASSERT(AR(C(AAV(w)[7]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[7]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[7]))==AS(C(AAV(w)[4]))[0],EVLENGTH); bv=DAV(C(AAV(w)[7]));  // bk, one per row of M
   ASSERT(AR(C(AAV(w)[8]))<=1,EVRANK);   // Frow, one per row of M and column of A
   if(AN(C(AAV(w)[8]))==0)Frow=0;else{ASSERT(AT(C(AAV(w)[8]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[8]))==AS(C(AAV(w)[4]))[0]+AS(C(AAV(w)[1]))[0],EVLENGTH); Frow=DAV(C(AAV(w)[8]));}  // if Frow omitted we are looking to make bks nonzero
   ASSERT(AR(C(AAV(w)[6]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
   if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
   bkmin=DAV(C(AAV(w)[6]))[2];
   thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],bkmin,inf,DAV(C(AAV(w)[6]))[0]); nfreecolsd=(DAV(C(AAV(w)[6]))[3]); ncolsd=(DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; prirow=(I)DAV(C(AAV(w)[6]))[6];
-  zv=AN(C(AAV(w)[5]))==AN(C(AAV(w)[7]))?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
-  if(AN(w)>9){
-   ASSERT(AN(w)==11,EVLENGTH); 
-   // An exclusion list is given (and thus also yk).  Remember their addresses.  Its presence puts us through the 'nonimproving path' case
+  ASSERT(AR(C(AAV(w)[7]))<=1,EVRANK);
+  if(AN(C(AAV(w)[7]))!=0){
+   // Normal DIP calculation
+   ASSERT(AT(C(AAV(w)[7]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[7]))==AS(C(AAV(w)[4]))[0],EVLENGTH); bv=DAV(C(AAV(w)[7]));  // bk, one per row of M
+   zv=AN(C(AAV(w)[5]))==AN(C(AAV(w)[7]))?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
+   if(AN(w)>9){
+    // nonimproving pivots with exlist
+    ASSERT(AN(w)==11,EVLENGTH); 
+    // An exclusion list is given (and thus also yk).  Remember their addresses.  Its presence puts us through the 'nonimproving path' case
+    exlist=IAV(C(AAV(w)[9]));  // remember address of exclusions
+    nexlist=AN(C(AAV(w)[9]));  // and length of list
+    ASSERT(AR(C(AAV(w)[9]))<=1,EVRANK); ASSERT(nexlist==0||ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVDOMAIN);  // must be integer list
+    ASSERT(AR(C(AAV(w)[10]))<=1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[10])),INT),EVDOMAIN); ASSERT(AN(C(AAV(w)[10]))==AS(C(AAV(w)[4]))[0],EVLENGTH); // yk, one per row of M
+    yk=IAV(C(AAV(w)[10]));  // remember address of translation table of row# to basis column#
+   }
+  }else{
+   // Dpiv counting, with Dpiv.  exlist is the Dpiv area
+   ASSERT(AN(w)==10,EVLENGTH); 
+   bv=zv=0;
    exlist=IAV(C(AAV(w)[9]));  // remember address of exclusions
-   nexlist=AN(C(AAV(w)[9]));  // and length of list
-   ASSERT(AR(C(AAV(w)[9]))<=1,EVRANK); ASSERT(nexlist==0||ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVDOMAIN);  // must be integer list
-   ASSERT(AR(C(AAV(w)[10]))<=1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[10])),INT),EVDOMAIN); ASSERT(AN(C(AAV(w)[10]))==AS(C(AAV(w)[4]))[0],EVLENGTH); // yk, one per row of M
-   yk=IAV(C(AAV(w)[10]));  // remember address of translation table of row# to basis column#
+   ASSERT(AR(C(AAV(w)[9]))==1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVDOMAIN);  // must be integer list
+   ASSERT(AN(C(AAV(w)[9]))==AS(C(AAV(w)[2]))[0]+AS(C(AAV(w)[4]))[0],EVLENGTH);  // length of Dpiv is #cols of A + #rows of A (=M)
+   z=mtv;  // no error is possible; use harmless return value
   }
  }
 

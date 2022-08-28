@@ -781,7 +781,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    COLLPE
   }else{
    // here for sparse dot-product.
-   colx-=n;  // the offset into A starts after the identity prefix
+// obsolete    colx-=n;  // the offset into A starts after the identity prefix
    // look up column info, get A values and row numbers
    I an=axv[colx][1];  // number of sparse atoms in each row
    D *vv=avv0+axv[colx][0];  // pointer to values for this section of A
@@ -873,7 +873,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
   if(bv==0){  // one product, or Dpiv
    if(zv)break;  // if just one product, skip the setup for next column
    // here for Dpiv.  bestrow+1 is the # pivots found; we add/sub/store that in the Dpiv block based on 'prirow'
-   exlist[colx]=exlist[colx]*!!prirow+bestrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column 
+   exlist[*ndx]=exlist[*ndx]*!!prirow+bestrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column 
   }else if(exlist==0){  // looking for nonimproving pivots?
    // not looking for nonimproving pivots.  Do a normal pivot-pick
    // column ran to completion.  Detect unbounded
@@ -1052,7 +1052,7 @@ F1(jtmvmsparse){PROLOG(832);
    bv=zv=0;
    exlist=IAV(C(AAV(w)[9]));  // remember address of exclusions
    ASSERT(AR(C(AAV(w)[9]))==1,EVRANK); ASSERT(ISDENSETYPE(AT(C(AAV(w)[9])),INT),EVDOMAIN);  // must be integer list
-   ASSERT(AN(C(AAV(w)[9]))==AS(C(AAV(w)[2]))[0]+AS(C(AAV(w)[4]))[0],EVLENGTH);  // length of Dpiv is #cols of A + #rows of A (=M)
+   ASSERT(AN(C(AAV(w)[9]))==AS(C(AAV(w)[1]))[0]+AS(C(AAV(w)[4]))[0],EVLENGTH);  // length of Dpiv is #cols of A + #rows of A (=M)
    z=mtv;  // no error is possible; use harmless return value
   }
  }
@@ -1060,7 +1060,7 @@ F1(jtmvmsparse){PROLOG(832);
 
 #define YC(n) .n=n,
 struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
- YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=(I(*)[2])IAV(C(AAV(w)[1])),.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.mv0=DAV(C(AAV(w)[4])),
+ YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=((I(*)[2])IAV(C(AAV(w)[1])))-n,.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.mv0=DAV(C(AAV(w)[4])),
  .ndotprods=0,.ncolsproc=0,.taskmask=0};
 #undef YC
 

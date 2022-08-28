@@ -740,12 +740,13 @@ ASSERT(0,EVNONCE)
   break;}
  case 14:  { // threadpool keepwarm (in sec): set to y, return previous value
 #if PYXES
+#define MAXLINGER 0.1  //  maximum time we will allow for lingering
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // arg is threadpool# keepwarm
   if(AT(w)!=FL)RZ(w=cvt(FL,w));  // make arg float type
   D dpoolno=DAV(w)[0]; I poolno=(I)dpoolno; ASSERT((D)poolno==dpoolno,EVDOMAIN) ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
   D oldval=jobq->keepwarmns*1e-9;
-  D kwtime=DAV(w)[1]; ASSERT(kwtime>=0,EVDOMAIN); if(kwtime>0.003)kwtime=0.003; I kwtimens=(I)(kwtime*1000000000);  // limit time to 3ms and convert to ns
+  D kwtime=DAV(w)[1]; ASSERT(kwtime>=0,EVDOMAIN); if(unlikely(kwtime>MAXLINGER))kwtime=MAXLINGER; I kwtimens=(I)(kwtime*1000000000);  // limit time and convert to ns
   jobq->keepwarmns=kwtimens;  // store new value
   z=scf(oldval);  // return old value
 #else

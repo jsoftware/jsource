@@ -6,9 +6,9 @@ l=.15
 ix =. l ? c  NB. indexes
 v =. l ?@$ 0  NB. vector values
 bk=. 0. +  i.#M
-bkg=.i.#M
-cons=.1e_11 1e_6 0.0 0 1. 1.0
-Frow=.(1+#M)$_4.
+bkg=. i.#M
+cons=. 1e_11 1e_6 0.0 0 1. 1.0
+Frow=. (1+#M)$_4.
 (128!:9) (,c);(,."1 (_2) ]\ 0 , #ix);ix;v;M;bkg;cons;bk;Frow
 )
 
@@ -31,7 +31,7 @@ for_l. >:  i. 50 do.
 end.
 bk =. _2 1 3 1e_8
 M =. |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-cons=.1e_11 1e_6 0.0 0 1. 1.0 _1 NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby prirow
+cons=. 1e_11 1e_6 0.0 0 1. 1.0 _1 NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby prirow
 Frow=. _4 _3 _2 _1. 0.
 bkg=.i.#M
 NB. Test DIP mode - on identity cols
@@ -148,7 +148,7 @@ delth''  NB. make sure we start with an empty system
 
 bk =. _2 1 3 1e_8
 M =. |: _4 ]\ 0. 1 2.9 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-cons=.1e_11 1e_6 0.0 0 1. 1.0 _1  NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby nvirt
+cons=. 1e_11 1e_6 0.0 0 1. 1.0 _1  NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby nvirt
 Frow=. _4 _3 _2 _1. 0.
 bkg=.i.#M
 NB. Test DIP mode - on identity cols

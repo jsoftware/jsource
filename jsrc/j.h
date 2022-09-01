@@ -532,7 +532,7 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 // NEW WAY
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
-#if defined(__APPLE__) || defined(_WIN32)
+#if (defined(__APPLE__)&&(defined(__aarch64__)||defined(_M_ARM64))) || defined(_WIN32)
 #define CSTACKSIZE      (SY_64?12009472:1015808)  // size we allocate in the calling function, aligned to 16k system page size
 #else
 #define CSTACKSIZE      (SY_64?7946240:1015808)  // OS default stack size 8MB, aligned to 16k system page size

@@ -17,14 +17,14 @@
 #include <signal.h>
 #include <stdint.h>
 #include <locale.h>
-#ifdef __MACH__
+#ifdef __APPLE__
 #include <xlocale.h>
 #endif
 
 #include "j.h"
 #include "jeload.h"
 
-#define J_STACK  0x1000000uL // 16mb
+#define J_STACK  0xc00000uL // 12mb
 
 static int forceprmpt=0;   /* emit prompt even if isatty is false */
 static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
@@ -68,7 +68,7 @@ char histfile[512];
 static int readlineinit()
 {
  if(hreadline)return 0; // already run
-#ifndef __MACH__
+#ifndef __APPLE__
  if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
  if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
   if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))
@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
   free(argvv);
  }
 
-#if !defined(WIN32)
+#if 0
 // set stack size to get limit error instead of crash
  struct rlimit lim;
  if(!getrlimit(RLIMIT_STACK,&lim)){

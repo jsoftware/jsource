@@ -161,33 +161,33 @@ LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 #-mmacosx-version-min=10.5
 darwin_j64)
 CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
+LDFLAGS=" -Wl,-stack_size -Wl,0xc00000 -ldl $LDTHREAD $macmin "
 ;;
 darwin_j64avx)
 CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
+LDFLAGS=" -Wl,-stack_size -Wl,0xc00000 -ldl $LDTHREAD $macmin "
 ;;
 darwin_j64avx2)
 CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
+LDFLAGS=" -Wl,-stack_size -Wl,0xc00000 -ldl $LDTHREAD $macmin "
 ;;
 darwin_j64avx512)
 CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
+LDFLAGS=" -Wl,-stack_size -Wl,0xc00000 -ldl $LDTHREAD $macmin "
 ;;
 darwin_j64arm) # darwin arm
 CFLAGS="$common $macmin -march=armv8-a+crc "
-LDFLAGS=" -ldl $LDTHREAD $macmin "
+LDFLAGS=" -Wl,-stack_size -Wl,0xc00000 -ldl $LDTHREAD $macmin "
 ;;
 windows_j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
-LDFLAGS=" -m32 -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
+LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
 windows_j6*)
 TARGET=jconsole.exe
 CFLAGS="$common"
-LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
+LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
 *)
 echo no case for those parameters

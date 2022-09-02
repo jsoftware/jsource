@@ -228,7 +228,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
   acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); acc0=prim(acc0,acc4); \
   acc2=prim(acc2,acc3); acc0=prim(acc0,acc1); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
   acc0=prim(acc0,_mm256_permute4x64_pd(acc0,0b11111110)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
-  *(I*)z=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++z;  /* store the single result from 0 */ \
+  *z=_mm256_cvtsd_f64(acc0); ++z;  /* store the single result from 0 */ \
  )
 
 // f/ on rank>1, going down columns to save bandwidth
@@ -429,8 +429,8 @@ DF1(jtcompsum){
    c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // combine c0+c1, acc1<-1
    TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1);    // combine 0123, combine all low parts
    acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
-   *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++zv;  // store the single result
-//    _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0));
+   *zv=_mm256_cvtsd_f64(acc0); ++zv;  // store the single result
+// obsolete    _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0));
   }
  }else{
   // rank>1, going down columns to save bandwidth and add accuracy

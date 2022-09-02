@@ -680,7 +680,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  I bestcol; I bestcolrow;  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
  D *zv; D *Frow;  // pointer to output for product mode, Frow
  D nfreecolsd, ncolsd; D impfac;  // faction of cols to process before we insist on min improvement; min fraction of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
- I prirow;  // row to give priority to (virtual if any, else _1)
+ I prirow;  // row to give priority to (virtual if any, else _1), or flag to Dpiv
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
@@ -709,13 +709,13 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    __m256d bks=_mm256_set1_pd(bv[i]);  /* bks = bk bk bk - */ \
    dotprod=_mm256_blend_pd(dotprod,bks,0b0100);  /* dotprod=col col bk col */ \
    __m256d tcond=_mm256_sub_pd(thresh,dotprod); I tmask=_mm256_movemask_pd(tcond); if((tmask&0b0101)==0b0001)goto abortcol;  /* tmask is col>ColThr 0 bk>bkmin col>ColMin; also in tcond; abort, avoiding unbounded, if col>ColThr & bk<=0 */ \
-   I imask=i+(tmask<<32);  /* save tmask in the pivot; we care about bit 3 which is 1 if this is not a dangerous pivot.  That goes to bit 35 of bestrow */ \
+   I imask=i+(tmask<<32);  /* save tmask in the pivot; we care about bit 3 which is 1 if this is not a dangerous pivot.  That goes to bit 35 of limitrow */ \
    ratios=_mm256_fmsub_pd(bks,oldcol,ratios);  /* bk*oldcol-col*oldbk  bk*Frow-col*minimp 0 0  i. e.  1 if new smallest (possibly invalid) pivotratio/0 if abort on limited gain/0 /0 */ \
    tcond=_mm256_and_pd(tcond,ratios);  /* tcond is (new smallest pivotratio & col>ColThr [& bk>bkmin]) 0 0 0   */ \
    oldbk=_mm256_blendv_pd(oldbk,bks,tcond); oldcol=_mm256_blendv_pd(oldcol,dotprod,tcond);  /* if valid new smallest pivotratio, update col and bk where the smallest is found */ \
    I rmask=_mm256_movemask_pd(ratios); /*   rmask is new smallest (possibly invalid) pivotratio   !limited gain 0 0 */ \
-   bestrow=(tmask&=1)&rmask?imask:bestrow;   /* col>ColThr & new smallest pivotratio: update best-value variables.  This updates even if bk=0, avoiding unbounded */ \
-   if(tmask>(rmask>>1) && (I4)bestrow!=(I4)prirow)goto abortcol;  /* col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority */ \
+   limitrow=(tmask&=1)&rmask?imask:limitrow;   /* col>ColThr & new smallest pivotratio: update best-value variables.  This updates even if bk=0, avoiding unbounded */ \
+   if(tmask>(rmask>>1) && (I4)limitrow!=(I4)prirow)goto abortcol;  /* col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority */ \
   }else if(Frow!=0){ /* look for nonimproving pivot */  \
    if(ABS(_mm256_cvtsd_f64(dotprod))>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  /* any nonzero pivot is a pivot row, unless in the exclusion list */ \
   }else{ \
@@ -729,12 +729,12 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    if(!bkle0){  /* find the smallest pivot ratio, & the frequency thereof */ \
     if(c>_mm256_cvtsd_f64(thresh)){  /* eligible pivot.  Compare pivot ratios bk/c */ \
      if(bkold*c>bk*cold){  /* bkold-(bk/c)*cold > 0: smaller pivot ratio.  c is positive */ \
-      bkold=bk; cold=c; bestrow=i; \
+      bkold=bk; cold=c; limitrow=i; \
      } \
     }else if(c>0)goto abortcol;  /* possible dangerous pivot: skip the column */ \
    } \
   } \
- }else if(zv==0){bestrow+=_mm256_cvtsd_f64(thresh)<=_mm256_cvtsd_f64(dotprod);  /* counting eligibles for Dpiv */ \
+ }else if(zv==0){limitrow+=_mm256_cvtsd_f64(thresh)<=_mm256_cvtsd_f64(dotprod);  /* counting eligibles for Dpiv */ \
  }else{zv[i]=_mm256_cvtsd_f64(dotprod); /* just fetching the column: do it */ \
  }
  __m256d oldcol;  // oldcol Frow   0      0            col value at previous smallest pivot / Frow of current col (always <=0)  0 0
@@ -763,15 +763,15 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
 #define COLLPE }while(++bvgrd!=bvgrde);
  do{
   I colx=*ndx;  // get next column# to work on
-  I bestrow;  // the best row to use as a pivot for this column; or # qualifying Dpiv found.
+  I limitrow;  // the best row to use as a pivot for this column; or # qualifying Dpiv found.
   if(likely(bv!=0)){
    if(exlist==0){
     // col init
     oldcol=_mm256_set_pd(0.0,0.0,Frow[colx],0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
     oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0);
    }
-   bestrow=-1;  // init no eligible row found
-  }else bestrow=0;  // for Dpiv, init to none found
+   limitrow=-1;  // init no eligible row found
+  }else limitrow=0;  // for Dpiv, init to none found
   COLLPINIT
   // if the column is just to be fetched from M, do so without dot-product.  We can use gather down the column, but there's no gain
   __m256d dotprod;  // place where product is assembled or read into
@@ -872,21 +872,21 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
   // done with one column.  Collect stats and update parms for the next column
   if(bv==0){  // one product, or Dpiv
    if(zv)break;  // if just one product, skip the setup for next column
-   // here for Dpiv.  bestrow+1 is the # pivots found; we add/sub/store that in the Dpiv block based on 'prirow'
-   exlist[*ndx]=exlist[*ndx]*!!prirow+bestrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column 
+   // here for Dpiv.  limitrow+1 is the # pivots found; we add/sub/store that in the Dpiv block based on 'prirow'
+   exlist[*ndx]=exlist[*ndx]*!!prirow+limitrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column 
   }else if(exlist==0){  // looking for nonimproving pivots?
    // not looking for nonimproving pivots.  Do a normal pivot-pick
    // column ran to completion.  Detect unbounded
-   if(bestrow<0){bestcolrow=bestrow; bestcol=*ndx; goto return4;}  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
+   if(limitrow<0){bestcolrow=limitrow; bestcol=*ndx; goto return4;}  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
           // but if we are looking for nonimproving pivots, we don't use F or bk and this is invalid
    // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
    // Exception: if a nondangerous pivot pivots out a virtual row, we accept it immediately and abort all other processing
-   if(likely((bestcol|SGNIF(bestrow,32+3))<0)){  // if this pivot is not dangerous, remember it.  Also remember if it is the first pivot, in case there are only dangerous pivots
-    bestcol=*ndx; bestcolrow=bestrow;  // update the found position for any nondangerous pivot, or the first time in case we have only dangerous pivots
+   if(likely((bestcol|SGNIF(limitrow,32+3))<0)){  // if this pivot is not dangerous, remember it.  Also remember if it is the first pivot, in case there are only dangerous pivots
+    bestcol=*ndx; bestcolrow=limitrow;  // update the found position for any nondangerous pivot, or the first time in case we have only dangerous pivots
     // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
-    if(likely((bestrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
+    if(likely((limitrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
      // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
-     if(unlikely((I4)bestrow==(I4)prirow)){++ndx; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
+     if(unlikely((I4)limitrow==(I4)prirow)){++ndx; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
      I incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
      while(1){  // put the minimum found into the ctx for the job so that all threads can cut off quickly
       minimpfound=(Frow[*ndx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
@@ -910,8 +910,8 @@ abortcol:  // here if column aborted early, possibly on insufficient gain
    ndotprods+=bvgrd-bvgrd0;  // accumulate # products performed
    if(Frow==0){
     // accept a zero-Frow pivot if it exists, has more non0 than 0, and is not excluded
-    if(bestrow>=0 && notexcluded(exlist,nexlist,*ndx,yk[bestrow])){
-     minimpfound=1.0; bestcol=*ndx; bestcolrow=bestrow; goto return2;
+    if(limitrow>=0 && notexcluded(exlist,nexlist,*ndx,yk[limitrow])){
+     minimpfound=1.0; bestcol=*ndx; bestcolrow=limitrow; goto return2;
     }
    }
   }
@@ -1009,7 +1009,7 @@ F1(jtmvmsparse){PROLOG(832);
 // obsolete 1LL<<(32+3);
  A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
  D nfreecolsd, ncolsd; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
- I prirow;  // row to get priority (virtual)
+ I prirow;  // row to get priority (virtual), or flag to Dpiv
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist=0, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
@@ -1085,4 +1085,137 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndx
 #endif
 }
 
+// everything we need for one core's execution
+struct __attribute__((aligned(CACHELINESIZE))) ekctx {
+ I taskmask;  // a bit for each task as we take it for work
+ // the rest is moved into static names
+ // arguments
+ A qk;
+ A prx;
+ A pcx;
+ A pivotcolnon0;
+ A newrownon0;
+ D relfuzz;
+} ;
 
+
+// the processing loop for one core.  We take a slice of the columns depending on our proc# in the threadpool
+// ti is the job#, not used except to detect error
+static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
+ // transfer everything out of ctx into local names
+#define YC(x) typeof(((struct ekctx*)ctx)->x) x=((struct ekctx*)ctx)->x;
+ YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)
+#undef YC
+
+ __m256d pcoldh, pcoldl=_mm256_setzero_pd();  // value from pivotcolnon0, multiplying one row
+ __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from newrownon0
+ __m256d relfuzzcct=_mm256_set1_pd(1.0-relfuzz);  // comparison tolerance
+ __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
+ I dpflag=0;  // precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0
+ D *qkv=DAV(qk); I qksize=AS(qk)[0]; I qksizesq=qksize*qksize; dpflag|=AR(qk)>2;  // pointer to qk data, length of a row, offset to low part if present
+ UI rowx=0, rown=AN(prx); I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // current row, # rows, address of row indexes, column data
+ UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
+ // for each row
+ for(rowx=0;rowx<rown;++rowx){
+  // get the address of this row in Qk
+  D *qkvrow=qkv+rowxv[rowx]*qksize;   // the row of Qk being modified
+  // fetch the pivotcol value into all lanes
+  pcoldh=_mm256_set1_pd(pcn0v[rowx]);  // fetch high part of pivotcol value
+  if(dpflag&2)pcoldl=_mm256_set1_pd(pcn0v[rown+rowx]);  // fetch low part if it is present
+  UI colx;
+  // for each column-group
+  for(colx=0;colx<coln;colx+=NPAR){
+   __m256i endmask;  // maks for maskload and gather, indicating # words to process
+   __m256i prn0x;  // indexes of nonzero values in row
+   // get the mask of valid values, fetch pivotrow values, fetch the Qk indexes to modify
+   if(coln-colx>=NPAR){  // all lanes valid
+    prn0x=_mm256_loadu_si256((__m256i_u*)(colxv+colx));  // load the indexes into Qk
+    prowdh=_mm256_loadu_pd(prn0v+colx);  // load next 4 non0 values in pivotrow
+    if(dpflag&4)prowdl=_mm256_loadu_pd(prn0v+coln+colx);  // and low part if present
+    endmask=sgnbit;  // indicate all lanes valid
+   }else{
+    endmask=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
+    prn0x=_mm256_maskload_epi64(colxv+colx,endmask);  // load the indexes into Qk
+    prowdh=_mm256_maskload_pd(prn0v+colx,endmask);  // load next 4 non0 values in pivotrow
+    if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,endmask);  // and low part if present
+   }
+   // gather the high parts of Qk
+   __m256d qkvh=_mm256_setzero_pd(); qkvh=_mm256_mask_i64gather_pd(qkvh,qkvrow,prn0x,endmask,SZI);
+   // take product of high parts for fuzz comp
+   __m256d prodh=_mm256_mul_pd(pcoldh,prowdh);  // 
+   // calculate fuzzy not-equal.  high parts are enough
+//  ((((a)>(cct)*(b))?1:0) == (((b)<=(cct)*(a))?1:0)) TNE
+   prodh=_mm256_xor_pd(_mm256_fmsub_pd(relfuzzcct,prodh,qkvh),_mm256_fmsub_pd(relfuzzcct,qkvh,prodh));  // sets sign of prodh if fuzzy ne, means keep the result
+   if(!(dpflag&1)){
+    // single-precision calculation
+    // calculate old - pcol*prow
+    qkvh=_mm256_fnmadd_pd(prowdh,pcoldh,qkvh);
+   }else{
+    // extended-precision calculation
+    __m256d qkvl; qkvl=_mm256_mask_i64gather_pd(qkvh,qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
+    __m256d iph,ipl,isl;  // intermediate products and sums
+
+    // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
+    // (iph,ipl) = - prowdh*pcoldh
+    TWOPROD(prowdh,pcoldh,iph,ipl) iph=_mm256_xor_pd(sgnbit,iph);
+    // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
+    // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
+    // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
+    qkvl=_mm256_sub_pd(qkvl,ipl); qkvl=_mm256_fnmadd_pd(prowdh,pcoldl,qkvl); qkvl=_mm256_fnmadd_pd(prowdl,pcoldh,qkvl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
+    TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
+    isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
+    // Make sure qkvl is much less than qkvh
+    TWOSUM(qkvh,isl,qkvh,qkvl)  // establish separation
+
+    // zero if lower than fuzz
+    qkvl=_mm256_blendv_pd(_mm256_setzero_pd(),qkvl,prodh);
+    // scatter the results (low part)
+    qkvrow[_mm256_extract_epi64(prn0x,0)+qksizesq]=_mm256_cvtsd_f64(qkvl);
+    if(coln-colx>1)qkvrow[_mm256_extract_epi64(prn0x,1)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
+    if(coln-colx>2)qkvrow[_mm256_extract_epi64(prn0x,2)+qksizesq]=_mm256_cvtsd_f64(qkvl=_mm256_permute4x64_pd (qkvl,0b01001110));
+    if(coln-colx>3)qkvrow[_mm256_extract_epi64(prn0x,3)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
+   }
+   // zero if lower than fuzz
+   qkvh=_mm256_blendv_pd(_mm256_setzero_pd(),qkvh,prodh);
+   // scatter the results (high part)
+//   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
+   qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
+   if(coln-colx>1)qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
+   if(coln-colx>2)qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(qkvh=_mm256_permute4x64_pd (qkvh,0b01001110));
+   if(coln-colx>3)qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
+  }
+ }
+ R 0;
+}
+
+// 128!:12  calculate
+// Qk=: (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0) (<prx;pcx)} Qk
+// with high precision
+// a is prx;pcx;pivotcolnon0;newrownon0;relfuzz
+// w is Qk
+// If Qk has rank 3, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
+// Qk is modified in place
+F2(jtekupdate){F2PREFIP;
+ ARGCHK2(a,w);
+ // extract the inputs
+ A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w),EVNONCE) ASSERT(BETWEENC(AR(w),2,3),EVRANK)
+ ASSERT(AR(w)==2||AS(w)[0]==2, EVLENGTH) ASSERT(AS(w)[AR(w)-1]==AS(w)[AR(w)-2],EVLENGTH)
+ ASSERT(AT(a)&BOX,EVDOMAIN) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==5,EVLENGTH)  // a is 5 boxes
+ A prx=AAV(a)[0]; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)==1,EVRANK)  // prx is integer list
+ A pcx=AAV(a)[1]; ASSERT(AT(pcx)&INT,EVDOMAIN) ASSERT(AR(pcx)==1,EVRANK)  // pcx is integer list
+ A pivotcolnon0=AAV(a)[2]; ASSERT(AT(pivotcolnon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(pivotcolnon0),1,2),EVRANK)
+ ASSERT(AR(pivotcolnon0)==1||AS(pivotcolnon0)[0]==2, EVLENGTH)  // pivotcolnon0 is float or extended list
+ A newrownon0=AAV(a)[3]; ASSERT(AT(newrownon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(newrownon0),1,2),EVRANK)
+ ASSERT(AR(newrownon0)==1||AS(newrownon0)[0]==2, EVLENGTH)  // newrownon0 is float or extended list
+ A tmp=AAV(a)[4]; if(!(AT(tmp)&FL))RZ(tmp=cvt(FL,tmp)); ASSERT(AR(tmp)==0,EVRANK) D relfuzz=DAV(tmp)[0];  // relfuzz is a float atom
+ // agreement
+ ASSERT(AN(prx)==AN(pivotcolnon0),EVLENGTH) ASSERT(AN(pcx)==AN(newrownon0),EVLENGTH)   // indexes and values must agree
+ // do the work
+#define YC(n) .n=n,
+struct ekctx opctx={YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)};
+
+#undef YC
+ jtekupdatex(jt,&opctx,0);
+
+ R qk;
+}

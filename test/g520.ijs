@@ -1,16 +1,19 @@
 prolog './g520.ijs'
 
-1: 0 : 0
-l=.15
-'r c' =. $M =. _0.5 + (2 # l)?@$ 0
-ix =. l ? c  NB. indexes
-v =. l ?@$ 0  NB. vector values
-bk=. 0. +  i.#M
-bkg=.i.#M
-cons=.1e_11 1e_6 0.0 0 1. 1.0
-Frow=.(1+#M)$_4.
-(128!:9) (,c);(,."1 (_2) ]\ 0 , #ix);ix;v;M;bkg;cons;bk;Frow
-)
+NB. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk ------------------------
+f =: 1:`({{
+ siz =. y  NB. size of Qk
+ 'r c' =. 2 ?@$ >:siz  NB. size of modified area
+ prx =. 00 + r ? siz [ pcx =. 00 + c ? siz  NB. indexes of mods
+ pivotcolnon0 =.r ?@$ 0 [ newrownon0 =. c ?@$ 0
+ relfuzz =. 1e_14 * ? 0  NB. tolerance
+ Qk =. (siz,siz) ?@$ 0
+ expQk=. (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0) (<prx;pcx)} preQk =. memu Qk
+ Qk =. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk
+ if. -. r =. 1e_13 > >./ , | Qk - expQk do. 13!:8]4 [ 'prx__ pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expQk__ preQk__ Qk__' =: prx;pcx;pivotcolnon0;newrownon0;relfuzz;expQk;preQk;Qk end.
+ r 
+}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+f i. 65
 
 NB. 128!:9  g;i;v;M ---------------------------------------------------------
 {{)v

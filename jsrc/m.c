@@ -976,7 +976,8 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   }else if(t&SYMB){wd=jtfreesymtab(jt,wd,AR(wd));  // SYMB is used as a flag; we test here AFTER NAME and ADV which are lower bits
   } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
    // single-level indirect forms.  handle each block
-   DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
+   DQ(t&RAT?2*n:n, if(*v)if(AT(*v)&LIT){frgmp(*v);}else fr(*v); ++v;);
+// obsolete    DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
   }else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
    fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
    // for sparse, decrement the usecount

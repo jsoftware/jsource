@@ -974,7 +974,7 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
 
 
 
-// +/@:*"1 with IRS, also +/@:*"1!.0 on float args
+// +/@:*"1 with IRS, also +/@:*"1!.0 on float args and +/@:*"1!.1 producing a float extended-precision result, a length-2 list per product
 DF2(jtsumattymes1){
  ARGCHK2(a,w);
  I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
@@ -985,9 +985,12 @@ DF2(jtsumattymes1){
    // Now that we have used the rank info, clear jt->ranks.  All verbs start with jt->ranks=RMAXX unless they have "n applied
    // we do this before we generate failures
  RESETRANK;  // This is required if we go to slower code
+
+ I fit=0; if(unlikely(FAV(self)->id==CFIT))fit=1+FAV(self)->localuse.lu1.fittype;  // fit 0=normal, 1=!.0, 2=!.1
+
  // if an argument is empty, sparse, has cell-rank 0, or not a fast arithmetic type, revert to the code for f/@:g atomic
  if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
-  if(FAV(self)->id==CFIT)self=FAV(self)->fgh[0];  // lose the !.0 if we revert
+  if(fit!=0)self=FAV(self)->fgh[0];  // lose the !.[01] if we revert
   R rank2ex(a,w,FAV(self)->fgh[0],MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
  // We can handle it here, and both ranks are at least 1.
@@ -996,11 +999,12 @@ DF2(jtsumattymes1){
  // This promotes the outer loops to inner loops
  {I rankgiven = (acr|wcr)-1; acr=rankgiven?acr:ar; wcr=rankgiven?wcr:wr;}
 
+
  // Exchange if needed to make the cell-rank of a no greater than that of w.  That way we know that w will never repeat in the inner loop
  if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
 
  // Convert arguments as required
- I it=MAX(AT(a),AT(w)); it=FAV(self)->id==CFIT?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.0, convert everything to float
+ I it=MAX(AT(a),AT(w)); it=fit!=0?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.[01], convert everything to float
  if(unlikely(it!=(AT(w)|AT(a)))){
   if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // convert to common input type
   if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
@@ -1017,9 +1021,9 @@ DF2(jtsumattymes1){
  A z; 
  // if there is frame, create the outer loop values
  I nfro,nfri;  // outer loop counts, and which arg is repeated
- if(likely(((ar-acr)|(wr-wcr))==0)){  // normal case
+ if(likely(((ar-acr)|(wr-wcr))==0)){  // normal case of no frame
   nfro=nfri=1;  // no outer loops, repeata immaterial
-  GA(z,FL>>(it&B01),ndpo*ndpi,wcr-1,AS(w));  // type is INT if inputs booleans, otherwise FL
+  GA(z,FL>>(it&B01),(ndpo*ndpi)<<(fit>>1),wcr-1+(fit>>1),AS(w));  // type is INT if inputs booleans, otherwise FL
  }else{
   // There is frame, analyze and check it
   I af=ar-acr; I wf=wr-wcr; I commonf=wf; I *as=AS(a), *ws=AS(w); I *longs=as;
@@ -1029,14 +1033,15 @@ DF2(jtsumattymes1){
   ASSERTAGREE(as,ws,commonf)  // verify common frame
   PROD(nfri,af,longs+commonf); PROD(nfro,commonf,longs);   // number of outer loops, number of repeats
   I zn = ndpo*ndpi*nfro; DPMULDE(zn,nfri,zn);  // no error possible till we extend the shape
-  GA00(z,FL>>(it&B01),zn,af+commonf+wcr-1); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
+  GA00(z,FL>>(it&B01),zn<<(fit>>1),af+commonf+wcr-1+(fit>>1)); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
   // install the shape
   MCISH(zs,longs,af+commonf); MCISH(zs+af+commonf,ws+wr-wcr,wcr-1);
  }
+ if(unlikely(fit==2))AS(w)[AR(w)-1]=2;  // if +/@:*"1!.1, we store two atoms per sum
 
- if(likely(FAV(self)->id!=CFIT)){RZ(jtsumattymesprods(jt,it,voidAV(a),voidAV(w),dplen,nfro,nfri,ndpo,ndpi,voidAV(z)));  // eval standard dot-product, check for error
+ if(likely(fit==0)){RZ(jtsumattymesprods(jt,it,voidAV(a),voidAV(w),dplen,nfro,nfri,ndpo,ndpi,voidAV(z)));  // eval standard dot-product, check for error
  }else{
-  // here for +/@:*"1!.0, double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
+  // here for +/@:*"1!.[01], double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;
 #if (C_AVX2&&SY_64) || EMU_AVX2
 #if 1  // higher precision.  Required when a large product is added to a small total.  Dependency loop for acc is 4 clocks; for c is 4 clocks.  Total 12 insts, so unrolled 2 would do

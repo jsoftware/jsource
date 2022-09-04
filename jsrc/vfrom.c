@@ -687,7 +687,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  I (*axv)[2];  // pointer to ax data
  I *amv0;  // pointer to am block, and to the selected column's indexes
  D *avv0;  // pointer to av data, and to the selected column's values
- D *mv0;  // pointer to M data, and to the selected column (for identity columns) or to the current row of M (for sparse columns)
+ A qk;  // original M block
 } ;
 
 
@@ -697,7 +697,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(((struct mvmctx*)ctx)->x) x=((struct mvmctx*)ctx)->x;
  YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)
- YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(mv0)
+ YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(qk)
 #undef YC
  // perform the operation
 
@@ -746,6 +746,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  I taskno=jt->ndxinthreadpool;  // default task# to try
  if(unlikely(taskno>=AN(ndxa)))taskno=taskno%AN(ndxa);  // if more processors than tasks, take a value in range
  I trymask=1LL<<taskno;  // mask we will try to take
+ D *mv0=DAV(qk);  // pointer to 
  while(1){
   I oldmask=__atomic_fetch_or(&((struct mvmctx*)ctx)->taskmask,trymask,__ATOMIC_ACQ_REL);  // try to reserve a task
   if(!(oldmask&trymask))break;  // if we reserved it, continue
@@ -758,10 +759,8 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  if(bv!=0&&prirow>=0)zv=0;  // if we have DIP with a priority row, signal to process ALL rows in bk order.  It's not really needed but it ensures that if the prirow is tied for pivot in the first
                                // column, we will take it
 
-#define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; D bkold=inf, cold=1.0; I bkle0=1;
-#define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?
-#define COLLPE }while(++bvgrd!=bvgrde);
  do{
+  // start of processing one column
   I colx=*ndx;  // get next column# to work on
   I limitrow;  // the best row to use as a pivot for this column; or # qualifying Dpiv found.
   if(likely(bv!=0)){
@@ -772,6 +771,12 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    }
    limitrow=-1;  // init no eligible row found
   }else limitrow=0;  // for Dpiv, init to none found
+#if 0
+  // process the column NPAR values at a time
+#else
+#define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; D bkold=inf, cold=1.0; I bkle0=1;
+#define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?
+#define COLLPE }while(++bvgrd!=bvgrde);
   COLLPINIT
   // if the column is just to be fetched from M, do so without dot-product.  We can use gather down the column, but there's no gain
   __m256d dotprod;  // place where product is assembled or read into
@@ -869,6 +874,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
     COLLPE
    }  // end 'long product'
   } // end 'needed dot-product'
+#endif
   // done with one column.  Collect stats and update parms for the next column
   if(bv==0){  // one product, or Dpiv
    if(zv)break;  // if just one product, skip the setup for next column
@@ -952,10 +958,11 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 
 // 128!:9 matrix times sparse vector with optional early exit
 // product mode:
-// y is ndx;Ax;Am;Av;(M, shape m,n)  where ndx is an atom
-// if ndx<m, the column is ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
-// Result for product mode (exitvec is scalar) is the product
-// DIP mode
+//  y is ndx;Ax;Am;Av;(M, shape m,n)  where ndx is an atom
+//  if ndx<m, the column is ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
+//   if M has rank 3 (with 2={.$M), do the product in extended precision
+//  Result for product mode (exitvec is scalar) is the product, one column of M
+// DIP/Dpiv mode:
 // y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold/PivTol,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Virtx/Dpivdir);bk/'';Frow[;exclusion list/Dpiv;Yk]
 // Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
 //           rc,failing column of NTT, an element of ndx (if rc=4)
@@ -975,7 +982,7 @@ F1(jtmvmsparse){PROLOG(832);
  ASSERT(AR(C(AAV(w)[1]))==3&&AS(C(AAV(w)[1]))[1]==2&&AS(C(AAV(w)[1]))[2]==1,EVRANK);  // Ax, shape cols,2 1
  ASSERT(AR(C(AAV(w)[2]))==1,EVRANK);  // Am
  ASSERT(AR(C(AAV(w)[3]))==1,EVRANK);  // Av
- ASSERT(AR(C(AAV(w)[4]))==2,EVRANK);  // M
+ ASSERT(AR(C(AAV(w)[4]))==2||(AR(C(AAV(w)[4]))==3&&AR(C(AAV(w)[0]))==0),EVRANK);  // M
  // abort if no columns
  if(AN(C(AAV(w)[0]))==0)R num(6);  // if no cols (which happens at startup, return error indic)
  // check types.  Don't convert - force the user to get it right
@@ -985,7 +992,7 @@ F1(jtmvmsparse){PROLOG(832);
  ASSERT(AT(C(AAV(w)[4]))&FL,EVDOMAIN);  // M
  // check agreement
  ASSERT(AS(C(AAV(w)[2]))[0]==AS(C(AAV(w)[3]))[0],EVLENGTH);   // Am and Av
- ASSERT(AS(C(AAV(w)[4]))[0]==AS(C(AAV(w)[4]))[1],EVLENGTH);   // M is square
+ ASSERT(AS(C(AAV(w)[4]))[AR(C(AAV(w)[4]))-2]==AS(C(AAV(w)[4]))[AR(C(AAV(w)[4]))-1],EVLENGTH);   // M is square
 
  // indexes must be an atom, a single list of integers, or a list of boxes containing integers
  // we don't allow conversion so as to force the user to get it right, for speed
@@ -1001,7 +1008,7 @@ F1(jtmvmsparse){PROLOG(832);
  // extract pointers to tables
  D minimp=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
 
- I n=AS(C(AAV(w)[4]))[0];  // n=#rows/cols in M
+ I n=AS(C(AAV(w)[4]))[1];  // n=#rows/cols in M
  // convert types as needed; set ?v=pointer to data area for ?
  D *bv; // pointer to b values if there are any
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
@@ -1017,9 +1024,10 @@ F1(jtmvmsparse){PROLOG(832);
  if(AR(C(AAV(w)[0]))==0){
   // single index value.  set bv=0, zv non0 as a flag that we are storing the column
   bv=0; ASSERT(AN(w)==5,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
-  if(unlikely(n==0)){R reshape(sc(n),zeroionei(0));}   // empty M, each product is 0
-  GATV0(z,FL,n,1); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
-  bvgrd0=0; bvgrde=bvgrd0+AS(C(AAV(w)[4]))[0];  // length of column is #M
+  if(unlikely(n==0)){R reshape(drop(num(-1),shape(C(AAV(w)[4]))),zeroionei(0));}   // empty M, each product is 0
+  I epcol=AR(C(AAV(w)[4]))==3;  // flag if we are doing an extended-precision column fetch
+  GATV(z,FL,n<<epcol,1+epcol,AS(C(AAV(w)[4]))); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
+  bvgrd0=0; bvgrde=bvgrd0+n;  // length of column is #M
  }else{
   // A list of index values.  We are doing the DIP calculation or Dpiv
   ASSERT(AR(C(AAV(w)[5]))==1,EVRANK); ASSERT(AN(C(AAV(w)[5]))==0||AT(C(AAV(w)[5]))&INT,EVDOMAIN); bvgrd0=IAV(C(AAV(w)[5])); bvgrde=bvgrd0+AN(C(AAV(w)[5]));  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
@@ -1060,7 +1068,7 @@ F1(jtmvmsparse){PROLOG(832);
 
 #define YC(n) .n=n,
 struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
- YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=((I(*)[2])IAV(C(AAV(w)[1])))-n,.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.mv0=DAV(C(AAV(w)[4])),
+ YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=((I(*)[2])IAV(C(AAV(w)[1])))-n,.amv0=IAV(C(AAV(w)[2])),.avv0=DAV(C(AAV(w)[3])),.qk=C(AAV(w)[4]),
  .ndotprods=0,.ncolsproc=0,.taskmask=0};
 #undef YC
 
@@ -1109,10 +1117,10 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
 
  __m256d pcoldh, pcoldl=_mm256_setzero_pd();  // value from pivotcolnon0, multiplying one row
  __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from newrownon0
- __m256d relfuzzcct=_mm256_set1_pd(1.0-relfuzz);  // comparison tolerance
+ __m256d mrelfuzz=_mm256_set1_pd(relfuzz);  // comparison tolerance
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  I dpflag=0;  // precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0
- D *qkv=DAV(qk); I qksize=AS(qk)[0]; I qksizesq=qksize*qksize; dpflag|=AR(qk)>2;  // pointer to qk data, length of a row, offset to low part if present
+ D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I qksizesq=qksize*qksize; dpflag|=AR(qk)>2;  // pointer to qk data, length of a row, offset to low part if present
  UI rowx=0, rown=AN(prx); I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // current row, # rows, address of row indexes, column data
  UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
  // for each row
@@ -1141,42 +1149,52 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
    }
    // gather the high parts of Qk
    __m256d qkvh=_mm256_setzero_pd(); qkvh=_mm256_mask_i64gather_pd(qkvh,qkvrow,prn0x,endmask,SZI);
-   // take product of high parts for fuzz comp
-   __m256d prodh=_mm256_mul_pd(pcoldh,prowdh);  // 
-   // calculate fuzzy not-equal.  high parts are enough
-//  ((((a)>(cct)*(b))?1:0) == (((b)<=(cct)*(a))?1:0)) TNE
-   prodh=_mm256_xor_pd(_mm256_fmsub_pd(relfuzzcct,prodh,qkvh),_mm256_fmsub_pd(relfuzzcct,qkvh,prodh));  // sets sign of prodh if fuzzy ne, means keep the result
+   // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
+   __m256d maxabs=_mm256_max_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_andnot_pd(sgnbit,_mm256_mul_pd(pcoldh,prowdh)));
    if(!(dpflag&1)){
     // single-precision calculation
     // calculate old - pcol*prow
     qkvh=_mm256_fnmadd_pd(prowdh,pcoldh,qkvh);
+    // convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
+    maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh));
    }else{
     // extended-precision calculation
-    __m256d qkvl; qkvl=_mm256_mask_i64gather_pd(qkvh,qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
     __m256d iph,ipl,isl;  // intermediate products and sums
+    __m256d qkvl;  // low-order part of result
 
-    // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
     // (iph,ipl) = - prowdh*pcoldh
-    TWOPROD(prowdh,pcoldh,iph,ipl) iph=_mm256_xor_pd(sgnbit,iph);
-    // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
-    // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
-    // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
-    qkvl=_mm256_sub_pd(qkvl,ipl); qkvl=_mm256_fnmadd_pd(prowdh,pcoldl,qkvl); qkvl=_mm256_fnmadd_pd(prowdl,pcoldh,qkvl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
-    TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
-    isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
-    // Make sure qkvl is much less than qkvh
-    TWOSUM(qkvh,isl,qkvh,qkvl)  // establish separation
+    TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,prowdl) to high precision
+    iph=_mm256_xor_pd(sgnbit,iph);  // change sign for subtract
+    if(_mm256_movemask_pd(_mm256_cmp_pd(qkvh,_mm256_setzero_pd(),_CMP_EQ_OQ))==0xf){
+     // qkvh is all 0 - the result is simply (-iph,-ipl) 
+     qkvh=iph; qkvl=_mm256_xor_pd(sgnbit,ipl);  // -iph, -ipl
+     maxabs=_mm256_setzero_pd();  // do not force any values to true zero
+    }else{
+     // normal case where qkvh not all 0
+     qkvl=_mm256_mask_i64gather_pd(qkvh,qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
+     // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
+     // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
+     // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
+     // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
+     qkvl=_mm256_sub_pd(qkvl,ipl); qkvl=_mm256_fnmadd_pd(prowdh,pcoldl,qkvl); qkvl=_mm256_fnmadd_pd(prowdl,pcoldh,qkvl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
+     TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
+     isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
+     // Make sure qkvl is much less than qkvh
+     TWOSUM(qkvh,isl,qkvh,qkvl)  // put pkvh into canonical form
+     // convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
+     maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh)); 
 
-    // zero if lower than fuzz
-    qkvl=_mm256_blendv_pd(_mm256_setzero_pd(),qkvl,prodh);
+     // zero if lower than fuzz (low part)
+     qkvl=_mm256_blendv_pd(qkvl,_mm256_setzero_pd(),maxabs);
+    }
     // scatter the results (low part)
     qkvrow[_mm256_extract_epi64(prn0x,0)+qksizesq]=_mm256_cvtsd_f64(qkvl);
     if(coln-colx>1)qkvrow[_mm256_extract_epi64(prn0x,1)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
     if(coln-colx>2)qkvrow[_mm256_extract_epi64(prn0x,2)+qksizesq]=_mm256_cvtsd_f64(qkvl=_mm256_permute4x64_pd (qkvl,0b01001110));
     if(coln-colx>3)qkvrow[_mm256_extract_epi64(prn0x,3)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
    }
-   // zero if lower than fuzz
-   qkvh=_mm256_blendv_pd(_mm256_setzero_pd(),qkvh,prodh);
+   // zero if lower than fuzz (high part)
+   qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
    // scatter the results (high part)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
    qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
@@ -1209,7 +1227,7 @@ F2(jtekupdate){F2PREFIP;
  ASSERT(AR(newrownon0)==1||AS(newrownon0)[0]==2, EVLENGTH)  // newrownon0 is float or extended list
  A tmp=AAV(a)[4]; if(!(AT(tmp)&FL))RZ(tmp=cvt(FL,tmp)); ASSERT(AR(tmp)==0,EVRANK) D relfuzz=DAV(tmp)[0];  // relfuzz is a float atom
  // agreement
- ASSERT(AN(prx)==AN(pivotcolnon0),EVLENGTH) ASSERT(AN(pcx)==AN(newrownon0),EVLENGTH)   // indexes and values must agree
+ ASSERT(AN(prx)==AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) ASSERT(AN(pcx)==AS(newrownon0)[AR(newrownon0)-1],EVLENGTH)   // indexes and values must agree
  // do the work
 #define YC(n) .n=n,
 struct ekctx opctx={YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)};

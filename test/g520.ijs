@@ -1,6 +1,7 @@
 prolog './g520.ijs'
 
 NB. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk ------------------------
+NB. normal precision
 f =: 1:`({{
  siz =. y  NB. size of Qk
  'r c' =. 2 ?@$ >:siz  NB. size of modified area
@@ -14,6 +15,35 @@ f =: 1:`({{
  r 
 }}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
 f i. 65
+
+NB. double precision
+f =: 1:`({{
+ epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
+ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
+ epsub =. (epadd -)
+ epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
+ epcanon =. (epadd   0 $~ $)
+ siz =. y  NB. size of Qk
+ 'r c' =. 2 ?@$ >:siz  NB. size of modified area
+ prx =. 00 + r ? siz [ pcx =. 00 + c ? siz  NB. indexes of mods
+ pivotcolnon0 =.r ?@$ 0 [ newrownon0 =. c ?@$ 0
+ pivotcolnon0 =. (] {~ r ? #) (, -) 10 ^ (+   10 * *) 10. * _0.5 + r ?@$ 0  NB. random values 1e10 to 1e15 and 1e_10 to 1e_15, both signs
+ pivotcolnon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) pivotcolnon0  NB. append extended part
+ pivotcolnon0 =. 0. + pivotcolnon0  NB. force to float
+ newrownon0 =. (] {~ c ? #) (, -) 10 ^ (+   10 * *) 10. * _0.5 + c ?@$ 0  NB. random values 1e10 to 1e15 and 1e_10 to 1e_15, both signs
+ newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
+ newrownon0 =. 0. + newrownon0  NB. force to float
+ relfuzz =. 1e_25 * ? 0  NB. tolerance
+ Qk =. (siz,siz) ?@$ 0.
+ Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
+ expQk=. (((<a:;prx;pcx) { Qk) (relfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
+ Qk =. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk
+ if. -. 1e_30 > >./ re =. , | (+/  expQk epsub Qk) % (| +/ Qk) >. (| +/ preQk) >. (| +/ expQk) do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expQk__ preQk__ Qk__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;relfuzz;expQk;preQk;Qk end.
+ 1
+}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+
+f i. 65
+
 
 NB. 128!:9  g;i;v;M ---------------------------------------------------------
 {{)v

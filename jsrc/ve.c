@@ -44,13 +44,16 @@ primop256(plusDB,0xa00,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusBD,0x900,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusII,0x21,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
- R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)
+// obsolete  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)
+ R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(plusBI,0x860,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(yy),_mm256_castpd_si256(zz))));,
- R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSBI:EVOK;)
+// obsolete  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSBI:EVOK;)
+ R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSBI:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(plusIB,0x8a0,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(zz))));,
- R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSIB:EVOK;)
+// obsolete  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSIB:EVOK;)
+ R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSIB:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(plusBB,0xc0,,
 zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,R EVOK;)
 primop256(minusDI,16,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
@@ -59,13 +62,16 @@ primop256(minusDB,0xa00,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
 primop256(minusBD,0x100,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
 primop256(minusII,0x22,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
- R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSII:EVOK;)
+// obsolete  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSII:EVOK;)
+ R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPMINUSII:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(minusBI,0x62,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));oflo=_mm256_or_pd(oflo,_mm256_and_pd(zz,yy));,  // only oflo is b - imin,
- R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSBI:EVOK;)
+// obsolete  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSBI:EVOK;)
+ R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPMINUSBI:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(minusIB,0x8a2,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(zz),_mm256_castpd_si256(xx))));,
- R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSIB:EVOK;)
+// obsolete  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSIB:EVOK;)
+ R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPMINUSIB:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(minusBB,0xe0,,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,R EVOK;)
 primop256(minDI,16,,zz=_mm256_min_pd(xx,yy),R EVOK;)

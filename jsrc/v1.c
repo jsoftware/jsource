@@ -98,31 +98,31 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
   // fetch the load mask for the last block: the words to load, including any trailing fragment
    // step up to qword boundary
    I *x=(I*)((C*)av+((k-1)&(SZI-1))+1), *y=(I*)((C*)wv+((k-1)&(SZI-1))+1);  // access the arguments as Is
-   __m256i allmatches =_mm256_cmpeq_epi8(endmask,endmask),ones=allmatches; // accumuland for compares init to all 1
+   __m256i allmatches =_mm256_cmpeq_epi8(endmask,endmask); __m256d ones=_mm256_castsi256_pd(allmatches); // accumuland for compares init to all 1
    b=b1;  // init store value to compare failure
    if(n2>0){
     UI i = n2;  // inner loop size
     x+=(backoff+1)*NPAR; y+=(backoff+1)*NPAR;
     switch(backoff){
     do{
-    case -1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-    case -2: u=_mm256_loadu_si256 ((__m256i*)(x+1*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+1*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-    case -3: u=_mm256_loadu_si256 ((__m256i*)(x+2*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+2*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-    case -4: u=_mm256_loadu_si256 ((__m256i*)(x+3*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+3*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-    case -5: u=_mm256_loadu_si256 ((__m256i*)(x+4*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+4*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-    case -6: u=_mm256_loadu_si256 ((__m256i*)(x+5*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+5*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-    case -7: u=_mm256_loadu_si256 ((__m256i*)(x+6*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+6*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-    case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
+    case -1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+    case -2: u=_mm256_loadu_si256 ((__m256i*)(x+1*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+1*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+    case -3: u=_mm256_loadu_si256 ((__m256i*)(x+2*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+2*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+    case -4: u=_mm256_loadu_si256 ((__m256i*)(x+3*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+3*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+    case -5: u=_mm256_loadu_si256 ((__m256i*)(x+4*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+4*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+    case -6: u=_mm256_loadu_si256 ((__m256i*)(x+5*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+5*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+    case -7: u=_mm256_loadu_si256 ((__m256i*)(x+6*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+6*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+    case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
     x+=8*NPAR; y+=8*NPAR;
     if(n2==1)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
 // obsolete     if(~_mm256_movemask_epi8(allmatches))goto fail;  // if searches are long, kick out when there is a miscompare
-     if(!_mm256_testc_si256(allmatches,ones))goto fail;  // if searches are long, kick out when there is a miscompare.  test is '!(all bits of allmatches =1)'
+     if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))goto fail;  // if searches are long, kick out when there is a miscompare.  test is '!(all bits of allmatches =1)'
     }while(--i>0);
     }
 oneloop:;
    }
    u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
-   b ^= _mm256_testc_si256(_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)),ones);  // no miscompares, switch failure value to success.  test 1=good
+   b ^= _mm256_testc_pd(_mm256_castsi256_pd(_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v))),ones);  // no miscompares, switch failure value to success.  test 1=good
 // obsolete    b ^= 0==~_mm256_movemask_epi8(_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)));  // no miscompares, switch failure value to success
 fail:
    *z++=b;  // store one result
@@ -146,7 +146,7 @@ I memcmpne(void *s, void *t, I l){
  I n=(l-1)>>LGSZI;  // number of Ds to process - cannot be 0
  __m256i u,v;
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
- __m256i ones=_mm256_cmpeq_epi8(endmask,endmask);
+ __m256d ones=_mm256_castsi256_pd(_mm256_cmpeq_epi8(endmask,endmask));
 
  UI n2=DUFFLPCT(n-1,3);  /* # turns through duff loop */
  if(n2>0){
@@ -155,23 +155,23 @@ I memcmpne(void *s, void *t, I l){
   x+=(backoff+1)*NPAR; y+=(backoff+1)*NPAR;
   switch(backoff){
   do{
-  case -1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-  case -2: u=_mm256_loadu_si256 ((__m256i*)(x+1*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+1*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-  case -3: u=_mm256_loadu_si256 ((__m256i*)(x+2*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+2*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-  case -4: u=_mm256_loadu_si256 ((__m256i*)(x+3*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+3*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-  case -5: u=_mm256_loadu_si256 ((__m256i*)(x+4*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+4*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-  case -6: u=_mm256_loadu_si256 ((__m256i*)(x+5*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+5*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-  case -7: u=_mm256_loadu_si256 ((__m256i*)(x+6*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+6*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
-  case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
+  case -1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+  case -2: u=_mm256_loadu_si256 ((__m256i*)(x+1*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+1*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+  case -3: u=_mm256_loadu_si256 ((__m256i*)(x+2*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+2*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+  case -4: u=_mm256_loadu_si256 ((__m256i*)(x+3*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+3*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+  case -5: u=_mm256_loadu_si256 ((__m256i*)(x+4*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+4*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+  case -6: u=_mm256_loadu_si256 ((__m256i*)(x+5*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+5*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+  case -7: u=_mm256_loadu_si256 ((__m256i*)(x+6*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+6*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
+  case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
   x+=8*NPAR; y+=8*NPAR;
 // obsolete   if(~_mm256_movemask_epi8(allmatches))R 1;
-   if(!_mm256_testc_si256(allmatches,ones))R 1;  // test is '!(all bits of allmatches=1)'
+   if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))R 1;  // test is '!(all bits of allmatches=1)'
   }while(--n2>0);
   }
  }
 
  u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
- R !_mm256_testc_si256(_mm256_cmpeq_epi8(u,v),ones);  // return 1 if any mismatch
+ R !_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones);  // return 1 if any mismatch
 // obsolete  R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
 }
 

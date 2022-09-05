@@ -123,22 +123,23 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
    if(an>NPAR){
     indexes0=_mm256_loadu_si256((__m256i*)av);   // fetch a block of indexes
     indexes0=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes0),_mm256_castsi256_pd(_mm256_add_epi64(indexes0,wstride)),_mm256_castsi256_pd(indexes0)));  // get indexes, add axis len if neg
-    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
     if(an>2*NPAR){
      indexes1=_mm256_loadu_si256((__m256i*)(av+NPAR));   // fetch a block of indexes
      indexes1=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes1),_mm256_castsi256_pd(_mm256_add_epi64(indexes1,wstride)),_mm256_castsi256_pd(indexes1)));  // get indexes, add axis len if neg
-     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes1,_mm256_sub_epi64(indexes1,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes1,_mm256_sub_epi64(indexes1,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
      if(an>3*NPAR){
       indexes2=_mm256_loadu_si256((__m256i*)(av+2*NPAR));   // fetch a block of indexes
       indexes2=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes2),_mm256_castsi256_pd(_mm256_add_epi64(indexes2,wstride)),_mm256_castsi256_pd(indexes2)));  // get indexes, add axis len if neg
-      ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes2,_mm256_sub_epi64(indexes2,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+      ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes2,_mm256_sub_epi64(indexes2,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
      }
     }
    }
    if(an<=4*NPAR){
     indexesn=_mm256_maskload_epi64(av+((an-1)&-NPAR),endmask);   // fetch last block of indexes
     indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
-    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
     // Now do the gather/writes
     if(an<=NPAR){
      do{_mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,indexesn,endmask,SZI)); v+=p; x+=an;}while(--i);
@@ -158,7 +159,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
    }else{
     indexesn=_mm256_loadu_si256((__m256i*)(av+3*NPAR));   // fetch last block of indexes
     indexesn=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesn),_mm256_castsi256_pd(_mm256_add_epi64(indexesn,wstride)),_mm256_castsi256_pd(indexesn)));  // get indexes, add axis len if neg
-    ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+    ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesn,_mm256_sub_epi64(indexesn,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
     do{
      // 17+indexes.  We must read the tail repeatedly
      // this first execution audits the indexes and converts negatives
@@ -174,17 +175,17 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
        __m256i indexesx=indexes;  // fetch a block of indexes
        indexes=_mm256_loadu_si256((__m256i*)avv); avv+=NPAR;  // fetch a block of indexes
        anynegindex=_mm256_or_si256(anynegindex,indexesx); indexesx=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexesx),_mm256_castsi256_pd(_mm256_add_epi64(indexesx,wstride)),_mm256_castsi256_pd(indexesx)));  // get indexes, add axis len if neg
-       ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesx,_mm256_sub_epi64(indexesx,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+       ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexesx,_mm256_sub_epi64(indexesx,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
        _mm256_storeu_si256((__m256i*)x, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,indexesx,ones,SZI)); x+=NPAR;
       )
       anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg
-      ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+      ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
       _mm256_storeu_si256((__m256i*)x, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,indexes,ones,SZI)); x+=NPAR;
      }
      // runout using mask
      indexes=_mm256_maskload_epi64(avv,endmask);  // fetch a block of indexes
      anynegindex=_mm256_or_si256(anynegindex,indexes); indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg.  unfetched indexes are 0
-     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+     ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
      _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),v,indexes,endmask,SZI)); x+=((an-1)&(NPAR-1))+1;   // must use a different reg for source and index, lest VS2013 create an illegal instruction
      v+=p;  // advance to next input cell
      --i;

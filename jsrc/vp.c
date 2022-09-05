@@ -49,8 +49,10 @@ A jtpind(J jt,I n,A w){A z;I j,*v;
  // handle remnant
  u=_mm256_maskload_epi64(pv,endmask); INDCHK
  // if there is an error, we can abort.  If we saw a negative, it may be an error (if it was near IMIN)
- ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(eacc))==0,EVINDEX);  // error if any index too high
- if(likely(_mm256_movemask_pd(_mm256_castsi256_pd(nacc))==0))R z;  // all indexes positive, keep input buffer
+// obsolete  ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(eacc))==0,EVINDEX);  // error if any index too high
+// obsolete   if(likely(_mm256_movemask_pd(_mm256_castsi256_pd(nacc))==0))R z;  // all indexes positive, keep input buffer
+ ASSERT(_mm256_testc_pd(_mm256_setzero_pd(),_mm256_castsi256_pd(eacc)),EVINDEX);  // error if any index too high
+ if(likely(_mm256_testc_pd(_mm256_setzero_pd(),_mm256_castsi256_pd(nacc))))R z;  // all indexes positive, keep input buffer
 #else
  // Make a quick scan to see if all are positive, as they usually are
  for(j=AN(z), v=IAV(z);j;--j)if((UI)*v++>=(UI)n)break;

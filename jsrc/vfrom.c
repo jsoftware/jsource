@@ -772,7 +772,91 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
    limitrow=-1;  // init no eligible row found
   }else limitrow=0;  // for Dpiv, init to none found
 #if 0
-  // process the column NPAR values at a time
+ I epcol=AR(qk)==3;  // flag if we are doing an extended-precision column fetch  scaf move out of loop, and into limitrow
+ __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);  // scaf move out of loop
+ __m256i rowstride=_mm256_set1_epi64x(n);  // number of Ds in a row of M, in each lane
+  // init for the column
+  __m256i endmask=_mm256_cmpeq_epi64(sgnbit,sgnbit); /* length mask for the last word */ 
+  __m256i indexes, rownums;  // row numbers and atom indexes for the rows we are fetching
+  I *bvgrd=bvgrd0; I i=-1; D bkold=inf, cold=1.0; I bkle0=1;
+  if(bv==0&&zv!=0){  // one-column mode: gather offsets address successive rows
+..
+  }
+  // create the column NPAR values at a time
+  do{
+   __m256i indexes;  // indexes for the rows we are fetching
+   __m256d dotproducth,dotproductl;  // where we build the column value
+   // get the validity mask for the gather and process: leave as ones until the end of the column
+   if(unlikely(bvgrde-bvgrd<NPAR))endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-(bvgrde-bvgrd)));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+   // if DIP/Dpiv, fetch the row#s of the next group to process, in bkg order
+   if(bv!=0||zv==0){
+..
+   }else{
+    rownums=_mm256_add_epi64(rownums,_mm256_sll_epi64(rowstride,LGNPAR));  // advance NPAR rows to next sequential values
+   }
+   indexes=_mm256_mul_epu32(rowstride,rownums);
+   // Now mv and indexes are set up to read the correct rows
+   // get the next NPAR values by dot-product with Av
+   if(colx<n){
+    // fetching from the Ek matrix itself.  Just fetch the values from the column
+    dotproducth=_mm256_setzero_pd(); dotproducth=_mm256_mask_i64gather_pd(qkvh,mv0+colx,indexes,endmask,SZI);
+    if(epcol){dotproductl=_mm256_setzero_pd(); dotproductl=_mm256_mask_i64gather_pd(qkvh,mv0+n*n+colx,indexes,endmask,SZI);}
+   }else{
+    // fetching from A.  Form Ek row . A column for each of the 4 rows
+    I an=axv[colx][1];  // number of sparse atoms in each row
+    D *vv=avv0+axv[colx][0];  // pointer to values for this section of A
+    I *iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
+    if(likely(!epcol)){
+     // single-precision accumulate
+     dotproducth=_mm256_setzero_pd();
+     I k;
+     NOUNROLL for(k=0;k<an;++k){
+      dotproductl=_mm256_setzero_pd(); dotproductl=_mm256_mask_i64gather_pd(qkvh,mv0+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
+      dotproducth=_mm256_fmadd_pd(dotproductl,_mm256_set1_pd(vv[k]),dotproducth);  // accumulate the dot-product
+     }
+    }else{
+     // extended-precision accumulate
+     __m256d th,tl,tl2,vval;  // temps for value loaded, and multiplier from A column
+     if(likely(an!=0){
+      // get column number to fetch; fetch 4 rows
+      th=_mm256_setzero_pd(); th=_mm256_mask_i64gather_pd(qkvh,mv0+iv[0],indexes,endmask,SZI);  // fetch from up to 4 rows
+      tl=_mm256_setzero_pd(); tl=_mm256_mask_i64gather_pd(qkvh,mv0+n*n+iv[0],indexes,endmask,SZI);  // fetch from up to 4 rows
+      vval=_mm256_set1_pd(vv[0]);  // load column value
+      // initialize the dotproduct with the first product
+      TWOPROD(th,vval,dotproducth,tl2)  // high qk * col
+      tl2=_mm256_fmadd_pd(tl,vval,tl2);  // low qk*col, and add in extension of prev product
+      TWOADD(dotproducth,tl2,dotproducth,dotproductl)  // combine high & low
+      I k;
+      for(k=1;k<an;++k){  // for each other element of the dot-product
+       // get column number to fetch; fetch 4 rows
+       th=_mm256_setzero_pd(); th=_mm256_mask_i64gather_pd(qkvh,mv0+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
+       tl=_mm256_setzero_pd(); tl=_mm256_mask_i64gather_pd(qkvh,mv0+n*n+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
+       vval=_mm256_set1_pd(vv[0]);  // load column value
+       // accumulate the dot-product
+       TWOPROD(th,vval,th,tl2)  // high qk * col
+       tl2=_mm256_fmadd_pd(tl,vval,tl2);  // low qk*col, and add in extension of prev product
+       TWOADD(dotproducth,th,dotproducth,vval) tl2=_mm256_add_pd(vval,tl2);  // add high parts & accum extension
+       TWOADD(dotproducth,tl2,dotproducth,dotproductl)  // combine high & extension for final form
+      }
+     }else{dotproducth=dotproductl=_mm256_setzero_pd();}  // no columns should not occur.  Just 1 shouldn't either
+    }
+   }
+   // process the NPAR generated values
+   if(bv==0&&zv!=0){
+    // one-column mode: just store out the values
+..
+   }else{
+    // DIP/Dpiv mode: process each value in turn.  Since 0 values are never pivots, we can stop when all remaining values are 0
+    indexes=rownums;  // repurpose indexes to hold the row-number we are working on
+    while(_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_EQ_OQ))!=0xf)){
+     dotprod=_mm256_permute4x64_pd(dotproducth,0b00000000);  // copy next value into all lanes
+     dotproducth=_mm256_permute4x64_pd(dotproducth,0b11111001); dotproducth=_mm256_blend_pd(dotproducth,_mm256_setzero_pd(),0b1000) // shift down one value for next time
+     i=_mm256_extract_epi64(indexes,0); indexes=_mm256_permute4x64_pd(indexes,0b11111001); // get the row number we are trying to swap out; shift row number down for next loop
+     PROCESSROWRATIOS
+    }
+   }
+  }
+  }while((bvgrd+=NPAR)<bvgrde);
 #else
 #define COLLPINIT I *bvgrd=bvgrd0; I i=-1; D *mv=mv0-n; D bkold=inf, cold=1.0; I bkle0=1;
 #define COLLP do{if(unlikely(zv!=0)){++i; mv+=n;}else{i=*bvgrd; mv=mv0+n*i;} // for each row, i is the row#, mv points to the beginning of the row of M.  If we take the whole col, take it in order for cache.  Prefetch next row?
@@ -970,7 +1054,7 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 //  rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // if the exclusion list is given, we stop on the first nonimproving pivot, and the exclusion list is used to prevent repetition of basis
 // If Frow is empty, we are looking for nonimproving pivots in rows where the selector is 0.  In that case the bkgrd puts the bk values in descending order.  We return the first column that will make more 0 B rows non0 than non0 B rows 0.
-// If bk is empty, we are counting the #places where c>=PivTol and accumulating into Dpiv under control of Dpivdir (-1=decr, 1=incr; init to 0 if neg)
+// If bk is empty, we are looking in bkgrd columns and counting the #places where c>=PivTol and accumulating into Dpiv under control of Dpivdir (-1=decr, 1=incr; init to 0 if neg)
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
 #if C_AVX2

@@ -217,6 +217,8 @@ op1 +/@:*"1!.0"rnk&:(perm&{"1) op2
 1e_15 > | 1e_10 - f (, 1 1e5+/i. 17) ;"0 1 ]1;2;''
 1e_15 > | 1e_10 - f (, 1 1e5+/i. 17) ;"0 1 ]2;2 2 2;''
 
+(+/@:*"1!.0)
+
 NB. Test for NaN
 'NaN error' -: 0 _ 1 (+/@:*"1!.0) etx _ 0 2   NB. in exact calculation, any infinity causes a NaN
 'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1

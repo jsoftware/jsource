@@ -14,11 +14,18 @@ struct Bd2 {I hdr[AKXR(0)/SZI]; D v[2];};
 #define CREBLOCKATOMV2(name,t,v1,v2) struct Bd2 __attribute__((aligned(CACHELINESIZE))) B##name={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1,v2}};
 CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
 #if SY_64
-#define CBAIVAL(t,v) {7*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0,(v)}
+#define CBAIVALM(t,v,m) {7*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,(v)}
 #else
-#define CBAIVAL(t,v) {8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0,0,(v)}
+#define CBAIVALM(t,v,m) {8*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,0,(v)}
 #endif
+#define CBAIVAL(t,v) CBAIVALM(t,v,0)
 #define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9-SY_64]=CBAIVAL(t,v);
+#define CREBLOCKATOMGMP(name,t,v,m) I __attribute__((aligned(CACHELINESIZE))) B##name[9-SY_64]=CBAIVALM(t,v,m);
+CREBLOCKATOMGMP(X0,LIT,0,0)  // X block representing GMP 0 - AN=1, AM=0, val=immaterial
+CREBLOCKATOMGMP(X1,LIT,1,1)  // X block representing GMP 1 - AN=1, AM=1, val=1
+struct Bxnum0 {I hdr[AKXR(0)/SZI]; X v[1];};
+#define CREBLOCKATOMXNUM(name,v) struct Bxnum0 __attribute__((aligned(CACHELINESIZE))) B##name={{AKXR(0),XNUM&TRAVERSIBLE,0,XNUM,ACPERMANENT,1,0},{(X)B##v}};
+CREBLOCKATOMXNUM(xnum1,X1)  // XNUM block for 1
 #define CREBLOCKVEC0(name,t) I __attribute__((aligned(CACHELINESIZE))) B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean

@@ -16,7 +16,7 @@ f =: 1:`({{
 }}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
 f i. 65
 
-NB. double precision
+NB. quad precision
 f =: 1:`({{
  epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
  epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
@@ -44,6 +44,50 @@ f =: 1:`({{
 
 f i. 65
 
+NB. (0;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 bk ------------------------
+NB. normal precision
+f =: 1:`({{
+ siz =. y  NB. size of bk
+ r =. 1 [ c =. ? >:siz  NB. size of modified area
+ pcx =. 00 + c ? siz  NB. indexes of mods
+ pivotcolnon0 =. r ?@$ 0 [ newrownon0 =. c ?@$ 0
+ relfuzz =. 1e_14 * ? 0  NB. tolerance
+ bk =. siz ?@$ 0
+ expbk=. (((<<pcx) { bk) ((~:!.relfuzz) * -) (c # pivotcolnon0) * newrownon0) (<<pcx)} prebk =. memu bk
+ bk =. (00;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 bk
+ if. -. r =. 1e_13 > >./ , | bk - expbk do. 13!:8]4 [ 'pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expbk__ prebk__ bk__' =: pcx;pivotcolnon0;newrownon0;relfuzz;expbk;prebk;bk end.
+ r 
+}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+f i. 65
+
+NB. quad precision
+f =: 1:`({{
+ epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
+ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
+ epsub =. (epadd -)
+ epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
+ epcanon =. (epadd   0 $~ $)
+ siz =. y  NB. size of Qk
+ r =. 1 [ c =. ? >:siz  NB. size of modified area
+ pcx =. 00 + c ? siz  NB. indexes of mods
+ pivotcolnon0 =.r ?@$ 0 [ newrownon0 =. c ?@$ 0
+ pivotcolnon0 =. (] {~ r ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + r ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
+ pivotcolnon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) pivotcolnon0  NB. append extended part
+ pivotcolnon0 =. 0. + pivotcolnon0  NB. force to float
+ newrownon0 =. (] {~ c ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + c ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
+ newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
+ newrownon0 =. 0. + newrownon0  NB. force to float
+ relfuzz =. 1e_25 * ? 0  NB. tolerance
+ bk =. (*  0.25 < 0 ?@$~ $) 1e6 * siz ?@$ 0.
+ bk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) bk  NB. append extended part
+ expbk=. (((<a:;pcx) { bk) (relfuzz epdefuzzsub) (c #"1 pivotcolnon0) epmul (newrownon0)) (<a:;pcx)} prebk=. memu bk
+ bk =. (00;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 bk
+ if. -. 1e_30 > >./ re =. , | (+/  expbk epsub bk) % (| +/ bk) >. (| +/ prebk) >. (| +/ expbk) do. 13!:8]4 [ 'r__ c__ re__ pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expbk__ prebk__ bk__' =: r;c;re;pcx;pivotcolnon0;newrownon0;relfuzz;expbk;prebk;bk end.
+ 1
+}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+
+f i. 65
+
 
 NB. 128!:9  g;i;v;M ---------------------------------------------------------
 {{)v
@@ -53,10 +97,18 @@ epsub =. (epadd -)
 epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
 epcanon =. (epadd   0 $~ $)
 M =. 0. + =/~ i. 6
-assert. 1 0 0 0 0 0 -: (128!:9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M
-assert. 0 0 1 0 0 0 -: (128!:9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M
-assert. 1 2 0 0 0 0 -: (128!:9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M
-assert. 0 0 1 2 0 3 -: (128!:9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M
+assert. 1 0 0 0 0 0 -: (128!:9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0
+assert. 0 0 1 0 0 0 -: (128!:9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0
+assert. 1 2 0 0 0 0 -: (128!:9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0
+assert. 0 0 1 2 0 3 -: (128!:9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M;0.0
+NB. clamping to threshold
+M =.|: _4 ]\ _1. 0 1 2  _1e_5 _2e_9 0 1e_9   0 0 0 0 0 0 0 0   NB. input by columns
+assert. _1. 0 1 2 -: (128!:9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.5
+assert. 0. 0 0 2 -: (128!:9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1.5
+assert. 0. 0 0 0 -: (128!:9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2.5
+assert. _1e_5 _2e_9 0 1e_9 -: (128!:9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_10
+assert. _1e_5 _2e_9 0 1e_9 -: (128!:9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_9
+assert. _1e_5 0 0 0 -: (128!:9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8
 NB. Test every different length.  Different size of M are not so important
 for_l. >:  i. 50 do.
   'r c' =. $M =. _0.5 + (2 # l+?20)?@$ 0
@@ -65,7 +117,7 @@ for_l. >:  i. 50 do.
     v =. l ?@$ 0  NB. vector values
     pad =. ? 20  NB. number of dummy columns to install
     ref =. (ix{"1 M) +/@:*"1 v
-    assert. 1e_10 > | ref - (128!:9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M
+    assert. 1e_10 > | ref - (128!:9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M;0.0
   end.
 end.
 NB. Repeat in quad precision
@@ -78,11 +130,12 @@ for_l. i. 51 do.
     v =. l ?@$ 0  NB. vector values
     pad =. ? 20  NB. number of dummy columns to install
     ref =. |: (,~ v) +/@:*"1!.1 ,.~/ ix{"1 M  NB. M values, small first, weighted by v
-    act =. (128!:9) tmp__   =: (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M
+    act =. (128!:9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M;0.0
     if. -. 1e_25 > >./ re=. | +/ ref epsub act do. 13!:8]4 [ 'r__ c__ re__ ix__ v__ ref__ act__ M__' =: r;c;re;ix;v;ref;act;M end.
   end.
 end.
 prtpms =. ([: 1: smoutput@[ smoutput@'' smoutput@])
+prtpms =. -:
 bk =. _2 1 3 1e_8
 M =. |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
 cons=.1e_11 1e_6 0.0 0 1. 1.0 _1 NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby prirow
@@ -135,7 +188,7 @@ bk=. 1e_1 1e_2 1 1
 bkg=.i.#M
 Frow=. _1 _1.1 _1.5 _2 0  NB. improvements are _1 _1.1 _3 _4
 assert. 3 0 0 4 4 0 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.5 0 1 1.0 _1;bk;Frow
-assert. 3 0 0 4 8 0 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.05 0 1 1.0 _1;bk;Frow
+assert. 3 0 0 4 4 0 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.05 0 1 1.0 _1;bk;Frow
 assert. 0 3 1 4 16 _0.02 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.005 0 1 1.0 _1;bk;Frow
 NB. unbounded
 M =. |: _3 ]\ 0. 0 0 1 1 1 0 0 0   NB. input by columns
@@ -235,9 +288,9 @@ M =. |: _3 ]\ 0. 0 0 1 1 1 0 0 0   NB. input by columns
 bk =. 1. 2 2  NB. the first row on each col is the pivot
 bkg=.i.#M
 Frow=. _1 _1.1 _1.5 0  NB. improvements
-assert. 4 0 mt3 128!:9 (bxr 0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
-assert. 4 2 mt3 128!:9 (bxr 1 2 0);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
-assert. 4 3 mt3 128!:9 (bxr 3 1 2);(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;bkg;cons;bk;Frow
+assert. 4 0 mt3&{. 128!:9 (bxr 0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 4 2 mt3&{. 128!:9 (bxr 1 2 0);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 4 3 mt3&{. 128!:9 (bxr 3 1 2);(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;bkg;cons;bk;Frow
 NB. stall
 bk =. 0. 0 0  NB. no improving pivots
 M =. |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns

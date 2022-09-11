@@ -116,7 +116,7 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
     x+=8*NPAR; y+=8*NPAR;
     if(n2==1)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
 // obsolete     if(~_mm256_movemask_epi8(allmatches))goto fail;  // if searches are long, kick out when there is a miscompare
-     if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))goto fail;  // if searches are long, kick out when there is a miscompare.  test is '!(all bits of allmatches =1)'
+     if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))goto fail;  // if searches are long, kick out when there is a miscompare.  test is '!(all sign bits of allmatches =1)'
     }while(--i>0);
     }
 oneloop:;
@@ -150,7 +150,7 @@ I memcmpne(void *s, void *t, I l){
 
  UI n2=DUFFLPCT(n-1,3);  /* # turns through duff loop */
  if(n2>0){
-  __m256i allmatches =ones; // accumuland for compares init to all 1
+  __m256i allmatches =_mm256_castpd_si256(ones); // accumuland for compares init to all 1
   UI backoff=DUFFBACKOFF(n-1,3);
   x+=(backoff+1)*NPAR; y+=(backoff+1)*NPAR;
   switch(backoff){
@@ -165,7 +165,7 @@ I memcmpne(void *s, void *t, I l){
   case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
   x+=8*NPAR; y+=8*NPAR;
 // obsolete   if(~_mm256_movemask_epi8(allmatches))R 1;
-   if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))R 1;  // test is '!(all bits of allmatches=1)'
+   if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))R 1;  // test is '!(all sign bits of allmatches=1)'
   }while(--n2>0);
   }
  }
@@ -272,7 +272,7 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
      x+=8*NPAR; y+=8*NPAR;
      if(n2==1)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
 // obsolete      if(0xf!=_mm256_movemask_pd(allmatches))goto fail;
-      if(!_mm256_testc_pd(allmatches,ones))goto fail;  // test is '!(all bits of allmatches=1)'
+      if(!_mm256_testc_pd(allmatches,ones))goto fail;  // test is '!(all sign bits of allmatches=1)'
      }while(--i>0);
      }
     }

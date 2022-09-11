@@ -725,7 +725,7 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
  if(unlikely(nc==0))R 0;  // abort with no action if no columns (possible only for DIP)
  if(bv!=0&&prirow>=0)zv=0;  // if we have DIP with a priority row, signal to process ALL rows in bk order.  It's not really needed but it ensures that if the prirow is tied for pivot in the first
                                // column, we will take it
- if(bv==0)thresh=_mm256_permute4x64_pd(thresh,0b00000000);  // for Dpiv, repurpose thresh to all thresholds
+ if(bv==0)thresh=_mm256_permute4x64_pd(thresh,0b00000000);  // for Dpiv or one-column, repurpose thresh to all thresholds
 
  // loop over all columns requested
  do{
@@ -871,8 +871,11 @@ static unsigned char jtmvmsparsex(J jt,void* const ctx,UI4 ti){
     oldcol=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_cmp_pd(dotproducth,thresh,_CMP_GT_OQ))));
    }else{
     // one-column mode: just store out the values
+    __m256d force0=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),thresh,_CMP_LT_OQ);  // 1s where we need to clamp
+    dotproducth=_mm256_blendv_pd(dotproducth,_mm256_setzero_pd(),force0);  // set values < threshold to +0
     if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv,dotproducth);else _mm256_maskstore_pd(zv,endmask,dotproducth);  // store, masking if needed
     if(limitrow==-3){
+     dotproductl=_mm256_blendv_pd(dotproductl,_mm256_setzero_pd(),force0);  // set values < threshold to +0
      if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv+n,dotproductl);else _mm256_maskstore_pd(zv+n,endmask,dotproductl);  // repeat for low part
     }
     zv+=NPAR;  // advance to next output location
@@ -1101,11 +1104,12 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 
 // 128!:9 matrix times sparse vector with optional early exit
 // product mode:
-//  y is ndx;Ax;Am;Av;(M, shape m,n)  where ndx is an atom
+//  y is ndx;Ax;Am;Av;(M, shape m,n);threshold  where ndx is an atom
 //  if ndx<m, the column is ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
-//   if M has rank 3 (with 2={.$M), do the product in extended precision
-//  Result for product mode (exitvec is scalar) is the product, one column of M
+//   if M has rank 3 (with 2={.$M), do the product in quad precision
+//  Result for product mode (exitvec is scalar) is the product, one column of M.  Values closer to 0 than the threshold are clamped to 0
 // DIP/Dpiv mode:
+// Only the high part of M is used if it is quad-precision
 // y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold/PivTol,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Virtx/Dpivdir);bk/'';Frow[;exclusion list/Dpiv;Yk]
 // Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
 //           rc,failing column of NTT, an element of ndx (if rc=4)
@@ -1154,7 +1158,7 @@ F1(jtmvmsparse){PROLOG(832);
  I n=AS(C(AAV(w)[4]))[1];  // n=#rows/cols in M
  // convert types as needed; set ?v=pointer to data area for ?
  D *bv; // pointer to b values if there are any
- __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
+ __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values   - for one-column mode, all lanes have the threshold for zero-clamp
  I bestcol=1LL<<(BW-1), bestcolrow=0;  // col# and row#+mask for best value found from previous column, init to no col found, and best value 'dangerous or not found'
 // obsolete 1LL<<(32+3);
  A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
@@ -1166,11 +1170,13 @@ F1(jtmvmsparse){PROLOG(832);
 
  if(AR(C(AAV(w)[0]))==0){
   // single index value.  set bv=0, zv non0 as a flag that we are storing the column
-  bv=0; ASSERT(AN(w)==5,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
+  bv=0; ASSERT(AN(w)==6,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
   if(unlikely(n==0)){R reshape(drop(num(-1),shape(C(AAV(w)[4]))),zeroionei(0));}   // empty M, each product is 0
+  ASSERT(AR(C(AAV(w)[5]))==0,EVRANK); ASSERT(AT(C(AAV(w)[5]))&FL,EVDOMAIN);  // thresh must be a float atom
   I epcol=AR(C(AAV(w)[4]))==3;  // flag if we are doing an extended-precision column fetch
   GATV(z,FL,n<<epcol,1+epcol,AS(C(AAV(w)[4]))); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
   bvgrd0=0; bvgrde=bvgrd0+n;  // length of column is #M
+  thresh=_mm256_set1_pd(DAV(C(AAV(w)[5]))[0]);  // load threshold in all lanes
  }else{
   // A list of index values.  We are doing the DIP calculation or Dpiv
   ASSERT(AR(C(AAV(w)[5]))==1,EVRANK); ASSERT(AN(C(AAV(w)[5]))==0||AT(C(AAV(w)[5]))&INT,EVDOMAIN); bvgrd0=IAV(C(AAV(w)[5])); bvgrde=bvgrd0+AN(C(AAV(w)[5]));  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
@@ -1180,6 +1186,7 @@ F1(jtmvmsparse){PROLOG(832);
   if(AN(C(AAV(w)[8]))==0)Frow=0;else{ASSERT(AT(C(AAV(w)[8]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[8]))==AS(C(AAV(w)[4]))[0]+AS(C(AAV(w)[1]))[0],EVLENGTH); Frow=DAV(C(AAV(w)[8]));}  // if Frow omitted we are looking to make bks nonzero
   ASSERT(AR(C(AAV(w)[6]))<=1,EVRANK); ASSERT(AT(C(AAV(w)[6]))&FL,EVDOMAIN); ASSERT(AN(C(AAV(w)[6]))==7,EVLENGTH);  // 7 float constants
   if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
+  DO(AN(C(AAV(w)[5])), ASSERT((UI)bvgrd0[i]<(UI)n,EVINDEX); )  // verify bv indexes in bounds if M not empty
   bkmin=DAV(C(AAV(w)[6]))[2];
   thresh=_mm256_set_pd(DAV(C(AAV(w)[6]))[1],bkmin,inf,DAV(C(AAV(w)[6]))[0]); nfreecolsd=(DAV(C(AAV(w)[6]))[3]); ncolsd=(DAV(C(AAV(w)[6]))[4]); impfac=DAV(C(AAV(w)[6]))[5]; prirow=(I)DAV(C(AAV(w)[6]))[6];
   ASSERT(AR(C(AAV(w)[7]))<=1,EVRANK);
@@ -1236,6 +1243,7 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndx
 #endif
 }
 
+#if C_AVX2
 // everything we need for one core's execution
 struct __attribute__((aligned(CACHELINESIZE))) ekctx {
  I taskmask;  // a bit for each task as we take it for work
@@ -1248,8 +1256,6 @@ struct __attribute__((aligned(CACHELINESIZE))) ekctx {
  A newrownon0;
  D relfuzz;
 } ;
-
-
 // the processing loop for one core.  We take a slice of the columns depending on our proc# in the threadpool
 // ti is the job#, not used except to detect error
 static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
@@ -1263,7 +1269,7 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
  __m256d mrelfuzz=_mm256_set1_pd(relfuzz);  // comparison tolerance
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  I dpflag=0;  // precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0
- D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I qksizesq=qksize*qksize; dpflag|=AR(qk)>2;  // pointer to qk data, length of a row, offset to low part if present
+ D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I t=AR(prx)+1; t=(t!=1)?qksize:t; I qksizesq=qksize*t; dpflag|=AR(qk)>AR(prx)+1;  // pointer to qk data, length of a row, offset to low part if present.  offset is qksize^2, or bksize
  UI rowx=0, rown=AN(prx); I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // current row, # rows, address of row indexes, column data
  UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
  // for each row
@@ -1352,28 +1358,33 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
 }
 
 // 128!:12  calculate
-// Qk=: (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0) (<prx;pcx)} Qk
+// Qk/bk=: (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0) (<prx;pcx)} Qk/bk
 // with high precision
 // a is prx;pcx;pivotcolnon0;newrownon0;relfuzz
-// w is Qk
-// If Qk has rank 3, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
-// Qk is modified in place
+// w is Qk or bk.  If bk, prx must be scalar 0
+// If Qk has rank > rank newrownon0 + rank prx, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
+// Qk/bk is modified in place
 F2(jtekupdate){F2PREFIP;
  ARGCHK2(a,w);
  // extract the inputs
- A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w),EVNONCE) ASSERT(BETWEENC(AR(w),2,3),EVRANK)
- ASSERT(AR(w)==2||AS(w)[0]==2, EVLENGTH) ASSERT(AS(w)[AR(w)-1]==AS(w)[AR(w)-2],EVLENGTH)
+ A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w),EVNONCE)
  ASSERT(AT(a)&BOX,EVDOMAIN) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==5,EVLENGTH)  // a is 5 boxes
- A prx=AAV(a)[0]; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)==1,EVRANK)  // prx is integer list
+ A prx=AAV(a)[0]; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)<=1,EVRANK)  // prx is integer list or atom
  A pcx=AAV(a)[1]; ASSERT(AT(pcx)&INT,EVDOMAIN) ASSERT(AR(pcx)==1,EVRANK)  // pcx is integer list
  A pivotcolnon0=AAV(a)[2]; ASSERT(AT(pivotcolnon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(pivotcolnon0),1,2),EVRANK)
  ASSERT(AR(pivotcolnon0)==1||AS(pivotcolnon0)[0]==2, EVLENGTH)  // pivotcolnon0 is float or extended list
  A newrownon0=AAV(a)[3]; ASSERT(AT(newrownon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(newrownon0),1,2),EVRANK)
- ASSERT(AR(newrownon0)==1||AS(newrownon0)[0]==2, EVLENGTH)  // newrownon0 is float or extended list
+ ASSERT(AR(newrownon0)==1||AS(newrownon0)[0]==2,EVLENGTH)  // newrownon0 is float or extended list
  A tmp=AAV(a)[4]; if(!(AT(tmp)&FL))RZ(tmp=cvt(FL,tmp)); ASSERT(AR(tmp)==0,EVRANK) D relfuzz=DAV(tmp)[0];  // relfuzz is a float atom
  // agreement
+ ASSERT(BETWEENC(AR(w),AR(prx)+1,AR(prx)+2),EVRANK)  // Qk is nxn; bk is n, treated as a single row.  Each may be quadprec
+ ASSERT(AR(w)==AR(prx)+1||AS(w)[0]==2,EVLENGTH)
+ if(AR(prx)!=0){ASSERT(AS(w)[AR(w)-1]==AS(w)[AR(w)-2],EVLENGTH) DO(AN(prx), ASSERT(IAV(prx)[i]<AS(w)[AR(w)-2],EVINDEX))} else{ASSERT(IAV(prx)[0]==0,EVINDEX)}  // Qk must be square; bk not; valid row indexes
  ASSERT(AN(prx)==AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) ASSERT(AN(pcx)==AS(newrownon0)[AR(newrownon0)-1],EVLENGTH)   // indexes and values must agree
+ // audit the indexes
+ DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes
  // do the work
+ 
 #define YC(n) .n=n,
 struct ekctx opctx={YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)};
 
@@ -1382,3 +1393,6 @@ struct ekctx opctx={YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz
 
  R qk;
 }
+#else
+F2(jtekupdate){ASSERT(0,EVNONCE);}
+#endif

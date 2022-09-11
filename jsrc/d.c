@@ -171,7 +171,7 @@ void jtdebdisp(J jt,DC d){A*x,y;I e,t;
  switch(t){
   case DCPARSE:  dhead(3,d); seeparse(d); if(NETX==jt->etxn)--jt->etxn; eputc(CLF); break;
   case DCCALL:   dhead(0,d); seecall(d);  eputc(CLF); break;
-  case DCSCRIPT: dhead(0,d); efmt("[-"FMTI"] ", d->dcn-1); 
+  case DCSCRIPT: dhead(0,d); efmt("[-"FMTI"] ", d->dcn);  // keep the line number as 1-origin since that's what editors do 
                  if(0<=d->dcm){READLOCK(JT(jt,startlock)) y=AAV(JT(jt,slist))[d->dcm]; ep(AN(y),CAV(y)); READUNLOCK(JT(jt,startlock))}
                  eputc(CLF); break;
 }}

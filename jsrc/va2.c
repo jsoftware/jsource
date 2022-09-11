@@ -794,10 +794,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
         ti * RESTRICT wv1=wv+dplen; wv1=j==1?wv:wv1; \
         oneprod2  \
         if(j>1){--j; _mm_storeu_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storeu_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100)); wv+=dplen; zv +=2;} \
-        else{*zv=_mm256_cvtsd_f64(acc000); *(zv+ndpi)=_mm256_cvtsd_f64(acc100);  zv+=1;} \
+        else{*(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc000),0x0); *(I*)(zv+ndpi)=_mm256_extract_epi64(_mm256_castpd_si256(acc100),0x0); /* AVX2 *zv=_mm256_cvtsd_f64(acc000); *(zv+ndpi)=_mm256_cvtsd_f64(acc100); */  zv+=1;} \
        }else{ \
         oneprod1  \
-        *zv=_mm256_cvtsd_f64(acc000); \
+        *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc000),0x0); /* AVX2 *zv=_mm256_cvtsd_f64(acc000); */ \
         zv+=1; \
        } \
        if(!--j)break; \
@@ -932,7 +932,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
  acc3=MUL_ACC(acc3,_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask)); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
  acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \
  acc0=_mm256_add_pd(acc0,_mm256_permute4x64_pd(acc0,0b11111110)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
- *zv=_mm256_cvtsd_f64(acc0); ++zv;
+ *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); /* AVX2 *zv=_mm256_cvtsd_f64(acc0); */ ++zv;
 #else
 #define ONEPRODD D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;
 #endif
@@ -1088,7 +1088,7 @@ DF2(jtsumattymes1){
       // the largest intermediate total encountered; sometimes we get a little more.
       c0=_mm256_add_pd(c0,_mm256_permute4x64_pd(c0,0b11111110)); acc1=_mm256_permute4x64_pd(acc0,0b11111110);  // c0: lo01+=lo23, acc1<-hi23
       TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1); // combine acc0 = hi0+2/1+3, c0 accumulates lo0+lo2+extension0, lo1+lo3+extension1 
-      c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // c0[0] has total of all loe parts, acc1=hi1+hi3
+      c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // c0[0] has total of all low parts, acc1=hi1+hi3
       TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1);    // acc0 has sum of all hi parts, c1 sum of all low parts+extensions
       if(fit==1){
        // normal result.  Just add the extensions into the hi part
@@ -1096,7 +1096,7 @@ DF2(jtsumattymes1){
       }else{
        // extended result.  We must preserve the extension bits in the total and write them out
        TWOSUM(acc0,c0,acc0,c1);  // extended total
-       zv[1]=_mm256_cvtsd_f64(c1);  // store it out
+       ((I*)zv)[1]=_mm256_extract_epi64(_mm256_castpd_si256(c1),0x0); /* AVX2 zv[1]=_mm256_cvtsd_f64(c1); */  // store it out
 
       }
 #else  // obsolete 
@@ -1109,7 +1109,7 @@ DF2(jtsumattymes1){
       acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));
       acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
 #endif
-      *zv=_mm256_cvtsd_f64(acc0); zv+=fit;  // store out high (perhaps only) part
+      ((I*)zv)[0]=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0);  /*  AVX2 *zv=_mm256_cvtsd_f64(acc0); */ zv+=fit;  // store out high (perhaps only) part
       if(!--j)break; av=av0;  // repeat a if needed
      }
     }

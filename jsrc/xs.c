@@ -43,6 +43,8 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 /* tso: echo to stdout                          */
 
 #define SEEKLEAK 0
+
+// handler for load command, 0!:0-112
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
@@ -159,6 +161,7 @@ F1(jtscriptnum){
  R rv;  // return prev value
 }
 
+// entry points for 0!:0-0!:112
 F1(jtscm00 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm00, DUMMYSELF); R r?line(w,-1L,0,0):linf(mark,w,0,0);}
 F1(jtscm01 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm01, DUMMYSELF); R r?line(w,-1L,0,1):linf(mark,w,0,1);}
 F1(jtscm10 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm10, DUMMYSELF); R r?line(w,-1L,1,0):linf(mark,w,1,0);}

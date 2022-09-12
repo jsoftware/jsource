@@ -138,7 +138,7 @@ prtpms =. ([: 1: smoutput@[ smoutput@'' smoutput@])
 prtpms =. -:
 bk =. _2 1 3 1e_8
 M =. |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-cons=.1e_11 1e_6 0.0 0 1. 1.0 _1 NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby prirow
+cons=. 1e_11 1e_6 0.0 0 1. 1.0 _1 NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby prirow
 Frow=. _4 _3 _2 _1. 0.
 bkg=.i.#M
 NB. Test DIP mode - on identity cols
@@ -281,7 +281,7 @@ delth''  NB. make sure we start with an empty system
 
 bk =. _2 1 3 1e_8
 M =. |: _4 ]\ 0. 1 2.9 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-cons=.1e_11 1e_6 0.0 0 1. 1.0 _1  NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby nvirt
+cons=. 1e_11 1e_6 0.0 0 1. 1.0 _1  NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby nvirt
 Frow=. _4 _3 _2 _1. 0.
 bkg=.i.#M
 NB. Test DIP mode - on identity cols

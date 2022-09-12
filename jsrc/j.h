@@ -532,7 +532,11 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 // NEW WAY
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
+#if defined(_WIN32)
 #define CSTACKSIZE      (SY_64?12009472:1015808)  // size we allocate in the calling function, aligned to 16k system page size
+#else
+#define CSTACKSIZE      (SY_64?7946240:1015808)  // OS default stack size 8MB, aligned to 16k system page size
+#endif
 #define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
 #else
 // OBSOLETE OLD WAY (with USECSTACK off)
@@ -2153,7 +2157,7 @@ extern JS gjt; // global for JPF (procs without jt)
 /* strchr fails for CE MIPS - neg chars - spellit fails in ws.c for f=.+.  */
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
-#if (defined(__arm__)||defined(__aarch64__)||defined(_M_ARM64)) && !defined(__MACH__)
+#if (defined(__arm__)||defined(__aarch64__)||defined(_M_ARM64)) && !defined(__APPLE__)
 // option -fsigned-char in android and raspberry
 #ifdef strchr
 #undef strchr

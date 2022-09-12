@@ -246,6 +246,30 @@ assert. '' prtpms 128!:9 (1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1 2 3;2.5 
 assert Dpiv prtpms 1 4 6 2 _1
 assert. '' prtpms 128!:9 (0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 3;2.5 0 0 0 0 0 _1;'';'';Dpiv  NB. sub
 
+NB. Quad-precision M
+bk =. _2 1 3 1e_8
+M =. 2 {. ,: |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
+cons=.1e_11 1e_6 0.0 0 1. 1.0 _1 NB. ColThr MinPivot #freepasses #improvements #amounttoimproveby prirow
+Frow=. _4 _3 _2 _1. 0.
+bkg=.i.4
+NB. Test DIP mode - on identity cols
+assert. 0 0 1 4 10 _4 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 13 _4 prtpms (128!:9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 13 _4 prtpms (128!:9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 1 3 1 1 4 0 prtpms (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. dangerous pivot
+bk =. 2 {. ,: bk  NB. Repeat with quad-prec bk
+assert. 0 0 1 4 10 _4 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 13 _4 prtpms (128!:9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 1 4 13 _4 prtpms (128!:9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 1 3 1 1 4 0 prtpms (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. dangerous pivot
+M=. 2 {. ,: |: _4 ]\ _1. 0 2 3  0 2 3 4  2 3 4 5  3 4 5 6    NB. quad-prec
+Dpiv=. (1+4) $ _1
+assert. '' prtpms 128!:9 (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2;1.0 0 0 0 0 0 0;'';'';Dpiv  NB. init
+assert Dpiv prtpms 1 2 3 _1 _1
+assert. '' prtpms 128!:9 (1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1 2 3;2.5 0 0 0 0 0 1;'';'';Dpiv  NB. add
+assert Dpiv prtpms 1 4 6 2 _1
+assert. '' prtpms 128!:9 (0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 3;2.5 0 0 0 0 0 _1;'';'';Dpiv  NB. sub
+
 NB. Repeat multithreaded
 bxr =. </.~  0 1 $~ $  NB. 2 threads
 mt3 =. -:&(3&{.)

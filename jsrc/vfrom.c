@@ -1250,7 +1250,7 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndx
 #if C_AVX2
 // everything we need for one core's execution
 struct __attribute__((aligned(CACHELINESIZE))) ekctx {
- I taskmask;  // a bit for each task as we take it for work
+ I rowsperthread;  // number of rows of prx for each thread to handle
  // the rest is moved into static names
  // arguments
  A qk;
@@ -1260,12 +1260,11 @@ struct __attribute__((aligned(CACHELINESIZE))) ekctx {
  A newrownon0;
  D relfuzz;
 } ;
-// the processing loop for one core.  We take a slice of the columns depending on our proc# in the threadpool
-// ti is the job#, not used except to detect error
+// the processing loop for one core.  We take groups of rows, in order
 static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(((struct ekctx*)ctx)->x) x=((struct ekctx*)ctx)->x;
- YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)
+ YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)
 #undef YC
 
  __m256d pcoldh, pcoldl=_mm256_setzero_pd();  // value from pivotcolnon0, multiplying one row
@@ -1274,10 +1273,11 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  I dpflag=0;  // precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0
  D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I t=AR(prx)+1; t=(t!=1)?qksize:t; I qksizesq=qksize*t; dpflag|=AR(qk)>AR(prx)+1;  // pointer to qk data, length of a row, offset to low part if present.  offset is qksize^2, or bksize
- UI rowx=0, rown=AN(prx); I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // current row, # rows, address of row indexes, column data
+ UI rowx=ti*rowsperthread, rown=AN(prx), slicen=rown; slicen=rown<rowx+rowsperthread?slicen:rowx+rowsperthread;   // current row, ending row+1 taken for the current task#
+ I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // address of row indexes, column data
  UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
  // for each row
- for(rowx=0;rowx<rown;++rowx){
+ for(;rowx<slicen;++rowx){
   // get the address of this row in Qk
   D *qkvrow=qkv+rowxv[rowx]*qksize;   // the row of Qk being modified
   // fetch the pivotcol value into all lanes
@@ -1373,13 +1373,14 @@ F2(jtekupdate){F2PREFIP;
  // extract the inputs
  A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w),EVNONCE)
  ASSERT(AT(a)&BOX,EVDOMAIN) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==5,EVLENGTH)  // a is 5 boxes
- A prx=AAV(a)[0]; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)<=1,EVRANK)  // prx is integer list or atom
- A pcx=AAV(a)[1]; ASSERT(AT(pcx)&INT,EVDOMAIN) ASSERT(AR(pcx)==1,EVRANK)  // pcx is integer list
- A pivotcolnon0=AAV(a)[2]; ASSERT(AT(pivotcolnon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(pivotcolnon0),1,2),EVRANK)
+ A box0=C(AAV(a)[0]), box1=C(AAV(a)[1]), box2=C(AAV(a)[2]), box3=C(AAV(a)[3]), box4=C(AAV(a)[4]);
+ A prx=box0; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)<=1,EVRANK)  // prx is integer list or atom
+ A pcx=box1; ASSERT(AT(pcx)&INT,EVDOMAIN) ASSERT(AR(pcx)==1,EVRANK)  // pcx is integer list
+ A pivotcolnon0=box2; ASSERT(AT(pivotcolnon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(pivotcolnon0),1,2),EVRANK)
  ASSERT(AR(pivotcolnon0)==1||AS(pivotcolnon0)[0]==2, EVLENGTH)  // pivotcolnon0 is float or extended list
- A newrownon0=AAV(a)[3]; ASSERT(AT(newrownon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(newrownon0),1,2),EVRANK)
+ A newrownon0=box3; ASSERT(AT(newrownon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(newrownon0),1,2),EVRANK)
  ASSERT(AR(newrownon0)==1||AS(newrownon0)[0]==2,EVLENGTH)  // newrownon0 is float or extended list
- A tmp=AAV(a)[4]; if(!(AT(tmp)&FL))RZ(tmp=cvt(FL,tmp)); ASSERT(AR(tmp)==0,EVRANK) D relfuzz=DAV(tmp)[0];  // relfuzz is a float atom
+ A tmp=box4; if(!(AT(tmp)&FL))RZ(tmp=cvt(FL,tmp)); ASSERT(AR(tmp)==0,EVRANK) D relfuzz=DAV(tmp)[0];  // relfuzz is a float atom
  // agreement
  ASSERT(BETWEENC(AR(w),AR(prx)+1,AR(prx)+2),EVRANK)  // Qk is nxn; bk is n, treated as a single row.  Each may be quadprec
  ASSERT(AR(w)==AR(prx)+1||AS(w)[0]==2,EVLENGTH)
@@ -1389,11 +1390,23 @@ F2(jtekupdate){F2PREFIP;
  DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes
  // do the work
  
-#define YC(n) .n=n,
-struct ekctx opctx={YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)};
+ // figure out how many threads to use, how many lines to take in each one
+#define TASKMINATOMS ((2*2000)/6)  // TUNE a cached atom takes 5 clocks to compute; an uncached one takes 20 (2022 Alder Lake).  We don't want to start a task with less than 2000 clocks, so insist on twice that many
+ I m=AN(prx), n=AN(pcx);  // # rows & columns to modify
+ I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
+ I rowsperthread=m;  // will be #rows each processor should take
+ if(((1-nthreads)&(TASKMINATOMS-m*n))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
+ else{
+  // big enough for multithreading.
+  rowsperthread=(m+nthreads-1)/nthreads;  // number of threads per processor, rounded up
+ }
 
+#define YC(n) .n=n,
+struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)};
 #undef YC
- jtekupdatex(jt,&opctx,0);
+
+ if(nthreads>1)jtjobrun(jt,jtekupdatex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+ else jtekupdatex(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
 
  R qk;
 }

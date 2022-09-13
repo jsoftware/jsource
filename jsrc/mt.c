@@ -123,6 +123,9 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
 void jfutex_waken(UI4 *p,UI4 n){jfutex_wakea(p);} //scaf/TUNE: should DO(n,jfutex_wake1(p)) depending on n and the #threads waiting on p
 #endif
 
+// remove wakeup to this thread; if wakeup in progress, wait till it finishes
+void clrfutexwt(J jt){sta(&jt->futexwt,0); while(lds(&JT(jt,wakeallct)))YIELD;}
+
 //values for mutex->v.  The upper 16 bits are a wait counter; the state is the low 16 bits, as follows
 //todo consider storing owner in the high bits of v
 enum{
@@ -152,8 +155,8 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
    //ulrich drepper 'futexes are tricky' explains the issue with storing a waiter count in the value
    //a couple of alternatives suggest themselves: store up to k waiters (FREE/LOCK/WAIT is really 0/1/n; we could do eg 0/1/2/3/n); store the waiter count somehow outside of the value
    // Before waiting, handle system events if present
-   UI4 waitval=m->v; C breakb;  // get the serial number before we check
-   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // if system lock requested, accept it
+   UI4 waitval=lda(&m->v); C breakb;  // get the serial number before we check.  Must be atomic; this is supposed to synchronise with writes to the same location via futexwt by wakeall
+   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);continue;}  // if system lock requested, accept it.  Then retry; a lot can happen during a systemlock, and we probably need to resample waitval anyway
    // the user may be requesting a BREAK interrupt for deadlock or other slow execution
    if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
    // Now wait for a change.  The futex_wait is atomic, and will wait only if the state is WAIT.  In that case,
@@ -167,10 +170,10 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
   }
   // come out of loop when we have the lock
-  sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;  // remove wakeup to this thread; if wakeup in progress, wait till it finishes
+  CLRFUTEXWT;
  }
  m->ct+=m->recursive;m->owner=self;R 0;  // install ownership info, good return
-fail:sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD; R r;}  // error return, with our internal errorcode
+fail:CLRFUTEXWT; R r;}  // error return, with our internal errorcode
 
 
 // return positive error code, 0 if got lock, -1 if lock timed out
@@ -181,18 +184,19 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
   struct jtimespec tgt=jtmtil(ns);
   sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
   while(xchga((US*)&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
-   UI4 waitval=m->v; C breakb;  // get the serial number before we check
-   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}
+   UI4 waitval=lda(&m->v); C breakb;  // get the serial number before we check.  Must be atomic; this is supposed to synchronise with writes to the same location via futexwt by wakeall
+   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);goto retime;}
    if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
    I i=jfutex_waitn(&m->v,waitval|WAIT,ns);
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
    if(i==-1){r=-1;goto fail;} //if the kernel says we timed out, trust it rather than doing another syscall to check the time
+retime:
    if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;} //update delta, abort if timed out
   }
-  sta(&jt->futexwt,0);  // remove wakeup to this thread
+  CLRFUTEXWT;  // remove wakeup to this thread
  }
  m->ct+=m->recursive;m->owner=self;R 0;  // install ownership info, good return
-fail:sta(&jt->futexwt,0);R r;}  // error return, with our internal errorcode or -1 if timeout
+fail:CLRFUTEXWT; R r;}  // error return, with our internal errorcode or -1 if timeout
 
 I jtpthread_mutex_trylock(jtpthread_mutex_t *m,I self){ //attempt to acquire m
  if(casa((US*)&m->v,&(US){FREE},LOCK)){m->ct+=m->recursive;m->owner=self;R 0;} //fastpath: attempt to acquire the lock; if free, take it
@@ -206,4 +210,23 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){ //release m
  m->owner=0;  // clear owner before releasing the lock
  if(unlikely(xchga((US*)&m->v,FREE)==WAIT))jfutex_wake1(&m->v);  // move to FREE state; if state was WAIT, wake up a waiter
  R 0;}
+
+// misc: sleep
+// attempt to sleep for ns ns, with proper handling of systemlock and jbreak.  Returns error code
+C jtjsleep(J jt,UI ns){
+ C r=0,breakb;
+ struct jtimespec tgt=jtmtil(ns);
+ UI4 ftx=0;
+ sta(&jt->futexwt,&ftx);
+ while(1){
+  UI4 waitval=lda(&ftx);
+  if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);goto retime;} //systemlock can take a long time
+  if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;break;}
+  I i=jfutex_waitn(&ftx,waitval|1,ns);
+  if(unlikely(i>0)){r=EVFACE;break;}
+  if(i==-1){r=0;break;} //timed out
+retime:
+  if(-1ull==(ns=jtmdif(tgt))){r=0;break;}}
+ CLRFUTEXWT;
+ R r;}
 #endif //PYXES

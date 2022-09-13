@@ -26,6 +26,8 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t*,UI ns,I self); //absolute ti
 I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure positive=error
 C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
 
+C jtjsleep(J jt,UI ns); //returns error
+
 #if defined(__linux__)
 #include <linux/futex.h>
 #include <sys/syscall.h>
@@ -72,3 +74,6 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 #error no futex support for your platform
 #endif //_WIN32
 #endif //PYXES
+
+// remove wakeup to this thread; if wakeup in progress, wait till it finishes
+#define CLRFUTEXWT {sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;}

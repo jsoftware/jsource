@@ -264,12 +264,16 @@ F1(jttsit1){R tsit2(num(1),w);}
 F1(jtdl){D m,n,*v;UINT ms,s;
  RZ(w=cvt(FL,w));
  n=0; v=DAV(w); DQ(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);
- s=(UINT)jfloor(n); ms=(UINT)jround(1000*(n-s));
+#if PYXES
+ C sr=jtjsleep(jt,(UI)jfloor(n*1e9));ASSERT(!sr,sr);
+#else
+ s=(I)jfloor(n); ms=(I)jround(1000*(n-s));
 #if SYS & SYS_MACINTOSH
  {I t=TickCount()+(I)(60*n); while(t>TickCount())JBREAK0;}
 #else
  DQ(s, sleepms(1000); JBREAK0;);
  sleepms(ms);
+#endif
 #endif
  R w;
 }

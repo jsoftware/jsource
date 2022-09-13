@@ -36,6 +36,7 @@
 static void* hjdll;
 static JST* jt;
 static JDoType jdo;
+static JInterruptType jinterrupt;
 static JFreeType jfree;
 static JgaType jga;
 static JGetLocaleType jgetlocale;
@@ -84,6 +85,11 @@ int jedo(char* sentence)
 	return jdo(jt,(C*)sentence);
 }
 
+void jeinterrupt()
+{
+ jinterrupt(jt);
+}
+
 A jegeta(I n, char* s){return jgeta(jt,n,(C*)s);}
 I jeseta(I n,char* name,I x,char* d){return jseta(jt,n,(C*)name,x,(C*)d);}
 void jefree(){jfree(jt);}
@@ -106,6 +112,7 @@ JST* jeload(void* callbacks)
  if(!jt) return 0;
  ((JSMType)GETPROCADDRESS(hjdll,"JSM"))(jt,callbacks);
  jdo=(JDoType)GETPROCADDRESS(hjdll,"JDo");
+ jinterrupt=(JInterruptType)GETPROCADDRESS(hjdll,"JInterrupt");
  jfree=(JFreeType)GETPROCADDRESS(hjdll,"JFree");
  jga=(JgaType)GETPROCADDRESS(hjdll,"Jga");
  jgetlocale=(JGetLocaleType)GETPROCADDRESS(hjdll,"JGetLocale");

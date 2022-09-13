@@ -26,6 +26,7 @@
 #include "jlib.h"
 
 static JDoType jdo;
+static JInterruptType jinterrupt;
 static JFreeType jfree;
 static JgaType jga;
 static JGetLocaleType jgetlocale;
@@ -33,8 +34,7 @@ static JGetLocaleType jgetlocale;
 static J jt;
 static void* hjdll;
 
-static char **adadbreak;
-static void sigint(int k){**adadbreak+=1;signal(SIGINT,sigint);}
+static void sigint(int k){jinterrupt(jt);}
 static char input[1000];
 
 // J calls for input (debug suspension and 1!:1[1) and we call for input
@@ -44,7 +44,7 @@ char* _stdcall Jinput(J jt,char* prompt)
 	if(!fgets(input, sizeof(input), stdin))
 	{
 		fputs("\n",stdout);
-		**adadbreak+=1;
+		jinterrupt(jt);
 	}
 	return input;
 }
@@ -144,10 +144,10 @@ int main(int argc, char* argv[])
 	if(!jt) return 1; // JE init failed
 	((JSMType)GETPROCADDRESS(hjdll,"JSM"))(jt,callbacks);
 	jdo=(JDoType)GETPROCADDRESS(hjdll,"JDo");
+	jinterrupt=(JInterruptType)GETPROCADDRESS(hjdll,"JInterrupt");
 	jfree=(JFreeType)GETPROCADDRESS(hjdll,"JFree");
 	jga=(JgaType)GETPROCADDRESS(hjdll,"Jga");
 	jgetlocale=(JGetLocaleType)GETPROCADDRESS(hjdll,"JGetLocale");
-	adadbreak=(char**)jt; // first address in jt is address of breakdata
 	signal(SIGINT,sigint);
 	while(1){jdo(jt,Jinput(jt,"   "));}
 	jfree(jt);

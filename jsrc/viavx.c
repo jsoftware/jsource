@@ -564,13 +564,15 @@ static __forceinline I fcmp0(D* a, D* w, I n){
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
 static __forceinline I icmpeq(I *x, I *y, I n, __m256i endmask) {
- __m256i u,v;
+ __m256i u,v; __m256d ones=_mm256_castsi256_pd(_mm256_cmpeq_epi64(endmask,endmask));
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  while(--i>=0){
-  u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); if(~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v)))R 1; x+=NPAR; y+=NPAR;
+// obsolete   u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); if(~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v)))R 1; x+=NPAR; y+=NPAR;
+  u=_mm256_loadu_si256((__m256i*)x); v=_mm256_loadu_si256((__m256i*)y); if(!_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones))R 1; x+=NPAR; y+=NPAR;  // abort on any nonequal
   }
  u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
- R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
+// obsolete  R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
+ R !_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones);  // no miscompares, compare equal (= 0 result)
 }
 #else
 #define COMPSETUP

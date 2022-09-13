@@ -61,10 +61,11 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
  __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax); \
  , \
- ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(_mm256_and_pd(u,absmask), thmax,comp))==0,err); \
+ ASSERTWR(_mm256_testc_pd(absmask,_mm256_cmp_pd(_mm256_and_pd(u,absmask), thmax,comp)),err); /* assert all bits 0 */ \
  u=sleeffn(u); \
  , \
  )}
+// obsolete  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(_mm256_and_pd(u,absmask), thmax,comp))==0,err);
 
 // Call SLEEF after checking limits, but calculate the value to use then
 #define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1, \
@@ -118,7 +119,8 @@ AHDR1(expD,D,D) {  AVXATOMLOOP(1,
 AHDR1(logD,D,D) {  AVXATOMLOOP(1,
  __m256d zero; zero=_mm256_setzero_pd();
  ,
- ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
+// obsolete  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
+ ASSERTWR(_mm256_testc_pd(zero,_mm256_cmp_pd(u, zero,_CMP_LT_OQ)),EWIMAG);  // assert compares all 0
  u=Sleef_logd4(u);
  ,
  R EVOK;
@@ -162,7 +164,8 @@ AHDR2(powDD,D,D,D) {D v;
       __m256d zero = _mm256_setzero_pd();
       __m256d vv = _mm256_broadcast_sd(&v);  // 4 copies of exponent  (2 if __SSE2__)
      ,
-      ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
+// obsolete       ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
+      ASSERTWR(_mm256_testc_pd(zero,_mm256_cmp_pd(u, zero,_CMP_LT_OQ)),EWIMAG);  // assert all compare bit 0
       u=Sleef_log2d4(u);
       u=_mm256_mul_pd(u,vv);
       u=Sleef_exp2d4(u);

@@ -407,8 +407,8 @@ static __emu_inline int _mm_testc_si128_REF( __m128i a, __m128i b)
     A = a;
     B = b;
 
-    return ( (A[0] & B[0]) == A[0] ) &&
-           ( (A[1] & B[1]) == A[1] ) ;
+    return ( ((~A[0]) & B[0]) == 0 ) &&
+           ( ((~A[1]) & B[1]) == 0 ) ;
 }
 
 /** \SSE45{Reference,_mm_testz_si128,ptest} */

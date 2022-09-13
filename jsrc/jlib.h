@@ -11,6 +11,7 @@ CDPROC JS _stdcall JInit(void);                         /* init instance */
 CDPROC void _stdcall JSM(JS jt, void*callbacks[]);  /* set callbacks */
 CDPROC void _stdcall JSMX(JS jt, void*, void*, void*, void*, I);
 CDPROC int _stdcall JDo(JS jt,C*);                  /* run sentence */
+CDPROC void _stdcall JInterrupt(JS jt);             /* signal interrupt */
 CDPROC C* _stdcall JGetLocale(JS jt);               /* get locale */
 CDPROC A _stdcall Jga(JS jt, I t, I n, I r, I*s);
 CDPROC int _stdcall JFree(JS jt);                   /* free instance */
@@ -23,6 +24,7 @@ CDPROC int _stdcall JErrorTextM(JS jt, I ec, I* p);
 
 typedef void* (_stdcall *JInitType)     ();
 typedef int   (_stdcall *JDoType)       (JS, C*);
+typedef void  (_stdcall *JInterruptType)(JS);
 typedef C*    (_stdcall *JGetLocaleType)(JS);
 typedef void  (_stdcall *JSMType)       (JS, void*);
 typedef void  (_stdcall *JSMXType)      (JS, void*, void*, void*, void*, I);

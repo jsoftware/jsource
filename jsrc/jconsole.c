@@ -29,9 +29,8 @@
 static int forceprmpt=0;   /* emit prompt even if isatty is false */
 static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
 static int norl=0;         /* disable readline/linenoise */
-static char **adadbreak;
-static void sigint(int k){**adadbreak+=1;signal(SIGINT,sigint);}
-static void sigint2(int k){**adadbreak+=1;}
+static void sigint(int k){jeinterrupt();signal(SIGINT,sigint);}
+static void sigint2(int k){jeinterrupt();}
 static char input[30000];
 
 #if defined(ANDROID) || defined(_WIN32)
@@ -155,7 +154,7 @@ char* Jinput_stdio(char* prompt)
 		if(!(forceprmpt||_isatty(_fileno(stdin)))) return "2!:55''";
 		fputs("\n",stdout);
 		fflush(stdout);
-		**adadbreak+=1;
+		jeinterrupt();
 #else
 		/* unix eof without readline */
 		return "2!:55''";
@@ -276,7 +275,6 @@ int main(int argc, char* argv[])
 
  jt=jeload(callbacks);
  if(!jt){char m[1000]; jefail(m); fputs(m,stderr); exit(1);}
- adadbreak=(char**)jt; // first address in jt is address of breakdata
 #ifndef _WIN32
  if(2==breadline){
   struct sigaction sa;

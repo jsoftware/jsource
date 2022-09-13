@@ -182,13 +182,13 @@ typedef struct pyxcondmutex{
  S pyxorigthread;  // thread number that is working on this pyx, or _1 if the value is available
  C errcode;  // 0 if no error, or error code
 #if PYXES
- UI4 state;//one of the below pyx states.  Monotonically increases
+ UI4 state;//one of the below pyx states
 #endif
 } PYXBLOK;
 enum{  // pyx state is low 2 bytes of state.  High 2 bytes are the wakeup sequence number
  PYXEMPTY=0, //the pyx is not filled in, and no one is waiting
- PYXWAIT=3,  //at least 1 thread is waiting, and the pyx is not filled in
- PYXFULL=1}; //the pyx is filled in.  We can OR FULL into pyx state to move to FULL state
+ PYXWAIT=3,  //at least 1 thread is waiting, and the pyx is not filled in.  We can OR WAIT into pyx state to move to WAIT state
+ PYXFULL=1}; //the pyx is filled in
 #if PYXES
 
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.  fa() the pyx to indicate that the thread has released the pyx
@@ -221,15 +221,15 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
 // EVTIME if timeout
 A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx); 
  if(PYXFULL==(state=lda((US*)&blok->state)))goto done; // if pyx already full, return result
- casa((US*)&blok->state,&(US){PYXEMPTY},PYXWAIT);  // if pyx is EMPTY, move it to WAIT
+ {US dummy=0;casa(state!=PYXEMPTY?&dummy:(US*)&blok->state,&(US){PYXEMPTY},PYXWAIT);}  // if pyx is EMPTY, move it to WAIT.  Avoid excess contention on hot pyxes
  UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait
  struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
  I err;
- sta(&jt->futexwt,&blok->state); // make sure systemlock knows how to wake us up.  We check for system events AFTER this store, but before the wait (but wakeall has a window so it is called repeatedly anyway)
+ sta(&jt->futexwt,&blok->state); // make sure systemlock knows how to wake us up.  We check for system events AFTER this store, but before the wait
  while(1){ // repeat till state goes to FULL
-  if(lda((US*)&blok->state)==PYXFULL)break; // if pyx was filled, exit and return its value
   // The wait may time out because of a pending system action (BREAK or system lock).  If so, we accept it now...
   UI4 state=lda(&blok->state); C breakb;  // get store sequence # before we check for system event
+  if(PYXFULL==(state&0xffff))break; // if pyx was filled, exit and return its value
   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // process systemlock and keep waiting
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){err=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
@@ -238,13 +238,12 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
    else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
   I wr=jfutex_waitn(&blok->state,state|PYXWAIT,ns);if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
  } 
- sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;   // wait till pending wakealls complete before we allow this block to be deleted
+ CLRFUTEXWT;   // wait till pending wakealls complete before we allow this block to be deleted
 done:  // pyx has been filled in.  jt->futexwt must be 0
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
  ASSERT(0,blok->errcode); // if error, return the error code
 fail:
- sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;
- ASSERT(0,err);}
+ CLRFUTEXWT;ASSERT(0,err);}
 
 // ************************************* Locks **************************************
 // take a readlock on *alock.  We come here only if a writelock was requested or running.  We have incremented the readlock

@@ -74,3 +74,6 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 #error no futex support for your platform
 #endif //_WIN32
 #endif //PYXES
+
+// remove wakeup to this thread; if wakeup in progress, wait till it finishes
+#define CLRFUTEXWT {sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;}

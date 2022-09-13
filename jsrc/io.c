@@ -33,6 +33,8 @@ jfe routines (jconsole.c):
 je routines (io.c):
  jdo(line)
 
+ jinterrupt() - signal interrupt in all threads.  Safe to call from signal handlers, and even from non-j threads, but shouldn't be called concurrently
+
  jsto(type,string) - JT(jt,smoutput)() to give jfe output
              
  jgets() - JT(jt,sminput)() callback to get jfe kb input
@@ -662,6 +664,15 @@ A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;
  ACINIT(z,ACUC1)  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
 }
+
+void _stdcall JInterrupt(JS jt){
+ SETJTJM(jt,jt,jm);
+ // increment adbreak by 1, capping at 2
+ C old=lda(jt->adbreak);
+ while(1){
+  if(old>=2)break;
+  if(casa(jt->adbreak,&old,1+old))break;}
+ wakeall(jm);}
 
 void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
 

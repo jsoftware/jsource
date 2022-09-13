@@ -135,6 +135,7 @@ fail:
 }
 // memcmpne: test for inequality, not caring about order, for exact inputs
 // We use AVX2 instructions always, so this might be a little slower for repeat matches on short inputs; but it avoids misbranches
+#if !EMU_AVX2
 I memcmpne(void *s, void *t, I l){
  if(unlikely(l==0))R 0; // loops require nonempty arrays - empties compare equal.  If there are no atoms we can't safely fetch anything from memory
  // If the first fetch miscompares, we can avoid the setup overhead.  This will be worthwhile on long compares, and not too
@@ -174,6 +175,7 @@ I memcmpne(void *s, void *t, I l){
  R !_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones);  // return 1 if any mismatch
 // obsolete  R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
 }
+#endif
 
 // memcmpnefl: test for inequality, not caring about order, for float inputs, possibly with tolerance
 // We use AVX2 instructions always, so this might be a little slower for repeat matches on short inputs; but it avoids misbranches

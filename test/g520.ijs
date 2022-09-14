@@ -280,13 +280,41 @@ assert Dpiv prtpms 1 4 6 2 _1
 assert. '' prtpms 128!:9 (0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 3;2.5 0 0 0 0 0 _1;'';'';Dpiv  NB. sub
 
 NB. Repeat multithreaded
-bxr =. </.~  0 1 $~ $  NB. 2 threads
+NB. obsolete bxr =. </.~  0 1 $~ $  NB. 2 threads
 mt3 =. -:&(3&{.)
 mt025 =. -:&(0 2 5&{)
 mt0125 =. -:&(0 1 2 5&{)
 delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 0 T. 0  NB. Allocate 1 worker thread
+
+bxr =. ]
+
+NB. Test every different length.  Different size of M are not so important but must be >100 to engage multithreading
+for_l. >:  i. 50 do.
+  'r c' =. $M =. _0.5 + (2 # 100+?20)?@$ 0
+  for_j. 100$0 do.
+    ix =. l ? c  NB. indexes
+    v =. l ?@$ 0  NB. vector values
+    pad =. ? 20  NB. number of dummy columns to install
+    ref =. (ix{"1 M) +/@:*"1 v
+    assert. 1e_10 > | ref - (128!:9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M;0.0
+  end.
+end.
+NB. Repeat in quad precision
+for_l. i. 51 do.
+  M =. (*  0.25 < 0 ?@$~ $)  _0.5 + (2 # 100+?20)?@$ 0  NB. random values of random sizes, with 25% 0s
+  M =. 0. + epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) M  NB. append extended part, force to float
+  'r2 r c' =. $M
+  for_j. 100$0 do.
+    ix =. 00 + l ? c  NB. indexes
+    v =. l ?@$ 0  NB. vector values
+    pad =. ? 20  NB. number of dummy columns to install
+    ref =. |: (,~ v) +/@:*"1!.1 ,.~/ ix{"1 M  NB. M values, small first, weighted by v
+    act =. (128!:9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M;0.0
+    if. -. 1e_25 > >./ re=. | +/ ref epsub act do. 13!:8]4 [ 'r__ c__ re__ ix__ v__ ref__ act__ M__' =: r;c;re;ix;v;ref;act;M end.
+  end.
+end.
 
 bk =. _2 1 3 1e_8
 M =. |: _4 ]\ 0. 1 2.9 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns

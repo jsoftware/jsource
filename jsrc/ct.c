@@ -543,7 +543,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
 // execute an internal job made up of n tasks.  f is the function to run, end is the function to call at end, ctx is parms to pass to each task
-// poolno is the threadpool to use
+// poolno is the threadpool to use.  Tasks are run on this thread and the worker threads
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread

@@ -710,7 +710,8 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
  D minimpfound=0.0;  // minimum (=best) improvement found so far from a non-dangerous pivot
  I ndotprods=0;  // number of dot-products we perform here
 
- UI *ndx0=IAV(AAV(ndxa)[0]), nc=AN(AAV(ndxa)[0]);  // origin of ordered column numbers, number of columns  scaf no boxing
+// obsolete  UI *ndx0=IAV(AAV(ndxa)[0]), nc=AN(AAV(ndxa)[0]);  // origin of ordered column numbers, number of columns  scaf no boxing
+ UI *ndx0=IAV(ndxa), nc=AN(ndxa);  // origin of ordered column numbers, number of columns
 
  D *mv0=DAV(qk);  // pointer to start of Qk
  I nfreecols=(I)(((struct mvmctx*)ctx)->nfreecolsd*nc); I ncols=(I)(((struct mvmctx*)ctx)->ncolsd*nc);  // the prefix and total fractions are fractions of the size & must be adjusted
@@ -1022,16 +1023,17 @@ F1(jtmvmsparse){PROLOG(832);
  ASSERT(AS(box2)[0]==AS(box3)[0],EVLENGTH);   // Am and Av
  ASSERT(AS(box4)[AR(box4)-2]==AS(box4)[AR(box4)-1],EVLENGTH);   // M is square
 
- // indexes must be an atom, a single list of integers, or a list of boxes containing integers
+ // indexes must be an atom or a single list of integers
  // we don't allow conversion so as to force the user to get it right, for speed
- A ndxa=box0; ASSERT(AT(ndxa)&BOX+INT,EVDOMAIN);
- if(likely(AT(ndxa)&BOX)){  // if list of boxes, ensure each holds a list of integers, possibly empty
-  I ncols=0;
-  DO(AN(ndxa), ASSERT(AN(AAV(ndxa)[i])==0||(AT(AAV(ndxa)[i])&INT),EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) ncols+=AN(AAV(ndxa)[i]); )
-  if(ncols==0)R num(6);  // if no cols (which happens at startup, return error indic)
- }
- if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box
- ASSERT(AN(ndxa)<=MAXTHREADSINPOOL+1,EVLIMIT)   // if we don't have a bit in trymask for each task, that's too many tasks
+ ASSERT(AT(box0)&INT,EVDOMAIN);
+// obsolete  if(likely(AT(ndxa)&BOX)){  // if list of boxes, ensure each holds a list of integers, possibly empty
+// obsolete   I ncols=0;
+// obsolete   DO(AN(ndxa), ASSERT(AN(AAV(ndxa)[i])==0||(AT(AAV(ndxa)[i])&INT),EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) ncols+=AN(AAV(ndxa)[i]); )
+// obsolete   if(ncols==0)R num(6);  // if no cols (which happens at startup, return error indic)
+// obsolete  }
+// obsolete  if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box
+// obsolete  if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box
+// obsolete  ASSERT(AN(ndxa)<=MAXTHREADSINPOOL+1,EVLIMIT)   // if we don't have a bit in trymask for each task, that's too many tasks
 // obsolete  ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
  // extract pointers to tables
  D minimp=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
@@ -1104,7 +1106,7 @@ F1(jtmvmsparse){PROLOG(832);
 
 
 #define YC(n) .n=n,
-struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
+struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=box0,YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
  YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=((I(*)[2])IAV(box1))-n,.amv0=IAV(box2),.avv0=DAV(box3),.qk=box4,
  .ndotprods=0,.ncolsproc=0,};
 #undef YC

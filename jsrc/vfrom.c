@@ -735,7 +735,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    I startx=ti*tn;  // starting offset for this thread
    zv+=startx;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
    rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(startx));  // index points to before the row#s
-   tn+=startx; tn=tn>n?n:tn; tn-=startx; tn=tn<0?0:tn; bvgrde=(I*)0+tn;  // make tn the endpoint; clamp to max; restore to len; clamp at 0; set bvgrde for length of section
+   tn+=startx; tn=tn>n?n:tn; tn-=startx; tn=tn<0?0:tn; bvgrde=bvgrd0+tn;  // make tn the endpoint; clamp to max; restore to len; clamp at 0; set bvgrde for length of section
    lastreservedcol=1;  // cause each thread to process the same one column
   }
  }

@@ -737,8 +737,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    // Virtual values were realized earlier, and usecounts guaranteed recursive
    // If the value is abandoned inplaceable, we can just zap it and set its usecount to 1
    // SPARSE nouns must never be inplaceable, because their components are not 
-// obsolete    _Static_assert(JTFINALASGNX==QCNOUNX,"bit divergence");
-// obsolete    if((SGNIF((I)jtinplace&valtype,QCNOUNX)&AC(w))<0){  // if final assignment of abandoned noun   scaf why noun?
    if((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w))<0){  // if final assignment of abandoned value
     // We can zap abandoned nouns.  But only if they are final assignment: something like nm:: [ nm=. 4+4 would free the active block if we zapped.
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.

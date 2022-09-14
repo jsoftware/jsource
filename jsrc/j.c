@@ -137,7 +137,6 @@ const char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jtype"/"jl
 
 F1(jtversq){
  char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p;
-// obsolete  C* q;
  ASSERTMTV(w);
  strcpy(m,jeversion+8);
  p= m+strlen(m)-20;
@@ -147,7 +146,6 @@ F1(jtversq){
  strncat(p,d+7,4);
  strcat(p,"-");
  d[3] = 0;
- // obsolete q= strstr(months,d);
  strncat(p,3 + strstr(months,d),2);
  strcat(p,"-");
  strncat(p,d + 4,2);

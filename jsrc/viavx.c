@@ -361,7 +361,6 @@ static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
 // Hash y, which is not a singleton.
 static UI jthiau(J jt,A y){I m,n;UI z;X*u,x;
  m=n=AN(y);
-// obsolete  UC*v=UAV(y);
  if(!n)R 0;
  switch(AT(y)){
  case INT:  R hici(n,AV(y));
@@ -567,11 +566,9 @@ static __forceinline I icmpeq(I *x, I *y, I n, __m256i endmask) {
  __m256i u,v; __m256d ones=_mm256_castsi256_pd(_mm256_cmpeq_epi64(endmask,endmask));
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  while(--i>=0){
-// obsolete   u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); if(~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v)))R 1; x+=NPAR; y+=NPAR;
   u=_mm256_loadu_si256((__m256i*)x); v=_mm256_loadu_si256((__m256i*)y); if(!_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones))R 1; x+=NPAR; y+=NPAR;  // abort on any nonequal
   }
  u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
-// obsolete  R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
  R !_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones);  // no miscompares, compare equal (= 0 result)
 }
 #else
@@ -666,7 +663,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // set dx to the 'other' interval from *v.
 #define SETXVAL  xval=_mm256_castpd256_pd128(_mm256_broadcast_sd((D*)v)); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UIL dx; /* obsolete x=*(D*)v;*/                                                                            \
+ {UIL dx;       \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
   SETXVAL \
   HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,asct==hj,fstmt0); il=hj; \
@@ -676,7 +673,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // we know that there will be a match in the first search, which simplifies that search.
 // For this routine expa MUST be an intolerant comparison
 #define TFINDY1T(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UIL dx; /* obsolete x=*(D*)v;*/                                                                             \
+ {UIL dx;      \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
   SETXVAL \
   FINDWR(TH,expa);  \
@@ -685,7 +682,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
  }
 // This version for nub/key.  We read first, and add to the table only if the value was not found
 #define TFINDY1TKEY(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UIL dx; /* obsolete x=*(D*)v;*/                                                                             \
+ {UIL dx;       \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; /* j=jx=main interval */ \
   SETXVAL \
   FINDRD(expw,jx,asct==hj,fstmt0); il=hj; /* read main interval */ \

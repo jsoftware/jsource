@@ -115,7 +115,6 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
     case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
     x+=8*NPAR; y+=8*NPAR;
     if(n2==1)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
-// obsolete     if(~_mm256_movemask_epi8(allmatches))goto fail;  // if searches are long, kick out when there is a miscompare
      if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))goto fail;  // if searches are long, kick out when there is a miscompare.  test is '!(all sign bits of allmatches =1)'
     }while(--i>0);
     }
@@ -123,7 +122,6 @@ oneloop:;
    }
    u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
    b ^= _mm256_testc_pd(_mm256_castsi256_pd(_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v))),ones);  // no miscompares, switch failure value to success.  test 1=good
-// obsolete    b ^= 0==~_mm256_movemask_epi8(_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)));  // no miscompares, switch failure value to success
 fail:
    *z++=b;  // store one result
    wv += k; av+= ka;  // advance w always, and a if original m was 1
@@ -164,7 +162,6 @@ I memcmpne(void *s, void *t, I l){
   case -7: u=_mm256_loadu_si256 ((__m256i*)(x+6*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+6*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
   case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi64(u,v));
   x+=8*NPAR; y+=8*NPAR;
-// obsolete   if(~_mm256_movemask_epi8(allmatches))R 1;
    if(!_mm256_testc_pd(_mm256_castsi256_pd(allmatches),ones))R 1;  // test is '!(all sign bits of allmatches=1)'
   }while(--n2>0);
   }
@@ -172,7 +169,6 @@ I memcmpne(void *s, void *t, I l){
 
  u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
  R !_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones);  // return 1 if any mismatch
-// obsolete  R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
 }
 
 // memcmpnefl: test for inequality, not caring about order, for float inputs, possibly with tolerance
@@ -204,13 +200,11 @@ I memcmpnefl(void *s, void *t, I l, J jt){
    case -7: u=_mm256_loadu_pd(x+6*NPAR); v=_mm256_loadu_pd(y+6*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
    case -8: u=_mm256_loadu_pd(x+7*NPAR); v=_mm256_loadu_pd(y+7*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
    x+=8*NPAR; y+=8*NPAR;
-// obsolete    if(0xf!=_mm256_movemask_pd(allmatches))R 1;
     if(!_mm256_testc_pd(allmatches,ones))R 1;  // test is '!(all bits of allmatches=1)'
    }while(--n2>0);
    }
   }
   u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
-// obsolete   R 0xf!=_mm256_movemask_pd(_mm256_cmp_pd(u,v,_CMP_EQ_OQ));  // no miscompares, compare equal
   R !_mm256_testc_pd(_mm256_cmp_pd(u,v,_CMP_EQ_OQ),ones);   // return 1 if any mismatch
  }
  UI i=(l-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
@@ -219,12 +213,10 @@ I memcmpnefl(void *s, void *t, I l, J jt){
  if(i){
   do{
    u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); x+=NPAR; y+=NPAR;
-// obsolete    if(0xf!=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ))))R 1;
    if(!_mm256_testc_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)),ones))R 1;
   }while(--i>0);
  }
  u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
-// obsolete  R 0xf!=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)));
  R !_mm256_testc_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)),ones);
 }
 
@@ -271,14 +263,12 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
      case -8: u=_mm256_loadu_pd(x+7*NPAR); v=_mm256_loadu_pd(y+7*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
      x+=8*NPAR; y+=8*NPAR;
      if(n2==1)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
-// obsolete      if(0xf!=_mm256_movemask_pd(allmatches))goto fail;
       if(!_mm256_testc_pd(allmatches,ones))goto fail;  // test is '!(all sign bits of allmatches=1)'
      }while(--i>0);
      }
     }
 oneloop:
     u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
-// obsolete     b ^= 0xf==_mm256_movemask_pd(_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)));  // no miscompares, compare equal
     b ^= _mm256_testc_pd(_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)),ones);  // no miscompares, switch failure value to success.  test 1=good
    }else{
     // tolerant comparison
@@ -287,12 +277,10 @@ oneloop:
      UI i = i0;  // inner loop size
      do{  // unfortunately it's probably not worth checking for lengths 5-8 & we will have a misbranch whenever length > 4
       u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); x+=NPAR; y+=NPAR;
-// obsolete       if(0xf!=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ))))goto fail;
       if(!_mm256_testc_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)),ones))goto fail;
      }while(--i>0);
     }
     u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
-// obsolete     b ^= 0xf==_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)));
     b ^= _mm256_testc_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)),ones);
    }
 

@@ -883,7 +883,7 @@ A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
 #if AUDITEXECRESULTS
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
-   if((np=QCWORD(np))!=0){if(unlikely(AC(np)<0)){printf("system error: contents not incorped\n");while(1);}racontents(np);}  // scaf remove for release // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.
+   if((np=QCWORD(np))!=0){/* obsolete if(unlikely(AC(np)<0)){printf("system error: contents not incorped\n");while(1);}*/racontents(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
@@ -977,7 +977,6 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
    // single-level indirect forms.  handle each block
    DQ(t&RAT?2*n:n, if(*v)if(AT(*v)&LIT){frgmp(*v);}else fr(*v); ++v;);
-// obsolete    DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
   }else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
    fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
    // for sparse, decrement the usecount

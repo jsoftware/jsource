@@ -579,7 +579,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-   ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&(EXECCTNOTDELD>>1)),"execct has gone < 0")  // scaf remove for release
+// obsolete    ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&(EXECCTNOTDELD>>1)),"execct has gone < 0")  //  remove for release
    DELEXECCT(g)  // say that the user doesn't want this locale any more.  Paths etc. still might.
   }
  }

@@ -516,7 +516,6 @@ int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstack
 } 
 
 C* _stdcall JGetR(JS jt){
-// obsolete SETJTJM(jt,jt,jm)
  jt=JorJJTOJ(jt);  // point to shared block
  R JT(jt,capture)?JT(jt,capture):(C*)"";
 }
@@ -899,7 +898,6 @@ C* esub(JS jt, I ec)
 
 int _stdcall JErrorTextM(JS jt, I ec, I* p)
 {
-// obsolete  SETJTJM(jt,jt,jm)
  jt=JorJJTOJ(jt);
  *p = (I)esub(jt, ec);
  return 0;

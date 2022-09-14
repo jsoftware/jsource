@@ -957,7 +957,6 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
 F1(jttou32){A z;I n,t,b=0,j; US* c2v; C4* c4v; I* v; UC* c1v;
  PROLOG(0000);
  ARGCHK1(w); n=AN(w); t=AT(w);
-// obsolete  wv=UAV(w);
  if(C4T&AT(w))RCA(w);  // if already C4T, return
  ASSERT(!n||(NUMERIC+JCHAR)&AT(w),EVDOMAIN);  // must be empty or unicode
  if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty list

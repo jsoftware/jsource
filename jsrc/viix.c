@@ -39,7 +39,6 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
  av=AV(a); wv=AV(w);
  p=av[0]; q=av[n-1]; ascend=p<=q; if(!ascend){x=p; p=q; q=x;}
  GATV0(t,INT,1+q-p,1); v=AV(t); tv=v-p;   // v->buffer; tv->virtual buffer origin, where p=0; vv->buffer end
-// obsolete vv=v+AN(t);
   // This could be recoded to allocate slots for <p and >q, but it would be better only if those cases were common
  if(ascend){u=av;     x=*u++; *v++=j=0; DQ(n-1, ++j; y=*u++; ASSERT(BETWEENC(y,x,q),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
  else      {u=av+n-1; x=*u--;      j=n; DQ(n-1, --j; y=*u--; ASSERT(BETWEENC(y,x,q),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}

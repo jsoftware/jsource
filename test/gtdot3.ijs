@@ -12,6 +12,9 @@ NB. delete all worker threads
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}
 delth''  NB. make sure we start with an empty system
 
+NB. leave us with y worker threads
+setth =: {{ while. t =. * y-1 T. '' do. '' T.~ t{0 0 55 end. 1 }} 
+
 N=: <: 1 { 8 T. ''  NB. max # worker threads
 N > 0
 N1=: <.@%: N
@@ -50,14 +53,16 @@ end.
 if. IF64 do.
 assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
 assert. 2 <: 1 T. ''
-nwthreads=. 1 T. ''
+NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores
+setth nwthreads=. <: 0 { 8 T. ''  NB. one worker thread per core, -1
 wthr nwthreads
-assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
+assert. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
 wthr nwthreads
 assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
 wthr nwthreads
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
 wthr nwthreads
+setth nwthreads=. N   NB. Back to testing many threads
 (nwthreads-1) = 1 T. '' [ 55 T. ''
 nwthreads = 1 T. '' [ 0 T. ''
 NB. Verify forcetask arg

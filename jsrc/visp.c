@@ -52,8 +52,6 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
 
 A jtiovsd(J jt,I mode,A a,A w){A ae,ax,ay,p,z;B h,*pv;I at,j,m,n,t,wt,*v,*yv;P*ap;
  ap=PAV(a); ax=SPA(ap,x); ay=SPA(ap,i);
-// obsolete A zz=0;
-// obsolete  if(!AN(ay))zz= indexofsub(mode,ravel(ax),w);// fails when length not 0  
  if(!AS(ay)[1])R indexofsub(mode,ravel(ax),w);// special case if no sparse axes: just like dense i.  
  m=AN(ax); n=AS(a)[0]; yv=AV(ay); ae=SPA(ap,e);
  at=DTYPE(AT(a)); wt=AT(w); if(h=HOMO(at,wt))t=maxtype(at,wt);
@@ -62,7 +60,6 @@ A jtiovsd(J jt,I mode,A a,A w){A ae,ax,ay,p,z;B h,*pv;I at,j,m,n,t,wt,*v,*yv;P*a
  RZ(z=mkwris(indexofsub(mode,ax,w))); v=AV(z);  // ensure z writable since we may modify it here
  RZ(p=eq(ae,w)); pv=BAV(p); 
  DO(AN(w), *v=pv[i]?j:m>*v?yv[*v]:n; ++v;);
-// obsolete if(zz&&!BAV(match(zz,z))[0])SEGFAULT;  // scaf
  R z;
 }    /* (sparse vector) i. dense */
 
@@ -152,8 +149,8 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
 
 A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,mm,n,r,*u,*v,wr;P*zp;
  ARGCHK2(a,w);
- ar=AR(a); // obsolete  ap=PAV(a);
- wr=AR(w); r=1+wr-ar; // obsolete wp=PAV(w);
+ ar=AR(a);
+ wr=AR(w); r=1+wr-ar; 
  RZ(ioresparse(aw,&a,&w));
  v=AS(a); n=*v++; mm=-1; DO(ar-1, mm=MAX(mm,v[i]););
  c=-1; RZ(iopart(a,ar-1,mm,&c,&ai,&aj,&ax));

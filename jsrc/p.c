@@ -550,11 +550,8 @@ rdglob: ;  // here when we tried the buckets and failed
         y=NAV(y)->cachedref; // use the cached address/flags, which has QCFAOWED semantics
         goto endname; // take its type, proceed.  We skip the FAOWED issues (FAOWED must be clear in the cached addr)
        }
-// obsolete        jt->parserstackframe.parsercurrtok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
-// obsolete        jt->parserstackframe.parseroridetok = (US)pt0ecam;  // syrd can fail, so we have to set the error-word number (before it is decremented) before calling
        y=syrdnobuckets(y);    // do full symbol lookup, knowing that we have checked for buckets already.  Error if not defined
        if(unlikely(y==0))goto undefname;
-// obsolete        jt->parserstackframe.parseroridetok = 0xffff;  // remove lookup override
       }
       // end of looking at local/global symbol tables.
       // y has QCGLOBAL semantics here, and has the type flags.  When we finish y must have QCFAOWED semantics, still with the type flags
@@ -592,7 +589,6 @@ rdglob: ;  // here when we tried the buckets and failed
 undefname:
        // undefined name, possibly because malformed (in which case error is already set).  If a_:, or special u v x. y. in an explicit definition etc, that's fatal; otherwise try creating a dummy ref to [: (to have a verb)
        if(pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX))&&(pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))||EXPLICITRUNNING)){jt->jerr=EVVALUE;FPS}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
-// obsolete        jt->parserstackframe.parseroridetok = 0xffff;  // remove lookup override  kludge - we should suppress calls to signal from lookup
        y=namerefacv(QCWORD(*(volatile A*)queue), 0);    // this will create a ref to undefined name as verb [:, including flags
        FPSZ(y)   // if syrd gave an error (malformed name), namerefacv will return 0 (via fdef).  This will have previously signaled an error, and we abort here
       }
@@ -655,12 +651,10 @@ endname: ;
     pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PLINESAVEX));   // clear all the flags we will use
     
     if(pmask){  // If all 0, nothing is dispatchable, go push next word after checking for (
-// obsolete      jt->parserstackframe.parsercurrtok = fsa[0].t;   // in order 4-0: 2 2 2 2 1
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
       jt->parserstackframe.parserstkend1=stack;    // Save the stackpointer in case there are calls to parse in the names we execute
-// obsolete      // Fill in the token# (in case of error) based on the line# we are running
      if(pmask&0x1F){  // if lines 0-4
       I fs1flag=FAV(fs1=pmask&2?fs1:fs)->flag;  // if line 1, fetch V0 flags; otherwise harmless refetch of fs flags.  If line 1 matches, line 0 cannot
       I fsflag=FAV(fs)->flag;  // fetch flags early - we always need them in lines 0-2
@@ -684,13 +678,10 @@ endname: ;
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
        // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
-// obsolete        if(((UI)(fsflag&(VJTFLGOK1<<(pmask>>2)))>(UI)PTISNOTASGNNAME(GETSTACK0PT)))if(likely(!notfinalexec)){A zval;   // inplaceable assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
        if(unlikely((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(notfinalexec<<NOTFINALEXECX)+(~fs1flag&VASGSAFE)))){A zval; 
           // The values on the left are good: function that understands inplacing.
           // The values on the right are bad, and all bits > the good bits.  They are: not assignment to name; something in the stack to the right of what we are about to execute;
           // ill-behaved function (may change locales).  The > means 'good and no bads', that is, inplaceable assignment
-// obsolete         if(pt0ecam&VASGSAFE&&(!(pmask&2)||FAV(QCWORD(stack[1].a))->flag&VASGSAFE)){  // if executing line 1, make sure stack[1] is also ASGSAFE
-// obsolete         if(pt0ecam&VASGSAFE){  // if the verb(s) allow execution-in-place for assignment...
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
         if(likely(GETSTACK0PT&PTASGNLOCAL)){L *s;
          // local assignment.  First check for primary symbol.  We expect this to succeed
@@ -704,7 +695,6 @@ endname: ;
         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
         pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
        }
-// obsolete        }
        AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[(pmask+1)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
        A arg2=stack[(pmask>>=1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)    pmask shifted right 1
@@ -725,7 +715,6 @@ endname: ;
               // tpopa/tpopw are:  monad: w fs  dyad: a w
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
        J jti=(J)((I)jt+(2*pmask)+1); jti=(pt0ecam&VJTFLGOK1)?jti:jt;  // pmask now means 'dyad execution'.  Set args as inplaceable if verb supports inplacing
-// obsolete        y=(*actionfn)((J)((I)jt+(REPSGN(SGNIF(pt0ecam,VJTFLGOK1X))&((pmask>>1)|1))),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
        y=(*actionfn)(jti,QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
          // use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  When we don't break we lose time waiting for jt->fs to settle, but very little
        // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
@@ -782,8 +771,6 @@ RECURSIVERESULTSCHECK
          }else{INCRSTAT(wpopnull/*0.65 local, 0.18 global*/) }
         }else{INCRSTAT(wnull/*.34*/)}
        }
-// obsolete if(statwfaowed!=statwfainh+statwfafa)SEGFAULT;
-// obsolete if(statwpop!=statwpopfa+statwpopnull)SEGFAULT;
        // repeat for a if any
        freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_RELAXED);
        freep=(A)QCWORD(tpopa); freep=ISSTKFAOWED(tpopa)?freep:(A)jt;
@@ -799,9 +786,6 @@ RECURSIVERESULTSCHECK
          }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
         }else{INCRSTAT(anull/*.25*/)}
        }
-// obsolete if(statafaowed!=statafainh+statafafa)SEGFAULT;
-// obsolete if(statapop!=statapopfa+statapopnull)SEGFAULT;
-// obsolete if(statwfaowed+statwpop+statwnull!=statafaowed+statapop+statanull)SEGFAULT;
        // repeat for fs, which we extract from the stack to get the FAOWED flag
        PSTK *fsa2=&stack[2-(pmask&1)];
        freep=fsa2->a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
@@ -810,7 +794,6 @@ RECURSIVERESULTSCHECK
        // close up the stack and store the result
        fsa2[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
        y=NEXTY;  // refetch next-word to save regs
-// obsolete        stack[((pmask&3)>>1)+1]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->1(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
        fsa2[0]=stack[pmask>>1];    // overwrite the verb with the previous cell - 0->1  1->2  2->2(NOP)  need 0->1     1->2 0->1    0->2  after relo  -1->0    0->1 -1->0   -2->0
        stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
@@ -840,7 +823,6 @@ RECURSIVERESULTSCHECK
        // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
        pmask>>=3; // 1 for adj, 2 for conj
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
-// obsolete        AF actionfn=FAV(fs)->valencefns[pmask-1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
        A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
        A arg3=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED); arg3=pmask&2?arg3:(A)jt;  // fs, if this is a conjunction, for FAOWED testing.  If not conj, set to jt which has FAOWED clear but allows reads.  Atomic to avoid branch
@@ -866,10 +848,8 @@ RECURSIVERESULTSCHECK
        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
        freep=stack[pmask+1].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-// obsolete        if(ISSTKFAOWED(arg1=stack[pmask+1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
        freep=arg3; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-// obsolete        if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
@@ -879,7 +859,6 @@ RECURSIVERESULTSCHECK
       // Here for lines 5-7 (fork/hook/assign), which branch to a canned routine
       // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
       // We avoid the indirect branch, which is very expensive
-// obsolete       jt->parserstackframe.parsercurrtok = stack[1].t;   // 1 for hook/fork/assign
       if(pmask&0b10000000){  // assign - can't be fork/hook
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
@@ -922,9 +901,6 @@ RECURSIVERESULTSCHECK
         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
         freep=stack[3].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-// obsolete         if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-// obsolete         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
-// obsolete         if(ISSTKFAOWED(arg1=stack[3].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faacv(arg1);}
         y=NEXTY;  // refetch next-word to save regs
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
@@ -944,9 +920,6 @@ RECURSIVERESULTSCHECK
         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
         freep=arg3; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-// obsolete         if(ISSTKFAOWED(arg1=stack[1].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-// obsolete         if(ISSTKFAOWED(arg1=stack[2].a)){arg1=QCWORD(arg1);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
-// obsolete         if(ISSTKFAOWED(arg3)){arg1=QCWORD(arg3);if(unlikely(arg1==yy))yy=SETSTKFAOWED(yy);else faowed(arg1);}
         y=NEXTY;  // refetch next-word to save regs
         PTFROMTYPE(stack[trident].pt,AT(QCWORD(yy))) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
@@ -1026,7 +999,6 @@ failparse:
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
    // overhead, because it happens enough to notice.
    // No ASSERT - must get to the end to pop stack
-// obsolete   jt->parserstackframe.parsercurrtok=1;  // error token if error found
    I at=AT(y = QCWORD(queue[0]));  // fetch the word
    if((at&NAME)!=0) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...

@@ -430,7 +430,6 @@ DF1(jtcompsum){
    TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1);    // combine 0123, combine all low parts
    acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
    *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); /* AVX2 *zv=_mm256_cvtsd_f64(acc0);*/ ++zv;  // store the single result
-// obsolete    _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0));
   }
  }else{
   // rank>1, going down columns to save bandwidth and add accuracy

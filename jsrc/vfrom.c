@@ -123,7 +123,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
    if(an>NPAR){
     indexes0=_mm256_loadu_si256((__m256i*)av);   // fetch a block of indexes
     indexes0=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes0),_mm256_castsi256_pd(_mm256_add_epi64(indexes0,wstride)),_mm256_castsi256_pd(indexes0)));  // get indexes, add axis len if neg
-// obsolete     ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
     ASSERT(_mm256_testc_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes0,_mm256_sub_epi64(indexes0,wstride))),_mm256_castsi256_pd(ones)),EVINDEX);  // positive, and negative if you subtract axis length
     if(an>2*NPAR){
      indexes1=_mm256_loadu_si256((__m256i*)(av+NPAR));   // fetch a block of indexes
@@ -668,18 +667,14 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  D minimp;
  I ncolsproc;  // number of columns processed
  I ndotprods;  // total # dotproducts evaluated
-// obsolete  I taskmask;  // a bit for each task as we take it for work
  UI nextcol;  // index of next column to process. Advanced by atomic operations
  // the rest is moved into static names
- A ndxa;   // the indexes, always a boxed list of arrays  scaf change to list of ndxs
-// obsolete  I nc; I *ndx; I *ndx0; I *ndxe;
+ A ndxa;   // the indexes, always a list of ndxs
  I n;  // #rows/cols in M
  D *bv;  // pointer to bk.  If 0, this is either a column extraction (if zv!=0) or a Dpiv operation (if zv=0)
                   // 0      1       2      3
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values
 // for Dpiv, thresh is 4 copies of ColThr
-// obsolete  __m256d oldcol;  // oldcol Frow   0      0            col value at previous smallest pivot / Frow of current col (always <=0)  0 0
-// obsolete  __m256d oldbk;   // oldbk  minimp 0      0            bk value at previous smallest pivot, best gain available in a previous col (always <=0) 0 0
  I bestcol; I bestcolrow;  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
  D *zv; D *Frow;  // pointer to output for product mode, Frow
  D nfreecolsd, ncolsd; D impfac;  // faction of cols to process before we insist on min improvement; min fraction of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
@@ -710,7 +705,6 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
  D minimpfound=0.0;  // minimum (=best) improvement found so far from a non-dangerous pivot
  I ndotprods=0;  // number of dot-products we perform here
 
-// obsolete  UI *ndx0=IAV(AAV(ndxa)[0]), nc=AN(AAV(ndxa)[0]);  // origin of ordered column numbers, number of columns  scaf no boxing
  UI *ndx0=IAV(ndxa), nc=AN(ndxa);  // origin of ordered column numbers, number of columns
 
  D *mv0=DAV(qk);  // pointer to start of Qk
@@ -777,7 +771,6 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
   }
   // init for the column
   __m256i endmask=_mm256_cmpeq_epi64(sgnbit,sgnbit); // mask for validity of next 4 words: used to control fetch from column and store into result row
-// obsolete   __m256i indexes;  // offset in atoms from Qk to the beginning of the row we are fetching = rownums*n
   I *bvgrd;
   // create the column NPAR values at a time
   for(bvgrd=bvgrd0;bvgrd<bvgrde;bvgrd+=NPAR){
@@ -948,7 +941,7 @@ abortcol:  // here if column aborted early, possibly on insufficient gain
   }
   ++ncolsprocd;  // incr # cols we did
  }  // end of loop over columns
-// obsoletewhile(++ndx!=ndxe);  // end loop over columns
+
  if(bv==0)R 0;  // if Dpiv or single column, ctx is unused for return
  // operation complete; transfer results back to ctx.  To reduce stores we jam the col/row together
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
@@ -972,7 +965,7 @@ return2:  // here we found a nonimproving pivot.  Save it, possibly overwriting 
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
  ((struct mvmctx*)ctx)->minimp=1.0;  // flag that we found a nonimproving pivot
  ((struct mvmctx*)ctx)->bestcolandrow[0]=(bestcol<<32)|(UI4)bestcolrow;  // the pivot we found
- R 0;  // scaf
+ R 0;
 return4:  // we have a preemptive result.  store it in abortcolandrow, and set minimp =-inf to cut off all threads
  // the possibilities are unbounded and pivoting out a virtual.  We indicate unbounded by row=-1.  We may overstore another thread's result; that's OK
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
@@ -1026,15 +1019,6 @@ F1(jtmvmsparse){PROLOG(832);
  // indexes must be an atom or a single list of integers
  // we don't allow conversion so as to force the user to get it right, for speed
  ASSERT(AT(box0)&INT,EVDOMAIN);
-// obsolete  if(likely(AT(ndxa)&BOX)){  // if list of boxes, ensure each holds a list of integers, possibly empty
-// obsolete   I ncols=0;
-// obsolete   DO(AN(ndxa), ASSERT(AN(AAV(ndxa)[i])==0||(AT(AAV(ndxa)[i])&INT),EVDOMAIN)  ASSERT(AR(AAV(ndxa)[i])<=1,EVDOMAIN) ncols+=AN(AAV(ndxa)[i]); )
-// obsolete   if(ncols==0)R num(6);  // if no cols (which happens at startup, return error indic)
-// obsolete  }
-// obsolete  if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box
-// obsolete  if(unlikely(AT(ndxa)&INT)){A t; GAT0(t,BOX,1,0) AAV0(t)[0]=ndxa; ndxa=t;} // if ndxa is integer list, make it a list of one box
-// obsolete  ASSERT(AN(ndxa)<=MAXTHREADSINPOOL+1,EVLIMIT)   // if we don't have a bit in trymask for each task, that's too many tasks
-// obsolete  ASSERT(AN(ndxa)!=0,EVLENGTH); if(!(AT(ndxa)&INT))RZ(ndxa=cvt(INT,ndxa));
  // extract pointers to tables
  D minimp=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
 
@@ -1043,7 +1027,6 @@ F1(jtmvmsparse){PROLOG(832);
  D *bv; // pointer to b values if there are any
  __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values   - for one-column mode, all lanes have the threshold for zero-clamp
  I bestcol=1LL<<(BW-1), bestcolrow=0;  // col# and row#+mask for best value found from previous column, init to no col found, and best value 'dangerous or not found'
-// obsolete 1LL<<(32+3);
  A z; D *zv; D *Frow;  // pointer to output for product mode, Frow
  D nfreecolsd, ncolsd; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
  I prirow;  // row to get priority (virtual), or flag to Dpiv

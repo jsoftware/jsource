@@ -907,7 +907,6 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
 
 static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,*zv;
  p=1<ac?m:0; q=1<wc||1<c;
-// obsolete  zn=AN(z); 
  zv=AV(z); zb=(B*)zv; u=AV(a); v=AV(w); 
  switch(CTTZ(AT(a))){
   default:                SCDO(C, *wv,x!=av[j]      ); break;

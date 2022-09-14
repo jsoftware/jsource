@@ -535,7 +535,8 @@ typedef I SI;
 #define ACSETPERM(x)    {AC(x)=ACPERMANENT+100000; __atomic_fetch_or(&AFLAG(x),(AT(x)&RECURSIBLE),__ATOMIC_ACQ_REL);}  // Make a block permanent from now on.  In case other threads have committed to changing the usecount, make it permanent with a margin of safety
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)<0)&&jt->zombieval==w)  // OK to inplace ordinary operation  scaf could improve?
+// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)<0)&&jt->zombieval==w)  // OK to inplace ordinary operation  scaf could improve?
+#define ASGNINPLACESGN(s,w)  (((s)&(AC(w)|SGNIF(jt->zombieval==w,0)))<0)   // OK to inplace ordinary operation
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
@@ -982,7 +983,6 @@ typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
  union {
   // start with the larger localuse, which requires a second cacheline.  This is 16 bytes, the first 8 of which are in the excess (first) cacheline
-// obsolete   I4 clr[4];   // used to init to 0 - extends the union for 32-bit
   struct {AF func; I parm;} boxcut0;  // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, .parm is ~0 for first, 0 for second, and .func points to failover routine (seldom used).  func in first cacheline
   S srank[4];   // for RANK conj, the signed ranks
   // the rest do not require both cachelines in 64-bit
@@ -1214,7 +1214,6 @@ typedef struct {
   PSTK* parserstkbgn;     // &start of parser stack
   PSTK* parserstkend1;    // &end+1 of parser stack
   A    sf;   // $: stack in the parser (other users of $: have their own stacks)
-// obsolete  US   parsercurrtok;   // the token number of the word to flag if there is an error
   US   parseroridetok;  // inited to -1; set to the failing token number+1 to override looking at the exec stack. 0 for no error-line flag.  This is done when pee is detected
                      // or preemptively for calls to syrd which can fail (kludge)
   US   filler[2];

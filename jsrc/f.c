@@ -162,7 +162,6 @@ static void sbtou8(J jt,SBU*u,C*s){
 static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SBU*u;
  PROLOG(0000);
  n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w);
-// obsolete q=AM(JT(jt,sbu));
  if(1>=r){
   c=n; 
   RZ(d=apvwr(c,0L,0L)); dv=AV(d);

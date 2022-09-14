@@ -306,7 +306,6 @@ F2(jtexpand){A z;B*av;C*wv,*zv;I an,i,k,p,wc,wk,wt,zn;
  RZ(w=setfv(w,w)); 
  if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w
  av=BAV(a); an=AN(a);
-// obsolete  au=(I*)av;
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once
  wv=CAV(w); PROD(wc,AR(w)-1,AS(w)+1) wt=AT(w); k=bpnoun(wt); wk=k*wc;  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
  DPMULDE(an,wc,zn);

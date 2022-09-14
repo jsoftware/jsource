@@ -7,10 +7,6 @@
 
 
 static I jtfdepger(J jt,A w){R 0;
-// obsolete A*wv;I d=0,k; 
-// obsolete wv=AAV(w);  
-// obsolete  DO(AN(w), k=fdep(fx(C(wv[i]))); d=MAX(d,k);); 
-// obsolete R d;
 }
 
 #if !USECSTACK
@@ -57,7 +53,6 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
  AN(z)=0xdeadbeef;  // AN field of function is used for actual rank
  if(fs)INCORPRA(fs); if(gs)INCORPRA(gs); if(hs)INCORPRA(hs);   // indicate fgh are about to be incorporated, and raise
  memset(&v->localuse,0,sizeof(v->localuse));
-// obsolete  v->localuse.clr[0]=v->localuse.clr[1]=v->localuse.clr[2]=v->localuse.clr[3]=0;  // clear the private field
  v->valencefns[0]    =f1?f1:jtdomainerr1;  /* monad C function */
  v->valencefns[1]    =f2?f2:jtdomainerr2;  /* dyad  C function */
  v->fgh[0]     =fs;                  /* monad            */

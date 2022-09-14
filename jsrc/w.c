@@ -58,7 +58,6 @@ static const ST state[SDDD+1][16]={
 // If there are mismatched quotes, AM(z) is set to -1 and the number of valid tokens is in AS(z)[0]
 F1(jtwordil){A z;I s,i,m,n,*x;UC*v;
  ARGCHK1(w);  // if no string, could be empty line from keyboard; return null A in that case
-// obsolete nv=0;    // set not creating numeric constant
  n=AN(w); v=UAV(w); GATV0(z,INT,n+n,3); x=AV(z); AS(z)[1]=2; AS(z)[2]=1;  // get count of characters n and address v; turn into suitable shape for ;.0 (x 2 1)
   // allocate absolute worst-case output area (each char is 1 word); point x to output indexes
  s=SE(SS,0);
@@ -275,10 +274,10 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 #define ZVA5                {*zv++=i; *zv++=j; *zv++=r; *zv++=c; *zv++=v[0]; *zv++=v[1];}
 
 #define FSMF(dcls,T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
- {/* obsolete T*u,*uu;*/                                                                  \
+ {       \
   RZ(z=exta((zt),(zr),(zm),(f|4)==5?n+4*f:n/3));                              \
   if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCISH(1+s,1+AS(w0),wr-1);}  \
-  zv=AV(z); dcls /* obsolete u=(T*)zv; uu=u+AN(z);*/                                           \
+  zv=AV(z); dcls         \
   for(;i<n;++i,r=*v){c=(cexp); v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
   if(6!=e){                                                                 \
    if(0<=d)         {c=d;      v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
@@ -361,7 +360,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  if(chka)RZ(a=fsmvfya(a)); 
  av=AAV(a); 
  f=i0(C(av[0])); s=C(av[1]); m=C(av[2]); ijrd=AV(C(av[3]));
- n=AN(w); v=AS(s); // obsolete p=v[0];
+ n=AN(w); v=AS(s);
  q=v[1];
  ASSERT((UI)ijrd[0]<(UI)n,EVINDEX);
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // b=w is atom/list, either literal or empty; c is # columns mapped to input through m

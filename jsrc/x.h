@@ -4,8 +4,6 @@
 /* Xenos: Macros and Defined Constants for !:                              */
 
 
-// obsolete #define XCC             127
-// obsolete #define XC(m,n)         (n+XCC*m)
 
 /* adding suffix _O to avoid possible name conflict with fcntl.h */
 #define FAPPEND_O         "ab"

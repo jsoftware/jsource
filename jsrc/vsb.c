@@ -359,7 +359,6 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h;UC*us=
 
  // lock the table while we are reading from it, unless we already have a lock
  if(!(test&2))READLOCK(JT(jt,sblock)); 
-// obsolete  hn=AN(HASHTABLE);                        /* size of hash table           */
  hi=INITHASH(h);                               /* index into hash table        */
  while(1){   // loop till empty hash slot or match
   ui=IAV1(HASHTABLE)[hi];                    /* index into unique symbols    */
@@ -674,7 +673,6 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  ASSERTD(INT&AT(sna),"sn integer");
  sn=AV(sna)[0];
  ASSERTD(0<=sn,"sn non-negative");
-// obsolete  sv=CAV(s);
  un=AS(u)[0]; uv=(SBU*)AV(u);
  ASSERTD(4==AR(u),"u matrix");
  ASSERTD(INT&AT(u),"u integer");
@@ -687,7 +685,6 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
   c2=v->flag&SBC2+SBC4;
   vi=v->i;
   vn=v->n;
- // obsolete  vc=(UC*)(sv+vi);
   ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
   ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
   ASSERTD(BETWEENC(vi,0,sn),"u index");
@@ -748,7 +745,6 @@ static F1(jtsbsetdata2){A *wv;I c,i,offset=0;SBU*uv,*v;C*sv;
  RZ(sbcheck2(C(wv[0]),C(wv[1]),C(wv[2]),C(wv[3])));
  c=AV(C(wv[0]))[0];                         // cardinality
  if(1<AN(C(wv[0])))offset=AV(C(wv[0]))[1];// offset
-// obsolete  sn=AV(C(wv[1]))[0];                        // string length
  uv=(SBU*)AV(C(wv[2]));                   // table of symbols
  sv=CAV(C(wv[3]));                        // global string table
  if(!offset)resetdata(jt);

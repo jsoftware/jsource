@@ -58,7 +58,6 @@ AHDR1(sqrtD,D,D){
   u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg);  // store sqrt, with sign of the original value
 
  ,
-// obsolete  R (_mm256_movemask_pd(anyneg)&0xf)?EWIMAG:EVOK;  // if there are any negative values, call for a postpass
  R (!_mm256_testc_pd(zero,anyneg))?EWIMAG:EVOK;  // if there are any negative values, call for a postpass
  )
 }

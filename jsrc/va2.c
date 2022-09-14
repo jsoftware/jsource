@@ -1044,11 +1044,7 @@ DF2(jtsumattymes1){
   // here for +/@:*"1!.[01], double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;
 #if (C_AVX2&&SY_64) || EMU_AVX2
-#if 1  // higher precision.  Required when a large product is added to a small total.  Dependency loop for acc is 4 clocks; for c is 4 clocks.  Total 12 insts, so unrolled 2 would do
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) TWOSUM(acc##n,h,acc##n,q) c##n=_mm256_add_pd(_mm256_add_pd(q,y),c##n);
-#else  // obsolete 
-#define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) c##n=_mm256_add_pd(y,c##n); KAHAN(h,n)
-#endif
   __m256i endmask; /* length mask for the last word */
   _mm256_zeroupperx(VOIDARG)
   __m256d idreg=_mm256_setzero_pd();
@@ -1080,7 +1076,6 @@ DF2(jtsumattymes1){
        }
       }
       OGITA(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask),0) av+=((dplen-1)&(NPAR-1))+1; wv+=((dplen-1)&(NPAR-1))+1;  // the remnant at the end
-#if 1  // higher precision
       c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
       TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_add_pd(c0,c2);   // add 0+1, 2+3
       TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2
@@ -1099,16 +1094,6 @@ DF2(jtsumattymes1){
        ((I*)zv)[1]=_mm256_extract_epi64(_mm256_castpd_si256(c1),0x0); /* AVX2 zv[1]=_mm256_cvtsd_f64(c1); */  // store it out
 
       }
-#else  // obsolete 
-      c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
-      acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2);   // add all the high parts
-     // acc0/c0 survive.  Combine horizontally
-      c0=_mm256_add_pd(c0,_mm256_permute4x64_pd(c0,0b11111110));  // 02, 13
-      acc0=_mm256_add_pd(acc0,_mm256_permute4x64_pd(acc0,0b11111110));
-      c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf));   // 0123
-      acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));
-      acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
-#endif
       ((I*)zv)[0]=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0);  /*  AVX2 *zv=_mm256_cvtsd_f64(acc0); */ zv+=fit;  // store out high (perhaps only) part
       if(!--j)break; av=av0;  // repeat a if needed
      }

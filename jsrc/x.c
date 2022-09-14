@@ -366,10 +366,6 @@ F2(jtforeign){F2PREFIP;I p,q;
  }
  ASSERT(0,EVDOMAIN);  // any unknown combination is a domain error right away
 }
-// obsolete  ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);
-// obsolete  switch(XC(p,q)){
-// obsolete /* case XC(11,*):      handled at beginning */
-// obsolete /* case XC(12,*):      reserved for D.H. Steinbrook tree stuff         */
 
 /* SY_64 double trick - null routines here to avoid optimization */
 #if SY_64 & SY_WIN32

@@ -754,12 +754,10 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
   I limitrow;  // the best row to use as a pivot for this column; or # qualifying Dpiv found.  Used as a flag for column processing
   if(bv!=0){
    // DIP mode
+   // col init
    rownums=_mm256_loadu_si256((__m256i*)(&iotavec[-NPAR-IOTAVECBEGIN]));  // in case zv=0, init row #s
-   if(exlist==0){
-    // col init
-    oldcol=_mm256_set_pd(0.0,0.0,Frow[colx],0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
-    oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0);
-   }
+   oldcol=_mm256_set_pd(0.0,0.0,Frow[colx],0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
+   oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0);
    limitrow=-1;  // init no eligible row found
   }else{  // Dpiv or one-column
    // For Dpiv, limitrow is -1; oldcol has counts of pivots.  For single-row processing, limitrow is not needed and the use it as a flag:
@@ -897,26 +895,29 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    oldcol=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_permute4x64_pd(oldcol,0b00001110))));
    limitrow=_mm256_extract_epi64(_mm256_add_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_permute_pd(oldcol,0b0001))),0);
    exlist[colx]=exlist[colx]*!!prirow+limitrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column 
-  }else if(exlist==0){  // DIP.  looking for nonimproving pivots?
+  }else{  // DIP
+// obsolete  if(exlist==0){  // DIP.  looking for nonimproving pivots?
    // not looking for nonimproving pivots.  Do a normal pivot-pick
    // column ran to completion.  Detect unbounded
    if(limitrow<0){bestcolrow=limitrow; bestcol=colx; goto return4;}  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
-          // but if we are looking for nonimproving pivots, we don't use F or bk and this is invalid
-   // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
-   // Exception: if a nondangerous pivot pivots out a virtual row, we accept it immediately and abort all other processing
-   if(likely((bestcol|SGNIF(limitrow,32+3))<0)){  // if this pivot is not dangerous, remember it.  Also remember if it is the first pivot, in case there are only dangerous pivots
-    bestcol=colx; bestcolrow=limitrow;  // update the found position for any nondangerous pivot, or the first time in case we have only dangerous pivots
-    // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
-    if(likely((limitrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
-     // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
-     if(unlikely((I4)limitrow==(I4)prirow)){++ncolsprocd; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
-     I incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
-     while(1){  // put the minimum found into the ctx for the job so that all threads can cut off quickly
-      minimpfound=(Frow[colx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
-      if(minimpfound>=*(D*)&incumbentimpi)break;  // if not new global best, don't update global
-      if(__atomic_compare_exchange_n((I*)&(((struct mvmctx*)ctx)->minimp),&incumbentimpi,*(I*)&minimpfound,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent
+   // If this pivot would result in a cycle, ignore it
+   if(nexlist==0||notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){
+    // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
+    // Exception: if a nondangerous pivot pivots out a virtual row, we accept it immediately and abort all other processing
+    if(likely((bestcol|SGNIF(limitrow,32+3))<0)){  // if this pivot is not dangerous, remember it.  Also remember if it is the first pivot, in case there are only dangerous pivots
+     bestcol=colx; bestcolrow=limitrow;  // update the found position for any nondangerous pivot, or the first time in case we have only dangerous pivots
+     // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
+     if(likely((limitrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
+      // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
+      if(unlikely((I4)limitrow==(I4)prirow)){++ncolsprocd; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
+      I incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
+      while(1){  // put the minimum found into the ctx for the job so that all threads can cut off quickly
+       minimpfound=(Frow[colx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
+       if(minimpfound>=*(D*)&incumbentimpi)break;  // if not new global best, don't update global
+       if(__atomic_compare_exchange_n((I*)&(((struct mvmctx*)ctx)->minimp),&incumbentimpi,*(I*)&minimpfound,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent
+      }
+      zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
      }
-     zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
     }
    }
    --bvgrd;  // undo the +1 in the product-accounting below
@@ -929,6 +930,7 @@ abortcol:  // here if column aborted early, possibly on insufficient gain
    currcolproxy=__atomic_load_n(&((struct mvmctx*)ctx)->nextcol,__ATOMIC_ACQUIRE);  // start load of column position for next spin through loop
    if(unlikely(minimp==infm))break;  // if improvement has been pegged at limit, it's a signal to stop
    if(unlikely(--nfreecols<0))minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
+#if 0
   }else{
    // we are looking for nonimproving pivots.  Skip all the gain accounting, and just remember how many products we did
    ndotprods+=bvgrd-bvgrd0;  // accumulate # products performed
@@ -938,6 +940,7 @@ abortcol:  // here if column aborted early, possibly on insufficient gain
      minimpfound=1.0; bestcol=colx; bestcolrow=limitrow; goto return2;
     }
    }
+#endif
   }
   ++ncolsprocd;  // incr # cols we did
  }  // end of loop over columns
@@ -960,12 +963,14 @@ abortcol:  // here if column aborted early, possibly on insufficient gain
   }
  }
  R 0;
+#if 0   // obsolete
 return2:  // here we found a nonimproving pivot.  Save it, possibly overwriting a value stored in a different thread
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
  ((struct mvmctx*)ctx)->minimp=1.0;  // flag that we found a nonimproving pivot
  ((struct mvmctx*)ctx)->bestcolandrow[0]=(bestcol<<32)|(UI4)bestcolrow;  // the pivot we found
  R 0;
+#endif
 return4:  // we have a preemptive result.  store it in abortcolandrow, and set minimp =-inf to cut off all threads
  // the possibilities are unbounded and pivoting out a virtual.  We indicate unbounded by row=-1.  We may overstore another thread's result; that's OK
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
@@ -989,7 +994,7 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 //           rc,failing column of NTT, an element of ndx (if rc=4)
 //  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //  rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
-// if the exclusion list is given, we stop on the first nonimproving pivot, and the exclusion list is used to prevent repetition of basis
+// if the exclusion list is given, we use it to prevent repetition of basis.  Yk must be given, holding the column #s of the rows of M
 // If Frow is empty, we are looking for nonimproving pivots in rows where the selector is 0.  In that case the bkgrd puts the bk values in descending order.  We return the first column that will make more 0 B rows non0 than non0 B rows 0.
 // If bk is empty, we are looking in bkgrd columns and counting the #places where c>=PivTol and accumulating into Dpiv under control of Dpivdir (-1=decr, 1=incr; init to 0 if neg)
 // Rank is infinite
@@ -1031,7 +1036,7 @@ F1(jtmvmsparse){PROLOG(832);
  D nfreecolsd, ncolsd; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
  I prirow;  // row to get priority (virtual), or flag to Dpiv
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
- I *exlist=0, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
+ I *exlist=0, nexlist=0, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
 
  // Run the operation on every thread we have, if it is big enough (as it usually will be)
@@ -1068,7 +1073,7 @@ F1(jtmvmsparse){PROLOG(832);
     // nonimproving pivots with exlist
     A box9=C(AAV(w)[9]), box10=C(AAV(w)[10]);
     ASSERT(AN(w)==11,EVLENGTH); 
-    // An exclusion list is given (and thus also yk).  Remember their addresses.  Its presence puts us through the 'nonimproving path' case
+    // An exclusion list is given (and thus also yk).  Remember their addresses.
     exlist=IAV(box9);  // remember address of exclusions
     nexlist=AN(box9);  // and length of list
     ASSERT(AR(box9)<=1,EVRANK); ASSERT(nexlist==0||ISDENSETYPE(AT(box9),INT),EVDOMAIN);  // must be integer list

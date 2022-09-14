@@ -224,17 +224,19 @@ M=. |: _4 ]\ 0. 1 1 0   1 0 1 0  0 0 0 1 0 0 0 1   NB. input by columns
 assert. 0 1 0 2 8 __ prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2 3;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
 M=. |: _4 ]\ 0. 1 1 0   1 0 2 0  0 0 0 1 0 0 0 1   NB. input by columns
 assert. 0 0 1 4 7 _4 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2 3;1e_11 1e_6 0 0 1 1.0 0;bk;Frow  NB. later non-virtual doesn't get priority
-if. 0 do.  NB. no longer supported
-NB. nonimproving pivots
-M=. |: _4 ]\ 0. 0 0 1e_12   1e_12 1e_8 0 0  0 0 0 0   0 0 0 0   NB. input by columns
-Frow=. 5$1.0   NB. rows are immaterial
-bk =. 4 $ _1.0  NB. bk is immaterial
+NB. exclusion list
+M=. |: _4 ]\ 1. 0 0 0   0 1 0 0   1. 0 0 0  1. 0 0 0   NB. input by columns
+Frow=. _1. _5 _1 _1 0   NB. all improving
+bk =. 4 $ 1.0  NB. all valid
 bkg=.i.#M
-assert. 2 1 1 1 6 1 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
-assert. 2 1 1 2 10 1 prtpms (128!:9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
-assert. 3 0 0 4 16 0 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
-M=. |: _4 ]\ 0. 0 0 1e_12   1e_12 1e_8 1e_5 0  0 0 0 0   0 0 0 0   NB. input by columns
-assert. 2 1 2 1 7 1 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
+assert. 0 1 1 4 10 _5 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
+assert. 0 1 1 4 10 _5 prtpms (128!:9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
+assert. 0 0 0 4 10 _1 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+Frow=. _1. _5 _2 _1 0   NB. all improving
+assert. 0 2 0 4 13 _2 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+M=. |: _4 ]\ 0. 0 0 1   0 2 1 0  1 0 0 0    1 0 0 0   NB. input by columns
+assert. 0 2 0 4 13 _2 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
+if. 0 do.  NB. no longer supported
 NB. Zero Frow
 M=. |: _4 ]\ _1. _1 2 1   _1 1 1 1    _1 _1 2 1e_13   1 1 _1 1   NB. 2 non0, 1 0; 2 non0, 2 0; only 1 non0 (c too small); 2 non0, 2 0 (close enough)
 Frow=. ''   NB. rows are immaterial
@@ -369,17 +371,19 @@ M=. |: _4 ]\ 0. 1 1 0   1 0 1 0  0 0 0 1 0 0 0 1   NB. input by columns
 assert. 0 1 0 2 8 __ mt3 128!:9 (bxr 0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2 3;1e_11 1e_6 0 0 1 1.0 0;bk;Frow
 M=. |: _4 ]\ 0. 1 1 0   1 0 2 0  0 0 0 1 0 0 0 1   NB. input by columns
 assert. 0 0 1 4 15 _4 mt3 128!:9 (bxr 0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2 3;1e_11 1e_6 0 0 1 1.0 0;bk;Frow  NB. later non-virtual doesn't get priority
-if. 0 do.  NB. no longer supported
-NB. nonimproving pivots
-M=. |: _4 ]\ 0. 0 0 1e_12   1e_12 1e_8 0 0  0 0 0 0   0 0 0 0   NB. input by columns
-Frow=. 5$1.0   NB. rows are immaterial
-bk =. 4 $ _1.0  NB. bk is immaterial
+NB. exclusion list
+M=. |: _4 ]\ 1. 0 0 0   0 1 0 0   1. 0 0 0  1. 0 0 0   NB. input by columns
+Frow=. _1. _5 _1 _1 0   NB. all improving
+bk =. 4 $ 1.0  NB. all valid
 bkg=.i.#M
-assert. 2 1 1 1 6 1 mt3 128!:9 (bxr 0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
-assert. 2 1 1 2 10 1 mt3 128!:9 (bxr 3 0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
-assert. 3 0 0 4 16 0 mt3 128!:9 (bxr 0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
-M=. |: _4 ]\ 0. 0 0 1e_12   1e_12 1e_8 1e_5 0  0 0 0 0   0 0 0 0   NB. input by columns
-assert. 2 1 2 1 7 1 mt3 128!:9 (bxr 0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
+assert. 0 1 1 4 10 _5 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
+assert. 0 1 1 4 10 _5 mt3 (128!:9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
+assert. 0 0 0 4 10 _1 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+Frow=. _1. _5 _2 _1 0   NB. all improving
+assert. 0 2 0 4 13 _2 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+M=. |: _4 ]\ 0. 0 0 1   0 2 1 0  1 0 0 0    1 0 0 0   NB. input by columns
+assert. 0 2 0 4 13 _2 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
+if. 0 do.  NB. no longer supported
 NB. Zero Frow
 M=. |: _4 ]\ _1. _1 2 1   _1 1 1 1    _1 _1 2 1e_13   1 1 _1 1   NB. 2 non0, 1 0; 2 non0, 2 0; only 1 non0 (c too small); 2 non0, 2 0 (close enough)
 Frow=. ''   NB. rows are immaterial

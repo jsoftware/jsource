@@ -979,7 +979,7 @@ extern D        xdouble(X);
 extern void     readlock(S*,S);
 extern void     writelock(S*,S);
 #endif
-#if C_AVX2 //|| EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 extern I        memcmpne(void*, void*, I);
 #else
 #define memcmpne(s,t,l) (!!memcmp((s),(t),(l)))

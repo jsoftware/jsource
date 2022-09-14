@@ -407,8 +407,7 @@ static __emu_inline int _mm_testc_si128_REF( __m128i a, __m128i b)
     A = a;
     B = b;
 
-    return ( (A[0] & B[0]) == A[0] ) &&
-           ( (A[1] & B[1]) == A[1] ) ;
+    return (((~A[0]) & B[0]) | ((~A[1]) & B[1])) == 0;
 }
 
 /** \SSE45{Reference,_mm_testz_si128,ptest} */
@@ -418,8 +417,7 @@ static __emu_inline int _mm_testz_si128_REF( __m128i a, __m128i b)
     A = a;
     B = b;
 
-    return ( (A[0] & B[0]) == 0 ) &&
-           ( (A[1] & B[1]) == 0 ) ;
+    return ( (A[0] & B[0]) | (A[1] & B[1])) == 0;
 }
 
 /** \SSE45{Reference,_mm_testnzc_si128,ptest} */
@@ -430,10 +428,8 @@ static __emu_inline int _mm_testnzc_si128_REF( __m128i a, __m128i b)
     A = a;
     B = b;
 
-    zf = _mm_testz_si128_REF( A, B);
-
-    cf = ( (~A[0] & B[0]) == 0 ) &&
-         ( (~A[1] & B[1]) == 0 ) ;
+    zf = _mm_testz_si128_REF(A, B);
+    cf = _mm_testc_si128_REF(A, B);
     return ((int)!zf & (int)!cf);
 }
 

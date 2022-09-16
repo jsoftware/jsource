@@ -1514,6 +1514,9 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // ??? is_mm256_zeroupper really needed
 // -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
 #define _mm256_zeroupperx(x)
+// this is faster than reusing another register as the source anyway, because it's not a recognised idiom, so we would have a false dependency on the other register
+#define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
+#define _mm256_setone_pd() _mm256_castsi256_pd(_mm256_setone_epi64())
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input (as D*), z->result (as D*), u=input atom4 and result

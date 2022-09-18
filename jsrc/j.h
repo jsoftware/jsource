@@ -1454,7 +1454,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
  {void *_d=dest,*_s=src; I _n=n;\
   if(likely(_n<=8)){__mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));}\
   else{MC(_d,_s,_n<<LGSZI);}}
-#elif (C_AVX&&SY_64) || EMU_AVX
+#elif C_AVX
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
   if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \

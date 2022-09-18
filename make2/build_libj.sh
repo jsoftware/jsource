@@ -606,4 +606,6 @@ make -j$par -f makefile-libj
 else
 make -f makefile-libj
 fi
+retval=$?
 cd -
+exit $retval

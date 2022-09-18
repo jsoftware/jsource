@@ -768,7 +768,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    }else limitrow=-AR(qk);  // -1 for Dpiv; otherwise -2 or -3.  
   }
   // init for the column
-  __m256i endmask=_mm256_cmpeq_epi64(sgnbit,sgnbit); // mask for validity of next 4 words: used to control fetch from column and store into result row
+  __m256i endmask=_mm256_cmpeq_epi64(_mm256_castpd_si256(sgnbit),_mm256_castpd_si256(sgnbit)); // mask for validity of next 4 words: used to control fetch from column and store into result row
   I *bvgrd;
   // create the column NPAR values at a time
   for(bvgrd=bvgrd0;bvgrd<bvgrde;bvgrd+=NPAR){

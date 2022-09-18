@@ -1350,7 +1350,7 @@ printf("%p-\n",w);
  if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
 #endif
   jt->bytes-=allocsize;  // keep track of total allocation
-  I mfreeb = __atomic_fetch_sub(&jt->mfree[blockx].ballo,allocsize,__ATOMIC_ACQ_REL);   // number of bytes allocated at this size (biased zero point)
+  I mfreeb = jt->mfree[blockx].ballo -= allocsize;   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
   if(unlikely(mfreeb<0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;

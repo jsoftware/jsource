@@ -1224,7 +1224,7 @@ NOINLINE static C jtboxcutm21x(J jt,void *ctx,UI4 ti){ PBOXCUTSTATE *c=ctx; C *c
   UI4 m=_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(ce-32))); //assume at least 32 chars per chunk; very reasonable
   if(!m){ c->c[ti].prefend=-1; R 0; }
   ch=ce-32+CTTZ(m)+1; pe=ch-chb-1;}
-success:
+success:;
  C *lf=ch-1; //pointer to the vector containing the last fret
  I zl=0;
  // count frets, and find the last one.  TODO unroll, sum in vector regs

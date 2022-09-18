@@ -131,6 +131,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fwrapv \
  -Wno-implicit-int-float-conversion \
  -Wno-int-in-bool-context \
  -Wno-missing-braces \
+ -Wno-missing-field-initializers \
  -Wno-null-pointer-subtraction \
  -Wno-parentheses \
  -Wno-pass-failed \

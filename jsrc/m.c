@@ -1304,6 +1304,7 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 // flush outgoing repatriation queues
 // TODO should do this for all threads during system lock?
 void jtrepato(J jt){
+#if PYXES
  A repato=jt->repato, tail=*AAV0(repato);
  I origthread=repato->origin;
  I allocsize=AC(repato);
@@ -1312,6 +1313,7 @@ void jtrepato(J jt){
  A expval=lda(&jt->repatq); do AFCHAIN(tail)=expval; while(!casa(&jt->repatq, &expval, repato));   // atomic install at head of chain
  I4 oldrepatbytes=aadd(&jt->repatbytes,allocsize);  // Get total # bytes freed in the repat thread
  if(common(((oldrepatbytes-REPATGCLIM)^(oldrepatbytes+allocsize-REPATGCLIM))<0))sta(&jt->uflags.us.uq.uq_c.spfreeneeded,1);  // If amt freed crosses boundary, request GC in the repat thread
+#endif
 }
 
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,

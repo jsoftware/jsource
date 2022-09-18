@@ -1522,6 +1522,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // this is faster than reusing another register as the source anyway, because it's not a recognised idiom, so we would have a false dependency on the other register
 #define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
 #define _mm256_setone_pd() _mm256_castsi256_pd(_mm256_setone_epi64())
+static inline __m256i LOADV32I(void *x) { return _mm256_loadu_si256(x); }
+static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input (as D*), z->result (as D*), u=input atom4 and result

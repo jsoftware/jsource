@@ -495,7 +495,7 @@ static I jtthreadcreate(J jt,I n){
 #endif
  ASSERT(pthread_attr_setstacksize(&attr,stksiz)==0,EVFACE)    // request sufficient stack size
  JTFORTHREAD(jt,n)->cstackmin=0;  // clear any old stackarea; we wait for thread to fill in the stack
- ASSERT(pthread_create(&JTFORTHREAD(jt,n)->pthreadid,&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
+ ASSERT(pthread_create(&(pthread_t){0},&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
  // since the user may try to use the thread right away, delay until it is available for use.  We use cstackmin as a 99.999% proxy for 'ready'
  while(__atomic_load_n(&JTFORTHREAD(jt,n)->cstackmin,__ATOMIC_ACQUIRE)==0){delay(10000); YIELD}  // task startup takes a while
  R 1;

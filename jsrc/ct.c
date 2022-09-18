@@ -399,6 +399,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
      // still have the lock
      if(unlikely(jt->taskstate&TASKSTATETERMINATE)){--jobq->waiters; goto terminate;}  // if central has requested this thread to terminate, do so when the queue goes empty.   This counts as work
      JOBUNLOCK(jobq,job);
+     jtrepato(jt); // since we have nothing to better to do, release memory now
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
      // we could check to see if there is a job before doing the RFO; that would reduce contention after a kick but it would increase delay
@@ -476,6 +477,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
  // end of loop forever
 terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
  JOBUNLOCK(jobq,job); 
+ jtrepato(jt); // release any memory belonging to other threads
  __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
  R 0;  // return to OS, closing the thread
 }

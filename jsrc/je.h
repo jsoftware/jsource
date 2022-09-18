@@ -743,6 +743,7 @@ extern RESTRICTF A jtga0(J,I,I);
 #else
 extern RESTRICTF A jtga0(J,I,I,I);
 #endif
+extern void      jtrepato(J);
 extern RESTRICTF A jtgaf(J,I);
 extern RESTRICTF A jtgafv(J,I);
 extern A        jtgadv(J,A,C);

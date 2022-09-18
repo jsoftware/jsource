@@ -4,9 +4,10 @@ NB. 7!: -----------------------------------------------------------------
 NB. Testing malloc/free; try  f 200  or  g 40000, etc.
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 
-NB. We use whatever threads the ystem defines
+NB. We use whatever threads the system defines
 
 sp  =: 7!:0
+spa =: 7!:8
 space=:7!:2
 
 pr =: [             NB. for silent iteration
@@ -55,10 +56,10 @@ s =: g 30+?200
 y =: sp ''
 x -: y
 
-x =: sp ''
+x =: spa ''
 s =: h 3+?7
 1: 6!:3 ] 0.01  NB. must give the task a chance to be dequeued
-y =: sp ''
+y =: spa ''
 x -: y
 
 t =: sp ''
@@ -94,7 +95,7 @@ t -: /:~t
 *./~:{."1 t
 
 
-4!:55 ;:'delth f g h n old pr s sp space t x y '
+4!:55 ;:'delth f g h n old pr s sp spa space t x y '
 
 
 

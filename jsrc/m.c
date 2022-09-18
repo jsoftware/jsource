@@ -414,7 +414,7 @@ I jtspbytesinuse(J jt){I i,totalallo = jt->mfreegenallo&~MFREEBCOUNTING;  // sta
 
 // called under systemlock to add up all threads
 static A jtspallthreadsx(J jt){I grandtotal;
- grandtotal=0; DO(THREADIDFORWORKER(MAXTHREADS), grandtotal+=jtspbytesinuse(JTFORTHREAD(jt,i));)  // add total for all threads, active or not
+ grandtotal=0; DO(THREADIDFORWORKER(MAXTHREADS), grandtotal+=jtspbytesinuse(JTFORTHREAD(jt,i));if(JTFORTHREAD(jt,i)->repato)grandtotal-=AC(JTFORTHREAD(jt,i)->repato);)  // add total for all threads, active or not
  R sc(grandtotal);
 }
 
@@ -1305,11 +1305,13 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 // TODO should do this for all threads during system lock?
 void jtrepato(J jt){
 #if PYXES
- A repato=jt->repato, tail=*AAV0(repato);
+ A repato=jt->repato, tail;
+ if(!repato)R; //nothing to repatriate
+ tail=*AAV0(repato);
  I origthread=repato->origin;
  I allocsize=AC(repato);
- jt->repato=0;// switch to the thread the chain must return to
- jt=JTFORTHREAD(jt,origthread);
+ jt->repato=0;
+ jt=JTFORTHREAD(jt,origthread); // switch to the thread the chain must return to
  A expval=lda(&jt->repatq); do AFCHAIN(tail)=expval; while(!casa(&jt->repatq, &expval, repato));   // atomic install at head of chain
  I4 oldrepatbytes=aadd(&jt->repatbytes,allocsize);  // Get total # bytes freed in the repat thread
  if(common(((oldrepatbytes-REPATGCLIM)^(oldrepatbytes+allocsize-REPATGCLIM))<0))sta(&jt->uflags.us.uq.uq_c.spfreeneeded,1);  // If amt freed crosses boundary, request GC in the repat thread

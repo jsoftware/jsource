@@ -1446,10 +1446,15 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 #define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=REPSGN(_n))<0)*_d++=*src++;}  // ... this when s increments through the loop
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
-// Copy shapes.  Optimized for length <5, subroutine for others
+// Copy shapes.  Optimized for length <5 (<9 on avx512), subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the testing
 // len is # words in shape
-#if 1 && ((C_AVX&&SY_64) || EMU_AVX)
+#if C_AVX512
+#define MCISH(dest,src,n) \
+ {void *_d=dest,*_s=src; I _n=n;\
+  if(likely(_n<=8)){__mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));}\
+  else{MC(_d,_s,_n<<LGSZI);}}
+#elif (C_AVX&&SY_64) || EMU_AVX
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
   if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \

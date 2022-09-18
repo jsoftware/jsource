@@ -13,6 +13,8 @@ nn    =: unix{3 9
 
 test  =: 3 : ('((,nn)-:$y) *. *./y e."_1 nn$''rwx'',.''-''')
 
+erase ::1: ('brandnew/'&,)&.> {."1[ 1!:0<'brandnew/*'
+erase ::1: <'brandnew'
 d =. <'brandnew'
 mkdir d
 test perm d

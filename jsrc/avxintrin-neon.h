@@ -933,12 +933,28 @@ FORCE_INLINE int64x2_t vmvnq_s64(int64x2_t a) {
     return vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a)));
 }
 
+FORCE_INLINE int _mm_testc_pd(__m128d a, __m128d b)
+{
+    __m128i res_m128i;
+    res_m128i = vandq_s64(vmvnq_s64(vreinterpretq_s64_f64(a)), vreinterpretq_s64_f64(b));
+    int64x2_t tmp = vandq_s64(res_m128i, _mm_set_epi64x(1LL<<63,1LL<<63));
+    return !(vgetq_lane_s64(tmp, 0) | vgetq_lane_s64(tmp, 1));
+}
+
+FORCE_INLINE int _mm_testz_pd(__m128d a, __m128d b)
+{
+    __m128i res_m128i;
+    res_m128i = vandq_s64(vreinterpretq_s64_f64(a), vreinterpretq_s64_f64(b));
+    int64x2_t tmp = vandq_s64(res_m128i, _mm_set_epi64x(1LL<<63,1LL<<63));
+    return !(vgetq_lane_s64(tmp, 0) | vgetq_lane_s64(tmp, 1));
+}
+
 FORCE_INLINE int _mm256_testc_pd(__m256d a, __m256d b)
 {
     __m256i res_m256i;
     res_m256i.vect_s64[0] = vandq_s64(vmvnq_s64(vreinterpretq_s64_f64(a.vect_f64[0])), vreinterpretq_s64_f64(b.vect_f64[0]));
     res_m256i.vect_s64[1] = vandq_s64(vmvnq_s64(vreinterpretq_s64_f64(a.vect_f64[1])), vreinterpretq_s64_f64(b.vect_f64[1]));
-    int64x2_t tmp = vorrq_s64(res_m256i.vect_s64[0], res_m256i.vect_s64[1]);
+    int64x2_t tmp = vandq_s64(vorrq_s64(res_m256i.vect_s64[0], res_m256i.vect_s64[1]), _mm_set_epi64x(1LL<<63,1LL<<63));
     return !(vgetq_lane_s64(tmp, 0) | vgetq_lane_s64(tmp, 1));
 }
 
@@ -956,7 +972,7 @@ FORCE_INLINE int _mm256_testz_pd(__m256d a, __m256d b)
     __m256i res_m256i;
     res_m256i.vect_s64[0] = vandq_s64(vreinterpretq_s64_f64(a.vect_f64[0]), vreinterpretq_s64_f64(b.vect_f64[0]));
     res_m256i.vect_s64[1] = vandq_s64(vreinterpretq_s64_f64(a.vect_f64[1]), vreinterpretq_s64_f64(b.vect_f64[1]));
-    int64x2_t tmp = vorrq_s64(res_m256i.vect_s64[0], res_m256i.vect_s64[1]);
+    int64x2_t tmp = vandq_s64(vorrq_s64(res_m256i.vect_s64[0], res_m256i.vect_s64[1]), _mm_set_epi64x(1LL<<63,1LL<<63));
     return !(vgetq_lane_s64(tmp, 0) | vgetq_lane_s64(tmp, 1));
 }
 

@@ -1279,7 +1279,7 @@ DF1(jtboxcutm21){
  PREF1(jtboxcutm21);
 #if 1
  I nchunk=(AN(w)+65535)/65536; //try out 64k chunks for now
- I incfretp=1-(FAV(self)->localuse.lu1.gercut.cutn>>31), incfretm=-1+incfretm;
+ I incfretp=1-(FAV(self)->localuse.lu1.gercut.cutn>>31), incfretm=-1+incfretp;
  _Alignas(64) char ctxbuf[sizeof(PBOXCUTSTATE)+nchunk*sizeof(PBOXCUTCHUNK)];PBOXCUTSTATE *ctx=(PBOXCUTSTATE*)ctxbuf;
  ctx->w=w;
  ctx->chunksz=65536;

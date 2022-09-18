@@ -190,22 +190,28 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
 #if PYXES
- pthread_t pthreadid;  // OS-dependent thread ID.  We need it only for destroying tasks.
- C filler7[16-sizeof(pthread_t)];  // trouble if it's bigger than this!
+ pthread_t pthreadid;  // OS-dependent thread ID.  Not currently used, but could be useful (pthread_kill)
+ C filler7[8-sizeof(pthread_t)];  // trouble if it's bigger than a word (shouldn't be)
 #else
- I filler7[2];
+ I filler7[1];
 #endif
+ A repato; // outgoing repatriation chain; chain of objects which all belong to the same thread.  AAV0(repato) points to the last link in the chain, and AC(repato) is the cumulative #bytes in the chain (used to update repatbytes)
+           // rationale: it's common to free many objects from the same thread at once (in particular, release boxed list from a pyx), so this amortises that work
+           // it would be good to have a more general outgoing repatriation queue to handle better the case when you free objects from different threads; logic is more annoying there because you have to route the objects to their right destinations
+           // snmalloc has a slick design but it sometimes 'repatriates' blocks to the wrong queue, so they must sometimes take multiple hops to get home, which is annoying.  An alternative is to use a fixed-sized array, and sort it once it fills up
+           // perhaps something like an lru cache of threads recently freed to?  Do a linear scan of the first k entries (maybe w/short simd if the first is a miss), and if they all miss, then fall back to--snmalloc trick, or sort buffer, or something else
+           // Or maybe a fixed-size cache, and anything that falls out of it gets immediately flushed?  I like that, because it helps prevent singleton allocations from getting lost
  UI4*futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock
 // end of cacheline 6
 
  C _cl7[0];
  // Area used for intertask communication of memory allocation
- A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
+ A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory than a straight chain?
  I4 repatbytes;  // number of bytes repatriated since the last garbage collection, modified by all threads
  C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created
 // 3 bytes free
- I mfreegenallo;        // Amount allocated through malloc, biased  modified onlt by owning thread
- I malloctotal;    // net total of malloc/free performed in m.c only  modified onlt by owning thread
+ I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
+ I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;

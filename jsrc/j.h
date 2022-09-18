@@ -731,6 +731,7 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 
 #if PYXES
 #define REPATGCLIM 0x100000   // When this many bytes have been repatriated to a thread, call a GC in that thread
+#define REPATOLIM (REPATGCLIM/32) // When an outgoing repatriation queue contains this many bytes, flush it
 #else
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)

@@ -210,9 +210,22 @@ F1(jtspcount){A z;I c=0,i,j,*v;A x;
 
 // Garbage collector.  Called when free has decided a call is needed
 B jtspfree(J jt){I i;A p;
+#if PYXES
+ // start by reclaiming and re-chaining expatriots
+ p=xchga(&jt->repatq,0);
+ if(uncommon(!!p)){
+  adda(&jt->repatbytes,-AC(p));
+  jt->bytes-=AC(p);
+  for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):p){
+   I blockx=FHRHPOOLBIN(AFHRH(p));
+   jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p));
+   AFCHAIN(p)=jt->mfree[blockx].pool;
+   jt->mfree[blockx].pool=p;}}
+#endif
+
  for(i = 0;i<=PLIML-PMINL;++i) {
   // Check each chain to see if it is ready to coalesce.  If the repatq is calling for the gc, process all queues
-  if((jt->mfree[i].ballo|(REPATGCLIM-jt->repatbytes))<=0) {
+  if(jt->mfree[i].ballo<=0) {
    // garbage collector: coalesce blocks in chain i
    // pass through the chain, incrementing the j field in the base allo for each
    // Also create a 'proxy chain' - one element for each base block processed, not necessarily the base block (because the base block may not be free)
@@ -235,23 +248,7 @@ B jtspfree(J jt){I i;A p;
     // advance to next free block, which may involve switching to the repatq
     A prevp=p;  // save end-of-chain pointer
     p=AFCHAIN(p);  // next block if any
-#if PYXES
-    ++nexpats;  // keep track of # blocks of this size repatriated
-    if(p==0){
-     // We have exhausted the main chain.  See if there are expats to process.  We may take expats more than once
-     p=__atomic_exchange_n(&jt->repatq[i], 0, __ATOMIC_ACQ_REL);  // Get the current list and mark list empty
-     AFCHAIN(prevp)=p;  // extend the freed chain to include the new blocks, so we will process them all in later steps
-     nexpats=nexpats<0?0:nexpats;  // if this is the first time we find expats, set count to 0 and we go up from there
-    }
-#endif
    }
-#if PYXES
-   // do space accounting for the expat blocks that we saw here
-   if(unlikely(nexpats>0)){  // small expats will probably be rare
-    jt->bytes-=nexpats*incr;  // keep track of total allocation
-    jt->mfree[i].ballo-=nexpats*incr;  // also number of bytes in this chain
-   }
-#endif
    // if any blocks can be freed, pass through the chain to remove them.
    if(FHRHISROOTALLOFREE(freereqd)) {   // if any of the base blocks were freed...
     A survivetail = (A)&jt->mfree[i].pool;  // running pointer to last block in chain of blocks that are NOT dropped off.  Chain is rooted in jt->mfree[i].pool, i. e. it replaces the previous chain there
@@ -297,7 +294,6 @@ B jtspfree(J jt){I i;A p;
   }
  }
  jt->uflags.us.uq.uq_c.spfreeneeded = 0;  // indicate no check needed yet
- jt->repatbytes=0;   // clear count of repatriated bytes for triggering next GC
 // audit free list {I xxi,xxj;A xxx; {for(xxi=PMINL;xxi<=PLIML;++xxi){xxj=0; xxx=(jt->mfree[-PMINL+xxi].pool); while(xxx){xxx=xxx->kchain.chain; ++xxj;}}}}
  R 1;
 }
@@ -1305,6 +1301,18 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 }
 #endif
 
+// flush outgoing repatriation queues
+// TODO should do this for all threads during system lock?
+void jtrepato(J jt){
+ A repato=jt->repato, tail=*AAV0(repato);
+ I origthread=repato->origin;
+ I allocsize=AC(repato);
+ jt->repato=0;// switch to the thread the chain must return to
+ jt=JTFORTHREAD(jt,origthread);
+ A expval=lda(&jt->repatq); do AFCHAIN(tail)=expval; while(!casa(&jt->repatq, &expval, repato));   // atomic install at head of chain
+ I4 oldrepatbytes=aadd(&jt->repatbytes,allocsize);  // Get total # bytes freed in the repat thread
+ if(common(((oldrepatbytes-REPATGCLIM)^(oldrepatbytes+allocsize-REPATGCLIM))<0))sta(&jt->uflags.us.uq.uq_c.spfreeneeded,1);  // If amt freed crosses boundary, request GC in the repat thread
+}
 
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
@@ -1358,11 +1366,16 @@ printf("%p-\n",w);
 #if PYXES
   }else{
    // repatriate a block allocated in another thread
+   A repato=jt->repato;
+   if(common(repato&&repato->origin==origthread)){      // adding to existing repatriation queue
+    allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
+    AFCHAIN(*AAV0(repato))=w; *AAV0(repato)=w;          // add block to chain
+    if(uncommon(allocsize>=REPATOLIM))jtrepato(jt);}    // if size of chain exceeded limit, flush
+   else{
+    if(repato)jtrepato(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
+    jt->repato=w; AC(w)=allocsize; *AAV0(w)=w;          // queue now empty regardless; install w
+    if(unlikely(allocsize>=REPATOLIM))jtrepato(jt);}    // maybe this block alone is large enough to deserve immediate repatriation
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
-   A expval=jt->repatq[blockx]; do AFCHAIN(w)=expval; while(!__atomic_compare_exchange_n(&jt->repatq[blockx], &expval, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED));   // atomic install at head of chain
-   I4 oldrepatbytes=__atomic_fetch_add(&jt->repatbytes,allocsize,__ATOMIC_ACQ_REL);  // Get total # bytes freed in the repat thread
-   if(unlikely(((oldrepatbytes-REPATGCLIM)^(oldrepatbytes+allocsize-REPATGCLIM))<0))__atomic_store_n(&jt->uflags.us.uq.uq_c.spfreeneeded,1,__ATOMIC_RELEASE);  // If amt freed crosses boundary, request GC in the repat thread
-   //  ********************* jt is corrupt *************************
   }
 #endif
  }else{                // buffer allocated from malloc

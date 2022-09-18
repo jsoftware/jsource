@@ -1286,7 +1286,7 @@ DF1(jtboxcutm21){
  UI l=0;
  DO(nchunk,if(ctx->c[i].prefend!=-1){l++;if(ctx->c[i].contents)l+=AN(ctx->c[i].contents);});
  // generate output, copy in 'head' from first chunk
- A z;GA10(z,BOX,l);A *zv=AAV1(z);
+ A z;GA10(z,BOX,l);AFLAGINIT(z,BOX);A *zv=AAV1(z);
  I i=0;while(uncommon(ctx->c[i].prefend==-1))i++; //chunk 0 could be empty; find the first chunk that actually has something
  A t;GA10(t,LIT,ctx->c[i].prefend);ACINITZAP(t);MC(CAV1(t),CAV(w),ctx->c[i].prefend);*zv++=t;
  if(ctx->c[i].contents){MC(zv,AAV0(ctx->c[i].contents),AN(ctx->c[i].contents)*SZA); zv+=AN(ctx->c[i].contents); fa(ctx->c[i].contents);}

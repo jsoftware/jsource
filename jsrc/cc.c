@@ -1205,11 +1205,13 @@ typedef struct {
  A w; //array to be cut
  I chunksz; //MUST be >=vector size
  C fret; //cached last element
+ I incfretp; //1 if fret should be included, 0 otherwise
+ I incfretm; //0 if fret should be included, -1 otherwise
  _Alignas(CACHELINESIZE)
  PBOXCUTCHUNK c[];
 } PBOXCUTSTATE;
 
-NOINLINE static C jtboxcutm21x(J jt,void *ctx,UI4 ti){ PBOXCUTSTATE *c=ctx; C *chb=CAV(c->w),*ch=chb+ti*c->chunksz;I cl=MIN(c->chunksz,chb+AN(c->w)-ch);C *ce=ch+cl; I pe,ss;A z;
+NOINLINE static C jtboxcutm21x(J jt,void *ctx,UI4 ti){ PBOXCUTSTATE *c=ctx; C *chb=CAV(c->w),*ch=chb+ti*c->chunksz;I cl=MIN(c->chunksz,chb+AN(c->w)-ch);C *ce=ch+cl; I pe,ss;A z; I incfretp=c->incfretp,incfretm=c->incfretm;
  __m256i fret=_mm256_set1_epi8(c->fret);
  //find first fret
  for(;ch+32<ce;ch+=32){ //when the loop terminates normally, there will still be [1 32] bytes of tail left
@@ -1254,7 +1256,7 @@ success:
    UI4 lf=__builtin_clz(m);
    m=(UI)m<<(1+lf); //if m=1, then lf=31 and 1+lf=32, which is problematic for a 32-bit shift; make it a 64-bit shift
    cs-=1+lf;
-   A t;GA10(t,LIT,ce-cs-1);ACINITZAP(t);MC(CAV1(t),cs+1,ce-cs-1); *--ze=t;
+   A t;GA10(t,LIT,ce-cs+incfretm);ACINITZAP(t);MC(CAV1(t),cs+1,ce-cs+incfretm); *--ze=t;
    ce=cs;}}
  //now [ch ct) is a [1 32]-byte as-yet-unprocessed region; process any remaining frets therein
  {
@@ -1264,10 +1266,10 @@ success:
    UI4 lf=__builtin_clz(m);
    m=(UI)m<<(1+lf);
    cs-=1+lf;
-   A t;GA10(t,LIT,ce-cs-1);ACINITZAP(t);MC(CAV1(t),cs+1,ce-cs-1); *--ze=t;
+   A t;GA10(t,LIT,ce-cs+incfretm);ACINITZAP(t);MC(CAV1(t),cs+1,ce-cs+incfretm); *--ze=t;
    ce=cs;}
   //process the final [ch ce) cell
-  A t;GA10(t,LIT,ce-ch);ACINITZAP(t);MC(CAV1(t),ch,ce-ch);
+  A t;GA10(t,LIT,ce-ch+incfretp);ACINITZAP(t);MC(CAV1(t),ch,ce-ch+incfretp);
   *--ze=t;}
  PBOXCUTCHUNK t={pe,z,ss};c->c[ti]=t; R 0;}
 
@@ -1277,10 +1279,12 @@ DF1(jtboxcutm21){
  PREF1(jtboxcutm21);
 #if 1
  I nchunk=(AN(w)+65535)/65536; //try out 64k chunks for now
+ I incfretp=1-(FAV(self)->localuse.lu1.gercut.cutn>>31), incfretm=-1+incfretm;
  _Alignas(64) char ctxbuf[sizeof(PBOXCUTSTATE)+nchunk*sizeof(PBOXCUTCHUNK)];PBOXCUTSTATE *ctx=(PBOXCUTSTATE*)ctxbuf;
  ctx->w=w;
  ctx->chunksz=65536;
  ctx->fret=CAV(w)[AN(w)-1];
+ ctx->incfretp=incfretp;ctx->incfretm=incfretm;
  jtjobrun(jt,jtboxcutm21x,ctx,nchunk,0);
  //count frets
  UI l=0;
@@ -1288,12 +1292,12 @@ DF1(jtboxcutm21){
  // generate output, copy in 'head' from first chunk
  A z;GA10(z,BOX,l);AFLAGINIT(z,BOX);A *zv=AAV1(z);
  I i=0;while(uncommon(ctx->c[i].prefend==-1))i++; //chunk 0 could be empty; find the first chunk that actually has something
- A t;GA10(t,LIT,ctx->c[i].prefend);ACINITZAP(t);MC(CAV1(t),CAV(w),ctx->c[i].prefend);*zv++=t;
+ A t;GA10(t,LIT,ctx->c[i].prefend+incfretp);ACINITZAP(t);MC(CAV1(t),CAV(w),ctx->c[i].prefend+incfretp);*zv++=t;
  if(ctx->c[i].contents){MC(zv,AAV0(ctx->c[i].contents),AN(ctx->c[i].contents)*SZA); zv+=AN(ctx->c[i].contents); fa(ctx->c[i].contents);}
  I ss=ctx->c[i].suffstart;
  for(i++;i<nchunk;i++){
   if(common(ctx->c[i].prefend!=-1)){
-   A t;GA10(t,LIT,ctx->c[i].prefend-ss);ACINITZAP(t);MC(CAV1(t),CAV(w)+ss,ctx->c[i].prefend-ss);
+   A t;GA10(t,LIT,ctx->c[i].prefend-ss+incfretp);ACINITZAP(t);MC(CAV1(t),CAV(w)+ss,ctx->c[i].prefend-ss+incfretp);
    *zv++=t;ss=ctx->c[i].suffstart;
    if(common(!!ctx->c[i].contents)){
     MC(zv,AAV0(ctx->c[i].contents),AN(ctx->c[i].contents)*SZA); zv+=AN(ctx->c[i].contents); fa(ctx->c[i].contents);}}}
@@ -1333,15 +1337,14 @@ F2(jtcut){F2PREFIP;A h=0,z;I flag=0,k;
   R z;
   }
   z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
- case -2:
+ case 2: case -2:
 #if C_AVX2 && PYXES
  if(FAV(a)->id==CBOX){ //<;._2
   RZ(z=fdef(0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX));
   FAV(z)->localuse.lu1.gercut.cutn=k;
   R z;}
 #endif
- case 1: case -1:
- case 2: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; z=fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX); break;
+ case 1: case -1: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; z=fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX); break;
  case 3: case -3: case 259: case -259: z=fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX); break;
  default:         ASSERT(0,EVDOMAIN);
  }

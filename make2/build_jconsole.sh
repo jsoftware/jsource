@@ -206,4 +206,6 @@ cp makefile-jconsole obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-jconsole
+retval=$?
 cd -
+exit $retval

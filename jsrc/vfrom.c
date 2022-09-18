@@ -714,7 +714,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
                                // column, we will take it
 
  // loop over all columns requested
- I ncolsprocd=0;  // counter of columns we have finished
+ I ncolsprocd;  // counter of columns we have finished
  UI firstcol=0, lastreservedcol=0;  // we have reserved columns from firstcol to lastreservedcol-1 for us to calculate
  I currcolproxy=0;   // The column pointer, approximately.  Updated only for DIP mode.  Dpiv doesn't have the variability, and one-col doesn't care
  I resredwarn=nc-100*((*JT(jt,jobqueue))[0].nthreads+1);  // when col# gets above this, switch to reserving one at a time
@@ -736,7 +736,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  __m256i rowstride=_mm256_set1_epi64x(n);  // number of Ds in a row of M, in each lane
 
- while(1){
+ for(ncolsprocd=0;;++ncolsprocd){
   // start of processing one column
   // get next col index to work on; stop if no more cols
   // We would like to take sequential columns, because they are likely to share columns of Qk.  But there is wild variation in the time spent on a column: the
@@ -901,7 +901,8 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    // column ran to completion.  Detect unbounded
    if(limitrow<0){bestcolrow=limitrow; bestcol=colx; goto return4;}  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
    // If this pivot would result in a cycle, ignore it
-   if(nexlist==0||notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){
+   if(nexlist!=0&&!notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){printf("scaf exclusion\n");goto abortcol;}
+   {
     // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
     // Exception: if a nondangerous pivot pivots out a virtual row, we accept it immediately and abort all other processing
     if(likely((bestcol|SGNIF(limitrow,32+3))<0)){  // if this pivot is not dangerous, remember it.  Also remember if it is the first pivot, in case there are only dangerous pivots
@@ -942,7 +943,7 @@ abortcol:  // here if column aborted early, possibly on insufficient gain
    }
 #endif
   }
-  ++ncolsprocd;  // incr # cols we did
+// obsolete  ++ncolsprocd;  // incr # cols we did
  }  // end of loop over columns
 
  if(bv==0)R 0;  // if Dpiv or single column, ctx is unused for return
@@ -1070,7 +1071,7 @@ F1(jtmvmsparse){PROLOG(832);
    ASSERT(AT(box7)&FL,EVDOMAIN); ASSERT(AS(box7)[AR(box7)-1]==n,EVLENGTH); bv=DAV(box7);  // bk, one per row of M
    zv=AN(box5)==AS(box7)[AR(box7)-1]?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
    if(AN(w)>9){
-    // nonimproving pivots with exlist
+    // exclusion list given
     A box9=C(AAV(w)[9]), box10=C(AAV(w)[10]);
     ASSERT(AN(w)==11,EVLENGTH); 
     // An exclusion list is given (and thus also yk).  Remember their addresses.
@@ -1085,7 +1086,7 @@ F1(jtmvmsparse){PROLOG(832);
    A box9=C(AAV(w)[9]);
    ASSERT(AN(w)==10,EVLENGTH); 
    bv=zv=0;
-   exlist=IAV(box9);  // remember address of exclusions
+   exlist=IAV(box9);  // remember address of Dpiv result
    ASSERT(AR(box9)==1,EVRANK); ASSERT(ISDENSETYPE(AT(box9),INT),EVDOMAIN);  // must be integer list
    ASSERT(AN(box9)==AS(box1)[0]+n,EVLENGTH);  // length of Dpiv is #cols of A + #rows of A (=M)
    z=mtv;  // no error is possible; use harmless return value

@@ -54,7 +54,7 @@ if. IF64 do.
 assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
 assert. 2 <: 1 T. ''
 NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores
-setth nwthreads=. <: 0 { 8 T. ''  NB. one worker thread per core, -1
+setth nwthreads=. 1 >. <: 0 { 8 T. ''  NB. one worker thread per core, -1
 wthr nwthreads
 assert. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
 wthr nwthreads

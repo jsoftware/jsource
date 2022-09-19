@@ -69,7 +69,7 @@ f =: 3!:11
 (-:   (frombase64_old"1) @: (tobase64_old"1)) a. {~ 41 35 ?@$ 256
 
 
-L0=: QKTEST{90000 9000
+L0=: QKTEST{9000 900
 S1=: a.
 
 test1=: 4 : 0

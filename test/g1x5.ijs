@@ -10,22 +10,24 @@ erase =: 1!:55
 
 x=: 9!:12 ''
 win =: x e. 2 6
-mac =: x e. 3
+oldmac =: x e. 3
 unix=: x e. 5 7
 pc  =: x e. 0 1 2 6
 
 ocwd=: 1!:43 ''
 1!:44 jpath '~temp'
 
-p=: (1!:43 ''),mac{'/:'
+p=: (1!:43 ''),oldmac{'/:'
 
+erase ::1: ('brandnew/'&,)&.> {."1[ 1!:0<'brandnew/*'
+erase ::1: <'brandnew'
 mkdir d=:<'brandnew'
 ". pc#'''----d-'' -: att d'
 
-f=: p&,&.> mac{'brandnew/foo.x';':brandnew:foo.x'
+f=: p&,&.> oldmac{'brandnew/foo.x';':brandnew:foo.x'
 0 0$(x=:a.{~?500$#a.) write f
 x -: read f
-(<'foo.x') -: _5{.&.> {.,dir p&,&.>mac{'brandnew/*.*';':brandnew'
+(<'foo.x') -: _5{.&.> {.,dir p&,&.>oldmac{'brandnew/*.*';':brandnew'
 
 erase f,d
 
@@ -41,7 +43,7 @@ erase f,d
 
 badf =: e.&('interface error';'file name error')
 badf <mkdir etx <''
-badf <mkdir etx mac{'does/not/exist';':does:not:exist'
+badf <mkdir etx oldmac{'does/not/exist';':does:not:exist'
 badf <mkdir etx <':bad:/bad/\bad\'
 
 'asdf' write <'conflict'
@@ -51,7 +53,7 @@ erase <'conflict'
 
 1!:44 ocwd
 
-4!:55 ;:'att bada badf d dir erase f mac mkdir ocwd p pc '
+4!:55 ;:'att bada badf d dir erase f oldmac mkdir ocwd p pc '
 4!:55 ;:'read unix win write x '
 
 

@@ -54,7 +54,7 @@ if. IF64 do.
 assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
 assert. 2 <: 1 T. ''
 NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores
-setth nwthreads=. <: 0 { 8 T. ''  NB. one worker thread per core, -1
+setth nwthreads=. 1 >. <: 0 { 8 T. ''  NB. one worker thread per core, -1
 wthr nwthreads
 assert. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
 wthr nwthreads
@@ -69,32 +69,35 @@ NB. Verify forcetask arg
 pyx =. 6!:3 t. ''"0 N # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
-assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
+assert. (t0 + 0.5) < 6!:1''  [ 'a1' NB. master should not wait
 wthr nwthreads
+echo 't0';6!:1''
 pyx =. 6!:3 t. ''"0 (>:N) # 1.0  NB. fill up with delaying threads
+echo 't1';6!:1''
 t0 =. 6!:1''
 1. = >pyx
-assert. (t0 + 0.5) > 6!:1''  NB. master should wait
+echo 't2';6!:1''
+assert. (t0 + 0.5) > 6!:1''  [ 'a2' NB. master should wait
 wthr nwthreads
 pyx =. 6!:3 t. 'worker'"0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
-assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
+assert. (t0 + 0.5) < 6!:1''  [ 'a3' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker') "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
-assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
+assert. (t0 + 0.5) < 6!:1''  [ 'a4' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';1) "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
-assert. (t0 + 0.5) < 6!:1''  NB. master should not wait
+assert. (t0 + 0.5) < 6!:1''  [ 'a5' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';0) "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
 1. = >pyx
-assert. (t0 + 0.5) > 6!:1''  NB. master should wait
+assert. (t0 + 0.5) > 6!:1''  [ 'a6' NB. master should wait
 NB. semaphore test
 localpyx=.5 T. 5
 sema t. '' localpyx;<1

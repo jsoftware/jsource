@@ -716,7 +716,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // ****** if g is a global table, we have a write lock on the locale, which we must release in any error paths.  g=0 otherwise *******
 
  // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
- if(unlikely(jt->uflags.us.cx.cx_c.db))if(e->val!=0&&((e->valtype&QCNOUN)==0))RZGOTO(redef(w,e->val),exitlock);  // could move outside of lock, but it's only for debug
+ if(unlikely(jt->uflags.trace&TRACEDB))if(e->val!=0&&((e->valtype&QCNOUN)==0))RZGOTO(redef(w,e->val),exitlock);  // could move outside of lock, but it's only for debug
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
 
  I xaf;  // holder for nvr/free flags

@@ -76,23 +76,25 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  union {  // this union is 4 bytes long on a 4-byte bdy
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
+#define TRACEDB1                1  // full debug
+#define TRACEPM                 2  // set when PM is running
+#define TRACEDBSUSSS         0x20  // single-step request encountered - end suspension
+#define TRACEDBSUSCLEAR      0x40  // set to forcibly end suspension
+#define TRACEDBSUSFROMSCRIPT 0x80  // debug only, to keep reading from script during suspension
+#define TRACEDB              0xfd  // any of the debug flags; see 13!:0
+                                   // debug flags are also used for dbuser
+   UC trace;  // tracing-related flags (debug and pm)  inherit
+   C init0area[0]; // label for initializing
+                   // ************************************** here starts the area that is initialized to 0 when task starts 0x14
+   C bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
    union {
-    US cx_us;       // accessing both flags at once
+    US spflag; // access as short
     struct {
-     C    pmctr;     // set when PM is running inherit
-     UC   db;               /* debug flag; see 13!:0 inherit                          */
-    } cx_c;        // accessing as bytes
-   } cx;   // flags needed by unquote and jtxdefn   inherit for task
-   union {
-    US uq_us;       // accessing both flags at once
-    struct {
-     B    spfreeneeded;     // When set, we should perform a garbage-collection pass  persistent    combine w/pmctr & db
-     C init0area[0];  // label for initializing
-// ************************************** here starts the area that is initialized to 0 when task starts 0x16
-     C    bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
-    } uq_c;        // accessing as bytes
-   } uq;   // flags needed only by unquote  clear for task
-  } us;   // access as US
+     B spfreeneeded;  // When set, we should perform a garbage-collection pass  persistent
+     B sprepatneeded; // When bit 1 set, we should reclaim repat blocks.  Needs synchronisation, but rarely touched by other threads
+    };
+   };
+  };
  } uflags;   // 4 bytes
  I4 parsercalls;      // # times parser was called clear for task
  B iepdo;            // 1 iff do iep on going to immex   init for task to 0   should be shared?
@@ -189,23 +191,23 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  PSTK initparserstack[1];  // 2 words stack used for messages when we don't have a real one Only .a and .t are used, leaving 6 bytes free (.pt and .filler)
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
-#if PYXES
- pthread_t pthreadid;  // OS-dependent thread ID.  We need it only for destroying tasks.
- C filler7[16-sizeof(pthread_t)];  // trouble if it's bigger than this!
-#else
- I filler7[2];
-#endif
+ A repato; // outgoing repatriation chain; chain of objects which all belong to the same thread.  AAV0(repato) points to the last link in the chain, and AC(repato) is the cumulative #bytes in the chain
+           // rationale: it's common to free many objects from the same thread at once (in particular, release boxed list from a pyx), so this amortises that work
+           // it would be good to have a more general outgoing repatriation queue to handle better the case when you free objects from different threads; logic is more annoying there because you have to route the objects to their right destinations
+           // snmalloc has a slick design but it sometimes 'repatriates' blocks to the wrong thread, so they may sometimes take multiple hops to get home, which is annoying.  An alternative is to use a fixed-sized array, and sort it once it fills up
+           // perhaps something like an lru cache of threads recently freed to?  Do a linear scan of the first k entries (maybe w/short simd if the first is a miss), and if they all miss, then fall back to--snmalloc trick, or sort buffer, or something else
+           // Or maybe a fixed-size cache, and anything that falls out of it gets immediately flushed?  I like that, because it helps prevent singleton allocations from getting lost
  UI4*futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock
+ I filler6[1];
 // end of cacheline 6
 
  C _cl7[0];
  // Area used for intertask communication of memory allocation
- A repatq[-PMINL+PLIML+1];  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  We have 5 queues to avoid muxing; could do with 1
- I4 repatbytes;  // number of bytes repatriated since the last garbage collection, modified by all threads
- C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created
-// 3 bytes free
- I mfreegenallo;        // Amount allocated through malloc, biased  modified onlt by owning thread
- I malloctotal;    // net total of malloc/free performed in m.c only  modified onlt by owning thread
+ A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory friendly than a straight chain?
+ C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.  scaf should go in different cache line since repatq will get batted around quite a bit?
+// 7 bytes free
+ I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
+ I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;
@@ -300,7 +302,7 @@ typedef struct JSTstruct {
  C baselocale[4];    // will be "base"
  UI4 baselocalehash;   // name hash for base locale
  UC seclev;           /* security level                                  */
- UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script
+ UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script.  See TRACEDB* flags above
  B assert;           /* 1 iff evaluate assert. statements               */
  // rest of cacheline used only in exceptional paths
  UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)

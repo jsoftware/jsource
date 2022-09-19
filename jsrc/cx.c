@@ -50,7 +50,7 @@
 #define SETTRACK
 #endif
 
-#define POPTRYSTK if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8); nGpysfctdl^=4;}
+#define POPTRYSTK if(!--tdi){jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|(UC)(nGpysfctdl>>8); nGpysfctdl^=4;}
 #define POPIFTRYSTK if(unlikely(nGpysfctdl&4))POPTRYSTK
 #define NOUNERR(t,ti) \
     /* Signal post-exec error*/ \
@@ -265,14 +265,14 @@ DF2(jtxdefn){
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){nGpysfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
-  if(unlikely((jt->uflags.us.cx.cx_us | (sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.
+  if(unlikely((jt->uflags.trace|(sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.
    // special processing required
    // if we are in debug/pm mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
    // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
-   if(!(nGpysfctdl&1)&&jt->uflags.us.cx.cx_us){
+   if(!(nGpysfctdl&1)&&jt->uflags.trace){
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
      callframe=jt->sitop;  // remember the caller's frame
-     if(jt->uflags.us.cx.cx_c.db){  // if debug
+     if(jt->uflags.trace&TRACEDB){  // if debug
       nGpysfctdl|=2;   // set debug flag if debug requested and not locked (no longer used)
       // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
       // information about this execution: the local symbols and the control-word table
@@ -288,7 +288,7 @@ DF2(jtxdefn){
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sflg&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
+   if(sflg&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= (jt->uflags.trace&TRACEDB)<<8;}
   }
   // End of unusual processing
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -362,7 +362,7 @@ DF2(jtxdefn){
   // Inside the loop we must use BZ and BASSERT or continue for errors; these will break out of the loop and run the ending code
   // i holds the control-word number of the current control word
   // Check for debug and other modes
-  if(unlikely(jt->uflags.us.cx.cx_us!=0)){  // fast check to see if we have overhead functions to perform
+  if(unlikely(jt->uflags.trace)){  // fast check to see if we have overhead functions to perform
    // here to handle debug jump, perf monitor, or any other unusual cases
    if(!(nGpysfctdl&(1))){  // only if not locked
     if(!(nGpysfctdl&(16))){
@@ -381,14 +381,14 @@ DF2(jtxdefn){
      }
     }
 
-    if(jt->uflags.us.cx.cx_c.db){   // if debug is on, or coming on
+    if(jt->uflags.trace&TRACEDB){   // if debug is on, or coming on
      nGpysfctdl|=2;  // if this is coming from debug, indicate debug mode
      i=debugnewi(i,thisframe,self);  // get possibly-changed execution line
     }
     if((UI)i>=(UI)(nGpysfctdl>>16))break;  // if defn is exiting, avoid a PM record for an invalid line
 
     // if performance monitor is on, collect data for it
-    if(jt->uflags.us.cx.cx_c.pmctr&&C1==((PM0*)CAV1(JT(jt,pma)))->rec){
+    if((jt->uflags.trace&TRACEPM)&&C1==((PM0*)CAV1(JT(jt,pma)))->rec){
      // PM is enabled & we have requested line timing.  We have to record the name and locale that is running.
      // If the most recent stack entry before this entity started is a CALL, that is the name to use (it may have been extracted from an anonymous operator).
      // Otherwise, the call is truly anonymous and we use a name of ''
@@ -427,13 +427,13 @@ dobblock:
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bi=i; i+=((cwgroup>>5)&1)+1;  // go to next sentence, or to the one after that if it's harmless end. 
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // end of definition
-    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)!=0))break;  // not another B block
+    if(unlikely((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace))break;  // not another B block
     goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
    }else if((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
-   }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
+   }else if((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(jt->jerr==EVTHROW){
@@ -453,7 +453,7 @@ dobblock:
      // in a long run of only if. and B blocks, the only switches executed will go to the if. processor, predictably
    i=cw[i].go;  // Go to the next sentence, whatever it is
    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // no fallthrough if line exits
-   if(unlikely((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
+   if(unlikely((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)|jt->uflags.trace))break;  // avoid indirect-branch overhead on the likely case
    // fall through to...
   case CASSERT:
   case CTBLOCK:
@@ -470,10 +470,10 @@ tblockcase:
    }else{parseline(t,lbl3);}
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // exit if end of defn
-    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)+jt->uflags.us.cx.cx_us)!=0))break;  // break if T block extended
+    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)|jt->uflags.trace)!=0))break;  // break if T block extended
     goto docase;  // avoid indirect-branch overhead on the likely case, if. T do.
    }else if((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
-   }else if((nGpysfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
+   }else if((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(EVTHROW==jt->jerr){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
@@ -505,7 +505,7 @@ docase:
    }
    t=0;  // Indicate no T block, now that we have processed it
    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;
-   if(unlikely(((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)!=0))break;  // check for end of definition of special types
+   if(unlikely((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace))break;  // check for end of definition of special types
    goto dobblock;   // normal case, continue with B processing, without switch overhead
 
   // ************* The rest of the cases are accessed only by indirect branch or fixed fallthrough ********************
@@ -515,7 +515,7 @@ docase:
    tryinit(tdv+tdi,i,cw);
    // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
    // if debugging is already off, it stays off
-   if(unlikely(jt->uflags.us.cx.cx_c.db))jt->uflags.us.cx.cx_c.db=(nGpysfctdl&16)&&(UC)(tdv+tdi)->d?JT(jt,dbuser)&0x1:0;
+   if(unlikely(jt->uflags.trace&TRACEDB))jt->uflags.trace^=(nGpysfctdl&16)&&(UC)(tdv+tdi)->d?(jt->uflags.trace^JT(jt,dbuser))&TRACEDB1:0;
    ++tdi; ++i; nGpysfctdl|=4;  // bump tdi pointer, set flag
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
@@ -605,7 +605,7 @@ docase:
   case CRETURN:
    // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
    i=cw[i].go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
-   if(nGpysfctdl&4)jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
+   if(nGpysfctdl&4)jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|(UC)(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
    break;
   case CCASE:
   case CFCASE:
@@ -618,7 +618,7 @@ docase:
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
    i=cw[i].go;  // Go to next sentence, which might be in the default case (if T block is empty)
-   if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)+jt->uflags.us.cx.cx_us)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
+   if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)|jt->uflags.trace)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
    break;  // if it's not a t-block, take the indirect branch
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
@@ -635,7 +635,7 @@ docase:
     // Clear t to ensure that the next case./fcase. does not reuse this value
     t=0;
    }
-   if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
+   if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
@@ -666,7 +666,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
   }else {pee(line,&cw[bi],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error
-  if(nGpysfctdl&4)jt->uflags.us.cx.cx_c.db=(UC)(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
+  if(nGpysfctdl&4)jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|(UC)(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
@@ -715,7 +715,7 @@ static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
 // executing PARSE or other, we must be executing a truly anonymous operator, and we return 0
-static F1(jtxopcall){R jt->uflags.us.cx.cx_us&&jt->sitop&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}  // debug or pm, and CALL type.  sitop may be 0 if deb/pm turned on in the middle of a sentence
+static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}  // debug or pm, and CALL type.  sitop may be 0 if deb/pm turned on in the middle of a sentence
 
 // This handles adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, and copy the flags
 // point g in the derived verb to the original self

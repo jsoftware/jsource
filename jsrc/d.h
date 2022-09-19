@@ -4,14 +4,6 @@
 /* Debug                                                                   */
 
 
-/* jt->uflags.us.cx.cx_c.db and JT(jt,dbuser) values; 0 means no debug                           */
-
-#define DB1         1       /* full debug                                   */
-#define DBSUSSS  0x20   // single-step request encountered - end suspension
-#define DBSUSCLEAR  0x40   // set to forcibly end suspension
-#define DBSUSFROMSCRIPT 0x80  // debug only, to keep reading from script during suspension
-
-
 // values returned in box 0 of an AFDEBUGRESULT value - big enough to be an integer
 
 #define SUSCLEAR    7       /* clear stack                                  */

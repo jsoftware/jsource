@@ -413,9 +413,18 @@ void OPENSSL_setcap(void)
 
 int getNumberOfCores(void) {
 #ifdef _WIN32
- SYSTEM_INFO sysinfo;
- GetSystemInfo(&sysinfo);
- return sysinfo.dwNumberOfProcessors;
+ DWORD_PTR ProcessAffinityMask, SystemAffinityMask;
+ if(GetProcessAffinityMask(GetCurrentProcess(), &ProcessAffinityMask, &SystemAffinityMask)){
+#if defined(_WIN64)||defined(__LP64__)
+  return __builtin_popcountll(ProcessAffinityMask);
+#else
+  return __builtin_popcount(ProcessAffinityMask);
+#endif
+ }else{
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+  return sysinfo.dwNumberOfProcessors;
+ }
 #elif defined(__APPLE__)
  int nm[2];
  size_t len = 4;
@@ -430,6 +439,10 @@ int getNumberOfCores(void) {
   if(count < 1) { count = 1; }
  }
  return count;
+#elif defined(__linux__)
+ cpu_set_t set;
+ CPU_ZERO(&set);
+ return (!sched_getaffinity(getpid(), sizeof(set), &set)) ? CPU_COUNT(&set) : sysconf(_SC_NPROCESSORS_ONLN);
 #else
  return sysconf(_SC_NPROCESSORS_ONLN);
 #endif

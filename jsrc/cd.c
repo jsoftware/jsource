@@ -39,6 +39,7 @@ int jgettimeofday(struct jtimeval *tp, struct jtimezone * tzp)
 struct jtimespec jmtclk(){
  long long t=GetTickCount64();
  return (struct jtimespec){.tv_sec=t/1000,.tv_nsec=1000000*(t%1000)};}
+struct jtimespec jmtfclk(){return jmtclk();}
 
 // unavailable on older windows
 #if NOSYNCHLIB
@@ -58,4 +59,5 @@ long long jfutex_waitn(unsigned *p,unsigned v,unsigned long long ns){
 #else
 #include"j.h"
 struct jtimespec jmtclk(){struct timespec r; clock_gettime(CLOCK_MONOTONIC,&r);R r;}
+struct jtimespec jmtfclk(){struct timespec r; clock_gettime(CLOCK_MONOTONIC_RAW,&r);R r;}
 #endif

@@ -325,7 +325,7 @@ typedef struct jobstruct {
  union {
   struct {
    A args[3];  // w,u,u if monad; a,w,u if dyad
-   I inherited[(offsetof(JTT,uflags.us.uq.uq_c.init0area)+SZI-1)>>LGSZI]; // inherited sections of JT, plus a bit.  The pyx is stored in AM
+   I inherited[(offsetof(JTT,uflags.init0area)+SZI-1)>>LGSZI]; // inherited sections of JT, plus a bit.  The pyx is stored in AM
   } user;
   struct uiint {
    unsigned char (*f)(J jt,void *ctx,UI4 i);  // function to do 1 internal task. C is the error code, 0=OK. i is the task# within this job
@@ -377,7 +377,11 @@ nexttask: ;
 nexttasklocked: ;  // come here if already holding the lock, and job is set
   if(unlikely(job==0)){  // not really unlikely, but if there's not one we can be as slow as we like
    // No job to run.  Wait for one.  While we're waiting, do a garbage-collection if one is needed.  It could be signaled by a different thread
-   if(unlikely(__atomic_load_n(&jt->uflags.us.uq.uq_c.spfreeneeded,__ATOMIC_ACQUIRE)!=0)){JOBUNLOCK(jobq,0) spfree(); job=JOBLOCK(jobq);}  // Collect garbage if there is enough to check
+   JOBUNLOCK(jobq,0);
+   jtrepatsend(jt); // Relinquish others' memory
+   jtrepatrecv(jt); // Reclaim any of our own memory from others; unconditionally because there's nothing better to do
+   if(uncommon(&jt->uflags.spfreeneeded))spfree();  // Collect garbage if there is enough to check
+   job=JOBLOCK(jobq);
    if(likely(job==0)){
     // Still no job.  As far as tasks are concerned, we are now waiting.  But don't do an OS wait till we have lingered
     ++jobq->waiters;  // indicate we are waiting, while under lock
@@ -385,11 +389,11 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
     do{   // loop till we get something to process
      UI4 futexval=__atomic_load_n(&jobq->futex,__ATOMIC_ACQUIRE);  // get current value to wait on, before we check for work.  It is updated under lock when a job is added or if threads are kicked with 15 T.
                               // we set the value before lingering so that if we are kicked while lingering the wait will fail and we will come back to linger again
-     if(warmendns!=0){struct jtimespec endtime=jtmtil(warmendns);  // time when our keepwarm expires
+     if(warmendns!=0){struct jtimespec endtime=jtmftil(warmendns);  // time when our keepwarm expires
       // the user wants us to linger before performing a wait.  We will spin here in the hope that a job arrives
       JOBUNLOCK(jobq,job);
       while(1){
-       if(jtmdif(endtime)<0)break;  // if time expired, exit loop.  Would prefer to deal with ns only rather than timespec, but these are the primitives we have
+       if(jtmfdif(endtime)<0)break;  // if time expired, exit loop.  Would prefer to deal with ns only rather than timespec, but these are the primitives we have
 #define THREADSPERPAUSE 4  // We want to reduce the bus load when all threads are lingering.  With PAUSE at 140 cycles, one read per 35 cycles seems negligible
        I threadct=jobq->nthreads; do{_mm_pause();}while(threadct-=THREADSPERPAUSE>0);
        if(__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)!=0)break;  // if a job shows up, exit loop
@@ -399,6 +403,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
      // still have the lock
      if(unlikely(jt->taskstate&TASKSTATETERMINATE)){--jobq->waiters; goto terminate;}  // if central has requested this thread to terminate, do so when the queue goes empty.   This counts as work
      JOBUNLOCK(jobq,job);
+     jtrepatsend(jt); // since we have nothing to better to do, release memory now
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
      // we could check to see if there is a job before doing the RFO; that would reduce contention after a kick but it would increase delay
@@ -443,10 +448,9 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // set up jt state here only; for internal tasks, such setup is not needed
    A *old=jt->tnextpushp;  // we leave a clear stack when we go
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
-   memset(&jt->uflags.us.uq.uq_c.init0area,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.us.uq.uq_c.init0area));    // clear what should be cleared - up to locsyms
+   memset(&jt->uflags.init0area,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.init0area));    // clear what should be cleared - up to locsyms
    A startloc=jt->global;  // extract the globals from the job
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATEBUSY;  // init what needs initing.  Notably clear the local symbols
-   __atomic_store_n(&jt->uflags.us.uq.uq_c.spfreeneeded,0,__ATOMIC_RELEASE); if(unlikely((__atomic_load_n(&jt->repatbytes,__ATOMIC_ACQUIRE)&-REPATGCLIM)!=0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // if gc needed, set so
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
    I4 savcallstack = jt->callstacknext;   // starting callstack
@@ -476,6 +480,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
  // end of loop forever
 terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
  JOBUNLOCK(jobq,job); 
+ jtrepatsend(jt); // release any memory belonging to other threads
  __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
  R 0;  // return to OS, closing the thread
 }
@@ -495,7 +500,7 @@ static I jtthreadcreate(J jt,I n){
 #endif
  ASSERT(pthread_attr_setstacksize(&attr,stksiz)==0,EVFACE)    // request sufficient stack size
  JTFORTHREAD(jt,n)->cstackmin=0;  // clear any old stackarea; we wait for thread to fill in the stack
- ASSERT(pthread_create(&JTFORTHREAD(jt,n)->pthreadid,&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
+ ASSERT(pthread_create(&(pthread_t){0},&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
  // since the user may try to use the thread right away, delay until it is available for use.  We use cstackmin as a 99.999% proxy for 'ready'
  while(__atomic_load_n(&JTFORTHREAD(jt,n)->cstackmin,__ATOMIC_ACQUIRE)==0){delay(10000); YIELD}  // task startup takes a while
  R 1;

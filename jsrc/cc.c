@@ -1189,6 +1189,140 @@ static DF1(jttess1){A s;I m,r,*v;
 }
 
 
+// parallel <;._2 y for LIT lists (could reuse for B01 harmlessly, but what's the point?)
+// TODO: other cuts, other types
+// TODO: use with user-defined verb?  u t.'';.n ok--preserves semantics, since t. executions are unordered--but what if user wants an open result?  ;@:(u t.'';.n) ok, but bulky & annoying;
+// maybe infer purity of u or have user explicitly declare it with something like u pure.;.n ('pure.' strawman adverb name)--a general solution is warranted, since none of the issues are specific to ;.
+// TODO: better to compute fret counts per chunk ahead-of-time?  That's probably bandwidth-bound, so no reason to bother tying up cores for it
+#if C_AVX2 && PYXES
+typedef struct {
+ I prefend; //prefix end; index of the first fret within the chunk.  If -1, then the chunk contained no frets and contents/suffstart are undefined
+ A contents; //list of boxes.  Potentially null => empty
+ I suffstart; //suffix start; one past the index of the last fret in the chunk (potentially points one past the end of the chunk, as must obviously be the case for the last chunk)
+ I pad;
+} PBOXCUTCHUNK;
+typedef struct {
+ A w; //array to be cut
+ I chunksz; //MUST be >=vector size
+ C fret; //cached last element
+ I incfretp; //1 if fret should be included, 0 otherwise
+ I incfretm; //0 if fret should be included, -1 otherwise
+ _Alignas(CACHELINESIZE)
+ PBOXCUTCHUNK c[];
+} PBOXCUTSTATE;
+
+NOINLINE static C jtboxcutm21x(J jt,void *ctx,UI4 ti){ PBOXCUTSTATE *c=ctx; C *chb=CAV(c->w),*ch=chb+ti*c->chunksz;I cl=MIN(c->chunksz,chb+AN(c->w)-ch);C *ce=ch+cl; I pe,ss;A z; I incfretp=c->incfretp,incfretm=c->incfretm;
+ __m256i fret=_mm256_set1_epi8(c->fret);
+ //find first fret
+ for(;ch+32<ce;ch+=32){ //when the loop terminates normally, there will still be [1 32] bytes of tail left
+  UI4 m=_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(ch)));
+  if(common(m)){
+   ch+=CTTZ(m)+1; pe=ch-chb-1;
+   goto success;}}
+ // got to tail and no matches
+ {
+  UI4 m=_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(ce-32))); //assume at least 32 chars per chunk; very reasonable
+  if(!m){ c->c[ti].prefend=-1; R 0; }
+  ch=ce-32+CTTZ(m)+1; pe=ch-chb-1;}
+success:;
+ C *lf=ch-1; //pointer to the vector containing the last fret
+ I zl=0;
+ // count frets, and find the last one.  TODO unroll, sum in vector regs
+ for(C *tch=ch;tch+33<=ce;tch+=32){
+  UI4 m=_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(tch)));
+  zl+=__builtin_popcount(m);
+  lf=m?tch:lf;}
+ //tail
+ {UI4 m=(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(ce-32)))>>(31&(32-((ce-ch)&31))); //31& is to deal with the case where 0=cl&31; it is a no-op on x86/arm & the whole thing just becomes ch-ce
+  zl+=__builtin_popcount(m);
+  lf=m?(ce-32):lf;}
+ //Note: if ce-ch<32 then we will definitely set lf to ce-32 in the tail, so there is no danger of overreading from it, unless zl==0, which we handle below
+ if(!zl){ PBOXCUTCHUNK t={pe,0,pe+1};c->c[ti]=t; R 0; } //only a prefix (and potentially suffix)
+ GAE0(z,INT,zl,0,R jt->jerr);
+ /*GATV0(z,BOX,zl,1);*/ACINITZAP(z);
+ A *zv=AAV0/*AAV1*/(z);
+ A *ze=zv+zl;
+ {UI4 m=_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(lf)));
+  ce=lf+31-__builtin_clz(m); ss=ce-chb+1;}
+ //ch now points one past the first fret; ce now points at last fret; now walk backwards from ce to ch, to avoid a potential cache miss
+ //todo a cleverer solution--especially on avx512--would be to use compress to grab indices; store them in the latter half of z or something
+ //if we process 64k blocks at a time, then the indices can be 16-bit.  VPCOMPRESSW is only in VBMI2, though...
+ //64k blows out of L1, but maybe ok as long as we do a final forward pass (so still linear access; L2 bandwidth ok)
+ C *ct;
+ for(ct=ce;ct-33>=ch;ct-=32){
+  UI4 m=_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(ct-32)));
+  C *cs=ct;
+  while(m){
+   UI4 lf=__builtin_clz(m);
+   m=(UI)m<<(1+lf); //if m=1, then lf=31 and 1+lf=32, which is problematic for a 32-bit shift; make it a 64-bit shift
+   cs-=1+lf;
+   A t;GA10(t,LIT,ce-cs+incfretm);ACINITZAP(t);MC(CAV1(t),cs+1,ce-cs+incfretm); *--ze=t;
+   ce=cs;}}
+ //now [ch ct) is a [1 32]-byte as-yet-unprocessed region; process any remaining frets therein
+ {
+  UI4 m=_bzhi_u32(_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(ch))),ct-ch);
+  C *cs=ch+32;
+  while(m){
+   UI4 lf=__builtin_clz(m);
+   m=(UI)m<<(1+lf);
+   cs-=1+lf;
+   A t;GA10(t,LIT,ce-cs+incfretm);ACINITZAP(t);MC(CAV1(t),cs+1,ce-cs+incfretm); *--ze=t;
+   ce=cs;}
+  //process the final [ch ce) cell
+  A t;GA10(t,LIT,ce-ch+incfretp);ACINITZAP(t);MC(CAV1(t),ch,ce-ch+incfretp);
+  *--ze=t;}
+ PBOXCUTCHUNK t={pe,z,ss};c->c[ti]=t; R 0;}
+
+DF1(jtboxcutm21){
+ if(AR(w)!=1||!(AT(w)&LIT)||AN(w)<=65536)R jtcut1(jt,w,self);
+ F1PREFIP;PROLOG(0026);
+ PREF1(jtboxcutm21);
+#if 1
+ I nchunk=(AN(w)+65535)/65536; //try out 64k chunks for now
+ I incfretp=1-(FAV(self)->localuse.lu1.gercut.cutn>>31), incfretm=-1+incfretp;
+ _Alignas(64) char ctxbuf[sizeof(PBOXCUTSTATE)+nchunk*sizeof(PBOXCUTCHUNK)];PBOXCUTSTATE *ctx=(PBOXCUTSTATE*)ctxbuf;
+ ctx->w=w;
+ ctx->chunksz=65536;
+ ctx->fret=CAV(w)[AN(w)-1];
+ ctx->incfretp=incfretp;ctx->incfretm=incfretm;
+ jtjobrun(jt,jtboxcutm21x,ctx,nchunk,0);
+ //count frets
+ UI l=0;
+ DO(nchunk,if(ctx->c[i].prefend!=-1){l++;if(ctx->c[i].contents)l+=AN(ctx->c[i].contents);});
+ // generate output, copy in 'head' from first chunk
+ A z;GA10(z,BOX,l);AFLAGINIT(z,BOX);A *zv=AAV1(z);
+ I i=0;while(uncommon(ctx->c[i].prefend==-1))i++; //chunk 0 could be empty; find the first chunk that actually has something
+ A t;GA10(t,LIT,ctx->c[i].prefend+incfretp);ACINITZAP(t);MC(CAV1(t),CAV(w),ctx->c[i].prefend+incfretp);*zv++=t;
+ if(ctx->c[i].contents){MC(zv,AAV0(ctx->c[i].contents),AN(ctx->c[i].contents)*SZA); zv+=AN(ctx->c[i].contents); fa(ctx->c[i].contents);}
+ I ss=ctx->c[i].suffstart;
+ for(i++;i<nchunk;i++){
+  if(common(ctx->c[i].prefend!=-1)){
+   A t;GA10(t,LIT,ctx->c[i].prefend-ss+incfretp);ACINITZAP(t);MC(CAV1(t),CAV(w)+ss,ctx->c[i].prefend-ss+incfretp);
+   *zv++=t;ss=ctx->c[i].suffstart;
+   if(common(!!ctx->c[i].contents)){
+    MC(zv,AAV0(ctx->c[i].contents),AN(ctx->c[i].contents)*SZA); zv+=AN(ctx->c[i].contents); fa(ctx->c[i].contents);}}}
+ EPILOG(z);
+#else
+
+ C *wv=CAV(w);I wn=AN(w);A z;
+ if(!wn){GATV0(z,BOX,0,1);EPILOG(z);}
+ C fret=wv[AN(w)-1];
+ I zn=0;
+ DO(wn,zn+=wv[i]==fret;)
+ GA10(z,BOX,zn);
+ A *zv=AAV1(z);
+ I i=0;
+ for(I j=0;j<wn;j++){
+  if(wv[j]==fret){
+   A t;GA10(t,LIT,j-i,1);ACINITZAP(t);
+   MC(CAV(t),wv+i,j-i);
+   *zv++=t;
+   i=j+1;}}
+ EPILOG(z);
+#endif
+}
+#endif //C_AVX2 && PYXES
+
 F2(jtcut){F2PREFIP;A h=0,z;I flag=0,k;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.  For the shared case, inplacing is OK
@@ -1203,8 +1337,14 @@ F2(jtcut){F2PREFIP;A h=0,z;I flag=0,k;
   R z;
   }
   z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
- case 1: case -1:
- case 2: case -2: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; z=fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX); break;
+ case 2: case -2:
+#if C_AVX2 && PYXES
+ if(FAV(a)->id==CBOX){ //<;._2
+  RZ(z=fdef(0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX));
+  FAV(z)->localuse.lu1.gercut.cutn=k;
+  R z;}
+#endif
+ case 1: case -1: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; z=fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX); break;
  case 3: case -3: case 259: case -259: z=fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX); break;
  default:         ASSERT(0,EVDOMAIN);
  }

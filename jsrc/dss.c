@@ -25,7 +25,7 @@ DC jtssnext(J jt,DC d,C c){
 // the suspension to terminate
 static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  RZ(w=vs(w));  // w is ignored; must be list or atom
- ASSERT(jt->uflags.us.cx.cx_c.db,EVDOMAIN);
+ ASSERT(jt->uflags.trace&TRACEDB,EVDOMAIN);
  d=jt->sitop;                               /* cut back to topmost suspension  */
  NOUNROLL while(d&&!d->dcsusp){                      /* do until topmost suspension     */
   if(d->dctype==DCCALL)DGOTO(d,-1)    /* terminate each call             */
@@ -42,7 +42,7 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
   case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) jt->jerr=EVCUTSTACK; break;  // terminate current verb, resume previous fn, stop after executing there.  Set jerr which will fail sentence and set z=0
  }
  // Return a suspension-ending value.  Kludge we also set a flag to process the step because the labs can't route the value correctly
- JT(jt,dbuser)|=DBSUSSS;  // indicate single-step pending.  This is non-reentrant and may have multithread issues
+ JT(jt,dbuser)|=TRACEDBSUSSS;  // indicate single-step pending.  This is non-reentrant and may have multithread issues
  A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }
 

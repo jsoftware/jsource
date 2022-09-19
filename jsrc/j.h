@@ -234,15 +234,15 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 // likely/unlikely support
 #if defined(__clang__) || defined(__GNUC__)
 #ifndef likely
-#define likely(x) __builtin_expect((x),1)
+#define likely(x) __builtin_expect(!!(x),1)
 #endif
 #ifndef unlikely
-#define unlikely(x) __builtin_expect((x),0)
+#define unlikely(x) __builtin_expect(!!(x),0)
 #endif
 #if defined(_WIN32) || defined(__clang__) || __GNUC__ > 4
 #if (defined(__has_builtin) && __has_builtin(__builtin_expect_with_probability)) || (!defined(__clang__) && __GNUC__ >= 9)
-#define common(x) __builtin_expect_with_probability((x),1,0.6)
-#define uncommon(x) __builtin_expect_with_probability((x),1,0.4)
+#define common(x) __builtin_expect_with_probability(!!(x),1,0.6)
+#define uncommon(x) __builtin_expect_with_probability(!!(x),1,0.4)
 #else
 #define common(x) likely(x)
 #define uncommon(x) unlikely(x)
@@ -252,10 +252,10 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define uncommon(x) unlikely(x)
 #endif
 #else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#define common(x) (x)
-#define uncommon(x) (x)
+#define likely(x) (!!(x))
+#define unlikely(x) (!!(x))
+#define common(x) (!!(x))
+#define uncommon(x) (!!(x))
 #endif
 
 #if 1
@@ -457,6 +457,7 @@ int jgettimeofday(struct jtimeval*, struct jtimezone*);
 #define jgettimeofday gettimeofday
 #endif
 struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions when sleeping; has poor granularity and slow on windows
+struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended for timed busywaiting
 
 #if SY_64
 #if defined(MMSC_VER)  // SY_WIN32
@@ -731,6 +732,7 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 
 #if PYXES
 #define REPATGCLIM 0x100000   // When this many bytes have been repatriated to a thread, call a GC in that thread
+#define REPATOLIM (REPATGCLIM/32) // When an outgoing repatriation queue contains this many bytes, flush it
 #else
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
@@ -881,7 +883,7 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
-#define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
+#define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
 #define MODESRESET(jm)      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
@@ -1446,10 +1448,15 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 #define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=REPSGN(_n))<0)*_d++=*src++;}  // ... this when s increments through the loop
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
-// Copy shapes.  Optimized for length <5, subroutine for others
+// Copy shapes.  Optimized for length <5 (<9 on avx512), subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the testing
 // len is # words in shape
-#if 1 && ((C_AVX&&SY_64) || EMU_AVX)
+#if C_AVX512
+#define MCISH(dest,src,n) \
+ {void *_d=dest,*_s=src; I _n=n;\
+  if(likely(_n<=8)){__mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));}\
+  else{MC(_d,_s,_n<<LGSZI);}}
+#elif C_AVX
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
   if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \
@@ -1514,6 +1521,11 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // ??? is_mm256_zeroupper really needed
 // -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
 #define _mm256_zeroupperx(x)
+// this is faster than reusing another register as the source anyway, because it's not a recognised idiom, so we would have a false dependency on the other register
+#define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
+#define _mm256_setone_pd() _mm256_castsi256_pd(_mm256_setone_epi64())
+static inline __m256i LOADV32I(void *x) { return _mm256_loadu_si256(x); }
+static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input (as D*), z->result (as D*), u=input atom4 and result
@@ -1929,7 +1941,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
-#define WITHDEBUGOFF(stmt) {UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; stmt jt->uflags.us.cx.cx_c.db=d;}  // execute stmt with debug turned off
+#define WITHDEBUGOFF(stmt) {UC _d=jt->uflags.trace&TRACEDB; jt->uflags.trace&=~TRACEDB; stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB);}  // execute stmt with debug turned off
 #if C_LE
 #if BW==64
 #define IHALF0  0x00000000ffffffffLL

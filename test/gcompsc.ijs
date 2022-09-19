@@ -497,7 +497,7 @@ NB. Verify toler honored in compound
 10 = # 1 ([ -.!.0 -.!.1e_12)~ 1 + 1e_14 * i. 10
 1 = # 1 ([ -.!.0 -.!.1e_16)~ 1 + 1e_14 * i. 10
 
-yy =: 1e7 $ 1 + 1e_14  NB. Must be big so that temp hashtable is released
+yy =: (QKTEST{1e7 1e5) $ 1 + 1e_14  NB. Must be big so that temp hashtable is released
 (#yy) = yy +/@:(=!.1e_12) yy
 10000 > 7!:2 'yy +/@:(=!.1e_12) yy'
 f =: +/@:(e.!.1e_12)&yy
@@ -511,12 +511,12 @@ xx =: (#yy) $ 1.0
 0 = # -.!.1e_12&xx yy
 (#yy) = # -.!.1e_16&xx yy
 t =: 7!:2 'f yy'
-(-.IF64) +. (7!:2 'yy  -.!.1e_12 yy') > 1.5 * t
+(QKTEST+.-.IF64) +. (7!:2 'yy  -.!.1e_12 yy') > 1.5 * t
 (#yy) = # yy ([ -. -.!.1e_12) xx
 0 = # yy ([ -.!.0 -.!.1e_16) xx
 (#yy) = # ([ -.!.0 -.!.1e_12)&xx yy
 0 = # ([ -.!.0 -.!.1e_16)&xx yy
-(-.IF64) +. (7!:2 'yy ([ -. -.!.1e_16) yy') > 1.5 * t
+(QKTEST+.-.IF64) +. (7!:2 'yy ([ -. -.!.1e_16) yy') > 1.5 * t
 
 NB. empty-arg detection
 ((+/"]@:= S: 0 <"0@i.@#) -: (+/@:= S: 0 <"0@i.@#)) '' ; 1

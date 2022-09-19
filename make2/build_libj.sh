@@ -131,6 +131,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fwrapv \
  -Wno-implicit-int-float-conversion \
  -Wno-int-in-bool-context \
  -Wno-missing-braces \
+ -Wno-missing-field-initializers \
  -Wno-null-pointer-subtraction \
  -Wno-parentheses \
  -Wno-pass-failed \
@@ -600,10 +601,12 @@ mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform j64x
 cd obj/$jplatform/$j64x/
-if [ "x$MAKEFLAGS" = x'' ] ; then
+if [ ! -v MAKEFLAGS ] ; then
 if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
 make -j$par -f makefile-libj
 else
 make -f makefile-libj
 fi
+retval=$?
 cd -
+exit $retval

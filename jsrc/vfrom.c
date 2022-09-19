@@ -768,17 +768,17 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    }else limitrow=-AR(qk);  // -1 for Dpiv; otherwise -2 or -3.  
   }
   // init for the column
-  __m256i endmask=_mm256_cmpeq_epi64(sgnbit,sgnbit); // mask for validity of next 4 words: used to control fetch from column and store into result row
+  __m256d endmask=_mm256_setone_pd(); // mask for validity of next 4 words: used to control fetch from column and store into result row
   I *bvgrd;
   // create the column NPAR values at a time
   for(bvgrd=bvgrd0;bvgrd<bvgrde;bvgrd+=NPAR){
    __m256i indexes;  // offset in atoms from Qk to the beginning of the row we are fetching = rownums*n
    __m256d dotproducth,dotproductl;  // where we build the column value
    // get the validity mask for the gather and process: leave as ones until the end of the column
-   if(unlikely(bvgrde-bvgrd<NPAR))endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-(bvgrde-bvgrd)));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+   if(unlikely(bvgrde-bvgrd<NPAR))endmask = _mm256_loadu_pd((double*)(validitymask+NPAR-(bvgrde-bvgrd)));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
    // if we are processing DIP/Dpiv and looking for early cutoff, fetch the row#s of the next group to process, in bkg order
    if(zv==0){
-    if(likely(bvgrde-bvgrd>=NPAR))rownums=_mm256_loadu_si256((__m256i*)bvgrd); else rownums=_mm256_maskload_epi64(bvgrd,endmask);
+    if(likely(bvgrde-bvgrd>=NPAR))rownums=_mm256_loadu_si256((__m256i*)bvgrd); else rownums=_mm256_maskload_epi64(bvgrd,_mm256_castpd_si256(endmask));
    }else{
     rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(NPAR));  // otherwise, sequential processing of entire column
    }
@@ -834,7 +834,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
      __m256d dotprod;  // place where product is assembled or read into
      dotprod=_mm256_permute4x64_pd(dotproducth,0b00000000);  // copy next value into all lanes
      dotproducth=_mm256_permute4x64_pd(dotproducth,0b11111001); dotproducth=_mm256_blend_pd(dotproducth,_mm256_setzero_pd(),0b1000); // shift down one value for next time
-     I i=_mm256_extract_epi64(indexes,0); indexes=_mm256_permute4x64_pd(indexes,0b11111001); // get the row number we are trying to swap out; shift row number down for next loop
+     I i=_mm256_extract_epi64(indexes,0); indexes=_mm256_permute4x64_epi64(indexes,0b11111001); // get the row number we are trying to swap out; shift row number down for next loop
 
      // DIP processing.  col data is in dotprod as col col col col
      __m256d ratios=_mm256_mul_pd(oldbk,dotprod);  // ratios is col*oldbk col*minimp 0 0
@@ -880,10 +880,10 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     // one-column mode: just store out the values
     __m256d force0=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),thresh,_CMP_LT_OQ);  // 1s where we need to clamp
     dotproducth=_mm256_blendv_pd(dotproducth,_mm256_setzero_pd(),force0);  // set values < threshold to +0
-    if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv,dotproducth);else _mm256_maskstore_pd(zv,endmask,dotproducth);  // store, masking if needed
+    if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv,dotproducth);else _mm256_maskstore_pd(zv,_mm256_castpd_si256(endmask),dotproducth);  // store, masking if needed
     if(limitrow==-3){
      dotproductl=_mm256_blendv_pd(dotproductl,_mm256_setzero_pd(),force0);  // set values < threshold to +0
-     if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv+n,dotproductl);else _mm256_maskstore_pd(zv+n,endmask,dotproductl);  // repeat for low part
+     if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv+n,dotproductl);else _mm256_maskstore_pd(zv+n,_mm256_castpd_si256(endmask),dotproductl);  // repeat for low part
     }
     zv+=NPAR;  // advance to next output location
    }
@@ -1159,7 +1159,7 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
   UI colx;
   // for each column-group
   for(colx=0;colx<coln;colx+=NPAR){
-   __m256i endmask;  // maks for maskload and gather, indicating # words to process
+   __m256d endmask;  // maks for maskload and gather, indicating # words to process
    __m256i prn0x;  // indexes of nonzero values in row
    // get the mask of valid values, fetch pivotrow values, fetch the Qk indexes to modify
    if(coln-colx>=NPAR){  // all lanes valid
@@ -1168,10 +1168,10 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     if(dpflag&4)prowdl=_mm256_loadu_pd(prn0v+coln+colx);  // and low part if present
     endmask=sgnbit;  // indicate all lanes valid
    }else{
-    endmask=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
-    prn0x=_mm256_maskload_epi64(colxv+colx,endmask);  // load the indexes into Qk
-    prowdh=_mm256_maskload_pd(prn0v+colx,endmask);  // load next 4 non0 values in pivotrow
-    if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,endmask);  // and low part if present
+    endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
+    prn0x=_mm256_maskload_epi64(colxv+colx,_mm256_castpd_si256(endmask));  // load the indexes into Qk
+    prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
+    if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
    }
    // gather the high parts of Qk
    __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow,prn0x,endmask,SZI);

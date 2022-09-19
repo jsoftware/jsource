@@ -192,4 +192,6 @@ cp makefile-jnative obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-jnative
+retval=$?
 cd -
+exit $retval

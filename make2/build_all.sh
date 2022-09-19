@@ -39,6 +39,6 @@ else
 j64x="${j64x:=j32}"
 fi
 
-jplatform=$jplatform j64x=$j64x ./build_jconsole.sh
-jplatform=$jplatform j64x=$j64x ./build_libj.sh
-jplatform=$jplatform j64x=$j64x ./build_tsdll.sh
+jplatform=$jplatform j64x=$j64x ./build_jconsole.sh || exit $?
+jplatform=$jplatform j64x=$j64x ./build_libj.sh || exit $?
+jplatform=$jplatform j64x=$j64x ./build_tsdll.sh || exit $?

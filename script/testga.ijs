@@ -15,6 +15,11 @@ NB. RES=: RUN (<testpath),each 'gtdot.ijs';'gtdot.ijs';'gtdot1.ijs';'gtdot1.ijs'
 NB. echo^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
+NB. smoke test
+RES=: RUN (<testpath),each 'g520.ijs';'gtdot3.ijs'
+echo^:(*@#RES) RES
+exit^:(*@#RES) *@#RES
+
 RES=: RUN ddall
 
 3 : 0''

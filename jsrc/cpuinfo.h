@@ -13,6 +13,12 @@
 #undef MMSC_VER
 #endif
 
+#if defined(__linux__)
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <sched.h>
+#endif
 #include <stdint.h>
 
 extern void cpuInit(void);

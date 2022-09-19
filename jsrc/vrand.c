@@ -21,9 +21,9 @@
 #define SETNEXT     UF nextfn=jt->rngdata->rngparms[jt->rngdata->rng].rngF;
 #define NEXT        (nextrand(jt,nextfn))
 // call the rng efficiently.  The call is an indirect call from many places & thus likely to mispredict.  To help out, we make
-// all calls through a common routine that does the indirect call; in the one location it is more likely to be predicted.  Compiler 'optimizations'
-// may defeat us.  SETNEXT must appear in every function that calls NEXT
-static UI nextrand(J jt, UF f){R (*f)(jt);}
+// all calls through a common routine that does the indirect call; in the one location it is more likely to be predicted
+// SETNEXT must appear in every function that calls NEXT
+static NOINLINE UI nextrand(J jt, UF f){R (*f)(jt);}
 
 #if SY_64
 #define INITD       {sh=mk=1;}

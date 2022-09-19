@@ -234,15 +234,15 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 // likely/unlikely support
 #if defined(__clang__) || defined(__GNUC__)
 #ifndef likely
-#define likely(x) __builtin_expect((x),1)
+#define likely(x) __builtin_expect(!!(x),1)
 #endif
 #ifndef unlikely
-#define unlikely(x) __builtin_expect((x),0)
+#define unlikely(x) __builtin_expect(!!(x),0)
 #endif
 #if defined(_WIN32) || defined(__clang__) || __GNUC__ > 4
 #if (defined(__has_builtin) && __has_builtin(__builtin_expect_with_probability)) || (!defined(__clang__) && __GNUC__ >= 9)
-#define common(x) __builtin_expect_with_probability((x),1,0.6)
-#define uncommon(x) __builtin_expect_with_probability((x),1,0.4)
+#define common(x) __builtin_expect_with_probability(!!(x),1,0.6)
+#define uncommon(x) __builtin_expect_with_probability(!!(x),1,0.4)
 #else
 #define common(x) likely(x)
 #define uncommon(x) unlikely(x)
@@ -252,10 +252,10 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define uncommon(x) unlikely(x)
 #endif
 #else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#define common(x) (x)
-#define uncommon(x) (x)
+#define likely(x) (!!(x))
+#define unlikely(x) (!!(x))
+#define common(x) (!!(x))
+#define uncommon(x) (!!(x))
 #endif
 
 #if 1
@@ -457,6 +457,7 @@ int jgettimeofday(struct jtimeval*, struct jtimezone*);
 #define jgettimeofday gettimeofday
 #endif
 struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions when sleeping; has poor granularity and slow on windows
+struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended for timed busywaiting
 
 #if SY_64
 #if defined(MMSC_VER)  // SY_WIN32
@@ -882,7 +883,7 @@ struct jtimespec jmtclk(void); //monotonic clock.  Intended rel->abs conversions
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
-#define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
+#define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
 #define MODESRESET(jm)      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
@@ -1940,7 +1941,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
-#define WITHDEBUGOFF(stmt) {UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; stmt jt->uflags.us.cx.cx_c.db=d;}  // execute stmt with debug turned off
+#define WITHDEBUGOFF(stmt) {UC _d=jt->uflags.trace&TRACEDB; jt->uflags.trace&=~TRACEDB; stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB);}  // execute stmt with debug turned off
 #if C_LE
 #if BW==64
 #define IHALF0  0x00000000ffffffffLL

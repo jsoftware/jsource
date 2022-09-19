@@ -38,6 +38,15 @@ I jtmdif(struct jtimespec w){ //returns the time in ns between the current time 
  struct jtimespec t=jmtclk();
  if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1;
  R (w.tv_sec-t.tv_sec)*1000000000ull+w.tv_nsec-t.tv_nsec;}
+struct jtimespec jtmftil(UI ns){
+ struct jtimespec r=jmtfclk();
+ r.tv_sec+=ns/1000000000ull;r.tv_nsec+=ns%1000000000ull;
+ if(r.tv_nsec>=1000000000ll){r.tv_sec++;r.tv_nsec-=1000000000ll;}
+ R r;}
+I jtmfdif(struct jtimespec w){ //returns the time in ns between the current time and w, or -1 if it is not in the future
+ struct jtimespec t=jmtfclk();
+ if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1;
+ R (w.tv_sec-t.tv_sec)*1000000000ull+w.tv_nsec-t.tv_nsec;}
 
 #if PYXES
 // implement jfutex_wait _waitn _wake1 _wakea; synchronisation primitives

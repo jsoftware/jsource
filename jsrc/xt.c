@@ -289,7 +289,7 @@ F1(jtpmctr){D x;I q;
  ASSERT(JT(jt,pma),EVDOMAIN);
  x=q+(D)((PM0*)(CAV1(JT(jt,pma))))->pmctr;
  ASSERT(IMIN<=x&&x<FLIMAX,EVDOMAIN);
- ((PM0*)(CAV1(JT(jt,pma))))->pmctr=q=(I)x; jt->uflags.us.cx.cx_c.pmctr=!!q;  // tell cx and unquote to look for pm
+ ((PM0*)(CAV1(JT(jt,pma))))->pmctr=q=(I)x; if(q)jt->uflags.trace|=TRACEPM;else jt->uflags.trace&=~TRACEPM; // tell cx and unquote to look for pm
  R sc(q);
 }    /* add w to pmctr */
 
@@ -320,7 +320,7 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  wn=AN(w);  // wn=length in bytes
  ASSERT(!wn||wn>=s+s0,EVLENGTH);  // make sure it can record at least 1 sample
  x=JT(jt,pma);   // read incumbent sample buffer
- jt->uflags.us.cx.cx_c.pmctr=0;  // clear sample counter and tracking status
+ jt->uflags.trace&=~TRACEPM;  // clear sample counter and tracking status
  if(wn){ras(w); JT(jt,pma)=w;}else JT(jt,pma)=0;  // set new buffer address, if it is valid
  if(JT(jt,pma))spstarttracking();else spendtracking();  // track memory usage whenever PM is running
  RZ(pmfree(x));  // free the old buffer and all its contents, if there was one

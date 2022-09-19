@@ -105,8 +105,8 @@ static A jtsusp(J jt){A z;
  A *old=jt->tnextpushp;  // fence must be after we have allocated our stack block
  // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
- if(d&&!(JT(jt,dbuser)&DBSUSFROMSCRIPT))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
- JT(jt,dbuser)&=~DBSUSCLEAR;  // when we start a new suspension, wait for a new clear
+ if(d&&!(JT(jt,dbuser)&TRACEDBSUSFROMSCRIPT))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
+ JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // when we start a new suspension, wait for a new clear
  // Make sure we have a decent amount of stack space left to run sentences in suspension
 #if USECSTACK
  jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
@@ -128,7 +128,7 @@ static A jtsusp(J jt){A z;
   if(iep){
    // if there is an immex latent expression (9!:27), execute it before prompting
    jt->iepdo=0; z=immex(iep); fa(iep);  // reset request flag; run sentence & force typeout; undo the ra() that protected the immex sentence
-   if(JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS)break;  // dbr 0/1 forces end of suspension, as does single-step request
+   if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS)break;  // dbr 0/1 forces end of suspension, as does single-step request
    if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }
@@ -137,7 +137,7 @@ static A jtsusp(J jt){A z;
   // If the result came from a suspension-ending command, get out of suspension
   // Kludge: 13 : 0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doen't properly route the result of these to the
   // suspension result and we would lose them.  Fortunately they have no arguments
-  if(JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
+  if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
   if(z&&AFLAG(z)&AFDEBUGRESULT&&IAV(C(AAV(z)[0]))[0]==SUSTHREAD){  // (0;0) {:: z; is this T. y?
    J newjt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
    if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
@@ -152,7 +152,7 @@ static A jtsusp(J jt){A z;
  if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
  jt=jtold;  // Reset to original debug thread.  NOTE that old is no longer valid, so don't tpop
  // Reset stack
- if(JT(jt,dbuser)&DB1){
+ if(JT(jt,dbuser)&TRACEDB1){
 #if USECSTACK
   jt->cstackmin+=CSTACKSIZE/10;
 #else
@@ -188,7 +188,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  // Process the end-of-suspension.  There are several different ending actions
  // The end block is a list of boxes, where the first box, an integer atom, contains the operation type
  I susact;   // requested action
- if(!z||AN(z)==0||JT(jt,dbuser)&DBSUSCLEAR+DBSUSSS){susact=JT(jt,dbuser)&DBSUSSS?SUSSS:SUSCLEAR; JT(jt,dbuser)&=~(DBSUSCLEAR+DBSUSSS);}  // if error in suspension, exit debug mode; empty arg or DBSUSCLEAR is always 13!:0
+ if(!z||AN(z)==0||JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS){susact=JT(jt,dbuser)&TRACEDBSUSSS?SUSSS:SUSCLEAR; JT(jt,dbuser)&=~(TRACEDBSUSCLEAR+TRACEDBSUSSS);}  // if error in suspension, exit debug mode; empty arg or DBSUSCLEAR is always 13!:0
  else susact=IAV(C(AAV(z)[0]))[0];  // (0;0) {:: z
  // susact describes what is to be done; it has already been stored into dcss
  switch(susact){
@@ -220,7 +220,7 @@ static A jtdebugmux(J jt){A z;
   z=jtsystemlock(jt,LOCKPRIDEBUG,jtdebug);  // request debug
   // when we return, we may not have been the selected thread, in which case we need to put our request up again.
   // but if the user directed us to terminate, we must do that.
-  if(!jt->uflags.us.cx.cx_c.db){RESETERR R 0;}  // if user turned off debug mode, fail all tasks (back to a try.) and print no message.  This is the only valid time for result 0 with jt->jerr=0
+  if(!(jt->uflags.trace&TRACEDB)){RESETERR R 0;}  // if user turned off debug mode, fail all tasks (back to a try.) and print no message.  This is the only valid time for result 0 with jt->jerr=0
   if(jt->jerr==EVDEBUGEND){R 0;}  // if user suppressed this thread, fail it back to start/console (with no message)
  }while(z==(A)1);  // loop back if we were not the selected thread
  R z;  // if we were selected, carry on as requested by user: line# will have been set, and value if any
@@ -236,7 +236,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  jsignal(err);   // signal the requested error
  jt->parserstackframe=oframe;  // restore to the executing sentence
  // enter debug mode if that is enabled
- if(c&&jt->uflags.us.cx.cx_c.db){jt->sitop->dcj=jt->jerr; z=jtdebugmux(jt); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ if(c&&(jt->uflags.trace&TRACEDB)){jt->sitop->dcj=jt->jerr; z=jtdebugmux(jt); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
@@ -251,7 +251,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
  if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKALL);}
  // if there is an ATTN/BREAK to take, take it and enter debug suspension
  if(attnval&0xff){
-  if(!(jt->uflags.us.cx.cx_c.db&(DB1)))__atomic_store_n(JT(jt,adbreak),2,__ATOMIC_RELEASE);  // if not debug, promote the ATTN to BREAK for other threads to speed it up
+  if(!(jt->uflags.trace&TRACEDB1))__atomic_store_n(JT(jt,adbreak),2,__ATOMIC_RELEASE);  // if not debug, promote the ATTN to BREAK for other threads to speed it up
   jsignal(EVATTN); z=parsez=0; goto noparse;  // if debug is not enabled, this will just be an error in the unparsed line
  }
  // we can stop before the sentence, or after it if it fails.  Stopping before is better because then we know we can restart safely
@@ -262,7 +262,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
 noparse: ;
  // If we hit a stop or ATTN, or if we hit an error (outside of try./catch., which turns debug off), enter debug suspension if enabled.  But if debug mode is off now, we must have just
  // executed 13!:0]0 or a suspension-ending command, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
- if(!z&&c&&jt->uflags.us.cx.cx_c.db){
+ if(!z&&c&&(jt->uflags.trace&TRACEDB)){
   if(jt->jerr==EVCUTSTACK){
   // If the line failed with EVCUTSTACK, it must be the caller's line that called the function where Cut Stack ran (the Cut Stack was returned from suspension).  This frame has already been
   // set up to restart on the same line, so all we have to do is clear the error and return 0 so that debugnewi restarts the line
@@ -290,7 +290,7 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
    else              {ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outside of debug mode
-   if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
+   if(!z&&(jt->uflags.trace&TRACEDB)){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(!(d->dcnewlineno&&d->dcix!=-1))break;  // if 'run' specified (by jump not to -1), loop again.  Otherwise exit with result given
    // for 'run', the value of z gives the argument(s) to set; but if no args given, leave them unchanged
    if(AN(z)){w=C(AAV(z)[0]); a=AN(z)==2?C(AAV(z)[1]):0;}  // extract new args if there are any
@@ -300,7 +300,7 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
  R z;
 }    /* function call, debug version */
 
-F1(jtdbq){ASSERTMTV(w); R sc(JT(jt,dbuser)&~DBSUSCLEAR);}
+F1(jtdbq){ASSERTMTV(w); R sc(JT(jt,dbuser)&~TRACEDBSUSCLEAR);}
      /* 13!:17 debug flag */
 
 // x 13!:11 y set error number(s) in threads.  Error _1 is converted to EVDEBUGEND
@@ -328,7 +328,7 @@ F1(jtdbc){UC k;
  if(AN(w)){
   // turn debugging on/off in all threads
   JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
-  DONOUNROLL(MAXTHREADS, __atomic_store_n(&jjbase[i].uflags.us.cx.cx_c.db,k&1,__ATOMIC_RELEASE);) JT(jt,dbuser)=k;
+  DONOUNROLL(MAXTHREADS, if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
 #else
@@ -336,7 +336,7 @@ F1(jtdbc){UC k;
 #endif
   jt->fcalln=NFCALL/(k?2:1);
  }
- JT(jt,dbuser)|=DBSUSCLEAR;  // come out of suspension, whether value given or not
+ JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether value given or not
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

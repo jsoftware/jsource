@@ -208,7 +208,7 @@ static void jtjsigstr(J jt,I e,I n,C*s){
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
  if(e!=EVSTOP)moveparseinfotosi(jt); jt->etxn=0;  // before we display, move error info from parse variables to si; but if STOP, it's already installed
  dhead(0,0L);  // | left-header for the error line
- if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}
+ if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}
  ep(n,s);
  if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}
  eputc(CLF);
@@ -244,7 +244,7 @@ void jtjsignal3(J jt,I e,A w,I j){
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
  moveparseinfotosi(jt); jt->etxn=0;  // before we display, move error info from parse variables to si
  dhead(0,0L);
- if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}
+ if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}
  eputl(AAV(JT(jt,evm))[jt->jerr]);
  if(!jt->glock){
   if(e==EVCTRL){dhead(3,0L); efmt("["FMTI"]",j); eputl(w);}

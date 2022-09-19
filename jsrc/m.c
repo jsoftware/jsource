@@ -210,21 +210,9 @@ F1(jtspcount){A z;I c=0,i,j,*v;A x;
 
 // Garbage collector.  Called when free has decided a call is needed
 B jtspfree(J jt){I i;A p;
-#if PYXES
- // start by reclaiming and re-chaining expatriots
- p=xchga(&jt->repatq,0);
- if(uncommon(!!p)){
-  adda(&jt->repatbytes,-AC(p));
-  jt->bytes-=AC(p);
-  for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):p){
-   I blockx=FHRHPOOLBIN(AFHRH(p));
-   jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p));
-   AFCHAIN(p)=jt->mfree[blockx].pool;
-   jt->mfree[blockx].pool=p;}}
-#endif
-
+ jtrepatrecv(jt);
  for(i = 0;i<=PLIML-PMINL;++i) {
-  // Check each chain to see if it is ready to coalesce.  If the repatq is calling for the gc, process all queues
+  // Check each chain to see if it is ready to coalesce
   if(jt->mfree[i].ballo<=0) {
    // garbage collector: coalesce blocks in chain i
    // pass through the chain, incrementing the j field in the base allo for each
@@ -293,7 +281,7 @@ B jtspfree(J jt){I i;A p;
    jt->mfree[i].ballo = SBFREEB + (jt->mfree[i].ballo & MFREEBCOUNTING);  // set so we trigger rescan when we have allocated another SBFREEB bytes
   }
  }
- jt->uflags.us.uq.uq_c.spfreeneeded = 0;  // indicate no check needed yet
+ jt->uflags.spfreeneeded = 0;  // indicate no check needed yet
 // audit free list {I xxi,xxj;A xxx; {for(xxi=PMINL;xxi<=PLIML;++xxi){xxj=0; xxx=(jt->mfree[-PMINL+xxi].pool); while(xxx){xxx=xxx->kchain.chain; ++xxj;}}}}
  R 1;
 }
@@ -407,7 +395,7 @@ F1(jtmmaxs){I j,m=MLEN,n;
 // on the free list.
 // At coalescing, mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
 I jtspbytesinuse(J jt){I i,totalallo = jt->mfreegenallo&~MFREEBCOUNTING;  // start with bias value
- totalallo-=jt->repatbytes;  // bytes awaiting gc should not be considered inuse
+ if(jt->repatq)totalallo-=AC(jt->repatq);  // bytes awaiting gc should not be considered inuse
  for(i=PMINL;i<=PLIML;++i){totalallo+=jt->mfree[-PMINL+i].ballo&~MFREEBCOUNTING;}  // add all the allocations
  R totalallo;
 }
@@ -1215,10 +1203,10 @@ if((I)jt&3)SEGFAULT;
  I n=(I)2<<blockx;  // n=size of allocated block
  ASSERT(2>*JT(jt,adbreakr),EVBREAK)  // this is JBREAK0.  Fails if break pressed twice
 
- if(blockx<PLIML){
+ if(likely(blockx<PLIML)){
   // small block: allocate from pool
-
   if(likely(z!=0)){         // allocate from a chain of free blocks
+frompool:
    jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
    if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
@@ -1232,7 +1220,9 @@ if((I)jt&3)SEGFAULT;
    if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
 #endif
-  }else{ // small block, but chain is empty.  Alloc PSIZE and split it into blocks
+  }else{
+   if(lda(&jt->repatq)&&(jtrepatrecv(jt),z=jt->mfree[-PMINL+1+blockx].pool))goto frompool; // didn't have any blocks of the right size, but managed to repatriate one
+   // chain is empty, couldn't repatriate anything; alloc PSIZE and split it into blocks
    RZ(z=jtgafallopool(jt,blockx,n));
   }
  } else {      // here for non-pool allocs...
@@ -1301,9 +1291,13 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 }
 #endif
 
-// flush outgoing repatriation queues
-// TODO should do this for all threads during system lock?
-void jtrepato(J jt){
+// send expatriot blocks back home
+// There is a subtlety to these two routines.  Originally, repatsend set sprepatneeded and repatrecv cleared it.
+// But there was an obvious opportunity to race there.
+// Now, repatsend xors the flag with 1 every time it bumps the total number of repatriated bytes to REPATGCLIM or greater, and repatrecv xors it with 1 every time it reduces the total number of repatriated bytes by at least that number all at once.
+// (If recv repatriates fewer bytes, it does nothing to the flag.)
+// Clearly, every bump over will be paired with a bump under, so the steady state of the flag will be 0; it _is_ possible to observe an 'inconsistent' intermediate state, but the flag will eventually become consistent, so there is no danger of repat chains getting lost.
+void jtrepatsend(J jt){
 #if PYXES
  A repato=jt->repato, tail;
  if(!repato)R; //nothing to repatriate
@@ -1312,9 +1306,24 @@ void jtrepato(J jt){
  I allocsize=AC(repato);
  jt->repato=0;
  jt=JTFORTHREAD(jt,origthread); // switch to the thread the chain must return to
- A expval=lda(&jt->repatq); do AFCHAIN(tail)=expval; while(!casa(&jt->repatq, &expval, repato));   // atomic install at head of chain
- I4 oldrepatbytes=aadd(&jt->repatbytes,allocsize);  // Get total # bytes freed in the repat thread
- if(common(((oldrepatbytes-REPATGCLIM)^(oldrepatbytes+allocsize-REPATGCLIM))<0))sta(&jt->uflags.us.uq.uq_c.spfreeneeded,1);  // If amt freed crosses boundary, request GC in the repat thread
+ I zero=0,exsize;
+ A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=*(expval?&AC(expval):&zero)); } while(!casa(&jt->repatq, &expval, repato));   // atomic install at head of chain
+ if(common(((exsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_fetch_xor(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt freed crosses boundary, request reclamation in the home thread
+#endif
+}
+
+void jtrepatrecv(J jt){
+#if PYXES
+ A p=xchga(&jt->repatq,0);
+ if(likely(p)){
+  I count=AC(p);
+  if (common(count>=REPATGCLIM)) __atomic_fetch_xor(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt crosses boundary, 'clear' flag
+  jt->bytes-=count;
+  for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):p){
+   I blockx=FHRHPOOLBIN(AFHRH(p));
+   if ((jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0) jt->uflags.spfreeneeded=1;
+   AFCHAIN(p)=jt->mfree[blockx].pool;
+   jt->mfree[blockx].pool=p;}}
 #endif
 }
 
@@ -1365,7 +1374,7 @@ printf("%p-\n",w);
   I mfreeb = jt->mfree[blockx].ballo -= allocsize;   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
-  if(unlikely(mfreeb<0))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
+  if(unlikely(mfreeb<0))jt->uflags.spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
 #if PYXES
   }else{
@@ -1374,11 +1383,11 @@ printf("%p-\n",w);
    if(common(repato&&repato->origin==origthread)){      // adding to existing repatriation queue
     allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
     AFCHAIN(*AAV0(repato))=w; *AAV0(repato)=w;          // add block to chain
-    if(uncommon(allocsize>=REPATOLIM))jtrepato(jt);}    // if size of chain exceeded limit, flush
+    if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);}    // if size of chain exceeded limit, flush
    else{
-    if(repato)jtrepato(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
-    jt->repato=w; AC(w)=allocsize; *AAV0(w)=w;          // queue now empty regardless; install w
-    if(unlikely(allocsize>=REPATOLIM))jtrepato(jt);}    // maybe this block alone is large enough to deserve immediate repatriation
+    if(repato)jtrepatsend(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
+    jt->repato=w; AC(w)=allocsize; *AAV0(w)=w;             // queue now empty regardless; install w
+    if(unlikely(allocsize>=REPATOLIM))jtrepatsend(jt);}    // maybe this block alone is large enough to deserve immediate repatriation
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
   }
 #endif
@@ -1479,8 +1488,3 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
 
 // forcetomemory does nothing, but it does take an array as argument.  This will spook the compiler out of trying to assign parts of the array to registers.
 void forcetomemory(void * w){R; }
-
-#if (C_AVX2&&SY_64) || EMU_AVX2
-__m256d initecho(void * addr) {R _mm256_broadcast_sd((D*)addr);}   // no longer used
-#endif
-

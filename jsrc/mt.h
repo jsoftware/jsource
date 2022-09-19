@@ -4,6 +4,8 @@
 #if PYXES
 struct jtimespec jtmtil(UI ns); //returns a time ns ns in the future
 I jtmdif(struct jtimespec when); //returns the time in ns between now and when.  If when is not in the future, the result will be -1
+struct jtimespec jtmftil(UI ns); //'fast' (& potentially inaccurate) version of the above (on unix, uses CLOCK_MONOTONIC_RAW rather than CLOCK_MONOTONIC, TODO use QueryPerformanceCounter/QueryPerformanceFrequency on windows)
+I jtmfdif(struct jtimespec when); //ditto
 //both of these are implemented in terms of mtclk and use its clock
 
 __attribute__((cold)) C jfutex_wait(UI4 *p,UI4 v); //atomically, compare v to *p and go to sleep if they are equal.  Return error code

@@ -168,23 +168,25 @@ DF2(jtunquote){A z;
  } else {
   // Extra processing is required.  Check each option individually
   DC d=0;  // pointer to debug stack frame, if one is allocated
-  if(jt->uflags.us.cx.cx_us){  // debug or pm
+  if(jt->uflags.trace){  // debug or pm
    // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
    RZSUFF(d=deba(DCCALL,flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs),z=0; goto exitpop;); d->dcn=(I)fs;   // save executing value for redef checks
   }
 
-  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
+  if(jt->uflags.trace&TRACEPM)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
-  if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.us.uq.uq_c.bstkreqd && (US)flgd0cpC==jt->callstacknext){
+  if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd && (US)flgd0cpC==jt->callstacknext){
    pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;); INCREXECCT(jt->global);  // push the call, and increment the count of the new exec (which is the same locale as the old)
   }  //  If cocurrent is about, make every call visible
-  if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&FAV(fs)->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
+  if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
    z=jtdbunquote((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
   }else{
    A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
   }
-  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // record the return from call
-  if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
+  if(jt->uflags.trace&TRACEPM)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // record the return from call
+  if(jt->uflags.spflag){                        // Need to do some form of space reclamation?
+   if(jt->uflags.sprepatneeded)jtrepatrecv(jt); // repatriate first, because we might reclaim enough memory to need to gc
+   if(jt->uflags.spfreeneeded)spfree();}        // if garbage collection required, do it
   if(d)debz();  // release stack frame if allocated
  }
 #if !USECSTACK
@@ -266,7 +268,7 @@ exitpop: ;
      // Therefore we must terminate the execution of the global locale.
      // EXCEPTION for boot kludge: if this stack frame also includes POPFROM, the execution of the implied locale will be inherited by the caller.  Don't terminate.  Cannot occur if cover used for 18!:4
      if(!(jt->callstacknext-1>callstackx&&jt->callstack[jt->callstacknext-2].type&CALLSTACKPOPFROM))DECREXECCT(jt->global);  // end execution of the last switched locale - unless it persists (kludge)
-     if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){SYMSETGLOBAL(jt->locsyms,jt->callstack[jt->callstacknext-1].value); jt->uflags.us.uq.uq_c.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
+     if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){SYMSETGLOBAL(jt->locsyms,jt->callstack[jt->callstacknext-1].value); jt->uflags.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
     }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){
      // if this name did POPLOCALE, we have to terminate the execution that it started (now in jt->global); and also restore the implied locale EXCEPT when we had POPFROM indicating that the current name
      // is a cover for 18!:4.  In that case we suppress the restore
@@ -282,15 +284,15 @@ exitpop: ;
    // There is no way to detect this, because names that don't change locales don't leave a trace, and thus there is no guarantee that the function-call stack will
    // be at 0 when the last name returns, because the name might have been called from the middle of a tacit expression that already had a function-call depth when the
    // name was called.
-   // Therefore, we reset the name-stack pointer whenever we call from console level (jt->uflags.us.uq.uq_c.bstkreqd too)
+   // Therefore, we reset the name-stack pointer whenever we call from console level (jt->uflags.bstkreqd too)
 
    // We have the implied locale and execution counts right.  If the name we are running did 18!:4 to change the locale in the caller, we have to
    // install a stack entry in the caller to indicate that fact.  BUT we have to keep the stack to just a single POPLOCALEFIRST/POPFROM/CHANGELOCALE, so we may have
    // to look into the caller's stack to see if there is something already there.  If there is, we add nothing, because we need the earliest pop-to locale.
    if(fromloc){  // if we have just called 18!:4...
-    if(!jt->uflags.us.uq.uq_c.bstkreqd){
+    if(!jt->uflags.bstkreqd){
      // We are still in fast mode.  That means that there in no 18!:4 info on the stack, and we can safely add CALLSTACKPOPLOCALEFIRST to the caller's stack.
-     pushcallstack1(CALLSTACKPOPLOCALEFIRST,fromloc); jt->uflags.us.uq.uq_c.bstkreqd=1;
+     pushcallstack1(CALLSTACKPOPLOCALEFIRST,fromloc); jt->uflags.bstkreqd=1;
     }else{
      // We are in slow mode, which means the caller's stack must contain something.  It can't contain POPFROM, which is erased after it is read
      if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
@@ -323,7 +325,7 @@ void jtstackepilog(J jt, I4 initcurrstack){
   }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
    // The called function switched locales and incremented the count for the new locale.  We must close that execution
    DECREXECCT(jt->global);  // end execution of the last switched locale
-   if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
+   if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
     // We don't go to fast mode willy-nilly because we could be an interrupt handler and the interrupted function may be in slow mode
   }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){
    // Since we know we didn't do a POP, there's no need to look for one

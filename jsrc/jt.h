@@ -191,7 +191,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  PSTK initparserstack[1];  // 2 words stack used for messages when we don't have a real one Only .a and .t are used, leaving 6 bytes free (.pt and .filler)
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
- A repato; // outgoing repatriation chain; chain of objects which all belong to the same thread.  AAV0(repato) points to the last link in the chain, and AC(repato) is the cumulative #bytes in the chain (used to update repatbytes)
+ A repato; // outgoing repatriation chain; chain of objects which all belong to the same thread.  AAV0(repato) points to the last link in the chain, and AC(repato) is the cumulative #bytes in the chain
            // rationale: it's common to free many objects from the same thread at once (in particular, release boxed list from a pyx), so this amortises that work
            // it would be good to have a more general outgoing repatriation queue to handle better the case when you free objects from different threads; logic is more annoying there because you have to route the objects to their right destinations
            // snmalloc has a slick design but it sometimes 'repatriates' blocks to the wrong thread, so they may sometimes take multiple hops to get home, which is annoying.  An alternative is to use a fixed-sized array, and sort it once it fills up
@@ -204,9 +204,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl7[0];
  // Area used for intertask communication of memory allocation
  A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory friendly than a straight chain?
- I4 repatbytes;  // number of bytes repatriated since the last garbage collection, modified by all threads
  C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.  scaf should go in different cache line since repatq will get batted around quite a bit?
-// 3 bytes free
+// 7 bytes free
  I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
 // end of cacheline 7

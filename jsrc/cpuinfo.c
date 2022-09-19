@@ -416,9 +416,9 @@ int getNumberOfCores(void) {
  DWORD_PTR ProcessAffinityMask, SystemAffinityMask;
  if(GetProcessAffinityMask(GetCurrentProcess(), &ProcessAffinityMask, &SystemAffinityMask)){
 #if defined(_WIN64)||defined(__LP64__)
-  return __builtin_popcount(ProcessAffinityMask);
-#else
   return __builtin_popcountll(ProcessAffinityMask);
+#else
+  return __builtin_popcount(ProcessAffinityMask);
 #endif
  }else{
   SYSTEM_INFO sysinfo;

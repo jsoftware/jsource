@@ -13,7 +13,7 @@ realpath()
  cd $oldpath > /dev/null 2>&1
 }
 
-cd "$(realpath "$0")"
+cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
 find ../jsrc -name "*.o" -type f -delete || true

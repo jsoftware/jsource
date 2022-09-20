@@ -27,6 +27,12 @@ echo "#define jplatform \"$1\"" >> jsrc/jversion.h
 echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
 echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 
+if [ "x$MAKEFLAGS" = x'' ] ; then
+if [ "$1" == "linux" ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+export MAKEFLAGS=-j$par
+fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+
 cd make2
 ./clean.sh
 
@@ -38,6 +44,11 @@ if [ "$1" == "darwin" ]; then
 j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
 j64x=j64arm ./build_tsdll.sh
 j64x=j64arm USE_PYXES=1 ./build_libj.sh
+else
+./clean.sh
+j64x=j32 USE_PYXES=0 ./build_jconsole.sh
+j64x=j32 ./build_tsdll.sh
+j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
 ./clean.sh
 j64x=j64avx USE_PYXES=1 ./build_libj.sh
@@ -58,3 +69,11 @@ cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 chmod 644 j64/*
 chmod 755 j64/jconsole
+
+if [ "$1" == "linux" ]; then
+mkdir -p j32
+cp bin/profile.ijs j32
+cp bin/$1/j32/* j32
+chmod 644 j32/*
+chmod 755 j32/jconsole
+fi

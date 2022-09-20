@@ -33,7 +33,8 @@ jobs:
    - name: Setup Environment (Linux)
      if: matrix.os == 'ubuntu-18.04'
      run: |
-      sudo apt-get install -y libedit-dev libncursesw5-dev
+      script/install-lnx.sh
+#      sudo apt-get install -y libedit-dev libncursesw5-dev
 
    - name: Setup Environment (Windows)
      if: matrix.os == 'windows-2019'

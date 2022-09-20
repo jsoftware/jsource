@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 # build all binaries
 
 realpath()
@@ -13,7 +14,7 @@ realpath()
  cd $oldpath > /dev/null 2>&1
 }
 
-cd "$(realpath "$0")"
+cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
 ./clean.sh

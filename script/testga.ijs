@@ -11,12 +11,8 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-NB. RES=: RUN (<testpath),each 'gtdot.ijs';'gtdot.ijs';'gtdot1.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot4.ijs';'gtdot3.ijs';'gtdot2.ijs';'gtdot1.ijs';'gtdot.ijs'
-NB. echo^:(*@#RES) RES
-NB. exit^:(*@#RES) *@#RES
-
 NB. smoke test
-RES=: RUND (<testpath),each 'gtdot.ijs';'gtdot3.ijs'
+RES=: RUN (<testpath),each 'gtdot.ijs';'gtdot3.ijs'
 echo^:(*@#RES) RES
 exit^:(*@#RES) *@#RES
 

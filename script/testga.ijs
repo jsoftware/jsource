@@ -14,6 +14,7 @@ stdout LF ,~ 9!:14''
 NB. smoke test
 RES=: RUN (<testpath),each 'gtdot.ijs';'gtdot3.ijs'
 echo^:(*@#RES) RES
+RUN1 ::0:@dtb"1^:(*@#RES) RES
 exit^:(*@#RES) *@#RES
 
 RES=: RUN ddall

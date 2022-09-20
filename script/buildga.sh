@@ -44,6 +44,10 @@ if [ "$1" == "darwin" ]; then
 j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
 j64x=j64arm ./build_tsdll.sh
 j64x=j64arm USE_PYXES=1 ./build_libj.sh
+else
+j64x=j32 USE_PYXES=0 ./build_jconsole.sh
+j64x=j32 ./build_tsdll.sh
+j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
 ./clean.sh
 j64x=j64avx USE_PYXES=1 ./build_libj.sh

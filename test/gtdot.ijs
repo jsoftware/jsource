@@ -26,7 +26,7 @@ NB. no more thread can be created
 'limit error' -: 0&T. etx ''
 
 f=: 4 : 0
-echo^:PRINTMSG 'test ',(":1),' f ',(":y),' start: ',":6!:0''
+echo^:(PRINTMSG+.GITHUBCI*.IFWIN) 'test ',(":1),' f ',(":y),' start: ',":6!:0''
 pyx=. g t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
@@ -35,13 +35,13 @@ while. do.
 end.
 if. -. r e. _1000 _1001 do. pyxA =: pyx [ rA =: r end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
-echo^:PRINTMSG 'test ',(":1),' f ',(":y),' finish: ',":6!:0''
+echo^:(PRINTMSG+.GITHUBCI*.IFWIN) 'test ',(":1),' f ',(":y),' finish: ',":6!:0''
 ]&> pyx
 )
 
 f1=: 4 : 0
 if. 0 [ x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
-echo^:PRINTMSG 'test ',(":1),' f1 ',(":y),' start: ',":6!:0''
+echo^:(PRINTMSG+.GITHUBCI*.IFWIN) 'test ',(":1),' f1 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
@@ -50,13 +50,13 @@ while. do.
 end.
 if. -. r e. _1000 _1001 do. pyxA =: pyx [ rA =: r end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
-echo^:PRINTMSG 'test ',(":1),' f1 ',(":y),' finish: ',":6!:0''
+echo^:(PRINTMSG+.GITHUBCI*.IFWIN) 'test ',(":1),' f1 ',(":y),' finish: ',":6!:0''
 ]&> pyx
 )
 
 f2=: 4 : 0
 if. 0 [ x*.GITHUBCI*.IFWIN do. y=. 10 <. y end.    NB. temp workaround
-echo^:PRINTMSG 'test ',(":1),' f2 ',(":y),' start: ',":6!:0''
+echo^:(PRINTMSG+.GITHUBCI*.IFWIN) 'test ',(":1),' f2 ',(":y),' start: ',":6!:0''
 pyx=. x&g1@y t. (<'worker';x) "0 i.y
 pyx0=. g t. (<'worker';x) "0 i.y
 while. do.
@@ -66,7 +66,7 @@ while. do.
 end.
 if. -. r e. _1000 _1001 do. pyxA =: pyx [ rA =: r end.
 assert. r e. _1000 _1001    NB. _1001 if run on the main thread
-echo^:PRINTMSG 'test ',(":1),' f2 ',(":y),' finish: ',":6!:0''
+echo^:(PRINTMSG+.GITHUBCI*.IFWIN) 'test ',(":1),' f2 ',(":y),' finish: ',":6!:0''
 (,]&> pyx), ]&>pyx0
 )
 

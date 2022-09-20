@@ -27,6 +27,12 @@ echo "#define jplatform \"$1\"" >> jsrc/jversion.h
 echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
 echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 
+if [ "x$MAKEFLAGS" = x'' ] ; then
+if [ "$1" == "linux" ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+export MAKEFLAGS=-j$par
+fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+
 cd make2
 ./clean.sh
 

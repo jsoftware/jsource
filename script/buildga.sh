@@ -69,3 +69,11 @@ cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 chmod 644 j64/*
 chmod 755 j64/jconsole
+
+if [ "$1" == "linux" ]; then
+mkdir -p j32
+cp bin/profile.ijs j32
+cp bin/$1/j32/* j32
+chmod 644 j32/*
+chmod 755 j32/jconsole
+fi

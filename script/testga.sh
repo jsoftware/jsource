@@ -25,4 +25,5 @@ j64/jconsole -lib libjavx.$ext testga.ijs
 
 if [ $1 == "linux" ]; then
   j64/jconsole -lib libjavx2.$ext testga.ijs
+  j32/jconsole -lib libj.$ext testga.ijs
 fi

@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 realpath()
 {
@@ -12,7 +13,7 @@ realpath()
  cd $oldpath > /dev/null 2>&1
 }
 
-cd "$(realpath "$0")"
+cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
 if [ "`uname`" != "Darwin" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then

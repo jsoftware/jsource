@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 realpath()
 {
@@ -12,7 +13,7 @@ realpath()
  cd $oldpath > /dev/null 2>&1
 }
 
-cd "$(realpath "$0")"
+cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
 if [ "`uname`" != "Darwin" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
@@ -601,7 +602,7 @@ mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform j64x
 cd obj/$jplatform/$j64x/
-if [ ! -v MAKEFLAGS ] ; then
+if [ "x$MAKEFLAGS" = x'' ] ; then
 if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
 make -j$par -f makefile-libj
 else

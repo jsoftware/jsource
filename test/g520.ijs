@@ -231,11 +231,11 @@ bk =. 4 $ 1.0  NB. all valid
 bkg=.i.#M
 assert. 0 1 1 4 10 _5 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
 assert. 0 1 1 4 10 _5 prtpms (128!:9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
-assert. 0 0 0 4 10 _1 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+assert. 0 0 0 4 11 _1 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
 Frow=. _1. _5 _2 _1 0   NB. all improving
-assert. 0 2 0 4 13 _2 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+assert. 0 2 0 4 14 _2 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
 M=. |: _4 ]\ 0. 0 0 1   0 2 1 0  1 0 0 0    1 0 0 0   NB. input by columns
-assert. 0 2 0 4 13 _2 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
+assert. 0 2 0 4 14 _2 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
 if. 0 do.  NB. no longer supported
 NB. Zero Frow
 M=. |: _4 ]\ _1. _1 2 1   _1 1 1 1    _1 _1 2 1e_13   1 1 _1 1   NB. 2 non0, 1 0; 2 non0, 2 0; only 1 non0 (c too small); 2 non0, 2 0 (close enough)
@@ -378,11 +378,11 @@ bk =. 4 $ 1.0  NB. all valid
 bkg=.i.#M
 assert. 0 1 1 4 10 _5 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
 assert. 0 1 1 4 10 _5 mt3 (128!:9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;($00);(4 5 6 7)
-assert. 0 0 0 4 10 _1 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+assert. 0 0 0 4 11 _1 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
 Frow=. _1. _5 _2 _1 0   NB. all improving
-assert. 0 2 0 4 13 _2 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
+assert. 0 2 0 4 14 _2 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. The only pivot was excluded
 M=. |: _4 ]\ 0. 0 0 1   0 2 1 0  1 0 0 0    1 0 0 0   NB. input by columns
-assert. 0 2 0 4 13 _2 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
+assert. 0 2 0 4 14 _2 mt3 (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow;(,16b100000005);(4 5 6 7)  NB. Next pivot accepted
 if. 0 do.  NB. no longer supported
 NB. Zero Frow
 M=. |: _4 ]\ _1. _1 2 1   _1 1 1 1    _1 _1 2 1e_13   1 1 _1 1   NB. 2 non0, 1 0; 2 non0, 2 0; only 1 non0 (c too small); 2 non0, 2 0 (close enough)

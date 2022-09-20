@@ -259,15 +259,23 @@ static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DQ(AN(w), *x++=*v++; *x++=iv1;); R 1;
 
 static KF2(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
  if(!(w))R 0;
- n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*C_LE+(S*)&t;
+ n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*C_LE+(S*)&t;  // tv points to exponent
  for(i=0;i<n;++i){
   t=wv[i]; 
   ASSERT(!_isnan(t),EVNAN);
   if(neg=0>t)t=-t; q.d=iv1;
   if     (t==inf)q.n=vci(XPINF);
   else if(t==0.0)q.n=iv0;
-  else if(1.1102230246251565e-16<t&&t<9.007199254740992e15){
-   d=jround(1/dgcd(1.0,t)); c=jround(d*t); 
+  else if(jt->cct==1.0 && mode==XMEXACT){
+   // x:!.0 - cut no corners
+   e=(I)(0xfff0&*tv); e>>=4; e-=1023;   // exponent, with bias removed
+   unsigned long long num=((*(unsigned long long *)&t)&0xfffffffffffffLL)+0x10000000000000;  // numerator with hidden bit restored
+   GAT0(q.n,INT,4,1); DO(4, IAV(q.n)[i]=num%XBASE; num=num/XBASE;) q.n=xstd(q.n);
+   if(e<=52)q.d=xpow(xc(2L),xc(52-e));  // for 1.0, num is 1 in bit 52, e is 0, thus denom=2^52
+   else{q.d=iv1; q.n=xtymes(q.n,xpow(xc(2L),xc(e-52)));}  // large exponents need big numerators
+   q=qstd(q);
+  }else if(1.1102230246251565e-16<t&&t<9.007199254740992e15){
+   d=jround(1/dgcd(1.0,t)); c=jround(d*t);
    q.n=xd1(c,mode); q.d=xd1(d,mode); q=qstd(q);
   }else{
    if(recip=1>t)t=1.0/t;

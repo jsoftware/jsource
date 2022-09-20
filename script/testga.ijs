@@ -16,7 +16,7 @@ NB. echo^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
 NB. smoke test
-RES=: RUN (<testpath),each 'g520.ijs';'gtdot3.ijs'
+RES=: RUND (<testpath),each 'gtdot.ijs';'gtdot3.ijs'
 echo^:(*@#RES) RES
 exit^:(*@#RES) *@#RES
 

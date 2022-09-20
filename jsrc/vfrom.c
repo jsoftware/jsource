@@ -689,6 +689,8 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 } ;
 
 
+// obsolete static I scafndprods=0, scafn0dprods=0;
+
 // the processing loop for one core.  We take a slice of the columns depending on our proc# in the threadpool
 // ti is the job#, not used except to detect error
 static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
@@ -826,10 +828,26 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    }  // end of loop to create NPAR values
    // process the NPAR generated values
    if(bv!=0){
+    // this table gives the values to use in permutevar32 to push all the nonzeros to the bottom of the 256 bytes, with 0s at the top
+    // the index is the mask of nonzeros
+    static __attribute__((aligned(CACHELINESIZE))) UI4 permvals[16][8] ={
+     {0,0,0,0,0,0,0,0},{0,1,7,7,7,7,7,7},{2,3,7,7,7,7,7,7},{0,1,2,3,7,7,7,7},
+     {4,5,7,7,7,7,7,7},{0,1,4,5,7,7,7,7},{2,3,4,5,7,7,7,7},{0,1,2,3,4,5,7,7},
+     {6,7,5,5,5,5,5,5},{0,1,6,7,5,5,5,5},{2,3,6,7,5,5,5,5},{0,1,2,3,6,7,5,5},
+     {4,5,6,7,3,3,3,3},{0,1,4,5,6,7,3,3},{2,3,4,5,6,7,1,1},{0,1,2,3,4,5,6,7},
+    };
     // DIP mode: process each value in turn.  Since 0 values are never pivots, we can stop a group of 4 when all remaining values are 0
+    I nonzeromsk=_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_NEQ_OQ));  // mask of nonzero values in h.  Stop when 0
+    __m256i compressperm=_mm256_load_si256((__m256i*)&permvals[_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_NEQ_OQ))]);  // get permutation mask
+    dotproducth=_mm256_castsi256_pd(_mm256_permutevar8x32_epi32(_mm256_castpd_si256(dotproducth),compressperm));  // push all significance to the lower lanes
     // read the bk values we are working on
     __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // fetch from up to 4 rows
-    indexes=rownums;  // repurpose indexes to hold the row-number we are working on
+    indexes=_mm256_permutevar8x32_epi32(rownums,compressperm);  // repurpose indexes to hold the row-number we are working on, in the lower lanes
+    bk4=_mm256_permutevar8x32_epi32(bk4,compressperm);  // discard bk corresponding to 0 in dotproducth
+// obsolete     indexes=rownums;
+// obsolete I npr=_mm256_movemask_pd(endmask); I nzero=_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_EQ_OQ))&npr; 
+// obsolete npr=((npr&10)>>1)+(npr&5); npr=((npr&12)>>1)+(npr&3); __atomic_fetch_add(&scafndprods,npr,__ATOMIC_ACQ_REL);
+// obsolete nzero=((nzero&10)>>1)+(nzero&5); nzero=((nzero&12)>>1)+(nzero&3); __atomic_fetch_add(&scafn0dprods,nzero,__ATOMIC_ACQ_REL);
     while(!_mm256_testz_si256(_mm256_castpd_si256(dotproducth),_mm256_castpd_si256(dotproducth))){  // our numbers can never be -0 since they come out of addition
      __m256d dotprod;  // place where product is assembled or read into
      dotprod=_mm256_permute4x64_pd(dotproducth,0b00000000);  // copy next value into all lanes
@@ -1001,6 +1019,11 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
 #if C_AVX2
+if(AN(w)==0){
+ // empty arg just returns stats
+ R mtv;
+// obsolete  A z=v2(scafndprods,scafn0dprods); scafndprods=scafn0dprods=0; R z;
+}
  ASSERT(AR(w)==1,EVRANK);
  ASSERT(AN(w)>=5,EVLENGTH);  // audit overall w
  ASSERT(AT(w)&BOX,EVDOMAIN);

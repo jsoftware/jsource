@@ -573,6 +573,7 @@ extern F2(jtsparse2);
 extern DF2(jtspecialatoprestart);
 extern F2(jtstitch);
 extern F2(jtstitchsp2);
+extern F2(jtstringtoe);
 extern F2(jtsumebar);
 extern F2(jttake);
 extern F2(jttcap);

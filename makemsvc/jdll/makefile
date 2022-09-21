@@ -213,6 +213,7 @@ OBJS=  \
  ../../jsrc/xu.o \
  ../../jsrc/crc32c.o \
  ../../jsrc/str.o \
+ ../../jsrc/strptime.o \
  ../../jsrc/mt.o \
  ../../jsrc/openssl/sha/keccak1600.o \
  ../../jsrc/openssl/sha/md4_dgst.o \

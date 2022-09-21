@@ -3,6 +3,7 @@
 /*                                                                         */
 /* Xenos: Binary Representation                                            */
 
+#define _XOPEN_SOURCE //strptime
 #include "j.h"
 #include "x.h"
 

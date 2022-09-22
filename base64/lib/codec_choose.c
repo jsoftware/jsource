@@ -40,6 +40,13 @@
 				__asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
 				return ((uint64_t)edx << 32) | eax;
 			}
+		#elif !__has_builtin(_xgetbv)
+			static inline uint64_t _xgetbv (uint32_t index)
+			{
+				uint32_t eax, edx;
+				__asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
+				return ((uint64_t)edx << 32) | eax;
+			}
 		#endif
 		#else
 			#error "Platform not supported"

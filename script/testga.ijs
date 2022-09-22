@@ -11,6 +11,8 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
+RUN1^:(GITHUBCI>IF64) 'g100i'
+
 NB. smoke test
 RES=: RUN (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
 echo^:(*@#RES) RES
@@ -27,7 +29,7 @@ else.
   msg=. msg,LF,'test fails:'
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
-msg fappends testres
+sg fappends testres
 )
 
 1: 0 : 0

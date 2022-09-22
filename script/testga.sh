@@ -27,3 +27,13 @@ if [ $1 == "linux" ]; then
   j64/jconsole -lib libjavx2.$ext testga.ijs
   j32/jconsole -lib libj.$ext testga.ijs
 fi
+
+if [ $1 == "linux" ] && [ -d "j64gcc" ]; then
+  j64gcc/jconsole -lib libj.$ext testga.ijs
+  j64gcc/jconsole -lib libjavx.$ext testga.ijs
+  j64gcc/jconsole -lib libjavx2.$ext testga.ijs
+fi
+
+if [ $1 == "linux" ] && [ -d "j32gcc" ]; then
+  j32gcc/jconsole -lib libj.$ext testga.ijs
+fi

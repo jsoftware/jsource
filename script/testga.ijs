@@ -29,7 +29,7 @@ else.
   msg=. msg,LF,'test fails:'
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
-sg fappends testres
+msg fappends testres
 )
 
 1: 0 : 0

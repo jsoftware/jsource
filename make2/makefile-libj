@@ -7,7 +7,7 @@ ifndef j64x
 j64x=j64
 endif
 
-ODIR=../../../../bin/$(jplatform)/$(j64x)
+ODIR=../../../../bin/$(jplatform)/$(j64x)$(DEBUGDIR)
 
 .SUFFIXES: .o
 

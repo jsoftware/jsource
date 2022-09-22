@@ -46,7 +46,7 @@ PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
 !if "1"=="$(NOSYNCHLIB)"
 FNOSYNCHLIB = /DNOSYNCHLIB=1
 !endif
-!if "1"=="$(DEBUG)"
+!if "1"=="$(_DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 !endif

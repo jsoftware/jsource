@@ -2,7 +2,7 @@
 !if "1"=="$(USE_PYXES)"
 PTHREADINC = -I../../pthreads4w/include -DPYXES=1
 !endif
-!if "1"=="$(DEBUG)"
+!if "1"=="$(_DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 !endif

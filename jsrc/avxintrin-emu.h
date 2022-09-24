@@ -51,6 +51,7 @@
 #ifndef __EMU_M256_AVXIMMINTRIN_EMU_H__
 #define __EMU_M256_AVXIMMINTRIN_EMU_H__
 
+#include <assert.h>
 // for memset
 #include <string.h>
 
@@ -1089,10 +1090,13 @@ static __emu_inline __m128 __emu_mm_cmp_ps(__m128 m1, __m128 m2, const int predi
 }
 __EMU_M256_IMPL2_M2I_DUP( __m256, cmp_ps )
 
-static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, const int predicate)
+static __emu_inline __m128d __emu_mm_cmp_pd(__m128d um1, __m128d um2, const int predicate)
 {
     __m128d res=res;
+    __m128d m1=um1,m2=um2;
 
+ assert(!(((intptr_t)&m1)&0xf));
+ assert(!(((intptr_t)&m2)&0xf));
     if ( predicate >= 0 && predicate <= 7 ) {
         res = m1;
         __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] "xm" (m2), [pred_] "i" (predicate) );

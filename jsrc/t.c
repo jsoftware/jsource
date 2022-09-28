@@ -130,6 +130,7 @@ PRIM primtab[256] = {
  /*  /  */  PRIMACV(CSLASH,  ADV,  jtslash,   jtdomainerr2, 0,   0,   0   ,VIRS1,VF2NONE),
  /*  /. */  PRIMACV(CSLDOT,  ADV,  jtsldot,   jtdomainerr2, 0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  /: */  PRIMACV(CGRADE,  VERB, jtgrade1,  jtgrade2, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VJTFLGOK2,VF2NONE),
+ /*  /.. */  PRIMACV(CSLDOTDOT,  ADV,  jtsldotdot,   jtdomainerr2, 0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  \  */  PRIMACV(CBSLASH, ADV,  jtbslash,  jtdomainerr2, 0,   0,   0   ,VIRS1,VF2NONE),
  /*  \. */  PRIMACV(CBSDOT,  ADV,  jtbsdot,   jtdomainerr2, 0,   0,   0   ,VIRS1,VF2NONE),
  /*  \: */  PRIMACV(CDGRADE, VERB, jtdgrade1, jtdgrade2,RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VJTFLGOK2,VF2NONE),

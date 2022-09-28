@@ -71,12 +71,12 @@ t0 =. 6!:1''
 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a1' NB. master should not wait
 wthr nwthreads
-echo 't0';6!:1''
+NB. obsolete echo 't0';6!:1''
 pyx =. 6!:3 t. ''"0 (>:N) # 1.0  NB. fill up with delaying threads
-echo 't1';6!:1''
+NB. obsolete echo 't1';6!:1''
 t0 =. 6!:1''
 1. = >pyx
-echo 't2';6!:1''
+NB. obsolete echo 't2';6!:1''
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a2' NB. master should wait
 wthr nwthreads
 pyx =. 6!:3 t. 'worker'"0 (>:N) # 1.0  NB. fill up with delaying threads

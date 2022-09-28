@@ -25,6 +25,7 @@ static C spellintab2[128-0x20][3] = {
 ['1'-0x20]={0,0,CFCONS},          ['2'-0x20]={CHOOK,0,CFCONS},      ['3'-0x20]={CFORK,0,CFCONS},      ['4'-0x20]={CADVF,0,CFCONS},      ['5'-0x20]={0,0,CFCONS},          ['6'-0x20]={0,0,CFCONS},          
 ['7'-0x20]={0,0,CFCONS},          ['8'-0x20]={0,0,CFCONS},          ['9'-0x20]={0,0,CFCONS},          ['F'-0x20]={0,CFDOT,CFCO},        ['Z'-0x20]={0,0,CZCO},
 };
+// doubly-inflected forms, giving the char to use for .. .: :. ::  or 0 if error
 static C spellintab3[][4] = {
 /* err */ {0, 0, 0, 0},
 /* { */ {0, 0, 0, CFETCH},
@@ -32,6 +33,7 @@ static C spellintab3[][4] = {
 /* p */ {CPDERIV, 0, 0, 0},
 /* & */ {0, CUNDCO, 0, 0},
 /* F */ {CFDOTDOT, CFDOTCO, CFCODOT, CFCOCO},
+/* / */ {CSLDOTDOT, 0, 0, 0},
 };
 // The spelling is encoded (littleendian) as (graphic) followed by 2 bits of inflection1 followed by 2 bits of inflection2: 00=NUL 01=. 10=: 11=SP
 #define DOT0 0x100
@@ -87,7 +89,7 @@ static US spellouttab[256] = {
 [CFCONS  ]=(UC)'0'+CO0,       [CAMIP   ]=(UC)'}',             [CCASEV  ]=(UC)'}',             [CFETCH  ]=(UC)'{'+CO0+CO1,
 [CMAP    ]=(UC)'{'+CO0+CO1,[CEMEND  ]=(UC)'}'+CO0+CO1,[CUNDCO  ]=(UC)'&'+DOT0+CO1,[CPDERIV ]=(UC)'p'+DOT0+DOT1,
 [CFDOT   ]=(UC)'F'+DOT0,       [CFDOTCO ]=(UC)'F'+DOT0+CO1,[CFDOTDOT]=(UC)'F'+DOT0+DOT1,[CZCO    ]=(UC)'Z'+CO0,       
-[CFCO    ]=(UC)'F'+CO0,       [CFCOCO  ]=(UC)'F'+CO0+CO1,[CFCODOT ]=(UC)'F'+CO0+DOT1,       
+[CFCO    ]=(UC)'F'+CO0,       [CFCOCO  ]=(UC)'F'+CO0+CO1,[CFCODOT ]=(UC)'F'+CO0+DOT1,     [CSLDOTDOT]=(UC)'/'+DOT0+DOT1,  
    };
 // *s is a string with length n representing a primitive.  Convert the primitive to
 // a 1-byte pseudocharacter number.  Return value of 0 means error.  This is called to audit ARs & thus must work with unverified input
@@ -103,7 +105,7 @@ C spellin(I n,C*s){
  // 3-byte characters.  Rare, so handle individually.  Most likely these will be names that are being checked to see if they are primitives
  if(p!='_'){
   // translate the base char to a table index.  Not worth the cache misses to have a full table.  This table fits in 1/2 cache line
-  I ind=0; ind=p=='{'?1:ind; ind=p=='}'?2:ind; ind=p=='p'?3:ind; ind=p=='&'?4:ind; ind=p=='F'?5:ind; ind=p=='@'?6:ind;
+  I ind=0; ind=p=='{'?1:ind; ind=p=='}'?2:ind; ind=p=='p'?3:ind; ind=p=='&'?4:ind; ind=p=='F'?5:ind; ind=p=='/'?6:ind;
   // there are 4 possible inflections: decode them, checking for erroneous inflection
   I inf1=-16; inf1=s[1]==CESC1?0:inf1; inf1=s[1]==CESC2?1:inf1; I inf2=-16; inf2=s[2]==CESC1?0:inf2; inf2=s[2]==CESC2?1:inf2; inf2=2*inf1+inf2;  // inf2=0-3, or neg if error
   C *bp=&spellintab3[ind][inf2]; bp=inf2<0?&spellintab3[0][0]:bp;   // point to the result; if erroneous inflection, point to error return

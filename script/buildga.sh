@@ -34,11 +34,7 @@ fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 
 cd make2
-./clean.sh
 
-j64x=j64 USE_PYXES=1 ./build_jconsole.sh
-j64x=j64 ./build_tsdll.sh
-j64x=j64 USE_PYXES=1 ./build_libj.sh
 if [ "$1" == "darwin" ]; then
 ./clean.sh
 j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
@@ -50,6 +46,10 @@ j64x=j32 USE_PYXES=0 ./build_jconsole.sh
 j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
+./clean.sh
+j64x=j64 USE_PYXES=1 ./build_jconsole.sh
+j64x=j64 ./build_tsdll.sh
+j64x=j64 USE_PYXES=1 ./build_libj.sh
 ./clean.sh
 j64x=j64avx USE_PYXES=1 ./build_libj.sh
 ./clean.sh
@@ -76,4 +76,41 @@ cp bin/profile.ijs j32
 cp bin/$1/j32/* j32
 chmod 644 j32/*
 chmod 755 j32/jconsole
+fi
+
+if [ "$1" == "linux" ]; then
+mkdir -p j64gcc
+cp bin/profile.ijs j64gcc
+mkdir -p j32gcc
+cp bin/profile.ijs j32gcc
+
+cd make2
+
+./clean.sh
+CC=gcc j64x=j32 USE_PYXES=0 ./build_jconsole.sh
+CC=gcc j64x=j32 ./build_tsdll.sh
+CC=gcc j64x=j32 USE_PYXES=0 ./build_libj.sh
+./clean.sh
+CC=gcc j64x=j64 USE_PYXES=1 ./build_jconsole.sh
+CC=gcc j64x=j64 ./build_tsdll.sh
+CC=gcc j64x=j64 USE_PYXES=1 ./build_libj.sh
+./clean.sh
+CC=gcc j64x=j64avx USE_PYXES=1 ./build_libj.sh
+./clean.sh
+CC=gcc j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
+./clean.sh
+CC=gcc j64x=j64avx512 USE_PYXES=1 ./build_libj.sh
+
+cd ..
+cp bin/$1/j64/* j64gcc
+cp bin/$1/j64avx/libj.$ext j64gcc/libjavx.$ext
+cp bin/$1/j64avx2/libj.$ext j64gcc/libjavx2.$ext
+cp bin/$1/j64avx512/libj.$ext j64gcc/libjavx512.$ext
+chmod 644 j64gcc/*
+chmod 755 j64gcc/jconsole
+
+cp bin/$1/j32/* j32gcc
+chmod 644 j32gcc/*
+chmod 755 j32gcc/jconsole
+
 fi

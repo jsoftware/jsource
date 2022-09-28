@@ -33,7 +33,14 @@
 	#include <cpuid.h>
 	#if HAVE_AVX2 || HAVE_AVX
 		#if ((__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 2) || (__clang_major__ >= 3))
-		#if !__has_builtin(_xgetbv)
+		#if !defined(__clang__)
+			static inline uint64_t _xgetbv (uint32_t index)
+			{
+				uint32_t eax, edx;
+				__asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
+				return ((uint64_t)edx << 32) | eax;
+			}
+		#elif !__has_builtin(_xgetbv)
 			static inline uint64_t _xgetbv (uint32_t index)
 			{
 				uint32_t eax, edx;

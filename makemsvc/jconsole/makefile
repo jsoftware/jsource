@@ -2,7 +2,7 @@
 ifeq (1,${USE_PYXES})
 PTHREADINC = -I../../pthreads4w/include -DPYXES=1
 endif
-ifeq (1,${DEBUG})
+ifeq (1,${_DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 endif

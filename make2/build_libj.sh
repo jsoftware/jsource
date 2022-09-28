@@ -16,6 +16,15 @@ realpath()
 cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
+_DEBUG="${_DEBUG:=0}"
+if [ $_DEBUG -eq 1 ] ; then
+OPTLEVEL=" -O2 -g "
+DEBUGDIR="-debug"
+else
+OPTLEVEL=" -O2 "
+DEBUGDIR=
+fi
+
 if [ "`uname`" != "Darwin" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
@@ -93,7 +102,7 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
-common="$OPENMP -fPIC -O2 -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions \
+common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wno-cast-function-type \
  -Wno-clobbered \
@@ -119,7 +128,7 @@ common="$OPENMP -fPIC -O2 -falign-functions=4 -fvisibility=hidden -fno-strict-al
 
 else
 # clang
-common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing -fwrapv \
+common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wsign-compare \
  -Wtautological-constant-out-of-range-compare \
@@ -597,11 +606,11 @@ if [ ! -f ../jsrc/jversion.h ] ; then
   cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
-mkdir -p ../bin/$jplatform/$j64x
-mkdir -p obj/$jplatform/$j64x/
-cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform j64x
-cd obj/$jplatform/$j64x/
+mkdir -p ../bin/$jplatform/$j64x$DEBUGDIR
+mkdir -p obj/$jplatform/$j64x$DEBUGDIR/
+cp makefile-libj obj/$jplatform/$j64x$DEBUGDIR/.
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform j64x DEBUGDIR
+cd obj/$jplatform/$j64x$DEBUGDIR/
 if [ "x$MAKEFLAGS" = x'' ] ; then
 if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
 make -j$par -f makefile-libj

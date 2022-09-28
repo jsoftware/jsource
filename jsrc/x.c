@@ -179,6 +179,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(6,15):  R CDERIV(CIBEAM, jtetoint,    0,      VASGSAFE,RMAX,RMAX,RMAX);
   case XC(6,16):  R CDERIV(CIBEAM, jtetoiso8601,jtetoiso8601,  VASGSAFE,RMAX,RMAX,RMAX);
   case XC(6,17):  R CDERIV(CIBEAM, jtiso8601toe,jtiso8601toe,  VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(6,18):  R CDERIV(CIBEAM, jtstringtoe,jtstringtoe,    VASGSAFE,RMAX,RMAX,RMAX);
   default: break;
   } break;
  case 7:

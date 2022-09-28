@@ -866,7 +866,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     // read the bk values we are working on
     __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // fetch from up to 4 rows
     indexes=_mm256_permutevar8x32_epi32(rownums,compressperm);  // repurpose indexes to hold the row-number we are working on, in the lower lanes
-    bk4=_mm256_permutevar8x32_epi32(bk4,compressperm);  // discard bk corresponding to 0 in dotproducth
+    bk4=_mm256_castps_pd(_mm256_permutevar8x32_ps(_mm256_castpd_ps(bk4),compressperm));  // discard bk corresponding to 0 in dotproducth
 // obsolete     indexes=rownums;
 // obsolete I npr=_mm256_movemask_pd(endmask); I nzero=_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_EQ_OQ))&npr; 
 // obsolete npr=((npr&10)>>1)+(npr&5); npr=((npr&12)>>1)+(npr&3); __atomic_fetch_add(&scafndprods,npr,__ATOMIC_ACQ_REL);

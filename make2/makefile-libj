@@ -7,7 +7,7 @@ ifndef j64x
 j64x=j64
 endif
 
-ODIR=../../../../bin/$(jplatform)/$(j64x)
+ODIR=../../../../bin/$(jplatform)/$(j64x)$(DEBUGDIR)
 
 .SUFFIXES: .o
 
@@ -153,6 +153,7 @@ OBJS=  \
  xu.o \
  crc32c.o \
  str.o \
+ strptime.o \
  keccak1600.o \
  md4_dgst.o \
  md4_one.o \

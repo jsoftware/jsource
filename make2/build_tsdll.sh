@@ -16,6 +16,15 @@ realpath()
 cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
+_DEBUG="${_DEBUG:=0}"
+if [ $_DEBUG -eq 1 ] ; then
+OPTLEVEL=" -O2 -g "
+DEBUGDIR="-debug"
+else
+OPTLEVEL=" -O2 "
+DEBUGDIR=
+fi
+
 if [ "`uname`" != "Darwin" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
@@ -65,7 +74,7 @@ echo "compiler=$compiler"
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
-common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
+common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing  \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wno-cast-function-type \
  -Wno-clobbered \
@@ -85,7 +94,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
 
 else
 # clang
-common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
+common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wsign-compare \
  -Wtautological-constant-out-of-range-compare \
@@ -184,11 +193,11 @@ esac
 
 echo "CFLAGS=$CFLAGS"
 
-mkdir -p ../bin/$jplatform/$j64x
-mkdir -p obj/$jplatform/$j64x/
-cp makefile-tsdll obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET jplatform j64x
-cd obj/$jplatform/$j64x/
+mkdir -p ../bin/$jplatform/$j64x$DEBUGDIR
+mkdir -p obj/$jplatform/$j64x$DEBUGDIR/
+cp makefile-tsdll obj/$jplatform/$j64x$DEBUGDIR/.
+export CFLAGS LDFLAGS TARGET jplatform j64x DEBUGDIR
+cd obj/$jplatform/$j64x$DEBUGDIR/
 make -f makefile-tsdll
 retval=$?
 cd -

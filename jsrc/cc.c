@@ -9,6 +9,10 @@
 #include "result.h"
 #define STATENEEDSASSEMBLYX 15
 #define STATENEEDSASSEMBLY (((I)1)<<STATENEEDSASSEMBLYX)
+#define STATEDYADKEYX 16
+#define STATEDYADKEY (((I)1)<<STATEDYADKEYX)
+#define STATEDYADKEYSMALLRANGEX 17
+#define STATEDYADKEYSMALLRANGE (((I)1)<<STATEDYADKEYSMALLRANGEX)
 
 
 
@@ -568,7 +572,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
- // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
+ // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
   R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
  }
@@ -584,16 +588,24 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
- if(FAV(fs)->mr>=r){
-  // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-  state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
-  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-  state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+ if(likely(FAV(self)->id!=CSLDOTDOT)){
+  if(FAV(fs)->mr>=r){
+   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
+   state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
+   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+  }
+ }else{
+  // /..
+  state|=STATEDYADKEY;  // remember that this is  /..
+  state|=(AT(CUTFRETAARG(a))&FL)<<(STATEDYADKEYSMALLRANGEX-FLX);  // extract 'ai is smallrange' indicator
  }
- AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
+ AF f1=FAV(fs)->valencefns[FAV(self)->id==CSLDOTDOT];  // point to the action routine now that we have handled gerunds
+  // for /.. we take the dyad; but we don't support <@ yet; so we call it f1 always
 
- // Time to find the frets.  If we are acting on behalf of Key /., frets are already in the single buffer
- if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
+ A virta; fauxblock(virtafaux); C *origav0; I *origaiv; I ka; I ndxa;   // for /.. - pointer to a data; pointer to ai data (fret frequency table or small-range table); len of item of a; ndx of next a 
+ // Time to find the frets.  If we are acting on behalf of Key /. or /.., frets are already in the single buffer
+ if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.[.]  Fall through if not
   pfx=(I)FAV(self)->localuse.lu1.gercut.cutn; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
@@ -775,7 +787,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
    --m;  // remove the discarded d from the count
   }
  }else{
-  // Here we are processing /.; the original a had the fret sizes built already.  Just set up the loop variables based on them
+  // Here we are processing /.[.]; the original a had the fret sizes built already.  Just set up the loop variables based on them
   m=CUTFRETCOUNT(a);  // # frets, set by caller
   pd0=a;  // &first block of frets
   pd=CUTFRETFRETS(a);  // &first fret
@@ -784,10 +796,29 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   v1=wv;  // we always start with the first cell
      // CUTFRETEND in input block is set by caller
   pfx=1; neg=0;  // This is a ;.1 cut
+  if(unlikely(state&STATEDYADKEY)){
+   // setup for /.. - get ready for virtual arg
+   A origai=CUTFRETAARG(a);  // extract fret/smallrange table passed through the frets
+   a=origai->mback.aarg;  // extract original a arg
+   I ar=AR(a); ar+=REPSGN(-ar);  // rank of item of original a
+   origav0=(C*)AV(a);  // point to base of data area of a
+   fauxvirtual(virta,virtafaux,a,ar,ACUC1);
+   MCISH(AS(virta),AS(a)+1,ar-1);
+   origaiv=IAV1(origai);  // extract original ai data, which is a table or a small-range
+   ndxa=0;  // start the processing at start of a/ai.  Pun: 0 always, but may be index to a or ai depending on smallrange
+   PROD(ka,ar,AS(a)+1)  // number of atoms in an item of a
+   AN(virta)=ka;  // install atom count in virt
+   ka<<=bplg(AT(a)); // length in bytes of an item of a
+   zz=0;  // indicate no output yet
+   goto skipspecial;  // skip special-case checking, which applies only to ;. and /.
+   // a has been replaced by the original a from /..
+  }
  }
 
  // At this point we have m, the number of result cells; pd0, pointer to first block of lengths; pd, pointer to first fret-length to use; v1, pointer to first participating cell of w; pfx, neg
  // in the user's stmt, v1 points to the start of the fret, k is the length of an item in bytes, d is #items in subarray
+
+ // for /., a=0 and id is set.  for /.., a is set to original a and id=0
 
  // process, handling special cases
  zz=0;   // indicate no result from special cases
@@ -854,6 +885,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  // If we didn't get a result from the special cases, run the normal result loop
  // NOTE: if zz is set w may have been destroyed
  if(!zz){
+skipspecial:;
   if(m){
    // There are cells.  Run the result loop over them
    // Allocate the virtual block we will use for arguments
@@ -867,20 +899,37 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
-   jtinplace = (J)(intptr_t)(((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))&JTINPLACEW));  // turn off inplacing based on verb
+   jtinplace = (J)(intptr_t)(((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX-((state>>STATEDYADKEYX)&(VJTFLGOK2X-VJTFLGOK1X)))))&JTINPLACEW));  // turn off inplacing based on verb
 
 #define ZZDECL
 #include "result.h"
-   ZZPARMS(1,m,1)
+   if(unlikely((state&STATEDYADKEY)!=0)){ZZPARMSNOFS(1,m)}else {ZZPARMS(1,m,1)}
 #define ZZINSTALLFRAME(optr) *optr++=m;
 
    do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */
     while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */
      UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d=len-neg;  /* fetch size, adjust if neg */
      AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
-     // call the user's function
      ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
-     RZ(z=CALL1IP(f1,virtw,fs));  //normal case
+     // call the user's function
+     if(unlikely(state&STATEDYADKEY)){
+      // /.. set up virta as the fret
+      if(state&STATEDYADKEYSMALLRANGE){
+       // origaiv is the small-range table; we start looking at origav0[ndxa] to find an element of a for which origaiv[ele] is non0.
+       // when we find one we zero it, and use ndxa as the index to the fret
+       NOUNROLL while(origav0[ndxa]==0)++ndxa; origav0[ndxa]=0;  // find the fret, make sure we don't find it again
+      }else{
+       // origaiv is the frequency table AFTER it has been processed in /. to sort w.  We know the first fret is at 0, and each fret element of ai points to the end+1 of its partition.
+       // The fret elements have values >= their index; we look for one
+       NOUNROLL while(origaiv[ndxa]<ndxa)++ndxa;
+      }
+      // ndxa is the index of the next fret.  Point virta to it
+      AK(virta)=((C*)origav0+ndxa*ka)-(C*)virta;  // data offset to fret
+      ++ndxa;  // start next look at the next location in a
+      RZ(z=CALL2IP(f1,virta,virtw,fs));  // call as dyad
+     }else{  // normal case of ;. or /.
+      RZ(z=CALL1IP(f1,virtw,fs));  //normal case, call as monad
+     }
 
 #define ZZBODY  // assemble results
 #include "result.h"
@@ -907,7 +956,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 
 static DF1(jtcut1){R cut2(mark,w,self);}
 
-// ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \. for \
+// ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \.
 // also [: ; (<@(f/\));._2 _1 1 2)  when no rank loop required
 // NOTE: if there are no cuts, this routine produces different results from the normal routine if the operation is one we recognise.
 //  This routine produces an extra axis, as if the shape of the boxed result were preserved even when there are no boxed results

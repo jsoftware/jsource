@@ -157,11 +157,13 @@ struct AD {
         // number of partitions found; (7) in the self block for y L: n and u S: n, the address of the fs block for u; (8) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in all tables that use extendunderlock, the number of valid entries in the table (AN gives the allocation)
         // (11) in file-lock list and file-number list, the # valid files (12) if AFUNIFORMITEMS is set, the total# items in all boxes (13) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
-        // (14) in the filenames pointed to by fopafl, the file handle for the open file
+        // (14) in the filenames pointed to by fopafl, the file handle for the open file (15) for fret block passed from /.. into ;., the address of the original a arg to /..
+        // (16) in permuted W block passed from /. to ;., pointer to information on where frets are in a
   A back; // For VIRTUAL blocks, points to backing block
   A jobpyx;    // for user JOB blocks, points to the pyx
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
+  A aarg;  // for /.., the original a arg
 } mback;
  union {
   I t;  // type
@@ -238,6 +240,7 @@ typedef I SI;
 // The following fields are used for private communication between /. and ;. and inside ;. for the fret buffer.
 #define CUTFRETCHAIN(x) ((x)->kchain.chain)  // pointer to next block of frets
 #define CUTFRETCOUNT(x) ((x)->kchain.k)  // when passed into cut, this is # frets.  Overwritten by CUTFRETCHAIN
+#define CUTFRETAARG(x) ((x)->mback.aarg)  // when passed into cut, this is # frets.  Overwritten by CUTFRETCHAIN
 #define CUTFRETFRETS(x) ((UC*)((x)->s))   // address of first fret
 #define CUTFRETEND(x)   ((x)->n)   // address of last+1 fret
 

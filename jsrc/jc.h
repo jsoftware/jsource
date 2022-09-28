@@ -197,6 +197,7 @@
 #define CROOT      (C)0x62  // %:
 #define CBANG      (C)0x63  // !
 #define CBDOT      (C)0x64  // b.
+#define CSLDOTDOT  (C)0x65  // /..
 
 #define CGRAVE     (C)0x67 // `
 #define CINF       (C)0x68  //  infinity

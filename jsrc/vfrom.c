@@ -667,7 +667,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  D minimp;
  I ncolsproc;  // number of columns processed
  I ndotprods;  // total # dotproducts evaluated
- UI nextcol;  // index of next column to process. Advanced by atomic operations
+ UI nextcol;  // index of next column to process. Advanced by atomic operations.  For one-column mode, the index of next row to process
  // the rest is moved into static names
  A ndxa;   // the indexes, always a list of ndxs
  I n;  // #rows/cols in M
@@ -716,7 +716,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
                                // column, we will take it
 
  // loop over all columns requested
- I ncolsprocd;  // counter of columns we have finished
+ I ncolsprocd=0;  // counter of columns we have finished; for one-col mode, the size of each reservation
  UI firstcol=0, lastreservedcol=0;  // we have reserved columns from firstcol to lastreservedcol-1 for us to calculate
  I currcolproxy=0;   // The column pointer, approximately.  Updated only for DIP mode.  Dpiv doesn't have the variability, and one-col doesn't care
  I resredwarn=nc-100*((*JT(jt,jobqueue))[0].nthreads+1);  // when col# gets above this, switch to reserving one at a time
@@ -727,25 +727,33 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
   if(zv!=0){  // one-column
    // Set up for multithreading one-column mode, where we have to split the column.  Multithreading of larger problems is handled
    // by having each thread take columns in turn
-   I tn=bvgrde-(I*)0;  // get # values desired for each thread
-   I startx=ti*tn;  // starting offset for this thread
-   zv+=startx;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
-   rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(startx));  // index points to before the row#s
-   tn+=startx; tn=tn>n?n:tn; tn-=startx; tn=tn<0?0:tn; bvgrde=bvgrd0+tn;  // make tn the endpoint; clamp to max; restore to len; clamp at 0; set bvgrde for length of section
+   if(AR(qk)==2){
+    // in double precision, the operation is predictable and we just want to take equal amounts in each task
+    I tn=bvgrde-(I*)0;  // get # values desired for each thread
+    I startx=ti*tn;  // starting offset for this thread
+    zv+=startx;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
+    rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(startx));  // index points to before the row#s
+    tn+=startx; tn=tn>n?n:tn; tn-=startx; tn=tn<0?0:tn; bvgrde=bvgrd0+tn;  // make tn the endpoint; clamp to max; restore to len; clamp at 0; set bvgrde for length of section
+   }else{
+    // in quad-precision we take reservations of a few lines each time.  Everybody starts at 0
+    bvgrde=bvgrd0;  // each reservation is taken in the loop below
+   }
    lastreservedcol=1;  // cause each thread to process the same one column
+   ncolsprocd=2*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // repurpose ncolsprocd: enough rows to allow each thread
+        // to arbitrate if they have all-zero jobs TUNE
   }
  }
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  __m256i rowstride=_mm256_set1_epi64x(n);  // number of Ds in a row of M, in each lane
 
- for(ncolsprocd=0;;++ncolsprocd){
+ for(;;++ncolsprocd){
   // start of processing one column
   // get next col index to work on; stop if no more cols
   // We would like to take sequential columns, because they are likely to share columns of Qk.  But there is wild variation in the time spent on a column: the
   // average column cuts off within 50 rows, while a winning column goes to the end, perhaps thousands of rows.  As a compromise we take groups of columns until
   // the number of columns left is less than 100*number of threads.  Then we switch to one at a time.  We use a slightly out-of-date value of the current column
   if(firstcol>=lastreservedcol){
-   // we have to refresh our reservation.
+   // we have to refresh our reservation.  We never go through here for one-column mode; nextcol is the column reservation then
    UI ressize=currcolproxy>resredwarn?1:8;  // take 8 at a time till we get near end
    firstcol=__atomic_fetch_add(&((struct mvmctx*)ctx)->nextcol,ressize,__ATOMIC_ACQ_REL);  // get next sequential column number, reserve a section starting from there
    lastreservedcol=firstcol+ressize;  // remember end of our reservation
@@ -773,7 +781,22 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
   __m256d endmask=_mm256_setone_pd(); // mask for validity of next 4 words: used to control fetch from column and store into result row
   I *bvgrd;
   // create the column NPAR values at a time
-  for(bvgrd=bvgrd0;bvgrd<bvgrde;bvgrd+=NPAR){
+  for(bvgrd=bvgrd0;;bvgrd+=NPAR){
+   if(bvgrd>=bvgrde){  // end of column or column section
+    if(limitrow!=-3)break;  // normally, that's the end of the column
+    // quad-prec one-column mode.  Take a set of rows to process.  The issue is that some rows are faster than others: rows with all 0s skip extended-precision
+    // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
+    // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
+    // for NPAR*nthreads at least.
+    I currx=bvgrde-(I*)0;  // index we would be processing next
+    I resrow=__atomic_fetch_add(&((struct mvmctx*)ctx)->nextcol,ncolsprocd,__ATOMIC_ACQ_REL);
+    if(resrow>=n)break;  // finished when reservation is off the end
+    I skipamt=resrow-currx;  // number of rows to skip
+    zv+=skipamt;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
+    rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(skipamt));  // index points to before the row#s
+    I endx=resrow+ncolsprocd; endx=endx>n?n:endx;  // end+1 of the reservation
+    bvgrd=bvgrd0+resrow; bvgrde=bvgrd0+endx;  // loop controls
+   }
    __m256i indexes;  // offset in atoms from Qk to the beginning of the row we are fetching = rownums*n
    __m256d dotproducth,dotproductl;  // where we build the column value
    // get the validity mask for the gather and process: leave as ones until the end of the column
@@ -793,7 +816,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     if(limitrow==-3){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+n*n+colx,indexes,endmask,SZI);}
    }else{
     // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows
-    I an=axv[colx][1];  // number of sparse atoms in each row
+    I an=axv[colx][1];  // number of sparse atoms in each row   scaf move out of loop
     D *vv=avv0+axv[colx][0];  // pointer to values for this section of A
     I *iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
     if(likely(limitrow!=-3)){
@@ -829,16 +852,16 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    // process the NPAR generated values
    if(bv!=0){
     // this table gives the values to use in permutevar32 to push all the nonzeros to the bottom of the 256 bytes, with 0s at the top
-    // the index is the mask of nonzeros
+    // the index is the mask of zeros
     static __attribute__((aligned(CACHELINESIZE))) UI4 permvals[16][8] ={
-     {0,0,0,0,0,0,0,0},{0,1,7,7,7,7,7,7},{2,3,7,7,7,7,7,7},{0,1,2,3,7,7,7,7},
-     {4,5,7,7,7,7,7,7},{0,1,4,5,7,7,7,7},{2,3,4,5,7,7,7,7},{0,1,2,3,4,5,7,7},
-     {6,7,5,5,5,5,5,5},{0,1,6,7,5,5,5,5},{2,3,6,7,5,5,5,5},{0,1,2,3,6,7,5,5},
-     {4,5,6,7,3,3,3,3},{0,1,4,5,6,7,3,3},{2,3,4,5,6,7,1,1},{0,1,2,3,4,5,6,7},
+     {0,1,2,3,4,5,6,7},{2,3,4,5,6,7,1,1},{0,1,4,5,6,7,3,3},{4,5,6,7,3,3,3,3},
+     {0,1,2,3,6,7,5,5},{2,3,6,7,5,5,5,5},{0,1,6,7,5,5,5,5},{6,7,5,5,5,5,5,5},
+     {0,1,2,3,4,5,7,7},{2,3,4,5,7,7,7,7},{0,1,4,5,7,7,7,7},{4,5,7,7,7,7,7,7},
+     {0,1,2,3,7,7,7,7},{2,3,7,7,7,7,7,7},{0,1,7,7,7,7,7,7},{0,0,0,0,0,0,0,0},
     };
     // DIP mode: process each value in turn.  Since 0 values are never pivots, we can stop a group of 4 when all remaining values are 0
-    I nonzeromsk=_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_NEQ_OQ));  // mask of nonzero values in h.  Stop when 0
-    __m256i compressperm=_mm256_load_si256((__m256i*)&permvals[_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_NEQ_OQ))]);  // get permutation mask
+// obsolete     I nonzeromsk=_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_setzero_pd(),_CMP_NEQ_OQ));  // mask of nonzero values in h.  Stop when 0
+    __m256i compressperm=_mm256_load_si256((__m256i*)&permvals[_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(dotproducth),_mm256_setzero_si256())))]);  // get permutation mask
     dotproducth=_mm256_castsi256_pd(_mm256_permutevar8x32_epi32(_mm256_castpd_si256(dotproducth),compressperm));  // push all significance to the lower lanes
     // read the bk values we are working on
     __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // fetch from up to 4 rows

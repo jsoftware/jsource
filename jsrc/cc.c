@@ -598,12 +598,12 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  }else{
   // /..
   state|=STATEDYADKEY;  // remember that this is  /..
-  state|=(AT(CUTFRETAARG(a))&FL)<<(STATEDYADKEYSMALLRANGEX-FLX);  // extract 'ai is smallrange' indicator
+  state|=(AT(w->mback.aarg)&FL)<<(STATEDYADKEYSMALLRANGEX-FLX);  // extract 'ai is smallrange' indicator
  }
  AF f1=FAV(fs)->valencefns[FAV(self)->id==CSLDOTDOT];  // point to the action routine now that we have handled gerunds
   // for /.. we take the dyad; but we don't support <@ yet; so we call it f1 always
 
- A virta; fauxblock(virtafaux); C *origav0; I *origaiv; I ka; I ndxa;   // for /.. - pointer to a data; pointer to ai data (fret frequency table or small-range table); len of item of a; ndx of next a 
+ A virta; fauxblock(virtafaux); C *origav0; I *origaiv; I ka; I ndxa; I valmska;   // for /.. - pointer to a data; pointer to ai data (fret frequency table or small-range table); len of item of a; ndx of next a; mask of valid bytes in a
  // Time to find the frets.  If we are acting on behalf of Key /. or /.., frets are already in the single buffer
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.[.]  Fall through if not
   pfx=(I)FAV(self)->localuse.lu1.gercut.cutn; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
@@ -798,17 +798,22 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   pfx=1; neg=0;  // This is a ;.1 cut
   if(unlikely(state&STATEDYADKEY)){
    // setup for /.. - get ready for virtual arg
-   A origai=CUTFRETAARG(a);  // extract fret/smallrange table passed through the frets
+   A origai=w->mback.aarg;  // extract fret/smallrange table passed through the frets
    a=origai->mback.aarg;  // extract original a arg
    I ar=AR(a); ar+=REPSGN(-ar);  // rank of item of original a
    origav0=(C*)AV(a);  // point to base of data area of a
    fauxvirtual(virta,virtafaux,a,ar,ACUC1);
-   MCISH(AS(virta),AS(a)+1,ar-1);
+   MCISH(AS(virta),AS(a)+1,ar);  // copy item shape into virt
    origaiv=IAV1(origai);  // extract original ai data, which is a table or a small-range
    ndxa=0;  // start the processing at start of a/ai.  Pun: 0 always, but may be index to a or ai depending on smallrange
    PROD(ka,ar,AS(a)+1)  // number of atoms in an item of a
    AN(virta)=ka;  // install atom count in virt
    ka<<=bplg(AT(a)); // length in bytes of an item of a
+   if(state&STATEDYADKEYSMALLRANGE){
+    // if ai is the smallrange table, use the information stored there: range
+    origaiv-=AK(origai);  // # bytes; back up data pointer to account for range
+    valmska=(UI)~0LL>>(((-ka)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
+   }
    zz=0;  // indicate no output yet
    goto skipspecial;  // skip special-case checking, which applies only to ;. and /.
    // a has been replaced by the original a from /..
@@ -915,22 +920,22 @@ skipspecial:;
      if(unlikely(state&STATEDYADKEY)){
       // /.. set up virta as the fret
       if(state&STATEDYADKEYSMALLRANGE){
-       // origaiv is the small-range table; we start looking at origav0[ndxa] to find an element of a for which origaiv[ele] is non0.
+       // origaiv is the small-range table biased by the range origin; we start looking at origav0[ndxa] to find an element of a for which origaiv[ele] is non0.
        // when we find one we zero it, and use ndxa as the index to the fret
-       NOUNROLL while(origav0[ndxa]==0)++ndxa; origav0[ndxa]=0;  // find the fret, make sure we don't find it again
+       I fetchoffset;  // index in the smallrange table corresponding to an item of a
+       NOUNROLL while(origaiv[fetchoffset=(*(I*)&origav0[ndxa*ka])&valmska]==0)++ndxa; origaiv[fetchoffset]=0;  // find the fret, make sure we don't find it again
       }else{
        // origaiv is the frequency table AFTER it has been processed in /. to sort w.  We know the first fret is at 0, and each fret element of ai points to the end+1 of its partition.
        // The fret elements have values >= their index; we look for one
        NOUNROLL while(origaiv[ndxa]<ndxa)++ndxa;
       }
       // ndxa is the index of the next fret.  Point virta to it
-      AK(virta)=((C*)origav0+ndxa*ka)-(C*)virta;  // data offset to fret
+      AK(virta)=(origav0+ndxa*ka)-(C*)virta;  // data offset to fret
       ++ndxa;  // start next look at the next location in a
       RZ(z=CALL2IP(f1,virta,virtw,fs));  // call as dyad
      }else{  // normal case of ;. or /.
       RZ(z=CALL1IP(f1,virtw,fs));  //normal case, call as monad
      }
-
 #define ZZBODY  // assemble results
 #include "result.h"
 

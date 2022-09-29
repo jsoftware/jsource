@@ -77,10 +77,11 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
 F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  F2PREFIP;
  ARGCHK2(a,w); I wt = AT(w);  // wt=type of w
- if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));
+ acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
+ if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  //if a is empty this destroys jt->ranks
  if(likely(!ISSPARSE(wt)))RZ(w=setfv(w,w)); 
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
+ ar=AR(a); acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
+ wr=AR(w); wcr=wr<wcr?wr:wcr; wf=wr-wcr;
  if(((af-1)&(acr-2))>=0){
   s=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
   // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use

@@ -471,7 +471,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  }else{I *av;  // running pointer through the inputs
   // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of ai
   ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
-  // allocate a tally area and clear it.  Could use narrower table perhaps.  Use FL+INT to indicate smallrange
+  // allocate a tally area and clear it.  Could use narrower table perhaps, with ramifications in ;. .  Use FL+INT to indicate smallrange
   A ftbl; GATV0(ftbl,FL+INT,p,1); I *ftblv=IAV1(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSET00);  // rank 1 to match result of self-classify, so that ai always has rank 1
   // pass through the inputs, counting the negative of the number of slots mapped to each index
   I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
@@ -481,7 +481,8 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // now that we have the number of frets, we can allocate the fret block
   I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; AR(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only; for memaudit we need flag too, and rank in case we rank2ex
-  else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
+  else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))
+frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
 
@@ -517,16 +518,19 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   }
   // frets have been created
   ai=ftbl;  // we will be passing the tally table into cut - always writable rank 1
+  AK(ai)=datamin;  // copy the min range over
  }
 
  // Frets are calculated and w is reordered.  Call cut to finish the job.  We have to store the count and length of the frets
  CUTFRETCOUNT(frets)=nfrets;  // # frets is #bytes stored, minus the length of the extended encodings
  CUTFRETEND(frets)=(I)fretp;   // pointer to end+1 of data
- CUTFRETAARG(frets)=ai;  // for /.., send fret info/tally table to ;., otherwise immaterial
  ai->mback.aarg=a;  // through ai, pass the address of the original a
+ wperm->mback.aarg=ai;  // pass ai into ;.
+ 
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
  // Transfer pristinity of w to wperm so we can see if it went away, but only if w is pristine inplaceable.  We want to leave
  // wperm pristine so it can be used, but it's pristine only is w is zombie.  We sacrifice pristinity to inplaceability
+ // the AM field of wperm is destroyed but that's OK because it never becomes a result
  I wprist=AFLAG(w)&AFPRISTINE;
  I wpprist=wprist&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX));  // original pristinity of wperm
  AFLAGINIT(wperm,AFLAG(wperm)|wpprist)

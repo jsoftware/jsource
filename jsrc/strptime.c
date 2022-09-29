@@ -136,7 +136,7 @@ static char *
 strptime_internal (const char *rp, const char *fmt, struct tm *tm,
                    enum locale_status *decided)
 {
-    const char *rp_backup;
+ // obsolete    const char *rp_backup;
     int cnt;
     size_t val;
     int have_I, is_pm;
@@ -176,7 +176,7 @@ strptime_internal (const char *rp, const char *fmt, struct tm *tm,
     start_over:
 
         /* Make back up of current processing pointer.  */
-        rp_backup = rp;
+ // obsolete         rp_backup = rp;
 
         switch (*fmt++)
         {

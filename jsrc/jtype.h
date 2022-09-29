@@ -240,7 +240,6 @@ typedef I SI;
 // The following fields are used for private communication between /. and ;. and inside ;. for the fret buffer.
 #define CUTFRETCHAIN(x) ((x)->kchain.chain)  // pointer to next block of frets
 #define CUTFRETCOUNT(x) ((x)->kchain.k)  // when passed into cut, this is # frets.  Overwritten by CUTFRETCHAIN
-#define CUTFRETAARG(x) ((x)->mback.aarg)  // when passed into cut, this is # frets.  Overwritten by CUTFRETCHAIN
 #define CUTFRETFRETS(x) ((UC*)((x)->s))   // address of first fret
 #define CUTFRETEND(x)   ((x)->n)   // address of last+1 fret
 

@@ -21,7 +21,7 @@ static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey
  ,jtsfu   // only in viavx.c
 #endif
 };
-// cno is 3 for i., 2 for f/., 1 for comparison, 0 otherwise
+// cno is 3 for i., 2 for f/.[.], 1 for comparison, 0 otherwise
 static A jtfitct(J jt,A a,A w,I cno){V*sv;
  ARGCHK2(a,w);
  ASSERT(!AR(w),EVRANK);
@@ -68,7 +68,7 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
  I cno=0;
  switch(sv->id){I wval;
   case CIOTA: ++cno;  // i.!.1 supported only in viavx.c
-  case CSLDOT: ++cno;   case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
+  case CSLDOT: case CSLDOTDOT: ++cno;   case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
   case CMATCH: case CEPS:    case CICO:      case CNUB:     case CSTAR:  
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:
   case CNOT:   case CXCO:   case CSPARSE:   case CEBAR:

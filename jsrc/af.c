@@ -84,7 +84,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
  switch(v->id){  // we know that modifiers have been executed to produce verb/nouns
  case CSLASH: 
   R df1(z,REFIXA(2,f),wf);
- case CSLDOT: case CBSLASH: case CBSDOT:
+ case CSLDOT: case CSLDOTDOT: case CBSLASH: case CBSDOT:
   R df1(z,REFIXA(1,f),wf);
  case CTDOT:
   f=REFIXA(0,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // recur and rebuild.  t. starts a new recursion, so don't replace $: in it

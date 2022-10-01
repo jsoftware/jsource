@@ -38,7 +38,10 @@
 #define FHRHROOTFREE ((I)2<<(PSIZEL-PMINL))   // If this bit is set at the end of garbage-collection, the whole allocation can be freed.  LSB (precisely, lowest 1-bit) is the size indicator
 //
 // the lower bits encode the size of the block, by the position of the lowest 1 bit, and in the upper bits either (1) the full size of the block for large allocations
-// (2) the offset of the block from the root, for pool allocations.  The following macros define the field
+// (2) the offset of the block from the root, for pool allocations.
+// For GMP allocations, h has a special value and we free them through mfgmp
+#define FHRHISGMP 0x4000  // this block was allocated by GMP
+//  The following macros define the field
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
 #define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system (h is mask from block)
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))
@@ -433,6 +436,7 @@ void jtspendtracking(J jt){I i;
 // Make sure all deletecounts start at 0
 static void auditsimverify0(J jt,A w){
  if(!w)R;
+ if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if(AFLAG(w)>>AFAUDITUCX)SEGFAULT;   // hang if nonzero count
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2 && AC(w)!=ACINPLACE+3))SEGFAULT;   // could go higher but doesn't in our tests
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(jt,ABACK(w));  // check backer
@@ -458,6 +462,7 @@ static void auditsimverify0(J jt,A w){
 static void auditsimdelete(J jt,A w){I delct;
  if(!w)R;
  if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT;
+ if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT;   // hang if too many deletes
  if(AFLAG(w)&AFVIRTUAL && (AT(w)^AFLAG(w))&RECURSIBLE)SEGFAULT;   // hang if nonrecursive virtual
  if(delct==ACUC(w)&&AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);
@@ -958,9 +963,9 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
   // SYMB must free as a monolith, with the symbols returned when the hashtables are
   }else if(t&SYMB){wd=jtfreesymtab(jt,wd,AR(wd));  // SYMB is used as a flag; we test here AFTER NAME and ADV which are lower bits
-  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+  }else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
    // single-level indirect forms.  handle each block
-   DQ(t&RAT?2*n:n, if(*v)if(AT(*v)&LIT){frgmp(*v);}else fr(*v); ++v;);
+   DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
   }else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
    fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
    // for sparse, decrement the usecount
@@ -1391,7 +1396,8 @@ printf("%p-\n",w);
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
   }
 #endif
- }else{                // buffer allocated from malloc
+ }else if(unlikely(hrh==FHRHISGMP)){mfgmp(w);  // if GMP allocation, free it through GMP
+ }else{    // buffer allocated from malloc
   allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area

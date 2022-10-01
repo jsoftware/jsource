@@ -18,7 +18,7 @@
 
 // Bivalent entry point.
 // self is a cyclic iterator
-// we extract the pointer to the verb to be executed, advance the cycle pointer with wraparound, and call the verb
+// we extract the pointer to the verb to be executed, advance the cycle pointer (.gerx) with wraparound, and call the verb
 // passes inplacing through
 static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
  // find the real self, valence-dependent
@@ -28,30 +28,31 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
-// similar, for executing m@.v.  This for I selectors
+
+// similar, for executing m@.v on cells sequentially.  This for I selectors
 static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
  // find the real self, valence-dependent
  F2PREFIP;ARGCHK1(w);
- I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
- I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;
- I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];
- gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
- ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
+ I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
+ I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;  // index of cell we are working on
+ I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];  // selector for that cell
+ gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);  // if negative, back up from end
+ ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);  // must be in range of # gerunds
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
- ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
+ ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // advance to next cell
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
 // This for B selectors
 static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
  // find the real self, valence-dependent
  F2PREFIP;ARGCHK1(w);
- I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
+ I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
  ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
- ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
+ ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec;
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
 
@@ -60,13 +61,14 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
 // Result is a clone that is used to hold which gerund is next to execute
 // the gerund must not be empty
 A jtcreatecycliciterator(J jt, A z, A w){
- // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
+ // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number (.gerx) to 0
  ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lu1.gercut.cgerx=0;
  FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
  if(MEMAUDIT&0xc)AFLAGFAUX(z,0)  // in debug, flags must be valid
  R z;
 }
-// Similar, but also install r, the list of gerund results that will select the verb to run
+// Similar, but also install r, the list of gerund results that will select the verb to run.  Used when there are few cells.
+// in this case gerx is the cell#, and will be used to step through the result selectors sequentially
 static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is gerunds, r is selector list
  // Convert the selectors to integer/boolean
  if(!ISDENSETYPE(AT(r),(INT|B01)))RZ(r=cvt(INT,r));

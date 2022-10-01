@@ -110,7 +110,7 @@ void msort(SORT *sortblok, I n, void **zv, void **xv, I sortparm){
 
 // m: #cells in w (# sorts to do)   n: #items in a cell of w   ai: #atoms in an item of a cell of w
 // JTDESCEND in jt is set for descending
-#define GF(f)         B f(J jt,I m,I ai,I n,A w,I*zv)
+#define GF(f)         B f(J jt,I m,I ai,I n,A w,I* RESTRICT zv)
 
 /* m  - # cells (# individual grades to do) */
 /* c  - # atoms in a cell                   */
@@ -471,7 +471,7 @@ static GF(jtgriq){F1PREFJT;
 #endif
 
 
-static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
+static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,* RESTRICT v,*wv,*xv;UI4 * RESTRICT yv,* RESTRICT yvb;I c=ai*n;
  wv=AV(w);
  // select algorithm based on size & range.  To develop models for the different algorithms, modify the code here to force one choice
  // & run test lines.
@@ -575,7 +575,7 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
   // refetch each input and take its position from the +/\ list.  After taking a position, add 1 so the next identical value gets the next position
   // store the index of the fetched input value into the indicated position
   v=wv+ai-1;  // rescan lowest-significance column
-  DO(n, zv[yv[*v]++]=i; v+=ai;);
+  DO(n, zv[yv[*v]++]=i; v+=ai;);  // do the grade
   v=wv+ai-1;
   // if items contain multiple atoms, process the remanining atoms similarly, from lowest to highest significance
   for(e=ai-2;0<=e;--e){  // loop d-1 times

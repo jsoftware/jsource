@@ -588,19 +588,19 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
- if(likely(FAV(self)->id!=CSLDOTDOT)){
-  if(FAV(fs)->mr>=r){
-   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-   state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
-   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
-  }
- }else{
+ I issldotdot=FAV(self)->id==CSLDOTDOT;  // 
+ if(unlikely(issldotdot)){
   // /..
   state|=STATEDYADKEY;  // remember that this is  /..
   state|=(AT(w->mback.aarg)&FL)<<(STATEDYADKEYSMALLRANGEX-FLX);  // extract 'ai is smallrange' indicator
  }
- AF f1=FAV(fs)->valencefns[FAV(self)->id==CSLDOTDOT];  // point to the action routine now that we have handled gerunds
+ if(FAV(fs)->mr>=r){
+  // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
+  state |= ((FAV(fs)->flag2>>(issldotdot*(VF2BOXATOP2X-VF2BOXATOP1X)))&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Remember <@ . Don't touch fs yet, since we might not loop
+// obsolete   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
+  state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+ }
+ AF f1=FAV(fs)->valencefns[issldotdot];  // point to the action routine now that we have handled gerunds
   // for /.. we take the dyad; but we don't support <@ yet; so we call it f1 always
 
  A virta; fauxblock(virtafaux); C *origav0; I *origaiv; I ka; I ndxa; I valmska;   // for /.. - pointer to a data; pointer to ai data (fret frequency table or small-range table); len of item of a; ndx of next a; mask of valid bytes in a
@@ -907,8 +907,11 @@ skipspecial:;
    jtinplace = (J)(intptr_t)(((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX-((state>>STATEDYADKEYX)&(VJTFLGOK2X-VJTFLGOK1X)))))&JTINPLACEW));  // turn off inplacing based on verb
 
 #define ZZDECL
+#define f2 f1
 #include "result.h"
-   if(unlikely((state&STATEDYADKEY)!=0)){ZZPARMSNOFS(1,m)}else {ZZPARMS(1,m,1)}
+   if(unlikely((state&STATEDYADKEY)!=0)){ZZPARMS(1,m,2)}else {ZZPARMS(1,m,1)}
+#undef f2
+
 #define ZZINSTALLFRAME(optr) *optr++=m;
 
    do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */

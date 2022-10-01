@@ -428,10 +428,10 @@
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))
 #define fpolyc(x)                   jtfpolyc(jt,(x))
-#define gmpmfree(x) {I allocsize = AN(x)+AKXR(0); jt->bytes-=allocsize; jt->malloctotal-=allocsize; jt->mfreegenallo-=allocsize; free(x);}
-#define frcommon(x,f)               {if(likely((x)!=0)){I Zs = AC(x); if(likely(!ACISPERM(Zs))){if(likely(--Zs<=0)){f(x);}else AC(x)=Zs;}}}  // use fr for known nonrecursives, and for locales
+#define gmpmfree(x)   // scaf will be GMP memory-free routine incl accounting
+#define frcommon(x,f)               {if(likely((x)!=0)){I Zs = AC(x); if(likely(Zs<=1)){f(x);} else if(likely(!ACISPERM(Zs))){if(__atomic_fetch_add(&AC(x),-1,__ATOMIC_ACQ_REL)<0)f(x);}}}  // use fr for known nonrecursives, and for locales
 #define fr(x)                       frcommon(x,mf)
-#define frgmp(x)                    frcommon(x,gmpmfree)  // to free GMP blocks
+#define mfgmp(x)                    gmpmfree(x)  // to free GMP blocks
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y))   
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))

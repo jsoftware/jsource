@@ -43,7 +43,7 @@
 #define FHRHISGMP 0x4000  // this block was allocated by GMP
 //  The following macros define the field
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
-#define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system (h is mask from block)
+#define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system or GMP (h is mask from block)
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))
 #define ALLOJBIN(j) ((j)-PMINL)   // convert j (=lg2(size)) to pool bin#
 #define FHRHPOOLBINSIZE(h) (LOWESTBIT(h)<<PMINL)        // convert hmask to size for pool bin#
@@ -1359,7 +1359,7 @@ printf("%p-\n",w);
 #endif
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
 #if MEMAUDIT&1
- if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT;  // pool number must be valid
+ if(hrh!=FHRHISGMP && (hrh==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
 #if MEMAUDIT&17
 #endif
 #endif

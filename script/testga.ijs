@@ -14,10 +14,10 @@ stdout LF ,~ 9!:14''
 RUN1^:(GITHUBCI>IF64) 'g100i'
 
 NB. smoke test
-RES=: RUN (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
-echo^:(*@#RES) RES
-RUN1 ::0:@dtb"1^:(*@#RES) RES
-exit^:(*@#RES) *@#RES
+NB. RES=: RUN (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
+NB. echo^:(*@#RES) RES
+NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
+NB. exit^:(*@#RES) *@#RES
 
 RES=: RUN ddall
 

@@ -1455,13 +1455,13 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MCISH(dest,src,n) \
  {void *_d=dest,*_s=src; I _n=n;\
   if(likely(_n<=8)){__mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));}\
-  else{MC(_d,_s,_n<<LGSZI);}}
+  else{memmove(_d,_s,_n<<LGSZI);}}
 #elif C_AVX
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
   if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \
    _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
-  }else{MC(_d,_s,_n<<LGSZI);} \
+  }else{memmove(_d,_s,_n<<LGSZI);} \
  }
 #else
 #define MCISH(dest,src,n) \
@@ -1469,7 +1469,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
   if(likely(_n<=2)){ \
    _n-=1; _d=(_n<0)?jt->shapesink+1:_d; _s=(_n<0)?jt->shapesink+1:_s; \
    _d[0]=_s[0]; _d[_n]=_s[_n];  \
-  }else{MC(_d,_s,_n<<LGSZI);} \
+  }else{memmove(_d,_s,_n<<LGSZI);} \
  }
 #endif
 #define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop

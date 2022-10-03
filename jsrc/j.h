@@ -1468,7 +1468,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
  {I *_d=(dest), *_s=(src); I _n=(I)(n); \
   if(likely(_n<=2)){ \
    _n-=1; _d=(_n<0)?jt->shapesink+1:_d; _s=(_n<0)?jt->shapesink+1:_s; \
-   _d[0]=_s[0]; _d[_n]=_s[_n];  \
+   I _s0=_s[0],_sn=_s[_n]; _d[0]=_s0; _d[_n]=_sn;  \
   }else{memmove(_d,_s,_n<<LGSZI);} \
  }
 #endif

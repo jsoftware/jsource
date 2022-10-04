@@ -264,6 +264,9 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #include <limits.h>
 #define link unused_syscall_link
 #define qdiv unused_netbsd_qdiv
+#ifndef __USE_XOPEN2K
+#define __USE_XOPEN2K  // for posix_memalign
+#endif
 #include <stdlib.h>
 #undef link
 #undef qdiv

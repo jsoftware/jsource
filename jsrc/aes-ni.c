@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 #include <wmmintrin.h>
+#ifndef __USE_XOPEN2K
+#define __USE_XOPEN2K  // for posix_memalign
+#endif
 #include <stdlib.h>
 
 #define ADD _mm_add_epi32

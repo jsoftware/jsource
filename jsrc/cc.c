@@ -1360,7 +1360,6 @@ DF1(jtboxcutm21){
     MC(zv,AAV0(ctx->c[i].contents),AN(ctx->c[i].contents)*SZA); zv+=AN(ctx->c[i].contents); fa(ctx->c[i].contents);}}}
  EPILOG(z);
 #else
-
  C *wv=CAV(w);I wn=AN(w);A z;
  if(!wn){GATV0(z,BOX,0,1);EPILOG(z);}
  C fret=wv[AN(w)-1];
@@ -1395,7 +1394,7 @@ F2(jtcut){F2PREFIP;A h=0,z;I flag=0,k;
   }
   z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
  case 2: case -2:
-#if C_AVX2 && PYXES
+#if 0 && C_AVX2 && PYXES //temp. disabled; broken
  if(FAV(a)->id==CBOX){ //<;._2
   RZ(z=fdef(0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX));
   FAV(z)->localuse.lu1.gercut.cutn=k;

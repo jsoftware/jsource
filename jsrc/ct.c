@@ -864,6 +864,36 @@ ASSERT(0,EVNONCE)
   ASSERT(0,EVNONCE)
 #endif
   break;}
+ case 16: {  // create an AMV.  w is initial value
+#if PYXES
+  I initval; RE(initval=i0(w))  // recur must be integer
+  A zz; GAT0(zz,INT,1,0); IAV0(zz)[0]=initval;  // AMV is a boxed integer atom.  The boxing is needed to protect the value from being virtualized and then realized in a different place
+  z=box(zz); 
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
+ case 17: {  // atomic add to atom, returning previous value
+#if PYXES
+  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // w is 2 boxes
+  A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH)  // amv is singleton integer - we don't verify anything else
+  I imod; RE(imod=i0(AAV(w)[1]))  // addend must be integer
+  z=sc(__atomic_fetch_add(&IAV(amv)[0],imod,__ATOMIC_ACQ_REL));  // do the add, return unincremented value
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
+ case 18: {  // compare-and-swap on atom
+#if PYXES
+  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==3,EVLENGTH)  // w is 2 boxes
+  A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH)  // amv is singleton integer - we don't verify anything else
+  I desired; RE(desired=i0(AAV(w)[1]))  // replacement value
+  I expected; RE(expected=i0(AAV(w)[2]))  // expected value
+  z=mtv; if(!__atomic_compare_exchange_n(&IAV(amv)[0], &expected, desired, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))z=sc(expected);  // if no match for expected, return new value; otherwise modify & return ''
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
  case 55: {  // destroy thread.  w is thread# to destroy, or '' for last thread
   // A thread is set to ACTIVE state when it is created.  It sets itself !ACTIVE when it returns.
   // ACTIVE is changed only under the job lock.

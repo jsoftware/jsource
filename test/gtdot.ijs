@@ -199,6 +199,47 @@ wthr N
 N = 1 T.''
 wthr N
 
+NB. AMV
+amv =. 16 T. 0  NB. AMV with value 0
+0 = 17 T. amv,<1
+1 = 17 T. amv,<2
+3 = 17 T. amv,<1  NB. Now set to 4
+4 = 18 T. amv,0;5  NB. failed write
+'' -: 18 T. amv,0;4  NB. successful write - amv is now 0
+'domain error' -: 16 T. etx 0.5
+'domain error' -: 16 T. etx a:
+'rank error' -: 16 T. etx 1 2
+'domain error' -: 17 T. etx 0
+'domain error' -: 17 T. etx 1.5
+'rank error' -: 17 T. etx <amv
+'length error' -: 17 T. etx amv,0;0
+'rank error' -: 17 T. etx ,: amv,<0
+'domain error' -: 17 T. etx 1.5;0
+'domain error' -: 17 T. etx amv,<0.5
+'rank error' -: 17 T. etx amv,<3 2
+'domain error' -: 18 T. etx 0
+'domain error' -: 18 T. etx 1.5
+'rank error' -: 18 T. etx <amv
+'length error' -: 18 T. etx amv,<0
+'length error' -: 18 T. etx amv,0;3;4
+'rank error' -: 18 T. etx ,: amv,0;2
+'domain error' -: 18 T. etx 1.5;0;2
+'domain error' -: 18 T. etx amv,0.5;2
+'rank error' -: 18 T. etx amv,3 2;2
+'domain error' -: 18 T. etx amv,2;0.5
+'rank error' -: 18 T. etx amv,2;3 2
+
+f =: {{ vec =. 0$0 for. i. y do. vec =. vec , 17 T. x,<1 end. vec }}  NB. x is amv, y is # times to reserve 1
+wthr N
+amv =. 16 T. 0  NB. AMV with value 0
+(i. 30000) -: /:~ ; amv f t. ''"0 ] 3 $ 10000
+f =: {{ vec =. 0$0  for. i. y do. exp =. 0 while. $exp do. exp =. 18 T. x,des;exp [ des =. >:exp end. vec =. vec,des end. vec }}  NB. x is amv, y is # times to reserve 1
+wthr N
+amv =. 16 T. 0  NB. AMV with value 0
+(>: i. 3000) -: /:~ ; amv f t. ''"0 ] 3 $ 1000
+
+
+
 'domain error' -: ". etx '0 t. ($0)'
 'domain error' -: ". etx '+ t. 1.5'
 'domain error' -: ". etx '+ t. ''abc'''
@@ -213,7 +254,7 @@ wthr N
 'limit error' -: 2 T. etx 8
 'limit error' -: ". etx '] t. 8'
 
-4!:55 ;:'allowlongjobs delth N N1 N2 f f1 f2 g g1 wthr'
+4!:55 ;:'allowlongjobs amv delth N N1 N2 f f1 f2 g g1 wthr'
 
 epilog''
 

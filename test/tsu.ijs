@@ -65,10 +65,10 @@ ex01=:0!:1
 ex02=:0!:2
 ex03=:0!:3
 
-etx      =: 1 : 'u :: (<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)'  NB. error message from error number
+etx      =: ::(<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)  NB. error message from error number
 ex       =: ". etx
 fex      =: }. @ (i.&(10{a.) {. ]) @ (13!:12) @ i. @ 0: @ (0!:110)
-eftx     =: 1 : 'u :: ((10{a.) -.~ (13!:12) @ i. @ 0:)'   NB. full text of error message
+eftx     =: ::((10{a.) -.~ (13!:12) @ i. @ 0:)   NB. full text of error message
 efx      =: ". eftx
 
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'

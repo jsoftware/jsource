@@ -171,7 +171,7 @@ a3=: /\
 
 'value error'   -: 2 (5!:7) etx <'nonexistentverb'
 
-'|length error|   y    *"(0)0 0 1,:_ _,7)];.0 x' ([ -: #@[ {. ]) 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun
+'|length error: frames 3 and 2 are not conformable|   y    *"(0)0 0 1,:_ _,7)];.0 x' ([ -: #@[ {. ]) 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun
 
 
 4!:55 ;:'a1 a2 a3 c1 c2 chk f1 f2 f3 f4 f5 mean perm ww xr'

@@ -587,7 +587,7 @@ typedef I SI;
                                   // even if the value is assigned to another name.  The purpose is to allow virtual extension: if you know that a value is assigned to a name, then only one
                                   // thread can encounter the value with AC=2, and that is safe for virtual extension.
 
-#define AFVIRTUALBOXEDX XDX   // matches XDX
+#define AFVIRTUALBOXEDX XDX   // matches XDX 19
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
 #define AFPRISTINEX      ASGNX  // matches ASGN 24 - must be above all DIRECT flags   *** can be changed when block is shared
 #define AFPRISTINE  ((I)1<<AFPRISTINEX)  // meaningful only for BOX type.  This block's contents were made entirely of DIRECT inplaceable or PERMANENT values, and thus can be
@@ -597,10 +597,10 @@ typedef I SI;
    // If a PRISTINE block is incorporated, it must lose PRISTINE status because it is no longer possible to know whether contents may have been fetched while the
    // block was incorporated.
    // NOTE: if a block becomes shared, the value of PRISTINE becomes immaterial
-#define AFDPARENX CONWX     // matches CONW
+#define AFDPARENX CONWX     // matches CONW 26
 #define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) or noun () and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
-#define AFUPPERTRIX RPARX      // matches RPAR
+#define AFUPPERTRIX RPARX      // matches RPAR 30
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 

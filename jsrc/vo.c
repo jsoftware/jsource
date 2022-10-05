@@ -30,7 +30,7 @@ F1(jtlevel1){ARGCHK1(w); I z=level(jt,w); RE(0) R sc(z);}
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
 #ifndef BOXEDSPARSE
- ASSERT(!ISSPARSE(wt),EVNONCE);
+ ASSERTF(!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");
 #endif
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(likely(!f)){
@@ -54,7 +54,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  } else {
   // <"r
 #ifdef BOXEDSPARSE
- ASSERT(!ISSPARSE(wt),EVNONCE);    // <"r not implemented
+ ASSERTF(!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");    // <"r not implemented
 #endif
   ws=AS(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
@@ -124,7 +124,7 @@ F2PREFIP;ARGCHK2(a,w);
  }
 #endif
 #ifndef BOXEDSPARSE
- ASSERT(!ISSPARSE(AT(a)|AT(w)),EVNONCE);   // can't box sparse values
+ ASSERTF(!ISSPARSE(AT(a)|AT(w)),EVNONCE,"can't box sparse arrays");
 #endif
  I optype=FAV(self)->localuse.lu1.linkvb;  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
  optype|=((I)jtinplace&JTWILLBEOPENED)<<(BOXX-JTWILLBEOPENEDX);  // fold in BOX flag that tells us to allow virtual boxed results
@@ -519,7 +519,8 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // So, we don't check compatibility for empty boxes.
  // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is contiguous for each cell and we just copy into the result area
  if(likely(t!=0)){
-  ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
+  // no mixed nonempties: t is homo num/char or all boxed or all symbol.
+  ASSERTHOMO(t);
   ASSERT(((t^SPARSE)&SPARSE+XNUM+RAT)<=0,EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
@@ -575,7 +576,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
   // if contents has the same rank as result, it is an array of result-cells, and each item adds
   // to c, the total # items in result; otherwise it is a single cell that will be promoted in rank to
   // become one result-cell.  Error if overflow (should be impossible).  j=#leading length-1 axes that need to be added
-  y=C(v[i]); yr=AR(y); ys=AS(y); I nitems=ys[0]; j=r-yr; nitems=j==0?nitems:1; c+= nitems; ASSERT(0<=c,EVLIMIT); 
+  y=C(v[i]); yr=AR(y); ys=AS(y); I nitems=ys[0]; j=r-yr; nitems=j==0?nitems:1; c+=nitems; ASSERT(0<=c,EVLIMIT); 
   if(!yr)continue;   // do not perform rank extension of atoms
   // here we find the max cell size in *(s+1). *s is not used.  The maximum shape is taken
   // over extension axes of length 1, followed by the actual shape of the contents
@@ -600,7 +601,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
     for(yr=yr-1,k=r-1;yr>=0&&ys[yr]==s[k];--yr,--k);  // see if unextended cell-shape matches
     if(yr<0){NOUNROLL while(k>0&&s[k]==1)--k;}   // if all that match, check to see if extended cell-shape==1
     if(k>0) {   // If we compared all the way back to the entire rank or one short (since we only care about CELL shape), there will be no fill
-     ASSERT(HOMO(t, AT(jt->fill)), EVDOMAIN); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
+     ASSERTHOMO2(t,AT(jt->fill)); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
      break;  // one fill is enough
     }    
    }
@@ -657,7 +658,7 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   // So, we don't check compatibility for empty boxes.
   i=t;  // save indicator of nonempties
   if(t){
-   ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
+   ASSERTHOMO(t);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
    te=t;  // te holds the type to use
   }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given.
   t=te&-te; NOUNROLL while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type

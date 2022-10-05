@@ -797,6 +797,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+#define ASSERTF(b,e,s...){if(unlikely(!(b))){jsignalf(e,s); R 0;}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
 #define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
@@ -810,17 +811,30 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTSYSV(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s);}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
+#define ASSERTHOMO(t) {\
+ if(unlikely(0>(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)))){\
+  /* Just grab and display any two mismatching types */\
+  /* Generating error is slightly annoying; can't just use blsi, because in the event that we have (e.g.) a numeric type, another numeric type, and something non-numeric, we might display both numeric types, instead of a number and a something-else */\
+  I _tt[2],_ti=0;\
+  if(t&NUMERIC)_tt[_ti++]=BLSI(t&NUMERIC);\
+  if(t&JCHAR)_tt[_ti++]=BLSI(t&JCHAR);\
+  t&=~(NUMERIC|JCHAR);\
+  while(_ti<2){_tt[_ti++]=BLSI(t);t=BLSR(t);}\
+  ASSERTF(0,EVDOMAIN,"%t incompatible with %t",_tt[0],_tt[1]);}}
+#define ASSERTHOMO2(t0,t1) ASSERTF(HOMO(t0,t1),EVDOMAIN,"%t incompatible with %t",t0,t1)
+
 // verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
-#if 1 && ((C_AVX&&SY_64) || EMU_AVX)
+#if 1 && ((C_AVX2&&SY_64) || EMU_AVX)
 // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
-#define ASSERTAGREE(x,y,l) \
- {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
+#define ASSERTAGREE2(x,y,l,xl,yl) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
-   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
-   ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); /* result is 1 if all match */ \
-  }else{NOUNROLL do{--aai; ASSERT(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
+   endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
+   ASSERTF(_mm256_testz_si256(endmask,endmask),EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); /* result is 1 if all match */ \
+  }else{DONOUNROLL(aai,ASSERTF(aaa[i]==aab[i],EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab);)} \
  }
+#define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
 // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
  {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
@@ -830,13 +844,14 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{NOUNROLL do{--aai; r=0; if(((I*)aaa)[aai]!=((I*)aab)[aai]){r=1; break;}}while(aai);} \
  }
 #else
-#define ASSERTAGREE(x,y,l) \
+#define ASSERTAGREE2(x,y,l,xl,yl) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
    aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
-   ASSERT(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH); \
-  }else{ASSERT(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
+   ASSERTF(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); \
+  }else{ASSERTF(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab)} \
  }
+#define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
@@ -1354,7 +1369,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
 #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
 #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)
-#define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
+#define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=MAX(0,fl); I fr=(I)AR(w)-(r); fr=MAX(0,fr); ASSERTAGREE2(AS(a),AS(w),MIN(fl,fr),fl,fr) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lc=FAV(ds(cxx))->lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
@@ -2154,6 +2169,14 @@ extern I CTTZZ(I);
 #if !defined(CTLZI)
 extern I CTLZI_(UI,UI4*);
 #define CTLZI(in,out) CTLZI_(in,&(out))
+#endif
+
+#if C_AVX2&&__x86_64__
+#define BLSI(x) _blsi_u64(x)
+#define BLSR(x) _blsr_u64(x)
+#else
+#define BLSI(x) ((x)&-(x))
+#define BLSR(x) ((x)&~BLSI(x))
 #endif
 
 // Set these switches for testing

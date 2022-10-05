@@ -287,18 +287,18 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
   // find smaller/larger frame/shape, and indicate if a is the repeated arg (otherwise we assume w)
-  wof=aofwof&RANKTMSK; aof=aofwof>>RANKTX; lof=aof; sof=wof; los=AS(a); lof=aof-wof<0?wof:lof; sof=aof-wof<0?aof:sof; los=aof-wof<0?AS(w):los; state|=(aof-wof)&STATEOUTERREPEATA;
-  ASSERTAGREE(AS(a),AS(w),sof)  // prefixes must agree
+  wof=aofwof&RANKTMSK; aof=aofwof>>RANKTX; lof=MAX(aof,wof); sof=MIN(aof,wof); los=AS(a); los=aof-wof<0?AS(w):los; state|=(aof-wof)&STATEOUTERREPEATA;
+  ASSERTAGREE2(AS(a),AS(w),sof,aof,wof)  // prefixes must agree
   CPROD(state&STATEAWNOTEMPTY,outerframect,sof,los); CPROD(state&STATEAWNOTEMPTY,outerrptct,lof-sof,los+sof);  // get # cells in frame, and in unmatched frame
  }
 
  // Now work on inner frames.  Compare frame lengths after discarding outer frames
  // set lif=length of longer inner frame, sif=length of shorter inner frame, lis->longer inner shape
  {
-  I ea=(afwf>>RANKTX)-aof, ew=(afwf&RANKTMSK)-wof; sif=lif=ea; lif=ea-ew<=0?ew:lif; sif=ea-ew<=0?sif:ew;  // lif=long inner frame, sif=short
+  I ea=(afwf>>RANKTX)-aof, ew=(afwf&RANKTMSK)-wof; sif=MIN(ea,ew); lif=MAX(ea,ew);  // lif=long inner frame, sif=short
   state|=(ea-ew)&STATEINNERREPEATA;  // if w is longer, indicate repeating a.  The flag bit is far above the max rank
   lis=AS(w)+wof; I *sis=AS(a)+aof;  // start out as the two inner shapes lis=w, sis=a
-  ASSERTAGREE(sis,lis,sif)  // error if frames are not same as prefix
+  ASSERTAGREE2(sis,lis,sif,ea,ew)  // error if frames are not same as prefix
   lis=ew-ea<=0?sis:lis; state|=(ew-ea)&STATEINNERREPEATW;  // make lis the shape pointer for longer; if a is longer, indicate repeating w
  }
  CPROD(state&STATEAWNOTEMPTY,innerrptct,lif-sif,lis+sif);  // number of repetitions per matched-frame cell
@@ -425,7 +425,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 #define ZZFLAGWORD state
 
  // Verify agreement
- as=AS(a); ws=AS(w); ASSERTAGREE(as,ws,MIN(ar,wr))
+ as=AS(a); ws=AS(w); ASSERTAGREE2(as,ws,MIN(ar,wr),ar,wr)
 
  // Calculate strides for inner and outer loop.  Cell-size is known to be 1 atom.  The stride of the inner loop is 1 atom, except for a
  // repeated value, of which there can be at most 1.  For a repeated value, we set the stride to 0 and remember the repetition count and stride
@@ -593,8 +593,7 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I ar,wr;
  F2PREFIP; ARGCHK2(a,w);
  wr=AR(w); r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; r=AR(w)-wr;   // wr=requested rank, after negative resolution, or ~0; r=frame of w, possibly negative if no frame
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
- l=MIN(r,l); l=l<0?0:l;  // get length of frame
- ASSERTAGREE(AS(a),AS(w),l)  // verify agreement before we modify jt->ranks
+ ASSERTAGREE2(AS(a),AS(w),MAX(0,MIN(r,l)),MAX(0,l),MAX(0,r))  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
    // Not all verbs (*f2)() use the fs argument.
@@ -651,8 +650,7 @@ static DF1(rank1in){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested r
 static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
  I ar=sv->localuse.srank[1]; ar=ar>=AR(a)?RMAX:ar; I af=AR(a)-ar;   // left rank
  I wr=sv->localuse.srank[2]; wr=wr>=AR(w)?RMAX:wr; I wf=AR(w)-wr;   // right rank
- af=wf<af?wf:af; af=af<0?0:af;
- ASSERTAGREE(AS(a),AS(w),af)  // verify agreement before we modify jt->ranks
+ ASSERTAGREE2(AS(a),AS(w),MAX(0,MIN(wf,af)),MAX(0,af),MAX(0,wf));  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
  jt->ranks=R2MAX;  // reset rank to infinite
@@ -661,8 +659,7 @@ static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested ra
 static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested rank is negative
  I wr=AR(w); I r=sv->localuse.srank[2]; r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
  I ar=AR(a); r=sv->localuse.srank[1];   r=r>=ar?RMAX:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
- af=wf<af?wf:af; af=af<0?0:af;
- ASSERTAGREE(AS(a),AS(w),af)  // verify agreement before we modify jt->ranks
+ ASSERTAGREE2(AS(a),AS(w),MAX(0,MIN(wf,af)),MAX(0,af),MAX(0,wf))  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
  jt->ranks=R2MAX;  // reset rank to infinite

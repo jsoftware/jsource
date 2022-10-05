@@ -918,24 +918,24 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1))))  // test true is value found
 #define DF1(f)          A f(JJ jt,    A w,A self)
 #define DF2(f)          A f(JJ jt,A a,A w,A self)
-#define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
-#define DONOUNROLL(n,stm) {I i=0,_n=(n); NOUNROLL for(;i<_n;i++){stm}}  // i runs from 0 to n-1
-#define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
-#define DPNOUNROLL(n,stm)       {I i=-(n);   NOUNROLL for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
-#define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}   // i runs from n-1 downto 0 (fastest when you don't need i)
-#define DQNOUNROLL(n,stm) {UI i=(n); if((I)i>0){--i; NOUNROLL do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i).  i is UI
-#define DOU(n,stm)      {I i=0,_n=(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
-#define DPU(n,stm)      {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
-#define DQU(n,stm)      {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
-#define DOSTEP(n,step,stm) {I i=0,_n=(n); for(;_n;i++,_n-=(step)){stm}}  // i runs from 0 to n-1, but _n counts down
+#define DO(n,stm...)          {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
+#define DONOUNROLL(n,stm...)  {I i=0,_n=(n); NOUNROLL for(;i<_n;i++){stm}}  // i runs from 0 to n-1
+#define DP(n,stm...)          {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
+#define DPNOUNROLL(n,stm...)  {I i=-(n);   NOUNROLL for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
+#define DQ(n,stm...)          {I i=(I)(n)-1;    for(;i>=0;--i){stm}}   // i runs from n-1 downto 0 (fastest when you don't need i)
+#define DQNOUNROLL(n,stm...)  {UI i=(n); if((I)i>0){--i; NOUNROLL do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i).  i is UI
+#define DOU(n,stm...)         {I i=0,_n=(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
+#define DPU(n,stm...)         {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
+#define DQU(n,stm...)         {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
+#define DOSTEP(n,step,stm...) {I i=0,_n=(n); for(;_n;i++,_n-=(step)){stm}}  // i runs from 0 to n-1, but _n counts down
 
 // C suffix indicates that the count is one's complement
-#define DOC(n,stm)       {I i=0,_n=~(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
-#define DPC(n,stm)       {I i=(n)+1;    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
-#define DQC(n,stm)       {I i=-2-(I)(n);    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0 (fastest when you don't need i)
-#define DOUC(n,stm)      {I i=0,_n=~(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
-#define DPUC(n,stm)      {I i=(n)+1;    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
-#define DQUC(n,stm)      {I i=-2-(I)(n);  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
+#define DOC(n,stm...)    {I i=0,_n=~(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
+#define DPC(n,stm...)    {I i=(n)+1;    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
+#define DQC(n,stm...)    {I i=-2-(I)(n);    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0 (fastest when you don't need i)
+#define DOUC(n,stm...)   {I i=0,_n=~(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
+#define DPUC(n,stm...)   {I i=(n)+1;    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
+#define DQUC(n,stm...)   {I i=-2-(I)(n);  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define ds(c)            (A)&primtab[(UC)(c)]
 #define DUMMYSELF        ds(CRIGHT)  // harmless value to use for self in calls to rank loops
 // see if value of x is the atom v.  Do INT/B01/FL here, subroutine for exotic cases

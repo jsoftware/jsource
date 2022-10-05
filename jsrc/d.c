@@ -270,9 +270,14 @@ void jtjsignalf(J jt,I e,C *fmt,...){
     if(l<0){ it=va_arg(ap,I);p=&it;l=1; }
     else{ p=va_arg(ap,I*); }
     DO(l,if(bp>=be)break;
+         I pi=p[i];
          *bp=' ';bp+=!!i;     // space between elements (other than the first)
-         *bp='_';bp+=p[i]<0;
-         bp+=snprintf(bp,be-bp,"%zd",ABS(p[i]));)
+         *bp='_';bp+=pi<0;
+         pi=ABS(pi);
+         if(!pi){*bp++='0';}
+         else{I pil=0,tpi=pi;while(tpi>=1000)pil+=3,tpi/=1000;while(tpi)pil++,tpi/=10;
+              C *nbp=bp+=pil;
+              while(pi)*--nbp='0'+pi%10,pi/=10;})
     break;
    default:SEGFAULT;}}
  jsigstr(e,bp-buf,buf);}

@@ -265,7 +265,7 @@ void jtjsignalf(J jt,I e,C *fmt,...){
   if(BETWEENC(*fmt,'0','9')){for(l=0;BETWEENC(*fmt,'0','9');fmt++)l*=10,l+=*fmt-'0';}
   else if(*fmt=='*'){l=va_arg(ap,I);*fmt++;}
   switch(*fmt++){
-   case 'i':
+   case 'i':;
     I *p,it;
     if(l<0){ it=va_arg(ap,I);p=&it;l=1; }
     else{ p=va_arg(ap,I*); }

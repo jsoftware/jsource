@@ -11,7 +11,7 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-RUN1^:(GITHUBCI>IF64) 'g100i'
+NB. RUN1^:(GITHUBCI>IF64) 'g100i'
 
 NB. smoke test
 NB. RES=: RUN (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'

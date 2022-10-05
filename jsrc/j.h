@@ -823,10 +823,26 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   ASSERTF(0,EVDOMAIN,"%t incompatible with %t",_tt[0],_tt[1]);}}
 #define ASSERTHOMO2(t0,t1) ASSERTF(HOMO(t0,t1),EVDOMAIN,"%t incompatible with %t",t0,t1)
 
-// verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
-#if 1 && ((C_AVX2&&SY_64) || EMU_AVX)
+// verify that shapes *x and *y match for l axes using AVX for rank<=vector size, memcmp otherwise
+#if C_AVX512
 // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
+// todo would it be better to overread and do a masked compare instead?  Cache pollution technically, but we probably need the next cacheline anyway, soo
+#define ASSERTAGREE2(x,y,l,xl,yl) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xff,aai); \
+   ASSERTF(!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(endmask,aaa),_mm512_maskz_loadu_epi64(endmask,aab)), \
+           EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); /* result is nonzero if any mismatch */ \
+  }else{DONOUNROLL(aai,ASSERTF(aaa[i]==aab[i],EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab);)} \
+ }
+// set r nonzero if shapes disagree
+#define TESTDISAGREE(r,x,y,l) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xff,aai); \
+   r=!!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(endmask,aaa),_mm512_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
+  }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
+ }
+#elif (C_AVX2&&SY_64) || EMU_AVX
 #define ASSERTAGREE2(x,y,l,xl,yl) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
@@ -834,14 +850,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    ASSERTF(_mm256_testz_si256(endmask,endmask),EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); /* result is 1 if all match */ \
   }else{DONOUNROLL(aai,ASSERTF(aaa[i]==aab[i],EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab);)} \
  }
-#define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
-// set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
- {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
-   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
+   endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
    r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
-  }else{NOUNROLL do{--aai; r=0; if(((I*)aaa)[aai]!=((I*)aab)[aai]){r=1; break;}}while(aai);} \
+  }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
 #else
 #define ASSERTAGREE2(x,y,l,xl,yl) \
@@ -851,7 +865,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    ASSERTF(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); \
   }else{ASSERTF(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab)} \
  }
-#define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
@@ -860,6 +873,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
 #endif
+#define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
 #define ASSERTAGREESEGFAULT (x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]

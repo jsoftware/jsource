@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <winbase.h>
 #endif
+#include <stdarg.h>
 
 #include "j.h"
 #include "d.h"
@@ -235,6 +236,52 @@ void jtjsignal(J jt,I e){A x;
  // Ignore them here - they will not be displayed
  x=BETWEENC(e,1,NEVM)?AAV(JT(jt,evm))[e]:mtv; jsigstr(e,AN(x),CAV(x));
 }
+
+// like jtjsignal, but with more detailed error message
+// format: cf printf
+// %%   literal %
+// %i   I
+// %5i  I(*)[5]
+// %*i  I(*)[I] (length, then ptr)
+// %t   type (nonspecific; eg 'number', not 'integer') as I
+void jtjsignalf(J jt,I e,C *fmt,...){
+ va_list ap;va_start(ap,fmt);
+ C buf[1024],*bp=buf,*be=buf+1000; //bufend leave a bit of scratch space to simplify logic
+ {A x=AAV(JT(jt,evm))[e];MC(bp,CAV(x),AN(x));bp+=AN(x);*bp++=':';*bp++=' ';}
+ while(bp<be&&*fmt){
+  //could be faster with simd scanning, but who cares?
+  if(*fmt!='%'){*bp++=*fmt++;continue;}
+  fmt++;
+  if(*fmt=='%'){*bp++='%';fmt++;continue;}
+  if(*fmt=='t'){
+   fmt++;
+   static const char *ntt[]={[B01X]="number",[INTX]="number",[FLX]="number",[CMPXX]="number",[XNUMX]="number",[RATX]="number",
+                             [BOXX]="box",[PYXX]="box",
+                             [SBTX]="symbol",
+                             [LITX]="literal",[C2TX]="literal",[C4TX]="literal"};
+   bp+=snprintf(bp,be-bp,"%s",ntt[CTTZ(va_arg(ap,I))]);
+   continue;}
+  I l=-1;
+  if(BETWEENC(*fmt,'0','9')){for(l=0;BETWEENC(*fmt,'0','9');fmt++)l*=10,l+=*fmt-'0';}
+  else if(*fmt=='*'){l=va_arg(ap,I);*fmt++;}
+  switch(*fmt++){
+   case 'i':;
+    I *p,it;
+    if(l<0){ it=va_arg(ap,I);p=&it;l=1; }
+    else{ p=va_arg(ap,I*); }
+    DO(l,if(bp>=be)break;
+         I pi=p[i];
+         *bp=' ';bp+=!!i;     // space between elements (other than the first)
+         *bp='_';bp+=pi<0;
+         pi=ABS(pi);
+         if(!pi){*bp++='0';}
+         else{I pil=0,tpi=pi;while(tpi>=1000)pil+=3,tpi/=1000;while(tpi)pil++,tpi/=10;
+              C *nbp=bp+=pil;
+              while(pi)*--nbp='0'+pi%10,pi/=10;})
+    break;
+   default:SEGFAULT;}}
+ jsigstr(e,bp-buf,buf);}
+
 
 void jtjsignal2(J jt,I e,A dummy){jtjsignal(jt,e);}  // used in unquote to reschedule instructions
 

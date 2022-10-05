@@ -261,15 +261,13 @@ h=: 2 3&+@sum
 
 'value error: junkfoo' -: fex 'junkfoo'
 
-'length error: fex'    -: fex '2 3+4 5 6'
+'length error: frames 2 and 3 are not conformable: fex'    -: fex '2 3+4 5 6'
 'domain error: fex'    -: fex '+/1;2 3'
 'domain error: sum'    -: fex 'sum ''asdf'''
 'noun result was required: g'      -: fex 'f 0'
-'length error: f'      -: fex 'f 2 3 4'
+'length error: frames 2 and 3 are not conformable: f'      -: fex 'f 2 3 4'
 'domain error: sum'    -: fex 'h ''asdf'''
-'length error: h'      -: fex 'h i.3 4'
-
-'length error: fex'    -: fex '2 3+4 5 6'
+'length error: frames 2 and 4 are not conformable: h'      -: fex 'h i.3 4'
 
 f=: 3 : 0
  abc=. 'abc'

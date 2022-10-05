@@ -778,9 +778,10 @@ extern A        jtjgets(JJ,C*);
 extern C        jtjinit2(JS,int,C**);
 extern A        jtinv(J,A,I);  // second arg is forced to 0 for initial call
 extern F        jtjope(J,A,C*);
-extern I       jtjset(J,C*,A);
+extern I        jtjset(J,C*,A);
 extern void     jtjsigd(J,C*);
 extern void     jtjsignal(J,I);
+extern void     jtjsignalf(J,I,C*,...);
 extern void     jtjsignal2(J,I,A);
 extern void     jtjsignal3(J,I,A,I);
 extern A        jtleakblockread(J,A);

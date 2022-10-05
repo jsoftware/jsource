@@ -312,62 +312,62 @@ typedef I SI;
 // NOTE: all noun types must be below all parsable non-nouns
 
 #define B01X 0
-#define B01             ((I)1L<<B01X)           /* B  boolean                      */
-#define B01SIZE         sizeof(B)       // length of 1 atom
+#define B01             ((I)1L<<B01X)           // B  boolean
+#define B01SIZE         sizeof(B)               // length of 1 atom
 #define LITX 1
-#define LIT             ((I)1L<<LITX)           /* C  literal (character)          */
+#define LIT             ((I)1L<<LITX)           // C  literal (character)
 #define LITSIZE sizeof(C)
 #define INTX 2
-#define INT             ((I)1L<<INTX)           /* I  integer                      */
+#define INT             ((I)1L<<INTX)           // I  integer
 #define INTSIZE sizeof(I)
 #define FLX 3
-#define FL              ((I)1L<<FLX)           /* D  double (IEEE floating point) */
+#define FL              ((I)1L<<FLX)            // D  double (IEEE floating point)
 #define FLSIZE sizeof(D)
 #define CMPXX 4
-#define CMPX            ((I)1L<<CMPXX)          /* Z  complex                      */
+#define CMPX            ((I)1L<<CMPXX)          // Z  complex
 #define CMPXSIZE sizeof(Z)
 #define BOXX 5
-#define BOX             ((I)1L<<BOXX)          /* A  boxed                        */
+#define BOX             ((I)1L<<BOXX)           // A  boxed
 #define BOXSIZE sizeof(A)
 #define XNUMX 6
-#define XNUM            ((I)1L<<XNUMX)          /* X  extended precision integer   */
+#define XNUM            ((I)1L<<XNUMX)          // X  extended precision integer
 #define XNUMSIZE sizeof(X)
 #define RATX 7
-#define RAT             ((I)1L<<RATX)         /* Q  rational number              */
+#define RAT             ((I)1L<<RATX)           // Q  rational number
 #define RATSIZE sizeof(Q)
 #define PYXX 8
 #define PYX          ((I)1L<<PYXX)  // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
-                                          // Task creation returns an atomic box (which is NOT a pyx) that CONTAINS a pyx.  A pyx itself never becomes a result or argument, because
-                                          // the value of a pyx may not be accessed except through C(pyx), which will return the address of the contents.  An A block pointing to the pyx (necessarily of BOX type)
-                                          // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that pyxes MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
-                                          // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
-                                          // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the pyx,  requires C(pyx).
-                                          // If the address of the pyx is being copied into another block, there is no need for C().  In particular, the pyx may be ra()'d if it is put into a recursive block.
-                                          // ra() on a pyx will affect the usecount of the pyx itself but NOT of the contents, because a pyx is always marked recursive.
-                                          // The pyx looks like an atomic box but it actually holds a PYXBLOK where the data would be.  The PYXBLOK begins with the result value, so that when
-                                          // the pyx is freed the result will be also.  The AN of the 'atomic' pyx is initialized to 1, and AAV[0] to 0.  When the pyx is resolved, the address of the
-                                          // result A block is stored into AAV[0], error code is saved in the PYXBLOK, and the executing thread field of the PYXBLOK is set to -1.
-                                          // When a pyx is created, ownership is transferred to the enclosing box via zap.  The enclosing box is active in the creating task.  The PYXBLOK is ra()d
-                                          // before it is passed to the executing task; the task fa()s it after it is filled in.
-                                          //
-                                          // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
-                                          // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
-                                          // a being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
+                                    // Task creation returns an atomic box (which is NOT a pyx) that CONTAINS a pyx.  A pyx itself never becomes a result or argument, because
+                                    // the value of a pyx may not be accessed except through C(pyx), which will return the address of the contents.  An A block pointing to the pyx (necessarily of BOX type)
+                                    // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that pyxes MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
+                                    // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
+                                    // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the pyx,  requires C(pyx).
+                                    // If the address of the pyx is being copied into another block, there is no need for C().  In particular, the pyx may be ra()'d if it is put into a recursive block.
+                                    // ra() on a pyx will affect the usecount of the pyx itself but NOT of the contents, because a pyx is always marked recursive.
+                                    // The pyx looks like an atomic box but it actually holds a PYXBLOK where the data would be.  The PYXBLOK begins with the result value, so that when
+                                    // the pyx is freed the result will be also.  The AN of the 'atomic' pyx is initialized to 1, and AAV[0] to 0.  When the pyx is resolved, the address of the
+                                    // result A block is stored into AAV[0], error code is saved in the PYXBLOK, and the executing thread field of the PYXBLOK is set to -1.
+                                    // When a pyx is created, ownership is transferred to the enclosing box via zap.  The enclosing box is active in the creating task.  The PYXBLOK is ra()d
+                                    // before it is passed to the executing task; the task fa()s it after it is filled in.
+                                    //
+                                    // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
+                                    // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
+                                    // a being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
 // Bit 9 unused
 #define SBTX 16
-#define SBT             ((I)1L<<SBTX)       /* SB symbol                       */
+#define SBT             ((I)1L<<SBTX)       // SB symbol
 #define SBTSIZE sizeof(SB)
 #define C2TX 17
-#define C2T             ((I)1L<<C2TX)      /* C2 unicode (2-byte characters)  */
+#define C2T             ((I)1L<<C2TX)       // C2 unicode (2-byte characters)
 #define C2TSIZE sizeof(US)
 #define C4TX 18
-#define C4T             ((I)1L<<C4TX)         /* C4 unicode (4-byte characters)  */
+#define C4T             ((I)1L<<C4TX)       // C4 unicode (4-byte characters)
 #define C4TSIZE sizeof(C4)
 #define XDX 19
-#define XD              ((I)1L<<XDX)   // DX extended floating point   used to represent intolerant compare in jtiosc
+#define XD              ((I)1L<<XDX)        // DX extended floating point   used to represent intolerant compare in jtiosc
 #define XDSIZE sizeof(DX)
 #define XZX 20
-#define XZ              ((I)1L<<XZX)   /* ZX extended complex             */
+#define XZ              ((I)1L<<XZX)        // ZX extended complex
 #define XZSIZE sizeof(ZX)
 
 #define LASTNOUNX XZX    // index of last noun bit

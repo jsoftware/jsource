@@ -99,6 +99,9 @@
 #endif
 
 #include <stdint.h>
+#ifndef __USE_XOPEN2K
+#define __USE_XOPEN2K  // for posix_memalign
+#endif
 #include <stdlib.h>
 
 /* Architecture-specific build options */

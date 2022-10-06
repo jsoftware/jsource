@@ -388,6 +388,9 @@ strptime_internal (const char *rp, const char *fmt, struct tm *tm,
             want_century = 0;
             want_xday = 1;
             break;
+        case 'z':
+            /* XXX How to handle this?  */
+            break;
         case 'Z':
             /* XXX How to handle this?  */
             break;

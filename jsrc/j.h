@@ -811,6 +811,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTSYSV(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s);}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
+
+#define ASSERTFHOMO(c,t0,t1)        ASSERTF(c,EVDOMAIN,"%t incompatible with %t",t0,t1)
+#define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i are not conformable",xl,xs,yl,ys)
+#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l)
+#define ASSERTINDEX(io,ir,l)        ASSERTFINDEX((UI)(ir)<(UI)(l),io,l)
+
 #define ASSERTHOMO(t) {\
  if(unlikely(0>(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)))){\
   /* Just grab and display any two mismatching types */\
@@ -820,20 +826,20 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   if(t&JCHAR)_tt[_ti++]=BLSI(t&JCHAR);\
   t&=~(NUMERIC|JCHAR);\
   while(_ti<2){_tt[_ti++]=BLSI(t);t=BLSR(t);}\
-  ASSERTF(0,EVDOMAIN,"%t incompatible with %t",_tt[0],_tt[1]);}}
-#define ASSERTHOMO2(t0,t1) ASSERTF(HOMO(t0,t1),EVDOMAIN,"%t incompatible with %t",t0,t1)
+  ASSERTFHOMO(0,_tt[0],_tt[1]);}}
+#define ASSERTHOMO2(t0,t1) ASSERTFHOMO(HOMO(t0,t1),t0,t1)
 
 // verify that shapes *x and *y match for l axes using AVX for rank<=vector size, memcmp otherwise
 #if C_AVX512
 // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
 // todo would it be better to overread and do a masked compare instead?  Cache pollution technically, but we probably need the next cacheline anyway, soo
+// Actually not safe because there's a one-cacheline allocation bucket which has space for a list with no ravel (virtual or empty), and that could be at the end of a page; todo fix because overreading is generally useful
 #define ASSERTAGREE2(x,y,l,xl,yl) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xff,aai); \
-   ASSERTF(!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(endmask,aaa),_mm512_maskz_loadu_epi64(endmask,aab)), \
-           EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); /* result is nonzero if any mismatch */ \
-  }else{DONOUNROLL(aai,ASSERTF(aaa[i]==aab[i],EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab);)} \
+   ASSERTFAGREE(!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(endmask,aaa),_mm512_maskz_loadu_epi64(endmask,aab)),xl,aaa,yl,aab); /* result is nonzero if any mismatch */ \
+  }else{DONOUNROLL(aai,ASSERTFAGREE(aaa[i]==aab[i],xl,aaa,yl,aab))} \
  }
 // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
@@ -847,8 +853,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
    endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
-   ASSERTF(_mm256_testz_si256(endmask,endmask),EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); /* result is 1 if all match */ \
-  }else{DONOUNROLL(aai,ASSERTF(aaa[i]==aab[i],EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab);)} \
+   ASSERTFAGREE(_mm256_testz_si256(endmask,endmask),xl,aaa,yl,aab); /* result is 1 if all match */ \
+  }else{DONOUNROLL(aai,ASSERTFAGREE(aaa[i]==aab[i],xl,aaa,yl,aab);)} \
  }
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -862,8 +868,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
    aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
-   ASSERTF(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab); \
-  }else{ASSERTF(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH,"frames %*i and %*i are not conformable",xl,aaa,yl,aab)} \
+   ASSERTFAGREE(0==(aaa[0]^aab[0])+(aaa[aai]^aab[aai]),xl,aaa,yl,aab); \
+  }else{ASSERTFAGREE(!memcmp(aaa,aab,aai<<LGSZI),xl,aaa,yl,aab)} \
  }
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \

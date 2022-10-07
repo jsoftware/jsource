@@ -32,8 +32,8 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  EPILOG(z);
 }
 
-#define SETNDX(ndxvbl,ndxexp,limexp)      {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp);          ASSERTF((UI)ndxvbl<(UI)limexp,EVINDEX,"index %i out of range for dimension %i",ndxvbl-(limexp),limexp);}}  // if ndxvbl>p, adding p can never make it OK
-#define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERTF((UI)ndxvbl<(UI)limexp,EVINDEX,"index %i out of range for dimension %i",ndxvbl-(limexp),limexp);}}  // this version write to input if the value was negative
+#define SETNDX(ndxvbl,ndxexp,limexp)      {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp);          ASSERTINDEX(ndxvbl-(limexp),ndxvbl,limexp);}}  // if ndxvbl>p, adding p can never make it OK
+#define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERTINDEX(ndxvbl-(limexp),ndxvbl,limexp);}}  // this version write to input if the value was negative
 #define SETJ(jexp) SETNDX(j,jexp,p)
 
 #define IFROMLOOP(T)        \
@@ -97,8 +97,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
 #if C_AVX2
 #define IDXASSERT(vo,vr,b) {\
  __m256d _mask=_mm256_castsi256_pd(_mm256_andnot_si256(vr,_mm256_sub_epi64(vr,b))); /* positive, and negative if you subtract axis length */\
- ASSERTF(_mm256_testc_pd(_mask,_mm256_castsi256_pd(ones)),\
-         EVINDEX,"index %i out of range for dimension %i",\
+ ASSERTFINDEX(_mm256_testc_pd(_mask,_mm256_castsi256_pd(ones)),\
          ((I*)&vo)[CTTZ(~_mm256_movemask_pd(_mask))],_mm256_extract_epi64(b,0));}
 #define GETIDX(v,p,b) {\
  __m256i _v=p; /* fetch a block of indices */\

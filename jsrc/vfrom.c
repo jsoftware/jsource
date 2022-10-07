@@ -1203,8 +1203,8 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
   if(dpflag&2)pcoldl=_mm256_set1_pd(pcn0v[rown+rowx]);  // fetch low part if it is present
   UI colx;
   // for each column-group
-  for(colx=0;colx<coln;colx+=NPAR){
-   __m256d endmask;  // maks for maskload and gather, indicating # words to process
+  for(colx=0;colx<coln;){
+   __m256d endmask;  // mask for maskload and gather, indicating # words to process
    __m256i prn0x;  // indexes of nonzero values in row
    // get the mask of valid values, fetch pivotrow values, fetch the Qk indexes to modify
    if(coln-colx>=NPAR){  // all lanes valid
@@ -1218,6 +1218,24 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
     if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
    }
+   // If relfuzz is 0, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to
+   // make sure that we don't work on the same column# in one batch of NPAR, because one update would be lost.
+   // We compare the indexes against each other and set endmask so as to stop before a repetition of index
+   if(unlikely(_mm256_cvtsd_f64(mrelfuzz))==0){
+    // compare 0-1 and 2-3
+    __m256i cmp01012323=_mm256_cmpeq_epi64(prn0x,_mm256_shuffle_epi32(prn0x,0b01001110));  // 0=1 0=1 2=3 2=3
+    // if 0=1, clear 1 2 3; if 2=3, clear 3
+    endmask=_mm256_andnot_si256(_mm256_or_si256(_mm256_permute2x128_si256(cmp01012323,cmp01012323,0b00001000),_mm256_blend_epi32(_mm256_setzero_si256(),cmp01012323,0b11001100)),endmask);
+    // compare 0-2 and 1-3
+    __m256i cmpxxxx0213=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b01000000));  // x x 0=2 1=3
+    // if 0=2, clear 2 3; if 1=3, clear 3
+    endmask=_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0213,0b01000100),cmpxxxx0213),0b11110000),endmask);
+    // compare 0-3 and 1-2
+    __m256i cmpxxxx0312=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b00010000));  // x x 0=3 1=2
+    // if 1=2, clear 2 3; if 0=3 clear 3
+    endmask=_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0312,0b01000100),cmpxxxx0312),0b11110000),endmask);
+   }
+   I okmsk=_mm256_movemask_pd(_mm256_castsi256_pd(endmask));  // mask of valid words in this block - always at least 1
    // gather the high parts of Qk
    __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow,prn0x,endmask,SZI);
    // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
@@ -1228,6 +1246,16 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     qkvh=_mm256_fnmadd_pd(prowdh,pcoldh,qkvh);
     // convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
     maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh));
+    // zero if lower than fuzz (high part)
+    qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
+    // scatter the results (high part)
+//   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
+    qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
+    if(likely(okmsk&0b1000))goto storeh1111; if(okmsk&0b100)goto storeh111; if(okmsk&0b10)goto storeh11; goto storeh1;
+    storeh1111: qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100111));
+    storeh111: qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100110));
+    storeh11: qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
+    storeh1: ;
    }else{
     // extended-precision calculation
     __m256d iph,ipl,isl;  // intermediate products and sums
@@ -1260,20 +1288,23 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
      // zero if lower than fuzz (low part)
      qkvl=_mm256_blendv_pd(qkvl,_mm256_setzero_pd(),maxabs);
     }
-    // scatter the results (low part)
-    qkvrow[_mm256_extract_epi64(prn0x,0)+qksizesq]=_mm256_cvtsd_f64(qkvl);
-    if(coln-colx>1)qkvrow[_mm256_extract_epi64(prn0x,1)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
-    if(coln-colx>2)qkvrow[_mm256_extract_epi64(prn0x,2)+qksizesq]=_mm256_cvtsd_f64(qkvl=_mm256_permute4x64_pd (qkvl,0b01001110));
-    if(coln-colx>3)qkvrow[_mm256_extract_epi64(prn0x,3)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
-   }
-   // zero if lower than fuzz (high part)
-   qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
-   // scatter the results (high part)
+    // zero if lower than fuzz (high part)
+    qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
+    // scatter the results (both parts)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
-   qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
-   if(coln-colx>1)qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
-   if(coln-colx>2)qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(qkvh=_mm256_permute4x64_pd (qkvh,0b01001110));
-   if(coln-colx>3)qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
+    qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
+    qkvrow[_mm256_extract_epi64(prn0x,0)+qksizesq]=_mm256_cvtsd_f64(qkvl);
+    if(likely(okmsk&0b1000))goto storeq1111; if(okmsk&0b100)goto storeq111; if(okmsk&0b10)goto storeq11; goto storeq1;
+    storeq1111: qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100111));
+    qkvrow[_mm256_extract_epi64(prn0x,3)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvl,0b11100111));
+    storeq111: qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd (qkvh,0b11100110));
+    qkvrow[_mm256_extract_epi64(prn0x,2)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute4x64_pd (qkvl,0b11100110));
+    storeq11: qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
+    qkvrow[_mm256_extract_epi64(prn0x,1)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
+    storeq1: ;
+   }
+
+   colx+=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
   }
  }
  R 0;

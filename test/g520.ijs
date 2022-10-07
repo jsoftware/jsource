@@ -53,6 +53,22 @@ f =: 1:`({{
 
 f i. 65
 
+NB. avoid repeated indexes
+f =: 1:`({{
+ ck =. 0. + i. 10
+ prcrnub =. ~. prcr =. 1 2 3 4 1 2 3 1 2 1 6 6 6 6
+ prcl =.               4       3     2   1 1 1 1 1
+ newrownon0 =.         3.      1     4   1 5 9 2 6
+ ckchg =. prcr +//. (prcl # newrownon0)
+ upd=. ckchg -~ prcrnub { ck
+ expck=. upd prcrnub} preck =. memu ck
+ ck =. (00;prcr;(,1.);(prcl #"01 newrownon0);0.0) 128!:12 ck
+ if. -. r =. 1e_13 > >./ , | ck - expck do. 13!:8]4 [ ' prcr__  newrownon0__  expck__ preck__ ck__' =: prcr;newrownon0;expck;preck;ck end.
+ r 
+}})@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+f ''
+
+
 NB. (0;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 bk ------------------------
 NB. normal precision
 f =: 1:`({{

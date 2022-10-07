@@ -265,10 +265,8 @@ static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
  R rank1ex0(tymes(b,plus(w,x)),fs,FAV(fs)->valencefns[0]);
 }
 
-static F1(jtprevprime){A fs,x,y;I k,m,n,*xv,*yv;X*wv;
- ARGCHK1(w);
- n=AN(w);
- ASSERT(!n||NUMERIC&AT(w)&&!(B01&AT(w)),EVDOMAIN);
+static F1(jtprevprime){A fs,x,y;I k,m,*xv,*yv;X*wv;
+ ARGCHK1(w);I n=AN(w);if(!n)R w;ASSERT(NUMERIC&AT(w)&&!(B01&AT(w)),EVDOMAIN);
  RZ(fs=eval("_2&+^:(0&p:)^:_"));
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);
  if(INT&AT(w)){I*wv=AV(w);

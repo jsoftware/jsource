@@ -779,11 +779,11 @@ extern C        jtjinit2(JS,int,C**);
 extern A        jtinv(J,A,I);  // second arg is forced to 0 for initial call
 extern F        jtjope(J,A,C*);
 extern I        jtjset(J,C*,A);
-extern void     jtjsigd(J,C*);
-extern void     jtjsignal(J,I);
-extern void     jtjsignalf(J,I,C*,...);
-extern void     jtjsignal2(J,I,A);
-extern void     jtjsignal3(J,I,A,I);
+extern void     jtjsigd(J,C*) __attribute__((cold));
+extern void     jtjsignal(J,I) __attribute__((cold));
+extern void     jtjsignalf(J,I,C*,...) __attribute__((cold));
+extern void     jtjsignal2(J,I,A) __attribute__((cold));
+extern void     jtjsignal3(J,I,A,I) __attribute__((cold));
 extern A        jtleakblockread(J,A);
 extern A        jtleakblockreset(J,A);
 extern F1(jtshowinplacing1);

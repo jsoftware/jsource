@@ -1176,24 +1176,26 @@ struct __attribute__((aligned(CACHELINESIZE))) ekctx {
  A pcx;
  A pivotcolnon0;
  A newrownon0;
- D relfuzz;
+ A relfuzzmplr;
 } ;
 // the processing loop for one core.  We take groups of rows, in order
 static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(((struct ekctx*)ctx)->x) x=((struct ekctx*)ctx)->x;
- YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)
+ YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzzmplr)
 #undef YC
 
+ D *mplrd=DAV(relfuzzmplr);  // pointer to relfuzz/mplr data
  __m256d pcoldh, pcoldl=_mm256_setzero_pd();  // value from pivotcolnon0, multiplying one row
  __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from newrownon0
- __m256d mrelfuzz=_mm256_set1_pd(relfuzz);  // comparison tolerance
+ __m256d mrelfuzz=_mm256_set1_pd(*mplrd);  // comparison tolerance (if given)
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
- I dpflag=0;  // precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0
+ I dpflag=0;  // precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0 8=mplr exists
  D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I t=AR(prx)+1; t=(t!=1)?qksize:t; I qksizesq=qksize*t; dpflag|=AR(qk)>AR(prx)+1;  // pointer to qk data, length of a row, offset to low part if present.  offset is qksize^2, or bksize
  UI rowx=ti*rowsperthread, rown=AN(prx), slicen=rown; slicen=rown<rowx+rowsperthread?slicen:rowx+rowsperthread;   // current row, ending row+1 taken for the current task#
  I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // address of row indexes, column data
  UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
+ dpflag|=AR(relfuzzmplr)<<3;  // set flag if mplr is given
  // for each row
  for(;rowx<slicen;++rowx){
   // get the address of this row in Qk
@@ -1211,17 +1213,19 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     prn0x=_mm256_loadu_si256((__m256i_u*)(colxv+colx));  // load the indexes into Qk
     prowdh=_mm256_loadu_pd(prn0v+colx);  // load next 4 non0 values in pivotrow
     if(dpflag&4)prowdl=_mm256_loadu_pd(prn0v+coln+colx);  // and low part if present
+    if(dpflag&8)mrelfuzz=_mm256_loadu_pd(mplrd+colx);
     endmask=sgnbit;  // indicate all lanes valid
    }else{
     endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
     prn0x=_mm256_maskload_epi64(colxv+colx,_mm256_castpd_si256(endmask));  // load the indexes into Qk
     prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
     if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
+    if(dpflag&8)mrelfuzz=_mm256_maskload_pd(mplrd+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
    }
-   // If relfuzz is 0, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to
+   // mplr is given, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to
    // make sure that we don't work on the same column# in one batch of NPAR, because one update would be lost.
    // We compare the indexes against each other and set endmask so as to stop before a repetition of index
-   if(unlikely(_mm256_cvtsd_f64(mrelfuzz))==0){
+   if(unlikely(dpflag&8)){
     // compare 0-1 and 2-3
     __m256i cmp01012323=_mm256_cmpeq_epi64(prn0x,_mm256_shuffle_epi32(prn0x,0b01001110));  // 0=1 0=1 2=3 2=3
     // if 0=1, clear 1 2 3; if 2=3, clear 3
@@ -1242,12 +1246,16 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
    __m256d maxabs=_mm256_max_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_andnot_pd(sgnbit,_mm256_mul_pd(pcoldh,prowdh)));
    if(!(dpflag&1)){
     // single-precision calculation
+    // if mplr given, multiply prow by it
+    if(dpflag&8)prowdh=_mm256_mul_pd(prowdh,mrelfuzz);
     // calculate old - pcol*prow
     qkvh=_mm256_fnmadd_pd(prowdh,pcoldh,qkvh);
-    // convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
-    maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh));
-    // zero if lower than fuzz (high part)
-    qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
+    if(!(dpflag&8)){
+     // thresholding - convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
+     maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh));
+     // zero if lower than fuzz (high part)
+     qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
+    }
     // scatter the results (high part)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
     qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
@@ -1261,15 +1269,19 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     __m256d iph,ipl,isl;  // intermediate products and sums
     __m256d qkvl;  // low-order part of result
 
+    // if mplr given, multiply prow by it
+    if(dpflag&8){
+     // mplr is dp, prow is qp.
+     TWOPRODQD(prowdh,prowdl,mrelfuzz,iph,ipl) prowdh=iph; prowdl=ipl;
+    }
     // (iph,ipl) = - prowdh*pcoldh
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,prowdl) to high precision
     ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);  // accumulate middle pps
     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
-    // Because we added 3 low-order values (with the same shift), we are limiting precision to 104 bits
+    // Because we added 3 low-order values (with the same shift) - 4 if nplr used - , we are limiting precision to 104 bits
     if(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh))){  // all 0?  our numbers can never be -0 since they come out of addition
      // qkvh is all 0 - the result is simply (-iph,-ipl) 
      TWOSUMBS(iph,ipl,qkvh,qkvl)  // canonical form
-     maxabs=_mm256_setzero_pd();  // do not force any values to true zero
     }else{
      // normal case where qkvh not all 0
      qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
@@ -1282,14 +1294,15 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
      isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
      // Make sure qkvl is much less than qkvh
      TWOSUM(qkvh,isl,qkvh,qkvl)  // put pkvh into canonical form
-     // convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
-     maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh)); 
-
-     // zero if lower than fuzz (low part)
-     qkvl=_mm256_blendv_pd(qkvl,_mm256_setzero_pd(),maxabs);
+     if(!(dpflag&8)){
+      // thresholding - convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
+      maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh));
+      // zero if lower than fuzz (low part)
+      qkvl=_mm256_blendv_pd(qkvl,_mm256_setzero_pd(),maxabs);
+      // zero if lower than fuzz (high part)
+      qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
+     }
     }
-    // zero if lower than fuzz (high part)
-    qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
     // scatter the results (both parts)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
     qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
@@ -1311,9 +1324,9 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
 }
 
 // 128!:12  calculate
-// Qk/bk=: (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0) (<prx;pcx)} Qk/bk
+// Qk/bk=: (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0 [* mplr]) (<prx;pcx)} Qk/bk
 // with high precision
-// a is prx;pcx;pivotcolnon0;newrownon0;relfuzz
+// a is prx;pcx;pivotcolnon0;newrownon0;relfuzz/mplr (mplr if not atom)
 // w is Qk or bk.  If bk, prx must be scalar 0
 // If Qk has rank > rank newrownon0 + rank prx, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
 // Qk/bk is modified in place
@@ -1329,7 +1342,8 @@ F2(jtekupdate){F2PREFIP;
  ASSERT(AR(pivotcolnon0)==1||AS(pivotcolnon0)[0]==2, EVLENGTH)  // pivotcolnon0 is float or extended list
  A newrownon0=box3; ASSERT(AT(newrownon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(newrownon0),1,2),EVRANK)
  ASSERT(AR(newrownon0)==1||AS(newrownon0)[0]==2,EVLENGTH)  // newrownon0 is float or extended list
- A tmp=box4; if(!(AT(tmp)&FL))RZ(tmp=cvt(FL,tmp)); ASSERT(AR(tmp)==0,EVRANK) D relfuzz=DAV(tmp)[0];  // relfuzz is a float atom
+ A relfuzzmplr=box4; ASSERT(AT(relfuzzmplr)&FL,EVDOMAIN) ASSERT(AR(relfuzzmplr)<=1,EVRANK)  // relfuzz is a float atom; mplr is a float list
+ if(AR(relfuzzmplr)==1)ASSERT(AN(relfuzzmplr)==AN(pcx),EVLENGTH)  // if mplr, must be one per input in row
  // agreement
  ASSERT(BETWEENC(AR(w),AR(prx)+1,AR(prx)+2),EVRANK)  // Qk is nxn; bk is n, treated as a single row.  Each may be quadprec
  ASSERT(AR(w)==AR(prx)+1||AS(w)[0]==2,EVLENGTH)
@@ -1344,14 +1358,14 @@ F2(jtekupdate){F2PREFIP;
  I m=AN(prx), n=AN(pcx);  // # rows & columns to modify
  I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
  I rowsperthread=m;  // will be #rows each processor should take
- if(((1-nthreads)&(TASKMINATOMS-m*n))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
+ if(((1-m)&(1-nthreads)&(TASKMINATOMS-m*n))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
  else{
   // big enough for multithreading.
   rowsperthread=(m+nthreads-1)/nthreads;  // number of threads per processor, rounded up
  }
 
 #define YC(n) .n=n,
-struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzz)};
+struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzzmplr)};
 #undef YC
 
  if(nthreads>1)jtjobrun(jt,jtekupdatex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0

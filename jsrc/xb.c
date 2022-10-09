@@ -3,14 +3,14 @@
 /*                                                                         */
 /* Xenos: Binary Representation                                            */
 
-#define _XOPEN_SOURCE //strptime
+// #define _XOPEN_SOURCE //strptime
 #include "j.h"
 #include "x.h"
 
 #include <stddef.h>
 #include <ctype.h>
 #include <time.h>
-#ifdef _WIN32
+#if defined(_WIN32)||defined(__linux__)
 extern char * strptime(const char *buf, const char *format, struct tm *tm);
 #endif
 

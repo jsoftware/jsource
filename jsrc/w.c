@@ -167,7 +167,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
      wl-=2;  // remove _: from name; leave b set to indicate inflection
     }
     ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));  // error if invalid name; create name block and install it in result
-    if(unlikely(b)){AT(*x)|=NAMEBYVALUE|NAMEABANDON;}  // flag name:: for stack processing
+    if(unlikely(b)){AT(*x)|=NAMEBYVALUE|NAMEABANDON;}  // flag name_: for stack processing
    }else if(unlikely(b)){jsignal3(EVSPELL,w,wi-s); R 0;
    }else if(p==C9){if(unlikely(!(*x=connum(wl,wi)))){I lje=jt->jerr; RESETERR; jsignal3(lje,w,u[0]); R 0;}   // starts with numeric, create numeric constant.  If error, give a message showing the bad number
    }else if(p==CQ){ RZ(*x=constr(wl,wi));   // start with ', make string constant

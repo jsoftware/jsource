@@ -1956,7 +1956,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define LGSZS   1  // lg (bytes in an S)
 
 #if (C_AVX2&&SY_64) || EMU_AVX2
-// create double-precision product of inputs.  outhi must not be an input; outlo can
+// create quad-precision product of double-precision inputs.  outhi must not be an input; outlo can
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 // create double-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Needs sgnbit.
 #define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_sub_pd(t,outlo); \
@@ -1968,6 +1968,9 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define TWOSUMBS(inbig,insmall,outhi,outlo) {outhi=_mm256_add_pd(inbig,insmall); /* single-prec sum */ \
                                     outlo=_mm256_sub_pd(inbig,outhi); /* big-(big+small): implied val of -small after rounding */ \
                                     outlo=_mm256_add_pd(outlo,insmall);}  // amt by which actual value exceeds implied: this is the lost low precision
+// create quad-precision product of quad x double.  outlo can be qp0
+// This result is not in canonical form: outlo may have magnitude more than 1 ULP of outhi, but not more than 2 ULP
+#define TWOPRODQD(qp0,qp1,dp,outhi,outlo) TWOPROD(qp0,dp,outhi,outlo) outlo=_mm256_fmadd_pd(qp1,dp,outlo);
 #define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
 #else
 #define TWOSPLIT(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning

@@ -389,7 +389,31 @@ strptime_internal (const char *rp, const char *fmt, struct tm *tm,
             want_xday = 1;
             break;
         case 'z':
-            /* XXX How to handle this?  */
+            {
+            int i, len, sign = 1;
+         
+            if (*rp != '+') {
+             if (*rp == '-')
+              sign = -1;
+             else
+              return (NULL);
+            }
+         
+            rp++;
+            i = 0;
+            for (len = 4; len > 0; len--) {
+             if (isdigit((unsigned char)*rp)) {
+              i *= 10;
+              i += *rp - '0';
+              rp++;
+             } else
+              return (NULL);
+            }
+         
+            tm->tm_hour -= sign * (i / 100);
+            tm->tm_min  -= sign * (i % 100);
+         //   *GMTp = 1;
+            }
             break;
         case 'Z':
             /* XXX How to handle this?  */

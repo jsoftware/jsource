@@ -3,14 +3,14 @@
 /*                                                                         */
 /* Xenos: Binary Representation                                            */
 
-#define _XOPEN_SOURCE //strptime
+// #define _XOPEN_SOURCE //strptime
 #include "j.h"
 #include "x.h"
 
 #include <stddef.h>
 #include <ctype.h>
 #include <time.h>
-#ifdef _WIN32
+#if defined(_WIN32)||defined(__linux__)
 extern char * strptime(const char *buf, const char *format, struct tm *tm);
 #endif
 
@@ -892,76 +892,102 @@ static A efstring(J jt,A w,I prec){
  UC afterday=(UC)((~prec)>>8);  //  0x00 if we stop  after the day, 0xff if we continue
  for(i=0;i<n;++i,s+=strglen){
   struct tm tm;
+  time_t tk;
+  char *extra;
   memset(&tm, 0, sizeof(tm));
   c=*(s+strglen);
   *(s+strglen)=0;
-  I j=0;
-  char* tfmt[]={
+  I j=0,tt;
+  char* tfmt0[]={
    "%Y-%m-%dT%I:%M:%S %p",
+   "%Y-%m-%dT%H:%M:%S%z",
    "%Y-%m-%dT%H:%M:%S",
    "%Y-%m-%d %I:%M:%S %p",
+   "%Y-%m-%d %H:%M:%S%z",
    "%Y-%m-%d %H:%M:%S",
    "%Y-%m-%d",
    "%m/%d/%Y %I:%M:%S %p",
+   "%m/%d/%Y %H:%M:%S%z",
    "%m/%d/%Y %H:%M:%S",
    "%m/%d/%Y",
    "%d/%m/%Y %I:%M:%S %p",
+   "%d/%m/%Y %H:%M:%S%z",
    "%d/%m/%Y %H:%M:%S",
    "%d/%m/%Y",
    "%d/%b/%Y %I:%M:%S %p",
+   "%d/%b/%Y %H:%M:%S%z",
    "%d/%b/%Y %H:%M:%S",
    "%d/%b/%Y",
    "%b/%d/%Y %I:%M:%S %p",
+   "%b/%d/%Y %H:%M:%S%z",
    "%b/%d/%Y %H:%M:%S",
    "%b/%d/%Y",
    "%d %b %Y %I:%M:%S %p",
+   "%d %b %Y %H:%M:%S%z",
    "%d %b %Y %H:%M:%S",
    "%d %b %Y",
    "%b %d %Y %I:%M:%S %p",
+   "%b %d %Y %H:%M:%S%z",
    "%b %d %Y %H:%M:%S",
    "%b %d %Y",
    "%x",
    0
   };
+  char* tfmt1[]={
+   "%Y-%m-%d",
+   "%m/%d/%Y",
+   "%d/%m/%Y",
+   "%d/%b/%Y",
+   "%b/%d/%Y",
+   "%d %b %Y",
+   "%b %d %Y",
+   "%x",
+   0
+  };
+  char** tfmt=(afterday)?tfmt0:tfmt1;
   while(tfmt[j]){
-   if(strptime(s, tfmt[j], &tm)) break;
+   if(extra=strptime(s, tfmt[j], &tm)) break;
    j++;
   }
   if(!tfmt[j]) IAV(z)[i]=IMIN;
-  else {
-  UI4 Y,M,D,ss; I4 hh,mm;  // hh,mm are I because they may go negative during TZ adjustment
-  UI N=0;  // init nanosec accum to 0
-  Y=1900+tm.tm_year; M=1+tm.tm_mon; D=tm.tm_mday; hh=tm.tm_hour; mm=tm.tm_min; ss=tm.tm_sec;
-  // Now calculate number of days from epoch.  First reorder months so that the irregular February comes last, i. e. make the year start Mar 1
-  UI4 janfeb=(I4)(M-3)>>(32-1);   // -1 if jan/feb
-  Y+=janfeb; M+=janfeb&12;  // if janfeb, subtract 1 from year and add 12 to month
-  // Add in leap-years (since the year 0, for comp. ease).  Year 2000 eg, which starts Mar 1, is a leap year and has 1 added to its day#s (since they come after Feb 29)
-  D+=Y>>2;
-  // Gregorian correction.  Since it is very unlikely we will encounter a date that needs correcting, we use an IF
-  if(!BETWEENC(Y,1901,2100)){  // date is outside 1901-2099
-   D+=(((Y/100)>>2)-(Y/100))-((2000/400)-(2000/100));  // 1900 2100 2200 2300 2500 etc are NOT leapyears.  Create correction from Y2000 count
-  }
-  // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)
-  D+=(0x765544322110000>>(4*M))&0xf;  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
-  // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
-  // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gregorian leapyears up to 2000
-  I t=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch.  May be negative
-  // Combine everything into one # and store
-  if(0==prec)
-   IAV(z)[i]=(NANOS*24LL*60LL*60LL)*t + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss + N;  // eschew Horner's Rule because of multiply latency
-  else
-   IAV(z)[i]=(NANOS*24LL*60LL*60LL)*t;
+  else{
+   tm.tm_isdst=-1;  // daylight no information
+#ifdef _WIN32
+   tk=_mkgmtime(&tm);
+#else
+   tk=timegm(&tm);
+#endif
+   if(!afterday){
+    tt=1000000000LL*(-946684800LL+(((I)tk)/86400)*86400);
+   }else{
+    tt=1000000000LL*(-946684800LL+(I)tk);
+    if(prec){
+     double fraction;
+     char *endptr;
+     char c1=*((tfmt[j])+strlen(tfmt[j])-1);
+     if(((c1=='S')||(c1=='T')||(c1=='X')) && extra[0]=='.'){
+      fraction = strtod( extra, &endptr );
+      if(9==prec)
+       tt+=(I)(fraction * 1000000000.0);
+      else if(6==prec)
+       tt+=1000LL * (I)(fraction * 1000000.0);
+      else if(3==prec)
+       tt+=1000000LL * (I)(fraction * 1000.0);
+     }
+    }
+   }
+   IAV(z)[i]=tt;
   }
   *(s+strglen)=c;
  }
  RETF(z);
 #else
-R 0;
+ R 0;
 #endif
 }
 
 // 6!:18 convert a block of strings to nanosecond times.  Result has one INT for each string
-// Bivalent.  left arg is 'd', '0', like 3d digit of 6!:16, default '0'
+// Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
 F2(jtstringtoe){A z;I prec;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
@@ -971,9 +997,9 @@ F2(jtstringtoe){A z;I prec;
   ASSERT(AN(a)==1,EVLENGTH);
   ASSERT(AR(a)<=1,EVRANK);  // a must be a 1-character list or atom
   // convert precision character to precision to use (_1 for date, 0-9)
-  if(CAV(a)[0]=='d')prec=-1; else {prec=CAV(a)[0]-'0'; ASSERT(prec==0||prec==-1,EVDOMAIN); }  // d 0 allowed
+  if(CAV(a)[0]=='d')prec=-1; else {prec=CAV(a)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(((I)1<<prec)&0x209,EVNONCE);}  // 0 3 9 allowed
  }else{
-  w=a; prec=0; // monad: switch argument, set defaults
+  w=a; prec=9; // monad: switch argument, set defaults
  }
  ASSERT(AT(w)&LIT,EVDOMAIN);  // must be LIT
  ASSERT(AR(w),EVRANK);    // must not be an atom

@@ -380,7 +380,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    JOBUNLOCK(jobq,0);
    jtrepatsend(jt); // Relinquish others' memory
    jtrepatrecv(jt); // Reclaim any of our own memory from others; unconditionally because there's nothing better to do
-   if(uncommon(&jt->uflags.spfreeneeded))spfree();  // Collect garbage if there is enough to check
+   if(jt->uflags.spfreeneeded)spfree();  // Collect garbage if there is enough to check
    job=JOBLOCK(jobq);
    if(likely(job==0)){
     // Still no job.  As far as tasks are concerned, we are now waiting.  But don't do an OS wait till we have lingered

@@ -91,7 +91,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
     US spflag; // access as short
     struct {
      B spfreeneeded;  // When set, we should perform a garbage-collection pass  persistent
-     B sprepatneeded; // When bit 1 set, we should reclaim repat blocks.  Needs synchronisation, but rarely touched by other threads
+     B sprepatneeded; // When low bit set, we should reclaim repat blocks.  Needs synchronisation, but rarely touched by other threads so this can stay in M/E
     };
    };
   };

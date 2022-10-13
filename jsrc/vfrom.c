@@ -1202,9 +1202,9 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
   // fetch the pivotcol value into all lanes
   pcoldh=_mm256_set1_pd(pcn0v[rowx]);  // fetch high part of pivotcol value
   if(dpflag&2)pcoldl=_mm256_set1_pd(pcn0v[rown+rowx]);  // fetch low part if it is present
-  UI colx;
+  UI colx; I okwds=NPAR; I okmsk=(1LL<<NPAR)-1;  //  number/mask of valid wds in block
   // for each column-group
-  for(colx=0;colx<coln;){
+  for(colx=0;colx<coln;colx+=okwds){
    __m256d endmask;  // mask for maskload and gather, indicating # words to process
    __m256i prn0x;  // indexes of nonzero values in row
    // get the mask of valid values, fetch pivotrow values, fetch the Qk indexes to modify
@@ -1216,6 +1216,7 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     endmask=sgnbit;  // indicate all lanes valid
    }else{
     endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
+    okmsk=_mm256_movemask_pd(_mm256_castsi256_pd(endmask));  // mask of valid words in this block - always at least 1
     prn0x=_mm256_maskload_epi64(colxv+colx,_mm256_castpd_si256(endmask));  // load the indexes into Qk
     prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
     if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
@@ -1237,8 +1238,9 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     __m256i cmpxxxx0312=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b00010000));  // x x 0=3 1=2
     // if 1=2, clear 2 3; if 0=3 clear 3
     endmask=_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0312,0b01000100),cmpxxxx0312),0b11110000),endmask);
+    okmsk=_mm256_movemask_pd(_mm256_castsi256_pd(endmask));  // mask of valid words in this block - always at least 1
+    okwds=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
    }
-   I okmsk=_mm256_movemask_pd(_mm256_castsi256_pd(endmask));  // mask of valid words in this block - always at least 1
    // gather the high parts of Qk
    __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow,prn0x,endmask,SZI);
    // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
@@ -1292,7 +1294,7 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
      TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
      isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
      // Make sure qkvl is much less than qkvh
-     TWOSUM(qkvh,isl,qkvh,qkvl)  // put pkvh into canonical form
+     TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
      if(!(dpflag&8)){
       // thresholding - convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
       maxabs=_mm256_fnmadd_pd(maxabs,mrelfuzz,_mm256_andnot_pd(sgnbit,qkvh));
@@ -1316,7 +1318,6 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     storeq1: ;
    }
 
-   colx+=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
   }
  }
  R 0;
@@ -1325,7 +1326,7 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
 // 128!:12  calculate
 // Qk/bk=: (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0 [* mplr]) (<prx;pcx)} Qk/bk
 // with high precision
-// a is prx;pcx;pivotcolnon0;newrownon0;relfuzz/mplr (mplr if not atom)
+// a is prx;pcx;pivotcolnon0;newrownon0;relfuzz/mplr (mplr if not atom) TODO: make fuzz absolute
 // w is Qk or bk.  If bk, prx must be scalar 0
 // If Qk has rank > rank newrownon0 + rank prx, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
 // Qk/bk is modified in place

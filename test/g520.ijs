@@ -56,9 +56,10 @@ f i. 65
 NB. avoid repeated indexes
 f =: 1:`({{
  ck =. 0. + i. 10
- prcrnub =. ~. prcr =. 1 2 3 4 1 2 3 1 2 1 6 6 6 6
- prcl =.               4       3     2   1 1 1 1 1
- newrownon0 =.         3.      1     4   1 5 9 2 6
+ prcr =. ;@:((<@:({.~  1 i.~ 0 1 2 3 ~: i.~))"1) (#: i.@:(*/)) 4 4 4 4
+ prcrnub =. ~. prcr
+ prcl =. (#prcr) # 01
+ newrownon0 =. >: (#prcr) ?@$ 0
  mplr =. ($prcr) ?@$ 0
  ckchg =. prcr +//. (prcl # newrownon0) * mplr
  upd=. ckchg -~ prcrnub { ck

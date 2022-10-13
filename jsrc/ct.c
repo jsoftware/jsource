@@ -673,7 +673,8 @@ F2(jttdot){F2PREFIP;
 }
 
 // credentials.  These are installed into AM of a synco to indicate the type of a synco
-#define CREDMUTEX 0x582a9524c923485f
+#define CREDMUTEX (I)0x582a9524c923485f
+#define CREDAMV (I)0x86a7210d76e0295f
 
 // x T. y - various thread and task operations
 F2(jttcapdot2){A z;
@@ -822,19 +823,19 @@ ASSERT(0,EVNONCE)
  case 10: {  // create a mutex.  w indicates recursive status
 #if PYXES
   I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
-  GAT0(z,INT,(sizeof(jtpthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(z); AN(z)=1; AM(z)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
-  jtpthread_mutex_init((jtpthread_mutex_t*)IAV0(z),recur);
+  A zz;GAT0(zz,INT,(sizeof(jtpthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(zz); AN(zz)=1; AM(zz)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
+  jtpthread_mutex_init((jtpthread_mutex_t*)IAV0(zz),recur);
+  z=box(zz);  // protect in a box in case the mutex is copied
 #else
   ASSERT(0,EVNONCE)
 #endif
   break;}
  case 11: {  // lock mutex.  w is mutex[;timeout] timeout of 0=trylock
 #if PYXES
-  A mutex=w; D timeout=inf; I lockfail=0;
-  if(AT(w)&BOX){
-   ASSERT(AR(w)<=1,EVRANK); ASSERT(BETWEENC(AN(w),1,2),EVLENGTH) mutex=AAV(w)[0];  // pull out mutex
-   if(AN(w)==2){A tob=AAV(w)[1]; ASSERT(AR(tob)<=1,EVLENGTH) ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=cvt(FL,tob)) timeout=DAV(tob)[0];}  // pull out timeout
-  }
+  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=2,EVLENGTH)
+  A mutex=AN(w)==1?w:C(AAV(w)[0]); D timeout=inf; I lockfail=0;
+  if(AN(w)==2){A tob=C(AAV(w)[1]); ASSERT(AR(tob)<=1,EVRANK) ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=cvt(FL,tob)) timeout=DAV(tob)[0];}  // pull out timeout
+  ASSERT(AT(mutex)&BOX,EVDOMAIN) ASSERT(AR(mutex)==0,EVRANK) mutex=AAV(mutex)[0];  // mutex is a box protecting the actual mutex: open it
   ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
   if(timeout==inf){  // is there a max timeout?
    C c=jtpthread_mutex_lock(jt,(jtpthread_mutex_t*)IAV0(mutex),1+THREADID(jt));ASSERT(!c,c); //1+ is to ensure nonzero id.  TODO id should be unique per-task, not just per-thread
@@ -856,6 +857,7 @@ ASSERT(0,EVNONCE)
  case 13: {  // unlock mutex.  w is mutex
 #if PYXES
   A mutex=w;
+  ASSERT(AT(mutex)&BOX,EVDOMAIN) ASSERT(AR(mutex)==0,EVRANK) mutex=AAV(mutex)[0];  // mutex is a box protecting the actual mutex: open it
   ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
   C c=jtpthread_mutex_unlock((jtpthread_mutex_t*)IAV0(mutex),1+THREADID(jt));
   ASSERT(!c,c);
@@ -867,7 +869,7 @@ ASSERT(0,EVNONCE)
  case 16: {  // create an AMV.  w is initial value
 #if PYXES
   I initval; RE(initval=i0(w))  // recur must be integer
-  A zz; GAT0(zz,INT,1,0); IAV0(zz)[0]=initval;  // AMV is a boxed integer atom.  The boxing is needed to protect the value from being virtualized and then realized in a different place
+  A zz; GAT0(zz,INT,1,0);  ACINITZAP(zz); AN(zz)=1; AM(zz)=CREDAMV; IAV0(zz)[0]=initval;  // AMV is a boxed integer atom.  The boxing is needed to protect the value from being virtualized and then realized in a different place
   z=box(zz); 
 #else
   ASSERT(0,EVNONCE)
@@ -876,7 +878,7 @@ ASSERT(0,EVNONCE)
  case 17: {  // atomic add to atom, returning previous value
 #if PYXES
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // w is 2 boxes
-  A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH)  // amv is singleton integer - we don't verify anything else
+  A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH) ASSERT(AM(amv)==CREDAMV,EVDOMAIN)  // amv is singleton integer - we don't verify anything else
   I imod; RE(imod=i0(AAV(w)[1]))  // addend must be integer
   z=sc(__atomic_fetch_add(&IAV(amv)[0],imod,__ATOMIC_ACQ_REL));  // do the add, return unincremented value
 #else
@@ -886,7 +888,7 @@ ASSERT(0,EVNONCE)
  case 18: {  // compare-and-swap on atom
 #if PYXES
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==3,EVLENGTH)  // w is 2 boxes
-  A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH)  // amv is singleton integer - we don't verify anything else
+  A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH) ASSERT(AM(amv)==CREDAMV,EVDOMAIN)  // amv is singleton integer - we don't verify anything else
   I desired; RE(desired=i0(AAV(w)[1]))  // replacement value
   I expected; RE(expected=i0(AAV(w)[2]))  // expected value
   z=mtv; if(!__atomic_compare_exchange_n(&IAV(amv)[0], &expected, desired, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))z=sc(expected);  // if no match for expected, return new value; otherwise modify & return ''

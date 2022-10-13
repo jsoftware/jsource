@@ -63,35 +63,35 @@ wthr nwthreads
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
 wthr nwthreads
 setth nwthreads=. N   NB. Back to testing many threads
-(nwthreads-1) = 1 T. '' [ 55 T. ''
-nwthreads = 1 T. '' [ 0 T. ''
+assert. (nwthreads-1) = 1 T. '' [ 55 T. ''
+assert. nwthreads = 1 T. '' [ 0 T. ''
 NB. Verify forcetask arg
 pyx =. 6!:3 t. ''"0 N # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
-1. = >pyx
+assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a1' NB. master should not wait
 wthr nwthreads
 NB. obsolete echo 't0';6!:1''
 pyx =. 6!:3 t. ''"0 (>:N) # 1.0  NB. fill up with delaying threads
 NB. obsolete echo 't1';6!:1''
 t0 =. 6!:1''
-1. = >pyx
+assert. 1. = >pyx
 NB. obsolete echo 't2';6!:1''
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a2' NB. master should wait
 wthr nwthreads
 pyx =. 6!:3 t. 'worker'"0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
-1. = >pyx
+assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a3' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker') "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
-1. = >pyx
+assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a4' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';1) "0 (>:N) # 1.0  NB. fill up with delaying threads
 t0 =. 6!:1''
-1. = >pyx
+assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a5' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';0) "0 (>:N) # 1.0  NB. fill up with delaying threads
@@ -108,34 +108,34 @@ assert. remote_stuff=2
 assert. remote_stuff=4
 NB. mutex
 mtx =. 10 T. 0
-0 = >{{11 T. y;0}}t.''mtx
-1 = 11 T. mtx;0
+assert. 0 = >{{11 T. y;0}}t.''mtx
+assert. 1 = 11 T. mtx;0
 mtx =. 10 T. 0
-0 = 11 T. mtx
-'domain error' -: 11 T. etx >: mtx
+assert. 0 = 11 T. mtx
+'domain error' -: 11 T. etx >:&.> mtx
 mtx =. 10 T. 0
 tod =. 6!:1''
-0 = >{{11 T. <y}}t.''mtx  NB. boxed mtx OK
-1 = 11 T. mtx;2.0
-(2.005 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
+assert. 0 = >{{11 T. y}}t.''mtx  NB. boxed mtx OK
+assert. 1 = 11 T. mtx;2.0
+assert. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
-1 = 11 T. mtx;0.1
-(0.105 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
+assert. 1 = 11 T. mtx;0.1
+assert. (0.3 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
-1 = 11 T. mtx;0
-(0.005 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
+assert. 1 = 11 T. mtx;0
+assert. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
 mtx=.10 T. 1  NB. recursive
-0 = 11 T. mtx
-0 = 11 T. mtx  NB. lock count=2
+assert. 0 = 11 T. mtx
+assert. 0 = 11 T. mtx  NB. lock count=2
 13 T. mtx
 13 T. mtx
-'' -: $ mtx  NB. mtx looks atomic
-1 = #mtx
-'domain error' -: 11 T. etx mtx;'a'
-'rank error' -: 11 T. etx mtx;i. 1 1
-'length error' -: 11 T. etx mtx;1 2
-'length error' -: 11 T. etx mtx;1;2
-'rank error' -: 11 T. etx 2 2 $<mtx
+assert. '' -: $ mtx  NB. mtx looks atomic
+assert. 1 = #mtx
+assert. 'domain error' -: 11 T. etx mtx;'a'
+assert. 'rank error' -: 11 T. etx mtx;i. 1 1
+assert. 'length error' -: 11 T. etx mtx;1 2
+assert. 'length error' -: 11 T. etx mtx;1;2
+assert. 'rank error' -: 11 T. etx 2 2 $<mtx
 end.
 1
 )

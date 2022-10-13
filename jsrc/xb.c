@@ -712,7 +712,8 @@ R 0;
 // w is LIT array of ISO strings (rank>0, not empty), result is array of INTs with nanosecond time for each string
 // We don't bother to support a boxed-string version because the strings are shorter than the boxes & it is probably just about as good to just open the boxed strings
 // prec is -1 (day only) or 0,3,9 for that many fractional digits below seconds
-static A efs(J jt,A w,I prec){
+// if local is given we convert all UTC times to times in the 'local' zone, where local is in seconds
+static A efs(J jt,A w,I prec,I local){
 #if SY_64
 	I i;A z;
  // Allocate result area
@@ -777,7 +778,8 @@ hittz:
     RDTWOC(tzhm,0,59);
     mm-=tzisplus*tzhm;    // same for minutes, may go negative
    }
-  }else if(c=='Z')c=*++sp;  // no numbered timezone; skip Zulu timezone if given
+   N+=local;  // adjust to user's tz
+  }else if(c=='Z'){N+=local; c=*++sp;}  // no numbered timezone; skip Zulu timezone if given, but adjust to user's tz
   // Verify no significance after end
   NOUNROLL while(c){if(c!=' ')DOERR; c=*++sp;}
 gottime: ;
@@ -799,7 +801,7 @@ gottime: ;
   // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gregorian leapyears up to 2000
   I t=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch.  May be negative
   // Combine everything into one # and store
- 	IAV(z)[i]=(NANOS*24LL*60LL*60LL)*t + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss + N;  // eschew Horner's Rule because of multiply latency
+  IAV(z)[i]=(NANOS*24LL*60LL*60LL)*t + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss + N;  // eschew Horner's Rule because of multiply latency
 
 err:
   s[strglen]=savesentinel;  // restore end-of-string marker
@@ -854,23 +856,26 @@ F2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
 
 // 6!:17 convert a block of iso8601-format strings to nanosecond times.  Result has one INT for each string
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
-F2(jtiso8601toe){A z;I prec;
+// optional second box of x is #seconds to local timezone, i. e 180 for GMT+03; if given all UTC times will be
+// converted to local time
+F2(jtiso8601toe){A z;I prec;I local;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
  if(AT(w)&NOUN){  // dyad
-  ASSERT(AT(a)&LIT,EVDOMAIN);
-  ASSERT(AN(a)==1,EVLENGTH);
-  ASSERT(AR(a)<=1,EVRANK);  // a must be a 1-character list or atom
+  A aprec=a, alocal=zeroionei(0);  // precision and local timezone args
+  if(AT(a)&BOX){ASSERT(AR(a)==1,EVRANK) ASSERT(BETWEENC(AN(a),1,2),EVLENGTH) aprec=AAV(a)[0]; if(AN(a)==2)alocal=AAV(a)[1];}
+  ASSERT(AT(aprec)&LIT,EVDOMAIN); ASSERT(AN(aprec)==1,EVLENGTH); ASSERT(AR(aprec)<=1,EVRANK);  // a must be a 1-character list or atom
   // convert precision character to precision to use (_1 for date, 0-9)
-  if(CAV(a)[0]=='d')prec=-1; else {prec=CAV(a)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(((I)1<<prec)&0x209,EVNONCE);}  // 0 3 9 allowed
+  if(CAV(aprec)[0]=='d')prec=-1; else {prec=CAV(aprec)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(((I)1<<prec)&0x209,EVNONCE);}  // 0 3 9 allowed
+  RE(local=i0(alocal)); ASSERT(BETWEENO(local,-24*3600,24*3600),EVDOMAIN) local=local*1000000000;   // fetch timezone offset if any
  }else{
-  w=a; prec=9; // monad: switch argument, set defaults
+  w=a; prec=9; local=0; // monad: switch argument, set defaults
  }
  ASSERT(AT(w)&LIT,EVDOMAIN);  // must be LIT
  ASSERT(AR(w),EVRANK);    // must not be an atom
  if(!AN(w)){RETF(df1(z,w,qq(sc(IMIN),zeroionei(1))));}   // return _"1 w on empty w - equivalent
- RETF(efs(jt,w,prec));
+ RETF(efs(jt,w,prec,local));
 }
 
 // w is LIT array of datetime strings (rank>0, not empty), result is array of INTs with nanosecond time for each string

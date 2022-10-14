@@ -1216,7 +1216,7 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     endmask=sgnbit;  // indicate all lanes valid
    }else{
     endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
-    okmsk=_mm256_movemask_pd(_mm256_castsi256_pd(endmask));  // mask of valid words in this block - always at least 1
+    okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
     prn0x=_mm256_maskload_epi64(colxv+colx,_mm256_castpd_si256(endmask));  // load the indexes into Qk
     prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
     if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
@@ -1238,7 +1238,7 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     __m256i cmpxxxx0312=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b00010000));  // x x 0=3 1=2
     // if 1=2, clear 2 3; if 0=3 clear 3
     endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0312,0b01000100),cmpxxxx0312),0b11110000),_mm256_castpd_si256(endmask)));
-    okmsk=_mm256_movemask_pd(_mm256_castsi256_pd(endmask));  // mask of valid words in this block - always at least 1
+    okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
     okwds=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
    }
    // gather the high parts of Qk

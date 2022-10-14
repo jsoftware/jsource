@@ -1216,11 +1216,11 @@ static unsigned char jtekupdatex(J jt,void* const ctx,UI4 ti){
     endmask=sgnbit;  // indicate all lanes valid
    }else{
     endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
-    okmsk=_mm256_movemask_pd(_mm256_castsi256_pd(endmask));  // mask of valid words in this block - always at least 1
+    okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
     prn0x=_mm256_maskload_epi64(colxv+colx,_mm256_castpd_si256(endmask));  // load the indexes into Qk
-    prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
-    if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
-    if(dpflag&8)mrelfuzz=_mm256_maskload_pd(mplrd+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
+    prowdh=_mm256_maskload_pd(prn0v+colx,endmask);  // load next 4 non0 values in pivotrow
+    if(dpflag&4)prowdl=_mm256_maskload_pd(prn0v+coln+colx,endmask);  // and low part if present
+    if(dpflag&8)mrelfuzz=_mm256_maskload_pd(mplrd+colx,endmask);  // load next 4 non0 values in pivotrow
    }
    // mplr is given, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to
    // make sure that we don't work on the same column# in one batch of NPAR, because one update would be lost.

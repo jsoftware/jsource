@@ -151,7 +151,7 @@ AHDR2(powDI,D,D,I) {I v;
 }
 
 AHDR2(powDD,D,D,D) {D v;
- if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )  // scaf should be parallel; test is wrong
+ if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )
  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=pospow( u,*y); y++;))
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
@@ -216,7 +216,7 @@ AHDR2(powDD,D,D,D) {D v;
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
    if(v==0){DQ(n, *z++=1.0;) x+=n;}
-   else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
+   else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
     AVXATOMLOOP(1,  // build result in u, which is also the input
       float64x2_t zero = {0.0 COMMA 0.0};

@@ -4,6 +4,15 @@ NB. T. t. ------------------------------------------------------------------
 NB. **************************************** threads & tasks **********************************
 NB. j904 64-bit only
 
+3 : 0''
+if. IFWIN do.
+ sleep=: usleep@>.@(1e6&*)
+else.
+ sleep=: 6!:3
+end.
+1
+)
+
 NB. wait until there are y waiting threads
 wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
@@ -72,14 +81,14 @@ echo^:(PRINTMSG+.GITHUBCI*.IFWIN) 'test ',(":1),' f2 ',(":y),' finish: ',":6!:0'
 
 g=: 3 : 0
 9!:1[(7^5)+3 T.''  NB. random per thread
-6!:3[0.001*?0      NB. arbitrary delay
+sleep[0.001*?0      NB. arbitrary delay
 1
 )
 
 g1=: 4 : 0
 9!:1[(7^5)-3 T.''  NB. random per thread
 for_i. i.y do.
- 6!:3[0.001*?0     NB. arbitrary delay
+ sleep[0.001*?0     NB. arbitrary delay
  pyx=. g t. (<'worker';x) "0 i.y
 end.
 ]&> pyx
@@ -254,7 +263,7 @@ amv =. 16 T. 0  NB. AMV with value 0
 'limit error' -: 2 T. etx 8
 'limit error' -: ". etx '] t. 8'
 
-4!:55 ;:'allowlongjobs amv delth N N1 N2 f f1 f2 g g1 wthr'
+4!:55 ;:'allowlongjobs amv delth N N1 N2 f f1 f2 g g1 wthr sleep'
 
 epilog''
 

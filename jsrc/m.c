@@ -104,6 +104,21 @@ void *jmalloca(I n,I a){ //jmalloc, but result is a multiple of 1<<a
  if(!jmcommit(r,n)){jmrelease(r,n);R 0;}
  R r;}
 #else //windows
+#include<stdio.h>
+typedef PVOID (FVA2)(HANDLE, PVOID, SIZE_T, ULONG, ULONG, MEM_EXTENDED_PARAMETER*, ULONG);
+static FVA2 og_va2;
+static FVA2 *virtualAlloc2=og_va2;
+static PVOID og_va2(HANDLE h, PVOID p, SIZE_T n, ULONG t, ULONG prot, MEM_EXTENDED_PARAMETER *ext, ULONG next) {
+ HINSTANCE dll=LoadLibrary("kernelbase.dll");
+ if(!dll)goto fail;
+ FVA2 *f=(FVA2*)GetProcAddress(dll,"VirtualAlloc2");
+ if(!f)goto fail;
+ FreeLibrary(dll);
+ virtualAlloc2=f;
+ R f(h,p,n,t,prot,ext,next);
+fail:
+ puts("no VirtualAlloc2");
+ __builtin_trap();}
 void *jmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,0); }
 B jmcommit(void *p,I n){ R p==VirtualAlloc(p,n,MEM_COMMIT,PAGE_READWRITE); } //is this the right way to do error checking?
 void *jmalloc(I n){ R VirtualAlloc(0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE); }
@@ -112,11 +127,11 @@ void jmrelease(void *p,I n){ VirtualFree(p,0,MEM_RELEASE); }
 void *jmreservea(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
  MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
- R VirtualAlloc2(0,0,n,MEM_RESERVE,0,&opt,1);}
+ R virtualAlloc2(0,0,n,MEM_RESERVE,0,&opt,1);}
 void *jmalloca(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
  MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
- R VirtualAlloc2(0,0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE,&opt,1);}
+ R virtualAlloc2(0,0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE,&opt,1);}
 #endif
 
 #if LEAKSNIFF

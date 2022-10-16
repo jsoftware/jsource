@@ -328,7 +328,7 @@ F1(jtdbc){UC k;
  if(AN(w)){
   // turn debugging on/off in all threads
   JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
-  DONOUNROLL(MAXTHREADS, if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
+  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
 #else

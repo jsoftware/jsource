@@ -707,7 +707,7 @@ static A jtcdgahash(J jt,I n){A z;I hn;
  R z;
 }
 
-B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
+B jtcdinit(JS jjt){A x;JJ jt=MTHREAD(jjt);
  RZ(x=exta(BOX,0L,1L,100L )); ACINITZAP(x) INITJT(jjt,cdarg)=x;  // allocate indirect pointers to CCT blocks
  RZ(INITJT(jjt,cdhash) =cdgahash(4*AN(INITJT(jjt,cdarg))));  // start with 4x allocation for the strings.  We will reallocate when it gets to 2x.
  RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x

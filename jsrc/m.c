@@ -6,6 +6,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <sys/mman.h>
+#include <unistd.h>
 #define __cdecl
 #endif
 #ifdef MMSC_VER
@@ -68,6 +70,54 @@
 #define FREECHK(x) if(!FREE(x))SEGFAULT;  // crash on error
 #endif
 
+// memory reservation routines
+#if !SY_WIN32
+static I pagesz=0,pagemask=0,pagermask=0;
+void *jmreserve(I n){ // returns a pointer to a reservation of n bytes.  Must be committed before use.  Always at least 4k aligned
+ void *r=mmap(0, n, PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0);
+ R r==MAP_FAILED?0:r;}
+B jmcommit(void *p,I n){ // commits n bytes starting at p, a pointer within a previous reservation.  Returns 1=success
+ if(!pagesz)pagesz=sysconf(_SC_PAGESIZE),pagemask=pagesz-1,pagermask=~pagemask;
+ I pi=(I)p;
+ n+=pi-(pagermask&pi);
+ p=(void*)(pagermask&pi);
+ R !mprotect(p,n,PROT_READ|PROT_WRITE);}
+void *jmalloc(I n){ //reserve+commit in one step
+ void *r=mmap(0, n, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
+ R r==MAP_FAILED?0:r;}
+void jmdecommit(void *p,I n){ // decommits n bytes starting at p (while keeping the address space reserved).  Beware of page boundaries!
+ mprotect(p,n,PROT_NONE);}
+void jmrelease(void *p,I n){ // unreserves (and decommits) n bytes starting at p.  Note: must apply to the entirety of the original reservation at once for compat with windows
+ munmap(p,n);}
+void *jmreservea(I n,I a){ //jmreserve, but result is a multiple of 1<<a
+ // todo: freebsd has MAP_ALIGNED
+ a=1<<a;I m=a-1;
+ C *r=jmreserve(n+a);I ri=(I)r;
+ if(!(ri&m)){ //result already aligned; skip a syscall and just release the tail
+  jmrelease(r+n,a);
+  R r;}
+ jmrelease(r,a-(ri&m));
+ jmrelease(r+n+a-(ri&m),ri&m);
+ R r+a-(ri&m);}
+void *jmalloca(I n,I a){ //jmalloc, but result is a multiple of 1<<a
+ void *r=jmreservea(n,a);
+ if(!jmcommit(r,n)){jmrelease(r,n);R 0;}
+ R r;}
+#else //windows
+void *jmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,0); }
+B jmcommit(void *p,I n){ R p==VirtualAlloc(p,n,MEM_COMMIT,PAGE_READWRITE); } //is this the right way to do error checking?
+void *jmalloc(I n){ R VirtualAlloc(0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE); }
+void jmdecommit(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }
+void jmrelease(void *p,I n){ VirtualFree(p,0,MEM_RELEASE); }
+void *jmreservea(I n,I a){
+ MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
+ MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
+ R VirtualAlloc2(0,0,n,MEM_RESERVE,0,&opt,1);}
+void *jmalloca(I n,I a){
+ MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
+ MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
+ R VirtualAlloc2(0,0,n,MEM_RESERVE|MM_COMMIT,PAGE_READWRITE,&opt,1);}
+#endif
 
 #if LEAKSNIFF
 static I leakcode;
@@ -145,26 +195,28 @@ F1(jtmemhashs){
 
 #endif
 
-B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
+// initialise shared state for memory allocator
+B jtmeminits(JS jjt){
  INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=(C*)&INITJT(jjt,breakbytes); /* required for ma to work */
- INITJT(jjt,mmax) =(I)1<<(m-1);
- I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
-  // init tpop stack
-  jt->tstackcurr=(A*)MALLOC(NTSTACK+NTSTACKBLOCK);  // save address of first allocation
-  jt->malloctotal = NTSTACK+NTSTACKBLOCK;
-  jt->tnextpushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
-  *jt->tnextpushp++=0;  // blocks chain to blocks, allocations to allocations.  0 in first block indicates end.  We will never try to go past the first allo, so no chain needed
-  // init all subpools to empty, setting the garbage-collection trigger points
-  for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
-  jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
- }
+ INITJT(jjt,mmax) =(I)1<<(MLEN-1);
+ R 1;}
+
+// initialise thread-specific state for memory allocator
+B jtmeminitt(JJ jt){I k;
+ // init tpop stack
+ jt->tstackcurr=(A*)MALLOC(NTSTACK+NTSTACKBLOCK);  // save address of first allocation
+ jt->malloctotal = NTSTACK+NTSTACKBLOCK;
+ jt->tnextpushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
+ *jt->tnextpushp++=0;  // blocks chain to blocks, allocations to allocations.  0 in first block indicates end.  We will never try to go past the first allo, so no chain needed
+ // init all subpools to empty, setting the garbage-collection trigger points
+ for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
+ jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
 #if LEAKSNIFF
  leakblock = 0;
  leaknbufs = 0;
  leakcode = 0;
 #endif
- R 1;
-}
+ R 1;}
 
 // Audit all memory chains to detect overrun
 #if SY_64
@@ -405,7 +457,7 @@ I jtspbytesinuse(J jt){I i,totalallo = jt->mfreegenallo&~MFREEBCOUNTING;  // sta
 
 // called under systemlock to add up all threads
 static A jtspallthreadsx(J jt){I grandtotal;
- grandtotal=0; DO(THREADIDFORWORKER(MAXTHREADS), grandtotal+=jtspbytesinuse(JTFORTHREAD(jt,i));if(JTFORTHREAD(jt,i)->repato)grandtotal-=AC(JTFORTHREAD(jt,i)->repato);)  // add total for all threads, active or not
+ grandtotal=0; DO(NALLTHREADS(jt), grandtotal+=jtspbytesinuse(JTFORTHREAD(jt,i));if(JTFORTHREAD(jt,i)->repato)grandtotal-=AC(JTFORTHREAD(jt,i)->repato);)  // add total for all threads, active or not
  R sc(grandtotal);
 }
 

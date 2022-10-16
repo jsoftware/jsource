@@ -15,7 +15,7 @@
 #include "j.h"
 #include "x.h"
 
-B jtxoinit(JS jjt, I nthreads){A x;JJ jt=MTHREAD(jjt);
+B jtxoinit(JS jjt){A x;JJ jt=MTHREAD(jjt);
 #if SY_WIN32 && !SY_WINCE
  _setmode(_fileno(stdin),_O_BINARY);
  _setmode(_fileno(stdout),_O_BINARY);

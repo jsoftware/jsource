@@ -53,10 +53,6 @@ end.
 (10) 6!:2 'namelkp i. 1e6'
 
 */
-B jtparseinit(JS jjt, I nthreads){
- R 1;
-}
-
 
 #define AVN   (     ADV+VERB+NOUN)
 #define CAVN  (CONJ+ADV+VERB+NOUN)

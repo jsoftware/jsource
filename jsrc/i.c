@@ -54,7 +54,8 @@ JS gjt=0; // JPF debug - convenience debug single process - points to shared are
 // The jt we are given is a throwaway, needed ONLY so we can allocate some A blocks here.  Anything stored
 // into jt will never be used.  jinit3 will later be called with the real jt, to initialize it
 B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
- jtmeminit(jjt,1);  // init allocation queues & tpop stack, master thread only
+ jtmeminits(jjt);
+ jtmeminitt(jt);  // init allocation queues & tpop stack, master thread only
  RZ(mnuvxynam[0]=makename("m",0));
  RZ(mnuvxynam[1]=makename("n",0));
  RZ(mnuvxynam[2]=makename("u",NAMEBYVALUE));  // uv (and thus u. v.) must be defined when used in an explicit def.  Otherwise OK
@@ -81,7 +82,7 @@ B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
  R 1;
 }
 
-static B jtevinit(JS jjt,I nthreads){A q,*v;JJ jt=MTHREAD(jjt);
+static B jtevinit(JS jjt){A q,*v;JJ jt=MTHREAD(jjt);
  GA10(q,BOX,1+NEVM); v=AAV(q);
  DO(AN(q), v[i]=mtv;);
  v[EVALLOC  ]=INCORPNA(cstr("allocation error"           ));
@@ -119,14 +120,13 @@ static B jtevinit(JS jjt,I nthreads){A q,*v;JJ jt=MTHREAD(jjt);
  v[EVTHROW  ]=INCORPNA(cstr("uncaught throw."            ));
  v[EVTIME   ]=INCORPNA(cstr("time limit"                 ));
  v[EVVALUE  ]=INCORPNA(cstr("value error"                ));
-// no more v[EVCONCURRENCY]=INCORPNA(cstr("concurrency error"      ));
  ACINITZAPRECUR(q,BOX); INITJT(jjt,evm)=q;   // q and its contents are not on tstack; this way the contents are freed on assignment
  if(jt->jerr){printf("evinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }
 
 /* static void sigflpe(int k){jsignal(EVDOMAIN); signal(SIGFPE,sigflpe);} */
 
-static B jtconsinit(JS jjt,I nthreads){D y;JJ jt=MTHREAD(jjt);
+static B jtconsinits(JS jjt){D y;JJ jt=MTHREAD(jjt);
 // This is an initialization routine, so memory allocations performed here are NOT
 // automatically freed by tpop()
 #if AUDITCOMPILER
@@ -167,40 +167,53 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
   jt->fdepn=NFDEP;
 #endif
  MTHREAD(jjt)->threadpoolno=-1; // the master thread is in no pool, ever
- 
- I threadno; for(threadno=0;threadno<nthreads;++threadno){jt=&jjt->threaddata[threadno];
-  RESETRANK;  // init both ranks to RMAX
-  jt->ppn=6;  // default precision for printf
-  jt->fcalln=NFCALL;
-  jt->cct= 1.0-FUZZ;
-  jt->xmode=XMEXACT;
+ R 1;
+}
+
+static B jtconsinitt(J jt){
+ RESETRANK;  // init both ranks to RMAX
+ jt->ppn=6;  // default precision for printf
+ jt->fcalln=NFCALL;
+ jt->cct= 1.0-FUZZ;
+ jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
-  jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return
- }
+ jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return
  R 1;
 }
 
-static B jtbufferinit(JS jjt,I nthreads){
- INITJT(jjt,breakfn)=malloc(NPATH); memset(INITJT(jjt,breakfn),0,NPATH);  // place to hold the break filename
- I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
-  jt->etx=malloc(1+NETX);  // error-message buffer
-  jt->callstack=(LS *)malloc(sizeof(LS)*(1+NFCALL));  // function-call stack
-  jt->rngdata=(RNG*)(((I)malloc(sizeof(RNG)+CACHELINESIZE)+CACHELINESIZE-1)&-CACHELINESIZE); mvc(sizeof(RNG),jt->rngdata,1,MEMSET00);  // place to hold RNG data, aligned to cacheline
- }
+// initialise shared buffers
+static B jtbufferinits(JS jjt){
+ R !!(INITJT(jjt,breakfn)=calloc(1,NPATH)); // place to hold the break filename
+}
+
+// initialise thread-local buffers for thread threadno.  Requires synchronisation
+B jtbufferinitt(J jt){
+ RZ(jt->etx=malloc(1+NETX));  // error-message buffer
+ RZ(jt->callstack=malloc(sizeof(LS)*(1+NFCALL)));  // function-call stack
+ RZ(jt->rngdata=aligned_malloc(sizeof(RNG),CACHELINESIZE)); // place to hold RNG data, aligned to cacheline
+ memset(jt->rngdata,0,sizeof(RNG));
  R 1;
 }
 
- // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
- // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
- // look like those symbols have a free outstanding.
- // This also has the effect that buffers allocated during init do not need ra() to protect them, since they have no free outstanding
-static B jtinitfinis(JS jjt,I nthreads){
- I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
-  jt->tnextpushp=(A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK))+1;  // first store is to entry 1 of the first block
- }
+// We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
+// tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
+// look like those symbols have a free outstanding.
+// This also has the effect that buffers allocated during init do not need ra() to protect them, since they have no free outstanding
+static B jtinitfinis(J jt){
+ jt->tnextpushp=(A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK))+1;  // first store is to entry 1 of the first block
  R 1;
 }
 
+// Initialise thread-specific data for jt.  Idempotent.  Requires synchronisation.
+C jtjinitt(J jt){
+ if(jt->etx)R 1; // already initialised; ok
+ RZ(jtbufferinitt(jt));  // init thread-local buffers
+ RZ(jtmeminitt(jt));
+ RZ(jtconsinitt(jt));
+ RZ(jtrnginit(jt)); // thread only
+ RZ(jtecvtinit(jt));
+ RZ(jtinitfinis(jt));
+ R 1;}
 
 // initialize the master thread for a new instance.  This fills in the JS block, which will remain
 // for the duration of the instance.  It also fills in the JJ block for each thread
@@ -226,24 +239,26 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 #endif
 // only crashing on startup INITJT(jjt,peekdata)=1;  // wake up auditing
  // Initialize subsystems in order.  Each initializes all threads, if there are thread variables
- RZ(jtbufferinit(jjt,MAXTHREADS)); // init the buffers pointed to by jjt
- RZ(jtmeminit(jjt,MAXTHREADS));
- RZ(jtsesminit(jjt,MAXTHREADS));  // master only
- RZ(jtcdinit(jjt,MAXTHREADS));  // master only
- RZ(jtevinit(jjt,MAXTHREADS));  // master only
- RZ(jtconsinit(jjt,MAXTHREADS));
- RZ(jtxsinit(jjt,MAXTHREADS));  // must be before symbinit  master only
- RZ(jtsymbinit(jjt,MAXTHREADS));  // must be after consinit   master only - global/locsyms must init at start of op
- RZ(jtparseinit(jjt,MAXTHREADS));
- RZ(jtxoinit(jjt,MAXTHREADS));  // master only
- RZ(jtsbtypeinit(jjt,MAXTHREADS));  // master only
- RZ(jtrnginit(jjt,MAXTHREADS));
+ RZ(jtbufferinits(jjt)); // init the buffers pointed to by jjt
+ RZ(jtbufferinitt(jt));  // init thread-local buffers
+ RZ(jtmeminits(jjt));
+ RZ(jtmeminitt(jt));
+ RZ(jtsesminit(jjt,1));  // master only.  scaf pointless?
+ RZ(jtcdinit(jjt));  // master only
+ RZ(jtevinit(jjt));  // master only
+ RZ(jtconsinits(jjt));
+ RZ(jtconsinitt(jt));
+ RZ(jtxsinit(jjt));  // must be before symbinit  master only
+ RZ(jtsymbinit(jjt));  // must be after consinit   master only - global/locsyms must init at start of op
+ RZ(jtxoinit(jjt));  // master only
+ RZ(jtsbtypeinit(jjt));  // master only
+ RZ(jtrnginit(jt));
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
- RZ(jtxlinit(jjt,MAXTHREADS));  // file info, master only
+ RZ(jtxlinit(jjt));  // file info, master only
 #endif
- RZ(jtecvtinit(jjt,MAXTHREADS));
- RZ(jtinitfinis(jjt,MAXTHREADS));
+ RZ(jtecvtinit(jt));
+ RZ(jtinitfinis(jt));
  R 1;
 }
 

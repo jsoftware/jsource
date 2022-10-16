@@ -3398,8 +3398,7 @@ d2a_Malloc
 #endif
 
 // called only at initialization, so no ras() needed
-B jtecvtinit(JS jjt, I nthreads) {A x; struct dtoa_info *di;
- I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+B jtecvtinit(J jt) {A x; struct dtoa_info *di;
  GATV0(x, LIT, sizeof(struct dtoa_info), 1);
  di=(struct dtoa_info*)AV(x); 
  di->_p5s=0;
@@ -3408,7 +3407,6 @@ B jtecvtinit(JS jjt, I nthreads) {A x; struct dtoa_info *di;
  mvc( sizeof(di->_freelist),di->_freelist,1,MEMSET00);
  di->jt=jt;  // remember thread pointer in case further ga() needed
  jt->dtoa=di;
- }
  R 1;
 }
 

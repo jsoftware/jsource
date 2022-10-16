@@ -713,33 +713,30 @@ void jsto(JS jt,I type,C*s){C e;I ex;
 C dll_initialized= 0; // dll init sets to 1
 
 // dll init on load - eqivalent to windows DLLMAIN DLL_ATTACH_PROOCESS
-__attribute__((constructor)) static void Initializer(int argc, char** argv, char** envp)
-{
+__attribute__((constructor)) static void Initializer(){
  // Initialize J globals.  This is done only once.  Many of the globals are in static memory, initialized
  // by the compiler; some must be initialized a run-time in static memory; some must be allocated into A blocks
  // pointed to by static names.  Because of the A blocks, we have to perform a skeletal initialization of jt,
  // just enough to do ga().  The rest of jt is never used
- JS jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
- if(!jtnobdy) R;
- JS jt = (JS)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
- mvc(sizeof(JST),jt,1,MEMSET00);
- if(!jtglobinit(jt)){free(jtnobdy); R;}
- dll_initialized= 1; JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free
- // The g_jt heap MUST NOT be freed, because it holds the blocks pointed to by initialized globals.
- // g_jt itself, a JST struct, is not used.  Perhaps it could be freed, as long as the rest of the heap remains.
+ JS jt=jmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+ if(!jt)R;
+ I sz=offsetof(JST,threaddata[1]); // #relevant bytes: just JS and the first JT
+ if(!jmcommit(jt,sz)){jmrelease(jt,sizeof(JST));R;}
+ if(!jtglobinit(jt)){jmrelease(jt,sizeof(JST)); R;}
+ dll_initialized=1;
+ jmrelease(jt,sizeof(JST)); //the jt block itself can be released; we effectively orphan any blocks pointed to there by, because they are used by the globals we've just initialised
 }
 
  // Init for a new J instance.  Globals have already been initialized.
  // Create a new jt, which will be the one we use for the entirety of the instance.
 JS _stdcall JInit(void){
- if(!dll_initialized) R 0; // constructor failed
- JS jtnobdy;
- RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
- JS jt = (JS)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
- mvc(sizeof(JST),jt,1,MEMSET00);
+ if(!dll_initialized)R 0; // constructor failed
+ JS jt=jmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+ if(!jt)R 0;
+ if(!jmcommit(jt,offsetof(JST,threaddata[1]))){jmrelease(jt,sizeof(JST));R 0;}
+ mvc(offsetof(JST,threaddata[1]),jt,1,MEMSET00);
  // Initialize all the info for the shared region and the master thread
- if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
- JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free
+ if(!jtjinit2(jt,0,0)){jmrelease(jt,sizeof(JST)); R 0;}
  R jt;  // R (JS)MTHREAD(jt);
 }
 
@@ -753,7 +750,7 @@ int _stdcall JFree(JS jt){
 #if PYXES
   aligned_free(JT(jt,jobqueue));
 #endif
-  free(JT(jt,heap));  // free the initial allocation
+  jmrelease(jt,sizeof(JST)); // free the initial allocation
   R 0;
 }
 #endif

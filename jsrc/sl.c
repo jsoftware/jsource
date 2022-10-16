@@ -243,7 +243,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
 }    /* create locale, named (0==k) or numbered (1==k) */
 
 // initialization routine: INITZAP not required to protect blocks
-B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
+B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,locsize)[0]=3;  /* default hash table size for named    locales */
  INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
  RZ(jtsymext(jt));     /* initialize symbol pool                       */

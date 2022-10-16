@@ -733,25 +733,15 @@ void getpath(HINSTANCE hi, C* path)
 }
 #endif
 
-// create a memory heap of the given size, allocate a JST in it, and store the address
-// of the heap into jt->heap so that the JE can do memory allocations from it
-JS heapinit(int size)
+// create a skeletal JS--just good enough to do basic initialisation
+JS heapinit()
 {
-	HANDLE h;
-	JS jt;
-
-	h = HeapCreate(0, size, 0);
-	if(!h) return 0;
-	jt = HeapAlloc(h, 0, sizeof(JST)+JTALIGNBDY-1);
-	if(!jt)
-	{
-		HeapDestroy(h);
-		return 0;
-	}
- jt = (JS)(((I)jt+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
-	mvc(sizeof(JST),jt,1,MEMSET00);
-	JT(jt,heap) = h;
-	return jt;
+ JS jt=jmreserve(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+ if(!jt)R 0; //no address space
+ I sz=(I)&jt->threaddata[2]-(I)jt; // #relevant bytes: just JS and the first JT
+ if(!jmcommit(jt,sz)){jmrelease(jt,sizeof(JST));R 0;} //no memory
+	mvc(sz,jt,1,MEMSET00);
+ R jt;
 }
 
 int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
@@ -778,9 +768,9 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
         // just enough to do GA().  The rest of jt is never used
 		getpath(0, modulepath);
 		getpath(hDLL, dllpath);
-		g_jt=heapinit(10000);  // just enough for a few allocations
+		g_jt=heapinit()
 		if(!g_jt) R 0;   // abort if no memory
-		if(!jtglobinit(g_jt)) {HeapDestroy(g_jt->heap); g_jt=0; R 0;};  // free & abort if initialization error
+		if(!jtglobinit(g_jt)) {jmrelease(g_jt,sizeof(JST)); g_jt=0; R 0;};  // free & abort if initialization error
         // The g_jt heap MUST NOT be freed, because it holds the blocks pointed to by initialized globals.
         // g_jt itself, a JST struct, is not used.  Perhaps it could be freed, as long as the rest of the heap remains.
 		break;
@@ -792,7 +782,7 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
       break;
 
     case DLL_PROCESS_DETACH:
-		if(g_jt) HeapDestroy(g_jt->heap);
+		if(g_jt){jmrelease(g_jt,sizeof(JST));g_jt=0;}
 		break;
   }
 return TRUE;

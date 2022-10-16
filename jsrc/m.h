@@ -8,7 +8,7 @@
 #include <malloc.h>
 #endif
 
-#if SY_WIN32 && !SY_WINCE
+#if 0 && SY_WIN32 && !SY_WINCE
 #define FREE(a)     HeapFree(JT(jt,heap),0,a)
 #define MALLOC(n)   (void*)HeapAlloc(JT(jt,heap),0,n)
 #define REALLOC(a,n) (void*)HeapReAlloc(JT(jt,heap),0,a,n)

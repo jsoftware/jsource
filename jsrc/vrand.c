@@ -452,22 +452,20 @@ F1(jtrngraw){A z;I n,*v;SETNEXT
  R z;
 }
 
-B jtrnginit(JS jjt,I nthreads){
- I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
-  DO(NRNG, jt->rngdata->rngparms[i].rngV=jt->rngdata->rngparms0[i].rngV=0;);
-  jt->rngdata->rngparms[0].rngF=jtsm_next; jt->rngdata->rngparms[0].rngS=16807;
-  jt->rngdata->rngparms[1].rngF=jtgb_next; jt->rngdata->rngparms[1].rngS=16807;
-  jt->rngdata->rngparms[2].rngF=jtmt_next; jt->rngdata->rngparms[2].rngS=16807;
-  jt->rngdata->rngparms[3].rngF=jtdx_next; jt->rngdata->rngparms[3].rngS=16807;
-  jt->rngdata->rngparms[4].rngF=jtmr_next; jt->rngdata->rngparms[4].rngS=16807;
-  jt->rngdata->rngparms[0].rngM=SY_64?0:0;             /*   %      2^32 */
-  jt->rngdata->rngparms[1].rngM=SY_64?0:2147483648UL;  /*   %      2^31 */
-  jt->rngdata->rngparms[2].rngM=0;                     /*   %      2^32 */
-  jt->rngdata->rngparms[3].rngM=SY_64?0:2147483648UL;  /*   %   _1+2^31 */  /* fudge; should be _1+2^31 */
-  jt->rngdata->rngparms[4].rngM=SY_64?0:4294967087UL;  /*   % _209+2^32 */
-  jt->rngdata->rngparms0[GBI].rngI=54;
-  rngselects(num(2));
- }
+B jtrnginit(J jt){
+ DO(NRNG, jt->rngdata->rngparms[i].rngV=jt->rngdata->rngparms0[i].rngV=0;);
+ jt->rngdata->rngparms[0].rngF=jtsm_next; jt->rngdata->rngparms[0].rngS=16807;
+ jt->rngdata->rngparms[1].rngF=jtgb_next; jt->rngdata->rngparms[1].rngS=16807;
+ jt->rngdata->rngparms[2].rngF=jtmt_next; jt->rngdata->rngparms[2].rngS=16807;
+ jt->rngdata->rngparms[3].rngF=jtdx_next; jt->rngdata->rngparms[3].rngS=16807;
+ jt->rngdata->rngparms[4].rngF=jtmr_next; jt->rngdata->rngparms[4].rngS=16807;
+ jt->rngdata->rngparms[0].rngM=SY_64?0:0;             /*   %      2^32 */
+ jt->rngdata->rngparms[1].rngM=SY_64?0:2147483648UL;  /*   %      2^31 */
+ jt->rngdata->rngparms[2].rngM=0;                     /*   %      2^32 */
+ jt->rngdata->rngparms[3].rngM=SY_64?0:2147483648UL;  /*   %   _1+2^31 */  /* fudge; should be _1+2^31 */
+ jt->rngdata->rngparms[4].rngM=SY_64?0:4294967087UL;  /*   % _209+2^32 */
+ jt->rngdata->rngparms0[GBI].rngI=54;
+ rngselects(num(2));
  R 1;
 }
 

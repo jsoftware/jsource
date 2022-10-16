@@ -255,11 +255,11 @@ typedef struct JSTstruct {
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
- void *heap;            // heap handle for large allocations
+ //void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
  A stloc;            // named locales symbol table - this pointer never changes
  A zpath;         // path 'z', used for all initial paths
- I filler0[1];
+ I filler0[2];
 // end of cacheline 0
 
 // Cacheline 1: DLL variables
@@ -317,7 +317,7 @@ typedef struct JSTstruct {
  A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
  S flock;            // r/w lock for flkd/fopa/fopf
  // rest of cacheline used only in exceptional paths
- S nwthreads;    // number of worker threads allocated so far - changes protected by flock
+ US nwthreads;    // number of worker threads allocated so far - changes protected by flock
  UC sm;               /* sm options set by JSM()                         */
  C smoption;         // wd options, see comment in jtwd
  UC int64rflag;       /* com flag for returning 64-bit integers          */
@@ -410,6 +410,7 @@ typedef JST* JS;  // shared part of struct
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
+#define NALLTHREADS(jt) (1+JT(jt,nwthreads))
 #define THREADIDFORWORKER(n) ((n)+1)  // convert worker# to thread#
 _Static_assert(sizeof(struct JSTstruct)<=JTALIGNBDY,"too many threads");  // assert not too many threads
 _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected

@@ -8,7 +8,7 @@ extern int numberOfCores;
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
-#define delay(n) {if(__builtin_constant_p(n)){if(n>36)DONOUNROLL(n/36,_mm_pause();)else johnson(n);}else if(unlikely(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
+#define delay(n) {if(__builtin_constant_p(n)){if(n>36)DONOUNROLL(n/36,_mm_pause();)else johnson(n);}else if(uncommon(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
 #else
 #define delay(n)
 #endif
@@ -86,7 +86,7 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 // wakeallct keeps track of the number of wakealls being processed.  When this is nonzero, a waiter must not allow the block pointed to by futexwt to go away.  And, it must
 // consider that wakeall may have sampled futexwt before it was cleared.  So, the waiter must wait for wakeallct to go to 0 before exiting.
 // Only a couple of threads can call wakeall (the leader, and a JBreak), so 1 byte suffices for wakeallct.
-void wakeall(J jt){aadd(&JT(jt,wakeallct),1); UI4 *wta; DONOUNROLL(MAXTHREADS,if((wta=JTTHREAD0(jt)[i].futexwt)!=0){aadd(wta,0x10000); jfutex_wakea(wta);} ) aadd(&JT(jt,wakeallct),(UC)-1);}
+void wakeall(J jt){aadd(&JT(jt,wakeallct),1); UI4 *wta; DONOUNROLL(NALLTHREADS(jt),if((wta=JTTHREAD0(jt)[i].futexwt)!=0){aadd(wta,0x10000); jfutex_wakea(wta);} ) aadd(&JT(jt,wakeallct),(UC)-1);}
 #else
 void wakeall(J jt){}
 #endif
@@ -104,11 +104,11 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
  // Process the request.  We don't know what the highest-priority request is until we have heard from all the
  // threads.  Thus, it is possible that our request will still be pending whe we finish.  In that case, loop till it is satisfied
  while(priority!=0){
-  S xxx=0; I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &xxx, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
+  I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &(S){0}, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
   // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
   // Also, wake up all tasks that are in a loop that needs interrupting on system action.  Those loops will honor it when we are in state 1/2
-  if(leader){DONOUNROLL(MAXTHREADS, nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) wakeall(jt);}
+  if(leader){DONOUNROLL(NALLTHREADS(jt), nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) wakeall(jt);}
   // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop.  We wake all threads that are waiting on pyx/mutex
   C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);)  // remember priority before we made our request
   // state 3: all threads get the final request priorities
@@ -132,7 +132,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
   if(executor){
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],0,__ATOMIC_RELEASE);  // clear the error flag from the interrupt request
    // go through all threads, turning off SYSLOCK in each.  This allows other tasks to run and new tasks to start
-   DO(MAXTHREADS, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
+   DO(NALLTHREADS(jt), __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
    // set the systemlock to 0, completing the operation
    __atomic_store_n(&JT(jt,systemlock),0,__ATOMIC_RELEASE);
   }else{
@@ -339,7 +339,7 @@ typedef struct jobstruct {
 // we use the 6 LSBs of jobq->ht[0] as the lock, so that when we get the lock we also have the job pointer.  The job is always on a cacheline boundary
 // We take JOBLOCK before taking the mutex, always.  By measurement (20220516 SkylakeX, 4 cores) the job lock keeps contention low until the tasks are < 400ns
 // long, while using the mutex gives out at < 1000ns
-_Static_assert(MAXTHREADS<64,"JOBLOCK fails if > 63 threads");
+_Static_assert(MAXTHREADSINPOOL<64,"JOBLOCK fails if > 63 threads");
 #define JOBLOCK(jobq) ({I z; if(unlikely(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(CACHELINESIZE-1))!=0))z=joblock(jobq); (JOB*)z; })
 #define JOBUNLOCK(jobq,oldh) __atomic_store_n(&jobq->ht[0],oldh,__ATOMIC_RELEASE);
 static NOINLINE I joblock(JOBQ *jobq){I z;
@@ -796,6 +796,10 @@ ASSERT(0,EVNONCE)
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
    resthread=THREADIDFORWORKER(JT(jt,nwthreads));  // number of current worker threads.  Next worker is nwthreads; convert worker# to thread#
    ASSERTSUFF(resthread<MAXTHREADS,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if new 0-origin thread# exceeds limit
+   if(!jmcommit(JTFORTHREAD(jt,resthread),sizeof(JTT))){ // attempt to commit thread data (in case it's not already committed); if failed, then bail
+    WRITEUNLOCK(JT(jt,flock));
+    ASSERT(0,EVWSFULL);}
+   if(unlikely(!jtjinitt(JTFORTHREAD(jt,resthread)))){WRITEUNLOCK(JT(jt,flock)); R 0;} // initialise thread-local state
    if(!(__atomic_load_n(&JTFORTHREAD(jt,resthread)->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE))break;
    WRITEUNLOCK(JT(jt,flock))  // release lock for next poll
    if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKALL);}else{YIELD}  // allow syslock if requested; otherwise let other threads run

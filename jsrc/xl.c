@@ -62,7 +62,7 @@ static B jtdolock(J jt,B lk,F f,I i,I n){I e;
 
 #define LKC  3      /* number of columns in JT(jt,flkd) table       */
 
-B jtxlinit(JS jjt,I nthreads){A x;I*s;JJ jt=MTHREAD(jjt);
+B jtxlinit(JS jjt){A x;I*s;JJ jt=MTHREAD(jjt);
  GAT0(x,INT,20*LKC,2); ACINITZAP(x); s=AS(x); s[0]=20; s[1]=LKC;  // called at init; shape is 20 3
  INITJT(jjt,flkd)=x; AM(INITJT(jjt,flkd))=0;  // AM holds the # valid entries
  R 1;

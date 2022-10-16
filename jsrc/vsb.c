@@ -730,7 +730,7 @@ exit: ;
 static void resetdata(J jt){
  WRITELOCK(JT(jt,sblock))
  fa(STRINGTABLE); fa(HASHTABLE); fa(JT(jt,sbu)); // free old symbol
- jtsbtypeinit(JJTOJ(jt),MAXTHREADS);                          // initialization routine
+ jtsbtypeinit(JJTOJ(jt));                          // initialization routine
  ras(JT(jt,sbu)); ra(STRINGTABLE); ra(HASHTABLE); // init does not ra(); we do it here
  WRITEUNLOCK(JT(jt,sblock))
 }    /* re-initialize global symbol table */
@@ -882,7 +882,7 @@ F2(jtsb2){A z;I j,k,n;
 
 // This is an initialization routine, so memory allocations performed here are NOT
 // automatically freed by tpop()
-B jtsbtypeinit(JS jjt, I nthreads){A x;I c=sizeof(SBU)/SZI,s[4],p;JJ jt=MTHREAD(jjt);
+B jtsbtypeinit(JS jjt){A x;I c=sizeof(SBU)/SZI,s[4],p;JJ jt=MTHREAD(jjt);
  s[0]=2000; s[1]=c; s[2]=1; s[3]=1;
  GATVR(x,INT,s[0]*c,4,s);          INITJT(jjt,sbu)=x;  // ras() not required
  GA10(x,LIT,20000); SETSTRINGTABLE(x);

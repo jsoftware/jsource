@@ -116,7 +116,7 @@ void *jmreservea(I n,I a){
 void *jmalloca(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
  MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
- R VirtualAlloc2(0,0,n,MEM_RESERVE|MM_COMMIT,PAGE_READWRITE,&opt,1);}
+ R VirtualAlloc2(0,0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE,&opt,1);}
 #endif
 
 #if LEAKSNIFF

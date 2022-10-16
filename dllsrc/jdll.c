@@ -736,20 +736,19 @@ void getpath(HINSTANCE hi, C* path)
 // create a skeletal JS--just good enough to do basic initialisation
 JS heapinit()
 {
- JS jt=jmreserve(sizeof(JST),__builtin_ctz(JTALIGNBDY));
- if(!jt)R 0; //no address space
- I sz=(I)&jt->threaddata[2]-(I)jt; // #relevant bytes: just JS and the first JT
- if(!jmcommit(jt,sz)){jmrelease(jt,sizeof(JST));R 0;} //no memory
-	mvc(sz,jt,1,MEMSET00);
- R jt;
+	JS jt=jmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+	if(!jt)R 0; //no address space
+	I sz=(I)&jt->threaddata[1]-(I)jt; // #relevant bytes: just JS and the first JT
+	if(!jmcommit(jt,sz)){jmrelease(jt,sizeof(JST));R 0;} //no memory
+	R jt;
 }
 
 int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 {
 	switch (dwReason)
 	{
-    case DLL_PROCESS_ATTACH:
-        // Handle the first activation of J
+	case DLL_PROCESS_ATTACH:
+	// Handle the first activation of J
 		g_hinst = hDLL;
 /*
 		{
@@ -768,11 +767,9 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
         // just enough to do GA().  The rest of jt is never used
 		getpath(0, modulepath);
 		getpath(hDLL, dllpath);
-		g_jt=heapinit()
+		g_jt=heapinit();
 		if(!g_jt) R 0;   // abort if no memory
 		if(!jtglobinit(g_jt)) {jmrelease(g_jt,sizeof(JST)); g_jt=0; R 0;};  // free & abort if initialization error
-        // The g_jt heap MUST NOT be freed, because it holds the blocks pointed to by initialized globals.
-        // g_jt itself, a JST struct, is not used.  Perhaps it could be freed, as long as the rest of the heap remains.
 		break;
 
     case DLL_THREAD_ATTACH:
@@ -792,14 +789,14 @@ CDPROC JS _stdcall JInit()
 {
 	JST* jt;
 
-    // Init for a new J instance.  Globals have already been initialized.
-    // Create a new jt, which will be the one we use for the entirety of the instance.
-	jt=heapinit(1000000);
+	// Init for a new J instance.  Globals have already been initialized.
+	// Create a new jt, which will be the one we use for the entirety of the instance.
+	jt=heapinit();
 	if(!jt) R 0;  // if no memory, fail
-    // Initialize all the info for the shared region and the master thread
+	// Initialize all the info for the shared region and the master thread
 	if(!jtjinit2(jt,0,0))
 	{
-		HeapDestroy(JT(jt,heap));  // if error during init, fail
+		jmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
 	return jt;  // return (JS)MTHREAD(jt);
@@ -809,11 +806,11 @@ CDPROC JS _stdcall JInit()
 CDPROC int _stdcall JFree(JS jt)
 {
 	if(!jt) return 0;
- SETJTJM(jt,jt,jm)
+	SETJTJM(jt,jt,jm)
 #if !SY_WINCE
 	dllquit(jm);  // clean up call dll
 #endif
-	HeapDestroy(JT(jt,heap));
+	jmrelease(jt,sizeof(JST));
 	return 0;
 }
 

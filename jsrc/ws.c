@@ -9,20 +9,20 @@
 // These are the codes for each char that can present as a primitive.  Alphabetics cannot unless inflected.  Numerics can in inflected with :
 // OR when they are generated internally, where 0 2 3 4 are used as primitives for invisible modifiers (noun, hook, fork, adv)
 static C spellintab2[128-0x20][3] = {
-['='-0x20]={CEQ,CASGN,CGASGN},      ['<'-0x20]={CLT,CFLOOR,CLE},        ['>'-0x20]={CGT,CCEIL,CGE},         ['_'-0x20]={CINF,0,CFCONS},          ['+'-0x20]={CPLUS,CPLUSDOT,CPLUSCO},  ['*'-0x20]={CSTAR,CSTARDOT,CSTARCO},  
-['-'-0x20]={CMINUS,CNOT,CMATCH},       ['%'-0x20]={CDIV,CDOMINO,CROOT},     ['^'-0x20]={CEXP,CLOG,CPOWOP},       ['$'-0x20]={CDOLLAR,CSPARSE,CSELF},     ['~'-0x20]={CTILDE,CNUB,CNE},          ['|'-0x20]={CSTILE,CREV,CCANT},        
-['.'-0x20]={CDOT,0,0},        [':'-0x20]={CCOLON,COBVERSE,CADVERSE}, [','-0x20]={CCOMMA,CCOMDOT,CLAMIN},    [';'-0x20]={CSEMICO,CCUT,CWORDS},       ['#'-0x20]={CPOUND,CBASE,CABASE},      ['@'-0x20]={CAT,CATDOT,CATCO},      
-['/'-0x20]={CSLASH,CSLDOT,CGRADE},     ['\\'-0x20]={CBSLASH,CBSDOT,CDGRADE},['['-0x20]={CLEFT,CLEV,CCAP},      [']'-0x20]={CRIGHT,CDEX,CIDENT},         ['{'-0x20]={CLBRACE,CTAKE,CTAIL},       ['}'-0x20]={CRBRACE,CDROP,CCTAIL},      
-['`'-0x20]={CGRAVE,CGRDOT,CGRCO},      ['\"'-0x20]={CQQ,CEXEC,CTHORN},      ['&'-0x20]={CAMP,CUNDER,CAMPCO},     ['!'-0x20]={CBANG,CFIT,CIBEAM},       ['?'-0x20]={CQUERY,CQRYDOT,CQRYCO},
-['('-0x20]={CLPAR,0,0},    [')'-0x20]={CRPAR,0,0},    
+['='-0x20]={CEQ,CASGN,CGASGN},    ['<'-0x20]={CLT,CFLOOR,CLE},           ['>'-0x20]={CGT,CCEIL,CGE},         ['_'-0x20]={CINF,0,CFCONS},          ['+'-0x20]={CPLUS,CPLUSDOT,CPLUSCO},  ['*'-0x20]={CSTAR,CSTARDOT,CSTARCO},
+['-'-0x20]={CMINUS,CNOT,CMATCH},  ['%'-0x20]={CDIV,CDOMINO,CROOT},       ['^'-0x20]={CEXP,CLOG,CPOWOP},      ['$'-0x20]={CDOLLAR,CSPARSE,CSELF},  ['~'-0x20]={CTILDE,CNUB,CNE},         ['|'-0x20]={CSTILE,CREV,CCANT},
+['.'-0x20]={CDOT,0,0},            [':'-0x20]={CCOLON,COBVERSE,CADVERSE}, [','-0x20]={CCOMMA,CCOMDOT,CLAMIN}, [';'-0x20]={CSEMICO,CCUT,CWORDS},    ['#'-0x20]={CPOUND,CBASE,CABASE},     ['@'-0x20]={CAT,CATDOT,CATCO},
+['/'-0x20]={CSLASH,CSLDOT,CGRADE},['\\'-0x20]={CBSLASH,CBSDOT,CDGRADE},  ['['-0x20]={CLEFT,CLEV,CCAP},       [']'-0x20]={CRIGHT,CDEX,CIDENT},     ['{'-0x20]={CLBRACE,CTAKE,CTAIL},     ['}'-0x20]={CRBRACE,CDROP,CCTAIL},
+['`'-0x20]={CGRAVE,CGRDOT,CGRCO}, ['\"'-0x20]={CQQ,CEXEC,CTHORN},        ['&'-0x20]={CAMP,CUNDER,CAMPCO},    ['!'-0x20]={CBANG,CFIT,CIBEAM},      ['?'-0x20]={CQUERY,CQRYDOT,CQRYCO},
+['('-0x20]={CLPAR,0,0},           [')'-0x20]={CRPAR,0,0},
 
-['a'-0x20]={0,CALP,CACE},        ['A'-0x20]={0,CATOMIC,0},         ['b'-0x20]={0,CBDOT,0},           ['c'-0x20]={0,CCDOT,0},           ['C'-0x20]={0,CCYCLE,0},          
-['e'-0x20]={0,CEPS,0},            ['E'-0x20]={0,CEBAR,0},           ['f'-0x20]={0,CFIX,0},            ['H'-0x20]={0,CHGEOM,0},          ['i'-0x20]={0,CIOTA,CICO},        ['I'-0x20]={0,CICAP,0},           
-['j'-0x20]={0,CJDOT,0},           ['L'-0x20]={0,CLDOT,CLCAPCO},     ['m'-0x20]={0,CMDOT,0},           ['M'-0x20]={0,CMCAP,0},           ['n'-0x20]={0,CNDOT,0},           ['o'-0x20]={0,CCIRCLE,0},         
+['a'-0x20]={0,CALP,CACE},         ['A'-0x20]={0,CATOMIC,0},         ['b'-0x20]={0,CBDOT,0},           ['c'-0x20]={0,CCDOT,0},           ['C'-0x20]={0,CCYCLE,0},
+['e'-0x20]={0,CEPS,0},            ['E'-0x20]={0,CEBAR,0},           ['f'-0x20]={0,CFIX,0},            ['H'-0x20]={0,CHGEOM,0},          ['i'-0x20]={0,CIOTA,CICO},        ['I'-0x20]={0,CICAP,0},
+['j'-0x20]={0,CJDOT,0},           ['L'-0x20]={0,CLDOT,CLCAPCO},     ['m'-0x20]={0,CMDOT,0},           ['M'-0x20]={0,CMCAP,0},           ['n'-0x20]={0,CNDOT,0},           ['o'-0x20]={0,CCIRCLE,0},
 ['p'-0x20]={0,CPOLY,CPCO},        ['q'-0x20]={0,0,CQCO},            ['r'-0x20]={0,CRDOT,0},           ['s'-0x20]={0,0,CSCO},            ['S'-0x20]={0,0,CSCAPCO},
-['t'-0x20]={0,CTDOT,0},            ['T'-0x20]={0,CTCAPDOT,0},
-['u'-0x20]={0,CUDOT,CUCO},        ['v'-0x20]={0,CVDOT,0},           ['x'-0x20]={0,0,CXCO},           ['0'-0x20]={CNOUN,0,CFCONS},          
-['1'-0x20]={0,0,CFCONS},          ['2'-0x20]={CHOOK,0,CFCONS},      ['3'-0x20]={CFORK,0,CFCONS},      ['4'-0x20]={CADVF,0,CFCONS},      ['5'-0x20]={0,0,CFCONS},          ['6'-0x20]={0,0,CFCONS},          
+['t'-0x20]={0,CTDOT,0},           ['T'-0x20]={0,CTCAPDOT,0},
+['u'-0x20]={0,CUDOT,CUCO},        ['v'-0x20]={0,CVDOT,0},           ['x'-0x20]={0,0,CXCO},            ['0'-0x20]={CNOUN,0,CFCONS},
+['1'-0x20]={0,0,CFCONS},          ['2'-0x20]={CHOOK,0,CFCONS},      ['3'-0x20]={CFORK,0,CFCONS},      ['4'-0x20]={CADVF,0,CFCONS},      ['5'-0x20]={0,0,CFCONS},          ['6'-0x20]={0,0,CFCONS},
 ['7'-0x20]={0,0,CFCONS},          ['8'-0x20]={0,0,CFCONS},          ['9'-0x20]={0,0,CFCONS},          ['F'-0x20]={0,CFDOT,CFCO},        ['Z'-0x20]={0,0,CZCO},
 };
 // doubly-inflected forms, giving the char to use for .. .: :. ::  or 0 if error
@@ -83,7 +83,7 @@ static US spellouttab[256] = {
 [CMDOT   ]=(UC)'m'+DOT0,       [CMCAP   ]=(UC)'M'+DOT0,       [CNDOT   ]=(UC)'n'+DOT0,       [CCIRCLE ]=(UC)'o'+DOT0,       
 [CPOLY   ]=(UC)'p'+DOT0,       [CPCO    ]=(UC)'p'+CO0,       [CQCAPCO ]=(UC)'Q'+CO0,       [CQCO    ]=(UC)'q'+CO0,       
 [CRDOT   ]=(UC)'r'+DOT0,       [CSCO    ]=(UC)'s'+CO0,       [CSCAPCO ]=(UC)'S'+CO0,
- [CTDOT    ]=(UC)'t'+DOT0,       [CTCAPDOT ]=(UC)'T'+DOT0,
+[CTDOT   ]=(UC)'t'+DOT0,       [CTCAPDOT ]=(UC)'T'+DOT0,
 [CUDOT   ]=(UC)'u'+DOT0,       [CVDOT   ]=(UC)'v'+DOT0,       
 [CUCO    ]=(UC)'u'+CO0,       [CXCO    ]=(UC)'x'+CO0,
 [CFCONS  ]=(UC)'0'+CO0,       [CAMIP   ]=(UC)'}',             [CCASEV  ]=(UC)'}',             [CFETCH  ]=(UC)'{'+CO0+CO1,
@@ -111,8 +111,8 @@ C spellin(I n,C*s){
   C *bp=&spellintab3[ind][inf2]; bp=inf2<0?&spellintab3[0][0]:bp;   // point to the result; if erroneous inflection, point to error return
   R *bp;  // return the character
  }else{
-  // must be _n: for n a digit
-  R BETWEENC(s[1],'0','9')&&s[2]==CESC2?CFCONS:0;
+  // must be _n: for n a digit or _
+  R (s[1]=='_'||BETWEENC(s[1],'0','9'))&&s[2]==CESC2?CFCONS:0;
  }
 }
 // s is a buffer long enough to hold the longest spelling.  Fill it with the spelling of c

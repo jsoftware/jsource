@@ -3,13 +3,13 @@ NB.  x +//.@(*/) y special code -----------------------------------------
 
 NB. test failed on small ct
 ct   =: 9!:18''
-9!:19[2^_40
+9!:19[5e_11
 
 test=: 4 : 0
  xx=: x{~53 ?@$ #x
  yy=: y{~61 ?@$ #y
- assert. (xx +//.@(*/) yy) -: +//. xx */ yy
- assert. (yy +//.@(*/) xx) -: +//. yy */ xx
+ assert. (xx +//.@(*/) yy) Nearmt +//. xx */ yy
+ assert. (yy +//.@(*/) xx) Nearmt +//. yy */ xx
  1
 )
 

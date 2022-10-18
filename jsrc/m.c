@@ -108,7 +108,8 @@ void *jmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,0); }
 B jmcommit(void *p,I n){ R p==VirtualAlloc(p,n,MEM_COMMIT,PAGE_READWRITE); } //is this the right way to do error checking?
 void *jmalloc(I n){ R VirtualAlloc(0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE); }
 void jmdecommit(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }
-void jmrelease(void *p,I n){ VirtualFree(p,0,MEM_RELEASE); }
+void jmrelease(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }  //using MEM_DECOMMIT rather than MEM_RELEASE for now, so long as vmreservea/vmalloca return partial results
+#if 0 //can't use VirtualAlloc2--why?
 void *jmreservea(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
  MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
@@ -117,6 +118,19 @@ void *jmalloca(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
  MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
  R VirtualAlloc2(0,0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE,&opt,1);}
+#else
+void *jmreservea(I n,I a){
+ a=1<<a;
+ void *r=VirtualAlloc(0,n+a,MEM_RESERVE,0);
+ R (void*)((-a)&((I)r+a-1));} //no null-checking needed--this will be 0 if r is.  Assumes null is 0, which is only untrue in adversarial environments.
+void *jmalloca(I n,I a){
+ a=1<<a;
+ void *p=VirtualAlloc(0,n+a,MEM_RESERVE,0);
+ if(!p)R p;
+ void *r=VirtualAlloc((void*)((-a)&((I)p+a-1)),n,MEM_COMMIT,PAGE_READWRITE);
+ if(!r){VirtualFree(p,0,MEM_RELEASE);R 0;}
+ R r;}
+#endif
 #endif
 
 #if LEAKSNIFF

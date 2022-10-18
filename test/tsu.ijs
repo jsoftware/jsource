@@ -190,9 +190,9 @@ SystemFolders_j_=: tmp (<t,1)}SystemFolders_j_
 )
 
 NB. comparisons
-neareq =: = +. *.&(0 = *!.1e_12)  NB. tolerant comparison, even against 0
+neareq =: = +. *.&(0 = *!.5e_11)  NB. tolerant comparison, even against 0
 nearmt =: *./@,@:neareq
-Neareq =: (1e_10 >(|@- % ])) +. *.&(0 = *!.1e_12)  NB. big tolerant comparison, even against 0
+Neareq =: (1e_8 >(|@- % ])) +. *.&(0 = *!.5e_11)  NB. big tolerant comparison, even against 0
 Nearmt =: *./@,@:Neareq
 
 NB. ebi extensions

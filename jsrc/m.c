@@ -1130,7 +1130,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
        // never freed by fa() as a top-level block
        // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
        // we make sure no such block is created in sprz()
-     }else ACDECRNOPERM(np)
+     }else ACDECRNOPERM(np)  // scaf must test for going to 0 here
     }
    }
    np=np0;  // Advance to next block

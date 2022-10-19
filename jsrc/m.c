@@ -121,7 +121,7 @@ void *jmalloca(I n,I a){
 #else
 void *jmreservea(I n,I a){
  a=1<<a;
- void *r=VirtualAlloc(0,n+a,MEM_RESERVE,0);
+ void *r=VirtualAlloc(0,n+a,MEM_RESERVE,PAGE_READWRITE);  // 0 is an invalid paramter
  R (void*)((-a)&((I)r+a-1));} //no null-checking needed--this will be 0 if r is.  Assumes null is 0, which is only untrue in adversarial environments.
 void *jmalloca(I n,I a){
  a=1<<a;

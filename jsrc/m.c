@@ -502,18 +502,18 @@ void jtspendtracking(J jt){I i;
 // Make sure all deletecounts start at 0
 static void auditsimverify0(J jt,A w){
  if(!w)R;
- if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if(AFLAG(w)>>AFAUDITUCX)SEGFAULT;   // hang if nonzero count
+ if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2 && AC(w)!=ACINPLACE+3))SEGFAULT;   // could go higher but doesn't in our tests
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(jt,ABACK(w));  // check backer
- if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt,CNULLNOERR(*v)); ++v;)}
+ if(AT(w)&(RAT|XNUM|BOX)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt,CNULLNOERR(*v)); ++v;)}  // check descendants even if nonrecursive
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
   if((AT(w)&BOX+SPARSE)>0){
-   I n=AN(w); I af=AFLAG(w);
-   A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; otherwise wv[] is a direct pointer
-   if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimverify0(jt,(A)(intptr_t)((I)CNULLNOERR(QCWORD(wv[i]))+(I)wrel)););
+// obsolete    I n=AN(w); I af=AFLAG(w);
+// obsolete    A* RESTRICT wv=AAV(w);  // pointer to box pointers
+// obsolete    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; otherwise wv[] is a direct pointer
+// obsolete    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
+// obsolete    DO(n, auditsimverify0(jt,(A)(intptr_t)((I)CNULLNOERR(QCWORD(wv[i]))+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimverify0(jt,v->fgh[0]); auditsimverify0(jt,v->fgh[1]); auditsimverify0(jt,v->fgh[2]);
   }else if(AT(w)&(RAT|XNUM)) {

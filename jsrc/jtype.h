@@ -523,7 +523,7 @@ typedef I SI;
 #define ACIPNOABAND(a)  {AC(a)&=~ACINPLACE;}  // block is known to be inplace abandoned & thus not PERMANENT
 #define ACADD(a,n)      if(AC(a)<0)__atomic_store_n(&AC(a),(n)+1,__ATOMIC_RELEASE);else if(likely(!ACISPERM(AC(a))))__atomic_fetch_add(&AC(a),(n),__ATOMIC_ACQ_REL);
 #define ACINCR(a)       ACADD(a,1)
-#define ACDECRNOPERM(a)  __atomic_fetch_sub(&AC(a),1,__ATOMIC_ACQ_REL);  // must not be PERM
+#define ACDECRNOPERM(a)  __atomic_fetch_sub(&AC(a),1,__ATOMIC_ACQ_REL)  // must not be PERM
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define ACSETLOCAL(a,v) AC(a)=(v);  // used when a might be shared, but atomic not needed

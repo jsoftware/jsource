@@ -1135,7 +1135,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
 #endif
      // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
      // Otherwise just decrement the count
-     if(c<=1){
+     if(c<=1||ACDECRNOPERM(np)<=1){  // avoid RFO if count is 1
 // stats ++frees;
       // The block is going to be destroyed.  See if there are further ramifications
       if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
@@ -1144,7 +1144,8 @@ void jttpop(J jt,A *old){A *endingtpushp;
        // never freed by fa() as a top-level block
        // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
        // we make sure no such block is created in sprz()
-     }else ACDECRNOPERM(np)  // scaf must test for going to 0 here
+     }
+// obsolete else ACDECRNOPERM(np)  // scaf must test for going to 0 here
     }
    }
    np=np0;  // Advance to next block

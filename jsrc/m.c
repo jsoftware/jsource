@@ -104,7 +104,7 @@ void *jmalloca(I n,I a){ //jmalloc, but result is a multiple of 1<<a
  if(!jmcommit(r,n)){jmrelease(r,n);R 0;}
  R r;}
 #else //windows
-void *jmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,0); }
+void *jmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,PAGE_READWRITE); }
 B jmcommit(void *p,I n){ R p==VirtualAlloc(p,n,MEM_COMMIT,PAGE_READWRITE); } //is this the right way to do error checking?
 void *jmalloc(I n){ R VirtualAlloc(0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE); }
 void jmdecommit(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }
@@ -125,7 +125,7 @@ void *jmreservea(I n,I a){
  R (void*)((-a)&((I)r+a-1));} //no null-checking needed--this will be 0 if r is.  Assumes null is 0, which is only untrue in adversarial environments.
 void *jmalloca(I n,I a){
  a=1<<a;
- void *p=VirtualAlloc(0,n+a,MEM_RESERVE,0);
+ void *p=VirtualAlloc(0,n+a,MEM_RESERVE,PAGE_READWRITE);
  if(!p)R p;
  void *r=VirtualAlloc((void*)((-a)&((I)p+a-1)),n,MEM_COMMIT,PAGE_READWRITE);
  if(!r){VirtualFree(p,0,MEM_RELEASE);R 0;}

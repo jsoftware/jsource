@@ -153,14 +153,6 @@ test4=: 1 : 0
 I  test4 0
 I. test4 0
 
-test5=: 3 : 0
- xx=: 233 ?@$ 1500 
- yy=: 263 ?@$ 3000
- 'domain error' -: xx I. etx yy
-)
-
-test5"0 i.5 20
-
 ((i.0) I. 1 2 3) -: (0$a.) I. 1 2 3
 ((i.0) I. 1 2 3) -: (0$adot1) I. 1 2 3
 ((i.0) I. 1 2 3) -: (0$adot2) I. 1 2 3
@@ -174,7 +166,7 @@ test5"0 i.5 20
 
 
 4!:55 ;:'adot1 adot2 sdot0 bs ge gt I i j k le lt p q s t'
-4!:55 ;:'test1 test2 test3 test4 test5'
+4!:55 ;:'test1 test2 test3 test4'
 4!:55 ;:'x xx y yy'
 randfini''
 

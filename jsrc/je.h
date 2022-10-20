@@ -740,13 +740,13 @@ extern A        jtfrombu(J,A,A,I);
 extern A        jtpyxval(J,A);
 extern C        jtjobrun(J,unsigned char(*)(J,void*,UI4),void*,UI4,I);
 extern A        jtfxeachv(J,I,A);
-extern void*    jmreserve(I);
-extern B        jmcommit(void*,I);
-extern void*    jmalloc(I);
-extern void     jmdecommit(void*,I);
-extern void     jmrelease(void*,I);
-extern void*    jmreservea(I,I);
-extern void*    jmalloca(I,I);
+extern void*    jvmreserve(I);
+extern B        jvmcommit(void*,I);
+extern void*    jvmalloc(I);
+extern void     jvmdecommit(void*,I);
+extern void     jvmrelease(void*,I);
+extern void*    jvmreservea(I,I);
+extern void*    jvmalloca(I,I);
 #if SY_64
 extern RESTRICTF A jtga0(J,I,I);
 #else

@@ -796,7 +796,7 @@ ASSERT(0,EVNONCE)
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
    resthread=THREADIDFORWORKER(JT(jt,nwthreads));  // number of current worker threads.  Next worker is nwthreads; convert worker# to thread#
    ASSERTSUFF(resthread<MAXTHREADS,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if new 0-origin thread# exceeds limit
-   if(!jmcommit(JTFORTHREAD(jt,resthread),sizeof(JTT))){ // attempt to commit thread data (in case it's not already committed); if failed, then bail
+   if(!jvmcommit(JTFORTHREAD(jt,resthread),sizeof(JTT))){ // attempt to commit thread data (in case it's not already committed); if failed, then bail
     WRITEUNLOCK(JT(jt,flock));
     ASSERT(0,EVWSFULL);}
    if(unlikely(!jtjinitt(JTFORTHREAD(jt,resthread)))){WRITEUNLOCK(JT(jt,flock)); R 0;} // initialise thread-local state

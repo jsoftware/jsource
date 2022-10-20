@@ -718,25 +718,25 @@ __attribute__((constructor)) static void Initializer(){
  // by the compiler; some must be initialized a run-time in static memory; some must be allocated into A blocks
  // pointed to by static names.  Because of the A blocks, we have to perform a skeletal initialization of jt,
  // just enough to do ga().  The rest of jt is never used
- JS jt=jmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+ JS jt=jvmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
  if(!jt)R;
  I sz=offsetof(JST,threaddata[1]); // #relevant bytes: just JS and the first JT
- if(!jmcommit(jt,sz)){jmrelease(jt,sizeof(JST));R;}
- if(!jtglobinit(jt)){jmrelease(jt,sizeof(JST)); R;}
+ if(!jvmcommit(jt,sz)){jvmrelease(jt,sizeof(JST));R;}
+ if(!jtglobinit(jt)){jvmrelease(jt,sizeof(JST)); R;}
  dll_initialized=1;
- jmrelease(jt,sizeof(JST)); //the jt block itself can be released; we effectively orphan any blocks pointed to there by, because they are used by the globals we've just initialised
+ jvmrelease(jt,sizeof(JST)); //the jt block itself can be released; we effectively orphan any blocks pointed to there by, because they are used by the globals we've just initialised
 }
 
  // Init for a new J instance.  Globals have already been initialized.
  // Create a new jt, which will be the one we use for the entirety of the instance.
 JS _stdcall JInit(void){
  if(!dll_initialized)R 0; // constructor failed
- JS jt=jmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+ JS jt=jvmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
  if(!jt)R 0;
- if(!jmcommit(jt,offsetof(JST,threaddata[1]))){jmrelease(jt,sizeof(JST));R 0;}
+ if(!jvmcommit(jt,offsetof(JST,threaddata[1]))){jvmrelease(jt,sizeof(JST));R 0;}
  mvc(offsetof(JST,threaddata[1]),jt,1,MEMSET00);
  // Initialize all the info for the shared region and the master thread
- if(!jtjinit2(jt,0,0)){jmrelease(jt,sizeof(JST)); R 0;}
+ if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
  R jt;  // R (JS)MTHREAD(jt);
 }
 
@@ -750,7 +750,7 @@ int _stdcall JFree(JS jt){
 #if PYXES
   aligned_free(JT(jt,jobqueue));
 #endif
-  jmrelease(jt,sizeof(JST)); // free the initial allocation
+  jvmrelease(jt,sizeof(JST)); // free the initial allocation
   R 0;
 }
 #endif

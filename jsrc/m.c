@@ -73,57 +73,57 @@
 // memory reservation routines
 #if !SY_WIN32
 static I pagesz=0,pagemask=0,pagermask=0;
-void *jmreserve(I n){ // returns a pointer to a reservation of n bytes.  Must be committed before use.  Always at least 4k aligned
+void *jvmreserve(I n){ // returns a pointer to a reservation of n bytes.  Must be committed before use.  Always at least 4k aligned
  void *r=mmap(0, n, PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0);
  R r==MAP_FAILED?0:r;}
-B jmcommit(void *p,I n){ // commits n bytes starting at p, a pointer within a previous reservation.  Returns 1=success
+B jvmcommit(void *p,I n){ // commits n bytes starting at p, a pointer within a previous reservation.  Returns 1=success
  if(!pagesz)pagesz=sysconf(_SC_PAGESIZE),pagemask=pagesz-1,pagermask=~pagemask;
  I pi=(I)p;
  n+=pi-(pagermask&pi);
  p=(void*)(pagermask&pi);
  R !mprotect(p,n,PROT_READ|PROT_WRITE);}
-void *jmalloc(I n){ //reserve+commit in one step
+void *jvmalloc(I n){ //reserve+commit in one step
  void *r=mmap(0, n, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
  R r==MAP_FAILED?0:r;}
-void jmdecommit(void *p,I n){ // decommits n bytes starting at p (while keeping the address space reserved).  Beware of page boundaries!
+void jvmdecommit(void *p,I n){ // decommits n bytes starting at p (while keeping the address space reserved).  Beware of page boundaries!
  mprotect(p,n,PROT_NONE);}
-void jmrelease(void *p,I n){ // unreserves (and decommits) n bytes starting at p.  Note: must apply to the entirety of the original reservation at once for compat with windows
+void jvmrelease(void *p,I n){ // unreserves (and decommits) n bytes starting at p.  Note: must apply to the entirety of the original reservation at once for compat with windows
  munmap(p,n);}
-void *jmreservea(I n,I a){ //jmreserve, but result is a multiple of 1<<a
+void *jvmreservea(I n,I a){ //jvmreserve, but result is a multiple of 1<<a
  // todo: freebsd has MAP_ALIGNED
  a=1<<a;I m=a-1;
- C *r=jmreserve(n+a);I ri=(I)r;
+ C *r=jvmreserve(n+a);I ri=(I)r;
  if(!(ri&m)){ //result already aligned; skip a syscall and just release the tail
-  jmrelease(r+n,a);
+  jvmrelease(r+n,a);
   R r;}
- jmrelease(r,a-(ri&m));
- jmrelease(r+n+a-(ri&m),ri&m);
+ jvmrelease(r,a-(ri&m));
+ jvmrelease(r+n+a-(ri&m),ri&m);
  R r+a-(ri&m);}
-void *jmalloca(I n,I a){ //jmalloc, but result is a multiple of 1<<a
- void *r=jmreservea(n,a);
- if(!jmcommit(r,n)){jmrelease(r,n);R 0;}
+void *jvmalloca(I n,I a){ //jvmalloc, but result is a multiple of 1<<a
+ void *r=jvmreservea(n,a);
+ if(!jvmcommit(r,n)){jvmrelease(r,n);R 0;}
  R r;}
 #else //windows
-void *jmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,PAGE_NOACCESS); }
-B jmcommit(void *p,I n){ R !!VirtualAlloc(p,n,MEM_COMMIT,PAGE_READWRITE); }
-void *jmalloc(I n){ R VirtualAlloc(0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE); }
-void jmdecommit(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }
-void jmrelease(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }  //using MEM_DECOMMIT rather than MEM_RELEASE for now, so long as vmreservea/vmalloca return partial results
+void *jvmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,PAGE_NOACCESS); }
+B jvmcommit(void *p,I n){ R !!VirtualAlloc(p,n,MEM_COMMIT,PAGE_READWRITE); }
+void *jvmalloc(I n){ R VirtualAlloc(0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE); }
+void jvmdecommit(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }
+void jvmrelease(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }  //using MEM_DECOMMIT rather than MEM_RELEASE for now, so long as vmreservea/vmalloca return partial results
 #if 0 //can't use VirtualAlloc2--why?
-void *jmreservea(I n,I a){
+void *jvmreservea(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
  MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
  R VirtualAlloc2(0,0,n,MEM_RESERVE,0,&opt,1);}
-void *jmalloca(I n,I a){
+void *jvmalloca(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
  MEM_EXTENDED_PARAMETER opt = {.Type=MemExtendedParameterAddressRequirements, .Pointer=&req};
  R VirtualAlloc2(0,0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE,&opt,1);}
 #else
-void *jmreservea(I n,I a){
+void *jvmreservea(I n,I a){
  a=1<<a;
  void *r=VirtualAlloc(0,n+a,MEM_RESERVE,PAGE_NOACCESS);
  R (void*)((-a)&((I)r+a-1));} //no null-checking needed--this will be 0 if r is.  Assumes null is 0, which is only untrue in adversarial environments.
-void *jmalloca(I n,I a){
+void *jvmalloca(I n,I a){
  a=1<<a;
  void *p=VirtualAlloc(0,n+a,MEM_RESERVE,PAGE_NOACCESS);
  if(!p)R p;

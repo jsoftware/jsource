@@ -736,10 +736,11 @@ void getpath(HINSTANCE hi, C* path)
 // create a skeletal JS--just good enough to do basic initialisation
 JS heapinit()
 {
-	JS jt=jmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+	JS jt=jvmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
 	if(!jt)R 0; //no address space
 	I sz=(I)&jt->threaddata[1]-(I)jt; // #relevant bytes: just JS and the first JT
-	if(!jmcommit(jt,sz)){jmrelease(jt,sizeof(JST));R 0;} //no memory
+	if(!jvmcommit(jt,sz)){jvmrelease(jt,sizeof(JST));R 0;} //no memory
+ jvmwire(jt,sz); //try to wire JS.  Don't bother with error checking; failure is non-catastrophic
 	R jt;
 }
 
@@ -769,7 +770,7 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 		getpath(hDLL, dllpath);
 		g_jt=heapinit();
 		if(!g_jt) R 0;   // abort if no memory
-		if(!jtglobinit(g_jt)) {jmrelease(g_jt,sizeof(JST)); g_jt=0; R 0;};  // free & abort if initialization error
+		if(!jtglobinit(g_jt)) {jvmrelease(g_jt,sizeof(JST)); g_jt=0; R 0;};  // free & abort if initialization error
 		break;
 
     case DLL_THREAD_ATTACH:
@@ -779,7 +780,7 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
       break;
 
     case DLL_PROCESS_DETACH:
-		if(g_jt){jmrelease(g_jt,sizeof(JST));g_jt=0;}
+		if(g_jt){jvmrelease(g_jt,sizeof(JST));g_jt=0;}
 		break;
   }
 return TRUE;
@@ -796,7 +797,7 @@ CDPROC JS _stdcall JInit()
 	// Initialize all the info for the shared region and the master thread
 	if(!jtjinit2(jt,0,0))
 	{
-		jmrelease(jt,sizeof(JST));  // if error during init, fail
+		jvmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
 	return jt;  // return (JS)MTHREAD(jt);
@@ -810,7 +811,7 @@ CDPROC int _stdcall JFree(JS jt)
 #if !SY_WINCE
 	dllquit(jm);  // clean up call dll
 #endif
-	jmrelease(jt,sizeof(JST));
+	jvmrelease(jt,sizeof(JST));
 	return 0;
 }
 

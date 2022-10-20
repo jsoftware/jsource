@@ -747,6 +747,8 @@ extern void     jvmdecommit(void*,I);
 extern void     jvmrelease(void*,I);
 extern void*    jvmreservea(I,I);
 extern void*    jvmalloca(I,I);
+extern B        jvmwire(void*,I);
+extern void     jvmunwire(void*,I);
 #if SY_64
 extern RESTRICTF A jtga0(J,I,I);
 #else

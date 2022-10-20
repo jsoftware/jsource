@@ -103,12 +103,23 @@ void *jvmalloca(I n,I a){ //jvmalloc, but result is a multiple of 1<<a
  void *r=jvmreservea(n,a);
  if(!jvmcommit(r,n)){jvmrelease(r,n);R 0;}
  R r;}
-#else //windows
+B jvmwire(void *p,I n){ // wires n bytes starting at p, ensuring they will not be paged out.  Must have been previously committed.  Returns 1=success
+ I pi=(I)p;
+ n+=pi-(pagermask&pi);
+ p=(void*)(pagermask&pi);
+ R !mlock(p,n);}
+void jvmunwire(void *p,I n){ // unwires n bytes starting at p (while keeping them committed).  Beware of page boundaries!
+ I pi=(I)p;
+ n+=pi-(pagermask&pi);
+ p=(void*)(pagermask&pi);
+ munlock(p,n);}
+#else //windows.  Interface is the same
 void *jvmreserve(I n){ R VirtualAlloc(0,n,MEM_RESERVE,PAGE_NOACCESS); }
 B jvmcommit(void *p,I n){ R !!VirtualAlloc(p,n,MEM_COMMIT,PAGE_READWRITE); }
 void *jvmalloc(I n){ R VirtualAlloc(0,n,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE); }
 void jvmdecommit(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }
 void jvmrelease(void *p,I n){ VirtualFree(p,n,MEM_DECOMMIT); }  //using MEM_DECOMMIT rather than MEM_RELEASE for now, so long as vmreservea/vmalloca return partial results
+//Actually, it should be possible to use VirtualAlloc to query the base ptr, and then MEM_RELEASE that 
 #if 0 //can't use VirtualAlloc2--why?
 void *jvmreservea(I n,I a){
  MEM_ADDRESS_REQUIREMENTS req = {.Alignment=1<<a};
@@ -130,6 +141,10 @@ void *jvmalloca(I n,I a){
  void *r=VirtualAlloc((void*)((-a)&((I)p+a-1)),n,MEM_COMMIT,PAGE_READWRITE);
  if(!r){VirtualFree(p,0,MEM_RELEASE);R 0;}
  R r;}
+B jvmwire(void *p,I n){
+ R !!VirtualLock(p,n);}
+void jvmunwire(void *p,I n){
+ VirtualUnlock(p,n);}
 #endif
 #endif
 

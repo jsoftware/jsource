@@ -819,6 +819,7 @@ ASSERT(0,EVNONCE)
   }else resthread=0;  // if error, mark invalid thread#; error signaled earlier
   JOBUNLOCK(jobq,job);  // We don't add a job - just unlock
   WRITEUNLOCK(JT(jt,flock))  // release lock on global thread data
+  jvmwire(JTFORTHREAD(jt,resthread),sizeof(JTT)); // try to wire thread data.  Do this outside of the lock, since failure is not catastrophic.  Also don't check for error before doing the wiring; if there was an error, resthread=0, so we just harmlessly wire thread 0's data again.
   z=resthread?sc(resthread):0;  // if no error, return thread# started
 #else
   ASSERT(0,EVLIMIT)

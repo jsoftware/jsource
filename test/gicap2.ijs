@@ -142,7 +142,7 @@ test4=: 1 : 0
  assert. (i.~ -: u~) x
  assert. (i.~ -: u~) x=. /:~ ~. 100   ?@$ 1e6
  assert. (i.~ -: u~) x=. /:~ ~. 100 2 ?@$ 0
- assert. 0 0 0 -: '' I 'abc'
+ assert. 0 0 0 -: '' u 'abc'
  assert. (i.~ -: u~) i.  6 3
  assert. (i.~ -: u~) i. _6 3
  1

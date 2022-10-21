@@ -112,7 +112,7 @@ __attribute__((sysv_abi)) void jtiixf_1a (I*,D*,D*,I,I,I),jtiixf_1d (I*,D*,D*,I,
 __attribute__((sysv_abi)) void jtiixif_1a(I*,I*,D*,I,I,I),jtiixif_1d(I*,I*,D*,I,I,I);
 __attribute__((sysv_abi)) void jtiixfi_1a(I*,D*,I*,I,I,I),jtiixfi_1d(I*,D*,I*,I,I,I);
 #define RNDDN(x,y) ((-1)+x-(x-1)%y) //x-x%y, unless x is a multiple of y, in which case it's x-y
-#define ITERCT(x) (64-__builtin_ia32_lzcnt_u64(x-1)) // 2 >.@^. x.  In other words: the #bisections we will need for an array of length x
+#define ITERCT(x) (64-__builtin_ia32_lzcnt_u64(x)) // 2 >.@^. 1+x.  In other words: the #bisections we will need for an array of length x (which has 1+x potential insertion points)
 // assumes c==1 for now
 // todo less copy-paste below
 static void jtiixi(I*z,I*a,I*w,I n,I m,I c,B ge){I k,p,q;C x,y;

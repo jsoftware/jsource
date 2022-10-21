@@ -83,22 +83,22 @@ MOVQ	xmm13,r9	; set constant 1
 ; note: use of sar (rather than shr) in inner loop is crucial (see note about idempotence), as we need _1=(_1+_1)>>1.  IMAX/2-sized arrays seem a lot less tenable on 64-bit, and are only possible anyway for 1-byte data 
 
 .oloop:                          ;outer loop: iterate over w
-%4	xmm11,qword gs:[rax*8-8] ;load y5
+%4	xmm11,qword [gs:rax*8-8] ;load y5
 mov	rbp,rcx                  ;q5 (upper)
 mov	rsp,-1                   ;p5 (lower)
-%4	xmm9,qword gs:[rax*8-16] ;load y4
+%4	xmm9,qword [gs:rax*8-16] ;load y4
 mov	rsi,rcx                  ;q4 (upper)
 mov	rdi,rsp                  ;p4 (lower)
-%4	xmm7,qword gs:[rax*8-24] ;load y3
+%4	xmm7,qword [gs:rax*8-24] ;load y3
 mov	r15,rcx                  ;q3 (upper)
 mov	r14,rsp                  ;p3 (lower)
-%4	xmm5,qword gs:[rax*8-32] ;load y2
+%4	xmm5,qword [gs:rax*8-32] ;load y2
 mov	r13,rcx                  ;q2 (upper)
 mov	r12,rsp                  ;p2 (lower)
-%4	xmm3,qword gs:[rax*8-40] ;load y1
+%4	xmm3,qword [gs:rax*8-40] ;load y1
 mov     r11,rcx                  ;q1 (upper)
 mov	r10,rsp                  ;p1 (lower)
-%4	xmm1,qword gs:[rax*8-48] ;load y0
+%4	xmm1,qword [gs:rax*8-48] ;load y0
 mov     r9,rcx                   ;q1 (upper)
 mov	r8,rsp                   ;p1 (lower)
 MOVQ	xmm12,xmm14              ;set inner loop count
@@ -151,18 +151,18 @@ jnz	.iloop
 
 ; todo consider not doing redundant work, but instead reloading each parameter once it finishes?  I think this requires index registers, and I'm using all the registers already
 
-mov	fs:[rax*8-8],rbp  ;store result for y5
-mov	fs:[rax*8-16],rsi ;store result for y4
-mov	fs:[rax*8-24],r15 ;store result for y3
-mov	fs:[rax*8-32],r13 ;store result for y2
-mov	fs:[rax*8-40],r11 ;store result for y1
-mov	fs:[rax*8-48],r9  ;store result for y0
+mov	[fs:rax*8-8],rbp  ;store result for y5
+mov	[fs:rax*8-16],rsi ;store result for y4
+mov	[fs:rax*8-24],r15 ;store result for y3
+mov	[fs:rax*8-32],r13 ;store result for y2
+mov	[fs:rax*8-40],r11 ;store result for y1
+mov	[fs:rax*8-48],r9  ;store result for y0
 
 sub	rax,6
 jnz	.oloop       ;continue if more items of w to process
 
 MOVQ	rsp,xmm15
-;mov	rsp,fs:[-8]
+;mov	rsp,[fs:-8]
 pop	rax
 wrgsbase rax
 pop	rax
@@ -237,10 +237,10 @@ MOVQ	xmm13,r9
 ; note: use of sar (rather than shr) in inner loop is crucial (see note about idempotence), as we need _1=(_1+_1)>>1.  IMAX/2-sized arrays seem a lot less tenable on 64-bit, and are only possible anyway for 1-byte data 
 
 .oloop:               ;outer loop: iterate over w
-mov	rbp,gs:[rax*8-8]  ;load y3
-mov	rsp,gs:[rax*8-16] ;load y3
-mov	rsi,gs:[rax*8-24] ;load y1
-mov	rdi,gs:[rax*8-32] ;load y0
+mov	rbp,[gs:rax*8-8]  ;load y3
+mov	rsp,[gs:rax*8-16] ;load y3
+mov	rsi,[gs:rax*8-24] ;load y1
+mov	rdi,[gs:rax*8-32] ;load y0
 mov     r15,rcx      ;q3 (upper)
 mov	r14,-1       ;p3 (lower)
 mov	r13,rcx      ;q2 (upper)
@@ -280,16 +280,16 @@ PSUBQ	xmm12,xmm13
 PTEST	xmm12,xmm12
 jnz	.iloop
 
-mov	fs:[rax*8-8],r15  ;store result for y3
-mov	fs:[rax*8-16],r13 ;store result for y2
-mov	fs:[rax*8-24],r11 ;store result for y1
-mov	fs:[rax*8-32],r9  ;store result for y0
+mov	[fs:rax*8-8],r15  ;store result for y3
+mov	[fs:rax*8-16],r13 ;store result for y2
+mov	[fs:rax*8-24],r11 ;store result for y1
+mov	[fs:rax*8-32],r9  ;store result for y0
 
 sub	rax,4
 jnz	.oloop       ;continue if more items of w to process
 
 MOVQ	rsp,xmm0
-;mov	rsp,fs:[-8]
+;mov	rsp,[fs:-8]
 pop	rax
 wrgsbase rax
 pop	rax

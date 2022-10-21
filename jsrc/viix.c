@@ -101,6 +101,73 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
 #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
 #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
 
+// parallel implementations of I. in assembly
+// Mac doesn't support fsgsbase (but x86 mac is a dead-end, so w/e).  According to hearsay, support is spotty on windows (todo investigate).  Also, the windows abi doc says you have to always have a valid stack pointer and we clobber it; probably SEH related stuff or something?  Do we have to actually do that?
+#if C_AVX2 && SY_LINUX
+#define FAST_IIX
+#define IIXIA 4 //iix on ints alignemnt.  Update below code if this exceeds 8
+__attribute__((sysv_abi)) void jtiixi_1a(I*z,I*a,I*w,I n,I m,I nct),jtiixi_1d(I*,I*,I*,I,I,I);
+#define IIXFA 6 //iix on floats alignment
+__attribute__((sysv_abi)) void jtiixf_1a (I*,D*,D*,I,I,I),jtiixf_1d (I*,D*,D*,I,I,I);
+__attribute__((sysv_abi)) void jtiixif_1a(I*,I*,D*,I,I,I),jtiixif_1d(I*,I*,D*,I,I,I);
+__attribute__((sysv_abi)) void jtiixfi_1a(I*,D*,I*,I,I,I),jtiixfi_1d(I*,D*,I*,I,I,I);
+#define RNDDN(x,y) ((-1)+x-(x-1)%y) //x-x%y, unless x is a multiple of y, in which case it's x-y
+#define ITERCT(x) (64-__builtin_ia32_lzcnt_u64(x-1)) // 2 >.@^. x.  In other words: the #bisections we will need for an array of length x
+// assumes c==1 for now
+// todo less copy-paste below
+static void jtiixi(I*z,I*a,I*w,I n,I m,I c,B ge){I k,p,q;C x,y;
+ if(m<=IIXIA){ // if w/z is too small, copy out the elements into a separate buffer.  We then _underread_ from w (doing redundant work--ok), which should always be ok so long as IIXIA is <8
+               // we also take this path for m=IIXIA, to save a branch below
+  I tz[IIXIA]; // the previous version of this code saved the data before z, underwrote, and then restored it, but I decided that was too ugly
+  if(ge!=1)jtiixi_1a(tz,a,w+m-IIXIA,n,IIXIA,ITERCT(n));else jtiixi_1d(tz,a,w+m-IIXIA,n,IIXIA,ITERCT(n));
+  MCIS(z,tz+IIXIA-m,m);
+  R;}
+ if(ge!=1){
+  jtiixi_1a(z+m-IIXIA,a,w+m-IIXIA,n,IIXIA,ITERCT(n)); // process last batch
+  jtiixi_1a(z,a,w,n,RNDDN(m,IIXIA),ITERCT(n));}       // process first ~m batches
+ else{
+  jtiixi_1d(z+m-IIXIA,a,w+m-IIXIA,n,IIXIA,ITERCT(n)); // (we process the last batch first for better locality in w, because these routines go back-to-front)
+  jtiixi_1d(z,a,w,n,RNDDN(m,IIXIA),ITERCT(n));}}
+static void jtiixf(I*z,D*a,D*w,I n,I m,I c,B ge){I k,p,q;C x,y;
+ if(m<=IIXFA){
+  I tz[IIXFA];D tw[IIXFA]={0}; // unlike iixi, we have to copy out the elements of w, because underreading might yield nan, which would be a problem
+  MCIS((I*)tw,(I*)w,m);
+  if(ge!=1)jtiixf_1a(tz,a,tw,n,IIXFA,ITERCT(n));else jtiixf_1d(tz,a,tw,n,IIXFA,ITERCT(n));
+  MCIS(z,tz,m);
+  R;}
+ if(ge!=1){
+  jtiixf_1a(z+m-IIXFA,a,w+m-IIXFA,n,IIXFA,ITERCT(n)); // process last batch
+  jtiixf_1a(z,a,w,n,RNDDN(m,IIXFA),ITERCT(n));}            // process first ~m batches
+ else{
+  jtiixf_1d(z+m-IIXFA,a,w+m-IIXFA,n,IIXFA,ITERCT(n)); // we process the last batch first because these routines go back-to-front
+  jtiixf_1d(z,a,w,n,RNDDN(m,IIXFA),ITERCT(n));}}
+static void jtiixif(I*z,I*a,D*w,I n,I m,I c,B ge){I k,p,q;C x,y;
+ if(m<=IIXFA){
+  I tz[IIXFA];D tw[IIXFA]={0};
+  MCIS((I*)tw,(I*)w,m);
+  if(ge!=1)jtiixif_1a(tz,a,tw,n,IIXFA,ITERCT(n));else jtiixif_1d(tz,a,tw,n,IIXFA,ITERCT(n));
+  MCIS(z,tz,m);
+  R;}
+ if(ge!=1){
+  jtiixif_1a(z+m-IIXFA,a,w+m-IIXFA,n,IIXFA,ITERCT(n));
+  jtiixif_1a(z,a,w,n,RNDDN(m,IIXFA),ITERCT(n));}
+ else{
+  jtiixif_1d(z+m-IIXFA,a,w+m-IIXFA,n,IIXFA,ITERCT(n));
+  jtiixif_1d(z,a,w,n,RNDDN(m,IIXFA),ITERCT(n));}}
+static void jtiixfi(I*z,D*a,I*w,I n,I m,I c,B ge){I k,p,q;C x,y;
+ if(m<=IIXFA){
+  I tz[IIXFA];
+  if(ge!=1)jtiixfi_1a(tz,a,w+m-IIXFA,n,IIXFA,ITERCT(n));else jtiixfi_1d(tz,a,w+m-IIXFA,n,IIXFA,ITERCT(n));
+  MCIS(z,tz+IIXFA-m,m);
+  R;}
+ if(ge!=1){
+  jtiixfi_1a(z+m-IIXFA,a,w+m-IIXFA,n,IIXFA,ITERCT(n));
+  jtiixfi_1a(z,a,w,n,RNDDN(m,IIXFA),ITERCT(n));}
+ else{
+  jtiixfi_1d(z+m-IIXFA,a,w+m-IIXFA,n,IIXFA,ITERCT(n));
+  jtiixfi_1d(z,a,w,n,RNDDN(m,IIXFA),ITERCT(n));}}
+#endif //C_AVX2 && SY_LINUX
+
 // x I. y
 F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  ARGCHK2(a,w);
@@ -115,8 +182,12 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
  t=maxtyped(at,wt);
  if(1==c){  // the search is for atoms
   if(at&B01&&wt&B01+INT+FL){RZ(iixBX(n,m,a,w,zv)); R z;}
-  if(at&wt&INT){
+  if(at&wt&INT&0){
    // Integer search.  check for small-range
+   // TUNE: given b=: 1e6?@$1e9, check tm=. {{ 1e9*1e6%~timex'a I.b' [ a=: /:~y?@$1e9 }}"0] 2^i.30  ns per lookup
+   // and eg (i.#tm),.tm  and  2%~/\tm etc.  Use cmptm in place of timex for more reliable results
+   // I haven't actually tuned this; new I. invalidated the previous tuning, but partitioning w will invalidate it again.  Hence the &0 above disabling this path.  Current code is damn fast when a is small enough for this to matter, so minimal loss
+   // (above is also a good way of benchmarking the routine in general at various points at the cache hierarchy; check also float char matrix ...)
    UI r=IAV(a)[n-1]-IAV(a)[0]; r=IAV(a)[n-1]<IAV(a)[0]?0-r:r;  // get range, which may overflow I but will stay within UI
    UI4 nlg; CTLZI(n,nlg); nlg=(nlg<<1)+(SGNTO0(SGNIF((n<<1),nlg)));   // approx lg with 1 bit frac precision.  Can't shift 64 bits in case r=1
    if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores
@@ -143,20 +214,16 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
  ge=cc; gt=-ge;
  if(unlikely(t&JCHAR+SBT)){
   switch(CVCASECHAR(CTTZ(at),CTTZ(wt))){
-  case CVCASECHAR(LITX, C2TX ): BSLOOP(UC,US); break;
-  case CVCASECHAR(LITX, C4TX ): BSLOOP(UC,C4); break;
-#if C_LE
-  case CVCASECHAR(LITX, LITX ): BSLOOP(UC,UC); break;
-#else
-  case CVCASECHAR(LITX, LITX ): if(1&c){BSLOOP(UC,UC); break;}else c>>=1; /* fall thru */
-#endif
-  case CVCASECHAR(C2TX, C2TX ): BSLOOP(US,US); break;
-  case CVCASECHAR(C2TX, C4TX ): BSLOOP(US,C4); break;
-  case CVCASECHAR(C2TX, LITX ): BSLOOP(US,UC); break;
-  case CVCASECHAR(C4TX, C2TX ): BSLOOP(C4,US); break;
-  case CVCASECHAR(C4TX, C4TX ): BSLOOP(C4,C4); break;
-  case CVCASECHAR(C4TX, LITX ): BSLOOP(C4,UC); break;
-  case CVCASECHAR(SBTX, SBTX ): BSLOOF(SB,SB, SBCOMP  ); break;
+  case CVCASECHAR(LITX, C2TX): BSLOOP(UC,US); break;
+  case CVCASECHAR(LITX, C4TX): BSLOOP(UC,C4); break;
+  case CVCASECHAR(LITX, LITX): BSLOOP(UC,UC); break;
+  case CVCASECHAR(C2TX, C2TX): BSLOOP(US,US); break;
+  case CVCASECHAR(C2TX, C4TX): BSLOOP(US,C4); break;
+  case CVCASECHAR(C2TX, LITX): BSLOOP(US,UC); break;
+  case CVCASECHAR(C4TX, C2TX): BSLOOP(C4,US); break;
+  case CVCASECHAR(C4TX, C4TX): BSLOOP(C4,C4); break;
+  case CVCASECHAR(C4TX, LITX): BSLOOP(C4,UC); break;
+  case CVCASECHAR(SBTX, SBTX): BSLOOF(SB,SB, SBCOMP); break;
   default:   ASSERT(0,EVNONCE);
   }
  }else if(unlikely(t&BOX)){
@@ -171,16 +238,28 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
    }
  }else{
   switch(CVCASE(CTTZ(at),CTTZ(wt))){
-  case CVCASE(B01X, B01X ): BSLOOP(C, C ); break;
-  case CVCASE(B01X, INTX ): BSLOOP(C, I ); break;
-  case CVCASE(B01X, FLX  ): BSLOOP(C, D ); break;
-  case CVCASE(INTX, B01X ): BSLOOP(I, C ); break;
-  case CVCASE(INTX, INTX ): BSLOOP(I, I ); break;
-  case CVCASE(INTX, FLX  ): BSLOOP(I, D ); break;
-  case CVCASE(FLX,  B01X ): BSLOOP(D, C ); break;
-  case CVCASE(FLX,  INTX ): BSLOOP(D, I ); break;
+  case CVCASE(B01X, B01X ): BSLOOP(C, C); break;
+  case CVCASE(B01X, INTX ): BSLOOP(C, I); break;
+  case CVCASE(B01X, FLX  ): BSLOOP(C, D); break;
+  case CVCASE(INTX, B01X ): BSLOOP(I, C); break;
+#ifndef FAST_IIX
+  case CVCASE(INTX, INTX ): BSLOOP(I, I); break;
+  case CVCASE(INTX, FLX  ): BSLOOP(I, D); break;
+  case CVCASE(FLX,  INTX ): BSLOOP(D, I); break;
   case CVCASE(CMPXX,CMPXX): c+=c;  /* fall thru */
-  case CVCASE(FLX,  FLX  ): BSLOOP(D, D ); break;
+  case CVCASE(FLX,  FLX  ): BSLOOP(D, D); break;
+#else
+  case CVCASE(INTX, INTX ): if(c==1){jtiixi (zv, AV(a), AV(w),n,m,c,ge);}else{BSLOOP(I, I);} break;
+  case CVCASE(INTX, FLX  ): if(c==1){jtiixif(zv, AV(a),DAV(w),n,m,c,ge);}else{BSLOOP(I, D);} break;
+  case CVCASE(FLX,  INTX ): if(c==1){jtiixfi(zv,DAV(a), AV(w),n,m,c,ge);}else{BSLOOP(D, I);} break;
+  case CVCASE(FLX,  FLX  ):
+  if(c==1){jtiixf(zv,DAV(a),DAV(w),n,m,c,ge);}
+  else{
+   if(0)case CVCASE(CMPXX,CMPXX):c+=c;  // fallthru.  Lovely spaghetti
+   BSLOOP(D, D);}
+  break;
+#endif
+  case CVCASE(FLX,  B01X ): BSLOOP(D, C ); break;
   case CVCASE(XNUMX,XNUMX): BSLOOF(X, X, xcompare); break;
   case CVCASE(RATX, RATX ): BSLOOF(Q, Q, qcompare); break;
   default:

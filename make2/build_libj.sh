@@ -207,14 +207,16 @@ SRC_ASM_LINUXAVX512=" \
  keccak1600-avx512-elf.o \
  sha1-x86_64-elf.o \
  sha256-x86_64-elf.o \
- sha512-x86_64-elf.o "
+ sha512-x86_64-elf.o \
+ viixamd64.o "
 
 SRC_ASM_LINUXAVX2=" \
  md5-x86_64-elf.o \
  keccak1600-avx2-elf.o \
  sha1-x86_64-elf.o \
  sha256-x86_64-elf.o \
- sha512-x86_64-elf.o "
+ sha512-x86_64-elf.o \
+ viixamd64.o "
 
 SRC_ASM_LINUX=" \
  md5-x86_64-elf.o \

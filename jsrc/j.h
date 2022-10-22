@@ -813,8 +813,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 
 #define ASSERTFHOMO(c,t0,t1)        ASSERTF(c,EVDOMAIN,"%t incompatible with %t",t0,t1)
-#define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i are not conformable",xl,xs,yl,ys)
-#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l)
+#define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i do not conform",xl,xs,yl,ys)
+#define ASSERTFINDEX(c,i,l)         ASSERT(c,EVINDEX)
+//#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l) //scaf restore
 #define ASSERTINDEX(io,ir,l)        ASSERTFINDEX((UI)(ir)<(UI)(l),io,l)
 
 #define ASSERTHOMO(t) {\

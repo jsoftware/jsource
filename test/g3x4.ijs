@@ -47,7 +47,7 @@ g3 imin,0,imax
  '01&(3!:4)' -: _1&(3!:4) b. _1 
 '_1&(3!:4)' -:  1&(3!:4) b. _1 
 
-'domain error' -:     ic etx 3 4 5
+'valence error' -:     ic etx 3 4 5
 'domain error' -: '1' ic etx 3 4 5
 'domain error' -: (u:'1') ic etx 3 4 5
 'domain error' -: (10&u:'1') ic etx 3 4 5

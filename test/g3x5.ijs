@@ -33,7 +33,7 @@ g  0.5-?1000$1e6
  '01&(3!:5)' -: _1&(3!:5) b. _1 
 '_1&(3!:5)' -:  1&(3!:5) b. _1 
 
-'domain error' -:     fc etx 3 4.5
+'valence error' -:     fc etx 3 4.5
 'domain error' -: 0   fc etx 3 4.5
 'domain error' -: 3   fc etx 3 4.5
 'domain error' -: _3  fc etx 8$0{a.

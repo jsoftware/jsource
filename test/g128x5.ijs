@@ -30,8 +30,8 @@ b=: (#x) ?@$ 2
 x=: (-~0j1)+_. (I.b)}x
 b -: isnan x
 
-'domain error' -: 0 (128!:5) etx 3 4 5
-'domain error' -: 1 (128!:5) etx 3 4 5
+'valence error' -: 0 (128!:5) etx 3 4 5
+'valence error' -: 1 (128!:5) etx 3 4 5
 
 1: 0 : 0  NB. mapped boxed no longer supported
 NB. 128!:5 and mapped boxed arrays --------------------------------------

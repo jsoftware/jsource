@@ -219,7 +219,7 @@ f =: 4 : '*/x+(i.y)*/s'
 (12 ^!.s 6) -: 12 f 6 [ s=:1
 (12 ^!.s 6) -: 12 f 6 [ s=:_1
 
-'domain error'  -:  ^!.4 etx 5
+'valence error'  -:  ^!.4 etx 5
 'domain error'  -: 3^!.4 etx 5.6
 'domain error'  -: ex '^!.''a'''
 'domain error'  -: ex '^!.(<4) '

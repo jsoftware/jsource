@@ -86,7 +86,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
    UC trace;  // tracing-related flags (debug and pm)  inherit
    C init0area[0]; // label for initializing
                    // ************************************** here starts the area that is initialized to 0 when task starts 0x14
-   C bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
+   C bstkreqd;   // set if we MUST create a stack entry for each named call
    union {
     US spflag; // access as short
     struct {
@@ -96,21 +96,25 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
    };
   };
  } uflags;   // 4 bytes
- I4 parsercalls;      // # times parser was called clear for task
- B iepdo;            // 1 iff do iep on going to immex   init for task to 0   should be shared?
- C xmode;            // extended integer operating mode init for task to 0
+ I4 parsercalls;      // # times parser was called
+ B iepdo;            // 1 iff do iep on going to immex     should be shared?
+ C xmode;            // extended integer operating mode
+ C emsgstate;   // disposition of error messages, which determines how detailed we make the message
+#define EMSGSTATECONSOLE 0  // user will see the message.  Format it fully
+#define EMSGSTATECATCH 1  // error will be caught in a catch. block.
+#define EMSGSTATEADVERSE 2  // error will be caught in u :: v.  Just save the error number, do not format 
 // 2 bytes free
- I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
- S etxn;             // strlen(etx) but set negative to freeze changes to the error line  clear for task
- S etxn1;            // last non-zero etxn    clear for task
- B foldrunning;      // 1 if fold is running (allows Z:) clear for task
- UC jerr;             // error number (0 means no error)      clear for task
- UC jerr1;            // last non-zero jerr  clear for task
- C namecaching;     // 1=for script 2=on  clear for task
+ I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
+ S etxn;             // strlen(etx) but set negative to freeze changes to the error line
+ S etxn1;            // last non-zero etxn
+ B foldrunning;      // 1 if fold is running (allows Z:)
+ UC jerr;             // error number (0 means no error)
+ UC jerr1;            // last non-zero jerr
+ C namecaching;     // 1=for script 2=on
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
             // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
- A xmod;             // extended integer: the m in m&|@f clear for task
+ A xmod;             // extended integer: the m in m&|@f
 // end of cacheline 0
  C _cl1[0];
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
@@ -125,7 +129,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
 // **************************************  end of initialized part
 
- C persistarea[0];  // end of area set at startup
+ C persistarea[0];  // end of area set at task startup
 // ************************************** everything after here persists over the life of the thread
  C fillv0len;   // length of fill installed in fillv0 (max 16)
  C taskstate;  // task state: modified by other tasks on a system lock

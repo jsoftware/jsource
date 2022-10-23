@@ -135,7 +135,7 @@ NB. OK 'domain error'  -: lnc etx 1 2 3
 'domain error'  -: lnc etx 'ab';1 2 3x
 'domain error'  -: lnc etx 'ab';1 2r3
 
-'domain error'  -: 2 lnc etx <'base'
+'valence error'  -: 2 lnc etx <'base'
 
 'length error'  -: lnc etx 'ab';''
 'length error'  -: lnc etx 'ab';$0
@@ -463,7 +463,7 @@ f ''
 'domain error'    -: lswitch etx <2 3r4
 'domain error'    -: lswitch etx <<'abc'
 
-'domain error'    -: (<'j') lswitch etx <'abc'
+'valence error'    -: (<'j') lswitch etx <'abc'
 
 'rank error'      -: lswitch etx <3 4$'a'
 
@@ -611,7 +611,7 @@ ldestroy (0&".@>) (lcreate'') , (lcreate'')
 'length error'    -: ldestroy etx <''
 'length error'    -: ldestroy etx <$0
 
-'domain error'    -: 3 ldestroy etx <'abc'
+'valence error'    -: 3 ldestroy etx <'abc'
 
 
 NB. locatives and 4!:5 --------------------------------------------------

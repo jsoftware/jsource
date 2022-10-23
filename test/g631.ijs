@@ -52,9 +52,9 @@ NB. unaligned memory access
 
 NB. semiduals x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------------------------
 
-'domain error' -: +&.(a:`^.) etx i. 5
-'domain error' -: +:`*: "1&.(a:`>) etx i. 5
-'domain error' -: +&.(^.`a:) etx i. 5
+'valence error' -: +&.(a:`^.) etx i. 5
+'valence error' -: +:`*: "1&.(a:`>) etx i. 5
+'valence error' -: +&.(^.`a:) etx i. 5
 'domain error' -: ex '+&.(^.`^.)'
 'domain error' -: ex '+&.(a:`a:)'
 'domain error' -: ex '+&.(^.`a:`a:)'

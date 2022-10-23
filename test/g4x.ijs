@@ -258,7 +258,7 @@ _2 -: jnc    <''
 'domain error'    -: jnc etx 'a';3j4
 'domain error'    -: jnc etx <<'ab'
 'domain error'    -: jnc etx i.3 4
-'domain error'    -: 'abc' jnc etx 3  
+'valence error'    -: 'abc' jnc etx 3  
 
 'rank error'      -: jnc etx <3 4$'a'
 

@@ -166,7 +166,7 @@ a3=: /\
 'domain error'  -: 3    (5!:7) etx <'a2'
 'domain error'  -: (<2) (5!:7) etx <'a2'
 
-'domain error'  -:    5!:7  etx <'foo'
+'valence error'  -:    5!:7  etx <'foo'
 'domain error'  -: 1 (5!:7) etx <'ww'
 
 'value error'   -: 2 (5!:7) etx <'nonexistentverb'

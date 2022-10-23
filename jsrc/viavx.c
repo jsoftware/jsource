@@ -82,7 +82,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 
  // if we are forced to start over, do so
  md |= IINOTALLOCATED;   // indicate not allocated yet
- if(!(md&IIMODFORCE0)){   // this is never true for AVX code, which always clears the region
+ if(unlikely((md&IIMODFORCE0)==0)){   // this is never true for AVX code, which always clears the region
   // Not forced to start over, choose an allocation
 
   // First of all: it's moot if the allocation won't fit on the right
@@ -145,23 +145,24 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // We also don't want to clear the whole buffer if we were trying to save a little time by setting BASE0 in an argument that uses only a little
   // of the table.
   // We have to make sure we are not moving the partition to the left: that might expose some uninitialized values on the right side
-  if(md&IIMODFORCE0){
+  ++asct;  // get end of region+1 including misses
+  if(likely((md&IIMODFORCE0)!=0)){
    // Putting that together: if FORCE0 is set, we just clear the left side and leave the right alone, except that we may move the partition right.
    if(p>=hh->currenthi){
     // Moving the partition right (or not at all).  That doesn't uncover anything
     hh->currenthi=p;   // set the new partition pointer
-    hh->currentindexend=MAX(hh->previousindexend,1+asct);  // keep the left-side max index no less than the right-wide
+    hh->currentindexend=MAX(hh->previousindexend,asct);  // keep the left-side max index no less than the right-wide
    }else{
     // We didn't clear as far as the partition.  The left side still contains old data.
-    if(hh->currentindexend<1+asct)hh->currentindexend=1+asct;  // Don't lower the index if there is uncleared data on the left
+    if(hh->currentindexend<asct)hh->currentindexend=asct;  // Don't lower the index if there is uncleared data on the left
    }
   }else{
    // Not FORCE0: we are clearing because we have to.  Clear everything.  But we can save clearing the right side if it's already clear.
    I clrtopoint=(hh->previousindexend!=1)?hh->datasize:hh->currenthi<<hh->hashelelgsize;  // high+1 entry to clear
    I clrfrompoint=p<<hh->hashelelgsize;  // offset to clear from
-   if((clrtopoint-=clrfrompoint)>0){mvc( clrtopoint,hh->data.UC+clrfrompoint,1,MEMSET00);}  // clear the region to 0
+   if(likely((clrtopoint-=clrfrompoint)>0)){mvc( clrtopoint,hh->data.UC+clrfrompoint,1,MEMSET00);}  // clear the region to 0
    hh->currenthi=p;   // set return value (starting position) and partition
-   hh->currentindexend=1+asct;  // set return value (starting index) and allocated index space.  Leave 0 for 'not found'
+   hh->currentindexend=asct;  // set return value (starting index) and allocated index space.  Leave 0 for 'not found'
    hh->previousindexend=1;  // Init right side unused (but with the 0s representing initialized values)
   }
   hh->currentindexofst=0;  // Indic left-side starting index (return value)

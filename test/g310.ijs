@@ -306,12 +306,12 @@ f3 =: 4 : 'x+y'
 'domain error' -:   f2 etx 4
 'domain error' -:   f3 etx 4
 
-'domain error' -: ~./      etx 0 1 0
-'domain error' -: 0 1 ~./  etx 1 0
-'domain error' -: 0 1 ~.&* etx 1 0
-'domain error' -: 0 1 *@~. etx 1 0
-'domain error' -: (+ ~. -) etx 1 0
-'domain error' -: (~. -)   etx 1 0
+'valence error' -: ~./      etx 0 1 0
+'valence error' -: 0 1 ~./  etx 1 0
+'valence error' -: 0 1 ~.&* etx 1 0
+'valence error' -: 0 1 *@~. etx 1 0
+'valence error' -: (+ ~. -) etx 1 0
+'valence error' -: (~. -)   etx 1 0
 
 NB. : detection of x y etc.
 

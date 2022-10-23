@@ -341,7 +341,7 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  A h; I rmr=r, rlr, rrr; 
  if(gside<0){h=amp(a,wvb); rlr=rrr=rmr;  // normal case, f&g"mg
  }else{
-  f1=jtdomainerr1;  // monad not allowed with gerund v
+  f1=jtvalenceerr1;  // monad not allowed with gerund v
   if(gside==0){rlr=rmr; rrr=(RANKT)FAV(a)->lrr; h=qq(swap(hook(swap(a),wvb,mark)),v2(rlr,rrr));  // (f~ g)~"mw rf
   }else{rlr=FAV(a)->lrr>>RANKTX; rrr=rmr; h=qq(hook(a,wvb,mark),v2(rlr,rrr));  // (f g)"lf mg
   }
@@ -378,7 +378,7 @@ F2(jtundco){F2PREFIP;AF f1=0,f2;I gside=-1, flag=0;
  A h;
  if(gside<0){h=ampco(a,wvb); // normal case, f&:g
  }else{
-  f1=jtdomainerr1;  // monad not allowed with gerund v
+  f1=jtvalenceerr1;  // monad not allowed with gerund v
   if(gside==0){h=swap(hook(swap(a),wvb,mark));  // (f~ g)~
   }else{h=hook(a,wvb,mark);  // (f g)
   }

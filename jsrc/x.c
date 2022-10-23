@@ -12,10 +12,10 @@
 #include "x.h"
 
 #define SDERIV(id,f1,f2,flag,m,l,r)  \
- fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
+ fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?f1:jtvalenceerr1),(I)(f2?f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
 
 #define SDERI2(id,f1,f2,flag,m,l,r)  \
- fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
+ fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtvalenceerr1),(I)(f2?f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
 
 
 static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL1IP((AF)AV(h)[0],  w,self);}
@@ -69,7 +69,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(0,111): R SDERI2(CIBEAM, jtscm11,      jtscm112,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,2):   R SDERI2(CIBEAM, jtsct1,       jtsct2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,3):   R SDERI2(CIBEAM, jtscz1,       jtscz2,       VASGSAFE,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 1:
   switch(q){
@@ -100,7 +100,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(1,46):  R CDERIV(CIBEAM, jtpathdll,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 
   case XC(1,55):  R SDERIV(CIBEAM, jtjferase,    0,            VASGSAFE,0,   RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 2:
   switch(q){
@@ -117,7 +117,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(2,8):   R SDERIV(CIBEAM, jtcerrno,     0,            VASGSAFE,RMAX,RMAX,RMAX);
 // (2,9) reserved for messages from host OS
   case XC(2,55):  R CDERIV(CIBEAM,jtjoff,0,VASGSAFE,RMAX,0,0);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 3:
   switch(q){
@@ -132,7 +132,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(3,10):  R CDERIV(CIBEAM, jttobase64,   0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(3,11):  R CDERIV(CIBEAM, jtfrombase64, 0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(3,12):  R CDERIV(CIBEAM, 0,            jtlowerupper, VASGSAFE,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 4:
   switch(q){
@@ -145,7 +145,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(4,7):   R CDERIV(CIBEAM, jtscriptnum,        0,      VASGSAFE,RMAX,RMAX,RMAX);
   case XC(4,8):   R fdef(0,CIBEAM,ADV, jtcreatecachedref,0L,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );
   case XC(4,55):  R CDERIV(CIBEAM, jtex,         0,            VASGSAFE,0,   RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 5:
   switch(q){
@@ -157,7 +157,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(5,6):   R CDERIV(CIBEAM, jtprx,        0,            VASGSAFE,0,   RMAX,RMAX);
   case XC(5,7):   R CDERIV(CIBEAM, 0,            jtxrx,        VASGSAFE,RMAX,0,   0   );
   case XC(5,-1):  R CDERIV(CIBEAM, 0,            jtoutstr,     VASGSAFE,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 6:
   switch(q){
@@ -180,7 +180,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(6,16):  R CDERIV(CIBEAM, jtetoiso8601,jtetoiso8601,  VASGSAFE,RMAX,RMAX,RMAX);
   case XC(6,17):  R CDERIV(CIBEAM, jtiso8601toe,jtiso8601toe,  VASGSAFE,RMAX,RMAX,RMAX);
   case XC(6,18):  R CDERIV(CIBEAM, jtstringtoe,jtstringtoe,    VASGSAFE,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 7:
   switch(q){
@@ -192,14 +192,14 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(7,6):   R CDERIV(CIBEAM, jtspforloc,   0,            VASGSAFE,0,   RMAX,RMAX);
   case XC(7,7):   R CDERIV(CIBEAM, jtspresident, 0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(7,8):   R CDERIV(CIBEAM, jtspallthreads, 0,            VASGSAFE,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 8:
   switch(q){
   case XC(8,0):   R CDERIV(CIBEAM, jtfmt01,      jtfmt02,      VASGSAFE,RMAX,RMAX,RMAX);
   case XC(8,1):   R CDERIV(CIBEAM, jtfmt11,      jtfmt12,      VASGSAFE,RMAX,RMAX,RMAX);
   case XC(8,2):   R CDERIV(CIBEAM, jtfmt21,      jtfmt22,      VASGSAFE,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 9:
   switch(q){
@@ -260,7 +260,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(9,61):  R CDERIV(CIBEAM, jtleakblockreset, 0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(9,63):  R CDERIV(CIBEAM, jtshowinplacing1, jtshowinplacing2,  VASGSAFE|VJTFLGOK1|VJTFLGOK2,RMAX,RMAX,RMAX);
   case XC(9,66):  R CDERIV(CIBEAM, jtcheckcompfeatures, 0,  VASGSAFE,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 11: R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
  case 13:
@@ -298,7 +298,7 @@ F2(jtforeign){F2PREFIP;I p,q;
 #if PYXES
   case XC(13,-7): R SDERIV(CIBEAM, jtnulljob,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 #endif
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 15:
   switch(q){
@@ -329,7 +329,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(15,20): R SDERIV(CIBEAM, jtcdlibl,     0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,21): R SDERIV(CIBEAM, jtcdproc1,    jtcdproc2,    VASGSAFE,RMAX,RMAX,RMAX);
 #endif
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 18:
   switch(q){
@@ -342,7 +342,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(18,-1): R CDERIV(CIBEAM, jtlocmap,     0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(18,-2): R CDERIV(CIBEAM, jtsympool,    0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(18,55): R CDERIV(CIBEAM, jtlocexmark,  0,            VFLAGNONE,0,   RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 128:
   switch(q){
@@ -360,12 +360,12 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(128,10): R CDERIV(CIBEAM, jtludecomp,         0,     VASGSAFE,RMAX,   RMAX,RMAX);
   case XC(128,11): R CDERIV(CIBEAM, 0,           jtlrtrim,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(128,12): R CDERIVF(CIBEAM, 0,           jtekupdate,     VASGSAFE|VJTFLGOK2,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
   } break;
 //  default:        R foreignextra(a,w);
-  default: break;
+  default: ASSERT(0,EVDOMAIN); break;
  }
- ASSERT(0,EVDOMAIN);  // any unknown combination is a domain error right away
+ ASSERT(0,EVVALENCE);  // any unknown combination is a domain error right away
 }
 
 /* SY_64 double trick - null routines here to avoid optimization */

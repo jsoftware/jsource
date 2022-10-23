@@ -247,15 +247,7 @@ t=. (1;key;iv;mode) 128!:7 s
 'ctr' pkcs 'hello world12345'
 'ctr' pkcs 'hello world123456'
 
-'domain error' -: f etx 2 3 4
-'domain error' -: f etx 2 3 4x
-'domain error' -: f etx 2 3.4
-'domain error' -: f etx 2 3j4
-'domain error' -: f etx 2 3r4
-'domain error' -: f etx 2 3;4
-'domain error' -: f etx s:@<"0 'abc'
-'domain error' -: f etx u: 'abc'
-'domain error' -: f etx 10 u: 'abc'
+'valence error' -: f etx 2 3 4
 
 'domain error' -: 123           f etx 3 4 5
 'domain error' -: 123           f etx 3 4 5x

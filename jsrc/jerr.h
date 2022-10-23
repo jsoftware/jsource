@@ -40,10 +40,11 @@
 #define EVNONNOUN       34
 #define EVTHROW         35      // uncaught throw.
 #define EVFOLDLIMIT     36      // abort current execution and return the current result
-#define NEVM            36      /* number of event codes       */
+#define EVVALENCE       37      // no defined valence for verb
+#define NEVM            37      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
-/* The following codes are never displayed to the user (but may show up in a 13!:12 query)   */
+/* The following codes are never displayed to the user   */
 #define EVFOLDEXIT      43      // abort current execution and return the current result
 #define EVFOLDSKIP      44      // abort current execution and resume with the next iteration
 #define EWIMAG          45      /* imaginary  result           */

@@ -81,7 +81,7 @@ NB. Test display of error spacing
 '|syntax error: efx|   )123' -: efx ')123'
 '|value error: undef|   (undef undef)    (1+undef+".)''5 + 6''' -: efx '(undef undef) (1 + undef + ".) ''5 + 6'''
 '|value error: undef|   (undef undef)    (1+undef+".)''+ 6''' -: efx '(undef undef) (1 + undef + ".) ''+ 6'''
-'|domain error: efx|   5.7    ([:;]<@(+/\);.2)i.5' -: efx '5.7 ([:;]<@(+/\);.2) i. 5'
+'|valence error: efx|   5.7    ([:;]<@(+/\);.2)i.5' -: efx '5.7 ([:;]<@(+/\);.2) i. 5'
 
 NB. Verify that undefname is OK, but undefined u creates an error, in an explicit def
 t =: 1 : 0

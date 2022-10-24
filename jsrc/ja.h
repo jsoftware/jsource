@@ -600,7 +600,9 @@
 #define jsig(x,y)                   jtjsig(jt,(x),(y))
 #define jsigd(x)                    jtjsigd(jt,(x))
 #define jsignal(x)                  jtjsignal(jt,(x))
+#if 0 // obsolete
 #define jsignalf(x,y...)            jtjsignalf(jt,(x),y)
+#endif
 #define jsignal3(x,y,z)             jtjsignal3(jt,(x),(y),(z))
 #define jsigstr(x,y,z)              jtjsigstr(jt,(x),(y),(z))
 #define jstd(x,y,z)                 jtjstd(jt,(x),(y),(z))

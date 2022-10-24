@@ -797,13 +797,14 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
-#define ASSERTF(b,e,s...){if(unlikely(!(b))){jsignalf(e,s); R 0;}}
+#define ASSERTF(b,e,s...){if(unlikely(!(b))){R jtjsignale((J)((I)jt+e),0,0,0,0);}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
 #define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
 // version for debugging
 // #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
-#define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
+// obsolete #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
+#define ASSERTD(b,s)    {if(unlikely(!(b))){R jtjsignale(jt,0,0,0,(A)(s));}}  // e=0 means jsigd
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); goto lbl;}}  // set name for display (only if error)
@@ -1983,7 +1984,14 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
-#define WITHDEBUGOFF(stmt) {UC _d=jt->uflags.trace&TRACEDB; jt->uflags.trace&=~TRACEDB; stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB);}  // execute stmt with debug turned off
+#define WITHDEBUGOFF(stmt) {UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
+  C _e=jt->emsgstate; jt->emsgstate=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT; \
+  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug turned off
+
+#define EMSGSTATENOTEXT 1  // Set to suppress message text
+#define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
+#define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis
+
 #if C_LE
 #if BW==64
 #define IHALF0  0x00000000ffffffffLL

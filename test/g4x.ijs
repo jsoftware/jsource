@@ -227,6 +227,7 @@ a =: 5
 '|domain error|   a:    +a_:' -: ". eftx 'a: + a_:'
 4!:55 <'a'
 '|value error|   a:+    a_:' -: ". eftx 'a: + a_:'
+'value error' -: ". eftxs 'a: + a_:'
 
 a=:b=:0
 4!:55 ;:'a undefname b'

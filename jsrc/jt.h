@@ -100,9 +100,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  B iepdo;            // 1 iff do iep on going to immex     should be shared?
  C xmode;            // extended integer operating mode
  C emsgstate;   // disposition of error messages, which determines how detailed we make the message
-#define EMSGSTATECONSOLE 0  // user will see the message.  Format it fully
-#define EMSGSTATECATCH 1  // error will be caught in a catch. block.
-#define EMSGSTATEADVERSE 2  // error will be caught in u :: v.  Just save the error number, do not format 
+#define EMSGSTATENOTEXT 1  // Set to suppress message text
+#define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
+#define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis
 // 2 bytes free
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line

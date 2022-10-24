@@ -25,7 +25,8 @@ static void jteputs(J jt,C*s){ep((I)strlen(s),s);}
 
 static void jteputc(J jt,C c){ep(1L,&c);}
 
-static void jteputl(J jt,A w){ep(AN(w),CAV(w)); eputc(CLF);}
+static void jteputlnolf(J jt,A w){ep(AN(w),CAV(w));}
+static void jteputl(J jt,A w){jteputlnolf(jt,w); eputc(CLF);}
 
 static void jteputv(J jt,A w){I m=NETX-jt->etxn; if(m>0){jt->etxn+=thv(w,MIN(m,200),jt->etx+jt->etxn);}} // stop writing when there is no room in the buffer
      /* numeric vector w */
@@ -202,6 +203,7 @@ F1(jtdbstackz){A y,z;
  R df1(z,y,cut(ds(CLEFT),num(-2)));
 }    /* 13!:18  SI stack as result */
 
+#if 0
 // here for errors not from explicit definition
 // explicit errors also come here, so stop here to see the point at which error was detected
 static void jtjsigstr(J jt,I e,I n,C*s){
@@ -225,18 +227,9 @@ void jtjsigd(J jt,C*s){C buf[100],*d="domain error: ";I m,n,p;
  n=strlen(s); p=MIN(n,100-m); MC(buf+m,s,p);
  jsigstr(EVDOMAIN,m+p,buf);
 }
+#endif
 
-// here for errors coming from explicit definition
-void jtjsignal(J jt,I e){A x;
-// template for debug break point
-// if(EVDOMAIN==e){
-// fprintf(stderr,"domain error\n");
-// }
- // Errors > NEVM are internal-only errors that should never make it to the end of execution.
- // Ignore them here - they will not be displayed
- x=BETWEENC(e,1,NEVM)?AAV(JT(jt,evm))[e]:mtv; jsigstr(e,AN(x),CAV(x));
-}
-
+#if 0 // obsolete 
 // like jtjsignal, but with more detailed error message
 // format: cf printf
 // %%   literal %
@@ -281,12 +274,101 @@ void jtjsignalf(J jt,I e,C *fmt,...){
     break;
    default:SEGFAULT;}}
  jsigstr(e,bp-buf,buf);}
+#else
+// common error-analysis-and-display entry point
+// the error number is tucked into the low 8 bits of jt
+// ranks is 4 ranks: (low: rank(s) of self),(high: ranks in "n if verb supports IRS)  high is 0xffffffff if no IRS
+// self is the self for the failing entity
+// a is the x/u arg to the failing entity
+// w is the y/n arg to the failing entity
+// this routine also does the work for jtjsigd (domain error with message text), jtjsignal (old-fashioned terse display),
+// jtjsignal3 (terse display for lines known to be from an explicit definition, giving line#/column), and
+// x 13!:8 y (display text x, set error# y) 
+// These are indicated by self=0, in which case:
+//   e!=0 a=w=0 means terse display (jsignal)
+//   e!=0 a=failing line, w=0, ranks=failing line#/column for jsignal3
+//   e!=0 a=0 w=A text for message
+//   e=0 a=0 w->text as C string for jsigd (domain error assumed)
+//
+// if the line is to be analyzed in full, we format it by calling eformat_j_.  If the line is not destined to be seen by
+// the user we simply store the error code (we fill in the text if the user asks for it)
+//
+// return value is always 0
+A jtjsignale(J jt,I ranks,A self,A a,A w){
+ // if a message has already been stored, ignore any subsequent one
+ C e=(C)(I)jt; jt=(J)((I)jt&~0xff);  // extract error# from jt and fix jt
+ if(jt->jerr){jt->curname=0; R 0;}   // if not first error, ignore: clear error-name (why?) and continue
+ // store the error message#
+ jt->jerr=e; jt->jerr1=e; if(jt->etxn<0)R 0; jt->etxn=0;  // remember error for testing, but if the error line is frozen, don't touch it; clear error-message area indicating message not installed yet
+ // if the user will never see the error, exit wothout further ado - keeps u :: v fast
+ if(e==0 || (!(jt->emsgstate&EMSGSTATENOTEXT) && BETWEENC(e,1,NEVM))){  // message text suppressed or internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
+  // we will format for display
+  if(e!=EVSTOP)moveparseinfotosi(jt);  // before we display, move error info from parse variables to si; but if STOP, it's already installed
+  dhead(0,0L);  // if in suspension, display suspension prefix: *      or |     
+  // if debug is set, turn it off, with message, if there is not enough memory to run it
+  if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}  // spc sees that you can malloc 1000 bytes
+  // format the message lines according to the various types of call
+  if(self!=0){
+   // emsg will be analyzed externally.  The analyzer returns the string, which we append to the terse string
+   jteputlnolf(jt,AAV(JT(jt,evm))[e]);  // header of first line: terse string
+   if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}  // ...followed by name of running entity
+   if(!(jt->emsgstate&EMSGSTATENOTEXT)){  // analyze error unless forbidden to
+    A msg;
+    if(0&&msg)jteputlnolf(jt,msg);  // if there is a message, type it out
+   }
+   eputc(CLF);  // end the line
+  }else if(e!=0){
+   // 13!:8, jsignal, or jsignal3.  The message starts with the terse string or the user's string
+   A msg=w;  // init to use user's msg, if 13!:8
+   if(w==0){
+    msg=AAV(JT(jt,evm))[e];  // jsignal, or jsignal3.  Use the terse string
+   }
+   jteputlnolf(jt,msg);  // header of first line: terse string
+   if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}  // ...followed by name of running entity
+   eputc(CLF);  // ... that's the first line
+   if(!jt->glock){  // if locked display, show no detail about the failure
+    if(a!=0 && !(jt->emsgstate&EMSGSTATENOLINE)){  // if jsignal3 and not suppressed
+     // for jsignal3, output later lines
+     if(e==EVCTRL){dhead(3,0L); efmt("["FMTI"]",ranks); eputl(a);}  // control error: second line is [nnn]line-in-error
+     else{  // spelling error
+      dhead(3,0L); eputl(a);  // second line is line-in-error
+      dhead(3,0L); DQ(ranks, eputc(' ');); eputc('^'); eputc(CLF);  // third line is ^ indicating error location
+     }
+    }
+    // last line is the failing line, with spaces before the error point
+    debsi1(jt->sitop);
+   }
+  }else{
+   // jsigd, indicated by a 0 in e.  Redo as domain error with text
+   jtjsignale((J)((I)jt+EVDOMAIN),0,0,0,over(AAV(JT(jt,evm))[EVDOMAIN],over(str(1," "),str(strlen((C*)w),(C*)w))));
+  }
+ }else jt->curname=0;  // message suppressed: clear the name always
+ jt->etxn1=jt->etxn;  // save length of finished message
+ R 0;
+}
+#endif
 
+
+// here for errors coming from explicit definition
+void jtjsignal(J jt,I e){A x;
+#if 0
+// template for debug break point
+// if(EVDOMAIN==e){
+// fprintf(stderr,"domain error\n");
+// }
+ // Errors > NEVM are internal-only errors that should never make it to the end of execution.
+ // Ignore them here - they will not be displayed
+ x=BETWEENC(e,1,NEVM)?AAV(JT(jt,evm))[e]:mtv; jsigstr(e,AN(x),CAV(x));
+#else
+ jtjsignale((J)((I)jt+e),0,0,0,0);
+#endif
+}
 
 void jtjsignal2(J jt,I e,A dummy){jtjsignal(jt,e);}  // used in unquote to reschedule instructions
 
 // display the failing sentence. e=error message#, w holds sentence text, j is column# of error
 void jtjsignal3(J jt,I e,A w,I j){
+#if 0 // obsolete
  if(jt->jerr)R; 
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
  moveparseinfotosi(jt); jt->etxn=0;  // before we display, move error info from parse variables to si
@@ -302,6 +384,9 @@ void jtjsignal3(J jt,I e,A w,I j){
   debsi1(jt->sitop);
  }
  jt->etxn1=jt->etxn;
+#else
+ jtjsignale((J)((I)jt+e),j,0,w,0);
+#endif
 }    /* signal error e on line w with caret at j */
 
 static F2(jtdbsig){I e;
@@ -310,16 +395,32 @@ static F2(jtdbsig){I e;
  RZ(w=vi(w)); e=AV(w)[0]; 
  ASSERT(1<=e,EVDOMAIN);
  ASSERT(e<=255,EVLIMIT);
- if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jsig(e,a);} else jsignal(e);
+ if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale((J)((I)jt+e),0,0,0,a);} else jsignal(e);
  R 0;
 }    
 
 F1(jtdbsig1){R dbsig(0L,w);}   /* 13!:8  signal error */
 F2(jtdbsig2){R dbsig(a, w);}
 
+// 9!:59 set emsgslvl, return previous
+DF1(jtemsglevel){
+ if(!AN(w))R mtm;
+ RZ(w=vi(w)); I e=AV(w)[0]; 
+ ASSERT(e<=7,EVDOMAIN);  // must be integer in range 0-7
+ I ostate=jt->emsgstate; jt->emsgstate=e;
+ R sc(ostate);
+}
+
 
 F1(jtdberr){ASSERTMTV(w); R sc(jt->jerr1);}           /* 13!:11 last error number   */
-F1(jtdbetx){ASSERTMTV(w); R str(jt->etxn1,jt->etx);}  /* 13!:12 last error text     */
+// 13!:12 last error text.  If there is no error, show no text.  If there is an error with no text, we must have suppressed
+// loading the terse message; return it now
+F1(jtdbetx){
+ ASSERTMTV(w);
+ if(jt->jerr1==0)R mtv;  // if no error, no text either
+ if(jt->etxn1==0 && BETWEENC(jt->jerr1,1,NEVM))R AAV(JT(jt,evm))[jt->jerr1];  // no text, supply it now
+ R str(jt->etxn1,jt->etx);  // leave the text that's there
+}
 
 
 A jtjerrno(J jt){

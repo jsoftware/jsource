@@ -132,6 +132,7 @@ extern F1(jtgaussdet);
 extern F1(jtgausselm);
 extern F1(jtgb_test);
 extern F1(jtgemmtune);
+extern DF1(jtemsglevel);
 extern F1(jtgh15);
 extern F1(jtgrade1);
 extern F1(jtgr1);
@@ -791,7 +792,11 @@ extern F        jtjope(J,A,C*);
 extern I        jtjset(J,C*,A);
 extern void     jtjsigd(J,C*) __attribute__((cold));
 extern void     jtjsignal(J,I) __attribute__((cold));
+#if 0  // obsolete
 extern void     jtjsignalf(J,I,C*,...) __attribute__((cold));
+#else
+extern A     jtjsignale(J,I,A,A,A) __attribute__((cold));
+#endif
 extern void     jtjsignal2(J,I,A) __attribute__((cold));
 extern void     jtjsignal3(J,I,A,I) __attribute__((cold));
 extern A        jtleakblockread(J,A);

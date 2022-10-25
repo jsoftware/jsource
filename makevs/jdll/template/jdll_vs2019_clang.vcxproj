@@ -505,8 +505,7 @@
       <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)$(targetname).dll ..\..\jlibrary\bin\j.dll
-xcopy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\j.dll /C /Q</Command>
+      <Command>copy $(outdir)$(targetname).dll ..\..\jlibrary\bin\j.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx|x64'">
@@ -563,8 +562,7 @@ xcopy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\j.dll /C /Q</Comman
       <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)$(targetname).dll ..\..\jlibrary\bin\javx.dll
-xcopy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx.dll /C /Q</Command>
+      <Command>copy $(outdir)$(targetname).dll ..\..\jlibrary\bin\javx.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx2|x64'">
@@ -622,8 +620,7 @@ xcopy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx.dll /C /Q</Com
       <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)$(targetname).dll ..\..\jlibrary\bin\javx2.dll
-xcopy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll /C /Q</Command>
+      <Command>copy $(outdir)$(targetname).dll ..\..\jlibrary\bin\javx2.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|x64'">

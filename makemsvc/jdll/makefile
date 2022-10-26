@@ -1,31 +1,31 @@
-ifeq (1,${JAVX512})
+ifeq (1,$(JAVX512))
 FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512
 else
-ifeq (1,${JAVX2})
+ifeq (1,$(JAVX2))
 FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell
 else
-ifeq (1,${JAVX})
+ifeq (1,$(JAVX))
 FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1
 endif
 endif
 endif
-ifeq (1,${USE_OPENMP})
+ifeq (1,$(USE_OPENMP))
 FOPENMP= -Xclang -fopenmp
-ifeq (1,${x64})
+ifeq (1,$(x64))
 OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
 else
 OBJS_OPENMP=../../openmp/obj/windows/libomp32.lib
 endif
 endif
 USE_SLEEF=1
-ifeq (1,${x64})
-ifeq (1,${JAVX512})
+ifeq (1,$(x64))
+ifeq (1,$(JAVX512))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
-ifeq (1,${JAVX2})
+ifeq (1,$(JAVX2))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
-ifeq (1,${JAVX})
+ifeq (1,$(JAVX))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
@@ -35,36 +35,36 @@ endif
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 endif
-ifeq (1,${USE_PYXES})
+ifeq (1,$(USE_PYXES))
 PTHREADINC = -I../../pthreads4w/include -DPYXES=1
-ifeq (1,${x64})
+ifeq (1,$(x64))
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
 else
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
 endif
 endif
-ifeq (1,${NOSYNCHLIB})
+ifeq (1,$(NOSYNCHLIB))
 FNOSYNCHLIB = /DNOSYNCHLIB=1
 endif
-ifeq (1,${_DEBUG})
+ifeq (1,$(_DEBUG))
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 endif
-ifeq (1,${USE_BOXEDSPARSE})
+ifeq (1,$(USE_BOXEDSPARSE))
 FBOXEDSPARSE = /DBOXEDSPARSE
 endif
 
-ifeq (1,${x64})
-CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FAVX512} ${FOPENMP} ${FSLEEF} ${FNOSYNCHLIB} ${FBOXEDSPARSE} ${PTHREADINC} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
-FLAGS= ${LDEBUG} /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
+ifeq (1,$(x64))
+CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-shift-count-overflow -Wno-int-conversion -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 /DEMU_AVX=1 $(FAVX) $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
 ASMFLAGS= /Cx
 else
-CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-shift-count-overflow -Wno-int-conversion -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FSLEEF} ${FNOSYNCHLIB} ${FBOXEDSPARSE} ${PTHREADINC} /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
-FLAGS= ${LDEBUG} psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
+CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 endif
 
@@ -240,7 +240,7 @@ OBJS=  \
 ifdef NO_SHA_ASM
 CFLAGS1= /DNO_SHA_ASM
 else
-ifeq (1,${x64})
+ifeq (1,$(x64))
 OBJS_ASM= \
  ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -257,7 +257,7 @@ OBJS_ASM= \
 endif
 endif
 
-ifeq (1,${USE_SLEEF})
+ifeq (1,$(USE_SLEEF))
 OBJS_SLEEF= \
  ../../sleef/src/common/arraymap.o \
  ../../sleef/src/common/common.o \
@@ -281,14 +281,14 @@ endif
 %.o: %.asm
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-ifeq (1,${x64})
-ifeq (1,${JAVX512})
+ifeq (1,$(x64))
+ifeq (1,$(JAVX512))
 TARGET= javx512.dll
 else
-ifeq (1,${JAVX2})
+ifeq (1,$(JAVX2))
 TARGET= javx2.dll
 else
-ifeq (1,${JAVX})
+ifeq (1,$(JAVX))
 TARGET= javx.dll
 else
 TARGET= j.dll
@@ -299,7 +299,7 @@ else
 TARGET= j32.dll
 endif
 
-ifeq (1,${NOSYNCHLIB})
+ifeq (1,$(NOSYNCHLIB))
 SYNCLIB=
 else
 SYNCLIB= synchronization.lib

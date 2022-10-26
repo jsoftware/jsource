@@ -139,6 +139,7 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv
  -Wno-empty-body \
  -Wno-implicit-float-conversion \
  -Wno-implicit-int-float-conversion \
+ -Wno-int-conversion \
  -Wno-int-in-bool-context \
  -Wno-missing-braces \
  -Wno-missing-field-initializers \
@@ -147,6 +148,7 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv
  -Wno-pass-failed \
  -Wno-pointer-sign \
  -Wno-pointer-to-int-cast \
+ -Wno-shift-count-overflow \
  -Wno-sometimes-uninitialized \
  -Wno-string-plus-int \
  -Wno-unknown-pragmas \

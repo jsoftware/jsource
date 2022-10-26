@@ -66,7 +66,6 @@ typedef UC                 RANKT;
 #define RANKTX             8   // # bits in a RANKT
 #define LGRANKTX           3  // lg2(RANKTX)
 #define RANKTMSK           (((I)1<<RANKTX)-1)
-#define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
 typedef US                 RANK2T;  // 2 ranks, (l<<8)|r
 typedef UI4                RANK4T;  // 4 ranks
 #define RANK2TX            16   // # bits in a RANK2T
@@ -74,6 +73,7 @@ typedef UI4                RANK4T;  // 4 ranks
 #define RANK2TMSK           0xFFFFU
 #define LGRMAX             6  // lg2(RMAX+1)
 #define RMAX               (((I)1<<LGRMAX)-1)   // max rank, leaving 2 bits for flags
+#define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
 
 typedef I                  FLAGT;
 typedef I4                LX;  // index of an L block in SYMORIGIN

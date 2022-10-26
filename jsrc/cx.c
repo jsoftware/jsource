@@ -516,6 +516,7 @@ docase:
    // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
    // if debugging is already off, it stays off
    if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((nGpysfctdl&16)&&(UC)(tdv+tdi)->d)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}
+   // We allow verbose messages in case the catch. wants to display them.  This is different from u :: v
    ++tdi; ++i; nGpysfctdl|=4;  // bump tdi pointer, set flag
    break;
   case CCATCH: case CCATCHD: case CCATCHT:

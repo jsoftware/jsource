@@ -40,7 +40,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
 
 F1(jtdrep){A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
 
-
+// create AR of w
 F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  ARGCHK1(w);
  if(FUNC&AT(w)){

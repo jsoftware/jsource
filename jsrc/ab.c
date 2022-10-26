@@ -100,13 +100,13 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d,
 
 
 #define BITWISE(f,T,op)  \
- F2(f){A z;I *av,k=0,x;T*wv,y,*zv;             \
-  F2PREFIP;ARGCHK2(a,w);  /* kludge we allow inplace call but we don't honor it yet */ \
+ DF2(f){A z;I *av,k=0,x;T*wv,y,*zv;             \
+  F2PREFIP;ARGCHK2(a,w);EFORMAT2(0,0)  /* kludge we allow inplace call but we don't honor it yet */ \
   if(!ISDENSETYPE(AT(a),INT))RZ(a=cvt(INT,a));                                    \
   if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));                                    \
   av=(I*)AV(a);                          \
   wv=(T*)AV(w);                 \
-  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));                      \
+  ASSERTEAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));                      \
   GATV(z,INT,AN(AR(a)>AR(w)?a:w),MAX(AR(a),AR(w)),AS(AR(a)>AR(w)?a:w)); zv=(T*)AV(z);                  \
   if(!AN(z))R z;                                                       \
   if     (AR(a)==AR(w))DQ(AN(a), x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
@@ -137,12 +137,12 @@ static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010I
 /* m e. 16+i.16      */
 
 DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
- ARGCHK2(a,w);
+ ARGCHK2(a,w);EFORMAT2(RMAX,RMAX)
  x=a;
  y=w;
  if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(df2(z,indexof(ds(CALP),a),indexof(ds(CALP),w),fs),ds(CALP));  // empty or not LIT
  b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;
- ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
+ ASSERTEAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(VAV(fs)->fgh[1])-16;
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}

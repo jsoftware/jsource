@@ -895,9 +895,9 @@
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))
-#if SY_64
-#define REX2R(lr,rr,lcr,rcr)        (((I)(lr)<<RANKTX)+(I)(rr)+((((I)(lcr)<<RANKTX)+(I)(rcr))<<RANK2TX))
-#else
+#if 1
+#define REX2R(lr,rr,lcr,rcr)        (((UI)(lr)<<RANKTX)+(UI)(rr)+((((UI)(lcr)<<RANKTX)+(UI)(rcr))<<RANK2TX))
+#else  // obsolete
 #define REX2R(lr,rr,lcr,rcr)        (((I)(lr)<<RANKTX)+(I)(rr)),(((I)(lcr)<<RANKTX)+(I)(rcr))
 #endif
 #define rank2ex(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jt,(x0),(x1),(x2),REX2R((x3),(x4),(x5),(x6)),(x7))

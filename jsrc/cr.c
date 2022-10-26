@@ -229,17 +229,20 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
  EPILOG(zz);
 }
 
-#if SY_64
+#if 1
 A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
  I lrrr=(RANK2T)lrrrlcrrcr; I lcrrcr=lrrrlcrrcr>>RANK2TX;  // inner, outer ranks
-#else
-A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
+#else  // obsolete
+A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){  // scaf must combine 
 #endif
  F2PREFIP;PROLOG(0042);A virta,virtw,z;I acn,ak,mn,wcn,wk;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
  ARGCHK2(a,w);
  if(unlikely((UI)lrrr==(((UI)AR(a)<<RANKTX)+AR(w)))){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R sprank2(a,w,fs,(UI)lcrrcr>>RANKTX,lcrrcr&RANKTMSK,f2);  // this needs to be updated to handle multiple ranks
+ // ASSERTE header
+ A origa=a, origw=w, origself=fs; I origr=lrrrlcrrcr; ESECT((jt,origr,origself,origa,origw))
+
 // lr,rr are the ranks of the underlying verb.  lcr,rcr are the cell-ranks given by u"lcr rcr.
 // If " was not used, lcr,rcr=lr,rr usually
 // The ranks of the arguments have already been applied, so that we know that lr<=lcr<=AR(a), & similarly for w
@@ -288,7 +291,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
   // find smaller/larger frame/shape, and indicate if a is the repeated arg (otherwise we assume w)
   wof=aofwof&RANKTMSK; aof=aofwof>>RANKTX; lof=MAX(aof,wof); sof=MIN(aof,wof); los=AS(a); los=aof-wof<0?AS(w):los; state|=(aof-wof)&STATEOUTERREPEATA;
-  ASSERTAGREE2(AS(a),AS(w),sof,aof,wof)  // prefixes must agree
+  ASSERTEAGREE(AS(a),AS(w),sof)  // prefixes must agree
   CPROD(state&STATEAWNOTEMPTY,outerframect,sof,los); CPROD(state&STATEAWNOTEMPTY,outerrptct,lof-sof,los+sof);  // get # cells in frame, and in unmatched frame
  }
 
@@ -298,7 +301,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
   I ea=(afwf>>RANKTX)-aof, ew=(afwf&RANKTMSK)-wof; sif=MIN(ea,ew); lif=MAX(ea,ew);  // lif=long inner frame, sif=short
   state|=(ea-ew)&STATEINNERREPEATA;  // if w is longer, indicate repeating a.  The flag bit is far above the max rank
   lis=AS(w)+wof; I *sis=AS(a)+aof;  // start out as the two inner shapes lis=w, sis=a
-  ASSERTAGREE2(sis,lis,sif,ea,ew)  // error if frames are not same as prefix
+  ASSERTEAGREE(sis,lis,sif)  // error if frames are not same as prefix
   lis=ew-ea<=0?sis:lis; state|=(ew-ea)&STATEINNERREPEATW;  // make lis the shape pointer for longer; if a is longer, indicate repeating w
  }
  CPROD(state&STATEAWNOTEMPTY,innerrptct,lif-sif,lis+sif);  // number of repetitions per matched-frame cell
@@ -422,10 +425,13 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
    I ak,ar,*as,ict,oct,mn,wk,wr,*ws;
  ARGCHK2(a,w); ar=AR(a); wr=AR(w); if(unlikely(!(ar+wr)))R CALL2IP(f2,a,w,fs);   // if no frame, make just 1 call
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R sprank2(a,w,fs,0,0,f2);  // this needs to be updated to handle multiple ranks
+ // ASSERTE header
+ A origa=a, origw=w, origself=fs; ESECT((jt,0,origself,origa,origw))
+
 #define ZZFLAGWORD state
 
  // Verify agreement
- as=AS(a); ws=AS(w); ASSERTAGREE2(as,ws,MIN(ar,wr),ar,wr)
+ as=AS(a); ws=AS(w); ASSERTEAGREE(as,ws,MIN(ar,wr))
 
  // Calculate strides for inner and outer loop.  Cell-size is known to be 1 atom.  The stride of the inner loop is 1 atom, except for a
  // repeated value, of which there can be at most 1.  For a repeated value, we set the stride to 0 and remember the repetition count and stride
@@ -580,7 +586,8 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I wr;
  RETF(z);
 }
 
-// IRS setup for dyads x op y.  This routine sets jt->rank and calls the verb, which loops if it needs to
+// This code has been superseded by rank[12](i|in) and is called only by sparse routines
+// IRS setup for dyads x op y.  This routine sets jt->ranks and calls the verb, which loops if it needs to
 // a is x, w is y
 // fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none (if we are called internally)
 //  if inplacing is enabled in jt, fs must be given
@@ -591,9 +598,11 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I wr;
 // the verb f2 to finish operation on a cell
 A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I ar,wr;
  F2PREFIP; ARGCHK2(a,w);
+ // ASSERTE header
+ A origa=a,origw=w,origself=fs; I origr=(((I)(UC)l<<RANKTX)+(I)(UC)r); ESECT((jt,(R2MAX<<RANK2TX)+origr,origself,origa,origw))
  wr=AR(w); r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; r=AR(w)-wr;   // wr=requested rank, after negative resolution, or ~0; r=frame of w, possibly negative if no frame
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
- ASSERTAGREE2(AS(a),AS(w),MAX(0,MIN(r,l)),MAX(0,l),MAX(0,r))  // verify agreement before we modify jt->ranks
+ ASSERTEAGREE(AS(a),AS(w),MAX(0,MIN(r,l)))  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
    // Not all verbs (*f2)() use the fs argument.
@@ -648,18 +657,22 @@ static DF1(rank1in){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested r
  RETF(z);
 }
 static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
+ // ASSERTE header
+ A origa=a, origw=w, origself=self; ESECT((jt,(R2MAX<<RANK2TX)+((sv->localuse.srank[1]<<RANKTX)+sv->localuse.srank[2]),origself,origa,origw))
  I ar=sv->localuse.srank[1]; ar=ar>=AR(a)?RMAX:ar; I af=AR(a)-ar;   // left rank
  I wr=sv->localuse.srank[2]; wr=wr>=AR(w)?RMAX:wr; I wf=AR(w)-wr;   // right rank
- ASSERTAGREE2(AS(a),AS(w),MAX(0,MIN(wf,af)),MAX(0,af),MAX(0,wf));  // verify agreement before we modify jt->ranks
+ ASSERTEAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)));  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested rank is negative
+ // ASSERTE header
+ A origa=a, origw=w, origself=self; ESECT((jt,(R2MAX<<RANK2TX)+(((I)(C)sv->localuse.srank[1]<<RANKTX)+(I)(C)sv->localuse.srank[2]),origself,origa,origw))
  I wr=AR(w); I r=sv->localuse.srank[2]; r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
  I ar=AR(a); r=sv->localuse.srank[1];   r=r>=ar?RMAX:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
- ASSERTAGREE2(AS(a),AS(w),MAX(0,MIN(wf,af)),MAX(0,af),MAX(0,wf))  // verify agreement before we modify jt->ranks
+ ASSERTEAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)))  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
  jt->ranks=R2MAX;  // reset rank to infinite

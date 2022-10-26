@@ -137,8 +137,16 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  R z;
 }
 
-DF2(jtevery2self){R jtevery2(jt,a,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
+// u&.> called from user level
+DF2(jtevery2self){
+ F2PREFIP;ARGCHK2(a,w);EFORMAT2(0,0)
+ I ar=AR(a); I wr=AR(w);
+ I cf=ar; cf=ar<wr?cf:wr; ASSERTEAGREE(AS(a),AS(w),cf);  // we end up checking agreement twice, because we want the emsg from this call
+ R jtevery2(jtinplace,a,w,FAV(self)->fgh[0]);  // replace u&.> with u and process
+} 
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
+// This routine is called internally from many places without agreement checks
+// We could use a flag in jt to indicate agreement already checked
 A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  F2PREFIP;ARGCHK2(a,w);
  AF f2=FAV(fs)->valencefns[1];

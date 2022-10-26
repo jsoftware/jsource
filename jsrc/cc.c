@@ -954,7 +954,7 @@ skipspecial:;
   }else{
    // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell).  The call is non-inplaceable
    RZ(z=reitem(zeroionei(0),w));  // create 0 items of the type of w
-  WITHDEBUGOFF(zz=CALL1(f1,z,fs);) if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+   WITHDEBUGOFF(zz=CALL1(f1,z,fs);) if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
    RZ(zz=reshape(over(zeroionei(0),shape(zz?zz:mtv)),zz?zz:zeroionei(0)));
   }
  }

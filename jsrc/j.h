@@ -796,7 +796,18 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
+// support for eformat_j_
+// Put the appropriate macro at the start of any routine that will do ASSERTE.
+// the piece at the beginning of the routine will vector off to ASSERTE, passing in the error code, the ranks, the original self, and the args
+// The EFORMAT macro must follow PREFIP.  The args are the ranks
+#define ESECT(callstg) if(0){eformat: R jtjsignale callstg;}
+#define EFORMAT1(m) A origw=w, origself=self; ESECT((jt,(R2MAX<<RANK2TX)|m,origself,0,origw))
+#define EFORMAT2(l,r) A origa=a, origw=w, origself=self; ESECT((jt,(R2MAX<<RANK2TX)|((I)l<<RANKTX)|r,origself,origa,origw))
+#define EFORMAT1IRS(m) A origw=w, origself=self; RANK2T origr=jt->ranks;  ESECT((jt,(origr<<RANK2TX)|m,origself,0,origw))  // use when verb supports IRS
+#define EFORMAT2IRSCOMMON(l,r,irsr) A origa=a, origw=w, origself=self; RANK2T origr=irsr;  ESECT((jt,(origr<<RANK2TX)|((I)l<<RANKTX)|r,origself,origa,origw))
+#define EFORMAT2IRS(l,r) EFORMAT2IRSCOMMON(l,r,jt->ranks)
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+#define ASSERTE(b,e) {if(unlikely(!(b))){jt=(J)((I)jt+e); goto eformat;}}
 #define ASSERTF(b,e,s...){if(unlikely(!(b))){R jtjsignale((J)((I)jt+e),0,0,0,0);}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
@@ -814,7 +825,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 
 #define ASSERTFHOMO(c,t0,t1)        ASSERTF(c,EVDOMAIN,"%t incompatible with %t",t0,t1)
-#define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i do not conform",xl,xs,yl,ys)
+// obsolete #define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i do not conform",xl,xs,yl,ys)
 #define ASSERTFINDEX(c,i,l)         ASSERT(c,EVINDEX)
 //#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l) //scaf restore
 #define ASSERTINDEX(io,ir,l)        ASSERTFINDEX((UI)(ir)<(UI)(l),io,l)
@@ -835,6 +846,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if C_AVX512
 // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
+#if 0 // obsolete 
 // todo would it be better to overread and do a masked compare instead?  Cache pollution technically, but we probably need the next cacheline anyway, soo
 // Actually not safe because there's a one-cacheline allocation bucket which has space for a list with no ravel (virtual or empty), and that could be at the end of a page; todo fix because overreading is generally useful
 #define ASSERTAGREE2(x,y,l,xl,yl) \
@@ -843,7 +855,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    ASSERTFAGREE(!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(endmask,aaa),_mm512_maskz_loadu_epi64(endmask,aab)),xl,aaa,yl,aab); /* result is nonzero if any mismatch */ \
   }else{DONOUNROLL(aai,ASSERTFAGREE(aaa[i]==aab[i],xl,aaa,yl,aab))} \
  }
-// set r nonzero if shapes disagree
+#endif
+  // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xff,aai); \
@@ -851,12 +864,21 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
 #elif (C_AVX2&&SY_64) || EMU_AVX
+#if 0 // obsolete 
 #define ASSERTAGREE2(x,y,l,xl,yl) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
    endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
    ASSERTFAGREE(_mm256_testz_si256(endmask,endmask),xl,aaa,yl,aab); /* result is 1 if all match */ \
   }else{DONOUNROLL(aai,ASSERTFAGREE(aaa[i]==aab[i],xl,aaa,yl,aab);)} \
+ }
+#endif
+#define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
+ {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
+  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
+   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
+   ASTYPE(_mm256_testz_si256(endmask,endmask),EVLENGTH); /* result is 1 if all match */ \
+  }else{NOUNROLL do{--aai; ASTYPE(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
  }
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -866,6 +888,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
 #else
+#if 0 // obsolete 
 #define ASSERTAGREE2(x,y,l,xl,yl) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
@@ -873,6 +896,15 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    ASSERTFAGREE(0==(aaa[0]^aab[0])+(aaa[aai]^aab[aai]),xl,aaa,yl,aab); \
   }else{ASSERTFAGREE(!memcmp(aaa,aab,aai<<LGSZI),xl,aaa,yl,aab)} \
  }
+#endif
+#define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  if(likely(aai<=2)){ \
+   aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
+   ASTYPE(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH); \
+  }else{ASTYPE(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
+ }
+  
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
@@ -881,7 +913,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
 #endif
-#define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
+// obsolete #define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
+#define ASSERTAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERT)
+#define ASSERTEAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERTE)
 #define ASSERTAGREESEGFAULT (x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
@@ -1391,7 +1425,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
 #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
 #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)
-#define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=MAX(0,fl); I fr=(I)AR(w)-(r); fr=MAX(0,fr); ASSERTAGREE2(AS(a),AS(w),MIN(fl,fr),fl,fr) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
+// obsolete #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=MAX(0,fl); I fr=(I)AR(w)-(r); fr=MAX(0,fr); ASSERTAGREE2(AS(a),AS(w),MIN(fl,fr),fl,fr) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
+// no longer used #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lc=FAV(ds(cxx))->lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
@@ -1986,12 +2021,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
 #define WITHDEBUGOFF(stmt) {UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
   C _e=jt->emsgstate; jt->emsgstate=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT; \
-  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug turned off
-
-#define EMSGSTATENOTEXT 1  // Set to suppress message text
-#define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
-#define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis
-
+  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug turned off; turn on at end
 #if C_LE
 #if BW==64
 #define IHALF0  0x00000000ffffffffLL

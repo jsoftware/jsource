@@ -261,17 +261,14 @@ h=: 2 3&+@sum
 
 'value error: junkfoo' -: fex 'junkfoo'
 
-'length error: frames 2 and 3 do not conform: fex'    -: fex '2 3+4 5 6'
 'domain error: fex'    -: fex '+/1;2 3'
 'domain error: sum'    -: fex 'sum ''asdf'''
 'noun result was required: g'      -: fex 'f 0'
-'length error: frames 2 and 3 do not conform: f'      -: fex 'f 2 3 4'
 'domain error: sum'    -: fex 'h ''asdf'''
-'length error: frames 2 and 4 do not conform: h'      -: fex 'h i.3 4'
 
 f=: 3 : 0
  abc=. 'abc'
- ". :: 0: 'abc,',y
+ ".&([ 9!:59@0) :: 0: 'abc,',y  NB. We want to see the full message
  13!:12 ''
 )
 
@@ -372,7 +369,15 @@ m;n;x;y
 
 13!:0 ]0
 
+NB. ------------ eformat ---------------------------------------------------
 
+1 e. '(0)' E. 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun
+
+f =: 1:`(-: fex)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
+
+'length error: fex, in + : shapes 2 and 3 do not conform'    f '2 3+4 5 6'
+'length error: fex, in +"1 1 : shapes 2 3 and 4 5 6 do not conform'    f '(i. 2 3)+"1 i.4 5 6'
+'length error: fex, in +"1 1 : <frames> do not conform in shapes 2<3> and 2 3<6>'    f '(i. 2 3)+"1 i.2 3 6'
 
 
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '

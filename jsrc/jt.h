@@ -72,6 +72,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C ppn;              // print precision (field width for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task  could merge into .db or boxpos
+                     // 0x80 in glock is set during eformat_j_ to freeze the error line
 // 1 byte free
  union {  // this union is 4 bytes long on a 4-byte bdy
   UI4 ui4;    // all 4 flags at once, access as ui4
@@ -103,7 +104,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define EMSGSTATENOTEXT 1  // Set to suppress message text
 #define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
 #define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis
-// 2 bytes free
+// 1 byte free
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line
  S etxn1;            // last non-zero etxn

@@ -422,9 +422,9 @@ extern F2(jtbase2);
 extern F2(jtbinrep2);
 extern F2(jtbit);
 extern F2(jtbitmatch);
-extern F2(jtbitwiserotate);
-extern F2(jtbitwiseshift);
-extern F2(jtbitwiseshifta);
+extern DF2(jtbitwiserotate);
+extern DF2(jtbitwiseshift);
+extern DF2(jtbitwiseshifta);
 extern DF2(jtboxcut0);
 extern F2(jtcallback2);
 extern F2(jtcant2);
@@ -490,7 +490,7 @@ extern F2(jthgeom);
 extern A jthook(J,A,A,A);
 extern F2(jti1ebar);
 extern F2(jtic2);
-extern F2(jticap2);
+extern DF2(jticap2);
 extern F2(jtifbebar);
 extern F2(jtifrom);
 extern F2(jtindexof);
@@ -842,9 +842,9 @@ extern A        jtras(J,AD* RESTRICT);
 extern A        jtra00s(J,AD* RESTRICT);
 extern A        jtrank1ex(J,AD * RESTRICT,A,I,AF);
 extern A        jtrank1ex0(J,AD * RESTRICT,A,AF);
-#if SY_64
+#if 1
 extern A        jtrank2ex(J,AD * RESTRICT,AD * RESTRICT,A,UI,AF);
-#else
+#else // obsolete
 extern A        jtrank2ex(J,AD * RESTRICT,AD * RESTRICT,A,UI,UI,AF);
 #endif
 extern A        jtrank2ex0(J,AD * RESTRICT,AD * RESTRICT,A,AF);

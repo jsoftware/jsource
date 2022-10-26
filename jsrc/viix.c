@@ -169,12 +169,12 @@ static void jtiixfi(I*z,D*a,I*w,I n,I m,I c,B ge){I k,p,q;C x,y;
 #endif //C_AVX2 && SY_LINUX
 
 // x I. y
-F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
+DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  ARGCHK2(a,w);
  ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
  wr=AR(w); wt=AT(w); ws=AS(w);
- ASSERT(r<=wr,EVRANK);
- ASSERTAGREE(as+ar-r,ws+wr-r,r)
+ ASSERT(r<=wr,EVRANK);EFORMAT2(r,r)
+ ASSERTEAGREE(as+ar-r,ws+wr-r,r)
  ASSERT((POSIFHOMO(at,wt)&-AN(a)&-AN(w))>=0,EVDOMAIN); ASSERT(!ISSPARSE(at|wt),EVNONCE); // if no empties, verify agreement & non-sparse
  CPROD(AN(w),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);  // m=#atoms in result   c=# atoms in a cell of w
  GATV(z,INT,m,wr-r,ws); zv=AV(z);

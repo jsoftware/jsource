@@ -64,7 +64,7 @@
 // the size of the total allocation of the block for w, always a power of 2
 #define alloroundsize(w)  FHRHSIZE(AFHRH(w))
 
-#if (MEMAUDIT==0 || !_WIN32)
+#if 1 || (MEMAUDIT==0 || !_WIN32)  // windows makes free() a void
 #define FREECHK(x) FREE(x)
 #else
 #define FREECHK(x) if(!FREE(x))SEGFAULT;  // crash on error
@@ -253,6 +253,9 @@ B jtmeminitt(JJ jt){I k;
 #else
 #define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefL:0)
 #endif
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+// your code for which the warning gets suppressed 
 void jtauditmemchains(J jt){F1PREFIP;
 #if MEMAUDIT&0x30
 I Wi,Wj;A Wx,prevWx=0; if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
@@ -261,6 +264,7 @@ I Wi,Wj;A Wx,prevWx=0; if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdat
 }
 #endif
 }
+#pragma clang diagnostic pop
 // 13!:23  check the memory free list, a la auditmemchains()
 // return error info, a 2-atom list where
 //  atom 0 is return code 0=OK 1=pool number corrupted 2=header corrupted 3=usecount corrupted (valid only if MEMAUDIT&0x4) 4=loop in chain 

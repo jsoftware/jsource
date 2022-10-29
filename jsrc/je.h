@@ -795,8 +795,6 @@ extern A     jtjsigd(J,C*) __attribute__((cold));
 extern A     jtjsignal(J,I) __attribute__((cold));
 #if 0  // obsolete
 extern void     jtjsignalf(J,I,C*,...) __attribute__((cold));
-#else
-extern A     jtjsignale(J,I,A,I) __attribute__((cold));
 #endif
 extern void     jtjsignal2(J,I,A) __attribute__((cold));
 extern A     jtjsignal3(J,I,A,I) __attribute__((cold));

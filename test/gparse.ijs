@@ -77,7 +77,7 @@ NB. Test display of error spacing
 '|domain error: efx|       (+:+:+:)i.5' -: efx '(+: +: +:) i. 5'
 '|domain error: efx|       (+:+:)i.5' -: efx '(+: +:) i. 5'
 '|value error: undefname|   i__undefname    =:5' -: efx 'i__undefname =: 5'
-'|domain error: efx|   n__efx    =:5' -: efx 'n__efx =: 5'
+'|domain error: efx public assignment to a name with a private value|   n__efx    =:5' -: efx 'n__efx =: 5'
 '|syntax error: efx|   )123' -: efx ')123'
 '|value error: undef|   (undef undef)    (1+undef+".)''5 + 6''' -: efx '(undef undef) (1 + undef + ".) ''5 + 6'''
 '|value error: undef|   (undef undef)    (1+undef+".)''+ 6''' -: efx '(undef undef) (1 + undef + ".) ''+ 6'''

@@ -520,7 +520,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is contiguous for each cell and we just copy into the result area
  if(likely(t!=0)){
   // no mixed nonempties: t is homo num/char or all boxed or all symbol.
-  ASSERTHOMO(t);
+  ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)
   ASSERT(((t^SPARSE)&SPARSE+XNUM+RAT)<=0,EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
@@ -601,7 +601,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
     for(yr=yr-1,k=r-1;yr>=0&&ys[yr]==s[k];--yr,--k);  // see if unextended cell-shape matches
     if(yr<0){NOUNROLL while(k>0&&s[k]==1)--k;}   // if all that match, check to see if extended cell-shape==1
     if(k>0) {   // If we compared all the way back to the entire rank or one short (since we only care about CELL shape), there will be no fill
-     ASSERTHOMO2(t,AT(jt->fill)); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
+     ASSERT(HOMO(t,AT(jt->fill)),EVDOMAIN); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
      break;  // one fill is enough
     }    
    }
@@ -658,7 +658,7 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   // So, we don't check compatibility for empty boxes.
   i=t;  // save indicator of nonempties
   if(t){
-   ASSERTHOMO(t);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
+   ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)  // no mixed nonempties: t is homo num/char or all boxed or all symbol
    te=t;  // te holds the type to use
   }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given.
   t=te&-te; NOUNROLL while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type

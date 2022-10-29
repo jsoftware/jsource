@@ -222,11 +222,6 @@ static void jtjsigstr(J jt,I e,I n,C*s){
 static void jtjsig(J jt,I e,A x){jsigstr(e,AN(x),CAV(x));}
      /* signal error e with error text x */ 
 
-void jtjsigd(J jt,C*s){C buf[100],*d="domain error: ";I m,n,p;
- m=strlen(d); MC(buf,d,m);
- n=strlen(s); p=MIN(n,100-m); MC(buf+m,s,p);
- jsigstr(EVDOMAIN,m+p,buf);
-}
 #endif
 
 #if 0 // obsolete 
@@ -275,102 +270,128 @@ void jtjsignalf(J jt,I e,C *fmt,...){
    default:SEGFAULT;}}
  jsigstr(e,bp-buf,buf);}
 #else
-// common error-analysis-and-display entry point
-// the error number is tucked into the low 8 bits of jt
-// ranks is 4 ranks: (low: rank(s) of self),(high: ranks in "n if verb supports IRS)  high is 0xffffffff if no IRS
-// self is the self for the failing entity
+// ratify the current emsg and call eformat_j_ to give a full message
+// This is called from CALL[12] when we know the arguments and self.  The error code will have been signaled earlier
+// self is the self for the failing entity; but if self is 0, a is a string to display for the error
 // a is the x/u arg to the failing entity
 // w is the y/n arg to the failing entity
+// m is the m argument for adverbs
+// the args to eformat_j_ are error#;jt->ranks;AR of self;a/AR(a)[;w/AR(w)}[;m]
+A jteformat(J jt,A self,A a,A w,A m){
+ F1PREFIP;
+ if(jt->emsgstate&EMSGSTATEFORMATTED)R 0;   // if we have already run eformat on this error, don't do it again
+ if(!jt->glock){ // if we are locked, show nothing
+  if(!(jt->emsgstate&EMSGSTATENOEFORMAT)){  // if eformat suppressed, leave the error line as is
+   A msg=0;  // indicate no formatted message
+   C e=jt->jerr; A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save errpr code and message
+    if(self){
+     // we are going to try to run eformat.
+     // we have to reset the state of the error system after saving what we will need
+     RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
+     A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
+     if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
+     // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
+     // other internal state (i. e. from !.n) will have been restored before we get here
+     // establish internal-state args: jt->ranks.  We have to reset the rank before we call internal functions
+     A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
+     RESETRANK;
+     // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.
+     A awm=0; // where we build the a/w/m arguments
+     if(m){A m1; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg
+     if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
+      {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
+     if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
+     // Convert self to AR.  If self is not a verb convert a/w to AR also
+     A selfar; if((selfar=arep(self))==0)goto noeformat;
+     // run the analyzer
+     df1(msg,jlink(sc(e),jlink(rnk,jlink(selfar,awm))),val);  // run eformat_j_
+    }else msg=a;  // self not given, use given message text
+noeformat: ;
+    // restore the saved error message up to the first LF; then the formatted line(s) if any; then the rest of the saved message
+    jt->jerr=jt->jerr1=e; jt->etxn=0;
+    C *savtext=CAV(saverr); DO(AN(saverr), if(savtext[i]==CLF)break; eputc(savtext[i]);)  // copy up to first LF
+    I trailpos=jt->etxn;  // remember offset to rest of message
+    if(msg&&(AT(msg)&LIT))ep(AN(msg),CAV(msg));  // copy out message if any
+    ep(AN(saverr)-trailpos,savtext+trailpos);  // copy out the rest of the original message
+    jt->etxn1=jt->etxn;
+   }
+  }
+ }
+ jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it
+R 0;
+}
+
+// common error-analysis-and-display entry point
+// e is the error number plus flags
 // this routine also does the work for jtjsigd (domain error with message text), jtjsignal (old-fashioned terse display),
 // jtjsignal3 (terse display for lines known to be from an explicit definition, giving line#/column), and
 // x 13!:8 y (display text x, set error# y) 
-// These are indicated by self=0, in which case:
-//   e!=0 a=w=0 means terse display (jsignal)
-//   e!=0 a=failing line, w=0, ranks=failing line#/column for jsignal3
-//   e!=0 a=0 w=A text for message
-//   e=0 a=0 w->text as C string for jsigd (domain error assumed)
+// Encoded as follows using upper bits of e:
+#define EMSGE 0xff  // the error-code part
+#define EMSGNOEVM 0x200  // set to suppress moving the terse message
+#define EMSGLINEISA 0x400  // line contains A block for message (otherwise it points to string if any and info has the length of the string)
+#define EMSGCXINFO 0x800  // info contains line#/col# of error
+#define EMSGSPACEAFTEREVM 0x1000 // set if terse message should be followed by a space 
+//   no bits set  means terse display (jsignal)
+//   bit 9 set: line=failing line, info=failing line#/column for jsignal3
+//   bit 10 set: line=A text for message (sigstr)
+//   bit 11 set: line->text as C string (sigd)
 //
-// if the line is to be analyzed in full, we format it by calling eformat_j_.  If the line is not destined to be seen by
-// the user we simply store the error code (we fill in the text if the user asks for it)
+// we look at emsgstate and do as little as possible if the user isn't going to see the message
 //
 // return value is always 0
-A jtjsignale(J jt,I ranks,A self,A a,A w){
+static A jtjsignale(J jt,I eflg,A line,I info){
  // if a message has already been stored, ignore any subsequent one
- C e=(C)(I)jt; jt=(J)((I)jt&~0xff);  // extract error# from jt and fix jt
- if(jt->jerr){jt->curname=0; R 0;}   // if not first error, ignore: clear error-name (why?) and continue
- // store the error message#
- jt->jerr=e; jt->jerr1=e;   // remember error for testing
- if(jt->etxn<0)R 0;  // if the error line is frozen, don't touch it
- jt->etxn=0;  // clear error-message area indicating message not installed yet
- // if the user will never see the error, exit without further ado - keeps u :: v fast
- if(e==0 || (!(jt->emsgstate&EMSGSTATENOTEXT) && BETWEENC(e,1,NEVM))){  // message text suppressed or internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
-  // we will format for display
-  if(e!=EVSTOP)moveparseinfotosi(jt);  // before we display, move error info from parse variables to si; but if STOP, it's already installed
-  // if debug is set, turn it off, with message, if there is not enough memory to run it
-  if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}  // spc sees that you can malloc 1000 bytes
-  // format the message lines according to the various types of call
-  if(self!=0){
-   A msg=0; A savcurname=jt->curname;
-   // emsg will be analyzed externally.  The analyzer returns the string, which we append to the terse string
-   if(!jt->glock){
-    if(!(jt->emsgstate&EMSGSTATENOTEXT)){  // analyze error unless forbidden to
-     // execute eformat_j_ e;ranks;AR(self);AR(a);AR(w)
-     // we have to clear errors to let eformat have full control.  We save a pointer to jt->curname too.
-     RESETERR; jt->curname=0;   // clear the error code.  This will allow the called functions to run.
-     A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
-     if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
-     // analysis verb is defined.  Call it
-     A rnk; GAT0E(rnk,INT,4,1,goto noeformat) IAV1(rnk)[0]=(I)(B)ranks; IAV1(rnk)[1]=(I)(B)(ranks>>RANKTX);  IAV1(rnk)[2]=(I)(B)(ranks>>2*RANKTX);  IAV1(rnk)[3]=(I)(B)(ranks>>3*RANKTX); // 4 ranks lr rr lcr rcr
-     A selfar; if((selfar=arep(self))==0)goto noeformat;
-     A aar=mtv, war=mtv; if(a!=0 && ((aar=arep(a))==0))goto noeformat; if(w!=0 && ((war=arep(w))==0))goto noeformat;
-     df1(msg,jlink(sc(e),jlink(rnk,jlink(selfar,jlink(aar,box(war))))),val);  // run eformat_j_
-noeformat: ;
-     jt->jerr=jt->jerr1=e; jt->etxn=0;   // restore the error info
-    }
-   }else savcurname=0;  // hide name if locked
-   dhead(0,0L);  // if in suspension, display suspension prefix: *      or |     
-   jteputlnolf(jt,AAV(JT(jt,evm))[e]);  // header of first line: terse string
-   if(savcurname){eputs(": "); ep(AN(savcurname),NAV(savcurname)->s);}  // ...followed by name of running entity
-   if(msg)jteputlnolf(jt,msg);  // if there is a message, type it out
-   eputc(CLF);  // end the line
-   if(!jt->glock)debsi1(jt->sitop);  // display the failing line
-  }else{  // no eformat_j_, we finish the error line here
-   dhead(0,0L);  // if in suspension, display suspension prefix: *      or |     
-   if(e!=0){
-    // 13!:8, jsignal, or jsignal3.  The message starts with the terse string or the user's string
-    A msg=w;  // init to use user's msg, if 13!:8
-    if(w==0){
-     msg=AAV(JT(jt,evm))[e];  // jsignal, or jsignal3.  Use the terse string
-    }
-    jteputlnolf(jt,msg);  // header of first line: terse string
-    if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}  // ...followed by name of running entity
-    eputc(CLF);  // ... that's the first line
-    if(!jt->glock){  // if locked display, show no detail about the failure
-     if(a!=0 && !(jt->emsgstate&EMSGSTATENOLINE)){  // if jsignal3 and not suppressed
-      // for jsignal3, output later lines
-      if(e==EVCTRL){dhead(3,0L); efmt("["FMTI"]",ranks); eputl(a);}  // control error: second line is [nnn]line-in-error
-      else{  // spelling error
-       dhead(3,0L); eputl(a);  // second line is line-in-error
-       dhead(3,0L); DQ(ranks, eputc(' ');); eputc('^'); eputc(CLF);  // third line is ^ indicating error location
-      }
+ if(jt->jerr==0 && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if not first error or formatting the line is in progress, ignore: clear error-name and continue
+  C e=eflg&EMSGE;   // extract error#
+  // store the error message#
+  jt->jerr=e; jt->jerr1=e;   // remember error for testing
+  if(jt->etxn>=0){  // if the error line is frozen, don't touch it
+   jt->etxn=0;  // clear error-message area indicating message not installed yet
+   // if the user will never see the error, exit without further ado - keeps u :: v fast
+   if(!(jt->emsgstate&EMSGSTATENOTEXT) && BETWEENC(e,1,NEVM)){  // message text suppressed or internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
+    // we will format for display
+    if(e!=EVSTOP)moveparseinfotosi(jt);  // before we display, move error info from parse variables to si; but if STOP, it's already installed
+    // if debug is set, turn it off, with message, if there is not enough memory to run it
+    if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}  // spc sees that you can malloc 1000 bytes
+    // format the message lines according to the various types of call
+    dhead(0,0L);  // display suspension/error prefix: *      or |     
+    if(!(eflg&EMSGNOEVM) || jt->glock){  // if terse msg not suppressed... but if locked, the terse message is ALL we show
+      // start with terse message [: name]
+      A msg=AAV(JT(jt,evm))[e];  // jsignal, or jsignal3.  Use the terse string
+      jteputlnolf(jt,msg);  // header of first line: terse string
+      if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);}}  // ...followed by name of running entity
+      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
      }
-     // last line is the failing line, with spaces before the error point
-     debsi1(jt->sitop);
+     if(!jt->glock){  // suppress detail if locked
+      if((line!=0) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
+       // display the message in line, according to its mode
+       C *text; I textlen;
+       if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type
+       if(eflg&EMSGCXINFO){ // if line has decoration from tokenizing
+        dhead(3,0L);  // start with error header
+        if(e==EVCTRL)efmt("["FMTI"]",info);  // control error: prefix with line#
+       }
+       ep(textlen,text); eputc(CLF); // out the message text terminated by LF
+       if((eflg&EMSGCXINFO) && !(e==EVCTRL)){
+        dhead(3,0L); DQ(info, eputc(' ');); eputc('^'); eputc(CLF);  // third line is ^ indicating error location
+       }
+      }
+      // last line is the failing line, with spaces before the error point
+      debsi1(jt->sitop);
+     }
     }
-   }else{
-    // jsigd, indicated by a 0 in e.  Redo as domain error with text
-    jtjsignale((J)((I)jt+EVDOMAIN),0,0,0,over(AAV(JT(jt,evm))[EVDOMAIN],over(str(1," "),str(strlen((C*)w),(C*)w))));
+    jt->etxn1=jt->etxn;  // save length of finished message
    }
   }
- }else jt->curname=0;  // message suppressed: clear the name always
- jt->etxn1=jt->etxn;  // save length of finished message
+  jt->curname=0;  // clear the name always
  R 0;
 }
 #endif
 
 
 // here for errors coming from explicit definition
-void jtjsignal(J jt,I e){A x;
+A jtjsignal(J jt,I e){A x;
 #if 0
 // template for debug break point
 // if(EVDOMAIN==e){
@@ -380,14 +401,14 @@ void jtjsignal(J jt,I e){A x;
  // Ignore them here - they will not be displayed
  x=BETWEENC(e,1,NEVM)?AAV(JT(jt,evm))[e]:mtv; jsigstr(e,AN(x),CAV(x));
 #else
- jtjsignale((J)((I)jt+e),0,0,0,0);
+ R jtjsignale(jt,e,0,0);  // just the error
 #endif
 }
 
 void jtjsignal2(J jt,I e,A dummy){jtjsignal(jt,e);}  // used in unquote to reschedule instructions
 
-// display the failing sentence. e=error message#, w holds sentence text, j is column# of error
-void jtjsignal3(J jt,I e,A w,I j){
+// display the failing sentence. e=error message#, w holds sentence text, j is column# of error.  Returns 0
+A jtjsignal3(J jt,I e,A w,I j){
 #if 0 // obsolete
  if(jt->jerr)R; 
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
@@ -405,17 +426,29 @@ void jtjsignal3(J jt,I e,A w,I j){
  }
  jt->etxn1=jt->etxn;
 #else
- jtjsignale((J)((I)jt+e),j,0,w,0);
+ R jtjsignale(jt,e|EMSGLINEISA+EMSGCXINFO,w,j);
 #endif
 }    /* signal error e on line w with caret at j */
 
+A jtjsigd(J jt,C*s){
+#if 0 // obsolete
+C buf[100],*d="domain error: ";I m,n,p;
+ m=strlen(d); MC(buf,d,m);
+ n=strlen(s); p=MIN(n,100-m); MC(buf+m,s,p);
+ jsigstr(EVDOMAIN,m+p,buf);
+#else
+R jtjsignale(jt,EVDOMAIN|EMSGSPACEAFTEREVM,(A)s,strlen(s));
+#endif
+}
+
+// display for 13!:8
 static F2(jtdbsig){I e;
  RE(0);
  if(!AN(w))R mtm;
  RZ(w=vi(w)); e=AV(w)[0]; 
  ASSERT(1<=e,EVDOMAIN);
  ASSERT(e<=255,EVLIMIT);
- if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale((J)((I)jt+e),0,0,0,a);} else jsignal(e);
+ if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGNOEVM,a,0);} else jsignal(e);
  R 0;
 }    
 

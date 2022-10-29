@@ -1,10 +1,3 @@
-0 : 0
-To add formatting for a primitive:
-1. Add a EFORMAT macro at the top of the primitive
-2. Change ASSERT macros to ASSERTE as desired
-3. For each ASSERTE, add primitive-specific code to eformat_j_ below
-)
-
 NB. y is AR of self
 NB. x is the IRS n from "n, if any (63 63 if no IRS)
 NB. Result is string form; if too long, truncate and append ...
@@ -53,15 +46,17 @@ emsg
 
 efarisnoun_j_ =: (((<,'0')) = {.)@>
 
-NB. y is jerr;ranks;AR of failing self;AR of a;<AR of w
-NB. If an arg is omitted its AR is empty
+NB. y is jerr;ranks;fill (i.0 0 if no fill);AR of failing self;a[;w][;m]
+NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
 eformat_j_ =: {{
-'e r selfar aar war' =. y
-'ivr ovr' =. _2 |.\ r  NB. verb-ranks in case IRS is in use. ir=.[lr,] rr is the (positive) rank of self; or=.[lcr,] rcr is jt->ranks passed into self, i. e. from "n
+'e ovr selfar a' =. 4{.y
+
 self =. selfar 5!:0  NB. self as an entity
 psself =. 4!:0 <'self'  NB. part of speech of self
-if. #aar do. a =. aar 5!:0 end.  NB. a as an entity, if it exists
-if. #war do. w =. war 5!:0 end.  NB. w as an entity, if it exists
+if. dyad =. 4<#y do. w =. 4{::y end.
+NB. now a and possibly w are args 5&6.  If self is a verb these will be the arg value(s) and dyad will be the valence
+NB. if the verb is m}, there will be an m argument
+NB. if self is not a verb, a and w are ARs and dyad indicates a conjunction
 emsg =. ''  NB. init no result
 NB. Start parsing self
 if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0  NB. primitive or single name: self-defining
@@ -71,11 +66,10 @@ end.
 NB. Go through a tree to find the message code to use
 select. psself
 case. 3 do.
-  NB. verb. treats monad and dyad separately
-  if. 0=#aar do.
-    NB. Monads
-  else.
+  NB. verb. treat monad and dyad separately
+  if. dyad do.
     NB. Dyads
+    ivr =. }. self b. 0  NB. dyad ranks of the verb
     select. prim
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o.&."b.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
@@ -85,7 +79,8 @@ case. 3 do.
     case. ;:'I.' do.
       if. (e=9) do. emsg =. ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w  return. end.
     end.
-    
+  else.
+    NB. Monads
   end.
 end.
 ''
@@ -94,9 +89,11 @@ end.
 
 0 : 0
 self=.+
-eformat_j_ 9;0 0 63 63;(5!:1<'self');(5!:1<'a');<(5!:1<'w') [ a =. i. 2 3 4 [ w =. i. 3 3 4
-eformat_j_ 9;0 0 1 63;(5!:1<'self');(5!:1<'a');<(5!:1<'w') [ a =. i. 2 3 4 [ w =. i. 3 3 4
-eformat_j_ 9;0 0 1 2;(5!:1<'self');(5!:1<'a');<(5!:1<'w') [ a =. i. 2 3 4 [ w =. i. 3 3 4
+eformat_j_ 9;63 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
+eformat_j_ 9;1 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
+eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
+eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 1 2 [ w =. i. 1 2 4   NB. no error
+eformat_j_ 9;1 1;(5!:1<'self');a;<w [ a =. i. 1 2 [ w =. i. 1 2 4
 )
 
 

@@ -104,6 +104,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define EMSGSTATENOTEXT 1  // Set to suppress message text
 #define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
 #define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis
+#define EMSGSTATEFORMATTED 0x80  // line has been through eformat - do not call again until errors reset
 // 1 byte free
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line

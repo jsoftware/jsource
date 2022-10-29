@@ -604,9 +604,9 @@ static int jsetx(JJ jt, C* name, VARIANT* v, int dobstrs)   // jt is a thread po
 	if(strlen(name) >= sizeof(gn)) return EVILNAME;
 	if(valid(name, gn)) return EVILNAME; 
 
-	er=jt->jerr=0;
+	RESETERR;
 	jset(gn, v2a(jt, v,dobstrs));	// no bstrs, run in thread we were called in
-	er=jt->jerr; jt->jerr=0;
+	er=jt->jerr; RESETERR;
 	tpop(old);
 	return er;
 }

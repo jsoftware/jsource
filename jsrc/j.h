@@ -796,6 +796,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
+#if 0   // obsolete
 // support for eformat_j_
 // Put the appropriate macro at the start of any routine that will do ASSERTE.
 // the piece at the beginning of the routine will vector off to ASSERTE, passing in the error code, the ranks, the original self, and the args
@@ -806,16 +807,17 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define EFORMAT1IRS(m) A origw=w, origself=self; RANK2T origr=jt->ranks;  ESECT((jt,(origr<<RANK2TX)|m,origself,0,origw))  // use when verb supports IRS
 #define EFORMAT2IRSCOMMON(l,r,irsr) A origa=a, origw=w, origself=self; RANK2T origr=irsr;  ESECT((jt,(origr<<RANK2TX)|((I)l<<RANKTX)|r,origself,origa,origw))
 #define EFORMAT2IRS(l,r) EFORMAT2IRSCOMMON(l,r,jt->ranks)
-#define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTE(b,e) {if(unlikely(!(b))){jt=(J)((I)jt+e); goto eformat;}}
 #define ASSERTF(b,e,s...){if(unlikely(!(b))){R jtjsignale((J)((I)jt+e),0,0,0,0);}}
+#endif
+#define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+#define ASSERTF(b,e,s...)     {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
 #define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
 // version for debugging
 // #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
-// obsolete #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
-#define ASSERTD(b,s)    {if(unlikely(!(b))){R jtjsignale(jt,0,0,0,(A)(s));}}  // e=0 means jsigd
+#define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); goto lbl;}}  // set name for display (only if error)
@@ -824,13 +826,16 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 
-#define ASSERTFHOMO(c,t0,t1)        ASSERTF(c,EVDOMAIN,"%t incompatible with %t",t0,t1)
-// obsolete #define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i do not conform",xl,xs,yl,ys)
 #define ASSERTFINDEX(c,i,l)         ASSERT(c,EVINDEX)
 //#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l) //scaf restore
 #define ASSERTINDEX(io,ir,l)        ASSERTFINDEX((UI)(ir)<(UI)(l),io,l)
 
-#define ASSERTHOMO(t) {\
+#if 0  // obsolete 
+#define ASSERTFHOMO(c,t0,t1)        ASSERTF(c,EVDOMAIN,"%t incompatible with %t",t0,t1)
+// obsolete #define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i do not conform",xl,xs,yl,ys)
+#define ASSERTHOMO(t) ASSERT(0>(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)
+#define ASSERTHOMO2(t0,t1) ASSERT(HOMO(t0,t1),t0,t1)
+ {\
  if(unlikely(0>(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)))){\
   /* Just grab and display any two mismatching types */\
   /* Generating error is slightly annoying; can't just use blsi, because in the event that we have (e.g.) a numeric type, another numeric type, and something non-numeric, we might display both numeric types, instead of a number and a something-else */\
@@ -840,10 +845,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   t&=~(NUMERIC|JCHAR);\
   while(_ti<2){_tt[_ti++]=BLSI(t);t=BLSR(t);}\
   ASSERTFHOMO(0,_tt[0],_tt[1]);}}
-#define ASSERTHOMO2(t0,t1) ASSERTFHOMO(HOMO(t0,t1),t0,t1)
+#endif
 
 // verify that shapes *x and *y match for l axes using AVX for rank<=vector size, memcmp otherwise
-#if C_AVX512
+#if 0   // obsolete rank>4 has negligible importance and is not worth a separate branch
 // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
 #if 0 // obsolete 
@@ -915,7 +920,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 // obsolete #define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
 #define ASSERTAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERT)
-#define ASSERTEAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERTE)
+// obsolete #define ASSERTEAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERTE)
 #define ASSERTAGREESEGFAULT (x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
@@ -952,10 +957,18 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CNOERR(x) CCOMMON(x,,)  // value has been resolved before & there cannot be an error
 #define CNULL(x) CCOMMON(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
 #define CNULLNOERR(x) CCOMMON(x,if(likely(res!=0)),)  // if x is 0, keep it 0; ignore error
-#define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs),(A)(fs)))
-#define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
-#define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs),(A)(fs)))
-#define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
+// CALL[12] is an eformat point if we have a valid self.  AT is 0 in an invalid self
+#define CALL1COMMON(f,w,fs,j,pop)   ({A carg1=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg3,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,0,0);} cargz;})
+#define CALL1(f,w,fs)   CALL1COMMON(f,w,fs,jt,)
+#define CALL1IP(f,w,fs)   CALL1COMMON(f,w,fs,jtinplace,)
+#define CALL2COMMON(f,a,w,fs,j,pop)   ({A carg1=(a), carg2=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg2,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,carg2,0);} cargz;})
+#define CALL2(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jt,)
+#define CALL2IP(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jtinplace,)
+// obsolete #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs),(A)(fs)))
+// obsolete #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
+// obsolete #define CALL1IP(f,w,fs)   ({A carg1=(w), carg3=(A)(fs), cargz; cargz=(f)(jtinplace,carg1,carg3,carg3); if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(jtinplace,carg3,carg1,0,0);} cargz;})
+// obsolete // obsolete #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
+// obsolete #define CALL2IP(f,a,w,fs)   ({A carg1=(a), carg2=(w), carg3=(A)(fs), cargz; cargz=(f)(jtinplace,carg1,carg2,carg3); if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(jtinplace,carg3,carg1,carg2,0);} cargz;})
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
 #define MODESRESET(jm)      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
@@ -1054,6 +1067,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // bit8 is 1 when h is not given (@: &: hook)
 // hook is 110
 // @: &: is 160
+#define RZEFCALL(resval,call,callself,calla,callw) {if(unlikely((resval=call)==0))R jteformat(jt,callself,calla,callw,0);}  // resval=call, as a format point since we have self
+
 #define FORK1(name,opt) \
 DF1(name){F1PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
 AF fghfn; A fs, gs, hs; \
@@ -1075,7 +1090,7 @@ if(opt&0x1){hx=w; \
 }else{J jtf; \
  I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
- RZ(hx=(fghfn)(jtf,PTR(w),hs,hs)); \
+ RZEFCALL(hx,(fghfn)(jtf,PTR(w),hs,hs),hs,PTR(w),0); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
 } \
@@ -1088,7 +1103,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
   fghfn=FAVV(fs)->valencefns[0]; \
   I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
-  RZ(fx=(fghfn)(jtf,PTR(w),fs,fs)); \
+  RZEFCALL(fx,(fghfn)(jtf,PTR(w),fs,fs),fs,PTR(w),0); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \
  } \
@@ -1104,9 +1119,9 @@ if(!((opt&1)||((opt&0x10)&&!(opt&0x20)))) \
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if(opt&0x40){ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs),gs,PTR(hx),0); \
 }else{ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs,gs)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
 } \
 /* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); \
@@ -1150,11 +1165,11 @@ if(opt&0x2){hx=w; \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
   /* the flags in gh@][ are passed through from gh */ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(hx=(fghfn)(jtf,PTR(opt&0x4?a:w),hs,hs)); \
+  RZEFCALL(hx,(fghfn)(jtf,PTR(opt&0x4?a:w),hs,hs),hs,PTR(opt&0x4?a:w),0); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(hx=(fghfn)(jtf,PTR(a),PTR(w),hs,hs)); \
+  RZEFCALL(hx,(fghfn)(jtf,PTR(a),PTR(w),hs),hs,PTR(a),PTR(w)); \
   hx=PTROP(hx,+,(I)((hx!=w)&(hx!=a))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  } \
  ARGCHK1D(hx) \
@@ -1176,11 +1191,11 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
    /* Check AC and zap/free only if the block can be freed; zapping otherwise would leave no way to make the usecount positive in every() */ \
    if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){if(likely(c==(ACINPLACE+ACUC1))){*tpopw=0; fanapop(w,AFLAG(w));}}}} \
    else{if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(a)&DIRECT)|SGNIF(AFLAG(a),AFPRISTINEX)))<0){if(likely(c==(ACINPLACE+ACUC1))){*tpopa=0; fanapop(a,AFLAG(a));}}}} \
-   RZ(fx=(fghfn)(jtf,PTR(opt&0x40?a:w),fs,fs)); \
+   RZEFCALL(fx,(fghfn)(jtf,PTR(opt&0x40?a:w),fs,fs),fs,PTR(opt&0x40?a:w),0); \
    hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   }else{ \
    jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-   RZ(fx=(fghfn)(jtf,PTR(a),PTR(w),fs,fs)); \
+   RZEFCALL(fx,(fghfn)(jtf,PTR(a),PTR(w),fs),fs,PTR(a),PTR(w)); \
    hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   } \
   ARGCHK2D(fx,hx) \
@@ -1197,9 +1212,9 @@ if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if((opt&0xc0)==0xc0){ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs),gs,PTR(hx),0); \
 }else{ \
- RZ(z=(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
 } \
 /* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
@@ -1901,9 +1916,10 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define RCA(w)          R w
 #define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}
 #define REGOTO(exp,lbl) {if(unlikely(((exp),jt->jerr!=0)))goto lbl;}
-#define RESETERR        {jt->etxn=jt->jerr=0;}
-#define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen
-#define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;}
+#define RESETERRT(t)    {t->etxn=t->jerr=0;t->emsgstate&=0x7f;}
+#define RESETERR        RESETERRT(jt)
+#define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen.  Used only when formatting ARs
+// obsolete #define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;jt->emsgstate&=0x7f;}
 #define RESETRANK       (jt->ranks=R2MAX)
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(unlikely(!(exp)))R0}

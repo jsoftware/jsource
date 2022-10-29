@@ -724,7 +724,13 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
 #endif
-       FPZ(y);  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
+       if(unlikely(y==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
+        pmask=(pt0ecam>>PLINESAVEX)&7;  // restore after calls
+        // if there was an error, try to localize it to this primitive
+        jteformat(jt,jt->parserstackframe.sf,QCWORD(stack[(pmask+1)&3].a),QCWORD(pmask&4?stack[3].a:0),0);
+        FP
+       }
+// obsolete       FPZ(y);
 #if AUDITEXECRESULTS
        auditblock(jt,y,1,1);
 #endif
@@ -829,7 +835,12 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
 #endif
-       FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
+       if(unlikely(yy==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
+        // if there was an error, try to localize it to this primitive
+        jteformat(jt,fs,QCWORD(stack[1].a),QCWORD(pmask&2?stack[3].a:0),0);
+        FP
+       }
+// obsolete        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
 #if AUDITEXECRESULTS
        auditblock(jt,yy,1,1);
 #endif
@@ -866,8 +877,14 @@ RECURSIVERESULTSCHECK
        auditmemchains();
 #endif
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
+       if(unlikely(rc==0)){  // fail parse if error.  
+        // except for catastrophic errors, the only things that can happen in an assignment are domain (assignment to global when local is defined) and agreement (multiple assignment)
+        // The agreement is self-explanatory, but we put out a message for the domain error
+        if(jt->jerr==EVDOMAIN)jteformat(jt,0,str(strlen(" public assignment to a name with a private value")," public assignment to a name with a private value"),0,0);
+        FP
+       }
+// obsolete        FPZ(rc)  // fail if error.  
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
-       FPZ(rc)  // fail if error
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
        if(likely((US)pt0ecam==0))EP(1)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
        stack+=2;  // if we have to keep going, advance stack to the assigned value
@@ -889,6 +906,7 @@ RECURSIVERESULTSCHECK
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
         //  so that it is safe to remove its protection
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
+        // errors during fork execution are formatted there.  The only error on the fork itself is syntax, for which the terse error is enough
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
         A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
@@ -908,6 +926,7 @@ RECURSIVERESULTSCHECK
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
         //  so that it is safe to remove its protection
         FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
+        // errors inside hook are formatted there.  The only error on the hook itself is syntax, for which the terse error is enough
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
         A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
@@ -967,7 +986,7 @@ RECURSIVERESULTSCHECK
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
                 // we set the error word# for the failing word and then resignal the error to get the spacing right
-   {C olderr=jt->jerr; jt->jerr=0; jt->parserstackframe.parseroridetok=(US)pt0ecam; jsignal(olderr);}  // recreate the error with the correct spacing
+   {C olderr=jt->jerr; RESETERR jt->parserstackframe.parseroridetok=(US)pt0ecam; jsignal(olderr);}  // recreate the error with the correct spacing
 failparse:  
    // if m=0, the stack contains a virtual mark.  We must step over that so we don't free the garbage mark
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment

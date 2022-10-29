@@ -376,7 +376,7 @@ NB. ------------ eformat ---------------------------------------------------
 f =: 1:`(-: fex)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
 
 'length error: fex, in + : shapes 2 and 3 do not conform'    f '2 3+4 5 6'
-'length error: fex, in +"1 1 : shapes 2 3 and 4 5 6 do not conform'    f '(i. 2 3)+"1 i.4 5 6'
+'length error: fex, in +"1 : shapes 2 3 and 4 5 6 do not conform'    f '(i. 2 3)+"1 i.4 5 6'
 'length error: fex, in +"1 1 : <frames> do not conform in shapes 2<3> and 2 3<6>'    f '(i. 2 3)+"1 i.2 3 6'
 
 

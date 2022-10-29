@@ -11,6 +11,7 @@ static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z
 #define fitctvector(name,vector) DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
 static fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
 fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
+// Note: it is OK to call eformat before popping ct because ct cannot possibly introduce error
 
 // for key, we pass in the tolerance to use for the classification
 static DF2(jtfitctkey){DECLFG;R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lu1.cct);}  // inplace is OK, since we don't use jt
@@ -46,12 +47,12 @@ static DF2(jtfitpoly2){I j;
  A z; R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(z,IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
-static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
-static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
+static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1COMMON(f1,w,fs,jtinplace,jt->fill=0;);  RETF(z);}  // gs cannot be virtual
+static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2COMMON(f2,a,w,fs,jtinplace,jt->fill=0;); jt->fill=0; RETF(z);}
 
 // print precision, just the number of fractional digits requested from sprintf
 static DF1(jtfitpp1){DECLFG;A z;
- I stkppn=jt->ppn; jt->ppn=AV(gs)[0]; z=CALL1(f1,w,fs); jt->ppn=stkppn;
+ I stkppn=jt->ppn; jt->ppn=AV(gs)[0]; z=CALL1COMMON(f1,w,fs,jt,jt->ppn=stkppn;); 
  RETF(z);
 }
 

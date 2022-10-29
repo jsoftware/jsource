@@ -375,7 +375,7 @@ static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
  // if there is an immex phrase, protect it during its execution
   A iep=0; if(jt->iepdo){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
   if(iep==0)break;
-  jt->iepdo=0; jtimmexexecct(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) jt->jerr=0; jttpop(jt,old);
+  jt->iepdo=0; jtimmexexecct(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) RESETERR jttpop(jt,old);
  }
 }
 
@@ -399,10 +399,11 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE)); if(!jm->jerr)jtimmexexecct(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
- e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm) jm->jerr=0;
- if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
+ e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm)  // save error on sentence to be our return code
  if(likely(wasidle))jtclrtaskrunning(jm);  //  when we finally return to FE, clear running state in case other tasks are running and need system lock - but not if recursion
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
+ RESETERRT(jm)
+ if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);  // IEP does not display its errors
  jtspfree(jm);
  jttpop(jm,old);
  R e;

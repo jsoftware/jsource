@@ -1499,15 +1499,15 @@ printf("%p-\n",w);
  }
 }
 
-// allocate header with rank r; if r==1, move the item count to be the shape also
-// a header is a simplified virtual block, for temporary use only, that must never escape into the wild, either in full or
+// allocate header with rank r; if w is given init z to be a surrogate of w (but do not init shape); if r==1, move the item count to be the shape also
+// a header is a noninplaceable simplified virtual block, for temporary use only, that must never escape into the wild, either in full or
 // as a backer for a virtual block
 RESTRICTF A jtgah(J jt,I r,A w){A z;
  ASSERT(RMAX>=r,EVLIMIT); 
  RZ(z=gafv(SZI*(NORMAH+r)-1));
  AT(z)=0;
  if(w){
-  AT(z)=AT(w); AN(z)=AN(w); ARINIT(z,(RANKT)r); AK(z)=CAV(w)-(C*)z;
+  AT(z)=AT(w); AN(z)=AN(w); ARINIT(z,(RANKT)r); AK(z)=CAV(w)-(C*)z; AC(z)=ACUC1;
   if(1==r)AS(z)[0]=AN(w);
  }
  R z;

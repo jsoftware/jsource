@@ -709,6 +709,7 @@ extern D        jtdlcm(J,D,D);
 extern A        jtdropr(J,I,A);
 extern B        jtecvt(J,D,I,int*,int*,C*);
 extern B        jtecvtinit(J);
+extern A        jteformat(J,A,A,A,A);
 extern A        jtenqueue(J,A,A,I);
 extern B        jtequ(J,A,A);
 extern B        jtequ0(J,A,A);
@@ -790,15 +791,15 @@ extern C        jtjinitt(J);
 extern A        jtinv(J,A,I);  // second arg is forced to 0 for initial call
 extern F        jtjope(J,A,C*);
 extern I        jtjset(J,C*,A);
-extern void     jtjsigd(J,C*) __attribute__((cold));
-extern void     jtjsignal(J,I) __attribute__((cold));
+extern A     jtjsigd(J,C*) __attribute__((cold));
+extern A     jtjsignal(J,I) __attribute__((cold));
 #if 0  // obsolete
 extern void     jtjsignalf(J,I,C*,...) __attribute__((cold));
 #else
-extern A     jtjsignale(J,I,A,A,A) __attribute__((cold));
+extern A     jtjsignale(J,I,A,I) __attribute__((cold));
 #endif
 extern void     jtjsignal2(J,I,A) __attribute__((cold));
-extern void     jtjsignal3(J,I,A,I) __attribute__((cold));
+extern A     jtjsignal3(J,I,A,I) __attribute__((cold));
 extern A        jtleakblockread(J,A);
 extern A        jtleakblockreset(J,A);
 extern F1(jtshowinplacing1);

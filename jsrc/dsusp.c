@@ -121,7 +121,8 @@ static A jtsusp(J jt){A z;
  J jtold=jt;  // save the thread that we started in
  UI savcstackmin=0;  // when we switch threads, we keep our stack; so we must use our stack-end.  If this is not zero, we must reset the stack on exit/change
  while(1){A  inp;
-  jt->jerr=0;
+  RESETERR
+// obsolete   jt->jerr=0;
   A iep=0;
   // if there is an immex phrase, protect it during its execution
   if(jt->iepdo){READLOCK(JT(jt,felock)) if((iep=JT(jt,iep))!=0)ra(iep); READUNLOCK(JT(jt,felock))}
@@ -182,7 +183,8 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  c=jt->sitop; NOUNROLL while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  RZ(d=suspset(jt->sitop));  // find the topmost CALL frame and mark it as suspended
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
- e=jt->jerr; jt->jerr=0;
+ e=jt->jerr; RESETERR
+// obsolete  jt->jerr=0;
  // Suspend.  execute from the keyboard until a suspension-ending result is seen
  z=susp();
  // Process the end-of-suspension.  There are several different ending actions
@@ -200,7 +202,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  case SUSJUMP:  // goto line number.  Result not given, use i. 0 0
   DGOTO(d,lnumcw(IAV(C(AAV(z)[1]))[0],d->dcc)) z=mtm; break;
  case SUSCLEAR:  // exit from debug
-  jt->jerr=e;    // restore the error state before debug
+  jt->jerr=e;    // restore the error number before debug.  The message has been lost
   c=jt->sitop; z=mtm;  // in case no error, give empty result
   NOUNROLL while(c){if(DCCALL==c->dctype)DGOTO(c,-1) c=c->dclnk;} break;   // exit from all functions, back to immed mode
  case SUSNEXT:  // continue execution on next line
@@ -281,13 +283,13 @@ noparse: ;
 A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
  sv=FAV(self); t=sv->fgh[0]; 
  if(CCOLON==sv->id&&(sv->flag&VXOP||t&&NOUN&AT(t))){  // : and executable body: either OP (adv/conj now with noun operands) or m : n
-  ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); fa(self);
+  ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self);   if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);  // we have self, so this can be a format point
  }else{                              /* tacit    */
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 
   while(1){
    d->dcnewlineno=0;  // turn off 'reexec requested' flag
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}  // if first line is a stop
-   else              {ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); fa(self);}
+   else              {ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outside of debug mode
    if(!z&&(jt->uflags.trace&TRACEDB)){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}

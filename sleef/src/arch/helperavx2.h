@@ -40,7 +40,8 @@
 #if defined(MMSC_VER)
 #include <intrin.h>
 #else
-#include <x86intrin.h>
+// #include <x86intrin.h>
+#include <immintrin.h>
 #endif
 
 #include <stdint.h>

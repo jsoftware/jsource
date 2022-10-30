@@ -318,8 +318,9 @@ typedef union {
 #define LIKELY(condition) (condition)
 #define UNLIKELY(condition) (condition)
 
-#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__)) && !defined(SLEEF_GENHEADER)
-#include <x86intrin.h>
+#if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__)) && !defined(SLEEF_GENHEADER)
+// #include <x86intrin.h>
+#include <immintrin.h>
 #endif
 
 #define SLEEF_INFINITY (1e+300 * 1e+300)

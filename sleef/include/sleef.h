@@ -16,7 +16,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if 0 // (defined(__GNUC__) || defined(__CLANG__)) && !defined(__INTEL_COMPILER)
+#if 0 // (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
 #define CONST const
 #else
 #ifndef CONST
@@ -51,8 +51,9 @@
 #endif // #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(MMSC_VER)) && !defined(SLEEF_STATIC_LIBS)
 
 #if !defined(__EMU_M256_AVXIMMINTRIN_EMU_H__)
-#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__))
-#include <x86intrin.h>
+#if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
+// #include <x86intrin.h>
+#include <immintrin.h>
 #endif
 
 #if (defined(MMSC_VER))

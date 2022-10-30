@@ -105,10 +105,10 @@
 #endif
 
 #if C_AVX
-#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__))
+#if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
 #include <immintrin.h>
 #endif
-#if (defined(_MSC_VER))
+#if (defined(MMSC_VER))
 #include <intrin.h>
 #endif
 // no EMU_AVX512; avx512 is not widespread yet, and older chips still downclock (so not worth it for small arrays), so still maintain avx2-specific paths

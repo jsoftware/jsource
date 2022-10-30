@@ -563,6 +563,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
 noaxes:;
   if(unlikely(z==0))z=jstd(w,ind,&cellframelen);  // get ind and framelen for complex indexes
   z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,cellframelen);  //  dense a if needed; dense amend
+  if(unlikely(z==0))jteformat(jt,self,a,w,ind);  // eformat this error while we have access to ind
   // We modified w which is now not pristine.
   PRISTCLRF(w)
   EPILOG(z);
@@ -603,14 +604,15 @@ static DF2(amccv2){F2PREFIP;DECLF;
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
  A z=jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
+ if(unlikely(z==0))jteformat(jt,self,a,w,x);  // eformat this error while we have access to x
  // We modified w which is now not pristine.
  PRISTCLRF(w)
  RETF(z);
 }
 
 
-static DF1(mergn1){       R merge1(w,VAV(self)->fgh[0]);}
-static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
+static DF1(mergn1){A ind,z; z=merge1(w,ind=VAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
+static DF1(mergv1){DECLF; A ind,z; z=merge1(w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
 
 // called from m}, m is usually NOT a gerund
 static B ger(J jt,A w){A*wv,x;

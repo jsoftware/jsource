@@ -159,6 +159,9 @@ a =: 1
 1 = a ]:  NB. failed when arg returned modifier
 a ]:
 
+'syntax error' -: ". etx 'Oc)'
+'syntax error' -: ". etx 'Oc('
+
 
 4!:55 ;:'a aa bc locnm multi swd t '
 

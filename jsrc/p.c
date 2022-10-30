@@ -990,7 +990,7 @@ failparsestack: // here we encountered an error during stacking.  The error was 
 failparse:  
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
-   // fa() any blocks left on the stack that have FAOWED
+   // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address
    for(;stack!=stackend1;++stack)if(stack[0].pt!=PTMARK&&ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
   }
 #if MEMAUDIT&0x2

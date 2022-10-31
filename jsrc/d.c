@@ -276,7 +276,7 @@ void jtjsignalf(J jt,I e,C *fmt,...){
 // a is the x/u arg to the failing entity
 // w is the y/n arg to the failing entity
 // m is the m argument for adverbs
-// the args to eformat_j_ are error#;jt->ranks;AR of self;a/AR(a)[;w/AR(w)}[;m]
+// the args to eformat_j_ are error#;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
 A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
  if(jt->emsgstate&EMSGSTATEFORMATTED)R 0;   // if we have already run eformat on this error, don't do it again
@@ -292,12 +292,12 @@ A jteformat(J jt,A self,A a,A w,A m){
      if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
      // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
      // other internal state (i. e. from !.n) will have been restored before we get here
-     // establish internal-state args: jt->ranks.  We have to reset the rank before we call internal functions
+     // establish internal-state args: jt->ranks.
      A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
-     RESETRANK;
-     // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.
+     RESETRANK;   //  We have to reset the rank before we call internal functions
+     // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
      A awm=0; // where we build the a/w/m arguments
-     if(m){A m1; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg
+     if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg, and set rank to ''
      if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
       {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
      if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}

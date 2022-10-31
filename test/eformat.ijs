@@ -58,6 +58,15 @@ bshape =. (<"1 +:x) ;@:((;:'<>')"_`[`]})&.> (a: 0 _1} (<' ') (,@,. , [) (":&.>))
 ' : <frames> do not conform in shapes ' , (0 {:: bshape) , ' and ' , (1 {:: bshape)  
 }}
 
+NB. y is message;selfar;ovr ; result has the executing entity prepended
+efaddself_j_ =: {{
+'msg selfar ovr' =. y
+if. #msg do.
+  if. #selfmsg =. ovr eflinearself selfar do. msg =. msg ,~ selfmsg ,~ ', in ' end.
+end.
+msg
+}}
+
 NB. y is a;w;selfar;ivr;ovr
 NB. Create msg if frames of a & w do not agree
 efckagree_j_ =: {{
@@ -77,10 +86,13 @@ elseif. -. -:/ (<./ or-ir) {.&> (-or) {.&.> a ;&$ w do.  NB. inner frames too, a
   emsg =. bktpos efcarets a ;&$ w
 end.
 NB. If we found an error, prepend the failing primitive
-if. #emsg do.
-  if. #selfmsg =. ovr eflinearself selfar do. emsg =. emsg ,~ selfmsg ,~ ', in ' end.
-end.
-emsg
+efaddself y;selfar;ovr
+}}
+
+NB. y is a list of 3!:0 results; result is empty if OK, otherwise string with the incompatible types
+efhomo_j_ =: {{
+if. 2 > #types =. ~. 9 13 15 16 I. 1 4 8 16 64 128 1024 4096 8192 16384 2 131072 262144 2048 32 32768 65536 i. ,y do. '' return. end.
+;:^:_1 types { ;:'numeric character boxed symbol'
 }}
 
 efarisnoun_j_ =: (((<,'0')) = {.)@>
@@ -99,8 +111,15 @@ NB. if the verb is m}, there will be an m argument
 NB. if self is not a verb, a and w are ARs and dyad indicates a conjunction
 emsg =. ''  NB. init no result
 NB. Start parsing self
-if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0  NB. primitive or single name: self-defining
-else. prim =. {. > selfar [ args =. (0;1) {:: selfar  NB. entity, args if any
+fill =.  i. 0 0   NB. indicate no fill
+while. do.
+  if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0 break.  NB. primitive or single name: self-defining
+  else.
+    prim =. {. > selfar [ args =. (0;1) {:: selfar  NB. entity, args if any
+    if. prim ~: ;:'!.' do. break. end.
+    NB. self is u!.n - extract the fill and reanalyze
+    selfar =. {. args [ fill =. (1;1) {:: args  NB. n is always a noun 
+  end.
 end.
 
 NB. Go through a tree to find the message code to use
@@ -114,13 +133,18 @@ case. 3 do.
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o.&."b.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
       if. e=9 do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. emsg return. end. end.
-    case. ;: '@&' do.  NB. conjunctions with inherited rank
+    case. ;: '@&&.' do.  NB. conjunctions with inherited rank
       if. (e=9) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
       if. (e=9) do. emsg =. ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w  return. end.
     end.
   else.
     NB. Monads
+    select. prim
+    case. ;:'>' do.
+      if. (e=3) do. if. #types =. efhomo 3!:0@> a do. emsg =. ' contents are incompatible: ' , types end. end.  NB. only error is incompatible args
+      efaddself emsg;selfar;ovr return.
+    end.
   end.
 end.
 ''
@@ -147,6 +171,8 @@ self=.tolower
 eflinearself_j_ 5!:1<'self'
 self=.(tolower@tolower tolower tolower@tolower)
 eflinearself_j_ 5!:1<'self'
+self =. >
+eformat_j_ 3;63 63;(5!:1<'self');<a [ a =. 1;'1'
 )
 
 

@@ -291,7 +291,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     1!:1[1 read from keyboard */
  // if we are already prompting, a second prompt would be unrecoverable & we fail this request
  ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
- showerr();  // if there is an error at this point, display it (shouldn't happen)   use jt to force typeout
+ showerr();  // there may be error text that has not been emitted.  jt->jerr will be clear.
  // read from the front end. This is either through the nfe path or via the callback to the FE
  if(IJT(jt,nfe)){
   // Native Front End

@@ -223,6 +223,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(9,19):  R CDERIV(CIBEAM, jtcts,        0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,20):  R CDERIV(CIBEAM, jtmmaxq,      0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,21):  R CDERIV(CIBEAM, jtmmaxs,      0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(9,22):  R CDERIV(CIBEAM, jtqfill,      0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,24):  R CDERIV(CIBEAM, jtseclevq,    0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,25):  R CDERIV(CIBEAM, jtseclevs,    0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,26):  R CDERIV(CIBEAM, jtiepq,       0,            VASGSAFE,RMAX,RMAX,RMAX); 

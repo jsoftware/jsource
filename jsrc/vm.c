@@ -371,7 +371,7 @@ F2(jtrdot2){R tymes(a,rdot1(w));}
 
 F1(jtpolar){ARGCHK1(w); A z; R cvt((AT(w)&SPARSE)+FL,df2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
-F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
+DF1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
  ARGCHK1(w); 
  t=AT(w); r=AR(w); RESETRANK;   // Run as infinite rank
  ASSERT(!AN(w)||t&NUMERIC,EVDOMAIN);
@@ -386,5 +386,5 @@ F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,rect(SPA(wp,x)));
   R z;
- }else R IRS2(w,num(0),0,0,0,jtover,z);
+ }else R IRS2(w,num(0),self,0,0,jtover,z);
 }

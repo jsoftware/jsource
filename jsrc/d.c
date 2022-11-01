@@ -43,7 +43,7 @@ static void jtefmt(J jt,C*s,I i){
  if(15<NETX-jt->etxn){C*v=jt->etx+jt->etxn; sprintf(v,s,i); jt->etxn+=strlen(v);}
 }
 
-// jt has the typeout flags
+// jt has the typeout flags.  Display error text if any, then reset errors
 void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
  if(jt->etxn&&!((I)jtinplace&JTPRNOSTDOUT)){  // if there is a message and it is not suppressed...
   p=b; q=jt->etx; r=q+jt->etxn;
@@ -57,7 +57,8 @@ void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
   jsto(JJTOJ(jt),MTYOER,b);
 #endif
  }
- jt->etxn=0;
+ RESETERR
+// obsolete  jt->etxn=0;
 }
 
 static I jtdisp(J jt,A w,I nflag);
@@ -285,26 +286,28 @@ A jteformat(J jt,A self,A a,A w,A m){
    A msg=0;  // indicate no formatted message
    C e=jt->jerr; A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save errpr code and message
     if(self){
-     // we are going to try to run eformat.
-     // we have to reset the state of the error system after saving what we will need
-     RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
-     A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
-     if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
-     // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
-     // other internal state (i. e. from !.n) will have been restored before we get here
-     // establish internal-state args: jt->ranks.
-     A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
-     RESETRANK;   //  We have to reset the rank before we call internal functions
-     // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
-     A awm=0; // where we build the a/w/m arguments
-     if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg, and set rank to ''
-     if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
-      {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
-     if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
-     // Convert self to AR.  If self is not a verb convert a/w to AR also
-     A selfar; if((selfar=arep(self))==0)goto noeformat;
-     // run the analyzer
-     df1(msg,jlink(sc(e),jlink(rnk,jlink(selfar,awm))),val);  // run eformat_j_
+     if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
+      // we are going to try to run eformat.
+      // we have to reset the state of the error system after saving what we will need
+      RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
+      A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
+      if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
+      // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
+      // other internal state (i. e. from !.n) will have been restored before we get here
+      // establish internal-state args: jt->ranks.
+      A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
+      RESETRANK;   //  We have to reset the rank before we call internal functions
+      // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
+      A awm=0; // where we build the a/w/m arguments
+      if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg, and set rank to ''
+      if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
+       {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
+      if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
+      // Convert self to AR.  If self is not a verb convert a/w to AR also
+      A selfar; if((selfar=arep(self))==0)goto noeformat;
+      // run the analyzer
+      WITHDEBUGOFF(df1(msg,jlink(sc(e),jlink(rnk,jlink(selfar,awm))),val);)  // run eformat_j_
+     }
     }else msg=a;  // self not given, use given message text
 noeformat: ;
     // restore the saved error message up to the first LF; then the formatted line(s) if any; then the rest of the saved message
@@ -460,12 +463,12 @@ DF1(jtemsglevel){
  if(!AN(w))R mtm;
  RZ(w=vi(w)); I e=AV(w)[0]; 
  ASSERT(e<=7,EVDOMAIN);  // must be integer in range 0-7
- I ostate=jt->emsgstate; jt->emsgstate=e;
+ I ostate=jt->emsgstate; jt->emsgstate=(jt->emsgstate&~7)|e;
  R sc(ostate);
 }
 
 
-F1(jtdberr){ASSERTMTV(w); R sc(jt->jerr1);}           /* 13!:11 last error number   */
+F1(jtdberr){ASSERTMTV(w); R sc(jt->jerr1);}           /* 13!:11 y  last error number   */
 // 13!:12 last error text.  If there is no error, show no text.  If there is an error with no text, we must have suppressed
 // loading the terse message; return it now
 F1(jtdbetx){

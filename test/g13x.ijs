@@ -1,6 +1,7 @@
 prolog './g13x.ijs'
 NB. 13!: ----------------------------------------------------------------
 
+
 original=: 9!:6''
 boxdraw_j_ 1
 
@@ -223,7 +224,7 @@ f1 =: 3 : '+/'
 f2 =: 3 : '('
 
 13!:0 [1
-'domain error' -:   (3 : '%y' ) etx 'asdf'
+'domain error' -:   f =: (3 : '%y' ) etx 'asdf'
 'domain error' -: % (1 : 'u y') etx 'asdf'
 13!:0 [0
 

@@ -59,7 +59,7 @@ F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wr,*ws,wt;P*wp,*zp;
  RZ(b=bfi(wr,a,1));  // get boolean mask with a 1 for every axis that is sparse
  if(b[wf])R fromis1(ind,w,z,wf);  // if the selection is along a sparse axis, go do it
  // selection is along a dense axis...
- m=wcr; DO(wcr, m-=b[wf+i];); RZ(x=irs2(ind,SPA(wp,x),FUNCTYPE0,ar,m,jtifrom));
+ m=wcr; DO(wcr, m-=b[wf+i];); RZ(x=irs2(ind,SPA(wp,x),NOEMSGSELF,ar,m,jtifrom));
  if(k=ar-1)DO(an, if(av[i]>=wf)av[i]+=k;);
  if(AR(z)){SPB(zp,a,a); SPB(zp,x,x); SPB(zp,i,ca(SPA(wp,i))); R z;}
  else R AN(x)?reshape(mtv,x):ca(SPA(wp,e));
@@ -131,7 +131,7 @@ static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,wr,wcr;
    if(!AN(x))continue;
    RZ(x=less(IX(m),pind(m,x)));
   }
-  RZ(z=irs2(x,z,FUNCTYPE0, RMAX,wcr-j,jtfromis)); z=gc(z,old);
+  RZ(z=irs2(x,z,NOEMSGSELF, RMAX,wcr-j,jtfromis)); z=gc(z,old);
  }
  R z;
 }    /* (<ind){"r w, sparse w */
@@ -149,18 +149,18 @@ F2(jtfromsd){A e,x,z;I acr,af,ar,*v,wcr,wf,wr,*ws;P*ap,*zp;
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
- if(af)R sprank2(a,w,FUNCTYPE0,acr,wcr,jtfrom);
+ if(af)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtfrom);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVNONCE);
  ap=PAV(a); ws=AS(w);
  GASPARSE(z,STYPE(AT(w)),1L,ar+wr-(I )(0<wcr),ws); zp=PAV(z);
  v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
- RZ(x=irs2(SPA(ap,e),w,FUNCTYPE0,0L,wcr,jtifrom)); RZ(e=reshape(mtv,x));
+ RZ(x=irs2(SPA(ap,e),w,NOEMSGSELF,0L,wcr,jtifrom)); RZ(e=reshape(mtv,x));
  ASSERT(all1(eq(e,x)),EVSPARSE);
  SPB(zp,e,e);
  SPB(zp,a,wf?plus(sc(wf),SPA(ap,a)):SPA(ap,a));
  SPB(zp,i,SPA(ap,i));
  if(wf){
-  RZ(x=irs2(SPA(ap,x),w,FUNCTYPE0, RMAX,wcr,jtifrom));
+  RZ(x=irs2(SPA(ap,x),w,NOEMSGSELF, RMAX,wcr,jtifrom));
   RZ(x=cant2(less(IX(AR(x)),sc(wf)),x));
   SPB(zp,x,x);
  }else SPB(zp,x,ifrom(SPA(ap,x),w));
@@ -171,12 +171,12 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
- if(af)R sprank2(a,w,FUNCTYPE0,acr,wcr,jtfrom);
+ if(af)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtfrom);
  ASSERT(DTYPE(AT(w))&B01+INT+FL+CMPX,EVNONCE);
  ap=PAV(a); wp=PAV(w); ws=AS(w);
  GASPARSE(z,AT(w),1,ar+wr-(I )(0<wcr),ws); zp=PAV(z);
  v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
- RZ(x=irs2(SPA(ap,e),w,FUNCTYPE0,0L,wcr,jtfrom)); RZ(e=reshape(mtv,x));
+ RZ(x=irs2(SPA(ap,e),w,NOEMSGSELF,0L,wcr,jtfrom)); RZ(e=reshape(mtv,x));
  ASSERT(all1(denseit(eq(e,x))),EVSPARSE);
  SPB(zp,e,e);
  x=SPA(ap,a); if(ar>AN(x)){RZ(a=reaxis(IX(ar),a)); ap=PAV(a);}
@@ -185,7 +185,7 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  GATV0(x,INT,ar+n-!!wcr,1); v=AV(x);
  DO(wf, if(b[i])*v++=i;); DO(ar, *v++=wf+i;); DO(wcr-1, if(b[i+wf+1])*v++=wf+ar+i;);
  SPB(zp,a,x);
- RZ(x=irs2(SPA(ap,x),w,FUNCTYPE0, RMAX,wcr,jtfrom)); xp=PAV(x); 
+ RZ(x=irs2(SPA(ap,x),w,NOEMSGSELF, RMAX,wcr,jtfrom)); xp=PAV(x); 
  y=SPA(xp,i); u=AV(y); c=AS(y)[1]; m=AS(y)[0]; k=0; DO(wf, if(b[i])++k;);
  y=SPA(ap,i); v=AV(y); d=AS(y)[1]; n=c+d-1; p=c-(1+k);
  GATV0(y,INT,m*n,2); AS(y)[0]=m; AS(y)[1]=n; yv=AV(y);

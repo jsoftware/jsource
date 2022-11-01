@@ -196,7 +196,7 @@ F2PREFIP;ARGCHK2(a,w);
  // if WILLBEOPENED, any virtual boxes in w must be realized
  if(unlikely(optype&AT(w)&~AFLAG(w)&BOX))RZ(realizeboxedvirtuals(w));  // realize virtuals, in place.  Required only if WILLOPEN is set, and w is nonrecursive boxed.  Result 0 is error
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}   // box empty or unboxed w
- RETF(jtover(jtinplace,jtbox(JTIPAtoW,a),w));  // join to boxed a
+ RETF(jtover(jtinplace,jtbox(JTIPAtoW,a),w,ds(CSEMICO)));  // join to boxed a
 }
 
 // Calculate the value to use for rf arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)

@@ -112,8 +112,8 @@
 #define CLEFT      (C)0x16  // [   must be paired with CRIGHT
 #define CRIGHT     (C)0x17  // ]
 #define CLAMIN     (C)0x18  // ,:
-#define CCOMMA     (C)0x19  //
-#define CSEMICO    (C)0x1a  //
+#define CCOMMA     (C)0x19  // ,
+#define CSEMICO    (C)0x1a  // ;
 #define CRAZE      (C)0x1a  //
 #define CJDOT      (C)0x1b  // j.
 #define CGRADE     (C)0x1c  // /:
@@ -161,7 +161,7 @@
 #define CHEAD      (C)0x41  // {.
 #define CPOUND     (C)0x42  // #  must pair with $
 #define CDOLLAR    (C)0x43  // $
-#define CTILDE     (C)0x44  //
+#define CTILDE     (C)0x44  // ~
 #define CSLDOT     (C)0x45  // /.
 #define CADVERSE   (C)0x46  // ::
 #define CQQ        (C)0x47  //     double quote

@@ -121,8 +121,8 @@ static A jtsusp(J jt){A z;
  J jtold=jt;  // save the thread that we started in
  UI savcstackmin=0;  // when we switch threads, we keep our stack; so we must use our stack-end.  If this is not zero, we must reset the stack on exit/change
  while(1){A  inp;
-  RESETERR
-// obsolete   jt->jerr=0;
+// obsolete   RESETERR
+  jt->jerr=0;   // scaf not needed now since done in showerr
   A iep=0;
   // if there is an immex phrase, protect it during its execution
   if(jt->iepdo){READLOCK(JT(jt,felock)) if((iep=JT(jt,iep))!=0)ra(iep); READUNLOCK(JT(jt,felock))}
@@ -183,8 +183,9 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  c=jt->sitop; NOUNROLL while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  RZ(d=suspset(jt->sitop));  // find the topmost CALL frame and mark it as suspended
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
- e=jt->jerr; RESETERR
-// obsolete  jt->jerr=0;
+ e=jt->jerr;
+// obsolete  RESETERR
+ jt->jerr=0;  // scaf not needed now since done in showerr
  // Suspend.  execute from the keyboard until a suspension-ending result is seen
  z=susp();
  // Process the end-of-suspension.  There are several different ending actions

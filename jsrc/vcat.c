@@ -21,7 +21,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  switch(2*b[f]+!equ(a,e)){
   case 0:  /* dense and a equal e */
    RZ(y=ca(y)); 
-   RZ(x=p?irs2(x,a,0L,AR(x)-(1+k),0L,jtover):irs2(a,x,0L,0L,AR(x)-(1+k),jtover)); 
+   RZ(x=p?irs2(x,a,DUMMYSELF,AR(x)-(1+k),0L,jtover):irs2(a,x,DUMMYSELF,0L,AR(x)-(1+k),jtover)); 
    break;
   case 1:  /* dense and a not equal to e */
    GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); RZ(q=odom(2L,c,v));
@@ -30,7 +30,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
     RZ(x=from(grade1(over(y,less(q,y))),over(x,reshape(z,e))));
     y=q;
    }
-   RZ(x=p?irs2(x,a,0L,AR(x)-(1+k),0L,jtover):irs2(a,x,0L,0L,AR(x)-(1+k),jtover));
+   RZ(x=p?irs2(x,a,DUMMYSELF,AR(x)-(1+k),0L,jtover):irs2(a,x,DUMMYSELF,0L,AR(x)-(1+k),jtover));
    break;
   case 2:  /* sparse and a equals e */
    RZ(y=ca(y)); 
@@ -56,7 +56,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
  if(!ar)R ovs0(0,wcr,a,w);
  if(!wr)R ovs0(1,acr,w,a);
- if(ar>acr||wr>wcr)R sprank2(a,w,FUNCTYPE0,acr,wcr,jtover);
+ if(ar>acr||wr>wcr)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtover);
  r=MAX(ar,wr);
  if(r>ar)RZ(a=reshape(over(apv(r-ar,1L,0L),shape(a)),a)); as=AS(a);
  if(r>wr)RZ(w=reshape(over(apv(r-wr,1L,0L),shape(w)),w)); ws=AS(w);
@@ -214,7 +214,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
-F2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
+DF2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  F2PREFIP;ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
@@ -273,7 +273,7 @@ F2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,w
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  if(((r-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))>=0){  // r>2, or empty (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom), and items (which are lists) have same length 
-  RESETRANK; z=rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
+  RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
  }
  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible, but scalar replication might be
  I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
@@ -292,11 +292,11 @@ F2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,w
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
-F2(jtstitch){I ar,wr; A z;
+DF2(jtstitch){I ar,wr; A z;
  F2PREFIP;ARGCHK2(a,w);
  ar=AR(a); wr=AR(w);
  ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]
- if(likely(((SGNIFDENSE(AT(a)|AT(w)))&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
+ if(likely(((SGNIFDENSE(AT(a)|AT(w)))&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,self,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
@@ -308,14 +308,14 @@ F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
  R jtreshape(jtinplace,x,w);
 }    /* ,:"r w */
 
-F2(jtlamin2){A z;I ar,p,q,wr;
+DF2(jtlamin2){A z;I ar,p,q,wr;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  ARGCHK2(a,w); 
  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(p)RZ(a=IRS1(a,0L,p,jtlamin1,z));
  if(q)RZ(w=IRS1(w,0L,q,jtlamin1,z));
- RZ(IRS2(a,w,0L,p+!!p,q+!!q,jtover,z));
+ RZ(IRS2(a,w,self,p+!!p,q+!!q,jtover,z));
  if(!(p|q))z=IRS1(z,0L,0L,jtlamin1,a);
  RETF(z);
 }    /* a,:"r w */
@@ -415,5 +415,5 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    }  // end 'a and w compatible in rank and type'
   }   // end 'inplaceable usecount'
  }  // end 'inplaceable'
- R(jtover(jtinplace,a,w));  // if there was trouble, failover to non-in-place code
+ R(jtover(jtinplace,a,w,ds(CCOMMA)));  // if there was trouble, failover to non-in-place code
 }    /* append in place if possible */

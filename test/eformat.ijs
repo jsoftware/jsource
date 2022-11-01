@@ -52,6 +52,13 @@ if. 63 (+./@:~:) x do. sstg =. sstg , '"' , ": (_1 x: <. (%63&~:) x) end.
 sstg
 }}
 
+NB. y is list of boxes.  Result is string with the words separated and commaed
+efandlist_j_ =: {{
+if. 2 < #y do. y =. (,&','&.>@}: , {:) y end.
+if. 1 < #y do. y =. (}: , (<'and') , {:) y end.
+;:^:_1 y
+}}
+
 NB. x is 2x2 positions of <>; y is ashape;w shape  result is frame message
 efcarets_j_ =: {{
 bshape =. (<"1 +:x) ;@:((;:'<>')"_`[`]})&.> (a: 0 _1} (<' ') (,@,. , [) (":&.>))&.> y
@@ -86,22 +93,23 @@ elseif. -. -:/ (<./ or-ir) {.&> (-or) {.&.> a ;&$ w do.  NB. inner frames too, a
   emsg =. bktpos efcarets a ;&$ w
 end.
 NB. If we found an error, prepend the failing primitive
-efaddself y;selfar;ovr
+efaddself emsg;selfar;ovr
 }}
 
-NB. y is a list of 3!:0 results; result is empty if OK, otherwise string with the incompatible types
+NB. y is a list of 3!:0 results; result is list of the types represented
 efhomo_j_ =: {{
-if. 2 > #types =. ~. 9 13 15 16 I. 1 4 8 16 64 128 1024 4096 8192 16384 2 131072 262144 2048 32 32768 65536 i. ,y do. '' return. end.
-;:^:_1 types { ;:'numeric character boxed symbol'
+types =. ~. 9 13 15 16 I. 1 4 8 16 64 128 1024 4096 8192 16384 2 131072 262144 2048 32 32768 65536 i. ,y
+types { ;:'numeric character boxed symbol'
 }}
 
 efarisnoun_j_ =: (((<,'0')) = {.)@>
 
-NB. y is jerr;ranks;fill (i.0 0 if no fill);AR of failing self;a[;w][;m]
+NB. y is jerr;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
 eformat_j_ =: {{
+NB. extract internal state quickly, before anything disturbs it
+fill =. 9!:22''  NB. This also clears jt->fill
 'e ovr selfar a' =. 4{.y
-
 self =. selfar 5!:0  NB. self as an entity
 psself =. 4!:0 <'self'  NB. part of speech of self
 if. ism=.ovr-:'' do. ovr=.63 63 [ y =. }:y [ ind=._1{::y end.  NB. orv is the special value '' for m}.  Take the m arg in that case
@@ -111,17 +119,15 @@ NB. if the verb is m}, there will be an m argument
 NB. if self is not a verb, a and w are ARs and dyad indicates a conjunction
 emsg =. ''  NB. init no result
 NB. Start parsing self
-fill =.  i. 0 0   NB. indicate no fill
 while. do.
   if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0 break.  NB. primitive or single name: self-defining
   else.
     prim =. {. > selfar [ args =. (0;1) {:: selfar  NB. entity, args if any
     if. prim ~: ;:'!.' do. break. end.
-    NB. self is u!.n - extract the fill and reanalyze
-    selfar =. {. args [ fill =. (1;1) {:: args  NB. n is always a noun 
+    NB. self is u!.n - discard the !.n
+    selfar =. {. args
   end.
 end.
-
 NB. Go through a tree to find the message code to use
 select. psself
 case. 3 do.
@@ -137,12 +143,20 @@ case. 3 do.
       if. (e=9) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
       if. (e=9) do. emsg =. ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w  return. end.
+    case. ;:',,.,:' do.  NB. only error is incompatible args, but could be with fill also
+      if. (e=3) do.
+        if. 1 < #types =. a efhomo@:(,&(3!:0)) w do. emsg =. ' contents are incompatible: ' , efandlist types
+        elseif. 1=#fill do.
+          if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. ' contents and fill are incompatible: ' , efandlist types end.
+        end.
+      end.
+      efaddself emsg;selfar;ovr return.
     end.
   else.
     NB. Monads
     select. prim
     case. ;:'>' do.
-      if. (e=3) do. if. #types =. efhomo 3!:0@> a do. emsg =. ' contents are incompatible: ' , types end. end.  NB. only error is incompatible args
+      if. (e=3) do. if. 1 < #types =. efhomo 3!:0@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
       efaddself emsg;selfar;ovr return.
     end.
   end.
@@ -158,6 +172,7 @@ eformat_j_ 9;1 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
 eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
 eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 1 2 [ w =. i. 1 2 4   NB. no error
 eformat_j_ 9;1 1;(5!:1<'self');a;<w [ a =. i. 1 2 [ w =. i. 1 2 4
+eformat_j_ 9;63 63;(5!:1<'self');a;<w [ a =. 2 3 [ w =. 4 5 6
 eflinearself_j_ 5!:1<'self'
 self=.+&5
 eflinearself_j_ 5!:1<'self'
@@ -173,6 +188,10 @@ self=.(tolower@tolower tolower tolower@tolower)
 eflinearself_j_ 5!:1<'self'
 self =. >
 eformat_j_ 3;63 63;(5!:1<'self');<a [ a =. 1;'1'
+self =. ,
+eformat_j_ 3;63 63;(5!:1<'self');a;<w [ a =. 1 [ w=.'1'
+self =. ,:!.'a'
+eformat_j_ 3;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
 )
 
 

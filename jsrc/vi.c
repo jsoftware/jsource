@@ -1236,8 +1236,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
  // other words the frame of the results each cell of w will produce
  if(ISSPARSE(at|wt)){A z;
   // Handle sparse arguments
-  if(1>=acr)R af?sprank2(a,w,FUNCTYPE0,acr,RMAX,jtindexof):ISSPARSE(wt)?iovxs(mode,a,w):iovsd(mode,a,w);
-  if(af||wf)R sprank2(a,w,FUNCTYPE0,acr,wcr,jtindexof);
+  if(1>=acr)R af?sprank2(a,w,NOEMSGSELF,acr,RMAX,jtindexof):ISSPARSE(wt)?iovxs(mode,a,w):iovsd(mode,a,w);
+  if(af||wf)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtindexof);
   switch((ISSPARSE(at)?2:0)+(ISSPARSE(wt)?1:0)){
    case 1: z=indexofxx(mode,a,w); break;
    case 2: z=indexofxx(mode,a,w); break;

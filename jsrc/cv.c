@@ -5,6 +5,9 @@
 
 #include "j.h"
 
+// 9!:22 read current fill, or i. 0 0 if none.  Clear fill after reading it
+F1(jtqfill){PROLOG(976); ASSERTMTV(w); A z=jt->fill; z=z?z:mtm; jt->fill=0; EPILOG(z);}
+
 
 static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
 
@@ -47,16 +50,16 @@ static DF2(jtfitpoly2){I j;
  A z; R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(z,IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
-static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1COMMON(f1,w,fs,jtinplace,jt->fill=0;);  RETF(z);}  // gs cannot be virtual
-static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2COMMON(f2,a,w,fs,jtinplace,jt->fill=0;); jt->fill=0; RETF(z);}
+static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
+static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
 
 // print precision, just the number of fractional digits requested from sprintf
 static DF1(jtfitpp1){DECLFG;A z;
- I stkppn=jt->ppn; jt->ppn=AV(gs)[0]; z=CALL1COMMON(f1,w,fs,jt,jt->ppn=stkppn;); 
+ I stkppn=jt->ppn; jt->ppn=AV(gs)[0]; z=CALL1(f1,w,fs); jt->ppn=stkppn;
  RETF(z);
 }
 
-static DF1(jtfitf1){V*sv=FAV(self); A z; R df1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
+static DF1(jtfitf1){V*sv=FAV(self); A z; R df1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n
 static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
 
 // Fit conjunction u!.n
@@ -110,7 +113,7 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
   case CCYCLE:
    RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
    R CDERIV(CFIT,jtpparity,0L,0L,m,RMAX,RMAX);  // CCYCLE lacks VIRS
-  case CTILDE:
+  case CTILDE:   // noun~!.n - what in the world is that?
    ASSERT(NOUN&AT(sv->fgh[0]),EVDOMAIN);
    R CDERIV(CFIT,jtfitf1,jtfitf2,0L,m,l,r);  // m~ has no VIRS
   default:

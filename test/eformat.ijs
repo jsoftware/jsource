@@ -96,10 +96,10 @@ NB. If we found an error, prepend the failing primitive
 efaddself emsg;selfar;ovr
 }}
 
-NB. y is a list of 3!:0 results; result is list of the types represented
+NB. y is a list of 3!:0 results (0 for empty); result is list of the types represented, including a: to mean 'empty'
 efhomo_j_ =: {{
-types =. ~. 9 13 15 16 I. 1 4 8 16 64 128 1024 4096 8192 16384 2 131072 262144 2048 32 32768 65536 i. ,y
-types { ;:'numeric character boxed symbol'
+types =. ~. 0 10 14 16 17 I. 0 1 4 8 16 64 128 1024 4096 8192 16384 2 131072 262144 2048 32 32768 65536 i. ,y
+types { a:,;:'numeric character boxed symbol'
 }}
 
 efarisnoun_j_ =: (((<,'0')) = {.)@>
@@ -128,6 +128,15 @@ while. do.
     selfar =. {. args
   end.
 end.
+NB. Take valence error without further ado
+if. (e=37) do.
+  if. selfar -: {. ;:'[:' do. ' [: must be part of a capped fork' return.
+  else.
+    if.  prim -: {. ;:':' do. if. efarisnoun {.args do. ' explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end. end.  NB. could be {{ or m : and we can't distinguish
+    efaddself (' verb has no ',(dyad{::'monad';'dyad'),'ic valence');selfar;63 63 return.
+  end.
+end.
+
 NB. Go through a tree to find the message code to use
 select. psself
 case. 3 do.
@@ -143,11 +152,13 @@ case. 3 do.
       if. (e=9) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
       if. (e=9) do. emsg =. ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w  return. end.
-    case. ;:',,.,:' do.  NB. only error is incompatible args, but could be with fill also
+    fcase. ;:',.' do.  NB. May have agreement error.  No IRS
+      if. (e=9) do. emsg =. ' : shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
+    case. ;:',,:' do.  NB. only error is incompatible args, but could be with fill also
       if. (e=3) do.
-        if. 1 < #types =. a efhomo@:(,&(3!:0)) w do. emsg =. ' contents are incompatible: ' , efandlist types
+        if. 1 < #types =. a. -.~ a efhomo@:(,&(*@(#@,) * 3!:0)) w do. emsg =. ' arguments are incompatible: ' , efandlist types
         elseif. 1=#fill do.
-          if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. ' contents and fill are incompatible: ' , efandlist types end.
+          if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. ' arguments and fill are incompatible: ' , efandlist types end.
         end.
       end.
       efaddself emsg;selfar;ovr return.
@@ -155,8 +166,8 @@ case. 3 do.
   else.
     NB. Monads
     select. prim
-    case. ;:'>' do.
-      if. (e=3) do. if. 1 < #types =. efhomo 3!:0@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
+    case. ;:'>;' do.
+      if. (e=3) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
       efaddself emsg;selfar;ovr return.
     end.
   end.
@@ -192,6 +203,8 @@ self =. ,
 eformat_j_ 3;63 63;(5!:1<'self');a;<w [ a =. 1 [ w=.'1'
 self =. ,:!.'a'
 eformat_j_ 3;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
+self=:[:
+eformat_j_ 37;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
 )
 
 

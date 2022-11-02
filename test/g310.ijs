@@ -259,10 +259,10 @@ end.
 'domain error' -: ". eftxs 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside obverse
 
 7 -: 2 %: 2 : 'x + y' *: 5
-'domain error' -: 2 (1) : 'x + y' etx 5
+'valence error' -: 2 (1) : 'x + y' etx 5
 7 -: 2 *: (1) : 'x + y' 5
-'domain error' -: *: (1) : 'x + y' etx 5
-'domain error' -: 2 %: ((2) : 'y') *: etx 5
+'valence error' -: *: (1) : 'x + y' etx 5
+'valence error' -: 2 %: ((2) : 'y') *: etx 5
 5 -: %: (2) : 'y' *: 5
 5 -: *: (1) : 'y' 5
 
@@ -271,41 +271,41 @@ NB. : empty defn --------------------------------------------------------
 
 f=: 3 : ''
 
-'domain error' -:   f etx 4
-'domain error' -: 3 f etx 4
+'valence error' -:   f etx 4
+'valence error' -: 3 f etx 4
 
 f=: 3 : (i.0)
 
-'domain error' -:   f etx 4
-'domain error' -: 3 f etx 4
+'valence error' -:   f etx 4
+'valence error' -: 3 f etx 4
 
 f=: 4 : ''
 
-'domain error' -:   f etx 4
-'domain error' -: 3 f etx 4
+'valence error' -:   f etx 4
+'valence error' -: 3 f etx 4
 
 f=: 4 : (i.0)
 
-'domain error' -:   f etx 4
-'domain error' -: 3 f etx 4
+'valence error' -:   f etx 4
+'valence error' -: 3 f etx 4
 
 f =: (3 : '') : +
 
-'domain error' -: f\       etx 0 1 0     
-'domain error' -: f;._1    etx 0 1 0
-'domain error' -: f/.      etx i.3 5    
-'domain error' -: 0 1 ,&f  etx 1 0  
-'domain error' -: 0 1 f@*  etx 1 0  
-'domain error' -: (2: * f) etx 1 0 
-'domain error' -: (+ f)    etx 5      
+'valence error' -: f\       etx 0 1 0     
+'valence error' -: f;._1    etx 0 1 0
+'valence error' -: f/.      etx i.3 5    
+'valence error' -: 0 1 ,&f  etx 1 0  
+'valence error' -: 0 1 f@*  etx 1 0  
+'valence error' -: (2: * f) etx 1 0 
+'valence error' -: (+ f)    etx 5      
 
 f1 =: 3 : 'y'
 f2 =: 3 : (':'; 'x+y')
 f3 =: 4 : 'x+y'
 
-'domain error' -: 3 f1 etx 4
-'domain error' -:   f2 etx 4
-'domain error' -:   f3 etx 4
+'valence error' -: 3 f1 etx 4
+'valence error' -:   f2 etx 4
+'valence error' -:   f3 etx 4
 
 'valence error' -: ~./      etx 0 1 0
 'valence error' -: 0 1 ~./  etx 1 0

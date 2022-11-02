@@ -380,6 +380,10 @@ f =: 1:`(-: fex)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defin
 'length error: fex, in +"1 : shapes 2 3 and 4 5 6 do not conform'    f '(i. 2 3)+"1 i.4 5 6'
 'length error: fex, in +"1 1 : <frames> do not conform in shapes 2<3> and 2 3<6>'    f '(i. 2 3)+"1 i.2 3 6'
 
+g =: {{ y + 5 }}
+'valence error: g explicit definition has no dyadic valence' f '2 g 3'
+g =: {{ y + x }}
+'valence error: g explicit definition has no monadic valence' f 'g 3'
 
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '
 4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '

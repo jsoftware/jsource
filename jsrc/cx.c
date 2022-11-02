@@ -261,7 +261,7 @@ DF2(jtxdefn){
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
   locsym=hv[3];  // fetch pointer to preallocated symbol table
-  ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
+  ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){nGpysfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ

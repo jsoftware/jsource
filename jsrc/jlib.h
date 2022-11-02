@@ -7,13 +7,14 @@
 typedef void* JS
 #endif
 
-CDPROC JS _stdcall JInit(void);                         /* init instance */
+CDPROC JS _stdcall JInit(void);                     /* init instance */
 CDPROC void _stdcall JSM(JS jt, void*callbacks[]);  /* set callbacks */
 CDPROC void _stdcall JSMX(JS jt, void*, void*, void*, void*, I);
 CDPROC int _stdcall JDo(JS jt,C*);                  /* run sentence */
 CDPROC void _stdcall JInterrupt(JS jt);             /* signal interrupt */
 CDPROC C* _stdcall JGetLocale(JS jt);               /* get locale */
-CDPROC A _stdcall Jga(JS jt, I t, I n, I r, I*s);
+CDPROC A _stdcall Jga(JS jt, I t, I n, I r, I*s);   /* allocate array */
+CDPROC int _stdcall Jassoc(JS jt, C* name, A w);    /* associate name to array */
 CDPROC int _stdcall JFree(JS jt);                   /* free instance */
 CDPROC A _stdcall JGetA(JS jt,I n,C* name);         /* get 3!:1 from name */
 CDPROC C* _stdcall JGetR(JS jt);                    /* get capture */

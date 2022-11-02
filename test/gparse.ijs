@@ -68,6 +68,10 @@ locnm [ 4!:55 <'locnm'
 )
 
 
+t =: 3 : 'y'
+'valence error' -: 2 t etx 5
+t =: {{ x [ y }}
+'valence error' -: t etx 5
 
 NB. Test display of error spacing
 '|domain error: efx|   1    +''a''' -: efx '1 + ''a'''
@@ -81,7 +85,6 @@ NB. Test display of error spacing
 '|syntax error: efx|   )123' -: efx ')123'
 '|value error: undef|   (undef undef)    (1+undef+".)''5 + 6''' -: efx '(undef undef) (1 + undef + ".) ''5 + 6'''
 '|value error: undef|   (undef undef)    (1+undef+".)''+ 6''' -: efx '(undef undef) (1 + undef + ".) ''+ 6'''
-'|valence error: efx [: must be part of a capped fork|   5.7    ([:;]<@(+/\);.2)i.5' -: efx '5.7 ([:;]<@(+/\);.2) i. 5'
 
 NB. Verify that undefname is OK, but undefined u creates an error, in an explicit def
 t =: 1 : 0

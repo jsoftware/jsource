@@ -384,7 +384,7 @@ g =: {{ y + 5 }}
 'valence error: g explicit definition has no dyadic valence' f '2 g 3'
 g =: {{ y + x }}
 'valence error: g explicit definition has no monadic valence' f 'g 3'
-'|valence error: efx [: must be part of a capped fork|   5.7    ([:;]<@(+/\);.2)i.5' -: f '5.7 ([:;]<@(+/\);.2) i. 5'
+'valence error: fex [: must be part of a capped fork' f '5.7 ([:;]<@(+/\);.2) i. 5'
 
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '
 4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '

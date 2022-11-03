@@ -826,9 +826,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 
-#define ASSERTFINDEX(c,i,l)         ASSERT(c,EVINDEX)
-//#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l) //scaf restore
-#define ASSERTINDEX(io,ir,l)        ASSERTFINDEX((UI)(ir)<(UI)(l),io,l)
+// obsolete #define ASSERTFINDEX(c,i,l)         ASSERT(c,EVINDEX)
+// obsolete //#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l) //scaf restore
+// obsolete #define ASSERTINDEX(io,ir,l)        ASSERTFINDEX((UI)(ir)<(UI)(l),io,l)
 
 #if 0  // obsolete 
 #define ASSERTFHOMO(c,t0,t1)        ASSERTF(c,EVDOMAIN,"%t incompatible with %t",t0,t1)

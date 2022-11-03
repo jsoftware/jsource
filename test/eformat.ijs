@@ -1,3 +1,28 @@
+1: 0 : 0
+Rules for eformat_j_:
+
+1. Do not assign y or any part of it to a global name.  The components of y are special headers
+and their values are not protected by JE's usecount mechanism.  When eformat returns the values may
+become invalid.
+
+To guarantee a fresh copy (for debugging only) do something like
+savy__ =: 3!:1 (3!:2) y
+
+2. Remember that the noun arguments a, w, and ind may be very large.  (self may be large too but that
+is less likely and we can truncate it if we need to)  Do not do anything that will require making a copy
+of a/w/ind or creating a result of the same size.
+
+These are NOT OK:
+allint =. *./ (-: <.) , a  NB. <. a makes a copy of a
+~. ind   NB. ~. makes a hashtable of size +:#ind
+ind i. obinds   NB. (x i. y) makes a hashtable if y is a list
+
+These are OK:
+(i. >./) , inds  NB. , is virtual and (i. >./) is backed by special code
+10 {. a   NB. virtual
+ind i. >./ obinds   NB. When x is a list and y is a scalar, no hashtable is created
+)
+
 NB. x is (1 if all of main name always needed),(max # characters allowed),(parenthesize w if compound); y is AR
 NB. result is string to display, or ... if string too long
 eflinAR_j_ =: {{
@@ -102,7 +127,7 @@ types =. ~. 0 10 14 16 17 I. 0 1 4 8 16 64 128 1024 4096 8192 16384 2 131072 262
 types { a:,;:'numeric character boxed symbol'
 }}
 
-efarisnoun_j_ =: (((<,'0')) = {.)@>
+efarisnoun_j_ =: (((<,'0')) = {.)@>  NB. predicate.  y is an AR
 
 NB. y is jerr;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs

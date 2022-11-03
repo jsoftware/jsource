@@ -32,8 +32,10 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  EPILOG(z);
 }
 
-#define SETNDX(ndxvbl,ndxexp,limexp)      {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp);          ASSERTINDEX(ndxvbl-(limexp),ndxvbl,limexp);}}  // if ndxvbl>p, adding p can never make it OK
-#define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERTINDEX(ndxvbl-(limexp),ndxvbl,limexp);}}  // this version write to input if the value was negative
+#define SETNDX(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // if ndxvbl>p, adding p can never make it OK
+#define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // this version write to input if the value was negative
+// obsolete #define SETNDX(ndxvbl,ndxexp,limexp)      {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp);          ASSERTINDEX(ndxvbl-(limexp),ndxvbl,limexp);}}  // if ndxvbl>p, adding p can never make it OK
+// obsolete #define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERTINDEX(ndxvbl-(limexp),ndxvbl,limexp);}}  // this version write to input if the value was negative
 #define SETJ(jexp) SETNDX(j,jexp,p)
 
 #define IFROMLOOP(T)        \
@@ -97,8 +99,9 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
 #if C_AVX2
 #define IDXASSERT(vo,vr,b) {\
  __m256d _mask=_mm256_castsi256_pd(_mm256_andnot_si256(vr,_mm256_sub_epi64(vr,b))); /* positive, and negative if you subtract axis length */\
- ASSERTFINDEX(_mm256_testc_pd(_mask,_mm256_castsi256_pd(ones)),\
-         ((I*)&vo)[CTTZ(~_mm256_movemask_pd(_mask))],_mm256_extract_epi64(b,0));}
+ ASSERT(_mm256_testc_pd(_mask,_mm256_castsi256_pd(ones)),EVINDEX);}
+
+// obsolete       ((I*)&vo)[CTTZ(~_mm256_movemask_pd(_mask))],_mm256_extract_epi64(b,0));}
 #define GETIDX(v,p,b) {\
  __m256i _v=p; /* fetch a block of indices */\
  v=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(_v),_mm256_castsi256_pd(_mm256_add_epi64(_v,b)),_mm256_castsi256_pd(_v))); /* get indexes, add axis len if neg */\
@@ -940,7 +943,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    // column ran to completion.  Detect unbounded
    if(limitrow<0){bestcolrow=limitrow; bestcol=colx; goto return4;}  // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
    // If this pivot would result in a cycle, ignore it
-   if(nexlist!=0&&!notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){printf("scaf exclusion\n");goto abortcol;}
+   if(nexlist!=0&&!notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){goto abortcol;}
    {
     // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
     // Exception: if a nondangerous pivot pivots out a virtual row, we accept it immediately and abort all other processing

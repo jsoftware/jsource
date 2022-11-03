@@ -142,7 +142,7 @@ DF2(jtevery2self){
  F2PREFIP;ARGCHK2(a,w);
  I ar=AR(a); I wr=AR(w);
  I cf=ar; cf=ar<wr?cf:wr;
- R jtevery2(jtinplace,a,w,FAV(self)->fgh[0]);  // replace u&.> with u and process  scaf should eformat on error
+ R jtevery2(jtinplace,a,w,FAV(self)->fgh[0]);  // replace u&.> with u and process
 } 
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 // This routine is called internally from many places without agreement checks

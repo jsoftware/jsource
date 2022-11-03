@@ -857,7 +857,7 @@ NB. Add a line here whenever new verbs are inplaced
 y =. i. 5 5
 3 : 'y =. ,y' y
 assert. y -: i. 5 5
-3 : 'y =. y , i. 5'
+3 : 'y =. y , i. 5' y
 assert. y -: i. 5 5
 1
 )

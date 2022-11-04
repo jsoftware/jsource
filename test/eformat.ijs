@@ -16,8 +16,11 @@ These are NOT OK:
 allint =. *./ (-: <.) , a  NB. <. a makes a copy of a
 ~. ind   NB. ~. makes a hashtable of size +:#ind
 ind i. obinds   NB. (x i. y) makes a hashtable if y is a list
+val =. ,a  NB. , result is virtual, but assigning it to a name realizes it
 
 These are OK:
+val =. a
+val =. a ; w
 (i. >./) , inds  NB. , is virtual and (i. >./) is backed by special code
 10 {. a   NB. virtual
 ind i. >./ obinds   NB. When x is a list and y is a scalar, no hashtable is created
@@ -187,6 +190,33 @@ case. 3 do.
         end.
       end.
       efaddself emsg;selfar;ovr return.
+NB. $ x domain and fill
+NB. |. x domain and fill
+NB. |: x domain
+NB. ;. x domain and agreement
+NB. # x domain and agreement
+NB. #. xy domain and agreement
+NB. #: xy domain  and agreement
+NB. /. /.. agreement
+NB. { x domain and index
+NB. {. {: x domain rank fill
+NB. } xy homo ind domain (incl fill) and index x/ind agreement
+NB. }. }: x domain rank
+NB. m b. domain
+NB. A. x domain
+NB. C. x domain agreement
+NB. H. domain
+NB. j. xy domain
+NB. o. xy domain
+NB. p. xy domain
+NB. p.. xy domain
+NB. p: xy domain
+NB. q: xy domain
+NB. s: xy domain
+NB. T. xy domain
+NB. u: xy domain
+NB. x: xy domain
+NB. Z: fold
     end.
   else.
     NB. Monads
@@ -194,6 +224,29 @@ case. 3 do.
     case. ;:'>;' do.
       if. (e=3) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
       efaddself emsg;selfar;ovr return.
+NB. |.!.f fill
+NB. #. domain
+NB. #: domain
+NB. { domain
+NB. {. {: fill
+NB. } x domain
+NB. ". domain
+NB. ? ?. domain
+NB. A. domain
+NB. C. domain
+NB. H. domain
+NB. i. domain
+NB. i: domain length
+NB. I. domain
+NB. j. domain
+NB. o. domain
+NB. p. domain
+NB. p.. domain
+NB. p: q: domain
+NB. s: domain
+NB. T. domain
+NB. u: domain
+NB. x: domain
     end.
   end.
 end.

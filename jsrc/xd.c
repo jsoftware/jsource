@@ -122,9 +122,11 @@ F1(jtfullname){C dirpath[_MAX_PATH];
 
 #if !SY_WINCE
 
+// 1!:7 permissions
 F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
  F1RANK(0,jtjfperm1,DUMMYSELF);
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
+// obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
+ RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM)} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  p=USAV(fn); q=p+AN(fn)-3;
  GAT0(z,LIT,3,1); s=CAV(z);

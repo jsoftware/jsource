@@ -303,7 +303,6 @@ F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
  R 0;
 }
 
-
 // 9!:56  undocumented
 // query/override cpu feature
 F1(jtcpufeature){

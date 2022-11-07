@@ -281,10 +281,11 @@ void jtjsignalf(J jt,I e,C *fmt,...){
 A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
  if(jt->emsgstate&EMSGSTATEFORMATTED)R 0;   // if we have already run eformat on this error, don't do it again
- if(!jt->glock){ // if we are locked, show nothing
+  C e=jt->jerr;
+  if(!jt->glock){ // if we are locked, show nothing
   if(!(jt->emsgstate&EMSGSTATENOEFORMAT)){  // if eformat suppressed, leave the error line as is
    A msg=0;  // indicate no formatted message
-   C e=jt->jerr; A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save errpr code and message
+   A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save errpr code and message
     if(self){
      if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
       // we are going to try to run eformat.
@@ -320,6 +321,8 @@ noeformat: ;
    }
   }
  }
+ // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
+ e=e==EVINHOMO?EVDOMAIN:e; jt->jerr=jt->jerr1=e;  // revert INHOMO to DOMAIN after formatting
  jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it
 R 0;
 }

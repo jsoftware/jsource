@@ -165,7 +165,7 @@ static KF1F(jtIfromD){D p,q,*v;I i,k=0,n,*x;
  for(i=0;i<n;++i){
   p=v[i]; q=jround(p);
   if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
- *x++=(I)q;  // if tolerantly integral, store it
+  *x++=(I)q;  // if tolerantly integral, store it
  }
 #else
  q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
@@ -571,3 +571,57 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
    if(t&INT){RZ(DXfI(j,w,(DX*)AV(z))); R z;}
    ASSERT(0,EVNONCE);
 }}
+
+// 9!:23 audit indices
+// x is indexes (may be sparse)
+// y is type;parms
+// type is 0 (normal), 1 (treat complex as 2 separate reals)
+// parms is list of 0-2 elements min,max allowed
+// result is rc;index: rc: 0=OK, 1=nonnumeric, 2=nonintegral value 3=out of bounds
+// index=index list of failing entry, or empty if rc=0 or 1
+F2(jtindaudit){PROLOG(365);
+ ARGCHK2(a,w)
+ ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // need 2 boxes
+ I type; RE(type=i0(C(AAV(w)[0]))); ASSERT(BETWEENC(type,0,1),EVDOMAIN)  // first box must hold integer type 0 or 1
+ I min=IMIN, max=IMAX; A mma=C(AAV(w)[1]); ASSERT(AR(mma)<=1,EVRANK) ASSERT(AN(mma)<=2,EVLENGTH) if(!(AT(mma)&INT))RZ(mma=cvt(INT,mma))  // second box must hold 0-2 int values
+ if(AN(mma)>=1)min=IAV(mma)[0]; if(AN(mma)>=2)max=IAV(mma)[1];  // extract min/max
+ A ind=a, origind=ind; if(ISSPARSE(AT(ind))){ind=SPA(PAV(ind),x);}  // point to the indexes; if sparse, to the unique indexes
+ I indt=AT(ind); I indn=AN(ind); if(indn==0)R jlink(zeroionei(0),mtv);  if(!(indt&NUMERIC))R jlink(zeroionei(1),mtv);  // get type & number of indexes; fast return if empty; failure if nonintegral
+ if((indt&CMPX)&&type==1){indt=FL|C2T; indn<<=1;}  // for x # y, allow treating a complex as two reals.  C2T is a flag that we did this
+ A vind; RZ(vind=jtvirtual(jt,ind,0,0)) AN(vind)=1; // in case conversions are needed, we will step through with a virtual block
+ I vstride=bp(indt);  // size of an atom
+ I findex;  // failing index if any, total # atoms to check
+ A zwk, xwk; if(indt&CMPX)GAT(zwk,FL,1,0,0) if(indt&RAT)GAT(xwk,XNUM,1,0,0)  // intermediates for the 2-stwp conversions
+ I errtype=2;  // the type of audit failure: 2=noninteger, 3=out of bounds
+ for(findex=0;findex<indn;AK(vind)+=vstride,++findex){   // loop trying each index
+  I ival;   // the integer value of the index
+  // fetch to index and convert to integer if needed
+  if(indt&INT)ival=IAV(vind)[0];
+  else if(indt&B01)ival=BAV(vind)[0];
+  else if(indt&FL){if(!jtIfromD(jt,vind,&ival,FUZZ))break;}
+  else if(indt&CMPX){if(!jtDfromZ(jt,vind,&DAV(zwk)[0],FUZZ))break; if(!jtIfromD(jt,zwk,&ival,FUZZ))break;}
+  else if(indt&XNUM){if(!jtIfromX(jt,vind,&ival))break;}
+  else if(indt&RAT){if(!jtXfromQ(jt,vind,&XAV(xwk)[0]))break; if(!jtIfromX(jt,xwk,&ival))break;}
+  // value fetched, see if in range
+  if(!BETWEENC(ival,min,max)){errtype=3; break;}  // exit loop if index not in range, with appropriate error type
+ }
+ A z;  // result
+ if(findex==indn)z=jlink(zeroionei(0),mtv);  // normal return with no error
+ else{
+  // the search failed at findex.  Create the index list
+  if(indt&C2T)findex>>=1;  // if 2 reals per complex, convert failing index back to complex
+  if(!ISSPARSE(AT(origind))){
+   // non-sparse
+   RZ(z=abase2(shape(ind),sc(findex)))  // result is ($ind) #: findex
+  }else{
+   // sparse
+   RZ(z=shape(origind)); // z=$ind
+   P *p=PAV(origind); A sparseaxes=SPA(p,a); A denseaxes=box(box(box(sparseaxes)));  // the list of sparse axes
+   A id; RZ(id=abase2(over(zeroionei(0),from(denseaxes,z)),sc(findex)))     // id =.(0 , (<<<2$.ind) { $ind) #: findex  nonsparse indexes are in blocks of fixed size.  convert to block# , index list in block
+   A r; RZ(df2(r,from(head(id),SPA(p,i)),z,amend(sparseaxes)))  // r =. (({.id) { 4$.ind) (2$.ind)} z   convert block# to index list of sparse axes, save those axes in result
+   RZ(df2(z,behead(id),r,amend(denseaxes))) // z =. (}. id)  (<<<2$.ind)} r   insert index list in block into result
+  }
+  z=jlink(sc(errtype),z);  // return error type and location
+ }
+ EPILOG(z);
+}

@@ -40,7 +40,7 @@
 #define am1a(x0,x1,x2,x3)           jtam1a(jt,(x0),(x1),(x2),(x3))
 #define am1e(x0,x1,x2,x3)           jtam1e(jt,(x0),(x1),(x2),(x3))
 #define am1sp(x0,x1,x2,x3)          jtam1sp(jt,(x0),(x1),(x2),(x3))
-#define amend(x,y)                  jtamend(jt,(x),(y))
+#define amend(x)                    jtamend(jt,(x))
 #define amendn2(x0,x1,x2,x3)        jtamendn2(jt,(x0),(x1),(x2),(x3))
 #define amna(x0,x1,x2,x3)           jtamna(jt,(x0),(x1),(x2),(x3))
 #define amne(x0,x1,x2,x3)           jtamne(jt,(x0),(x1),(x2),(x3))

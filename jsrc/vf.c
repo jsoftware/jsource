@@ -18,7 +18,9 @@ F2(jtsetfv){A q=jt->fill;I t;
   if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));  // convert the user's type if needed
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
  }else{if(!t)t=AT(w); fillv0(t); jt->fillv=jt->fillv0;}    // empty fill.  create std fill in fillv0 and point jt->fillv at it
- R TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it
+ w=TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it
+ if(w==0)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
+ R w;
 }
 
 // Allocate a block for an atom of fill with type same as w, and move in the fill value.  Used to create a fill-cell

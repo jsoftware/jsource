@@ -178,6 +178,7 @@ extern F1(jtjgetenv);
 extern F1(jtjgetx);
 extern F1(jtjgetpid);
 extern F1(jtjico1);
+extern F2(jtindaudit);
 extern F1(jtjiread);
 extern F1(jtjlock);
 extern F1(jtjlocks);

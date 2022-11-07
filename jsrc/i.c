@@ -121,6 +121,7 @@ static B jtevinit(JS jjt){A q,*v;JJ jt=MTHREAD(jjt);
  v[EVTIME   ]=INCORPNA(cstr("time limit"                 ));
  v[EVVALENCE]=INCORPNA(cstr("valence error"              ));
  v[EVVALUE  ]=INCORPNA(cstr("value error"                ));
+ v[EVINHOMO  ]=v[EVDOMAIN];ras(v[EVINHOMO]);
  ACINITZAPRECUR(q,BOX); INITJT(jjt,evm)=q;   // q and its contents are not on tstack; this way the contents are freed on assignment
  if(jt->jerr){printf("evinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }

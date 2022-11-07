@@ -380,6 +380,10 @@ f =: 1:`(-: fex)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defin
 'length error: fex, in +"1 : shapes 2 3 and 4 5 6 do not conform'    f '(i. 2 3)+"1 i.4 5 6'
 'length error: fex, in +"1 1 : <frames> do not conform in shapes 2<3> and 2 3<6>'    f '(i. 2 3)+"1 i.2 3 6'
 
+'length error: fex, in $ extending an empty array requires fill' f '2 3 $ $0'
+'domain error: fex, in $ x has nonintegral value (2.5) at position 0' f '2.5 3 $ $0'
+'domain error: fex, in $ x has invalid value (_1) at position 1' f '2 _1 $ $0'
+
 g =: {{ y + 5 }}
 'valence error: g explicit definition has no dyadic valence' f '2 g 3'
 g =: {{ y + x }}

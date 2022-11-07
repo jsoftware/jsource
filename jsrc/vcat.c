@@ -12,7 +12,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); y=SPA(wp,i); m=AS(y)[0]; 
  a1=SPA(wp,a); c=AN(a1); av=AV(a1); RZ(b=bfi(zr,a1,1));
  at=AT(a); wt=AT(x);
- ASSERT(HOMO(at,wt),EVDOMAIN);
+ ASSERT(HOMO(at,wt),EVINHOMO);
  t=maxtype(at,wt);
  ASSERT(t&SPARSABLE,EVDOMAIN);  // verify supported sparse type
  if(TYPESNE(t,at))RZ(a=cvt(t,a));

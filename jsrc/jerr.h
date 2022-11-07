@@ -41,7 +41,8 @@
 #define EVTHROW         35      // uncaught throw.
 #define EVFOLDLIMIT     36      // abort current execution and return the current result
 #define EVVALENCE       37      // no defined valence for verb
-#define NEVM            37      /* number of event codes       */
+#define EVINHOMO        38     // inhomogeneous args - converted to EVDOMAIN after eformat
+#define NEVM            38      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */

@@ -115,7 +115,8 @@ F1(jtjopen){A z;I h;
  if(!AN(w))R w;
  if(AR(w))R rank1ex0(w,DUMMYSELF,jtjopen);
  RE(h=fnum(w));  // return non0 if the string is the # of an already-open file
- if(h){RZ(z=sc(h)); RZ(fname(z)); R z;}  // if already open, return # provided the file is open (it wouldn't be if the arg was an invalid file#)
+// obsolete  if(h){RZ(z=sc(h)); RZ(fname(z)); R z;}  // if already open, return # provided the file is open (it wouldn't be if the arg was an invalid file#)
+ if(h){RZ(z=sc(h)); ASSERT(fname(z)!=0,EVFNUM); R z;}  // if already open, return # provided the file is open (it wouldn't be if the arg was an invalid file#)
   // opening a file by number seems weird - the only # you can use is for an open file, so what's the point?
  else{A ww;
   // opening a file by name.  We open the file and then add it to the table.  If the same name is opened more than once, they get

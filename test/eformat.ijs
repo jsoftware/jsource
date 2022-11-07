@@ -26,7 +26,48 @@ val =. a ; w
 ind i. >./ obinds   NB. When x is a list and y is a scalar, no hashtable is created
 )
 
-NB. x is (1 if all of main name always needed),(max # characters allowed),(parenthesize w if compound); y is AR
+(bx) =: >: i. #bx =. <@(,&'_j_');._2 (0 : 0)   NB. define error names
+EVATTN
+EVBREAK
+EVDOMAIN
+EVILNAME
+EVILNUM
+EVINDEX
+EVFACE
+EVINPRUPT
+EVLENGTH
+EVLIMIT
+EVNONCE
+EVASSERT
+EVOPENQ
+EVRANK
+EVEXIT
+EVSPELL
+EVSTACK
+EVSTOP
+EVSYNTAX
+EVSYSTEM
+EVVALUE
+EVWSFULL
+EVCTRL
+EVFACCESS
+EVFNAME
+EVFNUM
+EVTIME
+EVSECURE
+EVSPARSE
+EVLOCALE
+EVRO
+EVALLOC
+EVNAN
+EVNONNOUN
+EVTHROW
+EVFOLDLIMIT
+EVVALENCE
+EVINHOMO
+)
+
+NB.x is (1 if all of main name always needed),(max # characters allowed),(parenthesize w if compound); y is AR
 NB. result is string to display, or ... if string too long
 eflinAR_j_ =: {{
 NB. parse the AR, recursively
@@ -132,6 +173,19 @@ types { a:,;:'numeric character boxed symbol'
 
 efarisnoun_j_ =: (((<,'0')) = {.)@>  NB. predicate.  y is an AR
 
+NB. y is result from 9!:23, x is index arg to that 9!:23
+NB. Result is message about the index if any, suitable by itself or if porefixed by ' [xy] has' 
+efindexmsg_j_ =: {{
+'rc il' =. y  NB. return code and index list of error
+emsg =. ''
+select. rc
+case. 1 do. emsg =. ' nonnumeric type (' , (>efhomo 3!:0 x) , ')'
+case. 2 do. emsg =. ' nonintegral value (' ,(": (<il) { x) , ') at position ' , ":il
+case. 3 do. emsg =. ' invalid value (' ,(": (<il) { x) , ') at position ' , ":il
+end.
+emsg
+}}
+
 NB. y is jerr;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
 eformat_j_ =: {{
@@ -183,11 +237,17 @@ case. 3 do.
     fcase. ;:',.' do.  NB. May have agreement error.  No IRS
       if. (e=9) do. emsg =. ' : shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:',,:' do.  NB. only error is incompatible args, but could be with fill also
-      if. (e=3) do.
+      if. (e e. 3 38) do.  NB. domain /inhomo
         if. 1 < #types =. a. -.~ a efhomo@:(,&(*@(#@,) * 3!:0)) w do. emsg =. ' arguments are incompatible: ' , efandlist types
         elseif. 1=#fill do.
           if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. ' arguments and fill are incompatible: ' , efandlist types end.
         end.
+      end.
+      efaddself emsg;selfar;ovr return.
+    case. ;:'$' do.
+      if. e=EVLENGTH do. emsg=.' extending an empty array requires fill'
+      elseif. e=EVDOMAIN do. emsg=. ' x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0)
+      elseif. e=EVINHOMO do. emsg =. ' arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
       efaddself emsg;selfar;ovr return.
 NB. $ x domain and fill
@@ -222,7 +282,7 @@ NB. Z: fold
     NB. Monads
     select. prim
     case. ;:'>;' do.
-      if. (e=3) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
+      if. (e e. 3 38) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
       efaddself emsg;selfar;ovr return.
 NB. |.!.f fill
 NB. #. domain

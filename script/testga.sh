@@ -9,8 +9,6 @@
 
 set -e
 
-# let testing on windows only
-exit 0
 if [ $1 == "linux" ]; then
   ext="so"
 elif [ "$1" == "darwin" ]; then

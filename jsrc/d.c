@@ -338,6 +338,7 @@ R 0;
 #define EMSGLINEISA 0x400  // line contains A block for message (otherwise it points to string if any and info has the length of the string)
 #define EMSGCXINFO 0x800  // info contains line#/col# of error
 #define EMSGSPACEAFTEREVM 0x1000 // set if terse message should be followed by a space 
+#define EMSGLINEISTERSE 0x2000 // set if line has the text for the terse message (13!:8)
 //   no bits set  means terse display (jsignal)
 //   bit 9 set: line=failing line, info=failing line#/column for jsignal3
 //   bit 10 set: line=A text for message (sigstr)
@@ -355,22 +356,20 @@ static A jtjsignale(J jt,I eflg,A line,I info){
   if(jt->etxn>=0){  // if the error line is frozen, don't touch it
    jt->etxn=0;  // clear error-message area indicating message not installed yet
    // if the user will never see the error, exit without further ado - keeps u :: v fast
-   if(!(jt->emsgstate&EMSGSTATENOTEXT) && BETWEENC(e,1,NEVM)){  // message text suppressed or internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
+   if(!(jt->emsgstate&EMSGSTATENOTEXT) && (eflg&EMSGLINEISA || BETWEENC(e,1,NEVM))){  // message text suppressed or internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
     // we will format for display
     if(e!=EVSTOP)moveparseinfotosi(jt);  // before we display, move error info from parse variables to si; but if STOP, it's already installed
     // if debug is set, turn it off, with message, if there is not enough memory to run it
     if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}  // spc sees that you can malloc 1000 bytes
-    // format the message lines according to the various types of call
-    dhead(0,0L);  // display suspension/error prefix: *      or |     
-    if(!(eflg&EMSGNOEVM) || jt->glock){  // if terse msg not suppressed... but if locked, the terse message is ALL we show
-      // start with terse message [: name]
-      A msg=AAV(JT(jt,evm))[e];  // jsignal, or jsignal3.  Use the terse string
-      jteputlnolf(jt,msg);  // header of first line: terse string
-      if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);}}  // ...followed by name of running entity
-      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
-     }
+     // format the message lines according to the various types of call
+     dhead(0,0L);  // display suspension/error prefix: *      or |     
+     // start with terse message [: name]
+     A msg=eflg&EMSGLINEISTERSE?line:AAV(JT(jt,evm))[e];  // jsignal/jsignal3/13!:8 dyad.  Use the terse string except for 13!:8
+     jteputlnolf(jt,msg);  // header of first line: terse string
+     if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);}}  // ...followed by name of running entity
+     eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
      if(!jt->glock){  // suppress detail if locked
-      if((line!=0) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
+      if((line!=0) && !(eflg&EMSGLINEISTERSE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
        // display the message in line, according to its mode
        C *text; I textlen;
        if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type
@@ -454,7 +453,7 @@ static F2(jtdbsig){I e;
  RZ(w=vi(w)); e=AV(w)[0]; 
  ASSERT(1<=e,EVDOMAIN);
  ASSERT(e<=255,EVLIMIT);
- if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGNOEVM,a,0);} else jsignal(e);
+ if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGLINEISTERSE,a,0);} else jsignal(e);
  R 0;
 }    
 

@@ -71,7 +71,7 @@ erase  =. 1!:55
 'file number error' -: 'abc' append etx 1
 'file number error' -:       size   etx 1
 'file number error' -:       size   etx 1
-'file number error' -:       er =: erase  etx 1
+'file number error' -:       erase  etx 1
 
 'file number error' -:       read   etx 2
 'file number error' -:       size   etx 2

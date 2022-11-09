@@ -126,7 +126,7 @@ F1(jtfullname){C dirpath[_MAX_PATH];
 F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
  F1RANK(0,jtjfperm1,DUMMYSELF);
 // obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
- RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM)} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
+ RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  p=USAV(fn); q=p+AN(fn)-3;
  GAT0(z,LIT,3,1); s=CAV(z);
@@ -155,7 +155,8 @@ F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
 
 F1(jtjfperm1){A y,z;C*p,*q,*s;F f; DWORD attr;
  F1RANK(0,jtjfperm1,DUMMYSELF);
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
+// obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
+ RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
  p=CAV(y); q=p+AN(y)-3;
  GAT0(z,LIT,3,1); s=CAV(z);
  if((attr=GetFileAttributes(tounibuf(p)))==0xFFFFFFFF)R jerrno();
@@ -387,7 +388,8 @@ F2(jtjfatt2){ASSERT(0,EVNONCE);}
 F1(jtjfperm1){A y;F f;C b[11];
  struct stat dirstatbuf[3];
  F1RANK(0,jtjfperm1,DUMMYSELF);
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
+// obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
+ RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
  if(0!=stat(CAV(y),dirstatbuf))R jerrno();
  R vec(LIT,9L,1+modebuf(dirstatbuf[0].st_mode,b));
 }

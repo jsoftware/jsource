@@ -186,8 +186,8 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  e=jt->jerr;
 // obsolete  RESETERR
  jt->jerr=0;  // scaf not needed now since done in showerr
- // Suspend.  execute from the keyboard until a suspension-ending result is seen
- z=susp();
+ // Suspend.  execute from the keyboard until a suspension-ending result is seen.  Clear the current name to start the suspension
+ A savname=jt->curname; z=susp(); jt->curname=savname;  // suspension starts as anonymous
  // Process the end-of-suspension.  There are several different ending actions
  // The end block is a list of boxes, where the first box, an integer atom, contains the operation type
  I susact;   // requested action

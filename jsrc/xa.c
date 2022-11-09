@@ -167,12 +167,13 @@ F1(jtpps){I k;
  R mtv;
 }
 
-F1(jtretcommq){ASSERTMTV(w); R scb(JT(jt,retcomm));}
+F1(jtretcommq){ASSERTMTV(w); R scb(JT(jt,retcomm));}  // 9!:40
 
-F1(jtretcomms){B b; RE(b=b0(w)); JT(jt,retcomm)=b; R mtm;}
+F1(jtretcomms){B b; RE(b=b0(w)); JT(jt,retcomm)=b; R mtm;}   // 9!:41
 
-F1(jtseclevq){ASSERTMTV(w); R sc(JT(jt,seclev));}
+F1(jtseclevq){ASSERTMTV(w); R sc(JT(jt,seclev));}   // 9!:24  security level
 
+// 9!:25 security level
 F1(jtseclevs){I k; 
  RE(k=i0(w)); 
  ASSERT(0==k||1==k,EVDOMAIN); 

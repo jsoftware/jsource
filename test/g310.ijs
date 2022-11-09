@@ -255,8 +255,8 @@ end.
 )
 '|noun result was required: f|   y+undefname' -: efx 'f 4'
 
-'|domain error|   a:    +(3 :''+'') ::0:0' -: efx 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside obverse; no : efx because of inner obverse
-'domain error' -: ". eftxs 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside obverse
+'|domain error: efx|   a:    +(3 :''+'') ::0:0' -: efx 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside adverse
+'domain error' -: ". eftxs 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside adverse
 
 7 -: 2 %: 2 : 'x + y' *: 5
 'valence error' -: 2 (1) : 'x + y' etx 5

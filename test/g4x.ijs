@@ -224,9 +224,9 @@ this1_:
 )
 20 -: ([ i."0@i.) {{ y_: }} 20
 a =: 5
-'|domain error|   a:    +a_:' -: ". eftx 'a: + a_:'
+'|domain error: ex02|   a:    +a_:' -:&(_11&{.) ". eftx 'a: + a_:'
 4!:55 <'a'
-'|value error|   a:+    a_:' -: ". eftx 'a: + a_:'
+'|value error: ex02|   a:+    a_:' -:&(_11&{.) ". eftx 'a: + a_:'
 'value error' -: ". eftxs 'a: + a_:'
 
 a=:b=:0

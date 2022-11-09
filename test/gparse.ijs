@@ -94,7 +94,7 @@ v/
 
 '|value error: t|       v/' -: efx '+ t 5'
 
-'|ill-formed number|   1+1qs|     ^|   3     :(''1+1qs'',(10{a.))' -: efx '3 : (''1+1qs'',(10{a.))'
+'|ill-formed number: efx|   1+1qs|     ^|   3     :(''1+1qs'',(10{a.))' -: efx '3 : (''1+1qs'',(10{a.))'
 
 
 NB. Verify AR assignment works for 1 & more names

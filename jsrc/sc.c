@@ -25,6 +25,7 @@ DF2(jtunquote){A z;
 #define FLGDYAD ((I)1<<FLGDYADX)
 // bits 0-15 hold the callstackx before execution
  I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad bits 0-15=jt->callstacknext at start
+ // errors from here on must restore curname
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
@@ -33,7 +34,7 @@ DF2(jtunquote){A z;
    // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
    if(unlikely((explocale=(A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave explocale=0.  This is a pun on 0
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
-     RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));  //  extract locale string, find/create locale
+     RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
     }
    }
@@ -52,7 +53,7 @@ DF2(jtunquote){A z;
     if(likely(!(NAV(thisname)->flag&NMIMPLOC))){  // locative
      // see if the locale is cached.  This will help name"n mainly, but also stored xctls like public_z_ =: entry_loc_ where entry_loc will have the locale pointer
      if((explocale=FAV(self)->localuse.lu0.cachedloc)==0){  // use cached locale if there is one
-      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
+      RZSUFF(explocale=sybaseloc(thisname),z=0; goto exitname;);  //  get the explicit locale.  0 if erroneous locale
       if(!(NAV(thisname)->flag&NMILOC))FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
@@ -65,7 +66,7 @@ DF2(jtunquote){A z;
     }
    }
    // fs has QCNAMED semantics
-   ASSERT(fs!=0,EVVALUE);  // name must be defined
+   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;);  // name must be defined
    I namedloc=(I)fs&QCNAMED; fs=QCWORD(fs);  // extract NAMED flag from fs, clear other flags
    // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa
    ASSERTSUFF(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed
@@ -108,12 +109,12 @@ DF2(jtunquote){A z;
   jt->curname=thisname=FAV(self)->fgh[1];  // get the original name
   explocale=0;  // flag no explicit locale
   fs=FAV(self)->fgh[2];  // point to the actual executable
-  ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
-  ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
+  ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also
+  flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
+  ASSERTSUFF(TYPESEQ(AT(self),AT(fs)),EVDOMAIN,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
-  flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
  }
  // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
 #if NAMETRACK
@@ -133,8 +134,8 @@ DF2(jtunquote){A z;
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif
-#if !USECSTACK
- I d=FAV(fs)->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
+#if !USECSTACK  // obsolete 
+ I d=FAV(fs)->fdep; if(!d)REGOTO(d=fdep(fs));  // get stack depth of this function, for overrun prevention
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
 #endif
  STACKCHKOFLSUFF(z=0; goto exitfa;)
@@ -191,7 +192,7 @@ DF2(jtunquote){A z;
    if(jt->uflags.spfreeneeded)spfree();}        // if garbage collection required, do it
   if(d)debz();  // release stack frame if allocated
  }
-#if !USECSTACK
+#if !USECSTACK  // obsolete 
  FDEPDEC(d);
 #endif
 
@@ -229,7 +230,6 @@ DF2(jtunquote){A z;
  //
  // Note that the POPFROM after the first propagates back through the stack until it is annihilated by the POPFIRST.
 exitpop: ;
- jt->curname=savname;  // restore the executing name
  I callstackx=(US)flgd0cpC;  // extract the init call stackx, which we will use to analyze
  if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them
@@ -313,6 +313,8 @@ exitpop: ;
  // ************** errors OK now
 exitfa:
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){faacv(fs);}  // unra the name if it was looked up from the symbol tables
+exitname:
+jt->curname=savname;  // restore the executing name
 R z;
 }
 
@@ -415,3 +417,6 @@ DF2(jtimplocref){
  w=AT(w)&NOUN?w:self;  // see whether we're a dyad
  R unquote(a,w,self); // call as (w,self,self) or (a,w,self)
 }
+
+// 9!:30 query current name, '' if none
+F1(jtcurnameq){ASSERTMTV(w); if(jt->curname==0)R mtv; R str(AN(jt->curname),NAV(jt->curname)->s);}

@@ -59,6 +59,7 @@ extern F1(jtcreatecachedref);
 extern F1(jtctq);
 extern F1(jtcts);
 extern F1(jtcurtail);
+extern F1(jtcurnameq);
 #if !C_CRC32C
 extern F1(jtcvt0);
 #endif
@@ -795,6 +796,7 @@ extern F        jtjope(J,A,C*);
 extern I        jtjset(J,C*,A);
 extern A     jtjsigd(J,C*) __attribute__((cold));
 extern A     jtjsignal(J,I) __attribute__((cold));
+extern A     jtjsignale(J,I,A,I) __attribute__((cold));
 #if 0  // obsolete
 extern void     jtjsignalf(J,I,C*,...) __attribute__((cold));
 #endif

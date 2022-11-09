@@ -591,7 +591,7 @@ F2(jtindaudit){PROLOG(365);
  A vind; RZ(vind=jtvirtual(jt,ind,0,0)) AN(vind)=1; // in case conversions are needed, we will step through with a virtual block
  I vstride=bp(indt);  // size of an atom
  I findex;  // failing index if any, total # atoms to check
- A zwk, xwk; if(indt&CMPX)GAT(zwk,FL,1,0,0) if(indt&RAT)GAT(xwk,XNUM,1,0,0)  // intermediates for the 2-stwp conversions
+ A zwk, xwk; if(indt&CMPX)GAT0(zwk,FL,1,0) if(indt&RAT)GAT0(xwk,XNUM,1,0)  // intermediates for the 2-stwp conversions
  I errtype=2;  // the type of audit failure: 2=noninteger, 3=out of bounds
  for(findex=0;findex<indn;AK(vind)+=vstride,++findex){   // loop trying each index
   I ival;   // the integer value of the index

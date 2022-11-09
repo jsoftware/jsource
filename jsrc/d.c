@@ -339,6 +339,7 @@ R 0;
 #define EMSGCXINFO 0x800  // info contains line#/col# of error
 #define EMSGSPACEAFTEREVM 0x1000 // set if terse message should be followed by a space 
 #define EMSGLINEISTERSE 0x2000 // set if line has the text for the terse message (13!:8)
+#define EMSGLINEISNAME 0x4000 // set if line has the name to use in place of jt->curname
 //   no bits set  means terse display (jsignal)
 //   bit 9 set: line=failing line, info=failing line#/column for jsignal3
 //   bit 10 set: line=A text for message (sigstr)
@@ -347,7 +348,7 @@ R 0;
 // we look at emsgstate and do as little as possible if the user isn't going to see the message
 //
 // return value is always 0
-static A jtjsignale(J jt,I eflg,A line,I info){
+A jtjsignale(J jt,I eflg,A line,I info){
  // if a message has already been stored, ignore any subsequent one
  if(jt->jerr==0 && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if not first error or formatting the line is in progress, ignore: clear error-name and continue
   C e=eflg&EMSGE;   // extract error#
@@ -366,7 +367,8 @@ static A jtjsignale(J jt,I eflg,A line,I info){
      // start with terse message [: name]
      A msg=eflg&EMSGLINEISTERSE?line:AAV(JT(jt,evm))[e];  // jsignal/jsignal3/13!:8 dyad.  Use the terse string except for 13!:8
      jteputlnolf(jt,msg);  // header of first line: terse string
-     if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);}}  // ...followed by name of running entity
+     A nameblok=jt->curname; nameblok=eflg&EMSGLINEISNAME?line:nameblok;  // if user overrides the name, use the user's name
+     if(nameblok){if(!jt->glock){eputs(": "); ep(AN(nameblok),NAV(nameblok)->s);}}  // ...followed by name of running entity
      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
      if(!jt->glock){  // suppress detail if locked
       if((line!=0) && !(eflg&EMSGLINEISTERSE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
@@ -389,7 +391,7 @@ static A jtjsignale(J jt,I eflg,A line,I info){
     jt->etxn1=jt->etxn;  // save length of finished message
    }
   }
-  jt->curname=0;  // clear the name always
+// obsolete    jt->curname=0;  // clear the name always
  R 0;
 }
 #endif

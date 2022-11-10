@@ -826,58 +826,25 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 
-// obsolete #define ASSERTFINDEX(c,i,l)         ASSERT(c,EVINDEX)
-// obsolete //#define ASSERTFINDEX(c,i,l)         ASSERTF(c,EVINDEX,"index %i out of range for dimension %i",i,l) //scaf restore
-// obsolete #define ASSERTINDEX(io,ir,l)        ASSERTFINDEX((UI)(ir)<(UI)(l),io,l)
-
-#if 0  // obsolete 
-#define ASSERTFHOMO(c,t0,t1)        ASSERTF(c,EVDOMAIN,"%t incompatible with %t",t0,t1)
-// obsolete #define ASSERTFAGREE(c,xl,xs,yl,ys) ASSERTF(c,EVLENGTH,"frames %*i and %*i do not conform",xl,xs,yl,ys)
-#define ASSERTHOMO(t) ASSERT(0>(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)
-#define ASSERTHOMO2(t0,t1) ASSERT(HOMO(t0,t1),t0,t1)
- {\
- if(unlikely(0>(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)))){\
-  /* Just grab and display any two mismatching types */\
-  /* Generating error is slightly annoying; can't just use blsi, because in the event that we have (e.g.) a numeric type, another numeric type, and something non-numeric, we might display both numeric types, instead of a number and a something-else */\
-  I _tt[2],_ti=0;\
-  if(t&NUMERIC)_tt[_ti++]=BLSI(t&NUMERIC);\
-  if(t&JCHAR)_tt[_ti++]=BLSI(t&JCHAR);\
-  t&=~(NUMERIC|JCHAR);\
-  while(_ti<2){_tt[_ti++]=BLSI(t);t=BLSR(t);}\
-  ASSERTFHOMO(0,_tt[0],_tt[1]);}}
-#endif
-
 // verify that shapes *x and *y match for l axes using AVX for rank<=vector size, memcmp otherwise
-#if 0   // obsolete rank>4 has negligible importance and is not worth a separate branch
+#if C_AVX512
 // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
-#if 0 // obsolete 
-// todo would it be better to overread and do a masked compare instead?  Cache pollution technically, but we probably need the next cacheline anyway, soo
-// Actually not safe because there's a one-cacheline allocation bucket which has space for a list with no ravel (virtual or empty), and that could be at the end of a page; todo fix because overreading is generally useful
-#define ASSERTAGREE2(x,y,l,xl,yl) \
+#define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xff,aai); \
-   ASSERTFAGREE(!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(endmask,aaa),_mm512_maskz_loadu_epi64(endmask,aab)),xl,aaa,yl,aab); /* result is nonzero if any mismatch */ \
-  }else{DONOUNROLL(aai,ASSERTFAGREE(aaa[i]==aab[i],xl,aaa,yl,aab))} \
+  if(likely(aai<=4)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
+   endmask=_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); \
+   ASTYPE(!endmask,EVLENGTH); \
+  }else{NOUNROLL do{--aai; ASTYPE(aaa[aai]==aab[aai],EVLENGTH)}while(aai);} \
  }
-#endif
-  // set r nonzero if shapes disagree
+// set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xff,aai); \
-   r=!!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(endmask,aaa),_mm512_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
+  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
+   r=!!_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
 #elif (C_AVX2&&SY_64) || EMU_AVX
-#if 0 // obsolete 
-#define ASSERTAGREE2(x,y,l,xl,yl) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
-   endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
-   ASSERTFAGREE(_mm256_testz_si256(endmask,endmask),xl,aaa,yl,aab); /* result is 1 if all match */ \
-  }else{DONOUNROLL(aai,ASSERTFAGREE(aaa[i]==aab[i],xl,aaa,yl,aab);)} \
- }
-#endif
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
@@ -893,15 +860,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
 #else
-#if 0 // obsolete 
-#define ASSERTAGREE2(x,y,l,xl,yl) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=2)){ \
-   aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
-   ASSERTFAGREE(0==(aaa[0]^aab[0])+(aaa[aai]^aab[aai]),xl,aaa,yl,aab); \
-  }else{ASSERTFAGREE(!memcmp(aaa,aab,aai<<LGSZI),xl,aaa,yl,aab)} \
- }
-#endif
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \

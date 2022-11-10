@@ -62,6 +62,8 @@ release
 
 # build folders
 bin/
+!pthreads4w/bin/
+!pthreads4w/bin/pthreadVC3.dll
 make2/
 jlibrary/bin/
 jlibrary/bin32/

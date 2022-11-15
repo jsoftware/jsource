@@ -135,9 +135,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // ************************************** everything after here persists over the life of the thread
  C fillv0len;   // length of fill installed in fillv0 (max 16)
  C taskstate;  // task state: modified by other tasks on a system lock
-#define TASKSTATERUNNINGX 0   // task has started
+#define TASKSTATERUNNINGX 0   // This thread has started running a task
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
-#define TASKSTATELOCKACTIVEX 1  // task is waiting for any reason
+#define TASKSTATELOCKACTIVEX 1  // thread has been notified that a systemlock has been called.  Transition of STATERUNNING is not allowed while LOCKACTIVE
 #define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
 #define TASKSTATEACTIVEX 2  // thread is running on this JTT.  Changed under job lock.
 #define TASKSTATEACTIVE (1LL<<TASKSTATEACTIVEX)

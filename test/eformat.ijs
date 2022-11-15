@@ -131,18 +131,18 @@ if. 1 < #y do. y =. (}: , (<'and') , {:) y end.
 NB. x is 2x2 positions of <>; y is ashape;w shape  result is frame message
 efcarets_j_ =: {{
 bshape =. (<"1 +:x) ;@:((;:'<>')"_`[`]})&.> (a: 0 _1} (<' ') (,@,. , [) (":&.>))&.> y
-' : <frames> do not conform in shapes ' , (0 {:: bshape) , ' and ' , (1 {:: bshape)  
+'<frames> do not conform in shapes ' , (0 {:: bshape) , ' and ' , (1 {:: bshape)  
 }}
 
-NB. y is message;selfar;ovr ; result has the executing entity prepended
-efaddself_j_ =: {{
-'msg selfar ovr' =. y
-if. #msg do.
-  if. #selfmsg =. ovr eflinearself selfar do. msg =. msg ,~ selfmsg ,~ ', in ' end.
-end.
-msg
-}}
-
+NB. obsolete NB. y is message;selfar;ovr ; result has the executing entity prepended
+NB. obsolete efaddself_j_ =: {{
+NB. obsolete 'msg selfar ovr' =. y
+NB. obsolete if. #msg do.
+NB. obsolete   if. #selfmsg =. ovr eflinearself selfar do. msg =. msg ,~ selfmsg ,~ ', in ' end.
+NB. obsolete end.
+NB. obsolete msg
+NB. obsolete }}
+NB. obsolete 
 NB. y is a;w;selfar;ivr;ovr
 NB. Create msg if frames of a & w do not agree
 efckagree_j_ =: {{
@@ -155,14 +155,14 @@ if. or -: awr do. or =. ir end.  NB. If outer frame is empty, switch to inner fr
 if. -. -:/ (<./ awr-or) {.&> a ;&$ w do.  NB. frames must share a common prefix
   NB. error in the outermost frame.  Don't highlight it, just say the shapes disagree
 NB. obsolete   bktpos =. 0 ,. awr-or
-  emsg =. ' : shapes ' , (":$a) , ' and ' , (":$w) , ' do not conform'
+  emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' do not conform'
 elseif. -. -:/ (<./ or-ir) {.&> (-or) {.&.> a ;&$ w do.  NB. inner frames too, after discarding outer frame
   NB. error in the inside frame.  highlight it.
   bktpos =. (awr-or) ,. awr-ir  NB. positions of <> chars for a/w, showing the position to put <> before.  There can be no agreement error if a frame is empty, so only one char per position is possible
   emsg =. bktpos efcarets a ;&$ w
 end.
 NB. If we found an error, prepend the failing primitive
-efaddself emsg;selfar;ovr
+emsg
 }}
 
 NB. y is a list of 3!:0 results (0 for empty); result is list of the types represented, including a: to mean 'empty'
@@ -186,20 +186,23 @@ end.
 emsg
 }}
 
-NB. y is jerr;jt->ranks;AR of failing self;a[;w][;m]
+NB. y is jerr;curname;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
 eformat_j_ =: {{
 NB. extract internal state quickly, before anything disturbs it
 fill =. 9!:22''  NB. This also clears jt->fill
-'e ovr selfar a' =. 4{.y
+'e curn ovr selfar a' =. 5{.y
 self =. selfar 5!:0  NB. self as an entity
 psself =. 4!:0 <'self'  NB. part of speech of self
 if. ism=.ovr-:'' do. ovr=.63 63 [ y =. }:y [ ind=._1{::y end.  NB. orv is the special value '' for m}.  Take the m arg in that case
-if. dyad =. 4<#y do. w =. 4{::y end.
-NB. now a and possibly w are args 5&6.  If self is a verb these will be the arg value(s) and dyad will be the valence
+if. dyad =. 5<#y do. w =. 5{::y end.
+NB. now a and possibly w are args 4&5.  If self is a verb these will be the arg value(s) and dyad will be the valence
 NB. if the verb is m}, there will be an m argument
 NB. if self is not a verb, a and w are ARs and dyad indicates a conjunction
-emsg =. ''  NB. init no result
+NB. Create the header line: terse-error [in name] [executing fragment], and a version without the fragment
+hdr1 =. ((<:e) {:: 9!:8'') , (' in '&,^:(*@#) curn) , LF
+hdr =. (}:hdr1) , (' executing '&,^:(*@#) ovr eflinearself selfar) , LF
+emsg =. ''  NB. init no formatted result
 NB. Start parsing self
 while. do.
   if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0 break.  NB. primitive or single name: self-defining
@@ -212,10 +215,10 @@ while. do.
 end.
 NB. Take valence error without further ado
 if. (e=37) do.
-  if. selfar -: {. ;:'[:' do. ' [: must be part of a capped fork' return.
+  if. selfar -: {. ;:'[:' do. hdr1 , '[: must be part of a capped fork' return.
   else.
-    if.  prim -: {. ;:':' do. if. efarisnoun {.args do. ' explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end. end.  NB. could be {{ or m : and we can't distinguish
-    efaddself (' verb has no ',(dyad{::'monad';'dyad'),'ic valence');selfar;63 63 return.
+    if.  prim -: {. ;:':' do. if. efarisnoun {.args do. hdr1 , 'explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end. end.  NB. could be {{ or m : and we can't distinguish
+    hdr ,  ('verb has no ',(dyad{::'monad';'dyad'),'ic valence') return.
   end.
 end.
 
@@ -229,11 +232,11 @@ case. 3 do.
     select. prim
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o.&."b.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
-      if. e=9 do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. emsg return. end. end.
+      if. e=9 do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.
     case. ;: '@&&.' do.  NB. conjunctions with inherited rank
-      if. (e=9) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. emsg return. end. end.  NB. check only if inherited rank
+      if. (e=9) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
-      if. (e=9) do. emsg =. ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w  return. end.
+      if. (e=9) do. hdr , ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w return. end.
     fcase. ;:',.' do.  NB. May have agreement error.  No IRS
       if. (e=9) do. emsg =. ' : shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:',,:' do.  NB. only error is incompatible args, but could be with fill also
@@ -243,13 +246,13 @@ case. 3 do.
           if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. ' arguments and fill are incompatible: ' , efandlist types end.
         end.
       end.
-      efaddself emsg;selfar;ovr return.
+      hdr , emsg return.
     case. ;:'$' do.
       if. e=EVLENGTH do. emsg=.' extending an empty array requires fill'
       elseif. e=EVDOMAIN do. emsg=. ' x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0)
       elseif. e=EVINHOMO do. emsg =. ' arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
-      efaddself emsg;selfar;ovr return.
+      hdr , emsg return.
 NB. $ x domain and fill
 NB. |. x domain and fill
 NB. |: x domain
@@ -283,7 +286,7 @@ NB. Z: fold
     select. prim
     case. ;:'>;' do.
       if. (e e. 3 38) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
-      efaddself emsg;selfar;ovr return.
+      hdr , emsg return.
 NB. |.!.f fill
 NB. #. domain
 NB. #: domain
@@ -316,7 +319,7 @@ end.
 
 1: 0 : 0
 self=.+
-eformat_j_ 9;63 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
+eformat_j_ 9;'name';63 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
 eformat_j_ 9;1 63;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
 eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 2 3 4 [ w =. i. 3 3 4
 eformat_j_ 9;1 2;(5!:1<'self');a;<w [ a =. i. 1 2 [ w =. i. 1 2 4   NB. no error

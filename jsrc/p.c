@@ -877,10 +877,11 @@ RECURSIVERESULTSCHECK
        auditmemchains();
 #endif
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
-       if(unlikely(rc==0)){  // fail parse if error.  
+       if(unlikely(rc==0)){  // fail parse if error.
         // except for catastrophic errors, the only things that can happen in an assignment are domain (assignment to global when local is defined) and agreement (multiple assignment)
-        // The agreement is self-explanatory, but we put out a message for the domain error
-        if(jt->jerr==EVDOMAIN)jteformat(jt,0,str(strlen(" public assignment to a name with a private value")," public assignment to a name with a private value"),0,0);
+        // The agreement is self-explanatory, but we put out a message for the domain error, provided it is an assignment to a valid non-locative
+        A assignand=QCWORD(stack[0].a);
+        if(jt->jerr==EVDOMAIN && GETSTACK0PT&PTNAME0 && !(NAV(assignand)->flag&NMLOC+NMILOC+NMIMPLOC))jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);
         FP
        }
 // obsolete        FPZ(rc)  // fail if error.  

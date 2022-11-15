@@ -374,21 +374,21 @@ NB. ------------ eformat ---------------------------------------------------
 
 1 e. '(0)' E. 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun
 
-f =: 1:`(-: fex)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
+f =: 1:`(-: ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
 
-'length error: fex, in + : shapes 2 and 3 do not conform'    f '2 3+4 5 6'
-'length error: fex, in +"1 : shapes 2 3 and 4 5 6 do not conform'    f '(i. 2 3)+"1 i.4 5 6'
-'length error: fex, in +"1 1 : <frames> do not conform in shapes 2<3> and 2 3<6>'    f '(i. 2 3)+"1 i.2 3 6'
+'|length error in f executing +|shapes 2 and 3 do not conform|   2 3    +4 5 6'    f '2 3+4 5 6'
+'|length error in f executing +"1|shapes 2 3 and 4 5 6 do not conform|   (i.2 3)    +"1 i.4 5 6'    f '(i. 2 3)+"1 i.4 5 6'
+'|length error in f executing +"1 1|<frames> do not conform in shapes 2<3> and 2 3<6>|   (i.2 3)    +"1 i.2 3 6'    f '(i. 2 3)+"1 i.2 3 6'
 
-'length error: fex, in $ extending an empty array requires fill' f '2 3 $ $0'
-'domain error: fex, in $ x has nonintegral value (2.5) at position 0' f '2.5 3 $ $0'
-'domain error: fex, in $ x has invalid value (_1) at position 1' f '2 _1 $ $0'
+'|length error in f executing $| extending an empty array requires fill|   2 3    $$0' f '2 3 $ $0'
+'|domain error in f executing $| x has nonintegral value (2.5) at position 0|   2.5 3    $$0' f '2.5 3 $ $0'
+'|domain error in f executing $| x has invalid value (_1) at position 1|   2 _1    $$0' f '2 _1 $ $0'
 
 g =: {{ y + 5 }}
-'valence error: g explicit definition has no dyadic valence' f '2 g 3'
+'|valence error in g|explicit definition has no dyadic valence|   2     g 3' f '2 g 3'
 g =: {{ y + x }}
-'valence error: g explicit definition has no monadic valence' f 'g 3'
-'valence error: fex [: must be part of a capped fork' f '5.7 ([:;]<@(+/\);.2) i. 5'
+'|valence error in g|explicit definition has no monadic valence|       g 3' f 'g 3'
+'|valence error in f|[: must be part of a capped fork|   5.7    ([:;]<@(+/\);.2)i.5' f '5.7 ([:;]<@(+/\);.2) i. 5'
 
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '
 4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '

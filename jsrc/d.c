@@ -277,7 +277,7 @@ void jtjsignalf(J jt,I e,C *fmt,...){
 // a is the x/u arg to the failing entity
 // w is the y/n arg to the failing entity
 // m is the m argument for adverbs
-// the args to eformat_j_ are error#;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
+// the args to eformat_j_ are error#;curname;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
 A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
  if(jt->emsgstate&EMSGSTATEFORMATTED)R 0;   // if we have already run eformat on this error, don't do it again
@@ -298,6 +298,7 @@ A jteformat(J jt,A self,A a,A w,A m){
       // establish internal-state args: jt->ranks.
       A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
       RESETRANK;   //  We have to reset the rank before we call internal functions
+      A namestg=mtv; if(jt->curname!=0)RZGOTO(namestg=str(AN(jt->curname),NAV(jt->curname)->s),noeformat)
       // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
       A awm=0; // where we build the a/w/m arguments
       if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg, and set rank to ''
@@ -307,16 +308,19 @@ A jteformat(J jt,A self,A a,A w,A m){
       // Convert self to AR.  If self is not a verb convert a/w to AR also
       A selfar; if((selfar=arep(self))==0)goto noeformat;
       // run the analyzer
-      WITHDEBUGOFF(df1(msg,jlink(sc(e),jlink(rnk,jlink(selfar,awm))),val);)  // run eformat_j_
+      WITHDEBUGOFF(df1(msg,jlink(sc(e),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_
      }
     }else msg=a;  // self not given, use given message text
 noeformat: ;
-    // restore the saved error message up to the first LF; then the formatted line(s) if any; then the rest of the saved message
     jt->jerr=jt->jerr1=e; jt->etxn=0;
-    C *savtext=CAV(saverr); DO(AN(saverr), if(savtext[i]==CLF)break; eputc(savtext[i]);)  // copy up to first LF
-    I trailpos=jt->etxn;  // remember offset to rest of message
-    if(msg&&(AT(msg)&LIT))ep(AN(msg),CAV(msg));  // copy out message if any
-    ep(AN(saverr)-trailpos,savtext+trailpos);  // copy out the rest of the original message
+    C *savtext=CAV(saverr); I copyoffset=0;  // pointer to old emsg text, and offset to copy from
+    if(msg&&(AT(msg)&LIT)&&AN(msg)>0){
+     // eformat_j_ returned a message.  Replace the first line of saverr with it UNLESS self=0: then insert it after the first line of saverr
+     DO(AN(saverr), if(savtext[i]==CLF){copyoffset=i; break;})  // count up to but not including including first LF
+     if(self==0){ep(copyoffset+1,savtext);}  // if internal msg, it is terse-msg LF internal-msg LF remaining lines
+     I waslf=1; C *msgtext=CAV(msg); DO(AN(msg) , if(waslf)dhead(0,0L); eputc(msgtext[i]); waslf=msgtext[i]==CLF;)  // copy out message if any; every nonempty line must start with the suspension/error prefix * or |
+    }
+    ep(AN(saverr)-copyoffset,savtext+copyoffset);  // copy out the rest (or all) of the original message, plus trailing LF
     jt->etxn1=jt->etxn;
    }
   }

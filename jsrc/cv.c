@@ -79,12 +79,12 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
    R fitct(a,w,cno);
   case CQQ: ;
    RE(wval=i0(w)); ASSERT(BETWEENC(wval,0,1),EVDOMAIN);  // only f"r!.[01] is supported
-   ASSERT(sv->valencefns[1]==jtsumattymes1,EVDOMAIN)  // Must be +/@:*"1!:[01]
+   ASSERT(sv->valencefns[1]==jtsumattymes1,EVDOMAIN)  // Must be +/@:*"1!.[01]
    RZ(f=CDERIV(CFIT,0,jtsumattymes1,VIRS2, m,l,r));  // supports IRS
    FAV(f)->localuse.lu1.fittype=wval; R f;
   case CSLASH: ;
    RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
-   ASSERT(FAV(sv->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!:0
+   ASSERT(FAV(sv->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!.0
    R CDERIV(CFIT,jtcompsum,0,VIRS1, m,l,r);  // supports IRS
   case CEXP:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);

@@ -117,6 +117,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));
   case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);
   case CPDERIV:  if(nf&&!AR(x))R ds(CPDERIV); break;  // only atom&p.. is invertible
+xco:
   case CXCO:     RE(n=i0(x)); ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN);  // fall through to create (-x)&u
   case CROT:          // fall through to create (-x)&u
   case CCIRCLE:       // fall through to create (-x)&u
@@ -155,7 +156,8 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    }
    break;
   case CFIT:
-   ASSERT(nf&&(CPOUND==ID(FAV(g)->fgh[0])),EVDOMAIN);
+   if(nf&&CXCO==ID(FAV(g)->fgh[0]))goto xco; // m&(x:!.n)^:_1 is (-m)&(x:!.n)
+   ASSERT(nf&&CPOUND==ID(FAV(g)->fgh[0]),EVDOMAIN);
    ASSERT(1==AR(x),EVRANK);
    R fdef(0,CPOWOP,VERB, jtexpandg,0L, w,num(-1),0L, VFLAGNONE, RMAX,0L,0L);
   case CPOUND:
@@ -260,6 +262,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
   case CDGRADE:  R eval("/:@|.");
   case CWORDS:   R eval("}:@;@(,&' '&.>\"1) :. ;:");
   case CBANG:    R eval("3 : '(-(y -~ !)%0.001&* (0.001%~[:-/[:! 0.001 0 +/ ]) ])^:_<.&170^:(-:+)^.y' :. !");
+xco:
   case CXCO:     R amp(num(-1),w);
   case CSPARSE:  R fdef(0,CPOWOP,VERB,jtdenseit,0L, w,num(-1),0L, VFLAGNONE, RMAX,RMAX,RMAX);
   case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    0L, w,num(-1),0L, 0L, 0L,  0L,  0L  );
@@ -271,10 +274,11 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
   case CAT:      if(vf&&vg)R atop(invrecur(g),invrecur(f));   break;
   case CAMPCO:
   case CATCO:    if(vf&&vg)R atco(invrecur(g),invrecur(f));   break;
-  case CSLASH:   if(CSTAR==ID(f))R ds(CQCO);        break;
-  case CQQ:      if(vf)R qq(invrecur(f),g);              break;
-  case COBVERSE: if(vf&&vg)R obverse(g,f);          break;  // if defined obverse, return it
+  case CSLASH:   if(CSTAR==ID(f))R ds(CQCO);                  break;
+  case CQQ:      if(vf)R qq(invrecur(f),g);                   break;
+  case COBVERSE: if(vf&&vg)R obverse(g,f);                    break;  // if defined obverse, return it
   case CSCO:     R amp(num(5),w);
+  case CFIT:     if(CXCO==ID(f))goto xco; //_1 x:!.n y is the same as _1 x: y, and n was already verified to be valid, so treat this the same as plain x:
   case CPOWOP:   
    if(vf&&ng){RE(p=i0(g)); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
    if(VGERL&v->flag)R AAV(v->fgh[2])[1];

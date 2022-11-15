@@ -48,6 +48,10 @@ NB. 'domain error' -: x: etx _.
 ((,%)    ! 10*i.10) -: x:^:_1   (,%)    ! 10*i.10x
 (12345 % ! 10*i.10) -: x:^:_1 ] 12345 % ! 10*i.10x
 
+(+/&.(x:!.0)"1 -:!.0 ([:_1&x: [:+/"1 x:!.0)) 20 20?@$0
+(+/&.(x:!.0)   -:!.0 ([:_1&x: [:+/   x:!.0)) 1000?@$0     NB.todo bump this to a more reasonable value--in particular, one that can properly stress the large superaccumulator--once extended-precision operations are fast
+
+
 (= x:) ,1 _1 */ 1e43 1e_43
 (= x:) ,1 _1 */ 2^137 _137
 

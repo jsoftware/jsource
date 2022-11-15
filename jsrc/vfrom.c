@@ -687,6 +687,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  I *amv0;  // pointer to am block, and to the selected column's indexes
  D *avv0;  // pointer to av data, and to the selected column's values
  A qk;  // original M block
+ I useqp;   // set to force qp during the column computation
 } ;
 
 
@@ -698,7 +699,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(((struct mvmctx*)ctx)->x) x=((struct mvmctx*)ctx)->x;
  YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)
- YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(qk)
+ YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(qk)YC(useqp)
 #undef YC
  // perform the operation
 
@@ -710,7 +711,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
 
  UI *ndx0=IAV(ndxa), nc=AN(ndxa);  // origin of ordered column numbers, number of columns
 
- D *mv0=DAV(qk);  // pointer to start of Qk
+ D *mv0=DAV(qk), *mv0lo=AR(qk)==2||(!useqp)?0:mv0+n*n;  // pointer to start of Qk and the the lower half if any and we will use it (0 if none)
  I nfreecols=(I)(((struct mvmctx*)ctx)->nfreecolsd*nc); I ncols=(I)(((struct mvmctx*)ctx)->ncolsd*nc);  // the prefix and total fractions are fractions of the size & must be adjusted
  if(unlikely(nc==0))R 0;  // abort with no action if no columns (possible only for DIP)
  if(bv!=0&&prirow>=0)zv=0;  // if we have DIP with a priority row, signal to process ALL rows in bk order.  It's not really needed but it ensures that if the prirow is tied for pivot in the first
@@ -728,7 +729,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
   if(zv!=0){  // one-column
    // Set up for multithreading one-column mode, where we have to split the column.  Multithreading of larger problems is handled
    // by having each thread take columns in turn
-   if(AR(qk)==2){
+   if(mv0lo==0){
     // in double precision, the operation is predictable and we just want to take equal amounts in each task
     I tn=bvgrde-(I*)0;  // get # values desired for each thread
     I startx=ti*tn;  // starting offset for this thread
@@ -784,8 +785,8 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
   // create the column NPAR values at a time
   for(bvgrd=bvgrd0;;bvgrd+=NPAR){
    if(bvgrd>=bvgrde){  // end of column or column section
-    if(limitrow!=-3)break;  // normally, that's the end of the column
-    // quad-prec one-column mode.  Take a set of rows to process.  The issue is that some rows are faster than others: rows with all 0s skip extended-precision
+    if(mv0lo==0)break;  // normally, that's the end of the column
+    // quad-prec mode.  Take a set of rows to process.  The issue is that some rows are faster than others: rows with all 0s skip extended-precision
     // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
     // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
     // for NPAR*nthreads at least.
@@ -814,13 +815,13 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    if(colx<n){
     // fetching from the Ek matrix itself.  Just fetch the values from the column
     dotproducth=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+colx,indexes,endmask,SZI);
-    if(limitrow==-3){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+n*n+colx,indexes,endmask,SZI);}
+    if(mv0lo!=0){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI);}
    }else{
     // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows
     I an=axv[colx][1];  // number of sparse atoms in each row   scaf move out of loop
     D *vv=avv0+axv[colx][0];  // pointer to values for this section of A
     I *iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
-    if(likely(limitrow!=-3)){
+    if(likely(mv0lo==0)){
      // single-precision accumulate
      dotproducth=_mm256_setzero_pd();
      I k;
@@ -829,7 +830,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
       dotproducth=_mm256_fmadd_pd(dotproductl,_mm256_set1_pd(vv[k]),dotproducth);  // accumulate the dot-product
      }
     }else{
-     // extended-precision accumulate, used only for single-column
+     // extended-precision accumulate, used when Qk has quad-precision
      dotproducth=dotproductl=_mm256_setzero_pd();  // init totals
      I k;
      NOUNROLL for(k=0;k<an;++k){  // for each element of the dot-product
@@ -837,7 +838,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
       // get column number to fetch; fetch 4 rows
       th=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
       if(!_mm256_testz_si256(_mm256_castpd_si256(th),_mm256_castpd_si256(th))){  // if all values 0, skip em.  Probably worth a test
-       tl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+n*n+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
+       tl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
        vval=_mm256_set1_pd(vv[k]);  // load column value
        // accumulate the dot-product
        TWOPROD(th,vval,th2,tl2)  // high qk * col
@@ -923,7 +924,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     __m256d force0=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),thresh,_CMP_LT_OQ);  // 1s where we need to clamp
     dotproducth=_mm256_blendv_pd(dotproducth,_mm256_setzero_pd(),force0);  // set values < threshold to +0
     if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv,dotproducth);else _mm256_maskstore_pd(zv,_mm256_castpd_si256(endmask),dotproducth);  // store, masking if needed
-    if(limitrow==-3){
+    if(likely(mv0lo!=0)){  // low parts has been calculated
      dotproductl=_mm256_blendv_pd(dotproductl,_mm256_setzero_pd(),force0);  // set values < threshold to +0
      if(likely(_mm256_testc_pd(endmask,sgnbit)))_mm256_storeu_pd(zv+n,dotproductl);else _mm256_maskstore_pd(zv+n,_mm256_castpd_si256(endmask),dotproductl);  // repeat for low part
     }
@@ -1031,8 +1032,8 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 //   if M has rank 3 (with 2={.$M), do the product in quad precision
 //  Result for product mode (exitvec is scalar) is the product, one column of M.  Values closer to 0 than the threshold are clamped to 0
 // DIP/Dpiv mode:
-// Only the high part of M is used if it is quad-precision
-// y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold/PivTol,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Virtx/Dpivdir);bk/'';Frow[;exclusion list/Dpiv;Yk]
+// Only the high part of M is used unless useqp is set and M has extended precision
+// y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold/PivTol,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Virtx/Dpivdir,useqp);bk/'';Frow[;exclusion list/Dpiv;Yk]
 // Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
 //           rc,failing column of NTT, an element of ndx (if rc=4)
 //  rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
@@ -1086,6 +1087,7 @@ if(AN(w)==0){
  I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
  I *exlist=0, nexlist=0, *yk;  // exclusion list: list of excluded col|row pairs, length
  D bkmin;  // the largest value for which bk is considered close enough to 0
+ I useqp;  // set if we use quad-precision for column, if available
 
  // Run the operation on every thread we have, if it is big enough (as it usually will be)
  UI nthreads=(*JT(jt,jobqueue))[0].nthreads+1; nthreads=n<100?1:nthreads;  // a wild guess at what 'too small' would be
@@ -1099,6 +1101,7 @@ if(AN(w)==0){
   GATV(z,FL,n<<epcol,1+epcol,AS(box4)); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
   bvgrd0=0; bvgrde=bvgrd0+(n+nthreads-1)/nthreads;  // get # values to process in each thread
   thresh=_mm256_set1_pd(DAV(box5)[0]);  // load threshold in all lanes
+  useqp=1;  // by default we do the column computation in high precision
  }else{
   // A list of index values.  We are doing the DIP calculation or Dpiv
   ASSERT(AR(box5)==1,EVRANK); ASSERT(AN(box5)==0||AT(box5)&INT,EVDOMAIN); bvgrd0=IAV(box5); bvgrde=bvgrd0+AN(box5);  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
@@ -1107,11 +1110,12 @@ if(AN(w)==0){
   A box6=C(AAV(w)[6]), box7=C(AAV(w)[7]), box8=C(AAV(w)[8]);
   ASSERT(AR(box8)<=1,EVRANK);   // Frow, one per row of M and column of A
   if(AN(box8)==0)Frow=0;else{ASSERT(AT(box8)&FL,EVDOMAIN); ASSERT(AN(box8)==n+AS(box1)[0],EVLENGTH); Frow=DAV(box8);}  // if Frow omitted we are looking to make bks nonzero
-  ASSERT(AR(box6)<=1,EVRANK); ASSERT(AT(box6)&FL,EVDOMAIN); ASSERT(AN(box6)==7,EVLENGTH);  // 7 float constants
+  ASSERT(AR(box6)<=1,EVRANK); ASSERT(AT(box6)&FL,EVDOMAIN); ASSERT(BETWEENC(AN(box6),7,8),EVLENGTH);  // 7 or 8 float constants
   if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
   DO(AN(box5), ASSERT((UI)bvgrd0[i]<(UI)n,EVINDEX); )  // verify bv indexes in bounds if M not empty
   bkmin=DAV(box6)[2];
   thresh=_mm256_set_pd(DAV(box6)[1],bkmin,inf,DAV(box6)[0]); nfreecolsd=(DAV(box6)[3]); ncolsd=(DAV(box6)[4]); impfac=DAV(box6)[5]; prirow=(I)DAV(box6)[6];
+  if(AN(box6)>7)useqp=(I)DAV(box6)[7]; else useqp=0;   // qp flag defaults to 0
   ASSERT(BETWEENC(AR(box7),1,2),EVRANK);
   if(AN(box7)!=0){
    // Normal DIP calculation
@@ -1143,7 +1147,7 @@ if(AN(w)==0){
 
 #define YC(n) .n=n,
 struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=box0,YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
- YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin).axv=((I(*)[2])IAV(box1))-n,.amv0=IAV(box2),.avv0=DAV(box3),.qk=box4,
+ YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(useqp)YC(bkmin).axv=((I(*)[2])IAV(box1))-n,.amv0=IAV(box2),.avv0=DAV(box3),.qk=box4,
  .ndotprods=0,.ncolsproc=0,};
 #undef YC
 

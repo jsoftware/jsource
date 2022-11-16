@@ -376,13 +376,13 @@ NB. ------------ eformat ---------------------------------------------------
 
 f =: 1:`(-: ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
 
-'|length error in f executing +|shapes 2 and 3 do not conform|   2 3    +4 5 6'    f '2 3+4 5 6'
-'|length error in f executing +"1|shapes 2 3 and 4 5 6 do not conform|   (i.2 3)    +"1 i.4 5 6'    f '(i. 2 3)+"1 i.4 5 6'
-'|length error in f executing +"1 1|<frames> do not conform in shapes 2<3> and 2 3<6>|   (i.2 3)    +"1 i.2 3 6'    f '(i. 2 3)+"1 i.2 3 6'
+'|length error in f, executing +|shapes 2 and 3 do not conform|   2 3    +4 5 6'    f '2 3+4 5 6'
+'|length error in f, executing +"1|shapes 2 3 and 4 5 6 do not conform|   (i.2 3)    +"1 i.4 5 6'    f '(i. 2 3)+"1 i.4 5 6'
+'|length error in f, executing +"1 1|<frames> do not conform in shapes 2<3> and 2 3<6>|   (i.2 3)    +"1 i.2 3 6'    f '(i. 2 3)+"1 i.2 3 6'
 
-'|length error in f executing $| extending an empty array requires fill|   2 3    $$0' f '2 3 $ $0'
-'|domain error in f executing $| x has nonintegral value (2.5) at position 0|   2.5 3    $$0' f '2.5 3 $ $0'
-'|domain error in f executing $| x has invalid value (_1) at position 1|   2 _1    $$0' f '2 _1 $ $0'
+'|length error in f, executing $|extending an empty array requires fill|   2 3    $$0' f '2 3 $ $0'
+'|domain error in f, executing $|x has nonintegral value (2.5) at position 0|   2.5 3    $$0' f '2.5 3 $ $0'
+'|domain error in f, executing $|x has invalid value (_1) at position 1|   2 _1    $$0' f '2 _1 $ $0'
 
 g =: {{ y + 5 }}
 '|valence error in g|explicit definition has no dyadic valence|   2     g 3' f '2 g 3'

@@ -15,11 +15,11 @@ F2(jtsetfv){A q=jt->fill;I t;
  I t2=REPSGN(-AN(w))&AT(w); t=REPSGN(-AN(a))&AT(a); t=t?t:t2;  // ignoring empties, use type of a then w
  if(unlikely(AN(q)!=0)){ // fill specified
   RE(t=t?maxtype(t,AT(q)):AT(q)); // get type needed for fill
-  if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));  // convert the user's type if needed
+  if(TYPESNE(t,AT(q))){if((q=cvt(t,q))==0&&jt->jerr==EVDOMAIN){jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
  }else{if(!t)t=AT(w); fillv0(t); jt->fillv=jt->fillv0;}    // empty fill.  create std fill in fillv0 and point jt->fillv at it
  w=TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it
- if(w==0)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
+ if(w==0&&jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
  R w;
 }
 
@@ -111,7 +111,7 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y
 F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  F2PREFIP;ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(w))))R rotsp(a,w);
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?AS(a)[af]:1;
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?AS(a)[af]:1;  // p=#axes to rotate
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic

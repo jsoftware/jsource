@@ -180,8 +180,8 @@ efindexmsg_j_ =: {{
 emsg =. ''
 select. rc
 case. 1 do. emsg =. ' nonnumeric type (' , (>efhomo 3!:0 x) , ')'
-case. 2 do. emsg =. ' nonintegral value (' ,(": (<il) { x) , ') at position ' , ":il
-case. 3 do. emsg =. ' invalid value (' ,(": (<il) { x) , ') at position ' , ":il
+case. 2 do. emsg =. ' nonintegral value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
+case. 3 do. emsg =. ' invalid value (' ,(": (<il) { x) , ')' ,  (' at position ' , ":)`(''"_)@.(1=*/@$x) il
 end.
 emsg
 }}
@@ -201,7 +201,7 @@ NB. if the verb is m}, there will be an m argument
 NB. if self is not a verb, a and w are ARs and dyad indicates a conjunction
 NB. Create the header line: terse-error [in name] [executing fragment], and a version without the fragment
 hdr1 =. ((<:e) {:: 9!:8'') , (' in '&,^:(*@#) curn) , LF
-hdr =. (}:hdr1) , (' executing '&,^:(*@#) ovr eflinearself selfar) , LF
+hdr =. (}:hdr1) , (', executing '&,^:(*@#) ovr eflinearself selfar) , LF
 emsg =. ''  NB. init no formatted result
 NB. Start parsing self
 while. do.
@@ -238,19 +238,25 @@ case. 3 do.
     case. ;:'I.' do.
       if. (e=9) do. hdr , ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w return. end.
     fcase. ;:',.' do.  NB. May have agreement error.  No IRS
-      if. (e=9) do. emsg =. ' : shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
+      if. (e=9) do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:',,:' do.  NB. only error is incompatible args, but could be with fill also
       if. (e e. 3 38) do.  NB. domain /inhomo
-        if. 1 < #types =. a. -.~ a efhomo@:(,&(*@(#@,) * 3!:0)) w do. emsg =. ' arguments are incompatible: ' , efandlist types
+        if. 1 < #types =. a. -.~ a efhomo@:(,&(*@(#@,) * 3!:0)) w do. emsg =. 'arguments are incompatible: ' , efandlist types
         elseif. 1=#fill do.
-          if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. ' arguments and fill are incompatible: ' , efandlist types end.
+          if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. 'arguments and fill are incompatible: ' , efandlist types end.
         end.
       end.
       hdr , emsg return.
     case. ;:'$' do.
-      if. e=EVLENGTH do. emsg=.' extending an empty array requires fill'
-      elseif. e=EVDOMAIN do. emsg=. ' x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0)
-      elseif. e=EVINHOMO do. emsg =. ' arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
+      if. e=EVLENGTH do. emsg=.'extending an empty array requires fill'
+      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0)
+      elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
+      end.
+      hdr , emsg return.
+    case. ;:'|.' do.
+      if. e=EVLENGTH do. emsg=.'x has ' , (":#a) , ' atoms but y has only ' , (":#@$w) , ' axes'
+      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
+      elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
       hdr , emsg return.
 NB. $ x domain and fill
@@ -285,7 +291,7 @@ NB. Z: fold
     NB. Monads
     select. prim
     case. ;:'>;' do.
-      if. (e e. 3 38) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. ' contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
+      if. (e e. 3 38) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. 'contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
       hdr , emsg return.
 NB. |.!.f fill
 NB. #. domain

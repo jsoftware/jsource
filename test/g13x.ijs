@@ -262,10 +262,10 @@ h=: 2 3&+@sum
 
 'value error: junkfoo' -: fex 'junkfoo'
 
-'domain error: fex'    -: fex '+/1;2 3'
-'domain error: sum'    -: fex 'sum ''asdf'''
-'noun result was required: g'      -: fex 'f 0'
-'domain error: sum'    -: fex 'h ''asdf'''
+'domain error'    ([ -: #@[ {. ]) fex '+/1;2 3'
+'domain error'    ([ -: #@[ {. ]) fex 'sum ''asdf'''
+'noun result was required'      ([ -: #@[ {. ]) fex 'f 0'
+'domain error'    ([ -: #@[ {. ]) fex 'h ''asdf'''
 
 f=: 3 : 0
  abc=. 'abc'

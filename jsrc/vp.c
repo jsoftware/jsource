@@ -70,7 +70,7 @@ A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv;I*wv,*zv;
  GATV0(z,INT,n,1); zv=AV(z);  // allocate result area
  GATV0(b,B01,n,1); bv=BAV(b); mvc(n,bv,1,MEMSET01);   // binary vector, init to 1
  DO(AN(w), bv[wv[i]]=0;);  // clear flag in indexes that appear
- DO(n, *zv=i; zv+=bv[i];); ASSERT((zv-AV(z))+AN(w)==n,EVINDEX); ICPY(zv,wv,AN(w));  // prefix result with missing indexes; verify the result accounts for all indexes
+ DO(n, *zv=i; zv+=bv[i];); ASSERT((zv-AV(z))+AN(w)==n,EVINDEXDUP); ICPY(zv,wv,AN(w));  // prefix result with missing indexes; verify the result accounts for all indexes
  EPILOG(z);
 }
 

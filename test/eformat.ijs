@@ -65,6 +65,9 @@ EVTHROW
 EVFOLDLIMIT
 EVVALENCE
 EVINHOMO
+EVINDEXDUP
+EVEMPTYT
+EVEMPTYDD
 )
 
 NB.x is (1 if all of main name always needed),(max # characters allowed),(parenthesize w if compound); y is AR
@@ -174,7 +177,7 @@ types { a:,;:'numeric character boxed symbol'
 efarisnoun_j_ =: (((<,'0')) = {.)@>  NB. predicate.  y is an AR
 
 NB. y is result from 9!:23, x is index arg to that 9!:23
-NB. Result is message about the index if any, suitable by itself or if porefixed by ' [xy] has' 
+NB. Result is message about the index if any, suitable by itself or if prefixed by ' [xy] has' 
 efindexmsg_j_ =: {{
 'rc il' =. y  NB. return code and index list of error
 emsg =. ''
@@ -186,6 +189,8 @@ end.
 emsg
 }}
 
+efdispnsp_j_ =: {{ (": , ' ' , (;:x) {::~ 1&=) y }}
+ 
 NB. y is jerr;curname;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
 eformat_j_ =: {{
@@ -199,10 +204,6 @@ if. dyad =. 5<#y do. w =. 5{::y end.
 NB. now a and possibly w are args 4&5.  If self is a verb these will be the arg value(s) and dyad will be the valence
 NB. if the verb is m}, there will be an m argument
 NB. if self is not a verb, a and w are ARs and dyad indicates a conjunction
-NB. Create the header line: terse-error [in name] [executing fragment], and a version without the fragment
-hdr1 =. ((<:e) {:: 9!:8'') , (' in '&,^:(*@#) curn) , LF
-hdr =. (}:hdr1) , (', executing '&,^:(*@#) ovr eflinearself selfar) , LF
-emsg =. ''  NB. init no formatted result
 NB. Start parsing self
 while. do.
   if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0 break.  NB. primitive or single name: self-defining
@@ -213,14 +214,59 @@ while. do.
     selfar =. {. args
   end.
 end.
+
+NB. See if the executing value is m : .  If so, don't show the lines of the name
+isexplicit =. 0 if.  prim -: {. ;:':' do. if. efarisnoun {.args do. isexplicit =. 1 end. end.
+
+NB. for self-explanatory errors, keep the terse message.  Also for value error, which for argnames is detected without a self
+if. e e. EVVALUE , EVILNAME , EVOPENQ , EVWSFULL do. '' return. end.
+
+NB. Create the header lines: terse-error [in name] [executing fragment], and a version without the fragment
+hdr1 =. ((<:e) {:: 9!:8'') , (' in '&,^:(*@#) curn) , LF
+emsg =. ''  NB. init no formatted result
+
+NB. Handle post-execution errors, which are not detected until after the sentence's final result has been found,
+NB. so that by the time eformat is called the selfar has moved on from the error
+select. e
+case. EVNONNOUN do. emsg =. 'the sentence did not produce a noun result, usually because of a misspelled word or missing argument'
+case. EVASSERT do. emsg =. 'the result was expected to be all 1'
+end.
+if. #emsg do. hdr1 , emsg return. end.  NB. pee
+
+if. selfar -:  {. ;:':' do. hdr =. (}:hdr1) , ', defining explicit entity' , LF
+else. hdr =. (}:hdr1) , (', executing '&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
+end.
+
+NB. Handle environment-dependent and non-execution errors
+select. e
+case. EVATTN do. emsg =. 'the executing entity was interrupted by user action'
+case. EVBREAK do. emsg =. 'the executing sentence was aborted by user action'
+case. EVFACE do. emsg =. 'file system error'
+case. EVLIMIT do. emsg =. 'a system limit was exceeded'
+case. EVSTACK do. emsg =. 'infinite recursion'
+case. EVFACCESS do. emsg =. 'nonexistent file or missing permissions'
+case. EVFNAME do. emsg =. 'nonexistent file or invalid filename '
+case. EVFNUM do. emsg =. 'the specified file number is not open'
+case. EVTIME do. emsg =. 'the execution time limit was exceeded'
+case. EVRO do. emsg =. 'attempt to modify a read-only mapped file'
+case. EVCTRL do. emsg =. 'the line, with its number shown in brackets, has a mismatched control structure'
+case. EVEMPTYT do. emsg =. 'no sentences following for. or select.'
+case. EVEMPTYDD do. emsg =. 'unfinished {{ }} definition'
+case. EVILNUM do. emsg =. 'any word beginning with a digit or _ must be a valid number'
+case. EVSPELL do. emsg =. 'words with . or : inflections must be J primitive words'
+end.
+if. #emsg do. hdr , emsg return. end.  NB. pee
+
 NB. Take valence error without further ado
-if. (e=37) do.
+if. (e=EVVALENCE) do.
   if. selfar -: {. ;:'[:' do. hdr1 , '[: must be part of a capped fork' return.
   else.
-    if.  prim -: {. ;:':' do. if. efarisnoun {.args do. hdr1 , 'explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end. end.  NB. could be {{ or m : and we can't distinguish
+    if.  isexplicit do. hdr1 , 'explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end.  NB. could be {{ or m : and we can't distinguish
     hdr ,  ('verb has no ',(dyad{::'monad';'dyad'),'ic valence') return.
   end.
 end.
+
+NB. Further errors are related to details of primitive execution.
 
 NB. Go through a tree to find the message code to use
 select. psself
@@ -232,15 +278,15 @@ case. 3 do.
     select. prim
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!o.&."b.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
-      if. e=9 do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.
+      if. e=EVLENGTH do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.
     case. ;: '@&&.' do.  NB. conjunctions with inherited rank
-      if. (e=9) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
+      if. (e=EVLENGTH) *. -. +./ efarisnoun args do. if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return. end. end.  NB. check only if inherited rank
     case. ;:'I.' do.
-      if. (e=9) do. hdr , ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w return. end.
+      if. (e=EVLENGTH) do. hdr , ((,.~ -&ivr) a ,&(#@$) w) efcarets a ;&$ w return. end.
     fcase. ;:',.' do.  NB. May have agreement error.  No IRS
-      if. (e=9) do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
+      if. (e=EVLENGTH) do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:',,:' do.  NB. only error is incompatible args, but could be with fill also
-      if. (e e. 3 38) do.  NB. domain /inhomo
+      if. (e e. EVDOMAIN , EVINHOMO) do.  NB. domain /inhomo
         if. 1 < #types =. a. -.~ a efhomo@:(,&(*@(#@,) * 3!:0)) w do. emsg =. 'arguments are incompatible: ' , efandlist types
         elseif. 1=#fill do.
           if. 1 < #types =. ~. types , efhomo 3!:0 fill do. emsg =. 'arguments and fill are incompatible: ' , efandlist types end.
@@ -254,7 +300,7 @@ case. 3 do.
       end.
       hdr , emsg return.
     case. ;:'|.' do.
-      if. e=EVLENGTH do. emsg=.'x has ' , (":#a) , ' atoms but y has only ' , (":#@$w) , ' axes'
+      if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
       elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
       elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
@@ -262,8 +308,26 @@ case. 3 do.
 NB. $ x domain and fill
 NB. |. x domain and fill
 NB. |: x domain
+    case. ;:'|:' do.
+      if. e=EVLENGTH do. emsg=.'x has ' , ('atoms atom' efdispnsp #a) , ' but y has only ' , ('axes axis' efdispnsp #@$w)
+      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (0;0$0)
+      elseif. e=EVINDEXDUP do. emsg =. 'x contains a duplicate axis number'
+      end.
+      hdr , emsg return.
 NB. ;. x domain and agreement
 NB. # x domain and agreement
+    case. ;:'#' do.
+      if. e=EVLENGTH do.
+        if. #emsg=.efckagree a;w;selfar;ivr;ovr do. hdr,emsg return.  NB. agreement error outside the item
+        elseif. ({:$a) ~: (-({:ovr)<.#$w) { $w do.   NB. agreement error inside the item
+          if. 1>:#$a do. xmsg =. 'x is a list of ' , ('values value' efdispnsp {:$a) else. xmsg =. 'rows of x contain ' , ('values value' efdispnsp {:$a) , ' each' end.
+          if. ({:ovr)>:#$w do. ymsg =. 'y has ' , ('items item' efdispnsp {.$w) else. ymsg =. 'cells of y contain ' , ('items item' efdispnsp ({:ovr){$w) , ' each' end.
+          hdr , xmsg , ' but ' , ymsg return.
+        end.
+      elseif. e=EVDOMAIN do. emsg=. 'x has'&,^:(*@#) a efindexmsg a 9!:23 (1;0)
+      elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
+      end.
+      hdr , emsg return.
 NB. #. xy domain and agreement
 NB. #: xy domain  and agreement
 NB. /. /.. agreement
@@ -291,7 +355,7 @@ NB. Z: fold
     NB. Monads
     select. prim
     case. ;:'>;' do.
-      if. (e e. 3 38) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. 'contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
+      if. (e e. EVDOMAIN , EVINHOMO) do. if. 1 < #types =. a: -.~ efhomo (,&(*@(#@,) * 3!:0)@> a do. emsg =. 'contents are incompatible: ' , efandlist types end. end.  NB. only error is incompatible args
       hdr , emsg return.
 NB. |.!.f fill
 NB. #. domain
@@ -319,7 +383,7 @@ NB. x: domain
     end.
   end.
 end.
-''
+hdr return.  NB. no match
 }}
 
 
@@ -352,6 +416,8 @@ self =. ,:!.'a'
 eformat_j_ 3;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
 self=:[:
 eformat_j_ 37;63 63;(5!:1<'self');a;<w [ a =. (,2) [ w=.2 3
+self=:#
+eformat_j_ 9;'name';63 63;(5!:1<'self');a;<w [ a =.2 3 [ w=.i. 5
 )
 
 

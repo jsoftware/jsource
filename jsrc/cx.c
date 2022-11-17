@@ -119,7 +119,7 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line){
 
 // called to init the iterator for for.
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
- ASSERT(t!=0,EVCTRL);
+ ASSERT(t!=0,EVEMPTYT);
  SETIC(t,cv->niter);                            /* # of items in t     */
  if(likely(cv->indexsym!=0)){
   // for_xyz.   protect iterator value and save it; create virtual item name
@@ -543,7 +543,7 @@ docase:
   case CDOF:   // do. after for.
    // do. after for. .  If this is first time, initialize the iterator
    if(unlikely(cv->j<0)){
-    BASSERT(t!=0,EVCTRL);   // Error if no sentences in T-block
+    BASSERT(t!=0,EVEMPTYT);   // Error if no sentences in T-block
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
     BZ(forinit(cv,t)); t=0;
    }
@@ -614,7 +614,7 @@ docase:
    // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
    if(!cv->t){
     // This is the first case.  That means the t block has the select. value.  Save it.
-    BASSERT(t!=0,EVCTRL);  // error if select. case.
+    BASSERT(t!=0,EVEMPTYT);  // error if select. case.
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
@@ -1247,7 +1247,7 @@ A jtddtokens(J jt,A w,I env){
  // scan for start of DD/end of DD.
  I firstddbgnx;  // index of first/last start of DD
  I ddschbgnx=0; // place where we started looking for DD
- for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
+ for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVEMPTYDD) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
    // search for {{; error if first thing found is }}; firstddbgnx is index of {{
  if(firstddbgnx>=nw){ASSERT(AM(wil)>=0,EVOPENQ) R env&8?w:enqueue(wil,w,env&3);}    //   If no DD chars found, and caller wants a string, return w fast.  There may be a latent quote error to attend to
  // loop till all DDs found
@@ -1278,10 +1278,10 @@ A jtddtokens(J jt,A w,I env){
 
    // Here the current line ended with no end DD or noun DD.  We have to continue onto the next line
    ASSERT(AM(wil)>=0,EVOPENQ);  // if the line didn't contain noun DD, we have to give error if open quote
-   ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to continue (as for an event or ". y)
+   ASSERT(!(env&4),EVEMPTYT);   // Abort if we are not allowed to continue (as for an event or ". y)
    scanstart=AM(wil);  // Get # words, not including final NB.  We have looked at em all, so start next look after all of them
    A neww=jgets("\001");  // fetch next line, in raw mode
-   RE(0); ASSERT(neww!=0,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
+   RE(0); ASSERT(neww!=0,EVEMPTYT); // fail if jgets failed, or if it returned EOF - problem either way
    // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it
    w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line
    jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
@@ -1312,7 +1312,7 @@ A jtddtokens(J jt,A w,I env){
     for(enddelimx=nounstart;enddelimx<wn-1;++enddelimx)if(wv[enddelimx]==(DDEND&0xff) && wv[enddelimx+1]==(DDEND>>8))break;
    }
    if(enddelimx>=wn-1){
-    ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to consume a new line (as for an event or ". y)
+    ASSERT(!(env&4),EVEMPTYT);   // Abort if we are not allowed to consume a new line (as for an event or ". y)
     // if a delimiter was not found on the first line, consume lines until we hit a delimiter
     while(1){
      // append the LF for the previous line (unless an empty first line), then the new line itself, to w
@@ -1322,7 +1322,7 @@ A jtddtokens(J jt,A w,I env){
      }
      enddelimx=0;   // after the first line, we always install the LF
      A neww=jgets("\001");  // fetch next line, in raw mode
-     RE(0); ASSERT(neww!=0,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
+     RE(0); ASSERT(neww!=0,EVEMPTYT); // fail if jgets failed, or if it returned EOF - problem either way
      // join the new line onto the end of the old one
      I oldchn=AN(w);  // len after adding LF, before adding new line
      RZ(w=jtapip(jtinplace,w,neww));   // join the new character list onto the old, inplace if possible
@@ -1372,7 +1372,7 @@ A jtddtokens(J jt,A w,I env){
   }
 
   // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen
-  for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
+  for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVEMPTYT) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
    // search for {{; error if first thing found is }}; firstddbgnx is index of {{
  }
  ASSERT(AM(wil)>=0,EVOPENQ);  // we have to make sure there is not an unscannable remnant at the end of the last line

@@ -326,7 +326,9 @@ noeformat: ;
   }
  }
  // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
- e=e==EVINHOMO?EVDOMAIN:e; jt->jerr=jt->jerr1=e;  // revert INHOMO to DOMAIN after formatting
+ e=e==EVINHOMO?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e;  // revert internal numbers to external codes after formatting
+
+ jt->jerr=jt->jerr1=e;  // save reverted value
  jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it
 R 0;
 }
@@ -381,7 +383,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
        if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type
        if(eflg&EMSGCXINFO){ // if line has decoration from tokenizing
         dhead(3,0L);  // start with error header
-        if(e==EVCTRL)efmt("["FMTI"]",info);  // control error: prefix with line#
+        if(e==EVCTRL)efmt("["FMTI"]",info);  // control error during explicit definition: prefix with line#
        }
        ep(textlen,text); eputc(CLF); // out the message text terminated by LF
        if((eflg&EMSGCXINFO) && !(e==EVCTRL)){

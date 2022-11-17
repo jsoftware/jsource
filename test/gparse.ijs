@@ -74,18 +74,18 @@ t =: {{ x [ y }}
 'valence error' -: t etx 5
 
 NB. Test display of error spacing
-'|domain error: efx|   1    +''a''' -: efx '1 + ''a'''
-'|domain error: efx|   2    /' -: efx '2/'
-'|domain error: efx|       i.0.5' -: efx 'i. 0.5'
-'|domain error: efx|   2    @+i.5' -: efx '2@+ i. 5'
-'|domain error: efx|       (+:+:+:)i.5' -: efx '(+: +: +:) i. 5'
-'|domain error: efx|       (+:+:)i.5' -: efx '(+: +:) i. 5'
-'|value error: undefname|   i__undefname    =:5' -: efx 'i__undefname =: 5'
-'|domain error: efx|   n__efx    =:5' -: efx 'n__efx =: 5'
-'|domain error: efx|public assignment to a name with a private value|   y    =:1' -:  efx '{{ y =: 1}} 2'
-'|syntax error: efx|   )123' -: efx ')123'
-'|value error: undef|   (undef undef)    (1+undef+".)''5 + 6''' -: efx '(undef undef) (1 + undef + ".) ''5 + 6'''
-'|value error: undef|   (undef undef)    (1+undef+".)''+ 6''' -: efx '(undef undef) (1 + undef + ".) ''+ 6'''
+'|domain error: efx|   1    +''a''' -:&(}.~ i:&'|') efx '1 + ''a'''
+'|domain error: efx|   2    /' -:&(}.~ i:&'|') efx '2/'
+'|domain error: efx|       i.0.5' -:&(}.~ i:&'|') efx 'i. 0.5'
+'|domain error: efx|   2    @+i.5' -:&(}.~ i:&'|') efx '2@+ i. 5'
+'|domain error: efx|       (+:+:+:)i.5' -:&(}.~ i:&'|') efx '(+: +: +:) i. 5'
+'|domain error: efx|       (+:+:)i.5' -:&(}.~ i:&'|') efx '(+: +:) i. 5'
+'|value error: undefname|   i__undefname    =:5' -:&(}.~ i:&'|') efx 'i__undefname =: 5'
+'|domain error: efx|   n__efx    =:5' -:&(}.~ i:&'|') efx 'n__efx =: 5'
+'|domain error: efx|public assignment to a name with a private value|   y    =:1' -:&(}.~ i:&'|')  efx '{{ y =: 1}} 2'
+'|syntax error: efx|   )123' -:&(}.~ i:&'|') efx ')123'
+'|value error: undef|   (undef undef)    (1+undef+".)''5 + 6''' -:&(}.~ i:&'|') efx '(undef undef) (1 + undef + ".) ''5 + 6'''
+'|value error: undef|   (undef undef)    (1+undef+".)''+ 6''' -:&(}.~ i:&'|') efx '(undef undef) (1 + undef + ".) ''+ 6'''
 
 NB. Verify that undefname is OK, but undefined u creates an error, in an explicit def
 t =: 1 : 0
@@ -95,7 +95,7 @@ v/
 
 '|value error: t|       v/' -: efx '+ t 5'
 
-'|ill-formed number: efx|   1+1qs|     ^|   3     :(''1+1qs'',(10{a.))' -: efx '3 : (''1+1qs'',(10{a.))'
+'|ill-formed number: efx|   1+1qs|     ^|   3     :(''1+1qs'',(10{a.))' -:&(}.~ i:&'|') efx '3 : (''1+1qs'',(10{a.))'
 
 
 NB. Verify AR assignment works for 1 & more names

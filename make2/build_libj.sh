@@ -136,6 +136,7 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv
  -Wno-char-subscripts \
  -Wno-consumed \
  -Wno-delete-non-abstract-non-virtual-dtor \
+ -Wno-deprecated-non-prototype \
  -Wno-empty-body \
  -Wno-implicit-float-conversion \
  -Wno-implicit-int-float-conversion \

@@ -253,9 +253,9 @@ if. 0: y -: 6 do.
   r =. r + 1
 end.
 )
-'|noun result was required in f|the sentence did not produce a noun result, usually because of a misspelled word or missing argument|   y+undefname' -: efx 'f 4'
+'|noun result was required in f|the sentence did not produce a noun result, usually because of a misspelled word or missing argument|   y+undefname' -:&(10&{. , i:&' ' }. ]) efx 'f 4'
 
-'|domain error in efx, executing +"0 0|   a:    +(3 :''+'') ::0:0' -: efx 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside adverse
+'|domain error in efx, executing +"0 0|   a:    +(3 :''+'') ::0:0' -:&(10&{. , i:&' ' }. ]) efx 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside adverse
 'domain error' -: ". eftxs 'a: + (3 : ''+'') :: 0: 0'   NB. pee inside adverse
 
 7 -: 2 %: 2 : 'x + y' *: 5

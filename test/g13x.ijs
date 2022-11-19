@@ -238,7 +238,7 @@ f=: 3 : 'try. 13!:8 y catch. 13!:11 $0 end.'
 10  -: f 256
 3  -: f 0
 
-13!:8 :: 1: x=: (- e.&35 15) >: ?255  NB. Make sure we don't try to create EVTHROW (35) or EVEXIT (15), which do not honor adverse
+13!:8 :: 1: x=: (3:^:(e.&35 15 38 39 40 41)) >: ?255  NB. Make sure we don't try to create EVTHROW (35) or EVEXIT (15), which do not honor adverse, of the internal signals that are remapped
 x -: 13!:11 ''
 
 'length error' -: 13!:11 etx 'junkfoo'

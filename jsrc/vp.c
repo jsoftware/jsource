@@ -107,16 +107,18 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
  for(j=AN(w)-1;0<=j;j--){
   RZ(q=pind(n,C(wv[j]))); qv=AV(q); qn=AN(q);
   if(!qn)continue;
-  DO(qn, ASSERT(bv[qv[i]],EVINDEX); bv[qv[i]]=0;); DO(qn,bv[qv[i]]=1;);
+  DO(qn, ASSERT(bv[qv[i]],EVINDEXDUP); bv[qv[i]]=0;); DO(qn,bv[qv[i]]=1;);
   c=x[qv[0]]; DO(qn-1,x[qv[i]]=x[qv[i+1]];); x[qv[qn-1]]=c;
  }
  EPILOG(z);
 }    /* direct from cycle */
 
-F1(jtcdot1){F1RANK(1,jtcdot1,DUMMYSELF); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
+// C. y
+DF1(jtcdot1){F1RANK(1,jtcdot1,self); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
 
-F2(jtcdot2){A p;I k;
- F2RANK(1,RMAX,jtcdot2,DUMMYSELF);
+// x C. y
+DF2(jtcdot2){A p;I k;
+ F2RANK(1,RMAX,jtcdot2,self);
  SETIC(w,k);
  RZ(p=BOX&AT(a)?dfc(k,a):pfill(k,a));
  R AR(w)?from(p,w):w;
@@ -164,6 +166,7 @@ F1(jtadot1){A y;I n;
  R base2(cvt(XNUM,apv(n,n,-1L)),rfd(y));
 }
 
+// x A. y
 F2(jtadot2){A m,p;I n;
  ARGCHK2(a,w);
  SETIC(w,n); p=sc(n); if(XNUM&AT(a))p=cvt(XNUM,p); RZ(m=fact(p));

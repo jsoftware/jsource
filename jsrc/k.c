@@ -575,7 +575,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
 // 9!:23 audit indices
 // x is indexes (may be sparse)
 // y is type;parms
-// type is 0 (normal), 1 (treat complex as 2 separate reals)
+// type is 0 (normal), 1 (treat complex as 2 separate reals), 2 allow _ as imin/imax
 // parms is list of 0-2 elements min,max allowed
 // result is rc;index: rc: 0=OK, 1=nonnumeric, 2=nonintegral value 3=out of bounds
 // index=index list of failing entry, or empty if rc=0 or 1
@@ -598,7 +598,7 @@ F2(jtindaudit){PROLOG(365);
   // fetch to index and convert to integer if needed
   if(indt&INT)ival=IAV(vind)[0];
   else if(indt&B01)ival=BAV(vind)[0];
-  else if(indt&FL){if(!jtIfromD(jt,vind,&ival,FUZZ))break;}
+  else if(indt&FL){I err; if(err=!jtIfromD(jt,vind,&ival,FUZZ)){if(type==2&&DAV(vind)[0]==inf)err=0,ival=IMAX; if(type==2&&DAV(vind)[0]==infm)err=0,ival=IMIN;}; if(err)break;}
   else if(indt&CMPX){if(!jtDfromZ(jt,vind,&DAV(zwk)[0],FUZZ))break; if(!jtIfromD(jt,zwk,&ival,FUZZ))break;}
   else if(indt&XNUM){if(!jtIfromX(jt,vind,&ival))break;}
   else if(indt&RAT){if(!jtXfromQ(jt,vind,&XAV(xwk)[0]))break; if(!jtIfromX(jt,xwk,&ival))break;}

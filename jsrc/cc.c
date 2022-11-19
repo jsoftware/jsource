@@ -28,7 +28,8 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
 
 
  if(!(VGERL&FAV(self)->flag)){
-  fs=FAV(self)->fgh[0];  // the verb we will execute
+  fs=FAV(self)->fgh[0];  // the verb we will execute'|syntax error in efx, executing 3:...|       ((3 3$0 1 2 1 2 3 2 3 4))+' -:&(10&{. , i:&' ' }. ]) efx '3 : ''((+/~ i. 3)) +'' 5'
+
  }else{
   RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
  }
@@ -44,7 +45,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
  RZ(a=vib(a));  // audit for valid integers
  if(1>=AR(a))RZ(a=lamin2(zeroionei(0),a));   // default list to be lengths starting at origin
  as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # 2-cells in a, c = #axes of subarray given, m is index of next-last axis of a, u->1st atom of a
- ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of r
+ ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of w
  if(!n){  /* empty result; figure out result type */
   z=CALL1(f1,w,fs);
   if(z==0)z=zeroionei(0);  // use zero as fill result if error
@@ -570,7 +571,7 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
- PREF2(jtcut2);
+ PREF2(jtcut2);  // this whole routine runs with left rank 1   scaf ranks should be wired here, not from self
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
@@ -962,7 +963,7 @@ skipspecial:;
 }    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
 
 
-static DF1(jtcut1){R cut2(mark,w,self);}
+static DF1(jtcut1){R cut2(mark,w,self);}  // scaf make multivalent
 
 // ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \.
 // also [: ; (<@(f/\));._2 _1 1 2)  when no rank loop required
@@ -1028,7 +1029,7 @@ static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
  t=AT(a);
  RZ(a=vib(a));    // convert a to integer (possibly with infinities)
  r=AR(a); s=AS(a); SHAPEN(a,r-1,c);  ac=c; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
- ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a list or 2-item table
+ ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a atom/list or 2-item table
  if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););  // if movement vector given, it must be nonnegative
  if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is
  GATV0(x,INT,2*c,2); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
@@ -1330,6 +1331,7 @@ success:;
   *--ze=t;}
  PBOXCUTCHUNK t={pe,z,ss};c->c[ti]=t; R 0;}
 
+// <;.[12] 
 DF1(jtboxcutm21){
  if(AR(w)!=1||!(AT(w)&LIT)||AN(w)<=65536)R jtcut1(jt,w,self);
  F1PREFIP;PROLOG(0026);

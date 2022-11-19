@@ -80,6 +80,7 @@ DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 I   iotavec[IOTAVECLEN];  // return values for i. small
 uint64_t g_cpuFeatures;   // blis
+uint64_t g_cpuFeatures2;  // fsgsbase
 int numberOfCores;        // number of cpu cores
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning

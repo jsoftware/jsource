@@ -226,6 +226,10 @@ void cpuInit(void)
 
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 
+#if defined(__linux__)
+#include <sys/auxv.h>
+#endif
+
 // mask off avx if os does not support
 static int AVX=0;
 // OSXSAVE

@@ -23,6 +23,7 @@
 
 extern void cpuInit(void);
 extern uint64_t getCpuFeatures(void);
+extern uint64_t getCpuFeatures2(void);
 extern intptr_t getCpuFamily(void);
 extern void OPENSSL_setcap(void);
 extern int getNumberOfCores(void);
@@ -70,6 +71,47 @@ enum {
   ARM_HWCAP_USCAT = (1 << 25),
   ARM_HWCAP_ILRCPC = (1 << 26),
   ARM_HWCAP_FLAGM = (1 << 27),
+  ARM_HWCAP_SSBS = (1 << 28),
+  ARM_HWCAP_SB = (1 << 29),
+  ARM_HWCAP_PACA = (1 << 30),
+  ARM_HWCAP_PACG = (1UL << 31),
+};
+
+enum {
+  ARM_HWCAP2_DCPODP  = (1 << 0),
+  ARM_HWCAP2_SVE2  = (1 << 1),
+  ARM_HWCAP2_SVEAES  = (1 << 2),
+  ARM_HWCAP2_SVEPMULL  = (1 << 3),
+  ARM_HWCAP2_SVEBITPERM = (1 << 4),
+  ARM_HWCAP2_SVESHA3  = (1 << 5),
+  ARM_HWCAP2_SVESM4  = (1 << 6),
+  ARM_HWCAP2_FLAGM2  = (1 << 7),
+  ARM_HWCAP2_FRINT  = (1 << 8),
+  ARM_HWCAP2_SVEI8MM  = (1 << 9),
+  ARM_HWCAP2_SVEF32MM  = (1 << 10),
+  ARM_HWCAP2_SVEF64MM  = (1 << 11),
+  ARM_HWCAP2_SVEBF16  = (1 << 12),
+  ARM_HWCAP2_I8MM  = (1 << 13),
+  ARM_HWCAP2_BF16  = (1 << 14),
+  ARM_HWCAP2_DGH  = (1 << 15),
+  ARM_HWCAP2_RNG  = (1 << 16),
+  ARM_HWCAP2_BTI  = (1 << 17),
+  ARM_HWCAP2_MTE  = (1 << 18),
+  ARM_HWCAP2_ECV  = (1 << 19),
+  ARM_HWCAP2_AFP  = (1 << 20),
+  ARM_HWCAP2_RPRES  = (1 << 21),
+  ARM_HWCAP2_MTE3  = (1 << 22),
+  ARM_HWCAP2_SME  = (1 << 23),
+  ARM_HWCAP2_SME_I16I64 = (1 << 24),
+  ARM_HWCAP2_SME_F64F64 = (1 << 25),
+  ARM_HWCAP2_SME_I8I32 = (1 << 26),
+  ARM_HWCAP2_SME_F16F32 = (1 << 27),
+  ARM_HWCAP2_SME_B16F32 = (1 << 28),
+  ARM_HWCAP2_SME_F32F32 = (1 << 29),
+  ARM_HWCAP2_SME_FA64  = (1 << 30),
+  ARM_HWCAP2_WFXT  = (1UL << 31),
+  ARM_HWCAP2_EBF16  = (1UL << 32),
+  ARM_HWCAP2_SVE_EBF16 = (1UL << 33),
 };
 
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
@@ -92,6 +134,10 @@ enum {
   CPU_X86_FEATURE_BMI1   = (1 << 12),
   CPU_X86_FEATURE_BMI2   = (1 << 13),
   CPU_X86_FEATURE_AVX512 = (1 << 14),
+};
+enum {
+  CPU_X86_FEATURE2_RING3MWAIT = (1 << 15),  /* MONITOR/MWAIT enabled in Ring 3 */
+  CPU_X86_FEATURE2_FSGSBASE   = (1 << 16),  /* Kernel allows FSGSBASE instructions available in Ring 3 */
 };
 
 #endif

@@ -32,13 +32,13 @@ int aes_arm(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
   1    CBC
   2    CTR
  */
-F2(jtaes2)
+DF2(jtaes2)
 {
   I n,decrypt,keyn,mode=1;
   int n1,padding=1;
   A z,*av,dec;
   UC *out,*key,*iv;
-  F2RANK(1,1,jtaes2,DUMMYSELF);  // do rank loop if necessary
+  F2RANK(1,1,jtaes2,self);  // do rank loop if necessary
   ASSERT(AT(a)&BOX,EVDOMAIN);
   ASSERT(1>=AR(a),EVRANK);
   ASSERT(AN(a)>=3&&AN(a)<=4,EVLENGTH);

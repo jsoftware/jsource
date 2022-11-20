@@ -97,8 +97,8 @@ F2(jtlev){F2PREFIP;RETF(RETARG(a));}  F2(jtdex){F2PREFIP;RETF(RETARG(w));}
 
 
 // i. y
-F1(jtiota){A z;I m,n,*v;
- F1RANK(1,jtiota,DUMMYSELF);
+DF1(jtiota){A z;I m,n,*v;
+ F1RANK(1,jtiota,self);
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));  // if extended, take integer and convert
  RZ(w=vi(w)); n=AN(w); v=AV(w);
  if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}  // if list required, create it (ascending or descending) and return it
@@ -108,8 +108,8 @@ F1(jtiota){A z;I m,n,*v;
 }
 
 // i: w
-F1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
- F1RANK(0,jtjico1,DUMMYSELF);
+DF1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
+ F1RANK(0,jtjico1,self);
  RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;  // convert to complex, d=real part of value
  RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num(2))));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
  ASSERT(0<m||!m&&0==d,EVDOMAIN);  // error if imag part was negative, or 0 unless d is also 0
@@ -152,14 +152,15 @@ F2(jtrepeatr){ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1
 A jttaker(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,z);}  // n {."1 w
 A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}  // n }."1 w
 
-F1(jticap){A a,e;I n;P*p;
- F1RANK(1,jticap,DUMMYSELF);
+// I. y
+DF1(jticap){A a,e;I n;P*p;
+ F1RANK(1,jticap,self);
  SETIC(w,n);
  if((AT(w)&SPARSE+B01)==SPARSE+B01){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
   R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));
  }
- R B01&AT(w) ? ifb(n,BAV(w)) : repeat(w,IX(n));
+ R B01&AT(w) ? ifb(n,BAV(w)) : repeat(w,IX(n));  // scaf could improve
 }
 
 A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];

@@ -418,7 +418,7 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale for each name */
 
-F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,C(w)));
+DF1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,C(w)));
  g=LOCPATH(g);  // the path for the current locale.  It must be non0
  GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV1(g);  // allocate result, point to input & output areas
  DO(AN(g), if(*gv){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator
@@ -430,8 +430,8 @@ F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF);
 // null systemlock handler to wait for quiet system.  Used for changing locale path
 static A jtnullsyslock(JTT* jt){R (A)1;}
 
-F2(jtlocpath2){A g,h; AD * RESTRICT x;
- F2RANK(1,0,jtlocpath2,DUMMYSELF);
+DF2(jtlocpath2){A g,h; AD * RESTRICT x;
+ F2RANK(1,0,jtlocpath2,self);
  RZ(g=locale(1,w));
  // The path is a recursive boxed list where each box is a SYMB type.  The usecount of each SYMB is incremented when it is added to the path.
  // When a locale is in a path the raised usecount prevents it from ever being deleted.  It has its Bloom filter zeroed so that it never searches for names

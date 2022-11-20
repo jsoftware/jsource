@@ -68,8 +68,8 @@ F1(jtsphwmk){
   R v2(curr,hwmk);
 }
 
-F1(jtspit){A z;I k; 
- F1RANK(1,jtspit,DUMMYSELF);
+DF1(jtspit){A z;I k; 
+ F1RANK(1,jtspit,self);
  jt->bytesmax=k=spstarttracking();  // start keeping track of bytesmax
  FDEPINC(1); A *old=jt->tnextpushp; z=exec1(w); tpop(old); FDEPDEC(1);  // pop tstack so that a returned arg is taken off & usecount decremented
  spendtracking();  // end tracking, even if there was an error
@@ -239,8 +239,8 @@ __int64 GetMachineCycleCount()
 F1(jttss){ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 
 // 6!:2 dyad
-F2(jttsit2){A z;D t;I n;
- F2RANK(0,1,jttsit2,DUMMYSELF);
+DF2(jttsit2){A z;D t;I n;
+ F2RANK(0,1,jttsit2,self);
  RE(n=i0(a));
  FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
  t=qpc(); 

@@ -759,11 +759,11 @@ F1(jtroll){A z;B b=0;I m,wt;
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
-F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
+DF2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
- F2RANK(0,0,jtdeal,DUMMYSELF);
+ F2RANK(0,0,jtdeal,self);
  RE(m=i0(a)); RE(c=n=i0(w));  // c starts as max#+1
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
@@ -988,12 +988,12 @@ static F1(jtrolldot){A z;B b=0;I m,wt;
 }
 
 #undef deal
-#define deal(a,w) jtdealdot(jt,(a),(w))
-static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
+#define deal(a,w) jtdealdot(jt,(a),(w),ds(CQRYDOT))
+static DF2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
- F2RANK(0,0,jtdealdot,DUMMYSELF);
+ F2RANK(0,0,jtdealdot,self);
  RE(m=i0(a)); RE(c=n=i0(w));
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
@@ -1026,7 +1026,7 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
 #define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; rngselects(sc(j));}
 
 F1(jtrollx  ){FXSDECL; ARGCHK1(w);                 FXSDO; z=roll(w);         FXSOD; R z;}       
-F2(jtdealx  ){FXSDECL; F2RANK(0,0,jtdealx,DUMMYSELF); FXSDO; z=deal(a,w);       FXSOD; R z;}        
+DF2(jtdealx  ){FXSDECL; F2RANK(0,0,jtdealx,self); FXSDO; z=deal(a,w);       FXSOD; R z;}        
 DF2(jtrollkx){FXSDECL; ARGCHK3(a,w,self);        FXSDO; z=rollk(a,w,self); FXSOD; R z;}      
 
 

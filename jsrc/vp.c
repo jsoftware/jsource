@@ -13,8 +13,8 @@ static I jtord(J jt,A w){I j,n,*v,z;
  R z;
 }  // the order of the permutation w: max element of w (could be negative)
 
-F1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
- F1RANK(1,jtpinv,DUMMYSELF);
+DF1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
+ F1RANK(1,jtpinv,self);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  DO(n, I r=v[i]^REPSGN(v[i]); m=r>m?r:m;); ++m;  // take 1s-comp of negative ele#, then find max; add 1 to get #eles
@@ -159,8 +159,8 @@ static F1(jtrfd){A z;I j,k,m,n,r,*s,*x;
  R z;
 }    /* reduced from direct */
 
-F1(jtadot1){A y;I n;
- F1RANK(1,jtadot1,DUMMYSELF);
+DF1(jtadot1){A y;I n;
+ F1RANK(1,jtadot1,self);
  RZ(y=BOX&AT(w)?cdot1(w):pfill(ord(w),w));
  SETIC(y,n);
  R base2(cvt(XNUM,apv(n,n,-1L)),rfd(y));

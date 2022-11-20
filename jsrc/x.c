@@ -12,10 +12,10 @@
 #include "x.h"
 
 #define SDERIV(id,f1,f2,flag,m,l,r)  \
- fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?f1:jtvalenceerr1),(I)(f2?f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
+ fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr1),(I)(f2?(AF)f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
 
 #define SDERI2(id,f1,f2,flag,m,l,r)  \
- fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtvalenceerr1),(I)(f2?f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
+ fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr1),(I)(f2?(AF)f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
 
 
 static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL1IP((AF)AV(h)[0],  w,self);}

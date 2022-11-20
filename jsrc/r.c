@@ -342,10 +342,10 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
 }    /* explicit representation -- h parameter for : definitions */
 
 
-F1(jtarx){F1RANK(0,  jtarx,DUMMYSELF); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!:1
-F1(jtdrx){F1RANK(0,  jtdrx,DUMMYSELF); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
-F1(jttrx){F1RANK(0,  jttrx,DUMMYSELF); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
-F1(jtlrx){F1RANK(0,  jtlrx,DUMMYSELF); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5
-F1(jtprx){F1RANK(0,  jtprx,DUMMYSELF); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
+DF1(jtarx){F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!:1
+DF1(jtdrx){F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
+DF1(jttrx){F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
+DF1(jtlrx){F1RANK(0,  jtlrx,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5
+DF1(jtprx){F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
 
-F2(jtxrx){F2RANK(0,0,jtxrx,DUMMYSELF); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7
+DF2(jtxrx){F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7

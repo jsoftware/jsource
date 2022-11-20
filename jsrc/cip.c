@@ -1112,8 +1112,8 @@ F2(jtdot){F2PREFIP;A f,h=0;AF f2=jtdotprod;C c,d;
 }
 
 // general LU decomp using generic arithmetic
-F1(jtludecompg){F1PREFIP;PROLOG(823);
- F1RANK(2,jtludecompg,DUMMYSELF)  // if rank > 2, call rank loop
+DF1(jtludecompg){F1PREFIP;PROLOG(823);
+ F1RANK(2,jtludecompg,self)  // if rank > 2, call rank loop
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  A luvb; ASSERT(luvb=jtfindnameinscript(jt,"~addons/dev/lu/lu.ijs","Lu_j_",VERB),EVNONCE)   // error if undefined or not verb
@@ -1128,7 +1128,7 @@ F1(jtludecompg){F1PREFIP;PROLOG(823);
 // 128!:10 LU decomposition for square real arrays LU=A
 // returns permutation ; L+U-I (Doolittle form)
 // the ith element of the permutation is the original row of row i of LU
-F1(jtludecomp){F1PREFIP;PROLOG(823);
+DF1(jtludecomp){F1PREFIP;PROLOG(823);
 #if C_AVX2 || EMU_AVX2
  // We operate on 4x4 blocks of A, which we transform into 4x4 blocks of LU.  The ravel of each LU block is stored for cache ease,
  // and the U blocks are ordered in transpose form to speed up the dot-product operations.
@@ -1141,10 +1141,10 @@ F1(jtludecomp){F1PREFIP;PROLOG(823);
 #define LGBLKSZ 2  // lg(BLKSZ)
  I nzeroblocks=0;  // number of zero blocks created.  If negative, we have given up on zero blocks
  B lookfor0blocks;  // set if we think it's worthwhile to check for sparse array
- F1RANK(2,jtludecomp,DUMMYSELF)  // if rank > 2, call rank loop
+ F1RANK(2,jtludecomp,self)  // if rank > 2, call rank loop
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
- if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w);  // if not real float type, use general version
+ if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version
  if(unlikely(!(AT(w)&FL)))RZ(w=cvt(FL,w));
  I wn=AS(w)[0];  // n=size of square matrix
  // Allocate the result (possibly inplace)
@@ -1412,6 +1412,6 @@ finrle: ;
  EPILOG(jlink(IX(wn),z));
 #endif
  // here if fast FP code not supported, either because we don't have AVX or the input is not float.  Fall back to general version
- R jtludecompg(jt,w);
+ R jtludecompg(jt,w,DUMMYSELF);
 }
 

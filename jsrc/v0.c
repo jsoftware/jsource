@@ -242,8 +242,8 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
 }
 
 // entry point for p. y
-F1(jtpoly1){A c,e,x;
- F1RANK(1L,jtpoly1,DUMMYSELF);
+DF1(jtpoly1){A c,e,x;
+ F1RANK(1L,jtpoly1,self);
  // If y is not boxed, it's a list of coefficients.  Get the roots
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R rfc(w);
  x=C(AAV(w)[0]);
@@ -282,8 +282,8 @@ static F2(jtpoly2a){A c,e,x;I m;D rkblk[16];
  ASSERT(AT(a)&NUMERIC,EVDOMAIN);
  ASSERT(2==AR(a),EVRANK);
  ASSERT(0<m,EVLENGTH);
- RZ(IRS1(a,0L,1L,jthead,c  ) ); 
- RZ(e=cant1(IRS1(a,0L,1L,jtbehead,e)));
+ RZ(IRS1(a,0L,1L,jthead,c  ) );   // c={."1 a
+ RZ(e=cant1(IRS1(a,0L,1L,jtbehead,e)));  // e =. }."1 a
  RZ(x=mnomx(m,w));
  if(1==m){A er; RZ(er=ravel(e)); R pdt(ATOMIC2(jt,x,er,rkblk,0L,2L,CEXP),c);}else{A z; R pdt(df2(z,x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);}
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
@@ -432,14 +432,14 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
 }    /* a p."r w */
 
 
-F1(jtpderiv1){
- F1RANK(1,jtpderiv1,DUMMYSELF);
+DF1(jtpderiv1){
+ F1RANK(1,jtpderiv1,self);
  if(AN(w)&&!(NUMERIC&AT(w)))RZ(w=poly1(w));
  R 1>=AN(w) ? apv(1L,0L,0L) : tymes(behead(w),apv(AN(w)-1,1L,1L));
 }    /* p.. w */
 
-F2(jtpderiv2){
- F2RANK(0,1,jtpderiv2,DUMMYSELF);
+DF2(jtpderiv2){
+ F2RANK(0,1,jtpderiv2,self);  // scaf need real self
  if(!(NUMERIC&AT(w)))RZ(w=poly1(w));
  ASSERT(NUMERIC&AT(a),EVDOMAIN);
  R over(a,divideW(w,apv(AN(w),1L,1L)));

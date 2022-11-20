@@ -509,7 +509,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  RETF(z);
 }
 
-F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
+DF2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
  ARGCHK2(a,w);
  an=AN(a); ar=AR(a); at=AT(a);
  wn=AN(w); wr=AR(w); wt=AT(w);
@@ -553,7 +553,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
   RETF(z);
  }
  {PROLOG(0070);A y,*zv;C*u,*yv;I k;
-  F2RANK(1,0,jtabase2,DUMMYSELF);
+  F2RANK(1,0,jtabase2,self);
   k=bpnoun(at); u=an*k+CAV(a);
   GA00(y,at,1,0); yv=CAV(y);
   GATV0(z,BOX,an,1); zv=an+AAV(z);

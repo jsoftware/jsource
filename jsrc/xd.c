@@ -381,8 +381,8 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
 
 
 
-F1(jtjfatt1){ASSERT(0,EVNONCE);}
-F2(jtjfatt2){ASSERT(0,EVNONCE);}
+DF1(jtjfatt1){ASSERT(0,EVNONCE);}
+DF2(jtjfatt2){ASSERT(0,EVNONCE);}
 
 
 DF1(jtjfperm1){A y;F f;C b[11];

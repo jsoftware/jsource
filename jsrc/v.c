@@ -156,11 +156,11 @@ A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jt
 DF1(jticap){A a,e;I n;P*p;
  F1RANK(1,jticap,self);
  SETIC(w,n);
- if((AT(w)&SPARSE+B01)==SPARSE+B01){
+ if(unlikely((AT(w)&SPARSE+B01)==SPARSE+B01)){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
   R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));
  }
- R B01&AT(w) ? ifb(n,BAV(w)) : repeat(w,IX(n));  // scaf could improve
+ R likely((B01&AT(w))!=0) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }
 
 A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];

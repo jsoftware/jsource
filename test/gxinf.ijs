@@ -232,8 +232,8 @@ y -: 0r1 | y
 
 _ 2x match !  _ 2x
 _ 2x match !  _ 2r1
-_ 2x match ! __ 2x
-_ 2x match ! __ 2r1
+'domain error' -: ! etx __ 2x
+'domain error' -: ! etx __ 2r1
 
 ( 64 -: type x), '_ __ 5'   -: ": x=:_ __ 5x
 (128 -: type x), '_ __ 5r3' -: ": x=:_ __ 5r3

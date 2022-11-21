@@ -34,7 +34,7 @@ rk  =: 1 : ('+"u b. 0')
 
 0 0j1 0j_1 -: * 0 j. 0 _ __
 1 _1 = * _ __ j. 0
-(<'NaN error') = * etx&.> j./~ _ __
+(<'domain error') = * etx&.> j./~ _ __
 
 'domain error' -: * etx 'abc'
 'domain error' -: * etx u:'abc'

@@ -110,8 +110,10 @@ enum {
   ARM_HWCAP2_SME_F32F32 = (1 << 29),
   ARM_HWCAP2_SME_FA64  = (1 << 30),
   ARM_HWCAP2_WFXT  = (1UL << 31),
+#if defined(_WIN64)||defined(__LP64__)
   ARM_HWCAP2_EBF16  = (1UL << 32),
   ARM_HWCAP2_SVE_EBF16 = (1UL << 33),
+#endif
 };
 
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)

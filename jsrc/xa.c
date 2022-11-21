@@ -395,8 +395,10 @@ F1(jtcpufeature){
  else if(!strcasecmp(CAV(w),"SME_F32F32" )) R sc(!!(getCpuFeatures2()&ARM_HWCAP2_SME_F32F32 ));
  else if(!strcasecmp(CAV(w),"SME_FA64" )) R sc(!!(getCpuFeatures2()&ARM_HWCAP2_SME_FA64 ));
  else if(!strcasecmp(CAV(w),"WFXT"    )) R sc(!!(getCpuFeatures2()&ARM_HWCAP2_WFXT ));
+#if defined(_WIN64)||defined(__LP64__)
  else if(!strcasecmp(CAV(w),"EBF16"   )) R sc(!!(getCpuFeatures2()&ARM_HWCAP2_EBF16 ));
  else if(!strcasecmp(CAV(w),"SVE_EBF16" )) R sc(!!(getCpuFeatures2()&ARM_HWCAP2_SVE_EBF16 ));
+#endif
  else R sc(0);
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
  if     (!strcasecmp(CAV(w),"SSSE3"   )) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_SSSE3 ));
@@ -497,8 +499,10 @@ F2(jtcpufeature2){I k;
  else if(!strcasecmp(CAV(w),"SME_F32F32" )) g_cpuFeatures2 |= ARM_HWCAP2_SME_F32F32 ;
  else if(!strcasecmp(CAV(w),"SME_FA64" )) g_cpuFeatures2 |= ARM_HWCAP2_SME_FA64 ;
  else if(!strcasecmp(CAV(w),"WFXT"    )) g_cpuFeatures2 |= ARM_HWCAP2_WFXT ;
+#if defined(_WIN64)||defined(__LP64__)
  else if(!strcasecmp(CAV(w),"EBF16"   )) g_cpuFeatures2 |= ARM_HWCAP2_EBF16 ;
  else if(!strcasecmp(CAV(w),"SVE_EBF16" )) g_cpuFeatures2 |= ARM_HWCAP2_SVE_EBF16 ;
+#endif
 
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
  if     (!strcasecmp(CAV(w),"SSSE3"   )) g_cpuFeatures |= CPU_X86_FEATURE_SSSE3 ;
@@ -585,8 +589,10 @@ F2(jtcpufeature2){I k;
  else if(!strcasecmp(CAV(w),"SME_F32F32" )) g_cpuFeatures2 &= ~ARM_HWCAP2_SME_F32F32 ;
  else if(!strcasecmp(CAV(w),"SME_FA64" )) g_cpuFeatures2 &= ~ARM_HWCAP2_SME_FA64 ;
  else if(!strcasecmp(CAV(w),"WFXT"    )) g_cpuFeatures2 &= ~ARM_HWCAP2_WFXT ;
+#if defined(_WIN64)||defined(__LP64__)
  else if(!strcasecmp(CAV(w),"EBF16"   )) g_cpuFeatures2 &= ~ARM_HWCAP2_EBF16 ;
  else if(!strcasecmp(CAV(w),"SVE_EBF16" )) g_cpuFeatures2 &= ~ARM_HWCAP2_SVE_EBF16 ;
+#endif
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
  if     (!strcasecmp(CAV(w),"SSSE3"   )) g_cpuFeatures &= ~CPU_X86_FEATURE_SSSE3 ;
  else if(!strcasecmp(CAV(w),"POPCNT"  )) g_cpuFeatures &= ~CPU_X86_FEATURE_POPCNT ;

@@ -103,7 +103,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
 
 // parallel implementations of I. in assembly
 // Mac doesn't support fsgsbase (but x86 mac is a dead-end, so w/e).  According to hearsay, support is spotty on windows (todo investigate).  Also, the windows abi doc says you have to always have a valid stack pointer and we clobber it; probably SEH related stuff or something?  Do we have to actually do that?
-#if C_AVX2 && SY_LINUX
+#if C_AVX512 && SY_LINUX
 #define FAST_IIX
 #define IIXIA 4 //iix on ints alignemnt.  Update below code if this exceeds 8
 __attribute__((sysv_abi)) void jtiixi_1a(I*z,I*a,I*w,I n,I m,I nct),jtiixi_1d(I*,I*,I*,I,I,I);

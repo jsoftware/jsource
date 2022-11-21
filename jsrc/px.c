@@ -27,11 +27,11 @@ A jteva(J jt,    A w,C*s){A z; R df1(z,  w,colon(num(1),   cstr(s)));}
 A jtevc(J jt,A a,A w,C*s){A z; R df2(z,a,w,colon(num(2),cstr(s)));}
 
 // ". y
-F1(jtexec1){A z;
+DF1(jtexec1){A z;
  ARGCHK1(w);
  if(AT(w)&NAME){z=nameref(w,jt->locsyms);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
-  F1RANK(1,jtexec1,DUMMYSELF);
+  F1RANK(1,jtexec1,self);
   A savself = jt->parserstackframe.sf;  // in case we are in a recursion, preserve the restart point
   STACKCHKOFL FDEPINC(1); z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+!!EXPLICITRUNNING))); FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
  jt->parserstackframe.sf=savself;
@@ -86,8 +86,8 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
 I jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
 
 // 128!:2
-F2(jtapplystr){PROLOG(0054);A fs,z;
- F2RANK(1,RMAX,jtapplystr,DUMMYSELF);
+DF2(jtapplystr){PROLOG(0054);A fs,z;
+ F2RANK(1,RMAX,jtapplystr,self);
  RZ(fs=PARSERVALUE(parseforexec(tokens(vs(a),1+!!EXPLICITRUNNING))));
  ASSERT(VERB&AT(fs),EVSYNTAX);
  STACKCHKOFL FDEPINC(d=fdep(fs)); z=CALL1(FAV(fs)->valencefns[0],w,fs); FDEPDEC(d);

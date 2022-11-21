@@ -130,8 +130,8 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
 }    /* write/append string w to file f at j */
 
 
-F1(jtjfread){A z;F f,fp;
- F1RANK(0,jtjfread,DUMMYSELF);
+DF1(jtjfread){A z;F f,fp;
+ F1RANK(0,jtjfread,self);
  RE(f=stdf(w));  // f=file#, or 0 if w is a filename
  if(f){ // if special file, read it all, possibly with error
   if(1==(I)f)R jgets("\001");
@@ -145,8 +145,8 @@ F1(jtjfread){A z;F f,fp;
  RETF(z);}
 
 // 1!:2
-F2(jtjfwrite){B b;F f;
- F2RANK(RMAX,0,jtjfwrite,DUMMYSELF);
+DF2(jtjfwrite){B b;F f;
+ F2RANK(RMAX,0,jtjfwrite,self);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
  RE(f=stdf(w));
  if(2==(I)f){jtjpr((J)((I)jt|MTYOFILE),a); R a;}  // this forces typeout, with NOSTDOUT off
@@ -159,8 +159,8 @@ F2(jtjfwrite){B b;F f;
 }
 
 // 1!:3
-F2(jtjfappend){B b;F f;
- F2RANK(RMAX,0,jtjfappend,DUMMYSELF);
+DF2(jtjfappend){B b;F f;
+ F2RANK(RMAX,0,jtjfappend,self);
  RE(f=stdf(w));
  if(2==(I)f){jpr(a); R a;}  // this forces typeout, with NOSTDOUT off
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
@@ -171,8 +171,8 @@ F2(jtjfappend){B b;F f;
  RNE(mtm);
 }
 
-F1(jtjfsize){B b;F f;I m;
- F1RANK(0,jtjfsize,DUMMYSELF);
+DF1(jtjfsize){B b;F f;I m;
+ F1RANK(0,jtjfsize,self);
  RE(f=stdf(w));
  if(b=!f)RZ(f=jope(w,FREAD_O)) else RE(vfn(f)); 
  m=fsize(f); 
@@ -206,8 +206,8 @@ static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
 }    /* process index file arg for index and length */
 
 // 1!:11
-F1(jtjiread){A z=0;B b;F f;I i,n;
- F1RANK(1,jtjiread,DUMMYSELF);
+DF1(jtjiread){A z=0;B b;F f;I i,n;
+ F1RANK(1,jtjiread,self);
  RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));  // b=filename, not number; if name, open the named file
  if(ixin(w,fsize(f),&i,&n))z=rd(f,i,n);
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
@@ -215,8 +215,8 @@ F1(jtjiread){A z=0;B b;F f;I i,n;
 }
 
 // 1!:12
-F2(jtjiwrite){B b;F f;I i;
- F2RANK(RMAX,1,jtjiwrite,DUMMYSELF);
+DF2(jtjiwrite){B b;F f;I i;
+ F2RANK(RMAX,1,jtjiwrite,self);
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
  RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FUPDATE_O));  // b=filename, not number; if name, open the named file
@@ -253,8 +253,8 @@ static B rmdir(C*v){R!rmdir1(v);}
 #endif
 
 
-F1(jtjmkdir){A y,z;
- F1RANK(0,jtjmkdir,DUMMYSELF);
+DF1(jtjmkdir){A y,z;
+ F1RANK(0,jtjmkdir,self);
  ASSERT(AT(w)&BOX,EVDOMAIN);
  RZ(y=str0(vslit(C(AAV(w)[0]))));
 #if (SYS & SYS_UNIX)
@@ -266,8 +266,8 @@ F1(jtjmkdir){A y,z;
 }
 
 // 1!:55
-F1(jtjferase){A y,fn;US*s;I h;
- F1RANK(0,jtjferase,DUMMYSELF);
+DF1(jtjferase){A y,fn;US*s;I h;
+ F1RANK(0,jtjferase,self);
  RE(h=fnum(w));
 // obsolete  if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(C(AAV(w)[0])),EVFNUM);
  if(h) {ASSERT((y=fname(sc(h)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT((y=vslit(C(AAV(w)[0])))!=0,EVFNUM);
@@ -315,8 +315,8 @@ F1(jtpathchdir){A z;
 #define _wgetenv(s)  (0)
 #endif
 
-F1(jtjgetenv){
- F1RANK(1,jtjgetenv,DUMMYSELF);
+DF1(jtjgetenv){
+ F1RANK(1,jtjgetenv,self);
  ASSERT((LIT+C2T+C4T)&AT(w),EVDOMAIN);
 #if (SYS & SYS_UNIX)
  {

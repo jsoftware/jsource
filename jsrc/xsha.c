@@ -52,12 +52,12 @@ F1(jtshasum1)
   R shasum2(sc(1),w);
 }
 
-F2(jtshasum2)
+DF2(jtshasum2)
 {
   I n;
   A z;
   UC *v;
-  F2RANK(0,1,jtshasum2,DUMMYSELF);  // do rank loop if necessary
+  F2RANK(0,1,jtshasum2,self);  // do rank loop if necessary
   RZ(a=vi(a));
   n=AN(w);
   v=UAV(w);

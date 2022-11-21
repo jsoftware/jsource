@@ -705,7 +705,7 @@ ASSERT(0,EVNONCE)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
   ASSERT(AT(pyx)&PYX,EVDOMAIN)
-  RZ(jtsetpyxval(jt,pyx,val,0))  // install value.  Will fail if previously set
+  ASSERT(jtsetpyxval(jt,pyx,val,0)!=0,EVRO)  // install value.  Will fail if previously set
   z=mtm;  // good quiet value
 #else
 ASSERT(0,EVNONCE)
@@ -716,8 +716,8 @@ ASSERT(0,EVNONCE)
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-  ASSERT(AT(pyx)&PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,0,255),EVDOMAIN)  // get the error number
-  RZ(jtsetpyxval(jt,pyx,0,err))  // install value.  Will fail if previously set
+  ASSERT(AT(pyx)&PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
+  ASSERT(jtsetpyxval(jt,pyx,0,err)!=0,EVRO)  // install error value.  Will fail if previously set
   z=mtm;  // good quiet value
 #else
 ASSERT(0,EVNONCE)
@@ -739,7 +739,7 @@ ASSERT(0,EVNONCE)
 ASSERT(0,EVNONCE)
 #endif
   break;}
- case 8:  { // system info: (number of cores),(max number of  threads including master)
+ case 8:  { // system info: (number of cores),(max number of threads including master)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   z=v2(numberOfCores,MAXTHREADS);
   break;}

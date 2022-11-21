@@ -260,7 +260,7 @@ void breakclose(JS jt);
 #define WITHATTNDISABLED(s) {DISABLEATTN s ENABLEATTN}
 
 static C* nfeinput(JS jt,C* s){A y;
- WITHATTNDISABLED(y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s));)  // exec the sentence with break interrupts disabled
+ WITHATTNDISABLED(y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s),ds(CEXEC));)  // exec the sentence with break interrupts disabled
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */

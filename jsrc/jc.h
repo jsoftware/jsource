@@ -104,7 +104,7 @@
 #define CNOT       (C)0x0f  // -.
 #define CLESS      (C)0x0f  // -.
 #define CICAP      (C)0x10  // I.
-#define CQUERY     (C)0x11  //
+#define CQUERY     (C)0x11  // ?
 #define CQRYDOT    (C)0x12  // ?.
 #define CFCONS     (C)0x13  // 0: 1: 2: etc.
 #define CUNDER     (C)0x14  // &.

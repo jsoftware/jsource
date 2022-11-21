@@ -54,9 +54,9 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
 
 
 // 128!:1 Invert Upper-triangular matrix R
-F1(jtrinv){
+DF1(jtrinv){
  ARGCHK1(w);
- F1RANK(2,jtrinv,DUMMYSELF);
+ F1RANK(2,jtrinv,self);
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // error if not square
  if(!AN(w))R w;  // if empty, return empty
@@ -186,8 +186,8 @@ ARGCHK1(w);
 }
 
 // qr (?) decomposition of w, returns q;r
-F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
- F1RANK(2,jtqr,DUMMYSELF);
+DF1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
+ F1RANK(2,jtqr,self);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
  wr=AR(w); s=AS(w);
@@ -286,8 +286,8 @@ static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 
 
 // a %. w  for all types
-F2(jtmdiv){PROLOG(0069);A z;I t;
- F2RANK(RMAX,2,jtmdiv,DUMMYSELF);
+DF2(jtmdiv){PROLOG(0069);A z;I t;
+ F2RANK(RMAX,2,jtmdiv,self);
  if(ISSPARSE(AT(a)))RZ(a=denseit(a));
  t=AT(w);
  if(ISSPARSE(t))R mdivsp(a,w);

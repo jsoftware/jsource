@@ -237,7 +237,8 @@ wthr N
 amv =. 16 T. 0  NB. AMV with value 0
 (>: i. 3000) -: /:~ ; amv f t. ''"0 ] 3 $ 1000
 
-
+'|ill-formed name (from pyx)' -: LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. 'worker' 4  NB. pyx error is so flagged
+'|ill-formed name (from pyx)' -: LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. '' 4  NB. pyx error is so flagged
 
 'domain error' -: ". etx '0 t. ($0)'
 'domain error' -: ". etx '+ t. 1.5'

@@ -241,7 +241,7 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
  CLRFUTEXWT;   // wait till pending wakealls complete before we allow this block to be deleted
 done:  // pyx has been filled in.  jt->futexwt must be 0
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
- ASSERT(0,blok->errcode); // if error, return the error code
+ ASSERTPYX(blok->errcode); // if error, return the error code, noting that it was extenally generated
 fail:
  CLRFUTEXWT;ASSERT(0,err);}
 

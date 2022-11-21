@@ -338,18 +338,6 @@ R 0;
 // this routine also does the work for jtjsigd (domain error with message text), jtjsignal (old-fashioned terse display),
 // jtjsignal3 (terse display for lines known to be from an explicit definition, giving line#/column), and
 // x 13!:8 y (display text x, set error# y) 
-// Encoded as follows using upper bits of e:
-#define EMSGE 0xff  // the error-code part
-#define EMSGNOEVM 0x200  // set to suppress moving the terse message
-#define EMSGLINEISA 0x400  // line contains A block for message (otherwise it points to string if any and info has the length of the string)
-#define EMSGCXINFO 0x800  // info contains line#/col# of error
-#define EMSGSPACEAFTEREVM 0x1000 // set if terse message should be followed by a space 
-#define EMSGLINEISTERSE 0x2000 // set if line has the text for the terse message (13!:8)
-#define EMSGLINEISNAME 0x4000 // set if line has the name to use in place of jt->curname
-//   no bits set  means terse display (jsignal)
-//   bit 9 set: line=failing line, info=failing line#/column for jsignal3
-//   bit 10 set: line=A text for message (sigstr)
-//   bit 11 set: line->text as C string (sigd)
 //
 // we look at emsgstate and do as little as possible if the user isn't going to see the message
 //
@@ -375,6 +363,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
      jteputlnolf(jt,msg);  // header of first line: terse string
      A nameblok=jt->curname; nameblok=eflg&EMSGLINEISNAME?line:nameblok;  // if user overrides the name, use the user's name
      if(nameblok){if(!jt->glock){eputs(": "); ep(AN(nameblok),NAV(nameblok)->s);}}  // ...followed by name of running entity
+     if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such
      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
      if(!jt->glock){  // suppress detail if locked
       if((line!=0) && !(eflg&EMSGLINEISTERSE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
@@ -397,6 +386,8 @@ A jtjsignale(J jt,I eflg,A line,I info){
     jt->etxn1=jt->etxn;  // save length of finished message
    }
   }
+  // if this error was forwarded from a pyx, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
+  if(eflg&EMSGFROMPYX)jt->emsgstate|=EMSGSTATEFORMATTED;
 // obsolete    jt->curname=0;  // clear the name always
  R 0;
 }

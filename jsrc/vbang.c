@@ -35,7 +35,7 @@ static Z jtzgps(J jt,Z z){R zdiv(z1,zhorner(terms,coeff,z));}
 
 D jtdgamma(J jt,D x){B b;D t;
  t=1.0; b=x==jfloor(x);
- if(b&&0>=x){ASSERT(x>x-1,EVLIMIT); R x==2*jfloor(x/2)?inf:infm;}
+ if(b&&0>=x){ASSERT(x>x-1,EVNAN); R x==2*jfloor(x/2)?inf:infm;}
  if(0<=x) while(1<x){t*=--x; if(t==inf)R inf;}
  else    {while(0>x){t*=x++; if(t==inf)R 0.0;} t=1.0/t;}
  R b?t:t*dgps(x);

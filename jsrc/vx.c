@@ -363,7 +363,8 @@ F2(jtxroota){A z; GAT0(z,XNUM,1L,0L); XAV(z)[0]=rifvsdebug(xroot(XAV(a)[0],XAV(w
 
 XF1(jtxfact){I n;
  n=AV(w)[0];
- if(n==XPINF||n==XNINF)R vci(XPINF);
+ ASSERT(n!=XNINF,EVNAN);
+ if(n==XPINF)R vci(XPINF);
  RE(n=xint(w)); 
  if(0>n)R rifvsdebug(vci(n&1?XPINF:XNINF));
  R rifvsdebug(xev1(apv(n,1L,1L),"*/"));

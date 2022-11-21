@@ -99,8 +99,8 @@ _ __ -: >: _ __
 _ __ eq + _ __
 _ __ eq _ __ + _ __
 
-'NaN error' -: _  + etx __
-'NaN error' -: __ + etx _
+'domain error' -: _  + etx __
+'domain error' -: __ + etx _
 
 *./, _  = _  + ?2 3$2
 *./, _  = _  + _1e9+?2 3 4$2e9
@@ -150,12 +150,12 @@ NB. _ __ __ _ -: _ _ __ __ *. _ __ _ __
 NB. _. _. eq 0 *. _ __
 NB. _. _. eq _ __ *. 0
 
-'NaN error' -: _  *. etx a=.?2 3$2
-'NaN error' -: _  *. etx a=._1e9+?2 3 4$2e9
-'NaN error' -: _  *. etx a=.o._1e9+?2 3 4$2e9
-'NaN error' -: __ *. etx a=.?2 3$2
-'NaN error' -: __ *. etx a=._1e9+?2 3 4$2e9
-'NaN error' -: __ *. etx a=.o._1e9+?2 3 4$2e9
+'domain error' -: _  *. etx a=.?2 3$2
+'domain error' -: _  *. etx a=._1e9+?2 3 4$2e9
+'domain error' -: _  *. etx a=.o._1e9+?2 3 4$2e9
+'domain error' -: __ *. etx a=.?2 3$2
+'domain error' -: __ *. etx a=._1e9+?2 3 4$2e9
+'domain error' -: __ *. etx a=.o._1e9+?2 3 4$2e9
 
 -. 128!:5 (2 (0 0;0 1;1 0)} 6 6$0) *  1 (0 0;0 1;1 0)} 6 6$_   NB. used to leave NaNs at the end
 -. 128!:5  (1 (0 0;0 1;1 0)} 6 6$_) * (2 (0 0;0 1;1 0)} 6 6$0)
@@ -167,8 +167,8 @@ __ _ -: - _ __
 
 _ __  eq _ __ - __ _
 
-'NaN error' -: _  - etx _
-'NaN error' -: __ - etx __
+'domain error' -: _  - etx _
+'domain error' -: __ - etx __
 
 *./, _  = _  - ?2 3$2
 *./, _  = _  - _1e9+?2 3 4$2e9

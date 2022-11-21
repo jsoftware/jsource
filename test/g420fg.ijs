@@ -195,7 +195,7 @@ NB. Verify double-speed on AVX2 when a repeated
 
 NB. Test for NaN
 0 _ 1 (+/@:*"1 -: +/@:*"]"1) _ 0 2   NB. removable NaN
-'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1
+'domain error' -: _ 0 __ +/@:*"1 etx  1 1 1
 
 NB. x +/@:*"1!.0 y ---------------------------------------------------------
 f =: 3 : 0"1   NB. x is rank to use for left arg; y is len of product;rank;left frame;right frame
@@ -220,8 +220,8 @@ op1 +/@:*"1!.0"rnk&:(perm&{"1) op2
 (+/@:*"1!.0)
 
 NB. Test for NaN
-'NaN error' -: 0 _ 1 (+/@:*"1!.0) etx _ 0 2   NB. in exact calculation, any infinity causes a NaN
-'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1
+'domain error' -: 0 _ 1 (+/@:*"1!.0) etx _ 0 2   NB. in exact calculation, any infinity causes a NaN
+'domain error' -: _ 0 __ +/@:*"1 etx  1 1 1
 
 4!:55 ;:'f p q space test testsub x xx y yy x0 y0'
 

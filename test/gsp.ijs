@@ -67,7 +67,7 @@ NB.  %. CDOMINO, VERB, minv,    mdiv,
 (s^t) -: x^y
 
 (^.s) -: ^.x
-'NaN error' -: s^. etx t
+'domain error' -: s^. etx t
 
 NB.  ^: CPOWOP,  CONJ, 0L,      powop,  
 NB.  $  CDOLLAR, VERB, shape,   reitem, 

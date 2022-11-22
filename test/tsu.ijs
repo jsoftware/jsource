@@ -1,6 +1,7 @@
 NB. test script utilities -----------------------------------------------
 
 cocurrent 'base'
+
 9!:19[2^_44   NB. default but some tests require a larger ct
 NB. set NORESETSTABLE to 1 to prevent restoring symbol table between files
 GLOBALSYMBOL=: 0 s: 10
@@ -430,6 +431,7 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
    RUN  ddall  NB. report scripts that fail
    RECHO ddall NB. echo script names as run and final count of failures
 )
+
 
 empty 0&T.^:(0=1&T.) ::1:''
 echo 9!:14''

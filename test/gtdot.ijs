@@ -34,6 +34,9 @@ wthr N
 NB. no more thread can be created
 'limit error' -: 0&T. etx ''
 
+('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  aa   =: (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. 'worker' 4  NB. pyx error is so flagged
+('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. '' 4  NB. pyx error is so flagged
+
 f=: 4 : 0
 pyx=. g t. (<'worker';x) "0 i.y
 while. do.
@@ -236,9 +239,6 @@ f =: {{ vec =. 0$0  for. i. y do. exp =. 0 while. $exp do. exp =. 18 T. x,des;ex
 wthr N
 amv =. 16 T. 0  NB. AMV with value 0
 (>: i. 3000) -: /:~ ; amv f t. ''"0 ] 3 $ 1000
-
-'|ill-formed name (from pyx)' -: LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. 'worker' 4  NB. pyx error is so flagged
-'|ill-formed name (from pyx)' -: LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. '' 4  NB. pyx error is so flagged
 
 'domain error' -: ". etx '0 t. ($0)'
 'domain error' -: ". etx '+ t. 1.5'

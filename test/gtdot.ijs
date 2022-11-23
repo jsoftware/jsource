@@ -34,7 +34,7 @@ wthr N
 NB. no more thread can be created
 'limit error' -: 0&T. etx ''
 
-('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  aa   =: (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. 'worker' 4  NB. pyx error is so flagged
+('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. 'worker' 4  NB. pyx error is so flagged
 ('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. '' 4  NB. pyx error is so flagged
 
 f=: 4 : 0

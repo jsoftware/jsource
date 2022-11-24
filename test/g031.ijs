@@ -23,7 +23,7 @@ _. -: _.
 
 8 -: (3!:0) _.
 
-'domain error' -: ex '_. ". ''circ'''
+'NaN error' -: ex '_. ". ''circ'''
 
 
 NB. conversion of _0 to 0 in place --------------------------------------

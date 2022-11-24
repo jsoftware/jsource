@@ -161,12 +161,12 @@ NB. 6!:6 arch   NB. Restore AVX
 0 -: _ 0 _ +/ .* 0 _ 0
 0 -: _ 0 _ +/ .*~0 _ 0
 
-'domain error' -: _1 1 (+/ .*)"1 etx _ _
-'domain error' -: _1 1 1 (+/ .*)"1 etx _ _ 5
-'domain error' -: 1 _1 1 (+/ .*)"1 etx 5 _ _
-'domain error' -: _1 1 1 (+/ .*)"1 etx _ 5 _
-'domain error' -: _1 1 1 (+/ .*)"1 etx _ 0 _
-'domain error' -: _1 1 1 (+/ .*)"1 etx _ _ _
+'NaN error' -: _1 1 (+/ .*)"1 etx _ _
+'NaN error' -: _1 1 1 (+/ .*)"1 etx _ _ 5
+'NaN error' -: 1 _1 1 (+/ .*)"1 etx 5 _ _
+'NaN error' -: _1 1 1 (+/ .*)"1 etx _ 5 _
+'NaN error' -: _1 1 1 (+/ .*)"1 etx _ 0 _
+'NaN error' -: _1 1 1 (+/ .*)"1 etx _ _ _
 
 sh =. $@(+/ .*) -: }:@$@[ , }.@$@]
 

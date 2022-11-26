@@ -307,6 +307,7 @@ void jesetpath(char* arg)
 // build and run first sentence to set BINPATH, ARGV, and run profile
 // arg is command line ready to set in ARGV_z_
 // type is 0 normal, 1 -jprofile xxx, 2 ijx basic, 3 nothing
+// type mask 256 runjscript
 // profile[ARGV_z_=:...[BINPATH=:....
 // profile is from BINPATH, ARGV, ijx basic, or nothing
 int jefirst(int type,char* arg)
@@ -316,6 +317,8 @@ int jefirst(int type,char* arg)
 #if 0
 	char buf[50];
 #endif
+	int runjscript=!!(type&256);
+	type=type&255;
 	*input=0;
 	if(0==type)
 	{
@@ -383,6 +386,8 @@ int jefirst(int type,char* arg)
 	strcat(input,"[HLIBJ_z_=:");
 	strcat(input,buf);
 #endif
+	if(runjscript) strcat(input,"[RUNJSCRIPT_z_=:1");
+	else strcat(input,"[RUNJSCRIPT_z_=:0");
 	strcat(input,"[BINPATH_z_=:'");
 	if(!FHS){
 	p=path;

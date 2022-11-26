@@ -7,6 +7,8 @@
 #include <windows.h>
 #include <winbase.h>
 #else
+#define _LARGEFILE64_SOURCE 
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
@@ -299,18 +301,26 @@ static C*modebuf(mode_t m,C* b){C c;I t=m;
  R b;
 }
 
+#if defined(ANDROID) || defined(__APPLE__)
+typedef struct stat struct_stat64;
+#define stat64 stat
+#define readdir64 readdir
+#define dirent64 dirent
+#else
+typedef struct stat64 struct_stat64;
+#endif
 
-static int ismatch(J jt,C*pat,C*name,struct stat *dirstatbuf,C *diratts, C *dirmode,C *dirrwx,C *dirnamebuf,C *dirbase){ 
+static int ismatch(J jt,C*pat,C*name,struct_stat64 *dirstatbuf,C *diratts, C *dirmode,C *dirrwx,C *dirnamebuf,C *dirbase){ 
 #if !SY_64 && defined(ANDROID)
 // Android issue
 // Long Long (64 bit) fields are not 8 bytes aligned
  UC* raw_stat=(UC*)dirstatbuf;
- raw_stat[sizeof(struct stat)-1]=98;
- raw_stat[sizeof(struct stat)-2]=76;
- raw_stat[sizeof(struct stat)-3]=54;
+ raw_stat[sizeof(struct_stat64)-1]=98;
+ raw_stat[sizeof(struct_stat64)-2]=76;
+ raw_stat[sizeof(struct_stat64)-3]=54;
 #endif
  strcpy(diratts,"------");
- strcpy(dirbase,name); if(stat(dirnamebuf,dirstatbuf))R 0;
+ strcpy(dirbase,name); if(stat64(dirnamebuf,dirstatbuf))R 0;
  if('.'!=*pat && ((!strcmp(name,"."))||(!strcmp(name,".."))))R 0;
  if(fnmatch(pat,name,0)) R 0;
 /* Set up dirrwx, diratts, and dirmode for this file */
@@ -324,7 +334,7 @@ static int ismatch(J jt,C*pat,C*name,struct stat *dirstatbuf,C *diratts, C *dirm
  R 1;
 }
 
-static A jtdir1(J jt,struct dirent*f,struct stat *dirstatbuf,C *diratts, C *dirmode,C *dirrwx){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;struct tm tmr,*tm=&tmr;
+static A jtdir1(J jt,struct dirent64*f,struct_stat64 *dirstatbuf,C *diratts, C *dirmode,C *dirrwx){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;struct tm tmr,*tm=&tmr;
  tm=localtime_r(&dirstatbuf[0].st_mtime,tm);
  ts[0]=1900+tm->tm_year; ts[1]=1+tm->tm_mon; ts[2]=tm->tm_mday;
  ts[3]=tm->tm_hour; ts[4]=tm->tm_min; ts[5]=tm->tm_sec;
@@ -335,9 +345,9 @@ static A jtdir1(J jt,struct dirent*f,struct stat *dirstatbuf,C *diratts, C *dirm
  sz=dirstatbuf[0].st_size;
 #if !SY_64 && defined(ANDROID)
  UC* raw_stat=(UC*)dirstatbuf;
- if(raw_stat[sizeof(struct stat)-1]==98 &&
-    raw_stat[sizeof(struct stat)-2]==76 &&
-    raw_stat[sizeof(struct stat)-3]==54){
+ if(raw_stat[sizeof(struct_stat64)-1]==98 &&
+    raw_stat[sizeof(struct_stat64)-2]==76 &&
+    raw_stat[sizeof(struct_stat64)-3]==54){
     // Wrong stat size. Long Long (64bit) fields are not 8 bytes aligned.
      uint* raw_stat32 = (uint*)dirstatbuf;
      sz=(I)(size_t)raw_stat32[11]; // st_size from the packed (without alignment) structure
@@ -352,9 +362,9 @@ static A jtdir1(J jt,struct dirent*f,struct stat *dirstatbuf,C *diratts, C *dirm
 }
 
 // 1!:0
-F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dirent *f;
+F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dirent64 *f;
  C diratts[7]; C dirmode[11];  C dirrwx[3];
- struct stat dirstatbuf[3];  // for some reason there were 2 dummy blocks reserved after the buffer for 32-bit Linux.  Preserve that
+ struct_stat64 dirstatbuf[3];  // for some reason there were 2 dummy blocks reserved after the buffer for 32-bit Linux.  Preserve that
  C dirnamebuf[NPATH];  // workarea
  ARGCHK1(w);
  RZ(w=str0(vslit(!AR(w)&&BOX&AT(w)?ope(w):w)));
@@ -365,14 +375,14 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
   * SYSV and BSD have different return types for sprintf(),
   * so we use less efficient but portable code.
   */
- sprintf(dirnamebuf,"%s/",dir); C *dirbase=dirnamebuf+strlen(dirnamebuf); f=readdir(DP);
+ sprintf(dirnamebuf,"%s/",dir); C *dirbase=dirnamebuf+strlen(dirnamebuf); f=readdir64(DP);
  GATV0(z,BOX,n,1); zv=AAV(z);
  while(f){
   if(ismatch(jt,pat,f->d_name,dirstatbuf,diratts,dirmode,dirrwx,dirnamebuf,dirbase)){
    if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}
    RZ(zv[j++]=incorp(jtdir1(jt,f,dirstatbuf,diratts,dirmode,dirrwx)));
   }
-  f=readdir(DP);
+  f=readdir64(DP);
  }
  closedir(DP);
  z=j?ope(j<n?vec(BOX,j,zv):z):reshape(v2(0L,6L),ds(CACE));
@@ -386,11 +396,11 @@ DF2(jtjfatt2){ASSERT(0,EVNONCE);}
 
 
 DF1(jtjfperm1){A y;F f;C b[11];
- struct stat dirstatbuf[3];
+ struct_stat64 dirstatbuf[3];
  F1RANK(0,jtjfperm1,self);
 // obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
  RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
- if(0!=stat(CAV(y),dirstatbuf))R jerrno();
+ if(0!=stat64(CAV(y),dirstatbuf))R jerrno();
  R vec(LIT,9L,1+modebuf(dirstatbuf[0].st_mode,b));
 }
 

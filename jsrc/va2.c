@@ -640,7 +640,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
   }
  }
 
- RESETRANK;  // Ranks are required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var().  Anyone who sets this must set it back,
+ RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var().  Anyone who sets this must set it back,
              // so it's OK that we don't clear it if we have error
 
  // Signal domain error if appropriate. Must do this after agreement tests
@@ -1127,7 +1127,7 @@ DF2(jtsumattymes1){
   }
  #endif
   NAN1;
- }
+ } 
  RETF(z);
 }
 

@@ -4,7 +4,7 @@ NB. x: and infinity -----------------------------------------------------
 match=: -:&(3!:1)
 xi   =: x:^:_1
 
-( 64=type x), 5 _ -: x=: 5x  _
+(128=type x), 5 _ -: x=: 5x  _
 ( 128=type x), 5 _ -: x=: 5r1 _
 
 (128 -: type x), _  1r2 match x=:x:  _ 0.5
@@ -97,27 +97,27 @@ __ 5r2 match __ 2r2 + __ 3r2
 __ 5r2 match __ 2r2 +  5 3r2
 __ 5r2 match __ 2r2 + _5 3r2
 
-'domain error' -: _  2x  + etx __ 5x
-'domain error' -: _  2r1 + etx __ 5r4
-'domain error' -: __ 2x  + etx _  5x
-'domain error' -: __ 2r1 + etx _  5r4
+'NaN error' -: _  2x  + etx __ 5x
+'NaN error' -: _  2r1 + etx __ 5r4
+'NaN error' -: __ 2x  + etx _  5x
+'NaN error' -: __ 2r1 + etx _  5r4
 
 
 y=: }. 5x _ __
-'domain error' -: y    +. etx  12x
-'domain error' -: y    +. etx _12x
-'domain error' -:  12x +. etx y
-'domain error' -: _12x +. etx y
-'domain error' -: y +. etx  y
-'domain error' -: y +.  etx |.y
+'NaN error' -: y    +. etx  12x
+'NaN error' -: y    +. etx _12x
+'NaN error' -:  12x +. etx y
+'NaN error' -: _12x +. etx y
+'NaN error' -: y +. etx  y
+'NaN error' -: y +.  etx |.y
 
 y=: }. 5r1 _ __
-'domain error' -: y    +. etx  12x
-'domain error' -: y    +. etx _12x
-'domain error' -:  12x +. etx y
-'domain error' -: _12x +. etx y
-'domain error' -: y +. etx  y
-'domain error' -: y +.  etx |.y
+'NaN error' -: y    +. etx  12x
+'NaN error' -: y    +. etx _12x
+'NaN error' -:  12x +. etx y
+'NaN error' -: _12x +. etx y
+'NaN error' -: y +. etx  y
+'NaN error' -: y +.  etx |.y
 
 _  5x match _  8x - __ 3x
 _  5x match _  8x -  5 3x
@@ -147,10 +147,10 @@ _  _5r2 match __ 8r2 -~ _ 3r2
 _  _5r2 match __ 8r2 -~ 5 3r2
 _  _5r2 match __ 8r2 -~_5 3r2
 
-'domain error' -: _  2x  - etx _  5x
-'domain error' -: _  2r1 - etx _  5r4
-'domain error' -: __ 2x  - etx __ 5x
-'domain error' -: __ 2r1 - etx __ 5r4
+'NaN error' -: _  2x  - etx _  5x
+'NaN error' -: _  2r1 - etx _  5r4
+'NaN error' -: __ 2x  - etx __ 5x
+'NaN error' -: __ 2r1 - etx __ 5r4
 
 
 _1 = * {. __ 2x
@@ -165,32 +165,32 @@ _1 = * {. __ 2r3
 
 
 y=: }. 5x _ __
-'domain error' -: y    *. etx  12x
-'domain error' -: y    *. etx _12x
-'domain error' -:  12x *. etx y
-'domain error' -: _12x *. etx y
+'NaN error' -: y    *. etx  12x
+'NaN error' -: y    *. etx _12x
+'NaN error' -:  12x *. etx y
+'NaN error' -: _12x *. etx y
 
 x=: {. _  5x
 y=: {. __ 5x
 
-'domain error' -: x *. etx x
-'domain error' -: x *. etx y
-'domain error' -: y *. etx x
-'domain error' -: y *. etx y
+'NaN error' -: x *. etx x
+'NaN error' -: x *. etx y
+'NaN error' -: y *. etx x
+'NaN error' -: y *. etx y
 
 y=: }. 5r1 _ __
-'domain error' -: y    *. etx  1r2
-'domain error' -: y    *. etx _1r2
-'domain error' -:  1r2 *. etx y
-'domain error' -: _1r2 *. etx y
+'NaN error' -: y    *. etx  1r2
+'NaN error' -: y    *. etx _1r2
+'NaN error' -:  1r2 *. etx y
+'NaN error' -: _1r2 *. etx y
 
 x=: {. _  5r2
 y=: {. __ 5r2
 
-'domain error' -: x *. etx x
-'domain error' -: x *. etx y
-'domain error' -: y *. etx x
-'domain error' -: y *. etx y
+'NaN error' -: x *. etx x
+'NaN error' -: x *. etx y
+'NaN error' -: y *. etx x
+'NaN error' -: y *. etx y
 
  5r0 -:  %0x
 _5r0 -: -%0x
@@ -198,44 +198,44 @@ _5r0 -: -%0x
 _5r0 -: -%0r1
 
 x=: {. _ 5x
-(64=type y),  x  = y=:  5x % 0x
-(64=type y),(-x) = y=: _5x % 0x
-(64=type y), 0x  = y=:  5x % x
-(64=type y), 0x  = y=: _5x % x
+(128=type y),  x  = y=:  5x % 0x
+(128=type y),(-x) = y=: _5x % 0x
+(128=type y), 0x  = y=:  5x % x
+(128=type y), 0x  = y=: _5x % x
 
 x=: {. _  5x
 y=: {. __ 5x
-'domain error' -: x % etx x
-'domain error' -: x % etx y
-'domain error' -: y % etx x
-'domain error' -: y % etx y
+'NaN error' -: x % etx x
+'NaN error' -: x % etx y
+'NaN error' -: y % etx x
+'NaN error' -: y % etx y
 
 x=: {. _  5r2
 y=: {. __ 5r2
-'domain error' -: x % etx x
-'domain error' -: x % etx y
-'domain error' -: y % etx x
-'domain error' -: y % etx y
+'NaN error' -: x % etx x
+'NaN error' -: x % etx y
+'NaN error' -: y % etx x
+'NaN error' -: y % etx y
 
 
 pinf = | pinf,ninf
 
 y=: }. 2x _ __
-(<'domain error') = 5 _5x | etx&.>/ y
+(<'NaN error') = 5 _5x | etx&.>/ y
 (2 2$5 _ __ _5x) -: y |/ 5 _5x
 y -: 0x | y
 
 y=: }. 2r3 _ __
-(<'domain error') = 5 _5r1 |etx&.>/ y
+(<'NaN error') = 5 _5r1 |etx&.>/ y
 (2 2$5 _ __ _5r1) -: y |/ 5 _5r1
 y -: 0r1 | y
 
 _ 2x match !  _ 2x
 _ 2x match !  _ 2r1
-'domain error' -: ! etx __ 2x
-'domain error' -: ! etx __ 2r1
+'NaN error' -: ! etx __ 2x
+'NaN error' -: ! etx __ 2r1
 
-( 64 -: type x), '_ __ 5'   -: ": x=:_ __ 5x
+(128 -: type x), '_ __ 5'   -: ": x=:_ __ 5x
 (128 -: type x), '_ __ 5r3' -: ": x=:_ __ 5r3
 
 'domain error' -: p: etx {. _  12x

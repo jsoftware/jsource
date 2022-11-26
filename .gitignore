@@ -64,7 +64,7 @@ release
 bin/
 !pthreads4w/bin/
 !pthreads4w/bin/pthreadVC3.dll
-make2/
+make2/obj/
 jlibrary/bin/
 jlibrary/bin32/
 jlibrary/system/
@@ -74,6 +74,9 @@ jlibrary/tools/
 
 #github workflow action folders
 j64/
+tools/
+system/
+addons/
 
 # addons
 jlibrary/addons

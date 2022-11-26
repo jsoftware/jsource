@@ -157,9 +157,9 @@ y=: o._1e5+?100$2e5
 
 NB. D (compare[!.0] |) D
 
-y =. , (i: 5) +/ _5e_15 _1e_15 0 1e_15 5e_15
-x =. 2048 ?@$ 0
-f =. {{
+y =: , (i: 5) +/ _5e_15 _1e_15 0 1e_15 5e_15
+x =: 2048 ?@$ 0
+f =: {{
 a =. u"u |  NB. no prim support
 b =. u |  NB. tolerant
 c =. u!.0"u |  NB. intolerant, no prim

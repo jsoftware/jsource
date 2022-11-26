@@ -5,10 +5,14 @@ seed =. 9!:0 ''
 x=.30$1e6
 a -: b [ a=.?.x [ b=.?.x
 seed -: 9!:0 ''
+x=.30$1000000x
+a -: b [ a=.?.x [ b=.?.x
 
 seed =. 9!:0 ''
 (s$?.1e6) -: ?."0 s$1e6 [ s=.5 6 7
 seed -: 9!:0 ''
+
+NB.  0 1 0 6 7 4 1 52 162 406 942 1905 -: ?. 2x ^ i. 12 NB. tentative
 
 'domain error' -: ?. etx 0 _1                          
 'domain error' -: ?. etx 'abc'                         

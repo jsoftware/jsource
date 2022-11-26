@@ -7,7 +7,13 @@ else
 DEBUGDIR=
 fi
 
+cd "$(dirname "$0")"
+echo "entering `pwd`"
+
 # copy binaries in bin/ to jlibrary/bin
+
+jplatform64="$(./jplatform64.sh)"
+# jplatform="$(dirname "$(jplatform64)")"
 
 cop(){
 # $1 src

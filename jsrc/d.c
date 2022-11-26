@@ -208,7 +208,7 @@ F1(jtdbstackz){A y,z;
 // here for errors not from explicit definition
 // explicit errors also come here, so stop here to see the point at which error was detected
 static void jtjsigstr(J jt,I e,I n,C*s){
- if(jt->jerr){jt->curname=0; R;}   // if not first error, ignore: clear error-name and continue
+ if(jt->jerr){jt->curname=0; R;}   // if not first error, trash diagnostic information and bail out
  jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
  if(e!=EVSTOP)moveparseinfotosi(jt); jt->etxn=0;  // before we display, move error info from parse variables to si; but if STOP, it's already installed
  dhead(0,0L);  // | left-header for the error line
@@ -326,7 +326,7 @@ noeformat: ;
   }
  }
  // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
- e=e==EVINHOMO?EVDOMAIN:e; e=e==EVNAN?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e;  // revert internal numbers to external codes after formatting
+ e=e==EVINHOMO?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e;  // revert internal numbers to external codes after formatting
 
  jt->jerr=jt->jerr1=e;  // save reverted value
  jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it

@@ -44,7 +44,7 @@ void jtfillv0(J jt,I t){I fillvalue0;
   *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue0;
 #endif
  }else{
-  fillvalue0=(I)0x0020002000200020; fillvalue0=t&C4T?(I)0x0000002000000020:fillvalue0; fillvalue0=t&XNUM+RAT?(I)iv0:fillvalue0;
+  fillvalue0=(I)0x0020002000200020; fillvalue0=t&C4T?(I)0x0000002000000020:fillvalue0; fillvalue0=t&XNUM+RAT?(I)X0:fillvalue0;
   I fillvalue1=(I)iv1; fillvalue1=t&RAT?fillvalue1:fillvalue0; 
   *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue1;  // copy to output
 #if !SY_64

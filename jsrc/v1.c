@@ -304,6 +304,17 @@ B jtequ(J jt,A a,A w){A x;
  R ((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // don't check level - it takes too long for big arrays
 }
 
+// Return 1 if a and w match, 0 if not
+B jtequx(J jt,X a,X w){R 0==icmpXX(a,w);}
+
+// Return 1 if a and w match, 0 if not
+B jteqx(J jt,A a,A w){A x;
+ F2PREFIP;ARGCHK2(a,w);  // allow inplace request - it has no effect
+ if(a==w)R 1;
+ if(unlikely(ISSPARSE(AT(a)|AT(w))))if(AR(a)&&AR(w)){RZ(x=matchs(a,w)); R BAV(x)[0];}
+ R ((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // don't check level - it takes too long for big arrays
+}
+
 // Return 1 if a and w match intolerantly, 0 if not
 B jtequ0(J jt,A a,A w){
  F2PREFIP;  // allow inplace request - it has no effect
@@ -327,7 +338,7 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  (((!ISSPARSE(AT(C(a))|AT(C(w))))&&((-(C(a)!=C(w))&((AN(C(a))^AN(C(w)))-1))>=0))?(C(a)==C(w)):((B (*)())jtmatchsub)(jt,C(a),C(w),0   MATCHSUBDEFAULTS))
 #endif
 // compare rationals
-#define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
+#define EQQ(a,w)  (equx(a.n,w.n)&&equx(a.d,w.d))
 
 // compare arrays for equality of all values.  f is the compare function
 // m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
@@ -427,7 +438,7 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
    if(1.0!=jt->cct)INNERT(D,TEQ)else INNERT(D,DEQCT0)
 #endif
   break;
- case XNUMX: INNERT(X,equ); break;
+ case XNUMX: INNERT(X,equx); break;
  case RATX:  INNERT(Q,EQQ); break;
  case BOXX:
    INNERT(A,EQA); break;

@@ -235,6 +235,7 @@ I jti0(J jt,A w){ARGCHK1(w);
   R cval;  // too-large values don't convert, handle separately
  }
  if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK);
+ if (AT(w)&(RAT+XNUM) || ISGMP(w)) SEGFAULT;
  R IAV(w)[0];
 }  // can't move the ASSERT earlier without breaking a lot of tests
 

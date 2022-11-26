@@ -62,63 +62,113 @@ static I jtc2j(J jt,B e,I m,C*zv,A*cellbuf){C c,*s,*t;I k,p;
  R k;
 }    /* c format to j format */
 
-static B jtfmtex(J jt,I m,I d,I n,I*xv,B b,I c,I q,I ex,A*cellbuf){B bm=b||m;C*u,*v=CAV1(*cellbuf);I k;
- if(AN(*cellbuf)<20+d){GATV0(*cellbuf,LIT,20+d,1); v=CAV1(*cellbuf);}
- if(b)*v++='_'; else if(m)*v++=' '; *v++=' '; sprintf(v,FMTI,c); v+=q;
- k=(XBASEN+d+1-q)/XBASEN; k=MIN(n-1,k);
- DQ(k, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
- k=v-CAV1(*cellbuf)-(2+bm);
- if(k<d){mvc(d-k,v,1,iotavec-IOTAVECBEGIN+'0'); v+=d-k;}
- else if(k>d&&(u=v=CAV1(*cellbuf)+d+2+bm,'5'<=*v)){
-  NOUNROLL while('9'==*--u);
-  if(' '!=*u)++*u; else{*++u='1'; ++ex;}
-  mvc(v-u-1,u+1,1,iotavec-IOTAVECBEGIN+'0');
- }
- CAV1(*cellbuf)[bm]=CAV1(*cellbuf)[bm+1]; CAV1(*cellbuf)[bm+1]='.'; sprintf(v-!d,"e"FMTI"",ex);
- R 1;
-}    /* format one extended integer in exponential form */
+static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv,A*cellbuf);
 
-static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);I c,n,p,q,*xv;X x;
- x=*wv; n=AN(x); xv=AV(x)+n-1; 
- c=*xv; b=0>c; if(b)c=-c;
- if(c==XPINF){if(b)*v++='_'; *v++='_'; *v=0; R 1;}
- q=c>999?4:c>99?3:c>9?2:1; p=q+XBASEN*(n-1);
- if(e)R fmtex(m,d,n,xv,b,c,q,p-1,cellbuf);
- else if(m&&m<b+p+d+!!d){mvc(m,v,1,iotavec-IOTAVECBEGIN+'*'); v[m]=0;}
- else{
-  if(AN(*cellbuf)<4+p+d){GATV0(*cellbuf,LIT,4+p+d,1); v=CAV1(*cellbuf);}
-  if(' '==s[0])*v++=' '; if(b)*v++='_'; 
-  sprintf(v,FMTI,c); v+=q;
-  DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;); 
-  if(d){*v++='.'; mvc(d,v,1,iotavec-IOTAVECBEGIN+'0'); v[d]=0;}
+static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv,A*cellbuf){
+ B sp=' '==*s;                               // the only thing we use from s
+ X x=*wv;                                    // the integer to format
+ if (e) {                                    // do we want exponential format?
+  ASSERT(d<10, EVNONCE)                      // fix this implementation if assumption is bad
+  D d= DgetX(x);                             // represent as float
+  fmt1(e,m,d,s,FL,(C*)&d,cellbuf);           // and punt
+  R 1;
  }
- R 1;
+ C*v= CAV1(*cellbuf);                        // for text of representation
+ I M= m-(sp+d+!!d);                          // maximum length of represented integer (sign plus number of digits, maybe a leading space)
+ B n= 0>XSGN(x);                             // negative?
+ I L= n+IsizeinbaseXI(x, 10);                // guess number of characters (may be off by 1, but never too small)
+ if (!m || L <= 1+M) {                       // intended length seems large enough
+  C*y= SgetX(x);                             // format number into result buffer
+  if (n) y[0]='_';                           // use J representation for negative numbers
+  L= strlen(y);                              // how long is it, really?
+  if (!m) {                                  // if length is unlimited,
+   m= L+sp+d+!!d;                            // limit it to the space we need
+   M= L;                                     // and fix the integer width to our integer width
+   if (AN(*cellbuf) < m) {                   // if we don't have enough
+    GATV0(*cellbuf,LIT,m,1);                 // get enough
+    v= CAV1(*cellbuf);
+   }
+  }
+  if (L <= M) {                              // would it fit? 
+   if (sp) *v++= ' ';                        // must have a leading space?
+   I pad= M-L; if (pad) mvc(pad, v, 1, " "); // pad with leading spaces if needed
+   JMC(v+pad, y, L+1, 0);                    // copy number's text into place
+   if (d) {                                  // do we need trailing zeros for fractional part?
+    v[M]='.';                                //  nnn.
+    mvc(d, v+M+1, 1, "0");                   //  nnn.000
+    v[m]= 0;                                 //         terminating null character
+   }
+   R 1;                                      // successfully formatted
+  }
+ }                                           // it was too big:
+ mvc(m,v,1,"*"); v[m]= 0; R 1;               // ************
 }    /* format one extended integer */
 
-static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);I c,ex=0,k,n,p,q,*xv;Q y;X a,g,x;
- y=*wv; x=y.n; c=XDIG(x); b=0>c; if(b)x=negate(x);
- if(c==XPINF||c==XNINF){if(e)*v++=' '; if(e>b)*v++=' '; if(b)*v++='_'; *v++='_'; *v=0; R 1;}
- RZ(a=xpow(xc(10L),xc(1+d)));
- if(e&&c&&0>xcompare(x,y.d)){
-  ex=XBASEN*(AN(y.n)-AN(y.d));
-  g=xtymes(x,xpow(xc(10L),xc(1+d-ex)));
-  RZ(x=xdiv(g,y.d,XMFLR));
-  NOUNROLL while(1==xcompare(a,x)){--ex; g=xtymes(xc(10L),g); RZ(x=xdiv(g,y.d,XMFLR));}
-  if(b)x=negate(x);
- }else x=xdiv(xtymes(y.n,a),y.d,XMFLR);
- RZ(x=xdiv(xplus(x,xc(5L)),xc(10L),XMFLR));
- n=AN(x); xv=AV(x)+n-1; c=*xv; b=0>c; if(b)c=-c;
- q=c>999?4:c>99?3:c>9?2:1; p=q+XBASEN*(n-1); if(c||!e)ex+=p-d-1;
- if(e)R fmtex(m,d,n,xv,b,c,q,ex,cellbuf);
- else if(m&&m<b+d+(I )!!d+(0>ex?1:1+ex)){mvc(m,v,1,iotavec-IOTAVECBEGIN+'*'); v[m]=0;}
- else{
-  if(AN(*cellbuf)<4+p+d){GATV0(*cellbuf,LIT,4+p+d,1); v=CAV1(*cellbuf);}
-  if(' '==s[0])*v++=' '; if(b)*v++='_';
-  if(0>ex){k=-ex-1; DQ(1+MIN(d,k), *v++='0';);}
-  sprintf(v,FMTI,c); v+=q;
-  DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
-  if(d){v[1]=0; DQ(d, *v=v[-1]; --v;); *v='.';}
+static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){
+ Q y=*wv;                              // the number to format
+ if(ISQINT(y))                         // punt integers
+	  R fmtx(e,m,d,s,XNUM,(X*)wv,cellbuf);
+ if (e&&!ISQinf(y)) {                  // exponential representation requested?
+  ASSERT(d<10, EVNONCE);               // assume max of 9 digits mantissa // FIXME: valid constraint?
+  D d= DgetQ(y);                       // get floating point repersentation
+  fmt1(e,m,d,s,FL,(C*)&d,cellbuf);     // and punt
+  R 1;
  }
+ B n= 0>QSGN(y);                       // negative?
+ B sp=' '==*s;                         // need leading space?
+ C*v= CAV1(*cellbuf);                  // destination for formatted result
+ C*z= 0;
+ if (ISQinf(y)) {                      // infinity?
+  z= n ?"__" :"_";
+ } else if (d||m) {                    // decimal or integer format?
+  Q Qp= QgetX(XpowUU(10,d));           // decimal scaling factor
+  Q Qm= QmulQQ(y, Qp);                 // scaled number
+  X Xr= XroundQ(Qm);                   // rounded to nearest integer
+  if(!d)R fmtx(e,m,d,s,XNUM,&Xr,cellbuf);// integer format?
+  C*y= SgetX(Xr);                      // corresponding digit sequence
+  I L= strlen(y);                      // length of that representation
+  I M= MAX(L,n+d+1)+sp+1;if(!m)m=M;    // length needed by representation
+  if(M>AN(*cellbuf)) {                 // enough space?
+   GATV0(*cellbuf,LIT,MAX(M,m),1);            // get enough
+   v= CAV1(*cellbuf);
+  }
+  if (!m) m=M; v[m]=0;
+  if (M<=m) {
+   if (sp) *v++=' ';                   // required leading space?
+   I pad=m-M;                          // any padding?
+   if(pad)mvc(pad, v, 1, " ");
+   v+=pad;
+   if (n){*v++='_';y++;L--;}           // negative sign?
+   if (L<=d)*v++='0';                  // integer part
+   else{
+    I l= L-d;
+    JMC(v,y,l,0);
+    v+=l;
+    y+=l;
+   }
+   *v++='.';                           // decimal point
+   if(L<d){
+    I l= d-L;
+    mvc(l,v,1,"0");                    // leading zeros in fraction
+    v+=l;
+    JMC(v,y,L,0);
+   }else{
+    JMC(v,y,d,0);
+   }
+   R 1;
+  }
+ } else {                              // native rational format
+  z= SgetQ(y);
+  C*r= strchr(z,'/');if(r)*r='r';      // 1r2 rather than 1/2
+  if(n)*z='_';                         // _1r2 rather than -1r2
+ }
+ if(z) {
+  I L= strlen(z);
+  JMC(v,z,L,0);
+  R 1;
+ }
+ ASSERT(m,EVWSFULL);
+ mvc(m,CAV1(*cellbuf),1,"*");
  R 1;
 }    /* format one rational number */
 

@@ -1,13 +1,10 @@
 vpath % ../../../../jsrc
 
-ifndef jplatform
-jplatform=linux
-endif
-ifndef j64x
-j64x=j64
+ifndef jplatform64
+jplatform64=linux/j64x
 endif
 
-ODIR=../../../../bin/$(jplatform)/$(j64x)$(DEBUGDIR)
+ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o
 

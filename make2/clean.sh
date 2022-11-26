@@ -1,5 +1,6 @@
 #!/bin/sh
 # rm all *.o for clean builds - makefile dependencies are not set
+set -e
 
 realpath()
 {
@@ -26,4 +27,4 @@ find ../jsrc -name "*.tmp" -type f -delete || true
 find ../dllsrc -name "*.tmp" -type f -delete || true
 find ../sleef/src -name "*.tmp" -type f -delete || true
 find ../base64 -name "*.tmp" -type f -delete || true
-find obj -name "*.tmp" -type f -delete || true || true
+find obj -name "*.tmp" -type f -delete || true

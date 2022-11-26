@@ -20,12 +20,7 @@ CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
 #endif
 #define CBAIVAL(t,v) CBAIVALM(t,v,0)
 #define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9-SY_64]=CBAIVAL(t,v);
-#define CREBLOCKATOMGMP(name,t,v,m) I __attribute__((aligned(CACHELINESIZE))) B##name[9-SY_64]=CBAIVALM(t,v,m);
-CREBLOCKATOMGMP(X0,LIT,0,0)  // X block representing GMP 0 - AN=1, AM=0, val=immaterial
-CREBLOCKATOMGMP(X1,LIT,1,1)  // X block representing GMP 1 - AN=1, AM=1, val=1
 struct Bxnum0 {I hdr[AKXR(0)/SZI]; X v[1];};
-#define CREBLOCKATOMXNUM(name,v) struct Bxnum0 __attribute__((aligned(CACHELINESIZE))) B##name={{AKXR(0),XNUM&TRAVERSIBLE,0,XNUM,ACPERMANENT,1,0},{(X)B##v}};
-CREBLOCKATOMXNUM(xnum1,X1)  // XNUM block for 1
 #define CREBLOCKVEC0(name,t) I __attribute__((aligned(CACHELINESIZE))) B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean
@@ -44,10 +39,10 @@ CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
 D   inf=INFINITY;                /* _                                    */
 D   infm=-INFINITY;               /* __                                   */
 #define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
-CREBLOCKVEC1I(iv0,INT,0)    /* ,0   also extended integer 0                                */
-CREBLOCKVEC1I(iv1,INT,1)     /* ,1   also extended integer 1                                */
+CREBLOCKVEC1I(iv0,INT,0)    /* ,0                                                          */
+CREBLOCKVEC1I(iv1,INT,1)     /* ,1                                                          */
 #define CREBLOCKVEC2I(name,t) I __attribute__((aligned(CACHELINESIZE)))  B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
-CREBLOCKVEC2I(mtm,B01)    /* ,0   also extended integer 0                                */
+CREBLOCKVEC2I(mtm,B01)    /* ,0                                                          */
 D   jnan=NAN;               /* _.                                   */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // validitymask is used mostly to set a sequence of all1/all0 words in a ymm reg.  We also use it as a read-only area containing
@@ -75,7 +70,7 @@ struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[3] = {  // floating-po
 };
 //I   v00[2]={0,0};         // vector value to use for rank 0 0
 D   pf=0;                 /* performance frequency                */
-Q   zeroQ={iv0,iv1};          /* 0r1                                  */
+// Q   zeroQ={iv0,iv1};          /* 0r1                                  */
 DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 I   iotavec[IOTAVECLEN];  // return values for i. small

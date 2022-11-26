@@ -10,7 +10,6 @@
 #endif
 #include "j.h"
 #include "w.h"
-#include "m.h"
 #include "cpuinfo.h"
 
 #if SYS & SYS_FREEBSD
@@ -103,6 +102,7 @@ static B jtevinit(JS jjt){A q,*v;JJ jt=MTHREAD(jjt);
  v[EVLENGTH ]=INCORPNA(cstr("length error"               ));
  v[EVLIMIT  ]=INCORPNA(cstr("limit error"                ));
  v[EVLOCALE ]=INCORPNA(cstr("locale error"               ));
+ v[EVNAN    ]=INCORPNA(cstr("NaN error"                  ));
  v[EVNONCE  ]=INCORPNA(cstr("nonce error"                ));
  v[EVNONNOUN]=INCORPNA(cstr("noun result was required"   ));
  v[EVSPARSE ]=INCORPNA(cstr("non-unique sparse elements" ));
@@ -120,7 +120,6 @@ static B jtevinit(JS jjt){A q,*v;JJ jt=MTHREAD(jjt);
  v[EVTIME   ]=INCORPNA(cstr("time limit"                 ));
  v[EVVALENCE]=INCORPNA(cstr("valence error"              ));
  v[EVVALUE  ]=INCORPNA(cstr("value error"                ));
- v[EVNAN    ]=v[EVDOMAIN];ras(v[EVNAN]);
  v[EVINHOMO  ]=v[EVDOMAIN];ras(v[EVINHOMO]);
  v[EVINDEXDUP  ]=v[EVINDEX];ras(v[EVINDEXDUP]);
  v[EVEMPTYT  ]=v[EVCTRL];ras(v[EVEMPTYT]);

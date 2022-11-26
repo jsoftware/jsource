@@ -305,6 +305,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 
 #if SY_64
 #define IMAX            9223372036854775807LL
+#define IMAXPRIME       9223372036854775783LL
 #define IMIN            (~9223372036854775807LL)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define FLIMAX          9223372036854775296.     // largest FL value that can be converted to I
 #define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
@@ -321,6 +322,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 
 #else
 #define IMAX            2147483647L
+#define IMAXPRIME       IMAX
 #define IMIN            (~2147483647L)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define FLIMAX          ((D)IMAX+0.4)     // largest FL value that can be converted to I
 #define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
@@ -673,21 +675,35 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
+#ifndef MEMAUDIT
 #define MEMAUDIT 0x00     // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#endif
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true and enabled by MEMAUDIT&0x20 || jt->peekdata
+#ifndef AUDITEXECRESULTS
 #define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
+#endif
+#ifndef FORCEVIRTUALINPUTS
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
+#endif
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
+#ifndef NAMETRACK
 #define NAMETRACK 0  // turn on to define trackinfo in unquote, xdefn, line
+#endif
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
+#ifndef FINDNULLRET
 #define FINDNULLRET 0
+#endif
+#ifndef CRASHLOG
 #define CRASHLOG 0     // set to allow writing to crashlog
+#endif
 
+#ifndef MEMHISTO
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
+#endif
 
 #define MAXTHREADS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
                        // threads will be paged out.
@@ -1916,7 +1932,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 
 // RETF is the normal function return.  For debugging we hook into it
 #if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
-#define RETF(exp)       A ZZZz = (exp); auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
+#define RETF(exp)       A ZZZz = (exp); if (!ZZZz && !jt->jerr) SEGFAULT; auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
 #else
 #if MEMAUDIT&0xc
 #define RETF(exp)       {A ZZZz = (exp); DEADARG(ZZZz); R ZZZz;}
@@ -2113,7 +2129,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #include "vdx.h"  
 #include "a.h"
 #include "s.h"
-
+#include "jgmp.h"
 
 
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.

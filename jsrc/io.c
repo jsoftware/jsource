@@ -739,6 +739,7 @@ JS _stdcall JInit(void){
  mvc(offsetof(JST,threaddata[1]),jt,1,MEMSET00);
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
+ jgmpinit(); // mp support for 1x and 2r3
  R jt;  // R (JS)MTHREAD(jt);
 }
 

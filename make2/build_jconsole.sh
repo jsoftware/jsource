@@ -1,46 +1,11 @@
 #!/bin/sh
-set -e
+set -vex
 
-realpath()
-{
- oldpath=`pwd`
- if ! cd $1 > /dev/null 2>&1; then
-  cd ${1##*/} > /dev/null 2>&1
-  echo $( pwd -P )/${1%/*}
- else
-  pwd -P
- fi
- cd $oldpath > /dev/null 2>&1
-}
-
-cd "$(realpath $(dirname "$0"))"
+cd "$(dirname "$0")"
 echo "entering `pwd`"
 
-_DEBUG="${_DEBUG:=0}"
-if [ $_DEBUG -eq 1 ] ; then
-OPTLEVEL=" -O2 -g "
-DEBUGDIR="-debug"
-else
-OPTLEVEL=" -O2 "
-DEBUGDIR=
-fi
+jplatform64=$(./jplatform64.sh)
 
-if [ "`uname`" != "Darwin" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
-jplatform="${jplatform:=raspberry}"
-elif [ "`uname`" = "Darwin" ]; then
-jplatform="${jplatform:=darwin}"
-else
-jplatform="${jplatform:=linux}"
-fi
-if [ "`uname -m`" = "x86_64" ]; then
-j64x="${j64x:=j64avx}"
-elif [ "`uname -m`" = "aarch64" ]; then
-j64x="${j64x:=j64}"
-elif [ "`uname -m`" = "arm64" ] && [ -z "${jplatform##*darwin*}" ]; then
-j64x="${j64x:=j64arm}"
-else
-j64x="${j64x:=j32}"
-fi
 USE_LINENOISE="${USE_LINENOISE:=1}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
@@ -48,28 +13,13 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
-if [ -z "${jplatform##*darwin*}" ]; then
-if [ -z "${j64x##*j64arm*}" ]; then
-macmin="-arch arm64 -mmacosx-version-min=11"
-else
-macmin="-arch x86_64 -mmacosx-version-min=10.6"
-fi
-fi
+case "$jplatform64" in
+	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
+	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+esac
 
-if [ "x$CC" = x'' ] ; then
-if [ -f "/usr/bin/cc" ]; then
-CC=cc
-else
-if [ -f "/usr/bin/clang" ]; then
-CC=clang
-else
-CC=gcc
-fi
-fi
-export CC
-fi
-# compiler=`$CC --version | head -n 1`
-compiler=$(readlink -f $(command -v $CC) 2> /dev/null || echo $CC)
+CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
+compiler=$(readlink -f $(which $CC) || which $CC)
 echo "CC=$CC"
 echo "compiler=$compiler"
 
@@ -91,7 +41,8 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -flax-v
  -Wno-type-limits \
  -Wno-uninitialized \
  -Wno-unused-parameter \
- -Wno-unused-value "
+ -Wno-unused-value \
+ $CFLAGS"
 
 else
 # clang
@@ -117,7 +68,8 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing \
  -Wno-unused-function \
  -Wno-unused-parameter \
  -Wno-unused-value \
- -Wno-unused-variable "
+ -Wno-unused-variable \
+ $CFLAGS"
 
 fi
 
@@ -146,55 +98,59 @@ common="$common -DREADLINE -DUSE_LINENOISE"
 OBJSLN="linenoise.o"
 fi
 
-case $jplatform\_$j64x in
+if [ "${USE_GMP_H:=1}" -eq 1 ] ; then
+ common="$common -I../../../../mpir/include"
+fi
 
-linux_j32)
+case $jplatform64 in
+
+linux/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 LDFLAGS=" -m32 -ldl $LDTHREAD"
 ;;
-linux_j6*)
+linux/j6*)
 CFLAGS="$common"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
-raspberry_j32)
+raspberry/j32)
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
-raspberry_j64)
+raspberry/j64)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
-darwin_j32)
+darwin/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
 #-mmacosx-version-min=10.5
-darwin_j64)
+darwin/j64)
 CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
-darwin_j64avx)
+darwin/j64avx)
 CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
-darwin_j64avx2)
+darwin/j64avx2)
 CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
-darwin_j64avx512)
+darwin/j64avx512)
 CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
-darwin_j64arm) # darwin arm
+darwin/j64arm) # darwin arm
 CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
 ;;
-windows_j32)
+windows/j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
 LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
-windows_j6*)
+windows/j6*)
 TARGET=jconsole.exe
 CFLAGS="$common"
 LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
@@ -210,11 +166,11 @@ if [ ! -f ../jsrc/jversion.h ] ; then
   cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
-mkdir -p ../bin/$jplatform/$j64x$DEBUGDIR
-mkdir -p obj/$jplatform/$j64x$DEBUGDIR/
-cp makefile-jconsole obj/$jplatform/$j64x$DEBUGDIR/.
-export CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x DEBUGDIR
-cd obj/$jplatform/$j64x$DEBUGDIR/
+mkdir -p ../bin/$jplatform64
+mkdir -p obj/$jplatform64
+cp makefile-jconsole obj/$jplatform64/.
+export CFLAGS LDFLAGS TARGET OBJSLN jplatform64
+cd obj/$jplatform64/
 make -f makefile-jconsole
 retval=$?
 cd -

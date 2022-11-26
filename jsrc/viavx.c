@@ -173,10 +173,11 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 }
 
 // All hashes must return a CRC result, because that is evenly distributed throughout the lower 32 bits
-// CRC32L  takes UI  (4 or 8 bytes)
-// CRC32LL takes UIL (8 bytes)
+// CRC32  takes UI4  (4 bytes)
+// CRC32L takes UIL (8 bytes)
 
-#define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
+// obsolete #define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
+#define RETCRC3 R CRC32L(crc0,(UI)__builtin_rotateleft32(crc1,9)+((UI)__builtin_rotateleft32(crc2,21)<<32))
 // Create CRC32 of the k bytes in *v.  Uses CRC32L to process 8 bytes at a time
 // We may fetch past the end of the input, but only up to the next SZI-byte block
 UI hic(I k, UC *v) {

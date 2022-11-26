@@ -49,8 +49,11 @@ spawn - linux/macos/windows
    build_for 'J904-beta-f'
    
 
-)   
+*** script segfault can be hard to isolate with previous tool
+   man_crash
+)
 
+load'git/jsource/test/tsu.ijs'
 load'~addons/misc/miscutils/utils.ijs'
 
 pgit=:      'git/jsource'
@@ -287,4 +290,65 @@ i.0 0
 macrun=: 0 : 0
 #!/bin/sh
 /users/eric/git/jsource/jlibrary/bin/jconsole  -lib LIB.dylib git/jsource/test/tsu.ijs
+)
+
+NB. following helps find the script that causes a segfaul
+
+man_crash=: 0 : 0
+find script that segfaults
+build_test segfault closes window and gives no info
+these steps determine the script and lines that led to the crash
+can run in jhs
+
+   crashrun ddall
+   
+...$ crashline (from above) - wait until finished
+
+   crashinfo''
+   
+...$ coredumpctl dump -1 > core   
+     gdb git/jsource/jlibrary/bin/libjavx2.so core
+     c
+     bt
+)   
+
+prolog=: '   prolog ''./'
+
+crashtests=: 3 : 0
+}.;';',each'''',~each'''',each y
+)
+
+crashtemplate=: 0 : 0
+load'git/jsource/test/tsu.ijs'
+ddrun=: boxopen <dd>
+RUND ddrun
+'ran to the end'
+exit''
+)
+
+NB. y ddall style list of tests
+crashrun=: 3 : 0
+(crashtemplate rplc '<dd>';crashtests y)fwrite 'jtestin.txt'
+''fwrite 'jtestout.txt'
+''fwrite 'jtesterr.txt'
+i.0 0
+)
+
+crashinfo=: 3 : 0
+lines=: <;. _2 fread 'jtestout.txt'
+tests=: _5}.each(#prolog)}.each((<prolog)=(#prolog){.each lines)#lines
+if. 'ran to the end'-:{.lines do.
+ echo 'there was no crash'
+else.
+ echo 'crash in script: ',;{:tests
+ echo 'crash line:      ',;{:lines
+ i=. lines i.<prolog,(;{:tests),'.ijs'''
+ crashdisplay=: ;(i}.lines),each LF
+ echo 'rundd display: crashdisplay'
+end.
+i.0 0
+)
+
+crashline=: 0 : 0
+git/jsource/jlibrary/bin/jconsole -lib libjavx2.so < jtestin.txt > jtestout.txt 2> jtesterr.txt
 )

@@ -98,16 +98,30 @@ static void (*jmp_set_memory_functions) (
 
 long long gmpmallocs;
 
+#if MEMAUDIT&0x40
+#define GUARDSIZE  (CACHELINESIZE)
+#define GUARDsSIZE (2*CACHELINESIZE)
+C GUARDBLOCK[GUARDSIZE];
+#else
+#define GUARDSIZE  0
+#define GUARDsSIZE 0
+#endif
+
 /*static*/void*jmalloc4gmp(size_t size){
  size_t avxsize= (size+7)&(-8); // libgmp's use of __strlen_avx2 segfaults when libgmp asks for size=2
- X z= malloc(avxsize+XHSZ);
- if(!z)SEGFAULT;
- if(!z)R0; // assert(z);// FIXME (but can't without replacing libgmp)
+ C*m= malloc(avxsize+XHSZ+GUARDsSIZE);
+ if(!m)SEGFAULT;
+ if(!m)R0; // assert(z);// FIXME (but can't without replacing libgmp)
+#if MEMAUDIT&0x40
+ memcpy(m, GUARDBLOCK, GUARDSIZE);
+ memcpy(m+size+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE);
+#endif
+ X z= (X)(m+GUARDSIZE); // J header starts here
  AK(z)= XHSZ;           // always rank 1
  AFLAG(z)= 0;           // should be a safe value
  AT(z)= LIT;            // matches significance of AN(z), simplifies 3!:1
  AC(z)= 1;              // always 1 ref in libgmp
- AN(z)= avxsize;        // track allocated memory
+ AN(z)= size;           // track amount of requested memory
  AR(z)= 1;              // always rank 1
  AFHRH(z)= FHRHISGMP;   // mark as a GMP psuedo-array
  /*
@@ -120,16 +134,30 @@ long long gmpmallocs;
  fprintf(stderr,"AR(z): %hhx (%hhu), ", AR(z), AR(z));
  fprintf(stderr,"AFHRH(z): %hx (%hi)\n", AFHRH(z), AFHRH(z));
  */
+#if MEMAUDIT&8
+ static I lfsr= 1;
+ DO(size/SZI, lfsr= (lfsr<<1) ^ (lfsr<0 ?0x1b :0); if (i!=2&&i!=6)((I*)(XHSZ+(C*)z))[i]= lfsr;);
+#endif
  R CAV1(z);
 }
 
 static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
+ size_t avxnew= (new+7)&(-8); // libgmp's use of __strlen_avx2 segfaults when libgmp asks for size=2
  X x= (X)(((C*)ptr)-XHSZ);
+ C*m= (C*)x-GUARDSIZE;
+#if MEMAUDIT&0x40
+ if (memcmp(m, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
+ if (memcmp(m+old+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
+#endif
  // assert(1==AC(x));   // must not have been exposed to J
  // assert(FHRHISGMP==AFHRH(x))
- X z= realloc(x, new+XHSZ);
- if(!z)SEGFAULT;
- if(!z)R0; // assert(z);// FIXME (but can't without replacing libgmp)
+ m= realloc(m, avxnew+XHSZ+GUARDsSIZE);
+ if(!m)SEGFAULT;
+ if(!m)R0; // assert(m);// FIXME (but can't without replacing libgmp)
+#if MEMAUDIT&0x40
+ memcpy(m+new+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE);
+#endif
+ X z= (X)(m+GUARDSIZE); // J header starts here
  AN(z)= new;            // track allocated memory
  /*
  fprintf(stderr,"jrealloc4gmp z: %llx (size: %zx -> %zx), ", (UI)z, old, new);
@@ -141,6 +169,12 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  fprintf(stderr,"AR(z): %hhx (%hhu), ", AR(z), AR(z));
  fprintf(stderr,"AFHRH(z): %hx (%hi)\n", AFHRH(z), AFHRH(z));
  */
+#if MEMAUDIT&8
+ static I lfsr= 1;
+ if (new > old) {
+  DO((new-old)/SZI, lfsr= (lfsr<<1)^(lfsr<0 ?0x1b :0); if (i!=2&&i!=6)((I*)(old+XHSZ+(C*)z))[i]= lfsr;);
+ }
+#endif
  R CAV1(z);
 }
 
@@ -149,6 +183,11 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  // assert(FHRHISGMP=AT(x))
  X x= UNvoidAV1(ptr);
  if (ACPERMANENT&AC(x)) SEGFAULT;
+ C* m= (C*)x-GUARDSIZE;
+#if MEMAUDIT&0x40
+ if (memcmp(m, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
+ if (memcmp(m+n+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
+#endif
  /*
  fprintf(stderr,"\tjfree4gmp (%lli) x: %llx, ", gmpmallocs--, (UI)x);
  fprintf(stderr,"AK(x): %llx (%lli), ", AK(x), AK(x));
@@ -162,7 +201,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
 #if MEMAUDIT&0x4
  AK(x)= AFLAG(x)= AM(x)= AT(x)= AC(x)= AN(x)= 0xdeadbeef;
 #endif
- free(x);
+ free(m);
 }
 
 // dehydrate fresh (mpz_t) as J (X)
@@ -249,6 +288,10 @@ void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
 // also in jgmp.h for global name declaration
 void jgmpinit() {
  if (SZI != sizeof (mp_limb_t)) SEGFAULT; // verify a fundamental assumption
+#if MEMAUDIT&0x40
+ ((UIL*)GUARDBLOCK)[0]= (UIL)0x1abe11ed1abe11edLL;
+ memcpy(GUARDBLOCK+sizeof (UIL), GUARDBLOCK, GUARDSIZE-sizeof (UIL));
+#endif
 #ifndef IMPORTGMPLIB
  if (jmpz_init) return; // link with libgmp only once
 #endif

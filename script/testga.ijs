@@ -19,9 +19,6 @@ NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
-RUN1^:('Linux'-:UNAME) 'gnan'
-exit^:('Linux'-:UNAME) 1
-
 RUN1^:IFWIN 'g640'
 NB. exit^:IFWIN 1
 

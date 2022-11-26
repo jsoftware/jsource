@@ -5,13 +5,12 @@
 
 #include "j.h"
 
-
 #define EPS            (FUZZ)
 
 #define dplus(x,y)     (x+y)
 #define dtymes(x,y)    (x*y)
 #define dnegate(x)     (-x)
-#define QNEGATE(x)     (qminus(zeroQ,x))
+#define QNEGATE(x)     ({Q neg= x; neg.n= XnegX(neg.n); neg;})
 
 #define CFR(f,T,TYPE,fplus,ftymes,fnegate)  \
  F2(f){PROLOG(0060);A z;I j,n;T d,*t,*u,*v;            \
@@ -26,7 +25,7 @@
  }
 
 static CFR(jtcfrd,D,FL,  dplus,dtymes,dnegate)
-static CFR(jtcfrx,X,XNUM,xplus,xtymes, negate)
+static CFR(jtcfrx,X,XNUM,xplus,xtymes, XnegX) // FIXME: optimize negate
 static CFR(jtcfrq,Q,RAT, qplus,qtymes,QNEGATE)
 
 static F1(jtrsort){A t,z;
@@ -86,7 +85,7 @@ static Z jtnewt(J jt,I m,Z*a,Z x,I n){I i,j;D e=EPS/1024.0;Z c,p,q,*v;
 
 static B jtdeflateq(J jt,B k,I m,Q*v,Q x){Q q,r,*u;
  u=v+m; q=*u--; DQ(m, r=*u--;       q=qplus(r,qtymes(q,x)););
- RE(0); if(!(QEQ(q,zeroQ)))R 0;
+ RE(0); if(XSGN(q.n))R 0;
  u=v+m; q=*u--; DQ(m, r=*u; *u--=q; q=qplus(r,qtymes(q,x)););
  R 1;
 }    /* deflate by x which may or may not be a root. result is 1 iff x is a root. k is ignored. */

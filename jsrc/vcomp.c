@@ -31,7 +31,7 @@ EQTEMPLATE(eqBI, B,B,I, CMPEQ,, R EVOK;)  ACMP0(eqBD, B,B,D, TEQ, ==  )
 EQTEMPLATE(eqIB, B,I,B, CMPEQ,, R EVOK;)  ACMP0(eqID, B,I,D, TEQ, ==  )
 ACMP0(eqDB, B,D,B, TEQ, ==  )             ACMP0(eqDI, B,D,I, TEQ, ==  )  
 APFX(eqZZ, B,Z,Z, zeq,, R EVOK;)   
-APFX(eqXX, B,X,X, equ,, R EVOK;)   
+APFX(eqXX, B,X,X, equx,, R EVOK;)   
 APFX(eqQQ, B,Q,Q, QEQ,, R EVOK;)
 BPFXAVX2(eqCC, CMPEQCC,x, CMPEQCC, x,
    (workarea=_mm256_castpd_si256(_mm256_xor_pd(u256,v256)), _mm256_castsi256_pd(_mm256_and_si256(_mm256_srli_epi64(_mm256_andnot_si256(workarea,_mm256_sub_epi8(workarea,bool256)),7),bool256))) ,

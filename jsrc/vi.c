@@ -108,8 +108,8 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
   case INTX:  d=(D)*(I*)yv; break;
   case FLX: 
   case CMPXX: d=*(D*)yv; break;
-  case XNUMX: d=xdouble(*(X*)yv); break;
-  case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d);
+  case XNUMX: d=DgetX(*(X*)yv); break;
+  case RATX:  d=DgetQ(*(Q*)yv); break;
  }
  R hid(d*hct);
 }
@@ -120,18 +120,18 @@ static UI jthiau(J jt,A y){I m,n;UI z=2038074751;X*u,x;
  if(!n)R 0;
  switch(CTTZ(AT(y))){
   case RATX:  m+=n;  /* fall thru */
-  case XNUMX: u=XAV(y); DQ(m, x=*u++; z+=hicnz(AN(x)*SZI,UAV(x));); R z;
+  case XNUMX: u=XAV(y); DQ(m, x=*u++; z+=hicnz(SZI+XLIMBLEN(x)*SZI,UAV(x)-SZI);); R z; /* shape immediately preceeds limbs, sign is in shape */
   case INTX:                                    z =hicnz(n    *SZI,UAV(y));   R z;
   default:   R hic(n<<bplg(AT(y)),UAV(y));
 }}
 
 // Hashes for extended/rational types.  Hash only the numerator of rationals.  These are
 // Q and X types (Q is a brace of X types)
-static UI hix(X*v){A y=*v;   R hic(AN(y)*SZI,UAV(y));}
-static UI hiq(Q*v){A y=v->n; R hic(AN(y)*SZI,UAV(y));}
+static UI hix(X*v){A y=*v;   R hic(XLIMBLEN(y)*SZI,UAV(y));}
+static UI hiq(Q*v){A y=v->n; R hic(XLIMBLEN(y)*SZI,UAV(y));}
 
 // Comparisons for extended/rational/float/complex types.  teq should use the macro
-static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(icmpXX(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqq(J jt,I n,Q*u,Q*v){DQ(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqd(J jt,I n,D*u,D*v){DQ(n, if(!TEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
@@ -913,7 +913,7 @@ static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,*z
   case C2TX:               SCDO(S, *wv,x!=av[j]      ); break;
   case C4TX:               SCDO(C4,*wv,x!=av[j]      ); break;
   case CMPXX:              SCDO(Z, *wv,!zeq(x, av[j])); break;
-  case XNUMX:              SCDO(A, *wv,!equ(x, av[j])); break;
+  case XNUMX:              SCDO(A, *wv,icmpXX(x, av[j])); break;
   case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;

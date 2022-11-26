@@ -5,7 +5,6 @@
 
 #include "j.h"
 
-
 static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 
 // take inverse of upper-triangular w.  We ASSUME w is inplaceable

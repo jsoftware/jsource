@@ -4,7 +4,10 @@
 #
 # argument is linux|darwin
 
-set -e
+set -vex
+CC=${CC-clang}
+USE_SLEEF=${USE_SLEEF-1}
+export CC USE_SLEEF
 
 if [ "$1" == "linux" ]; then
   ext="so"

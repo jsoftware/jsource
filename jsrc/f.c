@@ -213,61 +213,42 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SB
  EPILOG(z);
 }
 
-static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
- n=AN(w); v=AV(w)+n-1; b=0>*v; 
- p=*v; if(p==XPINF)R cstr("_"); else if(p==XNINF)R cstr("__");
- sprintf(s1,FMTI,*v); p1=strlen(s1);
- p=p1+XBASEN*(n-1);
- GATV0(z,LIT,p,1); s=CAV(z); 
- MC(s,s1,p1); if(b)s[0]=CSIGN; s+=p1; 
- DQ(n-1, --v; I j=*v; j=b?-j:j; sprintf(s,FMTI04,j); s+=XBASEN;);
- R z;           
-}
-
-static A jtthq1(J jt,Q y){A c,d,z;B b;C*zv;I m,n=-1;
- RZ(c=thx1(y.n)); m=AN(c);
- d=y.d;
- if(b=1<AN(d)||1!=AV(d)[0]){RZ(d=thx1(y.d)); n=AN(d);}
- GATV0(z,LIT,m+n+1,1); zv=CAV(z);
- MC(zv,AV(c),m); if(b){zv[m]='r'; MC(&zv[m+1],AV(d),n);}
+static F1(jtthx1){
+ C*s=SgetX(w); // base 10 representation
+ if('-'==s[0])s[0]='_'; // use J's convention for negative
+ I l= strlen(s);
+ A z; GA10(z, LIT, l); MC(CAV1(z), s, l+1);
+ jfree4gmp(s, l);
  R z;
 }
 
-static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
- e=y.e-1; x=y.x; p=y.p;
- n=AN(x); v=AV(x)+n-1; b=0>*v; 
- if(p==DXINF)R cstr("_"); else if(p==DXMINF)R cstr("__");
- sprintf(s1,FMTI,b?-*v:*v); p1=strlen(s1);
- if(e&&*v){s=s2; *s++='e'; if(0>e)*s++=CSIGN; sprintf(s,FMTI,0<e?e:-e); p2=strlen(s2);}else p2=0; 
- GATV0(z,LIT,b+p1+(I )(1<p1)+XBASEN*(n-1)+p2,1); s=CAV(z);
- if(b)*s++=CSIGN; *s++=*s1; if(1<p1){*s++='.'; MC(s,1+s1,p1-1); s+=p1-1;}
- DQ(n-1, --v; I j=*v; j=b?-j:j; sprintf(s,FMTI04,j); s+=XBASEN;);
- MC(s,s2,p2);
+/* static */ A jtthq1(J jt,Q y){
+ if(ISQinf(y)) {
+   if(0<QSGN(y)) R cstr("_");
+   else if (0>QSGN(y)) R cstr("__");
+   else R cstr("_.");
+ }
+ C*s= SgetQ(y);
+ if('-'==s[0]) s[0]='_';
+ C*r= strchr(s, '/'); if (r) *r= 'r';
+ A z=cstr(s);
  R z;
 }
 
-static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
- n=AN(w); r=AR(w); s=AS(w); wv=AV(w);
-  SHAPEN(w,r-1,c); m=n/c;
- GATV0(t,BOX,n,1); tv=AAV(t);
- RZ(d=apvwr(c,1L,0L)); dv=AV(d); v=tv;
- switch(CTTZ(AT(w))){
-  case XNUMX: {X*u =(X*) wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
-  case RATX:  {Q*u =(Q*) wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
-#ifdef UNDER_CE
-  default: 
-   if (AT(w)&XD){DX*u=(DX*)wv; DO(m, DO(c, RZ(*v++=y=thdx1(*u++)); dv[i]=MAX(dv[i],AN(y));));}
-   else          {ZX*u=(ZX*)wv; ASSERT(0,EVNONCE);}
-   break;
-#else
-  case XDX:   {DX*u=(DX*)wv; DO(m, DO(c, RZ(*v++=y=thdx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
-  case XZX:   {ZX*u=(ZX*)wv; ASSERT(0,EVNONCE);} break;
-#endif
+static F1(jtthxqe){
+ I n=AN(w), r=AR(w), *s=AS(w), *wv=AV(w), c;
+ SHAPEN(w,r-1,c); I m=n/c; // m: # rows, c: # columns
+ A t; GATV0(t,BOX,n,1); A*tv=AAV(t);
+ A d; RZ(d=apvwr(c,1L,0L)); I*dv=AV(d); A*v=tv;
+ switch(CTTZ(AT(w))){A y;
+  case XNUMX:{X*u=(X*)wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
+  case RATX: {Q*u=(Q*)wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
+  default: {ZX*u=(ZX*)wv; ASSERT(0,EVNONCE);}
  }
  --dv[c-1];
- p=0; DO(c, p+=++dv[i];);
- GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
- v=tv; DO(m, DO(c, zv+=dv[i]; y=*v++; p=AN(y); MC(zv-p-(I )(c>1+i),AV(y),p);));
+ I p=0; DO(c, p+=++dv[i];);
+ A z;GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; C*zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
+ v=tv; DO(m, DO(c, zv+=dv[i]; A y=*v++; p=AN(y); MC(zv-p-(I )(c>1+i),AV(y),p);));
  R z;
 }
 

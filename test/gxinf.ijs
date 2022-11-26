@@ -4,7 +4,7 @@ NB. x: and infinity -----------------------------------------------------
 match=: -:&(3!:1)
 xi   =: x:^:_1
 
-( 64=type x), 5 _ -: x=: 5x  _
+(128=type x), 5 _ -: x=: 5x  _
 ( 128=type x), 5 _ -: x=: 5r1 _
 
 (128 -: type x), _  1r2 match x=:x:  _ 0.5
@@ -198,10 +198,10 @@ _5r0 -: -%0x
 _5r0 -: -%0r1
 
 x=: {. _ 5x
-(64=type y),  x  = y=:  5x % 0x
-(64=type y),(-x) = y=: _5x % 0x
-(64=type y), 0x  = y=:  5x % x
-(64=type y), 0x  = y=: _5x % x
+(128=type y),  x  = y=:  5x % 0x
+(128=type y),(-x) = y=: _5x % 0x
+(128=type y), 0x  = y=:  5x % x
+(128=type y), 0x  = y=: _5x % x
 
 x=: {. _  5x
 y=: {. __ 5x
@@ -235,7 +235,7 @@ _ 2x match !  _ 2r1
 'NaN error' -: ! etx __ 2x
 'NaN error' -: ! etx __ 2r1
 
-( 64 -: type x), '_ __ 5'   -: ": x=:_ __ 5x
+(128 -: type x), '_ __ 5'   -: ": x=:_ __ 5x
 (128 -: type x), '_ __ 5r3' -: ": x=:_ __ 5r3
 
 'domain error' -: p: etx {. _  12x

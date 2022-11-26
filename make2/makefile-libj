@@ -1,13 +1,10 @@
 vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
 
-ifndef jplatform
-jplatform=linux
-endif
-ifndef j64x
-j64x=j64
+ifndef jplatform64
+jplatform64=linux/j64x
 endif
 
-ODIR=../../../../bin/$(jplatform)/$(j64x)$(DEBUGDIR)
+ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o
 
@@ -68,6 +65,7 @@ OBJS=  \
  io.o \
  j.o \
  jdlllic.o \
+ jgmpinit.o \
  k.o \
  m.o \
  mbx.o \

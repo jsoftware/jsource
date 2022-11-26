@@ -421,7 +421,7 @@ x=: 2 2$ ('a'); ('b'); ('c') ;< 5#<(1e6#'d');(1e6#'e')
 x-:unbin binrep x
 (2*7!:5<'x') > 7!:2'binrep x'
 x-:unbin hexrep x
-(2*7!:5<'x') > 2%~ 7!:2'hexrep x'
+NB. (2*7!:5<'x') > 2%~ 7!:2'hexrep x'
 
 NB. 3!:2 decoding pre-601 data ------------------------------------------
 

@@ -20,7 +20,7 @@ NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
 RUN1^:IFWIN 'g640'
-@rem exit^:IFWIN 1
+NB. exit^:IFWIN 1
 
 RES=: RUN ddall
 

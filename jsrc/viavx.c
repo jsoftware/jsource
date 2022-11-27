@@ -310,6 +310,13 @@ static __forceinline UI hici(I k, UI* v){
  RETCRC3;
 }
 
+// Hash a pair of INTs.  Not compatible with hici.  Based on wyhash.
+static __forceinline UI hici2(UI x, UI y){
+ x^=0xe7037ed1a0b428db;
+ y^=0xa0761d6478bd642f;
+ UI l,h;DPUMULU(x,y,l,h);
+ R (UI4)(l^h);}
+
 // Hash a single FL atom, with check for -0 and +0
 #define hic01(x) ((*(UIL*)(x)!=(UIL)NEGATIVE0)?CRC32LL(-1L,*(UIL*)(x)):CRC32LL(-1L,0))
 
@@ -559,7 +566,21 @@ static __forceinline I fcmp0(D* a, D* w, I n){
  DQ(n, if(a[i]!=w[i])R 1;);
  R 0;
 }
-#if C_AVX2 || EMU_AVX2
+
+#if C_AVX512
+#define COMPSETUP \
+ __mmask8 endmask = BZHI(0xff,1+(n-1)%8);
+#define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
+static __forceinline I icmpeq(I *x, I *y, I n, __mmask8 em) {
+ if(common(n<=8))R !!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(em,x),_mm512_maskz_loadu_epi64(em,y));
+ __m512i u,v;
+ DQ((n-1)/8,
+  u=_mm512_loadu_si512(x);
+  v=_mm512_loadu_si512(y);
+  x+=8;y+=8;
+  if(_mm512_cmpneq_epi64_mask(u,v))R 1;)
+ R !!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(em,x),_mm512_maskz_loadu_epi64(em,y));}
+#elif C_AVX2 || EMU_AVX2
 #define COMPSETUP \
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
@@ -567,7 +588,7 @@ static __forceinline I icmpeq(I *x, I *y, I n, __m256i endmask) {
  __m256i u,v; __m256d ones=_mm256_castsi256_pd(_mm256_cmpeq_epi64(endmask,endmask));
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  while(--i>=0){
-  u=_mm256_loadu_si256((__m256i*)x); v=_mm256_loadu_si256((__m256i*)y); if(!_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones))R 1; x+=NPAR; y+=NPAR;  // abort on any nonequal
+  u=_mm256_loadu_si256((__m256i*)x); v=_mm256_loadu_si256((__m256i*)y); x+=NPAR;y+=NPAR; if(!_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones))R 1; // abort on any nonequal
   }
  u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
  R !_mm256_testc_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(u,v)),ones);  // no miscompares, compare equal (= 0 result)
@@ -590,35 +611,49 @@ static __forceinline I icmpeq(I *a, I *w, I n) {
 // jtioq  RAT
 // jtioi1 k==SZI, INT/SBT/char/bool not small-range
 // jtioi  list of >1 INT
+// jtioCk k-sized bool/char
 // jtioc  k!=SZI, bool (must be list of em)/char/INT/SBT
 // jtioc01 intolerant FL atom
 // jtioc0 intolerant FL array
 // jtioz01 intolerant CMPX atom
 // jtioz0 intolerant CMPX array
 
-static IOFX(A,US,jtioax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,US,jtioau,, hiau(C(*v)),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
-static IOFX(X,US,jtiox,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,US,jtioq,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,US,jtioc,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFX(I,US,jtioi,COMPSETUP,  hici(n,v),            COMPCALL(av),          cn  )  // INT array, not float
-static IOFX(I,US,jtioi1,,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,US,jtioc01,, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,US,jtioz01,, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,US,jtioc0,, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,US,jtioz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+// I flip-flopped for a while between this and a pair of scalar compares.  Decided to go with this
+#if C_AVX512
+#define cmpi2(x,y) ({ !!_mm_cmpneq_epi64_mask(_mm_loadu_si128((__m128i*)(x)),_mm_loadu_si128((__m128i*)(y))); })
+#else
+#define cmpi2(x,y) ({ __m128i _cmpres=_mm_cmpeq_epi32(_mm_loadu_si128((__m128i*)(x)),_mm_loadu_si128((__m128i*)(y))); !_mm_testc_si128(_cmpres,_mm_setone_si128()); })
+#endif
 
-static IOFX(A,UI4,jtioax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,UI4,jtioau2,, hiau(C(*v)),  !equ(C(*v),C(av[hj])),1  )  /* boxed uniform type         */
-static IOFX(X,UI4,jtiox2,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,UI4,jtioq2,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,UI4,jtioc2,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFX(I,UI4,jtioi2,COMPSETUP,  hici(n,v),            COMPCALL(av),          cn  )  // INT array, not float
-static IOFX(I,UI4,jtioi12,,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,UI4,jtioc012,, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,UI4,jtioz012,, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,UI4,jtioc02,, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(A, US,jtioax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1) // boxed exact 1-element item
+static IOFX(A, US,jtioau,, hiau(C(*v)),      !equ(C(*v),C(av[hj])),    1) // boxed uniform type
+static IOFX(X, US,jtiox,,  hix(v),           !eqx(n,v,av+n*hj),       cn) // extended integer
+static IOFX(Q, US,jtioq,,  hiq(v),           !eqq(n,v,av+n*hj),       cn) // rational number
+static IOFX(C, US,jtioc,,  hic(k,(UC*)v),    memcmpne(v,av+k*hj,k),   cn) // boolean, char, or integer
+static IOFX(I, US,jtioi,COMPSETUP,hici(n,v),COMPCALL(av),             cn) // INT array, not float
+static IOFX(C2,US,jtioC2,, hici1((C2*)v),    *v!=av[hj],               1) // 2-byte (char)
+static IOFX(C4,US,jtioC4,, hici1((C4*)v),    *v!=av[hj],               1) // 4-byte (char)
+static IOFX(I, US,jtioi1,, hici1(v),         *v!=av[hj],               1) // len=8, not float
+static IOFX(I, US,jtioii2,,hici2(v[0],v[1]), cmpi2(v,av+2*hj),         2) // len=16, not float
+static IOFX(D, US,jtioc01,,hic01((UIL*)v),   *v!=av[hj],               1) // float atom
+static IOFX(Z, US,jtioz01,,hic0(2,(UIL*)v),  (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D, US,jtioc0,, hic0(n,(UIL*)v),  fcmp0(v,&av[n*hj],n),    cn) // float array
+static IOFX(Z, US,jtioz0,, hic0(2*n,(UIL*)v),fcmp0((D*)v,(D*)&av[n*hj],2*n),cn) // complex array
+
+static IOFX(A, UI4,jtioax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1) // boxed exact 1-element item
+static IOFX(A, UI4,jtioau2,, hiau(C(*v)),      !equ(C(*v),C(av[hj])),    1) // boxed uniform type
+static IOFX(X, UI4,jtiox2,,  hix(v),           !eqx(n,v,av+n*hj),       cn) // extended integer
+static IOFX(Q, UI4,jtioq2,,  hiq(v),           !eqq(n,v,av+n*hj),       cn) // rational number
+static IOFX(C, UI4,jtioc2,,  hic(k,(UC*)v),    memcmpne(v,av+k*hj,k),   cn) // boolean, char, or integer 
+static IOFX(I, UI4,jtioi2,COMPSETUP,hici(n,v),COMPCALL(av),             cn) // INT array, not float
+static IOFX(C2,UI4,jtioC22,, hici1((C2*)v),    *v!=av[hj],               1) // 2-byte (char)
+static IOFX(C4,UI4,jtioC42,, hici1((C4*)v),    *v!=av[hj],               1) // 4-byte (char)
+static IOFX(I, UI4,jtioi12,, hici1(v),         *v!=av[hj],               1) // len=8, not float
+static IOFX(I, UI4,jtioi22,, hici2(v[0],v[1]), cmpi2(v,av+2*hj),         2) // len=16, not float
+static IOFX(D, UI4,jtioc012,,hic01((UIL*)v),   *v!=av[hj],               1) // float atom
+static IOFX(Z, UI4,jtioz012,,hic0(2,(UIL*)v),  (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D, UI4,jtioc02,, hic0(n,(UIL*)v),  fcmp0(v,&av[n*hj],n),    cn) // float array
+static IOFX(Z, UI4,jtioz02,, hic0(2*n,(UIL*)v),fcmp0((D*)v,(D*)&av[n*hj],2*n),cn) // complex array
 
 
 // ********************* second class: tolerant comparisons, possibly boxed **********************
@@ -992,9 +1027,10 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eq
  }
 
 // The verbs to do the work, for different item lengths and hashtable sizes
-static IOFSMALLRANGE(jtio12,UC,US)  static IOFSMALLRANGE(jtio14,UC,UI4)  // 1-byte items, using small/large hashtable
-static IOFSMALLRANGE(jtio22,US,US)  static IOFSMALLRANGE(jtio24,US,UI4)  // 2-byte items, using small/large hashtable
-static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-byte items, using small/large hashtable
+static IOFSMALLRANGE(jtio12,UC, US)  static IOFSMALLRANGE(jtio14,UC, UI4)  // 1-byte items, using small/large hashtable
+static IOFSMALLRANGE(jtio22,US, US)  static IOFSMALLRANGE(jtio24,US, UI4)  // 2-byte items, using small/large hashtable
+static IOFSMALLRANGE(jtio42,UI4,US)  static IOFSMALLRANGE(jtio44,UI4,UI4)  // 4-byte items, using small/large hashtable
+static IOFSMALLRANGE(jtio82,I,  US)  static IOFSMALLRANGE(jtio84,I,  UI4)  // SZI-byte items, using small/large hashtable
 
 // ******************* fourth class: sequential comparison ***************************************
 // implemented only for i. i: e. u/.   - perhaps should revert for other compounds
@@ -1339,29 +1375,35 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
   R h;                                                                               \
  }
 
-static IOFXW(A,US,jtiowax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,US,jtiowau,, hiau(C(*v)),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
-static IOFXW(X,US,jtiowx,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
-static IOFXW(Q,US,jtiowq,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
-static IOFXW(C,US,jtiowc,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFXW(I,US,jtiowi,COMPSETUP,  hici(n,v),            COMPCALL(wv),          cn  )  // INT array, not float
-static IOFXW(I,US,jtiowi1,,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
-static IOFXW(D,US,jtiowc01,, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
-static IOFXW(Z,US,jtiowz01,, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
-static IOFXW(D,US,jtiowc0,, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
-static IOFXW(Z,US,jtiowz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
+static IOFXW(A, US,jtiowax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])), 1) // boxed exact 1-element item
+static IOFXW(A, US,jtiowau,, hiau(C(*v)),      !equ(C(*v),C(wv[hj])),     1) // boxed uniform type
+static IOFXW(X, US,jtiowx,,  hix(v),           !eqx(n,v,wv+n*hj),        cn) // extended integer
+static IOFXW(Q, US,jtiowq,,  hiq(v),           !eqq(n,v,wv+n*hj),        cn) // rational number
+static IOFXW(C, US,jtiowc,,  hic(k,(UC*)v),    memcmpne(v,wv+k*hj,k),    cn) // boolean, char, or integer
+static IOFXW(I, US,jtiowi,COMPSETUP,hici(n,v),COMPCALL(wv),              cn) // INT array, not float
+static IOFXW(C2,US,jtiow21,, hici1((C2*)v),    *v!=wv[hj],                1) // 2-byte (char)
+static IOFXW(C4,US,jtiow41,, hici1((C4*)v),    *v!=wv[hj],                1) // 4-byte (char)
+static IOFXW(I, US,jtiowi1,, hici1(v),         *v!=wv[hj],                1) // len=8, not float
+static IOFXW(I, US,jtiow161,,hici2(v[0],v[1]), cmpi2(v,wv+2*hj),          2) // len=8, not float
+static IOFXW(D, US,jtiowc01,,hic01((UIL*)v),   *v!=wv[hj],                1) // float atom
+static IOFXW(Z, US,jtiowz01,,hic0(2,(UIL*)v),  (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
+static IOFXW(D, US,jtiowc0,, hic0(n,(UIL*)v),  fcmp0(v,&wv[n*hj],n),     cn) // float array
+static IOFXW(Z, US,jtiowz0,, hic0(2*n,(UIL*)v),fcmp0((D*)v,(D*)&wv[n*hj],2*n),cn) // complex array
 
-static IOFXW(A,UI4,jtiowax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,UI4,jtiowau2,, hiau(C(*v)),  !equ(C(*v),C(wv[hj])),1  )  /* boxed uniform type         */
-static IOFXW(X,UI4,jtiowx2,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
-static IOFXW(Q,UI4,jtiowq2,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
-static IOFXW(C,UI4,jtiowc2,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFXW(I,UI4,jtiowi2,COMPSETUP,  hici(n,v),            COMPCALL(wv),          cn  )  // INT array, not float
-static IOFXW(I,UI4,jtiowi12,,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
-static IOFXW(D,UI4,jtiowc012,, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
-static IOFXW(Z,UI4,jtiowz012,, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
-static IOFXW(D,UI4,jtiowc02,, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
-static IOFXW(Z,UI4,jtiowz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
+static IOFXW(A, UI4,jtiowax12,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(wv[hj])), 1) // boxed exact 1-element item
+static IOFXW(A, UI4,jtiowau2,, hiau(C(*v)),      !equ(C(*v),C(wv[hj])),     1) // boxed uniform type
+static IOFXW(X, UI4,jtiowx2,,  hix(v),           !eqx(n,v,wv+n*hj),        cn) // extended integer
+static IOFXW(Q, UI4,jtiowq2,,  hiq(v),           !eqq(n,v,wv+n*hj),        cn) // rational number
+static IOFXW(C, UI4,jtiowc2,,  hic(k,(UC*)v),    memcmpne(v,wv+k*hj,k),    cn) // boolean, char, or integer
+static IOFXW(I, UI4,jtiowi2,COMPSETUP,hici(n,v),COMPCALL(wv),              cn) // INT array, not float
+static IOFXW(C2,UI4,jtiow212,, hici1((C2*)v),    *v!=wv[hj],                1) // 2-byte (char)
+static IOFXW(C4,UI4,jtiow412,, hici1((C4*)v),    *v!=wv[hj],                1) // 4-byte (char)
+static IOFXW(I, UI4,jtiowi12,, hici1(v),         *v!=wv[hj],                1) // len=8, not float
+static IOFXW(I, UI4,jtiow1612,,hici2(v[0],v[1]), cmpi2(v,wv+2*hj),          2) // len=16, not float
+static IOFXW(D, UI4,jtiowc012,,hic01((UIL*)v),   *v!=wv[hj],                1) // float atom
+static IOFXW(Z, UI4,jtiowz012,,hic0(2,(UIL*)v),  (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
+static IOFXW(D, UI4,jtiowc02,, hic0(n,(UIL*)v),  fcmp0(v,&wv[n*hj],n),           cn) // float array
+static IOFXW(Z, UI4,jtiowz02,, hic0(2*n,(UIL*)v),fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
 
 // *************************** seventh class: small-range processing of w ***********************
@@ -1525,7 +1567,8 @@ static IOF(jtiosfu){I i;
  R z;   // harmless nonzero return that we can fetch AM() from
 }
 
-static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, using small/large hashtable
+static IOFXWS(jtio82w,I,US)    static IOFXWS(jtio84w,I,UI4)  // INT-sized items, using small/large hashtable
+static IOFXWS(jtio42w,UI4,US)  static IOFXWS(jtio44w,UI4,UI4)  // 4-byte items, using small/large hashtable
 
 #define ASSESSBLOCKSIZE 64  // every so many inputs, check for range too large
 // Routine to find range of an array of I
@@ -1720,6 +1763,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 // jtioq  RAT
 // jtioi1 k==SZI, INT/SBT/char/bool not small-range
 // jtioi  list of >1 INT
+// jtioCk k-sized character
 // jtioc  k!=SZI, bool (must be list of em)/char/INT/SBT
 // jtioc01 intolerant FL atom
 // jtioc0 intolerant FL array
@@ -1736,7 +1780,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLSMALL1 12  // small-range, 1-byte items
 #define FNTBLSMALL2 13  // small-range, 2-byte items
 #define FNTBLSMALL4 14  // small-range, 4-byte items
-#define FNTBLONEINT 15  // hash of single INT-sized exact value
+#define FNTBLSMALLI 15  // small-range, SZI-byte items
 #define FNTBLBOXARRAY 20  // array of boxes, tolerant or not (we just hash on shape)
 #define FNTBLBOXINTOLERANT 21  // single box but intolerant
 #define FNTBLBOXUNIFORM 22  // single box, but a and w have uniform contents
@@ -1744,56 +1788,65 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLXNUM 24   // hashed xnum
 #define FNTBLRAT 25   // hashed rat
 #define FNTBLBOXSSORT 26  // boxes, handled by sorting and binary search
-#define FNTBLREVERSE 27  // where the reversed hashes start
-#define FNTBLSIZE 54  // number of functions - before the second half
-static const AF fntbl[]={
+#define FNTBL2 27 // 2-byte (probably characters)
+#define FNTBL4 28 // 4-byte (probably characters)
+#define FNTBL8 29  // 8-byte
+#define FNTBL16 30 // 16-byte
+#define FNTBLREVERSE 31  // where the reversed hashes start
+#define FNTBLSIZE 62  // number of functions - before the second half
+// fntbl[i][0] - 16-bit hashes;
+// fntbl[i][1] - 32-bit hashes
+static const AF fntbl[][2]={
 // prefix: routines used without hashtables, flags, etc
- jtiosc,  // sequential comparison (-2) - we pass in extra args
- jtiosfu,   // i.!.1 - sequential file update (-1)
-// US tables
- jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
- jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)
- jtioz,jtioz0,jtioz1,jtioz01,   // CMPX
+ {jtiosc,jtiosc},  // sequential comparison (-2) - we pass in extra args
+ {jtiosfu,jtiosfu},   // i.!.1 - sequential file update (-1)
 
- jtioa,jtioax1,jtioau,jtioa1,  // atomic types
- jtiox,jtioq,
- jtiobs,
- 
- jtiowc,jtiowc,jtiowc,jtiowc,jtiowi,jtiowi,jtiowi,jtiowi,  // bool, INT
- 0,jtiowc0,0,jtiowc01,0,0,jtio42w,jtiowi1,   // FL (then small-range, then ONEINT)
- 0,jtiowz0,0,jtiowz01,   // CMPX
- 0,0,0,0,
- 0,0,
- 0,
+ //hashing a
+ {jtioc, jtioc2},{jtioc, jtioc2}, {jtioc, jtioc2}, {jtioc,  jtioc2},     //bool/char/.. table
+ {jtioi, jtioi2},{jtioi, jtioi2}, {jtioi, jtioi2}, {jtioi,  jtioi2},     //INT table
+ {jtiod, jtiod2},{jtioc0,jtioc02},{jtiod1,jtiod12},{jtioc01,jtioc012},   //FL
+ {jtio12,jtio14},{jtio22,jtio24}, {jtio42,jtio44}, {jtio82, jtio84},     //small-range
+ {jtioz, jtioz2},{jtioz0,jtioz02},{jtioz1,jtioz12},{jtioz01,jtioz012},   //CMPX
 
-// UI4 tables
- jtioc2,jtioc2,jtioc2,jtioc2,jtioi2,jtioi2,jtioi2,jtioi2,  // bool, INT
- jtiod2,jtioc02,jtiod12,jtioc012,jtio14,jtio24,jtio44,jtioi12,   // FL (then small-range, then ONEINT)
- jtioz2,jtioz02,jtioz12,jtioz012,   // CMPX
+ {jtioa,jtioa2}, {jtioax1,jtioax12}, {jtioau,jtioau2}, {jtioa1,jtioa12}, //atomic types
 
- jtioa2,jtioax12,jtioau2,jtioa12,  // atomic types
- jtiox2,jtioq2,
- jtiobs,
+ {jtiox,jtiox2}, {jtioq,jtioq2},                                         //X
 
- jtiowc2,jtiowc2,jtiowc2,jtiowc2,jtiowi2,jtiowi2,jtiowi2,jtiowi2,  // bool, INT
- 0,jtiowc02,0,jtiowc012,0,0,jtio44w,jtiowi12,   // FL (then small-range, then ONEINT)
- 0,jtiowz02,0,jtiowz012   // CMPX
+ {jtiobs,jtiobs},                                                        //binary search
+ {jtioC2,jtioC22}, {jtioC4,jtioC42}, {jtioi1,jtioi12}, {jtioii2,jtioi22},//int list
 
+ //hashing w
+ {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, //bool/char/.. table
+ {jtiowi,jtiowi2}, {jtiowi,jtiowi2}, {jtiowi,jtiowi2}, {jtiowi,jtiowi2}, //INT table
+ {0,0}, {jtiowc0,jtiowc02}, {0,0}, {jtiowc01,jtiowc012}, {0,0},          //FL
+ {0,0}, {jtio42w,jtio44w}, {jtio82w,jtio84w},                            //small-range
+ {0,0}, {jtiowz0,jtiowz02}, {0,0}, {jtiowz01,jtiowz012},                 //CMPX
+ {0,0}, {0,0}, {0,0}, {0,0},                                             //atomic
+ {0,0}, {0,0},                                                           //X
+ {0,0},                                                                  //binary search
+ {jtiow21,jtiow212}, {jtiow41,jtiow412}, {jtiowi1,jtiowi12}, {jtiow161,jtiow1612},//int list
 };
 static const S fnflags[]={  // 0 values reserved for small-range.  They turn off booladj
- IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  // bool, INT
- IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,0,0,0,IIMODFULL,   // FL (then small-range, then ONEINT)
- IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,   // CMPX
-
- IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  // atomic types
- IIMODFULL,IIMODFULL,
- -2,  // 'no hashing' (for box search)
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //bool/char/.. table
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //INT table
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //FL
+ 0,0,0,0,                                  //small-range
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //CMPX
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //atomic types
+ IIMODFULL,IIMODFULL,                      //X
+ -2,                                       //'no hashing' (for box search)
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //int list
  
 // Reversed hashes, where supported.  IIMODFULL is not needed by the reversed-hash code so we continue its use, started above, as a flag to turn off booleans
- IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,  // bool, INT
- IIMODFULL,IREVERSED|IIMODFULL,IIMODFULL,IREVERSED|IIMODFULL,IREVERSED,IREVERSED,IREVERSED,IIMODFULL,   // FL (then small-range, then ONEINT)
- IIMODFULL,IREVERSED|IIMODFULL,IIMODFULL,IREVERSED|IIMODFULL   // CMPX
-
+ IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL, //bool/char table
+ IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL, //INT table
+           IIMODFULL,IREVERSED|IIMODFULL,          IIMODFULL,IREVERSED|IIMODFULL, //FL
+ IREVERSED,          IREVERSED,          IREVERSED,          IREVERSED,           //small-range
+           IIMODFULL,IREVERSED|IIMODFULL,          IIMODFULL,IREVERSED|IIMODFULL, //CMPX
+ 0,0,0,0,                                                                         //atomic
+ 0,0,                                                                             //X
+ 0,                                                                               //BS
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,                                         //int list
 };
 
 #define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
@@ -1904,7 +1957,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
  }
 
  // Convert dissimilar types
- I fnx;  // function to use, set below
+ I fnx;B bighash=0;  // function to use, set below
  if(likely(TYPESEQ(at,wt))){fnx=0;
  }else{
   fnx=HOMONE(at,wt)?0:-2; /* noavx jt->min=0; */  // are args compatible?  -2 if not.  MARK is inhomo
@@ -1972,23 +2025,28 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
    // result is p (the length of hashtable, as # of entries), datamin (the minimum value found, if small-range)
    // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
    if(unlikely(2==k)){
-    // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
-    CR crres = condrange2(USAV(a),(AN(a)<<klg)>>LGSZS,-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
-    if(crres.range){
-      datamin=crres.min;
-      // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because
-      // in the current allocation going all the way to 65536 kicks us into the longer hashtable (questionable decision).  Otherwise we should just promote
-      // any non-Boolean, because the actual cache footprint won't change.
-      // The cost of promoting a Boolean is 1 store (1 clock) per word cleared, for (65536-range)>>booladj bytes (if booladj!=0) [or (65536-range) hashtable entries if booladj==0]
-      // The savings is 4 ops (2 clocks) per word searched
-      if(booladj && ((UI)(65536-crres.range)>>booladj) < (c<<(LGSZI+1))){p=65536; datamin=0;}else{p=crres.range;}  // this underestimates the benefit for prehashes
-      if(p==65536)mode|=IIMODFULL;
-      fnx=FNTBLSMALL2;  // This qualifies for small-range processing
+    if(3*m>=65536>>booladj){datamin=0; p=65536; mode|=IIMODFULL; fnx=FNTBLSMALL2;} // will always qualify for small-range, so don't bother checking range
+    else if(t!=C2T){fnx=FNTBL2;} // 2-col matrix; range-checking likely unproductive
+    else{
+     // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
+     CR crres = condrange2(USAV(a),(AN(a)<<klg)>>LGSZS,-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
+     if(!crres.range){fnx=FNTBL2;}
+     else{
+       datamin=crres.min;
+       // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because
+       // in the current allocation going all the way to 65536 kicks us into the longer hashtable (questionable decision).  Otherwise we should just promote
+       // any non-Boolean, because the actual cache footprint won't change.
+       // The cost of promoting a Boolean is 1 store (1 clock) per word cleared, for (65536-range)>>booladj bytes (if booladj!=0) [or (65536-range) hashtable entries if booladj==0]
+       // The savings is 4 ops (2 clocks) per word searched
+       if(booladj && ((UI)(65536-crres.range)>>booladj) < (c<<(LGSZI+1))){p=65536; datamin=0;}else{p=crres.range;}  // this underestimates the benefit for prehashes
+       if(p==65536)mode|=IIMODFULL;
+       fnx=FNTBLSMALL2;  // This qualifies for small-range processing
+     }
     }
    }
    if(likely(fnx<0)){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
-    if((k&~(t&FL))==SZI){  // non-float, might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
-     if(likely((t&INT+SBT)!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
+    if(((k&~(t&FL))==SZI)|(4==k)){  // non-float (relies on FL==8), might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
+     if(likely((t&INT+SBT+(4==k?C4T:0))!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
       // small-range processing is a possibility, but we need to decide whether we are going to do a reversed hash, so we will
       // know which range to check.  For i./i:, we reverse if c is much shorter than m; for e., we have to consider whether
       // the forward hash will benefit from bits mode, so we have to estimate the size of each hash table
@@ -1996,9 +2054,9 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
       // otherwise (a candidate for reversed hash), if i./i: is set, meaning a full hashtable is needed, reverse if a is twice as long as w
       // otherwise (e., which uses bitmasks in the forward hash) calculate length of bitmask and reverse if the full table for w is shorter
       // than the bitmask for a.  Note that FORKEY will never cause a reversed hash
-      rangearg=a; rangearglen=m; fnprov=FNTBLSMALL4;   // values for forward check
+      rangearg=a; rangearglen=m; fnprov=FNTBLSMALL4+(k==SZI);   // values for forward check
       if(mode&IIOREPS){  // if reverse check is possible, see if it is desired
-       if((m>>(1))>c){rangearg=w; rangearglen=c; fnprov=FNTBLSMALL4+FNTBLREVERSE; }  // booladj?(m>MAXBYTEBOOL?5:2): omitted now
+       if((m>>(1))>c){rangearg=w; rangearglen=c; fnprov+=FNTBLREVERSE; }  // booladj?(m>MAXBYTEBOOL?5:2): omitted now
       }
       // we make the small-range decision mostly on length; if the range table would be bigger than the hashtable, we use the hash.  Here
       // we invert the calculation to see how big a range we can tolerate without exceeding the table size.  The length of the hash, whether small-range
@@ -2007,10 +2065,13 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
       // small-range hash.  The full hash spends more time in lookup than in creation, because misses become more likely the
       // fuller the table.  This makes small-range much more valuable when the hashes are repeated
       I maxsizemult=mode&IPHCALC?6:4;  // # slots/item to allow in small-range table.  More if prehash
-      CR crres = condrange(AV(rangearg),((AN(rangearg)<<klg))>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,maxsizemult*rangearglen)<<booladj);
+      CR crres = k==SZI?condrange   (AV(rangearg),((AN(rangearg)<<klg))>>LGSZI,  IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,maxsizemult*rangearglen)<<booladj)
+                       :condrange4(C4AV(rangearg),((AN(rangearg)<<klg))>>LGSZUI4,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,maxsizemult*rangearglen)<<booladj);
       if(crres.range){datamin=crres.min; p=crres.range; fnx=fnprov;  // use the selected orientation
-      }else{fnx=FNTBLONEINT;}  // select integer hashing if range too big...
-     }else{fnx=FNTBLONEINT;}   // ... or some other 8-byte length (not float, though)
+      }else{fnx=FNTBL4+(k==SZI);}  // select integer hashing if range too big...
+     }else{ fnx=FNTBL4+(k==SZI);}  // ... or some other 4/8-byte length (not float, though)
+    }else if(k==16&&!(t&FL+CMPX)){ // 16-byte (not float).  Don't bother with small-range checking
+     fnx=FNTBL16;
     }else{  // it's a hash
      fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+fnx+2;  // index: CMPX/FL/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
     }
@@ -2021,7 +2082,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
    // We know which type of hashing to use, and now we need to decide between forward and reverse hashing.  We use reverse hashing if the
    // type we have selected supports it, and if w is much shorter than a.  The operation must be i./i:/e., and we must not be prehashing
    p=m;
-   if(((m>>1)>c) && (mode&IIOREPS) && fntbl[FNTABLEPREFIX+fnx+FNTBLREVERSE]){
+   if(((m>>1)>c) && (mode&IIOREPS) && fntbl[FNTABLEPREFIX+fnx+FNTBLREVERSE][0]){
     p=c; fnx+=FNTBLREVERSE;
     fmods = fnflags[fnx];  // refetch flags
    }
@@ -2058,12 +2119,15 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     if(likely((h=jt->idothash1)!=0)){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
     // always allow a little bit larger than the range of a, to make sure we expand the hashtable if a little more would be enough.
     // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
-    if(unlikely(k==2)){
-     allowrange=MIN(MAX(L2CACHESIZE>>LGSZUS,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange2(USAV(w),(AN(w)<<klg)>>LGSZS,datamin,datamin+p-1,allowrange);
-    }else{
+    if(common(k==8)){
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUI4,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
      crres = condrange(AV(w),(AN(w)<<klg)>>LGSZI,datamin,datamin+p-1,allowrange);
+    }else if(uncommon(k==4)){
+     allowrange=MIN(MAX(L2CACHESIZE>>LGSZUI4,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
+     crres = condrange4(UI4AV(w),(AN(w)<<klg)>>LGSZS,datamin,datamin+p-1,allowrange);
+    }else{ //2
+     allowrange=MIN(MAX(L2CACHESIZE>>LGSZUS,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
+     crres = condrange2(USAV(w),(AN(w)<<klg)>>LGSZS,datamin,datamin+p-1,allowrange);
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
@@ -2121,14 +2185,14 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
      if(likely((SGNIFNOT(mode,IPHCALCX)&(hh->datasize-5*L3CACHESIZE))<0)){ACINITZAP(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal if not prehash and table not huge
     }
     // switch the routine pointer to the big table
-    fnx+=FNTBLSIZE;
+    bighash=1;
    }
    // Pass the min/range into the action routine, using result values in the hashtable
    hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
   }else{h = (A)acr;}  // if there is no hashtable, pass in acr using the h field.  This is for sorted boxes only
  }  // end of 'not sequential comparison' which means we may need a hashtable
 
- AF ifn=fntbl[FNTABLEPREFIX+fnx];  // get an early start fetching the function we will call
+ AF ifn=fntbl[FNTABLEPREFIX+fnx][bighash];  // get an early start fetching the function we will call
 
  // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. If we are prehashing we skip this.
  // If the conditions are right, perform the operation inplace
@@ -2195,7 +2259,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   // The caller must ras() this result to protect it, if it is going to be saved
   GAT0(z,BOX,2,1); zv=AAV(z);
   GAT0(x,INT,6,1); xv=AV(x);
-  xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[FNTABLEPREFIX+fnx]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
+  xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[FNTABLEPREFIX+fnx][bighash]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
   zv[0]=incorp(x); zv[1]=incorp(h);
  }
  RZ(z=EPILOGNORET(z));

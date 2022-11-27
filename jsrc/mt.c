@@ -189,8 +189,8 @@ fail:CLRFUTEXWT; R r;}  // error return, with our internal errorcode
 I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, with a timeout of ns ns.  Largely the same as lock
  I r;  // internal return code in case of error
  if(unlikely(!casa((US*)&m->v,&(US){FREE},LOCK))){    //fast and common path: attempt to install LOCK in place of FREE; if so, we have acquired the lock
-  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;} //handle deadlock and recursive cases
   struct jtimespec tgt=jtmtil(ns);
+  if(uncommon(m->owner==self)){if(unlikely(!m->recursive))R EVCONCURRENCY; m->ct++;R 0;} //handle deadlock and recursive cases
   sta(&jt->futexwt,&m->v); //ensure other threads know how to wake us up for systemlock
   while(xchga((US*)&m->v,WAIT)!=FREE){ //exit when _we_ successfully installed WAIT in place of FREE
    UI4 waitval=lda(&m->v); C breakb;  // get the serial number before we check.  Must be atomic; this is supposed to synchronise with writes to the same location via futexwt by wakeall

@@ -4,7 +4,7 @@
 #
 # argument is linux|darwin
 
-set -vex
+set -e
 CC=${CC-clang}
 USE_SLEEF=${USE_SLEEF-1}
 export CC USE_SLEEF

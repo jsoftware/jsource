@@ -53,7 +53,6 @@ spawn - linux/macos/windows
    man_crash
 )
 
-load'git/jsource/test/tsu.ijs'
 load'~addons/misc/miscutils/utils.ijs'
 
 pgit=:      'git/jsource'
@@ -300,6 +299,7 @@ build_test segfault closes window and gives no info
 these steps determine the script and lines that led to the crash
 can run in jhs
 
+   load'git/jsource/test/tsu.ijs' NB. later 904 required for load to work
    crashrun ddall
    
 ...$ crashline (from above) - wait until finished

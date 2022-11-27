@@ -10,7 +10,6 @@
 #endif
 #include "j.h"
 #include "w.h"
-#include "m.h"
 #include "cpuinfo.h"
 
 #if SYS & SYS_FREEBSD

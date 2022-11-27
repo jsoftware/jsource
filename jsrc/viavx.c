@@ -173,10 +173,11 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 }
 
 // All hashes must return a CRC result, because that is evenly distributed throughout the lower 32 bits
-// CRC32L  takes UI  (4 or 8 bytes)
-// CRC32LL takes UIL (8 bytes)
+// CRC32  takes UI4  (4 bytes)
+// CRC32L takes UIL (8 bytes)
 
-#define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
+// obsolete #define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
+#define RETCRC3 R CRC32L(crc0,(UI)rol32(crc1,9)+((UI)rol32(crc2,21)<<32))
 // Create CRC32 of the k bytes in *v.  Uses CRC32L to process 8 bytes at a time
 // We may fetch past the end of the input, but only up to the next SZI-byte block
 UI hic(I k, UC *v) {
@@ -334,9 +335,9 @@ static UI hic0(I k, UIL* v){
 
 
 // Hashes for extended/rational types.  Hash only the numerator of rationals.  These are
-// Q and X types (Q is a brace of X types)
-static UI hix(X*v){A y=*v;   R hici(AN(y),UIAV(y));}
-static UI hiq(Q*v){A y=v->n; R hici(AN(y),UIAV(y));}
+// Q and X types (Q is a pair of X types)
+static UI hix(X*v){A y=*v;   R hici(XLIMBLEN(y),UIAV(y));}
+static UI hiq(Q*v){A y=v->n; R hici(XLIMBLEN(y),UIAV(y));}
 
 
 // Hash a single double, using only the bits in ctmask.
@@ -360,8 +361,8 @@ static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
  case B01X:  d=*(B*)yv; break;
  case FLX: 
  case CMPXX: d=*(D*)yv; break;
- case XNUMX: d=xdouble(*(X*)yv); break;
- case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d); break;
+ case XNUMX: d=DgetX(*(X*)yv); break;
+ case RATX:  d=DgetQ(*(Q*)yv); break;
  }
  R cthid(ctmask,d*hct);
 }
@@ -373,13 +374,13 @@ static UI jthiau(J jt,A y){I m,n;UI z;X*u,x;
  switch(AT(y)){
  case INT:  R hici(n,AV(y));
  case RAT:  m+=n;  /* fall thru */
- case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
+ case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; z=CRC32((UI4)z,(UI4)hicnz(XLIMBLEN(x)*SZI,UAV(x)));); R z;
  default:   R hic(n<<bplg(AT(y)),UAV(y));
  }
 }
 
-// Comparisons for extended/rational/float/complex types.
-static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(!equ(C(*u),C(*v)))R 0; ++u; ++v;); R 1;}
+// Comparisons for float/complex types.
+static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(icmpXX(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqq(J jt,I n,Q*u,Q*v){DQ(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jeqd(I n,D*u,D*v,D cct){DQ(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
@@ -1148,7 +1149,7 @@ static A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; vo
   SCDO(C2TX,S,x!=av[j]      );
   SCDO(C4TX,C4,x!=av[j]      );
   SCDO(CMPXX,Z,!zeq(x, av[j]));
-  SCDO(XNUMX,A,!equ(x, av[j]));
+  SCDO(XNUMX,A,!equx(x, av[j]));
   SCDO(RATX,Q,!QEQ(x, av[j]));
   SCDO(SBTX,SB,x!=av[j]      );
   SCDO(BOXX,A,!equ(C(x),C(av[j])));

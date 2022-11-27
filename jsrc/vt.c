@@ -5,7 +5,6 @@
 
 #include "j.h"
 
-
 F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,zeroionei(1),    w);}
 F1(jtcurtail){F1PREFIP; R jtdrop(jtinplace,num(-1),w);}
 

@@ -48,7 +48,7 @@
 #define amp(x,y)                    jtamp(jt,(x),(y))
 #define ampco(x,y)                  jtampco(jt,(x),(y))
 #define apip(x,y)                   jtapip((J)((I)jt|JTINPLACEA),(x),(y))  // use apip instead of over when a is an inplaceable context
-#define applystr(x,y)               jtapplystr(jt,(x),(y))
+#define applystr(x,y)               jtapplystr(jt,(x),(y)) // FIXME: invalid
 #define apv(x,y,z)                  jtapv(jt,(x),(y),(z))
 #define apvwr(x,y,z)                jtapvwr(jt,(x),(y),(z))
 #define arep(x)                     jtarep(jt,(x))
@@ -314,6 +314,7 @@
 #define eqx(x,y,z)                  jteqx(jt,(x),(y),(z))
 #define equ(x,y)                    jtequ(jt,(x),(y))
 #define equ0(x,y)                   jtequ0(jt,(x),(y))
+#define equx(x,y)                   jtequx(jt,(x),(y))
 #define eqz(x,y,z)                  jteqz(jt,(x),(y),(z))
 #define errcap()                    jterrcap(jt)
 #define etc(x)                      jtetc(jt,(x))
@@ -428,9 +429,9 @@
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))
 #define fpolyc(x)                   jtfpolyc(jt,(x))
-#define gmpmfree(x)   // scaf will be GMP memory-free routine incl accounting
 #define frcommon(x,f)               {if(likely((x)!=0)){I Zs = AC(x); if(likely(Zs<=1)){f(x);} else if(likely(!ACISPERM(Zs))){if(__atomic_fetch_add(&AC(x),-1,__ATOMIC_ACQ_REL)<0)f(x);}}}  // use fr for known nonrecursives, and for locales
 #define fr(x)                       frcommon(x,mf)
+#define frgmp(x)                    frcommon(x,mfgmp) // to free GMP blocks
 #define mfgmp(x)                    gmpmfree(x)  // to free GMP blocks
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y))   
@@ -471,6 +472,8 @@
 #define gerfrom(x,y)                jtgerfrom(jt,(x),(y))
 #define getsen(x)                   jtgetsen(jt,(x))
 #define gjoin(x,y,z)                jtgjoin(jt,(x),(y),(z))   
+extern void jfree4gmp(void*,size_t);
+#define gmpmfree(x)                 if(!(ACISPERM(AC(x)))){I allocsize = AN(x)+AKXR(1); jt->bytes-=allocsize; jt->malloctotal-=allocsize; jt->mfreegenallo-=allocsize; /*free(x);*/ jfree4gmp(CAV1(x),0);}
 #define gr1(x)                      jtgr1(jtinplace,(x))
 #define gr2(x,y)                    jtgr2(jtinplace,(x),(y))
 #define grade1(x)                   jtgrade1(jt,(x))
@@ -584,7 +587,7 @@
 #define jdot2(x,y)                  jtjdot2(jt,(x),(y)) 
 #define jerrno()                    jtjerrno(jt)
 #define jfread(x)                   jtjfread(jt,(x),DUMMYSELF)
-#define jfwrite(x,y)                jtjfwrite(jt,(x),(y))
+#define jfwrite(x,y)                jtjfwrite(jt,(x),(y)) // FIXME: invalid
 #define jgetenv(x)                  jtjgetenv(jt,(x))
 #define jgetx(x)                    jtjgetx(jt,(x))
 #define jgets(x)                    jtjgets(jt,(x))
@@ -684,15 +687,16 @@
 #define maxtyped(x,y)               (((x)==(y))?(x):maxtypedne(x,y))
 #define typeged(x,y)                (TYPEPRIORITY(x)>=TYPEPRIORITY(y))
 // For sparse types, we encode here the corresponding dense type
-#define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
-#define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))
+#define mdiv(x,y)                   jtmdiv(jt,(x),(y)) // FIXME: invalid
+#define mdivsp(x,y)                 jtmdivsp(jt,(x),(y)) // FIXME: invalid
 #define meanD(x0,x1,x2,x3,x4)       jtmeanD(jt,(x0),(x1),(x2),(x3),(x4))
 #define meanI(x0,x1,x2,x3,x4)       jtmeanI(jt,(x0),(x1),(x2),(x3),(x4))
 #define memoget(x,y,z)              jtmemoget(jt,(x),(y),(z))
 #define memoput(x0,x1,x2,x3)        jtmemoput(jt,(x0),(x1),(x2),(x3))
 #define merge1(x,y)                 jtmerge1(jt,(x),(y))
-#define merge2(x0,x1,x2,x3,x4)         jtmerge2(jt,(x0),(x1),(x2),(x3),(x4))
+#define merge2(x0,x1,x2,x3,x4)      jtmerge2(jt,(x0),(x1),(x2),(x3),(x4))
 #define mf(x)                       jtmf(jt,(x),AFHRH(x))
+#define mfgmp(x)                    gmpmfree(x)  // to free GMP blocks
 #define minimum(x,y)                jtatomic2(jt,(x),(y),ds(CMIN))
 #define minors(x)                   jtminors(jt,(x))
 #define minus(x,y)                  jtatomic2(jt,(x),(y),ds(CMINUS))  
@@ -765,6 +769,7 @@
 #define odom(x,y,z)                 jtodom(jt,(x),(y),(z))
 #define ofxassoc(x,y,z)             jtofxassoc(jt,(x),(y),(z))
 #define oind(x)                     jtoind(jt,(x))
+#define oldsize(x)                  jtoldsize(jt,(x))
 #define omask(x,y)                  jtomask(jt,(x),(y))
 #define onf1(x,y)                   jtonf1(jt,(x),(y))
 #define onm(x)                      jtonm(jt,(x))     
@@ -821,8 +826,8 @@
 #define pollard_p_1(x)              jtpollard_p_1(jt,(x))
 #define pollard_rho(x)              jtpollard_rho(jt,(x))
 #define poly1(x)                    jtpoly1(jt,(x),ds(CPOLY))   
-#define poly2(x,y)                  jtpoly2(jt,(x),(y))
-#define poly2a(x,y)                 jtpoly2a(jt,(x),(y))
+#define poly2(x,y)                  jtpoly2(jt,(x),(y),ds(CPOLY))
+#define poly2a(x,y)                 jtpoly2a(jt,(x),(y)) // FIXME: invalid
 #define polymult(x,y,z)             jtpolymult(jt,(x),(y),(z))
 #define pospow(x,y)                 jtpospow(jt,(x),(y))
 #define powop(x,y,z)                jtpowop(jt,(x),(y),(z)) 
@@ -856,6 +861,7 @@
 #define qlogd1(x)                   jtqlogd1(jt,(x))
 #define qlogz1(x)                   jtqlogz1(jt,(x))
 #define qminus(x,y)                 jtqminus(jt,(x),(y))
+#define Qmpq(x)                     jtQmpq(jt,(x))
 #define qplus(x,y)                  jtqplus(jt,(x),(y))
 #define qpow(x,y)                   jtqpow(jt,(x),(y))
 #define qq(x,y)                     jtqq(jt,(x),(y)) 
@@ -989,7 +995,7 @@
 #define rollany(x,y)                jtrollany(jt,(x),(y))
 #define rollbool(x)                 jtrollbool(jt,(x))
 #define rollk(x,y,z)                jtrollk(jt,(x),(y),(z))    
-#define rollksub(x,y)               jtrollksub(jt,(x),(y))    
+#define rollksub(x,y)               jtrollksub(jt,(x),(y))  // FIXME: invalid
 #define rollnot0(x,y)               jtrollnot0(jt,(x),(y))
 #define rollxnum(x)                 jtrollxnum(jt,(x))
 #define root(x,y)                   jtroot(jt,(x),(y)) 
@@ -1256,7 +1262,7 @@
 #define tymesW(x,y)                 jtatomic2((J)((I)jt|JTINPLACEW),(x),(y),ds(CSTAR))
 #define uco1(x)                     jtuco1(jt,(x))
 #define uco2(x,y)                   jtuco2(jt,(x),(y))
-#define unbinr(x0,x1,x2,x3,x4)      jtunbinr(jt,(x0),(x1),(x2),(x3),(x4))
+#define unbinr(x0,x1,x2,x3,x4,x5)   jtunbinr(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define under(x,y)                  jtunder(jt,(x),(y))  
 #define unh(x)                      jtunh(jt,(x))
 #define unhex(x)                    jtunhex(jt,(x))
@@ -1315,7 +1321,7 @@
 #define widthdp(x,y,z)              jtwidthdp(jt,(x),(y),(z)) 
 #define wordil(x)                   jtwordil(jt,(x))
 #define words(x)                    jtwords(jt,(x),ds(CWORDS)) 
-#define x10(x)                      jtx10(jt,(x))
+#define x10(x)                      XpowUU(10,e) // 10^e as a rational number
 #define xbin(x,y)                   jtxbin(jt,(x),(y))
 #define xbinp(x,y)                  jtxbinp(jt,(x),(y))
 #define xc(x)                       jtxc(jt,(x))
@@ -1348,8 +1354,10 @@
 #define xpi(x)                      jtxpi(jt,(x))
 #define xplus(x,y)                  jtxplus(jt,(x),(y))
 #define xpow(x,y)                   jtxpow(jt,(x),(y))
+#define xpowmodinv(x,y)             jtxpowmodinv(jt,(x),(y))
 #define xprimeq(x,y)                jtxprimeq(jt,(x),(y)) 
 #define xprimetest(x)               jtxprimetest(jt,(x))
+#define Xmpzcommon(x)               jtXmpzcommon(jt,(x))
 #define xrand(x)                    jtxrand(jt,(x))
 #define xrem(x,y)                   jtxrem(jt,(x),(y))
 #define xrep(x,y)                   jtxrep(jt,(x),(y))

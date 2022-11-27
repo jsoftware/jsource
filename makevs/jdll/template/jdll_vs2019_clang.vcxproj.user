@@ -29,6 +29,7 @@
     <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\$(targetname).dll</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(userprofile)\jbld\j64\bin\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerEnvironment>IMPORTGMPLIB=1 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx2|x64'">
     <LocalDebuggerCommand>$(userprofile)\jbld\j64\bin\jconsole.exe</LocalDebuggerCommand>

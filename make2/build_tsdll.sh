@@ -1,76 +1,26 @@
 #!/bin/sh
 set -e
 
-realpath()
-{
- oldpath=`pwd`
- if ! cd $1 > /dev/null 2>&1; then
-  cd ${1##*/} > /dev/null 2>&1
-  echo $( pwd -P )/${1%/*}
- else
-  pwd -P
- fi
- cd $oldpath > /dev/null 2>&1
-}
-
-cd "$(realpath $(dirname "$0"))"
+cd "$(dirname "$0")"
 echo "entering `pwd`"
 
-_DEBUG="${_DEBUG:=0}"
-if [ $_DEBUG -eq 1 ] ; then
-OPTLEVEL=" -O2 -g "
-DEBUGDIR="-debug"
-else
-OPTLEVEL=" -O2 "
-DEBUGDIR=
-fi
-
-if [ "`uname`" != "Darwin" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
-jplatform="${jplatform:=raspberry}"
-elif [ "`uname`" = "Darwin" ]; then
-jplatform="${jplatform:=darwin}"
-else
-jplatform="${jplatform:=linux}"
-fi
-if [ "`uname -m`" = "x86_64" ]; then
-j64x="${j64x:=j64avx}"
-elif [ "`uname -m`" = "aarch64" ]; then
-j64x="${j64x:=j64}"
-elif [ "`uname -m`" = "arm64" ] && [ -z "${jplatform##*darwin*}" ]; then
-j64x="${j64x:=j64arm}"
-else
-j64x="${j64x:=j32}"
-fi
+jplatform64=$(./jplatform64.sh)
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
-if [ -z "${jplatform##*darwin*}" ]; then
-if [ -z "${j64x##*j64arm*}" ]; then
-macmin="-arch arm64 -mmacosx-version-min=11"
-else
-macmin="-arch x86_64 -mmacosx-version-min=10.6"
-fi
-fi
+case "$jplatform64" in
+	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
+	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+esac
 
-if [ "x$CC" = x'' ] ; then
-if [ -f "/usr/bin/cc" ]; then
-CC=cc
-else
-if [ -f "/usr/bin/clang" ]; then
-CC=clang
-else
-CC=gcc
-fi
-fi
-export CC
-fi
-# compiler=`$CC --version | head -n 1`
-compiler=$(readlink -f $(command -v $CC) 2> /dev/null || echo $CC)
+CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
+compiler=$(readlink -f $(which $CC) || which $CC)
 echo "CC=$CC"
 echo "compiler=$compiler"
+
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
@@ -90,7 +40,8 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing  \
  -Wno-type-limits \
  -Wno-uninitialized \
  -Wno-unused-parameter \
- -Wno-unused-value "
+ -Wno-unused-value \
+ $CFLAGS"
 
 else
 # clang
@@ -116,13 +67,14 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing \
  -Wno-unused-function \
  -Wno-unused-parameter \
  -Wno-unused-value \
- -Wno-unused-variable "
+ -Wno-unused-variable \
+ $CFLAGS"
 
 fi
 
-case $jplatform\_$j64x in
+case $jplatform64 in
 
-linux_j32) # linux x86
+linux/j32) # linux x86
 TARGET=libtsdll.so
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
@@ -132,55 +84,55 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
 ;;
 
-linux_j6*) # linux intel 64bit
+linux/j6*) # linux intel 64bit
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
-raspberry_j32) # linux raspbian arm
+raspberry/j32) # linux raspbian arm
 TARGET=libtsdll.so
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
-raspberry_j64) # linux arm64
+raspberry/j64) # linux arm64
 TARGET=libtsdll.so
 CFLAGS="$common -march=armv8-a+crc -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
-darwin_j32) # darwin x86
+darwin/j32) # darwin x86
 TARGET=libtsdll.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl -m32 $macmin"
 ;;
 
-darwin_j64) # darwin intel 64bit
+darwin/j64) # darwin intel 64bit
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
 ;;
 
-darwin_j64avx) # darwin intel 64bit
+darwin/j64avx) # darwin intel 64bit
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
 ;;
 
-darwin_j64avx2) # darwin intel 64bit
+darwin/j64avx2) # darwin intel 64bit
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
 ;;
 
-darwin_j64avx512) # darwin intel 64bit
+darwin/j64avx512) # darwin intel 64bit
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
 ;;
 
-darwin_j64arm) # darwin arm
+darwin/j64arm) # darwin arm
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
@@ -193,11 +145,11 @@ esac
 
 echo "CFLAGS=$CFLAGS"
 
-mkdir -p ../bin/$jplatform/$j64x$DEBUGDIR
-mkdir -p obj/$jplatform/$j64x$DEBUGDIR/
-cp makefile-tsdll obj/$jplatform/$j64x$DEBUGDIR/.
-export CFLAGS LDFLAGS TARGET jplatform j64x DEBUGDIR
-cd obj/$jplatform/$j64x$DEBUGDIR/
+mkdir -p ../bin/$jplatform64
+mkdir -p obj/$jplatform64/
+cp makefile-tsdll obj/$jplatform64/.
+export CFLAGS LDFLAGS TARGET jplatform64
+cd obj/$jplatform64/
 make -f makefile-tsdll
 retval=$?
 cd -

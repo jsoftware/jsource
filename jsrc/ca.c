@@ -29,11 +29,18 @@ static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
 static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
  if(!(XNUM&AT(a)))RZ(a=cvt(XNUM,a));
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
- if(!(XNUM&AT(h)))RZ(h=cvt(XNUM,h));
- ox=jt->xmod; jt->xmod=h;
- GAT0(z,XNUM,1,0); XAV(z)[0]=xpow(XAV(a)[0],XAV(w)[0]);
- jt->xmod=ox;
- RNE(z);
+ if (XNUM==AT(h)) { // special case
+  ox=jt->xmod; jt->xmod=h;
+  GAT0(z,XNUM,1,0); XAV(z)[0]=xpowmodinv(XAV(a)[0],XAV(w)[0]);
+  jt->xmod=ox;
+  RNE(z);
+ } else {
+  if(!(XNUM&AT(h)))RZ(h=cvt(XNUM,h));
+  ox=jt->xmod; jt->xmod=h;
+  GAT0(z,XNUM,1,0); XAV(z)[0]=xpow(XAV(a)[0],XAV(w)[0]);
+  jt->xmod=ox;
+  RNE(z);
+ }
 }
 
 #define DMOD 46340         /* <. %: _1+2^31 */
@@ -156,6 +163,9 @@ DF2(atcomp){A z;AF f;
 F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
  av=FAV(a); c=av->id;
+ if (av->fgh[0]) {
+  A f= av->fgh[0];
+ }
  if(unlikely((AT(w)&NOUN)!=0)){  // u@n
   if(c==CEXEC){  // ".@n
    // See if the argument is a string containing a single name.  If so, pass the name into the verb.
@@ -208,7 +218,8 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
   case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&av->fgh[1]==num(0)){f1=jtdigits10; flag&=~VJTFLGOK1;} break;  // "."0@":
   case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;
   case CAMP:
-   x=av->fgh[0]; if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
+   x=av->fgh[0];
+   if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
    if((d==CEXP||d==CAMP&&CEXP==ID(wv->fgh[1]))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==ID(av->fgh[1])){
     h=x; flag+=VMOD; 
     if(d==CEXP){f2=jtmodpow2; flag&=~VJTFLGOK2;} else{f1=jtmodpow1; flag&=~VJTFLGOK1;}
@@ -245,7 +256,6 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop; if v is atomic, switch to the loop that gives a msg if executed on non-atom
  if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==0?jton10:f1; f1=wv->flag&VISATOMIC1?jton10atom:f1; f1=wv->mr==RMAX?on1cell:f1;}
  if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==0?jtupon20:f2; f2=wv->flag&VISATOMIC2?jtupon20atom:f2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2;}
-
   A z=fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv));
   RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
 }

@@ -27,7 +27,7 @@ extern ADECL1( ceilQ,X,Q);
 extern ADECL1(  expX,X,X);
 extern ADECL1( factD,D,D);
 extern ADECL1( factI,I,I);
-extern ADECL1( factQ,X,Q);
+extern ADECL1( factQ,Q,Q);
 extern ADECL1( factX,X,X);
 extern ADECL1( factZ,Z,Z);
 extern ADECL1(floorQ,X,Q);

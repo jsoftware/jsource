@@ -61,9 +61,6 @@
 #define FHRHRESETROOT(b) (FHRHROOT + (((I)1)<<(b)))     // value to set root to after garbage-collection if the allocation was NOT freed
 #define FHRHENDVALUE(b) (FHRHROOTFREE + (((I)1)<<(b)))     // value representing last+1 block in allo.  Subtract FHRHBININCR to get to previous
 
-// the size of the total allocation of the block for w, always a power of 2
-#define alloroundsize(w)  FHRHSIZE(AFHRH(w))
-
 #if 1 || (MEMAUDIT==0 || !_WIN32)  // windows makes free() a void
 #define FREECHK(x) FREE(x)
 #else
@@ -521,12 +518,22 @@ void jtspendtracking(J jt){I i;
 // Make sure all deletecounts start at 0
 static void auditsimverify0(J jt,A w){
  if(!w)R;
- if(AFLAG(w)>>AFAUDITUCX)SEGFAULT;   // hang if nonzero count
+ if(AFLAG(w)>>AFAUDITUCX){
+  fprintf(stderr, "auditsimverify0 w: %llx, AFLAG(w)>>AFUDITUCX: %llx, ", (UI)w, AFLAG(w)>>AFAUDITUCX);
+  fprintf(stderr,"AK(w): %llx (%lli), ", AK(w), AK(w));
+  fprintf(stderr,"AFLAG(w): %llx (%lli), ", AFLAG(w), AFLAG(w));
+  fprintf(stderr,"AT(w): %llx (%lli), ", AT(w), AT(w));
+  fprintf(stderr,"AC(w): %llx (%lli), ", AC(w), AC(w));
+  fprintf(stderr,"AN(w): %llx (%lli), ", AN(w), AN(w));
+  fprintf(stderr,"AR(w): %hhx (%hhu), ", AR(w), AR(w));
+  fprintf(stderr,"AFHRH(w): %hx (%hi)\n", AFHRH(w), AFHRH(w));
+  SEGFAULT;
+ }   // hang if nonzero count
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2 && AC(w)!=ACINPLACE+3))SEGFAULT;   // could go higher but doesn't in our tests
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(jt,ABACK(w));  // check backer
- if(AT(w)&(RAT|XNUM|BOX)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt,CNULLNOERR(*v)); ++v;)}  // check descendants even if nonrecursive
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
+  if((AT(w)&(RAT|XNUM|BOX|SPARSE))>0) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt,CNULLNOERR(QCWORD(*v))); ++v;)}  // check descendants even if nonrecursive
   if((AT(w)&BOX+SPARSE)>0){
 // obsolete    I n=AN(w); I af=AFLAG(w);
 // obsolete    A* RESTRICT wv=AAV(w);  // pointer to box pointers
@@ -627,6 +634,7 @@ R num(0);
 // Verify that block w does not appear on tstack more than lim times
 // nextpushp might start out on a boundary
 void audittstack(J jt){F1PREFIP;
+ static B chkenabled= 0;
 #if BW==64 && MEMAUDIT&2
  if(JT(jt,audittstackdisabled)&1)R;
  A *ttop;
@@ -1485,21 +1493,24 @@ printf("%p-\n",w);
  }else if(unlikely(hrh==FHRHISGMP)){mfgmp(w);  // if GMP allocation, free it through GMP
  }else{    // buffer allocated from malloc
   allocsize = FHRHSYSSIZE(hrh);
+  if(unlikely(hrh==FHRHISGMP)){mfgmp(w);
+  }else{
 #if MEMAUDIT&4
-  DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
+   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
-  allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
+   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES
-  jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block came from
+   jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block came from
 #endif
-  jt->bytes-=allocsize;  // keep track of total allocation
-  jt->malloctotal-=allocsize;
-  jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
+   jt->bytes-=allocsize;  // keep track of total allocation
+   jt->malloctotal-=allocsize;
+   jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
 #if ALIGNTOCACHE
-  FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
+   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else
-  FREECHK(w);  // free the block
+   FREECHK(w);  // free the block
 #endif
+  }
  }
 }
 

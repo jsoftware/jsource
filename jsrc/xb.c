@@ -86,22 +86,29 @@ F2(jtnouninfo2){A z;
 static A jtbrep(J jt,B b,B d,A w);  // forward declaration
 static A jthrep(J jt,B b,B d,A w);
 
-// d & tb are something from the user
+// d: 1 if 64 bit format, 0 if 32 bit format
+// tb: include trailing blank in size for literals
+//   (always 0 if decoding, because GA does that for us,
+//   and always 0 for GMP extended integer memory)
 // t, n, r, s are from w (or INT if sparse)
 // size is rounded to integral # words
-static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
- w=WS(d);
- z=BH(d)+w*r;
- k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t); 
- R z+((n*k+(tb&&t&LAST0)+w-1)&(-w));
+static I bsize(J jt,B d,B tb,I t,I n,I r){
+ I w=WS(d);                                 // SZI for target architecture
+ I z=BH(d)+w*r;                             // bytes in header (1 each: f,t,n,r and r shape words)
+ I k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t);  // bytes occupied by one atom in w
+ I maxpad= ((t&LAST0)&&tb)+w-1;             // largest null terminator and alignment padding for strings
+ I totalsize= z+(n*k+maxpad)&(-w);          // roll sum back to word boundary
+ R totalsize;
 }   /* size in byte of binary representation, rounded up to even # words */
 
+// d: 1 if 64 bit format, 0 if 32 bit format
+// tb: 1 if encoding, 0 if decoding
 // like bsize, but recursive.  Add up the size of this block and the sizes of the descendants
 // size is rounded to integral # words
 static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
- I totalsize = bsize(jt,d,tb,AT(w),AN(w),AR(w),AS(w));
- if((AT(w)&DIRECT)>0)R totalsize;
- I nchildren = AN(w); nchildren<<=((AT(w)>>RATX)&1);  // # subblocks
+ I totalsize = bsize(jt,d,tb&&!ISGMP(w), AT(w), ISGMP(w)?XLIMBLEN(w)*SZI:AN(w), AR(w));
+ I t= AT(w); if((t&DIRECT)>0)R totalsize;
+ I nchildren= AN(w)<<((t>>RATX)&1);  // # subblocks
  DO(nchildren, totalsize+=bsizer(jt,d,tb,C(wv[i]));)
  R totalsize;
 }
@@ -138,25 +145,32 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
  R 1;
 }    /* move n words from u to v */
 
+// d: 1 if 64 bit format in target architecture, 0 if 32 bit
+// b: 1 if reversed bytes in target architecture
 // move the header, return new move point
-static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = toonehottype(AT(w));
-  r=AR(w); f=0;
- RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
- RZ(mvw(BT(d,q),(C*)&extt,1L,b,BU,d,SY_64));
- RZ(mvw(BN(d,q),(C*)&AN(w),1L,b,BU,d,SY_64));
+static C*jtbrephdrq(J jt,B b,B d,A w,C *q){
+ I t=toonehottype(AT(w)), n=ISGMP(w)?XLIMBLEN(w)*SZI:AN(w), r=AR(w), f=0;
+ RZ(mvw(BF(d,q),(C*)&f,1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
+ RZ(mvw(BT(d,q),(C*)&t,1L,b,BU,d,SY_64));
+ RZ(mvw(BN(d,q),(C*)&n,1L,b,BU,d,SY_64));
  RZ(mvw(BR(d,q),(C*)&r,1L,b,BU,d,SY_64));  // r is an I
  RZ(mvw(BS(d,q),(C*) AS(w),r, b,BU,d,SY_64));
  R BV(d,q,r);
 }
 
+// d: 1 if 64 bit format, 0 if 32 bit format
+// b: 1 if reversed bytes
 // move the header for block w to the preallocated block y
 static C*jtbrephdr(J jt,B b,B d,A w,A y){R jtbrephdrq(jt,b,d,w,CAV(y));}
 
+// d: 1 if 64 bit format, 0 if 32 bit format
+// b: 1 if reversed bytes
+// binrep implementation for sparse array w
 static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  wp=PAV(w);
  n=1+sizeof(P)/SZI; kk=WS(d);
  GATV0(z,BOX,n,1); zv=AAV(z);
- GATV0(y,LIT,bsize(jt,d,1,INT,n,AR(w),AS(w)),1);
+ GATV0(y,LIT,bsize(jt,d,1&&!ISGMP(w),INT,n,AR(w)),1);
  v=brephdr(b,d,w,y);
  RZ(mvw(v,(C*)&c,1L,BU,b,d,SY_64));  /* reserved for flag */
  zv[0]=incorp(y); m=AN(y);
@@ -167,14 +181,16 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  R raze(z);
 }    /* 3!:1 w for sparse w */
 
-// copy data into bin/hex rep
-static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
+// d: 1 if 64 bit format, 0 if 32 bit format
+// b: 1 if reversed bytes
+// copy data from w into bin/hex rep *zv (top level header already in place)
+static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
  C *origzv=zv;  // remember start of block
  zv=jtbrephdrq(jt,b,d,w,zv);   // fill in the header, advance pointer to after it
  C* u=CAV(w);  // input pointer
- I n=AN(w);  // #input atoms
  I t=AT(w);  // input type
- klg=bplg(t); kk=WS(d);
+ I n= ISGMP(w) ?XLIMBLEN(w)*SZI :AN(w);  // #input atoms
+ I klg=bplg(t), kk=WS(d);
  if((t&DIRECT)>0){
   I blksize=bsizer(jt,d,1,w);  // get size of this block (never needs recursion)
   switch(CTTZ(t)){
@@ -183,13 +199,14 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
   case FLX:   RZ(mvw(zv,u,n,  b,BU,1,1    )); break;
   case CMPXX: RZ(mvw(zv,u,n+n,b,BU,1,1    )); break;
   default:
-   // 1- and 2-byte C4T types, all of which have LAST0.  We need to clear the last
+   // 1- and 2-byte C4T types, all of which have LAST0*.  We need to clear the last
    // bytes, because the datalength is rounded up in bsize, and thus there are
    // up to 3 words at the end of y that will not be copied to.  We clear them to
    // 0 to provide repeatable results.
    // Make sure there is a zero byte if the string is empty
+   // * an exception is that LIT is also used for libgmp pseudo-arrays, without LAST0
    {I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
-   mvc(suffsize,(origzv+blksize)-suffsize,1,MEMSET00);   // clear suffix
+   if (!ISGMP(w))mvc(suffsize,(origzv+blksize)-suffsize,1,MEMSET00);   // clear suffix
    MC(zv,u,n<<klg); break;}      // copy the valid part of the data
   }
   R origzv+blksize;  // return next output position
@@ -202,21 +219,27 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  C* zvx=zv; zv += n*kk;  // save start of index, step over index
  // move in the blocks: first the offset, writing over the indirect block, then the data
  // the offsets are all relative to the start of the block, which is origzv
- DO(n, I offset=zv-origzv; RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64)); zvx+=kk; RZ(zv=jtbrepfill(jt,b,d,C(wv[i]),zv));)
+ DO(n, 
+  I offset=zv-origzv;
+  RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64));
+  zvx+=kk;
+  RZ(zv=jtbrepfill(jt,b,d,C(wv[i]),zv));
+ )
  R zv;
 }    /* b iff reverse the bytes; d iff 64-bit */
 
+// d: 1 if 64 bit format, 0 if 32 bit format
+// b: 1 if reversed bytes
 // main entry point for brep.  First calculate the size by a (recursive) call; allocate; then make a (recursive) call to fill in the block
-static A jtbrep(J jt,B b,B d,A w){A y;I t;
+static A jtbrep(J jt,B b,B d,A w){
  ARGCHK1(w);
- t=AT(w); 
+ I t=AT(w); 
  if(unlikely(ISSPARSE(t)))R breps(b,d,w);  // sparse separately
- GATV0(y,LIT,bsizer(jt,d,1,w),1);   // allocate entire result
+ A y;I sz=bsizer(jt,d,1,w);GATV0(y,LIT,sz,1); // allocate entire result
  RZ(jtbrepfill(jt,b,d,w,CAV(y)));   // fill it
  R y;  // return it
 }
 
-#if 0
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];
  RZ(y=brep(b,d,w));
  n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
@@ -225,26 +248,6 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
  RETF(z);
 }
-#else
-static A jthrep(J jt,B b,B d,A w){A y;C c,*hex="0123456789abcdef",*u,*v;I n,s[2],t;
- ARGCHK1(w);
- t=AT(w); 
- if(unlikely(ISSPARSE(t))){A z;  // sparse separately
-  RZ(y=breps(b,d,w));
-  n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
-  GATVR(z,LIT,2*n,2,s);  
-  u=CAV(y); v=CAV(z); 
-  DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
-  RETF(z);
- }
- n=bsizer(jt,d,1,w); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
- GATVR(y,LIT,2*n,2,s);   // allocate entire result
- RZ(jtbrepfill(jt,b,d,w,n+CAV(y)));   // fill brep starting from the middle of buffer
- u=n+CAV(y); v=CAV(y); 
- DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];);   // in-place translation to hex
- R y;  // return it
-}
-#endif
 
 F1(jtbinrep1){ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
 F1(jthexrep1){ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 w */
@@ -281,43 +284,58 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
 }
 
 // create A from 3!:1 form
-static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,n,p,r,*s,t,*vv;
+static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  ASSERT(m>BH(d),EVLENGTH);
- RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d));
- RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
- RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
- v=BV(d,w,r);
+ I t; RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d));
+ I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
+ I r; RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
+ C*v=BV(d,w,r);
  ASSERT(t==LOWESTBIT(t),EVDOMAIN);
  t=fromonehottype(t);
  ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);
- p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n; 
+ I p=bsize(jt,d,0,t,n,r); 
+ I e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
- if(likely(!ISSPARSE(t))){GA00(z,t,n,r)}else{GASPARSE0(z,t,n,r)} s=AS(z);
- RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
- j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
- ASSERT(j==n,EVLENGTH);
- if(t&BOX+XNUM+RAT+SPARSE){GATV0(y,INT,e,1); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
- if(t&BOX+XNUM+RAT){A*zv=AAV(z);I i,k=0,*iv;
-  RZ(y=indexof(y,y)); iv=AV(y);
-  for(i=0;i<e;++i){
+ A z; if(likely(!ISSPARSE(t))){
+  if(likely(!g)){
+   GA00(z,t,n,r);
+  }else{
+   GAGMP(z,n); if(ACISPERM(AC(z)))R z;
+  } }else{
+  GASPARSE0(z,t,n,r)
+ }
+ I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d));
+ I j=1; DO(r, ASSERT(g ?llabs(s[i])*SZI<=n :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
+ if (g) {AFHRH(z)= FHRHISGMP;}
+ else {ASSERT(j==n,EVLENGTH);}
+ A y; I *vv; if(t&BOX+XNUM+RAT+SPARSE){
+  GATV0(y,INT,e,1);
+  vv=AV(y);
+  RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
+ if(t&BOX+XNUM+RAT){
+  RZ(y=indexof(y,y));
+  A*zv= AAV(z);
+  for(I i=0,k=0,*iv=AV(y);i<e;++i){
    j=vv[i]; 
    ASSERT(BETWEENO(j,0,m),EVINDEX);
    if(i>iv[i])zv[i]=zv[iv[i]];
-   else{while(k<e&&j>=vv[k])++k; zv[i]=incorp(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
+   else{while(k<e&&j>=vv[k])++k;
+   zv[i]=incorp(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j),!!(t&XNUM+RAT)));}
  }}else if(unlikely(ISSPARSE(t))){P*zp=PAV(z);
-  j=vv[1]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
-  j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
-  j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j)));
-  j=vv[4]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,x,unbinr(b,d,pre601,m    -j,(A)(u+j)));
+  j=vv[1]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j),!!(t&XNUM+RAT)));
+  j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j),!!(t&XNUM+RAT)));
+  j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j),!!(t&XNUM+RAT)));
+  j=vv[4]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,x,unbinr(b,d,pre601,m    -j,(A)(u+j),!!(t&XNUM+RAT)));
  }else if(n)switch(CTTZNOFLAG(t)){
   case B01X:  {B c,*zv=BAV(z); DO(n, c=v[i]; ASSERT(c==C0||c==C1,EVDOMAIN); zv[i]=c;);} break; 
   case SBTX:
   case INTX:  RZ(mvw(CAV(z),v,n,  BU,b,SY_64,d)); break;
   case FLX:   RZ(mvw(CAV(z),v,n,  BU,b,1,    1)); break;
   case CMPXX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;
-  default:   e=n<<bplg(t); ASSERTSYS(e<=allosize(z),"unbinr"); MC(CAV(z),v,e);
+  default: e=n<<bplg(t);
+   ASSERTSYS(e<=allosize(z),"unbinr"); MC(CAV(z),v,e);
  }
  RE(z); RETF(z);
 }    /* b iff reverse the bytes; d iff argument is 64-bits */
@@ -331,10 +349,10 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
  ASSERT(m>=8,EVLENGTH);
  q=(A)AV(w);
  switch(CAV(w)[0]){
-  case (C)0xe0: R unbinr(0,0,0,m,q);
-  case (C)0xe1: R unbinr(1,0,0,m,q);
-  case (C)0xe2: R unbinr(0,1,0,m,q);
-  case (C)0xe3: R unbinr(1,1,0,m,q);
+  case (C)0xe0: R unbinr(0,0,0,m,q,0);
+  case (C)0xe1: R unbinr(1,0,0,m,q,0);
+  case (C)0xe2: R unbinr(0,1,0,m,q,0);
+  case (C)0xe3: R unbinr(1,1,0,m,q,0);
  }
  /* code to handle pre 601 headers */
  d=1; v=8+CAV(w); DQ(8, if(CFF!=*v++){d=0; break;});       /* detect 64-bit        */
@@ -353,7 +371,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
   }
   b=b||n!=c;
  }
- R unbinr(b,d,1,m,q);
+ R unbinr(b,d,1,m,q,!(!t&XNUM+RAT));
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
 // 3!:4

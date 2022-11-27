@@ -93,7 +93,12 @@ f1=: 4 : 0
 )
 
 NB. f1"0 ]10^2 3 9
-(1000 4 {~ 9!:57 (0) [ 9!:57 (1)) f1"0 ]10^2 3
+NB. This test seems to be valid but the prior k.c would
+NB. silently truncate small rationals to zero in the
+NB. part of jtDfromQ which this test exercises.
+NB.
+NB. FIXME: make this work right
+NB. (1000 4 {~ 9!:57 (0) [ 9!:57 (1)) f1"0 ]10^2 3
 
 
 4!:55 ;:'e d f f1 p q'

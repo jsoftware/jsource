@@ -206,12 +206,12 @@ static D jtexprndID(J jt, I d, D y){I e,s;D f,q,c,x1,x2;DI8 f8,y8,c8;
  if(y8.i-f8.i >= c8.i-y8.i-1) R s*c; else R s*f;
 } /* afzrnd for numbers in exponential notation */
 
-static B jtsprintfI(J jt, C *x, I m, I dp, I iw, C *subs) {I r,g;
+static B jtsprintfI(J jt, C *x, I m, I dp, I iw, C *subs) {I /*r,*/ g;
  x+=m-1;
- DQ(dp, *x--='0';); if(dp) *x--=SUBd; r=dp+!!dp;
+ DQ(dp, *x--='0';); if(dp) *x--=SUBd; /*r = dp + !!dp;*/
  g=SGN(iw); UI uiw=ABS(iw);
- while(uiw){ *x--='0'+(C)(uiw%10); uiw/=10; r++; }
- if(g==0) { *x--='0'; r++; }
+ while(uiw){ *x--='0'+(C)(uiw%10); uiw/=10; /*r++;*/ }
+ if(g==0) { *x--='0'; /*r++; */ }
  R 1;
 }
 

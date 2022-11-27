@@ -65,24 +65,23 @@ static NUMH(jtnumi){UI neg;UI j;  // must be UI to avoid signed overflow
  R 1+REPSGN((I)(j&(j-neg)));  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
 }     /* called only if SY_64 */
 
-static NUMH(jtnumx){A y;B b,c;C d;I j,k,m,*yv;X*v;
- v=(X*)vv;
- d=s[n-1]; b='-'==s[0]; c='x'==d||'r'==d; s+=b;
- if('-'==d){if(!(2>=n))R 0; if(!(*v=rifvs(vci(1==n?XPINF:XNINF))))R 0; R 1;}
- n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
- GATV0(y,INT,m,1); yv=m+AV(y);
- DQ(m, j=0; DQ(k, I dig=*s++; if(!BETWEENC(dig,'0','9'))R 0; j=10*j+(dig-'0');); *--yv=b?-j:j; k=XBASEN;);
- if(!(*v=yv[m-1]?y:mkwris(xstd(y))))R 0;  // this stores into the extended result
+static NUMH(jtnumxTEMP) { // n, s, vv NB. n is length of s, we put result in vv
+ GMP;                 // nonce error if libgmp not available
+ n-=s[n-1]=='x';      // if s ends in 'x' make that the end
+ C sav= s[n]; s[n]=0; // store NUL after string, save the character that was there
+ mpz_t mpy; if (jmpz_init_set_str(mpy, s, 10)) {s[n]= sav; R0;}
+ X y= Xmp(y);         // parsed extended integer (if we didn't fail)
+ s[n]= sav;           // restore buffer s to orig state (might be unnecessary)
+ ASSERT(!(AFLAG(y)&AFRO),EVWSFULL); // error if we used an emergency buffer
+ // FIXME: need that EVWSFULL test generically applied in all Xmp contexts
+ *(X*)vv= y;          // return the A block for the number
+ R 1;                 // good return
+}
+static NUMH(jtnumx) {
+ if (!jtnumxTEMP(jt, n, s, vv)) R0;
+ XPERSIST(*(X*)vv);  // cancel death warrant
  R 1;
 }
-
-static X jtx10(J jt,I e){A z;I c,m,r,*zv;
- m=1+e/XBASEN; r=e%XBASEN;
- GATV0(z,INT,m,1); zv=AV(z);
- DQ(m-1, *zv++=0;);
- c=1; DQ(r, c*=10;); *zv=c;
- R z;
-}     /* 10^e as a rational number */
 
 static NUMH(jtnume){C*t,*td,*te;I e,ne,nf,ni;Q f,i,*v,x,y;
  v=(Q*)vv;
@@ -99,19 +98,29 @@ static NUMH(jtnume){C*t,*td,*te;I e,ne,nf,ni;Q f,i,*v,x,y;
 
 static NUMH(jtnumr){C c,*t;I m,p,q;Q*v;
  v=(Q*)vv;
- m=(t=memchr(s,'r',n))?t-s:n; if(!(numx(m,s,&v->n)))R 0; v->d=iv1;
- if(t){
-  c=s[n-1]; if(!('r'!=c&&'x'!=c))R 0;
-  if(!(numx(n-m-1,s+m+1,&v->d)))R 0;
-  p=AV(v->n)[0]; q=AV(v->d)[0]; 
-  if(!(p!=XPINF&&p!=XNINF||q!=XPINF&&q!=XNINF))R 0;
-  RE(*v=qstd(*v));
+ if('-'==s[0]) { // infinity?
+  if(!s[1]){v->n=X1; v->d=X0; R 1;} // _
+  if('-'==s[1]){ASSERT(!s[2], EVILNUM); v->n=X_1; v->d=X0; R 1;} // __
  }
+ m=(t=memchr(s,'r',n))?t-s:n; if(!(jtnumxTEMP(jt,m,s,&v->n)))R 0; v->d=X1;
+ if(t){
+  c=s[n-1]; if('r'==c||'x'==c)R 0; // '2r' and '2r3x' are invalid
+  C*d= s+m+1;
+  if('-'==d[0]) {
+   if (!d[1] || '-'==d[1] && !d[2]) {*v= Q0; R 1;}
+   if (!jtnumxTEMP(jt,n-m-1,d,&v->d))R 0;
+   RE(*v=qstd(*v));
+   R 1;
+  }
+  if(!(jtnumxTEMP(jt,n-m-1,d,&v->d)))R 0;
+ }
+ RE(*v=qstd(*v));
  R 1;
 }
 
 static NUMH(jtnumq){B b=0;C c,*t;
- t=s; DQ(n, c=*t++; if(c=='e'||c=='.'){b=1; break;});
+ t=s;
+ DQ(n, c=*t++; if(c=='e'||c=='.'){b=1; break;});
  R b?nume(n,s,vv):numr(n,s,vv);
 }
 
@@ -209,6 +218,9 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
    // If any . or e found, or 'x' not at the end, treat as float, with exact modes cleared.  LIT could still be set for 1x2
    // Thus, 4. 1r3 produces float, while 4 1r3 produces rational
    e=s[0]; DO(n, c=e; e=s[i+1]; if(c=='.'||c=='e'||c=='x'&&e){R ret&~(XNUM+RAT+INT);});  // must look at stopper because comma strings have multiple NULs at the end
+   if (XNUM&ret) {
+    e=s[0]; DO(n, c=e; e=s[i+1]; if(!e&&'-'==c){R ret|RAT;});  // x:_ or x:__
+   }
   }
   R ret;
  }

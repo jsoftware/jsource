@@ -5,6 +5,7 @@
 
 #include "j.h"
 
+extern A jtthq1(J jt, Q y);
 // w is a rational matrix
 DF1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,self);
@@ -18,7 +19,7 @@ DF1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
  A *old=jt->tnextpushp;
  for(j=0;j<r1;++j){
   v=QAV(w);
-  e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
+  e=-1; u=v+c*j+j; DO(r-j, if(XSGN(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   ASSERT(0<=e,EVDOMAIN);
   x=v+c*j; 
   if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;);} /* interchange rows e and j */
@@ -40,18 +41,18 @@ static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
  A *old=jt->tnextpushp;
  for(j=0;j<r;++j){
   v=QAV(w); 
-  e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
+  e=-1; u=v+c*j+j; DO(r-j, if(XSGN(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   if(0>e)R cvt(RAT,num(0));
   x=v+c*j;
   if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;); g=-g;}  /* interchange rows e and j */
-  i=XDIG(x[j].n); if(i==XPINF||i==XNINF)R mark;
+  if(0==XSGN(x[j].d))R mark;
   for(i=j+1;i<r;++i){
    u=v+c*i;
-   if(XDIG(u[j].n)){p=qdiv(u[j],x[j]); ra(p.n); ra(p.d); for(k=j+1;k<r;++k){Q z=qminus(u[k],qtymes(p,x[k]));INSTALLRAT(w,u,k,z);} fa(p.n); fa(p.d);}
+   if(XSGN(u[j].n)){p=qdiv(u[j],x[j]); ra(p.n); ra(p.d); for(k=j+1;k<r;++k){Q z=qminus(u[k],qtymes(p,x[k]));INSTALLRAT(w,u,k,z);} fa(p.n); fa(p.d);}
   }
   if(!gc3(&w,0L,0L,old))R 0;  // use simple gc3 to ensure all changes use the stack, since w is modified inplace.  Alternatively could turn off inplacing here
  }
- d=0<g?*v:qminus(zeroQ,*v); u=v+1+c; DQ(r-1, d=qtymes(d,*u); u+=1+c;);
+ d=0<g?*v:qminus(Q0,*v); u=v+1+c; DQ(r-1, d=qtymes(d,*u); u+=1+c;);
  RE(0);
  GAT0(z,RAT,1,0); QAV(z)[0]=d; R z;
 }    /* determinant on rational matrix; works in place */

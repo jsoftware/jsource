@@ -1,6 +1,7 @@
 NB. test script utilities -----------------------------------------------
 
 cocurrent 'base'
+
 9!:19[2^_44   NB. default but some tests require a larger ct
 NB. set NORESETSTABLE to 1 to prevent restoring symbol table between files
 GLOBALSYMBOL=: 0 s: 10
@@ -424,12 +425,31 @@ load'jd'
 jdtests_jd_''
 )
 
+allorcmdline=: 3 :0
+  NB. testfiles gives an empty result for strings like jconsole and tsu.ijs
+  args=. ARGV}.~'g'i.~{.@>ARGV
+  if. #args do. 
+    files=. ;testfiles L:0 args
+    if. #files do.
+      echo }.@(}.~i:&'/')each files
+      files
+    else.
+      echo 'no testfiles found for:'
+      echo args
+      NB. fail
+    end.
+  else.
+    ddall-.((testpath,'g') , ,&'.ijs')&.>;:'131 cip 520 sp 7x tdot1 3x tdot2 tdot3 tdot4 tdot t' NB. temporarily ignore threading
+  end.
+)
+
 echo 0 : 0
 see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 
    RUN  ddall  NB. report scripts that fail
    RECHO ddall NB. echo script names as run and final count of failures
 )
+
 
 empty 0&T.^:(0=1&T.) ::1:''
 echo 9!:14''

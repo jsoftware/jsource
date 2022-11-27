@@ -648,18 +648,45 @@ DF2(jtrollk){A g,z;V*sv;
  RETF(rollksub(a,vi(w)));
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
-static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
- n=AN(x); xv=AV(x);  // number of Digits in x, &first digit
- m=n;  // m is number of result digits, same as input.  If input is 10000... this will always be 1 digit too many, but that's not worth checking for
- GATV0(q,INT,m,1); qv=AV(q);  // allocate place to hold base, qv-> result digits
- DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
- // loop to roll random values until we get one that is less than x
- NOUNROLL do{
-  RZ(z=roll(q)); if(unlikely(ISDENSETYPE(AT(z),B01)))RZ(z=cvt(INT,z)); zv=AV(z);  // roll one value in each Digit position; if by chance it comes back Boolean, input must have been single digit 1, convert to ,1
-  DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
- }while(b);  // loop till b=0
- j=m-1; NOUNROLL while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
- EPILOG(z);
+static X jtxrand(J jt,X x){PROLOG(0090);
+ if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
+ if (unlikely(1>(XSGN(x)))) SEGFAULT; // x must be positive -- anything else is a coding error
+ I n=XLIMBLEN(x), *xv=AV(x);  // number of Digits in x, &first digit
+ X q= GAGMP(q, n*SZI); UI*qv= UIAV1(q); // result goes here
+ B big= 1; I prev=0; A halflimb= sc(1LL<<SZI*4);
+#define rollpart(t) \
+       1==t ?0 \
+            :2==t ?(UI)(CAV0(roll(sc(2)))[0]) \
+	                 :(UI)(IAV0(roll(sc(t)))[0])
+#define rollhalf() ((UI)IAV0(roll(halflimb))[0])
+ for (I j= n-1; j>=0; j--) {
+  UI limb= (UI)xv[j];
+  if (big) { // does our limit still matter here?
+   I hi= limb>>SZI*4;
+   I lo= limb&(1LL<<SZI*4)-1;
+   I rhi= 0, rlo;
+   if (!big||prev>hi) hi= 1LL<<SZI*4;
+   prev= 1;
+   if (hi) {
+    rhi= rollpart(hi);
+    big= rhi==hi-1;
+   }
+   if (!big||!lo) lo= 1LL<<SZI*4;
+   rlo= rollpart(lo);
+   big= big&&rlo==lo-1;
+   qv[j]= (rhi<<SZI*4)+rlo;
+  } else { // we're plenty small, just fill in the rest:
+   qv[j]= (rollhalf()<<SZI*4)+rollhalf();
+  }
+ }
+ q->s[0]= 0;
+ for (I j= n-1; j>=0; j--) {
+  if (qv[j]) {
+   q->s[0]= 1+j;
+   break;
+  }
+ }
+ EPILOG(q);
 }    /* ?x where x is a single strictly positive extended integer */
 
 static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
@@ -667,12 +694,12 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
  // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
- DQ(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
+ DQ(n, x=*v++; d=XSGN(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=xrand(x)) else{*u++=X0; c=1;});
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
   RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);
-  DQ(n, x=*v++; if(!XDIG(x))*d=sh?NEXTD1:NEXTD0; ++d;);
+  DQ(n, x=*v++; if(!XSGN(x))*d=sh?NEXTD1:NEXTD0; ++d;);
  } 
  R z;
 }    /* ?n$x where x is extended integer */
@@ -861,40 +888,41 @@ DF2(jtrollkdot){A g,z;V*sv;
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];
  if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(df2(z,a,w,g));
  RETF(rollksub(a,vi(w)));
-}    /* ?@$ or ?@# or [:?$ or [:?# */
+}    /* ?.@$ or ?.@# or [:?.$ or [:?.# */
 
 #undef xrand
 #define xrand(w) jtxranddot(jt,(w))
-static X jtxranddot(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
- n=AN(x); xv=AV(x);  // number of Digits in x, &first digit
- m=n;  // m is number of result digits, same as input.  If input is 10000... this will always be 1 digit too many, but that's not worth checking for
- GATV0(q,INT,m,1); qv=AV(q);  // allocate place to hold base, qv-> result digits
- DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
+#define XBASE 10000 /* flash from the past */
+static X jtxranddot(J jt,X x){PROLOG(0090); // A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
+ if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
+ if (unlikely(1>(XSGN(x)))) SEGFAULT; // x must be positive -- anything else is a coding error
+ I n= oldsize(x); // number of "old big digits" to represent x
+ A q; GATV0(q,INT,n,1); I*qv= AV(q); // range of values which might appear at each digit position
+ A xbase= scx(XgetI(XBASE)); RZ(xbase);
  // loop to roll random values until we get one that is less than x
- NOUNROLL do{
-  RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
-  DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
- }while(b);  // loop till b=0
- j=m-1; NOUNROLL while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
- EPILOG(z);
-}    /* ?x where x is a single strictly positive extended integer */
+ DO(n-1, qv[i]= XBASE;); qv[n-1]= IgetX(Xfdiv_qXX(x, XpowUU(XBASE, n-1)));
+ NOUNROLL while(1){
+  A z= poly2(roll(q), xbase); RZ(z); X rz= XAV(z)[0];
+  if (0<icmpXX(x,rz)) {EPILOG(rz);}
+ }
+}    /* ?.x where x is a single strictly positive extended integer */
 
 #undef rollxnum
 #define rollxnum(w) jtrollxnumdot(jt,(w))
 static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
- if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to numeric
+ if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to integer
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
  // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
- DQ(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
+ DQ(n, x=*v++; d=XSGN(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=X0; c=1;});
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
   RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);
-  DQ(n, x=*v++; if(!XDIG(x))*d=sh?NEXTD1:NEXTD0; ++d;);
+  DQ(n, x=*v++; if(!XSGN(x))*d=sh?NEXTD1:NEXTD0; ++d;);
  } 
  R z;
-}    /* ?n$x where x is extended integer */
+}    /* ?.n$x where x is extended integer */
 
 #undef rollbool
 #define rollbool(w) jtrollbooldot(jt,(w))
@@ -904,7 +932,7 @@ static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
  if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
  else  DQ(n, *u++=*v++?0.0:NEXTD0;)
  R z;
-}    /* ?n$x where x is boolean */
+}    /* ?.n$x where x is boolean */
 
 // If w is all 2, deal Booleans, with each each bit of a random number providing a single Boolean
 // Result is Boolean array, or mark if w is not all 2
@@ -940,7 +968,7 @@ static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
  t=NEXT;  // Get random # for bits
  B*c=(B*)zv; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
  *b=1; R z;
-}    /* ?n$x where x is 2, maybe */
+}    /* ?.n$x where x is 2, maybe */
 
 #undef rollnot0
 #define rollnot0(w,b) jtrollnot0dot(jt,(w),(b))
@@ -956,7 +984,7 @@ static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->
    s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=t%m;
  }}
  *b=1; R z;
-}    /* ?n$x where x is not 0, maybe */
+}    /* ?.n$x where x is not 0, maybe */
 
 #undef rollany
 #define rollany(w,b) jtrollanydot(jt,(w),(b))
@@ -969,7 +997,7 @@ static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rng
   else{s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=(D)(t%m);}
  }
  *b=1; R z;
-}    /* ?s$x where x can be anything and 1<#x */
+}    /* ?.s$x where x can be anything and 1<#x */
 
 #undef roll
 #define roll(w) jtrolldot(jt,(w))

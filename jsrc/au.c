@@ -5,7 +5,6 @@
 
 #include "j.h"
 
-
 static I jtfdepger(J jt,A w){R 0;
 }
 

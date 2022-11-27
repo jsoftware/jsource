@@ -185,173 +185,174 @@ static KF1F(jtDfromZ){D d,*x;I n;Z*v;
  R 1;
 }
 
-static KF1(jtXfromB){B*v;I n,u[1];X*x;
- n=AN(w); v=BAV(w); x=(X*)yv;
- DO(n, *u=v[i]; x[i]=rifvsdebug(vec(INT,1L,u)););           
+static KF1(jtXfromB){ // array content yv as X from array w of B
+ GMP; X*y= (X*)yv; I wn= AN(w); B*wv= BAV(w);
+ DO(wn, y[i]= wv[i] ?X1 :X0;)
  R !jt->jerr;
 }
 
-static KF1(jtXfromI){B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
- n=AN(w); v=AV(w); x=(X*)yv;
- for(i=0;i<n;++i){
-  c=v[i]; b=c==IMIN; d=b?-(1+c):ABS(c); j=0;
-  DO(XIDIG, u[i]=r=d%XBASE; d=d/XBASE; if(r)j=i;);
-  ++j; *u+=b;
-  if(0>c)DO(XIDIG, u[i]=-u[i];);
-  x[i]=rifvsdebug(vec(INT,j,u));
- }
+static KF1(jtXfromI){ // array content yv as X from array w of I
+ GMP; X*y= (X*)yv; I wn= AN(w), *wv= AV(w);
+ DO(wn, I wi= wv[i];
+	 if (unlikely(!wi)) y[i]= X0;
+  else if (unlikely(1==wi)) y[i]= X1;
+  else if (unlikely(-1==wi)) y[i]= X_1;
+  else y[i]= XgetI(wi);
+ );
  R !jt->jerr;
 }
 
-static X jtxd1(J jt,D p, I mode){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
+static X jtxd1(J jt, D p, I mode) {PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  switch(mode){
   case XMFLR:   p=e;                            break;
-  case XMCEIL:  p=jceil(p);                      break;
+  case XMCEIL:  p=jceil(p);                     break;
   case XMEXACT: ASSERT(TEQ(p,e),EVDOMAIN); p=e; break;
   case XMEXMT:  if(!TEQ(p,e))R vec(INT,0L,&iotavec[-IOTAVECBEGIN]);
  }
- if(p== inf)R vci(XPINF);
- if(p==-inf)R vci(XNINF);
- GAT0(t,INT,30,1); u=AV(t); m=0; d=ABS(p); 
- NOUNROLL while(0<d){
-  q=jfloor(d/XBASE); r=d-q*XBASE; u[m++]=(I)r; d=q;
-  if(m==AN(t)){RZ(t=ext(0,t)); u=AV(t);}
- }
- if(!m){u[0]=0; ++m;}else if(0>p)DO(m, u[i]=-u[i];);
- A z=xstd(vec(INT,m,u));
- EPILOG(z);
+ ASSERT(p!= inf, EWRAT);
+ ASSERT(p!=-inf, EWRAT);
+ mpz_t mpz; jmpz_init_set_d(mpz, p); X z= Xmp(z);
+ EPILOG(z); // FIXME: haven't properly implemented gc support for X
 }
 
-static KF2(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=rifvsdebug(xd1(v[i],mode));); R !jt->jerr;}
+static KF2(jtXfromD){ // array content yv as X from array w of D
+ GMP; X*y= (X*)yv; I wn= AN(w); D*wv= DAV(w); mpz_t mpw;
+ DO(wn, D wvi= wv[i]; ASSERT(!(inf==wvi||infm==wvi),EWIRR); jmpz_init_set_d(mpw, wvi); y[i]= Xmp(w););
+ R !jt->jerr;
+}
 
-static KF1(jtBfromX){A q;B*x;I e;X*v;
- v=XAV(w); x=(B*)yv;
- DO(AN(w), q=v[i]; e=AV(q)[0]; if((AN(q)^1)|(e&-2))R 0; x[i]=(B)e;);
+static KF1(jtBfromX){ // array content yv as B from array w of X
+ B*y= yv; I wn= AN(w); X*wv= XAV(w); 
+ DO(wn, X W= wv[i];
+  if (0>XSGN(W)) R0;
+  if (1<XSGN(W)) R0;
+  if (0==XSGN(W)) *y++= 0;
+  else if (1==XLIMB0(W)) *y++= 1;
+  else R0;
+ );
  R 1;
 }
 
-static KF1(jtIfromX){I a,i,m,n,*u,*x;X c,p,q,*v;
- v=XAV(w); x=(I*)yv; n=AN(w);
- if(!(p=xc(IMAX)))R 0; if(!(q=xminus(negate(p),xc(1L))))R 0;
+static KF1(jtIfromX){
+ I *y=yv; X*wv=XAV(w);
+ DO(AN(w), X W= wv[i];
+  if (1==XSGN(W)) // w[i] is positive
+   if (IMAX<XLIMB0(W)) R 0; else *y++= XLIMB0(W);
+  else if (-1==XSGN(W)) // w[i] is negative
+   if ((UI)-IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
+  else if (0==XSGN(W)) *y++= 0; // w[i] is 0
+  else R0; // w[i] is too big
+ )
+ R 1;
+}
+
+static KF1(jtDfromX){
+ D*y=yv; X*wv=XAV(w);
+ DQ(AN(w), X W=*wv++; mpX(W); *y++= jmpz_get_d(mpW););
+ R 1;
+}
+
+static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DQ(AN(w), *x++=*v++; *x++=X1;); R 1;}
+
+static KF2(jtQfromD){
+ GMP; if(!(w))R 0; /* FIXME: why do we need this here, but not other conversion routines? */
+ I n=AN(w), i; D*wv=DAV(w), t; Q*x=(Q*)yv, q; S*tv=3*C_LE+(S*)&t;
  for(i=0;i<n;++i){
-  c=v[i]; if(!(1!=xcompare(q,c)&&1!=xcompare(c,p)))R 0;
-  m=AN(c); u=AV(c)+m-1; a=0; DO(m, a=*u--+a*XBASE;); x[i]=a;
- }
- R 1;
-}
-
-static KF1(jtDfromX){D d,*x=(D*)yv/*,dm,dp*/;I c,i,n,*v,wn;X p,*wv;
-// dp=1.7976931348623157e308; dm=-dp;
- wn=AN(w); wv=XAV(w);
- for(i=0;i<wn;++i){
-  p=wv[i]; n=AN(p); v=AV(p)+n-1; c=*v;
-  if     (c==XPINF)d=inf; 
-  else if(c==XNINF)d=infm; 
-  else{
-   d=0.0; DQ(n, d=*v--+d*XBASE;);
-  }
-  x[i]=d;
- } 
- R 1;
-}
-
-static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DQ(AN(w), *x++=*v++; *x++=iv1;); R 1;}
-
-static KF2(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
- if(!(w))R 0;
- n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*C_LE+(S*)&t;  // tv points to exponent
- for(i=0;i<n;++i){
-  t=wv[i]; 
+  t=wv[i]; q.d= X1;
   ASSERT(!_isnan(t),EVNAN);
-  if(neg=0>t)t=-t; q.d=iv1;
-  if     (t==inf)q.n=vci(XPINF);
-  else if(t==0.0)q.n=iv0;
-  else if(jt->cct==1.0 && mode==XMEXACT){
+  B neg; if(neg=0>t)t=-t;
+  if     (t==inf) q= Q_;
+  else if(t==0.0) q= Q0;
+  else if(1.0==jt->cct && XMEXACT==mode){
    // x:!.0 - cut no corners
-   e=(I)(0xfff0&*tv); e>>=4; e-=1023;   // exponent, with bias removed
+   I e=(I)(0xfff0&*tv); e>>=4; e-=1023;   // exponent, with bias removed
    unsigned long long num=((*(unsigned long long *)&t)&0xfffffffffffffLL)+0x10000000000000;  // numerator with hidden bit restored
-   GAT0(q.n,INT,4,1); DO(4, IAV(q.n)[i]=num%XBASE; num=num/XBASE;) q.n=xstd(q.n);
+#if SY_64
+   q.n=XgetI(num);
+#else /* SY_32 */
+   I qnlo= num&0xffffffff;
+   I qnhi= (num>>32)+(qnlo<0);
+   q.n= XaddXX(XgetI(qnlo), XmulXX(XgetD(4294967296.0), XgetI(qnhi)));
+#endif
    if(e<=52)q.d=xpow(xc(2L),xc(52-e));  // for 1.0, num is 1 in bit 52, e is 0, thus denom=2^52
-   else{q.d=iv1; q.n=xtymes(q.n,xpow(xc(2L),xc(e-52)));}  // large exponents need big numerators
+   else{q.d=X1; q.n=xtymes(q.n,xpow(xc(2L),xc(e-52)));}  // large exponents need big numerators
    q=qstd(q);
   }else if(1.1102230246251565e-16<t&&t<9.007199254740992e15){
-   d=jround(1/dgcd(1.0,t)); c=jround(d*t);
+   D d=jround(1/dgcd(1.0,t)), c=jround(d*t); 
    q.n=xd1(c,mode); q.d=xd1(d,mode); q=qstd(q);
   }else{
-   if(recip=1>t)t=1.0/t;
-   e=(I)(0xfff0&*tv); e>>=4; e-=1023;
-   if(recip){q.d=xtymes(xd1(t/pow(2.0,e-53.0),mode),xpow(xc(2L),xc(e-53))); q.n=ca(iv1);}
-   else     {q.n=xtymes(xd1(t/pow(2.0,e-53.0),mode),xpow(xc(2L),xc(e-53))); q.d=ca(iv1);}
+   B recip; if(recip=1>t)t=1.0/t;
+   I e=(I)(0xfff0&*tv); e>>=4; e-=1023;
+   if(recip){q.d=xtymes(xd1(t/pow(2.0,e-53.0),mode),xpow(xc(2L),xc(e-53))); q.n=X1;}
+   else     {q.n=xtymes(xd1(t/pow(2.0,e-53.0),mode),xpow(xc(2L),xc(e-53))); q.d=X1;}
   }
   q.n=rifvsdebug(q.n); q.d=rifvsdebug(q.d);
-  if(neg){v=AV(q.n); DQ(AN(q.n), *v=-*v; ++v;);}
+  if(neg) {
+   if (ACISPERM(AC(q.n))) {
+    if (ISX1(q.n)) q.n= X_1;
+    else if (ISX_1(q.n)) q.n= X1;
+    else if (ISX0(q.n)) q.n= X0;
+    else SEGFAULT; // this should never happen
+   } else QSGN(q)= -QSGN(q);
+  }
   *x++=q;
  }
  R !jt->jerr;
 }
 
-static KF1(jtDfromQ){D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c,p,q,x2=0;
- wn=AN(w); wv=QAV(w); x=(D*)yv; nn=308/XBASEN;
- for(i=0;i<wn;++i){
-  p=wv[i].n; pn=AN(p); k=1==pn?AV(p)[0]:0;
-  q=wv[i].d; qn=AN(q);
-  if     (k==XPINF)x[i]=inf;
-  else if(k==XNINF)x[i]=infm;
-  else if(pn<=nn&&qn<=nn){
-   n=0.0; f=1.0; v=AV(p); DO(pn, n+=f*v[i]; f*=xb;);
-   d=0.0; f=1.0; v=AV(q); DO(qn, d+=f*v[i]; f*=xb;);
-   x[i]=n/d;
-  }else{
-   k=5+qn; if(!x2)if(!(x2=xc(2L)))R 0;
-   if(!(c=xdiv(take(sc(-(k+pn)),p),q,XMFLR)))R 0;
-   cn=AN(c); m=MIN(cn,5); r=cn-(m+k); v=AV(c)+cn-m; 
-   n=0.0; f=1.0; DO(m, n+=f*v[i]; f*=xb;);
-   d=1.0; DQ(ABS(r), d*=xb;);
-   x[i]=0>r?n/d:n*d;
+/*
+// not accurate enough for J's test suite:
+static KF1(jtDfromQ){
+ D*x= yv; Q*wv=QAV(w);
+ DQ(AN(w), Q W= *wv++;
+  if (ISQinf(W)) *x++= 0<QSGN(W) ?inf :infm;
+  else *x++= ({mpQ(W); jmpq_get_d(mpW);});
+ ); 
+ R 1;
+}
+*/
+
+static KF1(jtDfromQ){
+ Q*wv=QAV(w); D*x=(D*)yv; I wn=AN(w);
+ // mp_limb_t is too large for us to represent it's "base" directly
+ // so: compromise: we represent the square root of that value, and take half steps.
+ const I hb= 4*sizeof (mp_limb_t), hba= 1LL<<hb, L= ~-hba;
+ for(I i=0;i<wn;++i){
+  Q r= wv[i];
+  if (ISQinf(r))x[i]= QSGN(r)>0 ?inf :infm;
+  else {
+ // J double (64 bit binary IEEE 754 floating point) can represent
+ // 2^1023 and 2^-1022, but 2^1024 is infinity and 2^-1023 is 0.
+ // So... if we convert the numerator and denominator to type double
+ // find their ratio, but our intermediate values are _ or 0 we fail.
+ // To work around this issue, if either are "too large" we'll first
+ // scale down to fit within range (then scaling the result).
+   I szn= IbitsX(r.n), szd= IbitsX(r.d), lim= 1023LL-(szd>szn);
+   I e= 0, pn= szn-lim, pd= szd-lim;
+   if (pn>0) {e+= pn; r.n= Xfdiv_qXX(r.n, XpowUU(2,pn));}
+   if (pd>0) {e-= pd; r.d= Xfdiv_qXX(r.d, XpowUU(2,pd));}
+   D n=0.0, f=1.0; UI*v=UIAV1(r.n); DO(XLIMBLEN(r.n), UI u= v[i]; n+=f*(L&u); f*=hba; n+=f*(u>>hb); f*=hba;)
+   D d=0.0; f=1.0;    v=UIAV1(r.d); DO(XLIMBLEN(r.d), UI u= v[i]; d+=f*(L&u); f*=hba; d+=f*(u>>hb); f*=hba;)
+   D xi= n/d;
+   if (e) {
+    D ex= 1.0, xbase=hba; xbase*= hba;
+    DQ(llabs(e), ex*=xbase;)
+    xi= e>0 ?xi*ex :xi/ex;
+   }
+   x[i]= (QSGN(r)>0 ?1 :-1)*xi;
  }}
  R 1;
 }
 
-static KF1(jtXfromQ){Q*v;X*x;
- v=QAV(w); x=(X*)yv;
- DQ(AN(w), if(!(equ(iv1,v->d)))R 0; *x++=v->n; ++v;);           
- R !jt->jerr;
+static KF1(jtXfromQ){
+ GMP; X*x=yv; Q*v= QAV(w);
+ DQ(AN(w), if (!ISQINT(*v)) R0;; *x++= v++->n;);
+ R 1;
 }
 
 static KF1(jtZfromD){
  D *wv=DAV(w); Z *zv=yv; DQ(AN(w), zv->im=0.0; zv++->re=*wv++;) R 1;
 }
-
-static B jtDXfI(J jt,I p,A w,DX*x){B b;I e,c,d,i,j,n,r,u[XIDIG],*v;
- n=AN(w); v=AV(w);
- for(i=0;i<n;++i){
-  c=v[i]; b=c==IMIN; d=b?-(1+c):ABS(c); j=0;
-  DO(XIDIG, u[i]=r=d%XBASE; d/=XBASE; if(r)j=i;);
-  ++j; *u+=b;
-  e=XBASEN*(j-1); d=u[j-1]; NOUNROLL while(d){++e; d/=10;} 
-  if(0>c)DO(j, u[i]=-u[i];);
-  x[i].e=e; x[i].p=p; x[i].x=vec(INT,j,u);
- }
- R !jt->jerr;
-}
-
-/*
-static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
- n=AN(w); wv=AV(w); m=(p+XBASEN-1)/XBASEN;
- for(i=0;i<n;++i){
-  c=wv[i]; d=dd=c==IMIN?-(1+c):ABS(c); 
-  if(d){e=0; NOUNROLL while(d){++e; r=d%10; d=d/10;}}else e=1;
-  GATV0(y,INT,m,1); yv=AV(y);
-  r=p%XBASEN; q=!!r+((e-r)+XBASEN-1)/XBASEN; 
-  if(d=(e-r)%XBASEN){b=1; DQ(XBASEN, b*=10; --d; if(!d)break;);}else b=XBASE;
-  DQ(m-q, *yv++=0;);
-  d=dd/b; r=dd%b; r+=c==IMIN; r*=XBASE/b; 
-  if(0>c){*yv++=-r; DQ(q-1, r=d%XBASE; d=d/XBASE; *yv++=-r;);}
-  else   {*yv++= r; DQ(q-1, r=d%XBASE; d=d/XBASE; *yv++= r;);}
-  x[i].e=e-1; x[i].p=p; x[i].x=y;
- }
- R !jt->jerr;
-} */    /* most significant digit last, decimal point before last digit */
 
 // Convert the data in w to the type t.  w and t must be noun types.  A new buffer is always created (with a
 // copy of the data if w is already of the right type), and returned in *y.  Result is
@@ -468,7 +469,10 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
 // clear rank before calling ccvt - needed for sparse arrays only but returns the block as the result
 A jtcvt(J jt,I t,A w){A y;B b; 
  b=ccvt(t,w,&y);
- ASSERT(b!=0,EVDOMAIN);
+ if(0==b) { // used to be x:_ could be NUMX, now must be RAT
+  if(jt->jerr==EWIRR) {RESETERR; b=ccvt(RAT,w,&y);}
+  ASSERT(b!=0,EVDOMAIN);
+ }
  R y;
 }
 
@@ -568,7 +572,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
   default:
    ASSERT(20<=j,EVDOMAIN);
    GA(z,t&CMPX?XZ:XD,n,r,AS(w));
-   if(t&INT){RZ(DXfI(j,w,(DX*)AV(z))); R z;}
+   if(t&INT){fprintf(stderr,"jtco2 would call DxfI\n"); R 0;}
    ASSERT(0,EVNONCE);
 }}
 

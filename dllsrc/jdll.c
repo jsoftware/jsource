@@ -800,6 +800,7 @@ CDPROC JS _stdcall JInit()
 		jvmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
+ jgmpinit(); // mp support for 1x and 2r3
 	return jt;  // return (JS)MTHREAD(jt);
 }
 

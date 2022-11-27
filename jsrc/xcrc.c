@@ -90,7 +90,7 @@ F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
 }
 
 // base64 stuff
-
+#include<assert.h>
 static C base64tab[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 DF1(jttobase64){
  F1RANK(1,jttobase64,self);  // here we deal only with rank<= 1

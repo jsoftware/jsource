@@ -1,4 +1,5 @@
 #include "j.h"
+#if C_CRC32C && SY_64
 #include "viavx.h"
 
 // ********************* i., second class: tolerant comparisons, possibly boxed **********************
@@ -212,3 +213,4 @@ IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],         
 IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj), D x)
 // singleton box
 IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])),  D x)
+#endif

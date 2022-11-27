@@ -1,4 +1,5 @@
 #include "j.h"
+#if C_CRC32C && SY_64
 #include "viavx.h"
 
 // *************************** sixth class: hashing w ***********************
@@ -80,3 +81,4 @@ IOFXW(D, UI4,jtiowc012,,hic01((UIL*)v),   *v!=wv[hj],                1) // float
 IOFXW(Z, UI4,jtiowz012,,hic0(2,(UIL*)v),  (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
 IOFXW(D, UI4,jtiowc02,, hic0(n,(UIL*)v),  fcmp0(v,&wv[n*hj],n),           cn) // float array
 IOFXW(Z, UI4,jtiowz02,, hic0(2*n,(UIL*)v),fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
+#endif

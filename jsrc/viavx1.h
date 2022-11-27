@@ -1,4 +1,3 @@
-#include "j.h"
 #include "viavx.h"
 
 // requires: suff and TH to be defined

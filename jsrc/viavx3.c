@@ -1,4 +1,5 @@
 #include "j.h"
+#if C_CRC32C && SY_64
 #include "viavx.h"
 
 // ********************* i., third class: small-range arguments ****************************
@@ -160,4 +161,4 @@ IOFSMALLRANGE(jtio12,UC, US)  IOFSMALLRANGE(jtio14,UC, UI4)  // 1-byte items, us
 IOFSMALLRANGE(jtio22,US, US)  IOFSMALLRANGE(jtio24,US, UI4)  // 2-byte items, using small/large hashtable
 IOFSMALLRANGE(jtio42,UI4,US)  IOFSMALLRANGE(jtio44,UI4,UI4)  // 4-byte items, using small/large hashtable
 IOFSMALLRANGE(jtio82,I,  US)  IOFSMALLRANGE(jtio84,I,  UI4)  // SZI-byte items, using small/large hashtable
-
+#endif

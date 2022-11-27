@@ -1,4 +1,5 @@
 #include "j.h"
+#if C_CRC32C && SY_64
 #include "viavx.h"
 
 // ***************** i., fifth class: boxed arguments ************************
@@ -112,3 +113,4 @@ IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  }}
  R h;
 }    /* a i.!.0 w on boxed a,w by grading and binary search */
+#endif

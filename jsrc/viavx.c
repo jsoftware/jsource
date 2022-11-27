@@ -7,10 +7,10 @@
 
 #include "j.h"
 #include "vcomp.h"
-#include "viavx.h"
 
 // platforms with hardware crc32c
 #if C_CRC32C && SY_64
+#include "viavx.h"
 
 #if !(C_AVX || EMU_AVX)
 #error need avx or emulation to work

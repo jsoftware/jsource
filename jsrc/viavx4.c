@@ -1,9 +1,9 @@
 #include "j.h"
+#if C_CRC32C && SY_64
 #include "viavx.h"
 
 // ******************* i., fourth class: sequential comparison ***************************************
 // implemented only for i. i: e. u/.   - perhaps should revert for other compounds
-
 
 // fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
 // bit3 set for int-to-float on x, bit4 for int-to-float on y
@@ -164,3 +164,4 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  }
  R z;  // return non-error indic, but also where the partition count for IFORKEY is stored
 }    /* right argument cell is scalar or list; only for modes IIDOT IICO IEPS, and intolerant IFORKEY */
+#endif

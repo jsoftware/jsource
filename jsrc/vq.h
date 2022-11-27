@@ -12,7 +12,7 @@
 #define QRZ(exp)        {if(!(exp))        R Q0;}
 
 #define QEQ(x,y)        (equx((x).n,(y).n)&&equx((x).d,(y).d))
-#define QCOMP(x,y)      ({Q Qx= x, Qy= y; ISQinf(Qx) ?(ISQinf(Qy) ?Qx.n-Qy.n :QSGN(Qx)) :ISQinf(Qy) ?-QSGN(Qy) :icmpQQ(Qx,Qy);})
+#define QCOMP(x,y)      ({Q Qx= x, Qy= y; ISQinf(Qx) ?(ISQinf(Qy) ?XSGN(Qx.n)-XSGN(Qy.n) :QSGN(Qx)) :ISQinf(Qy) ?-QSGN(Qy) :icmpQQ(Qx,Qy);})
 #define QLT(x,y)        (0> QCOMP(x,y))
 #define QLE(x,y)        (0>=QCOMP(x,y))
 #define QGT(x,y)        (0< QCOMP(x,y))

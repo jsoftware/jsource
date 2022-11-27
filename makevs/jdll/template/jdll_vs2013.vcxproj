@@ -1150,6 +1150,13 @@
     <ClCompile Include="..\..\jsrc\vgsp.c" />
     <ClCompile Include="..\..\jsrc\vi.c" />
     <ClCompile Include="..\..\jsrc\viavx.c" />
+    <ClCompile Include="..\..\jsrc\viavx1-2.c" />
+    <ClCompile Include="..\..\jsrc\viavx1-4.c" />
+    <ClCompile Include="..\..\jsrc\viavx2.c" />
+    <ClCompile Include="..\..\jsrc\viavx3.c" />
+    <ClCompile Include="..\..\jsrc\viavx4.c" />
+    <ClCompile Include="..\..\jsrc\viavx5.c" />
+    <ClCompile Include="..\..\jsrc\viavx6.c" />
     <ClCompile Include="..\..\jsrc\viix.c" />
     <ClCompile Include="..\..\jsrc\visp.c" />
     <ClCompile Include="..\..\jsrc\vm.c" />

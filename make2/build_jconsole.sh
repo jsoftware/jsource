@@ -1,5 +1,5 @@
 #!/bin/sh
-set -vex
+set -e
 
 cd "$(dirname "$0")"
 echo "entering `pwd`"

@@ -993,6 +993,7 @@ typedef struct {
    union {
     I filler;  // pad to cacheline
     A cachedloc;   //  for namerefs ('name'~), the locale address if the name is a direct named lookup (after the first reference)
+    A gerundself;  // in gerund iterators, the address of the self block for m@.v, for diagnostic purposes
    } lu0;
    // end of first cacheline, which is not used much during execution
    union {  // 8 bytes in the second (main) cacheline.  Aligned to 8-byte bdy even on 32-bit system

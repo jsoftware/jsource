@@ -37,10 +37,14 @@ static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;  // index of cell we are working on
  I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];  // selector for that cell
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);  // if negative, back up from end
- ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);  // must be in range of # gerunds
+ ASSERTGOTO(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);  // must be in range of # gerunds
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // advance to next cell
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+// in case of index error we have to call eformat right here, because our caller does not have the self block for the overall gerund.  The a and w values are unused except for valence.  We pass in all the selectors
+errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
+  jteformat(jt,FAV(self)->localuse.lu0.gerundself,ismonad?0:a,w,FAV(self)->fgh[1]);
+  RETF(0);
 }
 // This for B selectors
 static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
@@ -50,10 +54,13 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
- ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
+ ASSERTGOTO(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec;
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
+  jteformat(jt,FAV(self)->localuse.lu0.gerundself,ismonad?0:a,w,FAV(self)->fgh[1]);
+  RETF(0);
 }
 
 // w is a verb that refers to a cyclic gerund which is stored in h.
@@ -69,12 +76,13 @@ A jtcreatecycliciterator(J jt, A z, A w){
 }
 // Similar, but also install r, the list of gerund results that will select the verb to run.  Used when there are few cells.
 // in this case gerx is the cell#, and will be used to step through the result selectors sequentially
-static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is gerunds, r is selector list
+static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is self for h@.g, r is selector list
  // Convert the selectors to integer/boolean
  if(!ISDENSETYPE(AT(r),(INT|B01)))RZ(r=cvt(INT,r));
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
- ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
+ ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;  // h->gerunds, g->values
  FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lu1.gercut.cgerx=0;
+ FAV(z)->localuse.lu0.gerundself=w;  // save the self for m@.v so we can call eformat with it
  FAV(z)->flag2=0;
  if(MEMAUDIT&0xc)AFLAGFAUX(z,0)  // in debug, flags must be valid
  R z;
@@ -162,7 +170,8 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
  vres=FAV(self)->fgh[1];   // temp: verb to execute
- RZ(vres=(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jt,a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
+// obsolete RZ(vres=(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jt,a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
+ RZ(vres=CALL2(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX],a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
  // Now vres is the array of selectors into the gerund.  There should be one for each cell of the input.  Check that
  // The rank of the result must be no more than the larger rank
  I vr=AR(vres);  // rank of selectors
@@ -171,9 +180,10 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // grade the results of v and then sort them into order
   // for each unique value, collect the cells for that value and apply the verb to them (could use f/. code?)
   // reorder the results
-  ASSERT(mr>=vr,EVRANK);  // cell must not be bigger than the whole
-  ASSERTAGREE(AS(vres),AS(w),MIN(vr,wr));  // shapes must match
-  if(ZZFLAGWORD&ZZFLAGISDYAD)ASSERTAGREE(AS(vres),AS(a),MIN(vr,ar));   // if dyad, check both
+  ASSERTGOTO(mr>=vr,EVRANK,errorwind);  // there must not be more selectors than atoms in the larger arg
+  I disagree; TESTDISAGREE(disagree,AS(vres),AS(w),MIN(vr,wr));
+  if(unlikely(disagree))goto errorwind;  // shapes must match
+  if(ZZFLAGWORD&ZZFLAGISDYAD){TESTDISAGREE(disagree,AS(vres),AS(a),MIN(vr,wr));  if(unlikely(disagree))goto errorwind;}  // if dyad, check both
   I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
   I nar=AN(FAV(self)->fgh[2]);  // number of ARs in the gerund
   wr-=vr; wr=wr+vr?wr:IMIN;  // now wr is the rank of a cell of w (negative if repetition required in w), or IMIN if w was an atom
@@ -193,7 +203,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I bsiz=AT(vres)&B01?1:SZI;  // size of element of vres
    I minx=*(I*)(CAV(vres)+IAV(gradepm)[0]*bsiz)&bmsk;   // smallest result
    I maxx=*(I*)(CAV(vres)+IAV(gradepm)[AN(gradepm)-1]*bsiz)&bmsk;  // largest result
-   ASSERT(minx>=-nar&&maxx<nar,EVINDEX);  // verify that the results are in range
+   ASSERTGOTO(minx>=-nar&&maxx<nar,EVINDEX,errorwind);  // verify that the results are in range
    I numres= maxx - minx + 1;  // max possible # of selectors
    // get sorted input order - as long as it wasn't an atom, which we will have to repeat
    A sortw,sorta;
@@ -322,10 +332,13 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  }else{
   // There was only 1 cell in the result.  Apply the selected verb, inplace if possible
   I vx=i0(vres); RE(0);  // fetch index of gerund
-  vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERT(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX);
+  vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERTGOTO(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
   A ger=C(AAV(FAV(self)->fgh[2])[vx]);  // the selected gerund
   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
+errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
+  jteformat(jt,self,ZZFLAGWORD&ZZFLAGISDYAD?a:0,w,vres);
+  RETF(0);
 }
 
 // @.n

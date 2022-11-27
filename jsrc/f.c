@@ -216,9 +216,9 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SB
 static F1(jtthx1){
  C*s=SgetX(w); // base 10 representation
  if('-'==s[0])s[0]='_'; // use J's convention for negative
- I l= strlen(s);
+ I l= strlen(s); // maybe better to use AN(UNvoidAV1(s))-1 ??
  A z; GA10(z, LIT, l); MC(CAV1(z), s, l+1);
- jfree4gmp(s, l);
+ mfgmp(UNvoidAV1(s));
  R z;
 }
 

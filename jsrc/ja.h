@@ -474,7 +474,7 @@
 #define getsen(x)                   jtgetsen(jt,(x))
 #define gjoin(x,y,z)                jtgjoin(jt,(x),(y),(z))   
 extern void jfree4gmp(void*,size_t);
-#define gmpmfree(x)                 if(!(ACISPERM(AC(x)))){I allocsize = AN(x)+AKXR(1); jt->bytes-=allocsize; jt->malloctotal-=allocsize; jt->mfreegenallo-=allocsize; /*free(x);*/ jfree4gmp(CAV1(x),0);}
+#define gmpmfree(x)                 if(!(ACISPERM(AC(x)))){I allocsize = AN(x)+AKXR(1); jt->bytes-=allocsize; jt->malloctotal-=allocsize; jt->mfreegenallo-=allocsize; /*free(x);*/ jfree4gmp(CAV1(x),AN(x));}
 #define gr1(x)                      jtgr1(jtinplace,(x))
 #define gr2(x,y)                    jtgr2(jtinplace,(x),(y))
 #define grade1(x)                   jtgrade1(jt,(x))

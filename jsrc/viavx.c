@@ -177,7 +177,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 // CRC32L takes UIL (8 bytes)
 
 // obsolete #define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
-#define RETCRC3 R CRC32L(crc0,(UI)__builtin_rotateleft32(crc1,9)+((UI)__builtin_rotateleft32(crc2,21)<<32))
+#define RETCRC3 R CRC32L(crc0,(UI)rol32(crc1,9)+((UI)rol32(crc2,21)<<32))
 // Create CRC32 of the k bytes in *v.  Uses CRC32L to process 8 bytes at a time
 // We may fetch past the end of the input, but only up to the next SZI-byte block
 UI hic(I k, UC *v) {

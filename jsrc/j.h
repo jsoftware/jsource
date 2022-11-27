@@ -1613,6 +1613,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
 #define _mm256_zeroupperx(x)
 // this is faster than reusing another register as the source anyway, because it's not a recognised idiom, so we would have a false dependency on the other register
+#define _mm_setone_si128() _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128())
 #define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
 #define _mm256_setone_pd() _mm256_castsi256_pd(_mm256_setone_epi64())
 static inline __m256i LOADV32I(void *x) { return _mm256_loadu_si256(x); }
@@ -2213,6 +2214,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #if (C_AVX2&&SY_64)
 #define PEXT(s,m) _pext_u64(s,m)
 #define PDEP(s,m) _pdep_u64(s,m)
+#define BZHI(s,i) _bzhi_u64(s,i)
 #else
 // #define PEXT(s,m) _pext_u32(s,m)
 // #define PDEP(s,m) _pdep_u32(s,m)
@@ -2257,6 +2259,9 @@ extern I CTLZI_(UI,UI4*);
 #define BLSI(x) ((x)&-(x))
 #define BLSR(x) ((x)&~BLSI(x))
 #endif
+
+static inline UI4 rol32(UI4 x,I s){ R (x<<s)|(x>>(32-s)); }
+static inline UI4 ror32(UI4 x,I s){ R (x>>s)|(x<<(32-s)); }
 
 // Set these switches for testing
 #define AUDITBP 0  // Verify that bp() returns expected data
@@ -2338,6 +2343,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULDE(x,y,z) ASSERT(!__builtin_smulll_overflow(x,y,&z),EVLIMIT)
 #define DPUMUL(x,y,z,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); z=(I)_t; h=(I)(_t>>64);}  // product in z and h
 #define DPUMULH(x,y,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); h=(I)(_t>>64);}  // high product in h
+#define DPUMULU(x,y,z,h) {__uint128_t _t=(__uint128_t)(x)*(__uint128_t)(y);z=(UI)_t;h=(UI)(_t>>64);}
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (64-bit)
 #define DPMULDECLS

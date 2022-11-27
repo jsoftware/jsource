@@ -12,6 +12,13 @@ ODIR=../../../../bin/$(jplatform64)
 # (viavx is still longer than everything else combined--should maybe be broken up into multiple tus...)
 OBJS=  \
  viavx.o \
+ viavx1-2.o \
+ viavx1-4.o \
+ viavx2.o \
+ viavx3.o \
+ viavx4.o \
+ viavx5.o \
+ viavx6.o \
  vi.o \
  vcompsc.o \
  a.o \

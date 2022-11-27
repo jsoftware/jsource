@@ -102,6 +102,24 @@ long long gmpmallocs;
 #define GUARDSIZE  (CACHELINESIZE)
 #define GUARDsSIZE (2*CACHELINESIZE)
 C GUARDBLOCK[GUARDSIZE];
+/* seppuku if copy of guard memory has been altered
+ */
+static void guard(C*m) {
+ if(!memcmp(m, GUARDBLOCK, GUARDSIZE)) R;
+ fprintf(stderr, "guard block corrupt\n"
+  "m: %llx, GUARDBLOCK: %llx, GUARDSIZE: %x\n         m:",
+  (U long long)m, (U long long)GUARDBLOCK, (U)GUARDSIZE);
+ DO(GUARDSIZE, fprintf(stderr, " %.2hhx", m[i]);)
+ fprintf(stderr, "\nGUARDBLOCK:");
+ DO(GUARDSIZE, fprintf(stderr, " %.2hhx", GUARDBLOCK[i]);)
+ fprintf(stderr, "\n");
+ SEGFAULT;
+}
+// for use in m.c:
+void jgmpguard(X x) {
+ guard((C*)x-GUARDSIZE);
+ guard((C*)x+XHSZ+AN(x));
+}
 #else
 #define GUARDSIZE  0
 #define GUARDsSIZE 0
@@ -113,8 +131,8 @@ C GUARDBLOCK[GUARDSIZE];
  if(!m)SEGFAULT;
  if(!m)R0; // assert(z);// FIXME (but can't without replacing libgmp)
 #if MEMAUDIT&0x40
- memcpy(m, GUARDBLOCK, GUARDSIZE);
- memcpy(m+size+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE);
+ memcpy(m, GUARDBLOCK, GUARDSIZE); guard(m);
+ memcpy(m+GUARDSIZE+XHSZ+size, GUARDBLOCK, GUARDSIZE); guard(m+GUARDSIZE+XHSZ+size);
 #endif
  X z= (X)(m+GUARDSIZE); // J header starts here
  AK(z)= XHSZ;           // always rank 1
@@ -146,8 +164,8 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  X x= (X)(((C*)ptr)-XHSZ);
  C*m= (C*)x-GUARDSIZE;
 #if MEMAUDIT&0x40
- if (memcmp(m, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
- if (memcmp(m+old+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
+ guard(m);
+ guard(m+GUARDSIZE+XHSZ+old);
 #endif
  // assert(1==AC(x));   // must not have been exposed to J
  // assert(FHRHISGMP==AFHRH(x))
@@ -155,7 +173,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  if(!m)SEGFAULT;
  if(!m)R0; // assert(m);// FIXME (but can't without replacing libgmp)
 #if MEMAUDIT&0x40
- memcpy(m+new+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE);
+ memcpy(m+GUARDSIZE+XHSZ+new, GUARDBLOCK, GUARDSIZE); guard(m+GUARDSIZE+XHSZ+new);
 #endif
  X z= (X)(m+GUARDSIZE); // J header starts here
  AN(z)= new;            // track allocated memory
@@ -185,8 +203,8 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  if (ACPERMANENT&AC(x)) SEGFAULT;
  C* m= (C*)x-GUARDSIZE;
 #if MEMAUDIT&0x40
- if (memcmp(m, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
- if (memcmp(m+n+XHSZ+GUARDSIZE, GUARDBLOCK, GUARDSIZE)) SEGFAULT;
+ guard(m);
+ guard(m+GUARDSIZE+XHSZ+n);
 #endif
  /*
  fprintf(stderr,"\tjfree4gmp (%lli) x: %llx, ", gmpmallocs--, (UI)x);
@@ -290,7 +308,7 @@ void jgmpinit() {
  if (SZI != sizeof (mp_limb_t)) SEGFAULT; // verify a fundamental assumption
 #if MEMAUDIT&0x40
  ((UIL*)GUARDBLOCK)[0]= (UIL)0x1abe11ed1abe11edLL;
- memcpy(GUARDBLOCK+sizeof (UIL), GUARDBLOCK, GUARDSIZE-sizeof (UIL));
+ DO(GUARDSIZE-sizeof (UIL), GUARDBLOCK[i+sizeof (UIL)]= GUARDBLOCK[i]+i;)
 #endif
 #ifndef IMPORTGMPLIB
  if (jmpz_init) return; // link with libgmp only once

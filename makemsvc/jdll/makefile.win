@@ -184,6 +184,13 @@ OBJS=  \
  ../../jsrc/vgsp.o \
  ../../jsrc/vi.o \
  ../../jsrc/viavx.o \
+ ../../jsrc/viavx1-2.o \
+ ../../jsrc/viavx1-4.o \
+ ../../jsrc/viavx2.o \
+ ../../jsrc/viavx3.o \
+ ../../jsrc/viavx4.o \
+ ../../jsrc/viavx5.o \
+ ../../jsrc/viavx6.o \
  ../../jsrc/viix.o \
  ../../jsrc/visp.o \
  ../../jsrc/vm.o \

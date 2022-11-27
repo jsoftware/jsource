@@ -224,10 +224,10 @@ F1(jtdigits10){ // "."0@":
    case LITX: ASSERT(likely(ISGMP(w)), EVDOMAIN);
     if(0<=XSGN(w)){
      C*s= SgetX(w);
-     I n= strlen(s);
+     I n= strlen(s); // maybe better to use AN(UNvoidAV1(s))-1 ??
      A z; GATV0(z,INT,n,1); I*zv= AV(z);
      DQ(n, zv[i]= s[i]-'0';);
-     jfree4gmp(s, n);
+     mfgmp(UNvoidAV1(s));
      EPILOG(z);
     }
   }

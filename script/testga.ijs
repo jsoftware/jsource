@@ -13,7 +13,7 @@ stdout LF ,~ 9!:14''
 
 NB. RUN1^:(GITHUBCI>IF64) 'g100i'
 
-ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'Linux'-:UNAME)#(<testpath),each <'gnan.ijs' NB. temporarily disable gnan on linux
+ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'Linux'-:UNAME)#(<testpath),each 'gnan.ijs';'gxinf.ijs' NB. temporarily disable gnan on linux
 
 NB. smoke test
 NB. RES=: RUN (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'

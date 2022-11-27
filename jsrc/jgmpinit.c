@@ -115,6 +115,11 @@ static void guard(C*m) {
  fprintf(stderr, "\n");
  SEGFAULT;
 }
+// for use in m.c:
+void jgmpguard(X x) {
+ guard((C*)x-GUARDSIZE);
+ guard((C*)x+XHSZ+AN(x));
+}
 #else
 #define GUARDSIZE  0
 #define GUARDsSIZE 0

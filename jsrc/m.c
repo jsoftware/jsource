@@ -1426,6 +1426,10 @@ void jtrepatrecv(J jt){
 #endif
 }
 
+#if MEMAUDIT&0x40
+extern void jgmpguard(X);
+#endif
+
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
 void jtmf(J jt,A w,I hrh){
@@ -1453,7 +1457,13 @@ printf("%p-\n",w);
 #endif
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
 #if MEMAUDIT&1
- if(hrh!=FHRHISGMP && (hrh==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
+ if(hrh!=FHRHISGMP) {
+	 if((hrh==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
+ } else {
+#if MEMAUDIT&0x40
+  jgmpguard(w);
+#endif
+ }
 #if MEMAUDIT&17
 #endif
 #endif

@@ -2260,8 +2260,8 @@ extern I CTLZI_(UI,UI4*);
 #define BLSR(x) ((x)&~BLSI(x))
 #endif
 
-static inline UI4 rol32(UI4 x,I s){ R (x<<s)|(x>>(32-x)); }
-static inline UI4 ror32(UI4 x,I s){ R (x>>s)|(x<<(32-x)); }
+static inline UI4 rol32(UI4 x,I s){ R (x<<s)|(x>>(32-s)); }
+static inline UI4 ror32(UI4 x,I s){ R (x>>s)|(x<<(32-s)); }
 
 // Set these switches for testing
 #define AUDITBP 0  // Verify that bp() returns expected data

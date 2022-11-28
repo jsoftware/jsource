@@ -64,7 +64,9 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
 
 F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
  ARGCHK1(w);
- if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
+ A z; fdefallo(z)
+ if(VERB&AT(w)){fdeffill(z,0,CBDOT,VERB,(AF)(jtbasis1),(AF)(0),w,0L,0L,0L,0,0,0) RETF(z);}
+// obsolete R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}
@@ -72,13 +74,13 @@ F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
  if(j<16){
   GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV(b),booltab,64L);
   RZ(h=rifvs(cant2(IX(AR(w)),from(w,b))));  // h is an array representing b.  One cell for each atom of b; cell is 4 values
-  R fdef(0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VFLAGNONE, RMAX,0L,0L);
+  fdeffill(z,0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VFLAGNONE, RMAX,0L,0L); RETF(z);
  }else{
   if(BETWEENC(j,32,34)){
    AF rtn=jtbitwiserotate; rtn=j==33?jtbitwiseshift:rtn;  rtn=j==34?jtbitwiseshifta:rtn; 
-   R fdef(0,CBDOT,VERB, jtbitwise1,rtn, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
+   fdeffill(z,0,CBDOT,VERB, jtbitwise1,rtn, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L); RETF(z);
   }
-  A z=ca(ds(j-16+CBW0000)); RZ(z); RZ(FAV(z)->fgh[1]=rifvs(w)); FAV(z)->id=CBDOT; RETF(z);  // use g field not f to avoid interfering with atomic2
+  z=ca(ds(j-16+CBW0000)); RZ(z); RZ(FAV(z)->fgh[1]=rifvs(w)); FAV(z)->id=CBDOT; RETF(z);  // use g field not f to avoid interfering with atomic2
  }
 }
 

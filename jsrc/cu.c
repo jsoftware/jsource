@@ -310,6 +310,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 // u&.v
 F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  ARGCHK2(a,w);
+ A z; fdefallo(z)
  if(AT(w)&BOX){
   // Must be the gerund form.  Extract v and remember which argument it will apply to
   ASSERT((AR(w)^1)+(AN(w)^2)==0,EVDOMAIN);  // must be 2-element list
@@ -325,7 +326,7 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  // If v is WILLOPEN, so will the compound be - for all valences
  switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
  case COPE:
-  R fdef(VF2WILLOPEN1|VF2WILLOPEN2A|VF2WILLOPEN2W,CUNDER,VERB,jteveryself,jtevery2self,a,w,0,flag|VIRS1,0,0,0);   // this is the commonest case.  Return fast, avoiding analysis below
+  fdeffill(z,VF2WILLOPEN1|VF2WILLOPEN2A|VF2WILLOPEN2W,CUNDER,VERB,jteveryself,jtevery2self,a,w,0,flag|VIRS1,0,0,0) R z;   // this is the commonest case.  Return fast, avoiding analysis below
    // We do not expose BOXATOP or ATOPOPEN flags, because we want all u&.> to go through this path & thus we don't want to allow other loops to break in
    // We set VIRS1 just in case a user writes u&.>"n which we can ignore
    // The flags are ignored during u&.>, but they can forward through to affect previous verbs.
@@ -362,14 +363,15 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  // The standard verbs start with a rank loop; set the flag indicating that
  if(!f1){f1=r?(flag&VFUNDERHASINV?jtunderh1:jtunder1):(flag&VFUNDERHASINV?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; flag&=FAV(h)->flag|(~VJTFLGOK1);}  // allow inplace if v is known inplaceable
  if(!f2){f2=rlr+rrr?(flag&VFUNDERHASINV?jtunderh2:jtunder2):(flag&VFUNDERHASINV?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; flag&=FAV(h)->flag|(~VJTFLGOK2);}  // allow inplace if v is known inplaceable
- RZ(h=fdef(flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),rmr,rlr,rrr));
- // install wvb into the verb so we can get to it if needed
- FAV(h)->localuse.lu1.wvb=wvb;
- R h;
+ fdeffillall(z,flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),rmr,rlr,rrr,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;
+// obsolete  // install wvb into the verb so we can get to it if needed
+// obsolete  FAV(h)->localuse.lu1.wvb=wvb;
+// obsolete  R h;
 }
 
 F2(jtundco){F2PREFIP;AF f1=0,f2;I gside=-1, flag=0;
  ARGCHK2(a,w);
+ A z; fdefallo(z)
  A wvb=w;  // the verb we will take the inverse of
  if(AT(w)&BOX){
   // Must be the gerund form.  Extract v and remember which argument it will apply to
@@ -397,8 +399,8 @@ F2(jtundco){F2PREFIP;AF f1=0,f2;I gside=-1, flag=0;
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
  if(!f1)f1=flag&VFUNDERHASINV?jtunderh1:jtundco1; f2=flag&VFUNDERHASINV?jtunderh2:jtundco2; flag |= (FAV(a)->flag&FAV(wvb)->flag&VASGSAFE) + (FAV(h)->flag&(VJTFLGOK1|VJTFLGOK2));
- RZ(h=fdef(0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX));
- // install wvb into the verb so we can get to it if needed
- FAV(h)->localuse.lu1.wvb=wvb;
- R h;
+ fdeffillall(z,0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;
+/// obsolete  // install wvb into the verb so we can get to it if needed
+/// obsolete  FAV(h)->localuse.lu1.wvb=wvb;
+/// obsolete  R h;
 }

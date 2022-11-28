@@ -384,7 +384,34 @@
 #define fauxvirtual(z,v,w,r,c) {if(likely((r)<=4)){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); \
                               AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); ACFAUX(z,(c))} \
                               else{RZ(z=virtual((w),0,(r))); AFLAGORLOCAL(z,AFUNINCORPABLE) if((c)!=ACUC1)ACINIT(z,(c))} }
-#define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
+// obsolete #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
+// for function definition we don't call a subroutine, because that results in pushing all the arguments, popping them, and storing them back.
+// furthermore, we do better to allocate the block early, before the fill has been calculated so that (1) values can be dropped in as they are calculated (2) there is no
+// register-destroying subroutine call at the end of the function using fdef
+#define fdefallo(z) GAT0(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0)  // allocate as INT to avoid fill-in: we initialize everything
+// create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
+// if there has been a previous error this function returns 0
+// This creates a recursive block and raises fgh
+#define fdeffillall(fffz,fffflag2v,fffidv,ffft,ffff1,ffff2,ffffs,fffgs,fffhs,fffflagv,fffm,fffl,fffr,ffflui0,ffflui1) \
+{V *fffv=FAV(fffz); \
+AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank */ \
+A fffasg=(ffffs); if(fffasg)INCORPRA(fffasg); fffv->fgh[0]=fffasg;  /* incorp fs and install as f */ \
+fffasg=(fffgs); if(fffasg)INCORPRA(fffasg); fffv->fgh[1]=fffasg;  /* incorp gs and install as g */ \
+fffasg=(fffhs); if(fffasg)INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/otfher stuff and install as h */ \
+ffflui0; ffflui1;  /* local-use fields */ \
+fffv->valencefns[0]    =ffff1?(AF)(ffff1):(AF)jtvalenceerr1;  /* monad C function */ \
+fffv->valencefns[1]    =ffff2?(AF)(ffff2):(AF)jtvalenceerr2;  /* dyad  C function */ \
+fffv->flag  =(UI4)(fffflagv); \
+fffv->flag2 = (UI4)(fffflag2v); \
+fffv->mr    =(RANKT)(fffm);                   /* monadic rank     */ \
+fffv->lrr=(RANK2T)(((fffl)<<RANKTX)+(fffr)); /* left/right rank */ \
+fffv->id    =(C)(fffidv);                  /* spelling         */ \
+AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens */ \
+}
+// fdeffill replaces the original fdef, which did not know about localuse
+#define fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fdeffillall(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r,fffv->localuse.lu0.cachedloc=0,fffv->localuse.lu1.cct=0.0)
+#define fdef(flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) ({A fffz; fdefallo(fffz) fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fffz;})  // we no longer check error.  This cannot return 0
+
 #if !USECSTACK
 #define fdep(x)                     jtfdep(jt,(x))
 #else
@@ -397,7 +424,7 @@
 // x is locale number, result is address of symbol table, or 0 if nonexistent locale
 // only for non-reuse #define findnlz(x,z)                {if((UI)(n)>=jt->numlocsize)z=0; else {z=(A)(jt->numloctbl[n]); z=((UI)((I*)z-jt->numloctbl)<jt->numlocsize)?0:z;}}
 #define fit(x,y)                    jtfit(jt,(x),(y))
-#define fitct(x,y,n)                jtfitct(jt,(x),(y),(n)) 
+// obsolete #define fitct(x,y,n)                jtfitct(jt,(x),(y),(n)) 
 #define fix(x,y)                    jtfix(jt,(x),(y))
 #define fixa(x,y)                   jtfixa(jt,(x),(y))
 #define fixrecursive(x,y)           jtfixrecursive(jt,(x),(y))

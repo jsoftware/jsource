@@ -940,7 +940,8 @@ static DF1(jtiota1){I j; R apv(SETIC(w,j),1L,1L);}
 F1(jtbslash){F1PREFIP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
 ;
  ARGCHK1(w);
- if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
+ A z; fdefallo(z)
+ if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fixw, VGERL|flag, RMAX,0L,RMAX); RETF(z);}
  v=FAV(w);  // v is the u in u\ y
  switch(v->id){
   case CSLASH: ;  // never gerund/ which is coded as GRCO
@@ -949,17 +950,18 @@ F1(jtbslash){F1PREFIP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(
    f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
   case CPOUND:
    f1=jtiota1; break;
-  case CLEFT: case CRIGHT: case CCOMMA:   
+  case CLEFT: case CRIGHT: case CCOMMA:
    f2=jtinfixd; break;
   case CFORK:  
    if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
   default:
    flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }
- RZ(f=ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX));
- // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .
- FAV(f)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0;  // f is nonnull if f/\ .
- R f;
+// obsolete  RZ(f=ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX));
+ fdeffillall(z,0,CBSLASH,VERB,f1,f2,w,0L,0L,flag,RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
+ // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .
+// obsolete  FAV(f)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0;
+ RETF(z);
 }
 
 A jtascan(J jt,C c,A w){ARGCHK1(w); A z; R df1(z,w,bslash(slash(ds(c))));}

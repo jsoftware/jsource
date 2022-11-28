@@ -166,6 +166,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  if (av->fgh[0]) {
   A f= av->fgh[0];
  }
+ A z; fdefallo(z)
  if(unlikely((AT(w)&NOUN)!=0)){  // u@n
   if(c==CEXEC){  // ".@n
    // See if the argument is a string containing a single name.  If so, pass the name into the verb.
@@ -174,7 +175,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    // We give the w the strange flagging of NAME AND ALSO LIT - it will be handled as a name when executed, but as a noun for representations
    if(AR(w)<=1 && (g=tokens(vs(w),1)) && AN(g)==1 && AT(AAV(g)[0])&NAME){w=rifvs(AAV(g)[0]); AT(w)|=LIT;}
   }
-  R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
+  fdeffill(z,0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX); R z;
  }
  wv=FAV(w); d=wv->id;
  if((d&~1)==CLEFT){
@@ -182,7 +183,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
   // We must copy forwarded flags from f to f@][.  These are BOXATOP and WILLOPEN/USESITEMCOUNT.  BOXATOP is copied from the monad into both valences; WILLOPEN/USESITEMCOUNT are copied from the
   // monad into the monad and (A if @[, W if @])
   flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  R fdef(flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
+  fdeffill(z,flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
@@ -256,8 +257,8 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop; if v is atomic, switch to the loop that gives a msg if executed on non-atom
  if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==0?jton10:f1; f1=wv->flag&VISATOMIC1?jton10atom:f1; f1=wv->mr==RMAX?on1cell:f1;}
  if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==0?jtupon20:f2; f2=wv->flag&VISATOMIC2?jtupon20atom:f2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2;}
-  A z=fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv));
-  RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
+ fdeffillall(z,flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct); R z;
+// obsolete   RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
 }
 
 // u@:v
@@ -265,12 +266,13 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
  ASSERTVV(a,w);
  av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f);   /// c=op for a, d=op for w   if a is compound r m [s], f is r and e is its id; and g is s
  wv=FAV(w); d=wv->id;
+ A z; fdefallo(z)
  if((d&~1)==CLEFT){
   // the very common case u@:] and u@:[.  Take ASGSAFE and inplaceability from u.  No IRS.  Vector the monad straight to u; vector the dyad to our routine that shuffles args and inplace bits
   // We must copy forwarded flags from f to f@][.  These are BOXATOP and WILLOPEN/USESITEMCOUNT.  BOXATOP is copied from the monad into both valences; WILLOPEN/USESITEMCOUNT are copied from the
   // monad into the monad and (A if @[, W if @])
   flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  R fdef(flag2,CATCO,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
+  fdeffill(z,flag2,CATCO,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
@@ -337,13 +339,14 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
  // if u and v both propagate, the compound does so also
  flag2|=(wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1PROPX));
 
- A z=fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
- RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
+ fdeffillall(z,flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct); R z;
+// obsolete  RZ(z); ; R z;
 }
 
 // u&:v
 F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  ASSERTVV(a,w);
+ A z; fdefallo(z)
  c=FAV(a)->id; wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
  flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
@@ -368,8 +371,8 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
- A z; RZ(z=fdef(flag2,CAMPCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
- FAV(z)->localuse.lu1.linkvb=linktype; R z;
+ fdeffillall(z,flag2,CAMPCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype) R z;
+// obsolete  FAV(z)->localuse.lu1.linkvb=linktype; R z;
 }
 
 // m&v and u&n.  Never inplace the noun argument, since the verb may
@@ -402,9 +405,10 @@ A makenounasgsafe(J jt, A w){
 }
 
 // u&v
-F2(jtamp){F2PREFIP;A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
+F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
  ARGCHK2(a,w);
-  D cct;  // cct that was used for this comparison compound, if any
+ D cct;  // cct that was used for this comparison compound, if any
+ A z; fdefallo(z)
  switch(CONJCASE(a,w)){
  case NV:
   f1=withl; v=FAV(w); c=v->id;
@@ -424,8 +428,8 @@ F2(jtamp){F2PREFIP;A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,
    case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1; break;
    case CIBEAM: if(v->fgh[0]&&v->fgh[1]&&128==i0(v->fgh[0])&&3==i0(v->fgh[1])){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1;} break;
   }
-  z=fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
-  RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
+  fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
+  R z;
  case VN: 
   f1=withr; v=FAV(a);
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
@@ -443,8 +447,8 @@ F2(jtamp){F2PREFIP;A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,
     {PUSHCCTIF(cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
    }
   }
-  z=fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
-  RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
+  fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
+  R z;
  case VV:
   // u&v
   f1=on1; f2=on2;
@@ -489,7 +493,7 @@ F2(jtamp){F2PREFIP;A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,
   // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
   if(f1==on1){flag2|=VF2RANKATOP1; f1=r==RMAX?on1cell:f1; f1=r==0?jton10:f1;}
   if(f2==on2){flag2|=VF2RANKATOP2; f2=r==RMAX?on2cell:f2; f2=r==0?on20:f2;}
-  RZ(z=fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r));
+  fdeffillall(z,flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype);
   FAV(z)->localuse.lu1.linkvb=linktype; R z;
  default: ASSERTSYS(0,"amp");
  case NN: ASSERT(0,EVDOMAIN);

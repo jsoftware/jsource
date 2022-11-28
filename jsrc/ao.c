@@ -829,6 +829,7 @@ F1(jtsldot){F1PREFIP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
+ A z; fdefallo(z)
  if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
  v=VAV(w);
  switch(ID(w)){  // no default for f2: every path must set it
@@ -851,7 +852,7 @@ F1(jtsldot){F1PREFIP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2
                // otherwise (including keymean) fall through to...
   default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE); break;  // pass through ASGSAFE.
  }
- R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
+ fdeffill(z,0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX); R z;
 }
 
 // f/.. - looks like /. except for id

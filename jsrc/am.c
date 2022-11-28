@@ -671,14 +671,16 @@ B jtgerexact(J jt, A w){A*wv;
 // u} handling.  This is not inplaceable but the derived verb is
 F1(jtamend){F1PREFIP;
  ARGCHK1(w);
- if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,amccv2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
+ if(VERB&AT(w)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(ger(jt,w))R gadv(w,CRBRACE);   // v0`v1`v2}
- else           R ADERIV(CRBRACE,mergn1,jtamendn2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // m}
+ else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
+// obsolete  else           R ADERIV(CRBRACE,mergn1,jtamendn2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // m}
 }
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}
 
 F1(jtemend){F1PREFIP;
  ASSERT(NOUN&AT(w),EVDOMAIN);
- R ADERIV(CEMEND,0L,jtamen2,VFLAGNONE, RMAX,RMAX,RMAX);
+ R fdef(0,CEMEND,VERB,(AF)0,(AF)jtamen2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
+// obsolete  R ADERIV(CEMEND,0L,jtamen2,VFLAGNONE, RMAX,RMAX,RMAX);
 }

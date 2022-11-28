@@ -260,11 +260,14 @@ static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
 DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
+ A z; fdefallo(z)  // allocate normal result area
  if(AT(w)&VERB){
   // u^:v.  Create derived verb to handle it.
   v=FAV(a); b=((v->id&~1)==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v  (or @:)
   // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
-  R CDERIV(CPOWOP,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
+  fdeffill(z,0L,CPOWOP,VERB,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,a,w,0L,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX)
+  RETF(z);
+// obsolete   R CDERIV(CPOWOP,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
  }
  // u^:n.  Check for special types.
  if(BOX&AT(w)){A x,y;AF f1,f2;
@@ -277,7 +280,9 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
     if(CAMP==v->id&&(CFROM==ID(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:_ y
     else if(CTILDE==v->id&&CFROM==ID(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:_ y
    }
-   R CDERIV(CPOWOP,f1,f2,VFLAGNONE, RMAX,RMAX,RMAX);  // create the derived verb for <n
+   fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)
+   RETF(z);
+// obsolete    R CDERIV(CPOWOP,f1,f2,VFLAGNONE, RMAX,RMAX,RMAX);  // create the derived verb for <n
   }
 //    ASSERT(self!=0,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
   R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
@@ -297,15 +302,17 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
     // must wait until we get arguments
     A h=0; f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
     flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
-    R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
+    fdeffill(z,0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
    }else{  // u^:_
-    R fdef(0,CPOWOP,VERB,jtpinf12,jtpinf12,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
+    fdeffill(z,0,CPOWOP,VERB,jtpinf12,jtpinf12,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
    }
+   RETF(z);
   }
   if(IAV(hs)[0]>=0){f1=jtfpown; flag=FAV(a)->flag&VJTFLGOK1;}  // if nonneg atom, go to special routine for that, which supports inplace
  }
  // If not special case, fall through to handle general case
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
  ASSERT(m!=0,EVDOMAIN);  // empty power is error
- R fdef(0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
+ fdeffill(z,0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
+ RETF(z);
 }

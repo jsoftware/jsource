@@ -667,7 +667,7 @@ F2(jttdot){F2PREFIP;
  // set defaults for omitted parms
  nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0
  // parms read, install them into the block for t. verb
- A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX));
+ A z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
  FAV(z)->localuse.lu1.forcetask=poolno+(nolocal<<8);  // save the t. options for execution.  Bits 0-7=poolno, 8=worker only
  R atco(ds(CBOX),z);  // use <@: to get BOXATOP flags
 }

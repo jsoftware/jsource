@@ -1381,32 +1381,35 @@ DF1(jtboxcutm21){
 }
 #endif //C_AVX2 && PYXES
 
-F2(jtcut){F2PREFIP;A h=0,z;I flag=0,k;
+F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.  For the shared case, inplacing is OK
  ARGCHK2(a,w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RE(k=i0(w));
+ A z; fdefallo(z)
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  switch(k){
  case 0:          if(FAV(a)->id==CBOX){   // <;.0
-  RZ(z=fdef(0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX));
-  FAV(z)->localuse.boxcut0.parm=~0; FAV(z)->localuse.boxcut0.func=jtcut02;  // store parms to specify start/len format
+  fdeffillall(z,0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,FAV(z)->localuse.boxcut0.parm=~0, FAV(z)->localuse.boxcut0.func=jtcut02);
+// obsolete   FAV(z)->localuse.boxcut0.parm=~0; FAV(z)->localuse.boxcut0.func=jtcut02;  // store parms to specify start/len format
   R z;
   }
-  z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
+  fdeffillall(z,0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 2: case -2:
 #if 0 && C_AVX2 && PYXES //temp. disabled; broken
  if(FAV(a)->id==CBOX){ //<;._2
-  RZ(z=fdef(0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX));
-  FAV(z)->localuse.lu1.gercut.cutn=k;
-  R z;}
+  fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+// obsolete   FAV(z)->localuse.lu1.gercut.cutn=k;
+// obsolete   R z;
+ }
 #endif
- case 1: case -1: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; z=fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX); break;
- case 3: case -3: case 259: case -259: z=fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX); break;
+// fall through to...
+ case 1: case -1: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+ case 3: case -3: case 259: case -259: fdeffillall(z,0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  default:         ASSERT(0,EVDOMAIN);
  }
- RZ(z);
- FAV(z)->localuse.lu1.gercut.cutn=k;  // remember the integer form of the cut selector  This is saved for all cases EXCEPT jtboxcut0.  0-cut will not look at it
- R z;
+// obsolete  RZ(z);
+// obsolete  FAV(z)->localuse.lu1.gercut.cutn=k;  // remember the integer form of the cut selector  This is saved for all cases EXCEPT jtboxcut0.  0-cut will not look at it
+// obsolete  R z;
 }

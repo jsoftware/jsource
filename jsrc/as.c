@@ -394,7 +394,9 @@ static DF1(jtiota1rev){I j; SETIC(w,j); R apv(j,j,-1L);}
 
 F1(jtbsdot){F1PREFIP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;  // init flag is IRS1
  ARGCHK1(w);
- if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
+ A z; fdefallo(z)
+ if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|VAV(ds(CBSDOT))->flag, RMAX,0L,RMAX); RETF(z);}
+// obsolete  if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); R fdef(0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|VAV(ds(BSDOT))->flag, RMAX,0L,RMAX);}
  v=FAV(w);  // verb info for w
  switch(v->id){
  default: break;
@@ -408,8 +410,11 @@ F1(jtbsdot){F1PREFIP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag
   {CCMWDS(xassoc) CCMCAND(xassoc,cand,id) f2=CCMTST(cand,id)?jtofxassoc:f2;}
   break;
  }
- RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
- // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .
- FAV(f)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0;   // f is nonnull if f/\ .
+// obsolete  RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
+ fdeffillall(z,0,CBSDOT,VERB,f1,f2,w,0L,0L,flag,RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
+ // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .
+ RETF(z);
+ // Fill in the lvp[1] field: with 0 if not f/\.; with the lookup field for f/ if f/\. .
+// obsolete  FAV(f)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0;   // f is nonnull if f/\ .
  R f;
 }

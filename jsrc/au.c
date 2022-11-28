@@ -43,6 +43,7 @@ A jtac2(J jt,AF f){R fdef(0,0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 F1(jtvalenceerr1){F1PREFIP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
 F2(jtvalenceerr2){F2PREFIP; ASSERT(0,EVVALENCE);}
 
+#if 0
 // create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
 // if there has been a previous error this function returns 0
 // This creates a recursive block and raises fgh
@@ -68,6 +69,7 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
  AT(z)=t; AFLAGINIT(z,t&RECURSIBLE); // install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens
  R z;
 }
+#endif
 
 // return 1 if w contains no names or explicit definitions
 B nameless(A w){A f,g,h;C id;V*v;

@@ -725,7 +725,7 @@ static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt
 DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
- RZ(ff=fdef(0,CCOLON,VERB, jtxdefn,jtxdefn, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX));  // inherit other flags
+ ff=fdef(0,CCOLON,VERB, jtxdefn,jtxdefn, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
 
@@ -1126,12 +1126,13 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
 
 F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  ARGCHK2(a,w);PROLOG(778);
+ A z; fdefallo(z)
  if(VERB&AT(a)){  // v : v case
   ASSERT(AT(w)&VERB,EVDOMAIN);   // v : noun is an error
   // If nested v : v, prune the tree
   if(CCOLON==FAV(a)->id&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0])&&VERB&AT(FAV(a)->fgh[1]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
   if(CCOLON==FAV(w)->id&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0])&&VERB&AT(FAV(w)->fgh[1]))w=FAV(w)->fgh[1];
-  R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
+  fdeffill(z,0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) R z; // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));  // m : n; set n=value of a argument
  I col0;  // set if it was m : 0
@@ -1207,12 +1208,11 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
    }
   }while((hnofst+=HN)<=HN);
  }
- A z;
  switch(n){
- case 3:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxdefn,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 4:  z=fdef(0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ case 3:  fdeffill(z,0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ case 1:  fdeffill(z,0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxdefn,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  fdeffill(z,0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 4:  fdeffill(z,0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
  case 13: z=vtrans(w); break;
  default: ASSERT(0,EVDOMAIN);
  }

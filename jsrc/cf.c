@@ -179,7 +179,7 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  hcol=(CTTZI(atoplr(h)|0x80)+1)&7;
 
  A z=fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
- RZ(z);
+// obsolete  RZ(z);
  
  // set localuse: for intersect or comparison combination, cct; for echt fork, the h routine to call
  if(!f2){
@@ -301,6 +301,7 @@ static struct {
 // This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident
 A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
  ARGCHK3(a,w,h);
+ A z; fdefallo(z)
  if(likely(!(LOWESTBIT(AT(h))&NOUN+VERB+ADV+CONJ))){
   // bident.
   if(AT(a)&AT(w)&VERB){
@@ -335,11 +336,11 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
     }
    }
    // Return the derived verb
-   A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
-   if(unlikely(linktype!=0))FAV(z)->localuse.lu1.linkvb=linktype;  // if it's a form of ;, install the form
+   fdeffillall(z,0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype); R z;
+// obsolete    if(unlikely(linktype!=0))FAV(z)->localuse.lu1.linkvb=linktype;  // if it's a form of ;, install the form
    R z;
   // All other cases produce a modifier unless they are immediately executable (V N or N/V A)
-  }else{A z;
+  }else{
   // we might enter here with an executable: V N or N/V A, as a result of executing an invisible modifier.  V V was handled above
   I rtnx=TYPE2(AT(a),AT(w));  // the combination being parsed
   AF rtn=bidents[rtnx].fn;  // action routine
@@ -349,10 +350,10 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   // special processing: for display purposes only, we flag the gerunds in gerund@. gerund` gerund`:   `gerund ^:gerund
   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
-  R fdef(0,CADVF, t, rtn,rtn, a,w,0, flag, 0L,0L,0L);  // only one of the rtns is ever used.  h=0 to indicate bident
+  fdeffill(z,0,CADVF, t, rtn,rtn, a,w,0, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used.  h=0 to indicate bident
 
   }
- }else{A z;
+ }else{
   // trident.  we might enter here with an executable: N/V V V fork  or N/V C N/V  or N V N, as a result of executing an invisible modifier
   // here for all tridents except original forks.  forks resulting from execution of other trains are possible
   I rtnx=TYPE3(AT(a),AT(w),AT(h));  // the combination being parsed
@@ -361,6 +362,6 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
-  R fdef(0,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L);  // only one of the rtns is ever used
+  fdeffill(z,0,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used
  }
 }

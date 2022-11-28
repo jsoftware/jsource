@@ -729,6 +729,7 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 // a"w; result is a verb
 F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  ARGCHK2(a,w);
+ A z; fdefallo(z)
  // The localuse value in the function will hold the ranks from w.
  if(unlikely(VERB&AT(w))){
   // verb v.  Extract the ranks into an integer list, which goes into the derived verb
@@ -794,8 +795,8 @@ F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  }
 
  // Create the derived verb.  The derived verb (u"n) inplaces if the action verb u supports inplacing; it supports IRS only for monadic rank 0
- A z; RZ(z=fdef(flag2,CQQ,VERB, f1,f2, a,w,ger, vf, r[0],r[1],r[2]));
- FAV(z)->localuse.srank[0]=(I4)hv[0]; FAV(z)->localuse.srank[1]=(I4)hv[1]; FAV(z)->localuse.srank[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
- FAV(z)->lc=lc;  // install the code byte to use for fused atomic ops
+ fdeffillall(z,flag2,CQQ,VERB, f1,f2, a,w,ger, vf, r[0],r[1],r[2],FAV(z)->lc=lc,FAV(z)->localuse.srank[0]=(I4)hv[0]; FAV(z)->localuse.srank[1]=(I4)hv[1]; FAV(z)->localuse.srank[2]=(I4)hv[2]);
+// obsolete  FAV(z)->localuse.srank[0]=(I4)hv[0]; FAV(z)->localuse.srank[1]=(I4)hv[1]; FAV(z)->localuse.srank[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
+// obsolete  FAV(z)->lc=lc;  // install the code byte to use for fused atomic ops
  R z;
 }

@@ -358,9 +358,10 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // and let unquote use the up-to-date value.
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
- A z=fdef(0,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ // if there is  an error at this point, we must be working on an undefined mnuvxy.  In that case, keep the error and don't allocate a block
+ A z=likely(jt->jerr==0)?fdef(0,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v)):0;  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
  if(likely(val!=0))fa(QCWORD(val))else val=(A)QCVERB;  // release the value, now that we don't need it.  If val was 0, get flags to install into reference t indicate [: is a verb
- RZ(z);
+ RZ(z);  // return point for undefined mnuvxy
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, mark it cacheable
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
  FAV(z)->flag2|=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
@@ -388,7 +389,7 @@ F1(jtcreatecachedref){F1PREFIP;A z;
  A val=QCWORD(syrd(nm,(A)(*JT(jt,emptylocale))[THREADID(jt)]));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
  ASSERT(val!=0,EVVALUE);  // return if error or name not defined
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
- RZ(z=fdef(0,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val))));// create reference
+ z=fdef(0,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));// create reference
  FAV(z)->localuse.lu1.cachedref=val;  // install cached address of value
  ACSETPERM(val);  // now that the value is cached, it lives forever
  RETF(z);

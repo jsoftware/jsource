@@ -90,8 +90,10 @@ fi
 if [ "$1" == "linux" ]; then
 mkdir -p j64gcc
 cp bin/profile.ijs j64gcc
+cp mpir/linux/x86_64/libgmp.so.10 j64gcc
 mkdir -p j32gcc
 cp bin/profile.ijs j32gcc
+cp mpir/linux/i386/libgmp.so.10 j32gcc
 
 cd make2
 

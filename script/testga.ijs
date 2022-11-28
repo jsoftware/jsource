@@ -23,6 +23,8 @@ NB. exit^:(*@#RES) *@#RES
 
 RUN1^:IFWIN 'g640'
 NB. exit^:IFWIN 1
+RUN1^:IFWIN 'g7x6'
+exit^:IFWIN 1
 
 RES=: RUN ddall
 

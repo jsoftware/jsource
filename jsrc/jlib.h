@@ -7,7 +7,8 @@
 typedef void* JS
 #endif
 
-CDPROC JS _stdcall JInit(void);                         /* init instance */
+CDPROC JS _stdcall JInit(void);                     /* init instance */
+CDPROC JS _stdcall JInit2(C*libpath);               /* init instance with libpath */
 CDPROC void _stdcall JSM(JS jt, void*callbacks[]);  /* set callbacks */
 CDPROC void _stdcall JSMX(JS jt, void*, void*, void*, void*, I);
 CDPROC int _stdcall JDo(JS jt,C*);                  /* run sentence */
@@ -23,6 +24,7 @@ CDPROC int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdat
 CDPROC int _stdcall JErrorTextM(JS jt, I ec, I* p);
 
 typedef void* (_stdcall *JInitType)     ();
+typedef void* (_stdcall *JInit2Type)    (C*);
 typedef int   (_stdcall *JDoType)       (JS, C*);
 typedef void  (_stdcall *JInterruptType)(JS);
 typedef C*    (_stdcall *JGetLocaleType)(JS);

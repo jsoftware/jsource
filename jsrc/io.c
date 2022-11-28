@@ -739,7 +739,22 @@ JS _stdcall JInit(void){
  mvc(offsetof(JST,threaddata[1]),jt,1,MEMSET00);
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
- jgmpinit(); // mp support for 1x and 2r3
+ jgmpinit(0); // mp support for 1x and 2r3
+ R jt;  // R (JS)MTHREAD(jt);
+}
+
+ // Init for a new J instance.  Globals have already been initialized.
+ // Create a new jt, which will be the one we use for the entirety of the instance.
+JS _stdcall JInit2(C*libpath){
+ if(!dll_initialized)R 0; // constructor failed
+ JS jt=jvmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
+ if(!jt)R 0;
+ if(!jvmcommit(jt,offsetof(JST,threaddata[1]))){jvmrelease(jt,sizeof(JST));R 0;}
+ jvmwire(jt,offsetof(JST,threaddata[1])); //JS should probably not ever be swapped out.  But failure is non-catastrophic
+ mvc(offsetof(JST,threaddata[1]),jt,1,MEMSET00);
+ // Initialize all the info for the shared region and the master thread
+ if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
+ jgmpinit(libpath); // mp support for 1x and 2r3
  R jt;  // R (JS)MTHREAD(jt);
 }
 

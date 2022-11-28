@@ -211,6 +211,12 @@ case.            do.
  'unknown build' assert 0
 end.
 spawn_jtask_   (ptemp,'/build.sh'),' 1> ',stdout,' 2> ',stderr
+
+if. UNAME-:'Darwin' do.
+ t=. fread stderr
+ if. (62=#t)*.'readlink:'-:9{.t do. ''fwrite stderr end. NB. Mac readlink klucge
+end. 
+
 echo fread stderr
 'build failed'assert 0=#fread stderr
 'target not created' assert fexist pmake2,'/../jlibrary/bin/',y,suf

@@ -800,7 +800,25 @@ CDPROC JS _stdcall JInit()
 		jvmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
- jgmpinit(); // mp support for 1x and 2r3
+	jgmpinit(0); // mp support for 1x and 2r3
+	return jt;  // return (JS)MTHREAD(jt);
+}
+
+CDPROC JS _stdcall JInit2(C *libpath)
+{
+	JST* jt;
+
+	// Init for a new J instance.  Globals have already been initialized.
+	// Create a new jt, which will be the one we use for the entirety of the instance.
+	jt=heapinit();
+	if(!jt) R 0;  // if no memory, fail
+	// Initialize all the info for the shared region and the master thread
+	if(!jtjinit2(jt,0,0))
+	{
+		jvmrelease(jt,sizeof(JST));  // if error during init, fail
+		R 0;
+	};
+	jgmpinit(libpath); // mp support for 1x and 2r3
 	return jt;  // return (JS)MTHREAD(jt);
 }
 

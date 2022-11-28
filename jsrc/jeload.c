@@ -43,6 +43,7 @@ static JGetLocaleType jgetlocale;
 static JGetAType jgeta;
 static JSetAType jseta;
 char path[PLEN];
+char libpathj[PLEN];
 char pathdll[PLEN];
 static char pathetcpx[PLEN];
 static char pathexec0[PLEN];
@@ -108,7 +109,7 @@ JST* jeload(void* callbacks)
  hjdll=dlopen(pathdll,RTLD_LAZY);
 #endif
  if(!hjdll)return 0;
- jt=((JInitType)GETPROCADDRESS(hjdll,"JInit"))();
+ jt=((JInit2Type)GETPROCADDRESS(hjdll,"JInit2"))((C*)libpathj);
  if(!jt) return 0;
  ((JSMType)GETPROCADDRESS(hjdll,"JSM"))(jt,callbacks);
  jdo=(JDoType)GETPROCADDRESS(hjdll,"JDo");
@@ -133,6 +134,7 @@ void jepath(char* arg,char* lib)
  GetModuleFileNameW(0,wpath,_MAX_PATH);
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
+ strcpy(libpathj,path);
 #elif defined(ANDROID)
 #define AndroidPackage "com.jsoftware.j.android"
  char tmp[PLEN];
@@ -140,6 +142,7 @@ void jepath(char* arg,char* lib)
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
  strcat(pathdll,"/lib/");
+ strcpy(libpathj,pathdll);
  strcat(pathdll,JDLLNAME);
  strcat(pathdll,JDLLEXT);
  if(stat(path,&st)){ /* android 5 or newer */
@@ -245,6 +248,7 @@ void jepath(char* arg,char* lib)
  strcpy(tmp,pathdll);
 #endif
  strcpy(pathdll,path);
+ strcpy(libpathj,pathdll);
  strcat(pathdll,filesepx);
  strcat(pathdll,JDLLNAME);
  strcat(pathdll,JDLLEXT);
@@ -283,7 +287,7 @@ void jepath(char* arg,char* lib)
  }
  }
 #endif
- if(*lib)
+ if(lib&&*lib)
  {
 	 if(filesep==*lib || ('\\'==filesep && ':'==lib[1]))
 		 strcpy(pathdll,lib); // absolute path
@@ -293,6 +297,16 @@ void jepath(char* arg,char* lib)
 		 strcat(pathdll,filesepx);
 		 strcat(pathdll,lib); // relative path
 	 }
+#ifdef _WIN32
+	 char *p1,*p2;
+	 p1=strrchr(pathdll,filesep); p2=strrchr(pathdll,'/');
+	 if(p1&&p2){strcpy(libpathj,pathdll);libpathj[((p1>p2)?p1:p2)-pathdll]=0;}
+	 else if(p1){strcpy(libpathj,pathdll);libpathj[p1-pathdll]=0;}
+	 else if(p2){strcpy(libpathj,pathdll);libpathj[p2-pathdll]=0;}
+#else
+	 char *p1;
+	 if((p1=strrchr(pathdll,filesep))){strcpy(libpathj,pathdll);libpathj[p1-pathdll]=0;}
+#endif
  }
 }
 
@@ -302,6 +316,7 @@ void jesetpath(char* arg)
 	strcpy(pathdll,arg); // jwdp gives path to j.dll
 	strcpy(path,arg);
 	if(strrchr(path,filesep))*(strrchr(path,filesep)) = 0;
+	strcpy(libpathj,path);
 }
 
 // build and run first sentence to set BINPATH, ARGV, and run profile

@@ -24,6 +24,11 @@ cp script/ver.ijs .
 
 mkdir -p j64
 cp bin/profile.ijs j64
+if [ "$1" == "linux" ]; then
+cp mpir/linux/x86_64/libgmp.so.10 j64
+else
+cp mpir/apple/macos/libgmp.dylib j64
+fi
 
 cp version.txt jsrc/jversion.h
 echo "#define jplatform \"$1\"" >> jsrc/jversion.h
@@ -77,6 +82,7 @@ if [ "$1" == "linux" ]; then
 mkdir -p j32
 cp bin/profile.ijs j32
 cp bin/$1/j32/* j32
+cp mpir/linux/i386/libgmp.so.10 j32
 chmod 644 j32/*
 chmod 755 j32/jconsole
 fi
@@ -84,8 +90,10 @@ fi
 if [ "$1" == "linux" ]; then
 mkdir -p j64gcc
 cp bin/profile.ijs j64gcc
+cp mpir/linux/x86_64/libgmp.so.10 j64gcc
 mkdir -p j32gcc
 cp bin/profile.ijs j32gcc
+cp mpir/linux/i386/libgmp.so.10 j32gcc
 
 cd make2
 

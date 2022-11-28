@@ -291,8 +291,8 @@ static I recurmsg(J jt, C *msgaddr){
   sprintf(buf,"stack now at 0x%p\n",&buf);
   jsto(JJTOJ(jt),MTYOER,buf);
  }
-/* 32-bit raspberry pi gcc 4.6 compilation warning */
-#if !( !defined(__clang__) && defined( __GNUC__ ) && ( __GNUC__ == 4 ) && (__GNUC_MINOR__ < 7 ) )
+/* 32-bit raspberry pi gcc 4.7 compilation warning */
+#if !( !defined(__clang__) && defined( __GNUC__ ) && ( __GNUC__ == 4 ) && (__GNUC_MINOR__ < 8 ) )
  if(jt)R (I)&buf+recurmsg(jt,msgaddr);
 #endif
  R 0;

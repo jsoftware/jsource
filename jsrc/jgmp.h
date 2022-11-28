@@ -134,7 +134,7 @@ typedef long long int		mpir_si;
 typedef unsigned long       mpir_ui;
 typedef long                mpir_si;
 #endif
-extern void jgmpinit(void);
+extern void jgmpinit(C*);
 extern B nogmp(void);
 #define GMP ASSERT(!nogmp(), EVNONCE) // nonce error if libgmp is not available
 extern void*jmalloc4gmp(size_t);

@@ -109,7 +109,7 @@ JST* jeload(void* callbacks)
  hjdll=dlopen(pathdll,RTLD_LAZY);
 #endif
  if(!hjdll)return 0;
- jt=((JInit2Type)GETPROCADDRESS(hjdll,"JInit2"))(libpathj);
+ jt=((JInit2Type)GETPROCADDRESS(hjdll,"JInit2"))((C*)libpathj);
  if(!jt) return 0;
  ((JSMType)GETPROCADDRESS(hjdll,"JSM"))(jt,callbacks);
  jdo=(JDoType)GETPROCADDRESS(hjdll,"JDo");

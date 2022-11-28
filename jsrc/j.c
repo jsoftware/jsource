@@ -168,5 +168,9 @@ F1(jtversq){
 #else
  strcat(p,"/SLEEF=0");
 #endif
+#if MEMAUDIT
+ strcat(p,"/MEMAUDIT=");
+ sprintf(p + strlen(p), "%x0x", MEMAUDIT);
+#endif
  R cstr(m);
 }

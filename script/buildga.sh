@@ -24,6 +24,9 @@ cp script/ver.ijs .
 
 mkdir -p j64
 cp bin/profile.ijs j64
+if [ "$1" == "linux" ]; then
+cp mpir/linux/x86_64/libgmp.so.10 j64
+fi
 
 cp version.txt jsrc/jversion.h
 echo "#define jplatform \"$1\"" >> jsrc/jversion.h

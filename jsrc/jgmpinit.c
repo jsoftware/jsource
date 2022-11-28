@@ -284,6 +284,7 @@ Q jtQmpq(J jt, mpq_t mpq) {
   #endif
  #endif
 #define LIBGMPNAME "libgmp" LIBEXT
+#define LIBGMPNAME0 "./libgmp" LIBEXT
 #endif
 
 static void*libgmp;
@@ -318,7 +319,8 @@ void jgmpinit() {
  libgmp= LoadLibraryA(LIBGMPNAME);
  if (!libgmp) {fprintf(stderr,"%s\n","error loading gmp library");R;}
 #else
- libgmp= dlopen(LIBGMPNAME, RTLD_LAZY); 
+ if(!(libgmp= dlopen(LIBGMPNAME0, RTLD_LAZY)))  /* first try current directory */
+  libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
  if (!libgmp) {dldiag();R;}
 #endif
 #endif

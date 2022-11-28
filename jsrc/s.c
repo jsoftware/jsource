@@ -688,8 +688,11 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   // Find the symbol table to use, creating one if none found.  Unfortunately assignsym doesn't give us the symbol table
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
  }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
-  // not locative assignment, check for global assignment to a locally-defined name
-  if(unlikely(g==jt->global))ASSERT(!probelocal(a,jt->locsyms),EVDOMAIN)  // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
+  // not locative assignment
+  if(unlikely(g==jt->global))
+   // global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
+   // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
+   ASSERTSUFF(!probelocal(a,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
  }
  // g has the locale we are writing to
 

@@ -278,6 +278,7 @@ void jtjsignalf(J jt,I e,C *fmt,...){
 // w is the y/n arg to the failing entity
 // m is the m argument for adverbs
 // the args to eformat_j_ are error#;curname;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
+// Result is always 0
 A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
  if(jt->emsgstate&EMSGSTATEFORMATTED)R 0;   // if we have already run eformat on this error, don't do it again

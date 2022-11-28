@@ -1397,7 +1397,7 @@ F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
   }
   fdeffillall(z,0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 2: case -2:
-#if 0 && C_AVX2 && PYXES //temp. disabled; broken
+#if 0 && C_AVX2 && PYXES //temp. disabled; broken scaf
  if(FAV(a)->id==CBOX){ //<;._2
   fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
 // obsolete   FAV(z)->localuse.lu1.gercut.cutn=k;

@@ -26,6 +26,8 @@ mkdir -p j64
 cp bin/profile.ijs j64
 if [ "$1" == "linux" ]; then
 cp mpir/linux/x86_64/libgmp.so.10 j64
+else
+cp mpir/apple/macos/libgmp.dylib j64
 fi
 
 cp version.txt jsrc/jversion.h

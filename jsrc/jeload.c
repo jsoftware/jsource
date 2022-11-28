@@ -134,6 +134,7 @@ void jepath(char* arg,char* lib)
  GetModuleFileNameW(0,wpath,_MAX_PATH);
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
+ strcpy(libpathj,path);
 #elif defined(ANDROID)
 #define AndroidPackage "com.jsoftware.j.android"
  char tmp[PLEN];
@@ -141,6 +142,7 @@ void jepath(char* arg,char* lib)
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
  strcat(pathdll,"/lib/");
+ strcpy(libpathj,pathdll);
  strcat(pathdll,JDLLNAME);
  strcat(pathdll,JDLLEXT);
  if(stat(path,&st)){ /* android 5 or newer */
@@ -246,6 +248,7 @@ void jepath(char* arg,char* lib)
  strcpy(tmp,pathdll);
 #endif
  strcpy(pathdll,path);
+ strcpy(libpathj,pathdll);
  strcat(pathdll,filesepx);
  strcat(pathdll,JDLLNAME);
  strcat(pathdll,JDLLEXT);
@@ -284,7 +287,6 @@ void jepath(char* arg,char* lib)
  }
  }
 #endif
- strcpy(libpathj,path);
  if(lib&&*lib)
  {
 	 if(filesep==*lib || ('\\'==filesep && ':'==lib[1]))
@@ -314,6 +316,7 @@ void jesetpath(char* arg)
 	strcpy(pathdll,arg); // jwdp gives path to j.dll
 	strcpy(path,arg);
 	if(strrchr(path,filesep))*(strrchr(path,filesep)) = 0;
+	strcpy(libpathj,path);
 }
 
 // build and run first sentence to set BINPATH, ARGV, and run profile

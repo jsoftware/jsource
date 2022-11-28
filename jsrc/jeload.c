@@ -296,13 +296,13 @@ void jepath(char* arg,char* lib)
 		 strcat(pathdll,lib); // relative path
 	 }
 #ifdef _WIN32
-	 char* p1,p2;
+	 char *p1,*p2;
 	 p1=strrchr(pathdll,filesep); p2=strrchr(pathdll,'/');
 	 if(p1&&p2){strcpy(libpathj,pathdll);libpathj[((p1>p2)?p1:p2)-pathdll]=0;}
 	 else if(p1){strcpy(libpathj,pathdll);libpathj[p1-pathdll]=0;}
 	 else if(p2){strcpy(libpathj,pathdll);libpathj[p2-pathdll]=0;}
 #else
-	 char* p1;
+	 char *p1;
 	 if((p1=strrchr(pathdll,filesep))){strcpy(libpathj,pathdll);libpathj[p1-pathdll]=0;}
 #endif
  }

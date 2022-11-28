@@ -284,7 +284,6 @@ Q jtQmpq(J jt, mpq_t mpq) {
   #endif
  #endif
 #define LIBGMPNAME "libgmp" LIBEXT
-#define LIBGMPNAME0 "./libgmp" LIBEXT
 #endif
 
 static void*libgmp;
@@ -305,7 +304,7 @@ void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
 // referenced gmp routines are declared twice:
 // once here for dynamic linking and 
 // also in jgmp.h for global name declaration
-void jgmpinit() {
+void jgmpinit(C*libpath) {
  if (SZI != sizeof (mp_limb_t)) SEGFAULT; // verify a fundamental assumption
 #if MEMAUDIT&0x40
  ((UIL*)GUARDBLOCK)[0]= (UIL)0x1abe11ed1abe11edLL;
@@ -315,12 +314,20 @@ void jgmpinit() {
  if (jmpz_init) return; // link with libgmp only once
 #endif
 #ifndef IMPORTGMPLIB
+ C dllpath[1000];
 #ifdef _WIN32
- libgmp= LoadLibraryA(LIBGMPNAME);
+ if(libpath){
+  strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBGMPNAME);
+  if(!(libgmp= LoadLibraryA(dllpath)))  /* first try current directory */
+  else libgmp= LoadLibraryA(LIBGMPNAME);
+ } else libgmp= LoadLibraryA(LIBGMPNAME);
  if (!libgmp) {fprintf(stderr,"%s\n","error loading gmp library");R;}
 #else
- if(!(libgmp= dlopen(LIBGMPNAME0, RTLD_LAZY)))  /* first try current directory */
+ if(libpath){
+  strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME);
+  if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try current directory */
   libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
+ } else libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
  if (!libgmp) {dldiag();R;}
 #endif
 #endif

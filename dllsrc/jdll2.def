@@ -14,4 +14,5 @@ EXPORTS
                 JSetA               @27
                 JGetR               @29
                 JSMX                @30
+                JInit2              @31
                 

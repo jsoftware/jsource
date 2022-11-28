@@ -316,14 +316,14 @@ void jgmpinit(C*libpath) {
 #ifndef IMPORTGMPLIB
  C dllpath[1000];
 #ifdef _WIN32
- if(libpath){
+ if(libpath&&*libpath){
   strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBGMPNAME);
   if(!(libgmp= LoadLibraryA(dllpath)))  /* first try current directory */
   libgmp= LoadLibraryA(LIBGMPNAME);
  } else libgmp= LoadLibraryA(LIBGMPNAME);
  if (!libgmp) {fprintf(stderr,"%s\n","error loading gmp library");R;}
 #else
- if(libpath){
+ if(libpath&&*libpath){
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME);
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try current directory */
   libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);

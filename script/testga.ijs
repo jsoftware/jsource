@@ -11,9 +11,7 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-NB. RUN1^:(GITHUBCI>IF64) 'g100i'
-
-NB. ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'Linux'-:UNAME)#(<testpath),each 'gnan.ijs';'gxinf.ijs' NB. temporarily disable gnan on linux
+ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'Win'-:UNAME)#(<testpath),each <'g7x6.ijs' NB. temporarily disable
 
 NB. smoke test
 NB. RES=: RUN (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
@@ -22,7 +20,7 @@ NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
 RUN1^:IFWIN 'g640'
-RUN1^:IFWIN 'g7x6'
+NB. RUN1^:IFWIN 'g7x6'
 NB. exit^:IFWIN 1
 
 RES=: RUN ddall

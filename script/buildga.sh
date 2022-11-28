@@ -80,6 +80,7 @@ if [ "$1" == "linux" ]; then
 mkdir -p j32
 cp bin/profile.ijs j32
 cp bin/$1/j32/* j32
+cp mpir/linux/i386/libgmp.so.10 j32
 chmod 644 j32/*
 chmod 755 j32/jconsole
 fi

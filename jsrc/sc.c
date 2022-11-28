@@ -342,7 +342,9 @@ void jtstackepilog(J jt, I4 initcurrstack){
 // return ref to adv/conj/verb whose name is a and whose value/type is val (with QCGLOBAL semantics)
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
 // and return that; the name will be resolved when the name~ is executed.
-// If the name is undefined, return a reference to [: (a verb that always fails)
+// If the name is undefined, return a reference to [: (a verb that always fails) EXCEPT
+// that if an error is extant, it must be because a mnuvxy name was not found; in that case return 0 to
+// cause the error to be noticed
 // This verb also does some processing designed to reduce register usage in the parser:
 //  * if val is not 0, it is freed
 //  * the flags from val are transferred to the result (with QCFAOWED semantics)
@@ -359,8 +361,8 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
  // if there is  an error at this point, we must be working on an undefined mnuvxy.  In that case, keep the error and don't allocate a block
- A z=likely(jt->jerr==0)?fdef(0,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v)):0;  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
- if(likely(val!=0))fa(QCWORD(val))else val=(A)QCVERB;  // release the value, now that we don't need it.  If val was 0, get flags to install into reference t indicate [: is a verb
+ A z=likely(jt->jerr==0)?fdefnoerr(0,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v)):0;  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ if(likely(val!=0))fa(QCWORD(val))else val=(A)QCVERB;  // release the value, now that we don't need it.  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // return point for undefined mnuvxy
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, mark it cacheable
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name

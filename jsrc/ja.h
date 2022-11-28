@@ -411,6 +411,7 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 // fdeffill replaces the original fdef, which did not know about localuse
 #define fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fdeffillall(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r,fffv->localuse.lu0.cachedloc=0,fffv->localuse.lu1.cct=0.0)
 #define fdef(flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) ({A fffz; fdefallo(fffz) fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fffz;})  // we no longer check error.  This cannot return 0
+#define fdefnoerr(flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) ({A fffz; GAT0E(fffz,INT,(VERBSIZE+SZI-1)>>LGSZI,0,goto retpoint) fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) retpoint:; fffz;})  // this version returns 0 if allocation error
 
 #if !USECSTACK
 #define fdep(x)                     jtfdep(jt,(x))

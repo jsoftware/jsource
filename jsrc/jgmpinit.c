@@ -319,7 +319,7 @@ void jgmpinit(C*libpath) {
  if(libpath){
   strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBGMPNAME);
   if(!(libgmp= LoadLibraryA(dllpath)))  /* first try current directory */
-  else libgmp= LoadLibraryA(LIBGMPNAME);
+  libgmp= LoadLibraryA(LIBGMPNAME);
  } else libgmp= LoadLibraryA(LIBGMPNAME);
  if (!libgmp) {fprintf(stderr,"%s\n","error loading gmp library");R;}
 #else

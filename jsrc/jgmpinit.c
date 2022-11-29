@@ -327,7 +327,7 @@ void jgmpinit(C*libpath) {
  if(libpath&&*libpath){
   int FHS=0,i=0;
   const char *usrlib[]={"/opt/homebrew/lib","/usr/local/lib","/lib64","/lib",
-                  "/lib/aarch64-linux-gnu","/lib/arm-linux-gnueabihf"
+                  "/lib/aarch64-linux-gnu","/lib/arm-linux-gnueabihf",
                   "/lib/x86_64-linux-gnu","/lib/i386-linux-gnu",0 };
   while(usrlib[i]){
    if(!strcmp(libpath,usrlib[i])) {FHS=1; break;}

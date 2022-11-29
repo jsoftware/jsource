@@ -156,9 +156,9 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  INITJT(jjt,baselocalehash)=(UI4)nmhash(sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale));
   // Init for u./v.
  A uimp=ca(mnuvxynam[2]); NAV(uimp)->flag|=NMIMPLOC;  // create the name for u.
- INITJT(jjt,implocref)[0] = fdef(0,CTILDE,VERB,jtvalenceerr1,jtvalenceerr2, uimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[0])=ACUC1;  //create 'u.'~, mark an not abandoned (no ra() needed)
+ INITJT(jjt,implocref)[0] = fdef(0,CTILDE,VERB,jtvalenceerr,jtvalenceerr, uimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[0])=ACUC1;  //create 'u.'~, mark an not abandoned (no ra() needed)
  A vimp=ca(mnuvxynam[3]); NAV(vimp)->flag|=NMIMPLOC;
- INITJT(jjt,implocref)[1] = fdef(0,CTILDE,VERB,jtvalenceerr1,jtvalenceerr2, vimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[1])=ACUC1;  //create 'v.'~
+ INITJT(jjt,implocref)[1] = fdef(0,CTILDE,VERB,jtvalenceerr,jtvalenceerr, vimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[1])=ACUC1;  //create 'v.'~
 
  INITJT(jjt,igemm_thres)=FLOATTOFLOAT16(IGEMM_THRES);   // tuning parameters for cip.c
  INITJT(jjt,dgemm_thres)=FLOATTOFLOAT16(DGEMM_THRES);

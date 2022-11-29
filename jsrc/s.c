@@ -594,11 +594,11 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
  RETF(z);
 }
 
-F1(jtdllsymget){R dllsymaddr(w,0);}  // 15!:6
-F1(jtdllsymdat){R dllsymaddr(w,1);}  // 15!:14
-F1(jtdllsymhdr){R dllsymaddr(w,2);}  // 15!:12
+F1(jtdllsymget){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,0);}  // 15!:6
+F1(jtdllsymdat){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,1);}  // 15!:14
+F1(jtdllsymhdr){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,2);}  // 15!:12
 F1(jtscind){R dllsymaddr(w,3);}  // 4!:4
-F1(jtdllvaladdr){R sc((I)w);}  // 15!:19, return address of value
+F1(jtdllvaladdr){ASSERT(!JT(jt,seclev),EVSECURE) R sc((I)w);}  // 15!:19, return address of value
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found or invalid name
 F1(jtsymbrd){A z; ARGCHK1(w); ASSERTN(z=QCWORD(syrd(w,jt->locsyms)),EVVALUE,w); tpush(z); R z;}   // undo the ra() in syrd

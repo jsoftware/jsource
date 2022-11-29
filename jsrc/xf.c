@@ -131,6 +131,7 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
 
 
 DF1(jtjfread){A z;F f,fp;
+ ASSERT(!JT(jt,seclev),EVSECURE) 
  F1RANK(0,jtjfread,self);
  RE(f=stdf(w));  // f=file#, or 0 if w is a filename
  if(f){ // if special file, read it all, possibly with error
@@ -146,6 +147,7 @@ DF1(jtjfread){A z;F f,fp;
 
 // 1!:2
 DF2(jtjfwrite){B b;F f;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,0,jtjfwrite,self);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
  RE(f=stdf(w));
@@ -160,6 +162,7 @@ DF2(jtjfwrite){B b;F f;
 
 // 1!:3
 DF2(jtjfappend){B b;F f;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,0,jtjfappend,self);
  RE(f=stdf(w));
  if(2==(I)f){jpr(a); R a;}  // this forces typeout, with NOSTDOUT off
@@ -172,6 +175,7 @@ DF2(jtjfappend){B b;F f;
 }
 
 DF1(jtjfsize){B b;F f;I m;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfsize,self);
  RE(f=stdf(w));
  if(b=!f)RZ(f=jope(w,FREAD_O)) else RE(vfn(f)); 
@@ -207,6 +211,7 @@ static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
 
 // 1!:11
 DF1(jtjiread){A z=0;B b;F f;I i,n;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjiread,self);
  RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));  // b=filename, not number; if name, open the named file
  if(ixin(w,fsize(f),&i,&n))z=rd(f,i,n);
@@ -216,6 +221,7 @@ DF1(jtjiread){A z=0;B b;F f;I i,n;
 
 // 1!:12
 DF2(jtjiwrite){B b;F f;I i;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,1,jtjiwrite,self);
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
@@ -254,6 +260,7 @@ static B rmdir(C*v){R!rmdir1(v);}
 
 
 DF1(jtjmkdir){A y,z;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjmkdir,self);
  ASSERT(AT(w)&BOX,EVDOMAIN);
  RZ(y=str0(vslit(C(AAV(w)[0]))));
@@ -267,6 +274,7 @@ DF1(jtjmkdir){A y,z;
 
 // 1!:55
 DF1(jtjferase){A y,fn;US*s;I h;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjferase,self);
  RE(h=fnum(w));
 // obsolete  if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(C(AAV(w)[0])),EVFNUM);
@@ -287,7 +295,7 @@ DF1(jtjferase){A y,fn;US*s;I h;
 }    /* erase file or directory */
 
 F1(jtpathcwd){C path[1+NPATH];US wpath[1+NPATH];
- ASSERTMTV(w);
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
 #if (SYS & SYS_UNIX)
  ASSERT(getcwd(path,NPATH),EVFACE);
 #else
@@ -298,7 +306,7 @@ F1(jtpathcwd){C path[1+NPATH];US wpath[1+NPATH];
 }
 
 F1(jtpathchdir){A z;
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
  ASSERT((LIT+C2T+C4T)&AT(w),EVDOMAIN);
@@ -315,7 +323,9 @@ F1(jtpathchdir){A z;
 #define _wgetenv(s)  (0)
 #endif
 
+// 2!:5
 DF1(jtjgetenv){
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjgetenv,self);
  ASSERT((LIT+C2T+C4T)&AT(w),EVDOMAIN);
 #if (SYS & SYS_UNIX)
@@ -337,7 +347,9 @@ DF1(jtjgetenv){
  R num(0);
 }
 
+// 2!:6
 F1(jtjgetpid){
+ ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERTMTV(w);
 #if SY_WIN32
  R(sc(GetCurrentProcessId()));
@@ -349,19 +361,19 @@ F1(jtjgetpid){
 #if (SYS & SYS_UNIX)
 #if defined(__GNUC__) && defined(_GNU_SOURCE)
 F1(jtpathdll){Dl_info info;
- ASSERTMTV(w);
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
  if(dladdr(jtpathdll, &info)){
   R cstr((C*)info.dli_fname);
  } else R cstr((C*)"");
 }
 #else
 F1(jtpathdll){
- ASSERTMTV(w); R cstr((C*)"");
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w); R cstr((C*)"");
 }
 #endif
 #else
 F1(jtpathdll){char p[MAX_PATH]; extern C dllpath[];
- ASSERTMTV(w);
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
  strcpy(p,dllpath);
  if('\\'==p[strlen(p)-1]) p[strlen(p)-1]=0;
  R cstr(p);

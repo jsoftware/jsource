@@ -1210,8 +1210,8 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  }
  switch(n){
  case 3:  fdeffill(z,0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  fdeffill(z,0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxdefn,jtvalenceerr2,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  fdeffill(z,0,CCOLON, CONJ, jtvalenceerr1,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 1:  fdeffill(z,0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxdefn,jtvalenceerr,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  fdeffill(z,0,CCOLON, CONJ, jtvalenceerr,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
  case 4:  fdeffill(z,0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
  case 13: z=vtrans(w); break;
  default: ASSERT(0,EVDOMAIN);

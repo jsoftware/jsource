@@ -37,11 +37,10 @@ RETF(z);}
 F1(jtself1){A z; FDEPINC(d=fdep(jt->parserstackframe.sf)); STACKCHKOFL df1(z,  w,jt->parserstackframe.sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
 F2(jtself2){A z; FDEPINC(d=fdep(jt->parserstackframe.sf)); STACKCHKOFL df2(z,a,w,jt->parserstackframe.sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
 
-A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr2, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
-A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr1,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 
-F1(jtvalenceerr1){F1PREFIP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
-F2(jtvalenceerr2){F2PREFIP; ASSERT(0,EVVALENCE);}
+F1(jtvalenceerr){F1PREFIP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
 
 #if 0
 // create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
@@ -53,8 +52,8 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
  AN(z)=0xdeadbeef;  // AN field of function is used for actual rank
  if(fs)INCORPRA(fs); if(gs)INCORPRA(gs); if(hs)INCORPRA(hs);   // indicate fgh are about to be incorporated, and raise
  memset(&v->localuse,0,sizeof(v->localuse));
- v->valencefns[0]    =f1?f1:jtvalenceerr1;  /* monad C function */
- v->valencefns[1]    =f2?f2:jtvalenceerr2;  /* dyad  C function */
+ v->valencefns[0]    =f1?f1:jtvalenceerr;  /* monad C function */
+ v->valencefns[1]    =f2?f2:jtvalenceerr;  /* dyad  C function */
  v->fgh[0]     =fs;                  /* monad            */
  v->fgh[1]     =gs;                  /* dyad             */      
  v->fgh[2]     =hs;                  /* fork right tine or other auxiliary stuff */
@@ -108,14 +107,3 @@ I boxat(A x, I m, I l, I r){C c;V*v;
  }
  R 0; 
 }    /* 1 iff w is <@:f or <@f where f has infinite rank */
-
-// w is a verb
-// Result has bit 0 set if the verb is [, 2 if ...@[, bit 1 set if ], 3 if ...@]   (or @:)
-// The set bit indicates that argument WILL NOT be examined when w is executed
-I atoplr(A w){
- if(!w)R 0;
- V *v=FAV(w);     // v->verb info, c=id of w
- C id = v->id,id2=id; if((id2&-2)==CATCO)id = FAV(v->fgh[1])->id;  // @ @:
- id = (id-(CLEFT-1)) & REPSGN((CLEFT-1)-(I)id) & REPSGN((I)id-(CRIGHT+1));  // LEFT->1, RIGHT->2 punning with JINPLACEW/A; but 0 if not LEFT or RIGHT
- R (id2&-2)==CATCO?id<<2:id;  // if @[:], shift
-}

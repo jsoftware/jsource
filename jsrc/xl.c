@@ -72,11 +72,12 @@ B jtxlinit(JS jjt){A x;I*s;JJ jt=MTHREAD(jjt);
 // Our preference is to perform no system calls under readlock/writelock.  Here we violate that rule by executing J verbs
 // under the lock.  It's just too easy that way, and these functions are little-used and have low overhead.  Since the returns are
 // small - virtual blocks or scalars - we could allocate/free a block or two to make sure they are available, but we don't bother
-F1(jtjlocks){A y; ASSERTMTV(w); READLOCK(JT(jt,flock)) y=take(sc(AM(JT(jt,flkd))),JT(jt,flkd)); READUNLOCK(JT(jt,flock)) R grade2(y,y);}
+F1(jtjlocks){A y; ASSERTMTV(w); ASSERT(!JT(jt,seclev),EVSECURE) READLOCK(JT(jt,flock)) y=take(sc(AM(JT(jt,flkd))),JT(jt,flkd)); READUNLOCK(JT(jt,flock)) R grade2(y,y);}
      /* return the locks, a 3-column table of (number,index,length) */
 
 // 1!:31
 DF1(jtjlock){B b;I*v;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjlock,self);
  RZ(w=vi(w)); 
  ASSERT(LKC==AN(w),EVLENGTH);
@@ -119,6 +120,7 @@ found: ;   // here when a file was unlocked.  We know we have given up the lock 
 
 // 1!:32
 DF1(jtjunlock){
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjunlock,self); 
  ASSERT(INT&AT(w),EVDOMAIN); 
  WRITELOCK(JT(jt,flock))

@@ -64,6 +64,12 @@
 #define atcompf(x,y,z)              jtatcompf(jt,(x),(y),(z))
 #define atomic(x,y)                 jtatomic(jt,(x),(y))
 #define atop(x,y)                   jtatop(jt,(x),(y))
+
+// w is a verb
+// result indicates ][ status: 0=none, 1=[ 2=] 3=@[ 4=@]   (or @:)
+// idw is id from verb; id is same, but if f@[:}g is replaced by id from g; if id is ][, set bit 0-2 with ][ info, and add @ info; clear it all if not ][
+#define atoplr(w) ({I res; if(unlikely(w==0))res=0; else{C idw=FAV(w)->id; A g=FAV(w)->fgh[1]; g=(idw&-2)==CATCO?g:w; res=(idw&-2)==CATCO?3:1; C id=FAV(g)->id; res+=(id&1); res=(id&-2)==CLEFT?res:0;} res;})
+
 #define attu(x)                     jtattu(jt,(x))
 #define attv(x)                     jtattv(jt,(x))
 #define auditmemchains()            jtauditmemchains(jt)
@@ -395,8 +401,8 @@
 #define fdeffillall(fffz,fffflag2v,fffidv,ffft,ffff1,ffff2,ffffs,fffgs,fffhs,fffflagv,fffm,fffl,fffr,ffflui0,ffflui1) \
 {V *fffv=FAV(fffz); \
 AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank scaf */ \
-fffv->valencefns[0]    =(ffff1);  /* monad C function */ \
-fffv->valencefns[1]    =(ffff2); if((ffff1)==0||(ffff2)==0)SEGFAULT;  /* scaf dyad  C function */ \
+fffv->valencefns[0]=(ffff1);  /* monad C function */ \
+fffv->valencefns[1]=(ffff2); /* dyad  C function */ \
 fffv->flag  =(UI4)(fffflagv); \
 fffv->flag2 = (UI4)(fffflag2v); \
 fffv->mr    =(RANKT)(fffm);                   /* monadic rank     */ \

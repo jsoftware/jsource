@@ -150,7 +150,7 @@ F2(jtevger){F2PREFIP;A hs;I k;
    R fdef(0,CGRCO,VERB, jtcon1,jtcon2, a,w,hs, VGERL, RMAX,RMAX,RMAX);
   case GINSERT:
    ASSERT(1>=AR(a),EVRANK);
-   R fdef(0,CGRCO,VERB, jtinsert,jtvalenceerr2,   a,w,hs, VGERL, RMAX,0L,0L);
+   R fdef(0,CGRCO,VERB, jtinsert,jtvalenceerr,   a,w,hs, VGERL, RMAX,0L,0L);
   default:
    ASSERT(0,EVDOMAIN);
 }}
@@ -468,7 +468,7 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  ASSERT(AT(C(AAV(hs)[0]))&AT(C(AAV(hs)[1]))&AT(C(AAV(hs)[2]))&VERB,EVDOMAIN);
  I alr=atoplr(C(AAV(hs)[0]));
- I flag=(FAV(C(AAV(hs)[0]))->flag&FAV(C(AAV(hs)[1]))->flag&FAV(C(AAV(hs)[2]))->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+((alr|(alr>>2))&3);
+ I flag=(FAV(C(AAV(hs)[0]))->flag&FAV(C(AAV(hs)[1]))->flag&FAV(C(AAV(hs)[2]))->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+(alr-2>0?alr-2:alr);
  R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 

@@ -85,24 +85,24 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
    ASSERT(sv->valencefns[1]==jtsumattymes1,EVDOMAIN)  // Must be +/@:*"1!.[01]
 // obsolete   RZ(f=CDERIV(CFIT,0,jtsumattymes1,VIRS2, m,l,r));  // supports IRS
 // obsolete    FAV(f)->localuse.lu1.fittype=wval; R f;
-   fdeffillall(z,0L,CFIT,VERB,jtvalenceerr1,jtsumattymes1,a,w,0L,VIRS2,m,l,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.fittype=wval) RETF(z);  // supports IRS
+   fdeffillall(z,0L,CFIT,VERB,jtvalenceerr,jtsumattymes1,a,w,0L,VIRS2,m,l,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.fittype=wval) RETF(z);  // supports IRS
   case CSLASH: ;
    RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
    ASSERT(FAV(sv->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!.0
-   fdeffill(z,0L,CFIT,VERB,jtcompsum,jtvalenceerr2,a,w,0L,VIRS1,m,l,r) RETF(z);  // supports IRS
+   fdeffill(z,0L,CFIT,VERB,jtcompsum,jtvalenceerr,a,w,0L,VIRS1,m,l,r) RETF(z);  // supports IRS
 // obsolete    R CDERIV(CFIT,jtcompsum,0,VIRS1, m,l,r);  // supports IRS
   case CEXP:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
 // obsolete    R CDERIV(CFIT,0L,jtfitexp2,0L, m,l,r);
-   fdeffill(z,0L,CFIT,VERB,jtvalenceerr1,jtfitexp2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);  // ^!.f
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitexp2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);  // ^!.f
   case CPOLY:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
 // obsolete    R CDERIV(CFIT,0L,jtfitpoly2,0L, m,l,r);   // CPOLY has no VIRS
-   fdeffill(z,0L,CFIT,VERB,jtvalenceerr1,jtfitpoly2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);  // p.!.f
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitpoly2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);  // p.!.f
   case CPOWOP:  // support for #^:_1!.n
    if(sv->fgh[1]!=num(-1))R jtfitct(jt,a,w,0,z);
    f=sv->fgh[0]; c=ID(f);
-   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr1,jtfitfill2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);}  // #^:_1!.f
+   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);}  // #^:_1!.f
 // obsolete  R CDERIV(CFIT,0,jtfitfill2,VFLAGNONE,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);
    f=FAV(f)->fgh[1]; ASSERT(CPOUND==ID(f),EVDOMAIN);
@@ -123,7 +123,7 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
 // obsolete    R CDERIV(CFIT,jtfitpp1,sv->valencefns[1],0L,m,l,r);  // CTHORN lacks VIRS
   case CCYCLE:
    RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
-   fdeffill(z,0L,CFIT,VERB,jtpparity,jtvalenceerr2,a,w,0L,VFLAGNONE,m,RMAX,RMAX) RETF(z);  // C.!.2
+   fdeffill(z,0L,CFIT,VERB,jtpparity,jtvalenceerr,a,w,0L,VFLAGNONE,m,RMAX,RMAX) RETF(z);  // C.!.2
 // obsolete    R CDERIV(CFIT,jtpparity,0L,0L,m,RMAX,RMAX);  // CCYCLE lacks VIRS
   case CTILDE:   // noun~!.n - what in the world is that?
    ASSERT(NOUN&AT(sv->fgh[0]),EVDOMAIN);

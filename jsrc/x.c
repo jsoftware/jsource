@@ -11,15 +11,15 @@
 #include "j.h"
 #include "x.h"
 
-#define SDERIV(id,f1,f2,flag,m,l,r)  \
- fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr1),(I)(f2?(AF)f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
-
-#define SDERI2(id,f1,f2,flag,m,l,r)  \
- fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr1),(I)(f2?(AF)f2:jtvalenceerr2)),(flag),(I)m,(I)l,(I)r)
-
-
-static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL1IP((AF)AV(h)[0],  w,self);}
-static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL2IP((AF)AV(h)[1],a,w,self);}
+// obsolete #define SDERIV(id,f1,f2,flag,m,l,r)  \
+// obsolete  fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr),(I)(f2?(AF)f2:jtvalenceerr)),(flag),(I)m,(I)l,(I)r)
+// obsolete 
+// obsolete #define SDERI2(id,f1,f2,flag,m,l,r)  \
+// obsolete  fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr),(I)(f2?(AF)f2:jtvalenceerr)),(flag),(I)m,(I)l,(I)r)
+// obsolete 
+// obsolete 
+// obsolete static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL1IP((AF)AV(h)[0],  w,self);}
+// obsolete static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL2IP((AF)AV(h)[1],a,w,self);}
 
 // undocumented 13!: functions, used to test condrange
 static DF2(jtfindrange){
@@ -60,61 +60,61 @@ F2(jtforeign){F2PREFIP;I p,q;
  case 0:
   switch(q){
   case XC(0,  0): 
-  case XC(0,100): R SDERI2(CIBEAM, jtscm00,      jtscm002,     VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,100): R CDERIV(CIBEAM, jtscm00,      jtscm002,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,  1): 
-  case XC(0,101): R SDERI2(CIBEAM, jtscm01,      jtscm012,     VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,101): R CDERIV(CIBEAM, jtscm01,      jtscm012,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0, 10): 
-  case XC(0,110): R SDERI2(CIBEAM, jtscm10,      jtscm102,     VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,110): R CDERIV(CIBEAM, jtscm10,      jtscm102,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0, 11): 
-  case XC(0,111): R SDERI2(CIBEAM, jtscm11,      jtscm112,     VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(0,2):   R SDERI2(CIBEAM, jtsct1,       jtsct2,       VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(0,3):   R SDERI2(CIBEAM, jtscz1,       jtscz2,       VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,111): R CDERIV(CIBEAM, jtscm11,      jtscm112,     VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,2):   R CDERIV(CIBEAM, jtsct1,       jtsct2,       VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,3):   R CDERIV(CIBEAM, jtscz1,       jtscz2,       VASGSAFE,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 1:
   switch(q){
-  case XC(1,0):   R SDERIV(CIBEAM, jtjdir,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(1,1):   R SDERIV(CIBEAM, jtjfread,     0,            VASGSAFE,0,   RMAX,RMAX);
-  case XC(1,2):   R SDERIV(CIBEAM, 0,            jtjfwrite,    VASGSAFE,RMAX,RMAX,0   );
-  case XC(1,3):   R SDERIV(CIBEAM, 0,            jtjfappend,   VASGSAFE,RMAX,RMAX,0   );
-  case XC(1,4):   R SDERIV(CIBEAM, jtjfsize,     0,            VASGSAFE,0,   RMAX,RMAX);
-  case XC(1,5):   R SDERIV(CIBEAM, jtjmkdir,     0,            VASGSAFE,0,   RMAX,RMAX);
-  case XC(1,6):   R SDERIV(CIBEAM, jtjfatt1,     jtjfatt2,     VASGSAFE,0,   1,   0   );
-  case XC(1,7):   R SDERIV(CIBEAM, jtjfperm1,    jtjfperm2,    VASGSAFE,0,   1,   0   );
+  case XC(1,0):   R CDERIV(CIBEAM, jtjdir,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(1,1):   R CDERIV(CIBEAM, jtjfread,     0,            VASGSAFE,0,   RMAX,RMAX);
+  case XC(1,2):   R CDERIV(CIBEAM, 0,            jtjfwrite,    VASGSAFE,RMAX,RMAX,0   );
+  case XC(1,3):   R CDERIV(CIBEAM, 0,            jtjfappend,   VASGSAFE,RMAX,RMAX,0   );
+  case XC(1,4):   R CDERIV(CIBEAM, jtjfsize,     0,            VASGSAFE,0,   RMAX,RMAX);
+  case XC(1,5):   R CDERIV(CIBEAM, jtjmkdir,     0,            VASGSAFE,0,   RMAX,RMAX);
+  case XC(1,6):   R CDERIV(CIBEAM, jtjfatt1,     jtjfatt2,     VASGSAFE,0,   1,   0   );
+  case XC(1,7):   R CDERIV(CIBEAM, jtjfperm1,    jtjfperm2,    VASGSAFE,0,   1,   0   );
 
-  case XC(1,11):  R SDERIV(CIBEAM, jtjiread,     0,            VASGSAFE,1,   RMAX,RMAX);
-  case XC(1,12):  R SDERIV(CIBEAM, 0,            jtjiwrite,    VASGSAFE,RMAX,RMAX,1   );
-  case XC(1,20):  R SDERIV(CIBEAM, jtjfiles,     0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(1,21):  R SDERIV(CIBEAM, jtjopen,      0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(1,22):  R SDERIV(CIBEAM, jtjclose,     0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(1,11):  R CDERIV(CIBEAM, jtjiread,     0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(1,12):  R CDERIV(CIBEAM, 0,            jtjiwrite,    VASGSAFE,RMAX,RMAX,1   );
+  case XC(1,20):  R CDERIV(CIBEAM, jtjfiles,     0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(1,21):  R CDERIV(CIBEAM, jtjopen,      0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(1,22):  R CDERIV(CIBEAM, jtjclose,     0,            VASGSAFE,RMAX,RMAX,RMAX);
 
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
-  case XC(1,30):  R SDERIV(CIBEAM, jtjlocks,     0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(1,31):  R SDERIV(CIBEAM, jtjlock,      0,            VASGSAFE,1,   RMAX,RMAX);
-  case XC(1,32):  R SDERIV(CIBEAM, jtjunlock,    0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(1,30):  R CDERIV(CIBEAM, jtjlocks,     0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(1,31):  R CDERIV(CIBEAM, jtjlock,      0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(1,32):  R CDERIV(CIBEAM, jtjunlock,    0,            VASGSAFE,1,   RMAX,RMAX);
 #endif
   
-  case XC(1,43):  R SDERIV(CIBEAM, jtpathcwd,    0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(1,44):  R SDERIV(CIBEAM, jtpathchdir,  0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(1,43):  R CDERIV(CIBEAM, jtpathcwd,    0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(1,44):  R CDERIV(CIBEAM, jtpathchdir,  0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(1,46):  R CDERIV(CIBEAM, jtpathdll,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 
-  case XC(1,55):  R SDERIV(CIBEAM, jtjferase,    0,            VASGSAFE,0,   RMAX,RMAX);
+  case XC(1,55):  R CDERIV(CIBEAM, jtjferase,    0,            VASGSAFE,0,   RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 2:
   switch(q){
-  case XC(2,0):   R SDERIV(CIBEAM, jthost,       0,            VASGSAFE,1,   RMAX,RMAX);
-  case XC(2,1):   R SDERIV(CIBEAM, jthostne,     0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(2,0):   R CDERIV(CIBEAM, jthost,       0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(2,1):   R CDERIV(CIBEAM, jthostne,     0,            VASGSAFE,1,   RMAX,RMAX);
 #if 0  // doesn't work
-  case XC(2,2):   R SDERIV(CIBEAM, jthostio,     0,            VASGSAFE,1,   RMAX,RMAX);
-  case XC(2,3):   R SDERIV(CIBEAM, jtjwait,      0,            VASGSAFE,0,   RMAX,RMAX);
+  case XC(2,2):   R CDERIV(CIBEAM, jthostio,     0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(2,3):   R CDERIV(CIBEAM, jtjwait,      0,            VASGSAFE,0,   RMAX,RMAX);
 #endif
 // (2,4) reserved for messages from host OS
-  case XC(2,5):   R SDERIV(CIBEAM, jtjgetenv,    0,            VASGSAFE,1,   RMAX,RMAX);
-  case XC(2,6):   R SDERIV(CIBEAM, jtjgetpid,    0,            VASGSAFE,1,   RMAX,RMAX);
-  case XC(2,7):   R SDERIV(CIBEAM, jtjgetx,      0,            VASGSAFE,1,   RMAX,RMAX);
-  case XC(2,8):   R SDERIV(CIBEAM, jtcerrno,     0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(2,5):   R CDERIV(CIBEAM, jtjgetenv,    0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(2,6):   R CDERIV(CIBEAM, jtjgetpid,    0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(2,7):   R CDERIV(CIBEAM, jtjgetx,      0,            VASGSAFE,1,   RMAX,RMAX);
+  case XC(2,8):   R CDERIV(CIBEAM, jtcerrno,     0,            VASGSAFE,RMAX,RMAX,RMAX);
 // (2,9) reserved for messages from host OS
   case XC(2,55):  R CDERIV(CIBEAM,jtjoff,0,VASGSAFE,RMAX,0,0);
   default: ASSERT(0,EVDOMAIN); break;
@@ -143,13 +143,13 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(4,5):   R CDERIV(CIBEAM, jtnch,        0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(4,6):   R CDERIV(CIBEAM, jtscriptstring,        0,   VASGSAFE,RMAX,RMAX,RMAX);
   case XC(4,7):   R CDERIV(CIBEAM, jtscriptnum,        0,      VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(4,8):   R fdef(0,CIBEAM,ADV, jtcreatecachedref,jtvalenceerr2,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );
+  case XC(4,8):   R fdef(0,CIBEAM,ADV, jtcreatecachedref,jtvalenceerr,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );
   case XC(4,55):  R CDERIV(CIBEAM, jtex,         0,            VASGSAFE,0,   RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 5:
   switch(q){
-  case XC(5,0):   R fdef(0,CIBEAM,ADV, jtfxx,jtvalenceerr2,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );
+  case XC(5,0):   R fdef(0,CIBEAM,ADV, jtfxx,jtvalenceerr,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );
   case XC(5,1):   R CDERIV(CIBEAM, jtarx,        0,            VASGSAFE,0,   RMAX,RMAX);
   case XC(5,2):   R CDERIV(CIBEAM, jtdrx,        0,            VASGSAFE,0,   RMAX,RMAX);
   case XC(5,4):   R CDERIV(CIBEAM, jttrx,        0,            VASGSAFE,0,   RMAX,RMAX);
@@ -266,7 +266,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(9,66):  R CDERIV(CIBEAM, jtcheckcompfeatures, 0,  VASGSAFE,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
- case 11: R fdef(0,CIBEAM,VERB, jtwd,jtvalenceerr2, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
+ case 11: R fdef(0,CIBEAM,VERB, jtwd,jtvalenceerr, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
  case 13:
   switch(q){
   case XC(13,0):  R CDERIV(CIBEAM, jtdbc,        0,            VFLAGNONE,RMAX,RMAX,RMAX);
@@ -300,38 +300,38 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(13,-5): R CDERIV(CIBEAM, 0,            jtauditpyx,   VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,-6): R CDERIV(CIBEAM, jtstackfault,            0, VFLAGNONE,RMAX,RMAX,RMAX);
 #if PYXES
-  case XC(13,-7): R SDERIV(CIBEAM, jtnulljob,    0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(13,-7): R CDERIV(CIBEAM, jtnulljob,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 #endif
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 15:
   switch(q){
-  case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE|VJTFLGOK2,RMAX,   1L,  1L  );
-  case XC(15,1):  R SDERIV(CIBEAM, jtmemr,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,2):  R SDERIV(CIBEAM, 0,            jtmemw,       VASGSAFE,RMAX,   RMAX,RMAX);
-  case XC(15,3):  R SDERIV(CIBEAM, jtmema,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,4):  R SDERIV(CIBEAM, jtmemf,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,5):  R SDERIV(CIBEAM, jtcdf,        0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,6):  R SDERIV(CIBEAM, jtdllsymget,  0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,7):  R SDERIV(CIBEAM, jtdllsymset,  0,            VASGSAFE,RMAX,RMAX,RMAX);   
-  case XC(15,8):  R SDERIV(CIBEAM, jtgh15,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,9):  R SDERIV(CIBEAM, jtfh15,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,10): R SDERIV(CIBEAM, jtcder,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,11): R SDERIV(CIBEAM, jtcderx,      0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,12): R SDERIV(CIBEAM, jtdllsymhdr,  0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,0):  R CDERIV(CIBEAM, 0,            jtcd,         VASGSAFE|VJTFLGOK2,RMAX,   1L,  1L  );
+  case XC(15,1):  R CDERIV(CIBEAM, jtmemr,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,2):  R CDERIV(CIBEAM, 0,            jtmemw,       VASGSAFE,RMAX,   RMAX,RMAX);
+  case XC(15,3):  R CDERIV(CIBEAM, jtmema,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,4):  R CDERIV(CIBEAM, jtmemf,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,5):  R CDERIV(CIBEAM, jtcdf,        0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,6):  R CDERIV(CIBEAM, jtdllsymget,  0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,7):  R CDERIV(CIBEAM, jtdllsymset,  0,            VASGSAFE,RMAX,RMAX,RMAX);   
+  case XC(15,8):  R CDERIV(CIBEAM, jtgh15,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,9):  R CDERIV(CIBEAM, jtfh15,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,10): R CDERIV(CIBEAM, jtcder,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,11): R CDERIV(CIBEAM, jtcderx,      0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,12): R CDERIV(CIBEAM, jtdllsymhdr,  0,            VASGSAFE,RMAX,RMAX,RMAX);
 #if 0
   case XC(15,12): R CDERIV(CIBEAM, jtsmmblks,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 #endif
   case XC(15,13): R CDERIV(CIBEAM, jtcallback,   jtcallback2,  VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,14): R SDERIV(CIBEAM, jtdllsymdat,  0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,15): R SDERIV(CIBEAM, jtmemu,       jtmemu2,      VASGSAFE|VJTFLGOK1,RMAX,0,   0   );
-  case XC(15,16): R SDERIV(CIBEAM, jtnfes,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,17): R SDERIV(CIBEAM, jtcallbackx,  0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,19): R SDERIV(CIBEAM, jtdllvaladdr,  0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,14): R CDERIV(CIBEAM, jtdllsymdat,  0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,15): R CDERIV(CIBEAM, jtmemu,       jtmemu2,      VASGSAFE|VJTFLGOK1,RMAX,0,   0   );
+  case XC(15,16): R CDERIV(CIBEAM, jtnfes,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,17): R CDERIV(CIBEAM, jtcallbackx,  0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,19): R CDERIV(CIBEAM, jtdllvaladdr,  0,            VASGSAFE,RMAX,RMAX,RMAX);
 #if 0
-  case XC(15,19): R SDERIV(CIBEAM, jtcdjt,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,20): R SDERIV(CIBEAM, jtcdlibl,     0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,21): R SDERIV(CIBEAM, jtcdproc1,    jtcdproc2,    VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,19): R CDERIV(CIBEAM, jtcdjt,       0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,20): R CDERIV(CIBEAM, jtcdlibl,     0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,21): R CDERIV(CIBEAM, jtcdproc1,    jtcdproc2,    VASGSAFE,RMAX,RMAX,RMAX);
 #endif
   default: ASSERT(0,EVDOMAIN); break;
   } break;

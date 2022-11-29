@@ -35,8 +35,8 @@ extern int os_swi1(I,I);
 
 #if (SYS & SYS_MACINTOSH)
 
-F1(jthost  ){ASSERT(0,EVDOMAIN);}
-F1(jthostne){ASSERT(0,EVDOMAIN);}
+F1(jthost  ){ASSERT(0,EVDOMAIN);}  // 2!:0
+F1(jthostne){ASSERT(0,EVDOMAIN);}  // 2!:1
 
 #else
 
@@ -45,7 +45,9 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 // "avx"             would run j.dll or javx.dll
 // "avx avx2"        would run j.dll or javx.dll or javx2.dll
 // "avx avx2 avx512" would run j.dll or javx.dll or javx2.dll or javx512.dll
+// 2!:7
 F1(jtjgetx){
+ASSERT(!JT(jt,seclev),EVSECURE)
 #if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512) R cstr("avx avx2 avx512");
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX2)   R cstr("avx avx2");
@@ -55,7 +57,9 @@ if(getCpuFeatures()&CPU_X86_FEATURE_AVX)    R cstr("avx");
 R cstr("");
 }
 
+// 2!:0
 DF1(jthost){A z;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jthost,self);
  RZ(w=vslit(w));
 // #if SY_WINCE
@@ -119,7 +123,9 @@ DF1(jthost){A z;
  R z;
 }
 
+// 2!:1
 DF1(jthostne){
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jthostne,self);
  RZ(w=vslit(w));
 // #if SY_WINCE
@@ -148,18 +154,18 @@ DF1(jthostne){
 
 #endif
 
-
 #if 0 // doesn't work
 #if !(SYS & SYS_UNIX)
 
-F1(jthostio){ASSERT(0,EVDOMAIN);}
-F1(jtjwait ){ASSERT(0,EVDOMAIN);}
+F1(jthostio){ASSERT(0,EVDOMAIN);}  // 2!:2
+F1(jtjwait ){ASSERT(0,EVDOMAIN);}  // 2!:3
 
 #else
 
 #define CL(f) {close(f[0]);close(f[1]);}
 
 DF1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
+ ASSERT(!JT(jt,seclev),EVSECURE)
  if(pipe(fi)==-1) ASSERT(0,EVFACE);
  if(pipe(fo)==-1){CL(fi); ASSERT(0,EVFACE);}
  fii[0]=fi[0];fii[1]=fi[1];foi[0]=fo[0];foi[1]=fo[1];
@@ -184,13 +190,14 @@ DF1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
  R z;
 }
 
-F1(jtjwait){I k;int s; RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}
+F1(jtjwait){I k;int s; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}  // 2!:3
 
 #endif
 #endif
 /* return errno info from c library */
+// 2!:8
 F1(jtcerrno){C buf[1024],ermsg[1024];
- ASSERTMTV(w);
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
 #ifdef _WIN32
  if(errno&&!strerror_s(ermsg,1024,errno)) strcpy (buf, ermsg); else strcpy (buf, "");
 #else

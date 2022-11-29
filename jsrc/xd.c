@@ -126,6 +126,7 @@ F1(jtfullname){C dirpath[_MAX_PATH];
 
 // 1!:7 permissions
 DF1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfperm1,self);
 // obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
  RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
@@ -140,6 +141,7 @@ DF1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
 }
 
 DF2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(1,0,jtjfperm2,self);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
  RZ(a=vslit(a)); ASSERT(3==AN(a),EVLENGTH); 
@@ -156,6 +158,7 @@ DF2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
 #else /* SY_WINCE: */
 
 DF1(jtjfperm1){A y,z;C*p,*q,*s;F f; DWORD attr;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfperm1,self);
 // obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
  RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
@@ -216,7 +219,7 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
 
 // 1!:0
 F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C fnbuffer[10000]; C* name;
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  RZ(w=vslit(!AR(w)&&BOX&AT(w)?ope(w):w));
  RZ(fn=jttoutf16x(jt,w)); USAV(fn)[AN(fn)]=0;
  fh=FindFirstFileW(USAV(fn),&f);
@@ -238,6 +241,7 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
 }
 
 DF1(jtjfatt1){A y,fn;F f;U x;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfatt1,self);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
@@ -247,6 +251,7 @@ DF1(jtjfatt1){A y,fn;F f;U x;
 }
 
 DF2(jtjfatt2){A y,fn;F f;U x;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(1,0,jtjfatt2,self);
  RE(x=attu(a));
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=vslit(C(AAV(w)[0])),EVFNUM)
@@ -366,7 +371,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
  C diratts[7]; C dirmode[11];  C dirrwx[3];
  struct_stat64 dirstatbuf[3];  // for some reason there were 2 dummy blocks reserved after the buffer for 32-bit Linux.  Preserve that
  C dirnamebuf[NPATH];  // workarea
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  RZ(w=str0(vslit(!AR(w)&&BOX&AT(w)?ope(w):w)));
  s=CAV(w);
  if(x=strrchr(s,'/')){dir=s==x?(C*)"/":s; pat=x+1; *x=0;}else{dir="."; pat=s;}
@@ -396,6 +401,7 @@ DF2(jtjfatt2){ASSERT(0,EVNONCE);}
 
 
 DF1(jtjfperm1){A y;F f;C b[11];
+ ASSERT(!JT(jt,seclev),EVSECURE)
  struct_stat64 dirstatbuf[3];
  F1RANK(0,jtjfperm1,self);
 // obsolete  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
@@ -418,6 +424,7 @@ static const struct tperms {C*c;I p[4];} permtab[]=
     };
 
 DF2(jtjfperm2){A y;C*s;F f;int x=0,i;C*m;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(1,0,jtjfperm2,self);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
  RZ(a=vslit(a)); ASSERT(9==AN(a),EVLENGTH); s=CAV(a);

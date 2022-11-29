@@ -862,6 +862,6 @@ F1(jtsldotdot){F1PREFIP;A h=0; I flag=VJTFLGOK1|VJTFLGOK2;
  ARGCHK1(w);
  if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
  AF f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE);  // pass through ASGSAFE.
- R fdef(0,CSLDOTDOT,VERB,jtvalenceerr1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
+ R fdef(0,CSLDOTDOT,VERB,jtvalenceerr,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
 }
 

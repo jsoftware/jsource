@@ -51,13 +51,14 @@ FORK1(jthook1cell,0x110)
 A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  // by the parsing rules, g and h must be verbs here
+ A z; fdefallo(z);  // allocate the result early to free regs during function body
  gv=FAV(g); gi=gv->id;
  hv=FAV(h); hi=hv->id;
  D cct=0.0;  // cct to use for comparison/setintersect, 0='use default'
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
+  RZ(f=makenounasgsafe(jt, f))   // adjust usecount so that the value cannot be inplaced  scaf look at this
   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
-  RZ(f=makenounasgsafe(jt, f))   // adjust usecount so that the value cannot be inplaced
   fline=5;  // set left argtype
   if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only boolean 0
   if(LIT&AT(f)&&1==AR(f)&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==ID(gv->fgh[0])){
@@ -174,9 +175,11 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
   if(fi==CCAP){f=g; g=h; h=0;}  // dehydrate capped fork
   // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
   // argument.  In that case h can inplace the unused argument.
-  fline=(CTTZI(atoplr(f)|0x80)+1)&7;  // codes are none,[,],@[,@],noun in f
+// obsolete fline=(CTTZI(atoplr(f)|0x80)+1)&7;  // codes are none,[,],@[,@],noun in f
+  fline=atoplr(f);  // codes are none,[,],@[,@],noun in f
  }
- hcol=(CTTZI(atoplr(h)|0x80)+1)&7;  // codes are none,[,],@[,@] in h
+// obsolete  hcol=(CTTZI(atoplr(h)|0x80)+1)&7;  // codes are none,[,],@[,@] in h
+ hcol=atoplr(h);  // codes are none,[,],@[,@] in h
 
  // if we are using the default functions, pull them from the tables
  if(!f1)f1=fork1tbl[(0x200110>>(fline<<2))&3][(0b00110>>hcol)&1];  // fline: 0/3/4->0,  1/2->1, 5->2   hcol: / 0/3/4->0,  1/2->1
@@ -184,7 +187,6 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
   f2=fork2tbl[fline][hcol]; f2=(I)jtinplace&JTFOLKNOHFN?jtfolk2:f2;  // NOHFN means the caller is going to fool with the result fork, so the EP is unreliable
  }else{hcol=-1;}   // select the value we will put into localuse: hcol=-1 means cct, other hcol=routine address of h or h@]
 
- A z; fdefallo(z);
  fdeffillall(z,flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,if(hcol<0)FAV(z)->localuse.lu1.cct=cct;else FAV(z)->localuse.lu1.fork2hfn=hcol<=2?hv->valencefns[1]:FAV(hv->fgh[0])->valencefns[0]);
 // obsolete  RZ(z);
  

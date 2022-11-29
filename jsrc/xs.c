@@ -169,9 +169,9 @@ DF1(jtscm11 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     
 DF1(jtsct1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtsct1,  self); R r?line(w,-1L,2,1):linf(mark,w,2,1);}
 DF1(jtscz1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscz1,  self); R r?line(w,-1L,3,0):linf(mark,w,3,0);}
 
-DF2(jtscm002){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm002,self); R r?line(w,-1L,0,0):linf(a,   w,0,0);}
-DF2(jtscm012){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm012,self); R r?line(w,-1L,0,1):linf(a,   w,0,1);}
-DF2(jtscm102){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm102,self); R r?line(w,-1L,1,0):linf(a,   w,1,0);}
-DF2(jtscm112){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm112,self); R r?line(w,-1L,1,1):linf(a,   w,1,1);}
-DF2(jtsct2  ){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtsct2,  self); R r?line(w,-1L,2,1):linf(a,   w,2,1);}
-DF2(jtscz2  ){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscz2,  self); R r?line(w,-1L,3,0):linf(a,   w,3,0);}
+DF2(jtscm002){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm002,self); R r?line(w,-1L,0,0):linf(a,   w,0,0);}
+DF2(jtscm012){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm012,self); R r?line(w,-1L,0,1):linf(a,   w,0,1);}
+DF2(jtscm102){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm102,self); R r?line(w,-1L,1,0):linf(a,   w,1,0);}
+DF2(jtscm112){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm112,self); R r?line(w,-1L,1,1):linf(a,   w,1,1);}
+DF2(jtsct2  ){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtsct2,  self); R r?line(w,-1L,2,1):linf(a,   w,2,1);}
+DF2(jtscz2  ){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscz2,  self); R r?line(w,-1L,3,0):linf(a,   w,3,0);}

@@ -59,7 +59,7 @@ F1(jtfname){I j; A z=0;
 }    /* string name corresp. to file# w */
 
 // 1!:20
-F1(jtjfiles){A y,z=0;
+F1(jtjfiles){A y,z=0; ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERTMTV(w);
  READLOCK(JT(jt,flock))  A*v=AAV0(JT(jt,fopafl)); I nrows=AM(JT(jt,fopafl));
  // We are doing an uncomfortable amount of memory allocating here under lock.
@@ -111,7 +111,7 @@ F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
 
 // 1!:21
 F1(jtjopen){A z;I h;
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  if(!AN(w))R w;
  if(AR(w))R rank1ex0(w,DUMMYSELF,jtjopen);
  RE(h=fnum(w));  // return non0 if the string is the # of an already-open file
@@ -144,7 +144,7 @@ B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;I ct=AM(JT(jt,fopf));
 
 // 1!:22
 F1(jtjclose){A*av;I*iv,j,h;
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  if(!AN(w))R w;
  if(AR(w))R rank1ex0(w,DUMMYSELF,jtjclose);
  RZ(h=fnum(w));  // get the file # of the file referred to.  If nonexistent, fail

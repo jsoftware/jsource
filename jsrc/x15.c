@@ -1258,7 +1258,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 
 F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  F2PREFIP;
- ARGCHK2(a,w);
+ ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE)
  AFLAGPRISTNO(w)  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
  if(1<AR(a)){I rr=AR(w); rr=rr==0?1:rr; R rank2ex(a,w,DUMMYSELF,1L,rr,1L,rr,jtcd);}
  wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);   // m = # 1-cells of w
@@ -1299,16 +1299,16 @@ void dllquit(J jt){I j,*v;
  // leave the tables allocated
 }    /* dllquit - shutdown and cdf clean up dll call resources */
 
-F1(jtcdf){ASSERTMTV(w); dllquit(jt); R mtm;}
+F1(jtcdf){ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w); dllquit(jt); R mtm;}
      /* 15!:5 */
 
 /* return error info from last cd domain error - resets to DEOK */
-F1(jtcder){I4 t; ASSERTMTV(w); t=jt->dlllasterror; jt->dlllasterror=DEOK; R v2(t&0xff,t>>8);}
+F1(jtcder){I4 t; ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w); t=jt->dlllasterror; jt->dlllasterror=DEOK; R v2(t&0xff,t>>8);}
      /* 15!:10 */
 
 /* return errno info from last cd with errno not equal to 0 - resets to 0 */
 F1(jtcderx){I4 t;C buf[1024];
- ASSERTMTV(w); t=jt->getlasterror; jt->getlasterror=0;
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w); t=jt->getlasterror; jt->getlasterror=0;
 
 #if SY_WIN32 && !SY_WINCE
  FormatMessageA(
@@ -1336,14 +1336,14 @@ F1(jtcderx){I4 t;C buf[1024];
  R jlink(sc(t),cstr(buf));
 }    /* 15!:11  GetLastError information */
 
-F1(jtmema){I k; RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */
+F1(jtmema){I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */
      /* 15!:3  memory allocate */
 
-F1(jtmemf){I k; RE(k=i0(w)); FREE((void*)k); R num(0);}
+F1(jtmemf){I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); FREE((void*)k); R num(0);}
      /* 15!:4  memory free */
 
 F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(INT&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  n=AN(w); v=AV(w);
@@ -1371,7 +1371,7 @@ F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
 
 // write to memory.  w is addr,offset,count[,type]
 F2(jtmemw){C*u;I m,n,t,*v;
- ARGCHK2(a,w);
+ ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(INT&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  n=AN(w); v=AV(w);
@@ -1394,7 +1394,7 @@ F2(jtmemw){C*u;I m,n,t,*v;
 
 // 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
 // We have to check jt in case this usage is in a fork that will use the block later
-F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);
+F1(jtmemu) { F1PREFIP; ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);
  // We will NUL-terminate a string in case called routines need it (not sure this is necessary)
 #if SY_64
  if(unlikely((AT(w)&LAST0)!=0))*(C4*)&CAV(w)[AN(w)*bpnoun(AT(w))]=0;  // on 64-bit systems, always safe to add 4 bytes at end of data
@@ -1403,16 +1403,16 @@ F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG
 #endif
  RETF(w);
 }
-F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
+F2(jtmemu2) { ASSERT(!JT(jt,seclev),EVSECURE) RETF(ca(w)); }  // dyad - force copy willy-nilly
 
-F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
+F1(jtgh15){A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
      /* 15!:8  get header */
 
-F1(jtfh15){I k; RE(k=i0(w)); fr((A)k); R num(0);}
+F1(jtfh15){I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); fr((A)k); R num(0);}
      /* 15!:9  free header */
 
 // 15!:7.  w has the address of a header.  Put that address in play as an A block
-F1(jtdllsymset){ARGCHK1(w); R (A)i0(w);}      /* do some validation here */
+F1(jtdllsymset){ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) R (A)i0(w);}      /* do some validation here */
 
 /* dll callback routines */
 static J cbjt; /* callbacks require jt and can only use the one */
@@ -1751,6 +1751,7 @@ F2(jtcallback2){I k1;
 }    /* 15!:13 */
 
 F1(jtnfes){I k;I r;
+ ASSERT(!JT(jt,seclev),EVSECURE)
  RE(k=i0(w));
  ASSERT(BETWEENC(k,0,1),EVDOMAIN);
  r=JT(jt,nfe);
@@ -1759,17 +1760,17 @@ F1(jtnfes){I k;I r;
 } /* 15!:16 toggle native front end (nfe) state */
 
 F1(jtcallbackx){
- ASSERTMTV(w);
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
  R vec(INT,cbxn,cbx);
 } /* 15!:17 return x callback arguments */
 
 F1(jtcdjt){
- ASSERTMTV(w);
+ ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
  R sc((I)(intptr_t)jt);
 } /* 15!:19 return jt */
 
 F1(jtcdlibl){
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
@@ -1778,7 +1779,7 @@ F1(jtcdlibl){
 }    /* 15!:20 return library handle */
 
 F1(jtcdproc1){CCT*cc;
- ARGCHK1(w);
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
@@ -1870,7 +1871,7 @@ static const C* jfntnm[]={
 };
 
 F2(jtcdproc2){C*proc;FARPROC f;HMODULE h;
- ARGCHK2(a,w);
+ ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);

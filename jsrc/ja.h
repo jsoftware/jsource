@@ -394,11 +394,7 @@
 // This creates a recursive block and raises fgh
 #define fdeffillall(fffz,fffflag2v,fffidv,ffft,ffff1,ffff2,ffffs,fffgs,fffhs,fffflagv,fffm,fffl,fffr,ffflui0,ffflui1) \
 {V *fffv=FAV(fffz); \
-AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank */ \
-A fffasg=(ffffs); if(fffasg)INCORPRA(fffasg); fffv->fgh[0]=fffasg;  /* incorp fs and install as f */ \
-fffasg=(fffgs); if(fffasg)INCORPRA(fffasg); fffv->fgh[1]=fffasg;  /* incorp gs and install as g */ \
-fffasg=(fffhs); if(fffasg)INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/otfher stuff and install as h */ \
-ffflui0; ffflui1;  /* local-use fields */ \
+AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank scaf */ \
 fffv->valencefns[0]    =ffff1?(AF)(ffff1):(AF)jtvalenceerr1;  /* monad C function */ \
 fffv->valencefns[1]    =ffff2?(AF)(ffff2):(AF)jtvalenceerr2;  /* dyad  C function */ \
 fffv->flag  =(UI4)(fffflagv); \
@@ -406,6 +402,11 @@ fffv->flag2 = (UI4)(fffflag2v); \
 fffv->mr    =(RANKT)(fffm);                   /* monadic rank     */ \
 fffv->lrr=(RANK2T)(((fffl)<<RANKTX)+(fffr)); /* left/right rank */ \
 fffv->id    =(C)(fffidv);                  /* spelling         */ \
+ffflui0; ffflui1;  /* local-use fields - store last in case it overwrites an earlier value */ \
+/* do the INCORPs last to allow reg vbls to be stored first */ \
+A fffasg=(ffffs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[0]=fffasg;  /* incorp fs and install as f */ \
+fffasg=(fffgs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[1]=fffasg;  /* incorp gs and install as g */ \
+fffasg=(fffhs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/otfher stuff and install as h */ \
 AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens */ \
 }
 // fdeffill replaces the original fdef, which did not know about localuse

@@ -37,8 +37,8 @@ RETF(z);}
 F1(jtself1){A z; FDEPINC(d=fdep(jt->parserstackframe.sf)); STACKCHKOFL df1(z,  w,jt->parserstackframe.sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
 F2(jtself2){A z; FDEPINC(d=fdep(jt->parserstackframe.sf)); STACKCHKOFL df2(z,a,w,jt->parserstackframe.sf);  FDEPDEC(d); forcetomemory(w); RETF(z);}
 
-A jtac1(J jt,AF f){R fdef(0,0,VERB, f,0L, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
-A jtac2(J jt,AF f){R fdef(0,0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr2, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr1,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 
 F1(jtvalenceerr1){F1PREFIP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
 F2(jtvalenceerr2){F2PREFIP; ASSERT(0,EVVALENCE);}

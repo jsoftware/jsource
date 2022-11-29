@@ -1014,8 +1014,8 @@ typedef struct {
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s
- AF valencefns[2];   // function to call for monad,dayd
  A fgh[3];  // operands of modifiers.  h is used for forks and also as a storage spot for parms.  all 3 are freed when the V block is freed
+ AF valencefns[2];   // function to call for monad,dayd
  I4 flag;
  UI4 flag2;
  RANK2T lrr;  // combining dyad ranks: (left<<RANKTX)|right

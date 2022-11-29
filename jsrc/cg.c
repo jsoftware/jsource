@@ -150,7 +150,7 @@ F2(jtevger){F2PREFIP;A hs;I k;
    R fdef(0,CGRCO,VERB, jtcon1,jtcon2, a,w,hs, VGERL, RMAX,RMAX,RMAX);
   case GINSERT:
    ASSERT(1>=AR(a),EVRANK);
-   R fdef(0,CGRCO,VERB, jtinsert,0L,   a,w,hs, VGERL, RMAX,0L,0L);
+   R fdef(0,CGRCO,VERB, jtinsert,jtvalenceerr2,   a,w,hs, VGERL, RMAX,0L,0L);
   default:
    ASSERT(0,EVDOMAIN);
 }}

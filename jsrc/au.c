@@ -117,5 +117,5 @@ I atoplr(A w){
  V *v=FAV(w);     // v->verb info, c=id of w
  C id = v->id,id2=id; if((id2&-2)==CATCO)id = FAV(v->fgh[1])->id;  // @ @:
  id = (id-(CLEFT-1)) & REPSGN((CLEFT-1)-(I)id) & REPSGN((I)id-(CRIGHT+1));  // LEFT->1, RIGHT->2 punning with JINPLACEW/A; but 0 if not LEFT or RIGHT
- R (id2&-2)==CATCO?id<<2:id;  // if @, shift
+ R (id2&-2)==CATCO?id<<2:id;  // if @[:], shift
 }

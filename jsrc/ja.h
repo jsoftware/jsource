@@ -395,8 +395,8 @@
 #define fdeffillall(fffz,fffflag2v,fffidv,ffft,ffff1,ffff2,ffffs,fffgs,fffhs,fffflagv,fffm,fffl,fffr,ffflui0,ffflui1) \
 {V *fffv=FAV(fffz); \
 AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank scaf */ \
-fffv->valencefns[0]    =ffff1?(AF)(ffff1):(AF)jtvalenceerr1;  /* monad C function */ \
-fffv->valencefns[1]    =ffff2?(AF)(ffff2):(AF)jtvalenceerr2;  /* dyad  C function */ \
+fffv->valencefns[0]    =(ffff1);  /* monad C function */ \
+fffv->valencefns[1]    =(ffff2); if((ffff1)==0||(ffff2)==0)SEGFAULT;  /* scaf dyad  C function */ \
 fffv->flag  =(UI4)(fffflagv); \
 fffv->flag2 = (UI4)(fffflag2v); \
 fffv->mr    =(RANKT)(fffm);                   /* monadic rank     */ \

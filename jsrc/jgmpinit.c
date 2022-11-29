@@ -284,6 +284,7 @@ Q jtQmpq(J jt, mpq_t mpq) {
   #endif
  #endif
 #define LIBGMPNAME "libgmp" LIBEXT
+#define LIBJGMPNAME "libjgmp" LIBEXT
 #endif
 
 static void*libgmp;
@@ -324,8 +325,16 @@ void jgmpinit(C*libpath) {
  if (!libgmp) {fprintf(stderr,"%s\n","error loading gmp library");R;}
 #else
  if(libpath&&*libpath){
-  strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME);
-  if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try current directory */
+  int FHS=0,i=0;
+  const char *usrlib[]={"/opt/homebrew/lib","/usr/local/lib","/lib64","/lib",
+                  "/lib/aarch64-linux-gnu","/lib/arm-linux-gnueabihf",
+                  "/lib/x86_64-linux-gnu","/lib/i386-linux-gnu",0 };
+  while(usrlib[i]){
+   if(!strcmp(libpath,usrlib[i])) {FHS=1; break;}
+   i++;
+  }
+  strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
+  if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
   libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
  } else libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
  if (!libgmp) {dldiag();R;}

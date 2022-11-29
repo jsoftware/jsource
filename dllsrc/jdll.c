@@ -800,7 +800,7 @@ CDPROC JS _stdcall JInit()
 		jvmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
-	jgmpinit(0); // mp support for 1x and 2r3
+	jgmpinit(dllpath); // mp support for 1x and 2r3
 	return jt;  // return (JS)MTHREAD(jt);
 }
 
@@ -818,7 +818,8 @@ CDPROC JS _stdcall JInit2(C *libpath)
 		jvmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
-	jgmpinit(libpath); // mp support for 1x and 2r3
+	if(libpath){strcpy(dllpath,libpath);if(strlen(dllpath)&&('\\'==dllpath[strlen(dllpath)-1]))dllpath[strlen(dllpath)-1]=0;}
+	jgmpinit(dllpath); // mp support for 1x and 2r3
 	return jt;  // return (JS)MTHREAD(jt);
 }
 

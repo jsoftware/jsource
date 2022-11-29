@@ -170,11 +170,20 @@ JHS has the additional complication of critical sections of J code
 #include <windows.h>
 #include <winbase.h>
 #else
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dlfcn.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#else // Linux
+#include <link.h>
+#endif
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -710,6 +719,22 @@ void jsto(JS jt,I type,C*s){C e;I ex;
 }
 
 #if SYS&SYS_UNIX
+char sopath[PATH_MAX];
+
+static void getsopath(void){
+const char *sym_name = "JGetLocale";
+ void *sym_ptr = dlsym(RTLD_DEFAULT,sym_name);
+// fprintf(stdout,"SYMBOL %s ADDRESS %p\n", sym_name, sym_ptr);
+ if (sym_ptr){
+  Dl_info info;
+  if (dladdr(sym_ptr,&info)){ // non-zero is success
+   strcpy(sopath,info.dli_fname);
+   char *p1;
+   if((p1=strrchr(info.dli_fname,'/'))){sopath[p1-(char*)info.dli_fname]=0;}
+  } else *sopath=0;
+ } else *sopath=0;
+// fprintf(stdout,"sopath: %s\n", sopath);
+}
 
 C dll_initialized= 0; // dll init sets to 1
 
@@ -719,6 +744,7 @@ __attribute__((constructor)) static void Initializer(){
  // by the compiler; some must be initialized a run-time in static memory; some must be allocated into A blocks
  // pointed to by static names.  Because of the A blocks, we have to perform a skeletal initialization of jt,
  // just enough to do ga().  The rest of jt is never used
+ getsopath();
  JS jt=jvmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
  if(!jt)R;
  I sz=offsetof(JST,threaddata[1]); // #relevant bytes: just JS and the first JT
@@ -739,7 +765,7 @@ JS _stdcall JInit(void){
  mvc(offsetof(JST,threaddata[1]),jt,1,MEMSET00);
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
- jgmpinit(0); // mp support for 1x and 2r3
+ jgmpinit(sopath); // mp support for 1x and 2r3
  R jt;  // R (JS)MTHREAD(jt);
 }
 
@@ -754,7 +780,8 @@ JS _stdcall JInit2(C*libpath){
  mvc(offsetof(JST,threaddata[1]),jt,1,MEMSET00);
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
- jgmpinit(libpath); // mp support for 1x and 2r3
+ if(libpath){strcpy(sopath,libpath);if(strlen(sopath)&&('/'==sopath[strlen(sopath)-1]))sopath[strlen(sopath)-1]=0;}
+ jgmpinit(sopath); // mp support for 1x and 2r3
  R jt;  // R (JS)MTHREAD(jt);
 }
 

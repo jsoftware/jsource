@@ -346,7 +346,8 @@ F1(jtjgetpid){
 #endif
 }
 
-#if (SYS & SYS_UNIX)
+// #if (SYS & SYS_UNIX)
+#if 0
 #if defined(__GNUC__) && defined(_GNU_SOURCE)
 F1(jtpathdll){Dl_info info;
  ASSERTMTV(w);
@@ -360,10 +361,20 @@ F1(jtpathdll){
 }
 #endif
 #else
-F1(jtpathdll){char p[MAX_PATH]; extern C dllpath[];
+F1(jtpathdll){
+#if (SYS & SYS_UNIX)
+char p[PATH_MAX]; extern C sopath[];
+#else
+char p[MAX_PATH]; extern C dllpath[];
+#endif
  ASSERTMTV(w);
+#if (SYS & SYS_UNIX)
+ strcpy(p,sopath);
+ if(strlen(p)&&('/'==p[strlen(p)-1])) p[strlen(p)-1]=0;
+#else
  strcpy(p,dllpath);
- if('\\'==p[strlen(p)-1]) p[strlen(p)-1]=0;
+ if(strlen(p)&&('\\'==p[strlen(p)-1])) p[strlen(p)-1]=0;
+#endif
  R cstr(p);
 }
 #endif

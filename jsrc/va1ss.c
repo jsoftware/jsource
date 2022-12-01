@@ -88,7 +88,7 @@ A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
 
  case SSINGCASE(VA1CSTILE-VA1ORIGIN,SSINGENC(B01)): SSSTORENV((B)wiv,z,B01,B) R z;
  case SSINGCASE(VA1CSTILE-VA1ORIGIN,SSINGENC(INT)):
-    wiv=(I)((UI)(wiv^REPSGN(wiv))-(UI)REPSGN(wiv)); if(likely(wiv>=0)){SSSTORENV(wiv,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
+    wiv=(I)(((UI)wiv^(UI)REPSGN(wiv))-(UI)REPSGN(wiv)); if(likely(wiv>=0)){SSSTORENV(wiv,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
  case SSINGCASE(VA1CSTILE-VA1ORIGIN,SSINGENC(FL)):
     wdv=ABS(wdv); SSSTORENVFL(wdv,z,FL,D) R z;
 

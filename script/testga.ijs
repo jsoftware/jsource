@@ -19,7 +19,7 @@ NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
-RUN1^:(GITHUBCI*.'Linux'-:UNAME) 'g128x'
+NB. RUN1^:(GITHUBCI*.'Linux'-:UNAME) 'g128x'
 
 RUN1^:IFWIN 'g640'
 NB. RUN1^:IFWIN 'g7x6'

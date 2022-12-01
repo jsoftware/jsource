@@ -250,8 +250,8 @@ B jtmeminitt(JJ jt){I k;
 #else
 #define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefL:0)
 #endif
-//#pragma clang diagnostic push
-//#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+// obsolete #pragma clang diagnostic push
+// obsolete #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 // your code for which the warning gets suppressed 
 void jtauditmemchains(J jt){
 #if MEMAUDIT&0x30
@@ -261,7 +261,7 @@ void jtauditmemchains(J jt){
 }
 #endif
 }
-//#pragma clang diagnostic pop
+// obsolete #pragma clang diagnostic pop
 // 13!:23  check the memory free list, a la auditmemchains()
 // return error info, a 2-atom list where
 //  atom 0 is return code 0=OK 1=pool number corrupted 2=header corrupted 3=usecount corrupted (valid only if MEMAUDIT&0x4) 4=loop in chain 

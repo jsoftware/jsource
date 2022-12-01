@@ -18,6 +18,10 @@ License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 
+/*
+libgmp binaries are built from https://gmplib.org/download/gmp/gmp-6.2.1.tar.lz
+*/
+
 #ifdef gmp_wrapper_h
 #error "gmp_wrapper_h should not be defined!"
 #endif

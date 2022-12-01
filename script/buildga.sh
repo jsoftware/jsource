@@ -87,9 +87,7 @@ chmod 644 j32/*
 chmod 755 j32/jconsole
 fi
 
-# gcc
-# temp disable
-if [ "$1" == "linux_yyy" ]; then
+if [ "$1" == "linux" ]; then
 mkdir -p j64gcc
 cp bin/profile.ijs j64gcc
 cp mpir/linux/x86_64/libgmp.so.10 j64gcc

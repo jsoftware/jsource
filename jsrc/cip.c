@@ -1116,16 +1116,11 @@ DF1(jtludecompg){F1PREFIP;PROLOG(823);
  F1RANK(2,jtludecompg,self)  // if rank > 2, call rank loop
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
-fprintf(stderr,"jtludecompg a1 \n");
  A luvb; ASSERT(luvb=jtfindnameinscript(jt,"~addons/dev/lu/lu.ijs","Lu_j_",VERB),EVNONCE)   // error if undefined or not verb
-fprintf(stderr,"jtludecompg a2 \n");
  // Apply Lu_j_ to the input argument
  A z=unquote(w,luvb,luvb);  // monadic call to unquote
-fprintf(stderr,"jtludecompg a3 \n");
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
-fprintf(stderr,"jtludecompg a4 \n");
  if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
-fprintf(stderr,"jtludecompg a5 \n");
  R z;
 }
 

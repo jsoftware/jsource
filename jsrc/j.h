@@ -745,6 +745,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define EMSGLINEISTERSE 0x2000 // set if line has the text for the terse message (13!:8)
 #define EMSGLINEISNAME 0x4000 // set if line has the name to use in place of jt->curname
 #define EMSGFROMPYX 0x8000  // set if this error is being copied from a pyx (it can't be analyzed, and it should be marked specially
+#define EMSGNOEFORMAT 0x10000  // set if this error should not be passed to eformat for processing
 //   no bits set  means terse display (jsignal)
 //   bit 9 set: line=failing line, info=failing line#/column for jsignal3
 //   bit 10 set: line=A text for message (sigstr)
@@ -830,7 +831,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define SGNIF4(v,bitno) ((I4)(v)<<(32-1-(bitno)))  // Sets sign bit if the numbered bit is set, in an I4
 #define SGNONLYIF(v,bitno) (((v)>>(bitno))<<(BW-1))  // Sets sign bit if the numbered bit is set, clears all other bits
 #define SGNIFNOT(v,bitno) (~SGNIF((v),(bitno)))  // Clears sign bit if the numbered bit is set
-#define REPSGN(x) ((x)>>(BW-1))  // replicate sign bit of x to entire word (assuming x is signed type - if unsigned, just move sign to bit 0)
+#define REPSGN(x) ((I)(x)>>(BW-1))  // replicate sign bit of x to entire word
 #define REPSGN4(x) ((I4)(x)>>(32-1))  // replicate sign bit of x to entire I4 - x is forced to I4
 #define SGNTO0(x) ((UI)(x)>>(BW-1))  // move sign bit to bit 0, clear other bits
 #define SGNTO0US(x) ((US)(x)>>(16-1))  // move sign bit to bit 0, clear other bits
@@ -862,7 +863,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jtjsignale(jt,e|EMSGLINEISNAME,(nm),0); R 0;}}  // signal error, overriding the running name with a different one
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jtjsignale(jt,e|EMSGLINEISNAME,(nm),0); goto lbl;}}  // same, but without the exit
-#define ASSERTPYX(e)   {jsignal((e)|EMSGFROMPYX); R 0;}
+#define ASSERTPYX(e)   {jsignal((e)|(EMSGFROMPYX|EMSGNOEFORMAT)); R 0;}
 #define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTSYSV(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s);}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}

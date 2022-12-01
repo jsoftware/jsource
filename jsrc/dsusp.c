@@ -212,7 +212,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  }
  d->dcsusp=0;   // Mark the current definition as no longer suspended
  // If there is an error, set z=0; if not, make sure z is nonzero (use i. 0 0)
- if(jt->jerr)z=0; // return z=0 to cause us to look for resumption address
+ if(jt->jerr){z=0; jt->emsgstate|=EMSGSTATEFORMATTED;} // return z=0 to cause us to look for resumption address.  any message is for a long-gone self; don't call eformat for it.  If no message, allow the next one to be formatted
  R z;
 }
 

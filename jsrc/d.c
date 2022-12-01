@@ -281,12 +281,11 @@ void jtjsignalf(J jt,I e,C *fmt,...){
 // Result is always 0
 A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
- if(jt->emsgstate&EMSGSTATEFORMATTED)R 0;   // if we have already run eformat on this error, don't do it again
-  C e=jt->jerr;
-  if(!jt->glock){ // if we are locked, show nothing
-  if(!(jt->emsgstate&EMSGSTATENOEFORMAT)){  // if eformat suppressed, leave the error line as is
+ C e=jt->jerr;
+ if(e!=0 && !jt->emsgstate&EMSGSTATEFORMATTED){   // if no error, or we have already run eformat on this error, don't do it again
+  if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
    A msg=0;  // indicate no formatted message
-   A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save errpr code and message
+   A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save error code and message; if error in str, skip formatting
     if(self){
      if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
       // we are going to try to run eformat.
@@ -325,13 +324,13 @@ noeformat: ;
     jt->etxn1=jt->etxn;
    }
   }
- }
- // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
- e=e==EVINHOMO?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e;  // revert internal numbers to external codes after formatting
+  // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
+  e=e==EVINHOMO?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e;  // revert internal numbers to external codes after formatting
 
- jt->jerr=jt->jerr1=e;  // save reverted value
+  jt->jerr=jt->jerr1=e;  // save reverted value
+ }
  jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it
-R 0;
+ R 0;
 }
 
 // common error-analysis-and-display entry point
@@ -352,7 +351,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
   if(jt->etxn>=0){  // if the error line is frozen, don't touch it
    jt->etxn=0;  // clear error-message area indicating message not installed yet
    // if the user will never see the error, exit without further ado - keeps u :: v fast
-   if(!(jt->emsgstate&EMSGSTATENOTEXT) && (eflg&EMSGLINEISA || BETWEENC(e,1,NEVM))){  // message text suppressed or internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
+   if(!(jt->emsgstate&EMSGSTATENOTEXT) && (eflg&EMSGLINEISA || BETWEENC(e,1,NEVM))){  // message text not suppressed and not internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
     // we will format for display
     if(e!=EVSTOP)moveparseinfotosi(jt);  // before we display, move error info from parse variables to si; but if STOP, it's already installed
     // if debug is set, turn it off, with message, if there is not enough memory to run it
@@ -387,8 +386,8 @@ A jtjsignale(J jt,I eflg,A line,I info){
     jt->etxn1=jt->etxn;  // save length of finished message
    }
   }
-  // if this error was forwarded from a pyx, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
-  if(eflg&EMSGFROMPYX)jt->emsgstate|=EMSGSTATEFORMATTED;
+  // if this error was forwarded from a pyx or 13!:8, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
+  if(eflg&EMSGNOEFORMAT)jt->emsgstate|=EMSGSTATEFORMATTED;
 // obsolete    jt->curname=0;  // clear the name always
  R 0;
 }
@@ -453,7 +452,7 @@ static F2(jtdbsig){I e;
  RZ(w=vi(w)); e=AV(w)[0]; 
  ASSERT(1<=e,EVDOMAIN);
  ASSERT(e<=255,EVLIMIT);
- if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGLINEISTERSE,a,0);} else jsignal(e);
+ if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGLINEISTERSE+EMSGNOEFORMAT,a,0);} else jsignal(e|EMSGNOEFORMAT);  // must not run eformat, since self does not apply
  R 0;
 }    
 

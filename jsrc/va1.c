@@ -88,7 +88,7 @@ static AMONPS(expZ, Z,Z, , *z=zexp(*x); , HDR1JERR)
 static AMON(logB,   D,B, *z=*x?0:infm;)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
-static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^REPSGN(val))-REPSGN(val); vtot |= val; *z=val; , R vtot<0?EWOV:EVOK;)
+static AMONPS(absI,   I,I, UI vtot=0; , UI val=*(UI*)x; val=(val^(UI)REPSGN(val))-(UI)REPSGN(val); vtot |= val; *z=(I)val; , R (I)vtot<0?EWOV:EVOK;)
 static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 
 static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}

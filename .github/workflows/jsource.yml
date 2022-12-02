@@ -41,6 +41,7 @@ jobs:
      uses: nttld/setup-ndk@v1
      with:
       ndk-version: r25b
+      local-cache: true
 
    - name: Setup Environment (Windows)
      if: matrix.os == 'windows-2019'

@@ -125,3 +125,15 @@ chmod 644 j32gcc/*
 chmod 755 j32gcc/jconsole
 
 fi
+
+if [ "$1" == "darwin" ]; then
+cd android/jni
+ln -sf ../../hostdefs .
+ln -sf ../../jsrc .
+ln -sf ../../netdefs .
+cd ../..
+cd android
+ndk-build
+cd ..
+fi
+

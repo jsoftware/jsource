@@ -40,9 +40,8 @@ jobs:
      if: matrix.os == 'macos-11'
      uses: nttld/setup-ndk@v1
      with:
-#      ndk-version: r25b
-# r23c is the last version to support non-neon armeabi-v7a
-      ndk-version: r23c
+      ndk-version: r25b
+      local-cache: true
 
    - name: Setup Environment (Windows)
      if: matrix.os == 'windows-2019'

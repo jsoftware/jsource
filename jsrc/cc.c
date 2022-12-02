@@ -571,7 +571,8 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
- PREF2(jtcut2);  // this whole routine runs with left rank 1   scaf ranks should be wired here, not from self, in all uses of PREF[12]
+// obsolete  PREF2(jtcut2);  // this whole routine runs with left rank 1   scaf ranks should be wired here, not from self, in all uses of PREF[12]
+ F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _.  Right rank always _
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
@@ -1044,7 +1045,9 @@ static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
 #define STATEREFLECTY 0x800
 #define STATETAKE 0x1000  // subarray must be shortened at the end
 static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
- PROLOG(600); PREF2(jttess2);   // enforce left rank 2
+ PROLOG(600);
+// obsolete PREF2(jttess2);   // enforce left rank 2
+ F2RANK(2,RMAX,jttess2,self)
 #define ZZFLAGWORD state
  I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
@@ -1335,7 +1338,7 @@ success:;
 DF1(jtboxcutm21){
  if(AR(w)!=1||!(AT(w)&LIT)||AN(w)<=65536)R jtcut1(jt,w,self);
  F1PREFIP;PROLOG(0026);
- PREF1(jtboxcutm21);
+// obsolete  PREF1(jtboxcutm21);
 #if 1
  I nchunk=(AN(w)+65535)/65536; //try out 64k chunks for now
  I incfretp=1-(FAV(self)->localuse.lu1.gercut.cutn>>31), incfretm=-1+incfretp;

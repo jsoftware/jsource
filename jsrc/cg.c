@@ -112,7 +112,7 @@ PRIM jtfxself[2]={
 DF1(jtfxeach){RETF(every(w,self));}
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
- PREF1(jtcon1);
+// obsolete  PREF1(jtcon1);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(C(*hv))->valencefns[0],  w,C(*hv)))); ++hv;);
@@ -120,7 +120,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
 }
 
 static DF2(jtcon2){A h,*hv,*x,z;V*sv;
- PREF2(jtcon2);
+// obsolete  PREF2(jtcon2);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(C(*hv))->valencefns[1],a,w,C(*hv)))); ++hv;);

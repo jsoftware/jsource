@@ -30,6 +30,7 @@
                         AF h1=hs?FAV(hs)->valencefns[0]:0,h2=hs?FAV(hs)->valencefns[1]:0
 
 // If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell
+// Use PREF[12] when you don't know the rank; otherwise F[12]RANK(IP) directly
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}
 #define PREF2(f)        {I l=lr(self),r=rr(self); F2RANK(l,r,f,self);}
 #define PREF1IP(f)      {I m=mr(self);            F1RANKIP(  m,f,self);}

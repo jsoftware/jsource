@@ -204,7 +204,9 @@ static DF2(jtinv2){DECLFG;A z; ARGCHK2(a,w); FDEPINC(1); df1(z,w,inv(amp(a,fs)))
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
 // old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
-DF2(jtply2){PROLOG(107);DECLFG;A z, zz; PREF2(jtply2); z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
+DF2(jtply2){PROLOG(107);DECLFG;A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
+// obsolete  PREF2(jtply2);
+
 
 static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
 static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
@@ -231,7 +233,7 @@ else{RESETERR; RZ(u = powop(fs,u,(A)1));
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);
 }
-static DF1(fjtpowv1){PREF1(jtpowv1cell); R jtpowv1cell(jt,w,self);}
+// obsolete static DF1(fjtpowv1){PREF1(jtpowv1cell); R jtpowv1cell(jt,w,self);}
 // here for x u^:v y 
 static DF2(jtpowv2cell){F2PREFIP;DECLFG;A z;PROLOG(0109);
 A u; A v; RZ(u=CALL2(g2,a,w,gs));  /* execute v */
@@ -239,7 +241,7 @@ if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[1])
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
 z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);}
 EPILOG(z);}
-static DF2(jtpowv2){PREF2(jtpowv2cell); R jtpowv2cell(jt,a,w,self);}
+// obsolete static DF2(jtpowv2){PREF2(jtpowv2cell); R jtpowv2cell(jt,a,w,self);}
 // here for x u@:]^:v y and x u@]^:v y
 static DF2(jtpowv2acell){F2PREFIP;DECLFG;A z;PROLOG(0110);
 jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */
@@ -248,7 +250,7 @@ if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);}
-static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
+// obsolete static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
 // contains verb v or gerund v, it executes v on the xy arguments and then calls jtpowop

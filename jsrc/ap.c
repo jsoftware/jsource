@@ -443,7 +443,8 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 
 // Entry point for infix.  a is x, w is y, fs points to u
 static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m; 
- PREF2(jtinfix); // Handle looping over rank.  This returns here for each cell (including this test)
+// obsolete  PREF2(jtinfix); // Handle looping over rank.  This returns here for each cell (including this test)
+ F2RANK(0,RMAX,jtinfix,self); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
  // If length is infinite, convert to large integer
  // kludge - test for ==ainf should be replaced with a test for value; will fail if _ is result of expression like {._
@@ -496,9 +497,9 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 // prefix and infix: prefix if a is mark
 static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
    I wt;
- 
- ARGCHK1(w);
- PREF2IP(jtinfixprefix2);  // handle rank loop if needed
+  ARGCHK1(w);
+// obsolete  PREF2IP(jtinfixprefix2);  // handle rank loop if needed
+ F2RANKIP(0,RMAX,jtinfixprefix2,self);  // handle rank loop if needed
  wt=AT(w);
  if(unlikely(ISSPARSE(wt))){
   // Use the old-style non-virtual code for sparse types
@@ -770,7 +771,8 @@ static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
 }
 
 static DF2(jtmovavg){I m,j;
- PREF2(jtmovavg);
+// obsolete  PREF2(jtmovavg);
+ F2RANK(0,RMAX,jtmovavg,self);
  RE(m=i0(vib(a)));SETIC(w,j);
  if(0<m&&m<=j&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1);   // j may be 0
  R jtinfixprefix2(jt,a,w,self);
@@ -899,7 +901,8 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
 static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
- PREF2(jtmovfslash);
+// obsolete  PREF2(jtmovfslash);
+ F2RANK(0,RMAX,jtmovfslash,self);
  SETIC(w,p); wt=AT(w);   // p=#items of w
  RE(m0=i0(vib(a))); m=REPSGN(m0); m=(m^m0)-m; m^=REPSGN(m);  // m0=infx x,  m=abs(m0), handling IMIN
  if(m==1)R AR(w)?w:ravel(w);  // 1 f/\ w is always w, except on an atom

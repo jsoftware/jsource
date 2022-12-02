@@ -452,6 +452,7 @@ static F2(jtdbsig){I e;
  RZ(w=vi(w)); e=AV(w)[0]; 
  ASSERT(1<=e,EVDOMAIN);
  ASSERT(e<=255,EVLIMIT);
+ jt->emsgstate&=~(EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATEFORMATTED);  // user's message overrides anything that was given before; turn off ignore bits to ensure we process it
  if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGLINEISTERSE+EMSGNOEFORMAT,a,0);} else jsignal(e|EMSGNOEFORMAT);  // must not run eformat, since self does not apply
  R 0;
 }    

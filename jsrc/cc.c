@@ -571,7 +571,7 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
- PREF2(jtcut2);  // this whole routine runs with left rank 1   scaf ranks should be wired here, not from self
+ PREF2(jtcut2);  // this whole routine runs with left rank 1   scaf ranks should be wired here, not from self, in all uses of PREF[12]
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){

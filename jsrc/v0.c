@@ -438,7 +438,7 @@ DF1(jtpderiv1){
 }    /* p.. w */
 
 DF2(jtpderiv2){
- F2RANK(0,1,jtpderiv2,self);  // scaf need real self
+ F2RANK(0,1,jtpderiv2,self);
  if(!(NUMERIC&AT(w)))RZ(w=poly1(w));
  ASSERT(NUMERIC&AT(a),EVDOMAIN);
  R over(a,divideW(w,apv(AN(w),1L,1L)));

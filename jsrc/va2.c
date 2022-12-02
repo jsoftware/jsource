@@ -1224,20 +1224,26 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
    self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
    selfranks=jtranks==R2MAX?selfranks:jtranks;
   }
-  // af, awm1, self, awr, and selfranks are needed in the retry
+  // self, awr, and selfranks are needed in the retry
  } 
  
  // while it's convenient, check for empty result
  jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
- // Run the full dyad, retrying if a retryable error is returned
- z=jtva2(jtinplace,a,w,self,(awr<<RANK2TX)+selfranks);  // execute the verb
- if(likely(z!=0)){RETF(z);}  // normal case is good return
- if(likely(jt->jerr>NEVM))z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,(awr<<RANK2TX)+selfranks);  // if retryable error, retry it
- if(unlikely(z==0)){
-  // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
-  jt->ranks=selfranks; jteformat(jt,self,a,w,0); RESETRANK;
+ NOUNROLL while(1){
+  // Run the full dyad, retrying if a retryable error is returned
+  z=jtva2(jtinplace,a,w,self,(awr<<RANK2TX)+selfranks);  // execute the verb
+  if(likely(z!=0)){RETF(z);}  // normal case is good return
+  if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
+  jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
+// obsolete   z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,(awr<<RANK2TX)+selfranks);  // if retryable error, retry it
+// obsolete if(jt->jerr>NEVM)SEGFAULT;  // scaf
+// obsolete 
+// obsolete  if(unlikely(z==0)){
+ // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
+ jt->ranks=selfranks; jteformat(jt,self,a,w,0); RESETRANK;
+// obsolete  }
  RETF(z);
 }
 

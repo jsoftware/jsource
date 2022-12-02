@@ -72,8 +72,25 @@ AHDR1(absD,D,D){
  )
 }
 
+AHDR1(absI,D,D){
+ AVXATOMLOOP(0,
+ __m256d zero=_mm256_setzero_pd();
+ __m256d uneg; __m256d anyneg=zero;
+
+,
+  uneg=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(zero),_mm256_castpd_si256(u))); u=_mm256_blendv_pd(u,uneg,u); // take abs
+  anyneg=_mm256_or_pd(anyneg,u);  // remember if any overflow
+
+ ,
+ R (!_mm256_testc_pd(zero,anyneg))?EWIMAG:EVOK;  // if there are any negative values, call for a postpass.  Could just convert in place
+ )
+}
+
+
 #else
 static AMONPS(sqrtD,  D,D, I ret=EVOK; , if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
+// obsolete static AMONPS(absI,   I,I, UI vtot=0; , UI val=*(UI*)x; val=(val^(UI)REPSGN(val))-(UI)REPSGN(val); vtot |= val; *z=(I)val; , R (I)vtot<0?EWOV:EVOK;)
+static AMONPS(absI,   I,I, UI vtot=0; , UI val=*(UI*)x; I nval=(I)((0U-val)); val=nval>0?nval:val; vtot |= val; *z=(I)val; , R (I)vtot<0?EWOV:EVOK;)
 #if BW==64
 static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)
 #else
@@ -88,7 +105,6 @@ static AMONPS(expZ, Z,Z, , *z=zexp(*x); , HDR1JERR)
 static AMON(logB,   D,B, *z=*x?0:infm;)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
-static AMONPS(absI,   I,I, UI vtot=0; , UI val=*(UI*)x; val=(val^(UI)REPSGN(val))-(UI)REPSGN(val); vtot |= val; *z=(I)val; , R (I)vtot<0?EWOV:EVOK;)
 static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 
 static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
@@ -146,7 +162,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  VA1 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
 #endif
  ASSERT(wt&NUMERIC,EVDOMAIN);
- if(!((I)jtinplace&JTRETRY)){
+ if(likely(!((I)jtinplace&JTRETRY))){
   ado=p->f; cv=p->cv;
  }else{
   I m=REPSGN((wt&XNUM+RAT)-1);   // -1 if not XNUM/RAT
@@ -178,7 +194,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   // There was an error.  If it is recoverable in place, handle the cases here
   // positive result gives error type to use for retrying the operation; negative is 1's complement of the restart point (first value NOT stored)
   // integer abs: convert everything to float, changing IMIN to IMAX+1
-  if(ado==absI){A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(*zv<0)*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
+  if(ado==absI){A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(unlikely(*zv<0))*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
   // float sqrt: reallocate as complex, scan to make positive results real and negative ones imaginary
   if(ado==sqrtD){A zz; GATV(zz,CMPX,n,AR(z),AS(z)); D *zv=DAV(z); Z *zzv=ZAV(zz); DQ(n, if(*zv>=0){zzv->re=*zv;zzv->im=0.0;}else{zzv->im=-*zv;zzv->re=0.0;} ++zv; ++zzv;) RETF(zz);}
   // float floor: unconvertable cases are stored with bit 63 and bit 62 unlike; restore the float value by setting bit 62.

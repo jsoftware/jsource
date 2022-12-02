@@ -7,7 +7,8 @@
 #undef R0
 #define R0 RQ0
 
-QF1(jtqstd){// canonical form for w: 1155r210 -> 11r2
+// qstd is invoked in QEPILOG
+QF1(jtqstd){ // canonical form for w: 1155r210 -> 11r2
  if (ISQ0(w)) RQ0;
  if (ISQinf(w)) switch (QSGN(w)) { // libgmp does not handle infinity
    case -1: w.n= X_1; R w;
@@ -23,11 +24,9 @@ QF1(jtqstd){// canonical form for w: 1155r210 -> 11r2
    w.d= Xfdiv_qXX(w.d, gcd);
   }
  }
- XPERSIST(w.n);
- XPERSIST(w.d);
  R w;
 }
-QF2(jtqplus){PROLOG(0083); // a+w
+QF2(jtqplus){PROLOG(10001); // a+w
  if (ISQinf(a)) {
   if (ISQinf(w)) {
    QASSERT(0<QSGN(a)*QSGN(w), EVNAN);
@@ -38,9 +37,9 @@ QF2(jtqplus){PROLOG(0083); // a+w
  } else if (ISQinf(w)) {
   R w;
  }
- QEPILOG(qstd(QaddQQ(a,w)));
+ QEPILOG(QaddQQ(a,w));
 }
-QF2(jtqminus){PROLOG(0084); // a-w
+QF2(jtqminus){PROLOG(10002); // a-w
  if (ISQinf(a)) {
   if (ISQinf(w)) {
    QASSERT(0>QSGN(a)*QSGN(w), EVNAN);
@@ -53,20 +52,20 @@ QF2(jtqminus){PROLOG(0084); // a-w
  }
  QEPILOG(QsubQQ(a,w));
 }
-QF2(jtqtymes){PROLOG(0085); // a*w
+QF2(jtqtymes){PROLOG(10003); // a*w
  QEPILOG(QmulQQ(a, w));
 }
-QF2(jtqdiv){PROLOG(0086); // a%w
+QF2(jtqdiv){PROLOG(10004); // a%w
  QASSERT(!(ISQinf(a)&&ISQinf(w)), EVNAN);
- if (ISQ0(a)) R Q0;
+ if (ISQ0(a)) RQ0;
  if (0==QSGN(w)) R QSGN(a) ?(0<QSGN(a) ?Q_ :Q__) :Q1;
  QEPILOG(QdivQQ(a,w));
 }
-static QF2(jtqrem){PROLOG(0087); // a|w
+static QF2(jtqrem){PROLOG(10005); // a|w
  if (ISQ0(a)) R w;
  QASSERT(!ISQinf(w), EVNAN);
  if (ISQinf(a)) {
-  if(0>QSGN(a)*QSGN(w))R a;
+  if(0>QSGN(a)*QSGN(w)) QEPILOG(a);
   R w;
  }
  X num= Xfdiv_rXX(XmulXX(w.n,a.d), XmulXX(a.n,w.d));
@@ -75,7 +74,7 @@ static QF2(jtqrem){PROLOG(0087); // a|w
  QEPILOG(z);
 }
 
-static QF2(jtqgcd){PROLOG(0088); // a+.w
+static QF2(jtqgcd){PROLOG(10006); // a+.w
  QASSERT(XSGN(a.d)&&XSGN(w.d), EVNAN)
  X num= XgcdXX(XmulXX(a.n, w.d), XmulXX(w.n, a.d));
  X den= XmulXX(a.d, w.d);
@@ -84,10 +83,10 @@ static QF2(jtqgcd){PROLOG(0088); // a+.w
 }
 
 // a*.w
-static QF2(jtqlcm){
+static QF2(jtqlcm){PROLOG(10007);
  QASSERT(XSGN(a.d)&&XSGN(w.d), EVNAN)
  Q z= {xlcm(a.n, w.n), X1};
- R z;
+ QEPILOG(z);
 }
 
 /* a^w is complicated by need to shield from libgmp design decisions
@@ -97,7 +96,7 @@ static QF2(jtqlcm){
  * Note also that jt->xmod is a hidden influence here
  * this needs careful testing
  */
-static QF2(jtqpow){PROLOG(0089); // a^w
+static QF2(jtqpow){PROLOG(10008); // a^w
  if (0==QSGN(w)) R Q1; // a^0
  if (ISQinf(a)) { // a is _ or __
   if (0<QSGN(a)) {
@@ -105,7 +104,7 @@ static QF2(jtqpow){PROLOG(0089); // a^w
   } else { // a is __
    if (0>QSGN(w)) RQ0; // __^w where w is negative
    QASSERT(!ISQinf(w), EVDOMAIN) // sign unknown for __^_
-   R XODDnz(w.n) ?Q__ :Q_; // __^w for odd or even w
+   QEPILOG(XODDnz(w.n) ?Q__ :Q_); // __^w for odd or even w
   }
  }
  if (ISQinf(w)) { // w is _ or __
@@ -129,7 +128,7 @@ static QF2(jtqpow){PROLOG(0089); // a^w
  QASSERT(ISQINT(w), 0<QSGN(a) ?EWIRR :EWIMAG);  // use float or complex for roots (when w.d is larger than 1) // might make sense here to special case exact roots?
  QASSERT(1==XLIMBLEN(w.n) && INT_MAX>XLIMB0(w.n), EVWSFULL); // w is too large
  I W= QSGN(w)*XLIMB0(w.n); D DW= llabs(W); // DW=: 0.0+|W=: w
- if (1==W) R a;            // a^1
+ if (1==W) QEPILOG(a);            // a^1
  QASSERT(XLIMBLIM>XLIMBLEN(a.n)*DW, EVWSFULL) // a^w would be too large
  if (1==XLIMBLEN(a.n)) { // approximate result to check size
   D est= (log2(fabs(DgetX(a.n)))+log2(DgetX(a.d)))*DW/(8*sizeof (UI));
@@ -142,7 +141,7 @@ static QF2(jtqpow){PROLOG(0089); // a^w
  } else {
   Q z= {xpow(a.n, w.n), xpow(a.d, w.n)}; 
   QEPILOG(z);
- } // don't actually need qstd, because a was in canonical form
+ }
 }
 
 I jtqcompare(J jt,Q a,Q w){R QCOMP(a,w);}

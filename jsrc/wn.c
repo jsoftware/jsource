@@ -65,7 +65,7 @@ static NUMH(jtnumi){UI neg;UI j;  // must be UI to avoid signed overflow
  R 1+REPSGN((I)(j&(j-neg)));  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
 }     /* called only if SY_64 */
 
-static NUMH(jtnumxTEMP) { // n, s, vv NB. n is length of s, we put result in vv
+static NUMH(jtnumxTEMP) {PROLOG(0098); // n, s, vv NB. n is length of s, we put result in vv
  GMP;                 // nonce error if libgmp not available
  n-=s[n-1]=='x';      // if s ends in 'x' make that the end
  C sav= s[n]; s[n]=0; // store NUL after string, save the character that was there
@@ -74,12 +74,11 @@ static NUMH(jtnumxTEMP) { // n, s, vv NB. n is length of s, we put result in vv
  s[n]= sav;           // restore buffer s to orig state (might be unnecessary)
  ASSERT(!(AFLAG(y)&AFRO),EVWSFULL); // error if we used an emergency buffer
  // FIXME: need that EVWSFULL test generically applied in all Xmp contexts
- *(X*)vv= y;          // return the A block for the number
+ EPILOGNORET(*(X*)vv= y); // return the A block for the number
  R 1;                 // good return
 }
 static NUMH(jtnumx) {
  if (!jtnumxTEMP(jt, n, s, vv)) R0;
- XPERSIST(*(X*)vv);  // cancel death warrant
  R 1;
 }
 

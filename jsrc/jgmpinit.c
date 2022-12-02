@@ -178,7 +178,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  X z= (X)(m+GUARDSIZE); // J header starts here
  AN(z)= new;            // track allocated memory
  /*
- fprintf(stderr,"jrealloc4gmp z: %llx (size: %zx -> %zx), ", (UI)z, old, new);
+ fprintf(stderr,"jrealloc4gmp z: %llx <- %llx (size: %zx <- %zx), ", (UI)z, (UI)x, new, old);
  fprintf(stderr,"AK(z): %llx (%lli), ", AK(z), AK(z));
  fprintf(stderr,"AFLAG(z): %llx (%lli), ", AFLAG(z), AFLAG(z));
  fprintf(stderr,"AT(z): %llx (%lli), ", AT(z), AT(z));

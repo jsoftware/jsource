@@ -50,14 +50,14 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){ // a (<.@%,|~) w
 X jtxdiv(J jt,X a,X w,I mode){ // a mode@% w NB. X a, w // mode is <. or >. or ] 
  RZ(a&&w&&!jt->jerr); if(ISX0(a))R X0;ASSERT(XSGN(w), EWRAT); // infinity requres RAT
  switch(mode) {
-  case XMFLR/* a<.@%w*/: R XPERSIST(Xfdiv_qXX(a, w));
-  case XMCEIL/*a>.@%w*/: R XPERSIST(Xcdiv_qXX(a, w));
+  case XMFLR/* a<.@%w*/: R Xfdiv_qXX(a, w);
+  case XMCEIL/*a>.@%w*/: R Xcdiv_qXX(a, w);
   case XMEXACT/*  a%w*/: {
     mpX(a); mpX(w); mpX0(z); mpX0(r);
     jmpz_fdiv_qr(mpz, mpr, mpa, mpw); 
     X z= Xmp(z); X r= Xmp(r);
     ASSERT(0==XSGN(r), EWRAT);
-    R XPERSIST(z);
+    R z;
    }
  }
  SEGFAULT; R0; // this should never happen
@@ -69,14 +69,14 @@ XF2(jtxrem){ // a | w
 XF2(jtxgcd){ // a +. w
  R XgcdXX(a,w);
 }
-XF2(jtxlcm){PROLOG(0111); // a *. w
+XF2(jtxlcm){PROLOG(10100); // a *. w
  X z= XlcmXX(a,w);
  if(0>XSGN(a)*XSGN(w))EPILOG(XsubXX(X0,z));
- R z;
+ EPILOG(z);
 }
 static X jtxexp(J jt,X w,I mode) {ASSERT(0, EWIRR);} // u ^w NB. u is <. or >. or ]
 
-XF2(jtxpow){PROLOG(0112); // a m&|@^ w // FIXME: m should be a parameter rather than jt->xmod
+XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather than jt->xmod
  if (0 == XSGN(w)) { // a^0  NB. m is irrelevant, a is irrelevant
   R X1;
  }
@@ -96,7 +96,7 @@ XF2(jtxpow){PROLOG(0112); // a m&|@^ w // FIXME: m should be a parameter rather 
    I wi= IgetX(w);
    // FIXME: may need additional checks to throw WSFULL if a^w too large
    // (need a decent heuristic -- maybe log(a)*w > size of emergency buffer?)
-   R XpowXU(a, wi); // a^w
+   EPILOG(XpowXU(a, wi)); // a^w
   } 
  } else {
   ASSERT(0<XSGN(w), EWRAT); // want rational result if w is negative
@@ -131,7 +131,7 @@ static X jtIrootX(J jt, UI a, X w) { // a %:w NB. optionally with <. or >.
    case XMFLR: break;
    case XMCEIL: jmpz_add_ui(mpz, mpz, 1);
  }
- EPILOG(Xmp(z));
+ R Xmp(z);
 }
 
 XF1(jtxsqrt){ // %: w (optionally with <. or >.)

@@ -408,6 +408,8 @@ extern void jfree4gmp(void*, size_t);
 
 #define XHSZ AKXR(1)
 
+// optimization: 0==AZAPLOC(x) when ACISPERM(AC(x))
+
 // like tpushi, but doesn't exit on failure and can't be sparse
 // leaves pushp 0 on error
 // has result 1 if x was transient (not permanent), 0 if x was permanent
@@ -422,11 +424,6 @@ extern void jfree4gmp(void*, size_t);
 
 // think of this as a call to frgmp(), typically scheduled in a future EPILOG (though with an immediate frgmp to cope with a rare failure mode)
 #define XTEMP(Xx) ({X tempx=Xx;A*pushp;if(tpushnoret(tempx)){if(unlikely(!pushp)){frgmp(tempx);R0;}}tempx;})
-
-#define XPERSIST(x) ({if(AZAPLOC(x)){*AZAPLOC(x)= 0;AZAPLOC(x)=0;} x;})
-// optimization: 0==AZAPLOC(x) when ACISPERM(AC(x))
-// (clearing AZAPLOC here lets us pass non-pristine denominators into qstd).
-// caution: use qstd to remove death warrants from Q values
 
 /*
  * some named boilerplate for hopefully commonly used expressions

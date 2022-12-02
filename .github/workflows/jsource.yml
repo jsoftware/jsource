@@ -21,81 +21,81 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-18.04, macos-11, windows-2019]
-    #os: [ubuntu-18.04]
-    #os: [macos-11]
-    #os: [windows-2019]
+    os: [ubuntu-22.04, macos-12, windows-2022]
+    #os: [ubuntu-22.04]
+    #os: [macos-12]
+    #os: [windows-2022]
 
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
    - name: Setup Environment (Linux)
-     if: matrix.os == 'ubuntu-18.04'
+     if: matrix.os == 'ubuntu-22.04'
      run: |
       script/install-lnx.sh
 #      sudo apt-get install -y libedit-dev libncursesw5-dev
 
    - name: Setup Environment (macOS)
-     if: matrix.os == 'macos-11'
+     if: matrix.os == 'macos-12'
      uses: nttld/setup-ndk@v1
      with:
       ndk-version: r25b
       local-cache: true
 
    - name: Setup Environment (Windows)
-     if: matrix.os == 'windows-2019'
+     if: matrix.os == 'windows-2022'
      uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64
 
    - name: Build JE (Linux)
-     if: matrix.os == 'ubuntu-18.04'
+     if: matrix.os == 'ubuntu-22.04'
      env:
       CC: clang
       USE_SLEEF: 1
      run: script/buildga.sh linux
 
    - name: Build JE (macOS)
-     if: matrix.os == 'macos-11'
+     if: matrix.os == 'macos-12'
      env:
       CC: clang
       USE_SLEEF: 1
      run: script/buildga.sh darwin
 
    - name: Build JE (Windows)
-     if: matrix.os == 'windows-2019'
+     if: matrix.os == 'windows-2022'
      shell: cmd
      run: script\buildga.cmd
 
    - name: Test JE (Linux)
-     if: matrix.os == 'ubuntu-18.04'
+     if: matrix.os == 'ubuntu-22.04'
      run: script/testga.sh linux
 
    - name: Test JE (macOS)
-     if: matrix.os == 'macos-11'
+     if: matrix.os == 'macos-12'
      run: script/testga.sh darwin
 
    - name: Test JE (Windows)
-     if: matrix.os == 'windows-2019'
+     if: matrix.os == 'windows-2022'
      shell: cmd
      run: script\testga.cmd
 
    - name: Compress Files (Linux)
-     if: matrix.os == 'ubuntu-18.04'
+     if: matrix.os == 'ubuntu-22.04'
      run: zip -r l64.zip j64
 
    - name: Compress Files (macOS)
-     if: matrix.os == 'macos-11'
+     if: matrix.os == 'macos-12'
      run: zip -r m64.zip j64
 
    - name: Compress Files (Windows)
-     if: matrix.os == 'windows-2019'
+     if: matrix.os == 'windows-2022'
      shell: pwsh
      run: Compress-Archive j64 w64.zip
 
    - name: Release JE (Linux)
-     if: matrix.os == 'ubuntu-18.04'
+     if: matrix.os == 'ubuntu-22.04'
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -105,7 +105,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Release JE (version)
-     if: matrix.os == 'ubuntu-18.04'
+     if: matrix.os == 'ubuntu-22.04'
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -115,7 +115,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Release JE (macOS)
-     if: matrix.os == 'macos-11'
+     if: matrix.os == 'macos-12'
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -125,7 +125,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Release JE (Windows)
-     if: matrix.os == 'windows-2019'
+     if: matrix.os == 'windows-2022'
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -135,21 +135,21 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Linux)
-     if: matrix.os == 'ubuntu-18.04'
+     if: matrix.os == 'ubuntu-22.04'
      uses: actions/upload-artifact@v2
      with:
        name: dist
        path: testlinux.txt
 
    - name: Copy Test (macOS)
-     if: matrix.os == 'macos-11'
+     if: matrix.os == 'macos-12'
      uses: actions/upload-artifact@v2
      with:
        name: dist
        path: testdarwin.txt
 
    - name: Copy Test (Windows)
-     if: matrix.os == 'windows-2019'
+     if: matrix.os == 'windows-2022'
      uses: actions/upload-artifact@v2
      with:
        name: dist
@@ -157,7 +157,7 @@ jobs:
 
  tests:
   name: Test Results
-  runs-on: ubuntu-18.04
+  runs-on: ubuntu-22.04
   needs: jengine
   steps:
    - name: Checkout Git repository
@@ -182,7 +182,7 @@ jobs:
 
  webhook:
   name: Run Webhook
-  runs-on: ubuntu-18.04
+  runs-on: ubuntu-22.04
   needs: tests
   steps:
    - name: update server

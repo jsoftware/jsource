@@ -438,7 +438,7 @@ dobblock:
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(jt->jerr==EVTHROW){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERRNO; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
+    if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
    // for other error, go to the error location; if that's out of range, keep the error; if not,
    // it must be a try. block, so clear the error.  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
    // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
@@ -476,7 +476,7 @@ tblockcase:
    }else if((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-   }else if(EVTHROW==jt->jerr){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERRNO;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
+   }else if(EVTHROW==jt->jerr){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
    else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
    break;

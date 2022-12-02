@@ -244,6 +244,9 @@ x -: 13!:11 ''
 'length error' -: 13!:11 etx 'junkfoo'
 'length error' -: 13!:12 etx 'junkfoo'
 
+f=: 3 : '''my error'' assert 0'
+'assertion failure' -: f etx 0
+'|my error' ([ -: #@[ {. ]) 13!:12''  NB. User's error is stored even in adverse
 
 NB. stops ---------------------------------------------------------------
 

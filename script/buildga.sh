@@ -41,17 +41,6 @@ export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 
-if [ "$1" == "darwin" ]; then
-cd android/jni
-ln -sf ../../hostdefs .
-ln -sf ../../jsrc .
-ln -sf ../../netdefs .
-cd ../..
-cd android
-ndk-build
-cd ..
-fi
-
 cd make2
 
 if [ "$1" == "darwin" ]; then
@@ -135,5 +124,16 @@ cp bin/$1/j32/* j32gcc
 chmod 644 j32gcc/*
 chmod 755 j32gcc/jconsole
 
+fi
+
+if [ "$1" == "darwin" ]; then
+cd android/jni
+ln -sf ../../hostdefs .
+ln -sf ../../jsrc .
+ln -sf ../../netdefs .
+cd ../..
+cd android
+ndk-build
+cd ..
 fi
 

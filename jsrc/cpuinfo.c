@@ -97,11 +97,11 @@ void cpuInit(void)
   if(hwcaps2 & HWCAP2_RNG) g_cpuFeatures2 |= ARM_HWCAP2_RNG;
   if(hwcaps2 & HWCAP2_BTI) g_cpuFeatures2 |= ARM_HWCAP2_BTI;
   if(hwcaps2 & HWCAP2_MTE) g_cpuFeatures2 |= ARM_HWCAP2_MTE;
+#if 0
   if(hwcaps2 & HWCAP2_ECV) g_cpuFeatures2 |= ARM_HWCAP2_ECV;
   if(hwcaps2 & HWCAP2_AFP) g_cpuFeatures2 |= ARM_HWCAP2_AFP;
   if(hwcaps2 & HWCAP2_RPRES) g_cpuFeatures2 |= ARM_HWCAP2_RPRES;
   if(hwcaps2 & HWCAP2_MTE3) g_cpuFeatures2 |= ARM_HWCAP2_MTE3;
-#if 0
   if(hwcaps2 & HWCAP2_SME) g_cpuFeatures2 |= ARM_HWCAP2_SME;
   if(hwcaps2 & HWCAP2_SME_I16I64) g_cpuFeatures2 |= ARM_HWCAP2_SME_I16I64;
   if(hwcaps2 & HWCAP2_SME_F64F64) g_cpuFeatures2 |= ARM_HWCAP2_SME_F64F64;

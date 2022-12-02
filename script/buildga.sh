@@ -28,11 +28,6 @@ if [ "$1" == "linux" ]; then
 cp mpir/linux/x86_64/libgmp.so.10 j64
 else
 cp mpir/apple/macos/libgmp.dylib j64
-cd android/jni
-ln -sf ../../hostdefs .
-ln -sf ../../jsrc .
-ln -sf ../../netdefs .
-cd ../..
 fi
 
 cp version.txt jsrc/jversion.h
@@ -47,6 +42,11 @@ fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 
 if [ "$1" == "darwin" ]; then
+cd android/jni
+ln -sf ../../hostdefs .
+ln -sf ../../jsrc .
+ln -sf ../../netdefs .
+cd ../..
 cd android
 ndk-build
 cd ..

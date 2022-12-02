@@ -36,6 +36,12 @@ jobs:
       script/install-lnx.sh
 #      sudo apt-get install -y libedit-dev libncursesw5-dev
 
+   - name: Setup Environment (macOS)
+     if: matrix.os == 'macos-11'
+     uses: nttld/setup-ndk@v1
+     with:
+      ndk-version: r25b
+
    - name: Setup Environment (Windows)
      if: matrix.os == 'windows-2019'
      uses: ilammy/msvc-dev-cmd@v1

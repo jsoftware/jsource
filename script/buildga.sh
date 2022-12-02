@@ -28,6 +28,11 @@ if [ "$1" == "linux" ]; then
 cp mpir/linux/x86_64/libgmp.so.10 j64
 else
 cp mpir/apple/macos/libgmp.dylib j64
+cd android/jni
+ln -sf ../../hostdefs .
+ln -sf ../../jsrc .
+ln -sf ../../netdefs .
+cd ../..
 fi
 
 cp version.txt jsrc/jversion.h
@@ -40,6 +45,12 @@ if [ "$1" == "linux" ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
 export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
+
+if [ "$1" == "darwin" ]; then
+cd android
+ndk-build
+cd ..
+fi
 
 cd make2
 

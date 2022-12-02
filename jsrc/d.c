@@ -282,7 +282,7 @@ void jtjsignalf(J jt,I e,C *fmt,...){
 A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
  C e=jt->jerr;
- if(e!=0 && !jt->emsgstate&EMSGSTATEFORMATTED){   // if no error, or we have already run eformat on this error, don't do it again
+ if(e!=0 && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again
   if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
    A msg=0;  // indicate no formatted message
    A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save error code and message; if error in str, skip formatting

@@ -334,7 +334,7 @@ void jgmpinit(C*libpath) {
   }
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
-  libgmp= dlopen(FHS?LIBGMPNAME10?LIBGMPNAME, RTLD_LAZY);
+  libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
  } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);
  if (!libgmp) {dldiag();R;}
 #endif

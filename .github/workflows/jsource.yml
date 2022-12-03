@@ -38,13 +38,7 @@ jobs:
 
    - name: Setup Environment (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
-        target: [armv6, aarch64]
         include:
-        - target: armv6
-          cpu: arm1176
-          cpu_info: cpuinfo/raspberrypi_zero_w
-          base_image: raspbian_lite:2020-02-13
-        - target: aarch64
           cpu: cortex-a53
           cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
           base_image: raspi_3_bullseye:20220121

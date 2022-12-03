@@ -40,27 +40,26 @@ jobs:
      if: matrix.os == 'ubuntu-20.04'
      uses: pguyot/arm-runner-action@v2
      with:
-        cpu: cortex-a53
-        cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-        base_image: raspi_3_bullseye:20220121
-        image_additional_mb: 1024
-        commands: |
-            kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
-            arch=`apt list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`
-            wget -q http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
-            dpkg --install raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
-            apt-get update -y --allow-releaseinfo-change
-            apt-get install --no-install-recommends -y libasound2-dev make gcc libc6-dev
-            for builddir in /lib/modules/*/build ; do
-                parentdir=`dirname ${builddir}`
-                kernelrelease=`basename ${parentdir}`
-                make KERNELRELEASE=${kernelrelease}
-                sudo make install KERNELRELEASE=${kernelrelease}
-                make clean KERNELRELEASE=${kernelrelease}
-                make test KERNELRELEASE=${kernelrelease}
-
-#     run: |
-#      script/install-lnx.sh
+      cpu: cortex-a53
+      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+      base_image: raspi_3_bullseye:20220121
+      image_additional_mb: 1024
+      commands: |
+#        kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
+#        arch=`aptitude list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`
+#        wget -q http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
+#        dpkg --install raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
+#        apt-get update -y --allow-releaseinfo-change
+#        apt-get install --no-install-recommends -y libasound2-dev make gcc libc6-dev
+#        for builddir in /lib/modules/*/build ; do
+#         parentdir=`dirname ${builddir}`
+#         kernelrelease=`basename ${parentdir}`
+#         make KERNELRELEASE=${kernelrelease}
+#         sudo make install KERNELRELEASE=${kernelrelease}
+#         make clean KERNELRELEASE=${kernelrelease}
+#         make test KERNELRELEASE=${kernelrelease}
+#        done
+         script/install-rpi.sh
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'

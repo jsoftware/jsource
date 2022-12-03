@@ -11,17 +11,21 @@ set -e
 
 if [ $1 == "linux" ]; then
   ext="so"
+elif [ $1 == "raspberry" ]; then
+  ext="so"
 elif [ "$1" == "darwin" ]; then
   ext="dylib"
 else
-  echo "argument is linux|darwin"
+  echo "argument is linux|darwin|raspberry"
   exit 1
 fi
 
 ls -l j64
 
 j64/jconsole -lib libj.$ext testga.ijs
+if [ $1 != "raspberry" ]; then
 j64/jconsole -lib libjavx.$ext testga.ijs
+fi
 
 if [ $1 == "linux" ]; then
   j64/jconsole -lib libjavx2.$ext testga.ijs

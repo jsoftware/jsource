@@ -38,7 +38,7 @@ jobs:
 
    - name: Setup Environment (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
-    - uses: pguyot/arm-runner-action@v2
+      uses: pguyot/arm-runner-action@v2
       with:
         cpu: cortex-a53
         cpu_info: cpuinfo/raspberrypi_zero2_w_arm64

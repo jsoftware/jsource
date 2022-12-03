@@ -58,8 +58,11 @@ jobs:
                 sudo make install KERNELRELEASE=${kernelrelease}
                 make clean KERNELRELEASE=${kernelrelease}
                 make test KERNELRELEASE=${kernelrelease}
-     run: |
+
       script/install-lnx.sh
+
+#     run: |
+#      script/install-lnx.sh
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'

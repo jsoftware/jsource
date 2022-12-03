@@ -376,7 +376,7 @@ m;n;x;y
 {{
 if. 3 = 4!:0<'eformat_j_' do. f =. eformat_j_ else. f =. '' end.
 4!:55<'eformat_j_'
-assert. '|spelling error (invalid character in sentence, codepoint 160)' ([ -: ({.~ #)~) (': ex03'&taketo , ': ex03'&takeafter) (': ex02'&taketo , ': ex02'&takeafter) ". eftx 'aa 44'  NB. Contains nonbreaking space
+assert. *./ ('spelling error';'(invalid character in sentence, codepoint 160)') (>@[ +./@:E. ])"0 _ ". eftx 'aa 44'  NB. Contains nonbreaking space
 if. 3 = 4!:0<'f' do. eformat_j_ =: f end.
 1
 }} ''

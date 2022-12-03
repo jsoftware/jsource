@@ -45,6 +45,8 @@ jobs:
       base_image: raspi_3_bullseye:20220121
       image_additional_mb: 1024
       commands: |
+       script/install-rpi.sh
+
 #        kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
 #        arch=`aptitude list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`
 #        wget -q http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
@@ -59,7 +61,6 @@ jobs:
 #         make clean KERNELRELEASE=${kernelrelease}
 #         make test KERNELRELEASE=${kernelrelease}
 #        done
-         script/install-rpi.sh
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'

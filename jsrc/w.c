@@ -163,15 +163,15 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     // starts with alpha; must be a name.
     if(unlikely(b)){
      // Inflection is illegal except for trailing _: in name_:
-     if(!(wl>2&&wi[wl-2]=='_'&&wi[wl-1]==CESC2)){jsignal3(EVSPELL,w,wi-s); R 0;}  // error if not *_:
+     if(!(wl>2&&wi[wl-2]=='_'&&wi[wl-1]==CESC2)){jsignal3(EVSPELL|EMSGINVINFL|EMSGSPACEAFTEREVM,w,wi-s); R 0;}  // error if not *_:
      wl-=2;  // remove _: from name; leave b set to indicate inflection
     }
     ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));  // error if invalid name; create name block and install it in result
     if(unlikely(b)){AT(*x)|=NAMEBYVALUE|NAMEABANDON;}  // flag name_: for stack processing
-   }else if(unlikely(b)){jsignal3(EVSPELL,w,wi-s); R 0;
+   }else if(unlikely(b)){jsignal3(EVSPELL|EMSGINVINFL|EMSGSPACEAFTEREVM,w,wi-s); R 0;  // inflections when starting with not (alpha, ASCII graphic) and not num:
    }else if(p==C9){if(unlikely(!(*x=connum(wl,wi)))){I lje=jt->jerr; RESETERR; jsignal3(lje,w,u[0]); R 0;}   // starts with numeric, create numeric constant.  If error, give a message showing the bad number
    }else if(p==CQ){ RZ(*x=constr(wl,wi));   // start with ', make string constant
-   }else{jsignal3(EVSPELL,w,wi-s); R 0;}   // bad first character or inflection
+   }else{jsignal3(EVSPELL|EMSGINVCHAR|EMSGSPACEAFTEREVM,w,wi-s); R 0;}   // bad first character or inflection
   }
   // Since the word is being incorporated into a list, we must realize it
   rifv(*x);

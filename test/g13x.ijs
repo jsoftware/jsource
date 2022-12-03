@@ -373,6 +373,14 @@ m;n;x;y
 
 13!:0 ]0
 
+{{
+if. 3 = 4!:0<'eformat_j_' do. f =. eformat_j_ else. f =. '' end.
+4!:55<'eformat_j_'
+assert. '|spelling error (invalid character in sentence, codepoint 160)' ([ -: ({.~ #)~) (': ex03'&taketo , ': ex03'&takeafter) (': ex02'&taketo , ': ex02'&takeafter) ". eftx 'aa 44'  NB. Contains nonbreaking space
+if. 3 = 4!:0<'f' do. eformat_j_ =: f end.
+1
+}} ''
+
 NB. ------------ eformat ---------------------------------------------------
 
 1 e. '(0)' E. 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun

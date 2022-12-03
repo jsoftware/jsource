@@ -746,10 +746,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define EMSGLINEISNAME 0x4000 // set if line has the name to use in place of jt->curname
 #define EMSGFROMPYX 0x8000  // set if this error is being copied from a pyx (it can't be analyzed, and it should be marked specially
 #define EMSGNOEFORMAT 0x10000  // set if this error should not be passed to eformat for processing
-//   no bits set  means terse display (jsignal)
-//   bit 9 set: line=failing line, info=failing line#/column for jsignal3
-//   bit 10 set: line=A text for message (sigstr)
-//   bit 11 set: line->text as C string (sigd)
+#define EMSGINVCHAR 0x20000  // set to append 'invalid char' to msg
+#define EMSGINVINFL 0x40000  // set to append 'invalid inflection' to msg
 
 #ifndef PYXES
 #define PYXES 1

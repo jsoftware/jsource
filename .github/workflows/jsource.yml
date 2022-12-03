@@ -84,6 +84,7 @@ jobs:
 
    - name: Build JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
+     uses: pguyot/arm-runner-action@v2
      env:
       CC: clang
       USE_SLEEF: 1
@@ -107,6 +108,7 @@ jobs:
 
    - name: Test JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
+     uses: pguyot/arm-runner-action@v2
      run: script/testga.sh raspberry
 
    - name: Test JE (macOS)
@@ -124,6 +126,7 @@ jobs:
 
    - name: Compress Files (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
+     uses: pguyot/arm-runner-action@v2
      run: zip -r rpi64.zip j64
 
    - name: Compress Files (macOS)
@@ -158,6 +161,7 @@ jobs:
    - name: Release JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
      uses: ncipollo/release-action@v1
+     uses: pguyot/arm-runner-action@v2
      with:
       tag: build
       artifacts: "rpi64.zip"
@@ -195,6 +199,7 @@ jobs:
    - name: Copy Test (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
      uses: actions/upload-artifact@v2
+     uses: pguyot/arm-runner-action@v2
      with:
        name: dist
        path: testrpi.txt

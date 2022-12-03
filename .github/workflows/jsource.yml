@@ -38,14 +38,12 @@ jobs:
 
    - name: Setup Environment (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
-      uses: pguyot/arm-runner-action@v2
-      with:
+     uses: pguyot/arm-runner-action@v2
+     with:
         cpu: cortex-a53
         cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
         base_image: raspi_3_bullseye:20220121
         image_additional_mb: 1024
-        base_image: ${{ matrix.base_image }}
-        cpu: ${{ matrix.cpu }}
         commands: |
             kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
             arch=`apt list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`

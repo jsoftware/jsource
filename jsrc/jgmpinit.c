@@ -272,19 +272,18 @@ Q jtQmpq(J jt, mpq_t mpq) {
 // link with libgmp
 #ifdef _WIN32
  #define LIBEXT ".dll"
-#define LIBGMPNAME "mpir" LIBEXT
+ #define LIBGMPNAME "mpir" LIBEXT
 #else
  #ifdef __APPLE__
   #define LIBEXT ".dylib"
+  #define LIBEXT10 LIBEXT 
  #else
-  #ifdef ANDROID
-   #define LIBEXT ".so"
-  #else
-   #define LIBEXT ".so.10"    /* symlink of .so only available when devel package installed */
-  #endif
+  #define LIBEXT ".so"
+  #define LIBEXT10 ".so.10"    /* symlink of .so only available when devel package installed */
  #endif
-#define LIBGMPNAME "libgmp" LIBEXT
-#define LIBJGMPNAME "libjgmp" LIBEXT
+ #define LIBGMPNAME "libgmp" LIBEXT
+ #define LIBGMPNAME10 "libgmp" LIBEXT10
+ #define LIBJGMPNAME "libjgmp" LIBEXT
 #endif
 
 static void*libgmp;
@@ -335,8 +334,8 @@ void jgmpinit(C*libpath) {
   }
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
-  libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
- } else libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
+  libgmp= dlopen(FHS?LIBGMPNAME10?LIBGMPNAME, RTLD_LAZY);
+ } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);
  if (!libgmp) {dldiag();R;}
 #endif
 #endif

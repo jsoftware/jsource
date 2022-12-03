@@ -1594,8 +1594,10 @@ m=. 2":>:(;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec')i.<3{.date
 date=. ((_4{.date),'-',m,'-',4 5{date)rplc' ';'0'
 (_20}.s),date,11}.dt
 )
+JQTVERSION=: '2.0.3'
 do_install=: 3 : 0
 if. -. checkaccess_jpacman_ '' do. return. end.
+if. y -: 'gmp' do. do_getgmpbin '' return. end.
 if. ':' e. y do. install_gitrepo y return. end.
 'update' jpkg ''
 if. y -: 'addons' do. y=. 'all' end.
@@ -1618,15 +1620,16 @@ smoutput 'Exit and restart J using ',msg
 qt_ldd_test=: 3 : 0
 ldd=. ('Darwin'-:UNAME){::'ldd';'otool -L'
 suffix=. ('Darwin'-:UNAME){::'so';'dylib'
+vsuffix=. ('Darwin'-:UNAME){::*('so.',JQTVERSION);(JQTVERSION,'.dylib')
 if. FHS*.IFUNIX do.
   d=. <;._2 hostcmd_jpacman_ ldd,' ',BINPATH,'/jqt-9.04'
-  d=. d,<;._2 hostcmd_jpacman_ ldd,' ',y,'/libjqt.',suffix,'.9.04'
+  d=. d,<;._2 hostcmd_jpacman_ ldd,' ',y,'/libjqt.',vsuffix
 else.
   d=. <;._2 hostcmd_jpacman_ ldd,' ',jpath'~bin/jqt'
   d=. d,<;._2 hostcmd_jpacman_ ldd,' ',jpath'~bin/libjqt.',suffix
 end.
 b=. d#~;+./each (<'not found') E. each d
-if. #b do.
+if. ('Darwin'-:UNAME)<*#b do.
   echo'jqt dependencies not found - jqt will not start until these are resolved'
   echo >~.b
 end.
@@ -1634,6 +1637,9 @@ end.
 do_getqtbin=: 3 : 0
 
 bin=. 'JQt ',(((y-:'slim')#'slim ')),'binaries.'
+
+suffix=. IFUNIX{::'dll';('Darwin'-:UNAME){::'so';'dylib'
+vsuffix=. IFUNIX{::(JQTVERSION,'.dll');('Darwin'-:UNAME){::('so.',JQTVERSION);(JQTVERSION,'.dylib')
 smoutput 'Installing ',bin,'..'
 if. 'Linux'-:UNAME do.
   if. IFRASPI do.
@@ -1643,13 +1649,13 @@ if. 'Linux'-:UNAME do.
   elseif. do.
     z=. 'jqt-',((y-:'slim') pick 'linux';'slim'),'-',(IF64 pick 'x86';'x64'),'.tar.gz'
   end.
-  z1=. 'libjqt.',suffix=. 'so'
+  z1=. 'libjqt.',suffix
 elseif. IFWIN do.
   z=. 'jqt-win',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
-  z1=. 'jqt.',suffix=. 'dll'
+  z1=. 'jqt.',suffix
 elseif. do.
   z=. 'jqt-mac',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
-  z1=. 'libjqt.',suffix=. 'dylib'
+  z1=. 'libjqt.',suffix
 end.
 'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j904/qtide/',z
 if. rc do.
@@ -1671,8 +1677,8 @@ else.
     end.
     echo 'install libjqt.',suffix,' to ',d1
     hostcmd_jpacman_ 'rm -f ',BINPATH,'/jqt'
-    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.04 && cp libjqt.',suffix,' ',d1,'/libjqt.',suffix,'.9.04 && chmod 755 ',d1,'/libjqt.',suffix,'.9.04', ('Linux'-:UNAME)#' && ldconfig'
-    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.04 && cp libjqt.',suffix,' ',d1,'/libjqt.',suffix,'.9.04 && chmod 755 ',d1,'/libjqt.',suffix,'.9.04', ('Linux'-:UNAME)#' && ldconfig'
+    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.04 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ('Linux'-:UNAME)#' && ldconfig'
+    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.04 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ('Linux'-:UNAME)#' && ldconfig'
     if. 'Linux'-:UNAME do.
       echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.04 904'
       hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.04 904'
@@ -1689,21 +1695,21 @@ else.
   m=. m,'check that you have write permission for: ',LF,BINPATH
 end.
 smoutput m
-if. IFUNIX do.
+if. 'Linux'-:UNAME do.
   qt_ldd_test d1
   smoutput 'If libjqt cannot be loaded, see this guide for installing the Qt library'
   smoutput 'https://code.jsoftware.com/wiki/Guides/Linux_Installation'
   return.
 end.
 
-tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt5Core.dll'
+tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt6Core.dll'
 y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
 if. IFWIN do.
-  z=. 'qt512-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt62-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 else.
-  z=. 'qt512-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt62-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 end.
 'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j904/qtlib/',z
 if. rc do.
@@ -1721,6 +1727,70 @@ if. #1!:0 tgt do.
 else.
   m=. 'Unable to install Qt library.',LF
   m=. m,'check that you have write permission for: ',LF,IFWIN{::tgt;jpath'~bin'
+end.
+smoutput m
+
+)
+do_getgmpbin=: 3 : 0
+
+if. IFIOS +. UNAME-:'Android' do.
+  smoutput 'not available on the platform' return.
+end.
+
+bin=. (IFUNIX{::'mpir';'gmp'),' binary.'
+
+suffix=. IFUNIX{::'dll';('Darwin'-:UNAME){::'so';'dylib'
+libname=. IFUNIX{::('mpir.',suffix);'libgmp.',suffix
+libjname=. IFUNIX{::('mpir.',suffix);'libjgmp.',suffix
+if. ''-:1!:46'' do.
+  if. FHS do.
+    if. 'Darwin'-:UNAME do.
+      dest=. (({.~ i:&'/')BINPATH),'/lib/'
+    elseif. IFRASPI do.
+      dest=. (({.~ i:&'/')BINPATH),IF64{::'/lib/arm-linux-gnueabihf/';'/lib/aarch64-linux-gnu/'
+    elseif. do.
+      if. -.fexist dest=. (({.~ i:&'/')BINPATH),IF64{::'/lib/i386-linux-gnu/';'/lib/x86_64-linux-gnu/' do.
+        dest=. (({.~ i:&'/')BINPATH),IF64{::'/lib/';'/lib64/'
+      end.
+    end.
+  else.
+    dest=. BINPATH,'/'
+  end.
+else.
+  dest=. (1!:46''),'/'
+end.
+if. fexist f=. dest, FHS{::libname;libjname do.
+  smoutput f,' already exists' return.
+end.
+smoutput 'Installing ',bin,'..'
+if. 'Linux'-:UNAME do.
+  if. IFRASPI do.
+    z=. libname,~ IF64{::'linux/arm/';'linux/aarch64/'
+  elseif. do.
+    z=. libname,~ IF64{::'linux/i386/';'linux/x86_64/'
+  end.
+elseif. IFWIN do.
+  z=. libname,~ IF64{::'windows/win32/';'windows/x64/'
+elseif. do.
+  z=. libname,~ 'apple/macos/'
+end.
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/jengine/mpir/',z
+if. rc do.
+  smoutput 'unable to download: ',z return.
+end.
+echo 'install ',(FHS{::libname;libjname),' to ',dest
+if. IFWIN do.
+  (dest,libname) fcopynew p
+else.
+  (dest,FHS{::libname;libjname) fcopynew p
+  hostcmd_jpacman_ ::0: 'chmod 755 ',dquote (dest,FHS{::libname;libjname)
+end.
+ferase p
+if. fexist (dest,FHS{::libname;libjname) do.
+  m=. 'Finished install of ',bin
+else.
+  m=. 'Unable to install ',bin,LF
+  m=. m,'check that you have write permission for: ',LF,dest
 end.
 smoutput m
 

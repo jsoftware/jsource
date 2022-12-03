@@ -38,11 +38,11 @@ jobs:
 
    - name: Setup Environment (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
-          cpu: cortex-a53
-          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-          base_image: raspi_3_bullseye:20220121
     - uses: pguyot/arm-runner-action@v2
       with:
+        cpu: cortex-a53
+        cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+        base_image: raspi_3_bullseye:20220121
         image_additional_mb: 1024
         base_image: ${{ matrix.base_image }}
         cpu: ${{ matrix.cpu }}

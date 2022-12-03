@@ -21,7 +21,7 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-22.04, macos-12, windows-2022]
+    os: [ubuntu-22.04, ubuntu-20.04, macos-12, windows-2022]
     #os: [ubuntu-22.04]
     #os: [macos-12]
     #os: [windows-2022]
@@ -35,6 +35,41 @@ jobs:
      run: |
       script/install-lnx.sh
 #      sudo apt-get install -y libedit-dev libncursesw5-dev
+
+   - name: Setup Environment (Raspberry)
+     if: matrix.os == 'ubuntu-20.04'
+      matrix:
+        target: [armv6, aarch64]
+        include:
+        - target: armv6
+          cpu: arm1176
+          cpu_info: cpuinfo/raspberrypi_zero_w
+          base_image: raspbian_lite:2020-02-13
+        - target: aarch64
+          cpu: cortex-a53
+          cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+          base_image: raspi_3_bullseye:20220121
+    - uses: pguyot/arm-runner-action@v2
+      with:
+        image_additional_mb: 1024
+        base_image: ${{ matrix.base_image }}
+        cpu: ${{ matrix.cpu }}
+        commands: |
+            kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
+            arch=`apt list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`
+            wget -q http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
+            dpkg --install raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
+            apt-get update -y --allow-releaseinfo-change
+            apt-get install --no-install-recommends -y libasound2-dev make gcc libc6-dev
+            for builddir in /lib/modules/*/build ; do
+                parentdir=`dirname ${builddir}`
+                kernelrelease=`basename ${parentdir}`
+                make KERNELRELEASE=${kernelrelease}
+                sudo make install KERNELRELEASE=${kernelrelease}
+                make clean KERNELRELEASE=${kernelrelease}
+                make test KERNELRELEASE=${kernelrelease}
+     run: |
+      script/install-lnx.sh
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'

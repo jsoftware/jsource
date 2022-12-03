@@ -38,7 +38,6 @@ jobs:
 
    - name: Setup Environment (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
-      matrix:
         target: [armv6, aarch64]
         include:
         - target: armv6

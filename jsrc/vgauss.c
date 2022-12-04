@@ -23,7 +23,7 @@ DF1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
   ASSERT(0<=e,EVDOMAIN);
   x=v+c*j; 
   if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;);} /* interchange rows e and j */
-  p=x[j]; ra(p.n); ra(p.d); DO(c, Q z=qdiv(x[i],p); INSTALLRAT(w,x,i,z);); fa(p.n); fa(p.d);
+  p=x[j]; ra(p.n); ra(p.d); DO(c, Q z=qdiv(x[i],p); CHECKZAP(z.n); CHECKZAP(z.d); INSTALLRAT(w,x,i,z);); fa(p.n); fa(p.d);
   for(i=0;i<r;++i){
    if(i==j)continue;
    u=v+c*i; p=u[j];  /* pivot */

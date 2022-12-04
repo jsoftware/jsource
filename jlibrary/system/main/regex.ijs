@@ -178,9 +178,9 @@ NB. pcre2 library is in bin or tools/regex
 3 : 0''
 select. UNAME
 case. 'Win' do. t=. 'jpcre2.dll'
+case. 'Android' do. t=. 'libjpcre2.so'
 case. 'Darwin' do. t=. 'libjpcre2.dylib'
 case. 'Linux' do. t=. 'libjpcre2.so'
-case. 'Android' do. t=. 'libjpcre2.so'
 end.
 
 f=. BINPATH,'/',t
@@ -193,6 +193,8 @@ if. ('Android'-:UNAME) *. 0 = 1!:4 :: 0: <f do.
   f=. (({.~i:&'/')LIBFILE),'/',t
 elseif. ('Linux'-:UNAME) *. (IFUNIX>'/'e.LIBFILE) *. 0 = 1!:4 :: 0: <f do.
   f=. 'libpcre2-8.so.0'
+elseif. ('Darwin'-:UNAME) *. (IFUNIX>'/'e.LIBFILE) *. 0 = 1!:4 :: 0: <f do.
+  f=. 'libpcre2-8.dylib'
 elseif. 0 = 1!:4 :: 0: <f do.
   f=. t
 end.
@@ -350,7 +352,9 @@ pat=. >{.x
 new=. {:x
 if. L. pat do. 'pat ndx'=. pat else. ndx=. ,0 end.
 if. 1 ~: #$ ndx do. 13!:8[3 end.
-mat=. ({.ndx) {"2 pat rxmatches y
+m=. pat rxmatches y
+if. 0 e. $m do. y return. end.
+mat=. ({.ndx) {"2 m
 new mat rxmerge y
 )
 

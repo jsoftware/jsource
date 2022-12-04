@@ -74,7 +74,7 @@ static NUMH(jtnumxTEMP) {PROLOG(0098); // n, s, vv NB. n is length of s, we put 
  s[n]= sav;           // restore buffer s to orig state (might be unnecessary)
  ASSERT(!(AFLAG(y)&AFRO),EVWSFULL); // error if we used an emergency buffer
  // FIXME: need that EVWSFULL test generically applied in all Xmp contexts
- EPILOGNORET(*(X*)vv= y); // return the A block for the number
+ *(X*)vv= y; // return the A block for the number
  R 1;                 // good return
 }
 static NUMH(jtnumx) {

@@ -2304,8 +2304,8 @@ extern JS gjt; // global for JPF (procs without jt)
 #define CCBLOCK
 #endif
 
-#if SYS & SYS_UNIX
 #include <fenv.h>
+#if SYS & SYS_UNIX
 // bug clang isnan(x) set NaN flag if x is NaN
 #if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__))
 #define _isnan       __builtin_isnan

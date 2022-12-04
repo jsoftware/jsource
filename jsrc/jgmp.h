@@ -155,6 +155,12 @@ extern Q jtQmpq(J, mpq_t);
 
 #define ISGMP(x) unlikely(FHRHISGMP==AFHRH(x))
 
+#if MEMAUDIT
+#define CHECKZAP(xcheckzap) ({if (!ACISPERM(xcheckzap)) if (!AZAPLOC(xcheckzap)) {fprintf(stderr, "%llx: perm: %i, zap: %llx\n", (UIL)xcheckzap, !!ACISPERM(xcheckzap), (UIL)AZAPLOC(xcheckzap)); SEGFAULT;} xcheckzap;})
+#else
+#define CHECKZAP(xcheckzap) (xcheckzap)
+#endif
+
 // parallel definition of R0 in j.h (Q0 defined further down here)
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
 #define RQ0 {if(!jt->jerr)SEGFAULT; R Q0;}
@@ -394,11 +400,11 @@ extern void jfree4gmp(void*, size_t);
 #define XLIMB0(a) (UIAV1(a)[0])                // trailing "big digit" (probably base 1+ULLONG_MAX) in a non-zero extended integer if that could be represented directly in C
 #define XLIMBn(a) (UIAV1(a)[llabs(XSGN(a))-1])  // leading "big digit" (probably base 1+ULLONG_MAX) in a non-zero extended integer if that could be represented directly in C
 #define ISX0(x) (0==XSGN(x)) // x is 0
-#define ISX1(x) ({X x1= x; 1==XSGN(x1) && 1==XLIMB0(x1);}) // x is 1
-#define ISX_1(x) ({X x1= x; -1==XSGN(x1) && 1==XLIMB0(x1);}) // x is -1
+#define ISX1(x) ({X x1= x; CHECKZAP(x1); 1==XSGN(x1) && 1==XLIMB0(x1);}) // x is 1
+#define ISX_1(x) ({X x1= x; CHECKZAP(x1); -1==XSGN(x1) && 1==XLIMB0(x1);}) // x is -1
 
 // 2|x where is x is type X (may segfault if x is 0)
-#define XODDnz(x) ({X nz= x; UI d= *UIAV1(nz); 1&(d+(0>XSGN(x)));})
+#define XODDnz(x) ({X nz= x; CHECKZAP(nz); UI d= *UIAV1(nz); 1&(d+(0>XSGN(x)));})
 
 #define QSGN(q) XSGN((q).n)   // sign of type Q
 #define ISQinf(q) ISX0((q).d) // test if type Q is an infinity
@@ -407,6 +413,12 @@ extern void jfree4gmp(void*, size_t);
 #define ISQ1(q) ({Q Qq= q; ISQINT(Qq)&&ISX1(Qq.n);}) // q is 1
 
 #define XHSZ AKXR(1)
+
+#if MEMAUDIT
+#define ZAPONLYONCE(x,p) {if (AZAPLOC(x)||ACISPERM(AC(x))) SEGFAULT; else AZAPLOC(x)= p; jt->tnextpushp= p;}
+#else
+#define ZAPONLYONCE(x,p) {AZAPLOC(x)= p; jt->tnextpushp= p;}
+#endif
 
 // optimization: 0==AZAPLOC(x) when ACISPERM(AC(x))
 
@@ -417,8 +429,8 @@ extern void jfree4gmp(void*, size_t);
    likely(!ACISPERM(AC(x))) ?({ \
        I tt=AT(x); pushp=jt->tnextpushp; *pushp++=(x); \
        if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){pushp=tg(pushp);} \
-       if(likely(!pushp)){jsignal(EVWSFULL);} \
-       else{AZAPLOC(x)=pushp; jt->tnextpushp=pushp;} \
+       if(unlikely(!pushp)){jsignal(EVWSFULL);} \
+       else ZAPONLYONCE(x, pushp)\
        1;}) \
     :0;}))
 

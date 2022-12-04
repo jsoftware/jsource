@@ -312,6 +312,7 @@ B jtspfree(J jt){I i;A p;
    for(p=jt->mfree[i].pool;p;){
 #if MEMAUDIT&1
     if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT;  // make sure chains are valid
+    if(ISGMP(p)&&!ACISPERM(p)&&!AZAPLOC(p))SEGFAULT; // catch an old libgmp integration failure mode
 #endif
     A base = FHRHROOTADDR(p,offsetmask);   // address of base
     US baseh = AFHRH(base);  // fetch header for base

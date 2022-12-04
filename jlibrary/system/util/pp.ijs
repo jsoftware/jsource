@@ -232,7 +232,7 @@ end.
 pplint=: 3 : 0
 dat=. y
 
-'fmt wid rms exp sel'=. Format_j_
+'fmt wid rms exp sel blk'=. 6 {. Format_j_
 if. wid=0 do. spc=. TAB else. spc=. wid#' ' end.
 dat=. dat -. 26{a.
 if. 0 = #dat do. return. end.
@@ -307,6 +307,10 @@ end.
 if. exp do.
   msk=. (dat=<,')') < maskexps dat
   dat=. msk (([ # spc"_),]) each dat
+end.
+if. -.blk do.
+  ndx=. I. (maskexps dat) *. ' ' *./ . = &> dat
+  dat=. (<'') ndx} dat
 end.
 dat=. commentline each dat
 dat=. nouns nounx } dat

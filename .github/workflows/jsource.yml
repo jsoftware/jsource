@@ -38,55 +38,35 @@ jobs:
 
    - name: Setup Environment, Build JE, Test JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
-     steps:
-     - name: Setup Environment, Build JE, Test JE (Raspberry)
-       uses: pguyot/arm-runner-action@v2
-       with:
-        cpu: cortex-a53
-        cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-        base_image: raspios_lite_arm64:latest
-        image_additional_mb: 2048
-        commands: |
-         apt-get install --no-install-recommends -y clang zip
-         export CC=clang
-         export USE_SLEEF=1
-         script/buildga.sh raspberry
-         script/testga.sh raspberry
-         zip -r rpi64.zip j64
-     - name: Compress Files, Release JE (Raspberry)
-       uses: ncipollo/release-action@v1
-       with:
-        tag: build
-        artifacts: "rpi64.zip"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        allowUpdates: true
-        replacesArtifacts: true
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: cortex-a53
+      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+      base_image: raspios_lite_arm64:latest
+      image_additional_mb: 2048
+      commands: |
+       apt-get install --no-install-recommends -y clang zip
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh raspberry
+       script/testga.sh raspberry
+       zip -r rpi64.zip j64
 
    - name: Setup Environment, Build JE, Test JE (Raspberry32)
      if: matrix.os == 'ubuntu-latest'
-     steps:
-     - name: Setup Environment, Build JE, Test JE (Raspberry32)
-       uses: pguyot/arm-runner-action@v2
-       with:
-        cpu: arm1176
-        cpu_info: cpuinfo/raspberrypi_zero2_w
-        base_image: raspbian_lite:2020-02-13
-        image_additional_mb: 2048
-        commands: |
-         apt-get install --no-install-recommends -y zip
-         export CC=gcc
-         export USE_SLEEF=0
-         script/buildga.sh raspberry
-         script/testga.sh raspberry
-         zip -r rpi32.zip j32
-     - name: Compress Files, Release JE (Raspberry32)
-       uses: ncipollo/release-action@v1
-       with:
-        tag: build
-        artifacts: "rpi32.zip"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        allowUpdates: true
-        replacesArtifacts: true
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: arm1176
+      cpu_info: cpuinfo/raspberrypi_zero2_w
+      base_image: raspbian_lite:2020-02-13
+      image_additional_mb: 2048
+      commands: |
+       apt-get install --no-install-recommends -y zip
+       export CC=gcc
+       export USE_SLEEF=0
+       script/buildga.sh raspberry
+       script/testga.sh raspberry
+       zip -r rpi32.zip j32
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'

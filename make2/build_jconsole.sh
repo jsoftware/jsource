@@ -76,13 +76,12 @@ fi
 
 TARGET=jconsole
 
-if [ -z "${j64x##*32*}" ]; then
-USE_EMU_AVX=0
-else
-USE_EMU_AVX="${USE_EMU_AVX:=1}"
-fi
+case "$jplatform64" in
+ *32*) USE_EMU_AVX=0;;
+  *) USE_EMU_AVX="${USE_EMU_AVX:=1}";;
+esac
 if [ $USE_EMU_AVX -eq 1 ] ; then
-common="$common -DEMU_AVX=1"
+ common="$common -DEMU_AVX=1"
 fi
 
 USE_PYXES="${USE_PYXES:=1}"

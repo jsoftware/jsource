@@ -1,5 +1,5 @@
 #!/bin/sh
-set -vex
+set -e
 
 # respect individual jplatform and/or j64x if they are defined
 

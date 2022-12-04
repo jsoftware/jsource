@@ -62,7 +62,7 @@ jobs:
       base_image: raspbian_lite:2020-02-13
       image_additional_mb: 2048
       commands: |
-       export CC=gcc -m32
+       export CC=gcc
        export USE_SLEEF=0
        export j64x=j32
        script/buildga.sh raspberry

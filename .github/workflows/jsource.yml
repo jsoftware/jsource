@@ -83,6 +83,9 @@ jobs:
 
    - name: Build JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
+     env:
+      CC: clang
+      USE_SLEEF: 1
      uses: pguyot/arm-runner-action@v2
      with:
       cpu: cortex-a53

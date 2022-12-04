@@ -93,7 +93,7 @@ jobs:
       base_image: raspios_lite_arm64:latest
       image_additional_mb: 1024
       commands: |
-       export CC=clang
+       export CC=clang-11
        export USE_SLEEF=1
        script/buildga.sh raspberry
 

@@ -21,7 +21,7 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-22.04, ubuntu-20.04, macos-12, windows-2022]
+    os: [ubuntu-22.04, ubuntu-20.04, macos-12, macos-11, windows-2022]
     #os: [ubuntu-22.04]
     #os: [macos-12]
     #os: [windows-2022]
@@ -52,6 +52,23 @@ jobs:
        script/buildga.sh raspberry
        script/testga.sh raspberry
        zip -r rpi64.zip j64
+
+   - name: Setup Environment, Build JE, Test JE (Raspberry32)
+     if: matrix.os == 'macos-11'
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: arm1176
+      cpu_info: cpuinfo/raspberrypi_zero2_w
+      base_image: raspios_lite:latest
+      image_additional_mb: 1024
+      commands: |
+       apt-get install -y build-essential clang wget
+       apt-get install -y nasm
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh raspberry
+       script/testga.sh raspberry
+       zip -r rpi32.zip j32
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'

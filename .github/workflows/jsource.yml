@@ -36,7 +36,7 @@ jobs:
       script/install-lnx.sh
 #      sudo apt-get install -y libedit-dev libncursesw5-dev
 
-   - name: Setup Environment (Raspberry)
+   - name: Setup Environment, Build JE, Test JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
      uses: pguyot/arm-runner-action@v2
      with:
@@ -51,6 +51,7 @@ jobs:
        export USE_SLEEF=1
        script/buildga.sh raspberry
        script/testga.sh raspberry
+       zip -r rpi64.zip j64
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'

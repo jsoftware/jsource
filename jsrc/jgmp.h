@@ -156,7 +156,7 @@ extern Q jtQmpq(J, mpq_t);
 #define ISGMP(x) unlikely(FHRHISGMP==AFHRH(x))
 
 #if MEMAUDIT
-#define CHECKZAP(xcheckzap) ({if (!ACISPERM(xcheckzap)) if (!AZAPLOC(xcheckzap)) {fprintf(stderr, "%llx: perm: %i, zap: %llx\n", (UIL)xcheckzap, !!ACISPERM(xcheckzap), (UIL)AZAPLOC(xcheckzap)); SEGFAULT;} xcheckzap;})
+#define CHECKZAP(xcheckzap) ({if (!ACISPERM(AC(xcheckzap))) if (!AZAPLOC(xcheckzap)) {fprintf(stderr, "%llx: perm: %i, zap: %llx\n", (UIL)xcheckzap, !!ACISPERM(AC(xcheckzap)), (UIL)AZAPLOC(xcheckzap)); SEGFAULT;} xcheckzap;})
 #else
 #define CHECKZAP(xcheckzap) (xcheckzap)
 #endif
@@ -225,10 +225,10 @@ extern Q jtQmpq(J, mpq_t);
 
 
 // dehydrate a gmp (mpz_t) as a J (X), produces the X result as a C rvalue
-#define Xmp(x) XTEMP(Xmpzcommon(mp##x))
+#define Xmp(x) Xmpzcommon(mp##x)
 
 // same but for an expression where the naming convention doesn't work
-#define Xmpnodecl(x) ({X xvar= x; XTEMP(Xmpzcommon(xvar))});
+#define Xmpnodecl(x) ({X xvar= x; Xmpzcommon(xvar)});
 
 // dehydrate a gmp (mpq_t mp##q) as a J value of type (Q)
 // produces the Q result as a C rvalue
@@ -434,7 +434,10 @@ extern void jfree4gmp(void*, size_t);
        1;}) \
     :0;}))
 
-// think of this as a call to frgmp(), typically scheduled in a future EPILOG (though with an immediate frgmp to cope with a rare failure mode)
+// think of this as a call to frgmp(), typically scheduled in a future
+// EPILOG (though with an immediate frgmp to cope with a rare failure mode)
+// (typically this would be handled by Xmp() but we need this when
+// libgmp allocates memory for a character string (something other than an XNUM)
 #define XTEMP(Xx) ({X tempx=Xx;A*pushp;if(tpushnoret(tempx)){if(unlikely(!pushp)){frgmp(tempx);R0;}}tempx;})
 
 /*

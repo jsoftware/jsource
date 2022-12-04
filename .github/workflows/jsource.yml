@@ -92,7 +92,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-     run: script/buildga.sh raspberry
+     commands: script/buildga.sh raspberry
 
    - name: Build JE (macOS)
      if: matrix.os == 'macos-12'

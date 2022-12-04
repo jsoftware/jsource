@@ -16,9 +16,9 @@ fi
 if [ "`uname -m`" = "x86_64" ]; then
   j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ]; then
-  j64x=j64
+  j64x="${j64x:=j64}"
 elif [ "`uname -m`" = "armv6l" ]; then
-  j64x=j32
+  j64x="${j64x:=j32}"
 elif [ "`uname -m`" = "arm64" ] && [ -z "${jplatform##*darwin*}" ]; then
   j64x="${j64x:=j64arm}"
 else

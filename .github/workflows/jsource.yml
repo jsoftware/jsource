@@ -21,7 +21,8 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
+    #os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
+    os: [ubuntu-20.04, ubuntu-latest]
     #os: [ubuntu-22.04]
     #os: [macos-12]
     #os: [windows-2022]
@@ -125,6 +126,26 @@ jobs:
      if: matrix.os == 'windows-2022'
      shell: pwsh
      run: Compress-Archive j64 w64.zip
+
+   - name: Release JE (Raspberry)
+     if: matrix.os == 'ubuntu-20.04'
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Release JE (Raspberry32)
+     if: matrix.os == 'ubuntu-latest'
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
    - name: Release JE (Linux)
      if: matrix.os == 'ubuntu-22.04'

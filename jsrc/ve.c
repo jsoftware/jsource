@@ -418,8 +418,33 @@ APFX(lcmIO, D,I,I, LCMIO,,HDR1JERR)
 APFX(lcmDD, D,D,D, dlcm ,,HDR1JERR)
 APFX(lcmZZ, Z,Z,Z, zlcm ,,HDR1JERR)
 
+// <.@% and >.@%
 
-#define GETD          {d=*wv++; if(!d){z=0; break;}}
+// All integers with magnitude <:2^53 are also floating-point numbers.
+// Int division is much slower than float division (6 cycles vs 2)
+// Therefore, for integers in this range, we would like to divide them as floats.  Will this give correct results, or could double rounding cause problems?
+// Assume wlog that a>:0 and w>:2 (since w=1 will of course round correctly, and w=0 needs to be handled specially anyway).
+// Let q, r denote the exact (floored) quotient and remainder.
+// Since a<:2^53 and q<:a, q is exactly representable as a floating-point number.
+// If r=0, then we are done, for division is faithfully rounded.
+// Otherwise, it suffices to show that (<.a%w) < (round a%w) and (round a%w) < (>.a%w).
+// But since r<:2^53, and since q<2^53 (and therefore has more low-level range), r%w and its complement must both be >1 ulp of q.
+// Hence, a%w is at least 1 ulp away from the integers surrounding it, so it will round to a value (exclusively) between them.
+
+// I'm pretty sure that we can do something with full 64-bit divides too.  Something like:
+// q0 = (I)((D)n/(D)d)
+// r0 = n - q0*d
+// q1 = (float)r0/(float)d
+// r1 = n - q1*d
+// q = q0 + q1 + (r1/d)
+// (Yes, single-prec float.  It should always have enough bits to accomodate r0; perhaps not d, but fine.  And singles are faster than doubles.)
+// Where r1/d can be calculated by repeated subtraction.  The annoying thing I still have to work out here: can we bound r1 at, say, 1 or 2?  If so, then there's no need to loop there.
+
+// On avx2, where vectorised int->float conversions are not available, we
+// instead use the range of magnitudes <2^52, and produce denormals with the
+// same ratio, as this is a bit cheaper.
+
+#define GETD          {d=*wv++; if(!d){z=0; goto end;}}
 #define INTDIVF(c,d)  (((c^d)>=0)?c/d:c%d?c/d-1:c/d)  // c/d - (c^d)<0 && c%d
 #define INTDIVC(c,d)  (((c^d)<0)?c/d:c%d?c/d+1:c/d)   // c/d + (c^d)>=0 && c%d
 
@@ -438,15 +463,110 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
    case 1: DQ(n, c=*av++; *zv++=0< c?1+((c-1)>>k):(c+p1)>>k;); break;
    case 2: DQ(n, c=*av++; *zv++=c>IMIN?-c>>k:-(-c>>k););       break;
    case 3: DQ(n, c=*av++; *zv++=0<=c?-(c>>k):1+(-(1+c)>>k););
- }}else if(flr){
-  if(1==n)    DQ(m, c=*av++; GETD;                *zv++=INTDIVF(c,d);  )
-  else   if(b)DQ(m,          GETD; DQ(n, c=*av++; *zv++=INTDIVF(c,d););)
-  else        DQ(m, c=*av++;       DQ(n, GETD;    *zv++=INTDIVF(c,d););)
- }else{
-  if(1==n)    DQ(m, c=*av++; GETD;                *zv++=INTDIVC(c,d);  )
-  else   if(b)DQ(m,          GETD; DQ(n, c=*av++; *zv++=INTDIVC(c,d););)
-  else        DQ(m, c=*av++;       DQ(n, GETD;    *zv++=INTDIVC(c,d););)
+ }}else{
+#if C_AVX512
+#define ISBADFLT(x) _mm512_cmpgt_epu64_mask(_mm512_add_epi64(x, _mm512_set1_epi64(1ull<<53)),_mm512_set1_epi64(1ull<<54))
+// using or here instead of max admits false positives in case one argument is 2^53.  Too bad.
+#define HASBADFLT(x,y) _mm512_cmpgt_epu64_mask(_mm512_or_epi64(_mm512_add_epi64(x,_mm512_set1_epi64(1ull<<53)),\
+                                                               _mm512_add_epi64(y,_mm512_set1_epi64(1ull<<53))),\
+                                               _mm512_set1_epi64(1ull<<54))
+#define DIVRN(vn,vd,mode) ({ __m512d quot=_mm512_div_round_pd(_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd),_MM_FROUND_NO_EXC); /*must suppress exceptions here*/\
+                             quot=_mm512_fixupimm_pd(quot,quot,_mm512_castsi128_si512(_mm_cvtsi32_si128(0x00550088)),0xa0); /*convert nan to 0 (because we want 0%0 to be 0).  Trap on -inf and inf*/\
+                             _mm512_cvt_roundpd_epi64(quot, mode|_MM_FROUND_NO_EXC); })
+  if(1==n){
+#define EVEN(mode,div) \
+   for(I i=0;i<((m-1)&~7);i+=8){ \
+    __m512i vd=_mm512_loadu_epi64(wv+i); \
+    __m512i vn=_mm512_loadu_epi64(av+i); \
+    if(unlikely(HASBADFLT(vd,vn))){ /*could also do this by checking the inexact flag after converting, probably*/ \
+     for(I j=i;j<i+8;j++){c=av[j]; d=wv[j]; if(!d){if(!c){d=1;}else{z=0;goto end;}}; zv[j]=div(c,d);} \
+     continue;} \
+    _mm512_storeu_epi64(zv+i, DIVRN(vn,vd,mode));} \
+   I tlen=1+((m-1)&7),off=(m-1)&~7; \
+   __mmask8 mask=BZHI(0xf,tlen); \
+   __m512i vd=_mm512_maskz_loadu_epi64(mask,wv+off); \
+   __m512i vn=_mm512_maskz_loadu_epi64(mask,av+off); \
+   if(unlikely(HASBADFLT(vd,vn))){DO(tlen, c=av[i+off]; d=wv[i+off]; if(!d){if(!c){d=1;}else{z=0;goto end;}} zv[i+off]=div(c,d);)} \
+   else{_mm512_mask_storeu_epi64(zv+off, mask, DIVRN(vn,vd,mode));}
+   if(flr){ EVEN(_MM_FROUND_TO_NEG_INF,INTDIVF); }
+   else{    EVEN(_MM_FROUND_TO_POS_INF,INTDIVC); }
+   if(NANTEST)z=0;}
+#undef EVEN
+  else if(b){
+#define MOREA(mode,div) \
+   for(I _ct=m;_ct--;wv++,av+=n,zv+=n){\
+    I d=*wv;\
+    if(uncommon(!d)){ /*zero denominator*/\
+     DO(n,if(av[i])goto end;zv[i]=0;)\
+     continue;}\
+    __m512i vd=_mm512_set1_epi64(d);\
+    if(unlikely(ISBADFLT(vd))){ /*since this is a cold branch, better to vectorise the condition than to waste registers or cycles on the big immediate*/\
+     I d=_mm_cvtsi128_si64(_mm512_castsi512_si128(vd)); DO(n,c=av[i]; zv[i]=div(c,d);)\
+     continue;}\
+    for(I i=0;i<((n-1)&~7);i+=8){\
+     __m512i vn=_mm512_loadu_epi64(av+i);\
+     if(unlikely(ISBADFLT(vn))){\
+      I d=_mm_cvtsi128_si64(_mm512_castsi512_si128(vd));\
+      for(I j=i;j<i+8;j++){zv[j]=div(av[j],d);}\
+      continue;}\
+     /*we already know w isn't 0, so we don't have to handle the overflow case*/\
+     _mm512_storeu_epi64(zv+i, _mm512_cvt_roundpd_epi64(_mm512_div_pd(_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd)),_MM_FROUND_NO_EXC|mode));}\
+    I tlen=1+((n-1)&7),off=(n-1)&~7; \
+    __mmask8 mask=BZHI(0xf,tlen); \
+    __m512i vn=_mm512_maskz_loadu_epi64(mask,av+off);\
+    if(unlikely(ISBADFLT(vn))){\
+     I d=_mm_cvtsi128_si64(_mm512_castsi512_si128(vd));\
+     DO(tlen,zv[i+off]=div(av[i+off],d);)}\
+    else{\
+     _mm512_mask_storeu_epi64(zv+off,mask,_mm512_cvt_roundpd_epi64(_mm512_div_pd(_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd)),_MM_FROUND_NO_EXC|mode));}}
+   if(flr){ MOREA(_MM_FROUND_TO_NEG_INF,INTDIVF); }
+   else{    MOREA(_MM_FROUND_TO_POS_INF,INTDIVC); }}
+#undef MOREA
+  else{
+   //since we can catch a 0 numerator ahead of time, hoist a branch for it, and trap divide-by-zero to avoid needing to play the fixup dance
+   I exmask=_MM_GET_EXCEPTION_MASK(); _MM_SET_EXCEPTION_MASK(exmask|_MM_MASK_DIV_ZERO);
+#define MOREW(mode,div) \
+   for(I _ct=m;_ct--;av++,wv+=n,zv+=n){\
+    I c=*av;\
+    if(!c){DO(n,zv[i]=0;) continue;}\
+    __m512i vn=_mm512_set1_epi64(c);\
+    if(unlikely(ISBADFLT(vn))){\
+     DO(n,if(!wv[i]){z=0;goto resexend;}zv[i]=div(c,wv[i]);)\
+     continue;}\
+    for(I i=0;i<((n-1)&~7);i+=8){\
+     __m512i vd=_mm512_loadu_epi64(wv+i);\
+     if(unlikely(ISBADFLT(vd))){\
+      if(_mm512_cmpeq_epi64_mask(vd,_mm512_set1_epi64(0))){z=0;goto resexend;} /*any zero?*/\
+      I c=_mm_cvtsi128_si64(_mm512_castsi512_si128(vn));\
+      for(I j=i;j<i+8;j++){zv[j]=div(c,wv[j]);}\
+      continue;}\
+     _mm512_storeu_epi64(zv+i, _mm512_cvt_roundpd_epi64(_mm512_div_pd(_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd)),_MM_FROUND_NO_EXC|mode));}\
+    I tlen=1+((n-1)&7),off=(n-1)&~7; \
+    __mmask8 mask=BZHI(0xf,tlen); \
+    __m512i vd=_mm512_maskz_loadu_epi64(mask,wv+off);\
+    if(unlikely(ISBADFLT(vd))){\
+     if(_mm512_mask_cmpeq_epi64_mask(mask,vd,_mm512_set1_epi64(0))){z=0;goto resexend;} /*any zero in the tail?*/\
+     I c=_mm_cvtsi128_si64(_mm512_castsi512_si128(vn));\
+     DO(tlen,zv[i+off]=div(c,wv[i+off]);)}\
+    else{\
+     /*masking here is necessary to avoid faulting in the zeroed irrelevant lanes*/\
+     _mm512_mask_storeu_epi64(zv+off,mask,_mm512_cvt_roundpd_epi64(_mm512_maskz_div_pd(mask,_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd)),_MM_FROUND_NO_EXC|mode));}}
+   if(flr){ MOREW(_MM_FROUND_TO_NEG_INF,INTDIVF); }
+   else{    MOREW(_MM_FROUND_TO_POS_INF,INTDIVC); }
+#undef MOREW
+   if(FE_DIVBYZERO&_clearfp())z=0; //did we divide by any zeroes along the way?
+   resexend:
+   _MM_SET_EXCEPTION_MASK(exmask);}
+#else //C_AVX512
+  if(1==n){if(flr)  DQ(m, c=*av++; GETD;                *zv++=INTDIVF(c,d);)
+           else     DQ(m, c=*av++; GETD;                *zv++=INTDIVC(c,d);)}
+  else if(b){if(flr)DQ(m,          GETD; DQ(n, c=*av++; *zv++=INTDIVF(c,d););)
+             else   DQ(m,          GETD; DQ(n, c=*av++; *zv++=INTDIVC(c,d););)}
+  else      {if(flr)DQ(m, c=*av++;       DQ(n, GETD;    *zv++=INTDIVF(c,d););)
+                    DQ(m, c=*av++;       DQ(n, GETD;    *zv++=INTDIVC(c,d););)}
+#endif
  }
+end:
  R z?z:flr?floor1(divide(a,w)):ceil1(divide(a,w));
 }    /* <.@% or >.@% on integers */
 

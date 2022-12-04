@@ -46,7 +46,6 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){ // a (<.@%,|~) w
  *qz= Xmp(q); *rz= Xmp(r);
  R 1;
 }
-
 X jtxdiv(J jt,X a,X w,I mode){ // a mode@% w NB. X a, w // mode is <. or >. or ] 
  RZ(a&&w&&!jt->jerr); if(ISX0(a))R X0;ASSERT(XSGN(w), EWRAT); // infinity requres RAT
  switch(mode) {
@@ -127,7 +126,7 @@ static X jtIrootX(J jt, UI a, X w) { // a %:w NB. optionally with <. or >.
  mpX(w); mpX0(z); I exact= jmpz_root(mpz, mpw, a);
  if (!exact) switch(jt->xmode){
    default: ASSERTSYS(0,"xsqrt");
-   case XMEXACT: ASSERT(0,EWIRR);
+   case XMEXACT: jmpz_clear(mpz); ASSERT(0,EWIRR);
    case XMFLR: break;
    case XMCEIL: jmpz_add_ui(mpz, mpz, 1);
  }

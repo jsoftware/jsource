@@ -137,6 +137,7 @@ void jgmpguard(X x) {
  X z= (X)(m+GUARDSIZE); // J header starts here
  AK(z)= XHSZ;           // always rank 1
  AFLAG(z)= 0;           // should be a safe value
+ AM(z)= 0;              // 0 let's us test if we've put it on the tpush stack
  AT(z)= LIT;            // matches significance of AN(z), simplifies 3!:1
  AC(z)= 1;              // always 1 ref in libgmp
  AN(z)= size;           // track amount of requested memory
@@ -224,7 +225,10 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
 
 // dehydrate fresh (mpz_t) as J (X)
 X jtXmpzcommon(J jt, mpz_t mpz) {
- if(unlikely(!mpz->_mp_size)) R X0; // mpz is new but may not have memory
+ if(unlikely(!mpz->_mp_size)) {
+  jmpz_clear(mpz);
+  R X0; // mpz is new but may not have memory
+ }
  X x=UNvoidAV1(mpz->_mp_d);         // we gave libgmp AV1(x) for this block of memory
 #if MEMAUDIT&1
  if(FHRHISGMP!=AFHRH(x)) SEGFAULT;

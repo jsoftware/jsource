@@ -21,7 +21,8 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
+    # os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
+    os: [ubuntu-22.04, macos-12, windows-2022]
     #os: [ubuntu-20.04, ubuntu-latest]
     #os: [ubuntu-22.04]
     #os: [macos-12]
@@ -186,6 +187,20 @@ jobs:
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
+
+   - name: Copy Test (Raspberry)
+     if: matrix.os == 'ubuntu-20.04'
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testrpi64.txt
+
+   - name: Copy Test (Raspberry32)
+     if: matrix.os == 'ubuntu-latest'
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testrpi32.txt
 
    - name: Copy Test (Linux)
      if: matrix.os == 'ubuntu-22.04'

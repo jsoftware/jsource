@@ -43,9 +43,9 @@ jobs:
       cpu: cortex-a53
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
       base_image: raspios_lite_arm64:latest
-      image_additional_mb: 1024
+      image_additional_mb: 2048
       commands: |
-       apt-get install -y build-essential clang nasm
+       apt-get install -y clang
        export CC=clang
        export USE_SLEEF=1
        export j64x=j64
@@ -60,9 +60,8 @@ jobs:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
       base_image: raspbian_lite:2020-02-13
-      image_additional_mb: 1024
+      image_additional_mb: 2048
       commands: |
-       apt-get install -y nasm
        export CC=gcc
        export USE_SLEEF=0
        export j64x=j32

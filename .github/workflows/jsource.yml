@@ -59,13 +59,13 @@ jobs:
      with:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspios_lite:latest
+      base_image: raspbian_lite:2020-02-13
       image_additional_mb: 1024
       commands: |
-       apt-get install -y build-essential clang wget
+       apt-get install -y build-essential gcc wget
        apt-get install -y nasm
-       export CC=clang
-       export USE_SLEEF=1
+       export CC=gcc
+       export USE_SLEEF=0
        script/buildga.sh raspberry
        script/testga.sh raspberry
        zip -r rpi32.zip j32

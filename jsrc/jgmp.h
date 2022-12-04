@@ -434,12 +434,6 @@ extern void jfree4gmp(void*, size_t);
        1;}) \
     :0;}))
 
-// think of this as a call to frgmp(), typically scheduled in a future
-// EPILOG (though with an immediate frgmp to cope with a rare failure mode)
-// (typically this would be handled by Xmp() but we need this when
-// libgmp allocates memory for a character string (something other than an XNUM)
-#define XTEMP(Xx) ({X tempx=Xx;A*pushp;if(tpushnoret(tempx)){if(unlikely(!pushp)){frgmp(tempx);R0;}}tempx;})
-
 /*
  * some named boilerplate for hopefully commonly used expressions
  * (examples which do not get used should be removed)
@@ -464,7 +458,7 @@ extern void jfree4gmp(void*, size_t);
 #define shimQX(f, Qb,Xc) ({Q b= Qb;X c= Xc; mpQ(b); mpX(c);  f(mpb, mpc);})
 #define QshimQQ(f, Qb,Qc) ({mpQ0(a); Q b= Qb, c= Qc; mpQ(b); mpQ(c);  f(mpa, mpb, mpc); Q z= Qmp(a);z;})
 #define DgetQ(Qy) ({Q yDgetQ= Qy; mpQ(yDgetQ); jmpq_get_d(mpyDgetQ);})
-#define SgetQ(Qy) ({Q ySgetQ= Qy; mpQ(ySgetQ); C*str= jmpq_get_str(0,10,mpySgetQ); XTEMP(UNvoidAV1(str)); str;}) // ":y
+#define SgetQ(Qy) ({Q ySgetQ= Qy; mpQ(ySgetQ); C*str= jmpq_get_str(0,10,mpySgetQ); X tempx= UNvoidAV1(str); mpX(tempx); X safex= jtXmpzcommon(jt, mptempx); ISX0(safex) ?(C*)"" :CAV1(safex);}) // ":y
 
 #define QaddQQ(x, y) QshimQQ(jmpq_add, x, y)            // x+y
 #define icmpQQ(x, y) shimQQ(jmpq_cmp, x, y)             // k*  *x-y

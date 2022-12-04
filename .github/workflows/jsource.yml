@@ -21,7 +21,7 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-22.04, ubuntu-20.04, macos-12, macos-11, windows-2022]
+    os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
     #os: [ubuntu-22.04]
     #os: [macos-12]
     #os: [windows-2022]
@@ -54,12 +54,12 @@ jobs:
        zip -r rpi64.zip j64
 
    - name: Setup Environment, Build JE, Test JE (Raspberry32)
-     if: matrix.os == 'macos-11'
+     if: matrix.os == 'ubuntu-latest'
      uses: pguyot/arm-runner-action@v2
      with:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspi_2_bullseye:20220121
+      base_image: raspios_lite:latest
       image_additional_mb: 1024
       commands: |
        apt-get install -y build-essential clang wget

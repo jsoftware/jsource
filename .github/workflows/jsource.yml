@@ -59,7 +59,7 @@ jobs:
      with:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspbian_lite:2020-02-13
+      base_image: raspi_2_bullseye:20220121
       image_additional_mb: 1024
       commands: |
        apt-get install -y build-essential clang wget

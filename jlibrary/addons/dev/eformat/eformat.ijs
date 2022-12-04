@@ -182,6 +182,89 @@ types { a:,;:'numeric character boxed symbol'
 efarisnoun_j_ =: (((<,'0')) = {.)@>  NB. predicate.  y is an AR
 efarnounvalue_j_ =: 1&{::@>   NB. is is the AR of a noun.  result is the value
 
+NB. x and y are shapes of atoms; return shape of cells of >x,&<y
+shapeunion_j_ =: {{ x >.&((x >.&# y)&{.) y }}
+
+NB. x is an array of selectors into an array of shape y
+NB. result is either the shape the result would have, or rc;(y-axis#,is-excl,offi);<pathlist to offender
+NB. where rc of 1 2 3 means the same as 9!:23
+NB. _1 means an index referred to a non-existent axis (eg (<1 2 3){i.5 5)
+NB. _2 means a singly-boxed index list had rank >1 (eg (<i.2 2){i.5 5)
+NB. _3 means too much boxing
+NB. _4 means too many exclusion lists
+NB. (in these cases, axis# and offi should be ignored)
+NB. pathlist is a;...;d, where the offender can be found as a{:: ... d{::x (TODO is there a nicer way to represent this?), except that ''{::<a is <a, not a
+efindexaudit_j_ =: {{
+ if. (0=L.) x do. NB.simple array of integers
+  rc=. (,x) 9!:23] 0;(-{.!.1 y),<:{.!.1 y NB. !.1 ensures correct behaviour for scalar
+  if. 0-:0{::rc do. NB.no error
+   ($x),}.y return.
+  elseif. 1=0{::rc do. (0{rc),(<0 0 0),<,<0$0 return.
+  else. (0{rc),(<0 0,(,x){~1{::rc),<,<,($x)#:1{::rc return. end. end.
+ NB.(x;...){y.  Same result spec as efindexaudit
+ auditindex =. {{
+  NB.((<x);...){y.  y is dimension of the given axis.  Result spec is shape or rc,&<path
+  auditselector =. {{
+   if. (0=L.) x do. (0&{ , }.&.>@(1&{) , 2&{)^:(0~:L.) x efindexaudit y return. end. NB.punt to ordinary audit for simple list of integers, and then strip out y-axis on error
+   rs=. 0$0                               NB.result shape
+   if. 0 ~: #$x do. _4;0 0;'' return. end.NB.too many exclusion lists
+   x=. ,0{::,x
+   if. (0~:L.) x do. _3;1 0;($x)#:i return. end. NB.too much boxing!
+   if. (0~:L.) t=. x efindexaudit y do. (0&{ , (1 , {:)&.>@(1&{) , 2&{) t return. end. NB.oob excluded index
+   y - #@~. x + y * x<0                    NB.overall length.  Need to regularise to correctly compute #excluded hyperrows(?), which needs linear space.  But { would have needed at least that much space anyway, and more besides, so it seems 
+  }}
+  if. 1<#@$x  do. _2;0 0 0;'' return. end.NB.rank too high
+  if. x >&# y do. _1;(0 0,#x);'' return. end.NB.index list too long
+  'f cs'=. (#x)({.;}.)y                   NB.frame; cell shape
+  if. (0=L.) x do.                        NB.simple list of integers
+   offi=. /:~ (x I.@:>: f) , (x I.@:< -f) NB.list of offending indices
+   if. ''-:offi do.                       NB.everything in range
+    (#x) }. y return.
+   else. 3;(({.offi) , 0 , ({.offi){x);({.offi) return. end. end.
+  NB.boxed x; consider each element in turn
+  rs=. 0$0                                NB.result shape
+  for_i. i.#x do.
+   if. (0=L.) t=. (i{::x) auditselector i{f do.
+    rs=. rs , t
+   else. (0{t) , (i&,&.>1{t) , (($x)#:i)&;&.> 2{t return. end. end.
+  rs , cs
+ }}
+ rs=. 0$0                                 NB.result shape
+ for_i. i.*/$x do.                        NB.boxed x; consider each index in turn
+  if. (0=L.) t=. (i{::,x) auditindex y do. NB.if no error, then pad out shape appropriately
+   rs=. rs shapeunion t                   NB. and update result shape
+  else.
+   (2{.t) , (($x)#:i)&;&.>2{t return. end. end.NB.otherwise, add top-level path and return error desc
+ ($x),rs
+}}
+
+NB. y is a result from efindexaudit; x is $y
+effrommsg_j_ =: {{
+ 'rc aeo path'=. y
+ 'axis excl off'=. aeo
+ axismsg=. ''
+ axislen=. {.!.1 x
+ if. 1<#x do. axismsg=. 'axis ',' of ',~":axis
+              axislen=. axis{x end.
+ NB. generate a message like 'atom at position xx in exclusion list at position xx in ...
+ NB. match successive elements of path with successive elements of parts, and remove the elements referring to empty paths
+ parts=. ((1=#path) {:: ('index list';'index'));(excl {:: 'selector';'exclusion list');'atom'
+ pathmsg=. path (] , ((' at position ';''){::~0=#@[) , ":@[)&.> (parts {.~ #path)
+ pathmsg=. pathmsg #~ (0 1 0{.~#path) +. (0~:#)&>path NB.always print 'selector'/'exclusion list'; others are optional
+ if. #pathmsg do. pathmsg=. >([ , ' in ' , ])&.>/ |.pathmsg else. pathmsg=. 'x' end.
+ emsg=. ''
+ select. rc
+ case. _4 do. emsg=. pathmsg , ' contains too many exclusion lists (must have rank 0)'
+ case. _3 do. emsg=. pathmsg , ' is overly boxed'
+ case. _2 do. emsg=. pathmsg , ' must have rank 1'
+ case. _1 do. emsg=. pathmsg , ' is overlong; has length ' , (":off) , ' but y''s rank is only ' , ":#x
+ case.  1 do. emsg=. pathmsg , ' is not a number'
+ case.  2 do. emsg=. pathmsg , ' is ' , (":off) , '; not an integer'
+ case.  3 do. emsg=. pathmsg , ' is ' , (":off) , '; too long for ' , axismsg , 'y, whose length is only ' , ":axislen
+ end.
+ emsg
+}}
+
 NB. y is result from 9!:23, x is index arg to that 9!:23
 NB. Result is message about the index if any, suitable by itself or if prefixed by ' [xy] has' 
 efindexmsg_j_ =: {{
@@ -457,8 +540,10 @@ case. 3 do.
       if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
       end.
     case. ;:'/./..' do.
-      if. (e=EVLENGTH) do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
+      if. e=EVLENGTH do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
 NB. { x domain and index
+    case. ;:'{' do.
+      if. e e. EVINDEX,EVLENGTH,EVDOMAIN do. if. L. rc=. a efindexaudit $w do. emsg=. ($w) effrommsg rc end. end.
     fcase. ;:'{.{:' do.
       if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
     case. ;:'}.}:' do.

@@ -19,7 +19,10 @@ case "$jplatform64" in
 esac
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
-compiler=$(readlink -f $(which $CC) || which $CC)
+echo "CC=$CC"
+echo "which $CC"
+# compiler=$(readlink -f $(which $CC) || which $CC)
+compiler=$CC
 echo "CC=$CC"
 echo "compiler=$compiler"
 

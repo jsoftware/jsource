@@ -83,16 +83,13 @@ jobs:
 
    - name: Build JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
-     env:
-      CC: clang
-      USE_SLEEF: 1
      uses: pguyot/arm-runner-action@v2
      with:
       cpu: cortex-a53
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
       base_image: raspios_lite_arm64:latest
       image_additional_mb: 1024
-     commands: script/buildga.sh raspberry
+      commands: script/buildga.sh raspberry
 
    - name: Build JE (macOS)
      if: matrix.os == 'macos-12'

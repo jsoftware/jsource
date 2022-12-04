@@ -19,8 +19,13 @@ else
   echo "argument is linux|darwin|raspberry"
   exit 1
 fi
-
 if [ "`uname -m`" != "armv6l" ]; then
+ m64=1
+else
+ m64=0
+fi
+
+if [ $m64 -eq 1 ]; then
 ls -l j64
 j64/jconsole -lib libj.$ext testga.ijs
 else

@@ -19,12 +19,17 @@ else
   echo "argument is linux|darwin|raspberry"
   exit 1
 fi
+if [ "`uname -m`" != "armv6l" ]; then
+ m64=1
+else
+ m64=0
+fi
 
 cp -R jlibrary/* .
 cp script/testga.ijs .
 cp script/ver.ijs .
 
-if [ "`uname -m`" != "armv6l" ]; then
+if [ $m64 -eq 1 ]; then
 mkdir -p j64
 cp bin/profile.ijs j64
 else
@@ -34,7 +39,7 @@ fi
 if [ "$1" == "linux" ]; then
 cp mpir/linux/x86_64/libgmp.so j64
 elif [ "$1" == "raspberry" ]; then
-if [ "`uname -m`" != "armv6l" ]; then
+if [ $m64 -eq 1 ]; then
 cp mpir/linux/aarch64/libgmp.so j64
 else
 cp mpir/linux/arm/libgmp.so j32
@@ -67,7 +72,7 @@ j64x=j32 USE_PYXES=0 ./build_jconsole.sh
 j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
-if [ "`uname -m`" != "armv6l" ]; then
+if [ $m64 -eq 1 ]; then
 ./clean.sh
 j64x=j64 USE_PYXES=1 ./build_jconsole.sh
 j64x=j64 ./build_tsdll.sh
@@ -88,7 +93,11 @@ j64x=j64avx512 USE_PYXES=1 ./build_libj.sh
 fi
 
 cd ..
+if [ $m64 -eq 1 ]; then
 cp bin/$1/j64/* j64
+else
+cp bin/$1/j32/* j32
+fi
 if [ "$1" == "darwin" ] && [ -f "bin/$1/j64arm/libj.$ext" ]; then
 lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
 lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
@@ -99,7 +108,7 @@ cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
-if [ "`uname -m`" != "armv6l" ]; then
+if [ $m64 -eq 1 ]; then
 chmod 644 j64/*
 chmod 755 j64/jconsole
 else

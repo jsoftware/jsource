@@ -451,6 +451,7 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 )
 
 
+require ::1: 'dev/eformat'
 empty 0&T.^:(0=1&T.) ::1:''
 echo 9!:14''
 echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''

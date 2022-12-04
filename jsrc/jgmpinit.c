@@ -244,7 +244,9 @@ X jtXmpzcommon(J jt, mpz_t mpz) {
  jt->bytes+= sz;                    // summarize the size of the new space
  jt->malloctotal+= sz;              // ditto
  jt->mfreegenallo+= sz;             // ditto
- R x;                               // CAUTION: J must issue death warrant 
+ A*pushp; tpushnoret(x);            // issue death warrant
+ ASSERT(!(AFLAG(x)&AFRO),EVWSFULL); // error if we used an emergency buffer
+ R x;
 }
 
 // dehydrate fresh (mpq_t) as J (Q)
@@ -252,24 +254,8 @@ Q jtQmpq(J jt, mpq_t mpq) {
  Q q; A*pushp;
  q.n= Xmpzcommon(&mpq->_mp_num);   // dehydrate numerator
  q.d= Xmpzcommon(&mpq->_mp_den);   // dehydrate denominator
- if (tpushnoret(q.n)) {            // numerator is transient? (and, thus, non-zero)
-  if (unlikely(!pushp)) {          // numerator death warrant valid?
-   frgmp(q.n); frgmp(q.d); R Q0;   // discard transients and fail
-  } else {                         // numerator handled
-   if (tpushnoret(q.d)) {          // denominator is positive?
-    if (unlikely(!pushp)) {        // denominator death warrant valid?
-     *AZAPLOC(q.n)= 0;             // no: retract numerator warrant
-     frgmp(q.n); frgmp(q.d); R Q0; // clean up and fail
-    }                              // both warrants posted
-   } else {                        // denominator is 0?
-    R (0<XSGN(q.n)) ?Q_ :Q__;      // libgmp doesn't do infinity but J sometimes does
-   }
-  }
- } else {                          // numerator is 0
-  frgmp(q.d);                      // denominator is something else? result is 0
-  R Q0;
- }
- R q;                              // death warrant has been issued
+ if (unlikely(!q.n)||unlikely(!q.d)||unlikely(ISQ0(q))) R Q0;
+ R q;
 }
 
 ///////////////////////////////////////////////////////////////

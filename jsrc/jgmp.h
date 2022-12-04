@@ -156,7 +156,7 @@ extern Q jtQmpq(J, mpq_t);
 #define ISGMP(x) unlikely(FHRHISGMP==AFHRH(x))
 
 #if MEMAUDIT
-#define CHECKZAP(xcheckzap) ({if (!ACISPERM(xcheckzap)) if (!AZAPLOC(xcheckzap)) {fprintf(stderr, "%llx: perm: %i, zap: %llx\n", (UIL)xcheckzap, !!ACISPERM(xcheckzap), (UIL)AZAPLOC(xcheckzap)); SEGFAULT;} xcheckzap;})
+#define CHECKZAP(xcheckzap) ({if (!ACISPERM(AC(xcheckzap))) if (!AZAPLOC(xcheckzap)) {fprintf(stderr, "%llx: perm: %i, zap: %llx\n", (UIL)xcheckzap, !!ACISPERM(AC(xcheckzap)), (UIL)AZAPLOC(xcheckzap)); SEGFAULT;} xcheckzap;})
 #else
 #define CHECKZAP(xcheckzap) (xcheckzap)
 #endif
@@ -225,10 +225,10 @@ extern Q jtQmpq(J, mpq_t);
 
 
 // dehydrate a gmp (mpz_t) as a J (X), produces the X result as a C rvalue
-#define Xmp(x) XTEMP(Xmpzcommon(mp##x))
+#define Xmp(x) Xmpzcommon(mp##x)
 
 // same but for an expression where the naming convention doesn't work
-#define Xmpnodecl(x) ({X xvar= x; XTEMP(Xmpzcommon(xvar))});
+#define Xmpnodecl(x) ({X xvar= x; Xmpzcommon(xvar)});
 
 // dehydrate a gmp (mpq_t mp##q) as a J value of type (Q)
 // produces the Q result as a C rvalue
@@ -434,9 +434,6 @@ extern void jfree4gmp(void*, size_t);
        1;}) \
     :0;}))
 
-// think of this as a call to frgmp(), typically scheduled in a future EPILOG (though with an immediate frgmp to cope with a rare failure mode)
-#define XTEMP(Xx) ({X tempx=Xx;A*pushp;if(tpushnoret(tempx)){if(unlikely(!pushp)){frgmp(tempx);R0;}}tempx;})
-
 /*
  * some named boilerplate for hopefully commonly used expressions
  * (examples which do not get used should be removed)
@@ -461,7 +458,7 @@ extern void jfree4gmp(void*, size_t);
 #define shimQX(f, Qb,Xc) ({Q b= Qb;X c= Xc; mpQ(b); mpX(c);  f(mpb, mpc);})
 #define QshimQQ(f, Qb,Qc) ({mpQ0(a); Q b= Qb, c= Qc; mpQ(b); mpQ(c);  f(mpa, mpb, mpc); Q z= Qmp(a);z;})
 #define DgetQ(Qy) ({Q yDgetQ= Qy; mpQ(yDgetQ); jmpq_get_d(mpyDgetQ);})
-#define SgetQ(Qy) ({Q ySgetQ= Qy; mpQ(ySgetQ); C*str= jmpq_get_str(0,10,mpySgetQ); XTEMP(UNvoidAV1(str)); str;}) // ":y
+#define SgetQ(Qy) ({Q ySgetQ= Qy; mpQ(ySgetQ); C*str= jmpq_get_str(0,10,mpySgetQ); X tempx= UNvoidAV1(str); mpX(tempx); X safex= jtXmpzcommon(jt, mptempx); ISX0(safex) ?(C*)"" :CAV1(safex);}) // ":y
 
 #define QaddQQ(x, y) QshimQQ(jmpq_add, x, y)            // x+y
 #define icmpQQ(x, y) shimQQ(jmpq_cmp, x, y)             // k*  *x-y

@@ -2,7 +2,7 @@
 #
 # build linux/macOS on github actions
 #
-# argument is linux|darwin
+# argument is linux|darwin|raspberry
 
 set -e
 CC=${CC-clang}

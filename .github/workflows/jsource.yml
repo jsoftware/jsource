@@ -42,9 +42,9 @@ jobs:
      with:
       cpu: cortex-a53
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-      base_image: raspi_3_bullseye:20220121
+      base_image: raspios_lite_arm64:latest
       image_additional_mb: 1024
-      commands: |
+      run:
        uname -a
 
 #        kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`

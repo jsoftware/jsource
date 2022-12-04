@@ -1,13 +1,11 @@
 #!/bin/sh
-set -vex
+set -e
 
 cd "$(dirname "$0")"
 echo "entering `pwd`"
 
 jplatform64=$(./jplatform64.sh)
 echo $jplatform64
-echo $(uname -m)
-echo $"`uname -m`"
 
 USE_LINENOISE="${USE_LINENOISE:=1}"
 

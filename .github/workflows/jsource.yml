@@ -49,6 +49,7 @@ jobs:
        apt-get install -y nasm
        export CC=clang
        export USE_SLEEF=1
+       export jj64x=j64
        script/buildga.sh raspberry
        script/testga.sh raspberry
        zip -r rpi64.zip j64
@@ -66,6 +67,7 @@ jobs:
        apt-get install -y nasm
        export CC=gcc
        export USE_SLEEF=0
+       export jj64x=j32
        script/buildga.sh raspberry
        script/testga.sh raspberry
        zip -r rpi32.zip j32

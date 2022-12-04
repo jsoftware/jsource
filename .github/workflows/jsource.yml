@@ -50,21 +50,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh raspberry
-
-#        kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
-#        arch=`aptitude list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`
-#        wget -q http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
-#        dpkg --install raspberrypi-kernel-headers_${kernel_version}_${arch}.deb
-#        apt-get update -y --allow-releaseinfo-change
-#        apt-get install --no-install-recommends -y libasound2-dev make gcc libc6-dev
-#        for builddir in /lib/modules/*/build ; do
-#         parentdir=`dirname ${builddir}`
-#         kernelrelease=`basename ${parentdir}`
-#         make KERNELRELEASE=${kernelrelease}
-#         sudo make install KERNELRELEASE=${kernelrelease}
-#         make clean KERNELRELEASE=${kernelrelease}
-#         make test KERNELRELEASE=${kernelrelease}
-#        done
+       script/testga.sh raspberry
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'
@@ -86,19 +72,6 @@ jobs:
       USE_SLEEF: 1
      run: script/buildga.sh linux
 
-   - name: Build JE (Raspberry64)
-     if: matrix.os == 'ubuntu-20.04'
-     uses: pguyot/arm-runner-action@v2
-     with:
-      cpu: cortex-a53
-      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-      base_image: raspios_lite_arm64:latest
-      image_additional_mb: 1024
-      commands: |
-       export CC=clang-11
-       export USE_SLEEF=1
-       script/buildga.sh raspberry
-
    - name: Build JE (macOS)
      if: matrix.os == 'macos-12'
      env:
@@ -115,10 +88,6 @@ jobs:
      if: matrix.os == 'ubuntu-22.04'
      run: script/testga.sh linux
 
-   - name: Test JE (Raspberry64)
-     if: matrix.os == 'ubuntu-20.04'
-     run: script/testga.sh raspberry
-
    - name: Test JE (macOS)
      if: matrix.os == 'macos-12'
      run: script/testga.sh darwin
@@ -131,10 +100,6 @@ jobs:
    - name: Compress Files (Linux)
      if: matrix.os == 'ubuntu-22.04'
      run: zip -r l64.zip j64
-
-   - name: Compress Files (Raspberry64)
-     if: matrix.os == 'ubuntu-20.04'
-     run: zip -r rpi64.zip j64
 
    - name: Compress Files (macOS)
      if: matrix.os == 'macos-12'
@@ -165,16 +130,6 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
-   - name: Release JE (Raspberry64)
-     if: matrix.os == 'ubuntu-20.04'
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
    - name: Release JE (macOS)
      if: matrix.os == 'macos-12'
      uses: ncipollo/release-action@v1
@@ -201,13 +156,6 @@ jobs:
      with:
        name: dist
        path: testlinux.txt
-
-   - name: Copy Test (Raspberry64)
-     if: matrix.os == 'ubuntu-20.04'
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testrpi.txt
 
    - name: Copy Test (macOS)
      if: matrix.os == 'macos-12'

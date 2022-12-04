@@ -44,8 +44,7 @@ jobs:
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
       base_image: raspios_lite_arm64:latest
       image_additional_mb: 1024
-      run:
-       uname -a
+      commands: |
 
 #        kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
 #        arch=`aptitude list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`
@@ -82,8 +81,14 @@ jobs:
       USE_SLEEF: 1
      run: script/buildga.sh linux
 
-   - name: Build JE (Raspberry64)
+   - name: Build JE (Raspberry)
      if: matrix.os == 'ubuntu-20.04'
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: cortex-a53
+      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+      base_image: raspios_lite_arm64:latest
+      image_additional_mb: 1024
      env:
       CC: clang
       USE_SLEEF: 1

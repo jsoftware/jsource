@@ -89,10 +89,10 @@ jobs:
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
       base_image: raspios_lite_arm64:latest
       image_additional_mb: 1024
-      env:
-       CC: clang
-       USE_SLEEF: 1
-      commands: script/buildga.sh raspberry
+      commands: |
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh raspberry
 
    - name: Build JE (macOS)
      if: matrix.os == 'macos-12'

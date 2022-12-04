@@ -47,7 +47,9 @@ jobs:
       commands: |
        apt-get install -y build-essential clang wget
        apt-get install -y nasm
-       ls -l /usr/bin/clang*
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh raspberry
 
 #        kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
 #        arch=`aptitude list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`
@@ -84,7 +86,7 @@ jobs:
       USE_SLEEF: 1
      run: script/buildga.sh linux
 
-   - name: Build JE (Raspberry)
+   - name: Build JE (Raspberry64)
      if: matrix.os == 'ubuntu-20.04'
      uses: pguyot/arm-runner-action@v2
      with:

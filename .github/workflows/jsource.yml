@@ -45,11 +45,10 @@ jobs:
       base_image: raspios_lite_arm64:latest
       image_additional_mb: 1024
       commands: |
-       apt-get install -y build-essential clang wget
-       apt-get install -y nasm
+       apt-get install -y build-essential clang nasm
        export CC=clang
        export USE_SLEEF=1
-       export jj64x=j64
+       export j64x=j64
        script/buildga.sh raspberry
        script/testga.sh raspberry
        zip -r rpi64.zip j64
@@ -63,11 +62,10 @@ jobs:
       base_image: raspbian_lite:2020-02-13
       image_additional_mb: 1024
       commands: |
-       apt-get install -y build-essential gcc wget
        apt-get install -y nasm
        export CC=gcc
        export USE_SLEEF=0
-       export jj64x=j32
+       export j64x=j32
        script/buildga.sh raspberry
        script/testga.sh raspberry
        zip -r rpi32.zip j32

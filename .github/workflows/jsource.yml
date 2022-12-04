@@ -45,6 +45,9 @@ jobs:
       base_image: raspios_lite_arm64:latest
       image_additional_mb: 1024
       commands: |
+       apt-get install -y build-essential clang wget
+       apt-get install -y nasm
+       ls -l /usr/bin/clang*
 
 #        kernel_version=`apt list --installed | grep raspberrypi-kernel | awk '{ print $2 }' | sed -e 's|1:||g'`
 #        arch=`aptitude list --installed | grep raspberrypi-kernel | awk '{ print $3 }'`

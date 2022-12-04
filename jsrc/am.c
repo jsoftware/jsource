@@ -477,16 +477,16 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
    cellframelen=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // #axes used: 1, if m is a list; otherwise {:$m
    if(AR(ind)==0){  // scalar ind is common enough to test for
     if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // ind is now an INT vector, possibly the input selector
-    if(likely((UI)IAV(ind)[0]<(UI)ws[0]))z=ind; else{ASSERT(IAV(ind)[0]<0,EVINDEX); ASSERT(IAV(ind)[0]+ws[0]>=0,EVINDEX); RZ(z=sc(IAV(ind)[0]+ws[0]));}  // if the single index is in range, keep it; if neg, convert it quickly
+    if(likely((UI)IAV(ind)[0]<(UI)ws[0]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[0]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[0]));}  // if the single index is in range, keep it; if neg, convert it quickly
    }else RZ(z=jtcelloffset(jt,w,ind));  // create (or keep) list of cell indexes
   }else if(likely(AR(ind)==0)){
    // ind is a single box, <selectors.  It must have rank 0 because the rank affects the rank of m{y and thus the allowed rank of a.
    A ind0=C(AAV(ind)[0]);  // discard ind, move to selectors
-   ASSERT(AN(ind0)<=AR(w),EVLENGTH);  // can't have more selectors than axes
+   ASSERTSUFF(AN(ind0)<=AR(w),EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
    if(AT(ind0)&BOX){
     // selectors are boxed.  They have selectors for sequential axes.  Put them into a multidimensional axis struct.  In this struct a pointer of 0 means
     // an axis taken in full
-    ASSERT(AR(ind0)<2,EVRANK); ASSERT(AN(ind0)<=AR(w),EVLENGTH);   // array of axes must have rank<2, and must not exceed #axes in w
+    ASSERTSUFF(AR(ind0)<2,EVRANK,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(AN(ind0)<=AR(w),EVLENGTH,R jteformat(jt,self,a,w,ind););   // array of axes must have rank<2, and must not exceed #axes in w
     if(AN(ind0)<2){
      // 0-1 selectors, turn it into an ind if it contains a list/atom or a box.  If it contains a table or higher, revert to general case
      if(AN(ind0)!=0){
@@ -494,7 +494,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
       ind0=C(AAV(ind0)[0]);  // advance ind0 to indexes or <compindexes
       if(!(AT(ind0)&BOX))z=pind(AS(w)[0],ind0);  // not boxed - get/keep index list for first axis
       else{  // <<compidexes
-       ASSERT(!AR(ind0),EVINDEX);   // must be just one atomic box
+       ASSERTSUFF(!AR(ind0),EVINDEX,R jteformat(jt,self,a,w,ind););   // must be just one atomic box
        RZ(z=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(AS(w)[0]),num(1)),pind(AS(w)[0],C(AAV(ind0)[0])),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
       }
       cellframelen=1;  // in this path, the cells are _1-cells
@@ -528,7 +528,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
        axes[i].indexes=IAV(ax);  // save pointer to the indexes
       }else{
        // here for complementary indexing
-       ASSERT(!AR(ax),EVINDEX);   // must be just one box
+       ASSERTSUFF(!AR(ax),EVINDEX,R jteformat(jt,self,a,w,ind););   // must be just one box
        ax=C(AAV(ax)[0]);  // open it
        if(AN(ax)){  // if not taken in full...
         RZ(ax=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(axlen),num(1)),pind(axlen,ax),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
@@ -555,7 +555,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
     }
    }else{
     // contents are not boxed.  They must be a single list/atom of successive axes; convert to a single cell index
-    ASSERT(AR(ind0)<2,EVRANK);  // numeric contents must be atom or list
+    ASSERTSUFF(AR(ind0)<2,EVRANK,R jteformat(jt,self,a,w,ind););  // numeric contents must be atom or list
     cellframelen=AN(ind0);  // remember the size of the cells
     if(cellframelen){RZ(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0));}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }

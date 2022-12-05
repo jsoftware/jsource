@@ -204,6 +204,8 @@ PRIM primtab[256] = {
  /*  Z:  */  PRIMACV(CZCO,  VERB,  jtvalenceerr, jtfoldZ,  RMAX,   RMAX,   RMAX   ,VFLAGNONE,VF2NONE),
  // sequences supported as atomics.  The vaid is used only for ss and to reserve a slot in ds
 
+ /*  DUMMY*/ PRIMACV(CDUMMY,   VERB, 0, 0,  0,   0,   0   ,VFLAGNONE,VF2NONE),  // DUMMYSELF, used for flags only
+
 };
 
 B jtpinit(J jt){

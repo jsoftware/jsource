@@ -561,7 +561,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
    }
   }
 noaxes:;
-  if(unlikely(z==0))if(unlikely((z=jstd(w,ind,&cellframelen))==0))jt->emsgstate&=~EMSGSTATEFORMATTED;  // get ind and framelen for complex indexes; if error, we want to reformat it for our verb
+  if(unlikely(z==0))z=jstd(w,ind,&cellframelen);  // get ind and framelen for complex indexes
   z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,cellframelen);  //  dense a if needed; dense amend
   if(unlikely(z==0))jteformat(jt,self,a,w,ind);  // eformat this error while we have access to ind
   // We modified w which is now not pristine.

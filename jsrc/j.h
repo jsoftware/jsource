@@ -1005,8 +1005,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DPUC(n,stm...)   {I i=(n)+1;    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
 #define DQUC(n,stm...)   {I i=-2-(I)(n);  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define ds(c)            (A)&primtab[(UC)(c)]
-#define DUMMYSELF        ds(CRIGHT)  // harmless value to use for self in calls to rank loops
-#define NOEMSGSELF       ds(CRIGHT)  // harmless value to use for self - no eformat
+#define DUMMYSELF        ds(CDUMMY)  // harmless value to use for self in calls to rank loops
+#define NOEMSGSELF       DUMMYSELF  // harmless value to use for self - no eformat
 // see if value of x is the atom v.  Do INT/B01/FL here, subroutine for exotic cases
 #define EQINTATOM(x,v)  ( (AR(x)==0) && ((AT(x)&(INT+B01)) ? (((*IAV0(x))&(((AT(x)&B01)<<8)-1))==(v)) : (AT(x)&FL) ? *DAV0(x)==(D)(v) : 0!=equ(num(v),x))  )
 // define fs block used in every/every2.  It is the self for the f in f&.>, and contains only function pointers, an optional param in AK, and the flag field

@@ -281,55 +281,56 @@ void jtjsignalf(J jt,I e,C *fmt,...){
 // Result is always 0
 A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
- C e=jt->jerr;
- if(e!=0 && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again
-  if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
-   A msg=0;  // indicate no formatted message
-   A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save error code and message; if error in str, skip formatting
-    if(self){
-     if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
-      // we are going to try to run eformat.
-      // we have to reset the state of the error system after saving what we will need
-      RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
-      A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
-      if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
-      // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
-      // other internal state (i. e. from !.n) will have been restored before we get here
-      // establish internal-state args: jt->ranks.
-      A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
-      RESETRANK;   //  We have to reset the rank before we call internal functions
-      A namestg=mtv; if(jt->curname!=0)RZGOTO(namestg=str(AN(jt->curname),NAV(jt->curname)->s),noeformat)
-      // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
-      A awm=0; // where we build the a/w/m arguments
-      if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg, and set rank to ''
-      if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
-       {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
-      if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
-      // Convert self to AR.  If self is not a verb convert a/w to AR also
-      A selfar; if((selfar=arep(self))==0)goto noeformat;
-      // run the analyzer
-      WITHDEBUGOFF(df1(msg,jlink(sc(e),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_
+ if(likely(self!=DUMMYSELF)){  // if we are called without a real self, we must be executing something internal.  Format it later when we have a real self
+  C e=jt->jerr;
+  if(e!=0 && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again
+   if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
+    A msg=0;  // indicate no formatted message
+    A saverr; if((saverr=str(jt->etxn,jt->etx))!=0){  // save error code and message; if error in str, skip formatting
+     if(self){
+      if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
+       // we are going to try to run eformat.
+       // we have to reset the state of the error system after saving what we will need
+       RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
+       A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
+       if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
+       // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
+       // other internal state (i. e. from !.n) will have been restored before we get here
+       // establish internal-state args: jt->ranks.
+       A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
+       RESETRANK;   //  We have to reset the rank before we call internal functions
+       A namestg=mtv; if(jt->curname!=0)RZGOTO(namestg=str(AN(jt->curname),NAV(jt->curname)->s),noeformat)
+       // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
+       A awm=0; // where we build the a/w/m arguments
+       if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg, and set rank to ''
+       if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
+        {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
+       if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
+       // Convert self to AR.  If self is not a verb convert a/w to AR also
+       A selfar; if((selfar=arep(self))==0)goto noeformat;
+       // run the analyzer
+       WITHDEBUGOFF(df1(msg,jlink(sc(e),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_
+      }
+     }else msg=a;  // self not given, use given message text
+ noeformat: ;
+     jt->jerr=jt->jerr1=e; jt->etxn=0;
+     C *savtext=CAV(saverr); I copyoffset=0;  // pointer to old emsg text, and offset to copy from
+     if(msg&&(AT(msg)&LIT)&&AN(msg)>0){
+      // eformat_j_ returned a message.  Replace the first line of saverr with it UNLESS self=0: then insert it after the first line of saverr
+      DO(AN(saverr), if(savtext[i]==CLF){copyoffset=i; break;})  // count up to but not including including first LF
+      if(self==0){ep(copyoffset+1,savtext);}  // if internal msg, it is terse-msg LF internal-msg LF remaining lines
+      I waslf=1; C *msgtext=CAV(msg); DO(AN(msg) , if(waslf)dhead(0,0L); eputc(msgtext[i]); waslf=msgtext[i]==CLF;)  // copy out message if any; every nonempty line must start with the suspension/error prefix * or |
      }
-    }else msg=a;  // self not given, use given message text
-noeformat: ;
-    jt->jerr=jt->jerr1=e; jt->etxn=0;
-    C *savtext=CAV(saverr); I copyoffset=0;  // pointer to old emsg text, and offset to copy from
-    if(msg&&(AT(msg)&LIT)&&AN(msg)>0){
-     // eformat_j_ returned a message.  Replace the first line of saverr with it UNLESS self=0: then insert it after the first line of saverr
-     DO(AN(saverr), if(savtext[i]==CLF){copyoffset=i; break;})  // count up to but not including including first LF
-     if(self==0){ep(copyoffset+1,savtext);}  // if internal msg, it is terse-msg LF internal-msg LF remaining lines
-     I waslf=1; C *msgtext=CAV(msg); DO(AN(msg) , if(waslf)dhead(0,0L); eputc(msgtext[i]); waslf=msgtext[i]==CLF;)  // copy out message if any; every nonempty line must start with the suspension/error prefix * or |
+     ep(AN(saverr)-copyoffset,savtext+copyoffset);  // copy out the rest (or all) of the original message, plus trailing LF
+     jt->etxn1=jt->etxn;
     }
-    ep(AN(saverr)-copyoffset,savtext+copyoffset);  // copy out the rest (or all) of the original message, plus trailing LF
-    jt->etxn1=jt->etxn;
    }
+   // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
+   e=e==EVINHOMO?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e;  // revert internal numbers to external codes after formatting 
+   jt->jerr=jt->jerr1=e;  // save reverted value
   }
-  // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
-  e=e==EVINHOMO?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e;  // revert internal numbers to external codes after formatting
-
-  jt->jerr=jt->jerr1=e;  // save reverted value
+  jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it
  }
- jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it
  R 0;
 }
 

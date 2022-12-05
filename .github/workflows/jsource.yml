@@ -133,7 +133,8 @@ jobs:
    - name: Compress Files (Raspberry32)
      if: matrix.os == 'ubuntu-latest'
      run: |
-      ls *
+      whoami
+      ls -ld *
       ls -l j32
       mv j32/testrpi32.txt .
       zip -r rpi32.zip j32

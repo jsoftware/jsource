@@ -68,6 +68,8 @@ jobs:
        mkdir -p j32
        echo rpi32.so > j32/rpi32.so
        echo testrpi32 > j32/testrpi32.txt
+       find j32 -type d -exec chmod a+rwx {} \;
+       find j32 -type f -exec chmod a+rw {} \;
 #       apt-get install --no-install-recommends -y zip
 #       export CC=gcc
 #       export USE_SLEEF=0

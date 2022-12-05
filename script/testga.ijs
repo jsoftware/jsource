@@ -36,7 +36,11 @@ else.
   msg=. msg,LF,'test fails:'
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
-msg fappends testres
+if. IFRASPI do.
+  msg fappends testres,~ IF64{::'j32/';'j64/'
+else.
+  msg fappends testres
+end.
 )
 
 1: 0 : 0

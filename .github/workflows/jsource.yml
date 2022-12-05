@@ -66,7 +66,8 @@ jobs:
       copy_artifact_path: j32
       commands: |
        mkdir -p j32
-       echo rpi32 > j32/testrpi32.txt
+       echo rpi32.so > j32/rpi32.so
+       echo testrpi32 > j32/testrpi32.txt
 #       apt-get install --no-install-recommends -y zip
 #       export CC=gcc
 #       export USE_SLEEF=0
@@ -132,8 +133,10 @@ jobs:
    - name: Compress Files (Raspberry32)
      if: matrix.os == 'ubuntu-latest'
      run: |
+      ls *
+      ls -l j32
+      mv j32/testrpi32.txt .
       zip -r rpi32.zip j32
-      echo rpitest > testrpi32.txt
 
    - name: Compress Files (macOS)
      if: matrix.os == 'macos-12'

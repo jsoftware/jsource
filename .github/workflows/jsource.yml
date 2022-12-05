@@ -21,9 +21,9 @@ jobs:
 
   strategy:
    matrix:
-    #os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
+    os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
     #os: [ubuntu-22.04, macos-12, windows-2022]
-    os: [ubuntu-20.04, ubuntu-latest]
+    #os: [ubuntu-20.04, ubuntu-latest]
     #os: [ubuntu-latest]
     #os: [ubuntu-22.04]
     #os: [macos-12]
@@ -54,6 +54,7 @@ jobs:
        export USE_SLEEF=1
        script/buildga.sh raspberry
        script/testga.sh raspberry
+       cp testrpi64.txt j64/.
        find j64 -type d -exec chmod a+rwx {} \;
        find j64 -type f -exec chmod a+rw {} \;
 
@@ -71,6 +72,7 @@ jobs:
        export USE_SLEEF=0
        script/buildga.sh raspberry
        script/testga.sh raspberry
+       cp testrpi32.txt j32/.
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
 

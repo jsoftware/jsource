@@ -9,6 +9,13 @@
 #define PMAX 105097564L /* upper limit of p: ; (_1+2^31) = p: PMAX */
 #define PT   500000L    /* interval size in ptt                    */
 
+static void jtddumpx(JJ jt, C* s1, X x, C*s2) {
+ fprintf(stderr, "%s%s%s", s1, SgetX(x), s2);
+}
+#define ddumpx(s1, x, s2) jtddumpx(jt, s1, x, s2);
+#define dumpx(s1, x) ddumpx(s1, x, "");
+#define dumpxl(s1, x) ddumpx(s1, x, ", ");
+#define dumpxln(s1, x) ddumpx(s1, x, "\n");
 
 static const I ptt[]={
     7368791L,   15485867L,   23879539L,   32452867L,   41161751L,

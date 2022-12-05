@@ -47,7 +47,7 @@ APFXL(eqAA, B,A,A,CERR,equ,, R EVOK;)
 NETEMPLATE(neIB, B,I,B, CMPNE,, R EVOK;)    ACMP0(neID, B,I,D, TNE, != )
 ACMP0(neDB, B,D,B, TNE, != )  ACMP0(neDI, B,D,I, TNE, != )  
 APFX(neZZ, B,Z,Z, !zeq,, R EVOK;)  
-APFX(neXX, B,X,X, !equ,, R EVOK;)
+APFX(neXX, B,X,X, !equx,, R EVOK;)
 APFX(neQQ, B,Q,Q, !QEQ,, R EVOK;)
 BPFXAVX2(neCC, CMPNECC,x, CMPNECC, x,
    (workarea=_mm256_castpd_si256(_mm256_xor_pd(u256,v256)), _mm256_castsi256_pd(_mm256_andnot_si256(_mm256_srli_epi64(_mm256_andnot_si256(workarea,_mm256_sub_epi8(workarea,bool256)),7),bool256))) ,

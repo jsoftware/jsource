@@ -63,9 +63,10 @@ jobs:
       cpu_info: cpuinfo/raspberrypi_zero2_w
       base_image: raspbian_lite:2020-02-13
       image_additional_mb: 1024
-      copy_artifact_path: /opt/j32
+      copy_artifact_path: /opt/output
       commands: |
-       echo rpi32 > /opt/j32/rpi32.zip
+       mkdir -p /opt/output
+       echo rpi32 > /opt/output/rpi32.zip
 #       apt-get install --no-install-recommends -y zip
 #       export CC=gcc
 #       export USE_SLEEF=0

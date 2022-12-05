@@ -489,7 +489,9 @@ extern void jfree4gmp(void*, size_t);
 #define IgetXor(y,er) ({X Xy= y; 0==XSGN(Xy) ?0 :1==XLIMBLEN(Xy) && GMP_NUMB_MAX>=XLIMB0(Xy) ?IgetX(Xy) :({er;LONG_MIN;});}) // IgetX with error action er which is taken when y won't fit in an I. er should abort processing and an arbitrary value would be used if it fails to do so (er would typically be an ASSERT, though other possibilities exist)
 #define getSX(Sa,Xc) ({X c=Xc; mpX(c); jmpz_get_str(Sa,10,mpc);}) // ":c
 #define SgetX(Xy) ({\
- X Sy=Xy; mpX(Sy); C*s= jmpz_get_str(0,10,mpSy); s;})      // ":y
+ X Sy=Xy; mpX(Sy); C*s= jmpz_get_str(0,10,mpSy); \
+ X tempx= UNvoidAV1(s); mpX(tempx); X safex= jtXmpzcommon(jt, mptempx, 0); \
+ CAV1(safex);}) // ": y
 #define XlcmXX(x, y) XshimXX(jmpz_lcm, x, y)            // x*.y
 #define XmulXX(x, y) XshimXX(jmpz_mul, x, y)            // x+y
 #define XnegX(y) XshimX(jmpz_neg, y)                    // -y

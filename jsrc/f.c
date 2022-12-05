@@ -218,7 +218,6 @@ static F1(jtthx1){
  if('-'==s[0])s[0]='_'; // use J's convention for negative
  I l= strlen(s); // maybe better to use AN(UNvoidAV1(s))-1 ??
  A z; GA10(z, LIT, l); MC(CAV1(z), s, l+1);
- mfgmp(UNvoidAV1(s));
  R z;
 }
 

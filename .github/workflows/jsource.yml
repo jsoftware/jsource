@@ -156,7 +156,6 @@ jobs:
 
    - name: Release JE (Raspberry32)
      if: matrix.os == 'ubuntu-latest'
-     run: |
      uses: ncipollo/release-action@v1
      with:
       tag: build

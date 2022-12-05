@@ -21,9 +21,10 @@ jobs:
 
   strategy:
    matrix:
-    # os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
-    os: [ubuntu-22.04, macos-12, windows-2022]
+    os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
+    #os: [ubuntu-22.04, macos-12, windows-2022]
     #os: [ubuntu-20.04, ubuntu-latest]
+    #os: [ubuntu-latest]
     #os: [ubuntu-22.04]
     #os: [macos-12]
     #os: [windows-2022]
@@ -45,14 +46,17 @@ jobs:
       cpu: cortex-a53
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
       base_image: raspios_lite_arm64:latest
-      image_additional_mb: 2048
+      image_additional_mb: 1024
+      copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip
+       apt-get install --no-install-recommends -y clang
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh raspberry
        script/testga.sh raspberry
-       zip -r rpi64.zip j64
+       cp testrpi64.txt j64/.
+       find j64 -type d -exec chmod a+rwx {} \;
+       find j64 -type f -exec chmod a+rw {} \;
 
    - name: Setup Environment, Build JE, Test JE (Raspberry32)
      if: matrix.os == 'ubuntu-latest'
@@ -61,14 +65,16 @@ jobs:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
       base_image: raspbian_lite:2020-02-13
-      image_additional_mb: 2048
+      image_additional_mb: 1024
+      copy_artifact_path: j32
       commands: |
-       apt-get install --no-install-recommends -y zip
        export CC=gcc
        export USE_SLEEF=0
        script/buildga.sh raspberry
        script/testga.sh raspberry
-       zip -r rpi32.zip j32
+       cp testrpi32.txt j32/.
+       find j32 -type d -exec chmod a+rwx {} \;
+       find j32 -type f -exec chmod a+rw {} \;
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'
@@ -118,6 +124,18 @@ jobs:
    - name: Compress Files (Linux)
      if: matrix.os == 'ubuntu-22.04'
      run: zip -r l64.zip j64
+
+   - name: Compress Files (Raspberry)
+     if: matrix.os == 'ubuntu-20.04'
+     run: |
+      mv j64/testrpi64.txt .
+      zip -r rpi64.zip j64
+
+   - name: Compress Files (Raspberry32)
+     if: matrix.os == 'ubuntu-latest'
+     run: |
+      mv j32/testrpi32.txt .
+      zip -r rpi32.zip j32
 
    - name: Compress Files (macOS)
      if: matrix.os == 'macos-12'

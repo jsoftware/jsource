@@ -125,11 +125,12 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){
   Q Qm= QmulQQ(y, Qp);                 // scaled number
   X Xr= XroundQ(Qm);                   // rounded to nearest integer
   if(!d)R fmtx(e,m,d,s,XNUM,&Xr,cellbuf);// integer format?
-  C*y= SgetX(Xr);                      // corresponding digit sequence
-  I L= strlen(y);                      // length of that representation
+  C*str= SgetX(Xr);                    // corresponding digit sequence
+  I L= strlen(str);                    // length of that representation
+  if (0==XSGN(Xr)) n= 0;
   I M= MAX(L,n+d+1)+sp+1;if(!m)m=M;    // length needed by representation
   if(M>AN(*cellbuf)) {                 // enough space?
-   GATV0(*cellbuf,LIT,MAX(M,m),1);            // get enough
+   GATV0(*cellbuf,LIT,MAX(M,m),1);     // get enough
    v= CAV1(*cellbuf);
   }
   if (!m) m=M; v[m]=0;
@@ -138,22 +139,22 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){
    I pad=m-M;                          // any padding?
    if(pad)mvc(pad, v, 1, " ");
    v+=pad;
-   if (n){*v++='_';y++;L--;}           // negative sign?
+   if (n){*v++='_';str++;L--;}         // negative sign?
    if (L<=d)*v++='0';                  // integer part
    else{
     I l= L-d;
-    JMC(v,y,l,0);
+    JMC(v,str,l,0);
     v+=l;
-    y+=l;
+    str+=l;
    }
    *v++='.';                           // decimal point
    if(L<d){
     I l= d-L;
     mvc(l,v,1,"0");                    // leading zeros in fraction
     v+=l;
-    JMC(v,y,L,0);
+    JMC(v,str,L,0);
    }else{
-    JMC(v,y,d,0);
+    JMC(v,str,d,0);
    }
    R 1;
   }

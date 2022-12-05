@@ -3,6 +3,7 @@
 testpath=: (1!:43''),'/test/'
 
 os=: (('Linux';'Darwin') i. <UNAME) pick ;:'linux darwin win'
+os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os
 testres=: 'test',os,'.txt'
 
 0!:0 <testpath,'tsu.ijs'

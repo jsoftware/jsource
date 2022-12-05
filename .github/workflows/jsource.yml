@@ -21,9 +21,10 @@ jobs:
 
   strategy:
    matrix:
-    os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
-    # os: [ubuntu-22.04, macos-12, windows-2022]
+    #os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
+    #os: [ubuntu-22.04, macos-12, windows-2022]
     #os: [ubuntu-20.04, ubuntu-latest]
+    os: [ubuntu-latest]
     #os: [ubuntu-22.04]
     #os: [macos-12]
     #os: [windows-2022]
@@ -61,14 +62,16 @@ jobs:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
       base_image: raspbian_lite:2020-02-13
-      image_additional_mb: 2048
+      image_additional_mb: 1024
+      copy_artifact_path: /opt/j32
       commands: |
-       apt-get install --no-install-recommends -y zip
-       export CC=gcc
-       export USE_SLEEF=0
-       script/buildga.sh raspberry
-       script/testga.sh raspberry
-       zip -r rpi32.zip j32
+       echo rpi32 > /opt/j32/rpi32.zip
+#       apt-get install --no-install-recommends -y zip
+#       export CC=gcc
+#       export USE_SLEEF=0
+#       script/buildga.sh raspberry
+#       script/testga.sh raspberry
+#       zip -r rpi32.zip j32
 
    - name: Setup Environment (macOS)
      if: matrix.os == 'macos-12'
@@ -140,13 +143,16 @@ jobs:
 
    - name: Release JE (Raspberry32)
      if: matrix.os == 'ubuntu-latest'
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi32.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
+     run: |
+      ls -l *
+
+#     uses: ncipollo/release-action@v1
+#     with:
+#      tag: build
+#      artifacts: "rpi32.zip"
+#      token: ${{ secrets.GITHUB_TOKEN }}
+#      allowUpdates: true
+#      replacesArtifacts: true
 
    - name: Release JE (Linux)
      if: matrix.os == 'ubuntu-22.04'

@@ -63,10 +63,10 @@ jobs:
       cpu_info: cpuinfo/raspberrypi_zero2_w
       base_image: raspbian_lite:2020-02-13
       image_additional_mb: 1024
-      copy_artifact_path: /opt/output
+      copy_artifact_path: j32
       commands: |
-       mkdir -p /opt/output
-       echo rpi32 > /opt/output/rpi32.zip
+       mkdir -p j32
+       echo rpi32 > j32/testrpi32.txt
 #       apt-get install --no-install-recommends -y zip
 #       export CC=gcc
 #       export USE_SLEEF=0
@@ -146,6 +146,7 @@ jobs:
      if: matrix.os == 'ubuntu-latest'
      run: |
       ls -l *
+      ls -l j32
 
 #     uses: ncipollo/release-action@v1
 #     with:

@@ -123,6 +123,18 @@ jobs:
      if: matrix.os == 'ubuntu-22.04'
      run: zip -r l64.zip j64
 
+   - name: Compress Files (Raspberry)
+     if: matrix.os == 'ubuntu-20.04'
+     run: |
+      zip -r rpi64.zip j64
+      echo rpitest > testrpi64.txt
+
+   - name: Compress Files (Raspberry32)
+     if: matrix.os == 'ubuntu-latest'
+     run: |
+      zip -r rpi32.zip j32
+      echo rpitest > testrpi32.txt
+
    - name: Compress Files (macOS)
      if: matrix.os == 'macos-12'
      run: zip -r m64.zip j64
@@ -145,16 +157,13 @@ jobs:
    - name: Release JE (Raspberry32)
      if: matrix.os == 'ubuntu-latest'
      run: |
-      ls -l *
-      ls -l j32
-
-#     uses: ncipollo/release-action@v1
-#     with:
-#      tag: build
-#      artifacts: "rpi32.zip"
-#      token: ${{ secrets.GITHUB_TOKEN }}
-#      allowUpdates: true
-#      replacesArtifacts: true
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
    - name: Release JE (Linux)
      if: matrix.os == 'ubuntu-22.04'

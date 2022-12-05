@@ -1393,7 +1393,7 @@ extern void jfree4gmp(void*,size_t);
 #define xpowmodinv(x,y)             jtxpowmodinv(jt,(x),(y))
 #define xprimeq(x,y)                jtxprimeq(jt,(x),(y)) 
 #define xprimetest(x)               jtxprimetest(jt,(x))
-#define Xmpzcommon(x)               jtXmpzcommon(jt,(x))
+#define Xmpzcommon(x,b)             jtXmpzcommon(jt,(x),b)
 #define xrand(x)                    jtxrand(jt,(x))
 #define xrem(x,y)                   jtxrem(jt,(x),(y))
 #define xrep(x,y)                   jtxrep(jt,(x),(y))

@@ -224,8 +224,8 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
 }
 
 // dehydrate fresh (mpz_t) as J (X)
-X jtXmpzcommon(J jt, mpz_t mpz) {
- if(unlikely(!mpz->_mp_size)) {
+X jtXmpzcommon(J jt, mpz_t mpz, B numeric) {
+ if(unlikely(!mpz->_mp_size) && likely(numeric)) {
   jmpz_clear(mpz);
   R X0; // mpz is new but may not have memory
  }
@@ -252,8 +252,8 @@ X jtXmpzcommon(J jt, mpz_t mpz) {
 // dehydrate fresh (mpq_t) as J (Q)
 Q jtQmpq(J jt, mpq_t mpq) {
  Q q; A*pushp;
- q.n= Xmpzcommon(&mpq->_mp_num);   // dehydrate numerator
- q.d= Xmpzcommon(&mpq->_mp_den);   // dehydrate denominator
+ q.n= Xmpzcommon(&mpq->_mp_num, 1); // dehydrate numerator
+ q.d= Xmpzcommon(&mpq->_mp_den, 1); // dehydrate denominator
  if (unlikely(!q.n)||unlikely(!q.d)||unlikely(ISQ0(q))) R Q0;
  R q;
 }

@@ -1915,7 +1915,6 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #endif
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
-#define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}
 #define REGOTO(exp,lbl) {if(unlikely(((exp),jt->jerr!=0)))goto lbl;}
 #define RESETERRT(t)    {t->etxn=t->jerr=0;t->emsgstate&=~EMSGSTATEFORMATTED;}
 #define RESETERR        RESETERRT(jt)
@@ -1923,11 +1922,13 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define RESETERRNO      {jt->jerr=0;jt->emsgstate&=~EMSGSTATEFORMATTED;}  // reset the number but not the message; used in adverse/throw. to keep the user's message
 // obsolete #define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;jt->emsgstate&=0x7f;}
 #define RESETRANK       (jt->ranks=R2MAX)
-#define RNE(exp)        {R jt->jerr?0:(exp);}
-#define RZ(exp)         {if(unlikely(!(exp)))R0}
 #define RZSUFF(exp,suff) {if(unlikely(!(exp))){suff}}
+#define RZ(exp)         RZSUFF(exp,R0)
+// obsolete #define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}
+#define RE(exp)         RZ(((exp),jt->jerr==0))  // execute exp, then return if error
 #define RZGOTO(exp,lbl) RZSUFF(exp,goto lbl;)
-#define RZQ(exp)         {if(unlikely(!(exp)))R 0;}  // allows FINDNULLRET without jt
+#define RNE(exp)        {R unlikely(jt->jerr!=0)?0:(exp);}  // always return, with exp if no error, 0 if error
+// obsolete #define RZQ(exp)         {if(unlikely(!(exp)))R 0;}  // allows FINDNULLRET without jt
 #if MEMAUDIT&0xc
 #define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&LPAR?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
 #define ARGCHK1D(x)     ARGCHK1(x)  // these not needed normally, but useful for debugging

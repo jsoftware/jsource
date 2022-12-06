@@ -471,14 +471,14 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
   z=0;  // use z to hold reworked ind
   struct axis *axes, localaxes[4]; A alloaxes;  // put axes here usually
   I wr=AR(w); I *ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
-  if(unlikely(!wr)){RZ(z=from(ind,zeroionei(0))); cellframelen=0;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
+  if(unlikely(!wr)){RZSUFF(z=from(ind,zeroionei(0)),R jteformat(jt,self,a,w,ind);); cellframelen=0;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
   else if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table or higher, convert to cell indexes.
    cellframelen=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // #axes used: 1, if m is a list; otherwise {:$m
    if(AR(ind)==0){  // scalar ind is common enough to test for
-    if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // ind is now an INT vector, possibly the input selector
+    if(!ISDENSETYPE(AT(ind),INT)){A tind; RZSUFF(tind=cvt(INT,ind),R jteformat(jt,self,a,w,ind);); ind=tind;}  // ind is now an INT vector, possibly the input selector
     if(likely((UI)IAV(ind)[0]<(UI)ws[0]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[0]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[0]));}  // if the single index is in range, keep it; if neg, convert it quickly
-   }else RZ(z=jtcelloffset(jt,w,ind));  // create (or keep) list of cell indexes
+   }else RZSUFF(z=jtcelloffset(jt,w,ind),R jteformat(jt,self,a,w,ind););  // create (or keep) list of cell indexes
   }else if(likely(AR(ind)==0)){
    // ind is a single box, <selectors.  It must have rank 0 because the rank affects the rank of m{y and thus the allowed rank of a.
    A ind0=C(AAV(ind)[0]);  // discard ind, move to selectors
@@ -518,7 +518,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
        // not complementary indexing: create or keep valid integer index list
        // the selector may have any shape.  If it is not a list, it will affect the rank of m{y.  We will handle two cases: atom and list selector.
        // If the selector is an atom, we mark its max as -1 to indicate that the axis is to be skipped when checking frames
-       RZ(ax=pind(axlen,ax));  // audit selectors
+       RZSUFF(ax=pind(axlen,ax),R jteformat(jt,self,a,w,ind););  // audit selectors
        if(unlikely(AR(ax)>1)){
         // one of the selectors has rank >1.  We have to go to general case
         if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
@@ -557,7 +557,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
     // contents are not boxed.  They must be a single list/atom of successive axes; convert to a single cell index
     ASSERTSUFF(AR(ind0)<2,EVRANK,R jteformat(jt,self,a,w,ind););  // numeric contents must be atom or list
     cellframelen=AN(ind0);  // remember the size of the cells
-    if(cellframelen){RZ(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0));}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
+    if(cellframelen){RZSUFF(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }
   }
 noaxes:;

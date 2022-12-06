@@ -815,7 +815,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
    if(colx<n){
     // fetching from the Ek matrix itself.  Just fetch the values from the column
     dotproducth=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+colx,indexes,endmask,SZI);
-    if(mv0lo!=0){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI);}
+    if(mv0lo!=0){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI);}  // only needed if bv!=0
    }else{
     // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows
     I an=axv[colx][1];  // number of sparse atoms in each row   scaf move out of loop

@@ -224,6 +224,10 @@ Frow=. _1 _1.1 _1.5 0  NB. improvements
 assert. 4 0 prtpms (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 assert. 4 2 prtpms (128!:9) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 assert. 4 3 prtpms (128!:9) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;bkg;cons;bk;Frow
+M =. M ,: |: _3 ]\ 0. 0 0 1 1 1 0 0 1   NB. now column 3 is no longer unbounded
+assert. 4 0 prtpms (128!:9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 4 2 prtpms (128!:9) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 4 2 prtpms (128!:9) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;bkg;cons;bk;Frow
 NB. stall
 bk =. 0. 0 0  NB. no improving pivots
 M =. |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns

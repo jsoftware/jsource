@@ -56,9 +56,9 @@ assert. 2 <: 1 T. ''
 NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores
 setth nwthreads=. 1 >. <: 0 { 8 T. ''  NB. one worker thread per core, -1
 wthr nwthreads
-assert. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
+assert. GITHUBCI +. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
 wthr nwthreads
-assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
+assert. GITHUBCI +. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
 wthr nwthreads
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
 wthr nwthreads
@@ -117,13 +117,13 @@ mtx =. 10 T. 0
 tod =. 6!:1''
 assert. 0 = >{{11 T. y}}t.''mtx  NB. boxed mtx OK
 assert. 1 = 11 T. mtx;2.0
-assert. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
+assert. GITHUBCI +. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0.1
-assert. (0.3 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
+assert. GITHUBCI +. (0.3 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0
-assert. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
+assert. GITHUBCI +. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
 mtx=.10 T. 1  NB. recursive
 assert. 0 = 11 T. mtx
 assert. 0 = 11 T. mtx  NB. lock count=2

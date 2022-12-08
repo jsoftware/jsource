@@ -104,6 +104,14 @@
 #endif
 #endif
 
+#ifdef _WIN32
+#if EMU_AVX || EMU_AVX2 || C_AVX || C_AVX2
+#ifndef _WIN64
+#error not 64-bit compiler
+#endif
+#endif
+#endif
+
 #if C_AVX
 #if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
 #include <immintrin.h>

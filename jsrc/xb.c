@@ -299,7 +299,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  I e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
  A z; if(likely(!ISSPARSE(t))){
-  if(likely(!g)){
+  if(likely(!g||LIT!=t)){
    GA00(z,t,n,r);
   }else{
    GAGMP(z,n); if(ACISPERM(AC(z)))R z;
@@ -307,8 +307,8 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   GASPARSE0(z,t,n,r)
  }
  I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d));
- I j=1; DO(r, ASSERT(g ?llabs(s[i])*SZI<=n :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
- if (g) {AFHRH(z)= FHRHISGMP;}
+ I j=1; DO(r, ASSERT(g&&LIT==t ?llabs(s[i])*SZI<=n :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
+ if (g&&LIT==t) {AFHRH(z)= FHRHISGMP;}
  else {ASSERT(j==n,EVLENGTH);}
  A y; I *vv; if(t&BOX+XNUM+RAT+SPARSE){
   GATV0(y,INT,e,1);
@@ -336,6 +336,12 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   case CMPXX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;
   default: e=n<<bplg(t);
    ASSERTSYS(e<=allosize(z),"unbinr"); MC(CAV(z),v,e);
+ }
+ if (unlikely(g)) { // container is XNUM or RAT
+  if (INT==t) { // old style XNUM format
+   A xbase= scx(XgetI(10000)); RZ(xbase); // FIXME: make xbase a jgmpinit constant, use here and in vrand.c
+   z= XAV(poly2(z, xbase))[0];
+  } else (ASSERT(LIT==t, EVDOMAIN));
  }
  RE(z); RETF(z);
 }    /* b iff reverse the bytes; d iff argument is 64-bits */

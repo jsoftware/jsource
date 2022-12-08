@@ -534,7 +534,7 @@ static void auditsimverify0(J jt,A w){
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2 && AC(w)!=ACINPLACE+3))SEGFAULT;   // could go higher but doesn't in our tests
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(jt,ABACK(w));  // check backer
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
-  if((AT(w)&(RAT|XNUM|BOX|SPARSE))>0) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt,CNULLNOERR(QCWORD(*v))); ++v;)}  // check descendants even if nonrecursive
+  if((AT(w)&(RAT|XNUM|BOX|SPARSE))>0) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt, unlikely(AT(w)&XNUM+RAT) ?*v :CNULLNOERR(QCWORD(*v))); ++v;)}  // check descendants even if nonrecursive
   if((AT(w)&BOX+SPARSE)>0){
 // obsolete    I n=AN(w); I af=AFLAG(w);
 // obsolete    A* RESTRICT wv=AAV(w);  // pointer to box pointers

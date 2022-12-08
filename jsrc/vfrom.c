@@ -1200,8 +1200,8 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=
  jtjobrun(jt,jtmvmsparsex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
 
  // prepare final result
- if(likely(bv!=0||Frow==0)){
-  // DIP call or nonimp.  others return by storing into an input
+ if(likely(bv!=0||(zv==0&&Frow==0))){
+  // DIP call or nonimp.  onecol and Dpiv return by storing into an input
   if(unlikely(opctx.abortcolandrow!=-1))if((I4)opctx.abortcolandrow==-1)R v2(4,opctx.abortcolandrow>>32);  // if unbounded, return col# 
   GAT0(z,FL,6,1); zv=DAV(z);
   I rc=opctx.minimp==0.0?1:0; rc=Frow==0?2:rc;  // if nonimp, return nonimp found - will be overridden next if not found

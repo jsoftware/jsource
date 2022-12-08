@@ -341,7 +341,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   if (INT==t) { // old style XNUM format
    A xbase= scx(XgetI(10000)); RZ(xbase); // FIXME: make xbase a jgmpinit constant, use here and in vrand.c
    z= XAV(poly2(z, xbase))[0];
-  } else (ASSERT(LIT==t, EVDOMAIN));
+  } else{ASSERT(LIT==t, EVDOMAIN)};
  }
  RE(z); RETF(z);
 }    /* b iff reverse the bytes; d iff argument is 64-bits */

@@ -282,9 +282,8 @@ assert. '' prtpms 128!:9 (0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 3;2.5 
 NB. nonimproving pivots
 bk =. 4 $ 0.
 M =. |: _4 ]\ 0. 1 0 0  0 1e_10 3 0   1 1e_7 0 0   0 1e_9 0 0   NB. input by columns
-cons=.1e_9 1e_6 0.0 0 1. 1.0 _1 NB. MinPivot MinSafe #freepasses #improvements #amounttoimproveby prirow
-assert.  0 0 1 4 10 _4 prtpms 128!:9 (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2;1.0 0 0 0 0 0 0;bk
-assert.  0 0 1 4 10 _4 prtpms 128!:9 (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2 3 0 1;1.0 0 0 0 0 0 0;bk
+NB. assert.  0 0 1 4 10 _4 prtpms 128!:9 (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2;1.0 0 0 0 0 0 0;bk
+NB. assert.  0 0 1 4 10 _4 prtpms 128!:9 (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2 3 0 1;1.0 0 0 0 0 0 0;bk
 
 
 NB. Quad-precision M

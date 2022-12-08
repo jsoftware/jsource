@@ -283,22 +283,27 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  RE(z); RETF(z);
 }
 
-// create A from 3!:1 form
+// create A from 3!:1 form (recursive -- start at jtunbin)
+// b: 0: big-endian 1: little-endian
+// d: 0: 32 bits,   1: 64 bits
+// m: number of unconverted bytes remaining
+// w: pointer to those bytes
+// g: 0: result type A, 1: result type X (gmp)
 static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  ASSERT(m>BH(d),EVLENGTH);
- I t; RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d));
- I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
- I r; RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
- C*v=BV(d,w,r);
+ I t; RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d)); // t: type
+ I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));         // n: quantity
+ I r; RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d));         // r: rank
+ C*v=BV(d,w,r);                                        // v[]: n values go here
  ASSERT(t==LOWESTBIT(t),EVDOMAIN);
  t=fromonehottype(t);
  ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);
- I p=bsize(jt,d,0,t,n,r); 
- I e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n; 
+ I p=bsize(jt,d,0,t,n,r);                              // p: previous total size of array (in bytes)
+ I e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n;          // e: n or 2*n (if RAT)
  ASSERT(m>=p,EVLENGTH);
- A z; if(likely(!ISSPARSE(t))){
+ A z; if(likely(!ISSPARSE(t))){                        // z: result array
   if(likely(!g||LIT!=t)){
    GA00(z,t,n,r);
   }else{
@@ -306,17 +311,17 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   } }else{
   GASPARSE0(z,t,n,r)
  }
- I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d));
- I j=1; DO(r, ASSERT(g&&LIT==t ?llabs(s[i])*SZI<=n :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
+ I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d));     // s[]: shape
+ I j=1; DO(r, ASSERT(g&&LIT==t ?llabs(s[i])*SZI<=n :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];);                                      // j: to verify n
  if (g&&LIT==t) {AFHRH(z)= FHRHISGMP;}
  else {ASSERT(j==n,EVLENGTH);}
- A y; I *vv; if(t&BOX+XNUM+RAT+SPARSE){
+ A y; I *vv; if(t&BOX+XNUM+RAT+SPARSE){                // y: locator for values in v
   GATV0(y,INT,e,1);
-  vv=AV(y);
+  vv=AV(y);                                            // vv: y's offsets
   RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
  if(t&BOX+XNUM+RAT){
-  RZ(y=indexof(y,y));
-  A*zv= AAV(z);
+  RZ(y=indexof(y,y));                                  // now y is indices in v[]
+  A*zv= AAV(z);                                        // zv[]: result values
   for(I i=0,k=0,*iv=AV(y);i<e;++i){
    j=vv[i]; 
    ASSERT(BETWEENO(j,0,m),EVINDEX);

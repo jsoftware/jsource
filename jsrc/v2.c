@@ -384,12 +384,12 @@ static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
 
 F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  ARGCHK2(a,w);
- wn=AN(w); wr=AR(w); b=all1(lt(a,zeroionei(0))); xt=1&&AT(w)&XNUM+RAT;
+ wn=AN(w); wr=AR(w); b=all1(lt(a,zeroionei(0))); xt=1&&AT(w)&XNUM+RAT;  // b: every a is < 0
  if(AR(a)||wr&&(b||xt))R rank2ex0(a,w,DUMMYSELF,jtqco2);
  if(!b&&xt){RE(m=i0(vib(a))); if(BETWEENO(m,0,1229))R qco2x(m,w);}  /* 1229=p:^:_1 XBASE */
- RZ(q=factor(w)); qv=AV(q);
+ RZ(q=factor(w)); qv=AV(q);  // q is factors of w
  if(b)RZ(a=negate(a));
- bb=equ(a,ainf);
+ bb=equ(a,ainf);  // bb: a is _ or __
  if(b&bb){ /* __ q: w */
   RZ(y=ne(q,curtail(over(zeroionei(0),q))));
   R lamin2(repeat(y,q),df1(z,y,cut(ds(CPOUND),zeroionei(1))));

@@ -179,16 +179,16 @@ assert. 6 prtpms (128!:9) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;b
 assert. 6 prtpms (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;($0);cons;bk;Frow  NB. no rows
 assert. 6 prtpms (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);(0 0$0.);bkg;cons;(0$0.);(1$0.)  NB. empty M
 bkg=.i.-#M
-assert. 0 0 1 4 10 _4 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 10 _4 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 assert. 0 0 2 4 13 _4 prtpms (128!:9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. goes down 1st col, up the rest
-assert. 0 0 1 4 10 _4 prtpms (128!:9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 10 _4 prtpms (128!:9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 assert. 0 0 2 4 13 _4 prtpms (128!:9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 assert. 1 3 1 1 4 0 prtpms (128!:9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow  NB. dangerous pivot
 NB. row cutoff
 M =. |: _4 ]\ 0. 1 3 0  0 2 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-assert. 0 0 1 4 10 _4 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 10 _4 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 assert. 0 0 2 4 13 _4 prtpms (128!:9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
-assert. 0 0 1 4 10 _4 prtpms (128!:9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
+assert. 0 0 2 4 10 _4 prtpms (128!:9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 assert. 0 0 2 4 13 _4 prtpms (128!:9) 2 1 0 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;cons;bk;Frow
 NB. col cutoff
 M=. 4 4 $ 1.  NB. every ele is valid
@@ -217,7 +217,7 @@ assert. 3 0 0 4 4 0 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M
 assert. 3 0 0 4 4 0 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.05 0 1 1.0 _1;bk;Frow
 assert. 0 3 1 4 16 _0.02 prtpms (128!:9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;bkg;1e_11 1e_6 0.005 0 1 1.0 _1;bk;Frow
 NB. unbounded
-M =. |: _3 ]\ 0. 0 0 1 1 1 0 0 0   NB. input by columns
+M =. |: _3 ]\ 0. 0 0 1 1 1 0 0 1e_40   NB. input by columns.  Need small nonzero to ensure reading the extension
 bk =. 1. 2 2  NB. the first row on each col is the pivot
 bkg=.i.#M
 Frow=. _1 _1.1 _1.5 0  NB. improvements
@@ -277,6 +277,15 @@ assert Dpiv prtpms 1 2 3 _1 _1
 assert. '' prtpms 128!:9 (1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1 2 3;2.5 0 0 0 0 0 1;'';'';Dpiv  NB. add
 assert Dpiv prtpms 1 4 6 2 _1
 assert. '' prtpms 128!:9 (0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 3;2.5 0 0 0 0 0 _1;'';'';Dpiv  NB. sub
+
+
+NB. nonimproving pivots
+bk =. 4 $ 0.
+M =. |: _4 ]\ 0. 1 0 0  0 1e_10 3 0   1 1e_7 0 0   0 1e_9 0 0   NB. input by columns
+cons=.1e_9 1e_6 0.0 0 1. 1.0 _1 NB. MinPivot MinSafe #freepasses #improvements #amounttoimproveby prirow
+assert.  0 0 1 4 10 _4 prtpms 128!:9 (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0 1 2;1.0 0 0 0 0 0 0;bk
+assert.  0 0 1 4 10 _4 prtpms 128!:9 (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2 3 0 1;1.0 0 0 0 0 0 0;bk
+
 
 NB. Quad-precision M
 bk =. _2 1 3 1e_8

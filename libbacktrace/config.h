@@ -14,8 +14,9 @@
    don't. */
 //#undef HAVE_DECL_GETPAGESIZE
 
-/* Define if dl_iterate_phdr is available.  Should be true for all ELF platforms. */
-#if !defined(_WIN32) && !defined(__APPLE__)
+/* Define if dl_iterate_phdr is available.  Should be true for all ELF platforms, but apparently not on older android versions.
+ * See https://reviews.llvm.org/D39468 for a potential workaround if this causes breakage */
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(ANDROID)
 #define HAVE_DL_ITERATE_PHDR 1
 #endif
 

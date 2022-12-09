@@ -24,6 +24,10 @@
 #include "j.h"
 #include "jeload.h"
 
+#ifndef _WIN32 //temporary
+#include "../libbacktrace/backtrace.h"
+#endif
+
 #define J_STACK  0xc00000uL // 12mb
 
 static int runjscript=0;   /* exit after running script */
@@ -32,6 +36,27 @@ static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
 static int norl=0;         /* disable readline/linenoise */
 static void sigint(int k){jeinterrupt();signal(SIGINT,sigint);}
 static void sigint2(int k){jeinterrupt();}
+#ifndef _WIN32
+static int err_write(void *data, uintptr_t pc, const char *file, int line, const char *function){
+ char buf[512];
+ file = file ? file : "?";
+ while(!strncmp(file, "../", 3)) file += 3; // strip leading '../'.  Don't strip leading 'jsrc/' to avoid ambiguity with source files with other origins.
+ snprintf(buf, sizeof(buf), "%0*lx: %s:%d:\t%s\n", BW==64?16:8, pc, file, line, function ? function : "?");
+ write(STDERR_FILENO, buf, strlen(buf));
+ R 0;}
+static void sigsegv(int k){
+ //todo should say to report to the beta forums for beta builds
+ const char msg[] = "JE has crashed, likely due to an internal bug.  Please report the code which caused the crash, as well as the following printout, to the J programming forum.\n";
+ // write is async-signal safe; fwrite&co are not, but still do this, just to be safe
+ // similarly, can't fflush(stderr) first; too bad
+ write(STDERR_FILENO, msg, sizeof(msg)-1);
+ struct backtrace_state *state = backtrace_create_state(NULL, 1, NULL, NULL);
+ backtrace_full(state, 0, err_write, NULL, NULL);
+ fsync(STDERR_FILENO);
+ //abort rather than exit to ensure a core dump is still generated
+ abort();}
+#endif
+
 static char input[30000];
 
 #if defined(ANDROID) || defined(_WIN32)
@@ -219,6 +244,13 @@ JST* jt;
 
 int main(int argc, char* argv[])
 {
+#ifndef _WIN32
+ signal(SIGSEGV,sigsegv);
+ signal(SIGILL,sigsegv);
+#ifdef __APPLE__
+ signal(SIGTRAP,sigsegv); //catch SEGFAULT
+#endif
+#endif
  setlocale(LC_ALL, "");
 #if !(defined(ANDROID)||defined(_WIN32))
  locale_t loc;

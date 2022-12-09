@@ -1,4 +1,4 @@
-vpath % ../../../../jsrc
+vpath % ../../../../jsrc % ../../../../libbacktrace
 
 ifndef jplatform64
 jplatform64=linux/j64x
@@ -8,15 +8,40 @@ ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o
 
+# elf.o
+# pecoff.o
+# alloc.o -- alternative to mmap.o
+# read.o -- alternative to mmapio.o; probably mmap is more robust in this case
+
+BACKTRACE_OBJS := \
+ atomic.o \
+ backtrace.o \
+ dwarf.o \
+ fileline.o \
+ mmap.o \
+ mmapio.o \
+ posix.o \
+ print.o \
+ simple.o \
+ sort.o \
+ state.o
+
+ifeq (darwin,$(findstring darwin,$(jplatform64)))
+BACKTRACE_OBJS := $(BACKTRACE_OBJS) macho.o
+else
+BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
+endif
+
 OBJS=  \
  jconsole.o \
- jeload.o
+ jeload.o \
+ $(BACKTRACE_OBJS)
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN)
-	$(CC) -o $@ $(OBJS) $(OBJSLN) $(LDFLAGS)
+	$(CC) -o $@ $(OBJS) $(OBJSLN) -g $(LDFLAGS)
 
 all: $(ODIR)/$(TARGET)
 

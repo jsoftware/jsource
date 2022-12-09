@@ -7,7 +7,8 @@
 set -e
 CC=${CC-clang}
 USE_SLEEF=${USE_SLEEF-1}
-export CC USE_SLEEF
+_DEBUG=3
+export CC USE_SLEEF _DEBUG
 
 if [ "$1" == "linux" ]; then
   ext="so"

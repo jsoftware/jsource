@@ -10,6 +10,7 @@ if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
 	# OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
+  3) OPTLEVEL=" -O2 -g ";;
   2) OPTLEVEL=" -O0 -ggdb ";;
   1) OPTLEVEL=" -O2 -g "
    jplatform64=$(./jplatform64.sh)-debug;;

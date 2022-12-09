@@ -1976,7 +1976,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (!(AT(retfff)&SPARSE) && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; }
 #define SBSV(x)         (CAV1(JT(jt,sbstrings))+(I)(x))
 #define SBUV(x)         (SBUV4(JT(jt,sbu))+(I)(x))
-#define SEGFAULT        (*(volatile I*)0 = 0)
+#define SEGFAULT        (__builtin_trap())
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535
 #define SMIN            (-65536)

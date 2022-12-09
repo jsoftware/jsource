@@ -41,7 +41,7 @@ static int err_write(void *data, uintptr_t pc, const char *file, int line, const
  char buf[512];
  file = file ? file : "?";
  while(!strncmp(file, "../", 3)) file += 3; // strip leading '../'.  Don't strip leading 'jsrc/' to avoid ambiguity with source files with other origins.
- snprintf(buf, sizeof(buf), "%0*lx: %s:%d:\t%s\n", BW==64?16:8, pc, file, line, function ? function : "?");
+ snprintf(buf, sizeof(buf), "%0*lx: %s:%d:\t%s\n", BW==64?16:8, (unsigned long)pc, file, line, function ? function : "?");
  write(STDERR_FILENO, buf, strlen(buf));
  R 0;}
 static void sigsegv(int k){

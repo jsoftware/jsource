@@ -46,6 +46,7 @@
 /* Define if -lz is available. */
 //#undef HAVE_ZLIB
 
+#define _GNU_SOURCE
 
 /* Define to 1 if you have the <link.h> header file. */
 #define HAVE_LINK_H 1

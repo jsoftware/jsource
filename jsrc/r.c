@@ -50,7 +50,7 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R aro(gs);  // if <@:t. discard the <@:
   hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
   if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
-  if(VXOPCALL&v->flag)R aro(hs);
+  if(id==CCOLON&&VXOPCALL&v->flag)R aro(hs);
   xop=id==CCOLON&&VXOP&v->flag;
   ex=hs&&id==CCOLON&&!xop;
   m=BETWEENC(id,CFORK,CADVF)&&hs?3:!!fs+(ex||xop&&hs||!xop&&gs);  // number of components: if invisible, 2 or 3; otherwise count f g h

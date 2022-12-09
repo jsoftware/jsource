@@ -1057,6 +1057,8 @@ DF2(jtfold){F2PREFIP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
  A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),a,w,foldconj));
+ // If the returned verb has VXOPCALL set, that means we are in debug and a namerefop has been interposed for Foldr_j_.  We don't want that - get the real verb
+ if(unlikely(FAV(derivvb)->flag&VXOPCALL))derivvb=FAV(derivvb)->fgh[2];  // the verb is saved in h of the reference
  // Modify the derived verb to go to our preparatory stub.  Save the dyadic entry point for the derived verb so the stub can call it
  FAV(derivvb)->localuse.lu1.foldfn=FAV(derivvb)->valencefns[1];
  FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;

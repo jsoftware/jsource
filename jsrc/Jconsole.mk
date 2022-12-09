@@ -29,7 +29,19 @@ endif
 LOCAL_CFLAGS += -fPIE
 LOCAL_LDFLAGS += -fPIE -pie
 
-LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c
+LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c \
+../libbacktrace/atomic.c \
+../libbacktrace/backtrace.c \
+../libbacktrace/dwarf.c \
+../libbacktrace/fileline.c \
+../libbacktrace/mmap.c \
+../libbacktrace/mmapio.c \
+../libbacktrace/posix.c \
+../libbacktrace/print.c \
+../libbacktrace/simple.c \
+../libbacktrace/sort.c \
+../libbacktrace/state.c \
+../libbacktrace/elf.c
 
 include $(BUILD_EXECUTABLE)
 

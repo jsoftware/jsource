@@ -26,7 +26,19 @@ ifeq ($(TARGET_ARCH),x86)
   LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -fno-strict-aliasing -DREADLINE -DUSE_LINENOISE -march=i686 -mssse3 -mfpmath=sse -fno-stack-protector -I../mpir/include
 endif
 
-LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c
+LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c \
+../libbacktrace/atomic.c \
+../libbacktrace/backtrace.c \
+../libbacktrace/dwarf.c \
+../libbacktrace/fileline.c \
+../libbacktrace/mmap.c \
+../libbacktrace/mmapio.c \
+../libbacktrace/posix.c \
+../libbacktrace/print.c \
+../libbacktrace/simple.c \
+../libbacktrace/sort.c \
+../libbacktrace/state.c \
+../libbacktrace/elf.c
 
 include $(BUILD_EXECUTABLE)
 

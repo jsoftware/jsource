@@ -381,6 +381,12 @@ f                                test1
 (1 2 3x (2&+) ])                 test1
 (-&3x   (2&+) ])                 test1
 2 b.                             test1
++ F. -                           test1
++ F.. -                           test1
++ F.: -                           test1
++ F: -                           test1
++ F:. -                           test1
++ F:: -                           test1
 
 f =:+ 
 g =:- 

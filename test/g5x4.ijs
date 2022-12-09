@@ -85,6 +85,7 @@ NB. +`-`*`:0  test
 ''            test
 (i.10 1)      test
 (i.11 1)      test
++ F. -        test
 
 (jtr -: tree)"0 ;:'ar lr boxed mt oarg shr shl mat' NB. ,' boxc dash'
 (jtr -: tree)"0 ;:'extent limb1 limb pfx pad take rc'

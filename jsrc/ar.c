@@ -1062,6 +1062,8 @@ DF2(jtfold){F2PREFIP;
  FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;
  // Tell the stub what the original fold type was
  FAV(derivvb)->lc=FAV(self)->id;
+ // For display purposes, give the fold the spelling of the original
+ FAV(derivvb)->id=FAV(self)->id;
  R derivvb;
 }
 

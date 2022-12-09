@@ -22,13 +22,14 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R drr(hs);
- xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;  // xop=explicit operator, for which f=u, [h=v], g=the definition;  ex=explicit non-operator, for which f=defn type, g=text, h=processed text 
+ xop=id==CCOLON&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;  // xop=explicit operator, for which f=u, [h=v], g=the definition;  ex=explicit non-operator, for which f=defn type, g=text, h=processed text 
  b=BETWEENC(id,CHOOK,CADVF); c=id==CFORK||(id==CADVF&&hs!=0); b&=1^c;  // c if invisible trident (FORK or ADVF); b = invisible bident (HOOK or ADVF)
  m=!!fs+(gs||ex);   // m=# components of combination: test fs and gs, but in explicit definition the definition is in h, so we take that as surrogate g
  if(!m)R spella(w);  // if no components, it must be a primitive, out it
  m+=!b&&!xop||hs&&xop;   // if operator, add component for v if conjunction; if not operator, add component UNLESS w is an invisible bident: for w itself or for h
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep, which is the result
  if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
+ gs=(BETWEENC(id,CFDOT,CFCODOT))?hs:gs;  // when we emulate Fold, we have to get the conjunction value from h
  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
  GATV0(z,BOX,m,1); x=AAV(z);
@@ -50,7 +51,7 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
   if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
   if(VXOPCALL&v->flag)R aro(hs);
-  xop=1&&VXOP&v->flag;
+  xop=id==CCOLON&&VXOP&v->flag;
   ex=hs&&id==CCOLON&&!xop;
   m=BETWEENC(id,CFORK,CADVF)&&hs?3:!!fs+(ex||xop&&hs||!xop&&gs);  // number of components: if invisible, 2 or 3; otherwise count f g h
   if(!m)R spella(w);
@@ -60,7 +61,7 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  if(NOUN&AT(w)){RZ(x[0]=incorp(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); RZ(x[1]=INCORPNA(w)); RETF(z);}  // if name, must be ".@'name', format name as string
  GATV0(y,BOX,m,1); u=AAV(y);
  if(0<m)RZ(u[0]=incorp(aro(fs)));
- if(1<m)RZ(u[1]=incorp(aro(ex?unparsem(num(0),w):xop?hs:gs)));
+ if(1<m)RZ(u[1]=incorp(aro(ex?unparsem(num(0),w):xop?hs:BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));
  if(2<m)RZ(u[2]=incorp(aro(hs)));
  s=xop?aro(gs):VDDOP&v->flag?(hv=AV(hs),aro(foreign(sc(hv[0]),sc(hv[1])))):spellout(id);
  RZ(x[0]=incorp(s)); RZ(x[1]=INCORPNA(y));

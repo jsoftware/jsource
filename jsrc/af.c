@@ -89,12 +89,15 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
  case CTDOT:
   f=REFIXA(0,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // recur and rebuild.  t. starts a new recursion, so don't replace $: in it
  case CATCO:
-  if(FAV(g)->id==CTDOT)R REFIXA(na,g);   // t. is internally <@:t. .  Remove the <@; and continue.
+  if(FAV(g)->id==CTDOT)R REFIXA(na,g);   // t. is internally <@:t. .  Remove the <@: and continue.
 // otherwise fall through to...
  case CAT: case CCUT:
   f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // rerun the compound after fixing the args
  case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
   f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
+ case CFDOT: case CFDOTDOT: case CFDOTCO: case CFCO: case CFCOCO: case CFCODOT: 
+  // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
+  f=REFIXA(na,f); h=REFIXA(1,h); R df2(z,f,h,wf);
  case CCOLON:
   // n : n had VFIX set & never gets here
   if(v->flag&VXOPR){

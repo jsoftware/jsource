@@ -961,7 +961,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     // if we get here for nonimp, it means we didn't find one & should fail
     if(limitrow==-2){
      // nonimp mode, and we didn't find one in our column.  If any thread has found a nonimp, abort so we can use that
-     if(-1==__atomic_load_n(&(((struct mvmctx*)ctx)->bestcolandrow[0]),__ATOMIC_ACQUIRE))goto earlycol;
+     if(__atomic_load_n(&(((struct mvmctx*)ctx)->bestcolandrow[0]),__ATOMIC_ACQUIRE)!=-1)goto earlycol;
     }else{
      // here for Dpiv.  oldcol is the # pivots found; we add/sub/store that in the Dpiv block based on 'prirow'
      oldcol=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_permute4x64_pd(oldcol,0b00001110))));

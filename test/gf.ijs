@@ -108,6 +108,7 @@ eq=: 2 : 0
  1
 ))
 
+
 >:@ s          eq (>:@ ambi       )
 >:@:s          eq (>:@:ambi       )
 >:@ s@ *:      eq (>:@ monad@ *:  )
@@ -124,6 +125,15 @@ s & *:@>:      eq (monad& *:@>:   )
 NB. illegal *&.s           eq (* &.monad      )
 *&:s           eq (* &:monad      )
 )
+
+
++ F. - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F. - f.)
++ F.. - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F.. - f.)
++ F.: - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F.: - f.)
++ F: - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F: - f.)
++ F:: - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F:: - f.)
++ F:. - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F:. - f.)
+
 'domain error' -: ex '*&.$:'
 'domain error' -: ex '*&.i.'
 'domain error' -: ex '*&.:$:'

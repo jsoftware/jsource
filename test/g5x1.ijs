@@ -41,6 +41,18 @@ fork =: (plus,or) f.
 (ar <'over') -: <,','
 (ar <'hook') -: <(,'2');<ar ;:'plus      or'
 (ar <'fork') -: <(,'3');<ar ;:'plus over or'
+fold =: plus F. or f.
+(ar <'fold') -: <'F.';<;:'++.'
+fold =: plus F.. or f.
+(ar <'fold') -: <'F..';<;:'++.'
+fold =: plus F.: or f.
+(ar <'fold') -: <'F.:';<;:'++.'
+fold =: plus F: or f.
+(ar <'fold') -: <'F:';<;:'++.'
+fold =: plus F:. or f.
+(ar <'fold') -: <'F:.';<;:'++.'
+fold =: plus F:: or f.
+(ar <'fold') -: <'F::';<;:'++.'
 
 f =: ":@'abc'
 (ar <'f') -: < (,'@') ,&< ('":' ,&< (,'0') ,&< 'abc')

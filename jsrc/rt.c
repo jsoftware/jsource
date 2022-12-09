@@ -132,13 +132,14 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL){RETF(trr(hs));}
- xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
+ xop=id==CCOLON&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
  m=(I )!!fs+(I )(gs||ex)+(I )(id==CFORK||xop&&hs);
  if(!m){RETF(tleaf(spella(w)));}
  if(evoke(w)){RZ(w=sfne(w)); RETF((AT(w)&FUNC?jttrr:jttleaf)(jt,w));}
  GATV0(t,BOX,m,1); x=AAV(t);
  if(0<m)RZ(x[0]=incorp(fl&VGERL?treach(fxeach(fs,(A)&jtfxself[0])):trr(fs)));
- if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(fxeach(gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(gs)));
+ // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
+ if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(fxeach(BETWEENC(id,CFDOT,CFCODOT)?hs:gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));
  if(2<m)RZ(x[2]=incorp(trr(hs)));
  s=xop?spellout('0'):fl&VDDOP?(hv=AV(hs),over(thorn1(sc(hv[0])),over(spellout(id),thorn1(sc(hv[1]))))):spellout(id);
  z=troot(s,graft(ope(t)));

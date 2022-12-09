@@ -74,6 +74,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-int-to-pointer-cast \
  -Wno-maybe-uninitialized \
  -Wno-missing-field-initializers \
+ -Wno-null-pointer-subtraction \
  -Wno-overflow \
  -Wno-parentheses \
  -Wno-pointer-sign \

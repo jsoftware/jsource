@@ -233,9 +233,9 @@ do{
       // first wreck.  Allocate a boxed array to hold the results that mismatch zz
       // use zzboxp to tell how many results have been processed already; allocate space for the rest
 #if !ZZSTARTATEND  // going forwards
-      PROD(nboxes,zzframelen,AS(zz)); nboxes -= (zzboxp-(A*)0);   // see how many boxes we need: the number of cells, minus the number of cells processed so far
+      PROD(nboxes,zzframelen,AS(zz)); nboxes -= (UI)zzboxp/sizeof(A*);    // see how many boxes we need: the number of cells, minus the number of cells processed so far
 #else
-      nboxes = (zzboxp-(A*)0)+1;   // if box-pointer counts down, it already holds the # boxes left to do
+      nboxes = 1 + (UI)zzboxp/sizeof(A*);   // if box-pointer counts down, it already holds the # boxes left to do
 #endif
       // Allocate the boxed-result area.  Every result that doesn't match zz will be stored here, and we leave zeros for the places that DID match zz,
       // so that we can tell which result-cells come from zz and which from zzbox.

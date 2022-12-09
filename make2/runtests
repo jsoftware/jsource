@@ -30,7 +30,7 @@ if [ "$1" = "-i" ]; then
  shift
  gdb -iex 'set pagination off' -ex run -ex where -ex echo \n \
 	 -ex up -ex up -ex up -ex up --args \
-	 $jconsole -js "load'tsu.ijs'" "9!:29]1[9!:27'RUND]allorcmdline(0)'" "$@"
+	 $jconsole -js "load'tsu.ijs'" "9!:29]1[9!:27'RUND]allorcmdline(0)'return." "$@"
 else
  gdb -iex 'set pagination off' -ex run -ex where -ex echo \n \
 	 -ex up -ex up -ex up -ex up --args \

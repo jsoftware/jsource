@@ -345,7 +345,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  if (unlikely(g)) { // container is XNUM or RAT
   if (INT==t) { // old style XNUM format
    A xbase= scx(XgetI(10000)); RZ(xbase); // FIXME: make xbase a jgmpinit constant, use here and in vrand.c
-   z= XAV(poly2(z, xbase))[0];
+   RZ(z= XAV(poly2(z, xbase))[0]);
   } else{ASSERT(LIT==t, EVDOMAIN)};
  }
  RE(z); RETF(z);
@@ -382,7 +382,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
   }
   b=b||n!=c;
  }
- R unbinr(b,d,1,m,q,!(!t&XNUM+RAT));
+ R unbinr(b,d,1,m,q,!!t&XNUM+RAT);
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
 // 3!:4

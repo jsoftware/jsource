@@ -19,6 +19,15 @@ NB.  z=. z+7!:5 <'p' [ p=. 18!:2 y   NB. leave out the path since it's other loc
 
 sp_z_=: 7!:5
 
+18!:55 lc=: <'abcdefghijklmno0x13578x0'
+(lc) -: (h=:4) (18!:3) lc
+foot__lc=: i.3 4
+charboil__lc=: 123$'x'
+jajabinks__lc =: !100x
+(p=: ;:'z base j') 18!:2 lc
+(7!:6 lc) -: h spl lc
+18!:55 lc
+
 18!:55 <'abc'
 (<'abc') -: (h=:3) (18!:3) <'abc'
 foot_abc_=: i.3 4
@@ -61,7 +70,7 @@ NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/
 'ill-formed name' -: 7!:5 etx <'bad name'
 'ill-formed name' -: 7!:5 etx <''
 
-4!:55 ;:'h p sp_z_ spl spn'
+4!:55 ;:'h lc p sp_z_ spl spn'
 
 
 

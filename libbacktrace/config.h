@@ -16,7 +16,15 @@
 
 /* Define if dl_iterate_phdr is available.  Should be true for all ELF platforms, but apparently not on older android versions.
  * See https://reviews.llvm.org/D39468 for a potential workaround if this causes breakage */
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(ANDROID)
+#ifdef ANDROID
+#if defined(__arm__)
+#if __ANDROID_API__ >= 21
+#define HAVE_DL_ITERATE_PHDR 1
+#endif /* __ANDROID_API__ >= 21 */
+#else
+#define HAVE_DL_ITERATE_PHDR 1
+#endif
+#elif !defined(_WIN32) && !defined(__APPLE__)
 #define HAVE_DL_ITERATE_PHDR 1
 #endif
 

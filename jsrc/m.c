@@ -375,9 +375,10 @@ B jtspfree(J jt){I i;A p;
 // return space used by w and its descendants
 static D jtspfor1(J jt, A w){D tot=0.0;
  if(unlikely(w==0))R 0.0;
+ // recur on contents,  to get their total size
  switch(CTTZ(AT(w))){
-  case XNUMX: case BOXX:
-   if(!ISSPARSE(AT(w))){
+  case BOXX:
+   if(!ISSPARSE(AT(w))){  // I don't know why we don't account for space in sparse box
     if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
      {DO(AN(w), if(wv[i])tot+=spfor1(C(QCWORD(wv[i]))););}
     }
@@ -389,10 +390,11 @@ static D jtspfor1(J jt, A w){D tot=0.0;
    {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;
   case XDX:
    {DX*v=(DX*)AV(w); DQ(AN(w), if(v->x)tot+=spfor1(v->x); ++v;);} break;
-  case RATX:  
-   {A*v=AAV(w); DQ(2*AN(w), if(*v)tot+=spfor1((*v)); ++v;);} break;
+  case RATX: case XNUMX:
+   {A*v=AAV(w); DQ(AN(w)<<(!!(AT(w)&RAT)), if(*v)tot+=spfor1((*v)); ++v;);} break;  // no QCWORD on XNUM/RAT
  }
- if(!ACISPERM(AC(w))) {
+ // done with contents; now get the size of w itself
+ if(!ACISPERM(AC(w))) {  // permanent blocks add nothing to size
   // for NJA allocations with contiguous header, the size is the header size (7+64 words) plus the data size
   // for NJA allocations with separate header, the size is the data size plus the size of the base block
   if(AFNJA&AFLAG(w)) {

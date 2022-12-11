@@ -10,15 +10,23 @@ NB. 1   shape (no alignment needed)
 NB. 1   trailing 0 pad - full word-1 because B01 ops need it, will round up
 NB. #y  letters in the name
 
-spl=: 4 : 0   NB. space needed for locale y with hash table size x
- z=. spn >y                      NB. locale name
+spl=: 4 : 0   NB. space needed for locale y with hash table size x.  y is (actual locale name;string suffix when the name was assigned)
+ 'loc suff' =. y
+ z=. spn loc                      NB. locale name
  z=. z+(4)*2^6+x          NB. hash table
 NB.  z=. z+7!:5 <'p' [ p=. 18!:2 y   NB. leave out the path since it's other locales
- z=. z+ (+/spn&> v) + +/ (IF64{16 24) + 7!:5 v=. ,&('_',(>y),'_')&.>(nl__y '')-.;:'x y'  NB. 24 is length of L block
+ z=. z+ (+/spn&> v) + +/ (IF64{16 24) + 7!:5 v=. ,&suff&.>(nl__loc '')-.;:'x y bloc loc suff' [ loc =. <loc  NB. 24 is length of L block
 )
 
 sp_z_=: 7!:5
-
+18!:55 lc=: <'abcdefghijklmno0x13578x0'
+(lc) -: (h=:4) (18!:3) lc
+foot__lc=: i.3 4
+charboil__lc=: 123$'x'
+jajabinks__lc =: !100x
+(p=: ;:'z base j') 18!:2 lc
+(7!:6 lc) -: h spl lc,<'__lc'
+18!:55 lc
 18!:55 <'abc'
 (<'abc') -: (h=:3) (18!:3) <'abc'
 foot_abc_=: i.3 4
@@ -26,7 +34,7 @@ charboil_abc_=: 123$'x'
 jajabinks_abc_ =: !100x
 (p=: ;:'z base j') 18!:2 <'abc'
 NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/ 24+sp_abc_ nl_abc_ ''
-(7!:6 <'abc') -: h spl <'abc'
+(7!:6 <'abc') -: h spl 'abc' ; '_abc_'
 18!:55 <'abc'
 18!:55 <'abcdefghijklmno'
 (<'abcdefghijklmno') -: (h=:3) (18!:3) <'abcdefghijklmno'
@@ -35,7 +43,7 @@ charboil_abcdefghijklmno_=: 123$'x'
 jajabinks_abcdefghijklmno_ =: !100x
 (p=: ;:'z base j') 18!:2 <'abcdefghijklmno'
 NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/ 24+sp_abc_ nl_abc_ ''
-(7!:6 <'abcdefghijklmno') -: h spl <'abcdefghijklmno'
+(7!:6 <'abcdefghijklmno') -: h spl 'abcdefghijklmno' ; '_abcdefghijklmno_'
 18!:55 <'abcdefghijklmno'
 
 
@@ -61,7 +69,7 @@ NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/
 'ill-formed name' -: 7!:5 etx <'bad name'
 'ill-formed name' -: 7!:5 etx <''
 
-4!:55 ;:'h p sp_z_ spl spn'
+4!:55 ;:'h lc p sp_z_ spl spn'
 
 
 

@@ -195,20 +195,6 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  else{
   // There was an error.  If it is recoverable in place, handle the cases here
   // positive result gives error type to use for retrying the operation; negative is 1's complement of the restart point (first value NOT stored)
-#if 0 // obsolete 
-  if (EWRAT==oprc && RAT&AT(w)) { // result should be RAT and arg was RAT?
-   // 
-   VA1F ado2= 0;
-   if (floorQ==ado) ado2= floorQQ; // expect RAT result from floor
-   if (ceilQ==ado) ado2= ceilQQ; // expect RAT result from ceil
-   if (ado2) {
-    A zz; GATV(zz,RAT,n,AR(z),AS(z));
-	   oprc= ((AHDR1FN*)ado2)(jt,n,AV(zz),AV(w)); // retry RAT floor/ceil
-    if(oprc==EVOK){RETF(zz);} // success?
-// obsolete     mf(zz);
-   }
-  }
-#endif
   // integer abs: convert everything to float, changing IMIN to IMAX+1
   if(ado==absI){A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(unlikely(*zv<0))*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
   // float sqrt: reallocate as complex, scan to make positive results real and negative ones imaginary

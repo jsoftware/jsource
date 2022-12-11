@@ -382,7 +382,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
   }
   b=b||n!=c;
  }
- R unbinr(b,d,1,m,q,!!t&XNUM+RAT);
+ R unbinr(b,d,1,m,q,!!(t&XNUM+RAT));
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
 // 3!:4

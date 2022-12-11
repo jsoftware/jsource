@@ -2298,8 +2298,7 @@ extern JS gjt; // global for JPF (procs without jt)
 #define ZZ(x)
 
 /* workaround clang branch prediction side effect */
-// #if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 3)))
-#if defined(__GNUC__) || ( defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 3))) )
+#if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 3)))
 #define dmul2(u,v) ({__asm__("" ::: "cc");(u)*(v);})
 #define ddiv2(u,v) ({__asm__("" ::: "cc");(u)/(v);})
 #else

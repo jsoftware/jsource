@@ -103,7 +103,11 @@ primop256(maxIB,0x80,,
 primop256(tymesDI,16,I msav=m; D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){m=msav; z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 primop256(tymesDB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)
 primop256(tymesIB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;) // duplicated fn
+#ifdef DEBUG001
+primop256(tymesID,8,I msav=m; D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),fprintf(stderr,"NANTEST %d \n",NANTEST0);if(NANTEST){m=msav; z=zsav; DQ(n*m, fprintf(stderr,"_isnan %d \n",(_isnan(*(D*)z)));if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
+#else
 primop256(tymesID,8,I msav=m; D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){m=msav; z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
+#endif
 primop256(tymesBD,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)
 primop256(tymesBI,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)  // duplicated fn
 primop256(divDI,0x14,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),

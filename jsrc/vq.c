@@ -155,10 +155,12 @@ static D jtqlogd1(J jt,Q w){ASSERT(0<=XSGN(w.n),EWIMAG); R xlogabs(w.n)-xlogabs(
 
 static Z jtqlogz1(J jt,Q w){Z z; z.re=xlogabs(w.n)-xlogabs(w.d); z.im=0>XSGN(w.n)?PI:0.0; R z;}
 
-AMON(floorQ, X,Q, *z=rifvsdebug(xdiv(x->n,x->d,XMFLR ));)
-AMON( ceilQ, X,Q, *z=rifvsdebug(xdiv(x->n,x->d,XMCEIL));)
+AMON(floorQQ, Q,Q, *z= ISQinf(*x) ?*x :QgetX(xdiv(x->n,x->d,XMFLR ));)
+AMON( ceilQQ, Q,Q, *z= ISQinf(*x) ?*x :QgetX(xdiv(x->n,x->d,XMCEIL));)
 AMON(  sgnQ, X,Q, *z=rifvsdebug(xsgn(x->n));            )
 AMON(  absQ, Q,Q, z->n=XabsX(x->n); z->d=x->d;)
+AMONPS(floorQ, X,Q, , *z=xdiv(x->n,x->d,XMFLR ); , HDR1JERR)
+AMONPS( ceilQ, X,Q, , *z=xdiv(x->n,x->d,XMCEIL); , HDR1JERR)
 AMONPS( sqrtQ, Q,Q, , QSQRT(x) , HDR1JERR)
 AMONPS( factQ, Q,Q, , QFACT(x) , HDR1JERR)
 AMONPS( logQD, D,Q, , *z=qlogd1(*x); , HDR1JERR)

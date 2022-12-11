@@ -21,26 +21,28 @@
 #define ADECLR  AHDRR
 #define ADECLS  AHDRS
 
-extern ADECL1(  absQ,Q,Q);
-extern ADECL1(  absX,X,X);
-extern ADECL1( ceilQ,X,Q);
-extern ADECL1(  expX,X,X);
-extern ADECL1( factD,D,D);
-extern ADECL1( factI,I,I);
-extern ADECL1( factQ,Q,Q);
-extern ADECL1( factX,X,X);
-extern ADECL1( factZ,Z,Z);
-extern ADECL1(floorQ,X,Q);
-extern ADECL1(  logX,X,X);
-extern ADECL1( logQD,D,Q);
-extern ADECL1( logQZ,Z,Q);
-extern ADECL1( logXD,D,X);
-extern ADECL1( logXZ,Z,X);
-extern ADECL1(  pixX,X,X);
-extern ADECL1(  sgnQ,X,Q);
-extern ADECL1(  sgnX,X,X);
-extern ADECL1( sqrtQ,Q,Q);
-extern ADECL1( sqrtX,X,X);
+extern ADECL1(   absQ,Q,Q);
+extern ADECL1(   absX,X,X);
+extern ADECL1(  ceilQ,X,Q);
+extern ADECL1( ceilQQ,Q,Q);
+extern ADECL1(   expX,X,X);
+extern ADECL1(  factD,D,D);
+extern ADECL1(  factI,I,I);
+extern ADECL1(  factQ,Q,Q);
+extern ADECL1(  factX,X,X);
+extern ADECL1(  factZ,Z,Z);
+extern ADECL1( floorQ,X,Q);
+extern ADECL1(floorQQ,Q,Q);
+extern ADECL1(   logX,X,X);
+extern ADECL1(  logQD,D,Q);
+extern ADECL1(  logQZ,Z,Q);
+extern ADECL1(  logXD,D,X);
+extern ADECL1(  logXZ,Z,X);
+extern ADECL1(   pixX,X,X);
+extern ADECL1(   sgnQ,X,Q);
+extern ADECL1(   sgnX,X,X);
+extern ADECL1(  sqrtQ,Q,Q);
+extern ADECL1(  sqrtX,X,X);
 
 extern ADECLP(   andpfxB,B, B );  extern ADECLR(   andinsB,B, B );  extern ADECLS(   andsfxB,B, B );
 extern ADECLP(   divpfxD,D, D );  extern ADECLR(   divinsD,D, D );  extern ADECLS(   divsfxD,D, D );

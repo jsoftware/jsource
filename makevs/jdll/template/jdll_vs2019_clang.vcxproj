@@ -223,7 +223,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -275,7 +275,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -328,7 +328,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -380,7 +380,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -433,7 +433,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -488,7 +488,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -545,7 +545,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -603,7 +603,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -660,7 +660,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -718,7 +718,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -770,7 +770,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -828,7 +828,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\dll\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-x86_64-nasm.o;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;..\..\pthreads4w\lib\pthreadVC3.lib;..\..\mpir\windows\x64\mpir.lib;onecore.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -890,7 +890,7 @@
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(outdir)\j.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\dll\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\windows\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -983,7 +983,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\dll\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\windows\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\release\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -1035,7 +1035,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\dll\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\windows\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\release\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
@@ -1092,7 +1092,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\dll\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\windows\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1142,7 +1142,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\dll\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\md5-586-nasm.o;..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;..\..\pthreads4w\lib\pthreadVC3-w32.lib;..\..\mpir\windows\win32\mpir.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\debug\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>

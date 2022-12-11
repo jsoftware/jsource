@@ -66,6 +66,7 @@ fi
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions \
+ -DDEBUG001 \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wno-cast-function-type \
  -Wno-clobbered \

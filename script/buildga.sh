@@ -166,6 +166,7 @@ chmod 755 j32gcc/jconsole
 fi
 
 if [ "$1" == "darwin" ]; then
+export _DEBUG=0
 cd android/jni
 ln -sf ../../hostdefs .
 ln -sf ../../jsrc .

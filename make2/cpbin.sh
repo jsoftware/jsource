@@ -45,6 +45,33 @@ echo \# jplatform $jplatform
 if [ $jplatform = "darwin" ]; then
 
 # macos 64-bit
+if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM" ]; then
+dsymutil "../bin/${jplatform}/j64$DEBUGDIR/jconsole"
+rm -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM"
+fi
+if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM" ]; then
+dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole"
+rm -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM"
+fi
+
+if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib" ] && [ -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
+dsymutil "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib"
+rm -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM"
+fi
+if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
+dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib"
+rm -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM"
+fi
+
+if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib" ] && [ -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM" ]; then
+dsymutil "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib"
+rm -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM"
+fi
+if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM" ]; then
+dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib"
+rm -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM"
+fi
+
 if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ]; then
 # fat binary
 if [ -f "../jlibrary/bin/jconsole" ]; then
@@ -52,9 +79,7 @@ mv -f "../jlibrary/bin/jconsole" "/tmp/jconsole.old.$$"
 fi
 echo \# lipo "../bin/${jplatform}/j64$DEBUGDIR/jconsole" "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" -create -output "../jlibrary/bin/jconsole-mac"
 lipo "../bin/${jplatform}/j64$DEBUGDIR/jconsole" "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" -create -output "../jlibrary/bin/jconsole-mac"
-dsymutil ../jlibrary/bin/jconsole-mac
 cp ../jlibrary/bin/jconsole-mac ../jlibrary/bin/jconsole
-dsymutil ../jlibrary/bin/jconsole #need to do this separately for each file for some reason; why?
 elif [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ]; then
 cop j64 jconsole bin jconsole-mac
 cp ../jlibrary/bin/jconsole-mac ../jlibrary/bin/jconsole
@@ -70,7 +95,6 @@ mv -f "../jlibrary/bin/libtsdll.dylib" "/tmp/libtsdll.dylib.old.$$"
 fi
 echo \# lipo "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib" "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib" -create -output "../jlibrary/bin/libtsdll.dylib"
 lipo "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib" "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib" -create -output "../jlibrary/bin/libtsdll.dylib"
-dsymutil ../jlibrary/bin/libtsdll.dylib
 elif [ -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib" ]; then
 cop j64 libtsdll.dylib bin libtsdll.dylib
 elif [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib" ]; then
@@ -84,7 +108,6 @@ mv -f "../jlibrary/bin/libj.dylib" "/tmp/libj.dylib.old.$$"
 fi
 echo \# lipo "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib" "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
 lipo "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib" "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" -create -output "../jlibrary/bin/libj.dylib"
-dsymutil ../jlibrary/bin/libj.dylib
 elif [ -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib" ]; then
 cop j64 libj.dylib bin libj.dylib
 elif [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" ]; then

@@ -65,6 +65,7 @@ NB. 0!:x directly, because then all the calls in RUN (after a file that does coc
 ex01=:0!:1
 ex02=:0!:2
 ex03=:0!:3
+ex04=:0!:4
 
 etx      =: ::(<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)  NB. error message from error number
 ex       =: ". etx
@@ -201,14 +202,17 @@ NB. ebi extensions
 
 RSET=: 4 : '(x)=: y'
 RBAD=: 3 : '>_4}.each(#testpath)}.each(-.RB)#RF'
-RUN=: RBAD@('RB'&RSET)@(ex03`(0!:3)@.(*@".@'Debug'))@('RF'&RSET)
+RUN0=: RBAD@('RB'&RSET)@(ex03`(0!:3)@.(*@".@'Debug'))@('RF'&RSET)
+RUN4=: RBAD@('RB'&RSET)@(ex04`(0!:4)@.(*@".@'Debug'))@('RF'&RSET)
+RUN=: (RUN0`RUN4@.GITHUBCI)   NB. why ( ) is needed ?
 RUND=: RBAD@('RB'&RSET)@(ex02`(0!:2)@.(*@".@'Debug'))@('RF'&RSET)  NB. Run w/display
 
 RUN1=: 13 : 'ex02`(0!:2)@.(*@".@''Debug'') <testpath,y,''.ijs'''
 
 RESUB1=: 3 : 'y[echo >y'
 RESUB2=: (13 : '-.ex03 RESUB1 y')"0
-RECHO=: 13 : '+/ RESUB2 y'
+RESUB4=: (13 : '-.ex04 RESUB1 y')"0
+RECHO=: 13 : '+/ (RESUB2`RESUB4@.GITHUBCI) y'
 
 NB. bill extensions
 

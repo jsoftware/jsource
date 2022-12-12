@@ -69,6 +69,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(0,111): R CDERIV(CIBEAM, jtscm11,      jtscm112,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,2):   R CDERIV(CIBEAM, jtsct1,       jtsct2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,3):   R CDERIV(CIBEAM, jtscz1,       jtscz2,       VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,4):   R CDERIV(CIBEAM, jtscy1,       jtscy2,       VASGSAFE,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 1:

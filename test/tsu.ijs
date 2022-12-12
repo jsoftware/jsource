@@ -198,13 +198,15 @@ nearmt =: *./@,@:neareq
 Neareq =: (1e_8 >(|@- % ])) +. *.&(0 = *!.5e_11)  NB. big tolerant comparison, even against 0
 Nearmt =: *./@,@:Neareq
 
+GITHUBCI=: 0       NB. running on github action
+
 NB. ebi extensions
 
 RSET=: 4 : '(x)=: y'
 RBAD=: 3 : '>_4}.each(#testpath)}.each(-.RB)#RF'
 RUN0=: RBAD@('RB'&RSET)@(ex03`(0!:3)@.(*@".@'Debug'))@('RF'&RSET)
 RUN4=: RBAD@('RB'&RSET)@(ex04`(0!:4)@.(*@".@'Debug'))@('RF'&RSET)
-RUN=: (RUN0`RUN4@.GITHUBCI)   NB. why ( ) is needed ?
+RUN=:  RUN0`RUN4@.GITHUBCI
 RUND=: RBAD@('RB'&RSET)@(ex02`(0!:2)@.(*@".@'Debug'))@('RF'&RSET)  NB. Run w/display
 
 RUN1=: 13 : 'ex02`(0!:2)@.(*@".@''Debug'') <testpath,y,''.ijs'''
@@ -216,7 +218,6 @@ RECHO=: 13 : '+/ (RESUB2`RESUB4@.GITHUBCI) y'
 
 NB. bill extensions
 
-GITHUBCI=: 0       NB. running on github action
 ECHOFILENAME=: 0   NB. echo file name
 PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script

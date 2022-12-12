@@ -12,8 +12,10 @@ export CC USE_SLEEF _DEBUG
 
 if [ "$1" == "linux" ]; then
   ext="so"
+  export _DEBUG=3
 elif [ "$1" == "raspberry" ]; then
   ext="so"
+  export _DEBUG=3
 elif [ "$1" == "darwin" ]; then
   ext="dylib"
 else

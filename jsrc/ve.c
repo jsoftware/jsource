@@ -483,7 +483,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
      continue;} \
     _mm512_storeu_epi64(zv+i, DIVRN(vn,vd,mode));} \
    I tlen=1+((m-1)&7),off=(m-1)&~7; \
-   __mmask8 mask=BZHI(0xf,tlen); \
+   __mmask8 mask=BZHI(0xff,tlen); \
    __m512i vd=_mm512_maskz_loadu_epi64(mask,wv+off); \
    __m512i vn=_mm512_maskz_loadu_epi64(mask,av+off); \
    if(unlikely(HASBADFLT(vd,vn))){DO(tlen, c=av[i+off]; d=wv[i+off]; if(!d){if(!c){d=1;}else{z=0;goto end;}} zv[i+off]=div(c,d);)} \
@@ -512,7 +512,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
      /*we already know w isn't 0, so we don't have to handle the overflow case*/\
      _mm512_storeu_epi64(zv+i, _mm512_cvt_roundpd_epi64(_mm512_div_pd(_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd)),_MM_FROUND_NO_EXC|mode));}\
     I tlen=1+((n-1)&7),off=(n-1)&~7; \
-    __mmask8 mask=BZHI(0xf,tlen); \
+    __mmask8 mask=BZHI(0xff,tlen); \
     __m512i vn=_mm512_maskz_loadu_epi64(mask,av+off);\
     if(unlikely(ISBADFLT(vn))){\
      I d=_mm_cvtsi128_si64(_mm512_castsi512_si128(vd));\
@@ -542,7 +542,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
       continue;}\
      _mm512_storeu_epi64(zv+i, _mm512_cvt_roundpd_epi64(_mm512_div_pd(_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd)),_MM_FROUND_NO_EXC|mode));}\
     I tlen=1+((n-1)&7),off=(n-1)&~7; \
-    __mmask8 mask=BZHI(0xf,tlen); \
+    __mmask8 mask=BZHI(0xff,tlen); \
     __m512i vd=_mm512_maskz_loadu_epi64(mask,wv+off);\
     if(unlikely(ISBADFLT(vd))){\
      if(_mm512_mask_cmpeq_epi64_mask(mask,vd,_mm512_set1_epi64(0))){z=0;goto resexend;} /*any zero in the tail?*/\

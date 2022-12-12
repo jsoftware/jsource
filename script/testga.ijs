@@ -15,7 +15,7 @@ stdout LF ,~ 9!:14''
 NB. ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'Win'-:UNAME)#(<testpath),each <'g7x6.ijs' NB. temporarily disable
 
 NB. smoke test
-NB. RES=: RUN (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
+NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
 NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
@@ -26,7 +26,7 @@ NB. RUN1^:IFWIN 'g640'
 NB. RUN1^:IFWIN 'g7x6'
 NB. exit^:IFWIN 1
 
-RES=: RUN ddall
+RES=: RUN4 ddall
 
 3 : 0''
 msg=. 9!:14''

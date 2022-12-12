@@ -43,7 +43,7 @@ test*.txt
 
 # mac
 .DS_Store
-*.dSYM
+*.dSYM/
 
 #android
 android/libs/

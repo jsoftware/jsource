@@ -45,31 +45,31 @@ echo \# jplatform $jplatform
 if [ $jplatform = "darwin" ]; then
 
 # macos 64-bit
-if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM" ]; then
+if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -d "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM" ]; then
 dsymutil "../bin/${jplatform}/j64$DEBUGDIR/jconsole"
-rm -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM"
+rm -rf "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM"
 fi
-if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM" ]; then
+if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ] && [ -d "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM" ]; then
 dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole"
-rm -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM"
+rm -rf "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM"
 fi
 
-if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib" ] && [ -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
+if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib" ] && [ -d "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
 dsymutil "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib"
-rm -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM"
+rm -rf "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM"
 fi
-if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
+if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib" ] && [ -d "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
 dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib"
-rm -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM"
+rm -rf "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM"
 fi
 
-if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib" ] && [ -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM" ]; then
+if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib" ] && [ -d "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM" ]; then
 dsymutil "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib"
-rm -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM"
+rm -rf "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM"
 fi
-if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM" ]; then
+if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" ] && [ -d "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM" ]; then
 dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib"
-rm -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM"
+rm -rf "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM"
 fi
 
 if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ]; then

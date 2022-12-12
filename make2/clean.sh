@@ -29,8 +29,8 @@ find ../sleef/src -name "*.tmp" -type f -delete || true
 find ../base64 -name "*.tmp" -type f -delete || true
 find obj -name "*.tmp" -type f -delete || true
 
-find ../jsrc -name "*.dSYM" -type f -delete || true
-find ../dllsrc -name "*.dSYM" -type f -delete || true
-find ../sleef/src -name "*.dSYM" -type f -delete || true
-find ../base64 -name "*.dSYM" -type f -delete || true
-find obj -name "*.dSYM" -type f -delete || true
+find ../jsrc -name "*.dSYM" -type d -delete || true
+find ../dllsrc -name "*.dSYM" -type d -delete || true
+find ../sleef/src -name "*.dSYM" -type d -delete || true
+find ../base64 -name "*.dSYM" -type d -delete || true
+find obj -name "*.dSYM" -type d -delete || true

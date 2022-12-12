@@ -45,33 +45,6 @@ echo \# jplatform $jplatform
 if [ $jplatform = "darwin" ]; then
 
 # macos 64-bit
-if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -d "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM" ]; then
-dsymutil "../bin/${jplatform}/j64$DEBUGDIR/jconsole"
-rm -rf "../bin/${jplatform}/j64$DEBUGDIR/jconsole.dSYM"
-fi
-if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ] && [ -d "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM" ]; then
-dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole"
-rm -rf "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole.dSYM"
-fi
-
-if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib" ] && [ -d "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
-dsymutil "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib"
-rm -rf "../bin/${jplatform}/j64$DEBUGDIR/libtsdll.dylib.dSYM"
-fi
-if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib" ] && [ -d "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM" ]; then
-dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib"
-rm -rf "../bin/${jplatform}/j64arm$DEBUGDIR/libtsdll.dylib.dSYM"
-fi
-
-if [ -f "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib" ] && [ -d "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM" ]; then
-dsymutil "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib"
-rm -rf "../bin/${jplatform}/j64$DEBUGDIR/libj.dylib.dSYM"
-fi
-if [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" ] && [ -d "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM" ]; then
-dsymutil "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib"
-rm -rf "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib.dSYM"
-fi
-
 if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ]; then
 # fat binary
 if [ -f "../jlibrary/bin/jconsole" ]; then

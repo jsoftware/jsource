@@ -75,12 +75,12 @@ eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME y[RUNTIME=:6!:1'' }}
+prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0
 10 s: GLOBALSYMBOL
 empty 0&T.^:(0=1&T.) ::1:''
-1: echo^:ECHOFILENAME 'time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
+1: echo^:ECHOFILENAME RUNFILE,'  time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
 )
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 

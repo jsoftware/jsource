@@ -33,6 +33,14 @@ jobs:
      run: |
       script/buildga.sh linux
       script/testga.sh linux
+      cd j64
+      strip -S jconsole
+      strip -S libj.so
+      strip -S libjavx.so
+      strip -S libjavx2.so
+      strip -S libjavx512.so
+      strip -S libtsdll.so
+      cd ..
       zip -r l64.zip j64
 
    - name: Release JE (Linux)
@@ -71,6 +79,14 @@ jobs:
      run: |
       script/buildga.sh darwin
       script/testga.sh darwin
+      cd j64
+      strip -S jconsole
+      strip -S libj.dylib
+      strip -S libjavx.dylib
+      strip -S libjavx2.dylib
+      strip -S libjavx512.dylib
+      strip -S libtsdll.dylib
+      cd ..
       zip -r m64.zip j64
 
    - name: Release JE (macOS)
@@ -111,6 +127,11 @@ jobs:
        script/buildga.sh raspberry
        script/testga.sh raspberry
        cp testrpi64.txt j64/.
+       cd j64
+       strip -S jconsole
+       strip -S libj.so
+       strip -S libtsdll.so
+       cd ..
        find j64 -type d -exec chmod a+rwx {} \;
        find j64 -type f -exec chmod a+rw {} \;
 
@@ -156,6 +177,11 @@ jobs:
        script/buildga.sh raspberry
        script/testga.sh raspberry
        cp testrpi32.txt j32/.
+       cd j32
+       strip -S jconsole
+       strip -S libj.so
+       strip -S libtsdll.so
+       cd ..
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
 
@@ -229,7 +255,7 @@ jobs:
    - name: Get Test Results
      uses: actions/download-artifact@v2
      with:
-       name: dist
+      name: dist
 
    - name: Merge Test Results
      run: script/testgares.sh

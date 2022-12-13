@@ -243,6 +243,10 @@ jobs:
      shell: cmd
      run: |
       script\buildga.cmd
+
+   - name: Test JE (Windows)
+     shell: cmd
+     run: |
       script\testga.cmd
 
    - name: Compress Files (Windows)

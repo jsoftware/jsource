@@ -200,6 +200,30 @@ typedef double float64x2_t __attribute__ ((vector_size (16)));
 #undef VOIDARG
 #define VOIDARG
 
+#if C_AVX512
+#if (!defined(__clang__)) && defined(__GNUC__) && __GNUC__ < 10
+static __inline __m512i
+__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
+_mm512_loadu_epi64 (void const *__P)
+{
+  struct __loadu_epi64 {
+    __m512i_u __v;
+  } __attribute__((__packed__, __may_alias__));
+  return ((const struct __loadu_epi64*)__P)->__v;
+}
+
+static __inline void
+__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
+_mm512_storeu_epi64 (void *__P, __m512i __A)
+{
+  struct __storeu_epi64 {
+    __m512i_u __v;
+  } __attribute__((__packed__, __may_alias__));
+  ((struct __storeu_epi64*)__P)->__v = __A;
+}
+#endif
+#endif
+
 #if SLEEF
 #include "../sleef/include/sleef.h"
 #endif

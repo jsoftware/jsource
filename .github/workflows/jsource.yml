@@ -66,7 +66,7 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Setup Environment (macOS)
+#   - name: Setup Environment (macOS)
 
    - name: Build JE (macOS)
      env:
@@ -222,9 +222,9 @@ jobs:
      run: |
       script/buildga.sh android
 
-   - name: Release JE (android)
+#   - name: Release JE (android)
 
-   - name: Copy Test (android)
+#   - name: Copy Test (android)
 
 # windows --------------------------------------------------------------
  jewin:

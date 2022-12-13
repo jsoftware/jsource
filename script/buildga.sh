@@ -2,7 +2,7 @@
 #
 # build linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry
+# argument is linux|darwin|raspberry|android
 
 set -e
 CC=${CC-clang}
@@ -16,8 +16,10 @@ elif [ "$1" == "raspberry" ]; then
   ext="so"
 elif [ "$1" == "darwin" ]; then
   ext="dylib"
+elif [ "$1" == "android" ]; then
+  ext="so"
 else
-  echo "argument is linux|darwin|raspberry"
+  echo "argument is linux|darwin|raspberry|android"
   exit 1
 fi
 if [ "`uname -m`" != "armv6l" ]; then
@@ -45,7 +47,7 @@ cp mpir/linux/aarch64/libgmp.so j64
 else
 cp mpir/linux/arm/libgmp.so j32
 fi
-else
+elif [ "$1" == "darwin" ]; then
 cp mpir/apple/macos/libgmp.dylib j64
 fi
 
@@ -54,8 +56,21 @@ echo "#define jplatform \"$1\"" >> jsrc/jversion.h
 echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
 echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 
+if [ "$1" == "android" ]; then
+export _DEBUG=0
+cd android/jni
+ln -sf ../../hostdefs .
+ln -sf ../../jsrc .
+ln -sf ../../netdefs .
+cd ../..
+cd android
+ndk-build
+cd ..
+exit 0
+fi
+
 if [ "x$MAKEFLAGS" = x'' ] ; then
-if [ "$1" != "darwin" ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+if [ "$1" == "linux" ] || [ "$1" == "raspberry" ] ; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
 export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
@@ -163,17 +178,5 @@ cp bin/$1/j32/* j32gcc
 chmod 644 j32gcc/*
 chmod 755 j32gcc/jconsole
 
-fi
-
-if [ "$1" == "darwin" ]; then
-export _DEBUG=0
-cd android/jni
-ln -sf ../../hostdefs .
-ln -sf ../../jsrc .
-ln -sf ../../netdefs .
-cd ../..
-cd android
-ndk-build
-cd ..
 fi
 

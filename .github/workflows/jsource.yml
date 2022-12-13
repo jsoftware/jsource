@@ -67,10 +67,6 @@ jobs:
      uses: actions/checkout@v2
 
    - name: Setup Environment (macOS)
-     uses: nttld/setup-ndk@v1
-     with:
-      ndk-version: r25b
-      local-cache: true
 
    - name: Build JE (macOS)
      env:
@@ -204,6 +200,31 @@ jobs:
      with:
        name: dist
        path: testrpi32.txt
+
+# android --------------------------------------------------------------
+ jeandroid:
+  name: JE (android)
+  runs-on: macos-12
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (android)
+     uses: nttld/setup-ndk@v1
+     with:
+      ndk-version: r25b
+      local-cache: true
+
+   - name: Build JE (android)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh android
+
+   - name: Release JE (android)
+
+   - name: Copy Test (android)
 
 # windows --------------------------------------------------------------
  jewin:

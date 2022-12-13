@@ -41,6 +41,7 @@ jobs:
       strip -S libjavx512.so
       strip -S libtsdll.so
       cd ..
+      ls -l j64
       zip -r l64.zip j64
 
    - name: Release JE (Linux)
@@ -83,6 +84,7 @@ jobs:
       strip -S libjavx512.dylib
       strip -S libtsdll.dylib
       cd ..
+      ls -l j64
       zip -r m64.zip j64
 
    - name: Release JE (macOS)
@@ -134,6 +136,7 @@ jobs:
    - name: Compress Files (Raspberry)
      run: |
       mv j64/testrpi64.txt .
+      ls -l j64
       zip -r rpi64.zip j64
 
    - name: Release JE (Raspberry)
@@ -184,6 +187,7 @@ jobs:
    - name: Compress Files (Raspberry32)
      run: |
       mv j32/testrpi32.txt .
+      ls -l j32
       zip -r rpi32.zip j32
 
    - name: Release JE (Raspberry32)

@@ -59,6 +59,29 @@ jobs:
        name: dist
        path: testlinux.txt
 
+# linux gcc ------------------------------------------------------------
+ jelinux-gcc:
+  name: JE (Linux gcc)
+  runs-on: ubuntu-20.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (Linux gcc)
+     run: script/install-lnx.sh
+
+   - name: Build JE (Linux gcc)
+     env:
+      CC: gcc
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh linux
+      script/testga.sh linux
+
+#   - name: Release JE (Linux gcc)
+
+#   - name: Copy Test (Linux gcc)
+
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)

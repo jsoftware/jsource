@@ -571,8 +571,8 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
-// obsolete  PREF2(jtcut2);  // this whole routine runs with left rank 1   scaf ranks should be wired here, not from self, in all uses of PREF[12]
- F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _.  Right rank always _
+// obsolete  PREF2(jtcut2);  // this whole routine runs with left rank 1
+ F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _.  Right rank always _.  For the monad, mark has rank 0
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
@@ -594,7 +594,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  if(unlikely(issldotdot)){
   // /..
   state|=STATEDYADKEY;  // remember that this is  /..
-  state|=(AT(w->mback.aarg)&FL)<<(STATEDYADKEYSMALLRANGEX-FLX);  // extract 'ai is smallrange' indicator
+  state|=(AT(w->mback.aarg)&FL)<<(STATEDYADKEYSMALLRANGEX-FLX);  // extract 'ai is smallrange' indicator, set in AM of a argument by /..
  }
  if(FAV(fs)->mr>=r){
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
@@ -609,7 +609,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  // Time to find the frets.  If we are acting on behalf of Key /. or /.., frets are already in the single buffer
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.[.]  Fall through if not
   pfx=(I)FAV(self)->localuse.lu1.gercut.cutn; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
-  if(a!=mark){  // dyadic forms
+  if(!(AT(a)&MARK)){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
     R CALL1(f1,w,fs);
    }
@@ -621,7 +621,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
    // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
    // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than hardwired 1
    if((((wt&(B01|LIT|INT|FL|C2T|C4T|SBT))-1)|(k-1)|(((BW==32&&wt&FL&&k==SZD)-1)&((k&-k&(2*SZI-1))-k)))>=0){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
-   }else{RZ(a=n?eps(w,take(num(pfx?1:-1),w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
+   }else{RZ(a=n?eps(w,take(num(pfx?1:-1),w)):mtv); ak=1; at=B01;}  // any other w, replace a by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
   }
   {I x; ASSERT(n==SETIC(a,x),EVLENGTH);}
 
@@ -964,7 +964,7 @@ skipspecial:;
 }    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
 
 
-static DF1(jtcut1){R cut2(mark,w,self);}  // scaf make multivalent
+static DF1(jtcut1){R cut2(mark,w,self);}
 
 // ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \.
 // also [: ; (<@(f/\));._2 _1 1 2)  when no rank loop required

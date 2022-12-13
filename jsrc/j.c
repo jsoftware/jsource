@@ -32,7 +32,7 @@ CREBLOCKATOMI(asgnlocsimp,ASGN+ASGNLOCAL+ASGNTONAME,CASGN)    // =. flagged as L
 CREBLOCKATOMI(asgngloname,ASGN+ASGNTONAME,CGASGN)    // =: flagged as NAME
 CREBLOCKATOMI(asgnforcegloname,ASGN+ASGNTONAME,CASGN)  // =. converted to global+NAME
 CREBLOCKATOMI(asgnforceglo,ASGN,CASGN)  // =. converted to global
-CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special value
+CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special value - must be an atom to avoid all rank loops
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character

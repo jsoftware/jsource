@@ -72,8 +72,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C ppn;              // print precision (field width for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task  could merge into .db or boxpos
-                     // 0x80 in glock is set during eformat_j_ to freeze the error line
-// 1 byte free
  union {  // this union is 4 bytes long on a 4-byte bdy
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -122,8 +120,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  C initnon0area[0];
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
- UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task to 3F3F   should be 2 bytes?
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
+ US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
  C recurstate;       // state of recursions through JDo    init for task to BUSY
 #define RECSTATEIDLE    0  // JE is inactive, waiting for work
 #define RECSTATEBUSY    1  // JE is running a call from JDo
@@ -143,7 +141,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATEACTIVE (1LL<<TASKSTATEACTIVEX)
 #define TASKSTATETERMINATEX 3  // thread has been signaled to terminate.  Changed under job lock.
 #define TASKSTATETERMINATE (1LL<<TASKSTATETERMINATEX)
+ C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
+// 1 byte free
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution
@@ -210,10 +210,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl7[0];
  // Area used for intertask communication of memory allocation
  A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory friendly than a straight chain?
- C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.  scaf should go in different cache line since repatq will get batted around quite a bit?
-// 7 bytes free
  I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
+ I filler7[1];
 // end of cacheline 7
 // stats I totalpops;
 // stats I nonnullpops;

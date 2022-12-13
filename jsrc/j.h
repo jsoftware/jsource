@@ -1415,7 +1415,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // When a block is incorporated it becomes not pristine, because extractions from the parent may compromise it and we don't want to have to go through recursively to find them
 #define INCORPNC(z) {if(unlikely((AFLAG(z)&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAGPRISTNO(z)} }  // use if you are immediately going to change AC, as with ras()
 #define INCORPNCUI(z) {if(unlikely((AFLAG(z)&AFUNINCORPABLE)!=0)){RZ((z)=realize(z))} else{AFLAGPRISTNO(z)} }  // use if OK to incorporate virtual (but never UNINCORPABLE)
-#define INCORP(z) {INCORPNC(z) ACIPNO(z); }
+#define INCORP(z) {INCORPNC(z) ACIPNO(z);}  // the normal one to use when inserting into a non-DIRECT
 #define INCORPNV(z) {AFLAGPRISTNO(z) ACIPNO(z);}  // use when z is known nonvirtual
 // same, but for nonassignable argument.  Must remember to check the result for 0
 #define INCORPNA(z) incorp(z)

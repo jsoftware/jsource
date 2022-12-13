@@ -767,8 +767,9 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
   }
   if(firstcol>=nc)break;  // exit if all columns have been processed
   I colx=ndx0[firstcol];  // get next column# to work on
+  I an=axv[colx][1];  // number of sparse atoms in each row
   ++firstcol;  // update for next time
-// loop
+// loop until we don't need to rerun at higher precision
   {  // this is a loop: we branch back to retry
    D *mv0lo;
    if(1)mv0lo=forcemv0lo; else{retryinquad: mv0lo=mv0+n*n;}
@@ -826,7 +827,6 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
      if(limitrow==-4){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI);}  // if quad-prec onecol, fetch extension part too
     }else{
      // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows
-     I an=axv[colx][1];  // number of sparse atoms in each row   scaf move out of loop
      D *vv=avv0+axv[colx][0];  // pointer to values for this section of A
      I *iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
      if(likely(mv0lo==0)){

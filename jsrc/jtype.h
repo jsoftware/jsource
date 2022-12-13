@@ -380,7 +380,7 @@ typedef I SI;
 #define NAMEX 21
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
 #define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
-// NOTE: SYMB, and MARK are used as flags in names, see below
+// NOTE: SYMB and MARK are used as flags in names, see below, and CONW in some type args
 #define MARKX 22  // don't try to move this! it ripples through and breaks JTflags
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
@@ -416,6 +416,9 @@ typedef I SI;
 #define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
+
+// Upper bits of a type can be used as flags, since we use CTTZ(AT) to indicate what the type is.  Usually we avoid these in NOUN types to
+// make testing easier; but see BOXMULTIASSIGN which is never an argument
 
 // ** ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCALX      SYMBX     // set for =. (but not when assigning to locative)    aliases with SYMB

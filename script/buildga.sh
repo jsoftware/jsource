@@ -56,6 +56,12 @@ echo "#define jplatform \"$1\"" >> jsrc/jversion.h
 echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
 echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 
+if [ "x$MAKEFLAGS" = x'' ] ; then
+if [ "$1" == "linux" ] || [ "$1" == "raspberry" ] ; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+export MAKEFLAGS=-j$par
+fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+
 if [ "$1" == "android" ]; then
 export _DEBUG=0
 cd android/jni
@@ -68,12 +74,6 @@ ndk-build
 cd ..
 exit 0
 fi
-
-if [ "x$MAKEFLAGS" = x'' ] ; then
-if [ "$1" == "linux" ] || [ "$1" == "raspberry" ] ; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
-export MAKEFLAGS=-j$par
-fi
-echo "MAKEFLAGS=$MAKEFLAGS"
 
 cd make2
 

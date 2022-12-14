@@ -13,7 +13,7 @@ TASK=: <: 1 { 8 T. ''  NB. max # worker threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. TASK-1 T. ''),0
 
 STRIDE=: 3000                 NB. stride between tasks
-NX=: 2000
+NX=: QKTEST{2000 500
 
 18!:55 :: 1: "0 -.&' '&.> <"1 'loc',~"1 'f',"1 ": ,. i.TASK*STRIDE   NB. clear all locales
 

@@ -33,8 +33,8 @@ b=: 20 64 ?@$ 0
   assert.  (a +/@(*"1 _) b) -: a X b
 end. 1 }} ''
 
-a=: 1024 1024 ?@$ 0
-b=: 1024 1024 ?@$ 0
+a=: (-:^:QKTEST 1024 1024) ?@$ 0
+b=: (-:^:QKTEST 1024 1024) ?@$ 0
 c=: a +/@(*"1 _)t.'' b    NB.test against strawman approach
 d=: a {{ (<x X y) , (x XT y) , (<x X y) }}t.'' b NB. create user task while queue has internal tasks, and vice versa
 e=: a (XT , XT , XT , XT) b

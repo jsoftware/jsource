@@ -169,7 +169,7 @@ wthr N
 N = 1 T.''
 wthr N
 
-allowlongjobs =. 0 NB. some of these too long on Windows
+allowlongjobs =. -.QKTEST+.IFWIN NB. some of these too long on Windows
 
 1 1:`f1@.allowlongjobs 45          NB. queued job stress test
 

@@ -6,7 +6,7 @@ delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 
 {{
-N=: 3 <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
+N=: (QKTEST{3 2) <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
 for. i. N do.
 
 X=: +/ . *
@@ -33,8 +33,8 @@ b=: 20 64 ?@$ 0
   assert.  (a +/@(*"1 _) b) -: a X b
 end. 1 }} ''
 
-a=: (-:^:QKTEST 1024 1024) ?@$ 0
-b=: (-:^:QKTEST 1024 1024) ?@$ 0
+a=: (QKTEST{::1024 1024;256 256) ?@$ 0
+b=: (QKTEST{::1024 1024;256 256) ?@$ 0
 c=: a +/@(*"1 _)t.'' b    NB.test against strawman approach
 d=: a {{ (<x X y) , (x XT y) , (<x X y) }}t.'' b NB. create user task while queue has internal tasks, and vice versa
 e=: a (XT , XT , XT , XT) b

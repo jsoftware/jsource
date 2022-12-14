@@ -42,16 +42,18 @@ static int err_write(void *data, uintptr_t pc, const char *file, int line, const
  file = file ? file : "?";
  while(!strncmp(file, "../", 3)) file += 3; // strip leading '../'.  Don't strip leading 'jsrc/' to avoid ambiguity with source files with other origins.
  snprintf(buf, sizeof(buf), "%0*lx: %s:%d:\t%s\n", BW==64?16:8, (unsigned long)pc, file, line, function ? function : "?");
- ssize_t r=write(STDERR_FILENO, buf, strlen(buf));
+ (void)!write(STDERR_FILENO, buf, strlen(buf));
  R 0;}
 static void sigsegv(int k){
  //todo should say to report to the beta forums for beta builds
  const char msg[] = "JE has crashed, likely due to an internal bug.  Please report the code which caused the crash, as well as the following printout, to the J programming forum.\n";
  // write is async-signal safe; fwrite&co are not, but still do this, just to be safe
  // similarly, can't fflush(stderr) first; too bad
- ssize_t r=write(STDERR_FILENO, msg, sizeof(msg)-1);
+ (void)!write(STDERR_FILENO, msg, sizeof(msg)-1);
  struct backtrace_state *state = backtrace_create_state(NULL, 1, NULL, NULL);
  backtrace_full(state, 0, err_write, NULL, NULL);
+ const char line[] = "-----------------------------------------------------------------------------\n";
+ (void)!write(STDERR_FILENO, line, 78);
  fsync(STDERR_FILENO);
  //abort rather than exit to ensure a core dump is still generated
  abort();}

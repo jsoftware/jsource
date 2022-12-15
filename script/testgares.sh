@@ -7,8 +7,8 @@ T=tests.txt
 
 f() { if [ -e $1 ]; then cat $1 >> $T; fi }
 
-f "testrpi32.txt"
-f "testrpi64.txt"
+# f "testrpi32.txt"
+# f "testrpi64.txt"
 f "testlinux.txt"
-f "testdarwin.txt"
-f "testwin.txt"
+# f "testdarwin.txt"
+# f "testwin.txt"

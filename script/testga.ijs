@@ -27,10 +27,7 @@ NB. RUN1^:IFWIN 'g7x6'
 NB. exit^:IFWIN 1
 
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
-RES=: RUN4 (<testpath),each 'g0.ijs';'g000.ijs';'g222.ijs'
-20 RUN2 'g0'
-20 RUN2 'g000'
-2!:10[4   NB. test libbacktrace
+RES=: RUN4 (<testpath),each 'g0.ijs';'g000.ijs'
 
 3 : 0''
 msg=. 9!:14''

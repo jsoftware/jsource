@@ -99,15 +99,6 @@ j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
 
-if [ "$1" != "raspberry" ]; then
-./clean.sh
-j64x=j64avx USE_PYXES=1 ./build_libj.sh
-./clean.sh
-j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
-./clean.sh
-j64x=j64avx512 USE_PYXES=1 ./build_libj.sh
-fi
-
 cd ..
 if [ $m64 -eq 1 ]; then
 cp bin/$1/j64/* j64
@@ -119,11 +110,6 @@ lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
 lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 fi
-if [ "$1" != "raspberry" ]; then
-cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
-cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
-cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
-fi
 if [ $m64 -eq 1 ]; then
 chmod 644 j64/*
 chmod 755 j64/jconsole
@@ -132,22 +118,3 @@ chmod 644 j32/*
 chmod 755 j32/jconsole
 fi
 
-if [ "$1" == "linux" ]; then
-mkdir -p j32
-cp bin/profile.ijs j32
-cp bin/$1/j32/* j32
-cp mpir/linux/i386/libgmp.so j32
-chmod 644 j32/*
-chmod 755 j32/jconsole
-fi
-
-if [ "$1" == "darwin" ]; then
-cd j64
-dsymutil jconsole 2> /dev/null || true
-dsymutil libj.dylib 2> /dev/null || true
-dsymutil libjavx.dylib 2> /dev/null || true
-dsymutil libjavx2.dylib 2> /dev/null || true
-dsymutil libjavx512.dylib 2> /dev/null || true
-dsymutil libtsdll.dylib 2> /dev/null || true
-cd ..
-fi

@@ -32,11 +32,3 @@ else
 ls -l j32
 j32/jconsole -lib libj.$ext testga.ijs
 fi
-if [ $1 != "raspberry" ]; then
-j64/jconsole -lib libjavx.$ext testga.ijs
-fi
-
-if [ $1 == "linux" ]; then
-  j64/jconsole -lib libjavx2.$ext testga.ijs
-  j32/jconsole -lib libj.$ext testga.ijs
-fi

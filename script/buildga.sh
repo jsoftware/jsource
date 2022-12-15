@@ -141,3 +141,13 @@ chmod 644 j32/*
 chmod 755 j32/jconsole
 fi
 
+if [ "$1" == "darwin" ]; then
+cd j64
+dsymutil jconsole || true
+dsymutil libj.dylib || true
+dsymutil libjavx.dylib || true
+dsymutil libjavx2.dylib || true
+dsymutil libjavx512.dylib || true
+dsymutil libtsdll.dylib || true
+cd ..
+fi

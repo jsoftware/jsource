@@ -106,6 +106,12 @@ jobs:
       strip -S libjavx2.dylib
       strip -S libjavx512.dylib
       strip -S libtsdll.dylib
+      rm -rf jconsole.dSYM
+      rm -rf libj.dylib.dSYM
+      rm -rf libjavx.dylib.dSYM
+      rm -rf libjavx2.dylib.dSYM
+      rm -rf libjavx512.dylib.dSYM
+      rm -rf libtsdll.dylib.dSYM
       cd ..
       ls -l j64
       zip -r m64.zip j64

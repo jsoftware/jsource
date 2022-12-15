@@ -143,11 +143,11 @@ fi
 
 if [ "$1" == "darwin" ]; then
 cd j64
-dsymutil jconsole || true
-dsymutil libj.dylib || true
-dsymutil libjavx.dylib || true
-dsymutil libjavx2.dylib || true
-dsymutil libjavx512.dylib || true
-dsymutil libtsdll.dylib || true
+dsymutil jconsole 2> /dev/null || true
+dsymutil libj.dylib 2> /dev/null || true
+dsymutil libjavx.dylib 2> /dev/null || true
+dsymutil libjavx2.dylib 2> /dev/null || true
+dsymutil libjavx512.dylib 2> /dev/null || true
+dsymutil libtsdll.dylib 2> /dev/null || true
 cd ..
 fi

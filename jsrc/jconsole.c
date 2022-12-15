@@ -44,6 +44,11 @@ static int err_write(void *data, uintptr_t pc, const char *file, int line, const
  snprintf(buf, sizeof(buf), "%0*lx: %s:%d:\t%s\n", BW==64?16:8, (unsigned long)pc, file, line, function ? function : "?");
  (void)!write(STDERR_FILENO, buf, strlen(buf));
  R 0;}
+static void err_error(void *data, const char *msg, int errnum) {
+ char buf[512];
+ snprintf(buf, sizeof(buf), "Could not generate stack trace: %s (%d)\n", msg, errnum);
+ (void)!write(STDERR_FILENO, buf, strlen(buf));
+}
 static void sigsegv(int k){
  //todo should say to report to the beta forums for beta builds
  const char msg[] = "JE has crashed, likely due to an internal bug.  Please report the code which caused the crash, as well as the following printout, to the J programming forum.\n";
@@ -51,7 +56,7 @@ static void sigsegv(int k){
  // similarly, can't fflush(stderr) first; too bad
  (void)!write(STDERR_FILENO, msg, sizeof(msg)-1);
  struct backtrace_state *state = backtrace_create_state(NULL, 1, NULL, NULL);
- if(state)backtrace_full(state, 0, err_write, NULL, NULL);
+ if(state)backtrace_full(state, 0, err_write, err_error, NULL);
  const char line[] = "-----------------------------------------------------------------------------\n";
  (void)!write(STDERR_FILENO, line, 78);
  fsync(STDERR_FILENO);

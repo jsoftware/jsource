@@ -82,11 +82,6 @@ if [ "$1" == "darwin" ]; then
 j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
 j64x=j64arm ./build_tsdll.sh
 j64x=j64arm USE_PYXES=1 ./build_libj.sh
-elif [ "$1" == "linux" ]; then
-./clean.sh
-j64x=j32 USE_PYXES=0 ./build_jconsole.sh
-j64x=j32 ./build_tsdll.sh
-j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
 if [ $m64 -eq 1 ]; then
 ./clean.sh

@@ -211,7 +211,7 @@ RUN1=: 13 : 'ex02`(0!:2)@.(*@".@''Debug'') <testpath,y,''.ijs'''
 RESUB1=: 3 : 'y[echo >y'
 RESUB2=: (13 : '-.ex03 RESUB1 y')"0
 RESUB4=: (13 : '-.ex04 RESUB1 y')"0
-RECHO=: 13 : '+/ (RESUB2`RESUB4@.GITHUBCI) y'
+RECHO=: 3 : '+/ (RESUB2`RESUB4@.GITHUBCI) y'
 
 NB. bill extensions
 

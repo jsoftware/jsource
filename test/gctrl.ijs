@@ -120,6 +120,8 @@ Casey's Tool Works
 
 'control error' -: ". etx '{{ while. do. elseif. do.  end. }}'
 
+'noun result was required' -: {{ {{ }} }} etx ''
+
 NB. Nameref caching  -------------------------------------------------------------------------------
 NB. names are cached
 4!:55 ;:'vb__ vb_z_'

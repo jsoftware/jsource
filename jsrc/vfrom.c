@@ -861,6 +861,45 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     }  // end of loop to create NPAR values
     // process the NPAR generated values
     if(bv!=0){
+#if 0
+     // DIP mode, looking for pivots.  process the values in parallel
+     __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // the bk values we are working on
+     // see if any of the new values is limiting: b/c < min SPR, c>ColThresh, bk>bkthresh
+     __m256d ratios=_mm256_fmsub_pd(minspr,dotproducthi,bk4);  // minspr*c-b: sign set if this is NOT a new min SPR
+     __m256d coverthresh=_mm256_cmp_pd(dotproducthi,thresh,_CMP_GT_OQ);  // set to ~0 if c>ColThresh - never if endmask 0
+     __m256d sprvalid=_mm256_and_pd(coverthresh,_mm256_cmp_pd(bk4,bkthresh,_CMP_GT_OQ));  // compare sets to ~0 if b>bthresh - never if endmask is 0   set to ~0 if c>thresh & b>thresh, i. e. SPR is valid
+     if(unlikely((!_mm256_testc_pd(_mm256_cmp_pd(bk4,bkthresh,_CMP_GT_OQ),coverthresh)))goto abortcol;  // CF is 0 if any sign of ~a&b is 1 => ~b>bthresh & c>ColThresh.  Positive c and b<=0 means we cannot pivot in this column
+     if(_mm256_testc_pd(ratios,sprvalid)){  // 
+          // CF is 1 if ~a&b signs all 0 => ~(~new min)&(c good&b good) all 0 => no place where new min & c good & b good
+      // not limiting (normal).  If we haven't ruled out that the column is unbounded, check for c>thresh (and therefore b>thresh), which rules out unbounded
+      if(limitrow==-2)limitrow=_mm256_testz_pd(coverthresh,coverthresh)?limitrow:-1;  // if any c>thresh, zf is 0; set that we are bounded.  This branch will predict correctly
+     }else{
+      // at least one new value is limiting.  Find the SPRs, and the location of the smallest SPR.  Remember the position and value of the smallest SPR found
+      __m256d sprs=_mm256_blendv_pd(infinity,_mm256_div_pd(bk4,dotproducthi),sprvalid);  // find SPR; if not valid use high value
+      // the reciprocal, and the following analysis, takes a long time to run.  Make sure there are no dependencies.  The block of code
+      // issued here will complete while the next blocks of dotproduct is being computed.
+      // find the smallest SPR.  In case of ties take the LAST
+      minspr=_mm256_cmp_pd(sprs,_mm256_permute_pd(sprs,0b0000),_CMP_GT_OQ); I lomask=movemask(minspr);  // bit 1 of lomask set if sprs[1]>sprs[0]; bit 3 set if sprd[3]>sprs[2] bit 0 2 = 0
+      sprs=_mm256_permutevar_pd(sprs,minspr);  // sprs = x  min of 0/1   x   min of 2/3
+      minspr=_mm256_permute4x64_pd(sprs,0b11101100);    // minspr = x min of 2/3   x   x   but xs match sprs
+      __m256d s23lts01=_mm256_cmp_pd(minspr,sprs,_CMP_GT_OQ); I himask=movemask(s23lts01);  // bit 1 of himask set if max23 > max01   bits 023=0
+      sprs=_mm256_blendvar_pd(minspr,sprs,s23lts01);  // sprs[1] = overall min
+      minspr=_mm256_permute4x64_pd(sprs,0b01010101);    // copy new min spr into all lanes
+      himask^=3; himask&=(~lomask>>himask);  // index of last of the smallest SPRs.  mask are active low h0 and l0l; change to H1 and 1L1L; shift and combine to HL
+      limitrow=(bvgrd-bvgrd0)+himask;  // the index in bvgrd (not bk) of the limitrow
+      if(firstsprrow<0){  // have we noted the first SPR in the column?  This branch will predict correctly
+       // remember where the FIRST SPR in the column is
+       firstsprrow=(bvgrd-bvgrd0)+CTTZI(movemask(sprvalid));  // index of first valid SPR
+      }
+      // remember if the pivot is dangerous
+      limitrow|=((movemask(_mm256_cmp_pd(dotproducthi,dangerthresh,_CMP_LT_OQ))>>himask)&1)<<32;  // set bit 32 in limitrow if pivot is dangerous
+      // check for cutoff
+      if(unlikely(((_mm256_testc_pd(_mm256_fmsub_pd(minspr,dotproducthi,bk4),sprvalid))){  // Frow*b/c > minimp (Frow and minimp negative) => b/c < minimp/Frow = minimpspr => b < minimp*c.  Calc minimp*c-b: sign set if this value cuts off
+       // one of the values cuts off.  Abort this column, keeping the SPR and position.
+       if(likely((I4)limitrow!=(I4)prirow))goto abortcol;   //  EXCEPTION: if the new limiting row is virtual, don't cut off
+      }
+     }
+#endif
      // this table gives the values to use in permutevar32 to push all the nonzeros to the bottom of the 256 bytes, with 0s at the top
      // the index is the mask of zeros
      static __attribute__((aligned(CACHELINESIZE))) UI4 permvals[16][8] ={

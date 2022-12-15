@@ -17,6 +17,8 @@ extern int numberOfCores;
 #define strcasecmp _stricmp
 #endif
 
+#include <signal.h>
+
 F1(jtassertq){ASSERTMTV(w); R scb(JT(jt,assert));}
 
 F1(jtasserts){B b; RE(b=b0(w)); JT(jt,assert)=b; R mtm;}
@@ -747,3 +749,9 @@ F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
  R mtv;
 }
 
+// 2!:10   raise a signal. _1 calls SEGFAULT
+F1(jtgsignal){I m;
+ RE(m=i0(vib(w)));
+ if(-1==m)SEGFAULT;
+ R sc(raise(m));
+}

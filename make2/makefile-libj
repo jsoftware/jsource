@@ -180,7 +180,7 @@ OBJS=  \
 	$(CC) $(GASM_FLAGS) -c -o $@ $<
 
 %.o: %.asm
-	nasm -g -felf64 -o $@ $<
+	nasm $(NASM_FLAGS) -felf64 -o $@ $<
 
 $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(OBJS_AESNI) : CFLAGS_AESNI := -maes

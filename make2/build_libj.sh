@@ -10,9 +10,12 @@ if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
 	# OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
-  3) OPTLEVEL=" -O2 -g ";;
-  2) OPTLEVEL=" -O0 -ggdb ";;
+  3) OPTLEVEL=" -O2 -g "
+   NASM_FLAGS="-g";;
+  2) OPTLEVEL=" -O0 -ggdb "
+   NASM_FLAGS="-g";;
   1) OPTLEVEL=" -O2 -g "
+   NASM_FLAGS="-g"
    jplatform64=$(./jplatform64.sh)-debug;;
   *) OPTLEVEL=" -O2 ";;
  esac
@@ -582,7 +585,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform64
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then
  if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi

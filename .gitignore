@@ -8,6 +8,9 @@ jsrc/jversion.h
 *.so
 !asm/*.o
 
+# mpir
+!mpir/**/libgmp.so
+
 # temp scripts used for debugging
 *makevs/jdll/*.ijs
 foo.ijs
@@ -43,6 +46,7 @@ test*.txt
 
 # mac
 .DS_Store
+*.dSYM/
 
 #android
 android/libs/
@@ -65,12 +69,6 @@ bin/
 !pthreads4w/bin/
 !pthreads4w/bin/pthreadVC3.dll
 make2/obj/
-jlibrary/bin/
-jlibrary/bin32/
-jlibrary/system/
-jlibrary/system/config/
-jlibrary/system/main/
-jlibrary/tools/
 
 #github workflow action folders
 j64/
@@ -82,6 +80,13 @@ addons/
 jlibrary/addons
 !jlibrary/addons/data/jfiles
 !jlibrary/addons/data/jmf
+!jlibrary/addons/dev/eformat
 !jlibrary/addons/dev/fold
 !jlibrary/addons/dev/lu
 
+# other jlibrary
+jlibrary/bin32/
+!jlibrary/system/
+!jlibrary/system/config/
+!jlibrary/tools/
+!jlibrary/bin

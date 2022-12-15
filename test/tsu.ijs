@@ -65,6 +65,7 @@ NB. 0!:x directly, because then all the calls in RUN (after a file that does coc
 ex01=:0!:1
 ex02=:0!:2
 ex03=:0!:3
+ex04=:0!:4
 
 etx      =: ::(<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)  NB. error message from error number
 ex       =: ". etx
@@ -74,12 +75,12 @@ eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME y[RUNTIME=:6!:1'' }}
+prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0
 10 s: GLOBALSYMBOL
 empty 0&T.^:(0=1&T.) ::1:''
-1: echo^:ECHOFILENAME 'time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
+1: echo^:ECHOFILENAME RUNFILE,'  time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
 )
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 
@@ -202,13 +203,15 @@ NB. ebi extensions
 RSET=: 4 : '(x)=: y'
 RBAD=: 3 : '>_4}.each(#testpath)}.each(-.RB)#RF'
 RUN=: RBAD@('RB'&RSET)@(ex03`(0!:3)@.(*@".@'Debug'))@('RF'&RSET)
+RUN4=: RBAD@('RB'&RSET)@(ex04`(0!:4)@.(*@".@'Debug'))@('RF'&RSET)
 RUND=: RBAD@('RB'&RSET)@(ex02`(0!:2)@.(*@".@'Debug'))@('RF'&RSET)  NB. Run w/display
 
 RUN1=: 13 : 'ex02`(0!:2)@.(*@".@''Debug'') <testpath,y,''.ijs'''
 
 RESUB1=: 3 : 'y[echo >y'
 RESUB2=: (13 : '-.ex03 RESUB1 y')"0
-RECHO=: 13 : '+/ RESUB2 y'
+RESUB4=: (13 : '-.ex04 RESUB1 y')"0
+RECHO=: 3 : '+/ (RESUB2`RESUB4@.GITHUBCI) y'
 
 NB. bill extensions
 
@@ -217,6 +220,7 @@ ECHOFILENAME=: 0   NB. echo file name
 PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
+RUNFILE=: ''       NB. dummy
 QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
 
 RUND1=: 4 : 0

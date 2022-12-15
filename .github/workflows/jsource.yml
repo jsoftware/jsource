@@ -1,8 +1,5 @@
 name: JE
 
-# on:
-# - push
-
 on:
  push:
   branches:
@@ -14,160 +11,34 @@ on:
 #  paths:
 #   - 'version.txt'
 
+# if: ${{ false }}
+
 jobs:
- jengine:
-  name: JE
-  runs-on: ${{ matrix.os }}
 
-  strategy:
-   matrix:
-    os: [ubuntu-22.04, ubuntu-20.04, ubuntu-latest, macos-12, windows-2022]
-    #os: [ubuntu-22.04, macos-12, windows-2022]
-    #os: [ubuntu-20.04, ubuntu-latest]
-    #os: [ubuntu-latest]
-    #os: [ubuntu-22.04]
-    #os: [macos-12]
-    #os: [windows-2022]
-
+# linux gcc ------------------------------------------------------------
+ jelinux-gcc:
+  name: JE (Linux gcc)
+  runs-on: ubuntu-18.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
    - name: Setup Environment (Linux)
-     if: matrix.os == 'ubuntu-22.04'
-     run: |
-      script/install-lnx.sh
-#      sudo apt-get install -y libedit-dev libncursesw5-dev
-
-   - name: Setup Environment, Build JE, Test JE (Raspberry)
-     if: matrix.os == 'ubuntu-20.04'
-     uses: pguyot/arm-runner-action@v2
-     with:
-      cpu: cortex-a53
-      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-      base_image: raspios_lite_arm64:latest
-      image_additional_mb: 1024
-      copy_artifact_path: j64
-      commands: |
-       apt-get install --no-install-recommends -y clang
-       export CC=clang
-       export USE_SLEEF=1
-       script/buildga.sh raspberry
-       script/testga.sh raspberry
-       cp testrpi64.txt j64/.
-       find j64 -type d -exec chmod a+rwx {} \;
-       find j64 -type f -exec chmod a+rw {} \;
-
-   - name: Setup Environment, Build JE, Test JE (Raspberry32)
-     if: matrix.os == 'ubuntu-latest'
-     uses: pguyot/arm-runner-action@v2
-     with:
-      cpu: arm1176
-      cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspbian_lite:2020-02-13
-      image_additional_mb: 1024
-      copy_artifact_path: j32
-      commands: |
-       export CC=gcc
-       export USE_SLEEF=0
-       script/buildga.sh raspberry
-       script/testga.sh raspberry
-       cp testrpi32.txt j32/.
-       find j32 -type d -exec chmod a+rwx {} \;
-       find j32 -type f -exec chmod a+rw {} \;
-
-   - name: Setup Environment (macOS)
-     if: matrix.os == 'macos-12'
-     uses: nttld/setup-ndk@v1
-     with:
-      ndk-version: r25b
-      local-cache: true
-
-   - name: Setup Environment (Windows)
-     if: matrix.os == 'windows-2022'
-     uses: ilammy/msvc-dev-cmd@v1
-     with:
-      arch: amd64
+     run: script/install-lnx.sh
 
    - name: Build JE (Linux)
-     if: matrix.os == 'ubuntu-22.04'
      env:
-      CC: clang
+      CC: gcc
       USE_SLEEF: 1
-     run: script/buildga.sh linux
-
-   - name: Build JE (macOS)
-     if: matrix.os == 'macos-12'
-     env:
-      CC: clang
-      USE_SLEEF: 1
-     run: script/buildga.sh darwin
-
-   - name: Build JE (Windows)
-     if: matrix.os == 'windows-2022'
-     shell: cmd
-     run: script\buildga.cmd
-
-   - name: Test JE (Linux)
-     if: matrix.os == 'ubuntu-22.04'
-     run: script/testga.sh linux
-
-   - name: Test JE (macOS)
-     if: matrix.os == 'macos-12'
-     run: script/testga.sh darwin
-
-   - name: Test JE (Windows)
-     if: matrix.os == 'windows-2022'
-     shell: cmd
-     run: script\testga.cmd
-
-   - name: Compress Files (Linux)
-     if: matrix.os == 'ubuntu-22.04'
-     run: zip -r l64.zip j64
-
-   - name: Compress Files (Raspberry)
-     if: matrix.os == 'ubuntu-20.04'
      run: |
-      mv j64/testrpi64.txt .
-      zip -r rpi64.zip j64
-
-   - name: Compress Files (Raspberry32)
-     if: matrix.os == 'ubuntu-latest'
-     run: |
-      mv j32/testrpi32.txt .
-      zip -r rpi32.zip j32
-
-   - name: Compress Files (macOS)
-     if: matrix.os == 'macos-12'
-     run: zip -r m64.zip j64
-
-   - name: Compress Files (Windows)
-     if: matrix.os == 'windows-2022'
-     shell: pwsh
-     run: Compress-Archive j64 w64.zip
-
-   - name: Release JE (Raspberry)
-     if: matrix.os == 'ubuntu-20.04'
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Release JE (Raspberry32)
-     if: matrix.os == 'ubuntu-latest'
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi32.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
+      script/buildga.sh linux
+      script/testga.sh linux
+      cd j64
+      cd ..
+      ls -l j64
+      zip -r l64.zip j64
 
    - name: Release JE (Linux)
-     if: matrix.os == 'ubuntu-22.04'
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -176,75 +47,18 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
-   - name: Release JE (version)
-     if: matrix.os == 'ubuntu-22.04'
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "version.txt"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Release JE (macOS)
-     if: matrix.os == 'macos-12'
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "m64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Release JE (Windows)
-     if: matrix.os == 'windows-2022'
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "w64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Raspberry)
-     if: matrix.os == 'ubuntu-20.04'
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testrpi64.txt
-
-   - name: Copy Test (Raspberry32)
-     if: matrix.os == 'ubuntu-latest'
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testrpi32.txt
-
    - name: Copy Test (Linux)
-     if: matrix.os == 'ubuntu-22.04'
      uses: actions/upload-artifact@v2
      with:
        name: dist
        path: testlinux.txt
 
-   - name: Copy Test (macOS)
-     if: matrix.os == 'macos-12'
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testdarwin.txt
 
-   - name: Copy Test (Windows)
-     if: matrix.os == 'windows-2022'
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testwin.txt
-
+# get tests ------------------------------------------------------------
  tests:
   name: Test Results
-  runs-on: ubuntu-22.04
-  needs: jengine
+  runs-on: ubuntu-20.04
+  needs: [jelinux-gcc]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
@@ -252,7 +66,7 @@ jobs:
    - name: Get Test Results
      uses: actions/download-artifact@v2
      with:
-       name: dist
+      name: dist
 
    - name: Merge Test Results
      run: script/testgares.sh

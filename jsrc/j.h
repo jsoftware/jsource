@@ -200,6 +200,30 @@ typedef double float64x2_t __attribute__ ((vector_size (16)));
 #undef VOIDARG
 #define VOIDARG
 
+#if C_AVX512
+#if (!defined(__clang__)) && defined(__GNUC__) && __GNUC__ < 10
+static __inline __m512i
+__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
+_mm512_loadu_epi64 (void const *__P)
+{
+  struct __loadu_epi64 {
+    __m512i_u __v;
+  } __attribute__((__packed__, __may_alias__));
+  return ((const struct __loadu_epi64*)__P)->__v;
+}
+
+static __inline void
+__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
+_mm512_storeu_epi64 (void *__P, __m512i __A)
+{
+  struct __storeu_epi64 {
+    __m512i_u __v;
+  } __attribute__((__packed__, __may_alias__));
+  ((struct __storeu_epi64*)__P)->__v = __A;
+}
+#endif
+#endif
+
 #if SLEEF
 #include "../sleef/include/sleef.h"
 #endif
@@ -235,6 +259,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #endif
 
 #if (SYS & SYS_UNIX - SYS_SGI)
+#include <unistd.h>
 #include <memory.h>
 #include <sys/types.h>
 #endif
@@ -1976,7 +2001,17 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (!(AT(retfff)&SPARSE) && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; }
 #define SBSV(x)         (CAV1(JT(jt,sbstrings))+(I)(x))
 #define SBUV(x)         (SBUV4(JT(jt,sbu))+(I)(x))
-#define SEGFAULT        (__builtin_trap())
+// #define SEGFAULT        (__builtin_trap())
+#ifdef _WIN32
+#define FSYNC_STDERR
+#else
+#define FSYNC_STDERR fsync(STDERR_FILENO);
+#endif
+#define SEGFAULT        do{ \
+                         fprintf(stderr,"trap : file %s line %d\n",__FILE__,__LINE__); \
+                         FSYNC_STDERR; \
+                         (void)__builtin_trap(); \
+                        }while(0)
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535
 #define SMIN            (-65536)

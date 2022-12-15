@@ -70,11 +70,13 @@ EVEMPTYT
 EVEMPTYDD
 )
 
-NB.x is (1 if all of main name always needed),(max # characters allowed),(parenthesize w if compound); y is AR
+NB.x is (1 if all of main name always needed),(max # characters allowed),(par); y is AR
+NB. par is:0=no parens needed; 1=parens needed for train but not AC exec; parens needed for train and AC
 NB. result is string to display, or ... if string too long
 eflinAR_j_ =: {{
 NB. parse the AR, recursively
 if. y -: 0 0 do. '...' return. end.  NB. If no room for formatting, stop looking
+posy =. 4!:0 <'y'   NB. part of speech of y
 'frc max par' =. x
 aro =. >y
 if. 2 = 3!:0 aro do.   NB. primitive or named entity
@@ -95,16 +97,16 @@ else.
     NB. these cases are not so important because they don't give verb-execution errors
     stgs=.0$a:  NB. list of strings
     for_i. aro1 do.
-      stg =. (0 ,~ 0., 0. >. max%(#aro1)-i_index) eflinAR i  NB. collect strings for each AR
+      stg =. ((i_index<<:#aro1) ,~ 0., 0. >. max%(#aro1)-i_index) eflinAR i  NB. collect strings for each AR; paren trains except the right
       max =. max - #stg [ stgs =. stgs , <stg  NB. don't allow total size to be exceeded
     end.
     NB. We have strings for each component.  If nothing has a display, return '...' unless this is top-level
     if. (frc=0) *. *./ stgs = <'...' do. '...' return. end.
-    (')' ,~ '('&,)^:par ;:^:_1 stgs return. 
+    (')' ,~ '('&,)^:(par~:0) ;:^:_1 stgs return. 
   case. do.  NB. default: executed A/C
     stgs =. <stg=. (0 >. (<:frc) , max , 1) eflinAR {. aro   NB. get (stg) for AC
-    stgs =. stgs ,~ <stg =. (0 >. 0 , 0 ,~  max =. max -#stg) eflinAR {. aro1
-    if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , 1 ,~  max =. max -#stg) eflinAR {: aro1 end.
+    stgs =. stgs ,~ <stg =. (0 >. 0 , (posy{0 1 1 0) ,~  max =. max -#stg) eflinAR {. aro1
+    if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , (posy{0 0 2 0) ,~  max =. max -#stg) eflinAR {: aro1 end.
     if. (frc=0) *. *./ stgs = <'...' do. '...' return. end.
     NB. string not too long; leave spaces where needed (before letter, digit or inflection)
     NB. leading space needed before inflection always, or num/letter preceded by num/letter
@@ -112,14 +114,14 @@ else.
     NB. trailing space after num/letter
     bpad =. i.&1@:(e.&>&('.:';'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'))"0 {:@> stgs
     npad =. 0 (0}) 2 > fpad+|.!._1 bpad
-    (')' ,~ '('&,)^:par ; npad ((' ' #~ [) , ])&.> stgs return. 
+    (')' ,~ '('&,)^:(par=2) ; npad ((' ' #~ [) , ])&.> stgs return. 
   end.
 end.
 }}
 
 
 NB. y is AR of self
-NB. x is the IRS n from "n, if any (63 63 if no IRS)
+NB. x is the IRS n from "n, if any (63 63 if no IRS))
 NB. Result is string form, limited to 30 characters
 eflinearself_j_ =: {{
 '' eflinearself y

@@ -69,6 +69,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(0,111): R CDERIV(CIBEAM, jtscm11,      jtscm112,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,2):   R CDERIV(CIBEAM, jtsct1,       jtsct2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,3):   R CDERIV(CIBEAM, jtscz1,       jtscz2,       VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,4):   R CDERIV(CIBEAM, jtscy1,       jtscy2,       VASGSAFE,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 1:
@@ -116,6 +117,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(2,7):   R CDERIV(CIBEAM, jtjgetx,      0,            VASGSAFE,1,   RMAX,RMAX);
   case XC(2,8):   R CDERIV(CIBEAM, jtcerrno,     0,            VASGSAFE,RMAX,RMAX,RMAX);
 // (2,9) reserved for messages from host OS
+  case XC(2,10):  R CDERIV(CIBEAM, jtgsignal,    0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(2,55):  R CDERIV(CIBEAM,jtjoff,0,VASGSAFE,RMAX,0,0);
   default: ASSERT(0,EVDOMAIN); break;
   } break;

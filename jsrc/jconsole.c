@@ -51,7 +51,7 @@ static void sigsegv(int k){
  // similarly, can't fflush(stderr) first; too bad
  (void)!write(STDERR_FILENO, msg, sizeof(msg)-1);
  struct backtrace_state *state = backtrace_create_state(NULL, 1, NULL, NULL);
- backtrace_full(state, 0, err_write, NULL, NULL);
+ if(state)backtrace_full(state, 0, err_write, NULL, NULL);
  const char line[] = "-----------------------------------------------------------------------------\n";
  (void)!write(STDERR_FILENO, line, 78);
  fsync(STDERR_FILENO);

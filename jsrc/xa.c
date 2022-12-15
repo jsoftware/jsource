@@ -749,7 +749,7 @@ F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
  R mtv;
 }
 
-// 2!:10   raise a signal
+// 2!:10   raise a signal. _1 calls SEGFAULT
 F1(jtgsignal){I m;
  RE(m=i0(vib(w)));
  if(-1==m)SEGFAULT;

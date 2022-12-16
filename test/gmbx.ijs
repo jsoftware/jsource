@@ -1,5 +1,7 @@
-prolog './gmbx.ijs'
+NB. prolog './gmbx.ijs'
 NB. mapped boxed arrays -------------------------------------------------
+
+NB. do not run prolog in this script
 
 load 'jmf'
 18!:4 <'base'
@@ -20,6 +22,6 @@ g   =: 6 7 4 5 2 3 0 1&{"1 @: (5&}.) @: (3!:3) @: ({."1)
 mean=: +/ % #
 
 
-NB. do not erase names
+NB. do not erase names in this script
 NB. 4!:55 ;:'f f1 g mean q r'
 

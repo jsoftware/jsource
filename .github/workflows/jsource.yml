@@ -15,9 +15,9 @@ on:
 
 jobs:
 
-# linux gcc ------------------------------------------------------------
- jelinux-gcc:
-  name: JE (Linux gcc)
+# linux ----------------------------------------------------------------
+ jelinux:
+  name: JE (Linux)
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -28,12 +28,20 @@ jobs:
 
    - name: Build JE (Linux)
      env:
-      CC: gcc
+      CC: clang
       USE_SLEEF: 1
      run: |
       script/buildga.sh linux
       script/testga.sh linux
+      ls -l j64
+      zip -r l64d.zip j64
       cd j64
+      strip -S jconsole
+      strip -S libj.so
+      strip -S libjavx.so
+      strip -S libjavx2.so
+      strip -S libjavx512.so
+      strip -S libtsdll.so
       cd ..
       ls -l j64
       zip -r l64.zip j64
@@ -42,7 +50,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "l64.zip"
+      artifacts: "l64.zip,l64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -53,12 +61,255 @@ jobs:
        name: dist
        path: testlinux.txt
 
+# linux gcc ------------------------------------------------------------
+ jelinux-gcc:
+  name: JE (Linux gcc)
+  runs-on: ubuntu-20.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (Linux gcc)
+     run: script/install-lnx.sh
+
+   - name: Build JE (Linux gcc)
+     env:
+      CC: gcc
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh linux
+      script/testga.sh linux
+
+#   - name: Release JE (Linux gcc)
+
+#   - name: Copy Test (Linux gcc)
+
+# macOS ----------------------------------------------------------------
+ jemacos:
+  name: JE (macOS)
+  runs-on: macos-12
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+#   - name: Setup Environment (macOS)
+
+   - name: Build JE (macOS)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh darwin
+      script/testga.sh darwin
+      rm -rf j64/jconsole.dSYM
+      rm -rf j64/libj.dylib.dSYM
+      rm -rf j64/libjavx.dylib.dSYM
+      rm -rf j64/libjavx2.dylib.dSYM
+      rm -rf j64/libjavx512.dylib.dSYM
+      rm -rf j64/libtsdll.dylib.dSYM
+      ls -l j64
+      zip -r m64d.zip j64
+      cd j64
+      strip -S jconsole
+      strip -S libj.dylib
+      strip -S libjavx.dylib
+      strip -S libjavx2.dylib
+      strip -S libjavx512.dylib
+      strip -S libtsdll.dylib
+      cd ..
+      ls -l j64
+      zip -r m64.zip j64
+
+   - name: Release JE (macOS)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "m64.zip,m64d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (macOS)
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testdarwin.txt
+
+# rpi64 ----------------------------------------------------------------
+ jerpi64:
+  name: JE (Raspberry)
+  runs-on: ubuntu-20.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Build (Raspberry)
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: cortex-a53
+      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+      base_image: raspios_lite_arm64:latest
+      image_additional_mb: 1024
+      copy_artifact_path: j64
+      commands: |
+       apt-get install --no-install-recommends -y clang
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh raspberry
+       script/testga.sh raspberry
+       cp testrpi64.txt j64/.
+       cd j64
+       strip -S jconsole
+       strip -S libj.so
+       strip -S libtsdll.so
+       cd ..
+       find j64 -type d -exec chmod a+rwx {} \;
+       find j64 -type f -exec chmod a+rw {} \;
+
+   - name: Compress Files (Raspberry)
+     run: |
+      mv j64/testrpi64.txt .
+      ls -l j64
+      zip -r rpi64.zip j64
+
+   - name: Release JE (Raspberry)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Raspberry)
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testrpi64.txt
+
+# rpi32 ----------------------------------------------------------------
+ jerpi32:
+  name: JE (Raspberry32)
+  runs-on: ubuntu-20.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Build (Raspberry32)
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: arm1176
+      cpu_info: cpuinfo/raspberrypi_zero2_w
+      base_image: raspbian_lite:2020-02-13
+      image_additional_mb: 1024
+      copy_artifact_path: j32
+      commands: |
+       export CC=gcc
+       export USE_SLEEF=0
+       script/buildga.sh raspberry
+       script/testga.sh raspberry
+       cp testrpi32.txt j32/.
+       cd j32
+       strip -S jconsole
+       strip -S libj.so
+       strip -S libtsdll.so
+       cd ..
+       find j32 -type d -exec chmod a+rwx {} \;
+       find j32 -type f -exec chmod a+rw {} \;
+
+   - name: Compress Files (Raspberry32)
+     run: |
+      mv j32/testrpi32.txt .
+      ls -l j32
+      zip -r rpi32.zip j32
+
+   - name: Release JE (Raspberry32)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Raspberry)
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testrpi32.txt
+
+# android --------------------------------------------------------------
+ jeandroid:
+  name: JE (android)
+  runs-on: macos-12
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (android)
+     uses: nttld/setup-ndk@v1
+     with:
+      ndk-version: r25b
+      local-cache: true
+
+   - name: Build JE (android)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh android
+
+#   - name: Release JE (android)
+
+#   - name: Copy Test (android)
+
+# windows --------------------------------------------------------------
+ jewin:
+  name: JE (Windows)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (Windows)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64
+
+   - name: Build JE (Windows)
+     shell: cmd
+     run: |
+      script\buildga.cmd
+
+   - name: Test JE (Windows)
+     shell: cmd
+     run: |
+      script\testga.cmd
+
+   - name: Compress Files (Windows)
+     shell: pwsh
+     run: Compress-Archive j64 w64.zip
+
+   - name: Release JE (Windows)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Windows)
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testwin.txt
 
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results
   runs-on: ubuntu-20.04
-  needs: [jelinux-gcc]
+  needs: [jelinux, jemacos, jerpi64, jerpi32, jewin]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

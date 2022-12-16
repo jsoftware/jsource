@@ -40,7 +40,8 @@ mkdir -p j32
 cp bin/profile.ijs j32
 fi
 if [ "$1" == "linux" ]; then
-cp mpir/linux/x86_64/libgmp.so j64
+# cp mpir/linux/x86_64/libgmp.so j64
+cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so
 elif [ "$1" == "raspberry" ]; then
 if [ $m64 -eq 1 ]; then
 cp mpir/linux/aarch64/libgmp.so j64

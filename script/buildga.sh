@@ -27,11 +27,6 @@ if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" 
 else
  m64=0
 fi
-if [ "$1" == "darwin" ]; then
-sysctl -a | grep cpu
-else
-cat /proc/cpuinfo
-fi
 
 cp -R jlibrary/* .
 cp script/testga.ijs .

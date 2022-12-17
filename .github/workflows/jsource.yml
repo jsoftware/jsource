@@ -32,6 +32,9 @@ jobs:
       USE_SLEEF: 1
      run: |
       script/buildga.sh linux
+
+   - name: Test JE (Linux)
+     run: |
       script/testga.sh linux
       ls -l j64
       zip -r l64d.zip j64
@@ -78,6 +81,9 @@ jobs:
       USE_SLEEF: 1
      run: |
       script/buildga.sh linux
+
+   - name: Test JE (Linux gcc)
+     run: |
       script/testga.sh linux
       mv testlinux.txt  testlinuxgcc.txt 
       ls -l j64
@@ -124,6 +130,9 @@ jobs:
       USE_SLEEF: 1
      run: |
       script/buildga.sh darwin
+
+   - name: Test JE (macOS)
+     run: |
       script/testga.sh darwin
       rm -rf j64/jconsole.dSYM
       rm -rf j64/libj.dylib.dSYM
@@ -167,7 +176,7 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build (Raspberry)
+   - name: Build, Test JE (Raspberry)
      uses: pguyot/arm-runner-action@v2
      with:
       cpu: cortex-a53
@@ -219,7 +228,7 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build (Raspberry32)
+   - name: Build, Test JE (Raspberry 32)
      uses: pguyot/arm-runner-action@v2
      with:
       cpu: arm1176

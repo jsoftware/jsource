@@ -64,7 +64,7 @@ jobs:
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
   name: JE (Linux gcc)
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-18.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
@@ -79,10 +79,34 @@ jobs:
      run: |
       script/buildga.sh linux
       script/testga.sh linux
+      mv testlinux.txt  testlinuxgcc.txt 
+      ls -l j64
+      zip -r lgcc64d.zip j64
+      cd j64
+      strip -S jconsole
+      strip -S libj.so
+      strip -S libjavx.so
+      strip -S libjavx2.so
+      strip -S libjavx512.so
+      strip -S libtsdll.so
+      cd ..
+      ls -l j64
+      zip -r lgcc64.zip j64
 
-#   - name: Release JE (Linux gcc)
+   - name: Release JE (Linux gcc)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "lgcc64.zip,lgcc64d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
-#   - name: Copy Test (Linux gcc)
+   - name: Copy Test (Linux gcc)
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testlinuxgcc.txt
 
 # macOS ----------------------------------------------------------------
  jemacos:

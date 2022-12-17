@@ -45,7 +45,11 @@ j64/jconsole -lib libjavx.$ext testga.ijs
 fi
 
 if [ $1 == "linux" ]; then
+if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ]; then
   j64/jconsole -lib libjavx2.$ext testga.ijs
+fi
+if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ]; then
   j64/jconsole -lib libjavx512.$ext testga.ijs
+fi
   j32/jconsole -lib libj.$ext testga.ijs
 fi

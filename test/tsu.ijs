@@ -75,7 +75,7 @@ eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
+prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[4!:55'x';'y'[echo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0
 10 s: GLOBALSYMBOL

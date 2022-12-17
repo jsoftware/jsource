@@ -26,9 +26,14 @@ NB. RUN1^:IFWIN 'g640'
 NB. RUN1^:IFWIN 'g7x6'
 NB. exit^:IFWIN 1
 
+echo '1: 2 ^ i. 20x)'
+1: (2 ^ i. 20x)
+echo '1: (2x ^ 2 ^ i. 20x)'
 1: (2x ^ 2 ^ i. 20x)
+echo '1: (3x ^ 2 ^ i. 10x)'
 1: (3x ^ 2 ^ i. 10x)
 
+echo 'RUN4 ddall'
 RES=: RUN4 ddall
 
 3 : 0''

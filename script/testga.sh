@@ -4,8 +4,11 @@
 #
 # argument is linux|darwin|raspberry
 #
+# current Linux github builder supports avx512
+# cpu is Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
+#
 # current macOS github builder only supports avx
-# cpu is Xeon E5-1650 v2 (from 2013)
+# cpu is Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
 
 set -e
 
@@ -19,10 +22,15 @@ else
   echo "argument is linux|darwin|raspberry"
   exit 1
 fi
-if [ "`uname -m`" != "armv6l" ]; then
+if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
  m64=1
 else
  m64=0
+fi
+if [ "$1" == "darwin" ]; then
+sysctl -a | grep cpu
+else
+cat /proc/cpuinfo
 fi
 
 if [ $m64 -eq 1 ]; then
@@ -31,4 +39,17 @@ j64/jconsole -lib libj.$ext testga.ijs
 else
 ls -l j32
 j32/jconsole -lib libj.$ext testga.ijs
+fi
+if [ $1 != "raspberry" ]; then
+j64/jconsole -lib libjavx.$ext testga.ijs
+fi
+
+if [ $1 == "linux" ]; then
+if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ]; then
+  j64/jconsole -lib libjavx2.$ext testga.ijs
+fi
+if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ]; then
+  j64/jconsole -lib libjavx512.$ext testga.ijs
+fi
+  j32/jconsole -lib libj.$ext testga.ijs
 fi

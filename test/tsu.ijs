@@ -75,7 +75,7 @@ eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[echo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
+prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[4!:55'x';'y'[echo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0
 10 s: GLOBALSYMBOL
@@ -211,7 +211,8 @@ RUN1=: 13 : 'ex02`(0!:2)@.(*@".@''Debug'') <testpath,y,''.ijs'''
 RESUB1=: 3 : 'y[echo >y'
 RESUB2=: (13 : '-.ex03 RESUB1 y')"0
 RESUB4=: (13 : '-.ex04 RESUB1 y')"0
-RECHO=: 3 : '+/ (RESUB2`RESUB4@.GITHUBCI) y'
+RECHO=: 13 : '+/ RESUB2 y'
+RECHO4=: 13 : '+/ RESUB4 y'
 
 NB. bill extensions
 

@@ -1,7 +1,7 @@
 prolog './g1x7.ijs'
 NB. 1!:7 ----------------------------------------------------------------
 
-Note 'read only permissions leak to containing directory under wsl -- OS issue'
+0 0$0 [ 'read only permissions leak to containing directory under wsl -- OS issue'
 
 write =: 1!:2
 mkdir =: 1!:5

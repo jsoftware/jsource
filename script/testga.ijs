@@ -28,10 +28,10 @@ NB. exit^:IFWIN 1
 
 NB. echo '1: (2x ^ 2 ^ i. 20x)'
 NB. 1: (2x ^ 2 ^ i. 20x)
-echo '1: (2 ^ i. 10x)'
-1: (2 ^ i. 10x)
-echo '1: (2 ^ i. 10x)'
-1: (2 ^ i. 10x)
+NB. echo '1: (2 ^ i. 10x)'
+NB. 1: (2 ^ i. 10x)
+NB. echo '1: (2 ^ i. 10x)'
+NB. 1: (2 ^ i. 10x)
 echo '1: (3x ^ 2 ^ i. 10x)'
 1: (3x ^ 2 ^ i. 10x)
 

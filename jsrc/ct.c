@@ -437,7 +437,8 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // This block is done.  Since we will need the lock when we go to look for work, we take it now.
    jttpop(jt,old);  // release any resources used by internal job
    JOB *nextjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
-   ++job->internal.nf;  // account that this task has finished
+// obsolete   ++job->internal.nf;  // account that this task has finished
+   __atomic_fetch_add(&job->internal.nf,1,__ATOMIC_ACQ_REL);    // account that this task has finished; must do atomic to ensure handshake with end-of-job code
    job=nextjob;  // set up for loop
    if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
    goto nexttasklocked; // loop for work, holding the lock
@@ -587,6 +588,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()
  }
  // There are no more tasks to start.  Wait for all to finish.
+ // The threads and us acquire job->internal.nf to ensure all write have been seen.  For this reason the call and the threads do not need atomic ops when accessing the ctx block
  while(__atomic_load_n(&job->internal.nf,__ATOMIC_ACQUIRE)<n){_mm_pause(); YIELD}  // scaf  should we have a mutex & wait for a wakeup from the finisher?
  C r=__atomic_load_n(&job->internal.err,__ATOMIC_ACQUIRE); fa(jobA); R r;  // extract return code from the job, then free the job and return the error code
  // job may still be in the job list - if so it will be fa()d when it reaches the top

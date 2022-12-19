@@ -129,7 +129,7 @@ void jgmpguard(X x) {
  size_t avxsize= (size+7)&(-8); // libgmp's use of __strlen_avx2 segfaults when libgmp asks for size=2
  C*m= malloc(avxsize+XHSZ+GUARDsSIZE);
  if(!m)SEGFAULT;
- if(!m)R0; // assert(z);// FIXME (but can't without replacing libgmp)
+ if(!m)R0Q; // assert(z);// FIXME (but can't without replacing libgmp)
 #if MEMAUDIT&0x40
  memcpy(m, GUARDBLOCK, GUARDSIZE); guard(m);
  memcpy(m+GUARDSIZE+XHSZ+size, GUARDBLOCK, GUARDSIZE); guard(m+GUARDSIZE+XHSZ+size);
@@ -172,7 +172,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  // assert(FHRHISGMP==AFHRH(x))
  m= realloc(m, avxnew+XHSZ+GUARDsSIZE);
  if(!m)SEGFAULT;
- if(!m)R0; // assert(m);// FIXME (but can't without replacing libgmp)
+ if(!m)R0Q; // assert(m);// FIXME (but can't without replacing libgmp)
 #if MEMAUDIT&0x40
  memcpy(m+GUARDSIZE+XHSZ+new, GUARDBLOCK, GUARDSIZE); guard(m+GUARDSIZE+XHSZ+new);
 #endif

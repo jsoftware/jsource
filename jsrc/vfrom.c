@@ -747,10 +747,10 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
  }
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  __m256i rowstride=_mm256_set1_epi64x(n);  // number of Ds in a row of M, in each lane
-// DIP: bv!=0 (in the loop, limitrow is -1 until pivot found, then n onneg)
-// DPiv: bv=0, zv=0, Frow!=0 but not used (in the loop, limitrow=-1)
-// nonimp: bv=0, zv=0, Frow=0 (in the loop, limitrow=-2)
-// onecol: bv=0, zv!=0  (in the loop, limitrow=-3 for double, -4 for quad)
+// DIP: bv!=0 (in the loop, limitrow is -2 until any c>thresh found; -1 (indicating bounded) until SPR found, then nonneg)
+// DPiv: bv=0, zv=0, Frow!=0 but not used (in the loop, limitrow is -6)
+// nonimp: bv=0, zv=0, Frow=0 (in the loop, limitrow=-3)
+// onecol: bv=0, zv!=0  (in the loop, limitrow=-4 for double, -5 for quad)
 
  // loop over all columns requested
  for(;;++ncolsprocd){
@@ -818,7 +818,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     }else{
      rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(NPAR));  // one-column mode: otherwise, sequential processing of entire column
     }
-    indexes=_mm256_mul_epu32(rowstride,rownums);  // convert row# to atom offset to start of row
+    indexes=_mm256_mul_epu32(rowstride,rownums);  // convert row# to atom offset to start of row   could move this to the input
     // Now mv and indexes are set up to read the correct rows
     // get the next NPAR values by dot-product with Av
     if(colx<n){
@@ -862,41 +862,38 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     // process the NPAR generated values
     if(bv!=0){
 #if 0
+    if(limitrow>=-2){
      // DIP mode, looking for pivots.  process the values in parallel
-     __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // the bk values we are working on
-     // see if any of the new values is limiting: b/c < min SPR, c>ColThresh, bk>bkthresh
-     __m256d ratios=_mm256_fmsub_pd(minspr,dotproducthi,bk4);  // minspr*c-b: sign set if this is NOT a new min SPR
-     __m256d coverthresh=_mm256_cmp_pd(dotproducthi,thresh,_CMP_GT_OQ);  // set to ~0 if c>ColThresh - never if endmask 0
-     __m256d sprvalid=_mm256_and_pd(coverthresh,_mm256_cmp_pd(bk4,bkthresh,_CMP_GT_OQ));  // compare sets to ~0 if b>bthresh - never if endmask is 0   set to ~0 if c>thresh & b>thresh, i. e. SPR is valid
-     if(unlikely((!_mm256_testc_pd(_mm256_cmp_pd(bk4,bkthresh,_CMP_GT_OQ),coverthresh)))goto abortcol;  // CF is 0 if any sign of ~a&b is 1 => ~b>bthresh & c>ColThresh.  Positive c and b<=0 means we cannot pivot in this column
-     if(_mm256_testc_pd(ratios,sprvalid)){  // 
-          // CF is 1 if ~a&b signs all 0 => ~(~new min)&(c good&b good) all 0 => no place where new min & c good & b good
-      // not limiting (normal).  If we haven't ruled out that the column is unbounded, check for c>thresh (and therefore b>thresh), which rules out unbounded
-      if(limitrow==-2)limitrow=_mm256_testz_pd(coverthresh,coverthresh)?limitrow:-1;  // if any c>thresh, zf is 0; set that we are bounded.  This branch will predict correctly
-     }else{
-      // at least one new value is limiting.  Find the SPRs, and the location of the smallest SPR.  Remember the position and value of the smallest SPR found
-      __m256d sprs=_mm256_blendv_pd(infinity,_mm256_div_pd(bk4,dotproducthi),sprvalid);  // find SPR; if not valid use high value
-      // the reciprocal, and the following analysis, takes a long time to run.  Make sure there are no dependencies.  The block of code
-      // issued here will complete while the next blocks of dotproduct is being computed.
-      // find the smallest SPR.  In case of ties take the LAST
-      minspr=_mm256_cmp_pd(sprs,_mm256_permute_pd(sprs,0b0000),_CMP_GT_OQ); I lomask=movemask(minspr);  // bit 1 of lomask set if sprs[1]>sprs[0]; bit 3 set if sprd[3]>sprs[2] bit 0 2 = 0
-      sprs=_mm256_permutevar_pd(sprs,minspr);  // sprs = x  min of 0/1   x   min of 2/3
-      minspr=_mm256_permute4x64_pd(sprs,0b11101100);    // minspr = x min of 2/3   x   x   but xs match sprs
-      __m256d s23lts01=_mm256_cmp_pd(minspr,sprs,_CMP_GT_OQ); I himask=movemask(s23lts01);  // bit 1 of himask set if max23 > max01   bits 023=0
-      sprs=_mm256_blendvar_pd(minspr,sprs,s23lts01);  // sprs[1] = overall min
-      minspr=_mm256_permute4x64_pd(sprs,0b01010101);    // copy new min spr into all lanes
-      himask^=3; himask&=(~lomask>>himask);  // index of last of the smallest SPRs.  mask are active low h0 and l0l; change to H1 and 1L1L; shift and combine to HL
-      limitrow=(bvgrd-bvgrd0)+himask;  // the index in bvgrd (not bk) of the limitrow
-      if(firstsprrow<0){  // have we noted the first SPR in the column?  This branch will predict correctly
-       // remember where the FIRST SPR in the column is
-       firstsprrow=(bvgrd-bvgrd0)+CTTZI(movemask(sprvalid));  // index of first valid SPR
-      }
-      // remember if the pivot is dangerous
-      limitrow|=((movemask(_mm256_cmp_pd(dotproducthi,dangerthresh,_CMP_LT_OQ))>>himask)&1)<<32;  // set bit 32 in limitrow if pivot is dangerous
-      // check for cutoff
-      if(unlikely(((_mm256_testc_pd(_mm256_fmsub_pd(minspr,dotproducthi,bk4),sprvalid))){  // Frow*b/c > minimp (Frow and minimp negative) => b/c < minimp/Frow = minimpspr => b < minimp*c.  Calc minimp*c-b: sign set if this value cuts off
-       // one of the values cuts off.  Abort this column, keeping the SPR and position.
-       if(likely((I4)limitrow!=(I4)prirow))goto abortcol;   //  EXCEPTION: if the new limiting row is virtual, don't cut off
+     if(!_mm256_testz_si256(_mm256_castpd_si256(dotproducthi),_mm256_castpd_si256(dotproducthi))){  // if all c values are 0.0, we can skip everything - not unlikely
+      __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // the bk values we are working on
+      // see if any of the new values is limiting: b/c < min SPR, c>ColThresh, bk>bkthresh
+      // we perform this calculation on each lane separately, to save the expense of finding the minimum SPR each time one is calculated.
+      // This means the values in each lane will be smaller than they would be with sharing, leading to perhaps 2 extra divisions.  That's a good trade.
+      __m256d ratios=_mm256_fmsub_pd(minspr,dotproducthi,bk4);  // minspr*c-b: sign set if this is NOT a new min SPR in its lane
+      __m256d coverthresh=_mm256_cmp_pd(dotproducthi,thresh,_CMP_GT_OQ);  // set to ~0 if c>ColThresh - never if endmask 0
+      // we separate b into < threshold and >= threshold.   This must match the selection made for stall exit
+      __m256d sprvalid=_mm256_and_pd(coverthresh,_mm256_cmp_pd(bk4,bkthresh,_CMP_GE_OQ));  // compare sets to ~0 if b>=bthresh - never if endmask is 0   set to ~0 if c>thresh & b>=thresh, i. e. SPR is valid
+      if(unlikely((!_mm256_testc_pd(_mm256_cmp_pd(bk4,bkthresh,_CMP_GE_OQ),coverthresh)))goto abortcol;  // CF is 0 if any sign of ~a&b is 1 => ~b>=bthresh & c>ColThresh.  Positive c and b<=0 means we cannot pivot in this column
+      if(_mm256_testc_pd(ratios,sprvalid)){  // CF is 1 if ~a&b signs all 0 => ~(~new min)&(c good&b good) all 0 => no place where new min & c good & b good
+       // not limiting (normal).  If we haven't ruled out that the column is unbounded, check for c>thresh (and therefore b<=thresh), which rules out unbounded
+       if(limitrow==-2)limitrow=_mm256_testz_pd(coverthresh,coverthresh)?limitrow:-1;  // if any c>thresh, zf is 0; set that we are bounded.  This branch will predict correctly
+      }else{
+       // at least one new SPR is limiting (in its lane).  Find the SPRs
+       __m256d sprs=_mm256_div_pd(bk4,dotproducthi);  // find SPRs, valid or not.  Not worth moving this before the mispredicting branch
+       // the reciprocal takes a long time to run.  Make sure there are no dependencies.  The block of code
+       // issued here will complete while the next block of dotproduct is being computed.
+       if(limitrow<0){limitrow=0; firstsprrow=(bvgrd-bvgrd0);}  // index of (close to) first valid SPR.  Branch will predict correctly.  Set limitrow to show that we are bounded and have first SPR
+       sprvalid=_mm256_andnot_pd(ratios,sprvalid);  // sprvalid now means 'valid and limiting' - high bit only
+       minspr=_mm256_blendv_pd(minspr,sprs,sprvalid);   // remember the limiting SPR, in each lane
+       // remember if the pivot is dangerous, by taking one's complement of row# if it is
+       __m256d rownumsdanger=_mm256_xor_pd(_mm256_castsi256_pd(rownums),_mm256_cmp_pd(dotproducthi,dangerthresh,_CMP_LT_OQ));  // complement rownum if pivot is dangerous
+       limitrows=_mm256_blendv_pd(limitrows,__mm256_castsi256_pd(rownums),sprvalid);  // if there is a new limiting SPR, remember its row number
+       // check for cutoff
+       if(unlikely(((_mm256_testc_pd(_mm256_fmsub_pd(minimp,dotproducthi,bk4),sprvalid))){  // Frow*b/c > minimp (Frow and minimp negative) => b/c < minimp/Frow = minimpspr => b < minimp*c.  Calc minimp*c-b: sign set if this value cuts off
+        // one of the values cuts off.  Abort this column, keeping the SPR and position.
+        if(likely(_mm256_testz_si256(rowstride,_mm256_cmpeq_epi64(_mm256_set1_epi64x(prirow),_mm256_castpd_si256(limitrows)))))   // rowstride is any 256i with nonzero in all lanes
+         goto abortcol;   //  EXCEPTION: if any limiting row is virtual (and not dangerous), don't cut off.  We'll take it as long as it is the min SPR in this column
+       }
       }
      }
 #endif
@@ -931,15 +928,18 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
       __m256d bks=_mm256_permute4x64_pd(bk4,0b00000000);  // bk bk bk bk
       bk4=_mm256_permute4x64_pd(bk4,0b11111001);  // shift bk4 down one value for next time
       dotprod=_mm256_blend_pd(dotprod,bks,0b0100);  // dotprod=col col bk col
-      __m256d tcond=_mm256_sub_pd(thresh,dotprod); I tmask=_mm256_movemask_pd(tcond); if((tmask&0b0101)==0b0001)goto abortcol;  // tmask is col>ColThr 0 bk>bkmin col>ColMin; also in tcond; abort, avoiding unbounded, if col>ColThr & bk<=0
+      __m256d tcond=_mm256_sub_pd(thresh,dotprod); I tmask=_mm256_movemask_pd(tcond); // tmask is col>ColThr 0 bk>bkmin col>ColMin; also in tcond;
+      if((tmask&0b0101)==0b0001)
+       goto abortcol;  // abort, avoiding unbounded, if col>ColThr & bk<=0
       I imask=i+(tmask<<32);  // save tmask in the pivot; we care about bit 3 which is 1 if this is not a dangerous pivot.  That goes to bit 35 of limitrow
       ratios=_mm256_fmsub_pd(bks,oldcol,ratios);  // bk*oldcol-col*oldbk  bk*Frow-col*minimp 0 0  i. e.  1 if new smallest (possibly invalid) pivotratio/0 if abort on limited gain/0 /0
       tcond=_mm256_and_pd(tcond,ratios);  // tcond is (new smallest pivotratio & col>ColThr [& bk>bkmin]) 0 0 0  
       oldbk=_mm256_blendv_pd(oldbk,bks,tcond); oldcol=_mm256_blendv_pd(oldcol,dotprod,tcond);  // if valid new smallest pivotratio, update col and bk where the smallest is found
       I rmask=_mm256_movemask_pd(ratios); //   rmask is new smallest (possibly invalid) pivotratio   !limited gain 0 0
       limitrow=(tmask&=1)&rmask?imask:limitrow;   // col>ColThr & new smallest pivotratio: update best-value variables.  This updates even if bk=0, avoiding unbounded
-      if(tmask>(rmask>>1) && (I4)limitrow!=(I4)prirow)goto abortcol;  // col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority
-#if 0 // not used, not converted to new style
+      if(tmask>(rmask>>1) && (I4)limitrow!=(I4)prirow)  // col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority
+       goto abortcol;
+#if 0 // obsolete not used, not converted to new style
    }else if(Frow!=0){ // look for nonimproving pivot 
     if(ABS(_mm256_cvtsd_f64(dotprod))>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  // any nonzero pivot is a pivot row, unless in the exclusion list
    }else{
@@ -993,7 +993,9 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
      zv+=NPAR;  // advance to next output location
     }
    }
-   // done with loop down one column.  Collect stats and update parms for the next column
+   // done with loop down one column.
+
+   // End-of-column processing.  Collect stats and update parms for the next column
 
    if(bv==0){  // one product, nonimp, Dpiv
     if(zv)goto earlycol;  // if just one product, skip the setup for next column
@@ -1018,7 +1020,7 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
      if(AR(qk)>2 && mv0lo==0)goto retryinquad;  // if there is extended precision, and we haven't used it yet, retry in extended precision
      bestcolrow=limitrow; bestcol=colx; goto return4;
     }
-    // If this pivot would result in a cycle, ignore it
+    // If this pivot would result in a cycle, ignore it  scaf not used
     if(nexlist!=0&&!notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){goto abortcol;}
     {
      // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
@@ -1030,9 +1032,10 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
        // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
        if(unlikely((I4)limitrow==(I4)prirow)){++ncolsprocd; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
        I incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
+       D minimpthiscol=(Frow[colx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
        while(1){  // put the minimum found into the ctx for the job so that all threads can cut off quickly
-        minimpfound=(Frow[colx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
-        if(minimpfound>=*(D*)&incumbentimpi)break;  // if not new global best, don't update global
+        if(minimpthiscol>=*(D*)&incumbentimpi)break;  // if not new global best, don't update global.  In this case we don't need to remember the value of this column, since it has been beaten
+        minimpfound=minimpthiscol;  // wait till now to remember best-in-thread, because numerical error may allow minimpthiscol to be not as good as an earlier column
         if(__atomic_compare_exchange_n((I*)&(((struct mvmctx*)ctx)->minimp),&incumbentimpi,*(I*)&minimpfound,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent
        }
        zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
@@ -1041,16 +1044,19 @@ static unsigned char jtmvmsparsex(J jt,void *ctx,UI4 ti){
     }
    }
    --bvgrd;  // undo the +1 in the product-accounting below
+
+   // we have finished processing & reporting the column.  Now prepare for the next column
+
 abortcol:  // here if column aborted early, possibly on insufficient gain
    if(unlikely(!bv))goto earlycol;  // if just one product, skip the setup for next column
    ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
    if(unlikely((--ncols<0)&&(SGNIF(bestcolrow,32+3)<0))){++ncolsprocd; goto earlycol;}  // quit if we have made a non-dangerous improvement AND have processed enough columns - include the aborted column in the count
    // prepare for next column
-   *(I*)&minimp=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // update to find best improvement in any thread, to allot cutoff
+   *(I*)&minimp=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // update to find best improvement in any thread, to allow cutoff
    currcolproxy=__atomic_load_n(&((struct mvmctx*)ctx)->nextcol,__ATOMIC_ACQUIRE);  // start load of column position for next spin through loop
    if(unlikely(minimp==infm))goto earlycol;  // if improvement has been pegged at limit, it's a signal to stop
    if(unlikely(--nfreecols<0))minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
-#if 0
+#if 0  // obsolete
   }else{
    // we are looking for nonimproving pivots.  Skip all the gain accounting, and just remember how many products we did
    ndotprods+=bvgrd-bvgrd0;  // accumulate # products performed
@@ -1067,6 +1073,9 @@ nextcol: ; // come here to step to next column
  }  // end of loop over columns
 earlycol:;  // come here when we want to stop after the current column
 
+ // return result to the ctx, if we have the winning value.  Simple write to ctx do not require RELEASE order because the end-of-job code
+ // and the threads sync through ctx->internal.nf; but they should be atomic in case we run on a small-word machine
+
  if(bv==0)R 0;  // if Dpiv or single column, ctx is unused for return; if nonimp, to get here there must be no pivot found, so just return then too
  // operation complete; transfer results back to ctx.  To reduce stores we jam the col/row together
  __atomic_fetch_add(&((struct mvmctx*)ctx)->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
@@ -1074,13 +1083,15 @@ earlycol:;  // come here when we want to stop after the current column
  // We store dangerous & normal pivots separately.  Dangerous pivots we take as they come (because their improvement has not been stored);
  // for normal pivots we store only if our best improvement is the best encountered so far
  I bestcolandrow=(bestcol<<32)|(UI4)bestcolrow;  // the pivot we found, with flags removed
- if(unlikely((bestcol|SGNIF(bestcolrow,32+3))>=0)){((struct mvmctx*)ctx)->bestcolandrow[1]=bestcolandrow;  // if pivot found and dangerous, just store it willy-nilly
+ if(unlikely((bestcol|SGNIF(bestcolrow,32+3))>=0)){__atomic_store_n(&((struct mvmctx*)ctx)->bestcolandrow[1],bestcolandrow,__ATOMIC_RELEASE);  // if pivot found and dangerous, just store it willy-nilly
  }else{
   // normal pivot.  We want to pick the best.  We store our best pivot only if it is the best seen in any thread so far.  Unfortunately we need a lock for that
   // We don't know for sure we found any pivot; if not we will certainly not show an improvement
-  if(minimpfound==((struct mvmctx*)ctx)->minimp){  // check outside of lock for perf
+  I incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
+  if(minimpfound==*(D*)&incumbentimpi){  // check outside of lock for perf
    WRITELOCK(((struct mvmctx*)ctx)->ctxlock)
-   if(minimpfound==((struct mvmctx*)ctx)->minimp)((struct mvmctx*)ctx)->bestcolandrow[0]=bestcolandrow;  // if we have the best gain, report where we found it
+   incumbentimpi=__atomic_load_n((I*)&(((struct mvmctx*)ctx)->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
+   if(minimpfound==*(D*)&incumbentimpi)__atomic_store_n(&((struct mvmctx*)ctx)->bestcolandrow[0],bestcolandrow,__ATOMIC_RELEASE);  // if we have the best gain, report where we found it
    WRITEUNLOCK(((struct mvmctx*)ctx)->ctxlock)
   }
  }
@@ -1237,6 +1248,7 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=
 #undef YC
 
  jtjobrun(jt,jtmvmsparsex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+ // atomic sync operation on the job queue guarantee that we can use regular loads from opctx
 
  // prepare final result
  if(likely(bv!=0||(zv==0&&Frow==0))){
@@ -1458,7 +1470,7 @@ F2(jtekupdate){F2PREFIP;
   // big enough for multithreading.
   rowsperthread=(m+nthreads-1)/nthreads;  // number of threads per processor, rounded up
  }
-
+#undef TASKMINATOMS
 #define YC(n) .n=n,
 struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzzmplr)};
 #undef YC
@@ -1470,4 +1482,257 @@ struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newr
 }
 #else
 F2(jtekupdate){ASSERT(0,EVNONCE);}
+#endif
+
+#if C_AVX2
+// everything we need for one core's execution
+struct __attribute__((aligned(CACHELINESIZE))) sprctx {
+ I rowsperthread;  // number of rows of prx for each thread to handle
+ // the rest is moved into static names
+ // arguments
+ A ck;
+ A bk;
+ I col;  // the column number we are checking
+ I m;   // length of a column
+ D ckthreshd;
+ D bkthreshd;
+ // result
+ I row;  // the row number we found
+} ;
+// the processing loop for one core.  We take groups of rows, in order
+static unsigned char jtfindsprx(J jt,void* const ctx,UI4 ti){
+ // transfer everything out of ctx into local names
+#define YC(x) typeof(((struct sprctx*)ctx)->x) x=((struct sprctx*)ctx)->x;
+ YC(rowsperthread)YC(ck)YC(bk)YC(col)YC(m)YC(ckthreshd)YC(bkthreshd)
+#undef YC
+
+ // establish pointers, offsets, and sizes.  We keep pointers to the beginning of the block and offset into the region we're working on
+ D *ck0=DAV(ck);  // pointer to base of ck area
+ D *bk0=DAV(bk);  // pointer to base of bk area
+ I i0=rowsperthread*ti;  // starting offset of our block
+ I m0=m-i0; m0=m0>rowsperthread?rowsperthread:m0;  // number of atoms in our area, MIN(rowsperthread,length of bk/ck)
+ I i0e=m0+i0;  // end+1 offset for our block
+
+ // find the best SPR, dp only
+
+ // init for the column
+ __m256d endmask=_mm256_setone_pd(); // mask for validity of next 4 words: used to control fetch from column and store into result row
+ __m256d minspr=_mm256_set1_pd(inf); // min spr found per lane
+ __m256d ckthresh=_mm256_set1_pd(ckthreshd); // column threshold
+ __m256d bkthresh=_mm256_set1_pd(bkthreshd); // column threshold
+ I i;   // index to the block-of-4 we are working on
+ // create the column NPAR values at a time
+ for(i=i0;i<i0e;i+=NPAR){
+  // get the validity mask and process: leave as ones until the end of the column
+  __m256d ck4, bk4;  // values we are working on
+  if(likely(i0e-i>=NPAR)){
+   ck4=_mm256_loadu_pd(&ck0[i]); bk4=_mm256_loadu_pd(&bk0[i]);  // read in ck and bk
+  }else{
+   endmask = _mm256_loadu_pd((double*)(validitymask+NPAR-(i0e-i)));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+   ck4=_mm256_maskload_pd(&ck0[i],endmask); bk4=_mm256_maskload_pd(&bk0[i],endmask);  // read in ck and bk
+  }
+// obsolete   rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(NPAR));  // advance row numbers
+  if(!_mm256_testz_si256(_mm256_castpd_si256(ck4),_mm256_castpd_si256(ck4))){  // if all c values are 0.0, we can skip everything - not unlikely
+   // see if any of the new values is limiting: b/c < min SPR, c>ColThresh, bk>bkthresh
+   // we perform this calculation on each lane separately, to save the expense of finding the minimum SPR each time one is calculated.
+   // This means the values in each lane will be smaller than they would be with sharing, leading to perhaps 2 extra divisions.  That's a good trade.
+   __m256d ratios=_mm256_fmsub_pd(minspr,ck4,bk4);  // minspr*c-b: sign set if this is NOT a new min SPR in its lane
+   __m256d coverthresh=_mm256_cmp_pd(ck4,ckthresh,_CMP_GT_OQ);  // set to ~0 if c>ColThresh - never if endmask 0
+   // we separate b into < threshold and >= threshold.   This must match the selection made for stall exit
+   __m256d sprvalid=_mm256_and_pd(coverthresh,_mm256_cmp_pd(bk4,bkthresh,_CMP_GE_OQ));  // compare sets to ~0 if b>=bthresh - never if endmask is 0   set to ~0 if c>thresh & b>=thresh, i. e. SPR is valid
+   if(!_mm256_testc_pd(ratios,sprvalid)){  // CF is 1 if ~a&b signs all 0 => ~(~new min)&(c good&b good) all 0 => no place where new min & c good & b good
+    // at least one new SPR is limiting (in its lane).  Find the SPRs
+    __m256d sprs=_mm256_div_pd(bk4,ck4);  // find SPRs, valid or not.  Not worth moving this before the mispredicting branch
+    // the reciprocal takes a long time to run.  Make sure there are no dependencies.
+    sprvalid=_mm256_andnot_pd(ratios,sprvalid);  // sprvalid now means 'valid and limiting' - high bit only
+    minspr=_mm256_blendv_pd(minspr,sprs,sprvalid);   // remember the limiting SPR, in each lane
+// obsolete     limitrows=_mm256_blendv_pd(limitrows,_mm256_castsi256_pd(rownums),sprvalid);  // if there is a new limiting SPR, remember its row number
+   }
+  }
+ }  // end of loop to find minspr per lane
+
+ // find the smallest SPR, and its row#, of the ones in minspr.  In case of ties take the LAST
+// obsolete  I __attribute__((aligned(CACHELINESIZE))) rownumsarray[NPAR];  // place where we can see the individual row#s
+// obsolete  _mm256_store_pd(rownumsarray,rownums);  // look at em
+ __m256d allmin=_mm256_min_pd(minspr,_mm256_permute_pd(minspr,0b0101)); // allmin = min01 min01 min23 min23  could use integer in AVX-512
+ allmin=_mm256_min_pd(allmin,_mm256_permute4x64_pd(allmin,0b00001010));  // allmin=min value in all lanes
+// obsolete  I minrow=rownumsarray[CTTZI(_mm256_movemask_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(allmin),_mm256_castpd_si256(minspr))))];  // get any row# of the minimum
+ // now allmin has the min SPR in all lanes
+// obsolete , and minrow is the row# of the minimum DP SPR
+
+ // We know that the overall column has a pivot, but if we are a thread it is possible that we have no pivot.  Exit now in that case.
+ if(_mm256_cvtsd_f64(allmin)==inf)R 0;   // nothing more to do uif no SPRs
+
+ // get the list of row#s that are in contention for best pivot
+ // In QP, the true SPR may be up to 1.5 DP ULP greater than calculated value.  Go back and get the list of row#s that overlap with that
+ // create the column NPAR values at a time
+ allmin=_mm256_mul_pd(allmin,_mm256_set1_pd(1.0000000000000003));  // add 2 ULPs in DP
+ A conten; GAT0(conten,INT,m,0) I *conten0=IAV(conten), conteni=0;  // get address of place to store contenders
+ for(i=i0;i<i0e;i+=NPAR){
+  // get the validity mask and process: leave as ones until the end of the column
+  __m256d ck4, bk4;  // values we are working on
+  if(likely(i0e-i>=NPAR)){
+   ck4=_mm256_loadu_pd(&ck0[i]); bk4=_mm256_loadu_pd(&bk0[i]);  // read in ck and bk
+  }else{
+   ck4=_mm256_maskload_pd(&ck0[i],endmask); bk4=_mm256_maskload_pd(&bk0[i],endmask);  // read in ck and bk.  endmask is set from earlier loop
+  }
+  if(!_mm256_testz_si256(_mm256_castpd_si256(ck4),_mm256_castpd_si256(ck4))){  // if all c values are 0.0, we can skip everything - not unlikely
+   // see if any of the new values is limiting: b/c < min SPR, c>ColThresh, bk>bkthresh
+   // we perform this calculation on each lane separately, to save the expense of finding the minimum SPR each time one is calculated.
+   // This means the values in each lane will be smaller than they would be with sharing, leading to perhaps 2 extra divisions.  That's a good trade.
+   __m256d ratios=_mm256_fmsub_pd(allmin,ck4,bk4);  // allmin*c-b: sign set if this is NOT a new min SPR in its lane
+   __m256d coverthresh=_mm256_cmp_pd(ck4,ckthresh,_CMP_GT_OQ);  // set to ~0 if c>ColThresh - never if endmask 0
+   // we separate b into < threshold and >= threshold.   This must match the selection made for stall exit
+   __m256d sprvalid=_mm256_and_pd(coverthresh,_mm256_cmp_pd(bk4,bkthresh,_CMP_GE_OQ));  // compare sets to ~0 if b>=bthresh - never if endmask is 0   set to ~0 if c>thresh & b>=thresh, i. e. SPR is valid
+   if(!_mm256_testc_pd(ratios,sprvalid)){  // CF is 1 if ~a&b signs all 0 => ~(~new min)&(c good&b good) all 0 => no place where new min & c good & b good
+    // at least one new SPR has overlap.  Remember the numbers
+    I contenmsk=_mm256_movemask_pd(_mm256_andnot_pd(ratios,sprvalid));  // bitmask indicating overlap positions
+    do{conten0[conteni++]=i+CTTZI(contenmsk); contenmsk&=contenmsk-1;}while(contenmsk);  // copy the indexes of the set bits one by one
+   }
+  }
+ }  // end of loop to find contenders
+
+ I zrow;  // the row number containing the minimum SPR - our result
+ if(likely(((1-conteni)&(1-AR(ck)))>=0))zrow=conten0[0];  // usually there is 1 contender.  And if we don't have QP, we'll just take a good one (might not be best)
+ else{
+  // there are contenders, and we must pick the best, by QP cross-multiplies
+  // cull those to best row in each lane, in QP, and then to a single lane
+  __m256d ckbh=_mm256_setzero_pd(), ckbl=ckbl, bkbh=_mm256_set1_pd(1.0), bkbl=bkbh;  // current 'best' values in each lane - init to b/c=infinity
+  __m256d ck4h, ck4l, bk4h, bk4l;  // new values to try
+  __m256i rownums;  // row numbers we are fetching from in the current iteration 
+  __m256d limitrows=_mm256_setzero_pd();  // row numbers of lowest SPRs.  Init not needed 
+#define keepbest { /* ckb* and ck4* are loaded.  In each lane, leave the smaller SPR in ckb* and limitrows */ \
+ /* we see if b4/c4 < bb/cb, where if b4=c4=0 it must NOT compare lower, ever.  Take b4*cb < c4*bb */ \
+ __m256d b4cbh, b4cbl, c4bbh, c4bbl, t0, t1;  /* quad-precision cross products */ \
+ TWOPROD(bk4h,ckbh,t0,t1)  /* b4 * cb high parts */ \
+ t1=_mm256_fmadd_pd(bk4h,ckbl,t1);  /* bh * cl into low part */ \
+ t1=_mm256_fmadd_pd(bk4l,ckbh,t1);  /* bl * ch into low part */ \
+ TWOSUMBS(t0,t1,b4cbh,b4cbl)  /* convert to canonical form.  We ignore low*low, which costs us 1 bit */ \
+ TWOPROD(ck4h,bkbh,t0,t1)  /* c4 * bb high parts */ \
+ t1=_mm256_fmadd_pd(ck4h,bkbl,t1);  /* ch * bl into low part */ \
+ t1=_mm256_fmadd_pd(bk4l,ckbh,t1);  /* cl * bh into low part */ \
+ TWOSUMBS(t0,t1,c4bbh,c4bbl)  /* convert to canonical form.  We ignore low*low, which costs us 1 bit */ \
+ /* set t0 to 1s if b4*cb < c4*bb */ \
+ /* we rely on consistent rounding: it must never happen that qp a>b and high(a)<=high(b) */ \
+ t0=_mm256_or_pd(_mm256_cmp_pd(b4cbh,c4bbh,_CMP_LT_OQ),_mm256_and_pd(_mm256_cmp_pd(b4cbh,c4bbh,_CMP_EQ_OQ),_mm256_cmp_pd(b4cbl,c4bbl,_CMP_LT_OQ))); /* < hi, or = hi < lo */ \
+ ckbh=_mm256_blendv_pd(ckbh,ck4h,t0); ckbl=_mm256_blendv_pd(ckbl,ck4l,t0); bkbh=_mm256_blendv_pd(bkbh,bk4h,t0); bkbl=_mm256_blendv_pd(bkbl,bk4l,t0);   /* keep the winner */ \
+ limitrows=_mm256_blendv_pd(limitrows,rownums,t0);  /* also remember the row */ \
+}
+
+  endmask=_mm256_setone_pd(); // mask for validity of next 4 words: used to control fetch from indexes and column
+  for(i=0;i<conteni+LGNPAR*NPAR;i+=NPAR){  // we go through the loop for all inputs, then twice more to combine lanes
+   if(i<conteni){  // the first loops read new values; the last combine lanes
+    // get the validity mask and process: leave as ones until the end of the column
+    if(likely(conteni-i>=NPAR)){
+     rownums=_mm256_loadu_si256((__m256i*)&conten0[i]);
+    }else{
+     endmask = _mm256_loadu_pd((double*)(validitymask+NPAR-(conteni-i)));
+     rownums=_mm256_maskload_epi64(&conten0[i],endmask);
+    }
+    ck4h=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),ck0,rownums,endmask,SZI);
+    ck4l=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),ck0+m,rownums,endmask,SZI);
+    bk4h=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bk0,rownums,endmask,SZI);
+    bk4l=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bk0+m,rownums,endmask,SZI);
+   }else if(i>conteni+NPAR){  // next-last iteration
+     ck4h=_mm256_permute_pd(ckbh,0b0101); ck4l=_mm256_permute_pd(ckbl,0b0101); bk4h=_mm256_permute_pd(bkbh,0b0101); bk4l=_mm256_permute_pd(bkbl,0b0101);  rownums=_mm256_permute_pd(limitrows,0b0101);  // compare within lanes
+   }else{  // last iteration
+     ck4h=_mm256_permute_pd(ckbh,0b0101); ck4l=_mm256_permute_pd(ckbl,0b0101); bk4h=_mm256_permute_pd(bkbh,0b0101); bk4l=_mm256_permute_pd(bkbl,0b0101);  rownums=_mm256_permute_pd(limitrows,0b0101);  // compare across lanes
+   }
+
+   keepbest
+  }  // end of loop to pick best contender
+
+  zrow=_mm256_extract_epi64(limitrows,0);  // remember the winning row
+
+ }  // end 'there are contenders'
+
+ // compare our best row against the incumbent in the ctx, and update the incumbent if the new value is an improvement
+ while(1){  // till we succeed in writing or we realize we don't have the best
+  I incumbent=__atomic_load_n(&((struct sprctx*)ctx)->row,__ATOMIC_ACQUIRE);  // get the current best row
+  if(incumbent>=0){  // if there is no incumbent, we know we beat it
+   __m256d ckbh=_mm256_set1_pd(ck0[incumbent]), ckbl=_mm256_set1_pd(ck0[m+incumbent]), bkbh=_mm256_set1_pd(bk0[incumbent]), bkbl=_mm256_set1_pd(bk0[m+incumbent]);  // incumbent 'best' values in each lane
+   __m256d ck4h=_mm256_set1_pd(ck0[zrow]), ck4l=_mm256_set1_pd(ck0[m+zrow]), bk4h=_mm256_set1_pd(bk0[zrow]), bk4l=_mm256_set1_pd(bk0[m+zrow]);  // new values to try
+   __m256i rownums=_mm256_set1_epi64x(incumbent);  // row numbers of incumbent
+   __m256d limitrows=_mm256_set1_epi64x(zrow);  // row numbers of lowest SPRs.  Init not needed 
+   keepbest  // see if we keep our value
+   if(zrow!=_mm256_extract_epi64(limitrows,0))break;  // if we are not the best, exit loop, we're done
+  }
+  // we have the best.  Try to install it in row
+  if(__atomic_compare_exchange_n(&((struct sprctx*)ctx)->row,&incumbent,zrow,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent
+ }
+ R 0;
+}
+
+
+// 128!:13  find minimum pivot ratio in quad precision
+// w is ck;bk;col#;ColThresh,bkthresh  or   ck value
+// result is row#,reciprocal of pivot hi,lo
+F1(jtfindspr){F1PREFIP;
+ ARGCHK1(w);
+ I row;  // will hold the row of the SPR
+ D *ckd;  // pointer to column data
+ I isqp;  // will be set if there is a qp value
+ I m;  // number of items in ck
+ // extract the inputs
+ if(AT(w)&FL){
+  // reciprocal-only case
+  ASSERT(AR(w)<=1,EVRANK) ASSERT(AR(w)==0||AS(w)[0]==2,EVLENGTH)  // must be atom or 2-atom list
+  isqp=AR(w); ckd=DAV(w); row=0; m=1;   // point to the sole value, which we take recip of
+ }else{
+  // search for the best SPR
+  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==4,EVLENGTH)  // w is 4 boxes
+  A box0=C(AAV(w)[0]), box1=C(AAV(w)[1]), box2=C(AAV(w)[2]), box3=C(AAV(w)[3]);
+  A ck=box0; ASSERT(AT(ck)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(ck),1,2),EVRANK) ASSERT(AR(ck)==1||AS(ck)[0]==2,EVLENGTH)  // ck is FL list or 2xn table
+  isqp=!(AR(ck)==1); ckd=DAV(ck);  // remember if qp, and address of the column data
+  A bk=box1; ASSERT(AT(bk)&FL,EVDOMAIN) ASSERT(AR(bk)==AR(ck),EVRANK) ASSERT(AS(bk)[0]==AS(ck)[0],EVLENGTH) ASSERT(AR(bk)==1||AS(bk)[1]==AS(ck)[1],EVLENGTH)  // bk is float list or 2xn table, must match ck
+  A col=box2; ASSERT(AT(col)&INT,EVDOMAIN) ASSERT(AR(col)==0,EVRANK) ASSERT(BETWEENO(IAV(col)[0],0,AS(ck)[1]),EVINDEX)  // col is column# to look in
+  A thresh=box3; ASSERT(AT(thresh)&FL,EVDOMAIN) ASSERT(AR(thresh)==1,EVRANK) ASSERT(AN(thresh)==2,EVLENGTH)  // thresh is 2 floats
+
+  // do the work
+  m=AS(ck)[AR(ck)-1];   // length of a column
+  // figure out how many threads to use, how many lines to take in each one
+#define TASKMINATOMS ((2*2000)/2)  // TUNE Values will be in cache.  Normal DP comp is 2 clocks per atom.  We don't want to start a task with less than 2000 clocks, so insist on twice that many
+  I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
+  I rowsperthread=m;  // will be #rows each processor should take
+  if(((1-nthreads)&(TASKMINATOMS-rowsperthread))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
+  else{
+   // big enough for multithreading.
+   rowsperthread=(m+nthreads-1)/nthreads;  // number of threads per processor, rounded up
+  }
+#undef TASKMINATOMS
+
+  // init the context
+#define YC(n) .n=n,
+struct sprctx opctx={YC(rowsperthread)YC(ck)YC(bk)YC(m).col=IAV(col)[0],.ckthreshd=DAV(thresh)[0],.bkthreshd=DAV(thresh)[1]};
+#undef YC
+
+  // run the operation
+  opctx.row=-1;  // init row# to invalid.  Improving threads will update it
+  if(nthreads>1)jtjobrun(jt,jtekupdatex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+  else jtekupdatex(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
+
+  row=opctx.row;
+  // if no SPR was found, signal error.  This is poossible only if the only pivots were near-threshold in dp and below threshold in qp
+  ASSERT(opctx.row>=0,EVLIMIT);
+ }
+
+ // allocate the result
+ A z; GAT0(z,FL,3,1)
+ // Get the winning row and take the reciprocal of its column value
+ DAV(z)[0]=(D)row;  // move row#
+ __m256d pivhi=_mm256_set1_pd(ckd[row]), reciphi=_mm256_set1_pd(1.0/ckd[row]);
+ if(isqp){
+  __m256d pivlo=_mm256_set1_pd(ckd[m+row]), reciplo=_mm256_set1_pd(0.0), t0, t1, prodh, prodl;
+  DO(3, TWOPROD(reciphi,pivhi,t0,t1) t1=_mm256_fmadd_pd(reciplo,pivhi,t1); t1=_mm256_fmadd_pd(reciphi,pivlo,t1); TWOSUMBS(t0,t1,prodh,prodl)   // qp piv * recip - will be very close to 1.0
+        t0=_mm256_sub_pd(_mm256_sub_pd(_mm256_set1_pd(1.0),prodh),prodl);  // - (amount the product is too high).  1-prodh gives exact result, commensurate with prodl
+if(i==2 && ABS(_mm256_cvtsd_f64(t0))>1e-31)SEGFAULT;  // scaf change iter back to 2
+        t0=_mm256_fmadd_pd(prodh,t0,reciplo); t1=reciphi; TWOSUMBS(t1,t0,reciphi,reciplo)  // -(toohigh)*recip(hi) gives correction to recip: add it in 
+  )
+  DAV(z)[2]=_mm256_cvtsd_f64(reciplo);  // lower recip
+ }
+ DAV(z)[1]=_mm256_cvtsd_f64(reciphi);  // always write upper/only recip
+ R z;
+}
+#else
+F1(jtfindspr){ASSERT(0,EVNONCE);}
 #endif

@@ -315,7 +315,7 @@ exitfa:
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){faacv(fs);}  // unra the name if it was looked up from the symbol tables
 exitname:
 jt->curname=savname;  // restore the executing name
-R z;
+RETF(z);
 }
 
 // This code needs to be executed before returning to the initial caller (i. e. the keyboard, or at end of task).

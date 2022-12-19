@@ -945,7 +945,7 @@ I jtgc3(J jt,A *x,A *y,A *z,A* old){
 }
 
 // subroutine version of ra without rifv to save space
-static A raonlys(AD * RESTRICT w) { RZ(w);
+static A raonlys(AD * RESTRICT w) { RZQ(w);
 #if AUDITEXECRESULTS
  if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))SEGFAULT;
 #endif

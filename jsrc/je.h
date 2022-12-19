@@ -454,6 +454,7 @@ extern F2(jtdot);
 extern F2(jtdrop);
 extern F2(jtebar);
 extern F2(jtekupdate);
+extern F1(jtfindspr);
 extern F2(jteps);
 extern F2(jtetoiso8601);
 extern F2(jtiso8601toe);

@@ -182,8 +182,8 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // reorder the results
   ASSERTGOTO(mr>=vr,EVRANK,errorwind);  // there must not be more selectors than atoms in the larger arg
   I disagree; TESTDISAGREE(disagree,AS(vres),AS(w),MIN(vr,wr));
-  if(unlikely(disagree))goto errorwind;  // shapes must match
-  if(ZZFLAGWORD&ZZFLAGISDYAD){TESTDISAGREE(disagree,AS(vres),AS(a),MIN(vr,wr));  if(unlikely(disagree))goto errorwind;}  // if dyad, check both
+  ASSERTGOTO(!disagree,EVLENGTH,errorwind)  // shapes must match
+  if(ZZFLAGWORD&ZZFLAGISDYAD){TESTDISAGREE(disagree,AS(vres),AS(a),MIN(vr,ar));  ASSERTGOTO(!disagree,EVLENGTH,errorwind)}  // if dyad, check both
   I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
   I nar=AN(FAV(self)->fgh[2]);  // number of ARs in the gerund
   wr-=vr; wr=wr+vr?wr:IMIN;  // now wr is the rank of a cell of w (negative if repetition required in w), or IMIN if w was an atom

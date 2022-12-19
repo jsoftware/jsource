@@ -366,6 +366,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(128,10): R CDERIV(CIBEAM, jtludecomp,         0,     VASGSAFE,RMAX,   RMAX,RMAX);
   case XC(128,11): R CDERIV(CIBEAM, 0,           jtlrtrim,     VASGSAFE,RMAX,RMAX,RMAX);
   case XC(128,12): R CDERIVF(CIBEAM, 0,           jtekupdate,     VASGSAFE|VJTFLGOK2,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
+  case XC(128,13): R CDERIVF(CIBEAM, jtfindspr, 0,                VASGSAFE|VJTFLGOK2,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
 //  default:        R foreignextra(a,w);

@@ -236,11 +236,11 @@ t =: 1e6 ?@$ 0
 (-. 1 e. 'avx2' E. 9!:14'') +. (5000 + 16b100000*SZI) > 7!:2 '1e_20 ((< |) * ]) 1e6 ?@$ 0'
 
 NB. tests for correct generation of AVX2 instructions.  Verifies that the compiler is using the instructions
-(-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]0 1') < 1.25 *  6!:2 '9!:66]0 0'  NB. verify andn used
-(-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]1 1') < 1.25 *  6!:2 '9!:66]1 0'  NB. verify blsr used
-(-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]2 0'  NB. verify shlx used
-(-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]3 0'  NB. verify tzcnt used
-(-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]4 0'  NB. verify lzcnt used
+THRESHOLD +. (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]0 1') < 1.25 *  6!:2 '9!:66]0 0'  NB. verify andn used
+THRESHOLD +. (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]1 1') < 1.25 *  6!:2 '9!:66]1 0'  NB. verify blsr used
+THRESHOLD +. (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]2 0'  NB. verify shlx used
+THRESHOLD +. (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]3 0'  NB. verify tzcnt used
+THRESHOLD +. (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]4 0'  NB. verify lzcnt used
 
 
 4!:55 ;:'dr eq exp f qct rk s sgn t test testa testb testc times x y'

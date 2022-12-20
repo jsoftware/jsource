@@ -4,13 +4,13 @@ NB.  128!:13 ck[;bk;colthresh,bkthresh] ------------------------
 {{
 NB. qp reciprocal mode
 qpmulvecatom=: (|:@(|:@(1 1 0 0 { [) +/@:*"1!.1 (1 0 1 0 { ])))
-assert. ((1.0=!.0[) *. (1e_30>!.0]))/@,@(,.  qpmulvecatom }.@(128!:13))"1 (,. 1e_18 * (*  0 ?@:$~ $)) 2000 * 10000 ?@$ 0
+assert. ((1.0=!.0[) *. (1e_30>!.0]))/@,@(,.  qpmulvecatom (128!:13))"1 (,. 1e_18 * (*  0 ?@:$~ $)) 2000 * 10000 ?@$ 0
 
 NB. SPR calc, possibly multithreaded
 while. 1 T. '' do. 55 T. '' end.
 while. 4 > 1. T. '' do.
-0 0.5 0 -:!.0 (128!:13) (,. 2. 0);(,. 1. 0);1e_9 1e_22
-(1 (0}) (128!:13)  2. 1e_20) -:!.0 (128!:13) (|: _2 ]\ 2. 0 2 1e_20 );(|: _2 ]\ 1. 0 1. 0);1e_9 1e_22
+0 -: (128!:13) (,. 2. 0);(,. 1. 0);1e_9 1e_22
+1 -: (128!:13) (|: _2 ]\ 2. 0 2 1e_20 );(|: _2 ]\ 1. 0 1. 0);1e_9 1e_22
 
 NB. one SPR smaller than all the others
 f =: {{
@@ -19,7 +19,7 @@ f =: {{
  for. i. x do.
   lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert. (lowloc (0}) (128!:13) 2 {. cblo) -:!.0 (128!:13) c;b;1e_9 1e_22
+  assert. lowloc -: (128!:13) c;b;1e_9 1e_22
  end.
  1
 }}
@@ -34,7 +34,7 @@ f =: {{
  for. i. x do.
   lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert. (lowloc (0}) (128!:13) 2 {. {. cbtbl) -:!.0 (128!:13) c;b;1e_9 1e_22
+  assert.lowloc -: (128!:13) c;b;1e_9 1e_22
  end.
  1
 }}
@@ -48,7 +48,7 @@ f =: {{
   cbtbl =. (1.0+?0) ,. locparts ,"(0 1)  (1.0+?0) , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled
   lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert. (lowloc (0}) (128!:13) 2 {. {. cbtbl) -:!.0 (128!:13) c;b;1e_9 1e_22
+  assert. lowloc -: (128!:13) c;b;1e_9 1e_22
  end.
  1
 }}
@@ -65,7 +65,7 @@ f =: {{
   lowloc =. ? # perm =. (2 >. ?y) ?&.:<: # cbtbl
   perm =. 00 lowloc} perm
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert. (lowloc (0}) (128!:13) 2 {. {. cbtbl) -:!.0 (128!:13) c;b;1e_9 1e_22
+  assert. lowloc -: (128!:13) c;b;1e_9 1e_22
  end.
  1
 }}

@@ -1249,7 +1249,7 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=
  .ndotprods=0,.ncolsproc=0,};
 #undef YC
 
- jtjobrun(jt,jtmvmsparsex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+ jtjobrun(jt,jtmvmsparsex,(void *)&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  // atomic sync operation on the job queue guarantee that we can use regular loads from opctx
 
  // prepare final result
@@ -1477,7 +1477,7 @@ F2(jtekupdate){F2PREFIP;
 struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzzmplr)};
 #undef YC
 
- if(nthreads>1)jtjobrun(jt,jtekupdatex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+ if(nthreads>1)jtjobrun(jt,jtekupdatex,(void *)&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  else jtekupdatex(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
 
  R qk;
@@ -1664,7 +1664,7 @@ static unsigned char jtfindsprx(J jt,struct sprctx* const ctx,UI4 ti){
 }
 
 
-// 128!:13  find minimum pivot ratio in quad precision
+// 128!:13  find minimum pivot ratio in quad precision  OR  take reciprocal
 // w is ck;bk;ColThresh,bkthresh  or   ck value
 // result is row#,reciprocal of pivot hi,lo
 F1(jtfindspr){F1PREFIP;
@@ -1677,7 +1677,19 @@ F1(jtfindspr){F1PREFIP;
  if(AT(w)&FL){
   // reciprocal-only case
   ASSERT(AR(w)<=1,EVRANK) ASSERT(AR(w)==0||AS(w)[0]==2,EVLENGTH)  // must be atom or 2-atom list
-  isqp=AR(w); ckd=DAV(w); row=0; m=1;   // point to the sole value, which we take recip of
+  isqp=AR(w); ckd=DAV(w);
+  A z; GAT0(z,FL,2,1)
+  __m256d pivhi=_mm256_set1_pd(ckd[0]), reciphi=_mm256_set1_pd(1.0/ckd[0]);
+  if(isqp){
+   __m256d pivlo=_mm256_set1_pd(ckd[1]), reciplo=_mm256_set1_pd(0.0), t0, t1, prodh, prodl;
+   DO(2,  TWOPROD(reciphi,pivhi,t0,t1) t1=_mm256_fmadd_pd(reciplo,pivhi,t1); t1=_mm256_fmadd_pd(reciphi,pivlo,t1); TWOSUMBS(t0,t1,prodh,prodl)   // qp piv * recip - will be very close to 1.0
+          t0=_mm256_sub_pd(_mm256_sub_pd(_mm256_set1_pd(1.0),prodh),prodl);  // - (amount the product is too high).  1-prodh gives exact result, commensurate with prodl
+          t0=_mm256_fmadd_pd(reciphi,t0,reciplo); t1=reciphi; TWOSUMBS(t1,t0,reciphi,reciplo)  // -(toohigh)*recip(hi) gives correction to recip: add it in
+   )
+   DAV(z)[1]=_mm256_cvtsd_f64(reciplo);  // lower recip
+  }else DAV(z)[1]=0.0;
+  DAV(z)[0]=_mm256_cvtsd_f64(reciphi);  // always write upper/only recip
+  RETF(z);  // return qp reciprocal
  }else{
   // search for the best SPR
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==3,EVLENGTH)  // w is 3 boxes
@@ -1707,29 +1719,14 @@ struct sprctx opctx={YC(rowsperthread)YC(ck)YC(bk)YC(m).ckthreshd=DAV(thresh)[0]
 
   // run the operation
   opctx.row=-1;  // init row# to invalid.  Improving threads will update it
-  if(nthreads>1)jtjobrun(jt,jtfindsprx,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+  if(nthreads>1)jtjobrun(jt,jtfindsprx,(void *)&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
   else jtfindsprx(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
 
   row=opctx.row;
   // if no SPR was found, signal error.  This is possible only if the only pivots were near-threshold in dp and below threshold in qp
   ASSERT(opctx.row>=0,EVLIMIT);
+  RETF(sc(row))  // return the row#
  }
-
- // allocate the result
- A z; GAT0(z,FL,3,1)
- // Get the winning row and take the reciprocal of its column value
- DAV(z)[0]=(D)row;  // move row#
- __m256d pivhi=_mm256_set1_pd(ckd[row]), reciphi=_mm256_set1_pd(1.0/ckd[row]);
- if(isqp){
-  __m256d pivlo=_mm256_set1_pd(ckd[m+row]), reciplo=_mm256_set1_pd(0.0), t0, t1, prodh, prodl;
-  DO(2,  TWOPROD(reciphi,pivhi,t0,t1) t1=_mm256_fmadd_pd(reciplo,pivhi,t1); t1=_mm256_fmadd_pd(reciphi,pivlo,t1); TWOSUMBS(t0,t1,prodh,prodl)   // qp piv * recip - will be very close to 1.0
-         t0=_mm256_sub_pd(_mm256_sub_pd(_mm256_set1_pd(1.0),prodh),prodl);  // - (amount the product is too high).  1-prodh gives exact result, commensurate with prodl
-         t0=_mm256_fmadd_pd(reciphi,t0,reciplo); t1=reciphi; TWOSUMBS(t1,t0,reciphi,reciplo)  // -(toohigh)*recip(hi) gives correction to recip: add it in
- )
-  DAV(z)[2]=_mm256_cvtsd_f64(reciplo);  // lower recip
- }
- DAV(z)[1]=_mm256_cvtsd_f64(reciphi);  // always write upper/only recip
- R z;
 }
 #else
 F1(jtfindspr){ASSERT(0,EVNONCE);}

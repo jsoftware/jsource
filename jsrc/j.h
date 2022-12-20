@@ -1644,8 +1644,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // ??? is_mm256_zeroupper really needed
 // -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
 #define _mm256_zeroupperx(x)
-// this is faster than reusing another register as the source anyway, because it's not a recognised idiom, so we would have a false dependency on the other register
-#define _mm_setone_si128() _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128())
+// this is faster than reusing another register as the source anyway, because it's not a recognized idiom, so we would have a false dependency on the other register
+#define _mm_setone_si128() _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128()) // set to all ~0
 #define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
 #define _mm256_setone_pd() _mm256_castsi256_pd(_mm256_setone_epi64())
 static inline __m256i LOADV32I(void *x) { return _mm256_loadu_si256(x); }

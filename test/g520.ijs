@@ -1,5 +1,106 @@
 prolog './g520.ijs'
 
+NB.  128!:13 ck[;bk;colthresh,bkthresh] ------------------------
+{{
+NB. qp reciprocal mode
+qpmulvecatom=: (|:@(|:@(1 1 0 0 { [) +/@:*"1!.1 (1 0 1 0 { ])))
+assert. ((1.0=!.0[) *. (1e_30>!.0]))/@,@(,.  qpmulvecatom }.@(128!:13))"1 (,. 1e_18 * (*  0 ?@:$~ $)) 2000 * 10000 ?@$ 0
+
+NB. SPR calc, possibly multithreaded
+while. 1 T. '' do. 55 T. '' end.
+while. 4 > 1. T. '' do.
+0 0.5 0 -:!.0 (128!:13) (,. 2. 0);(,. 1. 0);1e_9 1e_22
+(1 (0}) (128!:13)  2. 1e_20) -:!.0 (128!:13) (|: _2 ]\ 2. 0 2 1e_20 );(|: _2 ]\ 1. 0 1. 0);1e_9 1e_22
+
+NB. one SPR smaller than all the others
+f =: {{
+ cbhi =. 1. 0.5e_18 1. 0.25e_18 [ cblo =. 1. 0.50000000001e_18 1. 0.25e_18
+ cbtbl =. cblo , cbhi *"1 0 y ?@$ 100   NB. 1 small SPR
+ for. i. x do.
+  lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
+  'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
+  assert. (lowloc (0}) (128!:13) 2 {. cblo) -:!.0 (128!:13) c;b;1e_9 1e_22
+ end.
+ 1
+}}
+
+400 f 1000
+400 f 10000  NB. multithreads
+
+NB. random SPRs, all contenders
+f =: {{
+ locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
+ cbtbl =. (y ?@$ 100) * 1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled
+ for. i. x do.
+  lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
+  'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
+  assert. (lowloc (0}) (128!:13) 2 {. {. cbtbl) -:!.0 (128!:13) c;b;1e_9 1e_22
+ end.
+ 1
+}}
+400 f 1000
+400 f 10000  NB. multithreads
+
+NB. Random variation in all of chi and blo (which must be the same everywhere)
+f =: {{
+ locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
+ for. i. x do.
+  cbtbl =. (1.0+?0) ,. locparts ,"(0 1)  (1.0+?0) , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled
+  lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
+  'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
+  assert. (lowloc (0}) (128!:13) 2 {. {. cbtbl) -:!.0 (128!:13) c;b;1e_9 1e_22
+ end.
+ 1
+}}
+400 f 1000
+400 f 10000  NB. multithreads
+
+
+NB. Some noncontenders
+f =: {{
+ locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
+ cbtbl =. 1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b
+ cbtbl =. (* 100 ?@$~ #) cbtbl , 200 # ,: 1.0 0 2.0 0   NB. add noncontenders and scale
+ for. i. x do.
+  lowloc =. ? # perm =. (2 >. ?y) ?&.:<: # cbtbl
+  perm =. 00 lowloc} perm
+  'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
+  assert. (lowloc (0}) (128!:13) 2 {. {. cbtbl) -:!.0 (128!:13) c;b;1e_9 1e_22
+ end.
+ 1
+}}
+400 f 1000
+400 f 10000  NB. multithreads
+
+0 T. 0  NB. allocate a worker thread
+end.   NB. end of loop with different # threads
+while. 1 T. '' do. 55 T. '' end.  NB. clear threads
+
+assert. 'limit error' -: (128!:13) etx (|: _2 ]\ 0. 0 0 0 );(|: _2 ]\ 1. 0 2. 1e_20);1e_9 1e_22  NB. no SPRs
+assert. 'domain error' -: (128!:13) etx 'abc'
+assert. 'domain error' -: (128!:13) etx 0 1
+assert. 'domain error' -: (128!:13) etx 2 3
+assert. 'rank error' -: (128!:13) etx 0. + i. 2 3
+assert. 'length error' -: (128!:13) etx 1. 2 3
+assert. 'length error' -: (128!:13) etx 1;2;3;4
+assert. 'length error' -: (128!:13) etx 1;2
+assert. 'domain error' -: (128!:13) etx (1,:0);(1.,:0.);1. 1.
+assert. 'domain error' -: (128!:13) etx (4,:0);(1.,:0.);1. 1.
+assert. 'domain error' -: (128!:13) etx (1.,:0.);(1,:0);1. 1.
+assert. 'domain error' -: (128!:13) etx (1.,:0.);(4,:0);1. 1.
+assert. 'domain error' -: (128!:13) etx (1.,:0.);(1.,:0.);1 1
+assert. 'domain error' -: (128!:13) etx (1.,:0.);(1.,:0.);2 2
+assert. 'rank error' -: (128!:13) etx (,:1.,:0.);(1.,:0.);1. 1.
+assert. 'rank error' -: (128!:13) etx (1.,:0.);(,:1.,:0.);1. 1.
+assert. 'rank error' -: (128!:13) etx (1.,:0.);(1.,:0.);,:1. 1.
+assert. 'length error' -: (128!:13) etx (0,1.,:0.);(1.,:0.);1. 1.
+assert. 'length error' -: (128!:13) etx (1.,:0.);(0,1.,:0.);1. 1.
+assert. 'length error' -: (128!:13) etx (1.,:0.);(1.,:0.);0 1. 1.
+
+1
+}}^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1
+
+
 NB. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk ------------------------
 NB. normal precision
 f =: 1:`({{
@@ -1446,7 +1547,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
  
-4!:55 ;:'a adot1 adot2 sdot0 b catalog copy count f fr from i j '
+4!:55 ;:'a adot1 adot2 sdot0 b catalog copy count f fr from i j qpmulvecatom'
 4!:55 ;:'jot k l n p prod q r s v x y '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

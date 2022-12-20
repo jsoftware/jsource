@@ -1249,7 +1249,7 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=
  .ndotprods=0,.ncolsproc=0,};
 #undef YC
 
- jtjobrun(jt,jtmvmsparsex,(void *)&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+ jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtmvmsparsex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  // atomic sync operation on the job queue guarantee that we can use regular loads from opctx
 
  // prepare final result
@@ -1477,7 +1477,7 @@ F2(jtekupdate){F2PREFIP;
 struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newrownon0)YC(relfuzzmplr)};
 #undef YC
 
- if(nthreads>1)jtjobrun(jt,jtekupdatex,(void *)&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+ if(nthreads>1)jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtekupdatex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  else jtekupdatex(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
 
  R qk;
@@ -1719,7 +1719,7 @@ struct sprctx opctx={YC(rowsperthread)YC(ck)YC(bk)YC(m).ckthreshd=DAV(thresh)[0]
 
   // run the operation
   opctx.row=-1;  // init row# to invalid.  Improving threads will update it
-  if(nthreads>1)jtjobrun(jt,jtfindsprx,(void *)&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+  if(nthreads>1)jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtfindsprx,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
   else jtfindsprx(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
 
   row=opctx.row;

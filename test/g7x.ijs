@@ -58,7 +58,7 @@ x -: y
 
 x =: spa ''
 s =: h 3+?7
-1: 6!:3 ] 0.01  NB. must give the task a chance to be dequeued
+1: 6!:3 ] 3.00  NB. must give the task a chance to be dequeued, 0.01 is insufficient
 y =: spa ''
 x -: y
 

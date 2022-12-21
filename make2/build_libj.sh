@@ -75,6 +75,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-empty-body \
  -Wno-format-overflow \
  -Wno-implicit-fallthrough \
+ -Wno-incompatible-function-pointer-types \
  -Wno-int-to-pointer-cast \
  -Wno-maybe-uninitialized \
  -Wno-missing-field-initializers \
@@ -108,6 +109,7 @@ else
  -Wno-empty-body \
  -Wno-implicit-float-conversion \
  -Wno-implicit-int-float-conversion \
+ -Wno-incompatible-function-pointer-types \
  -Wno-int-conversion \
  -Wno-int-in-bool-context \
  -Wno-missing-braces \

@@ -26,12 +26,7 @@ NB. RUN1^:IFWIN 'g640'
 NB. RUN1^:IFWIN 'g7x6'
 NB. exit^:IFWIN 1
 
-NB. echo '1: (2x ^ 2 ^ i. 20x)'
-NB. 1: (2x ^ 2 ^ i. 20x)
-NB. echo '1: (2 ^ i. 10x)'
-NB. 1: (2 ^ i. 10x)
-NB. echo '1: (2 ^ i. 10x)'
-NB. 1: (2 ^ i. 10x)
+NB. this crash on Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
 echo '1: (3x ^ 2 ^ i. 10x)'
 1: (3x ^ 2 ^ i. 10x)
 

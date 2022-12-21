@@ -6,6 +6,8 @@ NB. qp reciprocal mode
 qpmulvecatom=: (|:@(|:@(1 1 0 0 { [) +/@:*"1!.1 (1 0 1 0 { ])))
 assert. ((1.0=!.0[) *. (1e_30>!.0]))/@,@(,.  qpmulvecatom (128!:13))"1 (,. 1e_18 * (*  0 ?@:$~ $)) 2000 * 10000 ?@$ 0
 
+savspr =: {{ (exp =: x) -: res =: 128!:13 arg =: y }}
+
 NB. SPR calc, possibly multithreaded
 while. 1 T. '' do. 55 T. '' end.
 while. 4 > 1. T. '' do.
@@ -13,13 +15,14 @@ while. 4 > 1. T. '' do.
 1 -: (128!:13) (|: _2 ]\ 2. 0 2 1e_20 );(|: _2 ]\ 1. 0 1. 0);1e_9 1e_22
 
 NB. one SPR smaller than all the others
+ftype =: 0
 f =: {{
  cbhi =. 1. 0.5e_18 1. 0.25e_18 [ cblo =. 1. 0.50000000001e_18 1. 0.25e_18
  cbtbl =. cblo , cbhi *"1 0 y ?@$ 100   NB. 1 small SPR
  for. i. x do.
   lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert. lowloc -: (128!:13) c;b;1e_9 1e_22
+  assert. lowloc savspr c;b;1e_9 1e_22
  end.
  1
 }}
@@ -28,13 +31,14 @@ f =: {{
 400 f 10000  NB. multithreads
 
 NB. random SPRs, all contenders
+ftype =: 1
 f =: {{
  locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
- cbtbl =. (y ?@$ 100) * 1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled
+ cbtbl =. (*   [: (0}~   1 >. {.) 100 ?@$~ #) r__   =:  1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled.  Smallest must not go to 0; others can
  for. i. x do.
   lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert.lowloc -: (128!:13) c;b;1e_9 1e_22
+  assert.lowloc savspr c;b;1e_9 1e_22
  end.
  1
 }}
@@ -42,13 +46,14 @@ f =: {{
 400 f 10000  NB. multithreads
 
 NB. Random variation in all of chi and blo (which must be the same everywhere)
+ftype =: 2
 f =: {{
  locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
  for. i. x do.
   cbtbl =. (1.0+?0) ,. locparts ,"(0 1)  (1.0+?0) , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled
   lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert. lowloc -: (128!:13) c;b;1e_9 1e_22
+  assert. lowloc savspr c;b;1e_9 1e_22
  end.
  1
 }}
@@ -57,15 +62,16 @@ f =: {{
 
 
 NB. Some noncontenders
+ftype =: 3
 f =: {{
  locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
  cbtbl =. 1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b
- cbtbl =. (* 100 ?@$~ #) cbtbl , 200 # ,: 1.0 0 2.0 0   NB. add noncontenders and scale
+ cbtbl =. (*   [: (0}~   1 >. {.) 100 ?@$~ #) cbtbl , 200 # ,: 1.0 0 2.0 0   NB. add noncontenders and scale, not allowing smallest to go to 0
  for. i. x do.
   lowloc =. ? # perm =. (2 >. ?y) ?&.:<: # cbtbl
   perm =. 00 lowloc} perm
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
-  assert. lowloc -: (128!:13) c;b;1e_9 1e_22
+  assert. lowloc savspr c;b;1e_9 1e_22
  end.
  1
 }}
@@ -1547,7 +1553,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
  
-4!:55 ;:'a adot1 adot2 sdot0 b catalog copy count f fr from i j qpmulvecatom'
+4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count exp f fr from ftype i j qpmulvecatom res savspr'
 4!:55 ;:'jot k l n p prod q r s v x y '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

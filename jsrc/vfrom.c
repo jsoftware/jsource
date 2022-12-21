@@ -1631,10 +1631,10 @@ static unsigned char jtfindsprx(J jt,struct sprctx* const ctx,UI4 ti){
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-(conteni-i)));
      rownums=_mm256_maskload_epi64(&conten0[i],endmask);
     }
-    ck4h=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),ck0,rownums,endmask,SZI);
-    ck4l=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),ck0+m,rownums,endmask,SZI);
-    bk4h=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bk0,rownums,endmask,SZI);
-    bk4l=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bk0+m,rownums,endmask,SZI);
+    ck4h=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),ck0,rownums,_mm256_castsi256_pd(endmask),SZI);
+    ck4l=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),ck0+m,rownums,_mm256_castsi256_pd(endmask),SZI);
+    bk4h=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bk0,rownums,_mm256_castsi256_pd(endmask),SZI);
+    bk4l=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bk0+m,rownums,_mm256_castsi256_pd(endmask),SZI);
    }else if(i<conteni+NPAR){  // next-last iteration
      ck4h=_mm256_permute_pd(ckbh,0b0101); ck4l=_mm256_permute_pd(ckbl,0b0101); bk4h=_mm256_permute_pd(bkbh,0b0101); bk4l=_mm256_permute_pd(bkbl,0b0101);  rownums=_mm256_castpd_si256(_mm256_permute_pd(limitrows,0b0101));  // compare within lanes
    }else{  // last iteration

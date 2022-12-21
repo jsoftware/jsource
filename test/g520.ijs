@@ -107,7 +107,8 @@ assert. 'length error' -: (128!:13) etx (1.,:0.);(1.,:0.);0 1. 1.
 }}^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1
 
 
-NB. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk ------------------------
+NB. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk ------------------------
+epdefuzzsub =. {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
 NB. normal precision
 f =: 1:`({{
  while. 1 T. '' do. 55 T. '' end.
@@ -116,11 +117,11 @@ f =: 1:`({{
   'r c' =. 2 ?@$ >:siz  NB. size of modified area
   prx =. 00 + r ? siz [ pcx =. 00 + c ? siz  NB. indexes of mods
   pivotcolnon0 =.r ?@$ 0 [ newrownon0 =. c ?@$ 0
-  relfuzz =. 1e_14 * ? 0  NB. tolerance
+  absfuzz =. 1e_14 * ? 0  NB. tolerance
   Qk =. (siz,siz) ?@$ 0
-  expQk=. (((<prx;pcx) { Qk) ((~:!.relfuzz) * -) pivotcolnon0 */ newrownon0) (<prx;pcx)} preQk =. memu Qk
-  Qk =. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk
-  if. -. r =. 1e_13 > >./ , | Qk - expQk do. 13!:8]4 [ 'prx__ pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expQk__ preQk__ Qk__' =: prx;pcx;pivotcolnon0;newrownon0;relfuzz;expQk;preQk;Qk end.
+  expQk=. (((<prx;pcx) { Qk) ((*  absfuzz <!.0 |)@:-) pivotcolnon0 */ newrownon0) (<prx;pcx)} preQk =. memu Qk
+  Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk
+  if. -. r =. 1e_13 > >./ , | Qk - expQk do. 13!:8]4 [ 'prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
   0 T. 0  NB. allocate a worker thread
  end.
  while. 1 T. '' do. 55 T. '' end.
@@ -133,7 +134,7 @@ f =: 1:`({{
  epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
  epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
  epsub =. (epadd -)
- epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
+NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
  epcanon =. (epadd   0 $~ $)
  siz =. y  NB. size of Qk
  while. 1 T. '' do. 55 T. '' end.
@@ -146,12 +147,12 @@ f =: 1:`({{
   newrownon0 =. (] {~ c ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + c ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
   newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
   newrownon0 =. 0. + newrownon0  NB. force to float
-  relfuzz =. 1e_25 * ? 0  NB. tolerance
+  absfuzz =. 1e_25 * ? 0  NB. tolerance
   Qk =. (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
-  expQk=. (((<a:;prx;pcx) { Qk) (relfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
-  Qk =. (prx;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 Qk
-  if. -. 1e_30 > >./ re =. , | (+/  expQk epsub Qk) % (| +/ Qk) >. (| +/ preQk) >. (| +/ expQk) do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expQk__ preQk__ Qk__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;relfuzz;expQk;preQk;Qk end.
+  expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
+  Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk
+  if. -. 1e_30 > >./ re =. , | (+/  expQk epsub Qk) % (| +/ Qk) >. (| +/ preQk) >. (| +/ expQk) do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
   0 T. 0  NB. allocate a worker thread
  end.
  while. 1 T. '' do. 55 T. '' end.
@@ -178,18 +179,18 @@ f =: 1:`({{
 f ''
 
 
-NB. (0;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 bk ------------------------
+NB. (0;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 bk ------------------------
 NB. normal precision
 f =: 1:`({{
  siz =. y  NB. size of bk
  r =. 1 [ c =. ? >:siz  NB. size of modified area
  pcx =. 00 + c ? siz  NB. indexes of mods
  pivotcolnon0 =. r ?@$ 0 [ newrownon0 =. c ?@$ 0
- relfuzz =. 1e_14 * ? 0  NB. tolerance
+ absfuzz =. 1e_14 * ? 0  NB. tolerance
  bk =. siz ?@$ 0
- expbk=. (((<<pcx) { bk) ((~:!.relfuzz) * -) (c # pivotcolnon0) * newrownon0) (<<pcx)} prebk =. memu bk
- bk =. (00;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 bk
- if. -. r =. 1e_13 > >./ , | bk - expbk do. 13!:8]4 [ 'pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expbk__ prebk__ bk__' =: pcx;pivotcolnon0;newrownon0;relfuzz;expbk;prebk;bk end.
+ expbk=. (((<<pcx) { bk) ((*  absfuzz <!.0 |)@:-) (c # pivotcolnon0) * newrownon0) (<<pcx)} prebk =. memu bk
+ bk =. (00;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 bk
+ if. -. r =. 1e_13 > >./ , | bk - expbk do. 13!:8]4 [ 'pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expbk__ prebk__ bk__' =: pcx;pivotcolnon0;newrownon0;absfuzz;expbk;prebk;bk end.
  r 
 }}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
 f i. 65
@@ -199,7 +200,6 @@ f =: 1:`({{
  epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
  epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
  epsub =. (epadd -)
- epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
  epcanon =. (epadd   0 $~ $)
  siz =. y  NB. size of Qk
  r =. 1 [ c =. ? >:siz  NB. size of modified area
@@ -211,12 +211,12 @@ f =: 1:`({{
  newrownon0 =. (] {~ c ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + c ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
  newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
  newrownon0 =. 0. + newrownon0  NB. force to float
- relfuzz =. 1e_25 * ? 0  NB. tolerance
+ absfuzz =. 1e_25 * ? 0  NB. tolerance
  bk =. (*  0.25 < 0 ?@$~ $) 1e6 * siz ?@$ 0.
  bk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) bk  NB. append extended part
- expbk=. (((<a:;pcx) { bk) (relfuzz epdefuzzsub) (c #"1 pivotcolnon0) epmul (newrownon0)) (<a:;pcx)} prebk=. memu bk
- bk =. (00;pcx;pivotcolnon0;newrownon0;relfuzz) 128!:12 bk
- if. -. 1e_30 > >./ re =. , | (+/  expbk epsub bk) % (| +/ bk) >. (| +/ prebk) >. (| +/ expbk) do. 13!:8]4 [ 'r__ c__ re__ pcx__ pivotcolnon0__ newrownon0__ relfuzz__ expbk__ prebk__ bk__' =: r;c;re;pcx;pivotcolnon0;newrownon0;relfuzz;expbk;prebk;bk end.
+ expbk=. (((<a:;pcx) { bk) (absfuzz epdefuzzsub) (c #"1 pivotcolnon0) epmul (newrownon0)) (<a:;pcx)} prebk=. memu bk
+ bk =. (00;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 bk
+ if. -. 1e_30 > >./ re =. , | (+/  expbk epsub bk) % (| +/ bk) >. (| +/ prebk) >. (| +/ expbk) do. 13!:8]4 [ 'r__ c__ re__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expbk__ prebk__ bk__' =: r;c;re;pcx;pivotcolnon0;newrownon0;absfuzz;expbk;prebk;bk end.
  1
 }}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
 
@@ -228,7 +228,6 @@ NB. 128!:9  g;i;v;M ---------------------------------------------------------
 epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
 epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
-epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
 epcanon =. (epadd   0 $~ $)
 M =. 0. + =/~ i. 6
 assert. 1 0 0 0 0 0 -: (128!:9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0
@@ -1553,7 +1552,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
  
-4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count exp f fr from ftype i j qpmulvecatom res savspr'
+4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res savspr'
 4!:55 ;:'jot k l n p prod q r s v x y '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

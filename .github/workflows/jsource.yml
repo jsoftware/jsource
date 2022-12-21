@@ -45,6 +45,7 @@ jobs:
       strip -S libjavx2.so
       strip -S libjavx512.so
       strip -S libtsdll.so
+      strip -S libgmp.so
       cd ..
       ls -l j64
       zip -r l64.zip j64
@@ -95,6 +96,7 @@ jobs:
       strip -S libjavx2.so
       strip -S libjavx512.so
       strip -S libtsdll.so
+      strip -S libgmp.so
       cd ..
       ls -l j64
       zip -r lgcc64.zip j64

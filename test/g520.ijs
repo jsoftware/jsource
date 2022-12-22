@@ -108,7 +108,7 @@ assert. 'length error' -: (128!:13) etx (1.,:0.);(1.,:0.);0 1. 1.
 
 
 NB. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk ------------------------
-epdefuzzsub =. {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
+epdefuzzsub =: {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
 NB. normal precision
 f =: 1:`({{
  while. 1 T. '' do. 55 T. '' end.

@@ -294,7 +294,7 @@ jobs:
        export USE_SLEEF=1
        sh script/buildga.sh openbsd
        sh script/testga.sh openbsd
-#       cp testobsd64.txt j64/.
+       cp testobsd64.txt j64/.
        cd j64
        strip -S jconsole
        strip -S libj.so

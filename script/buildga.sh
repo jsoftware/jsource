@@ -2,7 +2,8 @@
 #
 # build linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry|android
+# argument is linux|darwin|raspberry|android|openbsd
+# openbsd is experimental
 
 set -e
 CC=${CC-clang}
@@ -18,8 +19,10 @@ elif [ "$1" == "darwin" ]; then
   ext="dylib"
 elif [ "$1" == "android" ]; then
   ext="so"
+elif [ "$1" == "openbsd" ]; then
+  ext="so"
 else
-  echo "argument is linux|darwin|raspberry|android"
+  echo "argument is linux|darwin|raspberry|android|openbsd"
   exit 1
 fi
 if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
@@ -58,7 +61,13 @@ echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
 echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 
 if [ "x$MAKEFLAGS" = x'' ] ; then
-if [ "$1" == "linux" ] || [ "$1" == "raspberry" ] ; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+if [ "$1" == "linux" ] || [ "$1" == "raspberry" ] ; then
+par=`nproc` 
+elif [ "$1" == "darwin" ] || [ "$1" == "android" ] ; then
+par=`sysctl -n hw.ncpu` 
+else 
+par=2
+fi
 export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"

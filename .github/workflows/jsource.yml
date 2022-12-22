@@ -274,7 +274,7 @@ jobs:
        path: testrpi32.txt
 
 # openbsd --------------------------------------------------------------
- jeopenbsd
+ jeopenbsd:
   name: JE (OpenBSD)
   runs-on: macos-12
   steps:

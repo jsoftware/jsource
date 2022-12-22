@@ -14,7 +14,9 @@ jplatform64=$(./jplatform64.sh)
 case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	openbsd/*) make=gmake
 esac
+make="${make:=make}"
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
 compiler=$(readlink -f $(which $CC) || which $CC)
@@ -114,6 +116,26 @@ TARGET=libjnative.so
 CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
+openbsd_j64arm)
+TARGET=libjnative.so
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+openbsd_j64)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+openbsd_j64avx)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+openbsd_j64avx2)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
 darwin/j32)
 TARGET=libjnative.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
@@ -156,7 +178,7 @@ mkdir -p obj/$jplatform64/
 cp makefile-jnative obj/$jplatform64/.
 export CFLAGS LDFLAGS TARGET jplatform64
 cd obj/$jplatform64/
-make -f makefile-jnative
+$make -f makefile-jnative
 retval=$?
 cd -
 exit $retval

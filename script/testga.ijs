@@ -2,7 +2,7 @@
 
 testpath=: (1!:43''),'/test/'
 
-os=: (('Linux';'Darwin') i. <UNAME) pick ;:'linux darwin win'
+os=: (('Linux';'Darwin';'OpenBSD') i. <UNAME) pick ;:'linux darwin openbsd win'
 os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os
 testres=: 'test',os,'.txt'
 

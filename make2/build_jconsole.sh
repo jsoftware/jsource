@@ -33,7 +33,9 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	openbsd/*) make=gmake
 esac
+make="${make:=make}"
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
 compiler=$(readlink -f $(which $CC) || which $CC)
@@ -136,6 +138,22 @@ raspberry/j64)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
+openbsd_j64arm)
+CFLAGS="$common -march=armv8-a+crc -DRASPI"
+LDFLAGS=" $LDTHREAD"
+;;
+openbsd_j64)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
+openbsd_j64avx)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
+openbsd_j64avx2)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
 darwin/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
@@ -187,7 +205,7 @@ mkdir -p obj/$jplatform64
 cp makefile-jconsole obj/$jplatform64/.
 export CFLAGS LDFLAGS TARGET OBJSLN jplatform64
 cd obj/$jplatform64/
-make -f makefile-jconsole
+$make -f makefile-jconsole
 retval=$?
 cd -
 exit $retval

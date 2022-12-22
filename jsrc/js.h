@@ -105,7 +105,7 @@ define one of the following in the build as required
 #define SYS_UNIX            (SYS_ATT3B1 + SYS_DEC5500 + SYS_IBMRS6000 + \
                              SYS_MIPS + SYS_NEXT + SYS_SGI + SYS_SUN3 + \
                              SYS_SUN4 + SYS_VAX + SYS_LINUX + SYS_MACOSX + SYS_OPENBSD + \
-                             SYS_FREEBSD + SYS_NETBSD + SYS_SUNSOL2 + SYS_HPUX)
+                             SYS_FREEBSD + SYS_NETBSD + SYS_OPENBSD + SYS_SUNSOL2 + SYS_HPUX)
 
 #if defined(__FreeBSD__)
 #define SYS SYS_FREEBSD

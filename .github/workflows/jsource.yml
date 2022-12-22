@@ -294,7 +294,7 @@ jobs:
        export USE_SLEEF=1
        sh script/buildga.sh openbsd
        sh script/testga.sh openbsd
-       cp testobsd64.txt j64/.
+#       cp testobsd64.txt j64/.
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -303,26 +303,26 @@ jobs:
        find j64 -type d -exec chmod a+rwx {} \;
        find j64 -type f -exec chmod a+rw {} \;
 
-   - name: Compress Files (OpenBSD)
-     run: |
-      mv j64/testobsd64.txt .
-      ls -l j64
-      zip -r obsd64.zip j64
-
-   - name: Release JE (OpenBSD)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "obsd64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (OpenBSD)
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testobsd64.txt
+#   - name: Compress Files (OpenBSD)
+#     run: |
+#      mv j64/testobsd64.txt .
+#      ls -l j64
+#      zip -r obsd64.zip j64
+#
+#   - name: Release JE (OpenBSD)
+#     uses: ncipollo/release-action@v1
+#     with:
+#      tag: build
+#      artifacts: "obsd64.zip"
+#      token: ${{ secrets.GITHUB_TOKEN }}
+#      allowUpdates: true
+#      replacesArtifacts: true
+#
+#   - name: Copy Test (OpenBSD)
+#     uses: actions/upload-artifact@v2
+#     with:
+#       name: dist
+#       path: testobsd64.txt
 
 # android --------------------------------------------------------------
  jeandroid:

@@ -290,16 +290,10 @@ jobs:
 #      pkg_add curl
 
       run: |
-       pwd
-       ls -lah
-       whoami
-       env
-       which gcc
-       which clang
        export CC=clang
        export USE_SLEEF=1
-       script/buildga.sh openbsd
-       script/testga.sh openbsd
+       sh script/buildga.sh openbsd
+       sh script/testga.sh openbsd
        cp testobsd64.txt j64/.
        cd j64
        strip -S jconsole

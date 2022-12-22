@@ -1,5 +1,7 @@
 @rem test windows on github actions
 
+systeminfo
+
 dir j64
 
 j64\jconsole -lib j.dll testga.ijs

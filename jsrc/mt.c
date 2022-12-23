@@ -128,7 +128,7 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  R EVFACE;}
 #endif
 
-#ifndef __linux__ //no native waken on non-linux
+#if !defined(__linux__) && !defined(__OpenBSD__) //no native waken on other platforms
 void jfutex_waken(UI4 *p,UI4 n){jfutex_wakea(p);} //scaf/TUNE: should DO(n,jfutex_wake1(p)) depending on n and the #threads waiting on p
 #endif
 

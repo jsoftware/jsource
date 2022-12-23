@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__APPLE__) || defined(__OpenBSD__)
+#elif defined(__APPLE__)
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #else

@@ -4,7 +4,7 @@
 
 // Parsing follows the description in Dictionary Chapter E. Parsing
 // with the following implementation details:
-// 1. words must have gone through enqueue, which puts type information into the low 5 bits of each pointer
+// 1. words must have gone through enqueue, which puts type information into the low 5 bits of each pointer with QCGLOBAL semantics
 // 2. the leading mark is not written before the sentence, but is implied
 // 3. the stack contains a pointer to the word and a binary mask indicating which parsing lines the word is recognized in, in
 //     each of the 4 stack popsitions.  The 'search of the parse table' is done by ANDing 4 bytes together.
@@ -323,12 +323,12 @@ static A virthook(J jtip, A f, A g){
 #define jthook virthook
 #endif
 
-// name:: delete the symbol name but not deleting the value.  Undo the pending fa: If usecount goes to 1, make it abandoned inplaceable and tpush them
+// name_: delete the symbol name but not deleting the value.  Undo the pending fa: If usecount goes to 1, make it abandoned inplaceable and tpush them
 // Incoming y is the value attached to the symbol & has QCGLOBAL semantics, result is same value with QCFAOWED semantics
 // result is the value, possibly with FAOWED set
 static A namecoco(J jt, A name, A y){F1PREFIP;
  if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., we can't do this because the value is not protected by FAOWED, so indic that we need to fa
- A locfound=jt->locsyms; if(unlikely(((I)y&QCGLOBAL)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name::
+ A locfound=jt->locsyms; if(unlikely(((I)y&QCGLOBAL)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name_:
  WRITELOCK(locfound->lock)
  jtprobedel((J)((I)jt+NAV(name)->m),NAV(name)->s,NAV(name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
  WRITEUNLOCK(locfound->lock)
@@ -375,27 +375,16 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
 //
 // There is one more piece to the inplace system: reassigned names.  When there is an
 // assignment to a name, the block being reassigned can be reused for the output if:
-//   the usecount is 1
+//   the usecount is 2 (1 for the name, 1 for the ra() in the lookup)
 //   the current execution is the only thing on the stack
 //   the name can be resolved before the execution
-// Resolving the name is vexed, because the execution might change the current locale, or the value
-// of an indirect locative.  Moreover, the global name may be on the stack in higher stack frames,
-// and assigning the name would change those values before they are executed.  Safest, therefore,
-// would be to detect in-place assignment to local names only; but that would not support name =: name , blah
-// which currently executes in-place (though with the aliasing problem mentioned above).
 //
 // The first rule is to have no truck with inplacing unless the execution is known to be locative-safe,
 // i. e. will not change locale, path, or any name that might go into a locative.  This is marked by a
 // flag ASGSAFE in the verb.
-
-// Any assignment to a name is resolved to an address when the copula is encountered and there
-//  is only one execution on the stack.  This resolution will always succeed for a local assignment to a name.
-//  For a global assignment to a locative, it may fail, or may resolve to an address that is different from
-//  the correct address after the execution.  The address of the block that is to be assigned is in jt->zombieval
-/
+//
 // If jt->zombieval is set, the (necessarily inplaceable) verb may choose to perform an in-place
-// operation.  It will check usecounts and addresses to decide whether to do this, and it bears the responsibility
-// of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
+// operation.  It will check usecounts and addresses to decide whether to do this
 #endif
 
 #if 0  // for stats gathering
@@ -427,7 +416,7 @@ I infererrtok(J jt){
 #define PSTACKRSV 1  // number of stack frames used for holding sentence error info
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
-// JT flag is used to indicate execution from ". - we can't honor name:: then, or perhaps some assignments
+// JT flag is used to indicate execution from ". - we can't honor name_: then, or perhaps some assignments
 A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragement; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
@@ -580,8 +569,8 @@ rdglob: ;  // here when we tried the buckets and failed
        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.  nameless was detected on assignment.
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-       if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|((I)y&QCNOUN)){   // use value if noun or special name, or name::
-        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){FPSZSUFF(y=namecoco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)}  // if name::, go delete the name, leaving the value to be deleted later
+       if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|((I)y&QCNOUN)){   // use value if noun or special name, or name_:
+        if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){FPSZSUFF(y=namecoco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)}  // if name_:, go delete the name, leaving the value to be deleted later
         else y=SETFAOWED(y);
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESSADV)){
         // nameless modifier, and not a locative.  This handles 'each'.  Don't create a reference; maybe cache the value
@@ -1047,9 +1036,9 @@ got1val:;
      // sv has QCGLOBAL semantics
      if(likely(((AT(QCWORD(sv))|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
       if(unlikely(at&NAMEABANDON)){
-       sv=namecoco(jtinplace, y, sv);  // if name::, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
+       sv=namecoco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // coco will set FAOWED if it didn't fa() the value; transfer that to sv
-      }else y=QCWORD(sv);  // not name::, just use the value
+      }else y=QCWORD(sv);  // not name_:, just use the value
      } else {y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
     } else {
      // undefined name.

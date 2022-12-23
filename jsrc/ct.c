@@ -493,7 +493,7 @@ static I jtthreadcreate(J jt,I n){
  ASSERT(pthread_attr_init(&attr)==0,EVFACE);
  ASSERT(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED)==0,EVFACE);
  size_t stksiz=CSTACKSIZE;
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__OpenBSD__)
  stksiz=pthread_get_stacksize_np(pthread_self());
 #elif defined(__linux__) && defined(_GNU_SOURCE)
  pthread_attr_t tattr;  // attributes for the current task

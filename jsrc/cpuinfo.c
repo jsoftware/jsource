@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__OpenBSD__)
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #else
@@ -526,7 +526,7 @@ int getNumberOfCores(void) {
   GetSystemInfo(&sysinfo);
   return sysinfo.dwNumberOfProcessors;
  }
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__OpenBSD__)
  int nm[2];
  size_t len = 4;
  uint32_t count;

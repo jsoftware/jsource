@@ -292,9 +292,9 @@ jobs:
       run: |
        export CC=clang
        export USE_SLEEF=1
-       sh script/buildga.sh openbsd
-       sh script/testga.sh openbsd
-       cp testobsd64.txt j64/.
+       script/buildga.sh openbsd
+       script/testga.sh openbsd
+       cp testobsd.txt j64/.
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -305,7 +305,7 @@ jobs:
 
 #   - name: Compress Files (OpenBSD)
 #     run: |
-#      mv j64/testobsd64.txt .
+#      mv j64/testobsd.txt .
 #      ls -l j64
 #      zip -r obsd64.zip j64
 #

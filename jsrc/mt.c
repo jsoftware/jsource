@@ -50,7 +50,7 @@ I jtmfdif(struct jtimespec w){ //returns the time in ns between the current time
 
 #if PYXES
 // implement jfutex_wait _waitn _wake1 _wakea; synchronisation primitives
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__OpenBSD__)
 void jfutex_wake1(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,0);}
 void jfutex_wakea(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO|ULF_WAKE_ALL,p,0);}
 C jfutex_wait(UI4 *p,UI4 v){

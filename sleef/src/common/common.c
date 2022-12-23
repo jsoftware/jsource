@@ -24,7 +24,7 @@ EXPORT uint64_t Sleef_currentTimeMicros() {
   _ftime64(&t);
   return t.time * INT64_C(1000000) + t.millitm*1000;
 }
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__OpenBSD__)
 #include <sys/time.h>
 
 EXPORT void *Sleef_malloc(size_t z) { void *ptr = NULL; int rc = posix_memalign(&ptr, 256, z); return ptr; }

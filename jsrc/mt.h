@@ -33,7 +33,7 @@ C jtjsleep(J jt,UI ns); //returns error
 #if defined(__linux__)
 #include <linux/futex.h>
 #include <sys/syscall.h>
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__OpenBSD__)
 // ulock (~futex) junk from xnu.  timeout=0 means wait forever
 extern int __ulock_wait(uint32_t operation, void *addr, uint64_t value, uint32_t timeout);             // timeout in us
 extern int __ulock_wait2(uint32_t operation, void *addr, uint64_t value, uint64_t timeout, uint64_t value2); // timeout in ns.  only available as of macos 11?
@@ -68,7 +68,7 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 
 #elif defined(_WIN32)
 // don't pollute everybody with windows.h.  win api is fairly basic anyway, so there is not much to take advantage of
-#elif defined(__OpenBSD__) // && 0
+#elif defined(__OpenBSD__) && 0
 // untested openbsd code; as I recall, openbsd people attempted a port in the past; uncomment this and send a patch if you have tested & it works
 #include <sys/time.h>
 #include <sys/futex.h>

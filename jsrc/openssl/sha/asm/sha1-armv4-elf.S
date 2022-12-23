@@ -21,7 +21,7 @@ sha1_block_data_order:
 	adr	r3,.Lsha1_block
 	ldr	r12,[r3,r12]		@ OPENSSL_armcap_P
 # endif
-# if defined(__APPLE__) || defined(_WIN32)
+# if defined(__APPLE__) || defined(__OpenBSD__) || defined(_WIN32)
 	ldr	r12,[r12]
 # endif
 	tst	r12,#ARMV8_SHA1

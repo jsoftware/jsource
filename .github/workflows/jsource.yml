@@ -286,8 +286,8 @@ jobs:
      with:
       usesh: true
       sync: sshfs
-#      prepare: |
-#      pkg_add curl
+      prepare: |
+       pkg_add curl gmake
 
       run: |
        export CC=clang

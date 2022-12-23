@@ -5,7 +5,7 @@ set -e
 
 cd "$(dirname "$0")"
 
-if [ "`uname`" == "Linux" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
+if [ "`uname`" = "Linux" ] && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
   jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
   jplatform="${jplatform:=darwin}"

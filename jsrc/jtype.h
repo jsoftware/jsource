@@ -8,12 +8,6 @@
 #if (SYS & SYS_UNIX)
 #define _stdcall      
 #endif
-#if defined(__OpenBSD__)
-#if (SYS & SYS_UNIX)
-#else
-#error b01
-#endif
-#endif
 
 #ifdef _WIN32
 #define CDPROC

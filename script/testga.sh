@@ -33,7 +33,8 @@ fi
 if [ "$1" = "darwin" ]; then
 sysctl -a | grep cpu
 elif [ "$1" = "openbsd" ]; then
-grep Features /var/run/dmesg.boot
+grep -i cpu /var/run/dmesg.boot || true
+sysctl hw || true
 else
 cat /proc/cpuinfo
 fi

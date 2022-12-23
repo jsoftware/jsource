@@ -65,7 +65,7 @@ echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 if [ "x$MAKEFLAGS" = x'' ] ; then
 if [ "$1" = "linux" ] || [ "$1" = "raspberry" ] ; then
 par=`nproc` 
-elif [ "$1" = "darwin" ] || [ "$1" = "android" ] ; then
+elif [ "$1" = "darwin" ] || [ "$1" = "openbsd" ] || [ "$1" = "android" ] ; then
 par=`sysctl -n hw.ncpu` 
 else 
 par=2

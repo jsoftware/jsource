@@ -119,10 +119,6 @@ define one of the following in the build as required
 #define SYS SYS_OPENBSD
 #undef SY_LINUX
 #define SY_LINUX 1
-#if (SYS & SYS_UNIX)
-#else
-#error a02
-#endif
 #endif
 
 #if defined(sparc) && ! defined(__svr4__)

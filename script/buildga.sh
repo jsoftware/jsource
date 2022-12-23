@@ -53,6 +53,8 @@ cp mpir/linux/arm/libgmp.so j32
 fi
 elif [ "$1" == "darwin" ]; then
 cp mpir/apple/macos/libgmp.dylib j64
+elif [ "$1" == "openbsd" ]; then
+cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
 fi
 
 cp version.txt jsrc/jversion.h

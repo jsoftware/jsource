@@ -306,7 +306,7 @@ static C*modebuf(mode_t m,C* b){C c;I t=m;
  R b;
 }
 
-#if defined(ANDROID) || defined(__APPLE__)
+#if defined(ANDROID) || defined(__APPLE__) || defined(__OpenBSD__)
 typedef struct stat struct_stat64;
 #define stat64 stat
 #define readdir64 readdir

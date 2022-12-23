@@ -416,18 +416,6 @@ case $jplatform64 in
   FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
  ;;
  
- openbsd/j64arm*)
-  TARGET=libj.so
-  CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
-  OBJS_AESARM=" aes-arm.o "
-  SRC_ASM="${SRC_ASM_RASPI}"
-  GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
-  #FLAGS_BASE64=" -DHAVE_NEON64=1 " # TODO
-  FLAGS_BASE64=""
- ;;
- 
  openbsd/j64*) # openbsd intel 64bit nonavx
   TARGET=libj.so
   CFLAGS="$common -msse3 "

@@ -142,10 +142,6 @@ openbsd/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 LDFLAGS=" -m32 -ldl $LDTHREAD"
 ;;
-openbsd/j64arm)
-CFLAGS="$common -march=armv8-a+crc -DRASPI"
-LDFLAGS=" $LDTHREAD"
-;;
 openbsd/j64*)
 CFLAGS="$common"
 LDFLAGS=" $LDTHREAD"

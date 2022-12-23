@@ -290,7 +290,6 @@ jobs:
        pkg_add curl gmake gmp
 
       run: |
-       find / -name 'libgmp.so*' || true
        export CC=clang
        export USE_SLEEF=1
        sh script/buildga.sh openbsd

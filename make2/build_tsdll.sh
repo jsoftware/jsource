@@ -127,12 +127,6 @@ CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
 ;;
 
-openbsd/j64arm)
-TARGET=libtsdll.so
-CFLAGS="$common -march=armv8-a+crc -DRASPI "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
-;;
-
 openbsd/j64*) # openbsd intel 64bit nonavx
 TARGET=libtsdll.so
 CFLAGS="$common "
@@ -145,33 +139,15 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl -m32 $macmin"
 ;;
 
-darwin/j64) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
-darwin/j64avx) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
-darwin/j64avx2) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
-darwin/j64avx512) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
 darwin/j64arm) # darwin arm
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin -march=armv8-a+crc "
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
+;;
+
+darwin/j64*) # darwin intel 64bit
+TARGET=libtsdll.dylib
+CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
 ;;
 

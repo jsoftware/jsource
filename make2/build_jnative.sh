@@ -125,23 +125,18 @@ LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j32)
 TARGET=libjnative.so
-CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "  # openbsd ?
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j64)
 TARGET=libjnative.so
-CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "  # openbsd ?
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 openbsd/j32)
 TARGET=libjnative.so
 CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
-;;
-openbsd/j64arm)
-TARGET=libjnative.so
-CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
-LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 openbsd/j64*)
 TARGET=libjnative.so
@@ -153,29 +148,14 @@ TARGET=libjnative.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" -m32 $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
-darwin/j64)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
-darwin/j64avx)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
-darwin/j64avx2)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
-darwin/j64avx512)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
 darwin/j64arm) # darwin arm
 TARGET=libjnative.dylib
 CFLAGS="$common $macmin -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
+;;
+darwin/j64*)
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
 *)

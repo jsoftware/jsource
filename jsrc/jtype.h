@@ -13,7 +13,7 @@
 #else
 #error b01
 #endif
-#enif
+#endif
 
 #ifdef _WIN32
 #define CDPROC

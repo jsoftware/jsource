@@ -50,7 +50,7 @@ I jtmfdif(struct jtimespec w){ //returns the time in ns between the current time
 
 #if PYXES
 // implement jfutex_wait _waitn _wake1 _wakea; synchronisation primitives
-#if defined(__APPLE__) || defined(__OpenBSD__)
+#if defined(__APPLE__)
 void jfutex_wake1(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,0);}
 void jfutex_wakea(UI4 *p){__ulock_wake(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO|ULF_WAKE_ALL,p,0);}
 C jfutex_wait(UI4 *p,UI4 v){
@@ -109,7 +109,7 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  R EVFACE;}
 #elif defined(_WIN32)
 // defined in cd.c to avoid name collisions between j.h and windows.h
-#elif defined(__OpenBSD__) && 0
+#elif defined(__OpenBSD__)
 // see comment in mt.h
 void jfutex_wake1(UI4 *p){futex(p,FUTEX_WAKE,1,0,0);}
 void jfutex_waken(UI4 *p,UI4 n){futex(p,FUTEX_WAKE,n,0,0);}

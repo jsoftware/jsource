@@ -140,7 +140,7 @@ LDFLAGS=" -ldl $LDTHREAD"
 ;;
 openbsd/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-LDFLAGS=" -m32 -ldl $LDTHREAD"
+LDFLAGS=" -m32 $LDTHREAD"
 ;;
 openbsd/j64*)
 CFLAGS="$common"

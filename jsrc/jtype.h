@@ -5,10 +5,15 @@
 
 #define U unsigned
 
-// #if (SYS & SYS_UNIX)
-#ifndef _WIN32
+#if (SYS & SYS_UNIX)
 #define _stdcall      
 #endif
+#if defined(__OpenBSD__)
+#if (SYS & SYS_UNIX)
+#else
+#error b01
+#endif
+#enif
 
 #ifdef _WIN32
 #define CDPROC

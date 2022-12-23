@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # list globals for J64 libj.so
 
 cd ~/jbld/j64/bin

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # read any test results into tests.txt
 

@@ -287,7 +287,7 @@ jobs:
       usesh: true
       sync: sshfs
       prepare: |
-       pkg_add curl gmake gmp
+       pkg_add curl gmake nasm gmp
 
       run: |
        export CC=clang

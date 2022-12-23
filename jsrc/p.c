@@ -1,7 +1,22 @@
 /* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-/* Parsing; see APL Dictionary, pp. 12-13 & 38.                            */
+
+// Parsing follows the description in Dictionary Chapter E. Parsing
+// with the following implementation details:
+// 1. words must have gone through enqueue, which puts type information into the low 5 bits of each pointer
+// 2. the leading mark is not written before the sentence, but is implied
+// 3. the stack contains a pointer to the word and a binary mask indicating which parsing lines the word is recognized in, in
+//     each of the 4 stack popsitions.  The 'search of the parse table' is done by ANDing 4 bytes together.
+// 4. all executions from parsing lines 0-2 are inplaceable
+// 5. if the result of an execution in lines 0-2 is assigned to a name, jt->zombieval is set to point to the value if that value can be modified in place
+// 6. after execution in lines 0-2, abandoned arguments that are still abandoned are freed immediately
+// 7. forks are processed through line 5.  all other bidents/tridents are processed through line 6, which calls jthook to do the work
+// 8. minimal error information is preserved.  When an error occurs, jtjsignal calls back here to figure out where the error happened
+// 9. end-of-parse is often detected early, especially after an assignment
+// 10. In certain cases the parse knows it can stack 2 or even 3 words before checking for an executable fragment
+//
+// During each symbol lookup the value read is ra()d.  After the execution the values that are no longer needed as arguments are fa()d
 
 #include "j.h"
 #include "p.h"
@@ -11,6 +26,9 @@
 
 
 #define PARSERSTKALLO (490*sizeof(PSTK))  // number of stack entries to allocate, when we allocate, in bytes
+
+
+
 
 /* parsing benchmark
 
@@ -903,7 +921,7 @@ RECURSIVERESULTSCHECK
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)
       }else{
-       if(pmask&0b100000){
+       if(pmask&0b100000){  // fork NVV or VVV
         A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
         A yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,

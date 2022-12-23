@@ -13,6 +13,8 @@ ODIR=../../../../bin/$(jplatform64)
 # alloc.o -- alternative to mmap.o
 # read.o -- alternative to mmapio.o; probably mmap is more robust in this case
 
+ifneq (openbsd,$(findstring openbsd,$(jplatform64)))
+
 BACKTRACE_OBJS := \
  atomic.o \
  backtrace.o \
@@ -30,6 +32,8 @@ ifeq (darwin,$(findstring darwin,$(jplatform64)))
 BACKTRACE_OBJS := $(BACKTRACE_OBJS) macho.o
 else
 BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
+endif
+
 endif
 
 OBJS=  \

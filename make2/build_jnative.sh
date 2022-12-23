@@ -6,6 +6,23 @@ echo "entering `pwd`"
 
 jplatform64=$(./jplatform64.sh)
 
+if [ "" = "$CFLAGS" ]; then
+ # OPTLEVEL will be merged back into CFLAGS, further down
+	# OPTLEVEL is probably overly elaborate, but it works
+ case "$_DEBUG" in
+  3) OPTLEVEL=" -O2 -g "
+   NASM_FLAGS="-g";;
+  2) OPTLEVEL=" -O0 -ggdb "
+   NASM_FLAGS="-g";;
+  1) OPTLEVEL=" -O2 -g "
+   NASM_FLAGS="-g"
+   jplatform64=$(./jplatform64.sh)-debug;;
+  *) OPTLEVEL=" -O2 ";;
+ esac
+
+fi
+echo "jplatform64=$jplatform64"
+
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
@@ -14,7 +31,9 @@ jplatform64=$(./jplatform64.sh)
 case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	openbsd/*) make=gmake
 esac
+make="${make:=make}"
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
 compiler=$(readlink -f $(which $CC) || which $CC)
@@ -99,19 +118,29 @@ TARGET=libjnative.so
 CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
 ;;
-linux/j6*)
+linux/j64*)
 TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j32)
 TARGET=libjnative.so
-CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "  # openbsd ?
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j64)
 TARGET=libjnative.so
-CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "  # openbsd ?
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+openbsd/j32)
+TARGET=libjnative.so
+CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
+;;
+openbsd/j64*)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 darwin/j32)
@@ -119,29 +148,14 @@ TARGET=libjnative.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" -m32 $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
-darwin/j64)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
-darwin/j64avx)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
-darwin/j64avx2)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
-darwin/j64avx512)
-TARGET=libjnative.dylib
-CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
-;;
 darwin/j64arm) # darwin arm
 TARGET=libjnative.dylib
 CFLAGS="$common $macmin -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
+;;
+darwin/j64*)
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
 *)
@@ -156,7 +170,7 @@ mkdir -p obj/$jplatform64/
 cp makefile-jnative obj/$jplatform64/.
 export CFLAGS LDFLAGS TARGET jplatform64
 cd obj/$jplatform64/
-make -f makefile-jnative
+$make -f makefile-jnative
 retval=$?
 cd -
 exit $retval

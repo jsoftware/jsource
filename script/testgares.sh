@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # read any test results into tests.txt
 
@@ -12,3 +12,4 @@ f "testrpi64.txt"
 f "testlinux.txt"
 f "testdarwin.txt"
 f "testwin.txt"
+f "testobsd.txt"

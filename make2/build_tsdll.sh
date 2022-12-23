@@ -21,6 +21,7 @@ if [ "" = "$CFLAGS" ]; then
  esac
 
 fi
+echo "jplatform64=$jplatform64"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
@@ -30,7 +31,9 @@ fi
 case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	openbsd/*) make=gmake
 esac
+make="${make:=make}"
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
 compiler=$(readlink -f $(which $CC) || which $CC)
@@ -100,7 +103,7 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
 ;;
 
-linux/j6*) # linux intel 64bit
+linux/j64*) # linux intel 64bit
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
@@ -118,39 +121,33 @@ CFLAGS="$common -march=armv8-a+crc -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
+openbsd/j32) # openbsd x86
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
+openbsd/j64*) # openbsd intel 64bit nonavx
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
 darwin/j32) # darwin x86
 TARGET=libtsdll.dylib
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl -m32 $macmin"
 ;;
 
-darwin/j64) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
-darwin/j64avx) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
-darwin/j64avx2) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
-darwin/j64avx512) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
-;;
-
 darwin/j64arm) # darwin arm
 TARGET=libtsdll.dylib
 CFLAGS="$common $macmin -march=armv8-a+crc "
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
+;;
+
+darwin/j64*) # darwin intel 64bit
+TARGET=libtsdll.dylib
+CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
 ;;
 
@@ -166,7 +163,7 @@ mkdir -p obj/$jplatform64/
 cp makefile-tsdll obj/$jplatform64/.
 export CFLAGS LDFLAGS TARGET jplatform64
 cd obj/$jplatform64/
-make -f makefile-tsdll
+$make -f makefile-tsdll
 retval=$?
 cd -
 exit $retval

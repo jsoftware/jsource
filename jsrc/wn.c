@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-#if (SYS & SYS_LINUX)
+#if (SYS & SYS_UNIX)
 #include <stdlib.h>
 #endif
 

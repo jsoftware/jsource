@@ -59,5 +59,8 @@ long long jfutex_waitn(unsigned *p,unsigned v,unsigned long long ns){
 #else
 #include"j.h"
 struct jtimespec jmtclk(){struct timespec r; clock_gettime(CLOCK_MONOTONIC,&r);R r;}
+#ifndef CLOCK_MONOTONIC_RAW
+#define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC
+#endif
 struct jtimespec jmtfclk(){struct timespec r; clock_gettime(CLOCK_MONOTONIC_RAW,&r);R r;}
 #endif

@@ -180,7 +180,7 @@ select. UNAME
 case. 'Win' do. t=. 'jpcre2.dll'
 case. 'Android' do. t=. 'libjpcre2.so'
 case. 'Darwin' do. t=. 'libjpcre2.dylib'
-case. 'Linux' do. t=. 'libjpcre2.so'
+case. 'Linux';'OpenBSD' do. t=. 'libjpcre2.so'
 end.
 
 f=. BINPATH,'/',t

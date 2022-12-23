@@ -141,7 +141,7 @@ DF1(jthostne){
 #else
   b=system(CAV(str0(w)));
 #endif
-#if !SY_64 && (SYS&SYS_LINUX)
+#if !SY_64 && (SYS&SYS_UNIX)
   //Java-jnative-j.so system always returns -1
   if(JT(jt,sm)==SMJAVA&&-1==b) b=-1==system("")?0:-1;
 #endif

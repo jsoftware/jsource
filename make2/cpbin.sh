@@ -36,6 +36,8 @@ if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
+elif [ "`uname`" = "OpenBSD" ]; then
+jplatform="${jplatform:=openbsd}"
 else
 jplatform="${jplatform:=linux}"
 fi

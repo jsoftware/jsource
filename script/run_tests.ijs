@@ -5,7 +5,7 @@ NB. todo - macos and windows
 
 3 : 0''
 select. UNAME
-case. 'Linux' do.
+case. 'Linux';'OpenBSD' do.
  j=:     'libj.so'
  javx=:  'libjavx.so'
  javx2=: 'libjavx2.so'

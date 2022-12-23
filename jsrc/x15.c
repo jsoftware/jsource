@@ -196,7 +196,7 @@ typedef struct {
 extern void double_trick(D,D,D,D);
 #endif
 
-#if (SYS & SYS_MACOSX) | (SYS & SYS_LINUX)
+#if (SYS & SYS_MACOSX) | (SYS & SYS_LINUX) | (SYS & SYS_OPENBSD)
 #ifdef C_CD_ARMHF
 extern void double_trick(float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float);
 #else
@@ -1107,7 +1107,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     iwd&=~((sxt-2)<<(nsig-1));  // if not sign-extend, clear upper bits.  Can't shift by BW.  If nsig is 8, sxt=1 ANDs with ~0, sxt=0 ANDs with ~0xFF..FF00
 #if defined(__aarch64__)
    if(rcnt<maxrcnt) data[rcnt++]=iwd; else{
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__OpenBSD__)
     dvc=alignto(dvc,1<<lglen);
     *(I*)dvc=iwd; // write extended result
     dvc+=1<<lglen;
@@ -1188,7 +1188,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   #elif defined(__aarch64__)
      {f=(float)*(D*)xv;
       if (dcnt<maxdcnt){dd[dcnt]=0; *(float*)(dd+dcnt++)=f;}
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__OpenBSD__)
       else {dvc=alignto(dvc,sizeof(float)); *(float*)dvc=f; dvc+=sizeof(float); }}
 #else
       else {dvc=alignto(dvc,sizeof(I)); *(I*)dvc=0; *(float*)dvc=f; dvc+=sizeof(I); }}

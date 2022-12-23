@@ -25,7 +25,7 @@
 #include "j.h"
 #include "cpuinfo.h"
 
-#if !SY_WINCE && (SY_WIN32 || (SYS & SYS_LINUX))
+#if !SY_WINCE && (SY_WIN32 || (SYS & SYS_UNIX))
 #include <time.h>
 #else
 #if SYS & SYS_UNIX

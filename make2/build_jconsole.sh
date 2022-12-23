@@ -5,7 +5,6 @@ cd "$(dirname "$0")"
 echo "entering `pwd`"
 
 jplatform64=$(./jplatform64.sh)
-echo $jplatform64
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -22,6 +21,7 @@ if [ "" = "$CFLAGS" ]; then
  esac
 
 fi
+echo "jplatform64=$jplatform64"
 
 USE_LINENOISE="${USE_LINENOISE:=1}"
 
@@ -33,7 +33,9 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	openbsd/*) make=gmake
 esac
+make="${make:=make}"
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
 compiler=$(readlink -f $(which $CC) || which $CC)
@@ -124,7 +126,7 @@ linux/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 LDFLAGS=" -m32 -ldl $LDTHREAD"
 ;;
-linux/j6*)
+linux/j64*)
 CFLAGS="$common"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
@@ -136,37 +138,33 @@ raspberry/j64)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
+openbsd/j32)
+CFLAGS="$common -m32 -msse2 -mfpmath=sse "
+LDFLAGS=" -m32 $LDTHREAD"
+;;
+openbsd/j64*)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
 darwin/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
-#-mmacosx-version-min=10.5
-darwin/j64)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin/j64avx)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin/j64avx2)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin/j64avx512)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
 darwin/j64arm) # darwin arm
 CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+;;
+#-mmacosx-version-min=10.5
+darwin/j64*)
+CFLAGS="$common $macmin"
+LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 windows/j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
 LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
-windows/j6*)
+windows/j64*)
 TARGET=jconsole.exe
 CFLAGS="$common"
 LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
@@ -187,7 +185,7 @@ mkdir -p obj/$jplatform64
 cp makefile-jconsole obj/$jplatform64/.
 export CFLAGS LDFLAGS TARGET OBJSLN jplatform64
 cd obj/$jplatform64/
-make -f makefile-jconsole
+$make -f makefile-jconsole
 retval=$?
 cd -
 exit $retval

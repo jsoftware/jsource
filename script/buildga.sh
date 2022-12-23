@@ -139,6 +139,16 @@ cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
 
+if [ $m64 -eq 1 ]; then
+chmod 644 j64/*
+chmod 755 j64/jconsole
+ls -l j64
+else
+chmod 644 j32/*
+chmod 755 j32/jconsole
+ls -l j32
+fi
+
 if [ "$1" = "linux" ]; then
 mkdir -p j32
 cp bin/profile.ijs j32
@@ -158,14 +168,4 @@ dsymutil libjavx2.dylib 2> /dev/null || true
 dsymutil libjavx512.dylib 2> /dev/null || true
 dsymutil libtsdll.dylib 2> /dev/null || true
 cd ..
-fi
-
-if [ $m64 -eq 1 ]; then
-chmod 644 j64/*
-chmod 755 j64/jconsole
-ls -l j64
-else
-chmod 644 j32/*
-chmod 755 j32/jconsole
-ls -l j32
 fi

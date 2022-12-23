@@ -140,7 +140,7 @@ libxml2.so.2 libxml2.so libxml2.dylib libxml2.so
 )
 unxlib=: 3 : 0
 r=. (;: 'c z sqlite3 libxml2') i. <,y
-c=. (;: 'Linux Android Darwin') i. <UNAME_z_
+c=. 0>.<:(;: 'Linux OpenBSD Android Darwin') i. <UNAME_z_
 (<r,c) {:: UNXLIB_z_
 )
 18!:4 <'z'

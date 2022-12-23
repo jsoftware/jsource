@@ -5,7 +5,8 @@
 
 #define U unsigned
 
-#if (SYS & SYS_UNIX)
+// #if (SYS & SYS_UNIX)
+#ifndef _WIN32
 #define _stdcall      
 #endif
 

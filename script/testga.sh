@@ -11,7 +11,7 @@
 # current macOS github builder only supports avx
 # cpu is Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
 
-set -e
+set -vex
 
 if [ $1 = "linux" ]; then
   ext="so"

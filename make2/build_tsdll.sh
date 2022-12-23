@@ -21,6 +21,7 @@ if [ "" = "$CFLAGS" ]; then
  esac
 
 fi
+echo "jplatform64=$jplatform64"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
@@ -102,7 +103,7 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
 ;;
 
-linux/j6*) # linux intel 64bit
+linux/j64*) # linux intel 64bit
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
@@ -120,25 +121,19 @@ CFLAGS="$common -march=armv8-a+crc -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
-openbsd_j64arm)
+openbsd/j32) # openbsd x86
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
+openbsd/j64arm)
 TARGET=libtsdll.so
 CFLAGS="$common -march=armv8-a+crc -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
 ;;
 
-openbsd_j64) # openbsd intel 64bit nonavx
-TARGET=libtsdll.so
-CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
-;;
-
-openbsd_j64avx) # openbsd intel 64bit avx
-TARGET=libtsdll.so
-CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
-;;
-
-openbsd_j64avx2) # openbsd intel 64bit avx
+openbsd/j64*) # openbsd intel 64bit nonavx
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"

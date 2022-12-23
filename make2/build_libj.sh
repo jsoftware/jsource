@@ -21,6 +21,7 @@ if [ "" = "$CFLAGS" ]; then
  esac
 
 fi
+echo "jplatform64=$jplatform64"
 
 USE_LINENOISE="${USE_LINENOISE:=1}"
 
@@ -361,55 +362,83 @@ case $jplatform64 in
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
- openbsd_j64arm)
- TARGET=libj.so
- CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
- LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
- OBJS_AESARM=" aes-arm.o "
- SRC_ASM="${SRC_ASM_RASPI}"
- GASM_FLAGS=""
- FLAGS_SLEEF=" -DENABLE_ADVSIMD "
- #FLAGS_BASE64=" -DHAVE_NEON64=1 " # TODO
- FLAGS_BASE64=""
- ;;
- 
- openbsd_j64) # openbsd intel 64bit nonavx
- TARGET=libj.so
- CFLAGS="$common -msse3 "
- LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
- OBJS_AESNI=" aes-ni.o "
- SRC_ASM="${SRC_ASM_openbsd}"
- GASM_FLAGS=""
- FLAGS_SLEEF=" -DENABLE_SSE2 "
- FLAGS_BASE64=""
- ;;
- 
- openbsd_j64avx) # openbsd intel 64bit avx
- TARGET=libj.so
- CFLAGS="$common -DC_AVX=1 "
- LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
- CFLAGS_SIMD=" -mavx "
- OBJS_FMA=" gemm_int-fma.o "
- OBJS_AESNI=" aes-ni.o "
- SRC_ASM="${SRC_ASM_openbsd}"
- GASM_FLAGS=""
- FLAGS_SLEEF=" -DENABLE_AVX "
- FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
- ;;
- 
- openbsd_j64avx2) # openbsd intel 64bit avx2
- TARGET=libj.so
- CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
- LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
- CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
- OBJS_FMA=" gemm_int-fma.o "
- OBJS_AESNI=" aes-ni.o "
- SRC_ASM="${SRC_ASM_openbsd}"
- GASM_FLAGS=""
- FLAGS_SLEEF=" -DENABLE_AVX2 "
- FLAGS_BASE64=" -DHAVE_AVX2=1 "
+ openbsd/j32*) # openbsd x86
+  TARGET=libj.so
+  # faster, but sse2 not available for 32-bit amd cpu
+  # sse does not support mfpmath=sse in 32-bit gcc
+  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
+  # slower, use 387 fpu and truncate extra precision
+  # CFLAGS="$common -m32 -ffloat-store "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD"
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_OPENBSD32}"
+  GASM_FLAGS="-m32"
+  FLAGS_SLEEF=" -DENABLE_SSE2 "
+  FLAGS_BASE64=""
  ;;
 
+ openbsd/j64avx512*) # openbsd intel 64bit avx512
+  TARGET=libj.so
+  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
+  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  OBJS_FMA=" gemm_int-fma.o "
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_OPENBSDAVX512}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
+  FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
+ ;;
+
+ openbsd/j64avx2*) # openbsd intel 64bit avx2
+  TARGET=libj.so
+  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  OBJS_FMA=" gemm_int-fma.o "
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_OPENBSD}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_AVX2 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+ ;;
+
+ openbsd/j64avx*) # openbsd intel 64bit avx
+  TARGET=libj.so
+  CFLAGS="$common -DC_AVX=1 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+  CFLAGS_SIMD=" -mavx "
+  OBJS_FMA=" gemm_int-fma.o "
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_OPENBSD}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_AVX "
+  FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
+ ;;
+ 
+ openbsd/j64arm*)
+  TARGET=libj.so
+  CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+  OBJS_AESARM=" aes-arm.o "
+  SRC_ASM="${SRC_ASM_RASPI}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
+  #FLAGS_BASE64=" -DHAVE_NEON64=1 " # TODO
+  FLAGS_BASE64=""
+ ;;
+ 
+ openbsd/j64*) # openbsd intel 64bit nonavx
+  TARGET=libj.so
+  CFLAGS="$common -msse3 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_OPENBSD}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_SSE2 "
+  FLAGS_BASE64=""
+ ;;
+ 
  darwin/j32*) # darwin x86
   TARGET=libj.dylib
   CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"

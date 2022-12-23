@@ -6,6 +6,23 @@ echo "entering `pwd`"
 
 jplatform64=$(./jplatform64.sh)
 
+if [ "" = "$CFLAGS" ]; then
+ # OPTLEVEL will be merged back into CFLAGS, further down
+	# OPTLEVEL is probably overly elaborate, but it works
+ case "$_DEBUG" in
+  3) OPTLEVEL=" -O2 -g "
+   NASM_FLAGS="-g";;
+  2) OPTLEVEL=" -O0 -ggdb "
+   NASM_FLAGS="-g";;
+  1) OPTLEVEL=" -O2 -g "
+   NASM_FLAGS="-g"
+   jplatform64=$(./jplatform64.sh)-debug;;
+  *) OPTLEVEL=" -O2 ";;
+ esac
+
+fi
+echo "jplatform64=$jplatform64"
+
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
@@ -101,7 +118,7 @@ TARGET=libjnative.so
 CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
 ;;
-linux/j6*)
+linux/j64*)
 TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
@@ -116,22 +133,17 @@ TARGET=libjnative.so
 CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
-openbsd_j64arm)
+openbsd/j32)
 TARGET=libjnative.so
-CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
+;;
+openbsd/j64arm)
+TARGET=libjnative.so
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
-openbsd_j64)
-TARGET=libjnative.so
-CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
-LDFLAGS=" -shared -Wl,-soname,libjnative.so "
-;;
-openbsd_j64avx)
-TARGET=libjnative.so
-CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
-LDFLAGS=" -shared -Wl,-soname,libjnative.so "
-;;
-openbsd_j64avx2)
+openbsd/j64*)
 TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "

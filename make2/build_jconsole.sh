@@ -5,7 +5,6 @@ cd "$(dirname "$0")"
 echo "entering `pwd`"
 
 jplatform64=$(./jplatform64.sh)
-echo $jplatform64
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -22,6 +21,7 @@ if [ "" = "$CFLAGS" ]; then
  esac
 
 fi
+echo "jplatform64=$jplatform64"
 
 USE_LINENOISE="${USE_LINENOISE:=1}"
 
@@ -126,7 +126,7 @@ linux/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 LDFLAGS=" -m32 -ldl $LDTHREAD"
 ;;
-linux/j6*)
+linux/j64*)
 CFLAGS="$common"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
@@ -138,19 +138,15 @@ raspberry/j64)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
-openbsd_j64arm)
+openbsd/j32)
+CFLAGS="$common -m32 -msse2 -mfpmath=sse "
+LDFLAGS=" -m32 -ldl $LDTHREAD"
+;;
+openbsd/j64arm)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" $LDTHREAD"
 ;;
-openbsd_j64)
-CFLAGS="$common"
-LDFLAGS=" $LDTHREAD"
-;;
-openbsd_j64avx)
-CFLAGS="$common"
-LDFLAGS=" $LDTHREAD"
-;;
-openbsd_j64avx2)
+openbsd/j64*)
 CFLAGS="$common"
 LDFLAGS=" $LDTHREAD"
 ;;
@@ -158,33 +154,21 @@ darwin/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
-#-mmacosx-version-min=10.5
-darwin/j64)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin/j64avx)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin/j64avx2)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
-darwin/j64avx512)
-CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $LDTHREAD $macmin "
-;;
 darwin/j64arm) # darwin arm
 CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+;;
+#-mmacosx-version-min=10.5
+darwin/j64*)
+CFLAGS="$common $macmin"
+LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 windows/j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
 LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
-windows/j6*)
+windows/j64*)
 TARGET=jconsole.exe
 CFLAGS="$common"
 LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"

@@ -11,7 +11,7 @@
 # current macOS github builder only supports avx
 # cpu is Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
 
-set -vex
+set -e
 
 if [ $1 = "linux" ]; then
   ext="so"
@@ -33,8 +33,7 @@ fi
 if [ "$1" = "darwin" ]; then
 sysctl -a | grep cpu
 elif [ "$1" = "openbsd" ]; then
-grep -i cpu /var/run/dmesg.boot || true
-sysctl hw || true
+grep -i cpu /var/run/dmesg.boot
 else
 cat /proc/cpuinfo
 fi
@@ -59,4 +58,14 @@ if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ]; then
   j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
   j32/jconsole -lib libj.$ext testga.ijs
+elif [ $1 = "openbsd" ]; then
+if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx)" -ne 0 ]; then
+  j64/jconsole -lib libjavx.$ext testga.ijs
+fi
+if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx2)" -ne 0 ]; then
+  j64/jconsole -lib libjavx2.$ext testga.ijs
+fi
+if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx512)" -ne 0 ]; then
+  j64/jconsole -lib libjavx512.$ext testga.ijs
+fi
 fi

@@ -287,42 +287,42 @@ jobs:
       usesh: true
       sync: sshfs
       prepare: |
-       pkg_add curl gmake nasm gmp
+       pkg_add curl zip gmake nasm gmp
 
       run: |
+       ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd
        script/testga.sh openbsd
-       cp testobsd.txt j64/.
+       ls -l j64
+       zip -r obsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
+       strip -S libjavx.so || true
+       strip -S libjavx2.so || true
+       strip -S libjavx512.so || true
        strip -S libtsdll.so
+       strip -S libgmp.so
        cd ..
-       find j64 -type d -exec chmod a+rwx {} \;
-       find j64 -type f -exec chmod a+rw {} \;
+       ls -l j64
+       zip -r obsd64.zip j64
 
-#   - name: Compress Files (OpenBSD)
-#     run: |
-#      mv j64/testobsd.txt .
-#      ls -l j64
-#      zip -r obsd64.zip j64
-#
-#   - name: Release JE (OpenBSD)
-#     uses: ncipollo/release-action@v1
-#     with:
-#      tag: build
-#      artifacts: "obsd64.zip"
-#      token: ${{ secrets.GITHUB_TOKEN }}
-#      allowUpdates: true
-#      replacesArtifacts: true
-#
-#   - name: Copy Test (OpenBSD)
-#     uses: actions/upload-artifact@v2
-#     with:
-#       name: dist
-#       path: testobsd64.txt
+   - name: Release JE (OpenBSD)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "obsd64.zip,obsd64d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (OpenBSD)
+     uses: actions/upload-artifact@v2
+     with:
+      name: dist
+      path: testobsd.txt
 
 # android --------------------------------------------------------------
  jeandroid:

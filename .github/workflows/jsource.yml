@@ -287,13 +287,10 @@ jobs:
       usesh: true
       sync: sshfs
       prepare: |
-       pkg_add curl gmake nasm gmp
+       pkg_add curl zip gmake nasm gmp
 
       run: |
-       find / -name 'libc.so*'
-       find / -name 'libz.so*'
-       find / -name 'libsqlite3.so*'
-       find / -name 'libxml2.so*'
+       ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd
@@ -303,9 +300,9 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so
-       strip -S libjavx2.so
-       strip -S libjavx512.so
+       strip -S libjavx.so || true
+       strip -S libjavx2.so || true
+       strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..

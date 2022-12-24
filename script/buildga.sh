@@ -87,6 +87,15 @@ cd ..
 exit 0
 fi
 
+# hostdefs netdefs
+if [ "$1" = "openbsd" ]; then
+cd hostdefs
+$CC hostdefs.c -o hostdefs && ./hostdefs
+cd ../netdefs
+$CC netdefs.c -o netdefs && ./netdefs
+cd ..
+fi
+
 cd make2
 
 if [ "$1" = "darwin" ]; then

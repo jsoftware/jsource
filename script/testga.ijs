@@ -13,6 +13,7 @@ ECHOFILENAME=: 1   NB. echo file name
 stdout LF ,~ 9!:14''
 
 NB. ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'Win'-:UNAME)#(<testpath),each <'g7x6.ijs' NB. temporarily disable
+ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. temp disable
 
 NB. smoke test
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'

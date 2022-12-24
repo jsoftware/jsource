@@ -94,6 +94,11 @@ $CC hostdefs.c -o hostdefs && ./hostdefs
 cd ../netdefs
 $CC netdefs.c -o netdefs && ./netdefs
 cd ..
+cd hostdefs
+$CC -m32 hostdefs.c -o hostdefs && ./hostdefs
+cd ../netdefs
+$CC -m32 netdefs.c -o netdefs && ./netdefs
+cd ..
 fi
 
 cd make2

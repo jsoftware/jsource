@@ -10,6 +10,9 @@
 #ifdef sun
 #include <inet/tcp.h>
 #endif
+#if defined(__OpenBSD__)
+#include <sys/select.h>
+#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

@@ -59,14 +59,13 @@ if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ]; then
 fi
   j32/jconsole -lib libj.$ext testga.ijs
 elif [ $1 = "openbsd" ]; then
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c avx)" -ne 0 ]; then
-#  j64/jconsole -lib libjavx.$ext testga.ijs
+if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx)" -ne 0 ]; then
+  j64/jconsole -lib libjavx.$ext testga.ijs
 fi
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c avx2)" -ne 0 ]; then
-#  j64/jconsole -lib libjavx2.$ext testga.ijs
+if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx2)" -ne 0 ]; then
+  j64/jconsole -lib libjavx2.$ext testga.ijs
 fi
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c avx512)" -ne 0 ]; then
-#  j64/jconsole -lib libjavx512.$ext testga.ijs
-fi
+if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx512)" -ne 0 ]; then
+  j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
 fi

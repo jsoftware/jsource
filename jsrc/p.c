@@ -4,19 +4,23 @@
 
 // Parsing follows the description in Dictionary Chapter E. Parsing
 // with the following implementation details:
-// 1. words must have gone through enqueue, which puts type information into the low 5 bits of each pointer with QCGLOBAL semantics
+// 1. words must have gone through enqueue, which puts type information into the low 4 bits of each pointer with QCTYPE flags
 // 2. the leading mark is not written before the sentence, but is implied
-// 3. the stack contains a pointer to the word and a binary mask indicating which parsing lines the word is recognized in, in
+// 3. During each symbol lookup the value read is ra()d and the type flags are converted to QCGLOBAL semantics.
+// 4. the stack contains a pointer to the word (converted to QCFAOWED semantics), the token number in the original sentence that will
+//     be blamed in case of error, and a binary mask indicating which parsing lines the word is recognized in, in
 //     each of the 4 stack popsitions.  The 'search of the parse table' is done by ANDing 4 bytes together.
-// 4. all executions from parsing lines 0-2 are inplaceable
-// 5. if the result of an execution in lines 0-2 is assigned to a name, jt->zombieval is set to point to the value if that value can be modified in place
-// 6. after execution in lines 0-2, abandoned arguments that are still abandoned are freed immediately
-// 7. forks are processed through line 5.  all other bidents/tridents are processed through line 6, which calls jthook to do the work
-// 8. minimal error information is preserved.  When an error occurs, jtjsignal calls back here to figure out where the error happened
-// 9. end-of-parse is often detected early, especially after an assignment
-// 10. In certain cases the parse knows it can stack 2 or even 3 words before checking for an executable fragment
+// 5. all executions from parsing lines 0-2 are inplaceable
+// 6. if the result of an execution in lines 0-2 is assigned to a name, jt->zombieval is set to point to the value if that value can be modified in place
+// 7. after execution in lines 0-2, abandoned arguments that are still abandoned are freed immediately
+// 8. After an execution, any stacked value that came from a symbol lookup is fa()d
+// 9. forks are processed through line 5.  All other bidents/tridents are processed through line 6, which calls jthook to do the work
+// 10. minimal error information is preserved.  When an error occurs, jtjsignal calls back to infererrtok to figure out where the error happened
+// 11. end-of-parse is often detected early, especially after an assignment
+// 12. In certain cases the parse knows it can stack 2 or even 3 words before checking for an executable fragment
 //
-// During each symbol lookup the value read is ra()d.  After the execution the values that are no longer needed as arguments are fa()d
+// There is a separate path for one-word sentences.  If you add any feature, check to see if you have to add it to the one-word path also.
+//
 
 #include "j.h"
 #include "p.h"
@@ -76,6 +80,7 @@ end.
 #define CAVN  (CONJ+ADV+VERB+NOUN)
 #define EDGE  (MARK+ASGN+LPAR)
 
+// the parsing table, used by the tacit translator only
 PT cases[] = {
  EDGE,      VERB,      NOUN, ANY,       0,  jtvmonad, 1,2,1,
  EDGE+AVN,  VERB,      VERB, NOUN,      0,  jtvmonad, 2,3,2,
@@ -100,7 +105,7 @@ PT cases[] = {
 #define PX 255
 
 // Tables to convert parsing type to mask of matching parse-table rows for each of the stack positions
-// the AND of these gives the matched row (the end-of-table row is always matched)
+// The AND of these gives the matched row (the end-of-table row is always matched)
 // static const US ptcol[4][10] = {
 //     PN     PA     PC     PV     PM     PNM    PL     PR     PS     PSN
 // { 0x2BE, 0x23E, 0x200, 0x23E, 0x27F, 0x280, 0x37F, 0x200, 0x27F, 0x27F},
@@ -114,6 +119,7 @@ PT cases[] = {
 // We distinguish local and global assignments by having local assignments enable line 6 (hook) which must be rejected in jthook
 #define PTNOUN 0xDFC17CBE
 #define PTMARK 0xC900007F
+// table for translating AT type to QC type flags
 static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [LASTNOUNX-LASTNOUNX] = PTNOUN,  // PN
 [NAMEX-LASTNOUNX] = 0xC9200080,  // PNM assigned: high 16 bits immaterial because this MUST match line 7 which will delete it
@@ -350,7 +356,6 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
 #define FPSZ(x) FPSZSUFF(x,)   // exit parser w/failure if x==0
 
 
-#if 0  // keep for commentary
 // An in-place operation requires an inplaceable argument, which is marked as AC<0,
 // Blocks are born non-inplaceable; they need to be marked inplaceable by the creator.
 // Blocks that are assigned are marked not-inplaceable.
@@ -385,7 +390,6 @@ static A namecoco(J jt, A name, A y){F1PREFIP;
 //
 // If jt->zombieval is set, the (necessarily inplaceable) verb may choose to perform an in-place
 // operation.  It will check usecounts and addresses to decide whether to do this
-#endif
 
 #if 0  // for stats gathering
 I statwfaowed=0, statwfainh=0, statwfafa=0, statwpop=0, statwpopfa=0, statwpopnull=0, statwnull=0;  // 39544103  842114 38701989 27774814 9635796 18139018 34965119
@@ -501,11 +505,11 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
   stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
   while(1){  // till no more matches possible...
 
-    // no executable fragment, pull from the queue.  If we pull ')', there is no way we can execute
+    // no executable fragment, pull from the queue.  Bits 31-29 of pt0ecam indicate how many we can safely pull before we
+    // check for executability.  If we pull ')', there is no way we can execute
     // anything till 2 more words have been pulled, so we pull them here to avoid parse overhead.
     // Likewise, if we pull a CONJ, we can safely pull 1 more here.  And first time through, we should
-    // pull 2 words following the first one.
-    // es holds the number of extra pulls required.
+    // pull 2 words following the first one.  Sometimes we can pull 3, if there are no adverbs about.
 
     // pt0ecam is settling from pt0 but it will be ready soon
    
@@ -527,7 +531,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       // otherwise resolve nouns to values, and others to 'name~' references
       // The important performance case is local names with symbol numbers.  Pull that out & do it without the call overhead
       // Registers are very tight here.  Nothing survives over a subroutine call - refetch y if necessary  If we have anything to
-      // pass over a subroutine call, we have to store it pt0ecam or some other saved name
+      // pass over a subroutine call, we have to store it in pt0ecam or some other saved name
       I4 symx, buck;
       symx=NAV(QCWORD(y))->symx; buck=NAV(QCWORD(y))->bucket;
       L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
@@ -623,9 +627,9 @@ endname: ;
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shiting it down and shortening it if we pulled ADV
      pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 2 more to request for 1 more by clearing bit 30.
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
-    }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
+    }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
-     if(GETSTACK0PT!=PTMARK){SETSTACK0PT(PTMARK) stack[0].pt=PTMARK; break;}  // first time m=0.  realize the virtual mark and use it.  e and ca flags immaterial.  We store the mark only so infererrtok can look at it
+     if(GETSTACK0PT!=PTMARK){SETSTACK0PT(PTMARK) stack[0].pt=PTMARK; break;}  // first time, realize the virtual mark and use it.  e and ca flags immaterial.  We store the mark only so infererrtok can look at it
      EP(0)       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
      // never fall through here
     }

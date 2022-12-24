@@ -748,7 +748,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  }
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  __m256i rowstride=_mm256_set1_epi64x(n);  // number of Ds in a row of M, in each lane
-// DIP: bv->bk values, zv=1 waiting for first c>0, 3=waiting for first SPR, 2=we have an SPR
+// DIP: bv->bk values, zv=1 waiting for first c>0, 3=waiting for first SPR, 2=we have an SPR.  Bit 2 of zv=0 to force qp, =1 to try dp first
 // nonimp: zv=4
 // onecol: zv->output, bv=0 if dp, n if qp
 // scaf todo: fix limitrow/zv; use bv for n; fix result signaling to use just 1 area; eventually, change i/f
@@ -1091,22 +1091,31 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 }
 #endif //C_AVX2
 
-// 128!:9 matrix times sparse vector with optional early exit
+// 128!:9 matrix times sparse vector with optional early exit, quad precision
 // product mode (aka one-column mode):
-//  y is ndx;Ax;Am;Av;(M, shape m,n);threshold  where ndx is an atom
+//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);threshold  where ndx is an atom
 //  if ndx<m, the column is ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
-//   if M has rank 3 (with 2={.$M), do the product in quad precision
-//  Result for product mode (exitvec is scalar) is the product, one column of M.  Values closer to 0 than the threshold are clamped to 0
-// DIP/Dpiv mode:
+//  Do the product in quad precision
+//  Result for product mode (exitvec is scalar) is the product, one column of M, shape 2,m.  Values closer to 0 than the threshold are clamped to 0
+// DIP mode:
 //  Only the high part of M is used unless useqp is set and M has extended precision
-//  y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(ColThreshold/PivTol,MinPivot,bkmin,NFreeCols,NCols,ImpFac,Virtx/Dpivdir,useqp);bk/'';Frow[;exclusion list/Dpiv;Yk]
-//   DPiv mode: If bk is empty, we are looking in bkgrd columns and counting the #places where c>=PivTol and accumulating into Dpiv under control of Dpivdir (-1=decr, 1=incr; init to 0 if neg)
+//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);bkgrd;parms;bk;Frow;sched
+//  parms is QpThresh,ColThreshold,ColDangerPivot,ColOkPivot,BkThreshold,PriRow
+//   QpThresh: if |column value| < QpThresh, recalculate in quad precision
+//   ColThreshold is minimum value considered valid for a column value (smaller are considered 0)
+//   ColDangerPivot is the smallest allowed pivot, but is dangerous
+//   ColOkPivot is the smallest pivot value considered non-dangerous
+//   BkThreshold is the smallest bk value considered nonzero
+//   PriRow is the priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so
+//  sched is list of integers: after i{sched columns, stop if we have found i improvements
+// obsolete [;exclusion list/Dpiv;Yk]
+// obsolete //   DPiv mode: If bk is empty, we are looking in bkgrd columns and counting the #places where c>=PivTol and accumulating into Dpiv under control of Dpivdir (-1=decr, 1=incr; init to 0 if neg)
 //  Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
 //            rc,failing column of NTT, an element of ndx (if rc=4)
 //   rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //   rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // nonimp mode:
-//  y is ndx;Ax;Am;Av;(M, shape m,n);bkgrd;(MinPivot,MinDoublePrecPivot,bkmin,NFreeCols,NCols,ImpFac,Virtx,useqp);bk (bk can be '' for nonimp)
+//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);bkgrd;(parms as above, only first 4 needed)
 
 // if the exclusion list is given, we use it to prevent repetition of basis.  Yk must be given, holding the column #s of the rows of M
 // obsolete If Frow is empty, we are looking for nonimproving pivots in rows where the selector is 0.  In that case the bkgrd puts the bk values in descending order.  We return the first column that will make more 0 B rows non0 than non0 B rows 0.

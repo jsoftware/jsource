@@ -32,7 +32,7 @@ fi
 
 cd "`dirname "$0"`"
 
-if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1 ]; then
+if ( [ "`uname`" = "Linux" ] )  && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ]  || [ "`uname -m`" = "arm64" ] ); then
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
@@ -109,5 +109,11 @@ cop j32 jconsole bin32 jconsole
 cop j32 libtsdll.so bin32 libtsdll.so
 cop j32 libj.so bin32 libj.so
 
+if [ $jplatform = "openbsd" ]; then
+cop j64arm jconsole bin jconsole
+cop j64arm jconsole bin jconsole-lx
+cop j64arm libtsdll.so bin libtsdll.so
+cop j64arm libj.so bin libj.so
+fi
 fi
 

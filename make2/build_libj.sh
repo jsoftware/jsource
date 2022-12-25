@@ -377,6 +377,17 @@ case $jplatform64 in
   FLAGS_BASE64=""
  ;;
 
+ openbsd/j64arm) # openbsd arm64
+  TARGET=libj.so
+  CFLAGS="$common -march=armv8-a+crc -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
+  OBJS_AESARM=" aes-arm.o "
+  SRC_ASM="${SRC_ASM_RASPI}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
+  FLAGS_BASE64=" -DHAVE_NEON64=1 "
+ ;;
+
  openbsd/j64avx512*) # openbsd intel 64bit avx512
   TARGET=libj.so
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "

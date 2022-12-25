@@ -138,6 +138,11 @@ TARGET=libjnative.so
 CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
 ;;
+openbsd/j64arm)
+TARGET=libjnative.so
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
 openbsd/j64*)
 TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "

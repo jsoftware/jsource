@@ -337,14 +337,12 @@ if. 0=L.x do. t=. <&> x else. t=. x end.
 type =. nountype type
 
 'trailing shape may not be zero' assert -. 0 e. tshape
-echo 'mmap 1'
 
 'name fn sn ro'=. 4{.y,(#y)}.'';'';'';0
 fn=. jpath fn
 sn=. '/' (('\'=sn)#i.#sn)} sn
 name=. fullname name
 c=. #mappings
-echo 'mmap 2'
 
 'maptype must be 0 (MTRW), 1 (MTRO), or 2 (MTCW - copy on write)' assert ro e. 0 1 2
 'name already mapped'assert c=({."1 mappings)i.<name
@@ -356,17 +354,14 @@ aa=. AFNJA+AFRO*ro=1
 
 m=. mapsub name;fn;sn;ro
 'fh mh fad had ts'=. (MAPFH,MAPMH,MAPADDRESS,MAPHEADER,MAPFSIZE){m
-echo 'mmap 3'
 
 if. ro*.0=type do.
-echo 'mmap 4'
   had=. allochdr 63
   d=. memr fad,0,HSN,JINT
   d=. (sfu HS+-/ufs fad,had),aa,2}.d
   d=. 1 HADCN} d
   d setheader had
 elseif. 0=type do.
-echo 'mmap 5'
   had=. fad
   if. 0=validate ts,had do. 'bad jmf header' assert 0[free fh,mh,fad end.
   aa memw had,HADFLAG,1,JINT
@@ -377,7 +372,6 @@ echo 'mmap 5'
   end.
   (,t+1) setHADC had
 elseif. 1 do.
-echo 'mmap 6'
   had=. allochdr 63
   'JBOXED (non-jmf) not supported' assert JBOXED~:type
   bx=. JBOXED=type
@@ -387,13 +381,10 @@ echo 'mmap 6'
   h=. d,aa,ts,type,1,(*/lshape,tshape),((-.bx)+#tshape),lshape,tshape
   h setheader had
 end.
-echo 'mmap 7'
 
 m=. (had;0=type) (MAPHEADER,MAPJMF)}m
 mappings=: mappings,m
-echo 'mmap 8'
 (name)=: 15!:7 had
-echo 'mmap 9'
 i.0 0
 )
 remap=: 3 : 0

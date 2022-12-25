@@ -138,6 +138,14 @@ libz.so.1 libz.so.1 libz.so libz.dylib libz.so
 libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
 libxml2.so.2 libxml2.so.2 libxml2.so libxml2.dylib libxml2.so
 )
+3 : 0^:('OpenBSD-:UNAME_z_)
+libc=. }. a}.~ {. I. '/libc.so.' E. a=. 2!:0'ldconfig -r | grep /libc\.so\.'
+echo a
+echo libc
+UNXLIB=: (<libc) (<0 1)}UNXLIB
+echo UNXLIB
+''
+)
 unxlib=: 3 : 0
 r=. (;: 'c z sqlite3 libxml2') i. <,y
 c=. (;: 'Linux OpenBSD Android Darwin') i. <UNAME_z_

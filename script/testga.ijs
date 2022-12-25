@@ -34,8 +34,15 @@ NB. RUN1^:IFWIN 'g7x6'
 NB. exit^:IFWIN 1
 
 NB. this crash on Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
-echo '1: (3x ^ 2 ^ i. 10x)'
-1: (3x ^ 2 ^ i. 10x)
+NB. echo '1: (3x ^ 2 ^ i. 10x)'
+NB. 1: (3x ^ 2 ^ i. 10x)^:
+3 : 0''
+if. 'Linux'-:UNAME do.
+ GITHUBCIBUG1=: 1 e. 'CPU E5-2673 v3' E. 2!:0'cat /proc/cpuinfo'
+else.
+ GITHUBCIBUG1=: 0
+end.
+)
 
 echo 'RUN4 ddall'
 RES=: RUN4 ddall

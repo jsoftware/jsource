@@ -217,6 +217,7 @@ RECHO4=: 13 : '+/ RESUB4 y'
 NB. bill extensions
 
 GITHUBCI=: 0       NB. running on github action
+GITHUBCIBUG1=: 0   NB. workaround github issue
 ECHOFILENAME=: 0   NB. echo file name
 PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script

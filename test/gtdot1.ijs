@@ -456,7 +456,7 @@ end.
 NB. test name access while path is being changed
 NB. Result is list of results from each thread
 s1=: 3 : 0
- ]&.> 5e5 (t1 f. t.'')"0  y       NB. start task
+ ]&.> (QKTEST{1e5 1e3)(t1 f. t.'')"0  y       NB. start task
 )
 
 t1done=: 0

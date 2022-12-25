@@ -290,6 +290,7 @@ jobs:
        pkg_add curl zip gmake nasm gmp pcre2
 
       run: |
+       rm -f jobdone
        ldconfig -r
        ldd /usr/bin/which || true
        export CC=clang
@@ -309,6 +310,11 @@ jobs:
        cd ..
        ls -l j64
        zip -r obsd64.zip j64
+       touch jobdone
+
+   - name: Check Status (OpenBSD)
+     run: |
+      test -f jobdone || exit 1
 
    - name: Release JE (OpenBSD)
      uses: ncipollo/release-action@v1

@@ -81,8 +81,6 @@ typedef double complex double_complex;
 #endif
 
 #include "j.h"
-// test compilation of apple m1
-// #define __APPLE__ 1
 
 // align memory pointer to natural alignment
 #define alignto(dvc,align) (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1))
@@ -1107,15 +1105,15 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     iwd&=~((sxt-2)<<(nsig-1));  // if not sign-extend, clear upper bits.  Can't shift by BW.  If nsig is 8, sxt=1 ANDs with ~0, sxt=0 ANDs with ~0xFF..FF00
 #if defined(__aarch64__)
    if(rcnt<maxrcnt) data[rcnt++]=iwd; else{
-#if defined(__APPLE__) || defined(__OpenBSD__)
+ #if defined(__APPLE__)
     dvc=alignto(dvc,1<<lglen);
     *(I*)dvc=iwd; // write extended result
     dvc+=1<<lglen;
-#else
+ #else
     dvc=alignto(dvc,sizeof(I));
     *(I*)dvc=iwd; // write extended result
     dvc+=sizeof(I);
-#endif
+ #endif
     }
 #else
     *dv++=iwd;  // write extended result
@@ -1188,7 +1186,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   #elif defined(__aarch64__)
      {f=(float)*(D*)xv;
       if (dcnt<maxdcnt){dd[dcnt]=0; *(float*)(dd+dcnt++)=f;}
-   #if defined(__APPLE__) || defined(__OpenBSD__)
+   #if defined(__APPLE__)
       else {dvc=alignto(dvc,sizeof(float)); *(float*)dvc=f; dvc+=sizeof(float); }}
    #else
       else {dvc=alignto(dvc,sizeof(I)); *(I*)dvc=0; *(float*)dvc=f; dvc+=sizeof(I); }}

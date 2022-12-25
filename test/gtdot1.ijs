@@ -9,7 +9,7 @@ delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}
 delth''  NB. make sure we start with an empty system
 
 TASK=: <: 1 { 8 T. ''  NB. max # worker threads
-TASK1=: 4 ] 12     NB. 12 crash   limit error of 1!:20
+TASK1=: ((<UNAME)e.'Linux';'Darwin';'Win'){4 12     NB. 12 crash   limit error of 1!:20
 
 1: 0&T."1^:(0 < #) ''$~ (0 >. TASK-1 T. ''),0
 

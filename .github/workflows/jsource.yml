@@ -291,6 +291,7 @@ jobs:
 
       run: |
        ldconfig -r
+       ldd /usr/bin/which || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1

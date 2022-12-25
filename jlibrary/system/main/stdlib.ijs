@@ -134,15 +134,20 @@ end.
 18!:4 <'z'
 UNXLIB=: ([: <;._1 ' ',]);._2 (0 : 0)
 libc.so.6 libc.so.7 libc.so libc.dylib libc.so
-libz.so.1 libz.so.1 libz.so libz.dylib libz.so
+libz.so.1 libz.so.7 libz.so libz.dylib libz.so
 libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
 libxml2.so.2 libxml2.so.2 libxml2.so libxml2.dylib libxml2.so
 )
 3 : 0^:('OpenBSD'-:UNAME_z_)
-libc=. }. a}.~ {. I. '/libc.so.' E. a=. 2!:0'ldconfig -r | grep /libc\.so\.'
-echo a
-echo libc
-UNXLIB=: (<libc) (<0 1)}UNXLIB
+if. #a1=. I. '/libc.so.' E. a=. 2!:0'ldconfig -r | grep /libc\.so\.' do.
+UNXLIB=: (<}.a}.~{.a1) (<0 1)}UNXLIB
+end.
+if. #a1=. I. '/libz.so.' E. a=. 2!:0'ldconfig -r | grep /libz\.so\.' do.
+UNXLIB=: (<}.a}.~{.a1) (<1 1)}UNXLIB
+end.
+if. #a1=. I. '/libsqlite3.so.' E. a=. 2!:0'ldconfig -r | grep /libsqlite3\.so\.' do.
+UNXLIB=: (<}.a}.~{.a1) (<2 1)}UNXLIB
+end.
 echo UNXLIB
 ''
 )

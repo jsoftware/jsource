@@ -139,20 +139,15 @@ libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
 libxml2.so.2 libxml2.so.2 libxml2.so libxml2.dylib libxml2.so
 )
 3 : 0^:('OpenBSD'-:UNAME_z_)''
-echo=. 0 0 $ 1!:2&2
-echo 'ldconfig -r'
-echo 2!:0'ldconfig -r'
-echo 2!:0'ldconfig -r | grep /libc\.so\.'
 if. #a1=. I. '/libc.so.' E. a=. 2!:0'ldconfig -r | grep /libc\.so\.' do.
-UNXLIB=: (<}.a}.~{.a1) (<0 1)}UNXLIB
+  UNXLIB=: (<}.a}.~{.a1) (<0 1)}UNXLIB
 end.
 if. #a1=. I. '/libz.so.' E. a=. 2!:0'ldconfig -r | grep /libz\.so\.' do.
-UNXLIB=: (<}.a}.~{.a1) (<1 1)}UNXLIB
+  UNXLIB=: (<}.a}.~{.a1) (<1 1)}UNXLIB
 end.
 if. #a1=. I. '/libsqlite3.so.' E. a=. 2!:0'ldconfig -r | grep /libsqlite3\.so\.' do.
-UNXLIB=: (<}.a}.~{.a1) (<2 1)}UNXLIB
+  UNXLIB=: (<}.a}.~{.a1) (<2 1)}UNXLIB
 end.
-echo UNXLIB
 ''
 )
 unxlib=: 3 : 0

@@ -94,7 +94,7 @@ return (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1));
 */
 
 #define SY_FREEBSD 0  // ??
-#define SY_UNIX64 (SY_64 && (SY_LINUX || SY_MAC || SY_FREEBSD))
+#define SY_UNIX64 (SY_64 && (SY_LINUX || SY_MAC || SY_FREEBSD || SY_OPENBSD))
 
 #if SY_WINCE
 #define HINSTANCE_ERROR 0
@@ -197,15 +197,15 @@ extern void double_trick(D,D,D,D);
 #endif
 
 #if (SYS & SYS_MACOSX) | (SYS & SYS_LINUX) | (SYS & SYS_OPENBSD)
-#ifdef C_CD_ARMHF
-extern void double_trick(float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float);
-#else
-#ifdef __PPC64__
-extern void double_trick(D,D,D,D,D,D,D,D,D,D,D,D,D);
-#else
-extern void double_trick(D,D,D,D,D,D,D,D);
-#endif
-#endif
+ #ifdef C_CD_ARMHF
+ extern void double_trick(float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float);
+ #else
+  #ifdef __PPC64__
+  extern void double_trick(D,D,D,D,D,D,D,D,D,D,D,D,D);
+  #else
+  extern void double_trick(D,D,D,D,D,D,D,D);
+  #endif
+ #endif
 #endif
 #if SY_MACPPC
 static void double_trick(double*v, I n){I i=0;
@@ -249,9 +249,9 @@ static void double_trick(double*v, I n){I i=0;
   #ifdef __PPC64__
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12]);
   #elif defined(__x86_64__)
-#if 0
+   #if 0
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
-#else
+   #else
 /* might be faster */
    #define dtrick \
   __asm__ ("movq (%0),%%xmm0\n\t"       \
@@ -265,7 +265,7 @@ static void double_trick(double*v, I n){I i=0;
         : /* no output operands */      \
         : "r" (dd)                      \
         : "xmm0","xmm1","xmm2","xmm3","xmm4","xmm5","xmm6","xmm7","cc");
-#endif
+   #endif
   #elif defined(__aarch64__)
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
   #endif
@@ -276,11 +276,11 @@ static void double_trick(double*v, I n){I i=0;
  #if SY_WIN32
   #define dtrick ;
  #elif SY_LINUX
- #ifdef C_CD_ARMHF
-  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12],dd[13],dd[14],dd[15]);
- #else
-  #define dtrick ;
- #endif
+  #ifdef C_CD_ARMHF
+   #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12],dd[13],dd[14],dd[15]);
+  #else
+   #define dtrick ;
+  #endif
  #elif SY_FREEBSD
   #define dtrick ;
  #elif SY_MACPPC
@@ -812,18 +812,18 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
  }else{
   CDASSERT(AM(JT(jt,cdhashl))<NLIBS,DETOOMANY);    /* too many dlls loaded */
 #if SY_WIN32
-#if SY_WINCE
-  h=LoadLibrary(tounibuf(lib));
-#else
-#ifdef FIXWINUTF8
-  wchar_t wlib[1024];
-  MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,1024);
-  h=LoadLibraryW(wlib);
-#else
-  h=LoadLibraryA(lib);
-#endif
-#endif
-  CDASSERT((UI)h>HINSTANCE_ERROR,DEBADLIB);
+ #if SY_WINCE
+   h=LoadLibrary(tounibuf(lib));
+ #else
+  #ifdef FIXWINUTF8
+    wchar_t wlib[1024];
+    MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,1024);
+    h=LoadLibraryW(wlib);
+  #else
+    h=LoadLibraryA(lib);
+  #endif
+ #endif
+ CDASSERT((UI)h>HINSTANCE_ERROR,DEBADLIB);
 #endif
 #if SYS & SYS_UNIX
   CDASSERT(h=dlopen((*lib)?lib:0,RTLD_LAZY),DEBADLIB);
@@ -1176,30 +1176,30 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #if SY_MACPPC
           dd[dcnt++]=(float)*(D*)xv;
 #endif
-#if SY_64 && (SY_LINUX  || SY_MAC)
+#if SY_64 && (SY_LINUX  || SY_MAC || SY_OPENBSD)
   #if defined(__PPC64__)
      /* +1 put the float in low bits in dv, but dd has to be D */
-#if C_LE
+   #if C_LE
      *dv=0; *(((float*)dv++))=(float)(dd[dcnt++]=*(D*)xv);
-#else
+   #else
      *dv=0; *(((float*)dv++)+1)=(float)(dd[dcnt++]=*(D*)xv);
-#endif
+   #endif
      /* *dv=0; *(((float*)dv++)+1)=dd[dcnt++]=(float)*(D*)xv; */
   #elif defined(__aarch64__)
      {f=(float)*(D*)xv;
       if (dcnt<maxdcnt){dd[dcnt]=0; *(float*)(dd+dcnt++)=f;}
-#if defined(__APPLE__) || defined(__OpenBSD__)
+   #if defined(__APPLE__) || defined(__OpenBSD__)
       else {dvc=alignto(dvc,sizeof(float)); *(float*)dvc=f; dvc+=sizeof(float); }}
-#else
+   #else
       else {dvc=alignto(dvc,sizeof(I)); *(I*)dvc=0; *(float*)dvc=f; dvc+=sizeof(I); }}
-#endif
+   #endif
   #elif defined(__x86_64__)
      {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
       if(dcnt>8){ /* push the 9th F and more on to stack (must be the 7th I onward) */
         if(dv-data>=6)*(float*)(dv++)=f;else *(float*)(data+dcnt-3)=f;}}
   #endif
 #else
-#ifdef C_CD_ARMHF
+  #ifdef C_CD_ARMHF
             {f=(float)*(D*)xv;
              if(fcnt<16&&dcnt<=16){
                dd[fcnt]=0; *(float*)(dd+fcnt++)=f;
@@ -1213,9 +1213,9 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
                  fcnt=MAX(fcnt,dcnt);
                  *(((float*)data)+fcnt++ -12)=f;
              }}}
-#else
+  #else
              f=(float)*(D*)xv; *dv++=*(int*)&f;
-#endif
+  #endif
 #endif
    }
   }

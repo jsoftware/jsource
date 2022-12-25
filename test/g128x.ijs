@@ -66,7 +66,9 @@ assert. 1e_14 > >./ (ckmat lrtoa)@:((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~
 NB. LU rational
 todiag =. ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
 lrtoa =. (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
+3 : 0^:(-.GITHUBCIBUG1)''
 (-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
+)
 
 
 1: 0 : 0

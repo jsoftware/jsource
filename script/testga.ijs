@@ -22,6 +22,12 @@ NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
 NB. RUN1^:(GITHUBCI*.'Linux'-:UNAME) 'g128x'
+RUN1^:('OpenBSD'-:UNAME) 'g15x'
+RUN1^:('OpenBSD'-:UNAME) 'g320ipt'
+RUN1^:('OpenBSD'-:UNAME) 'g320ipt'
+RUN1^:('OpenBSD'-:UNAME) 'g7x5'
+RUN1^:('OpenBSD'-:UNAME) 'gdll'
+RUN1^:('OpenBSD'-:UNAME) 'gmmf'
 
 NB. RUN1^:IFWIN 'g640'
 NB. RUN1^:IFWIN 'g7x6'

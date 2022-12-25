@@ -279,6 +279,8 @@ a=. memr phe,h_name_off,1,JPTR
 )
 sdclose=: 3 : 0"0
 if. 0=res closesocketJ <y do.
+  echo unxlib 'c'
+  echo cder''
   0[SOCKETS_jsocket_=: SOCKETS_jsocket_-.y
 else.
   sdsockerror ''

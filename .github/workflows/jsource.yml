@@ -293,16 +293,16 @@ jobs:
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1
-       script/buildga.sh openbsd
-       script/testga.sh openbsd
+       script/buildga.sh openbsd || exit 1
+       script/testga.sh openbsd || exit 1
        ls -l j64
        zip -r obsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so || true
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
+       strip -S libjavx.so
+       strip -S libjavx2.so
+       strip -S libjavx512.so
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..

@@ -99,6 +99,7 @@ define one of the following in the build as required
 #define SY_LINUX            0    /* any linux intel version                */
 #define SY_MAC              0    /* any macosx intel (once included ppc)   */
 #define SY_MACPPC           0    /* macosx powerpc                         */
+#define SY_OPENBSD          0    /* any openbsd version                    */
 
 #define SYS_DOS             (SYS_PC + SYS_PC386 + SYS_PCWIN)
 
@@ -117,8 +118,8 @@ define one of the following in the build as required
 
 #if defined(__OpenBSD__)
 #define SYS SYS_OPENBSD
-#undef SY_LINUX
-#define SY_LINUX 1
+#undef SY_OPENBSD
+#define SY_OPENBSD 1
 #endif
 
 #if defined(sparc) && ! defined(__svr4__)

@@ -236,7 +236,13 @@ sdconnect=: 3 : 0"1
 rc0 connectJ (>{.y);(sockaddr_in y);sockaddr_in_sz
 )
 sdsocket=: 3 : 0"1
+echo 3{.y,(0=#y)#PF_INET,SOCK_STREAM,IPPROTO_TCP
+try.
 s=. res socketJ <"0 [3{.y,(0=#y)#PF_INET,SOCK_STREAM,IPPROTO_TCP
+catch.
+echo cder''
+13!:8[3
+end.
 if. s=_1 do. 0;~sdsockerror'' return. end.
 SOCKETS_jsocket_=: SOCKETS_jsocket_,s
 0;s

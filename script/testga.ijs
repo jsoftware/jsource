@@ -13,21 +13,14 @@ ECHOFILENAME=: 1   NB. echo file name
 stdout LF ,~ 9!:14''
 
 NB. ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'Win'-:UNAME)#(<testpath),each <'g7x6.ijs' NB. temporarily disable
-ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. temp disable
+NB. ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. temp disable
+ddall=: ddall -. blacklist=: blacklist, (GITHUBCI*.'OpenBSD'-:UNAME)#(<testpath),each 'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs';'g320ipt';'g7x5.ijs'
 
 NB. smoke test
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
 NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
-
-NB. RUN1^:(GITHUBCI*.'Linux'-:UNAME) 'g128x'
-RUN1^:('OpenBSD'-:UNAME) 'g15x'
-RUN1^:('OpenBSD'-:UNAME) 'g320ipt'
-RUN1^:('OpenBSD'-:UNAME) 'g320ipt'
-RUN1^:('OpenBSD'-:UNAME) 'g7x5'
-RUN1^:('OpenBSD'-:UNAME) 'gdll'
-RUN1^:('OpenBSD'-:UNAME) 'gmmf'
 
 NB. RUN1^:IFWIN 'g640'
 NB. RUN1^:IFWIN 'g7x6'

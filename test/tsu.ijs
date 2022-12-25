@@ -223,7 +223,7 @@ PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 RUNFILE=: ''       NB. dummy
-QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
+QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.(UNAME-:'Android')+.(UNAME-:'OpenBSD')  NB. run quick test
 
 RUND1=: 4 : 0
 x123=. x>.1

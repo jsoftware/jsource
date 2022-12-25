@@ -111,7 +111,6 @@ cop j32 libj.so bin32 libj.so
 
 if [ $jplatform = "openbsd" ]; then
 cop j64arm jconsole bin jconsole
-cop j64arm jconsole bin jconsole-lx
 cop j64arm libtsdll.so bin libtsdll.so
 cop j64arm libj.so bin libj.so
 fi

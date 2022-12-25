@@ -139,6 +139,7 @@ libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
 libxml2.so.2 libxml2.so.2 libxml2.so libxml2.dylib libxml2.so
 )
 3 : 0^:('OpenBSD'-:UNAME_z_)''
+echo=. 0 0 $ 1!:2&2
 echo 'ldconfig -r'
 echo 2!:0'ldconfig -r'
 echo 2!:0'ldconfig -r | grep /libc\.so\.'

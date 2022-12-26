@@ -138,18 +138,19 @@ libz.so.1 libz.so.7 libz.so libz.dylib libz.so
 libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
 libxml2.so.2 libxml2.so.18.0 libxml2.so libxml2.dylib libxml2.so
 )
-3 : 0^:('OpenBSD'-:UNAME_z_)''
-if. #a1=. I. '/libc.so.' E. a=. 2!:0 ::(''"_) 'ldconfig -r | grep /libc\.so\.' do.
-  UNXLIB=: (<}:}.a}.~{.a1) (<0 1)}UNXLIB
+3 : 0^:((<UNAME)e.'Linux';'OpenBSD')''
+a=. 2!:0 ::(''"_) ('OpenBSD'-:UNAME){::'ldconfig -p';'ldconfig -r'
+if. #a1=. I. '/libc.so.' E. a do.
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<0 1)}UNXLIB
 end.
-if. #a1=. I. '/libz.so.' E. a=. 2!:0 ::(''"_) 'ldconfig -r | grep /libz\.so\.' do.
-  UNXLIB=: (<}:}.a}.~{.a1) (<1 1)}UNXLIB
+if. #a1=. I. '/libz.so.' E. a do.
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<1 1)}UNXLIB
 end.
-if. #a1=. I. '/libsqlite3.so.' E. a=. 2!:0 ::(''"_) 'ldconfig -r | grep /libsqlite3\.so\.' do.
-  UNXLIB=: (<}:}.a}.~{.a1) (<2 1)}UNXLIB
+if. #a1=. I. '/libsqlite3.so.' E. a do.
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<2 1)}UNXLIB
 end.
-if. #a1=. I. '/libxml2.so.' E. a=. 2!:0 ::(''"_) 'ldconfig -r | grep /libxml2\.so\.' do.
-  UNXLIB=: (<}:}.a}.~{.a1) (<3 1)}UNXLIB
+if. #a1=. I. '/libxml2.so.' E. a do.
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<3 1)}UNXLIB
 end.
 ''
 )

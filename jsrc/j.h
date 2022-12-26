@@ -574,7 +574,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if defined(_WIN32)
 #define CSTACKSIZE      (SY_64?12009472:1015808)  // size we allocate in the calling function, aligned to 16k system page size
 #else
+#if defined(ANDROID) || (defined(__OpenBSD__) && defined(__aarch64__))
+#define CSTACKSIZE      (SY_64?4194304:1015808)  // OS default stack size 4MB, aligned to 16k system page size
+#else
 #define CSTACKSIZE      (SY_64?7946240:1015808)  // OS default stack size 8MB, aligned to 16k system page size
+#endif
 #endif
 #define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
 #else

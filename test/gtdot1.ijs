@@ -14,7 +14,7 @@ TASK1=: ((<UNAME)e.'Linux';'Darwin';'Win'){4 12     NB. 12 crash   limit error o
 1: 0&T."1^:(0 < #) ''$~ (0 >. TASK-1 T. ''),0
 
 STRIDE=: 3000                 NB. stride between tasks
-NX=: 20
+NX=: (QKTEST+.4>9!:56'cores'){20 5
 MINLEN=: 1e5
 MLEN=: <.MINLEN%2
 

@@ -329,7 +329,7 @@ jobs:
      uses: actions/upload-artifact@v2
      with:
       name: dist
-      path: testobsd.txt
+      path: testopenbsd.txt
 
 # android --------------------------------------------------------------
  jeandroid:
@@ -402,7 +402,7 @@ jobs:
  tests:
   name: Test Results
   runs-on: ubuntu-20.04
-  needs: [jelinux, jemacos, jerpi64, jerpi32, jewin]
+  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jeopenbsd]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

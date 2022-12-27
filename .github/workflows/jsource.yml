@@ -402,7 +402,7 @@ jobs:
  tests:
   name: Test Results
   runs-on: ubuntu-20.04
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jeopenbsd]
+  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jeopenbsd, jeandroid]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

@@ -23,7 +23,7 @@ N > 0
 N1=: <.@%: N
 N1 > 0
 N >: N1*N1
-N2=: (QKTEST{32 16) <. <.@%: 20 * N+2
+N2=: ((QKTEST+.4>9!:56'cores'){32 16) <. <.@%: 20 * N+2
 N2 > 0
 
 NB. create all available threads
@@ -169,7 +169,7 @@ wthr N
 N = 1 T.''
 wthr N
 
-allowlongjobs =. 0 NB. some of these too long on Windows
+allowlongjobs=: IFWIN < QKTEST < 4<:{. 8 T.''       NB. some of these too long on Windows
 
 1 1:`f1@.allowlongjobs 45          NB. queued job stress test
 

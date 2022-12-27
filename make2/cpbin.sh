@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 _DEBUG="${_DEBUG:=0}"
 if [ $_DEBUG -eq 1 ] ; then
@@ -7,7 +8,19 @@ else
 DEBUGDIR=
 fi
 
-cd "$(dirname "$0")"
+realpath()
+{
+ oldpath=`pwd`
+ if ! cd $1 > /dev/null 2>&1; then
+  cd ${1##*/} > /dev/null 2>&1
+  echo $( pwd -P )/${1%/*}
+ else
+  pwd -P
+ fi
+ cd $oldpath > /dev/null 2>&1
+}
+
+cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
 # copy binaries in bin/ to jlibrary/bin
@@ -29,8 +42,6 @@ echo \# cp "../bin/${jplatform}/$1$DEBUGDIR/$2" "../jlibrary/$3/$4"
 cp "../bin/${jplatform}/$1$DEBUGDIR/$2" "../jlibrary/$3/$4"
 fi
 }
-
-cd "`dirname "$0"`"
 
 if ( [ "`uname`" = "Linux" ] )  && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ]  || [ "`uname -m`" = "arm64" ] ); then
 jplatform="${jplatform:=raspberry}"

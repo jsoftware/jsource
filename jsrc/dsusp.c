@@ -333,7 +333,7 @@ F1(jtdbc){UC k;
   JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
   DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
 #if USECSTACK
-  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
+  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&0b111111));
 #else
   jt->fdepn=NFDEP>>k;
 #endif

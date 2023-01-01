@@ -292,7 +292,7 @@ win=. mac < (1 e. 'win'&E.) &> pfm
 select. UNAME
 case. 'Win' do.
   zps=. win # zps
-case. 'Linux' do.
+case. 'Linux';'OpenBSD' do.
   zps=. lnx # zps
 case. 'Android' do.
   zps=. and # zps

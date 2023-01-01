@@ -5,7 +5,7 @@ set -e
 
 cd "$(dirname "$0")"
 
-if ( [ "`uname`" = "Linux" ] ||  [ "`uname`" = "OpenBSD" ] )  && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] ); then
+if ( [ "`uname`" = "Linux" ] )  && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ]  || [ "`uname -m`" = "arm64" ] ); then
   jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
   jplatform="${jplatform:=darwin}"
@@ -18,11 +18,11 @@ fi
 if [ "`uname -m`" = "x86_64" ]; then
   j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ]; then
-if [ -z "${jplatform##*raspberry*}" ]; then
-  j64x="${j64x:=j64}"
-else
-  j64x="${j64x:=j64arm}"
-fi
+  if [ -z "${jplatform##*raspberry*}" ]; then
+    j64x="${j64x:=j64}"
+  else
+    j64x="${j64x:=j64arm}"
+  fi
 elif [ "`uname -m`" = "armv6l" ]; then
   j64x="${j64x:=j32}"
 else j64x="${j64x:=j32}"

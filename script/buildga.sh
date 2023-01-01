@@ -8,15 +8,16 @@
 set -e
 CC=${CC-clang}
 USE_SLEEF=${USE_SLEEF-1}
-_DEBUG=3
-export CC USE_SLEEF _DEBUG
+export CC USE_SLEEF
 
 if [ "$1" = "linux" ]; then
   ext="so"
+  export _DEBUG=3
 elif [ "$1" = "raspberry" ]; then
   ext="so"
 elif [ "$1" = "darwin" ]; then
   ext="dylib"
+  export _DEBUG=3
 elif [ "$1" = "android" ]; then
   ext="so"
 elif [ "$1" = "openbsd" ]; then

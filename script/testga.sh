@@ -37,6 +37,7 @@ grep -i cpu /var/run/dmesg.boot
 else
 cat /proc/cpuinfo
 fi
+ulimit -a || true
 
 if [ $m64 -eq 1 ]; then
 ls -l j64

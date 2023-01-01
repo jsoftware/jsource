@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 _DEBUG="${_DEBUG:=0}"
 if [ $_DEBUG -eq 1 ] ; then
@@ -7,7 +8,19 @@ else
 DEBUGDIR=
 fi
 
-cd "$(dirname "$0")"
+realpath()
+{
+ oldpath=`pwd`
+ if ! cd $1 > /dev/null 2>&1; then
+  cd ${1##*/} > /dev/null 2>&1
+  echo $( pwd -P )/${1%/*}
+ else
+  pwd -P
+ fi
+ cd $oldpath > /dev/null 2>&1
+}
+
+cd "$(realpath $(dirname "$0"))"
 echo "entering `pwd`"
 
 # copy binaries in bin/ to jlibrary/bin
@@ -30,9 +43,7 @@ cp "../bin/${jplatform}/$1$DEBUGDIR/$2" "../jlibrary/$3/$4"
 fi
 }
 
-cd "`dirname "$0"`"
-
-if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1 ]; then
+if ( [ "`uname`" = "Linux" ] )  && ( [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ]  || [ "`uname -m`" = "arm64" ] ); then
 jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
@@ -109,5 +120,10 @@ cop j32 jconsole bin32 jconsole
 cop j32 libtsdll.so bin32 libtsdll.so
 cop j32 libj.so bin32 libj.so
 
+if [ $jplatform = "openbsd" ]; then
+cop j64arm jconsole bin jconsole
+cop j64arm libtsdll.so bin libtsdll.so
+cop j64arm libj.so bin libj.so
+fi
 fi
 

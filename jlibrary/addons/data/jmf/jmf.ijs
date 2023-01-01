@@ -104,9 +104,9 @@ if. IFUNIX do.
   c_mmap=: 'mmap * * x i i i x' api
   c_munmap=: 'munmap i * x' api
 
-  t=.           O_RDWR,   PROT_WRITE,  MAP_SHARED
-  t=. t,:       O_RDONLY, PROT_READ,   MAP_SHARED
-  mtflags=:  t, O_RDWR,   PROT_WRITE,  MAP_PRIVATE
+  t=.           O_RDWR,   (PROT_WRITE+PROT_READ),  MAP_SHARED
+  t=. t,:       O_RDONLY, PROT_READ,               MAP_SHARED
+  mtflags=:  t, O_RDWR,   (PROT_WRITE+PROT_READ),  MAP_PRIVATE
 else.
   CREATE_ALWAYS=: 2
   CREATE_NEW=: 1

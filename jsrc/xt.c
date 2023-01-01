@@ -57,6 +57,12 @@
 #include <sys/resource.h>
 #endif
 
+#ifdef __OpenBSD__
+#include <kvm.h>
+#include <fcntl.h>
+#include <sys/sysctl.h>
+#endif
+
 F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}  //  7!:0
 
 // 7!:1
@@ -119,6 +125,15 @@ ASSERTMTV(w);
   R v2(1024*(I)mem.ru_maxrss, 1024*(I)mem.ru_maxrss);   // linux only implemented max rss
  else
   R v2(4096*(I)result.resident, 1024*(I)mem.ru_maxrss);
+#elif defined(__OpenBSD__)
+ kvm_t *kd=kvm_open(NULL,NULL,NULL,KVM_NO_FILES,"kvm_open");
+ ASSERT(kd,EVFACE);
+ int cnt;
+ struct kinfo_proc *p=kvm_getprocs(kd,KERN_PROC_PID,getpid(),sizeof(struct kinfo_proc),&cnt);
+ if(unlikely(cnt!=1)){kvm_close(kd);ASSERT(0,EVFACE);}
+ A r=v2(p->p_vm_rssize*sysconf(_SC_PAGESIZE), 1024*(I)mem.ru_maxrss);
+ kvm_close(kd);
+ R r;
 #else
  R v2(1024*(I)mem.ru_maxrss, 1024*(I)mem.ru_maxrss);   // linux only implemented max rss
 #endif

@@ -35,7 +35,7 @@ NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
 blacklist=: blacklist, (<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
-blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each 'g13x.ijs';'gstack.ijs'
+NB. blacklist=: blacklist, (IFRASPI>IF64)#(<testpath),each <'g13x.ijs'
 blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. require multithreading
 
 ddall    =: blacklist -.~ testfiles 'g'
@@ -217,12 +217,13 @@ RECHO4=: 13 : '+/ RESUB4 y'
 NB. bill extensions
 
 GITHUBCI=: 0       NB. running on github action
+GITHUBCIBUG1=: 0   NB. workaround github issue
 ECHOFILENAME=: 0   NB. echo file name
 PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 RUNFILE=: ''       NB. dummy
-QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
+QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.(UNAME-:'Android')+.(UNAME-:'OpenBSD')  NB. run quick test
 
 RUND1=: 4 : 0
 x123=. x>.1

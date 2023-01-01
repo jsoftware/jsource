@@ -101,6 +101,7 @@ static int readlineinit()
 {
  if(hreadline)return 0; // already run
 #ifndef __APPLE__
+ if(!(hreadline=dlopen("libedit.so.5.2",RTLD_LAZY)))
  if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
  if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
   if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))

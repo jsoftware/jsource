@@ -127,6 +127,12 @@ CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
 ;;
 
+openbsd/j64arm) # openbsd arm64
+TARGET=libtsdll.so
+CFLAGS="$common -march=armv8-a+crc "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
 openbsd/j64*) # openbsd intel 64bit nonavx
 TARGET=libtsdll.so
 CFLAGS="$common "

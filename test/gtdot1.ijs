@@ -9,12 +9,12 @@ delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}
 delth''  NB. make sure we start with an empty system
 
 TASK=: <: 1 { 8 T. ''  NB. max # worker threads
-TASK1=: 4 ] 12     NB. 12 crash   limit error of 1!:20
+TASK1=: ((<UNAME)e.'Linux';'Darwin';'Win'){4 12     NB. 12 crash   limit error of 1!:20
 
 1: 0&T."1^:(0 < #) ''$~ (0 >. TASK-1 T. ''),0
 
 STRIDE=: 3000                 NB. stride between tasks
-NX=: 20
+NX=: (QKTEST+.4>9!:56'cores'){20 5
 MINLEN=: 1e5
 MLEN=: <.MINLEN%2
 
@@ -92,7 +92,7 @@ end.
 NB. test read directory on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-10 (t1 t.'')"0 [ i.TASK          NB. start task
+((QKTEST+.4>9!:56'cores'){10 2) (t1 t.'')"0 [ i.TASK          NB. start task
 )
 
 NB. run & open the futures results
@@ -177,7 +177,7 @@ end.
 NB. test file size on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-10 (t1 t.'')"0 [ i.TASK          NB. start task
+((QKTEST+.4>9!:56'cores'){10 2) (t1 t.'')"0 [ i.TASK          NB. start task
 )
 
 NB. run & open the futures results
@@ -456,7 +456,7 @@ end.
 NB. test name access while path is being changed
 NB. Result is list of results from each thread
 s1=: 3 : 0
- ]&.> 5e5 (t1 f. t.'')"0  y       NB. start task
+ ]&.> ((QKTEST+.4>9!:56'cores'){1e5 1e2)(t1 f. t.'')"0  y       NB. start task
 )
 
 t1done=: 0

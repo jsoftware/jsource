@@ -41,7 +41,7 @@ DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
  R d;
 }    /* create new top of si stack */
 
-void jtdebz(J jt){jt->sitop=jt->sitop->dclnk;}
+void jtdebz(J jt){if(jt->sitop!=0)jt->sitop=jt->sitop->dclnk;}  // stack may vanish if 13!:0]0
      /* remove     top of si stack */
 
 F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
@@ -136,8 +136,9 @@ static A jtsusp(J jt){A z;
   // Execute one sentence from the user
   if((inp=jgets("      "))==0){z=0; break;} inp=jtddtokens(jt,inp,1+!!EXPLICITRUNNING); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   // If the result came from a suspension-ending command, get out of suspension
-  // Kludge: 13 : 0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doen't properly route the result of these to the
-  // suspension result and we would lose them.  Fortunately they have no arguments
+  // Kludge: 13!:0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doesn't properly route the result of these to the
+  // suspension result and we would lose them.  Fortunately they have no arguments.  debugmux also eats the result of 13!:0]0
+  if(!(jt->uflags.trace&TRACEDB))break;  // if we are clearing the stack (13!:0]0), we exit all suspensions
   if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
   if(z&&AFLAG(z)&AFDEBUGRESULT&&IAV(C(AAV(z)[0]))[0]==SUSTHREAD){  // (0;0) {:: z; is this T. y?
    J newjt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
@@ -203,9 +204,8 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  case SUSJUMP:  // goto line number.  Result not given, use i. 0 0
   DGOTO(d,lnumcw(IAV(C(AAV(z)[1]))[0],d->dcc)) z=mtm; break;
  case SUSCLEAR:  // exit from debug
-  jt->jerr=e;    // restore the error number before debug.  The message has been lost
-  c=jt->sitop; z=mtm;  // in case no error, give empty result
-  NOUNROLL while(c){if(DCCALL==c->dctype)DGOTO(c,-1) c=c->dclnk;} break;   // exit from all functions, back to immed mode
+  jt->jerr=e; z=mtm;  // in case no error, give empty result
+  NOUNROLL for(c=jt->sitop;c;c=c->dclnk){if(DCCALL==c->dctype){DGOTO(c,-1) c->dcsusp=0;} }break;   // exit from all functions, clearing suspensions; back to immed mode with clear debug stack
  case SUSNEXT:  // continue execution on next line
  case SUSSS:  // single-step continuation
   z=mtm; break;  // pick up wherever it left off; no result
@@ -292,8 +292,8 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}  // if first line is a stop
    else              {ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
-   // executed 13!:8]0, and we should continue on outside of debug mode
-   if(!z&&(jt->uflags.trace&TRACEDB)){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
+   // executed 13!:0]0, and we should continue on outside of debug mode.  The debug stack frames are still on the stack, but they have been unchained from the root
+   if(!z&&(jt->uflags.trace&TRACEDB)){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(jt->sitop!=0)self=jt->sitop->dcf;}
    if(!(d->dcnewlineno&&d->dcix!=-1))break;  // if 'run' specified (by jump not to -1), loop again.  Otherwise exit with result given
    // for 'run', the value of z gives the argument(s) to set; but if no args given, leave them unchanged
    if(AN(z)){w=C(AAV(z)[0]); a=AN(z)==2?C(AAV(z)[1]):0;}  // extract new args if there are any
@@ -323,23 +323,23 @@ F2(jtdberr2){
 // of exit (run, step, clear, etc).  Other boxes give values for the run and ret types.  EXCEPTION: 13!:0 returns i. 0 0 for compatibility, but still flagged as AFDEBUGRESULT
 F1(jtdbc){UC k;
  ARGCHK1(w);
- if(AN(w)){
-  RE(k=(UC)i0(w));
-  ASSERT(!(k&~0x81),EVDOMAIN);
-  ASSERT(!k||!jt->glock,EVDOMAIN);
- }
- if(AN(w)){
-  // turn debugging on/off in all threads
-  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
-  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
+// obsolete  if(AN(w)){
+ RE(k=(UC)i0(w));
+ ASSERT(!(k&~(TRACEDBSUSFROMSCRIPT|TRACEDB1)),EVDOMAIN);
+ ASSERT(!k||!jt->glock,EVDOMAIN);
+// obsolete  }
+// obsolete  if(AN(w)){
+ // turn debugging on/off in all threads
+ JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
+ DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
 #if USECSTACK
-  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
+ jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the stack to allow suspension commands room to run
 #else
-  jt->fdepn=NFDEP>>k;
+ jt->fdepn=NFDEP>>(k&TRACEDB1);
 #endif
-  jt->fcalln=NFCALL/(k?2:1);
- }
- JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether value given or not
+ jt->fcalln=NFCALL>>(k&TRACEDB1);  // similarly reduce max fn-call depth
+// obsolete  }
+ JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

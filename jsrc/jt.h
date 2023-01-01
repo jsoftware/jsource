@@ -75,6 +75,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  union {  // this union is 4 bytes long on a 4-byte bdy
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
+   UC trace;  // tracing-related flags (debug and pm)  inherit
 #define TRACEDB1                1  // full debug
 #define TRACEPM                 2  // set when PM is running
 #define TRACEDBSUSSS         0x20  // single-step request encountered - end suspension
@@ -82,7 +83,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TRACEDBSUSFROMSCRIPT 0x80  // debug only, to keep reading from script during suspension
 #define TRACEDB              0xfd  // any of the debug flags; see 13!:0
                                    // debug flags are also used for dbuser
-   UC trace;  // tracing-related flags (debug and pm)  inherit
    C init0area[0]; // label for initializing
                    // ************************************** here starts the area that is initialized to 0 when task starts 0x14
    C bstkreqd;   // set if we MUST create a stack entry for each named call

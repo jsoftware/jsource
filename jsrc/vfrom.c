@@ -657,37 +657,36 @@ static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<row)?(col<
  R 1;
 }
  
-// everything we need for one core's execution
+// everything we need for one core's execution - shared by all cores
 struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  // returned section
  US ctxlock;  // used to lock changes
- I abortcolandrow;  // set to -1 normally, but if we have found something that will abort processing it is set.  There are 2 possibilities: unbounded, which has col=-1 and row negative; virtual pivot,
-    // which we jump on with row and col set normally.  We set minimp=-inf when we store here, to cut off other threads
- I bestcolandrow[2];  // packed best col (h)/row (l). [0] is for normal pivots or nonimproving pivots, [1] for dangerous pivots
- // shared section
- D minimp;
- I ncolsproc;  // number of columns processed
+// obsolete  I abortcolandrow;  // set to -1 normally, but if we have found something that will abort processing it is set.  There are 2 possibilities: unbounded, which has col=-1 and row negative; virtual pivot,
+// obsolete     // which we jump on with row and col set normally.  We set minimp=-inf when we store here, to cut off other threads
+// obsolete  I bestcolandrow[2];  // packed best col (h)/row (l). [0] is for normal pivots or nonimproving pivots, [1] for dangerous pivots
+ D minimp; // minimum (=best) improvement found in any previous column, including in other threads, set to -inf to abort other threads
+ D maxdanger;  // if we have not found a non-dangerous pivot, we want to take the one with the largest column value acroos threads
+ I bestcolandrow;  // (best column found, or -1 if none found)/(best row in column.  Bit 31 set if forcefeasible required.  If unbounded, set to -1 (with minimp=-inf))
+   // during the search, bit 63 indicates dangerous pivot
+ I nimpandcols;  // number of improvement,number of cols finished
+// obsolete  I ncolsproc;  // number of columns processed
  I ndotprods;  // total # dotproducts evaluated
+ // shared section
  UI nextcol;  // index of next column to process. Advanced by atomic operations.  For one-column mode, the index of next row to process
  // the rest is moved into static names
  A ndxa;   // the indexes, always a list of ndxs
  I n;  // #rows/cols in M
- D *bv;  // pointer to bk.  If 0, this is either a column extraction (if zv!=0) or a Dpiv operation (if zv=0)
-                  // 0      1       2      3
- __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values.  In nonimp mode ColThr is absolute minimum pivot and MinPivot is safety factor
-// for Dpiv, thresh is 4 copies of ColThr
- I bestcol; I bestcolrow;  // col# and row#+mask for best value found from previous column, init to no col found, and best value not dangerous
- D *zv; D *Frow;  // pointer to output for product mode, Frow
- D nfreecolsd, ncolsd; D impfac;  // faction of cols to process before we insist on min improvement; min fraction of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
- I prirow;  // row to give priority to (virtual if any, else _1), or flag to Dpiv
- I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order.  For one-col, bvgrde-bvgrd0 is the # values to proc in each thread
- I *exlist, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
- D bkmin;  // the largest value for which bk is considered close enough to 0
+ D *bv;  // pointer to bk.  If 0, this is a column extraction (if zv!=0) or a nonimproving pivot
+ D *Frow;  // the selector row
+ D *zv; // pointer to output for product mode
+ D *parms;  // parm info
+ I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
+// obsolete  I *exlist, nexlist, *yk;  // exclusion list: list of excluded col|row pairs, length
  I (*axv)[2];  // pointer to ax data
  I *amv0;  // pointer to am block, and to the selected column's indexes
  D *avv0;  // pointer to av data, and to the selected column's values
  A qk;  // original M block
- I useqp;   // set to force qp during the column computation
+ A sched;  // ending schedule, INT vector.  After the ith improvement, exit if i>:#sched or we have examined (<:i){sched columns
 } ;
 
 
@@ -698,65 +697,105 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(ctx->x) x=ctx->x;
- YC(ndxa)YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)
- YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(bkmin)YC(axv)YC(amv0)YC(avv0)YC(qk)YC(useqp)
+ YC(ndxa)YC(n)YC(minimp)YC(bv)YC(parms)YC(zv)
+ YC(bvgrd0)YC(bvgrde)YC(axv)YC(amv0)YC(avv0)YC(qk)YC(Frow)YC(sched)
 #undef YC
  // perform the operation
 
- __m256d oldcol;  // oldcol Frow   0      0            col value at previous smallest pivot / Frow of current col (always <=0)  0 0
- __m256d oldbk;   // oldbk  minimp 0      0            bk value at previous smallest pivot, best gain available in a previous col (always <=0) 0 0
-// if bv==0, oldcol is repurposed go hold the Dpiv totals, and is 4 64-bit values; oldbk is repurposed to hold MinSafeDouble
  D minimpfound=0.0;  // minimum (=best) improvement found so far from a non-dangerous pivot
  I ndotprods=0;  // number of dot-products we perform here
 
  UI *ndx0=IAV(ndxa), nc=AN(ndxa);  // origin of ordered column numbers, number of columns
 
- D *mv0=DAV(qk), *forcemv0lo=AR(qk)==2||(!useqp)?0:mv0+n*n;  // pointer to start of Qk and the the lower half if any and we will use it (0 if none)
- I nfreecols=(I)(ctx->nfreecolsd*nc); I ncols=(I)(ctx->ncolsd*nc);  // the prefix and total fractions are fractions of the size & must be adjusted
+ D *mv0=DAV(qk), *mv0lo=mv0+n*n;  // pointer to start of Qk and the the lower half if any and we will use it (0 if none)
+// obsolete  I nfreecols=(I)(ctx->nfreecolsd*nc); I ncols=(I)(ctx->ncolsd*nc);  // the prefix and total fractions are fractions of the size & must be adjusted
  if(unlikely(nc==0))R 0;  // abort with no action if no columns (possible only for DIP)
- if(bv!=0)zv=0;  // if we have DIP with a priority row, signal to process ALL rows in bk order.  It ensures that if the prirow is tied for pivot in the first column, we will take it
+// obsolete  if(bv!=0)zv=0;  // if we have DIP with a priority row, signal to process ALL rows in bk order.  It ensures that if the prirow is tied for pivot in the first column, we will take it
 
  // set up loop invariants based on operation type
- I ncolsprocd=0;  // counter of columns we have finished; for one-col mode, the size of each reservation
+// obsolete  I ncolsprocd=0;
+ I colressize;  // for one-col mode, the size of each reservation
  UI firstcol=0, lastreservedcol=0;  // we have reserved columns from firstcol to lastreservedcol-1 for us to calculate
  I currcolproxy=0;   // The column pointer, approximately.  Updated only for DIP mode.  Dpiv doesn't have the variability, and one-col doesn't care
- I resredwarn=nc-100*((*JT(jt,jobqueue))[0].nthreads+1);  // when col# gets above this, switch to reserving one at a time
- __m256i rownums=_mm256_loadu_si256((__m256i*)(&iotavec[-NPAR-IOTAVECBEGIN]));  // row numbers we are fetching from in the current pass.  Taken from bvgrd for DIP/Dpiv usually;
-        // when zv=0 or storing a column the values increase sequentially; for that case we start them at -NPAR so they will incr to 0
- if(bv==0){  // Dpiv, nonimp, or one-column
-  oldbk=_mm256_permute4x64_pd(thresh,0b11111111);  // for nonimp, repurpose oldbk to all safety thresholds
-  thresh=_mm256_permute4x64_pd(thresh,0b00000000);  // for nonimp and Dpiv, repurpose thresh to all minimum acceptable pivot
+ I resredwarn=nc-100*((*JT(jt,jobqueue))[0].nthreads+1);  // when col# gets above this, switch to reserving one at a time  scaf switch to 2/4 at a time?   move to main
+  // parms are  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
+ __m256d qpthresh=_mm256_set1_pd(parms[0]);  // if |column value| < QpThresh, recalculate in quad precision.  In one-column mode, this holds the Store0Threshold: column values less than this are set to 0
+ __m256d col0thresh;  //  minimum value considered valid for a column value (smaller are considered 0)
+ __m256d colbk0thresh;  //  minimum value that will block a pivot when bk=0.  In nonimp mode this is the smallest value we will accept for a random pivot, coming from ColOkPivot
+ D coldangerpivotthresh;  //  smallest allowed pivot, but is dangerous
+ D colokpivotthresh;  // smallest pivot value considered non-dangerous.
+ __m256d bk0thresh;  // smallest bk value considered nonzero
+ I prirow;  //  priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so.  Set to LOW_VALUE if no priority row
+ __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
+ __m256i rowstride; // number of Ds in a row of M, in each lane for DIP or nonimp; spacing between groups of NPAR rows, for onecol
+ __m256i rownums;  // DIP/nonimp: row numbers we are fetching from in the current pass.  Taken from bvgrd   in onecol, the offset in atoms to the next rows to fetch
+ D maxdangerc;  // DIP: max col value of dangerous pivot found here
+ I4 bestcol=-1; UI4 bestcolrow=0-1;  // best column found so far (bit 31 set if dangerous or none found), and the best row in that column (bit 31 set if forcefeasible required)
+
+ // DIP: bv->bk values, zv=1 waiting for first c>0, 3=waiting for first SPR, 2=we have an SPR.  Bit 2 of zv=0 to force qp, =1 to try dp first.
+  //  Bit 3 means 'nonzero column value ignored, forcefeasible required' bit 4 is a temp flag meaning 'this column was an improvement'
+ // nonimp: zv=4 (start in dp)
+ // onecol: zv->output, bv=0 if dp, n if qp (which is always)
+// obsolete not used DPiv: bv=0, zv=0, Frow!=0 but not used (in the loop, limitrow is -6)
+#define ZVFFREQDX 4  // set if we have encountered a column value that may cause us to need forcefeasible
+#define ZVFFREQD (1LL<<ZVFFREQDX)  // set if we have encountered a column value that may cause us to need forcefeasible
+#define ZVMODX 3  // set if the current column was an improvement
+#define ZVMOD (1LL<<ZVMODX)  // set if the current column was an improvement
+#define ZVDP 0b100  // set if we should start in double precision (set for DIP/nonimp)
+#define ZVPOSCVFOUND 0b10  // set if we have found a positive column value, indicating column is bounded
+#define ZVSPRNOTFOUND 0b01  // set if we have not yet found a valis SPR for the column
+// low 2 bits are 00 for non-DIP mode: 000=one-column, 100=nonimp
+#define ZVISDIP (ZVPOSCVFOUND|ZVSPRNOTFOUND)
+#define ZVISNOTONECOL (ZVDP|ZVPOSCVFOUND|ZVSPRNOTFOUND)
+
+ rowstride=_mm256_set1_epi64x(n);   // length of 1 row, which is right fpr DIP or nonimp
+ if(bv==0){  // nonimp or one-column
+// obsolete   oldbk=_mm256_permute4x64_pd(thresh,0b11111111);  // for nonimp, repurpose oldbk to all safety thresholds
+// obsolete   thresh=_mm256_permute4x64_pd(thresh,0b00000000);  // for nonimp and Dpiv, repurpose thresh to all minimum acceptable pivot
   if(zv!=0){  // one-column
    // Set up for multithreading one-column mode, where we have to split the column.  Multithreading of larger problems is handled
    // by having each thread take columns in turn
    // Since there is no bv or bvgrd, we save a register by repurposing bv to have the offset to the low part of result, if qp
-   if(forcemv0lo==0){
-    // in double precision, the operation is predictable and we just want to take equal amounts in each task
-    I tn=bvgrde-(I*)0;  // get # values desired for each thread
-    I startx=ti*tn;  // starting offset for this thread
-    zv+=startx;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
-    rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(startx));  // index points to before the row#s
-    tn+=startx; tn=tn>n?n:tn; tn-=startx; tn=tn<0?0:tn; bvgrde=bvgrd0+tn;  // make tn the endpoint; clamp to max; restore to len; clamp at 0; set bvgrde for length of section
-   }else{
-    // in quad-precision we take reservations of a few lines each time.  Everybody starts at 0
-    bvgrde=bvgrd0;  // each reservation is taken in the loop below
-   }
+   bv=(D*)n;  // offset to low part of *zv - saves a register
+// obsolete    if(forcemv0lo==0){
+// obsolete     // in double precision, the operation is predictable and we just want to take equal amounts in each task
+// obsolete     I tn=bvgrde-(I*)0;  // get # values desired for each thread
+// obsolete     I startx=ti*tn;  // starting offset for this thread
+// obsolete     zv+=startx;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
+// obsolete     rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(startx));  // index points to before the row#s
+// obsolete     tn+=startx; tn=tn>n?n:tn; tn-=startx; tn=tn<0?0:tn; bvgrde=bvgrd0+tn;  // make tn the endpoint; clamp to max; restore to len; clamp at 0; set bvgrde for length of section
+// obsolete    }else{
+   // in quad-precision we take reservations of a few lines each time.  Everybody starts at 0
+   bvgrde=bvgrd0;  // each reservation is taken in the loop below; start it out empty
+// obsolete    }
    lastreservedcol=1;  // cause each thread to process the same one column
-   ncolsprocd=2*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // repurpose ncolsprocd: enough rows to allow each thread
-        // to arbitrate if they have all-zero jobs TUNE
+   colressize=2*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs TUNE    scaf move to main
+   rownums=_mm256_mul_epu32(rowstride,_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
+   rowstride=_mm256_slli_epi64(rowstride,LGNPAR);   // length of NPAR rows for onecol
+   // we leave the low bits ov zv=000 for onecol mode
+  }else{
+   // nonimp mode
+   zv=(D*)ZVDP;  // zv flags 100: nonimp mode
+   colbk0thresh=_mm256_set1_pd(parms[4]);  // ColOkPivot, put into an often-used register
+   // bvgrde is set in the caller to process the requested rows
   }
+ }else{
+  // DIP initialization
+  col0thresh=_mm256_set1_pd(parms[1]); colbk0thresh=_mm256_set1_pd(parms[2]); coldangerpivotthresh=parms[3]; colokpivotthresh=parms[4]; bk0thresh=_mm256_set1_pd(parms[5]); prirow=(I)parms[6];   // copy in parms
+  *(I*)&minimp=__atomic_load_n((I*)&(ctx->minimp),__ATOMIC_ACQUIRE);  // in case some other thread has finished a column and given us a bogey, go get it
+  zv=(D*)(ZVDP+ZVSPRNOTFOUND);  // set flag 101 indicating DIP, dp, waiting for first c>0; bit 4 (ffreqd) starts clear
+  maxdangerc=0.0;  // indicate no dangerous pivot found yet
+  // bvgrde is set in the caller to process the requested rows
  }
- __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
- __m256i rowstride=_mm256_set1_epi64x(n);  // number of Ds in a row of M, in each lane
-// DIP: bv->bk values, zv=1 waiting for first c>0, 3=waiting for first SPR, 2=we have an SPR.  Bit 2 of zv=0 to force qp, =1 to try dp first
-// nonimp: zv=4
-// onecol: zv->output, bv=0 if dp, n if qp
-// scaf todo: fix limitrow/zv; use bv for n; fix result signaling to use just 1 area; eventually, change i/f
-// obsolete not used DPiv: bv=0, zv=0, Frow!=0 but not used (in the loop, limitrow is -6)
-
- // loop over all columns requested
- for(;;++ncolsprocd){
+ // loop over all columns requested.  Low 3 bits of zv indicate mode: 000=onecol 100=nonimp other=DIP
+ while(1){
   // start of processing one column
+  __m256d minspr;  // minimum valid SPR found so far, in each qword-lane
+  I firstsprrow=0;  // first row in which a valid SPR was found (may be lower than the actual value)   scaf init needed for warning
+  __m256d limitcs;  // col value, valid only when there is a valid SPR
+  __m256i limitrows=_mm256_set1_epi64x(1000000000);  // row number fetched from, valid only when there is a valid SPR.  This is a value from bvgrd.  Must be initialized so as not to match prirow
+
+  // establish column reservation, depending on mode
   // get next col index to work on; stop if no more cols
   // We would like to take sequential columns, because they are likely to share columns of Qk.  But there is wild variation in the time spent on a column: the
   // average column cuts off within 50 rows, while a winning column goes to the end, perhaps thousands of rows.  As a compromise we take groups of columns until
@@ -767,138 +806,164 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    firstcol=__atomic_fetch_add(&ctx->nextcol,ressize,__ATOMIC_ACQ_REL);  // get next sequential column number, reserve a section starting from there
    lastreservedcol=firstcol+ressize;  // remember end of our reservation
   }
+
   if(firstcol>=nc)break;  // exit if all columns have been processed
   I colx=ndx0[firstcol];  // get next column# to work on
-  I an=axv[colx][1];  // number of sparse atoms in each row
-  ++firstcol;  // update for next time
-// loop until we don't need to rerun at higher precision
-  {  // this is a loop: we branch back to retry
-   D *mv0lo;
-   if(1)mv0lo=forcemv0lo; else{retryinquad: mv0lo=mv0+n*n;}
-   I limitrow;  // the best row to use as a pivot for this column; or # qualifying Dpiv found.  Used as a flag for column processing
-   if(bv!=0){
-    // DIP mode
-    // col init
-    rownums=_mm256_loadu_si256((__m256i*)(&iotavec[-NPAR-IOTAVECBEGIN]));  // in case zv=0, init row #s
-    oldcol=_mm256_set_pd(0.0,0.0,Frow[colx],0.0);  //  init to pivotratio=inf and gain 0, assuming minimp is 0 the first time
-    oldbk=_mm256_set_pd(0.0,0.0,minimp,1.0);
-    limitrow=-1;  // init no eligible row found
-   }else if(zv==0){  // Dpiv, nonimp
-    // For Dpiv, limitrow is -1; oldcol has counts of pivots.  For single-row processing, limitrow is -3.  For nonimp, limitrow is -2
-    oldcol=_mm256_setzero_pd();  //  init counts to integer 0, in case Dpiv.  Immaterial for nonimp/onecol
-    limitrow=Frow==0?-2:-1;
-   }else limitrow=mv0lo==0?-3:-4;  // -3 for onecol
+  I an; D *vv; I *iv;  // number of sparse atoms in each row (0 if Ek column), pointers to row#s, values for this column
+  if(colx>=n){  // not a basis column
+   an=axv[colx][1];  // number of sparse atoms in each row
+   vv=avv0+axv[colx][0];  // pointer to values for this section of A
+   iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
+  }else an=-1;  // an<0 means basis column
 
-   // init for the column
+  // loop until we don't need to rerun at higher precision
+  {  // this is a loop: we branch back to retry
+   // col init
    __m256d endmask=_mm256_setone_pd(); // mask for validity of next 4 words: used to control fetch from column and store into result row
+   __m256d minimpspr;  // minimp/Frow of the current column, which is the minimum SPR that does not cut off
+   if((I)zv&ZVISDIP){
+    // DIP mode
+    minimpspr=unlikely(Frow[colx]==0)?_mm256_setzero_pd():_mm256_set1_pd(minimp/Frow[colx]);  //minimum SPR that will not cut off
+    // This is the retry point; put static inits above this
+    if(1)zv=(D*)(ZVDP+ZVSPRNOTFOUND);else{retryinquad: zv=(D*)ZVSPRNOTFOUND;}  // if we need to retry in qp, so indicate
+    minspr=_mm256_set1_pd(inf);  // minimum valid SPR found so far, in each qword-lane
+   }
+
    I *bvgrd;
    // create the column NPAR values at a time
    for(bvgrd=bvgrd0;;bvgrd+=NPAR){
     if(bvgrd>=bvgrde){  // end of column or column section
 // obsolete      if(mv0lo==0)break;  // normally, that's the end of the column
-     if(limitrow!=-4)break;  // end of column section is end of column except for one-column quad-prec, where we take multiple reservations per column
+     if(((I)zv&ZVISNOTONECOL)!=0)break;  // end of column section is end of column except for one-column quad-prec, where we take multiple reservations per column
+     // establish row reservation (one-col mode only)
      // quad-prec one-column mode.  Take a set of rows to process.  The issue is that some rows are faster than others: rows with all 0s skip extended-precision
      // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
      // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
      // for NPAR*nthreads at least.
      I currx=bvgrde-(I*)0;  // index we would be processing next
-     I resrow=__atomic_fetch_add(&ctx->nextcol,ncolsprocd,__ATOMIC_ACQ_REL);
+     I resrow=__atomic_fetch_add(&ctx->nextcol,colressize,__ATOMIC_ACQ_REL);
      if(resrow>=n)break;  // finished when reservation is off the end
      I skipamt=resrow-currx;  // number of rows to skip
      zv+=skipamt;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
-     rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(skipamt));  // index points to before the row#s
-     I endx=resrow+ncolsprocd; endx=endx>n?n:endx;  // end+1 of the reservation
+     rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(skipamt*(I)bv));  // advance the atom-offsets over the skipped area (bv=n)
+     I endx=resrow+colressize; endx=endx>(I)bv?(I)bv:endx;  // end+1 of the reservation
      bvgrd=bvgrd0+resrow; bvgrde=bvgrd0+endx;  // loop controls
     }
+
     __m256i indexes;  // offset in atoms from Qk to the beginning of the row we are fetching = rownums*n
     __m256d dotproducth,dotproductl;  // where we build the column value
     // get the validity mask for the gather and process: leave as ones until the end of the column
-    if(unlikely(bvgrde-bvgrd<NPAR))endmask = _mm256_loadu_pd((double*)(validitymask+NPAR-(bvgrde-bvgrd)));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
-    // if we are processing DIP/Dpiv and looking for early cutoff, fetch the row#s of the next group to process, in bkg order
-    if(zv==0){  // scaf use limitrow
+    if(unlikely(bvgrde-bvgrd<NPAR))endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(bvgrde-bvgrd)));  // mask for 00=1111, 01=1000, 10=1100, 11=1110.  Used for gather and store
+    // get row#s to read from
+    if(((I)zv&ZVISNOTONECOL)!=0){
      if(likely(bvgrde-bvgrd>=NPAR))rownums=_mm256_loadu_si256((__m256i*)bvgrd); else rownums=_mm256_maskload_epi64(bvgrd,_mm256_castpd_si256(endmask));
+     indexes=_mm256_mul_epu32(rowstride,rownums);  // convert row# to atom offset to start of row
     }else{
-     rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(NPAR));  // one-column mode: otherwise, sequential processing of entire column
+     indexes=rownums;  // one-column mode: sequential processing of entire column
+     rownums=_mm256_add_epi64(rownums,rowstride);
     }
-    indexes=_mm256_mul_epu32(rowstride,rownums);  // convert row# to atom offset to start of row   could move this to the input
+
     // Now mv and indexes are set up to read the correct rows
     // get the next NPAR values by dot-product with Av
-    if(colx<n){
+    if(an<0){
      // fetching from the Ek matrix itself.  Just fetch the values from the column
      dotproducth=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+colx,indexes,endmask,SZI);
-     if(limitrow==-4){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI);}  // if quad-prec onecol, fetch extension part too
+     if(!((I)zv&ZVDP)){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI);}  // if quad-prec (onecol or DIP retry)
     }else{
-     // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows
-     D *vv=avv0+axv[colx][0];  // pointer to values for this section of A
-     I *iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
-     if(likely(mv0lo==0)){
-      // single-precision accumulate
+     // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows.  There must be at least 1 column selected
+     if((I)zv&ZVDP){
+      // DIP or nonimp, starting in dp. single-precision accumulate
       dotproducth=_mm256_setzero_pd();
-      I k;
+      I k;  __m256d nonzerofound=_mm256_setzero_pd();  // will remain 0 if all values read in the lane are 0
       NOUNROLL for(k=0;k<an;++k){
        dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
        dotproducth=_mm256_fmadd_pd(dotproductl,_mm256_set1_pd(vv[k]),dotproducth);  // accumulate the dot-product
+       nonzerofound=_mm256_or_pd(nonzerofound,_mm256_cmp_pd(dotproductl,nonzerofound,_CMP_NEQ_OQ));  // if nonzero found, remember
       }
+      // if any of the results is below the qp threshold, revert to qp; but ignore any exact 0
+      if(!_mm256_testz_pd(_mm256_cmp_pd(dotproducth,qpthresh,_CMP_LT_OQ),nonzerofound))goto revertqp;  // testz is 1 if all comparisons fail, i. e. no product is too low
      }else{
+revertqp: ;
       // extended-precision accumulate, used only when Qk has quad-precision and we need the precision
-      dotproducth=dotproductl=_mm256_setzero_pd();  // init totals
+      // It's not unusual for all 4 values fetched from Qk to be 0. 
+      // For the first value, we can simplify the product with no accumulate
       I k;
       NOUNROLL for(k=0;k<an;++k){  // for each element of the dot-product
+       __m256d tl,th2,tl2,vval;  // temps for value loaded, and multiplier from A column
+       // get column number to fetch; fetch 4 rows
+       dotproducth=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
+       if(_mm256_testz_si256(_mm256_castpd_si256(dotproducth),_mm256_castpd_si256(endmask)))continue;  // if all values 0, skip em.  Probably worth a test
+       // there's a nonzero, calculate it
+       tl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
+       vval=_mm256_set1_pd(vv[k]);  // load column value
+       // take the two products and canonicalize
+       TWOPROD(dotproducth,vval,th2,tl2)  // high qk * col
+       tl2=_mm256_fmadd_pd(tl,vval,tl2);  // low qk*col, and add to high part
+       TWOSUMBS(th2,tl2,dotproducth,dotproductl)  // combine parts, canonicalize
+        // this is accurate to 104 bits from the largest of (new,old,new+old)
+       goto accumulateqp; 
+      }
+      // if we end the loop, there must have been nothing but 0.  We know dotproducth was set to 0.
+      dotproductl=dotproducth;  // set overall product to 0
+      goto endqp;
+accumulateqp: ;
+      NOUNROLL for(++k;k<an;++k){  // skip the first nonzero; for each remaining element of the dot-product
        __m256d th,tl,th2,tl2,vval;  // temps for value loaded, and multiplier from A column
        // get column number to fetch; fetch 4 rows
        th=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
-       if(!_mm256_testz_si256(_mm256_castpd_si256(th),_mm256_castpd_si256(th))){  // if all values 0, skip em.  Probably worth a test
-        tl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
-        vval=_mm256_set1_pd(vv[k]);  // load column value
-        // accumulate the dot-product
-        TWOPROD(th,vval,th2,tl2)  // high qk * col
-        tl2=_mm256_fmadd_pd(tl,vval,tl2);  // low qk*col, and add in extension of prev product
-        TWOSUM(dotproducth,th2,dotproducth,vval)  // combine high parts in quad precision
-        tl2=_mm256_add_pd(dotproductl,tl2); tl2=_mm256_add_pd(vval,tl2);  // add extensions, 3 products costs 2 bits of precision
-        TWOSUM(dotproducth,tl2,dotproducth,dotproductl)  // combine high & extension for final form
-        // this is accurate to 104 bits from the largest of (new,old,new+old).
-       }
+       if(_mm256_testz_si256(_mm256_castpd_si256(th),_mm256_castpd_si256(endmask)))continue;  // if all values 0, skip em.  Probably worth a test
+       tl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+iv[k],indexes,endmask,SZI);  // fetch from up to 4 rows
+       vval=_mm256_set1_pd(vv[k]);  // load column value
+       // accumulate the dot-product
+       TWOPROD(th,vval,th2,tl2)  // high qk * col
+       tl2=_mm256_fmadd_pd(tl,vval,tl2);  // low qk*col, and add in extension of prev product
+       TWOSUM(dotproducth,th2,dotproducth,vval)  // combine high parts in quad precision
+       tl2=_mm256_add_pd(dotproductl,tl2); tl2=_mm256_add_pd(vval,tl2);  // add extensions, 3 products costs 2 bits of precision
+       TWOSUM(dotproducth,tl2,dotproducth,dotproductl)  // combine high & extension for final form
+       // this is accurate to 104 bits from the largest of (new,old,new+old).
       }
+endqp: ;
      }
-    }  // end of loop to create NPAR values
+    }  // end of creating NPAR values
     // process the NPAR generated values
-    if(bv!=0){  // scaf use limitrow
-#if 0
-    if(limitrow>=-2){
+    if((I)zv&ZVISDIP){
      // DIP mode, looking for pivots.  process the values in parallel
-     if(!_mm256_testz_si256(_mm256_castpd_si256(dotproducthi),_mm256_castpd_si256(dotproducthi))){  // if all c values are 0.0, we can skip everything - not unlikely
+     __m256d cnon0=_mm256_cmp_pd(dotproducth,col0thresh,_CMP_GT_OQ);  // ~0 for words that have nonzero c
+     if(!_mm256_testz_pd(cnon0,endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process
       __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // the bk values we are working on
       // see if any of the new values is limiting: b/c < min SPR, c>ColThresh, bk>bkthresh
       // we perform this calculation on each lane separately, to save the expense of finding the minimum SPR each time one is calculated.
       // This means the values in each lane will be smaller than they would be with sharing, leading to perhaps 2 extra divisions.  That's a good trade.
-      __m256d ratios=_mm256_fmsub_pd(minspr,dotproducthi,bk4);  // minspr*c-b: sign set if this is NOT a new min SPR in its lane
-      __m256d coverthresh=_mm256_cmp_pd(dotproducthi,thresh,_CMP_GT_OQ);  // set to ~0 if c>ColThresh - never if endmask 0
-      // we separate b into < threshold and >= threshold.   This must match the selection made for stall exit
-      __m256d sprvalid=_mm256_and_pd(coverthresh,_mm256_cmp_pd(bk4,bkthresh,_CMP_GE_OQ));  // compare sets to ~0 if b>=bthresh - never if endmask is 0   set to ~0 if c>thresh & b>=thresh, i. e. SPR is valid
-      if(unlikely((!_mm256_testc_pd(_mm256_cmp_pd(bk4,bkthresh,_CMP_GE_OQ),coverthresh)))goto abortcol;  // CF is 0 if any sign of ~a&b is 1 => ~b>=bthresh & c>ColThresh.  Positive c and b<=0 means we cannot pivot in this column
-      if(_mm256_testc_pd(ratios,sprvalid)){  // CF is 1 if ~a&b signs all 0 => ~(~new min)&(c good&b good) all 0 => no place where new min & c good & b good
+      __m256d cbadifbk0=_mm256_cmp_pd(dotproducth,colbk0thresh,_CMP_GT_OQ);  // set to ~0 if c>ColBkThresh, i. e. column is blocked by bk=0 - always if endmask 0
+      __m256d ratios=_mm256_fnmadd_pd(_mm256_and_pd(cbadifbk0,minspr),dotproducth,bk4);  // b-minspr*c: sign set if b<minspr*c => b/c<minspr => this is a new min SPR in its lane.  If col is near 0, force minspr to 0, which clears the sign bit whenever bk4>0
+        // by using cbadifbk0 rather than cnon0 we are ignoring the (valid) SPRs created by small column values.  This probably doesn't matter because those SPRs are
+        // big anyway if bk!=0; but we do it mostly to match the dp code
+      __m256d bknot0=_mm256_cmp_pd(bk4,bk0thresh,_CMP_GE_OQ); // we separate b into < threshold and >= threshold.   This must match the selection made for stall exit
+// obsolete       __m256d sprvalid=_mm256_and_pd(coverthresh,_mm256_cmp_pd(bk4,bk0thresh,_CMP_GE_OQ));  // compare sets to ~0 if b>=bthresh - never if endmask is 0   set to ~0 if c>bkthresh & b>=thresh, i. e. SPR is valid
+      if(unlikely(!_mm256_testc_pd(bknot0,cbadifbk0)))goto abortcol;  // CF is 0 if any sign of ~a&b is 1 => ~(b>=bthresh) & c>BkThresh.  Positive c and b<=0 means we cannot pivot in this column
+      if(unlikely(!_mm256_testc_pd(cbadifbk0,cnon0)))zv=(D*)((I)zv|ZVFFREQD);  // CF is 0 if any sign of ~a&b is 1 => ~(c>BkThresh) & c>0thresh.  We are ignoring a non0 pivot; we will need forcefeasible; flag that
+      if(_mm256_testz_pd(ratios,bknot0)){  // ZF is 1 if a&b signs all 0 => (new min&c ok if b!=0)&(b!=0) all 0 => no place where new min & b good & b good
        // not limiting (normal).  If we haven't ruled out that the column is unbounded, check for c>thresh (and therefore b<=thresh), which rules out unbounded
-       if(limitrow==-2)limitrow=_mm256_testz_pd(coverthresh,coverthresh)?limitrow:-1;  // if any c>thresh, zf is 0; set that we are bounded.  This branch will predict correctly
+       if(!((I)zv&ZVPOSCVFOUND))if(!_mm256_testz_pd(cnon0,cnon0))zv=(D*)(((I)zv+firstsprrow)|ZVPOSCVFOUND);  // if any c>thresh, zf is 0; set that we are bounded.  This branch will predict correctly  scaf firstsprrow+ for warning
       }else{
        // at least one new SPR is limiting (in its lane).  Find the SPRs
-       __m256d sprs=_mm256_div_pd(bk4,dotproducthi);  // find SPRs, valid or not.  Not worth moving this before the mispredicting branch
+       __m256d sprs=_mm256_div_pd(bk4,dotproducth);  // find SPRs, valid or not.  Not worth moving this before the mispredicting branch
        // the reciprocal takes a long time to run.  Make sure there are no dependencies.  The block of code
        // issued here will complete while the next block of dotproduct is being computed.
-       if(limitrow<0){limitrow=0; firstsprrow=(bvgrd-bvgrd0);}  // index of (close to) first valid SPR.  Branch will predict correctly.  Set limitrow to show that we are bounded and have first SPR
-       sprvalid=_mm256_andnot_pd(ratios,sprvalid);  // sprvalid now means 'valid and limiting' - high bit only
-       minspr=_mm256_blendv_pd(minspr,sprs,sprvalid);   // remember the limiting SPR, in each lane
-       // remember if the pivot is dangerous, by taking one's complement of row# if it is
-       __m256d rownumsdanger=_mm256_xor_pd(_mm256_castsi256_pd(rownums),_mm256_cmp_pd(dotproducthi,dangerthresh,_CMP_LT_OQ));  // complement rownum if pivot is dangerous
-       limitrows=_mm256_blendv_pd(limitrows,__mm256_castsi256_pd(rownums),sprvalid);  // if there is a new limiting SPR, remember its row number
+       if((I)zv&ZVSPRNOTFOUND){zv=(D*)(((I)zv&~ZVSPRNOTFOUND)|ZVPOSCVFOUND); firstsprrow=(bvgrd-bvgrd0);}  // index of (close to) first valid SPR.  Branch will predict correctly.  Set state to show that we are bounded and have first SPR
+       __m256d validlimit=_mm256_and_pd(ratios,bknot0);  // pivot is valid and limiting - high bit only.  c too low was eliminated earlier; bk too low eliminated now
+       minspr=_mm256_blendv_pd(minspr,sprs,validlimit);   // remember the limiting SPR, in each lane
+       limitrows=_mm256_castsi256_pd(_mm256_blendv_pd(_mm256_castsi256_pd(limitrows),rownums,validlimit));  // if there is a new limiting SPR, remember its row number
+       limitcs=_mm256_blendv_pd(limitcs,dotproducth,validlimit);  // remember the column value at the limiting SPR.  We will classify it after we find the winning SPR
        // check for cutoff
-       if(unlikely(((_mm256_testc_pd(_mm256_fmsub_pd(minimp,dotproducthi,bk4),sprvalid))){  // Frow*b/c > minimp (Frow and minimp negative) => b/c < minimp/Frow = minimpspr => b < minimp*c.  Calc minimp*c-b: sign set if this value cuts off
+       if(unlikely(!_mm256_testc_pd(_mm256_fmsub_pd(minimpspr,dotproducth,bk4),validlimit))){  // cutoff if Frow*b/c > minimp (Frow and minimp negative) => b/c < (minimp/Frow = minimpspr) => b < minimpspr*c => minimpspr*c-b > 0. i. e. any sign 0 when b!=0 =: CF bot set
         // one of the values cuts off.  Abort this column, keeping the SPR and position.
-        if(likely(_mm256_testz_si256(rowstride,_mm256_cmpeq_epi64(_mm256_set1_epi64x(prirow),_mm256_castpd_si256(limitrows)))))   // rowstride is any 256i with nonzero in all lanes
-         goto abortcol;   //  EXCEPTION: if any limiting row is virtual (and not dangerous), don't cut off.  We'll take it as long as it is the min SPR in this column
+        if(likely(_mm256_testz_si256(rowstride,_mm256_cmpeq_epi64(_mm256_set1_epi64x(prirow),limitrows))))goto abortcol;   // rowstride is any 256i with nonzero in all lanes
        }
       }
      }
-#endif
+#if 0  // obsolete 
+    if(bv!=0){  // scaf use limitrow
      // this table gives the values to use in permutevar32 to push all the nonzeros to the bottom of the 256 bytes, with 0s at the top
      // the index is the mask of zeros
      static __attribute__((aligned(CACHELINESIZE))) UI4 permvals[16][8] ={
@@ -942,32 +1007,28 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
       if(tmask>(rmask>>1) && (I4)limitrow!=(I4)prirow)  // col>ColThr && abort on limited gain: abort UNLESS the current best is on a virtual row.  We give them priority
        goto abortcol;
      }
-    }else if(limitrow==-2){  // nonimp
+#endif
+    }else if((I)zv&ZVISNOTONECOL){  // nonimp
      __m256d threshcmp;  // results of comparing column value ve min
-     // looking for nonimproving pivots (only in rows where selector<0).  We choose the first one we see that is above the threshold (which here means non-dangerous).  But if the pivot is anywhere close to threshold, we
-     // worry that in quad-prec it might be below threashold; in that case we retry the column in quad-prec
-     if(!_mm256_testz_pd(threshcmp=_mm256_cmp_pd(dotproducth,thresh,_CMP_GT_OQ),endmask)){  // if any compare is true, we have a match
+     // looking for nonimproving pivots (only in cols where selector<0, in rows where bk is near0).  We choose the first one we see that is above the threshold (which here implies non-dangerous).
+     if(!_mm256_testz_pd(threshcmp=_mm256_cmp_pd(dotproducth,colbk0thresh,_CMP_GT_OQ),endmask)){  // if any compare is true, we have a match
       int mask1=_mm256_movemask_pd(threshcmp);  // see which value(s) succeeded
-      if(AR(qk)>2 && mv0lo==0){  // if there is a possibility of retrying this column at higher precision...
-       int mask2=_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,oldbk,_CMP_GT_OQ));  // see which values are safely above possibility of danger
-       if(!((mask1=LOWESTBIT(mask1))&mask2))goto retryinquad;  // if the first over-threshold is not guaranteed safe, retry the column in quad-precision
-      }
       // OK to use the first nonimp we have found
-      ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=colx; bestcolrow=bvgrd[CTTZI(mask1)]; goto return2;
+      ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=firstcol; bestcolrow=bvgrd[CTTZI(mask1)]; goto return2;
      }
 // obsolete      if(ABS(_mm256_cvtsd_f64(dotprod))>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  // any nonzero pivot is a pivot row, unless in the exclusion list
-    }else if(limitrow==-1){  // scaf this is obsolete
-     // Dpiv mode: count # values > ColThr
-     oldcol=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_cmp_pd(dotproducth,thresh,_CMP_GT_OQ))));
+// obsolete     }else if(limitrow==-1){  // scaf this is obsolete
+// obsolete      // Dpiv mode: count # values > ColThr
+// obsolete      oldcol=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_cmp_pd(dotproducth,thresh,_CMP_GT_OQ))));
     }else{
      // one-column mode: just store out the values, setting to 0 if below threshold
-     __m256d force0=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),thresh,_CMP_LT_OQ);  // 1s where we need to clamp
-     dotproducth=_mm256_blendv_pd(dotproducth,_mm256_setzero_pd(),force0);  // set values < threshold to +0
-     dotproductl=_mm256_blendv_pd(dotproductl,_mm256_setzero_pd(),force0);  // low part too.  Doesn't hurt if they're not written out
+     __m256d okmask=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),qpthresh,_CMP_GT_OQ);  // 1s where we need to clamp
+     dotproducth=_mm256_and_pd(dotproducth,okmask);  // set values < threshold to +0
+     dotproductl=_mm256_and_pd(dotproductl,okmask);  // low part too.
      if(likely(_mm256_testc_pd(endmask,sgnbit))){
-      if(likely(limitrow<-3))_mm256_storeu_pd(zv+n,dotproductl); _mm256_storeu_pd(zv,dotproducth);  // scaf use bv not n to save conditional and a register
+      _mm256_storeu_pd(zv,dotproducth); _mm256_storeu_pd(zv+(I)bv,dotproductl);   // store high & low
      }else{
-      if(likely(limitrow<-3))_mm256_maskstore_pd(zv+n,_mm256_castpd_si256(endmask),dotproductl); _mm256_maskstore_pd(zv,_mm256_castpd_si256(endmask),dotproducth);  // store, masking if needed
+      _mm256_maskstore_pd(zv,_mm256_castpd_si256(endmask),dotproducth); _mm256_maskstore_pd(zv+(I)bv,_mm256_castpd_si256(endmask),dotproductl);  // store, masking if needed
      }
 // obsolete      if(likely(mv0lo!=0)){  // low parts has been calculated
      zv+=NPAR;  // advance to next output location
@@ -977,65 +1038,93 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 
    // End-of-column processing.  Collect stats and update parms for the next column
 
-   if(bv==0){  // one product, nonimp, Dpiv  scaf use limitrow
-    if(zv)goto earlycol;  // if just one product, skip the setup for next column
-    // if we get here for nonimp, it means we didn't find one & should fail
-    if(limitrow==-2){
-     // nonimp mode, and we didn't find one in our column.  If any thread has found a nonimp, abort so we can use that
-     if(__atomic_load_n(&(ctx->bestcolandrow[0]),__ATOMIC_ACQUIRE)!=-1)goto earlycol;
-    }else{
-     // here for Dpiv.  oldcol is the # pivots found; we add/sub/store that in the Dpiv block based on 'prirow'
-     oldcol=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_permute4x64_pd(oldcol,0b00001110))));
-     limitrow=_mm256_extract_epi64(_mm256_add_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_permute_pd(oldcol,0b0001))),0);
-     exlist[colx]=exlist[colx]*!!prirow+limitrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column
-    }  // for nonimp, just move to the next col
-    goto nextcol;
+   if(((I)zv&ZVISNOTONECOL)==0)goto earlycol;  // if just one product, skip the setup for next column
+   // from here on, bv/nonimp mode; use bit 4 of zv to indicate 'improvement found'
+   if(!((I)zv&ZVISDIP)){  // nonimp
+    // if we get here for nonimp, it means we didn't find one & should look in the next column.  If any thread has found a nonimp in an earlier column, abort so we can use that
+    if((UI)(__atomic_load_n(&(ctx->bestcolandrow),__ATOMIC_ACQUIRE)>>32)<=firstcol)goto earlycol;  // nonimp found in earlier column: abort.  dangerous flag must be clear
+    goto abortcol2;  // don't bother with counting improvements, since we always exit after the first
+// obsolete     }else{
+// obsolete      // here for Dpiv.  oldcol is the # pivots found; we add/sub/store that in the Dpiv block based on 'prirow'
+// obsolete      oldcol=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_permute4x64_pd(oldcol,0b00001110))));
+// obsolete      limitrow=_mm256_extract_epi64(_mm256_add_epi64(_mm256_castpd_si256(oldcol),_mm256_castpd_si256(_mm256_permute_pd(oldcol,0b0001))),0);
+// obsolete      exlist[colx]=exlist[colx]*!!prirow+limitrow*(prirow|1);  //  add/sub/init Dpiv value.  Only one thread ever touches a column
+// obsolete     }  // for nonimp, just move to the next col
+// obsolete     goto nextcol;
    }else{  // DIP
 // obsolete  if(exlist==0){  // DIP.  looking for nonimproving pivots?
-    // not looking for nonimproving pivots.  Do a normal pivot-pick
     // column ran to completion.  Detect unbounded
-    if(limitrow<0){
+    if(!((I)zv&ZVPOSCVFOUND)){
      // no pivots found for a column, problem is unbounded, indicate which column in the NTT, i. e. the input value which is an identity column if < #A
      // BUT it is possible that a column that looks unbounded in double precision will be bounded in quad; so retry the column in that case
-     if(AR(qk)>2 && mv0lo==0)goto retryinquad;  // if there is extended precision, and we haven't used it yet, retry in extended precision
-     bestcolrow=limitrow; bestcol=colx; goto return4;
+     if((I)zv&ZVDP)goto retryinquad;  // if we haven't used qp yet, retry the column in extended precision
+     bestcolrow=0-1; bestcol=colx; goto return4;  // unbounded in qp: indicate where, with row=-1 as a flag
     }
-    // If this pivot would result in a cycle, ignore it  scaf not used
-    if(nexlist!=0&&!notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){goto abortcol;}
-    {
-     // The new column must have better gain than the previous one (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
+    // it is just possible that the entire column would be processed with no SPR found (all the rows would have to have c=0 b=0).
+    // In that case, ignore the column
+    if(likely(!((I)zv&ZVSPRNOTFOUND))){   // state 1/3: no SPR received yet
+     // The new column must have better gain than the previous best (since we had a pivot & didn't abort).  Remember where it was found and its improvement, unless it is dangerous.  Bit 35 set if NOT dangerous
      // Exception: if a nondangerous pivot pivots out a virtual row, we accept it immediately and abort all other processing
-     if(likely((bestcol|SGNIF(limitrow,32+3))<0)){  // if this pivot is not dangerous, remember it.  Also remember if it is the first pivot, in case there are only dangerous pivots
-      bestcol=colx; bestcolrow=limitrow;  // update the found position for any nondangerous pivot, or the first time in case we have only dangerous pivots
-      // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
-      if(likely((limitrow&(1LL<<32+3))!=0)){  // if the improvement is one we are content with...
-       // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
-       if(unlikely((I4)limitrow==(I4)prirow)){++ncolsprocd; ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
-       I incumbentimpi=__atomic_load_n((I*)&(ctx->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
-       D minimpthiscol=(Frow[colx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
+     union __attribute__((aligned(CACHELINESIZE))) {I quadI[NPAR]; D quadD[NPAR]; } extractarea;  // place where we can see individual values
+// obsolete  _mm256_store_pd(rownumsarray,rownums);  // look at em
+     __m256d allmin=_mm256_min_pd(minspr,_mm256_permute_pd(minspr,0b0101)); // allmin = min01 min01 min23 min23  could use integer in AVX-512
+     allmin=_mm256_min_pd(allmin,_mm256_permute4x64_pd(allmin,0b00001010));  // allmin=min value in all lanes
+     I minx=CTTZI(_mm256_movemask_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(allmin),_mm256_castpd_si256(minspr))));  // index of a lane containing the minimum SPR
+     _mm256_store_pd(&extractarea.quadD[0],limitcs); D minc=extractarea.quadD[minx];  // get column value at minimum SPR
+     _mm256_store_si256((__m256i *)&extractarea.quadI,limitrows); I minrownum=extractarea.quadI[minx];  // get bkgrd index of minimum row
+     D spratmin=_mm256_cvtsd_f64(allmin);    // the minimum SPR itself
+// obsolete     }
+// obsolete     // If this pivot would result in a cycle, ignore it  scaf not used
+// obsolete     if(nexlist!=0&&!notexcluded(exlist,nexlist,colx,yk[(UI4)limitrow])){goto abortcol;}
+// obsolete     {
+     if(likely(minc>=coldangerpivotthresh)){  // if pivot is so low that it will damage the problem, skip over it, try next column
+      if(likely(minc>=colokpivotthresh)){  // if this pivot is not dangerous, see if it is a new global best (for the time being); if so, share the improvement and remember that we have it
+// obsolete |((I)(minc>=colokpivotthresh)<<(32+3));
+       // update the best-gain-so-far to the actual value found - but only if this is not a dangerous pivot.  We don't want to cut off columns that are beaten only by a dangerous pivot
+// obsolete        if(likely(minc>=colokpivotthresh)){  // if the improvement is one we are content with...
+        // if the pivot was found in a virtual row, stop looking for other columns and take the one that gets rid of the virtual row.  But not if dangerous.
+       if(unlikely((I4)minrownum==(I4)prirow)){bestcol=colx; bestcolrow=minrownum|(((I)zv&ZVFFREQD)<<(31-ZVFFREQDX)); ndotprods+=bvgrd-bvgrd0; goto return4;}  // stop early if virtual pivot found, but take credit for the column we process here
+       I incumbentimpi=__atomic_load_n((I*)&(ctx->minimp),__ATOMIC_ACQUIRE);  // load incumbent best improvement
+// obsolete        D minimpthiscol=(Frow[colx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
+       D minimpthiscol=Frow[colx]*spratmin;  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
        while(1){  // put the minimum found into the ctx for the job so that all threads can cut off quickly
         if(minimpthiscol>=*(D*)&incumbentimpi)break;  // if not new global best, don't update global.  In this case we don't need to remember the value of this column, since it has been beaten
-        minimpfound=minimpthiscol;  // wait till now to remember best-in-thread, because numerical error may allow minimpthiscol to be not as good as an earlier column
-        if(__atomic_compare_exchange_n((I*)&(ctx->minimp),&incumbentimpi,*(I*)&minimpfound,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent
+        if(__atomic_compare_exchange_n((I*)&(ctx->minimp),&incumbentimpi,*(I*)&minimpthiscol,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE)){
+         minimpfound=minimpthiscol;  // wait till now to remember best-in-thread, because numerical error may allow minimpthiscol to be not as good as an earlier column
+         bestcol=colx; bestcolrow=minrownum|(((I)zv&ZVFFREQD)<<(31-ZVFFREQDX));  // update the found position
+         zv=(D*)((I)zv|ZVMOD);  // set flag indicating 'this was an improvement'
+         break;
+        }  // write; if written exit loop, otherwise reload incumbent.  Indicate we made an improvement
        }
-       zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
+// obsolete        }
+// obsolete       zv=0;  // now that we have an improvement to shoot at, we will benefit by scanning cols in bk order
+      }else{
+       // the best SPR was dangerous.  We don't update the improvement, and we don't try to pick the best improvement.  Rather, we keep the least dangerous pivot, i. e. the largest
+       if(bestcol<0&&minc>maxdangerc){  // if we have not found a nondangerous pivot yet and this is a new local best among dangerous pivots...
+        bestcol=colx|(1LL<<31); bestcolrow=minrownum|(((I)zv&ZVFFREQD)<<(31-ZVFFREQDX));  // update the found position as dangerous, with forcefeasible flag in bit 31.
+        maxdangerc=minc;  // remember the largest dangerous pivot we have found here
+       }
       }
      }
     }
    }
    --bvgrd;  // undo the +1 in the product-accounting below
 
-   // we have finished processing & reporting the column.  Now prepare for the next column
-
-abortcol:  // here if column aborted early, possibly on insufficient gain
-   if(unlikely(!bv))goto earlycol;  // if just one product, skip the setup for next column  scaf use limitrow
+   // we have finished processing the column, and reporting its gain if DIP.  Now prepare for the next column
+abortcol:  // jump here if column aborted early, possibly on insufficient gain.  This is the normal path
+// obsolete impossible   if(unlikely(!bv))goto earlycol;  // if just one product, skip the setup for next column  scaf use limitrow
+   // exit if we have processed enough columns (in DIP mode)
+   I nimpandcols=__atomic_add_fetch(&ctx->nimpandcols,(((I)zv&ZVMOD)<<(32-ZVMODX))+1,__ATOMIC_ACQ_REL);  // add on one finished column, and 0 or 1 improvements
+   if(unlikely((nimpandcols>>32)>AN(sched)))goto earlycol;  // if we have more improvements than the schedule imagined, finish
+   if(unlikely((nimpandcols>>32)>0 && (UI4)nimpandcols>=IAV(sched)[(nimpandcols>>32)-1]))goto earlycol;  // if we have processed enough columns for this level of improvements, finish
+// obsolete    if(unlikely((--ncols<0)&&(SGNIF(bestcolrow,32+3)<0))){++ncolsprocd; goto earlycol;}  // quit if we have made a non-dangerous improvement AND have processed enough columns - include the aborted column in the count
+abortcol2:  // jump here to go to next column without updating col completions (for nonimp mode)
    ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
-   if(unlikely((--ncols<0)&&(SGNIF(bestcolrow,32+3)<0))){++ncolsprocd; goto earlycol;}  // quit if we have made a non-dangerous improvement AND have processed enough columns - include the aborted column in the count
    // prepare for next column
    *(I*)&minimp=__atomic_load_n((I*)&(ctx->minimp),__ATOMIC_ACQUIRE);  // update to find best improvement in any thread, to allow cutoff
    currcolproxy=__atomic_load_n(&ctx->nextcol,__ATOMIC_ACQUIRE);  // start load of column position for next spin through loop
    if(unlikely(minimp==infm))goto earlycol;  // if improvement has been pegged at limit, it's a signal to stop
-   if(unlikely(--nfreecols<0))minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
+// obsolete    if(unlikely(--nfreecols<0))minimp*=impfac;  // for the first cols, accept any improvement; after that, insist on more
 #if 0  // obsolete
   }else{
    // we are looking for nonimproving pivots.  Skip all the gain accounting, and just remember how many products we did
@@ -1049,20 +1138,43 @@ abortcol:  // here if column aborted early, possibly on insufficient gain
 #endif
   }  // this is the end of retryable loop-by-hand
 // obsolete  ++ncolsprocd;  // incr # cols we did
-nextcol: ; // come here to step to next column
+// obsolete nextcol: ; // come here to step to next column
+  ++firstcol;  // update for next time
  }  // end of loop over columns
 earlycol:;  // come here when we want to stop after the current column
 
  // return result to the ctx, if we have the winning value.  Simple write to ctx do not require RELEASE order because the end-of-job code
  // and the threads sync through ctx->internal.nf; but they should be atomic in case we run on a small-word machine
 
- if(bv==0)R 0;  // if Dpiv or single column, ctx is unused for return; if nonimp, to get here there must be no pivot found, so just return then too  scaf use limitrow
+ if(!((I)zv&ZVISDIP))R 0;  // if single column, ctx is unused for return; if nonimp, to get here there must be no pivot found, so just return then too
+ // Here we are running DIP and reporting our best result (if it beats the incumbent)
  // operation complete; transfer results back to ctx.  To reduce stores we jam the col/row together
  __atomic_fetch_add(&ctx->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
- __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
+// obsolete  __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
+ I incumbent;  // incumbent value, as integer (may be dangermax or minimp)
+ I bestcolandrow=((I)bestcol<<32)|bestcolrow;  // combined value to store: row, column, forcefeasible flag
+ if(likely(bestcol>=0)){
+  // nondangerous pivot found.  Store it out, under lock, if the local improvement equals the best found so far
+  incumbent=__atomic_load_n((I*)&(ctx->minimp),__ATOMIC_ACQUIRE);  // load incumbent best value
+  if(minimpfound==*(D*)&incumbent){  // check outside of lock for perf
+   WRITELOCK(ctx->ctxlock)
+   if(minimpfound==ctx->minimp){ctx->bestcolandrow=bestcolandrow;} // if we have the best gain, report where we found it
+   WRITEUNLOCK(ctx->ctxlock)
+  }
+ }else{
+  // dangerous pivot or no pivot found.  Store, under lock, if we have the largest column value and the incumbent is also dangerous or missing
+  incumbent=__atomic_load_n((I*)&(ctx->maxdanger),__ATOMIC_ACQUIRE);  // load incumbent best value
+  I incumbcol=__atomic_load_n(&(ctx->bestcolandrow),__ATOMIC_ACQUIRE);  // ...and col/row (neg if none or dangerous)
+  if(incumbcol<0 && maxdangerc>*(D*)&incumbent){  // check outside of lock for perf
+   WRITELOCK(ctx->ctxlock)
+   if(ctx->bestcolandrow<0 && maxdangerc>ctx->maxdanger){ctx->bestcolandrow=bestcolandrow; ctx->maxdanger=maxdangerc;}   // if we still have the max value, report where we found it
+   WRITEUNLOCK(ctx->ctxlock)
+  }
+ }
+#if 0 // obsolete  
  // We store dangerous & normal pivots separately.  Dangerous pivots we take as they come (because their improvement has not been stored);
  // for normal pivots we store only if our best improvement is the best encountered so far
- I bestcolandrow=(bestcol<<32)|(UI4)bestcolrow;  // the pivot we found, with flags removed
+ I bestcolandrow=(bestcol<<32)|bestcolrow;  // the pivot we found, with flags removed
  if(unlikely((bestcol|SGNIF(bestcolrow,32+3))>=0)){__atomic_store_n(&ctx->bestcolandrow[1],bestcolandrow,__ATOMIC_RELEASE);  // if pivot found and dangerous, just store it willy-nilly
  }else{
   // normal pivot.  We want to pick the best.  We store our best pivot only if it is the best seen in any thread so far.  Unfortunately we need a lock for that
@@ -1075,18 +1187,33 @@ earlycol:;  // come here when we want to stop after the current column
    WRITEUNLOCK(ctx->ctxlock)
   }
  }
+#endif
  R 0;
-return2:  // here we found a nonimproving pivot.  Save it, possibly overwriting a value stored in a different thread
+
+// following are the early return points: nonimproving pivot, unbounded, pivot out virtual
+
+return2:  // here we found a nonimproving pivot.  Cut off other columns, Report it if it is best, then return
+ __atomic_store_n(&ctx->nextcol,nc,__ATOMIC_RELEASE);  // set next-column to 'finished' to suppress any further reservations
  __atomic_fetch_add(&ctx->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
- __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
- __atomic_store_n(&(ctx->bestcolandrow[0]),(bestcol<<32)|(UI4)bestcolrow,__ATOMIC_RELEASE);  // the pivot we found
+// obsolete  __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
+// obsolete  __atomic_store_n(&(ctx->bestcolandrow[0]),(bestcol<<32)|(UI4)bestcolrow,__ATOMIC_RELEASE);  // the pivot we found
+ // save the p;ivot we found only if it is in the smallest column
+ I newval=((I)bestcol<<32)|bestcolrow;  // the composite we want to store, always positive
+ I oldval=__atomic_load_n(&(ctx->bestcolandrow),__ATOMIC_ACQUIRE);  // incumbent, negative to begin with
+ while(1){  // put the minimum found into the ctx for the job so that all threads can cut off quickly
+  if((UI)newval>=(UI)oldval)break;  // if not new global best, don't update global.
+  if(__atomic_compare_exchange_n(&(ctx->bestcolandrow),&oldval,newval,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent.  Indicate we made an improvement
+ }
  R 0;
-return4:  // we have a preemptive result.  store it in abortcolandrow, and set minimp =-inf to cut off all threads
+return4:  // we have a preemptive DIP result.  store it in abortcolandrow, and set minimp =-inf to cut off all threads
  // the possibilities are unbounded and pivoting out a virtual.  We indicate unbounded by row=-1.  We may overstore another thread's result; that's OK
+ // We must do this under lock to make sure all stores to bestcol/row have checked the minimp they use
  __atomic_fetch_add(&ctx->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
- __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
- __atomic_store_n((I*)&(ctx->minimp),*(I*)&infm,__ATOMIC_RELEASE);  // shut off other threads
- __atomic_store_n(&(ctx->abortcolandrow),(bestcol<<32)|(UI4)bestcolrow,__ATOMIC_RELEASE);  // set unbounded col or col/row of virtual pivot
+ WRITELOCK(ctx->ctxlock)
+// obsolete  __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
+ ctx->minimp=infm;  // shut off other threads
+ ctx->bestcolandrow=((I)bestcol<<32)|bestcolrow;  // set unbounded col or col/row of virtual pivot, plus forcefeasible flag
+ WRITEUNLOCK(ctx->ctxlock)
  R 0;
 }
 #endif //C_AVX2
@@ -1099,13 +1226,14 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 //  Result for product mode (exitvec is scalar) is the product, one column of M, shape 2,m.  Values closer to 0 than the threshold are clamped to 0
 // DIP mode:
 //  Only the high part of M is used unless useqp is set and M has extended precision
-//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);bkgrd;parms;bk;Frow;sched
-//  parms is QpThresh,ColThreshold,ColDangerPivot,ColOkPivot,BkThreshold,PriRow
+//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bkgrd;bk;Frow;sched
+//  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
 //   QpThresh: if |column value| < QpThresh, recalculate in quad precision
-//   ColThreshold is minimum value considered valid for a column value (smaller are considered 0)
+//   Col0Threshold is minimum value considered valid for a column value (smaller are considered 0)
+//   ColBk0Threshold is minimum value that will block a pivot when bk=0
 //   ColDangerPivot is the smallest allowed pivot, but is dangerous
 //   ColOkPivot is the smallest pivot value considered non-dangerous
-//   BkThreshold is the smallest bk value considered nonzero
+//   Bk0Threshold is the smallest bk value considered nonzero
 //   PriRow is the priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so
 //  sched is list of integers: after i{sched columns, stop if we have found i improvements
 // obsolete [;exclusion list/Dpiv;Yk]
@@ -1115,7 +1243,7 @@ return4:  // we have a preemptive result.  store it in abortcolandrow, and set m
 //   rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //   rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // nonimp mode:
-//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);bkgrd;(parms as above, only first 4 needed)
+//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);(parms as above, only first 4 needed);bkgrd
 
 // if the exclusion list is given, we use it to prevent repetition of basis.  Yk must be given, holding the column #s of the rows of M
 // obsolete If Frow is empty, we are looking for nonimproving pivots in rows where the selector is 0.  In that case the bkgrd puts the bk values in descending order.  We return the first column that will make more 0 B rows non0 than non0 B rows 0.
@@ -1136,7 +1264,7 @@ if(AN(w)==0){
  ASSERT(AR(box1)==3&&AS(box1)[1]==2&&AS(box1)[2]==1,EVRANK);  // Ax, shape cols,2 1
  ASSERT(AR(box2)==1,EVRANK);  // Am
  ASSERT(AR(box3)==1,EVRANK);  // Av
- ASSERT(BETWEENC(AR(box4),2,3),EVRANK);  // M can be double or quad.  If quad, low part is ignored for DIP/Dpiv
+ ASSERT(AR(box4)==3,EVRANK);  // M and bk must be quad
  // abort if no columns
  if(AN(box0)==0)R num(6);  // if no cols (which happens at startup, return error indic)
  // check types.  Don't convert - force the user to get it right
@@ -1144,6 +1272,7 @@ if(AN(w)==0){
  ASSERT(AT(box2)&INT,EVDOMAIN);  // Am
  ASSERT(AT(box3)&FL,EVDOMAIN);  // Av
  ASSERT(AT(box4)&FL,EVDOMAIN);  // M
+ ASSERT(AT(box5)&FL,EVDOMAIN);  // parms
  // check agreement
  ASSERT(AS(box2)[0]==AS(box3)[0],EVLENGTH);   // Am and Av
  ASSERT(AS(box4)[AR(box4)-2]==AS(box4)[AR(box4)-1],EVLENGTH);   // M is square
@@ -1152,98 +1281,109 @@ if(AN(w)==0){
  // we don't allow conversion so as to force the user to get it right, for speed
  ASSERT(AT(box0)&INT,EVDOMAIN);
  // extract pointers to tables
- D minimp=0.0;  // (always neg) min improvement we will accept, best improvement in any column so far.  Init to 0 so we take first column with a pivot
 
  I n=AS(box4)[1];  // n=#rows/cols in M
  // convert types as needed; set ?v=pointer to data area for ?
  D *bv; // pointer to b values if there are any
- __m256d thresh;  // ColThr Inf    bkmin  MinPivot     validity thresholds, small positive values   - for one-column mode, all lanes have the threshold for zero-clamp
- I bestcol=1LL<<(BW-1), bestcolrow=0;  // col# and row#+mask for best value found from previous column, init to no col found, and best value 'dangerous or not found'
- A z; D *zv; D *Frow=0;  // pointer to output for product mode, pointer to Frow data (must be 0 for onecol and nonimp)
- D nfreecolsd, ncolsd; D impfac;  // number of cols to process before we insist on min improvement; min number of cols to process (always proc till improvement found); min gain to accept as an improvement after freecols
- I prirow;  // row to get priority (virtual), or flag to Dpiv
- I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk  if zv!=0, we process rows in order
- I *exlist=0, nexlist=0, *yk;  // exclusion list: list of excluded col|row pairs, length
- D bkmin;  // the largest value for which bk is considered close enough to 0
- I useqp;  // set if we use quad-precision for column, if available
+ D *parms=DAV(box5);  // pointer to misc processing controls
+ D *Frow;  // pointer to selector-row values
+ I bestcol=1LL<<(BW-1), bestcolrow=0;  // col# and row#+mask for best value found from previous columns, init to no col found, and best value 'dangerous or not found'
+ A z; D *zv;  // pointer to result, and output for product mode
+ I *bvgrd0, *bvgrde;  // bkgrd: the order of processing the rows, and end+1 ptr
+ A sched;  // exit schedule
+// obsolete  I *exlist=0, nexlist=0, *yk;  // exclusion list: list of excluded col|row pairs, length
 
  // Run the operation on every thread we have, if it is big enough (as it usually will be)
- UI nthreads=(*JT(jt,jobqueue))[0].nthreads+1; nthreads=n<100?1:nthreads;  // a wild guess at what 'too small' would be
+ UI nthreads;  // number of threads we will use
 
  if(AR(box0)==0){
   // single index value.  set bv=0, zv non0 as a flag that we are storing the column
-  bv=0; ASSERT(AN(w)==6,EVLENGTH);  // if goodvec is an atom, set bv=0 to indicate that bv is not used and verify no more input
+  bv=0; ASSERT(AN(w)==6,EVLENGTH);  // if column is an atom, set bv=0 to indicate that bv is not used and verify no more input
+  nthreads=(*JT(jt,jobqueue))[0].nthreads+1; nthreads=n<1000?1:nthreads;  // a wild guess at what 'too small' would be for a single column
   if(unlikely(n==0)){R reshape(drop(num(-1),shape(box4)),zeroionei(0));}   // empty M, each product is 0
-  ASSERT(AR(box5)==0,EVRANK); ASSERT(AT(box5)&FL,EVDOMAIN);  // thresh must be a float atom
+  ASSERT(AR(box5)==0,EVRANK);  // thresh must be a float atom
   I epcol=AR(box4)==3;  // flag if we are doing an extended-precision column fetch
   GATV(z,FL,n<<epcol,1+epcol,AS(box4)); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
-  bvgrd0=0; bvgrde=bvgrd0+(n+nthreads-1)/nthreads;  // get # values to process in each thread
-  thresh=_mm256_set1_pd(DAV(box5)[0]);  // load threshold in all lanes
-  useqp=1;  // by default we do the column computation in high precision
+  bvgrd0=0;  // for comp. ease, shift bv to 0
+// obsolete  bvgrde=bvgrd0+(n+nthreads-1)/nthreads;  // get # values to process in each thread
  }else{
-  // A list of index values.  We are doing the DIP calculation, nonimp, or Dpiv
-  ASSERT(AR(box5)==1,EVRANK); ASSERT(AN(box5)==0||AT(box5)&INT,EVDOMAIN); bvgrd0=IAV(box5); bvgrde=bvgrd0+AN(box5);  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
-  if(AN(box5)==0){RETF(num(6))}  // empty bk - give error/empty result 6
-  ASSERT(BETWEENC(AN(w),8,11),EVLENGTH); 
-  A box6=C(AAV(w)[6]), box7=C(AAV(w)[7]);
-  ASSERT(AR(box6)<=1,EVRANK); ASSERT(AT(box6)&FL,EVDOMAIN); ASSERT(BETWEENC(AN(box6),7,8),EVLENGTH);  // 7 or 8 float constants
+  // A list of index values.  We are doing the DIP calculation or nonimp
+  zv=0;  // clear zv as flag to indocaie non one-col
+// obsolete , or Dpiv
+  ASSERT(AR(box5)<=1,EVRANK); ASSERT(AT(box5)&FL,EVDOMAIN); ASSERT(BETWEENC(AN(box5),4,8),EVLENGTH);  // 4-8 float constants
+  ASSERT(AN(w)>=7,EVLENGTH); 
+  A box6=C(AAV(w)[6]);
+  if(AN(box6)==0){RETF(num(6))}  // empty bkgrd - give error/empty result 6
+  if(AN(box0)==0){RETF(num(6))}  // empty ndx - give error/empty result 6
+  ASSERT(AR(box6)==1,EVRANK); ASSERT(AT(box6)&INT,EVDOMAIN); bvgrd0=IAV(box6); bvgrde=bvgrd0+AN(box6);  // bkgrd: the order of processing the rows, and end+1 ptr   normally /: bk
+  nthreads=(*JT(jt,jobqueue))[0].nthreads+1; nthreads=AN(box6)*AN(box0)<1000?1:nthreads;  // a wild guess at what 'too small' would be for DIP/nonimp
   if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
-  DO(AN(box5), ASSERT((UI)bvgrd0[i]<(UI)n,EVINDEX); )  // verify bv indexes in bounds if M not empty
-  bkmin=DAV(box6)[2];
-  thresh=_mm256_set_pd(DAV(box6)[1],bkmin,inf,DAV(box6)[0]); nfreecolsd=(DAV(box6)[3]); ncolsd=(DAV(box6)[4]); impfac=DAV(box6)[5]; prirow=(I)DAV(box6)[6];
-  if(AN(box6)>7)useqp=(I)DAV(box6)[7]; else useqp=0;   // qp flag defaults to 0
-  ASSERT(BETWEENC(AR(box7),1,2),EVRANK);
-  if(AN(w)==8){bv=0; zv=0;   // Frow omitted: that's nonimp, indicated by bv=zv=Frow=0
-  }else{  // DIP/Dpiv
-   A box8=C(AAV(w)[8]);
-   // DIP/Dpiv
-    Frow=DAV(box8);  // Frow points to the data for DIP; for Dpiv it's just a nonzero flag to indicate mode
-    if(AN(box7)!=0){
-    // Normal DIP calculation
-    ASSERT(AR(box8)<=1,EVRANK);   // Frow, one per row of M and column of A
-    ASSERT(AT(box8)&FL,EVDOMAIN); ASSERT(AN(box8)==n+AS(box1)[0],EVLENGTH);  // Frow must be as long as the NTT
-    ASSERT(AT(box7)&FL,EVDOMAIN); ASSERT(AS(box7)[AR(box7)-1]==n,EVLENGTH); bv=DAV(box7);  // bk, one per row of M
-    zv=0;  // not used; set 0 to process b values in order
+  DO(AN(box6), ASSERT((UI)bvgrd0[i]<(UI)n,EVINDEX); )  // verify bv indexes in bounds if M not empty
+// obsolete   bkmin=DAV(box6)[2];
+// obsolete   thresh=_mm256_set_pd(DAV(box6)[1],bkmin,inf,DAV(box6)[0]); nfreecolsd=(DAV(box6)[3]); ncolsd=(DAV(box6)[4]); impfac=DAV(box6)[5]; prirow=(I)DAV(box6)[6];
+// obsolete   if(AN(box6)>7)useqp=(I)DAV(box6)[7]; else useqp=0;   // qp flag defaults to 0
+  if(AN(w)==7){  // nonimp mode  ndx;Ax;Am;Av;(M, shape 2,m,n);(parms as above, only first 4 needed);bkgrd
+   bv=0;   // indicate not DIP
+// obsolete   if(AN(w)==8){bv=0; zv=0;   // Frow omitted: that's nonimp, indicated by bv=zv=Frow=0
+  }else{  // DIP
+// obsolete /Dpiv
+   ASSERT(AN(w)==10,EVLENGTH)  // ndx;Ax;Am;Av;(M, shape 2,n,n);parms;bkgrd;bk;Frow;sched
+   A box7=C(AAV(w)[7]), box8=C(AAV(w)[8]), box9=C(AAV(w)[9]);
+   ASSERT(AT(box7)&FL,EVDOMAIN); ASSERT(AR(box7)==AR(box4)-1,EVRANK); ASSERT(AS(box7)[0]==AS(box4)[0]&&AS(box7)[1]==AS(box4)[1],EVLENGTH); bv=DAV(box7);  // bk, one per row of M
+// obsolete     if(AN(box7)!=0){
+// obsolete    // Normal DIP calculation
+   ASSERT(AR(box8)<=1,EVRANK); ASSERT(AT(box8)&FL,EVDOMAIN); ASSERT(AN(box8)==n+AS(box1)[0],EVLENGTH);  // Frow must be as long as the NTT
+   Frow=DAV(box8);  // Frow, one per row of M and column of A
+   ASSERT(AR(box9)<=1,EVRANK) ASSERT(((AN(box9)-1)|SGNIF(AT(box9),INTX))<0,EVDOMAIN)   // must be INT if not empty
+   sched=box9;  // exit schedule
 // obsolete     zv=AN(box5)==AS(box7)[AR(box7)-1]?Frow:0;  // set zv nonzero as a flag to process leading columns in order, until we have an improvement to shoot at.  Do this only if ALL values in bk are to be processed
-    if(AN(w)>9){
-     // exclusion list given
-     A box9=C(AAV(w)[9]), box10=C(AAV(w)[10]);
-     ASSERT(AN(w)==11,EVLENGTH); 
-     // An exclusion list is given (and thus also yk).  Remember their addresses.
-     exlist=IAV(box9);  // remember address of exclusions
-     nexlist=AN(box9);  // and length of list
-     ASSERT(AR(box9)<=1,EVRANK); ASSERT(nexlist==0||ISDENSETYPE(AT(box9),INT),EVDOMAIN);  // must be integer list
-     ASSERT(AR(box10)<=1,EVRANK); ASSERT(ISDENSETYPE(AT(box10),INT),EVDOMAIN); ASSERT(AN(box10)==n,EVLENGTH); // yk, one per row of M
-     yk=IAV(box10);  // remember address of translation table of row# to basis column#
-    }
-   }else{
-    // Dpiv counting, with Dpiv.  exlist is the Dpiv area. box8 is unused, but Frow must be nonzero as a flag to indicate Dpiv
-    A box9=C(AAV(w)[9]);
-    ASSERT(AN(w)==10,EVLENGTH); 
-    bv=zv=0;
-    exlist=IAV(box9);  // remember address of Dpiv result
-    ASSERT(AR(box9)==1,EVRANK); ASSERT(ISDENSETYPE(AT(box9),INT),EVDOMAIN);  // must be integer list
-    ASSERT(AN(box9)==AS(box1)[0]+n,EVLENGTH);  // length of Dpiv is #cols of A + #rows of A (=M)
-    z=mtv;  // no error is possible; use harmless return value
+#if 0 // obsolete 
+   if(AN(w)>9){
+    // exclusion list given
+    A box9=C(AAV(w)[9]), box10=C(AAV(w)[10]);
+    ASSERT(AN(w)==11,EVLENGTH); 
+    // An exclusion list is given (and thus also yk).  Remember their addresses.
+    exlist=IAV(box9);  // remember address of exclusions
+    nexlist=AN(box9);  // and length of list
+    ASSERT(AR(box9)<=1,EVRANK); ASSERT(nexlist==0||ISDENSETYPE(AT(box9),INT),EVDOMAIN);  // must be integer list
+    ASSERT(AR(box10)<=1,EVRANK); ASSERT(ISDENSETYPE(AT(box10),INT),EVDOMAIN); ASSERT(AN(box10)==n,EVLENGTH); // yk, one per row of M
+    yk=IAV(box10);  // remember address of translation table of row# to basis column#
    }
+#endif
+// obsolete    }else{
+// obsolete     // Dpiv counting, with Dpiv.  exlist is the Dpiv area. box8 is unused, but Frow must be nonzero as a flag to indicate Dpiv
+// obsolete     A box9=C(AAV(w)[9]);
+// obsolete     ASSERT(AN(w)==10,EVLENGTH); 
+// obsolete     bv=zv=0;
+// obsolete     exlist=IAV(box9);  // remember address of Dpiv result
+// obsolete     ASSERT(AR(box9)==1,EVRANK); ASSERT(ISDENSETYPE(AT(box9),INT),EVDOMAIN);  // must be integer list
+// obsolete     ASSERT(AN(box9)==AS(box1)[0]+n,EVLENGTH);  // length of Dpiv is #cols of A + #rows of A (=M)
+// obsolete     z=mtv;  // no error is possible; use harmless return value
   }
  }
 
-
 #define YC(n) .n=n,
-struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=box0,YC(n)YC(minimp)YC(bv)YC(thresh)YC(bestcol)YC(bestcolrow)YC(zv)YC(Frow)YC(nfreecolsd)
- YC(ncolsd)YC(impfac)YC(prirow)YC(bvgrd0)YC(bvgrde)YC(exlist)YC(nexlist)YC(yk)YC(useqp)YC(bkmin).axv=((I(*)[2])IAV(box1))-n,.amv0=IAV(box2),.avv0=DAV(box3),.qk=box4,
- .ndotprods=0,.ncolsproc=0,};
+struct mvmctx opctx={.ctxlock=0,.bestcolandrow=-1,.ndxa=box0,YC(n)YC(bv)YC(zv)
+ YC(bvgrd0)YC(bvgrde)YC(parms)YC(sched)YC(Frow).axv=((I(*)[2])IAV(box1))-n,.amv0=IAV(box2),.avv0=DAV(box3),.qk=box4,
+ .ndotprods=0,.nimpandcols=0,.minimp=0.0,.nextcol=0,.maxdanger=0.0};  // bias axv pointer back to start of (virtual) NTT
 #undef YC
 
  jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtmvmsparsex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  // atomic sync operation on the job queue guarantee that we can use regular loads from opctx
 
  // prepare final result
- if(likely(bv!=0||(zv==0&&Frow==0))){
-  // DIP call or nonimp.  onecol and Dpiv return by storing into an input
-  if(unlikely(opctx.abortcolandrow!=-1))if((I4)opctx.abortcolandrow==-1)R v2(4,opctx.abortcolandrow>>32);  // if unbounded, return col# 
+ if(likely(bv!=0||zv==0)){
+  // DIP call or nonimp.  onecol returns a result list, allocated above
   GAT0(z,FL,6,1); zv=DAV(z);
+  I bestcolandrow=opctx.bestcolandrow;  // Get col/row, each with sign-bit flags
+  if(bestcolandrow==-1){zv[0]=3; zv[1]=0; zv[2]=0;  // no pivot found, so indicate
+  }else if((I4)bestcolandrow==-1){zv[0]=4; zv[1]=(bestcolandrow>>32)&0x7fffffff; zv[2]=0; // unbounded (row=-1), so indicate
+  }else{
+   zv[0]=(bestcolandrow>>31)&1;  // good rc: 0/1 indicating forcefeasible
+   zv[1]=(bestcolandrow>>32)&0x7fffffff; zv[2]=bestcolandrow&0x7fffffff;   // row/col, with the flags removed
+  }
+#if 0 // obsolete 
+  if(unlikely(opctx.abortcolandrow!=-1))if((I4)opctx.abortcolandrow==-1)R v2(4,opctx.abortcolandrow>>32);  // if unbounded, return col# 
   I rc=opctx.minimp==0.0?1:0; rc=Frow==0?2:rc;  // if nonimp, return nonimp found - will be overridden next if not found
   I bestcolandrow=opctx.bestcolandrow[rc&1];  // if no normal pivot, look at [1] to see if there is a dangerous one
   bestcolandrow=opctx.minimp==infm?opctx.abortcolandrow:bestcolandrow;  // if abort called, use the col/row from the abort field
@@ -1252,7 +1392,8 @@ struct mvmctx opctx={.ctxlock=0,.abortcolandrow=-1,.bestcolandrow={-1,-1},.ndxa=
 // obsolete  rc=opctx.minimp==1.0?2:rc;
        // if no pivot, set row/col to 0 for testcases
   zv[0]=rc; zv[1]=bestcolandrow>>32; zv[2]=(UI4)bestcolandrow;  // rc (normal or dangerous pivot), col, row
-  zv[3]=opctx.ncolsproc; zv[4]=opctx.ndotprods; zv[5]=opctx.minimp;  // other stats: #cols, #dotproducts, best improvement
+#endif
+  zv[3]=(UI4)opctx.nimpandcols; zv[4]=opctx.ndotprods; zv[5]=opctx.minimp;  // other stats: #cols, #dotproducts, best improvement
  }  // if call is just to fetch the column, return it, it's already in z
  EPILOG(z);
 #else

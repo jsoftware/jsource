@@ -182,7 +182,7 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 )
 13!:4 ''   NB. finish sentences, test result
 foo =: foo , goo2 -: 5  NB. the sentence is aborted before assignment
-13!:0 ] 0
+13!:0 ] 0  NB. Revert suspension input back to prompt
 13!:0 [1
 i. 0 0 [ 9!:7 original
 foo   NB. Test results of stack/result checks
@@ -227,6 +227,8 @@ f2 =: 3 : '('
 'domain error' -:   f =: (3 : '%y' ) etx 'asdf'
 'domain error' -: % (1 : 'u y') etx 'asdf'
 13!:0 [0
+
+'rank error' -: 13!:0 etx ''
 
 f =: % 1 : 'u y'
 'domain error' -: f etx 'asdf'

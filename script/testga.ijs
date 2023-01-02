@@ -4,6 +4,7 @@ testpath=: (1!:43''),'/test/'
 
 os=: (('Linux';'Darwin';'OpenBSD') i. <UNAME) pick ;:'linux darwin openbsd win'
 os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os
+os=: ((('arm64'-:9!:56'cpu'){::'';'arm64')"_)^:('OpenBSD'-:UNAME) os
 testres=: 'test',os,'.txt'
 
 0!:0 <testpath,'tsu.ijs'
@@ -13,8 +14,6 @@ ECHOFILENAME=: 1   NB. echo file name
 stdout LF ,~ 9!:14''
 
 NB. ddall=: ddall -. blacklist=: blacklist, ('Win'-:UNAME)#(<testpath),each <'g7x6.ijs' NB. temporarily disable
-NB. ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. temp disable
-NB. ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs';'g320ipt.ijs';'g7x5.ijs'
 
 NB. smoke test
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'

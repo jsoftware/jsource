@@ -241,6 +241,7 @@ for_y234. y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
@@ -248,6 +249,7 @@ for_y234. y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
@@ -266,6 +268,7 @@ y123=. y
 d123=. Debug
 assert. (<'base')-:18!:5''
 4!:55 ;:'x y oldnl RLAST'
+echo (;:'x y oldnl RLAST') (e.#[) nl''
 assert. 0=(;:'x y oldnl RLAST') e. nl''
 oldnl=: nl''
 while. x123~:0 do.
@@ -277,6 +280,7 @@ while. x123~:0 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  echo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
@@ -284,6 +288,7 @@ while. x123~:0 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  echo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
 NB.   11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
@@ -313,6 +318,7 @@ for_y234. y123{~?~#y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
@@ -320,6 +326,7 @@ for_y234. y123{~?~#y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
@@ -346,6 +353,7 @@ while. x123~:0 do.
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
  assert. (<'base')-:18!:5''
+ echo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
  assert. ((;:'oldnl')-.~nl'') -: oldnl
  Debug=: 1
  0!:2<testpath,y123,'.ijs'
@@ -353,6 +361,7 @@ while. x123~:0 do.
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
  assert. (<'base')-:18!:5''
+ echo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
  assert. ((;:'oldnl')-.~nl'') -: oldnl
  x123=. <:x123
 NB.  11 s: ''    NB. reset symbol

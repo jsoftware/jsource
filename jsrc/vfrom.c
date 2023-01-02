@@ -1111,14 +1111,14 @@ endqp: ;
    --bvgrd;  // undo the +1 in the product-accounting below
 
    // we have finished processing the column, and reporting its gain if DIP.  Now prepare for the next column
-abortcol:  // jump here if column aborted early, possibly on insufficient gain.  This is the normal path
+abortcol: ;  // jump here if column aborted early, possibly on insufficient gain.  This is the normal path
 // obsolete impossible   if(unlikely(!bv))goto earlycol;  // if just one product, skip the setup for next column  scaf use limitrow
    // exit if we have processed enough columns (in DIP mode)
    I nimpandcols=__atomic_add_fetch(&ctx->nimpandcols,(((I)zv&ZVMOD)<<(32-ZVMODX))+1,__ATOMIC_ACQ_REL);  // add on one finished column, and 0 or 1 improvements
    if(unlikely((nimpandcols>>32)>AN(sched)))goto earlycol;  // if we have more improvements than the schedule imagined, finish
    if(unlikely((nimpandcols>>32)>0 && (UI4)nimpandcols>=IAV(sched)[(nimpandcols>>32)-1]))goto earlycol;  // if we have processed enough columns for this level of improvements, finish
 // obsolete    if(unlikely((--ncols<0)&&(SGNIF(bestcolrow,32+3)<0))){++ncolsprocd; goto earlycol;}  // quit if we have made a non-dangerous improvement AND have processed enough columns - include the aborted column in the count
-abortcol2:  // jump here to go to next column without updating col completions (for nonimp mode)
+abortcol2:;  // jump here to go to next column without updating col completions (for nonimp mode)
    ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
    // prepare for next column
    *(I*)&minimp=__atomic_load_n((I*)&(ctx->minimp),__ATOMIC_ACQUIRE);  // update to find best improvement in any thread, to allow cutoff

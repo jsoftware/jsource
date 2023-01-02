@@ -6,7 +6,7 @@ NB. 128!:9  g;i;v;M;thresh -----------------------------------------------------
 NB. y is 128!:9 parms, x is expected result (empty if we have to check column values).  m is parms
 NB. Save args, run 128!:9, check result.  For multithreads, expand M/bk/Frow to big enough to engage threading (leaving last row/col harmless)
 NB. and expand bkg and ndx to  make enough work to keep the threads busy
-run128_9   =: {{
+run128_9 =: {{
 epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 savx =: x [ savy =: y
@@ -80,22 +80,22 @@ end.
 }}
 
 {{)v
-epmul  =: (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
-epadd  =: (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
-epsub  =: (epadd -)
-epcanon  =: (epadd   0 $~ $)
-dptoqp  =: 2 {. ,:
+epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
+epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
+epsub =. (epadd -)
+epcanon=. (epadd   0 $~ $)
+dptoqp=. 2 {. ,:
 delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 
 delth''  NB. start with no threads
 for_t. i. 4 do.
-  M  =: (,:   ] * 1e_20 * i.@#) 0. + =/~ i. 6
+  M =. (,:   ] * 1e_20 * i.@#) 0. + =/~ i. 6
   assert. (_6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0
   assert. (_6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0
   assert. (_6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0
   assert. (_6 ]\ 0 0 1 2 0 3  0 0 2e_20 6e_20 0 15e_20) ('' run128_9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M;0.0
   NB. clamping to threshold
-  M  =: 1 1e_20 (<1;3;2 3)} 2 {. ,: |: _4 ]\ _1. 0 1 2  _1e_5 _2e_9 0 1e_9   0 0 0 0 0 0 0 1e_10   NB. input by columns
+  M =. 1 1e_20 (<1;3;2 3)} 2 {. ,: |: _4 ]\ _1. 0 1 2  _1e_5 _2e_9 0 1e_9   0 0 0 0 0 0 0 1e_10   NB. input by columns
   assert. (2 {. ,: _1. 0 1 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.5
   assert. (2 {. ,: 0. 0 0 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1.5
   assert. (2 {. ,: 0. 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2.5
@@ -106,8 +106,8 @@ for_t. i. 4 do.
   assert. (2 {. ,: 0 0 0 0) ('' run128_9) 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8  NB. low part cleared when high part is
   NB. Test every different length.  Different size of M are not so important
   for_l. >: i. (*1 T. ''){51 5 do.
-    M  =: (*  0.25 < 0 ?@$~ $)  _0.5 + (2 # l+?20)?@$ 0  NB. random values of random sizes, with 25% 0s
-    M  =: 0. + epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) M  NB. append extended part, force to float
+    M =. (*  0.25 < 0 ?@$~ $)  _0.5 + (2 # l+?20)?@$ 0  NB. random values of random sizes, with 25% 0s
+    M =. 0. + epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) M  NB. append extended part, force to float
     'r2 r c' =. $M
     for_j. 0 $~ (*1 T. ''){100 2 do.
       ix =. 00 + l ? c  NB. indexes
@@ -119,54 +119,54 @@ for_t. i. 4 do.
     end.
   end.
 
-  prtpms  =: ([: 1: smoutput@[ smoutput@'' smoutput@])
-  prtpms  =: -:
-  bk  =: dptoqp _2 1 3 1e_8
-  M  =: dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-  cons  =: 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
-  Frow  =: _4 _3 _2 _1. 1.
-  bkg  =: i.{:$M
-  sched  =:100 $ 100
+  prtpms =. ([: 1: smoutput@[ smoutput@'' smoutput@])
+  prtpms =. -:
+  bk =. dptoqp _2 1 3 1e_8
+  M =. dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
+  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
+  Frow =. _4 _3 _2 _1. 1.
+  bkg =. i.{:$M
+  sched=.100 $ 100
   NB. Test DIP mode - on identity cols    ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bkgrd;bk;Frow;sched
   assert. 0 0 1 4 10 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 3 1 1 4 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
-  M   =: (0 1 1 + $M) {. (0 0 1 + $M) {.!.1e_10 M
-  bk   =: (0 1 + $bk) {. bk
-  Frow   =: (1 + $Frow) {.!.1. Frow
+  M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.1e_10 M
+  bk =. (0 1 + $bk) {. bk
+  Frow =. (1 + $Frow) {.!.1. Frow
   assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg   =: ,00
+  bkg =. ,00
   assert. 4 0 0 0 0 __ ((4 0 0,4 1 0,:4 3 0) run128_9) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 1 0 0 0 __ ((4 0 0,4 1 0,:4 3 0) run128_9) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 3 0 0 0 __ ((4 0 0,4 1 0,:4 3 0) run128_9) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 3 0 0 0 __ ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
-  bkg   =: 00 1
+  bkg =. 00 1
   assert. 0 1 1 16 25 _6 ('' run128_9) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 1 1 16 22 _6 ('' run128_9) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 1 1 16 22 _6 ('' run128_9) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 3 1 1 4 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
-  bkg   =: 0 1 2
+  bkg =. 0 1 2
   assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 3 1 1 4 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
   NB. verify each lane
-  bkg   =: 1j3 #!.4 ]0 1 2 3
+  bkg =. 1j3 #!.4 ]0 1 2 3
   assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg   =: _1 |.!.4 ] 1j3 #!.4 ]0 1 2 3
+  bkg =. _1 |.!.4 ] 1j3 #!.4 ]0 1 2 3
   assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg   =: _2 |.!.4 ] 1j3 #!.4 ]0 1 2 3
+  bkg =. _2 |.!.4 ] 1j3 #!.4 ]0 1 2 3
   assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg   =: _3 |.!.4 ] 1j3 #!.4 ]0 1 2 3
+  bkg =. _3 |.!.4 ] 1j3 #!.4 ]0 1 2 3
   assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
@@ -175,21 +175,21 @@ for_t. i. 4 do.
   assert. 6 ((0 run128_9)) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. no columns
   assert. 6 ((0 run128_9)) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;($0);bk;Frow;sched  NB. no rows
   assert. 6 ((0 run128_9)) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);(2 0 0$0.);cons;bkg;(2 0$0.);(1$0.);sched  NB. empty M
-  bk  =: dptoqp _2 1 3 1e_8
-  M  =: dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-  cons  =: 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
-  Frow  =: _4 _3 _2 _1. 1.
-  bkg  =: i.-{:$M
-  sched  =:4 $ 100
+  bk =. dptoqp _2 1 3 1e_8
+  M =. dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
+  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
+  Frow =. _4 _3 _2 _1. 1.
+  bkg =. i.-{:$M
+  sched =.4 $ 100
   assert. 0 0 2 4 10 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 2 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 2 4 10 _4 (((0 0 1,:0 0 2) run128_9)) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 2 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   NB. row cutoff
-  M  =: ({.~   0 1 0 + $) ({.!.1e_10~  0 0 1 + $) dptoqp |: _4 ]\ % 1. 2 3 4   2 1 2 3   1.8 1.2 3 4   2.3 3 4 5 
-  Frow  =: _4 _3 _2 _1. 1. 1
-  bk  =: dptoqp 1. 1 1 1 0
-  bkg   =: 0 1 2 3  NB. test cutoff in different lanes, and then in one lane
+  M =. ({.~   0 1 0 + $) ({.!.1e_10~  0 0 1 + $) dptoqp |: _4 ]\ % 1. 2 3 4   2 1 2 3   1.8 1.2 3 4   2.3 3 4 5 
+  Frow =. _4 _3 _2 _1. 1. 1
+  bk =. dptoqp 1. 1 1 1 0
+  bkg =. 0 1 2 3  NB. test cutoff in different lanes, and then in one lane
   assert. 0 0 0 4 7 _4 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 0 4 10 _4 ('' run128_9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 0 4 10 _4 ('' run128_9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
@@ -198,7 +198,7 @@ for_t. i. 4 do.
   assert. 0 0 0 4 13 _4 ('' run128_9) 3 2 0 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 0 4 13 _4 ('' run128_9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   for_j. i. 4 do.
-    bkg   =: (-j) |.!.4 ] 1j3 #!.4 ]0 1 2 3
+    bkg =. (-j) |.!.4 ] 1j3 #!.4 ]0 1 2 3
     assert. 0 0 0 4 23 _4 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
     assert. 0 0 0 4 34 _4 ('' run128_9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
     assert. 0 0 0 4 38 _4 ('' run128_9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
@@ -207,78 +207,78 @@ for_t. i. 4 do.
     assert. 0 0 0 4 53 _4 ('' run128_9) 3 2 0 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
     assert. 0 0 0 4 49 _4 ('' run128_9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   end.
-  bk  =: dptoqp 0. 0 0 0 0
+  bk =. dptoqp 0. 0 0 0 0
   NB. col cutoff using schedule
-  M  =: dptoqp 4 4 $ 1.  NB. every ele is valid
-  bkg  =: i.{:$M
-  bk  =: dptoqp 1. 2 2 0  NB. the pivot is the first row; if row 3 is in, all rows abort
-  Frow  =: _1 _1.1 _1.5 _2 1  NB. improvements are _1 _1.1 _3 _4
-  sched   =: 5 4 3
+  M =. dptoqp 4 4 $ 1.  NB. every ele is valid
+  bkg =. i.{:$M
+  bk =. dptoqp 1. 2 2 0  NB. the pivot is the first row; if row 3 is in, all rows abort
+  Frow =. _1 _1.1 _1.5 _2 1  NB. improvements are _1 _1.1 _3 _4
+  sched =. 5 4 3
   assert. 3 0 0 7 7 0 ((0 run128_9)) 00 0 0 0 0 0 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;1 2 3;bk;Frow;sched
   assert. 0 1 0 5 7 _1.1 ((0 run128_9)) 01 1 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
   assert. 0 2 0 4 9 _1.5 ((0 run128_9)) 1 2 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
   assert. 0 2 0 4 6 _1.5 ((0 run128_9)) 1 1 1 2 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
-  M  =: dptoqp 4 4 $!.0 ] 1e_8 1 1 1  NB. first row is pivot; first col is dangerous
+  M =. dptoqp 4 4 $!.0 ] 1e_8 1 1 1  NB. first row is pivot; first col is dangerous
   assert. 0 2 0 5 16 _1.5 ((0 run128_9)) 0 0 0 2 2 2 2 2 2 2 2 2 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched  NB. don't count dangerous col as improvement
   NB. bk thresh
-  M  =: dptoqp 4 4 $ 1.
-  bk  =: dptoqp 1e_1 1e_2 1 1
-  bkg  =: i.{:$M
-  sched   =: 100 $ 100
-  Frow  =: _1 _1.1 _1.5 _2 1  NB. improvements are _1 _1.1 _3 _4
+  M =. dptoqp 4 4 $ 1.
+  bk =. dptoqp 1e_1 1e_2 1 1
+  bkg =. i.{:$M
+  sched =. 100 $ 100
+  Frow =. _1 _1.1 _1.5 _2 1  NB. improvements are _1 _1.1 _3 _4
   assert. 3 0 0 4 4 0 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(0.5 (5}) cons);bkg;bk;Frow;sched
   assert. 3 0 0 4 4 0 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(0.05 (5}) cons);bkg;bk;Frow;sched
   assert. 0 3 1 4 16 _.02 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(0.005 (5}) cons);bkg;bk;Frow;sched
   NB. unbounded
-  M  =: dptoqp |: _3 ]\ 0. 0 0   1 1 1   0 0 1e_40   NB. input by columns.  Need small nonzero to ensure reading the extension.  0 2 3 unbounded
-  bk  =: dptoqp 1. 2 2  NB. the first row on each col is the pivot
-  bkg  =: i.{:$M
-  Frow  =: _1 _1.1 _1.5 1  NB. improvements
+  M =. dptoqp |: _3 ]\ 0. 0 0   1 1 1   0 0 1e_40   NB. input by columns.  Need small nonzero to ensure reading the extension.  0 2 3 unbounded
+  bk =. dptoqp 1. 2 2  NB. the first row on each col is the pivot
+  bkg =. i.{:$M
+  Frow =. _1 _1.1 _1.5 1  NB. improvements
   assert. 4 0 0 0 0 __ (((4 0 0,:4 2 0) run128_9)) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 2 0 1 4 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 3 0 0 0 __ (((4 4 0,4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
-  M  =: 1. (<1 2 2)} M   NB. now column 3 is no longer unbounded
+  M =. 1. (<1 2 2)} M   NB. now column 3 is no longer unbounded
   assert. 4 0 0 0 0 __ (((4 0 0,:4 2 0) run128_9)) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 2 0 1 4 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 2 0 2 8 __(((4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
   NB. stall
-  bk  =: dptoqp 0. 0 0  NB. no improving pivots
-  M  =: dptoqp |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns
+  bk =. dptoqp 0. 0 0  NB. no improving pivots
+  M =. dptoqp |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns
   assert. 3 0 0 3 3 0 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   NB. virtual row gets priority
-  M  =: dptoqp |: _4 ]\ 0. 1 1 0   1 0 0 0  0 0 1 0   0 0 0 1   NB. input by columns
-  bk  =: dptoqp 1. 1 1 1  NB. every row can pivot
-  bkg  =: i.{:$M
-  Frow  =: _4. _3 _2 _1 1  NB. improvements reduced col by col
+  M =. dptoqp |: _4 ]\ 0. 1 1 0   1 0 0 0  0 0 1 0   0 0 0 1   NB. input by columns
+  bk =. dptoqp 1. 1 1 1  NB. every row can pivot
+  bkg =. i.{:$M
+  Frow =. _4. _3 _2 _1 1  NB. improvements reduced col by col
   assert. 0 0 1 4 7 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 1 0 1 8 __ ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(00 (6}) cons);bkg;bk;Frow;sched
   assert. 0 0 1 0 4 __ (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(01 (6}) cons);bkg;bk;Frow;sched
   assert. 0 2 2 2 9 __ (((0 2 2,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(2 (6}) cons);bkg;bk;Frow;sched  NB. col 0 misses because row 1 gets there first
   assert. 0 0 2 0 4 __ (((0 2 2,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(2 (6}) cons);2 0 1 3;bk;Frow;sched  NB. Tie goes to the lowest lane
   assert. 0 0 2 1 8 __ (((0 2 2,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(2 (6}) cons);2 0 1 3;bk;Frow;sched
-  M  =: dptoqp |: _4 ]\ 0. 1 1 0   1 0 1 0  0 0 0 1  0 0 0 1   NB. input by columns
+  M =. dptoqp |: _4 ]\ 0. 1 1 0   1 0 1 0  0 0 0 1  0 0 0 1   NB. input by columns
   assert. 0 1 0 1 8 __ (((0 0 1,0 0 2,0 1 0,:0 1 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(00 (6}) cons);bkg;bk;Frow;sched
-  M  =: dptoqp |: _4 ]\ 0. 1 1 0   1 0 2 0  0 0 0 1  0 0 0 1   NB. input by columns
+  M =. dptoqp |: _4 ]\ 0. 1 1 0   1 0 2 0  0 0 0 1  0 0 0 1   NB. input by columns
   assert. 0 0 1 4 10 _4 (((0 0 1,0 1 2,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(00 (6}) cons);bkg;bk;Frow;sched   NB. 0 0 2 may slip by if columns reordered; 0 0 1 if rows
   NB. ColBk0 threshold
-  M  =: dptoqp |: _4 ]\ 1e_8 1e_8 1e_8 1  1e_9 1e_9 1e_9 1  1e_10 1e_10 1e_10 1   0 0 0 1   NB. input by columns
-  bk  =: dptoqp 0. 0 0 1  NB. every row can pivot
-  bkg  =: i.{:$M
-  Frow  =: _4. _3 _2 _1 1  NB. improvements reduced col by col
+  M =. dptoqp |: _4 ]\ 1e_8 1e_8 1e_8 1  1e_9 1e_9 1e_9 1  1e_10 1e_10 1e_10 1   0 0 0 1   NB. input by columns
+  bk =. dptoqp 0. 0 0 1  NB. every row can pivot
+  bkg =. i.{:$M
+  Frow =. _4. _3 _2 _1 1  NB. improvements reduced col by col
   assert. 0 3 3 4 7 _1 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 1 2 3 4 7 _2 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(5e_10 (2}) cons);bkg;bk;Frow;sched
   assert. 1 1 3 4 7 _3 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(5e_9 (2}) cons);bkg;bk;Frow;sched
   assert. 1 0 3 4 7 _4 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(5e_8 (2}) cons);bkg;bk;Frow;sched
   NB. Switchover to qp
-  M  =: 1 ,:~ 4 4 $ 1e_20   NB. input by columns
-  bk  =: dptoqp 1. 1 1 1  NB. every row can pivot
-  Frow  =: _4. _3 _2 _1 _1  NB. improvements reduced col by col
+  M =. 1 ,:~ 4 4 $ 1e_20   NB. input by columns
+  bk =. dptoqp 1. 1 1 1  NB. every row can pivot
+  Frow =. _4. _3 _2 _1 _1  NB. improvements reduced col by col
   assert. 3 0 0 4 16 0 (((0 4,"1 0 i. 4) run128_9)) 0 1 4 3;(,."1 (_2) ]\ 00 1);(1$00);(1$1.0);M;(1e_21 (0}) cons);bkg;bk;Frow;sched  NB. multithreaded, col4 is a pivot
   assert. 0 4 0 4 16 _1 (((0 4,"1 0 i. 4) run128_9)) 0 1 4 3;(,."1 (_2) ]\ 00 1);(1$00);(1$1.0);M;(1e_19 (0}) cons);bkg;bk;Frow;sched
   
   NB. nonimproving pivots
-  bk  =: dptoqp 4 $ 0.
-  M  =: dptoqp |: _4 ]\ 0. 1 0 0        0 1e_10 3 0   1 1e_7 0 0   1e5 1e_5 0 0   NB. input by columns
+  bk =. dptoqp 4 $ 0.
+  M =. dptoqp |: _4 ]\ 0. 1 0 0        0 1e_10 3 0   1 1e_7 0 0   1e5 1e_5 0 0   NB. input by columns
   assert. 0 0 1 0 1 0 ('' run128_9) (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2
   assert. 0 0 1 0 1 0 ('' run128_9) (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
   assert. 0 0 2 0 1 0 ('' run128_9) (1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
@@ -287,13 +287,13 @@ for_t. i. 4 do.
   assert. 0 0 0 0 1 0 ('' run128_9) (4 0 1);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
   assert. 0 0 1 0 1 0 ('' run128_9) (4 0 1);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;1 0 2
   assert. 3 0 0 0 0 0 ('' run128_9) (4 3 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;2 3
-  M  =: M 1}~ |: _4 ]\ 0. _1 0 0  0 0 0 0        0 0 0 0     0 _1e_5 1e_5 0 
+  M =. M 1}~ |: _4 ]\ 0. _1 0 0  0 0 0 0        0 0 0 0     0 _1e_5 1e_5 0 
   assert. 0 0 1 0 1 0 ('' run128_9) (0 1 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
   assert. 0 0 1 0 1 0 ('' run128_9) (4 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2
   assert. 0 0 0 0 1 0 ('' run128_9) (4 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
   assert. 0 0 1 0 1 0 ('' run128_9) (4 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
-  M  =: 1e_20 (<0 3 3)} M 
+  M =. 1e_20 (<0 3 3)} M 
   assert. 0 0 0 0 1 0 ((0 0 0,:0 0 1) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
   assert. 0 0 2 0 1 0 ((0 1 1,0 0 1,:0 0 2) run128_9) (4 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2  NB. qp triggered; but not necessarily in all rows
   assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (4 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
@@ -340,7 +340,7 @@ NB. random SPRs, all contenders
 ftype =: 1
 f =: {{
  locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
- cbtbl =. (*   [: (0}~   1 >. {.) 100 ?@$~ #) r__   =:  1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled.  Smallest must not go to 0; others can
+ cbtbl =. (*   [: (0}~   1 >. {.) 100 ?@$~ #) 1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled.  Smallest must not go to 0; others can
  for. i. x do.
   lowloc =. 0 i.~ perm =. ?~ # (1 >. ?y) {. cbtbl  NB. shuffle & remember position of low
   'c b' =. (0 1&{ ; 2 3&{) |: perm { cbtbl 
@@ -584,10 +584,10 @@ a =: (1,}.0=?(#a)$4)<;.(1) a=:_40+?(1+?20)$100
 b =: (1,}.0=?(#b)$4)<;.(1) b=:0.1*_40+?(1+?20)$100
 ({(<a),<b) -: a<@,"0/b
 
-count   =: */@$@>
-prod    =: */\.@}.@(,&1)
-copy    =: */@[ $&> prod@[ (#,)&.> ]
-catalog =: ;@:($&.>) $ count <"1@|:@copy ]
+count =. */@$@>
+prod  =. */\.@}.@(,&1)
+copy  =. */@[ $&> prod@[ (#,)&.> ]
+catalog =. ;@:($&.>) $ count <"1@|:@copy ]
 
 f =: { -: catalog
 
@@ -1525,7 +1525,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
  
-4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res savspr'
+4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res run128_9 savx savy savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

@@ -1525,7 +1525,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
  
-4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res savspr'
+4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res run128_9 savspr M'
 4!:55 ;:'jot k l n p prod q r s v x y '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

@@ -335,7 +335,7 @@ jobs:
 # openbsd arm64 --------------------------------------------------------
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
@@ -349,6 +349,7 @@ jobs:
       shell: bash
 
       run: |
+       whoami
        rm -f jobdone
        doas rdate time.cloudflare.com || true
        doas pkg_add curl zip gmake nasm gmp pcre2

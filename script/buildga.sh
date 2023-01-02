@@ -99,6 +99,7 @@ fi
 
 cd make2
 
+if [ $m64 -eq 1 ]; then
 if [ "$1" = "darwin" ]; then
 ./clean.sh
 j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
@@ -110,11 +111,16 @@ j64x=j32 USE_PYXES=0 ./build_jconsole.sh
 j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
-if [ $m64 -eq 1 ]; then
 ./clean.sh
-j64x=j64 USE_PYXES=1 ./build_jconsole.sh
-j64x=j64 ./build_tsdll.sh
-j64x=j64 USE_PYXES=1 ./build_libj.sh
+if [ "$1" = "openbsd" ] && ([ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ]) ; then
+ j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
+ j64x=j64arm ./build_tsdll.sh
+ j64x=j64arm USE_PYXES=1 ./build_libj.sh
+else
+ j64x=j64 USE_PYXES=1 ./build_jconsole.sh
+ j64x=j64 ./build_tsdll.sh
+ j64x=j64 USE_PYXES=1 ./build_libj.sh
+fi
 else
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh
 j64x=j32 ./build_tsdll.sh

@@ -335,13 +335,13 @@ jobs:
 # openbsd arm64 --------------------------------------------------------
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: macos-12
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.3.1
+     uses: cross-platform-actions/action@v0.7.0
      with:
       operating_system: openbsd
       architecture: arm64

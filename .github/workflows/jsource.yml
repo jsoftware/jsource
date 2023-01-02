@@ -293,7 +293,6 @@ jobs:
       run: |
        rm -f jobdone
        ldconfig -r
-       ldd /usr/bin/which || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -345,16 +344,15 @@ jobs:
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.1'
+      version: '7.2'
       shell: bash
 
       run: |
        whoami
        rm -f jobdone
-       doas rdate time.cloudflare.com || true
-       doas pkg_add curl zip gmake nasm gmp pcre2
+       sudo rdate time.cloudflare.com || true
+       sudo pkg_add curl zip gmake nasm gmp pcre2
        ldconfig -r
-       ldd /usr/bin/which || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1

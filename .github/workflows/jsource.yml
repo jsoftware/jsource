@@ -343,8 +343,8 @@ jobs:
    - name: Build, Test JE (OpenBSD arm64)
      uses: cross-platform-actions/action@v0.3.1
      with:
-      architecture: arm64
       operating_system: openbsd
+      architecture: arm64
       version: 7.1
       shell: bash
 

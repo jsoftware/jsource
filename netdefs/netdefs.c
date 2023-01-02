@@ -167,7 +167,7 @@ int main(){
 	printf ("msg_iov_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_iov));
 	printf ("msg_iovlen_off=: " FMTI "\n",offset(struct msghdr,msg_iovlen));
 	printf ("msg_iovlen_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_iovlen));
-#if defined(linux) || defined(__APPLE__) || defined(__OpenBSD__)
+#if defined(linux) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 	printf ("msg_control_off=: " FMTI "\n",offset(struct msghdr,msg_control));
 	printf ("msg_control_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_control));
 	printf ("msg_controllen_off=: " FMTI "\n",offset(struct msghdr,msg_controllen));

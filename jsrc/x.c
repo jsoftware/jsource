@@ -380,7 +380,7 @@ F2(jtforeign){F2PREFIP;I p,q;
 void double_trick(D a,D b,D c,D d){;}
 #endif
 
-#if SY_64 && (SY_LINUX || SY_MAC || SY_OPENBSD)
+#if SY_64 && (SY_LINUX || SY_MAC || SY_FREEBSD || SY_OPENBSD)
 void double_trick(D a,D b,D c,D d,D e,D f,D g,D h){;}
 #endif
 

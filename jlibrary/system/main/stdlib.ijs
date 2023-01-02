@@ -133,10 +133,10 @@ end.
 18!:4 <'z'
 18!:4 <'z'
 UNXLIB=: ([: <;._1 ' ',]);._2 (0 : 0)
-libc.so.6 libc.so.7 libc.so libc.dylib libc.so
-libz.so.1 libz.so.7 libz.so libz.dylib libz.so
-libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
-libxml2.so.2 libxml2.so.18.0 libxml2.so libxml2.dylib libxml2.so
+libc.so.6 libc.so.7 libc.so.7 libc.so libc.dylib libc.so
+libz.so.1 libz.so.6 libz.so.7 libz.so libz.dylib libz.so
+libsqlite3.so.0 libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
+libxml2.so.2 libxml2.so.2 libxml2.so.18.0 libxml2.so libxml2.dylib libxml2.so
 )
 3 : 0^:((<UNAME)e.'Linux';'FreeBSD';'OpenBSD')''
 a=. 2!:0 ::(''"_) ('Linux'-:UNAME){::'ldconfig -r';'ldconfig -p'

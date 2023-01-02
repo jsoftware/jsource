@@ -43,6 +43,8 @@ case. 'Win' do.
  dltb;1{<;._2 CR-.~shell'wmic cpu get name'
 case. 'Darwin' do.
  shell'sysctl -n machdep.cpu.brand_string'
+case. 'FreeBSD' do.
+ shell'sysctl -n hw.model'
 case. 'OpenBSD' do.
  shell'sysctl -n machdep.cpuvendor'
 end. 

@@ -953,7 +953,7 @@ endqp: ;
        if((I)zv&ZVSPRNOTFOUND){zv=(D*)(((I)zv&~ZVSPRNOTFOUND)|ZVPOSCVFOUND); firstsprrow=(bvgrd-bvgrd0);}  // index of (close to) first valid SPR.  Branch will predict correctly.  Set state to show that we are bounded and have first SPR
        __m256d validlimit=_mm256_and_pd(ratios,bknot0);  // pivot is valid and limiting - high bit only.  c too low was eliminated earlier; bk too low eliminated now
        minspr=_mm256_blendv_pd(minspr,sprs,validlimit);   // remember the limiting SPR, in each lane
-       limitrows=_mm256_castsi256_pd(_mm256_blendv_pd(_mm256_castsi256_pd(limitrows),rownums,validlimit));  // if there is a new limiting SPR, remember its row number
+       limitrows=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(limitrows),_mm256_castsi256_pd(rownums),validlimit));  // if there is a new limiting SPR, remember its row number
        limitcs=_mm256_blendv_pd(limitcs,dotproducth,validlimit);  // remember the column value at the limiting SPR.  We will classify it after we find the winning SPR
        // check for cutoff
        if(unlikely(!_mm256_testc_pd(_mm256_fmsub_pd(minimpspr,dotproducth,bk4),validlimit))){  // cutoff if Frow*b/c > minimp (Frow and minimp negative) => b/c < (minimp/Frow = minimpspr) => b < minimpspr*c => minimpspr*c-b > 0. i. e. any sign 0 when b!=0 =: CF bot set
@@ -977,7 +977,7 @@ endqp: ;
      __m256i compressperm=_mm256_load_si256((__m256i*)&permvals[_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(dotproducth),_mm256_setzero_si256())))]);  // get permutation mask
      dotproducth=_mm256_castsi256_pd(_mm256_permutevar8x32_epi32(_mm256_castpd_si256(dotproducth),compressperm));  // push all significance to the lower lanes
      // read the bk values we are working on
-     __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // fetch from up to 4 rows
+     __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,_mm256_castsi256_pd(rownums),endmask,SZI);  // fetch from up to 4 rows
      indexes=_mm256_permutevar8x32_epi32(rownums,compressperm);  // repurpose indexes to hold the row-number we are working on, in the lower lanes
      bk4=_mm256_castps_pd(_mm256_permutevar8x32_ps(_mm256_castpd_ps(bk4),compressperm));  // discard bk corresponding to 0 in dotproducth
 // obsolete     indexes=rownums;
@@ -1069,7 +1069,7 @@ endqp: ;
 // obsolete  _mm256_store_pd(rownumsarray,rownums);  // look at em
      __m256d allmin=_mm256_min_pd(minspr,_mm256_permute_pd(minspr,0b0101)); // allmin = min01 min01 min23 min23  could use integer in AVX-512
      allmin=_mm256_min_pd(allmin,_mm256_permute4x64_pd(allmin,0b00001010));  // allmin=min value in all lanes
-     I minx=CTTZI(_mm256_movemask_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(allmin),_mm256_castpd_si256(minspr))));  // index of a lane containing the minimum SPR
+     I minx=CTTZI(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(allmin),_mm256_castpd_si256(minspr)))));  // index of a lane containing the minimum SPR
      _mm256_store_pd(&extractarea.quadD[0],limitcs); D minc=extractarea.quadD[minx];  // get column value at minimum SPR
      _mm256_store_si256((__m256i *)&extractarea.quadI,limitrows); I minrownum=extractarea.quadI[minx];  // get bkgrd index of minimum row
      D spratmin=_mm256_cvtsd_f64(allmin);    // the minimum SPR itself
@@ -1111,7 +1111,7 @@ endqp: ;
    --bvgrd;  // undo the +1 in the product-accounting below
 
    // we have finished processing the column, and reporting its gain if DIP.  Now prepare for the next column
-abortcol: ;  // jump here if column aborted early, possibly on insufficient gain.  This is the normal path
+abortcol: ; // jump here if column aborted early, possibly on insufficient gain.  This is the normal path
 // obsolete impossible   if(unlikely(!bv))goto earlycol;  // if just one product, skip the setup for next column  scaf use limitrow
    // exit if we have processed enough columns (in DIP mode)
    I nimpandcols=__atomic_add_fetch(&ctx->nimpandcols,(((I)zv&ZVMOD)<<(32-ZVMODX))+1,__ATOMIC_ACQ_REL);  // add on one finished column, and 0 or 1 improvements
@@ -1685,7 +1685,7 @@ static unsigned char jtfindsprx(J jt,struct sprctx* const ctx,UI4 ti){
 
  // find the smallest SPR, and its row#, of the ones in minspr.  In case of ties take the LAST
 // obsolete  I __attribute__((aligned(CACHELINESIZE))) rownumsarray[NPAR];  // place where we can see the individual row#s
-// obsolete  _mm256_store_pd(rownumsarray,rownums);  // look at em
+// obsolete  _mm256_store_pd(rownumsarray,_mm256_castsi256_pd(rownums));  // look at em
  __m256d allmin=_mm256_min_pd(minspr,_mm256_permute_pd(minspr,0b0101)); // allmin = min01 min01 min23 min23  could use integer in AVX-512
  allmin=_mm256_min_pd(allmin,_mm256_permute4x64_pd(allmin,0b00001010));  // allmin=min value in all lanes
 // obsolete  I minrow=rownumsarray[CTTZI(_mm256_movemask_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(allmin),_mm256_castpd_si256(minspr))))];  // get any row# of the minimum

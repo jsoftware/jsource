@@ -68,8 +68,10 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 
 #elif defined(_WIN32)
 // don't pollute everybody with windows.h.  win api is fairly basic anyway, so there is not much to take advantage of
+#elif defined(__FreeBSD__)
+#include <sys/umtx.h>
+#include <sys/types.h>
 #elif defined(__OpenBSD__)
-// untested openbsd code; as I recall, openbsd people attempted a port in the past; uncomment this and send a patch if you have tested & it works
 #include <sys/time.h>
 #include <sys/futex.h>
 #else

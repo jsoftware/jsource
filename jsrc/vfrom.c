@@ -1111,7 +1111,7 @@ endqp: ;
    --bvgrd;  // undo the +1 in the product-accounting below
 
    // we have finished processing the column, and reporting its gain if DIP.  Now prepare for the next column
-abortcol:  // jump here if column aborted early, possibly on insufficient gain.  This is the normal path
+abortcol: ; // jump here if column aborted early, possibly on insufficient gain.  This is the normal path
 // obsolete impossible   if(unlikely(!bv))goto earlycol;  // if just one product, skip the setup for next column  scaf use limitrow
    // exit if we have processed enough columns (in DIP mode)
    I nimpandcols=__atomic_add_fetch(&ctx->nimpandcols,(((I)zv&ZVMOD)<<(32-ZVMODX))+1,__ATOMIC_ACQ_REL);  // add on one finished column, and 0 or 1 improvements

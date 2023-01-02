@@ -344,7 +344,7 @@ jobs:
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.2'
+      version: '7.1'
       shell: bash
 
       run: |

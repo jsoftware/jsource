@@ -122,6 +122,17 @@ Casey's Tool Works
 
 'noun result was required' -: {{ {{ }} }} etx ''
 
+'noun result was required' -: ({. ({{ {{ y }} }})`'') 5!:0 etx ''
+'' -: ({. ({{ {{ y }} y }})`'') 5!:0  ''
+
+10 -: ({. ({{
+{{
+y
+}}
++: y
+}})`'') 5!:0 (5)
+
+
 NB. Nameref caching  -------------------------------------------------------------------------------
 NB. names are cached
 4!:55 ;:'vb__ vb_z_'

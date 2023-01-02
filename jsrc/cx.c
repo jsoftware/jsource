@@ -801,6 +801,10 @@ static F1(jtlineit){
  R 1<AR(w)?ravel(stitch(w,scc(CLF))):AN(w)&&CLF==cl(w)?w:over(w,scc(CLF));
 }
 
+// w is a rank-1 string.  We scan it for {{ }} and return the boxed result.  self is invalid
+static DF1(jtboxddline){RZ(w=ddtokens(w,0b1110)) R box(w);}
+
+
 // Convert ASCII w to boxed lines.  w is the argument to m : w and thus might be from 9 : w or might contain
 // 9 : w.  All we do here is look for non-embedded LF, i. e. LFs in the current line
 // We split into boxed lines on those LFs.  Any 9 : n strings will be processed during execution of this definition
@@ -810,7 +814,8 @@ static F1(jtlineit){
 static A jtsent12c(J jt,A w,I userm){C*p,*q,*r,*s,*x;A z;
  ASSERT(!AN(w)||LIT&AT(w),EVDOMAIN);
  ASSERT(2>=AR(w),EVRANK);
- if(AR(w)>1)R IRS1(w,0L,1,jtbox,z);  // table, just box lines individually we should call ddtokens for these?
+ if(AR(w)>1)R rank1ex(w,DUMMYSELF,1,jtboxddline); // table, just box lines individually after checking for {{ }} (which come when we have an AR)
+// obsolete  IRS1(w,0L,1,jtbox,z); 
 
  // otherwise we have a single string.  Could be from 9 : string.  If not, scan it for {{ }}
  if(userm!=9){RZ(w=ddtokens(w,0b1110))}  // scan for {{ }}.  Don't allow calling for another line, and return result as string

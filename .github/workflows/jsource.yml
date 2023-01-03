@@ -407,8 +407,7 @@ jobs:
       run: |
        whoami
        rm -f jobdone
-       sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2
+       sudo pkg install curl zip gmake gmp pcre2
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1

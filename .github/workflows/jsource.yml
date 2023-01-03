@@ -403,7 +403,7 @@ jobs:
       sync: sshfs
       prepare: |
        rdate time.cloudflare.com || true
-       pkg install -y curl zip gmake gmp pcre2
+       pkg install -y curl zip gmake nasm gmp pcre2
 
       run: |
        rm -f jobdone
@@ -413,7 +413,7 @@ jobs:
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
-       zip -r fbsdd.zip j64
+       zip -r fbsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -424,7 +424,7 @@ jobs:
        strip -S libgmp.so
        cd ..
        ls -l j64
-       zip -r fbsd.zip j64
+       zip -r fbsd64.zip j64
        touch jobdone
 
    - name: Check Status (FreeBSD)
@@ -435,7 +435,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "fbsd.zip,fbsdd.zip"
+      artifacts: "fbsd64.zip,fbsd64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -473,7 +473,7 @@ jobs:
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
-       zip -r fbsdd.zip j64
+       zip -r fbsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -481,7 +481,7 @@ jobs:
        strip -S libgmp.so
        cd ..
        ls -l j64
-       zip -r fbsd.zip j64
+       zip -r fbsd64.zip j64
        touch jobdone
 
    - name: Check Status (FreeBSD)
@@ -492,7 +492,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "fbsd.zip,fbsdd.zip"
+      artifacts: "fbsd64.zip,fbsd64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true

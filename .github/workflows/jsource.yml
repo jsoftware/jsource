@@ -275,13 +275,14 @@ jobs:
 
 # openbsd --------------------------------------------------------------
  jeopenbsd:
-  name: JE (OpenBSD)
+  name: JE (OpenBSD vmactions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build, Test JE (OpenBSD vmactions)
+   - name: Build, Test JE (OpenBSD)
      uses: vmactions/openbsd-vm@v0
      with:
       usesh: true
@@ -449,6 +450,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD vmactions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository

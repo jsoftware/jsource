@@ -131,7 +131,7 @@ j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
 
-if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ]; then
+if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] ; then
 ./clean.sh
 j64x=j64avx USE_PYXES=1 ./build_libj.sh
 ./clean.sh
@@ -158,7 +158,7 @@ lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
 lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 fi
-if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ]; then
+if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] ; then
 cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext

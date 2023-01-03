@@ -391,33 +391,35 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD)
-  runs-on: ubuntu-20.04
+  runs-on: macos-12
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.7.0
+     uses: vmactions/freebsd-vm@v0
      with:
-      operating_system: freebsd
-      architecture: x86-64
-      version: '13.0'
-      shell: bash
+      usesh: true
+      sync: sshfs
+      prepare: |
+       rdate time.cloudflare.com || true
+       pkg install -y curl zip gmake gmp pcre2
 
       run: |
        rm -f jobdone
-       export IGNORE_OSVERSION=yes
-       sudo pkg install -y zip gmake gmp pcre2
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
-       zip -r fbsd.zip j64
+       zip -r fbsdd.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
+       strip -S libjavx.so
+       strip -S libjavx2.so
+       strip -S libjavx512.so
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..
@@ -444,32 +446,34 @@ jobs:
       name: dist
       path: testfreebsd.txt
 
-# freebsd2 -------------------------------------------------------------
+# freebsd --------------------------------------------------------------
  jefreebsd2:
-  name: JE (FreeBSD #2)
-  runs-on: macos-12
+  name: JE (FreeBSD 2)
+  if: ${{ false }}
+  runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build, Test JE (FreeBSD #2)
-     uses: vmactions/freebsd-vm@v0
+   - name: Build, Test JE (FreeBSD)
+     uses: cross-platform-actions/action@v0.7.0
      with:
-      usesh: true
-      sync: sshfs
-      prepare: |
-       rdate time.cloudflare.com || true
-       pkg install -y curl zip gmake gmp pcre2
+      operating_system: freebsd
+      architecture: x86-64
+      version: '13.0'
+      shell: bash
 
       run: |
        rm -f jobdone
+       export IGNORE_OSVERSION=yes
+       sudo pkg install -y zip gmake gmp pcre2
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
-       zip -r fbsd.zip j64
+       zip -r fbsdd.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -480,11 +484,11 @@ jobs:
        zip -r fbsd.zip j64
        touch jobdone
 
-   - name: Check Status (FreeBSD #2)
+   - name: Check Status (FreeBSD)
      run: |
       test -f jobdone || exit 1
 
-   - name: Release JE (FreeBSD #2)
+   - name: Release JE (FreeBSD)
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -493,7 +497,7 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
-   - name: Copy Test (FreeBSD #2)
+   - name: Copy Test (FreeBSD)
      uses: actions/upload-artifact@v2
      with:
       name: dist

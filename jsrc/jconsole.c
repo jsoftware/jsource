@@ -24,7 +24,7 @@
 #include "j.h"
 #include "jeload.h"
 
-#if !defined(_WIN32) && !defined(__OpenBSD__) //temporary
+#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) //temporary
 #include "../libbacktrace/backtrace.h"
 #endif
 
@@ -36,7 +36,7 @@ static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
 static int norl=0;         /* disable readline/linenoise */
 static void sigint(int k){jeinterrupt();signal(SIGINT,sigint);}
 static void sigint2(int k){jeinterrupt();}
-#if !defined(_WIN32) && !defined(__OpenBSD__) //temporary
+#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) //temporary
 static int err_write(void *data, uintptr_t pc, const char *file, int line, const char *function){
  char buf[512];
  file = file ? file : "?";
@@ -252,7 +252,7 @@ JST* jt;
 
 int main(int argc, char* argv[])
 {
-#if !defined(_WIN32) && !defined(__OpenBSD__) //temporary
+#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) //temporary
  signal(SIGSEGV,sigsegv);
  signal(SIGILL,sigsegv);
 #ifdef __APPLE__

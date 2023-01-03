@@ -57,7 +57,7 @@
 #include <sys/resource.h>
 #endif
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__)
 #include <kvm.h>
 #include <fcntl.h>
 #include <sys/sysctl.h>

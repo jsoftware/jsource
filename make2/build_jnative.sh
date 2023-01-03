@@ -31,7 +31,8 @@ echo "jplatform64=$jplatform64"
 case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
-	openbsd/*) make=gmake
+	openbsd/*) make=gmake;;
+	freebsd/*) make=gmake;;
 esac
 make="${make:=make}"
 
@@ -125,12 +126,12 @@ LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j32)
 TARGET=libjnative.so
-CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "  # openbsd ?
+CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j64)
 TARGET=libjnative.so
-CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "  # openbsd ?
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 openbsd/j32)
@@ -146,6 +147,21 @@ LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 openbsd/j64*)
 TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+freebsd/j32)
+TARGET=libjnative.so
+CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/freebsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
+;;
+freebsd/j64arm)
+TARGET=libjnative.so
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/freebsd "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
+freebsd/j64*)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/freebsd "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 darwin/j32)

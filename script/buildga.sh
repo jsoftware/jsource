@@ -59,7 +59,7 @@ cp mpir/apple/macos/libgmp.dylib j64
 elif [ "$1" = "openbsd" ]; then
 cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
 elif [ "$1" = "freebsd" ]; then
-cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
+cp /usr/local/lib/libgmp.so.10 j64/libgmp.so
 fi
 
 cp version.txt jsrc/jversion.h

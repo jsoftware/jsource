@@ -34,6 +34,7 @@ case "$jplatform64" in
  darwin/j64arm*) macmin="-arch arm64 -mmacosx-version-min=11";;
  darwin/*)      macmin="-arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake
+	freebsd/*) make=gmake
 esac
 make="${make:=make}"
 
@@ -428,6 +429,82 @@ case $jplatform64 in
  ;;
  
  openbsd/j64*) # openbsd intel 64bit nonavx
+  TARGET=libj.so
+  CFLAGS="$common -msse3 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_LINUX}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_SSE2 "
+  FLAGS_BASE64=""
+ ;;
+ 
+ freebsd/j32*) # freebsd x86
+  TARGET=libj.so
+  # faster, but sse2 not available for 32-bit amd cpu
+  # sse does not support mfpmath=sse in 32-bit gcc
+  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
+  # slower, use 387 fpu and truncate extra precision
+  # CFLAGS="$common -m32 -ffloat-store "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -lkvm $LDOPENMP32 $LDTHREAD"
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_LINUX32}"
+  GASM_FLAGS="-m32"
+  FLAGS_SLEEF=" -DENABLE_SSE2 "
+  FLAGS_BASE64=""
+ ;;
+
+ freebsd/j64arm) # freebsd arm64
+  TARGET=libj.so
+  CFLAGS="$common -march=armv8-a+crc -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  OBJS_AESARM=" aes-arm.o "
+  SRC_ASM="${SRC_ASM_RASPI}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
+  FLAGS_BASE64=" -DHAVE_NEON64=1 "
+ ;;
+
+ freebsd/j64avx512*) # freebsd intel 64bit avx512
+  TARGET=libj.so
+  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  OBJS_FMA=" gemm_int-fma.o "
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_LINUXAVX512}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
+  FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
+ ;;
+
+ freebsd/j64avx2*) # freebsd intel 64bit avx2
+  TARGET=libj.so
+  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  OBJS_FMA=" gemm_int-fma.o "
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_LINUXAVX2}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_AVX2 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+ ;;
+
+ freebsd/j64avx*) # freebsd intel 64bit avx
+  TARGET=libj.so
+  CFLAGS="$common -DC_AVX=1 "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  CFLAGS_SIMD=" -mavx "
+  OBJS_FMA=" gemm_int-fma.o "
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_LINUX}"
+  GASM_FLAGS=""
+  FLAGS_SLEEF=" -DENABLE_AVX "
+  FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
+ ;;
+ 
+ freebsd/j64*) # freebsd intel 64bit nonavx
   TARGET=libj.so
   CFLAGS="$common -msse3 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"

@@ -49,6 +49,8 @@ elif [ "`uname`" = "Darwin" ]; then
 jplatform="${jplatform:=darwin}"
 elif [ "`uname`" = "OpenBSD" ]; then
 jplatform="${jplatform:=openbsd}"
+elif [ "`uname`" = "FreeBSD" ]; then
+jplatform="${jplatform:=freebsd}"
 else
 jplatform="${jplatform:=linux}"
 fi

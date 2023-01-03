@@ -32,6 +32,7 @@ case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake
+	freebsd/*) make=gmake
 esac
 make="${make:=make}"
 
@@ -134,6 +135,24 @@ LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
 ;;
 
 openbsd/j64*) # openbsd intel 64bit nonavx
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
+freebsd/j32) # freebsd x86
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
+freebsd/j64arm) # freebsd arm64
+TARGET=libtsdll.so
+CFLAGS="$common -march=armv8-a+crc "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+;;
+
+freebsd/j64*) # freebsd intel 64bit nonavx
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"

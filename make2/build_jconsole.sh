@@ -34,6 +34,7 @@ case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake
+	freebsd/*) make=gmake
 esac
 make="${make:=make}"
 
@@ -147,6 +148,18 @@ CFLAGS="$common -march=armv8-a+crc"
 LDFLAGS=" $LDTHREAD"
 ;;
 openbsd/j64*)
+CFLAGS="$common"
+LDFLAGS=" $LDTHREAD"
+;;
+freebsd/j32)
+CFLAGS="$common -m32 -msse2 -mfpmath=sse "
+LDFLAGS=" -m32 $LDTHREAD"
+;;
+freebsd/j64arm)
+CFLAGS="$common -march=armv8-a+crc"
+LDFLAGS=" $LDTHREAD"
+;;
+freebsd/j64*)
 CFLAGS="$common"
 LDFLAGS=" $LDTHREAD"
 ;;

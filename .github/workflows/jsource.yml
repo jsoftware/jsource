@@ -334,7 +334,7 @@ jobs:
 # openbsd arm64 --------------------------------------------------------
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: macos-12
+  runs-on: macos-11
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
@@ -449,7 +449,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-  runs-on: macos-12
+  runs-on: macos-11
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

@@ -391,6 +391,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -448,8 +449,7 @@ jobs:
 
 # freebsd --------------------------------------------------------------
  jefreebsd2:
-  name: JE (FreeBSD 2)
-  if: ${{ false }}
+  name: JE (FreeBSD)
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -477,6 +477,9 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
+       strip -S libjavx.so
+       strip -S libjavx2.so
+       strip -S libjavx512.so
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..

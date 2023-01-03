@@ -33,8 +33,8 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 case "$jplatform64" in
 	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
 	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
-	openbsd/*) make=gmake
-	freebsd/*) make=gmake
+	openbsd/*) make=gmake;;
+	freebsd/*) make=gmake;;
 esac
 make="${make:=make}"
 

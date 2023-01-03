@@ -405,9 +405,9 @@ jobs:
       shell: bash
 
       run: |
-       whoami
        rm -f jobdone
-       sudo pkg install curl zip gmake gmp pcre2
+       export IGNORE_OSVERSION=yes
+       sudo pkg install -y zip gmake gmp pcre2
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1

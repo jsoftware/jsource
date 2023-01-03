@@ -49,36 +49,36 @@ ls -l j32
 j32/jconsole -lib libj.$ext testga.ijs
 fi
 if [ $1 = "darwin" ]; then
-j64/jconsole -lib libjavx.$ext testga.ijs
+if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX)" -ne 0 ] && [ -f "j64/libjavx.$ext" ] ; then
+ j64/jconsole -lib libjavx.$ext testga.ijs
+fi
+if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
+ j64/jconsole -lib libjavx2.$ext testga.ijs
+fi
+if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
+ j64/jconsole -lib libjavx512.$ext testga.ijs
+fi
 elif [ $1 = "linux" ]; then
-if [ "$(cat /proc/cpuinfo | grep -c avx)" -ne 0 ]; then
+if [ "$(cat /proc/cpuinfo | grep -c avx)" -ne 0 ] && [ -f "j64/libjavx.$ext" ] ; then
   j64/jconsole -lib libjavx.$ext testga.ijs
 fi
-if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ]; then
+if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
   j64/jconsole -lib libjavx2.$ext testga.ijs
 fi
-if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ]; then
+if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
   j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
+if [ -f "j32/libj.$ext" ] ; then
   j32/jconsole -lib libj.$ext testga.ijs
-elif [ $1 = "openbsd" ] ; then
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx)" -ne 0 ]; then
+fi
+elif [ $1 = "openbsd" ] || [ $1 = "freebsd" ] ; then
+if [ "$(cat /var/run/dmesg.boot | grep -c AVX)" -ne 0 ] && [ -f "j64/libjavx.$ext" ] ; then
   j64/jconsole -lib libjavx.$ext testga.ijs
 fi
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx2)" -ne 0 ]; then
+if [ "$(cat /var/run/dmesg.boot | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
   j64/jconsole -lib libjavx2.$ext testga.ijs
 fi
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c xxxavx512)" -ne 0 ]; then
-  j64/jconsole -lib libjavx512.$ext testga.ijs
-fi
-elif [ $1 = "freebsd" ]; then
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c avx)" -ne 0 ]; then
-  j64/jconsole -lib libjavx.$ext testga.ijs
-fi
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c avx2)" -ne 0 ]; then
-  j64/jconsole -lib libjavx2.$ext testga.ijs
-fi
-if [ "$(grep -i cpu /var/run/dmesg.boot | grep -i -c avx512)" -ne 0 ]; then
+if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
   j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
 fi

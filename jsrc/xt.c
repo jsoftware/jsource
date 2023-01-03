@@ -57,7 +57,7 @@
 #include <sys/resource.h>
 #endif
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(__OpenBSD__)
 #include <kvm.h>
 #include <fcntl.h>
 #include <sys/sysctl.h>
@@ -125,7 +125,7 @@ ASSERTMTV(w);
   R v2(1024*(I)mem.ru_maxrss, 1024*(I)mem.ru_maxrss);   // linux only implemented max rss
  else
   R v2(4096*(I)result.resident, 1024*(I)mem.ru_maxrss);
-#elif defined(__OpenBSD__) || defined(__FreeBSD__)
+#elif defined(__OpenBSD__)
  kvm_t *kd=kvm_open(NULL,NULL,NULL,KVM_NO_FILES,"kvm_open");
  ASSERT(kd,EVFACE);
  int cnt;

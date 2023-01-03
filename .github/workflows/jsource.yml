@@ -444,6 +444,61 @@ jobs:
       name: dist
       path: testfreebsd.txt
 
+# freebsd2 -------------------------------------------------------------
+ jefreebsd2:
+  name: JE (FreeBSD #2)
+  runs-on: macos-12
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Build, Test JE (FreeBSD #2)
+     uses: vmactions/freebsd-vm@v0
+     with:
+      usesh: true
+      sync: sshfs
+      prepare: |
+       rdate time.cloudflare.com || true
+       pkg install -y curl zip gmake gmp pcre2
+
+      run: |
+       rm -f jobdone
+       ldconfig -r
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh freebsd || exit 1
+       script/testga.sh freebsd || exit 1
+       ls -l j64
+       zip -r fbsd.zip j64
+       cd j64
+       strip -S jconsole
+       strip -S libj.so
+       strip -S libtsdll.so
+       strip -S libgmp.so
+       cd ..
+       ls -l j64
+       zip -r fbsd.zip j64
+       touch jobdone
+
+   - name: Check Status (FreeBSD #2)
+     run: |
+      test -f jobdone || exit 1
+
+   - name: Release JE (FreeBSD #2)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "fbsd.zip,fbsdd.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (FreeBSD #2)
+     uses: actions/upload-artifact@v2
+     with:
+      name: dist
+      path: testfreebsd.txt
+
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)

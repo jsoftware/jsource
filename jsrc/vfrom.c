@@ -692,7 +692,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 
 // obsolete static I scafndprods=0, scafn0dprods=0;
 
-// the processing loop for one core.  We take a slice of the columns depending on our proc# in the threadpool
+// the processing loop for one core.  We take a slice of the columns/rows, repeatedly
 // ti is the job#, not used except to detect error
 static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names
@@ -756,6 +756,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    // Set up for multithreading one-column mode, where we have to split the column.  Multithreading of larger problems is handled
    // by having each thread take columns in turn
    // Since there is no bv or bvgrd, we save a register by repurposing bv to have the offset to the low part of result, if qp
+   // bvgrd continues to be the loop counter, but the region starts at 0
    bv=(D*)n;  // offset to low part of *zv - saves a register
 // obsolete    if(forcemv0lo==0){
 // obsolete     // in double precision, the operation is predictable and we just want to take equal amounts in each task
@@ -769,7 +770,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    bvgrde=bvgrd0;  // each reservation is taken in the loop below; start it out empty
 // obsolete    }
    lastreservedcol=1;  // cause each thread to process the same one column
-   colressize=2*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs TUNE    scaf move to main
+   colressize=8*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs TUNE.  Must be multiple of NPAR so that bvgrde is not adjusted except at end    scaf move to main
    rownums=_mm256_mul_epu32(rowstride,_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
    rowstride=_mm256_slli_epi64(rowstride,LGNPAR);   // length of NPAR rows for onecol
    // we leave the low bits ov zv=000 for onecol mode
@@ -778,6 +779,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    zv=(D*)ZVDP;  // zv flags 100: nonimp mode
    colbk0thresh=_mm256_set1_pd(parms[4]);  // ColOkPivot, put into an often-used register
    // bvgrde is set in the caller to process the requested rows
+   bvgrde-=(bvgrde-bvgrd0)&(NPAR-1)?NPAR:0;  // back bvgrde to the point of the incomplete remnant, if there is one
   }
  }else{
   // DIP initialization
@@ -786,6 +788,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   zv=(D*)(ZVDP+ZVSPRNOTFOUND);  // set flag 101 indicating DIP, dp, waiting for first c>0; bit 4 (ffreqd) starts clear
   maxdangerc=0.0;  // indicate no dangerous pivot found yet
   // bvgrde is set in the caller to process the requested rows
+  bvgrde-=(bvgrde-bvgrd0)&(NPAR-1)?NPAR:0;  // back bvgrde to the point of the incomplete remnant, if there is one
  }
  // loop over all columns requested.  Low 3 bits of zv indicate mode: 000=onecol 100=nonimp other=DIP
  while(1){
@@ -832,36 +835,53 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    I *bvgrd;
    // create the column NPAR values at a time
    for(bvgrd=bvgrd0;;bvgrd+=NPAR){
-    if(bvgrd>=bvgrde){  // end of column or column section
+    __m256i indexes;  // offset in atoms from Qk to the beginning of the row we are fetching = rownums*n
+    if(likely(bvgrd<bvgrde)){  // not close to end of column or column section; there is a full 4 values to process
+     if(((I)zv&ZVISNOTONECOL)!=0){   // DIP/nonimp
+      rownums=_mm256_loadu_si256((__m256i*)bvgrd);  // fetch the next set of row#s
+      indexes=_mm256_mul_epu32(rowstride,rownums);  // convert to atom #
+     }else{  // onecol
+      indexes=rownums; rownums=_mm256_add_epi64(rownums,rowstride);  // sequential processing of entire column; advance rownums by 4 rows
+     }
+    }else{  // we have hit the end or the incomplete remnant
 // obsolete      if(mv0lo==0)break;  // normally, that's the end of the column
+     if(unlikely(bvgrd!=bvgrde)){  // we did not do an even multiple of 4 (in which case there is no remnant)
+      I mnvalid=(I)(bvgrde-bvgrd);  // this is ((end-4)-curr)=(end-curr)-4=#values left-4, which is _1-_3 first time, _5-_7 second time
+      if(mnvalid>-NPAR){  // first time...
+       // there is a remnant to process.  Get the endmask and use it to fetch rownums/indexes
+       endmask=_mm256_loadu_pd((double*)(validitymask-mnvalid));   // 4-#values left is the correct mask, with (#values) ~0
+       if(((I)zv&ZVISNOTONECOL)!=0){   // DIP/nonimp
+        rownums=_mm256_maskload_epi64(bvgrd,_mm256_castpd_si256(endmask));  // fetch the remnant of row#s
+        indexes=_mm256_mul_epu32(rowstride,rownums);  // convert to atom #
+       }else{  // onecol
+        indexes=rownums; rownums=_mm256_add_epi64(rownums,rowstride);  // sequential processing of entire column; advance rownums
+       }
+       goto notendcolumn;
+      }
+      // fall through second time we encounter an incomplete remnant
+     }
+     // here we are done with the column/section
      if(((I)zv&ZVISNOTONECOL)!=0)break;  // end of column section is end of column except for one-column quad-prec, where we take multiple reservations per column
      // establish row reservation (one-col mode only)
      // quad-prec one-column mode.  Take a set of rows to process.  The issue is that some rows are faster than others: rows with all 0s skip extended-precision
      // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
      // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
      // for NPAR*nthreads at least.
-     I currx=bvgrde-(I*)0;  // index we would be processing next
+     I currx=bvgrde-(I*)0;  // index we would be processing next.  If not at end, this is known not to require adjustment.  bvgrd0 is always 0
      I resrow=__atomic_fetch_add(&ctx->nextcol,colressize,__ATOMIC_ACQ_REL);
-     if(resrow>=n)break;  // finished when reservation is off the end
+     if(resrow>=(I)bv)break;  // finished when reservation is off the end
      I skipamt=resrow-currx;  // number of rows to skip
      zv+=skipamt;  // advance the store pointer.  Since the high and low planes may have different alignment we don't try to avoid false cacheline sharing, which will occur on the fringes
      rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(skipamt*(I)bv));  // advance the atom-offsets over the skipped area (bv=n)
+     indexes=rownums; rownums=_mm256_add_epi64(rownums,rowstride);  // sequential processing of entire column; advance rownums
      I endx=resrow+colressize; endx=endx>(I)bv?(I)bv:endx;  // end+1 of the reservation
-     bvgrd=bvgrd0+resrow; bvgrde=bvgrd0+endx;  // loop controls
+     bvgrd=(I*)0+resrow; bvgrde=(I*)0+endx;  // loop controls
+     bvgrde-=endx&(NPAR-1)?NPAR:0;  // back bvgrde to the point of the incomplete remnant, if there is one (possible only at end)
+     if(unlikely(NPAR-(endx-resrow)>0))endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(endx-resrow)));  // if we start on the remnant, fetch its mask
     }
-
-    __m256i indexes;  // offset in atoms from Qk to the beginning of the row we are fetching = rownums*n
+notendcolumn: ;
+    // rownums, indexes, bvgrd are all set up
     __m256d dotproducth,dotproductl;  // where we build the column value
-    // get the validity mask for the gather and process: leave as ones until the end of the column
-    if(unlikely(bvgrde-bvgrd<NPAR))endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(bvgrde-bvgrd)));  // mask for 00=1111, 01=1000, 10=1100, 11=1110.  Used for gather and store
-    // get row#s to read from
-    if(((I)zv&ZVISNOTONECOL)!=0){
-     if(likely(bvgrde-bvgrd>=NPAR))rownums=_mm256_loadu_si256((__m256i*)bvgrd); else rownums=_mm256_maskload_epi64(bvgrd,_mm256_castpd_si256(endmask));
-     indexes=_mm256_mul_epu32(rowstride,rownums);  // convert row# to atom offset to start of row
-    }else{
-     indexes=rownums;  // one-column mode: sequential processing of entire column
-     rownums=_mm256_add_epi64(rownums,rowstride);
-    }
 
     // Now mv and indexes are set up to read the correct rows
     // get the next NPAR values by dot-product with Av
@@ -957,7 +977,7 @@ endqp: ;
        limitcs=_mm256_blendv_pd(limitcs,dotproducth,validlimit);  // remember the column value at the limiting SPR.  We will classify it after we find the winning SPR
        // check for cutoff
        if(unlikely(!_mm256_testc_pd(_mm256_fmsub_pd(minimpspr,dotproducth,bk4),validlimit))){  // cutoff if Frow*b/c > minimp (Frow and minimp negative) => b/c < (minimp/Frow = minimpspr) => b < minimpspr*c => minimpspr*c-b > 0. i. e. any sign 0 when b!=0 =: CF bot set
-        // one of the values cuts off.  Abort this column, keeping the SPR and position.
+        // one of the values cuts off.  Abort this column, keeping the SPR and position.  But if the prirow is winning, don't abort - we want it out
         if(likely(_mm256_testz_si256(rowstride,_mm256_cmpeq_epi64(_mm256_set1_epi64x(prirow),limitrows))))goto abortcol;   // rowstride is any 256i with nonzero in all lanes
        }
       }
@@ -1039,7 +1059,7 @@ endqp: ;
    // End-of-column processing.  Collect stats and update parms for the next column
 
    if(((I)zv&ZVISNOTONECOL)==0)goto earlycol;  // if just one product, skip the setup for next column
-   // from here on, bv/nonimp mode; use bit 4 of zv to indicate 'improvement found'
+   // from here on, bv/nonimp mode; use zv to indicate 'improvement found'
    if(!((I)zv&ZVISDIP)){  // nonimp
     // if we get here for nonimp, it means we didn't find one & should look in the next column.  If any thread has found a nonimp in an earlier column, abort so we can use that
     if((UI)(__atomic_load_n(&(ctx->bestcolandrow),__ATOMIC_ACQUIRE)>>32)<=firstcol)goto earlycol;  // nonimp found in earlier column: abort.  dangerous flag must be clear
@@ -1151,7 +1171,7 @@ earlycol:;  // come here when we want to stop after the current column
  // operation complete; transfer results back to ctx.  To reduce stores we jam the col/row together
  __atomic_fetch_add(&ctx->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
 // obsolete  __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
- I incumbent;  // incumbent value, as integer (may be dangermax or minimp)
+ I incumbent;  // incumbent value, as integer (may be maxdanger or minimp)
  I bestcolandrow=((I)bestcol<<32)|bestcolrow;  // combined value to store: row, column, forcefeasible flag
  if(likely(bestcol>=0)){
   // nondangerous pivot found.  Store it out, under lock, if the local improvement equals the best found so far
@@ -1192,7 +1212,7 @@ earlycol:;  // come here when we want to stop after the current column
 
 // following are the early return points: nonimproving pivot, unbounded, pivot out virtual
 
-return2:  // here we found a nonimproving pivot.  Cut off other columns, Report it if it is best, then return
+return2:  // (nonimp) here we found a nonimproving pivot.  Cut off other columns, Report it if it is best, then return
  __atomic_store_n(&ctx->nextcol,nc,__ATOMIC_RELEASE);  // set next-column to 'finished' to suppress any further reservations
  __atomic_fetch_add(&ctx->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
 // obsolete  __atomic_fetch_add(&ctx->ncolsproc,ncolsprocd,__ATOMIC_ACQ_REL);  // ...and # columns inspected
@@ -1205,7 +1225,7 @@ return2:  // here we found a nonimproving pivot.  Cut off other columns, Report 
   if(__atomic_compare_exchange_n(&(ctx->bestcolandrow),&oldval,newval,0,__ATOMIC_ACQ_REL,__ATOMIC_ACQUIRE))break;  // write; if written exit loop, otherwise reload incumbent.  Indicate we made an improvement
  }
  R 0;
-return4:  // we have a preemptive DIP result.  store it in abortcolandrow, and set minimp =-inf to cut off all threads
+return4:  // we have a preemptive DIP result.  store and set minimp =-inf to cut off all threads
  // the possibilities are unbounded and pivoting out a virtual.  We indicate unbounded by row=-1.  We may overstore another thread's result; that's OK
  // We must do this under lock to make sure all stores to bestcol/row have checked the minimp they use
  __atomic_fetch_add(&ctx->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products

@@ -25,8 +25,8 @@ if. '' -: $ 0 {::y do.
       y =. (< ({"2~ ?~@{:@$) (2 , 2 # expsiz) {. 4 {:: y) 4} y
       savy =: y
     end.
-    ref =. |: (,~ 3{::y) +/@:*"1!.1 ,.~/ (2{::y){"1 (4){::y 
-    assert. 1e_25 > >./ | +/ ref epsub 128!:9 y
+    savref   =: ref =. |: (,~ 3{::y) +/@:*"1!.1 ,.~/ (2{::y){"1 (4){::y 
+    assert. 1e_25 > >./ | +/ ref epsub savres   =: 128!:9 y
   end.
 elseif. 10 = #y do.  NB. DIP
   if. 0=nthr do.  NB. single-threaded, compare for exact result
@@ -1525,7 +1525,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
  
-4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res run128_9 savx savy savres savspr'
+4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

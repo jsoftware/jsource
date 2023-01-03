@@ -390,8 +390,7 @@ jobs:
 
 # freebsd --------------------------------------------------------------
  jefreebsd:
-  name: JE (FreeBSD)
-  if: ${{ false }}
+  name: JE (FreeBSD vmactions)
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -449,7 +448,7 @@ jobs:
 
 # freebsd --------------------------------------------------------------
  jefreebsd2:
-  name: JE (FreeBSD)
+  name: JE (FreeBSD cross-platform-actions)
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -466,7 +465,7 @@ jobs:
       run: |
        rm -f jobdone
        export IGNORE_OSVERSION=yes
-       sudo pkg install -y zip gmake gmp pcre2
+       sudo pkg install -y curl zip gmake nasm gmp pcre2
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1

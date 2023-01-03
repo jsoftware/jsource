@@ -2,9 +2,9 @@
 
 testpath=: (1!:43''),'/test/'
 
-os=: (('Linux';'Darwin';'OpenBSD') i. <UNAME) pick ;:'linux darwin openbsd win'
+os=: (('Linux';'Darwin';'OpenBSD';'FreeBSD') i. <UNAME) pick ;:'linux darwin openbsd freebsd win'
 os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os
-os=: ((('arm64'-:9!:56'cpu'){::'';'arm64')"_)^:('OpenBSD'-:UNAME) os
+os=: ((('arm64'-:9!:56'cpu'){::'';'arm64')"_)^:((<UNAME)e.'OpenBSD';'FreeBSD') os
 testres=: 'test',os,'.txt'
 
 0!:0 <testpath,'tsu.ijs'

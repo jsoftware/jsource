@@ -134,29 +134,30 @@ end.
 18!:4 <'z'
 UNXLIB=: ([: <;._1 ' ',]);._2 (0 : 0)
 libc.so.6 libc.so.7 libc.so.7 libc.so libc.dylib libc.so
-libz.so.1 libz.so.6 libz.so.7 libz.so libz.dylib libz.so
+libz.so.1 libz.so.7 libz.so.7 libz.so libz.dylib libz.so
 libsqlite3.so.0 libsqlite3.so.0 libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
-libxml2.so.2 libxml2.so.2 libxml2.so.18.0 libxml2.so libxml2.dylib libxml2.so
+libxml2.so.2 libxml2.so.18.0 libxml2.so.18.0 libxml2.so libxml2.dylib libxml2.so
 )
-3 : 0^:((<UNAME)e.'Linux';'FreeBSD';'OpenBSD')''
-a=. 2!:0 ::(''"_) ('Linux'-:UNAME){::'ldconfig -r';'ldconfig -p'
+3 : 0^:((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')''
+b=. (<UNAME)i.~'Linux';'OpenBSD';'FreeBSD'
+a=. 2!:0 ::(''"_) b{::'ldconfig -p';'ldconfig -r';'ldconfig -r'
 if. #a1=. I. '/libc.so.' E. a do.
-  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<0 1)}UNXLIB
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<0,b)}UNXLIB
 end.
 if. #a1=. I. '/libz.so.' E. a do.
-  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<1 1)}UNXLIB
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<1,b)}UNXLIB
 end.
 if. #a1=. I. '/libsqlite3.so.' E. a do.
-  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<2 1)}UNXLIB
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<2,b)}UNXLIB
 end.
 if. #a1=. I. '/libxml2.so.' E. a do.
-  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<3 1)}UNXLIB
+  UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<3,b)}UNXLIB
 end.
 ''
 )
 unxlib=: 3 : 0
 r=. (;: 'c z sqlite3 libxml2') i. <,y
-c=. (;: 'Linux FreeBSD OpenBSD Android Darwin') i. <UNAME_z_
+c=. (;: 'Linux OpenBSD FreeBSD Android Darwin') i. <UNAME_z_
 (<r,c) {:: UNXLIB_z_
 )
 18!:4 <'z'

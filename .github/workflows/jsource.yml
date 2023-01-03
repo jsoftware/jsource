@@ -388,6 +388,63 @@ jobs:
       name: dist
       path: testopenbsdarm64.txt
 
+# freebsd --------------------------------------------------------------
+ jefreebsd:
+  name: JE (FreeBSD)
+  runs-on: ubuntu-20.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Build, Test JE (FreeBSD)
+     uses: cross-platform-actions/action@v0.7.0
+     with:
+      operating_system: freebsd
+      architecture: x86-64
+      version: '13.0'
+      shell: bash
+
+      run: |
+       whoami
+       rm -f jobdone
+       sudo rdate time.cloudflare.com || true
+       sudo pkg_add curl zip gmake gmp pcre2
+       ldconfig -r
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh freebsd || exit 1
+       script/testga.sh freebsd || exit 1
+       ls -l j64
+       zip -r fbsd.zip j64
+       cd j64
+       strip -S jconsole
+       strip -S libj.so
+       strip -S libtsdll.so
+       strip -S libgmp.so
+       cd ..
+       ls -l j64
+       zip -r fbsd.zip j64
+       touch jobdone
+
+   - name: Check Status (FreeBSD)
+     run: |
+      test -f jobdone || exit 1
+
+   - name: Release JE (FreeBSD)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "fbsd.zip,fbsdd.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (FreeBSD)
+     uses: actions/upload-artifact@v2
+     with:
+      name: dist
+      path: testfreebsd.txt
+
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)

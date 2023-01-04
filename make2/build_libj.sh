@@ -83,6 +83,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-int-to-pointer-cast \
  -Wno-maybe-uninitialized \
  -Wno-missing-field-initializers \
+ -Wno-null-pointer-arithmetic \
  -Wno-null-pointer-subtraction \
  -Wno-overflow \
  -Wno-parentheses \
@@ -118,6 +119,7 @@ else
  -Wno-int-in-bool-context \
  -Wno-missing-braces \
  -Wno-missing-field-initializers \
+ -Wno-null-pointer-arithmetic \
  -Wno-null-pointer-subtraction \
  -Wno-parentheses \
  -Wno-pass-failed \

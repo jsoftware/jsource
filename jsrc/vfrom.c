@@ -867,7 +867,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
      // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
      // for NPAR*nthreads at least.
-     I currx=bvgrde-(I*)(intptr_t)0;  // index we would be processing next.  If not at end, this is known not to require adjustment.  bvgrd0 is always 0
+     I currx=bvgrde-(I*)0;  // index we would be processing next.  If not at end, this is known not to require adjustment.  bvgrd0 is always 0
      I resrow=__atomic_fetch_add(&ctx->nextcol,colressize,__ATOMIC_ACQ_REL);
      if(resrow>=(I)bv)break;  // finished when reservation is off the end
      I skipamt=resrow-currx;  // number of rows to skip
@@ -875,7 +875,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(skipamt*(I)bv));  // advance the atom-offsets over the skipped area (bv=n)
      indexes=rownums; rownums=_mm256_add_epi64(rownums,rowstride);  // sequential processing of entire column; advance rownums
      I endx=resrow+colressize; endx=endx>(I)bv?(I)bv:endx;  // end+1 of the reservation
-     bvgrd=(I*)(intptr_t)0+resrow; bvgrde=(I*)(intptr_t)0+endx;  // loop controls
+     bvgrd=(I*)0+resrow; bvgrde=(I*)0+endx;  // loop controls
      bvgrde-=endx&(NPAR-1)?NPAR:0;  // back bvgrde to the point of the incomplete remnant, if there is one (possible only at end)
      if(unlikely(NPAR-(endx-resrow)>0))endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(endx-resrow)));  // if we start on the remnant, fetch its mask
     }

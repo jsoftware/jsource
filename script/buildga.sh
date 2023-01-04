@@ -128,7 +128,7 @@ else
  j64x=j64 ./build_tsdll.sh
  j64x=j64 USE_PYXES=1 ./build_libj.sh
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "x86-64" ] ; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 ./clean.sh
 j64x=j64avx USE_PYXES=1 ./build_libj.sh
 ./clean.sh
@@ -160,7 +160,7 @@ lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
 lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "x86-64" ] ; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext

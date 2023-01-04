@@ -688,7 +688,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  A qk;  // original M block
  A sched;  // ending schedule, INT vector.  After the ith improvement, exit if i>:#sched or we have examined (<:i){sched columns
 } ;
-
+#define ONECOLGRD0 ((I*)(NPAR*SZI))  // starting value of bvgrd for onecol, offset from 0 so that backing up bvgrde won't wrap around 0
 
 // obsolete static I scafndprods=0, scafn0dprods=0;
 
@@ -867,7 +867,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
      // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
      // for NPAR*nthreads at least.
-     I currx=bvgrde-(I*)(intptr_t)0;  // index we would be processing next.  If not at end, this is known not to require adjustment.  bvgrd0 is always 0
+     I currx=bvgrde-ONECOLGRD0;  // index we would be processing next.  If not at end, this is known not to require adjustment.
      I resrow=__atomic_fetch_add(&ctx->nextcol,colressize,__ATOMIC_ACQ_REL);
      if(resrow>=(I)bv)break;  // finished when reservation is off the end
      I skipamt=resrow-currx;  // number of rows to skip
@@ -875,7 +875,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      rownums=_mm256_add_epi64(rownums,_mm256_set1_epi64x(skipamt*(I)bv));  // advance the atom-offsets over the skipped area (bv=n)
      indexes=rownums; rownums=_mm256_add_epi64(rownums,rowstride);  // sequential processing of entire column; advance rownums
      I endx=resrow+colressize; endx=endx>(I)bv?(I)bv:endx;  // end+1 of the reservation
-     bvgrd=(I*)(intptr_t)0+resrow; bvgrde=(I*)(intptr_t)0+endx;  // loop controls
+     bvgrd=ONECOLGRD0+resrow; bvgrde=ONECOLGRD0+endx;  // loop controls
      bvgrde-=endx&(NPAR-1)?NPAR:0;  // back bvgrde to the point of the incomplete remnant, if there is one (possible only at end)
      if(unlikely(NPAR-(endx-resrow)>0))endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(endx-resrow)));  // if we start on the remnant, fetch its mask
     }
@@ -1324,7 +1324,7 @@ if(AN(w)==0){
   ASSERT(AR(box5)==0,EVRANK);  // thresh must be a float atom
   I epcol=AR(box4)==3;  // flag if we are doing an extended-precision column fetch
   GATV(z,FL,n<<epcol,1+epcol,AS(box4)); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
-  bvgrd0=0;  // for comp. ease, shift bv to 0
+  bvgrd0=ONECOLGRD0;  // for comp. ease, shift bv to constant value
 // obsolete  bvgrde=bvgrd0+(n+nthreads-1)/nthreads;  // get # values to process in each thread
  }else{
   // A list of index values.  We are doing the DIP calculation or nonimp

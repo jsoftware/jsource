@@ -202,15 +202,10 @@ NB. complex
 ($0) -: (1 1&p. 0#1.) % (1 1&p. 0#1.)  NB. crashed when loop ran with 0 elements
 ($0) -: (1 1&p. 0#1j1) % (1 1&p. 0#1j1)  NB. crashed when loop ran with 0 elements
 
-'domain error' -: ($0) p. etx y=:?3 4$2
-'domain error' -: ($0) p. etx y=:?3 4 1$100
-'domain error' -: ($0) p. etx y=:o.?3 4$100
-'domain error' -: ($0) p. etx y=:r.?3 4$100
-
-'domain error' -: ($0) p. etx y=:?3 4$2
-'domain error' -: ($0) p. etx y=:?3 4 1$100
-'domain error' -: ($0) p. etx y=:o.?3 4$100
-'domain error' -: ($0) p. etx y=:r.?3 4$100
+'' fc y=:?3 4$2
+'' fc  y=:?3 4 1$100
+'' fc y=:o.?3 4$100
+'' fc r.?3 4$100
 
 (( <1 2 3) p. x) -: (1;1 2 3) p. x=:?2 3 4$100
 ((,<1 2 3) p. x) -: (1;1 2 3) p. x=:?2 3 4$100
@@ -257,15 +252,10 @@ x (p."2 1 -: p."1 0"2 1) y
 'rank error'   -: (3;i.2 3)   p. etx 4 5     
 
 NB. x ^@:p. y -----------------------------------------------------------
-'domain error' -: ($0) ^@:p. etx y=:?3 4$2
-'domain error' -: ($0) ^@:p. etx y=:?3 4 1$100
-'domain error' -: ($0) ^@:p. etx y=:o.?3 4$100
-'domain error' -: ($0) ^@:p. etx y=:r.?3 4$100
-
-'domain error' -: ($0) ^@:p. etx y=:?3 4$2
-'domain error' -: ($0) ^@:p. etx y=:?3 4 1$100
-'domain error' -: ($0) ^@:p. etx y=:o.?3 4$100
-'domain error' -: ($0) ^@:p. etx y=:r.?3 4$100
+1. = '' ^@:p. y=:?3 4$2
+1. = '' ^@:p. y=:?3 4 1$100
+1. = '' ^@:p. y=:o.?3 4$100
+1. = '' ^@:p. y=:r.?3 4$100
 
 f =: 4 : 0
 res =. (x ^@p. etx y) (-: +. -:&(0 ([`([: I. 1e_50 > |@])`])} ])`1:@.(2 e. ,&(3!:0)) ) x ^@:p. etx y  NB. either tolerant = or both less than a tiny value

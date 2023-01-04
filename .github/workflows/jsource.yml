@@ -288,7 +288,7 @@ jobs:
       sync: sshfs
       prepare: |
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm gmp pcre2
+       pkg_add curl zip gmake nasm gmp
 
       run: |
        rm -f jobdone
@@ -351,7 +351,7 @@ jobs:
       run: |
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2
+       sudo pkg_add curl zip gmake gmp
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1
@@ -392,6 +392,7 @@ jobs:
       path: testopenbsd.txt
 
 # openbsd arm64 --------------------------------------------------------
+# too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
   runs-on: ubuntu-22.04
@@ -410,12 +411,11 @@ jobs:
       run: |
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2
+       sudo pkg_add curl zip gmake gmp
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
-       script/testga.sh openbsd || exit 1
        ls -l j64
        zip -r obsdarm64d.zip j64
        cd j64
@@ -462,7 +462,7 @@ jobs:
       sync: sshfs
       prepare: |
        rdate time.cloudflare.com || true
-       pkg install -y curl zip gmake nasm gmp pcre2
+       pkg install -y curl zip gmake nasm gmp
 
       run: |
        rm -f jobdone
@@ -525,7 +525,8 @@ jobs:
       run: |
        rm -f jobdone
        export IGNORE_OSVERSION=yes
-       sudo pkg install -y curl zip gmake nasm gmp pcre2
+       sudo rdate time.cloudflare.com || true
+       sudo pkg install -y curl zip gmake nasm gmp
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1

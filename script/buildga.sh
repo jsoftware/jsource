@@ -31,6 +31,8 @@ else
   echo "argument is linux|darwin|raspberry|android|openbsd|freebsd"
   exit 1
 fi
+uname -a
+uname -m
 if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
  m64=1
 else
@@ -158,7 +160,7 @@ lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
 lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 fi
-if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] ; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "x86-64" ] ; then
 cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext

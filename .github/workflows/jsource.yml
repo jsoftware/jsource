@@ -188,7 +188,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang
+       apt-get install --no-install-recommends -y clang zip
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh raspberry || exit 1
@@ -245,6 +245,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |
+       apt-get install --no-install-recommends -y zip
        export CC=gcc
        export USE_SLEEF=0
        script/buildga.sh raspberry || exit 1

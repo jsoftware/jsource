@@ -193,8 +193,6 @@ jobs:
        export USE_SLEEF=1
        script/buildga.sh raspberry || exit 1
        script/testga.sh raspberry || exit 1
-       find j64 -type d -exec chmod a+rwx {} \;
-       find j64 -type f -exec chmod a+rw {} \;
        ls -l j64
        zip -r rpi64d.zip j64
        cd j64
@@ -204,14 +202,18 @@ jobs:
        strip -S libgmp.so
        cd ..
        zip -r rpi64.zip j64
-       chmod a+rw rpi64.zip
-       chmod a+rw rpi64d.zip
-       chmod a+rw testrpi64.txt
+       rm -rf j64
+       mkdir j64
+       mv rpi64.zip j64/.
+       mv rpi64d.zip j64/.
+       mv testrpi64.txt j64/.
+       find j64 -type d -exec chmod a+rwx {} \;
+       find j64 -type f -exec chmod a+rw {} \;
 
    - name: Compress Files (Raspberry)
      run: |
-      ls -l *.zip
-      ls -l testrpi64.txt
+      ls -l j64
+      mv j64/* .
 
    - name: Release JE (Raspberry)
      uses: ncipollo/release-action@v1
@@ -261,14 +263,18 @@ jobs:
        strip -S libgmp.so
        cd ..
        zip -r rpi32.zip j32
-       chmod a+rw rpi32.zip
-       chmod a+rw rpi32d.zip
-       chmod a+rw testrpi32.txt
+       rm -rf j32
+       mkdir j32
+       mv rpi32.zip j32/.
+       mv rpi32d.zip j32/.
+       mv testrpi32.txt j32/.
+       find j32 -type d -exec chmod a+rwx {} \;
+       find j32 -type f -exec chmod a+rw {} \;
 
    - name: Compress Files (Raspberry32)
      run: |
-      ls -l *.zip
-      ls -l testrpi32.txt
+      ls -l j32
+      mv j32/* .
 
    - name: Release JE (Raspberry32)
      uses: ncipollo/release-action@v1

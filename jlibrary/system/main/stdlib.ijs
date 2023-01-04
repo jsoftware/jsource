@@ -47,7 +47,7 @@ if. notdef 'RUNJSCRIPT' do.
   RUNJSCRIPT=: 0
 end.
 if. notdef 'IFRASPI' do.
-  if. UNAME -: 'Linux' do.
+  if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
     IFRASPI=: (<9!:56'cpu') e. 'arm';'arm64'
   else.
     IFRASPI=: 0
@@ -105,8 +105,7 @@ end.
 if. (<'home') -.@e. {."1 SystemFolders do.
   if. 'Win'-:UNAME do. t=. 2!:5'USERPROFILE'
   elseif. 'Android'-:UNAME do. t=. '/sdcard'
-  elseif. 'Darwin'-:UNAME do. t=. (0-:t){::'';~t=. 2!:5'HOME'
-  elseif. 'Linux'-:UNAME do. t=. (0-:t){::'';~t=. 2!:5'HOME'
+  elseif. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD';'Darwin') do. t=. (0-:t){::'';~t=. 2!:5'HOME'
   elseif. do. t=. ''
   end.
   if. (''-:t)+.((,'/')-:t)+.('/root'-:t)+.('/usr/'-:5{.t) do.
@@ -119,8 +118,7 @@ end.
 if. (<'temp') -.@e. {."1 SystemFolders do.
   if. 'Win'-:UNAME do. 1!:5 ::] <t=. (2!:5'USERPROFILE'),'\Temp'
   elseif. 'Android'-:UNAME do. t=. '/sdcard'
-  elseif. 'Darwin'-:UNAME do. 1!:5 ::] <t=. '/tmp/',":2!:6''
-  elseif. 'Linux'-:UNAME do. 1!:5 ::] <t=. '/tmp/',":2!:6''
+  elseif. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD';'Darwin') do. 1!:5 ::] <t=. '/tmp/',":2!:6''
   elseif. do. t=. ''
   end.
   SystemFolders=: SystemFolders, 'temp';t
@@ -1357,7 +1355,7 @@ require 'pacman'
 do_install_jpacman_ y
 )
 getqtbin=: 3 : 0
-if. (<UNAME) -.@e. 'Linux';'Darwin';'Win' do. return. end.
+if. (<UNAME) -.@e. 'Linux';'OpenBSD';'FreeBSD';'Darwin';'Win' do. return. end.
 if. IFQT do.
   smoutput 'must run from jconsole' return.
 end.
@@ -2034,7 +2032,7 @@ case. do.
   if. 0 = #browser do.
     browser=. dfltbrowser''
   end.
-  browser=. dquote (browser;Browser_nox_j_){::~ nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+  browser=. dquote (browser;Browser_nox_j_){::~ nox=. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') *. (0;'') e.~ <2!:5 'DISPLAY'
   cmd=. browser,' ',dquote cmd
   try.
     2!:1 cmd, (0=nox)#' >/dev/null 2>&1 &'
@@ -2135,8 +2133,8 @@ case. 'Win' do. ''
 case. 'Android' do. ''
 case. 'Darwin' do. 'open'
 case. do.
-  nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
-  if. ((UNAME-:'Linux') > nox) *. ''-: te=. nox{::PDFReader_j_;PDFReader_nox_j_ do.
+  nox=. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') *. (0;'') e.~ <2!:5 'DISPLAY'
+  if. (((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') > nox) *. ''-: te=. nox{::PDFReader_j_;PDFReader_nox_j_ do.
     for_t. linux_pdfreader do.
       try. 2!:0'which ',(>t),' 2>/dev/null'
         te=. >t
@@ -2332,10 +2330,10 @@ if. UNAME-:'Android' do.
   end.
   EMPTY return.
 end.
-editor=. (Editor_j_;Editor_nox_j_){::~ nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+editor=. (Editor_j_;Editor_nox_j_){::~ nox=. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') *. (0;'') e.~ <2!:5 'DISPLAY'
 if. 0=#editor do. EMPTY return. end.
-nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
-if. (UNAME-:'Linux')>nox do.
+nox=. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') *. (0;'') e.~ <2!:5 'DISPLAY'
+if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')>nox do.
   if. 1 e. r=. 'term' E. editor do.
     if. '-e ' -: 3{. editor=. dlb (}.~ i.&' ') ({.I.r)}.editor do.
       editor=. TermEmu, (('gnome-terminal'-:TermEmu){::' -e ';' -- '), dlb 3}.editor
@@ -2385,8 +2383,8 @@ st
 xterm
 )
 dflttermemu=: verb define
-nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
-if. ((UNAME-:'Linux') > nox) *. ''-: te=. nox{::TermEmu_j_;TermEmu_nox_j_ do.
+nox=. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') *. (0;'') e.~ <2!:5 'DISPLAY'
+if. (((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') > nox) *. ''-: te=. nox{::TermEmu_j_;TermEmu_nox_j_ do.
   for_t. linux_terminal do.
     try. 2!:0'which ',(>t),' 2>/dev/null'
       te=. >t
@@ -2407,7 +2405,7 @@ elseif. IFIOS do.
   jh '<a href="',(file2url cmd),'"</a>'
   EMPTY return.
 end.
-nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+nox=. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') *. (0;'') e.~ <2!:5 'DISPLAY'
 ImageViewer=. nox{::ImageViewer_j_;ImageViewer_nox_j_
 select. UNAME
 case. 'Win' do.
@@ -2427,7 +2425,7 @@ case. do.
     if. 0 = #browser do.
       browser=. dfltbrowser''
     end.
-    browser=. dquote (browser;Browser_nox_j_){::~ nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+    browser=. dquote (browser;Browser_nox_j_){::~ nox=. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') *. (0;'') e.~ <2!:5 'DISPLAY'
   else.
     browser=. dquote ImageViewer
   end.

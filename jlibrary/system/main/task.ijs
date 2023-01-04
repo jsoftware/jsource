@@ -266,7 +266,7 @@ NB.    launch jpath'~bin/installer.txt'   NB. text editor
 NB.    launch 'http://jsoftware.com'      NB. web browser
 
 3 : 0''
-LAUNCH=: ('gnome-open';'open';'start';'') {::~ ('Linux';'Darwin';'Win')i.<UNAME
+LAUNCH=: ('gnome-open';'gnome-open';'gnome-open';'open';'start';'') {::~ ('Linux';'OpenBSD';'FreeBSD';'Darwin';'Win')i.<UNAME
 if. 0=nc<'LAUNCH_j_'do.if. 0<#LAUNCH_j_ do.LAUNCH=: LAUNCH_j_ end.end.
 )
 launch=: 3 : 'shell LAUNCH,'' '',y'

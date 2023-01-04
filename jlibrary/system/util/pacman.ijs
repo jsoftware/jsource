@@ -292,7 +292,7 @@ win=. mac < (1 e. 'win'&E.) &> pfm
 select. UNAME
 case. 'Win' do.
   zps=. win # zps
-case. 'Linux';'OpenBSD' do.
+case. 'Linux';'OpenBSD';'FreeBSD' do.
   zps=. lnx # zps
 case. 'Android' do.
   zps=. and # zps
@@ -403,7 +403,7 @@ if. IFUNIX do.
     'file dir'=. y
     if. (i.0 0) -: tar 'x';file;dir do. e=. '' end.
   else.
-    e=. shellcmd 'tar ',((IFIOS+:UNAME-:'Android')#(((<UNAME)e.'Darwin';'FreeBSD';'OpenBSD'){::'--no-same-owner --no-same-permissions';'-o -p')),' -xzf ',file,' -C ',dir
+    e=. shellcmd 'tar ',((IFIOS+:UNAME-:'Android')#(((<UNAME)e.'Darwin';'OpenBSD';'FreeBSD'){::'--no-same-owner --no-same-permissions';'- o -p')),' -xzf ',file,' -C ',dir
   end.
   if. ('/usr/'-:5{.dir-.'"') *. ('root'-:2!:5'USER') +. (<2!:5'HOME') e. 0;'/var/root';'/root';'';,'/' do.
     shellcmd ::0: 'find ',dir,' -type d -exec chmod a+rx {} \+'
@@ -874,7 +874,8 @@ echo LF,'ALL DONE!',LF,'exit this J session and start new session with double cl
 i.0 0
 )
 shortcut=: 3 : 0
-try. ".UNAME,' y' catchd. echo 'create ',y,' launch icon failed' end.
+if. ((<UNAME)e.'OpenBSD';'FreeBSD') do. uname=. 'Linux' else. uname=. UNAME end.
+try. ".uname,' y' catchd. echo 'create ',y,' launch icon failed' end.
 )
 
 defaults=: 3 : 0
@@ -883,7 +884,7 @@ L=:   hostpathsep jpath'~/Desktop/'
 W=:   hostpathsep jpath'~'
 I=:   hostpathsep jpath'~bin/icons/'
 N=:   (1 2 3{9!:14''),;IF64{'-32';''
-DS=:  ;(('Win';'Linux';'Darwin')i.<UNAME){'.lnk';'.desktop';'.app'
+DS=:  ;(('Win';'Linux';'OpenBSD';'FreeBSD';'Darwin')i.<UNAME){'.lnk';'.desktop';'.desktop';'.desktop';'.app'
 LIB=: ''
 )
 vbs=: 0 : 0
@@ -1544,7 +1545,7 @@ else.
     2!:0 'chmod 755 "',DLL,'"'
     if. 'root'-: user=. 2!:5'user' do.
       2!:0 'chown ',user,':',user,' "',DLL,'"'
-      2!:0^:('Linux'-:UNAME) 'ldconfig'
+      2!:0^:((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') 'ldconfig'
     end.
   end.
 end.

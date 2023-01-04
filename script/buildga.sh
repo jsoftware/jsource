@@ -15,6 +15,7 @@ if [ "$1" = "linux" ]; then
   export _DEBUG=3
 elif [ "$1" = "raspberry" ]; then
   ext="so"
+  export _DEBUG=3
 elif [ "$1" = "darwin" ]; then
   ext="dylib"
   export _DEBUG=3
@@ -22,12 +23,16 @@ elif [ "$1" = "android" ]; then
   ext="so"
 elif [ "$1" = "openbsd" ]; then
   ext="so"
+  export _DEBUG=3
 elif [ "$1" = "freebsd" ]; then
   ext="so"
+  export _DEBUG=3
 else
   echo "argument is linux|darwin|raspberry|android|openbsd|freebsd"
   exit 1
 fi
+uname -a
+uname -m
 if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
  m64=1
 else
@@ -93,13 +98,11 @@ exit 0
 fi
 
 # hostdefs netdefs
-if [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ; then
 cd hostdefs
 $CC hostdefs.c -o hostdefs && ./hostdefs
 cd ../netdefs
 $CC netdefs.c -o netdefs && ./netdefs
 cd ..
-fi
 
 cd make2
 
@@ -125,19 +128,18 @@ else
  j64x=j64 ./build_tsdll.sh
  j64x=j64 USE_PYXES=1 ./build_libj.sh
 fi
-else
-j64x=j32 USE_PYXES=0 ./build_jconsole.sh
-j64x=j32 ./build_tsdll.sh
-j64x=j32 USE_PYXES=0 ./build_libj.sh
-fi
-
-if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] ; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 ./clean.sh
 j64x=j64avx USE_PYXES=1 ./build_libj.sh
 ./clean.sh
 j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
 ./clean.sh
 j64x=j64avx512 USE_PYXES=1 ./build_libj.sh
+fi
+else
+j64x=j32 USE_PYXES=0 ./build_jconsole.sh
+j64x=j32 ./build_tsdll.sh
+j64x=j32 USE_PYXES=0 ./build_libj.sh
 fi
 
 cd ..
@@ -158,7 +160,7 @@ lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
 lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 fi
-if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] ; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext

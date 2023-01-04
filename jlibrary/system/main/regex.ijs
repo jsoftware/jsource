@@ -34,7 +34,7 @@ regfree''
 lastpattern=: y
 msg=. ,2
 off=. ,2
-flg=. PCRE2_MULTILINE*RX_OPTIONS_MULTILINE
+flg=. (PCRE2_UTF*RX_OPTIONS_UTF8)+PCRE2_MULTILINE*RX_OPTIONS_MULTILINE
 lastcomp=: 0 pick rc=. jpcre2_compile (,y);(#y);flg;msg;off;<<0
 'msg off'=. 4 5{rc
 if. 0=lastcomp do. regerror msg,off end.
@@ -169,6 +169,7 @@ NB. compile flags:
 PCRE2_NOTBOL=: 16b1
 PCRE2_NOTEOL=: 16b2
 PCRE2_MULTILINE=: 16b400
+PCRE2_UTF=: 16b80000
 
 NB. info types:
 PCRE2_INFO_SIZE=: 22
@@ -180,7 +181,7 @@ select. UNAME
 case. 'Win' do. t=. 'jpcre2.dll'
 case. 'Android' do. t=. 'libjpcre2.so'
 case. 'Darwin' do. t=. 'libjpcre2.dylib'
-case. 'Linux';'FreeBSD';'OpenBSD' do. t=. 'libjpcre2.so'
+case. 'Linux';'OpenBSD';'FreeBSD' do. t=. 'libjpcre2.so'
 end.
 
 f=. BINPATH,'/',t
@@ -191,9 +192,11 @@ end.
 NB. fall back one more time
 if. ('Android'-:UNAME) *. 0 = 1!:4 :: 0: <f do.
   f=. (({.~i:&'/')LIBFILE),'/',t
-elseif. ('Linux'-:UNAME) *. (IFUNIX>'/'e.LIBFILE) *. 0 = 1!:4 :: 0: <f do.
+elseif. ((<UNAME)e.'Linux';'FreeBSD') *. 0 = 1!:4 :: 0: <f do.
   f=. 'libpcre2-8.so.0'
-elseif. ('Darwin'-:UNAME) *. (IFUNIX>'/'e.LIBFILE) *. 0 = 1!:4 :: 0: <f do.
+elseif. ((<UNAME)e.<'OpenBSD') *. 0 = 1!:4 :: 0: <f do.
+  f=. 'libpcre2-8.so.0.6'
+elseif. ('Darwin'-:UNAME) *. 0 = 1!:4 :: 0: <f do.
   f=. 'libpcre2-8.dylib'
 elseif. 0 = 1!:4 :: 0: <f do.
   f=. t

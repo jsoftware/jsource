@@ -100,7 +100,7 @@ int main(){
 	printf ("rm_eo_off=: " FMTI "\n",offset(regmatch_t,rm_eo));
 	printf ("rm_eo_sz=: " FMTI "\n",sizeof(((regmatch_t*)0)->rm_eo));
 	puts("");
-#ifdef linux
+#ifdef __linux__
 #ifndef ANDROID
 #define fds_bits __fds_bits
 #endif

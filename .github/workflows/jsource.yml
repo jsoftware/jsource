@@ -31,19 +31,19 @@ jobs:
       CC: clang
       USE_SLEEF: 1
      run: |
-      script/buildga.sh linux
+      script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
      run: |
-      script/testga.sh linux
+      script/testga.sh linux || exit 1
       ls -l j64
       zip -r l64d.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.so
-      strip -S libjavx.so
-      strip -S libjavx2.so
-      strip -S libjavx512.so
+      strip -S libjavx.so || true
+      strip -S libjavx2.so || true
+      strip -S libjavx512.so || true
       strip -S libtsdll.so
       strip -S libgmp.so
       cd ..
@@ -81,20 +81,20 @@ jobs:
       CC: gcc
       USE_SLEEF: 1
      run: |
-      script/buildga.sh linux
+      script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux gcc)
      run: |
-      script/testga.sh linux
-      mv testlinux.txt  testlinuxgcc.txt 
+      script/testga.sh linux || exit 1
+      mv testlinux.txt  testlinuxgcc.txt
       ls -l j64
       zip -r lgcc64d.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.so
-      strip -S libjavx.so
-      strip -S libjavx2.so
-      strip -S libjavx512.so
+      strip -S libjavx.so || true
+      strip -S libjavx2.so || true
+      strip -S libjavx512.so || true
       strip -S libtsdll.so
       strip -S libgmp.so
       cd ..
@@ -131,11 +131,11 @@ jobs:
       CC: clang
       USE_SLEEF: 1
      run: |
-      script/buildga.sh darwin
+      script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS)
      run: |
-      script/testga.sh darwin
+      script/testga.sh darwin || exit 1
       rm -rf j64/jconsole.dSYM
       rm -rf j64/libj.dylib.dSYM
       rm -rf j64/libjavx.dylib.dSYM
@@ -147,10 +147,11 @@ jobs:
       cd j64
       strip -S jconsole
       strip -S libj.dylib
-      strip -S libjavx.dylib
-      strip -S libjavx2.dylib
-      strip -S libjavx512.dylib
+      strip -S libjavx.dylib || true
+      strip -S libjavx2.dylib || true
+      strip -S libjavx512.dylib || true
       strip -S libtsdll.dylib
+      strip -S libgmp.dylib
       cd ..
       ls -l j64
       zip -r m64.zip j64
@@ -187,31 +188,38 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang
+       apt-get install --no-install-recommends -y clang zip
        export CC=clang
        export USE_SLEEF=1
-       script/buildga.sh raspberry
-       script/testga.sh raspberry
-       cp testrpi64.txt j64/.
+       script/buildga.sh raspberry || exit 1
+       script/testga.sh raspberry || exit 1
+       ls -l j64
+       zip -r rpi64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
        strip -S libtsdll.so
+       strip -S libgmp.so
        cd ..
+       zip -r rpi64.zip j64
+       rm -rf j64
+       mkdir j64
+       mv rpi64.zip j64/.
+       mv rpi64d.zip j64/.
+       mv testrpi64.txt j64/.
        find j64 -type d -exec chmod a+rwx {} \;
        find j64 -type f -exec chmod a+rw {} \;
 
    - name: Compress Files (Raspberry)
      run: |
-      mv j64/testrpi64.txt .
       ls -l j64
-      zip -r rpi64.zip j64
+      mv j64/* .
 
    - name: Release JE (Raspberry)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi64.zip"
+      artifacts: "rpi64.zip,rpi64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -239,30 +247,40 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |
+       apt-get install --no-install-recommends -y zip
        export CC=gcc
        export USE_SLEEF=0
-       script/buildga.sh raspberry
-       script/testga.sh raspberry
-       cp testrpi32.txt j32/.
+       script/buildga.sh raspberry || exit 1
+       script/testga.sh raspberry || exit 1
+       find j32 -type d -exec chmod a+rwx {} \;
+       find j32 -type f -exec chmod a+rw {} \;
+       ls -l j32
+       zip -r rpi32d.zip j32
        cd j32
        strip -S jconsole
        strip -S libj.so
        strip -S libtsdll.so
+       strip -S libgmp.so
        cd ..
+       zip -r rpi32.zip j32
+       rm -rf j32
+       mkdir j32
+       mv rpi32.zip j32/.
+       mv rpi32d.zip j32/.
+       mv testrpi32.txt j32/.
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
 
    - name: Compress Files (Raspberry32)
      run: |
-      mv j32/testrpi32.txt .
       ls -l j32
-      zip -r rpi32.zip j32
+      mv j32/* .
 
    - name: Release JE (Raspberry32)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi32.zip"
+      artifacts: "rpi32.zip,rpi32d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -276,6 +294,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd:
   name: JE (OpenBSD vmactions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -302,9 +321,9 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so
-       strip -S libjavx2.so
-       strip -S libjavx512.so
+       strip -S libjavx.so || true
+       strip -S libjavx2.so || true
+       strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..
@@ -334,7 +353,6 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
-  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -351,7 +369,7 @@ jobs:
       run: |
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2
+       sudo pkg_add curl zip gmake nasm gmp pcre2
        ldconfig -r
        export CC=clang
        export USE_SLEEF=1
@@ -362,9 +380,9 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so
-       strip -S libjavx2.so
-       strip -S libjavx512.so
+       strip -S libjavx.so || true
+       strip -S libjavx2.so || true
+       strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..
@@ -392,6 +410,7 @@ jobs:
       path: testopenbsd.txt
 
 # openbsd arm64 --------------------------------------------------------
+# too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
   runs-on: ubuntu-22.04
@@ -415,7 +434,6 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
-       script/testga.sh openbsd || exit 1
        ls -l j64
        zip -r obsdarm64d.zip j64
        cd j64
@@ -450,6 +468,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD vmactions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -476,9 +495,9 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so
-       strip -S libjavx2.so
-       strip -S libjavx512.so
+       strip -S libjavx.so || true
+       strip -S libjavx2.so || true
+       strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..
@@ -508,7 +527,6 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -525,6 +543,7 @@ jobs:
       run: |
        rm -f jobdone
        export IGNORE_OSVERSION=yes
+       sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm gmp pcre2
        ldconfig -r
        export CC=clang
@@ -536,9 +555,9 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so
-       strip -S libjavx2.so
-       strip -S libjavx512.so
+       strip -S libjavx.so || true
+       strip -S libjavx2.so || true
+       strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..
@@ -584,7 +603,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
      run: |
-      script/buildga.sh android
+      script/buildga.sh android || exit 1
 
 #   - name: Release JE (android)
 

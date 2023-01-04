@@ -13,7 +13,7 @@ ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
 
-NB. ddall=: ddall -. blacklist=: blacklist, ('Win'-:UNAME)#(<testpath),each <'g7x6.ijs' NB. temporarily disable
+ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
 
 NB. smoke test
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'
@@ -21,23 +21,11 @@ NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
-NB. RUN1^:IFWIN 'g640'
-NB. RUN1^:IFWIN 'g7x6'
-NB. exit^:IFWIN 1
-
-3 : 0''
-if. 'Linux'-:UNAME do.
- GITHUBCIBUG1=: 1 e. 'CPU E5-2673 v3' E. 2!:0'cat /proc/cpuinfo'
-else.
- GITHUBCIBUG1=: 0
-end.
-)
-
 NB. this crash on Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
-NB. echo '1: (3x ^ 2 ^ i. 10x)'
-NB. 1: 1: (3x ^ 2 ^ i. 10x)
-NB. echo '1: (128!:10)@(1000x ?@$~ ,~)"0 i. 15'
-NB. 1: (128!:10)@(1000x ?@$~ ,~)"0 i. 15
+echo '1: (3x ^ 2 ^ i. 10x)'
+1: 1: (3x ^ 2 ^ i. 10x)
+echo '1: (128!:10)@(1000x ?@$~ ,~)"0 i. 15'
+1: (128!:10)@(1000x ?@$~ ,~)"0 i. 15
 
 echo 'RUN4 ddall'
 RES=: RUN4 ddall

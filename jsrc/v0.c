@@ -339,7 +339,8 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
 #if (C_AVX&&SY_64) || EMU_AVX
 // loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
   switch(an){
-   
+
+  case 0: ad=&zeroZ.re;  // fall through to propagate the 0
   case 1: mvc(n*sizeof(D),z,sizeof(D),ad); break;
   case 2:
 #if SLEEF
@@ -415,6 +416,8 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
    {D c0=ad[0],c1=ad[1],c2=ad[2]; DQ(n, u=*x++; *z++=c0+u*(c1+u*c2););} break; 
   case 4:
    {D c0=ad[0],c1=ad[1],c2=ad[2],c3=ad[3]; DQ(n, u=*x++; *z++=c0+u*(c1+u*(c2+u*c3)););} break;
+  case 0: ad=&zeroZ.re;  // fall through to propagate the 0
+  case 1: mvc(n*sizeof(D),z,sizeof(D),ad); break;
   default:
    DO(n, p=ad[an-1]; u=*x++; DQ(an-1,p=ad[i]+u*p;); *z++=p;); break;
   }

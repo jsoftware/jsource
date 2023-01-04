@@ -245,7 +245,7 @@ x (p."2 1 -: p."1 0"2 1) y
 'domain error' -: (3;<<1 2 3) p. etx 4 5  
 'domain error' -: ((<3);2 3)  p. etx 4 5  
 
-'length error' -: (i.2 4)     p. etx 3 4 5   
+'length error' -: (i.2 4)     p. etx 3 4 5
 'length error' -: (3;4 5;6 7) p. etx 1 2 3 4 
 
 'rank error'   -: (3 4;1 2 3) p. etx 4 5     

@@ -448,7 +448,7 @@ case $jplatform64 in
   CFLAGS="$common -m32 -msse2 -mfpmath=sse "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -lkvm $LDOPENMP32 $LDTHREAD"
+  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm $LDOPENMP32 $LDTHREAD"
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
@@ -459,7 +459,7 @@ case $jplatform64 in
  freebsd/j64arm) # freebsd arm64
   TARGET=libj.so
   CFLAGS="$common -march=armv8-a+crc -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
@@ -470,7 +470,7 @@ case $jplatform64 in
  freebsd/j64avx512*) # freebsd intel 64bit avx512
   TARGET=libj.so
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -483,7 +483,7 @@ case $jplatform64 in
  freebsd/j64avx2*) # freebsd intel 64bit avx2
   TARGET=libj.so
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -496,7 +496,7 @@ case $jplatform64 in
  freebsd/j64avx*) # freebsd intel 64bit avx
   TARGET=libj.so
   CFLAGS="$common -DC_AVX=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -mavx "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -509,7 +509,7 @@ case $jplatform64 in
  freebsd/j64*) # freebsd intel 64bit nonavx
   TARGET=libj.so
   CFLAGS="$common -msse3 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""

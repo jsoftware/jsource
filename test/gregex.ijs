@@ -3,6 +3,9 @@ NB. regex ------------------------------------------------------------------
 
 load 'regex'
 
+echo pcre2dll_jregex_
+jpcre2_compile_jregex_
+
 rxutf8 1
 
 A=: '今日は良い天気です'

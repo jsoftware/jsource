@@ -192,12 +192,8 @@ end.
 NB. fall back one more time
 if. ('Android'-:UNAME) *. 0 = 1!:4 :: 0: <f do.
   f=. (({.~i:&'/')LIBFILE),'/',t
-elseif. ((<UNAME)e.'Linux';'FreeBSD') *. 0 = 1!:4 :: 0: <f do.
-  f=. 'libpcre2-8.so.0'
-elseif. ((<UNAME)e.<'OpenBSD') *. 0 = 1!:4 :: 0: <f do.
-  f=. 'libpcre2-8.so.0.6'
-elseif. ('Darwin'-:UNAME) *. 0 = 1!:4 :: 0: <f do.
-  f=. 'libpcre2-8.dylib'
+elseif. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD';'Darwin') *. 0 = 1!:4 :: 0: <f do.
+  f=. unxlib 'pcre2'
 elseif. 0 = 1!:4 :: 0: <f do.
   f=. t
 end.

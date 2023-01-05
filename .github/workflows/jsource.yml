@@ -413,6 +413,7 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
+  if: ${{ false }}
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository

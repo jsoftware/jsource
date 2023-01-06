@@ -58,20 +58,23 @@ static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,
  n=1; h=AS(ind)[AR(ind)-1];  // h=length of last axis of ind = len of frame of addressed cells
  RZ(ai=IX(h));   // ai = i. {:$ind = axis #s in frame
  RZ(t=eps(ai,a)); b=BAV(t); d=0; DO(h, if(b[i])++d;);  // t=mask of sparse axes in a that are in frame; d is # of them
+ // create table of the sparse axes of ind.  If there are no sparse axes of ind, we use an empty table
+ c=AN(a)-d;   // c=#sparse axes not in the frame, i. e. # sparse axes in the cells.
  RZ(i1=d<h?repeatr(t,ind):ind); if(2!=AR(ind))RZ(i1=d?reshape(v2(AN(i1)/d,d),i1):mtm);  // i1 = t#"_ 1 ind, i. e. ind containing only the sparse axes; form into table
  RZ(t=gt(sc(h),a)); RZ(y1=all1(t)?y:repeatr(t,y));  // y1=table of sparse indexes discarding any axes not in ind
  RZ(p=nub(less(i1,y1)));  // p=cells indexed by ind that are not already in z
- if(c=AN(a)-d){   // c=#sparse axes not in the frame, i. e. # sparse axes in the cells.  if there are any...
-  // first, the cells in ind that are entirely missing from y
+ if(c){   // If there are sparse axes in the cells...
+  // first, the cells in ind that are entirely missing from y.  We have to fill out the sparse axes not in ind
+  // Also, if ind contains only nonsparse axes, we have to add a dummy empty row to ind so that all the sparse cells will be created
+  A p2=p; if(d<h&&AN(p)==0)RZ(p2=over(p,zeroionei(0)));  // p2 =. i. 1 0 if dummy needed
   RZ(t=from(less(a,ai),shape(z))); RZ(p1=odom(2L,c,AV(t))); n=AS(p1)[0];  // t=lengths of the axes in the cells; p1=odometer for them; n=total # cells in a modified item
-  if(m=AS(p)[0])RZ(p=stitch(repeat(sc(n),p),reshape(v2(n*m,c),p1)));  // m=#new cells; if there are any, create p = (n # p) ,. ((n*#p) $ p1), i. e. extend p with indexes of sparse axes inside the cells
+  if(m=AS(p2)[0])RZ(p=stitch(repeat(sc(n),p2),reshape(v2(n*m,c),p1)));  // m=#new cells; if there are any, create p = (n # p) ,. ((n*#p) $ p1), i. e. extend p with indexes of sparse axes inside the cells
   // next, the cells of ind that are already in y, but perhaps partially
   RZ(t=nub(repeat(eps(y1,i1),y1)));   // t= ~. (y1 e. i1) # y1, i. e. rows of y1 that are already in ind
   RZ(t=stitch(repeat(sc(n),t),reshape(v2(n*AS(t)[0],c),p1)));  // t = (n # t) ,. (n*#t) $ p1, i. e. extend t with indexes of sparse axes in the cells
-  RZ(t=less(t,y));  // t = t -. y, i. e. discard any cells already in z
   if(AN(t))RZ(p=over(p,t));  // join the indexes for the full and partially-full new atoms
+  RZ(p=less(p,y));  // t = t -. y, i. e. discard any cells already in z
  }
-// bug: if ind has any nonsparse axis, each list of ind must be filled out with all combinations of the sparse axes not in ind 
  if(m=AS(p)[0]){  /* new cells being added */
   RZ(y=over(y,p)); RZ(q=grade1(y)); RZ(y=from(q,y));  // y =. y {~ q =. /: y =. y,p  i. e. sort y into cell order, with q the grade vector
   RZ(t=shape(x)); *AV(t)=m; RZ(x=from(q,over(x,reshape(t,SPA(zp,e)))));   // scaf need mkwris  x =. q { x,sparse ele $~ t =. (#p) 0} $x (x=sparse values)  i. e. x has sparse values insered in new atoms

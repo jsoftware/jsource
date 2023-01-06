@@ -139,7 +139,7 @@ libpcre2-8.so.0 libpcre2-8.so.0.6 libpcre2-8.so.0 libpcre2-8.so libpcre2-8.dylib
 )
 3 : 0^:((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')''
 b=. (<UNAME)i.~'Linux';'OpenBSD';'FreeBSD'
-a=. 2!:0 ::(''"_) b{::'ldconfig -p';'ldconfig -r';'ldconfig -r'
+a=. 2!:0 ::(''"_) b{::'/sbin/ldconfig -p';'/sbin/ldconfig -r';'/sbin/ldconfig -r'
 if. #a1=. I. '/libc.so.' E. a do.
   UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<0,b)}UNXLIB
 end.

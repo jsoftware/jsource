@@ -139,7 +139,7 @@ libpcre2-8.so.0 libpcre2-8.so.0.6 libpcre2-8.so.0 libpcre2-8.so libpcre2-8.dylib
 )
 3 : 0^:((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')''
 b=. (<UNAME)i.~'Linux';'OpenBSD';'FreeBSD'
-a=. 2!:0 ::(''"_) b{::'ldconfig -p';'ldconfig -r';'ldconfig -r'
+a=. 2!:0 ::(''"_) b{::'/sbin/ldconfig -p';'/sbin/ldconfig -r';'/sbin/ldconfig -r'
 if. #a1=. I. '/libc.so.' E. a do.
   UNXLIB=: (<({.~i.&(10{a.))}.a}.~{.a1) (<0,b)}UNXLIB
 end.
@@ -3291,7 +3291,6 @@ NB. ". domain
       if. 32~:3!:0 a do.  NB. unboxed polynomial
         if. e=EVDOMAIN do.
           if. #emsg=. efcknumericargs a do. hdr,'x is ' , emsg return. end.  NB. must be numeric
-          if. 0=*/@$ a  do. hdr,'polynomial may not be empty' return. end.  NB. must be nonempty
         end.
       else.  NB. boxed: mplr/roots or multinomial
         if. (e=EVDOMAIN) *. 0=*/@$ a  do. hdr,'polynomial may not be empty' return. end.  NB. must be nonempty

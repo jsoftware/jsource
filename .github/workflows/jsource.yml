@@ -311,7 +311,7 @@ jobs:
 
       run: |
        rm -f jobdone
-       ldconfig -r
+       /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -370,7 +370,7 @@ jobs:
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm gmp pcre2
-       ldconfig -r
+       /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -431,7 +431,7 @@ jobs:
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2
-       ldconfig -r
+       /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -486,7 +486,7 @@ jobs:
 
       run: |
        rm -f jobdone
-       ldconfig -r
+       /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh freebsd || exit 1
@@ -546,7 +546,7 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm gmp pcre2
-       ldconfig -r
+       /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh freebsd || exit 1

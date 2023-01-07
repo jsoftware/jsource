@@ -948,13 +948,13 @@ endqp: ;
     // process the NPAR generated values
     if((I)zv&ZVISDIP){
      // DIP mode, looking for pivots.  process the values in parallel
-     __m256d cnon0=_mm256_cmp_pd(dotproducth,col0thresh,_CMP_GT_OQ);  // ~0 for words that have nonzero c
-     if(!_mm256_testz_pd(cnon0,endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process
+     __m256d cnon0=_mm256_cmp_pd(dotproducth,col0thresh,_CMP_GT_OQ);  // ~0 for words that have positive c
+     if(!_mm256_testz_pd(cnon0,endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process.  if one is big enough...
       __m256d bk4=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),bv,rownums,endmask,SZI);  // the bk values we are working on
       // see if any of the new values is limiting: b/c < min SPR, c>ColThresh, bk>bkthresh
       // we perform this calculation on each lane separately, to save the expense of finding the minimum SPR each time one is calculated.
-      // This means the values in each lane will be smaller than they would be with sharing, leading to perhaps 2 extra divisions.  That's a good trade.
-      __m256d cbadifbk0=_mm256_cmp_pd(dotproducth,colbk0thresh,_CMP_GT_OQ);  // set to ~0 if c>ColBkThresh, i. e. column is blocked by bk=0 - always if endmask 0
+      // This means the values in each lane will be smaller than they would be with sharing, leading to perhaps 4x extra divisions.  That's a good trade.
+      __m256d cbadifbk0=_mm256_cmp_pd(dotproducth,colbk0thresh,_CMP_GT_OQ);  // set to ~0 if c>ColBkThresh, i. e. column is blocked by bk=0 - always 0 if endmask 0
       __m256d ratios=_mm256_fnmadd_pd(_mm256_and_pd(cbadifbk0,minspr),dotproducth,bk4);  // b-minspr*c: sign set if b<minspr*c => b/c<minspr => this is a new min SPR in its lane.  If col is near 0, force minspr to 0, which clears the sign bit whenever bk4>0
         // by using cbadifbk0 rather than cnon0 we are ignoring the (valid) SPRs created by small column values.  This probably doesn't matter because those SPRs are
         // big anyway if bk!=0; but we do it mostly to match the dp code
@@ -1034,7 +1034,8 @@ endqp: ;
      if(!_mm256_testz_pd(threshcmp=_mm256_cmp_pd(dotproducth,colbk0thresh,_CMP_GT_OQ),endmask)){  // if any compare is true, we have a match
       int mask1=_mm256_movemask_pd(threshcmp);  // see which value(s) succeeded
       // OK to use the first nonimp we have found
-      ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=firstcol; bestcolrow=bvgrd[CTTZI(mask1)]; goto return2;
+      ndotprods+=bvgrd-bvgrd0+1; bestcol=firstcol; bestcolrow=bvgrd[CTTZI(mask1)]; goto return2;
+// obsolete minimpfound=1.0;
      }
 // obsolete      if(ABS(_mm256_cvtsd_f64(dotprod))>=_mm256_cvtsd_f64(thresh) && notexcluded(exlist,nexlist,*ndx,yk[i])){ndotprods+=bvgrd-bvgrd0+1; minimpfound=1.0; bestcol=*ndx; bestcolrow=i; goto return2;};  // any nonzero pivot is a pivot row, unless in the exclusion list
 // obsolete     }else if(limitrow==-1){  // scaf this is obsolete

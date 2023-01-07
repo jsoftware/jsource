@@ -66,7 +66,7 @@ static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,
  if(c){   // If there are sparse axes in the cells...
   // first, the cells in ind that are entirely missing from y.  We have to fill out the sparse axes not in ind
   // Also, if ind contains only nonsparse axes, we have to add a dummy empty row to ind so that all the sparse cells will be created
-  A p2=p; if(d<h&&AN(p)==0)RZ(p2=over(p,zeroionei(0)));  // p2 =. i. 1 0 if dummy needed
+  A p2=p; // scaf if(d<h&&AN(p)==0)RZ(p2=over(p,zeroionei(0)));  // p2 =. i. 1 0 if dummy needed
   RZ(t=from(less(a,ai),shape(z))); RZ(p1=odom(2L,c,AV(t))); n=AS(p1)[0];  // t=lengths of the axes in the cells; p1=odometer for them; n=total # cells in a modified item
   if(m=AS(p2)[0])RZ(p=stitch(repeat(sc(n),p2),reshape(v2(n*m,c),p1)));  // m=#new cells; if there are any, create p = (n # p) ,. ((n*#p) $ p1), i. e. extend p with indexes of sparse axes inside the cells
   // next, the cells of ind that are already in y, but perhaps partially

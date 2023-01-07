@@ -54,7 +54,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "l64.zip,l64d.zip"
+      artifacts: "l64.zip,l64d.zip,version.txt"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true

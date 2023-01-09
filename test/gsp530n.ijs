@@ -41,7 +41,7 @@ h=: 4 : '<"1 v#:(>:?2*n)?@$n=. */v=. y{.$d'
 
 h=: 4 : '<"1 v#:5 7 4 ?@$n=. */v=. y{.$d'
 ] b=: |: c f&>/ >:i.#$d
-
+0
 f=: 3 : '(a i}d) -: a i}s=:(2;y)$.d'
 i=: <?#d                      NB. single index
 ] b=: f&>c [ a=:   ?(}.$d)$5  NB. dense  replacement data

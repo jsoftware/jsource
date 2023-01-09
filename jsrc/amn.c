@@ -52,6 +52,9 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
 }    /* index i1 (in index matrix) and address i2 (in data array) from index array */
 
 // ind is array of indexes to cells
+// We fill out the index-list (i) in z so that it has a list for each cell that will be modified by the indexes in ind.
+// This involves finding each combination of sparse-axis value in ind, and expanding each to the full cell by appending each combination of the
+// sparse axes that are NOT in ind.  Then, discard any cell-lists that are already in ind.  For each added cell, add an empty cell of sparse value (e) to the value (x) of z.
 static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,h,m,n;P*zp;
  // put sparse axi into names a,x,y; remember x&y as x0,y0
  zp=PAV(z); a=SPA(zp,a); x=x0=SPA(zp,x); y=y0=SPA(zp,i);  // a=list of sparse axes

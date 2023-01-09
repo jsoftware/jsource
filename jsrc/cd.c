@@ -52,7 +52,6 @@ void jfutex_wake1(unsigned *p){WakeByAddressSingle(p);}
 void jfutex_wakea(unsigned *p){WakeByAddressAll(p);}
 unsigned char jfutex_wait(unsigned *p,unsigned v){return WaitOnAddress(p,&v,4,INFINITE)?0:EVFACE;}
 long long jfutex_waitn(unsigned *p,unsigned v,unsigned long long ns){
-unsigned scafp = *p, scafv=v;
  if(WaitOnAddress(p,&v,4,ns/1000000))return 0;
  if(GetLastError()==ERROR_TIMEOUT)return -1;
  //is there EINTR on windows?  Does it manifest as a spurious wake with no error?

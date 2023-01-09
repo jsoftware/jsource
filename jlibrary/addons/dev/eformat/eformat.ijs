@@ -448,7 +448,7 @@ case. 3 do.
     case. ;:'=<<.<:>>.>:++.+:**.*:-%%:^^.~:|!"j.H.??.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.
       if. e=EVDOMAIN do.
-        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        if. #emsg=. a efcknumericargs w do. hdr,emsg return. end.
         if. prim e. ;:'??.' do.
           if. #emsg=. w efindexmsg w 9!:23 (0;1) do. hdr,'y must be a positive integer' return. end.
           if. #emsg=. a efindexmsg a 9!:23 (0;0,<:w) do. hdr,'x must be an integer no greater than y' return. end.
@@ -711,7 +711,7 @@ NB. most decoding omitted
     case. ;:'<.<:>.>:++:**:-%%:^^.|!j.H.??.' do.  NB. atomic dyads and u"v
       NB. Primitive atomic verb.  Check for agreement
       if. e=EVDOMAIN do.
-        if. #emsg=. efcknumericargs a  do. hdr,emsg return. end.
+        if. #emsg=. efcknumericargs a  do. hdr,'y is ',emsg return. end.
         if. prim e. ;:'??.' do.
           if. #emsg=. a efindexmsg a 9!:23 (0;1) do. hdr,'y must be a positive integer' return. end.
         end.
@@ -728,7 +728,7 @@ NB. most decoding omitted
     case. ;:'|.' do.
       if. e=EVINHOMO do. emsg =. 'argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill end.
     case. ;:'#.#:' do.
-      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end. end.
+      if. e=EVDOMAIN do. if. #emsg=. a efcknumericargs w  do. hdr,'y is ',emsg return. end. end.
     case. ;:'{.{:' do.
       if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
 NB. } xy homo ind domain (incl fill) and index x/ind agreement
@@ -749,14 +749,14 @@ NB. } x domain
       end.
     case. ;:'??.p:q:' do.
       if. e=EVDOMAIN do.
-        if. #emsg=. a efcknumericargs w  do. hdr,emsg return. end.
+        if. #emsg=. a efcknumericargs w  do. hdr,'y is ',emsg return. end.
         if. #emsg=. a efindexmsg a 9!:23 (0;0) do. hdr,'y must be a nonnegative integer' return. end.
       end.
     case. ;:'A.C.' do.
       if. e=EVINDEXDUP do. hdr , ('a permutation in ' #~ 1<*/}:$a) , 'y contains a duplicate value' return. end.
       if. e e. EVDOMAIN,EVINDEX do.
         if. 32 ~: 3!:0 a do.
-          if. #emsg=. efcknumericargs a  do. hdr,emsg return. end.
+          if. #emsg=. efcknumericargs a  do. hdr,'y is ',emsg return. end.
           permord =. <. >./ a
           if. #emsg=. 'y has '&,^:(*@#) a efindexmsg a 9!:23 (0;(_1&- , ]) permord) do. hdr,emsg return. end.  NB. direct form
         else.
@@ -776,17 +776,17 @@ NB. } x domain
       if. e=EVDOMAIN do. if. #emsg=. 'y has '&,^:(*@#) a efindexmsg a 9!:23 (0;0) do. hdr,emsg return. end. end.
     case. ;:'i:' do.
       if. e=EVDOMAIN do.
-        if. #emsg=. efcknumericargs a do. hdr,emsg return. end.
+        if. #emsg=. efcknumericargs a do. hdr,'y is ',emsg return. end.
         hdr,'number of steps must be a positive integer' return.
       end.
     case. ;:'I.' do.
-      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.  NB. complex case not decoded
+      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,'y is ',emsg return. end. end.  NB. complex case not decoded
     case. ;:'p.' do.
       if. #emsg=.efauditpoly a do. hdr,emsg return. end.
     case. ;:'u:' do.
       if. e=EVINDEX do. if. -. (3!:0 a) e. 2 131072 262144 do. if. #emsg=. a efindexmsg a 9!:23 (0;_65536 65535) do. hdr,emsg return. end. end. end.
     case. ;:'x:' do.
-      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,emsg return. end. end.
+      if. e=EVDOMAIN do. if. #emsg=. efcknumericargs a  do. hdr,'y is ',emsg return. end. end.
     case. ;:'/' do.
       if. e=EVDOMAIN do. if. 0=#a do. hdr,'y is empty but the verb has no identity element' return. end. end.
     case. ;:'@.' do.

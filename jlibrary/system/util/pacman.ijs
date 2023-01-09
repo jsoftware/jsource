@@ -852,9 +852,9 @@ echo '*** next step updates addons and base library'
 'upgrade'jpkg'all'
 'install'jpkg {."1'shownotinstalled'jpkg''
 if. IFIOS +. UNAME-:'Android' do.
- echo LF,'ALL DONE!',LF,'exit this J session and start new session'
- i.0 0
- return.
+  echo LF,'ALL DONE!',LF,'exit this J session and start new session'
+  i.0 0
+  return.
 end.
 echo '*** next step updates Jqt ide'
 do_install'qtide'
@@ -862,13 +862,13 @@ echo '*** next step updates JE'
 'upgrade'jpkg'jengine'
 echo '*** next step creates desktop J launch icons'
 if. 2~:ftype jpath'~/Desktop' do.
- echo '~/Desktop folder does not exist for shortcuts'
- echo 'perhaps create ~/Desktop as link to your Desktop folder and rerun'
- assert 0
+  echo '~/Desktop folder does not exist for shortcuts'
+  echo 'perhaps create ~/Desktop as link to your Desktop folder and rerun'
+  assert 0
 else.
- shortcut'jc'
- shortcut'jhs'
- shortcut'jqt'
+  shortcut'jc'
+  shortcut'jhs'
+  shortcut'jqt'
 end.
 echo LF,'ALL DONE!',LF,'exit this J session and start new session with double click',LF,'of desktop icon to run J with the corresponding user interface'
 i.0 0
@@ -879,12 +879,12 @@ try. ".uname,' y' catchd. echo 'create ',y,' launch icon failed' end.
 )
 
 defaults=: 3 : 0
-A=:   ' ~addons/ide/jhs/config/jhs.cfg'
-L=:   hostpathsep jpath'~/Desktop/'
-W=:   hostpathsep jpath'~'
-I=:   hostpathsep jpath'~bin/icons/'
-N=:   (1 2 3{9!:14''),;IF64{'-32';''
-DS=:  ;(('Win';'Linux';'OpenBSD';'FreeBSD';'Darwin')i.<UNAME){'.lnk';'.desktop';'.desktop';'.desktop';'.app'
+A=: ' ~addons/ide/jhs/config/jhs.cfg'
+L=: hostpathsep jpath'~/Desktop/'
+W=: hostpathsep jpath'~'
+I=: hostpathsep jpath'~bin/icons/'
+N=: (1 2 3{9!:14''),;IF64{'-32';''
+DS=: ;(('Win';'Linux';'OpenBSD';'FreeBSD';'Darwin')i.<UNAME){'.lnk';'.desktop';'.desktop';'.desktop';'.app'
 LIB=: ''
 )
 vbs=: 0 : 0
@@ -905,18 +905,18 @@ Winx y
 Winx=: 3 : 0
 select. y
 case.'jc' do.
- win'jc' ;'jconsole';'jgray.ico';LIB
+  win'jc' ;'jconsole';'jgray.ico';LIB
 case. 'jhs' do.
- win'jhs';'jconsole';'jblue.ico';LIB,A
+  win'jhs';'jconsole';'jblue.ico';LIB,A
 case. 'jqt' do.
- win'jqt';'jqt'     ;'jgreen.ico';LIB
+  win'jqt';'jqt' ;'jgreen.ico';LIB
 case. do.
- assert 0
+  assert 0
 end.
 )
 
 win=: 3 : 0
-'type bin icon arg'=.y
+'type bin icon arg'=. y
 f=. jpath '~temp/shortcut.vbs'
 n=. L,type,N,DS
 c=. hostpathsep jpath '~bin/',bin
@@ -969,56 +969,56 @@ Linuxx y
 Linuxx=: 3 : 0
 select. y
 case.'jc' do.
- linux'jc' ;'jconsole';'jgray.png';LIB
+  linux'jc' ;'jconsole';'jgray.png';LIB
 case. 'jhs' do.
- linux'jhs';'jconsole';'jblue.png';LIB,A
+  linux'jhs';'jconsole';'jblue.png';LIB,A
 case. 'jqt' do.
- linux'jqt';'jqt'     ;'jgreen.png';LIB
+  linux'jqt';'jqt' ;'jgreen.png';LIB
 case. do.
- assert 0
+  assert 0
 end.
 i.0 0
 )
 
 linux=: 3 : 0
-'type bin icon arg'=.y
+'type bin icon arg'=. y
 n=. type,N
 f=. L,type,N,DS
 c=. hostpathsep jpath '~bin/',bin
 rh=. 1<#fread '/etc/redhat-release'
 if. rh do.
- if. type-:'jqt' do.
-  e=. c
- else.
-  e=. c,' ',arg
- end.
-else.
- if. type-:'jqt' do.
-  e=. '"',c,'"'
- else.
-  if. 'gnome-terminal' -: TermEmu=. get_terminal'' do.
-   e=. '<T> -- "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+  if. type-:'jqt' do.
+    e=. c
   else.
-   e=. '<T> -e "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+    e=. c,' ',arg
   end.
- end.
+else.
+  if. type-:'jqt' do.
+    e=. '"',c,'"'
+  else.
+    if. 'gnome-terminal' -: TermEmu=. get_terminal'' do.
+      e=. '<T> -- "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+    else.
+      e=. '<T> -e "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+    end.
+  end.
 end.
 
 if. rh do.
- r=. desktoprh rplc '<N>';n
- r=. r rplc '<E>';e
- r=. r rplc '<W>';W
- r=. r rplc '<I>';I,icon
- r=. r rplc '<TT>';(type-:'jc'){'false';'true'
- r fwrite f
- 2!:0'chmod +x ',f
+  r=. desktoprh rplc '<N>';n
+  r=. r rplc '<E>';e
+  r=. r rplc '<W>';W
+  r=. r rplc '<I>';I,icon
+  r=. r rplc '<TT>';(type-:'jc'){'false';'true'
+  r fwrite f
+  2!:0'chmod +x ',f
 else.
- r=. desktop rplc '<N>';n
- r=. r rplc '<E>';e
- r=. r rplc '<W>';W
- r=. r rplc '<I>';I,icon
- r fwrite f
- 2!:0'chmod +x ',f
+  r=. desktop rplc '<N>';n
+  r=. r rplc '<E>';e
+  r=. r rplc '<W>';W
+  r=. r rplc '<I>';I,icon
+  r fwrite f
+  2!:0'chmod +x ',f
 end.
 )
 plist=: 0 : 0
@@ -1045,29 +1045,28 @@ Darwinx y
 Darwinx=: 3 : 0
 select. y
 case.'jc' do.
- darwin'jc' ;'jconsole';'jgray.icns';LIB
+  darwin'jc' ;'jconsole';'jgray.icns';LIB
 case. 'jhs' do.
- darwin'jhs';'jconsole';'jblue.icns';LIB,A
+  darwin'jhs';'jconsole';'jblue.icns';LIB,A
 case. 'jqt' do.
- darwin'jqt';'jqt'     ;'jgreen.icns';LIB
+  darwin'jqt';'jqt' ;'jgreen.icns';LIB
 case. do.
- assert 0
+  assert 0
 end.
 i.0 0
 )
 darwin=: 3 : 0
-'type bin icon arg'=.y
+'type bin icon arg'=. y
 n=. type,N
 f=. L,type,N,DS
 c=. hostpathsep jpath '~bin/',bin
 select. type
 case.'jc' do.
-
- r=. new_launch rplc '<COM>';COM;'<C>';(hostpathsep jpath '~bin/jconsole');'<A>';LIB
+  r=. new_launch rplc '<COM>';COM;'<C>';(hostpathsep jpath '~bin/jconsole');'<A>';LIB
 case. 'jhs' do.
- r=. new_launch rplc '<COM>';COM;'<C>';(hostpathsep jpath '~bin/jconsole');'<A>';LIB,A
+  r=. new_launch rplc '<COM>';COM;'<C>';(hostpathsep jpath '~bin/jconsole');'<A>';LIB,A
 case. 'jqt' do.
- r=.'#!/bin/sh',LF,'"',c,'.command" ',LIB
+  r=. '#!/bin/sh',LF,'"',c,'.command" ',LIB
 end.
 fpathcreate f,'/Contents/MacOS'
 fpathcreate f,'/Contents/Resources'
@@ -1507,20 +1506,20 @@ NEW=. hostpathsep jpath bname,'.new'
 if. 1~:ftype bname do. log'upgrade not supported for this type of install' return. end.
 
 if. IF64 > IFRASPI do.
- t=. httpget path,plat,'/j64'
- if. 1=;{.t do. log'upgrade - read jengine folder failed' return end.
- a=. fread '~temp/j64'
- i=. >:((;(UNAME-:'Win'){'>libj';'>j') E. a)#i.#a
- a=. i}.each (#i)#<a
- a=. (a i.each'<'){.each a
- a=. a}.~each a i.each 'j'
- a=. }.each a{.~each a i.each '.'
- try. t7=. 2!:7'' catch. t7=. '' end.
- a=. 'j',;{:(a e. ;:t7)#a
- i=. name i.'.'
- name=. <(}:i{.name),a,i}.name
+  t=. httpget path,plat,'/j64'
+  if. 1=;{.t do. log'upgrade - read jengine folder failed' return end.
+  a=. fread '~temp/j64'
+  i=. >:((;(UNAME-:'Win'){'>libj';'>j') E. a)#i.#a
+  a=. i}.each (#i)#<a
+  a=. (a i.each'<'){.each a
+  a=. a}.~each a i.each 'j'
+  a=. }.each a{.~each a i.each '.'
+  try. t7=. 2!:7'' catch. t7=. '' end.
+  a=. 'j',;{:(a e. ;:t7)#a
+  i=. name i.'.'
+  name=. <(}:i{.name),a,i}.name
 else.
- name=. <name
+  name=. <name
 end.
 
 arg=. (<jxxx),(<br),(<platform),(<3{.jbithw),name
@@ -1534,10 +1533,10 @@ r fwrite NEW
 
 if. UNAME-:'Win' do.
   if. fexist OLD do.
-   if. -.ferase OLD do. log'upgrade failed - ferase j.dll.old - exit all J sessions and try again' return. end.
+    if. -.ferase OLD do. log'upgrade failed - ferase j.dll.old - exit all J sessions and try again' return. end.
   end.
- if. -.OLD frename DLL do. log'upgrade failed - rename j.dll to j.dll.old' return. end.
- if. -.DLL frename NEW do. log'upgrade failed - rename j.dll.new to j.dll' return. end.
+  if. -.OLD frename DLL do. log'upgrade failed - rename j.dll to j.dll.old' return. end.
+  if. -.DLL frename NEW do. log'upgrade failed - rename j.dll.new to j.dll' return. end.
 else.
   if. -.ferase DLL do. log'upgrade failed - ferase libj.so.old - exit all J sessions and try again' return. end.
   if. -.DLL frename NEW do. log'upgrade failed - rename libj.so.new to libj.so' return. end.
@@ -1621,7 +1620,7 @@ smoutput 'Exit and restart J using ',msg
 qt_ldd_test=: 3 : 0
 ldd=. ('Darwin'-:UNAME){::'ldd';'otool -L'
 suffix=. ('Darwin'-:UNAME){::'so';'dylib'
-vsuffix=. ('Darwin'-:UNAME){::*('so.',JQTVERSION);(JQTVERSION,'.dylib')
+vsuffix=. ('Darwin'-:UNAME){::('so.',JQTVERSION);(JQTVERSION,'.dylib')
 if. FHS*.IFUNIX do.
   d=. <;._2 hostcmd_jpacman_ ldd,' ',BINPATH,'/jqt-9.04'
   d=. d,<;._2 hostcmd_jpacman_ ldd,' ',y,'/libjqt.',vsuffix
@@ -1642,20 +1641,21 @@ bin=. 'JQt ',(((y-:'slim')#'slim ')),'binaries.'
 suffix=. IFUNIX{::'dll';('Darwin'-:UNAME){::'so';'dylib'
 vsuffix=. IFUNIX{::(JQTVERSION,'.dll');('Darwin'-:UNAME){::('so.',JQTVERSION);(JQTVERSION,'.dylib')
 smoutput 'Installing ',bin,'..'
-if. 'Linux'-:UNAME do.
+arch=. (#.IF64,~'x86'-:3{.9!:56'cpu'){::'32';'64';'x86';'x64'
+if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
   if. IFRASPI do.
-    z=. 'jqt-',((y-:'slim') pick 'raspi';'raspislim'),'-',(IF64 pick '32';'64'),'.tar.gz'
-  elseif. 0 [ fexist '/etc/redhat-release' do.
-    z=. 'jqt-',((y-:'slim') pick 'rhel7';'rhel7slim'),'-',(IF64 pick '32';'64'),'.tar.gz'
+    z=. 'jqt-raspi',((y-:'slim')#'slim'),'-',arch,'.tar.gz'
+  elseif. 'Linux'-:UNAME do.
+    z=. 'jqt-',((y-.@-:'slim')#tolower UNAME),((y-:'slim')#'slim'),'-',arch,'.tar.gz'
   elseif. do.
-    z=. 'jqt-',((y-:'slim') pick 'linux';'slim'),'-',(IF64 pick 'x86';'x64'),'.tar.gz'
+    z=. 'jqt-',(tolower UNAME),((y-:'slim')#'slim'),'-',arch,'.tar.gz'
   end.
   z1=. 'libjqt.',suffix
 elseif. IFWIN do.
-  z=. 'jqt-win',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'jqt-win',((y-:'slim')#'slim'),'-',arch,'.zip'
   z1=. 'jqt.',suffix
 elseif. do.
-  z=. 'jqt-mac',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'jqt-mac',((y-:'slim')#'slim'),'-',arch,'.zip'
   z1=. 'libjqt.',suffix
 end.
 'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j904/qtide/',z
@@ -1667,7 +1667,7 @@ if. IFWIN do.
   unzip_jpacman_ p;d
 else.
   if. FHS do.
-    if. 'Darwin'-:UNAME do.
+    if. (<UNAME)e.'Darwin';'OpenBSD';'FreeBSD' do.
       d1=. (({.~ i:&'/')BINPATH),'/lib/'
     elseif. IFRASPI do.
       d1=. (({.~ i:&'/')BINPATH),IF64{::'/lib/arm-linux-gnueabihf/';'/lib/aarch64-linux-gnu/'
@@ -1707,10 +1707,11 @@ tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt6Core.dll'
 y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
+arch=. (#.IF64,~'x86'-:3{.9!:56'cpu'){::'32';'64';'x86';'x64'
 if. IFWIN do.
-  z=. 'qt62-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt62-win-',((y-:'slim')#'slim-'),arch,'.zip'
 else.
-  z=. 'qt62-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt62-mac-',((y-:'slim')#'slim-'),arch,'.zip'
 end.
 'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j904/qtlib/',z
 if. rc do.
@@ -1745,7 +1746,7 @@ libname=. IFUNIX{::('mpir.',suffix);'libgmp.',suffix
 libjname=. IFUNIX{::('mpir.',suffix);'libjgmp.',suffix
 if. ''-:1!:46'' do.
   if. FHS do.
-    if. 'Darwin'-:UNAME do.
+    if. (<UNAME)e.'Darwin';'OpenBSD';'FreeBSD' do.
       dest=. (({.~ i:&'/')BINPATH),'/lib/'
     elseif. IFRASPI do.
       dest=. (({.~ i:&'/')BINPATH),IF64{::'/lib/arm-linux-gnueabihf/';'/lib/aarch64-linux-gnu/'
@@ -1764,12 +1765,9 @@ if. fexist f=. dest, FHS{::libname;libjname do.
   smoutput f,' already exists' return.
 end.
 smoutput 'Installing ',bin,'..'
-if. 'Linux'-:UNAME do.
-  if. IFRASPI do.
-    z=. libname,~ IF64{::'linux/arm/';'linux/aarch64/'
-  elseif. do.
-    z=. libname,~ IF64{::'linux/i386/';'linux/x86_64/'
-  end.
+if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
+  arch=. (#.IF64,~'x86'-:3{.9!:56'cpu'){::'arm';'aarch64';'i386';'x86_64'
+  z=. libname,~ (tolower UNAME),'/',arch,'/'
 elseif. IFWIN do.
   z=. libname,~ IF64{::'windows/win32/';'windows/x64/'
 elseif. do.

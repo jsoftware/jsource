@@ -4,8 +4,9 @@
 #define QSQRT(x)    z->n=rifvsdebug(xsqrt(x->n)); z->d=rifvsdebug(xsqrt(x->d)); {I rc; if(rc=jt->jerr){RESETERR; R rc;}}
 #define QFACT(x)    if(ISQinf(*x)&&0<QSGN(*x)) *z=Q_; else {ASSERTWR(ISQINT(*x),EWIRR); z->n=xfact(x->n); z->d=X1;}
 
-#undef R0
-#define R0 RQ0
+#undef FAIL
+#define FAIL Q0
+#include "jr0.h"
 
 // qstd is invoked in QEPILOG
 QF1(jtqstd){ // canonical form for w: 1155r210 -> 11r2
@@ -146,8 +147,8 @@ static QF2(jtqpow){PROLOG(10008); // a^w
 
 I jtqcompare(J jt,Q a,Q w){R QCOMP(a,w);}
 
-#undef R0
-#define R0 R 0
+#undef FAIL
+#include "jr0.h"
 
 static X jtqbin(J jt,Q a,Q w){ASSERT(ISX1(a.d)&&ISX1(w.d),EWIRR); R rifvsdebug(xbin(a.n,w.n));}
 

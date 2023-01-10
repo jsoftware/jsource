@@ -887,7 +887,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTE(b,e) {if(unlikely(!(b))){jt=(J)((I)jt+e); goto eformat;}}
 #define ASSERTF(b,e,s...){if(unlikely(!(b))){R jtjsignale((J)((I)jt+e),0,0,0,0);}}
 #endif
-#define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+#include "jr0.h" // #define ASSERT(b,e) {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTF(b,e,s...)     {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
@@ -1945,12 +1945,15 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define PUSHZOMB A savasginfo = jt->zombieval; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
 #define POPZOMB {jt->zombieval=savasginfo;}
 #define R               return
+
+/* see above: include "jr0.h"
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
 #define R0 {if(!jt->jerr)SEGFAULT; R 0;}
 #else
 #define R0 R 0;
 #endif
-#define R0Q R 0; // allows FINDNULLRET without jt
+*/
+
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define REGOTO(exp,lbl) {if(unlikely(((exp),jt->jerr!=0)))goto lbl;}
@@ -1962,7 +1965,7 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define RESETRANK       (jt->ranks=R2MAX)
 #define RZSUFF(exp,suff) {if(unlikely(!(exp))){suff}}
 #define RZ(exp)         RZSUFF(exp,R0)
-#define RZQ(exp)         RZSUFF(exp,R0Q)  // allows FINDNULLRET without jt
+#define RZQ(exp)         RZSUFF(exp,R 0;)  // allows FINDNULLRET without jt
 // obsolete #define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}
 #define RE(exp)         RZ(((exp),jt->jerr==0))  // execute exp, then return if error
 #define RZGOTO(exp,lbl) RZSUFF(exp,goto lbl;)

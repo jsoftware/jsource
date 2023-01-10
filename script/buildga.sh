@@ -62,9 +62,19 @@ fi
 elif [ "$1" = "darwin" ]; then
 cp mpir/apple/macos/libgmp.dylib j64
 elif [ "$1" = "openbsd" ]; then
-cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
+# cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
+if [ "`uname -m`" = "amd64" ] ; then
+cp mpir/openbsd/x86_64/libgmp.so j64
+else
+cp mpir/openbsd/aarch64/libgmp.so j64
+fi
 elif [ "$1" = "freebsd" ]; then
-cp /usr/local/lib/libgmp.so.10 j64/libgmp.so
+# cp /usr/local/lib/libgmp.so.10 j64/libgmp.so
+if [ "`uname -m`" = "amd64" ] ; then
+cp mpir/freebsd/x86_64/libgmp.so j64
+else
+cp mpir/freebsd/aarch64/libgmp.so j64
+fi
 fi
 
 cp version.txt jsrc/jversion.h

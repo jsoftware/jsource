@@ -624,7 +624,7 @@ static AF atcompSB[]={  /* table for SBT vs. SBT */
  sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS,
 };
 
-// This table is indexed by m[5 4 3] but only a few combinations are generated
+// This table is indexed by m bits 5-3 but only a few combinations are generated
 static AF atcompX[]={0L, jti1ebar, 0L, 0L, jtsumebar, jtanyebar};
 
 

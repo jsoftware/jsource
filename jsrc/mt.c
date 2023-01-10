@@ -148,9 +148,6 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
 void jfutex_waken(UI4 *p,UI4 n){jfutex_wakea(p);} //scaf/TUNE: should DO(n,jfutex_wake1(p)) depending on n and the #threads waiting on p
 #endif
 
-// remove wakeup to this thread; if wakeup in progress, wait till it finishes
-void clrfutexwt(J jt){sta(&jt->futexwt,0); while(lds(&JT(jt,wakeallct)))YIELD;}
-
 //values for mutex->v.  The upper 16 bits are a wait counter; the state is the low 16 bits, as follows
 //todo consider storing owner in the high bits of v
 enum{

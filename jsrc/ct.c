@@ -87,11 +87,13 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 // we increment the store counter in the futex before we wake, in case a thread has sampled the system info but not yet waited
 // jtsignal calls here when a BREAK/ATTN is seen, to wake up any thread that may be locked up
 #if PYXES
-// wakeallct keeps track of the number of wakealls being processed.  When this is nonzero, a waiter must not allow the block pointed to by futexwt to go away.  And, it must
-// consider that wakeall may have sampled futexwt before it was cleared.  So, the waiter must wait for wakeallct to go to 0 before exiting.
-// So that we wake each thread only once, we clear the futexwt when we wakeup
-// Only a couple of threads can call wakeall (the leader, and a JBreak), so 1 byte suffices for wakeallct.  wta is a pointer to the state of the waiting pyx, used as the futex
-void wakeall(J jt){aadd(&JT(jt,wakeallct),1); UI4 *wta; DONOUNROLL(NALLTHREADS(jt),if((wta=lda(&JTTHREAD0(jt)[i].futexwt))!=0){sta(&JTTHREAD0(jt)[i].futexwt,0); aadd(wta,0x100); jfutex_wakea(wta);}) aadd(&JT(jt,wakeallct),(UC)-1);}
+// So that we wake each thread only once, we clear the futexwt when we wakeup.  wta is a pointer to the state of the waiting pyx, used as the futex
+void wakeall(J jt){UI4 *wta;
+ DONOUNROLL(NALLTHREADS(jt),
+   __atomic_fetch_or(&JTTHREAD0(jt)[i].taskstate,TASKSTATEFUTEXWAKE,__ATOMIC_ACQ_REL);
+   if((wta=lda(&JTTHREAD0(jt)[i].futexwt))!=0){sta(&JTTHREAD0(jt)[i].futexwt,0); aadd(wta,0x100); jfutex_wakea(wta);}
+   __atomic_fetch_and(&JTTHREAD0(jt)[i].taskstate,~TASKSTATEFUTEXWAKE,__ATOMIC_ACQ_REL);)
+}
 #else
 void wakeall(J jt){}
 #endif
@@ -244,8 +246,11 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   UI4 state=lda(&blok->seqstate); C breakb;  // get store sequence # before we check for system event
   if(PYXFULL==((C)state))break; // if pyx was filled, exit and return its value
 // obsolete   I scaf;
-  if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // process systemlock and keep waiting.  Prevent multiple wakeups to the same thread
-  sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per turn through the loop
+  // if someone is starting a system lock, we must go accept it.  To avoid reads from other cores, we look at our taskstate, where the lock requester
+  // tell us that a lock is running.  In normal use we will be the owner of this cacheline already.  It is not vital to get this right the first time, because the
+  // lock code will wake us 
+  if(lda(&jt->taskstate)&TASKSTATELOCKACTIVE)jtsystemlockaccept(jt,LOCKALL);  // process systemlock and keep waiting.
+// obsolete   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // process systemlock and keep waiting.  Prevent multiple wakeups to the same thread
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){err=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
   if(uncommon(-1ull==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
@@ -253,10 +258,13 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
    else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
 // obsolete scaflog(&blok->seqstate,scaf,THREADID(jt),state|PYXWAIT|4);  // scaf
 // obsolete scaflog(&blok->seqstate,0xff,THREADID(jt),lda(&blok->seqstate));  // scaf
+  sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per systemlock
   I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,ns);if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
 // obsolete scaflog(&blok->seqstate,lda(&JT(jt,systemlock)),THREADID(jt),0x80|lda(&blok->seqstate));  // scaf
- } 
- CLRFUTEXWT;   // wait till pending wakealls complete before we allow this block to be deleted
+ }
+ // We have the value; but if someone has started a system lock, they may erroneously try to wake up our futex, which is no longer needed.  We clear the futex pointer,
+ // and then wait until system lock is over
+ CLRFUTEXWT;   // clear the futex wait till no one is using it
 // obsolete scaflog((UI4*)0,JT(jt,systemlock),THREADID(jt),0x49);
 done:  // pyx has been filled in.  jt->futexwt must be 0
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it

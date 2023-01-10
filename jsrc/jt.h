@@ -132,7 +132,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C persistarea[0];  // end of area set at task startup
 // ************************************** everything after here persists over the life of the thread
  C fillv0len;   // length of fill installed in fillv0 (max 16)
- C taskstate;  // task state: modified by other tasks on a system lock
+ C taskstate;  // task state: modified by other tasks on a system lock or jbreak
 #define TASKSTATERUNNINGX 0   // This thread has started running a task
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
 #define TASKSTATELOCKACTIVEX 1  // thread has been notified that a systemlock has been called.  Transition of STATERUNNING is not allowed while LOCKACTIVE
@@ -141,14 +141,17 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATEACTIVE (1LL<<TASKSTATEACTIVEX)
 #define TASKSTATETERMINATEX 3  // thread has been signaled to terminate.  Changed under job lock.
 #define TASKSTATETERMINATE (1LL<<TASKSTATETERMINATEX)
+#define TASKSTATEFUTEXWAKEX 4  // wakeall is using jt->futexwt; don't delete it.  Accessed with RFO cycles
+#define TASKSTATEFUTEXWAKE (1LL<<TASKSTATEFUTEXWAKEX)
  C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
-// 1 byte free
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
+// 2 bytes free
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution
  UI cstackmin;        // red warning for C stack pointer
- A filler1[2];
+ UI4*futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
+ A filler1[1];
 // end of cacheline 1
 
  C _cl2[0];
@@ -203,8 +206,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
            // snmalloc has a slick design but it sometimes 'repatriates' blocks to the wrong thread, so they may sometimes take multiple hops to get home, which is annoying.  An alternative is to use a fixed-sized array, and sort it once it fills up
            // perhaps something like an lru cache of threads recently freed to?  Do a linear scan of the first k entries (maybe w/short simd if the first is a miss), and if they all miss, then fall back to--snmalloc trick, or sort buffer, or something else
            // Or maybe a fixed-size cache, and anything that falls out of it gets immediately flushed?  I like that, because it helps prevent singleton allocations from getting lost
- UI4*futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock
- I filler6[1];
+ I filler6[2];
 // end of cacheline 6
 
  C _cl7[0];
@@ -310,7 +312,8 @@ typedef struct JSTstruct {
  UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script.  See TRACEDB* flags above
  B assert;           /* 1 iff evaluate assert. statements               */
  // rest of cacheline used only in exceptional paths
- UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)
+// obsolete  UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)
+// 1 byte free
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
  I filler3[3];

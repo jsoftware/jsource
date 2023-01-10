@@ -80,4 +80,5 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 #endif //PYXES
 
 // remove wakeup to this thread; if wakeup in progress, wait till it finishes
-#define CLRFUTEXWT {sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;}
+// obsolete #define CLRFUTEXWT {sta(&jt->futexwt,0); while(lda(&JT(jt,wakeallct)))YIELD;}
+#define CLRFUTEXWT {sta(&jt->futexwt,0); while(unlikely(__atomic_fetch_add(&jt->taskstate,0,__ATOMIC_ACQ_REL)&TASKSTATEFUTEXWAKE))YIELD;}  // must use RFO cycle to the semaphore

@@ -9,8 +9,15 @@ omitversion=. 'Android' -: 0:`(UNAME"_)@.(0=4!:0<'UNAME_z_')''
 
 NB. create SystemFolders
 bin=. BINPATH
-install=. (bin i: '/'){.bin
-fhs=. (FHS"_)^:(0=4!:0<'FHS')(5=systype)*.0=#1!:0<BINPATH,'/../system/util/boot.ijs'
+install=. 3 : 0 bin
+if. 0=*@#1!:0<install,'/system/util/boot.ijs' [ install=. (bin i: '/'){.bin=. y do.
+  for_i. i.9 do.
+    if. *@#1!:0<bin,(p=. ,i#,:'/..'),'/jlibrary/system/util/boot.ijs' do. install=. bin,p,'/jlibrary' break. end.
+  end.
+end.
+install
+)
+fhs=. (FHS"_)^:(0=4!:0<'FHS')(5=systype)*.0=#1!:0<install,'/system/util/boot.ijs'
 install=. (0&~:fhs){::install;install,'/share/j/',omitversion{::'9.04';'0'
 install=. (INSTALLROOT"_)^:(0=4!:0<'INSTALLROOT') install
 addons=. install,'/addons'

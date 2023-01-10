@@ -7,7 +7,7 @@
 #define XT(w)        R 0
 
 X jtxc(J jt,I n){ // convert n to X
- mpz_t mpz; jmpz_init_set_si(mpz, n);
+ GEMP0; mpz_t mpz; jmpz_init_set_si(mpz, n);
  R Xmp(z);
 }
 I jtxint(J jt,X w){ // return w as integer (assuming it fits)
@@ -100,7 +100,7 @@ XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather
  } else {
   ASSERT(0<XSGN(w), EWRAT); // want rational result if w is negative
   mpX(a); mpX(w); mpX(m); mpz_t mpz;
-  jmpz_init(mpz); jmpz_powm(mpz, mpa, mpw, mpm); // m | a ^ w
+  jmpz_init(mpz); jmpz_powm(mpz, mpa, mpw, mpm); GEMP0; // m | a ^ w
   if (0>XSGN(m)) jmpz_fdiv_r(mpz, mpz, mpm); // jmpz_powm ignores sign of m
   EPILOG(Xmp(z));
  }
@@ -112,7 +112,7 @@ XF2(jtxpowmodinv){PROLOG(0113); // special case when xmod is extended (and w is 
  if (xmod) {m= XAV(xmod)[0]; if (!XSGN(m)) m= 0;}
  if (0 == m) R xpow(a, w);
  mpX(a); mpX(w); mpX(m); mpz_t mpz;
- jmpz_init(mpz); jmpz_powm(mpz, mpa, mpw, mpm); // m | a ^ w
+ jmpz_init(mpz); jmpz_powm(mpz, mpa, mpw, mpm); GEMP0; // m | a ^ w
  if (0>XSGN(m)) jmpz_fdiv_r(mpz, mpz, mpm); // jmpz_powm ignores sign of m
  EPILOG(Xmp(z));
 }
@@ -123,7 +123,7 @@ XF1(jtxsq){ // *: w
 static X jtIrootX(J jt, UI a, X w) { // a %:w NB. optionally with <. or >.
  PROLOG(0114);
  ASSERT(1&a||0<=XSGN(w), EWIRR);
- mpX(w); mpX0(z); I exact= jmpz_root(mpz, mpw, a);
+ mpX(w); mpX0(z); I exact= jmpz_root(mpz, mpw, a); GEMP0;
  if (!exact) switch(jt->xmode){
    default: ASSERTSYS(0,"xsqrt");
    case XMEXACT: jmpz_clear(mpz); ASSERT(0,EWIRR);
@@ -186,7 +186,7 @@ XF2(jtxroota){ // a %: w (optionally with <. or >.)
   // ASSERT(0<XSGN(w0)||1&XLIMB0(a0), EWIMAG);
   ASSERT(0<XSGN(w0), EWIMAG); // test/gx132.ijs wants imaginary cube roots
   I ia0= IgetXor(a0, ASSERT(0, EWIRR)); mpX(w0); mpX0(z0); // really want EWFL here
-  I exact= jmpz_root(mpz0, mpw0, ia0);
+  I exact= jmpz_root(mpz0, mpw0, ia0); GEMP0;
   if (!exact) switch(jt->xmode) {
     case XMEXACT: ASSERT(0, EWIRR);
     case XMFLR: if (mpz0->_mp_size<0) jmpz_sub(mpz0, mpz0, mpX1); break;

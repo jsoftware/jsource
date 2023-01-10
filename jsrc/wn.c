@@ -69,7 +69,7 @@ static NUMH(jtnumxTEMP) {PROLOG(0098); // n, s, vv NB. n is length of s, we put 
  GMP;                 // nonce error if libgmp not available
  n-=s[n-1]=='x';      // if s ends in 'x' make that the end
  C sav= s[n]; s[n]=0; // store NUL after string, save the character that was there
- mpz_t mpy; if (jmpz_init_set_str(mpy, s, 10)) {s[n]= sav; R0;}
+ mpz_t mpy; if (jmpz_init_set_str(mpy, s, 10)) {GEMP0; s[n]= sav; R0;}
  X y= Xmp(y);         // parsed extended integer (if we didn't fail)
  s[n]= sav;           // restore buffer s to orig state (might be unnecessary)
  ASSERT(!(AFLAG(y)&AFRO),EVWSFULL); // error if we used an emergency buffer

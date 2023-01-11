@@ -531,8 +531,8 @@ EXTERN I gempwsfull;           // non-zero when pool is occupied
 #define GEMP0 ASSERT(!GEMPWSFULL,EVWSFULL)
 #define GEMP1(type, value) ({type tmpresult= value; GEMP0; tmpresult;})
 #define GEMPcommon(value,freeroutine) ({if(GEMPWSFULL) {freeroutine(value); ASSERT(0,EVWSFULL);} value;})
-#define GEMPz(value) GEMPcommon(value, mpz_clear)
-#define GEMPq(value) GEMPcommon(value, mpq_clear)
+#define GEMPz(value) GEMPcommon(value, jmpz_clear)
+#define GEMPq(value) GEMPcommon(value, jmpq_clear)
 /* ------------------------------------------------- */
 
 #undef EXTERN

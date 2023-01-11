@@ -573,7 +573,7 @@ end:
 
 static F2(jtweight){ARGCHK2(a,w); A z; R df1(z,behead(over(AR(w)?w:reshape(a,w),num(1))),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
-F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;
+F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;PROLOG(889);
  ARGCHK1(w);
  t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
  ASSERT(!ISSPARSE(t),EVNONCE);
@@ -582,17 +582,19 @@ F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;
  GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
  if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
  else mvc(m*SZI,x,1,MEMSET00);
- RETF(z);
+ EPILOG(z);
+// obsolete  RETF(z);
 }
 
-F2(jtbase2){I ar,at,c,t,wr,wt;
+F2(jtbase2){I ar,at,c,t,wr,wt;PROLOG(888);
  ARGCHK2(a,w);
  at=AT(a); ar=AR(a);
  wt=AT(w); wr=AR(w); c=AS(w)[wr-1]; c=wr?c:1;
  ASSERT(!ISSPARSE(at|wt),EVNONCE); t=maxtyped(at,wt);
  if(!(t&at))RZ(a=cvt(t,a));
  if(!(t&wt))RZ(w=cvt(t,w));
- R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,DUMMYSELF,0L,MIN(ar,1),0L,MIN(ar,1),jtweight),DUMMYSELF,MIN(wr,1),1L,MIN(wr,1),1L,jtpdt);
+ A z=1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,DUMMYSELF,0L,MIN(ar,1),0L,MIN(ar,1),jtweight),DUMMYSELF,MIN(wr,1),1L,MIN(wr,1),1L,jtpdt);
+ EPILOG(z);
 }
 
 // #: y

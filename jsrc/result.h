@@ -249,7 +249,7 @@ do{
       zzresultpri=0;  // initialize the result type to low-value
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AR holds the actual size; AS[] is the data
       // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it
-      if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV0(zzcellshape,INT,AR(zz)-zzframelen+3,0);}
+      if(likely(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK)){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV0(zzcellshape,INT,AR(zz)-zzframelen+3,0);}
       AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCISH(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
       ZZFLAGWORD|=(ZZFLAGBOXALLO);  // indicate we have allocated the boxed area
      }
@@ -315,7 +315,7 @@ do{
   --zzboxp;
 #endif
   break;  // skip the first-cell processing
- } else{I * RESTRICT is;
+ }else{I * RESTRICT is;
   // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.
   // Get the rank/type to allocate for the presumed result
   // Get the type to allocate

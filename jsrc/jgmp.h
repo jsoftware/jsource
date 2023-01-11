@@ -136,9 +136,9 @@ typedef long                mpir_si;
 #endif
 extern void jgmpinit(C*);
 extern B nogmp(void);
-#define GMP ASSERT(!nogmp(), EVNONCE) // nonce error if libgmp is not available
+#define GMP ASSERT(!nogmp(), EVNONCE); GEMP0 // nonce error if libgmp is not available
 extern void*jmalloc4gmp(size_t);
-#define GAGMP(z,n) (z=({n ?({mpz_t mpd= {n/SZI, n/SZI, jmalloc4gmp(n)}; Xmp(d);}) :X0;}))
+#define GAGMP(z,n) (z=({n ?({GEMP0; mpz_t mpd= {n/SZI, n/SZI, jmalloc4gmp(n)}; Xmp(d);}) :X0;}))
 extern X jtXmpzcommon(J, mpz_t, B);
 extern Q jtQmpq(J, mpq_t);
 
@@ -210,40 +210,53 @@ extern Q jtQmpq(J, mpq_t);
 // declare mpz_t mp##x and rehydrate from (X x)
 // (typically use mpX instead of mpzX)
 // see also jgmp_set_memory_functions() and jtXmp() in jgmpinit.c
-#define mpzX(MPZ,x) mpz_t MPZ= {XLIMBLEN(x), XSGN((x)), voidAV1((x))}
+#define mpzX(MPZ,x) GEMP0; mpzXnojt(MPZ,x)
 
-// same, but without declaring MPZ
-#define mpzXnodecl(MPZ,x) MPZ._mp_alloc= XLIMBLEN(x); MPZ._mp_size= XSGN(x); MPZ._mp_d= voidAV1((x))
+// same but for use in macros where we might not have a jt
+#define mpzXnojt(MPZ,x) mpz_t MPZ= {XLIMBLEN(x), XSGN((x)), voidAV1((x))}
+
+// same, but without declaring MPZ and for use in contexts where there's no jt
+#define mpzXnodeclnojt(MPZ,x) MPZ._mp_alloc= XLIMBLEN(x); MPZ._mp_size= XSGN(x); MPZ._mp_d= voidAV1((x))
+
+// same, but leveraging jt to catch wsfull errors early
+#define mpzXnodecl(MPZ,x) GEMP0; mpzXnodeclnojt(MPZ,x)
 
 // declare and intialize mpz_t mp##x reflecting X x
 #define mpX(x) mpzX(mp##x, (x))
 
+// same but for use in macros where we might not have a jt
+#define mpXnojt(x) mpzXnojt(mp##x, (x))
+
 // declare and initialize mpz_t mp##x reflecting 0x 
 // (use this for hypothetical x -- when x does not exist)
 // obsolete #define mpX0(x) mpz_t mp##x= {0, 0, 0}
-#define mpX0(x) mpz_t mp##x; (jmpz_init)(mp##x)
-
+#define mpX0(x) GEMP0; mpz_t mp##x; (jmpz_init)(mp##x)
 
 // dehydrate a gmp (mpz_t) as a J (X), produces the X result as a C rvalue
-#define Xmp(x) Xmpzcommon(mp##x, 1)
+#define Xmp(x) Xmpzcommon(GEMPz(mp##x), 1)
 
-// same but for an expression where the naming convention doesn't work
-#define Xmpnodecl(x) ({X xvar= x; Xmpzcommon(xvar, 1)});
+// dehydrate a gmp (mpz_t) as a J (X), produces the X result as a C rvalue
+#define Xmpnojt(x) Xmpzcommon(mp##x, 1)
 
 // dehydrate a gmp (mpq_t mp##q) as a J value of type (Q)
 // produces the Q result as a C rvalue
-#define Qmp(q) jtQmpq(jt, mp##q)
+#define Qmp(q) jtQmpq(jt, GEMPq(mp##q))
 
 // rehydrate a J (Q q) as a gmp (mpq_t mp##q) reflecting value of q
 #define mpQ(q) \
   if (!AC(q.n)||!AC(q.d)) SEGFAULT; \
   mpq_t mp##q;  mpzXnodecl(mp##q[0]._mp_num, q.n); mpzXnodecl(mp##q[0]._mp_den, q.d);
 
+// same but for use in contexts which cannot return a Q
+#define mpQnojt(q) \
+  if (!AC(q.n)||!AC(q.d)) SEGFAULT; \
+  mpq_t mp##q;  mpzXnodeclnojt(mp##q[0]._mp_num, q.n); mpzXnodeclnojt(mp##q[0]._mp_den, q.d);
+
 // same but for hypothetical q which does not actually exist, sets mp##q to 0r1
-#define mpQ0(q) mpq_t mp##q; jmpq_init(mp##q)
+#define mpQ0(q) GEMP0; mpq_t mp##q; jmpq_init(mp##q); GEMP0
 
 // make a temporary Q q (and mpq_t mp##q) copy of mpq_t mp##t
-#define MPQtemp(q,t) mpq_t mp##q; jmpq_init(mp##q); jmpq_set(mp##q,t); Q q= Qmp(q);
+#define MPQtemp(q,t) GEMP0; mpq_t mp##q; jmpq_init(mp##q); GEMP0; jmpq_set(mp##q,t); Q q= Qmp(q);
 
 EXTERN X X2;             //  2x internal form
 EXTERN X X1;             //  1x internal form
@@ -275,7 +288,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpq_get_str __gmpq_get_str          // https://gmplib.org/manual/Rational-Conversions
 #define jmpq_init __gmpq_init                // https://gmplib.org/manual/Initializing-Rationals
 #define jmpq_mul __gmpq_mul                  // https://gmplib.org/manual/Rational-Arithmetic
-#define jmpq_out___gstr mpq_out_str          // https://gmplib.org/manual/I_002fO-of-Rationals
+// not used #define jmpq_out___gstr mpq_out_str          // https://gmplib.org/manual/I_002fO-of-Rationals
 #define jmpq_set __gmpq_set                  // https://gmplib.org/manual/Initializing-Rationals
 #define jmpq_sub __gmpq_sub                  // https://gmplib.org/manual/Rational-Arithmetic
 #define jmpz_abs __gmpz_abs                  // https://gmplib.org/manual/Integer-Arithmetic
@@ -305,14 +318,14 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_lcm __gmpz_lcm                  // https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_mul __gmpz_mul                  // https://gmplib.org/manual/Integer-Arithmetic
 #define jmpz_neg __gmpz_neg                  // https://gmplib.org/manual/Integer-Arithmetic
-#define jmpz_out_str __gmpz_out_str          // https://gmplib.org/manual/I_002fO-of-Integers
+#define jmpz_out_str __gmpz_out_str          // (for debugging) https://gmplib.org/manual/I_002fO-of-Integers
 #define jmpz_powm __gmpz_powm                // https://gmplib.org/manual/Integer-Exponentiation
 #define jmpz_pow_ui __gmpz_pow_ui            // https://gmplib.org/manual/Integer-Exponentiation
 #define jmpz_probab_prime_p __gmpz_probab_prime_p //https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_ui_pow_ui __gmpz_ui_pow_ui      // https://gmplib.org/manual/Integer-Exponentiation
 #define jmpz_root __gmpz_root                // https://gmplib.org/manual/Integer-Roots
 #define jmpz_set __gmpz_set                  // https://gmplib.org/manual/Assigning-Integers
-#define jmpz_set_si __gmpz_set_si            // https://gmplib.org/manual/Assigning-Integers
+// not used #define jmpz_set_si __gmpz_set_si            // https://gmplib.org/manual/Assigning-Integers
 #define jmpz_sizeinbase __gmpz_sizeinbase    // https://gmplib.org/manual/Miscellaneous-Integer-Functions
 #define jmpz_sub __gmpz_sub                  // https://gmplib.org/manual/Integer-Arithmetic
 #else
@@ -361,7 +374,7 @@ EXTERN int  (*jmpz_probab_prime_p)(const mpz_t,int);
 EXTERN void (*jmpz_ui_pow_ui)(mpz_t, mpir_ui, mpir_ui);
 EXTERN int  (*jmpz_root)(mpz_t, const mpz_t, mpir_ui);
 EXTERN void (*jmpz_set)(mpz_t, const mpz_t);
-EXTERN void (*jmpz_set_si)(mpz_t, mpir_si);
+// not used EXTERN void (*jmpz_set_si)(mpz_t, mpir_si);
 EXTERN size_t(*jmpz_sizeinbase)(const mpz_t, int);
 EXTERN void (*jmpz_sub)(mpz_t, const mpz_t, const mpz_t);
 #endif
@@ -442,9 +455,9 @@ extern void jfree4gmp(void*, size_t);
  * (fix the macro if its parameter names trigger compiler errors)
  */
 
-#define shimXI(f, Xb,Ic) ({X b= Xb; mpX(b); f(mpb, Ic);})
-#define shimX(f, Xb) ({X b= Xb; mpX(b); f(mpb);})
-#define shimXX(f, Xb,Xc) ({X b= Xb, c= Xc; mpX(b); mpX(c); f(mpb, mpc);})
+#define shimXI(f, Xb,Ic) ({X b= Xb; mpXnojt(b); f(mpb, Ic);})
+#define shimX(f, Xb) ({X b= Xb; mpXnojt(b); f(mpb);})
+#define shimXX(f, Xb,Xc) ({X b= Xb, c= Xc; mpXnojt(b); mpXnojt(c); f(mpb, mpc);})
 #define XshimX(f, Xb) ({mpX0(a); X b=Xb; mpX(b); f(mpa, mpb); Xmp(a);})
 #define XshimUU(f, Ub,Uc) ({mpX0(a); f(mpa, Ub, Uc); Xmp(a);})
 #define XshimXU(f, Xb,Uc) ({mpX0(a); X b= Xb; mpX(b); f(mpa, mpb, Uc); Xmp(a);})
@@ -454,40 +467,40 @@ extern void jfree4gmp(void*, size_t);
 #define QgetX(x) ({Q q= {x,X1}; q;})  // cast an X as a Q
 #define XroundQ(q) ({Q rounded= QaddQQ(q, Q1r2); X z= Xfdiv_qXX(rounded.n, rounded.d);z;}) // cast Q as X rounding to nearest integer
 
-#define shimQQ(f, Qb,Qc) ({Q qb= Qb, qc= Qc; mpQ(qb); mpQ(qc);  f(mpqb, mpqc);})
-#define shimQX(f, Qb,Xc) ({Q b= Qb;X c= Xc; mpQ(b); mpX(c);  f(mpb, mpc);})
+#define shimQQ(f, Qb,Qc) ({Q qb= Qb, qc= Qc; mpQnojt(qb); mpQnojt(qc);  f(mpqb, mpqc);})
+#define shimQX(f, Qb,Xc) ({Q b= Qb;X c= Xc; mpQnojt(b); mpX(c);  f(mpb, mpc);})
 #define QshimQQ(f, Qb,Qc) ({mpQ0(a); Q b= Qb, c= Qc; mpQ(b); mpQ(c);  f(mpa, mpb, mpc); Q z= Qmp(a);z;})
-#define DgetQ(Qy) ({Q yDgetQ= Qy; mpQ(yDgetQ); jmpq_get_d(mpyDgetQ);})
+#define DgetQ(Qy) ({Q yDgetQ= Qy; mpQnojt(yDgetQ); jmpq_get_d(mpyDgetQ);})
 #define SgetQ(Qy) ({Q ySgetQ= Qy; mpQ(ySgetQ); C*str= jmpq_get_str(0,10,mpySgetQ); X tempx= UNvoidAV1(str); mpX(tempx); X safex= jtXmpzcommon(jt, mptempx, 0); CAV1(safex);}) // ":y
 
 #define QaddQQ(x, y) QshimQQ(jmpq_add, x, y)            // x+y
-#define icmpQQ(x, y) shimQQ(jmpq_cmp, x, y)             // k*  *x-y
+#define icmpQQ(x, y) shimQQ(jmpq_cmp, x, y)         // k*  *x-y
 #ifndef RASPI
-#define icmpQX(x, y) shimQX(jmpq_cmp_z, x, y)           // k*  *x-y
+#define icmpQX(x, y) shimQX(jmpq_cmp_z, x, y)       // k*  *x-y
 #else
-#define icmpQX(x, y) shimQQ(jmpq_cmp, x, QgetX(y))      // k*  *x-y
+#define icmpQX(x, y) shimQQ(jmpq_cmp, x, QgetX(y))  // k*  *x-y
 #endif
 #define QdivQQ(x, y) QshimQQ(jmpq_div, x, y)            // x%y
 #define QmulQQ(x, y) QshimQQ(jmpq_mul, x, y)            // x*y
 #define QsubQQ(x, y) QshimQQ(jmpq_sub, x, y)            // x-y
 
 // Extended integer implementations
-#define XgetD(Dy) ({D Ty= Dy; mpz_t mpTy; jmpz_init_set_d(mpTy, Ty); Xmp(Ty);}) // cast a single double to X
-#define XgetI(Iy) ({I Ty= Iy; mpz_t mpTy; jmpz_init_set_si(mpTy, Ty); Xmp(Ty);}) // cast a single signed integer to X
+#define XgetD(Dy) ({D Ty= Dy; mpz_t mpTy; GEMP0; jmpz_init_set_d(mpTy, Ty); Xmp(Ty);}) // cast a single double to X
+#define XgetI(Iy) ({I Ty= Iy; mpz_t mpTy; GEMP0; jmpz_init_set_si(mpTy, Ty); Xmp(Ty);}) // cast a single signed integer to X
 #define XabsX(y) XshimX(jmpz_abs, y)                    // |y
 #define XaddXX(x, y) XshimXX(jmpz_add, x, y)            // x+y
 #define XaddXU(x, y) XshimXU(jmpz_add_ui, x, y)         // x+y
 #define XbinXU(x, y) XshimXU(jmpz_bin_ui, x, y)         // x!y
 #define Xcdiv_qXX(x, y) XshimXX(jmpz_cdiv_q, x, y)      // >.x%y
 #define Xfdiv_rXX(x, y) XshimXX(jmpz_fdiv_r, x, y)      // y|x
-#define icmpXX(x,y) shimXX(jmpz_cmp, x,y)             // *x-y
+#define icmpXX(x,y) shimXX(jmpz_cmp, x,y)           // *x-y
 #define icmpXI(x,y) shimXI(jmpz_cmp_si, x,y)
 #define Xfdiv_qXX(x, y) XshimXX(jmpz_fdiv_q, x, y)      // <.x%y
 #define XgcdXX(x, y) XshimXX(jmpz_gcd, x, y)            // x+.y
 #define DgetX(y) shimX(jmpz_get_d, y)    // y+0.0
 #define IgetX(y) shimX(jmpz_get_si, y)   // (I)y  NB. UINT_MAX&|&.(-&INT_MIN) y
 #define IgetXor(y,er) ({X Xy= y; 0==XSGN(Xy) ?0 :1==XLIMBLEN(Xy) && GMP_NUMB_MAX>=XLIMB0(Xy) ?IgetX(Xy) :({er;LONG_MIN;});}) // IgetX with error action er which is taken when y won't fit in an I. er should abort processing and an arbitrary value would be used if it fails to do so (er would typically be an ASSERT, though other possibilities exist)
-#define getSX(Sa,Xc) ({X c=Xc; mpX(c); jmpz_get_str(Sa,10,mpc);}) // ":c
+#define getSX(Sa,Xc) ({X c=Xc; mpX(c); GEMP1(C*, jmpz_get_str(Sa,10,mpc));}) // ":c
 #define SgetX(Xy) ({\
  X Sy=Xy; mpX(Sy); C*s= jmpz_get_str(0,10,mpSy); \
  X tempx= UNvoidAV1(s); mpX(tempx); X safex= jtXmpzcommon(jt, mptempx, 0); \
@@ -500,5 +513,26 @@ extern void jfree4gmp(void*, size_t);
 #define IsizeinbaseXI(x,y) shimXI(jmpz_sizeinbase, x,y)
 #define IbitsX(x) IsizeinbaseXI(x,2)
 #define XsubXX(x, y) XshimXX(jmpz_sub, x, y)            // x-y
+
+/* -------------------------------------------------
+ * GEMP -- gmp emergency memory pool --
+ * hopefully temporary hack to avoid shutting down J
+ * in low memory circumstances.
+ * (In a future revision, we may instead inspect the libgmp result)
+ */
+#define GMPMAXSZ (1<<20)       // allowed #bytes for exponential contexts
+#define GEMPSIZE (GMPMAXSZ<<6) // corresponding emergency pool size
+EXTERN C gempool[GEMPSIZE];    // the pool itself
+EXTERN C*gemptr;               // next available location in the pool
+EXTERN I gempwsfull;           // non-zero when pool is occupied
+
+#define INGEMP(pointer) unlikely(pointer >= gempool && pointer < gempool+GEMPSIZE)
+#define GEMPWSFULL unlikely(__atomic_load_n(&gempwsfull, __ATOMIC_SEQ_CST))
+#define GEMP0 ASSERT(!GEMPWSFULL,EVWSFULL)
+#define GEMP1(type, value) ({type tmpresult= value; GEMP0; tmpresult;})
+#define GEMPcommon(value,freeroutine) ({if(GEMPWSFULL) {freeroutine(value); ASSERT(0,EVWSFULL);} value;})
+#define GEMPz(value) GEMPcommon(value, jmpz_clear)
+#define GEMPq(value) GEMPcommon(value, jmpq_clear)
+/* ------------------------------------------------- */
 
 #undef EXTERN

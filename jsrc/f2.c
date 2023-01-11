@@ -121,7 +121,8 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){
  if (ISQinf(y)) {                      // infinity?
   z= n ?"__" :"_";
  } else if (d||m) {                    // decimal or integer format?
-  Q Qp= QgetX(XpowUU(10,d));           // decimal scaling factor
+  X Xp= XpowUU(10,d);                  // decimal scaling factor
+  Q Qp; Qp= QgetX(Xp);
   Q Qm= QmulQQ(y, Qp);                 // scaled number
   X Xr= XroundQ(Qm);                   // rounded to nearest integer
   if(!d)R fmtx(e,m,d,s,XNUM,&Xr,cellbuf);// integer format?

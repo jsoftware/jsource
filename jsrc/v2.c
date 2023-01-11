@@ -452,10 +452,10 @@ static B jtsmallprimes(J jt,I n,X y,A*zs,X*zx){mpX(y);
  ASSERT(n<=1229&&n<=AN(JT(jt,p4792)),EVLIMIT);
  I m=0,*pv=AV(JT(jt,p4792));B pq=0; // m: count of small primes
  { // calculate m (and pq which is set if prime list would include a sieved prime)
-  mpX0(r);mpX0(q);mpX0(x);jmpz_set(mpx,mpy);
+  mpX0(r);mpX0(q);mpX0(x);jmpz_set(mpx,mpy);GEMP0;
   for(I j=0;j<n;j++){
-   I d=pv[j];jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);
-   while(!mpr->_mp_size){m++;jmpz_set(mpx,mpq);jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);}
+   I d=pv[j];jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);GEMP0;
+   while(!mpr->_mp_size){m++;jmpz_set(mpx,mpq);GEMP0;jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);GEMP0;}
    if(0>jmpz_cmpabs_ui(mpq,d)){
     if(1>jmpz_cmpabs_ui(mpx,99460729L)&&!(1==mpx->_mp_size&&1==*mpx->_mp_d))m+=pq=1;
     break;
@@ -463,10 +463,10 @@ static B jtsmallprimes(J jt,I n,X y,A*zs,X*zx){mpX(y);
   }
   jmpz_clear(mpx);jmpz_clear(mpq);jmpz_clear(mpr);
  }
- A s;GATVR(s,INT,m,1,&m);I*sv,*v=sv=AV(s);mpX0(r);mpX0(q);mpX0(x);jmpz_set(mpx,mpy);
+ A s;GATVR(s,INT,m,1,&m);I*sv,*v=sv=AV(s);mpX0(r);mpX0(q);mpX0(x);jmpz_set(mpx,mpy);GEMP0;
  for(I j=0;j<n;j++){
-  I d=pv[j];jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);
-  while(!mpr->_mp_size){*v++=pv[j];jmpz_set(mpx,mpq);jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);}
+  I d=pv[j];jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);GEMP0;
+  while(!mpr->_mp_size){*v++=pv[j];jmpz_set(mpx,mpq);GEMP0;jmpz_fdiv_qr_ui(mpq,mpr,mpx,d);GEMP0;}
   if(0>jmpz_cmpabs_ui(mpq,d))break;
  }
  jmpz_clear(mpq);jmpz_clear(mpr);
@@ -479,10 +479,10 @@ static B jtsmallprimes(J jt,I n,X y,A*zs,X*zx){mpX(y);
 /* if 1=n xprimeq y, then y is prime with a probability of error of 0.25^n */
 
 static B jtxprimeq(J jt,I n,X y){mpX(y); 
- B r= jmpz_probab_prime_p(mpy,n);
- if (unlikely(1==r)) r= jmpz_probab_prime_p(mpy,n);
- if (unlikely(1==r)) r= jmpz_probab_prime_p(mpy,n);
- if (unlikely(1==r)) r= jmpz_probab_prime_p(mpy,n);
+ B r= jmpz_probab_prime_p(mpy,n); GEMP0;
+ if (unlikely(1==r)) {r= jmpz_probab_prime_p(mpy,n); GEMP0;}
+ if (unlikely(1==r)) {r= jmpz_probab_prime_p(mpy,n); GEMP0;}
+ if (unlikely(1==r)) {r= jmpz_probab_prime_p(mpy,n); GEMP0;}
  R !!r;
 }
 

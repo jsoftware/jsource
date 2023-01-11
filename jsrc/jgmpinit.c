@@ -96,6 +96,17 @@ static void (*jmp_set_memory_functions) (
 );
 #endif
 
+pthread_mutex_t gemp_mutex; 
+#if 1==PYXES
+#define GMPLOCKINIT pthread_mutex_init(&gemp_mutex, NULL);
+#define GMPLOCK pthread_mutex_lock(&gemp_mutex)
+#define GMPUNLOCK pthread_mutex_unlock(&gemp_mutex)
+#else
+#define GMPLOCKINIT
+#define GMPLOCK
+#define GMPUNLOCK
+#endif
+
 long long gmpmallocs;
 
 #if MEMAUDIT&0x40
@@ -127,9 +138,16 @@ void jgmpguard(X x) {
 
 /*static*/void*jmalloc4gmp(size_t size){
  size_t avxsize= (size+7)&(-8); // libgmp's use of __strlen_avx2 segfaults when libgmp asks for size=2
- C*m= malloc(avxsize+XHSZ+GUARDsSIZE);
- if(!m)SEGFAULT;
- if(!m)R0Q; // assert(z);// FIXME (but can't without replacing libgmp)
+ size_t totalsize= avxsize+XHSZ+GUARDsSIZE;
+ C*m= malloc(totalsize);
+ if(!m){ // wsfull?
+  GMPLOCK;
+  __atomic_fetch_add(&gempwsfull, 1, __ATOMIC_SEQ_CST);
+  m= (void*)__atomic_fetch_add(&gemptr, totalsize, __ATOMIC_SEQ_CST);
+  if (unlikely(!INGEMP(gemptr))) SEGFAULT; // this should never happen but, if it does, try to make it a little less mysterious
+  GMPUNLOCK;
+ }
+ if(unlikely(!m))R 0; // FIXME (but can't without replacing libgmp) does nothing
 #if MEMAUDIT&0x40
  memcpy(m, GUARDBLOCK, GUARDSIZE); guard(m);
  memcpy(m+GUARDSIZE+XHSZ+size, GUARDBLOCK, GUARDSIZE); guard(m+GUARDSIZE+XHSZ+size);
@@ -163,16 +181,31 @@ void jgmpguard(X x) {
 static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  size_t avxnew= (new+7)&(-8); // libgmp's use of __strlen_avx2 segfaults when libgmp asks for size=2
  X x= (X)(((C*)ptr)-XHSZ);
- C*m= (C*)x-GUARDSIZE;
+ C*m0= (C*)x-GUARDSIZE;
 #if MEMAUDIT&0x40
- guard(m);
- guard(m+GUARDSIZE+XHSZ+old);
+ guard(m0);
+ guard(m0+GUARDSIZE+XHSZ+old);
 #endif
  // assert(1==AC(x));   // must not have been exposed to J
  // assert(FHRHISGMP==AFHRH(x))
- m= realloc(m, avxnew+XHSZ+GUARDsSIZE);
- if(!m)SEGFAULT;
- if(!m)R0Q; // assert(m);// FIXME (but can't without replacing libgmp)
+ size_t newsize= avxnew+XHSZ+GUARDsSIZE;
+ C*m= INGEMP(m0) ?0 :realloc(m0, newsize);
+ if(unlikely(!m)){ // wsfull?
+  GMPLOCK;
+  if (INGEMP(m0)) {
+   if (new <= old) {
+    GMPUNLOCK;
+    return ptr;
+   }
+  } else __atomic_fetch_add(&gempwsfull, 1, __ATOMIC_SEQ_CST);
+  m= (void*)__atomic_fetch_add(&gemptr, newsize, __ATOMIC_SEQ_CST);
+  if (unlikely(!INGEMP(gemptr))) SEGFAULT; // this should never happen but, if it does, try to make it a little less mysterious
+  size_t avxold= (old+7)&(-8); // recreate previous pad length
+  size_t oldsize= avxold+XHSZ+GUARDsSIZE;
+  memcpy(m, m0, oldsize);
+  GMPUNLOCK;
+ }
+ if(!m)R 0; // assert(m);// FIXME (but can't without replacing libgmp)
 #if MEMAUDIT&0x40
  memcpy(m+GUARDSIZE+XHSZ+new, GUARDBLOCK, GUARDSIZE); guard(m+GUARDSIZE+XHSZ+new);
 #endif
@@ -220,6 +253,14 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
 #if MEMAUDIT&0x4
  AK(x)= AFLAG(x)= AM(x)= AT(x)= AC(x)= AN(x)= 0xdeadbeef;
 #endif
+ if (INGEMP(m)) {
+  GMPLOCK;
+  if (0== __atomic_add_fetch(&gempwsfull, -1, __ATOMIC_SEQ_CST)) {
+   __atomic_store_n(&gemptr, gempool, __ATOMIC_SEQ_CST);
+  }
+  GMPUNLOCK;
+  return;
+ }
  free(m);
 }
 
@@ -334,6 +375,9 @@ void jgmpinit(C*libpath) {
 #else
  jgmpfn(mp_set_memory_functions);
  jmp_set_memory_functions(jmalloc4gmp, jrealloc4gmp, jfree4gmp);
+ gemptr= gempool;          // silly hack to avert silly libgmp failure case
+ gempwsfull= 0;
+ GMPLOCKINIT;
  jgmpfn(mpq_add);          // https://gmplib.org/manual/Rational-Arithmetic
  // DO NOT USE //          jgmpfn(mpq_canonicalize); // https://gmplib.org/manual/Rational-Number-Functions
  jgmpfn(mpq_clear);        // https://gmplib.org/manual/Initializing-Rationals
@@ -376,14 +420,14 @@ void jgmpinit(C*libpath) {
  jgmpfn(mpz_lcm);          // https://gmplib.org/manual/Number-Theoretic-Functions
  jgmpfn(mpz_mul);          // https://gmplib.org/manual/Integer-Arithmetic
  jgmpfn(mpz_neg);          // https://gmplib.org/manual/Integer-Arithmetic
- jgmpfn(mpz_out_str);      // https://gmplib.org/manual/I_002fO-of-Integers
+ jgmpfn(mpz_out_str);      // (for debugging) https://gmplib.org/manual/I_002fO-of-Integers
  jgmpfn(mpz_powm);         // https://gmplib.org/manual/Integer-Exponentiation
  jgmpfn(mpz_pow_ui);       // https://gmplib.org/manual/Integer-Exponentiation
  jgmpfn(mpz_probab_prime_p);//https://gmplib.org/manual/Number-Theoretic-Functions
  jgmpfn(mpz_ui_pow_ui);    // https://gmplib.org/manual/Integer-Exponentiation
  jgmpfn(mpz_root);         // https://gmplib.org/manual/Integer-Roots
  jgmpfn(mpz_set);          // https://gmplib.org/manual/Assigning-Integers
- jgmpfn(mpz_set_si);       // https://gmplib.org/manual/Assigning-Integers
+// not used jgmpfn(mpz_set_si);       // https://gmplib.org/manual/Assigning-Integers
  jgmpfn(mpz_sizeinbase);   // https://gmplib.org/manual/Miscellaneous-Integer-Functions
  jgmpfn(mpz_sub);          // https://gmplib.org/manual/Integer-Arithmetic
 #endif

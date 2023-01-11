@@ -97,6 +97,13 @@ static void (*jmp_set_memory_functions) (
 #endif
 
 pthread_mutex_t gemp_mutex; 
+#if 1==PYXES
+#define GMPLOCK pthread_mutex_lock(&gemp_mutex)
+#define GMPUNLOCK pthread_mutex_unlock(&gemp_mutex)
+#else
+#define GMPLOCK
+#define GMPUNLOCK
+#endif
 
 long long gmpmallocs;
 
@@ -132,11 +139,11 @@ void jgmpguard(X x) {
  size_t totalsize= avxsize+XHSZ+GUARDsSIZE;
  C*m= malloc(totalsize);
  if(!m){ // wsfull?
-  pthread_mutex_lock(&gemp_mutex);
+  GMPLOCK;
   __atomic_fetch_add(&gempwsfull, 1, __ATOMIC_SEQ_CST);
   m= __atomic_fetch_add(&gemptr, totalsize, __ATOMIC_SEQ_CST);
   if (unlikely(!INGEMP(gemptr))) SEGFAULT; // this should never happen but, if it does, try to make it a little less mysterious
-  pthread_mutex_unlock(&gemp_mutex);
+  GMPUNLOCK;
  }
  if(unlikely(!m))R 0; // FIXME (but can't without replacing libgmp) does nothing
 #if MEMAUDIT&0x40
@@ -182,10 +189,10 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  size_t newsize= avxnew+XHSZ+GUARDsSIZE;
  C*m= INGEMP(m0) ?0 :realloc(m0, newsize);
  if(unlikely(!m)){ // wsfull?
-  pthread_mutex_lock(&gemp_mutex);
+  GMPLOCK;
   if (INGEMP(m0)) {
    if (new <= old) {
-    pthread_mutex_unlock(&gemp_mutex);
+    GMPUNLOCK;
     return ptr;
    }
   } else __atomic_fetch_add(&gempwsfull, 1, __ATOMIC_SEQ_CST);
@@ -194,7 +201,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
   size_t avxold= (old+7)&(-8); // recreate previous pad length
   size_t oldsize= avxold+XHSZ+GUARDsSIZE;
   memcpy(m, m0, oldsize);
-  pthread_mutex_unlock(&gemp_mutex);
+  GMPUNLOCK;
  }
  if(!m)R 0; // assert(m);// FIXME (but can't without replacing libgmp)
 #if MEMAUDIT&0x40
@@ -245,11 +252,11 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  AK(x)= AFLAG(x)= AM(x)= AT(x)= AC(x)= AN(x)= 0xdeadbeef;
 #endif
  if (INGEMP(m)) {
-  pthread_mutex_lock(&gemp_mutex);
+  GMPLOCK;
   if (0== __atomic_add_fetch(&gempwsfull, -1, __ATOMIC_SEQ_CST)) {
    __atomic_store_n(&gemptr, gempool, __ATOMIC_SEQ_CST);
   }
-  pthread_mutex_unlock(&gemp_mutex);
+  GMPUNLOCK;
   return;
  }
  free(m);

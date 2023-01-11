@@ -98,9 +98,11 @@ static void (*jmp_set_memory_functions) (
 
 pthread_mutex_t gemp_mutex; 
 #if 1==PYXES
+#define GMPLOCKINIT pthread_mutex_init(&gemp_mutex, NULL);
 #define GMPLOCK pthread_mutex_lock(&gemp_mutex)
 #define GMPUNLOCK pthread_mutex_unlock(&gemp_mutex)
 #else
+#define GMPLOCKINIT
 #define GMPLOCK
 #define GMPUNLOCK
 #endif
@@ -375,7 +377,7 @@ void jgmpinit(C*libpath) {
  jmp_set_memory_functions(jmalloc4gmp, jrealloc4gmp, jfree4gmp);
  gemptr= gempool;          // silly hack to avert silly libgmp failure case
  gempwsfull= 0;
- pthread_mutex_init(&gemp_mutex, NULL);
+ GMPLOCKINIT;
  jgmpfn(mpq_add);          // https://gmplib.org/manual/Rational-Arithmetic
  // DO NOT USE //          jgmpfn(mpq_canonicalize); // https://gmplib.org/manual/Rational-Number-Functions
  jgmpfn(mpq_clear);        // https://gmplib.org/manual/Initializing-Rationals

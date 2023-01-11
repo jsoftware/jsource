@@ -143,7 +143,7 @@ void jgmpguard(X x) {
  if(!m){ // wsfull?
   GMPLOCK;
   __atomic_fetch_add(&gempwsfull, 1, __ATOMIC_SEQ_CST);
-  m= __atomic_fetch_add(&gemptr, totalsize, __ATOMIC_SEQ_CST);
+  m= (void*)__atomic_fetch_add(&gemptr, totalsize, __ATOMIC_SEQ_CST);
   if (unlikely(!INGEMP(gemptr))) SEGFAULT; // this should never happen but, if it does, try to make it a little less mysterious
   GMPUNLOCK;
  }
@@ -198,7 +198,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
     return ptr;
    }
   } else __atomic_fetch_add(&gempwsfull, 1, __ATOMIC_SEQ_CST);
-  m= __atomic_fetch_add(&gemptr, newsize, __ATOMIC_SEQ_CST);
+  m= (void*)__atomic_fetch_add(&gemptr, newsize, __ATOMIC_SEQ_CST);
   if (unlikely(!INGEMP(gemptr))) SEGFAULT; // this should never happen but, if it does, try to make it a little less mysterious
   size_t avxold= (old+7)&(-8); // recreate previous pad length
   size_t oldsize= avxold+XHSZ+GUARDsSIZE;

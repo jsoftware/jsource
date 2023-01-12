@@ -15,34 +15,34 @@ echo #define jlicense  "commercial" >> jsrc\jversion.h
 echo #define jbuilder  "www.jsoftware.com" >> jsrc\jversion.h
 
 cd makemsvc\jconsole
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 USE_PYXES=1 clean
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-@rem ..\jom.exe -j2 -f makefile.win CC=clang-cl x64=0 USE_PYXES=1 clean
-@rem ..\jom.exe -j2 -f makefile.win CC=clang-cl x64=0 USE_PYXES=1
+@rem nmake -f makefile.win CC=clang-cl x64=0 USE_PYXES=1 clean
+@rem nmake -f makefile.win CC=clang-cl x64=0 USE_PYXES=1
 cd ..
 cd jdll
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 JAVX512=1 USE_OPENMP=0 USE_PYXES=1 clean
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 JAVX512=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1 clean
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 USE_PYXES=1 clean
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1 clean
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-@rem ..\jom.exe -j2 -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1 clean
-@rem ..\jom.exe -j2 -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1
+@rem nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1 clean
+@rem nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1
 cd ..
 cd tsdll
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1 clean
-..\jom.exe -j2 -f makefile.win CC=clang-cl x64=1
+nmake -f makefile.win CC=clang-cl x64=1 clean
+nmake -f makefile.win CC=clang-cl x64=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-@rem ..\jom.exe -j2 -f makefile.win CC=clang-cl x64=0 clean
-@rem ..\jom.exe -j2 -f makefile.win CC=clang-cl x64=0
+@rem nmake -f makefile.win CC=clang-cl x64=0 clean
+@rem nmake -f makefile.win CC=clang-cl x64=0
 cd ..
 
 copy jconsole\jconsole.exe ..\j64

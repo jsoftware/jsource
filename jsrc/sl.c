@@ -449,7 +449,9 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
  }
  *xv=0;  // terminate locale list with null.
  // We have the new path in x, and we can switch to it, but we have to call a system lock before we free the old path, to purge the old one from the system
- WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
+ // This really sucks, but the alternative is to hold a lock on the path during the entire time the path is in use, which is worse.  scaf better to
+ // have a per-thread RFO flag indicating 'path in use', and wait here till all threads have been seen with that off
+ WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // scaf use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
  if(!ACISPERM(AC(oldpath))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(oldpath);}  // if the old path is not PERMANENT, wait for a lock before freeing
  R mtm;
 }    /* 18!:2  set locale path */
@@ -557,24 +559,25 @@ F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt
  SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef((zv,mark),d->val)))
      /* check for redefinition (erasure) of entire symbol table. */
 
+// 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
 F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  RZ(vlocnl(1,w));
  if(ISDENSETYPE(AT(w),B01))RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
- GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
+ GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);  // result area, all 1s
  // Do this in a critical region since others may be deleting as well.  Any lock will do.  We don't
  // use stloc->lock because most deletions are of numbered locales & we want to keep stloc available for named
  WRITELOCK(JT(jt,locdellock))
- for(i=0;i<n;++i){
+ for(i=0;i<n;++i){  // for each
   g=0;
-  if(AT(w) & (INT)){zv[i]=1; g = findnl(IAV(w)[i]);
-  }else{
+  if(AT(w) & (INT)){zv[i]=1; g = findnl(IAV(w)[i]);  // integer, look up numbered locale
+  }else{   // boxed...
    zv[i]=1; y=C(wv[i]);
-   if(AT(y)&(INT|B01)){g = findnl(BIV0(y));
+   if(AT(y)&(INT|B01)){g = findnl(BIV0(y));  // boxed integer, look up numbered locale
    }else{
     m=AN(y); u=CAV(y);
     ASSERTGOTO(m<256,EVLIMIT,exitlock);
-    if('9'>=*u){g = findnl(strtoI10s(m,u));}
+    if('9'>=*u){g = findnl(strtoI10s(m,u));}  // boxed numeric string, look up numbered
     else {A v=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)); if(v)g=v;}  // g is locale block for named locale
    }
   }
@@ -586,7 +589,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
 exitlock:
  WRITEUNLOCK(JT(jt,locdellock))
  R z;
-}    /* 18!:55 destroy a locale (but only mark for destruction if on stack) */
+}
 
 // destroy symbol table g, which must be named or numbered
 // We cannot simply delete the symbol table, because it may be extant in paths.  So we empty the locale, and clear its path to 0

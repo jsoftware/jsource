@@ -689,16 +689,26 @@ static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceabil
 
 static DF1(rank1q){  // fast version: nonneg rank, no check for multiple RANKONLY
  ARGCHK1(w);
+ // rank is nugatory if the rank of u<=n
  I r=AR(w); r=r>FAV(self)->localuse.srank[0]?FAV(self)->localuse.srank[0]:r; A fs=FAV(self)->fgh[0];
  R rank1ex(w,fs,r,FAV(fs)->valencefns[0]);
 }
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
 // This version for use when the ranks are nonnegative and u is not RANKONLY
-static DF2(rank2q){
+static DF2(rank2q){F2PREFIP;
  ARGCHK2(a,w);
- I ar=AR(a); ar=ar>FAV(self)->localuse.srank[1]?FAV(self)->localuse.srank[1]:ar; I wr=AR(w); wr=wr>FAV(self)->localuse.srank[2]?FAV(self)->localuse.srank[2]:wr; A fs=FAV(self)->fgh[0];
- R rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]);
+ A fs=FAV(self)->fgh[0]; I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // u, left & right ranks of u
+ I ar=AR(a), wr=AR(w), l=FAV(self)->localuse.srank[1], r=FAV(self)->localuse.srank[2];  // ranks of args, ranks from n
+ // See if this use of rank is nugatory.  An arg has 1 cell if rank of arg<=MIN(n,rank of u); inner cells if n<MIN(rank of arg,rank of u); unchanged rank if n=rank of u.
+ // Rank can be omitted if it is true for either arg that (arg has 1 cell and other arg does not have inner cells), or both args have unchanged rank
+ //      0=unch rnk        0=ar<=MIN     0=n>=MIN (right)    0=wr<MIN          0=n>=MIN (left)
+ if((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0){
+printf("ar=%lld wr=%lld l=%lld r=%lld ulr=%lld urr=%lld\n",ar,wr,l,r,ulr,urr);
+RETF(CALL2IP(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+}
+ ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
+ RETF(rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
 }
 
 static DF2(rank2){DECLF;I ar,l=sv->localuse.srank[1],r=sv->localuse.srank[2],wr;

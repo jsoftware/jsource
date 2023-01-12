@@ -943,6 +943,7 @@ extern void jfree4gmp(void*,size_t);
 #define REX2R(lr,rr,lcr,rcr)        (((I)(lr)<<RANKTX)+(I)(rr)),(((I)(lcr)<<RANKTX)+(I)(rcr))
 #endif
 #define rank2ex(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jt,(x0),(x1),(x2),REX2R((x3),(x4),(x5),(x6)),(x7))
+#define rank2exip(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jtinplace,(x0),(x1),(x2),REX2R((x3),(x4),(x5),(x6)),(x7))
 #define rank2ex0(x0,x1,x2,x3)       jtrank2ex0(jt,(x0),(x1),(x2),(x3))
 #define rankingb(x0,x1,x2,x3,x4,x5) jtrankingb(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 // ras does rifv followed by ra

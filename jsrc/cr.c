@@ -670,7 +670,7 @@ static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested
 }
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
-// THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
+// This routine supports jtflags by not touching jt - pass it through
 static DF1(rank1){DECLF;I m,wr;
  ARGCHK1(w);
  wr=AR(w); efr(m,wr,(I)sv->localuse.srank[0]);
@@ -682,59 +682,78 @@ static DF1(rank1){DECLF;I m,wr;
  }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
+#define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
+#define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
+
+// This routine supports jtflags by not touching jt - pass it through
+static DF1(rank1q){  // fast version: nonneg rank, no check for multiple RANKONLY
+ ARGCHK1(w);
+ // rank is nugatory if the rank of u<=n or rank of arg <=n or if n=rank of u, i. e. if n>=MIN(ranku,rankarg)
+ // we do not discard nugatory rank operators because of the case
+ // (1&+@>)"1 ] 2 2 $ 1 2;3;4;0
+ // If you run this at rank 0, the fill will be calculated onver the whole array, while if you interpose a rank-1 step.
+ // the last row will fill separately.  g600 tests for this.  We could have the same problem with dyads, but (1) we've never seen one,
+ // (2) monad rank is easier to get right than dyadic; (3) we see a lot of ill use of rank on dyads.  So we keep the steps for dyads.
+ // perhaps we could have a way for the user to insist on explicit rank operators
+ I r=AR(w); A fs=FAV(self)->fgh[0]; I m=FAV(self)->localuse.srank[0];   // r=arg rank  fs->u  m=rank from n
+#if 0  // fails g600 as described above
+ I um=FAV(fs)->mr;
+ if(unlikely(GEMIN0(m,r,um)>=0))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
+#else
+ if(unlikely(r<=m))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
+#endif
+// obsolete  r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
+ R rank1ex(w,fs,m,FAV(fs)->valencefns[0]);
+}
+
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
 static DF1(jtrank10atom){ A fs=FAV(self)->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceability through.
 
-
-static DF1(rank1q){  // fast version: nonneg rank, no check for multiple RANKONLY
- ARGCHK1(w);
- // rank is nugatory if the rank of u<=n
- I r=AR(w); r=r>FAV(self)->localuse.srank[0]?FAV(self)->localuse.srank[0]:r; A fs=FAV(self)->fgh[0];
- R rank1ex(w,fs,r,FAV(fs)->valencefns[0]);
-}
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
-// THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
+
+// This routine supports jtflags by not touching jt - pass it through
+static DF2(rank2){DECLF;I ar,l=sv->localuse.srank[1],r=sv->localuse.srank[2],wr;
+ ARGCHK2(a,w);
+ ar=AR(a); efr(l,ar,l);
+ wr=AR(w); efr(r,wr,r);  // now l<=ar, r<=wr
+ I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // left & right ranks of u
+ if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+// obsolete  if(((l-ar)|(r-wr))<0) {
+ I llr=l, lrr=r;  // inner ranks, if any
+ // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
+ // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
+ // This may lead to error until we support multiple fill neighborhoods
+ NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){
+  I hlr=FAV(fs)->localuse.srank[1]; I hrr=FAV(fs)->localuse.srank[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
+  if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
+   if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
+   llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
+  }
+  // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
+  fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
+ }
+ R rank2ex(a,w,fs,llr,lrr,l,r,f2);
+// obsolete // obsolete  }else R CALL2IP(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite.  Preserves inplacing
+}
+
 // This version for use when the ranks are nonnegative and u is not RANKONLY
-static DF2(rank2q){F2PREFIP;
+// This routine supports jtflags by not touching jt - pass it through
+static DF2(rank2q){
  ARGCHK2(a,w);
  A fs=FAV(self)->fgh[0]; I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // u, left & right ranks of u
  I ar=AR(a), wr=AR(w), l=FAV(self)->localuse.srank[1], r=FAV(self)->localuse.srank[2];  // ranks of args, ranks from n
  // See if this use of rank is nugatory.  An arg has 1 cell if rank of arg<=MIN(n,rank of u); inner cells if n<MIN(rank of arg,rank of u); unchanged rank if n=rank of u.
  // Rank can be omitted if it is true for either arg that (arg has 1 cell and other arg does not have inner cells), or both args have unchanged rank
- //      0=unch rnk        0=ar<=MIN     0=n>=MIN (right)    0=wr<MIN          0=n>=MIN (left)
-// if((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0)RETF(CALL2IP(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+ //              0=unch rnk        0=ar<=MIN     0=n>=MIN (right)      0=wr<MIN       0=n>=MIN (left)
+// obsolete if(((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0) !=
+// obsolete ((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0) )SEGFAULT; // scaf
+ if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+// obsolete  if(unlikely((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
  ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
  RETF(rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
 }
 
-static DF2(rank2){DECLF;F2PREFIP;I ar,l=sv->localuse.srank[1],r=sv->localuse.srank[2],wr;
- ARGCHK2(a,w);
- ar=AR(a); efr(l,ar,l);
- wr=AR(w); efr(r,wr,r);  // now l<=ar, r<=wr
- I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // left & right ranks of u
-#if 0
- if((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0){
-printf("ar=%lld wr=%lld l=%lld r=%lld ulr=%lld urr=%lld\n",ar,wr,l,r,ulr,urr);
-RETF(CALL2IP(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
-}
-#endif
- if(((l-ar)|(r-wr))<0) {I llr=l, lrr=r;  // inner ranks, if any
-  // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
-  // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
-  // This may lead to error until we support multiple fill neighborhoods
-  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){
-   I hlr=FAV(fs)->localuse.srank[1]; I hrr=FAV(fs)->localuse.srank[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
-   if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
-    if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
-    llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
-   }
-   // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
-   fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
-  }
-  R rank2ex(a,w,fs,llr,lrr,l,r,f2);
- }else R CALL2(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite.  Preserves inplacing
-}
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
 static DF2(jtrank20atom){ A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jt,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceability through.

@@ -96,8 +96,8 @@ static void (*jmp_set_memory_functions) (
 );
 #endif
 
-pthread_mutex_t gemp_mutex; 
 #if 1==PYXES
+static pthread_mutex_t gemp_mutex; 
 #define GMPLOCKINIT pthread_mutex_init(&gemp_mutex, NULL);
 #define GMPLOCK pthread_mutex_lock(&gemp_mutex)
 #define GMPUNLOCK pthread_mutex_unlock(&gemp_mutex)

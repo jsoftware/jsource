@@ -703,18 +703,22 @@ static DF2(rank2q){F2PREFIP;
  // See if this use of rank is nugatory.  An arg has 1 cell if rank of arg<=MIN(n,rank of u); inner cells if n<MIN(rank of arg,rank of u); unchanged rank if n=rank of u.
  // Rank can be omitted if it is true for either arg that (arg has 1 cell and other arg does not have inner cells), or both args have unchanged rank
  //      0=unch rnk        0=ar<=MIN     0=n>=MIN (right)    0=wr<MIN          0=n>=MIN (left)
- if((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0){
-printf("ar=%lld wr=%lld l=%lld r=%lld ulr=%lld urr=%lld\n",ar,wr,l,r,ulr,urr);
-RETF(CALL2IP(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
-}
+// if((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0)RETF(CALL2IP(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
  ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
  RETF(rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
 }
 
-static DF2(rank2){DECLF;I ar,l=sv->localuse.srank[1],r=sv->localuse.srank[2],wr;
+static DF2(rank2){DECLF;F2PREFIP;I ar,l=sv->localuse.srank[1],r=sv->localuse.srank[2],wr;
  ARGCHK2(a,w);
  ar=AR(a); efr(l,ar,l);
- wr=AR(w); efr(r,wr,r);
+ wr=AR(w); efr(r,wr,r);  // now l<=ar, r<=wr
+ I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // left & right ranks of u
+#if 0
+ if((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0){
+printf("ar=%lld wr=%lld l=%lld r=%lld ulr=%lld urr=%lld\n",ar,wr,l,r,ulr,urr);
+RETF(CALL2IP(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+}
+#endif
  if(((l-ar)|(r-wr))<0) {I llr=l, lrr=r;  // inner ranks, if any
   // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
   // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.

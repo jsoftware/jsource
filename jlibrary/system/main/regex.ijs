@@ -16,7 +16,7 @@ ischar=: 2=3!:0
 NB. =========================================================
 NB. user compilation flags (0=off, 1=on)
 RX_OPTIONS_MULTILINE=: 1  NB. enable newline support, default on
-RX_OPTIONS_UTF8=: 1  NB. enable UTF-8 support, default on
+RX_OPTIONS_UTF8=: 1  NB. enable UTF-8 support
 
 NB. =========================================================
 NB. clear last values, not saved compiles

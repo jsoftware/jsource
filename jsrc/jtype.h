@@ -45,6 +45,7 @@ typedef unsigned short FLOAT16;  // top 16 bits of a floating-point value, used 
 
 typedef char               B;
 typedef unsigned char      C;
+typedef signed char        I1;
 typedef char*              Ptr;
 typedef short              S;
 typedef short              C2;
@@ -990,7 +991,6 @@ typedef struct {
  union {
   // start with the larger localuse, which requires a second cacheline.  This is 16 bytes, the first 8 of which are in the excess (first) cacheline
   struct {AF func; I parm;} boxcut0;  // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, .parm is ~0 for first, 0 for second, and .func points to failover routine (seldom used).  func in first cacheline
-  S srank[4];   // for RANK conj, the signed ranks
   // the rest do not require both cachelines in 64-bit
   struct {
    union {
@@ -1014,6 +1014,7 @@ typedef struct {
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block
+    I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

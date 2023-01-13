@@ -961,7 +961,8 @@ minus =: -
 (0 100 -"1 1"2 2 i. 3 2 2) -: 0 100 minus"1 1"2 2 i. 3 2 2
 (0 100 -"1 _1"2 2 i. 3 2 2) -: 0 100 minus"1 _1"2 2 i. 3 2 2
 
-(2 2 2$2 3 4 0 5 1 0 0) -: (1&+@>)"1 ] 2 2 $ 1 2;3;4;0   NB. Verify fill done in correct order
+(2 2 2$2 3 4 0 5 1 0 0) -: (1&+@>)"1. ] 2 2 $ 1 2;3;4;0   NB. Verify fill done in correct order with fp rank
+(2 2 2$2 3 4 0 5 0 1 0) -: (1&+@>)"1 ] 2 2 $ 1 2;3;4;0   NB. Integer rank combines the loops
 
 0 1 2 3 -: (i. 2 2) ;@:(<@(["1)) i. 2 2  NB. Verify virtual block not incorporated
 0 1 2 3 -: (i. 2 2) ;@:(<@(]"1)) i. 2 2  NB. Verify virtual block not incorporated

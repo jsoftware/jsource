@@ -611,12 +611,12 @@ static DF2(cons2a){R FAV(self)->fgh[0];}
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){V*sv=FAV(self);
  ARGCHK1(w);
- I mr; efr(mr,AR(w),(I)sv->localuse.srank[0]);
+ I mr; efr(mr,AR(w),(I)sv->localuse.lu1.srank[0]);
  R rank1ex(w,self,mr,cons1a);
 }
 static DF2(cons2){V*sv=FAV(self);
  ARGCHK2(a,w);
- I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.srank[1]); efr(rr2,AR(w),(I)sv->localuse.srank[2]);
+ I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)sv->localuse.lu1.srank[2]);
  R rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a);
 }
 
@@ -624,13 +624,13 @@ static DF2(cons2){V*sv=FAV(self);
 static DF1(cycr1){V*sv=FAV(self);I cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
- I mr; efr(mr,AR(w),(I)sv->localuse.srank[0]);
+ I mr; efr(mr,AR(w),(I)sv->localuse.lu1.srank[0]);
  R rank1ex(w,self,mr,FAV(self)->valencefns[0]);  // callback is to the cyclic-execution function
 }
 static DF2(cycr2){V*sv=FAV(self);I cger[128/SZI];
  ARGCHK2(a,w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
- I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.srank[1]); efr(rr2,AR(w),(I)sv->localuse.srank[2]);
+ I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)sv->localuse.lu1.srank[2]);
  R rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]);  // callback is to the cyclic-execution function
 }
 
@@ -639,20 +639,20 @@ static DF2(cycr2){V*sv=FAV(self);I cger[128/SZI];
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
 static DF1(rank1i){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
- I m=sv->localuse.srank[0]; m=m>=AR(w)?RMAX:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+ I m=sv->localuse.lu1.srank[0]; m=m>=AR(w)?RMAX:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 static DF1(rank1in){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is negative
- I m=sv->localuse.srank[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+ I m=sv->localuse.lu1.srank[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
- I ar=sv->localuse.srank[1]; ar=ar>=AR(a)?RMAX:ar; I af=AR(a)-ar;   // left rank
- I wr=sv->localuse.srank[2]; wr=wr>=AR(w)?RMAX:wr; I wf=AR(w)-wr;   // right rank
+ I ar=sv->localuse.lu1.srank[1]; ar=ar>=AR(a)?RMAX:ar; I af=AR(a)-ar;   // left rank
+ I wr=sv->localuse.lu1.srank[2]; wr=wr>=AR(w)?RMAX:wr; I wf=AR(w)-wr;   // right rank
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)));  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
@@ -660,8 +660,8 @@ static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested ra
  RETF(z);
 }
 static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested rank is negative
- I wr=AR(w); I r=sv->localuse.srank[2]; r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
- I ar=AR(a); r=sv->localuse.srank[1];   r=r>=ar?RMAX:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
+ I wr=AR(w); I r=sv->localuse.lu1.srank[2]; r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
+ I ar=AR(a); r=sv->localuse.lu1.srank[1];   r=r>=ar?RMAX:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)))  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
@@ -673,12 +673,14 @@ static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested
 // This routine supports jtflags by not touching jt - pass it through
 static DF1(rank1){DECLF;I m,wr;
  ARGCHK1(w);
- wr=AR(w); efr(m,wr,(I)sv->localuse.srank[0]);
+ wr=AR(w); efr(m,wr,(I)sv->localuse.lu1.srank[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank
- NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY1){
-  I hm=FAV(fs)->localuse.srank[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
-  m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
+ // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank  scaf should consume anyway, let user control
+ if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
+  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY1){
+   I hm=FAV(fs)->localuse.lu1.srank[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
+   m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
+  }
  }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
@@ -688,22 +690,16 @@ static DF1(rank1){DECLF;I m,wr;
 // This routine supports jtflags by not touching jt - pass it through
 static DF1(rank1q){  // fast version: nonneg rank, no check for multiple RANKONLY
  ARGCHK1(w);
- // rank is nugatory if the rank of u<=n or rank of arg <=n or if n=rank of u, i. e. if n>=MIN(ranku,rankarg)
- // we do not discard nugatory rank operators because of the case
+ // rank is considered nugatory if the rank of u<=n or rank of arg <=n or if n=rank of u, i. e. if n>=MIN(ranku,rankarg)
+ // This gives error in the case
  // (1&+@>)"1 ] 2 2 $ 1 2;3;4;0
  // If you run this at rank 0, the fill will be calculated onver the whole array, while if you interpose a rank-1 step.
- // the last row will fill separately.  g600 tests for this.  We could have the same problem with dyads, but (1) we've never seen one,
- // (2) monad rank is easier to get right than dyadic; (3) we see a lot of ill use of rank on dyads.  So we keep the steps for dyads.
- // perhaps we could have a way for the user to insist on explicit rank operators
- I r=AR(w); A fs=FAV(self)->fgh[0]; I m=FAV(self)->localuse.srank[0];   // r=arg rank  fs->u  m=rank from n
-#if 0  // fails g600 as described above
+ // the last row will fill separately.  User can give a floating-point rank to mean 'force the rank regardless'
+ I r=AR(w); A fs=FAV(self)->fgh[0]; I m=FAV(self)->localuse.lu1.srank[0];   // r=arg rank  fs->u  m=rank from n
  I um=FAV(fs)->mr;
- if(unlikely(GEMIN0(m,r,um)>=0))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
-#else
- if(unlikely(r<=m))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
-#endif
-// obsolete  r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
- R rank1ex(w,fs,m,FAV(fs)->valencefns[0]);
+ if(unlikely(GEMIN0(m,r,um)>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
+ r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
+ R rank1ex(w,fs,r,FAV(fs)->valencefns[0]);
 }
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
@@ -713,25 +709,27 @@ static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceabil
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 
 // This routine supports jtflags by not touching jt - pass it through
-static DF2(rank2){DECLF;I ar,l=sv->localuse.srank[1],r=sv->localuse.srank[2],wr;
+static DF2(rank2){DECLF;I ar,l=sv->localuse.lu1.srank[1],r=sv->localuse.lu1.srank[2],wr;
  ARGCHK2(a,w);
  ar=AR(a); efr(l,ar,l);
  wr=AR(w); efr(r,wr,r);  // now l<=ar, r<=wr
  I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // left & right ranks of u
- if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+ if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
 // obsolete  if(((l-ar)|(r-wr))<0) {
  I llr=l, lrr=r;  // inner ranks, if any
  // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
- // This may lead to error until we support multiple fill neighborhoods
- NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){
-  I hlr=FAV(fs)->localuse.srank[1]; I hrr=FAV(fs)->localuse.srank[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
-  if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
-   if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
-   llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
+ // This may lead to error until we support multiple fill neighborhoods - use floating-point n to suppress
+ if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
+  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){
+   I hlr=FAV(fs)->localuse.lu1.srank[1]; I hrr=FAV(fs)->localuse.lu1.srank[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
+   if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
+    if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
+    llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
+   }
+   // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
+   fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
   }
-  // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
-  fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
  }
  R rank2ex(a,w,fs,llr,lrr,l,r,f2);
 // obsolete // obsolete  }else R CALL2IP(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite.  Preserves inplacing
@@ -742,13 +740,13 @@ static DF2(rank2){DECLF;I ar,l=sv->localuse.srank[1],r=sv->localuse.srank[2],wr;
 static DF2(rank2q){
  ARGCHK2(a,w);
  A fs=FAV(self)->fgh[0]; I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // u, left & right ranks of u
- I ar=AR(a), wr=AR(w), l=FAV(self)->localuse.srank[1], r=FAV(self)->localuse.srank[2];  // ranks of args, ranks from n
+ I ar=AR(a), wr=AR(w), l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2];  // ranks of args, ranks from n
  // See if this use of rank is nugatory.  An arg has 1 cell if rank of arg<=MIN(n,rank of u); inner cells if n<MIN(rank of arg,rank of u); unchanged rank if n=rank of u.
  // Rank can be omitted if it is true for either arg that (arg has 1 cell and other arg does not have inner cells), or both args have unchanged rank
  //              0=unch rnk        0=ar<=MIN     0=n>=MIN (right)      0=wr<MIN       0=n>=MIN (left)
 // obsolete if(((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0) !=
 // obsolete ((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0) )SEGFAULT; // scaf
- if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+ if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
 // obsolete  if(unlikely((-((ulr^l)|(urr^r))&((MIN(l,ulr)-ar)|(r-MIN(wr,urr)))&((MIN(r,urr)-wr)|(l-MIN(ar,ulr))))>=0))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
  ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
  RETF(rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
@@ -764,6 +762,7 @@ F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  ARGCHK2(a,w);
  A z; fdefallo(z)
  // The localuse value in the function will hold the ranks from w.
+ I isfloat=AT(w)&FL;  // before we change w, remember if the value given was float.  We pass this through in srank[3] to tell the processing routines not to combine the rank op with other
  if(unlikely(VERB&AT(w))){
   // verb v.  Extract the ranks into an integer list, which goes into the derived verb
   r[0]=hv[0]=mr(w);
@@ -828,8 +827,8 @@ F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  }
 
  // Create the derived verb.  The derived verb (u"n) inplaces if the action verb u supports inplacing; it supports IRS only for monadic rank 0
- fdeffillall(z,flag2,CQQ,VERB, f1,f2, a,w,ger, vf, r[0],r[1],r[2],FAV(z)->lc=lc,FAV(z)->localuse.srank[0]=(I4)hv[0]; FAV(z)->localuse.srank[1]=(I4)hv[1]; FAV(z)->localuse.srank[2]=(I4)hv[2]);
-// obsolete  FAV(z)->localuse.srank[0]=(I4)hv[0]; FAV(z)->localuse.srank[1]=(I4)hv[1]; FAV(z)->localuse.srank[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
+ fdeffillall(z,flag2,CQQ,VERB, f1,f2, a,w,ger, vf, r[0],r[1],r[2],FAV(z)->lc=lc,FAV(z)->localuse.lu1.srank[0]=(I4)hv[0]; FAV(z)->localuse.lu1.srank[1]=(I4)hv[1]; FAV(z)->localuse.lu1.srank[2]=(I4)hv[2]; FAV(z)->localuse.lu1.srank[3]=isfloat);
+// obsolete  FAV(z)->localuse.lu1.srank[0]=(I4)hv[0]; FAV(z)->localuse.lu1.srank[1]=(I4)hv[1]; FAV(z)->localuse.lu1.srank[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
 // obsolete  FAV(z)->lc=lc;  // install the code byte to use for fused atomic ops
  R z;
 }

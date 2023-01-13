@@ -75,6 +75,7 @@ XF2(jtxlcm){PROLOG(10100); // a *. w
 }
 static X jtxexp(J jt,X w,I mode) {ASSERT(0, EWIRR);} // u ^w NB. u is <. or >. or ]
 
+#define LG2 0.693147180559945286 /* log(2) */
 XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather than jt->xmod
  if (0 == XSGN(w)) { // a^0  NB. m is irrelevant, a is irrelevant
   R X1;
@@ -90,11 +91,11 @@ XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather
    if (-1==XSGN(a) && 1==XLIMB0(a)) { // _1^w
     R XODDnz(w) ?X_1 :X1;
    }
-   ASSERT(2>XLIMBLEN(w), EVLIMIT); // a^w too bulky
+   ASSERT(1==XLIMBLEN(w), EVLIMIT); // a^w too bulky?
+   ASSERT(0<(I)XLIMB0(w), EVLIMIT);
    ASSERT(0<XSGN(w), EWRAT); // want rational result if w is negative
    I wi= IgetX(w);
-   // FIXME: may need additional checks to throw WSFULL if a^w too large
-   // (need a decent heuristic -- maybe log(a)*w > size of emergency buffer?)
+   ASSERT(LG2*8*GMPMAXSZ > log(DgetX(a))*wi, EVWSFULL); // GEMP (gmp emergency memory pool) heuristic
    EPILOG(XpowXU(a, wi)); // a^w
   } 
  } else {
@@ -160,7 +161,6 @@ static XF2(jtxlog2){
  mpX(a); mpX(w);
  long ae; D am= jmpz_get_d_2exp(&ae, mpa);
  long we; D wm= jmpz_get_d_2exp(&we, mpw);
-#define LG2 0.693147180559945286 /* log(2) */
  D lg= (LG2*we+log(wm))/(LG2*ae+log(am)); // estimate log
  I e= (I)(lg+0.5); // round to nearest integer
  X t= XpowXU(a,e); // test estimate
@@ -201,7 +201,7 @@ XF1(jtxfact){ // !w
  PROLOG(0116);
  ASSERT(0<=XSGN(w), EVDOMAIN);
  mpX(w); 
- ASSERT(1>jmpz_cmp_si(mpw, INT_MAX), EVWSFULL); // somewhat arbitrary threshold
+ ASSERT(1>jmpz_cmp_si(mpw, 1000000), EVWSFULL); // somewhat arbitrary threshold, roughly matches GEMP limit for result
  mpz_t mpz; jmpz_init(mpz); jmpz_fac_ui(mpz, jmpz_get_si(mpw));
  EPILOG(Xmp(z));
 }

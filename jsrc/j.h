@@ -739,7 +739,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 #ifndef NAMETRACK
-#define NAMETRACK 0  // turn on to define trackinfo in unquote, xdefn, line
+#define NAMETRACK 1     // scaf// turn on to define trackinfo in unquote, xdefn, line
 #endif
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #ifndef FINDNULLRET

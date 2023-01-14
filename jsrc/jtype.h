@@ -146,7 +146,7 @@ struct AD {
   I k;
   A chain;   // used when block is on free chain
   A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table when the current sentence started parsing
-  A locpath;  // for non-local SYMB (named and numeric), AK points to the path, which uses AAV0 and stores addresses of SYMBs
+  A *locpath;  // for non-local SYMB (named and numeric), AK points to the path, which is the end of a list of addresses of SYMBs
  } kchain;
  FLAGT flag;
  union {
@@ -830,7 +830,8 @@ typedef struct {
 #define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
 #define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)  // locale number, for numbered locales
 #define LOCNUM(g) (I)LOCNUMW(g)
-#define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted
+#define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted.  The path runs from LOCPATH backwards
+                        // to end with the ending 0 at AAV1()[0]
 #define LOCBLOOM(x) AM(x)
 #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
 

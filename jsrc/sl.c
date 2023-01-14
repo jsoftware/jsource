@@ -189,7 +189,7 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
 // For k=0, we have a write lock on stlock which we must hold throughout.
-// For k=0 or 1, we have made sure there are 2-k symbols reserved (for LOCPATH and, for k=0, the assignment to stloc).  Not required for k=2, which is not assigned
+// For k=0 or 1, we have made sure there are 2-k symbols reserved (for the assignment to stloc).  Not required for k=2, which is not assigned
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
  // allocate the symbol table itself: we have to give exactly what the user asked for so that cloned tables will hash identically; but a minimum of 1 chain field so hashes can always run
  GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB) LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  //  All SYMB tables are born recursive.  Init EXECCT to 'in use'
@@ -254,7 +254,8 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
  SYMRESERVE(2) RZ(zloc=stcreate(0,p,1L,"z")); ACX(zloc);   // make the z locale permanent
  // create zpath, the default path to use for all other locales
- GAT0(q,BOX,2,1); AAV1(q)[0]=zloc; ACX(q); JT(jt,zpath)=q;   // install z locale; ending 0 implied; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
+ GAT0(q,BOX,2,1); AAV1(q)[0]=0; AAV1(q)[1]=zloc; ACX(q); JT(jt,zpath)=&AAV1(q)[1];   // install ending 0 & z locale; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
+ LOCPATH(zloc)=&AAV1(q)[0];   // make z locale have no path.  The path is already permanent
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
@@ -273,8 +274,8 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  GA0(q,INT,16*MAXTHREADS,1) INITJT(jjt,emptylocale)=(I(*)[MAXTHREADS][16])((I*)q+8-3);   //  this mangles the header; OK since the block will never be freed
  DONOUNROLL(MAXTHREADS, A ei=(A)&((I*)q)[16*i+8-3]; MC(ei,emptyloc,(8+3)*SZI); AM(ei)=(I)ei;)
  jt->locsyms=(A)(*INITJT(jjt,emptylocale))[0];  // init jt->locsyms for master thread to the emptylocale for the master thread.  jt->locsyms in other threads must be initialized for each user task
- // Go back and fix the path for z locale to be empty
- GAT0(q,BOX,1,1); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list
+// obsolete  // Go back and fix the path for z locale to be empty
+// obsolete  GAT0(q,BOX,1,1); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list 
  R 1;
 }
 
@@ -418,11 +419,17 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale for each name */
 
+// 18!:2 y  return boxed locale path.  y is locale name/number
 DF1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,C(w)));
- g=LOCPATH(g);  // the path for the current locale.  It must be non0
- GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV1(g);  // allocate result, point to input & output areas
- DO(AN(g), if(*gv){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator
- AN(z)=AS(z)[0]=zv-zv0; R z;  // install number of strings added & return
+ A *gp=LOCPATH(g);  // the path for the current locale.  It must be non0 normally, but if another deleted the locale while we are running it might be 0
+ if(gp==0)RETF(mtv)   // if locale has been deleted, return something
+ I npath; for(npath=0;*gp;--gp,++npath);  // npath is # names in path
+// obsolete  GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV1(g);  // allocate result, point to input & output areas
+ GATV0(z,BOX,npath,1); AFLAGINIT(z,BOX) A *zv=AAV1(z); gp+=npath;  // allocate result, point to input & output areas
+// obsolete  DO(AN(g), if(*gv){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator
+ DO(npath, A t; RZ(t=sfn(0,LOCNAME(C(*gp)))); ACINITZAP(t); *zv++=t; --gp;)  // move strings except for the null terminator
+// obsolete  AN(z)=AS(z)[0]=npath;
+ RETF(z); 
 }
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored, and must incorporate it
      /* 18!:2  query locale path */
@@ -436,23 +443,26 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
  // The path is a recursive boxed list where each box is a SYMB type.  The usecount of each SYMB is incremented when it is added to the path.
  // When a locale is in a path the raised usecount prevents it from ever being deleted.  It has its Bloom filter zeroed so that it never searches for names
  // When all locales that have it in the path have been removed, the locale (including the name) will be deleted
- // The path is stored with one extra zero element at the end to allow for loop unrolling.  If the path is empty, the first path points to the empty locale
- // The path is allocated as a rank-0 list so that a path of length 1 doesn't need the data from the second cacheline
+ // The path is stored with one extra zero element at the end to allow for loop unrolling.
+ // The path is allocated as a rank-1 list to keep it in a single cacheline
  GAT0(x,BOX,MAX(AN(a),1)+1,1); AFLAGINIT(x,BOX); A *xv=AAV1(x); // allocate enough locations, plus one.  Set as recursive.  xv->first slot
+ *xv=0;  // install the terminating null in slot 0
  if(unlikely(AN(a)==0)){   // if path empty, leave it empty
- }else if(AN(a)==1){RZ(h=locale(1,a)); ra(h); *xv++=h;  // singleton, might be numeric atom - save it
+ }else if(AN(a)==1){RZ(h=locale(1,a)); ra(h); *++xv=h;  // singleton, might be numeric atom - save it
  }else{A locatom;
   // more than one locale; must be list of boxes.  Go through the list, using a virtual block
   ASSERT(AT(a)&BOX,EVLOCALE);
-  fauxblock(locfaux); fauxvirtual(locatom,locfaux,a,0,ACUC1) AN(locatom)=1;  // create an faux atom, starting at beginning of a
-  A *xv0=xv; DO(AN(a), RZ(h=locale(1,locatom)); if(likely(h!=g)){*xv++=h; ra(h);} AK(locatom)+=SZI;) AN(x)=(xv-xv0)+1;  // move locales for the names into the recursive path, but don't allow a locale in its own path
+  fauxblock(locfaux); fauxvirtual(locatom,locfaux,a,0,ACUC1) AK(locatom)+=AN(a)*SZI; AN(locatom)=1;  // create an faux atom, starting at beginning of a
+  DO(AN(a), AK(locatom)-=SZI; RZ(h=locale(1,locatom)); if(likely(h!=g)){*++xv=h; ra(h);}) AN(x)=(xv-AAV1(x))+1;  // move locales for the names into the recursive path, but don't allow a locale in its own path
  }
- *xv=0;  // terminate locale list with null.
+ // xv points to end of path
+// obsolete  *xv=0;  // terminate locale list with null.
  // We have the new path in x, and we can switch to it, but we have to call a system lock before we free the old path, to purge the old one from the system
  // This really sucks, but the alternative is to hold a lock on the path during the entire time the path is in use, which is worse.  scaf better to
  // have a per-thread RFO flag indicating 'path in use', and wait here till all threads have been seen with that off
- WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // scaf use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
- if(!ACISPERM(AC(oldpath))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(oldpath);}  // if the old path is not PERMANENT, wait for a lock before freeing
+// obsolete  WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // scaf use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
+ WRITELOCK(JT(jt,locdellock)) A *oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=xv; WRITEUNLOCK(JT(jt,locdellock))  // scaf use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
+ while(*oldpath)--oldpath; A op=UNvoidAV1(oldpath); if(!ACISPERM(AC(op))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}  // if the old path is not PERMANENT, wait for a lock before freeing
  R mtm;
 }    /* 18!:2  set locale path */
 
@@ -464,12 +474,13 @@ static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
  SYMRESERVE(2)  // make sure we have symbols to insert, for LOCPATH and for the locale itself
  WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!
  if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
-  // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
+  // named locale exists.  It may be zombie or not, but we have to keep using the same locale block, since it may be out there in paths
   g=v;
-  if(LOCPATH(g)){
+  A *gp;  // pointer to path
+  if(gp=LOCPATH(g)){
    // verify locale is empty (if it is zombie, its hashchains are garbage - clear them)
    LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERTGOTO(!u[i],EVLOCALE,exit););
-   fa(LOCPATH(g))  // free old path
+   while(*gp)--gp; fa(UNvoidAV1(gp))  // free old path   ?? scaf when would this happen?
   }else{
    ra(g);  // going from zombie to valid adds to the usecount
   }
@@ -489,7 +500,7 @@ static F1(jtloccrenum){C s[20];I k,p;A x;
  ARGCHK1(w);
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
- SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert, for LOCPATH
+ SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert  scaf not needed
  sprintf(s,FMTI,LOCNUM(x));   // extract locale# and convert to boxed string 
  R boxW(cstr(s));  // result is boxed string of name
 }    /* create a numbered locale with hash table size n */
@@ -597,12 +608,13 @@ exitlock:
 // usecount.  When the locale is no longer in any paths, it will be freed along with its name.
 B jtlocdestroy(J jt,A g){
  // see if the locale has been deleted already.  Return fast if so
- A path=(A)__atomic_exchange_n((I*)&LOCPATH(g),0,__ATOMIC_ACQ_REL);
+ A *path=(A*)__atomic_exchange_n((I*)&LOCPATH(g),0,__ATOMIC_ACQ_REL);
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
  freesymb(jt,g);   // delete all the names.  Anything executing will have been fa()d
- fa(path);   // delete the path too.  block is recursive; must fa() to free sublevels
+// obsolete  fa(path);   // delete the path too.  block is recursive; must fa() to free sublevels
+ while(*path)--path; fa(UNvoidAV1(path))   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  LOCBLOOM(g)=0;
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0

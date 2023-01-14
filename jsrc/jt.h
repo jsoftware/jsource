@@ -265,7 +265,7 @@ typedef struct JSTstruct {
  //void *heap;            // heap handle for large allocations
  I mmax;             /* space allocation limit                          */
  A stloc;            // named locales symbol table - this pointer never changes
- A zpath;         // path 'z', used for all initial paths
+ A *zpath;         // path 'z', used for all initial paths
  I filler0[2];
 // end of cacheline 0
 

@@ -43,6 +43,10 @@ cp -R jlibrary/* .
 cp script/testga.ijs .
 cp script/ver.ijs .
 
+if [ "$1" != "linux" ]; then
+rm -rf tools/regex/libjpcre2.so  # openbsd freebsd
+fi
+
 if [ $m64 -eq 1 ]; then
 mkdir -p j64
 cp bin/profile.ijs j64

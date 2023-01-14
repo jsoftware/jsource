@@ -33,7 +33,7 @@ NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
-blacklist=: blacklist, (IFWIN+.IFIOS+.(UNAME-:'Android')+.(IF64<'Linux'-:UNAME))#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
+blacklist=: blacklist, ((-.IF64)+.IFIOS+.(UNAME-:'Android'))#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. require multithreading
 

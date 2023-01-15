@@ -87,6 +87,7 @@ echo^:chk 'a13'
 NB. Verify forcetask arg
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a1' NB. master should not wait
 wthr nwthreads
+echo^:chk 'a13a'
 NB. obsolete echo 't0';6!:1''
 pyx =. 6!:3 t. ''"0 (>:N) # 1.0  NB. fill up with delaying threads
 echo^:chk 'a14'

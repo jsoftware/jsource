@@ -45,7 +45,7 @@ assert. remote_stuff=3
 )
 
 f =: 3 : 0
-chk=. ('FreeBSD'-:UNAME) *. 1 e. 'avx' E. 9!:14''
+chk=. ('FreeBSD'-:UNAME)
 try.
 echo^:chk 'a1'
 while. 2 > 1 T. '' do. 0 T. '' end.  NB. make sure we have 2 worker threads

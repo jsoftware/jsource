@@ -147,6 +147,10 @@ struct AD {
   A chain;   // used when block is on free chain
   A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table when the current sentence started parsing
   A *locpath;  // for non-local SYMB (named and numeric), AK points to the path, which is the end of a list of addresses of SYMBs
+             // LOCPATH is tricky because it is used during name lookup but can be modified all over, and can be assigned even when no thread is executing the
+             // locale, which means that the locale can be deleted while the path is being changed.  We make these rules: (1) use atomic_exchange to modify LOCPATH;
+             // (2) if you exchange out a nonzero, you have to free it; (3) you can replace a nonzero with another nonzero only under system lock, and if you
+             // are changing the block address (i. e. not extending) you must take a system lock before freeing
  } kchain;
  FLAGT flag;
  union {

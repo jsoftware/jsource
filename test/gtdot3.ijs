@@ -150,8 +150,11 @@ echo^:chk 'a31'
 mtx =. 10 T. 0
 echo^:chk 'a32'
 tod =. 6!:1''
+echo^:chk 'a32a'
 assert. 0 = >{{11 T. y}}t.''mtx  NB. boxed mtx OK
+echo^:chk 'a32b'
 assert. 1 = 11 T. mtx;2.0
+echo^:chk 'a32c'
 assert. GITHUBCI +. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
 echo^:chk 'a33'
 tod =. 6!:1''

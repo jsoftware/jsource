@@ -60,9 +60,9 @@ x -: y
 
 x =: spa ''
 s =: h 3+?7
-echo^:chk 'g7x a1'
+empty echo^:chk 'g7x a1'
 1: 6!:3 ] 3.00  NB. must give the task a chance to be dequeued, 0.01 is insufficient
-echo^:chk 'g7x a2'
+empty echo^:chk 'g7x a2'
 y =: spa ''
 x -: y
 

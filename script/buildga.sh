@@ -43,10 +43,6 @@ cp -R jlibrary/* .
 cp script/testga.ijs .
 cp script/ver.ijs .
 
-if [ "$1" != "linux" ]; then
-rm -f tools/regex/libjpcre2.so  # openbsd freebsd
-fi
-
 if [ $m64 -eq 1 ]; then
 mkdir -p j64
 cp bin/profile.ijs j64
@@ -54,6 +50,18 @@ else
 mkdir -p j32
 cp bin/profile.ijs j32
 fi
+
+if [ "$1" != "linux" ]; then
+rm -f tools/regex/libjpcre2.so  # openbsd freebsd
+fi
+if [ "$1" = "raspberry" ]; then
+if [ $m64 -eq 1 ]; then
+cp tools/regex/raspberry/j64/libjpcre2.so tools/regex/.
+else
+cp tools/regex/raspberry/j32/libjpcre2.so tools/regex/.
+fi
+fi
+
 if [ "$1" = "linux" ]; then
 # cp mpir/linux/x86_64/libgmp.so j64
 cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so

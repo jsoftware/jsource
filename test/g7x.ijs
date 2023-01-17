@@ -13,6 +13,8 @@ space=:7!:2
 pr =: [             NB. for silent iteration
 NB. pr =: 1!:2&2    NB. to see each iteration
 
+chk=: ('FreeBSD'-:UNAME)
+
 f =: 3 : 0
  old=.sp ''
  whilst. y=.<:y do.
@@ -58,7 +60,9 @@ x -: y
 
 x =: spa ''
 s =: h 3+?7
+empty echo^:chk 'g7x a1'
 1: 6!:3 ] 3.00  NB. must give the task a chance to be dequeued, 0.01 is insufficient
+empty echo^:chk 'g7x a2'
 y =: spa ''
 x -: y
 
@@ -95,7 +99,7 @@ t -: /:~t
 *./~:{."1 t
 
 
-4!:55 ;:'delth f g h n old pr s sp spa space t x y '
+4!:55 ;:'chk delth f g h n old pr s sp spa space t x y '
 
 
 

@@ -476,10 +476,14 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
   if(ACISPERM(AC(op))){__atomic_store_n(&LOCPATH(g),xv,__ATOMIC_RELEASE); op=0;  // if path permanent, it's like 0 - ignore it
   }else{
    // we are replacing a non-permanent path.  See if we can extend the current path
-   if(BETWEENO(AN(x),AN(op),allosize(op)>>LGSZI)){  // if the new path fits in the allocation...
+   if(0&&/*scaf*/BETWEENO(AN(x),AN(op),allosize(op)>>LGSZI)){  // if the new path fits in the allocation...
     A *xv2=AAV1(x); DQ(AN(op)-1, if(*++opv!=*++xv2)goto noextend;)  // see if all the values in old path are the end of the new.  No need to check leading 0
     // extension is possible.  Move the rest of the new path to the old path (ra because recursive), update the old path, set new path pointer, free the no-longer-used new path
-    DO(AN(x)-AN(op), A t=*++xv2; ra(t) *++opv=t;) __atomic_store_n(&AN(op),AN(x),__ATOMIC_RELEASE); __atomic_store_n(&LOCPATH(g),opv,__ATOMIC_RELEASE); fa(x); op=0;  //op=0 to stop further update 
+    // BUT: If the path has been replaced, we must not try to extend it, as it is about to be deleted.  In that case, we could install the new path, but we would have responsibility
+    // for the path we replaced here; so we simply suppress changing the path, allowing the other change to have priority.  We use cas to avoid changing a changed path.
+    // We need to update the path length so that all the newly-ra'd locales will be fa'd.
+    DO(AN(x)-AN(op), A t=*++xv2; ra(t) *++opv=t;) __atomic_store_n(&AN(op),AN(x),__ATOMIC_RELEASE); __atomic_compare_exchange_n(&LOCPATH(g),&oldpath,opv,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);
+    fa(x); op=0;  //op=0 to stop further update 
 noextend: ;
    }
   }

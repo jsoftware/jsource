@@ -347,6 +347,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(18,5):  R CDERIV(CIBEAM, jtlocname,    0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(18,-1): R CDERIV(CIBEAM, jtlocmap,     0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(18,-2): R CDERIV(CIBEAM, jtsympool,    0,            VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(18,-3):  R CDERIV(CIBEAM, jtlocnlz1,    0,     VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(18,55): R CDERIV(CIBEAM, jtlocexmark,  0,            VFLAGNONE,0,   RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;

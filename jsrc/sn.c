@@ -137,7 +137,10 @@ static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]
 static SYMWALK(jtnlsymlocked, A,BOX,20,1, LOCPATH(d->val)&&CAV1(a)[((UC*)NAV(d->name)->s)[0]],
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
-F2(jtnlsym){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) A z=jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) R z;}
+static SYMWALK(jtnlsymlockedz, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]],
+    RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
+
+A jtnlsym(J jt,A a,A w,I zomb){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) A z=zomb?jtnlsymlockedz(jt,a,w):jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) R z;}
 
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
@@ -151,7 +154,7 @@ static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
  ASSERT(!(m&MARK),EVDOMAIN);
  if(b           )RZ(z=nlxxx(a,jt->global));  // get list of global symbols
  if(b&&EXPLICITRUNNING)RZ(z=over(nlxxx(a,jt->locsyms),z));   // if there are local symbols, add them on
- if(m==SYMB     )RZ(z=over(nlsym(a,JT(jt,stloc)),z));
+ if(m==SYMB     )RZ(z=over(nlsym(a,JT(jt,stloc),0),z));
  R nub(grade2(z,ope(z)));
 }
 

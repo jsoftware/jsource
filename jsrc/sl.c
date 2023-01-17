@@ -317,7 +317,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){
 
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
-#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;
+#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
          // we should check whether the path in non0 but that would only matter if two threads created the locale simultaneously AND set a path, and the only loss would be that the path would leak
 static F2(jtloccre);
 
@@ -330,7 +330,11 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
  while(1){
   A v = stfind(n,u,bucketx);  // lookup.  NOTE another thread could delete the locale while we're looking at it - could always zombie it?
   if(likely(v!=0)){  // name found
+#if 0  // obsolete
+   if(unlikely(LOCPATH(v)==0)){ra(v); REINITZOMBLOC(v)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
+#else
    if(unlikely(LOCPATH(v)==0)){ra(v); WRITELOCK(JT(jt,stloc)->lock) REINITZOMBLOC(v) WRITEUNLOCK(JT(jt,stloc)->lock)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
+#endif
     // setting a path must be accompanied by raising the usecount, because a locale is liable to be erased when its path is nonnull and it must survive as a zombie then
    R v;  // return the locale found
   }
@@ -390,22 +394,25 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RETF(z);
 }    /* 18!:0 locale name class */
 
-static F2(jtlocnlx){A y,z=mtv;B*wv;I m=0;
+static A jtlocnlx(J jt,A a, A w, I zomb){A y,z=mtv;B*wv;I m=0;
  RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);  // accumulate mask of requested types
- if(1&m)z=nlsym(a,JT(jt,stloc));  // named locales
+ if(1&m)z=nlsym(a,JT(jt,stloc),zomb);  // named locales
  if(2&m){RZ(y=jtactivenl(jt)); z=over(y,z); }  // get list of active numbered locales
  R grade2(z,ope(z));
 }
 
-F1(jtlocnl1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w);}
+F1(jtlocnl1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,0);}
     /* 18!:1 locale name list */
+
+// 18!:_3 locale name list, but including zombie locales
+F1(jtlocnlz1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,1);}
 
 F2(jtlocnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
  A tmp; GAT0(tmp,B01,256,1) mvc(256L,CAV1(tmp),1,MEMSET00);
  u=UAV(a); DQ(AN(a),CAV1(tmp)[*u++]=1;);
- R locnlx(tmp,w); 
+ R locnlx(tmp,w,0); 
 }    /* 18!:1 locale name list */
 
 static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
@@ -458,13 +465,17 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
  // xv points to end of path
 // obsolete  *xv=0;  // terminate locale list with null.
  // We have the new path in x, and we can switch to it, but we have to call a system lock before we free the old path, to purge the old one from the system
- // This really sucks, but the alternative is to hold a lock on the path during the entire time the path is in use, which is worse.  scaf better to
+ // This really sucks, but the alternative is to hold a lock on the path during the entire time the path is in use, which is worse.  better to
  // have a per-thread RFO flag indicating 'path in use', and wait here till all threads have been seen with that off
  // As a stopgap that will probably suffice forever, we avoid the system lock provided the new path merely extends the old from the beginning.  In that case,
  // we move the path pointer but we don't have the free anything, so we need no systemlock.  The test and exchange must be under a lock (which one isn't important,
  // because this is the only place that stores a non-PERMANENT path that might get freed) to avoid ABA trouble.  We still have to use exchange to set the path because
  // a deleting thread may be installing 0 or zpath
-// obsolete  WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // scaf use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
+// obsolete  WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
+#if 0 // obsolete
+ WRITELOCK(JT(jt,locdellock)) A *oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=xv; WRITEUNLOCK(JT(jt,locdellock))  // use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
+ while(*oldpath)--oldpath; A op=UNvoidAV1(oldpath); if(!ACISPERM(AC(op))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}  // if the old path is not PERMANENT, wait for a lock before freeing
+#else
  A op=0; ACINITZAP(x);  // op is address of A for old path, if any.  Remove death warrant for new path, in case we store it
  WRITELOCK(JT(jt,locdellock))
  A *oldpath=__atomic_load_n(&LOCPATH(g),__ATOMIC_ACQUIRE);  // the path we are replacing
@@ -476,7 +487,7 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
   if(ACISPERM(AC(op))){__atomic_store_n(&LOCPATH(g),xv,__ATOMIC_RELEASE); op=0;  // if path permanent, it's like 0 - ignore it
   }else{
    // we are replacing a non-permanent path.  See if we can extend the current path
-   if(0&&/*scaf*/BETWEENO(AN(x),AN(op),allosize(op)>>LGSZI)){  // if the new path fits in the allocation...
+   if(BETWEENO(AN(x),AN(op),allosize(op)>>LGSZI)){  // if the new path fits in the allocation...
     A *xv2=AAV1(x); DQ(AN(op)-1, if(*++opv!=*++xv2)goto noextend;)  // see if all the values in old path are the end of the new.  No need to check leading 0
     // extension is possible.  Move the rest of the new path to the old path (ra because recursive), update the old path, set new path pointer, free the no-longer-used new path
     // BUT: If the path has been replaced, we must not try to extend it, as it is about to be deleted.  In that case, we could install the new path, but we would have responsibility
@@ -493,24 +504,30 @@ noextend: ;
  if(op!=0 && oldpath!=__atomic_exchange_n(&LOCPATH(g),xv,__ATOMIC_ACQ_REL))op=0;  // if path changed, suppress free below
  WRITEUNLOCK(JT(jt,locdellock))  // mustn't hold a lock when we call for systemlock
  if(op!=0){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}
-// obsolete  A *oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=xv;   // scaf use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
+// obsolete  A *oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=xv;   // use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
 // obsolete while(*oldpath)--oldpath; A op=UNvoidAV1(oldpath); if(!ACISPERM(AC(op))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}  // if the old path is not PERMANENT, wait for a lock before freeing
+#endif
  R mtm;
 }    /* 18!:2  set locale path */
 
-
+// create named locale
 static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
  SYMRESERVE(2)  // make sure we have symbols to insert, for the locale itself
  A op=0;  // old path, if there is one
- WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!
+ WRITELOCK(JT(jt,locdellock)) WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!  We need both locks, in this order (delete calls symfree, which takes locks in this order)
  if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale block, since it may be out there in paths
   g=v;
+#if 0 // obsolete
+  A *gp;  // pointer to path
+  if(gp=LOCPATH(g)){
+#else
   A *gp=__atomic_exchange_n(&LOCPATH(g),0,__ATOMIC_ACQ_REL);  // pointer to path, and clear path to 0
   if(gp){
+#endif
    // rare case of reinitializing a locale that has not been deleted.  This is allowed only if it has no symbols
    // verify locale is empty (if it is zombie, its hashchains are garbage - clear them)
    LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERTGOTO(!u[i],EVLOCALE,exit););
@@ -526,7 +543,7 @@ static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
  }
  z=y;  // good return
 exit:
- WRITEUNLOCK(JT(jt,stloc)->lock)  // errors OK now
+ WRITEUNLOCK(JT(jt,locdellock)) WRITEUNLOCK(JT(jt,stloc)->lock)  // errors OK now
  if(unlikely(op!=0&&!ACISPERM(AC(op)))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}  // free old path after systemlock to ensure uses of path have been purged.  Mustn't hold lock
  R boxW(ca(z));  // result is boxed string of name - we copy it, perhaps not needed
 }    /* create a locale named w with hash table size a */

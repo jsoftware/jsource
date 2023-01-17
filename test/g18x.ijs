@@ -76,7 +76,7 @@ NB. testing  scafnfree__   =: f
  NB. assert. b +. h +.             i = (prev*-.h){next,0
 
  assert. b +. orph +. li +. -. a e. a:
- assert. b +. orph +. li +. s e. '';'**local**';18!:1 i.2  NB. must allow no locale-name for local symbol tables
+ assert. b +. orph +. li +. s e. '';'**local**';18!:_3 i.2  NB. must allow no locale-name for local symbol tables; _3 includes zombie locales
  assert. (18!:1 i.2) e. s
  1
 )

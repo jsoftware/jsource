@@ -232,8 +232,8 @@ static A jticor(J jt,A  w,D d){D *v;
 static A jtminvdet(J jt,A w,D *det){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  F1RANK(2,jtminv,DUMMYSELF);
  t=AT(w); wr=AR(w); s=AS(w); m=wr?s[0]:1; n=1<wr?s[1]:1;
- if(!wr)R recip(w);
- if(!AN(w)){ASSERT(1==wr||m>=n,EVLENGTH); R cant1(w);}
+ if(!wr){*det=0.0; R recip(w);}
+ if(!AN(w)){ASSERT(1==wr||m>=n,EVLENGTH); *det=0.0; R cant1(w);}
  if(AN(w)&&t&RAT+XNUM){
   ASSERT(m>=n,EVLENGTH);
   if(t&XNUM)RZ(w=cvt(RAT,w));

@@ -12,6 +12,10 @@ erase =: 1!:55
 
 unix  =: (9!:12 '') e. 5 7
 nn    =: unix{3 9
+wsl   =: 1 e. 'WSL' E. ":1!:1 <'/proc/version'
+wslhack =: (nn$0 0,wsl) +. ]
+
+
 
 test  =: 3 : ('((,nn)-:$y) *. *./y e."_1 nn$''rwx'',.''-''')
 
@@ -27,11 +31,11 @@ f =. <jpath (UNAME-:'Android'){::'~temp/foogoo5.x';'~bin/foogoo5.x'
 test perm f
 
 (nn$'r--') perm f
-(nn$'r--') = perm f
+wslhack (nn$'r--') = perm f
 (nn$'rw-') perm f
-(nn$'rw-') = perm f
+wslhack (nn$'rw-') = perm f
 h =. open f
-(nn$'rw-') = perm h
+wslhack (nn$'rw-') = perm h
 close h
 
 h =. open f

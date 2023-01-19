@@ -12,7 +12,7 @@ erase =: 1!:55
 
 unix  =: (9!:12 '') e. 5 7
 nn    =: unix{3 9
-wsl   =: 1 e. 'WSL' E. ":1!:1 <'/proc/version'
+wsl   =: 1 e. 'WSL' E. ":1!:1 ::(''"_) <'/proc/version'
 wslhack =: (nn$0 0,wsl) +. ]
 
 

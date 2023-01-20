@@ -263,7 +263,7 @@ for_t. i. 4 do.
   M =. 1. (<1 2 2)} M   NB. now column 3 is no longer unbounded
   assert. 4 0 0 0 0 __ (((4 0 0,:4 2 0) run128_9)) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 2 0 1 4 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 2 0 2 8 __(((4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
+  assert. 4 2 0 2 8 __ (((4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
   NB. stall
   bk =. dptoqp 0. 0 0  NB. no improving pivots
   M =. dptoqp |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns
@@ -322,10 +322,11 @@ for_t. i. 4 do.
   assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (4 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
 
   NB. gradient-stall mode
-  M =. dptoqp |: _4 ]\ 1. 2 4 4    1 2 3 _10   _1 _2 _20 _10   1 _2 _20 _10   NB. input by columns
-  Frow =. _4. _3 _2 _1 _1e_20  NB. improvements reduced col by col
+  M =. dptoqp |: _4 ]\ 1. 2 5 4    1 2 3 _10   _1 _2 _20 _10   1 _2 _20 _10   NB. input by columns
+  Frow =. _4. _5 _2 _1 _1e_20 
   bkg =. i.{:$M
-  NB. assert. 0 3 3 4 7 _1 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;Frow;sched
+  assert. 0 0 2 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;Frow;sched
+  assert. 0 1 2 2 8 0.6 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;Frow;sched
 
   NB. end of tests, add a thread
   0 T. ''

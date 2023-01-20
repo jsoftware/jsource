@@ -28,7 +28,7 @@ static void jteputc(J jt,C c){ep(1L,&c);}
 static void jteputlnolf(J jt,A w){ep(AN(w),CAV(w));}
 static void jteputl(J jt,A w){jteputlnolf(jt,w); eputc(CLF);}
 
-static void jteputv(J jt,A w){I m=NETX-jt->etxn; if(m>0){jt->etxn+=thv(w,MIN(m,200),jt->etx+jt->etxn);}} // stop writing when there is no room in the buffer
+static void jteputv(J jt,A w){I m=NETX-jt->etxn; if(m>0){jt->etxn+=thv(w,~MIN(m,200),jt->etx+jt->etxn);}} // stop writing when there is no room in the buffer.  Complement for decoration
      /* numeric vector w */
 
 static void jteputq(J jt,A w,I nflag){C q=CQUOTE,*s;

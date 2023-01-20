@@ -52,6 +52,29 @@ elseif. 10 = #y do.  NB. DIP
       end.
     end.
   end.
+elseif. 9=#y do.  NB. gradient mode
+  if. 0=nthr do.  NB. single-threaded, compare for exact result
+    assert. x -: savres =: 128!:9 y
+  else.  NB. multiple threads.  Expand M with one harmless row/col, Frow to match; pad ndx and bkg, preserving order, to make work
+    if. -. opts -: 0 do.  NB. opts of 0 means single thread only
+      'ndx M bkg Frow cons' =. 0 4 6 7 5 { y
+      prirow =. 6 { cons
+      msiz =. {:$M  NB. size of M part
+      M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.1e_10 M  NB. One column of small c above threshold, ending row of 0
+      Frow =. (1 + $Frow) {.!.1e_20 Frow
+      'nndx nbkg' =. 35 + ? 20 20   NB. product must exceed 1000
+      saferc =. <: {: $ M  NB. last row/col doesn't change anything
+      ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
+      ndx =. ndx (0 (0})^:(prirow={.ndx) /:~ (#ndx) ? nndx)} nndx # saferc  NB. Keep prirow at head, if given, to avoid cutoff
+      bkg =. bkg (/:~ (#bkg) ? nbkg)} nbkg # saferc
+      savy =: (ndx;M;bkg;Frow) 0 4 6 7} y
+      if. #opts do.
+        assert. opts e.~ 3 {. savres =: 128!:9 savy  NB. alternative results
+      else.
+        assert. x -:&(3&{.) savres =: 128!:9 savy  NB. exact match
+      end.
+    end.
+  end.
 else.  NB. nonimp
   'ndx An Ax Av M cons bkg' =. 7 {. y
   if. 0=nthr do.  NB. single-threaded, compare for exact result
@@ -297,6 +320,14 @@ for_t. i. 4 do.
   assert. 0 0 0 0 1 0 ((0 0 0,:0 0 1) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
   assert. 0 0 2 0 1 0 ((0 1 1,0 0 1,:0 0 2) run128_9) (4 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2  NB. qp triggered; but not necessarily in all rows
   assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (4 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
+
+  NB. gradient-stall mode
+  M =. dptoqp |: _4 ]\ 1. 2 4 4    1 2 3 _10   _1 _2 _20 _10   1 _2 _20 _10   NB. input by columns
+  Frow =. _4. _3 _2 _1 _1e_20  NB. improvements reduced col by col
+  bkg =. i.{:$M
+  NB. assert. 0 3 3 4 7 _1 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;Frow;sched
+
+  NB. end of tests, add a thread
   0 T. ''
 end.
 

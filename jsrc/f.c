@@ -28,7 +28,7 @@ typedef void ((*FMTFUN)());
 
 #define WD          (9L+NPP)
 #define WZ          (WD+WD)
-#define FMTF(f,T)   void f(J jt,C*s,T*v)
+#define FMTF(f,T)   void f(J jt,C*s,T*v)  // function template
 // Calculate the number of blank lines to leave before a 2-cell of output, depending on how many
 // cell boundaries are crossed moving to it
 // j = line number in input of the line about to be written
@@ -73,31 +73,41 @@ static void thcase(I t,I*wd,FMTFUN *fmt){
  }
 }
 
-// copy numeric string to error line.  Values in w, n/s = len/addr of output buffer
-// negative n means 'decorate the result to show precision'
-I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;FMTFUN fmt;
+// copy numeric string to error line or result buffer.  Values in w, n/s = len/addr of output buffer
+// If n is negative, we decorate the line to show precision, but we have to do it without GA() in case we are out of memory
+I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I k,n4=n-4,p,wd,wn,wt;FMTFUN fmt;
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
  switch(CTTZNOFLAG(wt)){
  case INTX:
- 	{C*t;I i,*v,x;
-  	v=AV(w);
+  {C*t;I i,*v,orv=0,x;
+   v=AV(w);
    for(i=0;i<wn;++i){
-    t=buf; x=*v++;
+    t=buf; x=*v++; orv|=x;
     sprintf(t,FMTI" ",x);
-	   if('-'==*t)*t=CSIGN;
+    if('-'==*t)*t=CSIGN;
     p=strlen(t); if(ov=n4<p+y-s)break; strcpy(y,t); y+=p;
-  	}
+   }
+   // if all the values were boolean, prepend a 0 to the last
+   if(dec&&!ov&&i&&!(orv&~1)){if(!(ov=n4<y-s)){y[-1]=y[-2]; y[-2]='0';}}
   }
   break;
  case XNUMX: case RATX:
-  RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
+  RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p;
+  if(dec&&!ov&&p&&!memchr(s,'x',p)&&!memchr(s,'r',p))if(!(ov=n4<y+2-s)){if(wt&XNUM){*y++='x';}else{*y++='r'; *y++='1';}}
+  break;
  case B01X:
   if(ov=n<2*wn)p=n4>>1; else p=wn; DQ(p, *y++=*x++?'1':'0'; *y++=' ';); break;
- default:
+ default:  // FL or CMPX
   k=bpnoun(wt);
   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
+  p=y-s;  // total length
+  if(dec&&!ov&&p&&!memchr(s,'.',p)&&!memchr(s,'e',p)&&!memchr(s,'j',p)){
+   // we also need to to check for _ not followed by numeric: that doesn't need decorating
+   DO(y-s-1, if(s[i]=='_'&&!BETWEENC(s[i+1],'0','9')){p=0; break;})
+   if(p)if(!(ov=n4<(y+2)-s)){if(wt&FL){y[-1]='.';}else{y[-1]='j'; *y++='0';}}
+  }
   break;
  }
  if(ov){if(' '!=y[-1])*y++=' '; mvc(3L,y,1,iotavec-IOTAVECBEGIN+'.'); y+=3;}

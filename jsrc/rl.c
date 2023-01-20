@@ -159,7 +159,7 @@ A jtdcapp(J jt,A w,C c,A ap){R (memchr(CAV(w),c,AN(w)))?w:over(w,ap);}  /* condi
 A jtdecorate(J jt,A w,I t){
  if(AN(w)==0)R w;  // if empty string, don't decorate
  if(t&FL){
-  // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' at end
+  // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' at end, floated back over exponent if any
   B needdot = !memchr(CAV(w),'.',AN(w));  // check for decimal point
   if(needdot){DO(AN(w), if(CAV(w)[i]=='_' && (i==AN(w)-1 || CAV(w)[i+1]==' ')){needdot=0; break;} )}  // check for infinity
   if(needdot){w=over(w,scc('.')); RZ(w=mkwris(w)); DQ(AN(w) , if(CAV(w)[i]==' ')R w;  if(CAV(w)[i]=='e'){C f='.'; C *s=&CAV(w)[i]; DO(AN(w)-i, C ff=s[i]; s[i]=f; f=ff;)}) }

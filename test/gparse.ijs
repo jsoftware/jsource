@@ -166,6 +166,23 @@ a ]:
 'syntax error' -: ". etx 'Oc)'
 'syntax error' -: ". etx 'Oc('
 
+NB. display of decorated constants
+a =: 'a'
+'|domain error: efx|   a    +1.' -: efx 'a +  1.'
+'|domain error: efx|   a    +1' -: efx 'a +  1'
+'|domain error: efx|   a    +0' -: efx 'a +  0'
+'|domain error: efx|   a    +01' -: efx 'a +  01'
+'|domain error: efx|   a    +1 1 01' -: efx 'a +  01 1 1'
+'|domain error: efx|   a    +1j0' -: efx 'a +  1j0'
+'|domain error: efx|   a    +1x' -: efx 'a +  1x'
+'|domain error: efx|   a    +1r1' -: efx 'a +  1r1'
+'|domain error: efx|   a    +1000000' -: efx 'a +  1e6'
+'|domain error: efx|   a    +1e6' -: efx 'a +  1.e6'
+'|domain error: efx|   a    +_2' -: efx 'a +  _2'
+'|domain error: efx|   a    +_2.' -: efx 'a +  _2.'
+'|domain error: efx|   a    +_ _1' -: efx 'a +  _ _1.'
+'|domain error: efx|   a    +__ _1' -: efx 'a +  __ _1.'
+'|domain error: efx|   a    +_. _1' -: efx 'a +  _. _1.'
 
 4!:55 ;:'a aa bc locnm multi swd t '
 

@@ -1012,7 +1012,7 @@ endqp: ;
        __m256d y, t; y=_mm256_fmadd_pd(dotproducth,dotproducth,colbk0thresh); t=_mm256_add_pd(limitcs,y); colbk0thresh=_mm256_sub_pd(y,_mm256_sub_pd(t,limitcs)); limitcs=t;  // accumulate col^2; 16 cycles latency, which will limit perf (slightly)
        // fetch the 4 bk values and see which ones are near0
        __m256d bk4=likely(bvgrd<bvgrde)?_mm256_loadu_pd(bv+(bvgrd-ONECOLGRD0)):_mm256_maskload_pd(bv+(bvgrd-ONECOLGRD0),endmask);  // the next bk values
-       dotproducth=_mm256_and_pd(dotproducth,_mm256_cmp_pd(bk4,bk0thresh,_CMP_GT_OQ));   // clear any column values for which bk is not near0
+       dotproducth=_mm256_and_pd(dotproducth,_mm256_cmp_pd(bk4,bk0thresh,_CMP_LT_OQ));   // clear any column values for which bk is not near0
        // remember column position (of the NPAR-word block) of largest value (in limitrows)
        limitrows=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(limitrows),_mm256_castsi256_pd(_mm256_set1_epi64x((I)bvgrd)),_mm256_cmp_pd(dotproducth,minspr,_CMP_GT_OQ)));
        // find largest column value to date (in minspr)
@@ -1425,7 +1425,7 @@ if(AN(w)==0){
    Frow=0;  // indicate not gradient
    minimp=0.0;  // minimp not used, but passes through to result
 // obsolete   if(AN(w)==8){bv=0; zv=0;   // Frow omitted: that's nonimp, indicated by bv=zv=Frow=0
-  }else if(AN(w)==8){  // gradient mode  ndx;Ax;Am;Av;(M, shape 2,m,n);(parms as above);bk;Frow;sched
+  }else if(AN(w)==9){  // gradient mode  ndx;Ax;Am;Av;(M, shape 2,m,n);(parms as above);bk;Frow;sched
    A box6=C(AAV(w)[6]), box7=C(AAV(w)[7]), box8=C(AAV(w)[8]);
    ASSERT(AT(box6)&FL,EVDOMAIN); ASSERT(AR(box6)==AR(box4)-1,EVRANK); ASSERT(AS(box6)[0]==AS(box4)[0]&&AS(box6)[1]==AS(box4)[1],EVLENGTH); bv=DAV(box6);  // bk, one per row of M
    ASSERT(AR(box7)<=1,EVRANK); ASSERT(AT(box7)&FL,EVDOMAIN); ASSERT(AN(box7)==n+AS(box1)[0],EVLENGTH);  // Frow must be as long as the NTT

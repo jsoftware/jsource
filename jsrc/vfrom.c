@@ -750,7 +750,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 #define ZVISNOTONECOL (ZVDP|ZVPOSCVFOUND|ZVSPRNOTFOUND)
 
  rowstride=_mm256_set1_epi64x(n);   // length of 1 row, which is right for DIP/nonimp
- if(bv==0&&Frow==0){  // nonimp or one-column
+ if(bv==0){  // nonimp or one-column
 // obsolete   oldbk=_mm256_permute4x64_pd(thresh,0b11111111);  // for nonimp, repurpose oldbk to all safety thresholds
 // obsolete   thresh=_mm256_permute4x64_pd(thresh,0b00000000);  // for nonimp and Dpiv, repurpose thresh to all minimum acceptable pivot
   if(zv!=0){  // one-column
@@ -783,14 +783,14 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    bvgrde-=(bvgrde-bvgrd0)&(NPAR-1)?NPAR:0;  // back bvgrde to the point of the incomplete remnant, if there is one
   }
  }else{
-  // DIP/gradient initialization.  bv=0 for gradient - in that case bk0thresh is used for Kahan summation
+  // DIP/gradient initialization.  bv=0 for gradient - in that case colbk0thresh is used for Kahan summation
   col0thresh=_mm256_set1_pd(parms[1]); colbk0thresh=_mm256_set1_pd(parms[2]); coldangerpivotthresh=parms[3]; colokpivotthresh=parms[4]; bk0thresh=_mm256_set1_pd(parms[5]); prirow=(I)parms[6];   // copy in parms
   *(I*)&minimp=__atomic_load_n((I*)&(ctx->minimp),__ATOMIC_ACQUIRE);  // in case some other thread has finished a column and given us a bogey, go get it
   zv=(D*)(ZVDP+ZVSPRNOTFOUND);  // set flag 101 indicating DIP, dp, waiting for first c>0; bit 4 (ffreqd) starts clear
   maxdangerc=0.0;  // indicate no dangerous pivot found yet
   // bvgrde is set in the caller to process the requested rows
   bvgrde-=(bvgrde-bvgrd0)&(NPAR-1)?NPAR:0;  // back bvgrde to the point of the incomplete remnant, if there is one
-  if(bv==0){  // gradient mode: set up for sequential processing
+  if(bvgrd0==ONECOLGRD0){  // gradient mode: set up for sequential processing
    rownums0=rownums=_mm256_mul_epu32(rowstride,_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
    rowstride=_mm256_slli_epi64(rowstride,LGNPAR);   // length of NPAR rows for onecol
   }
@@ -833,12 +833,12 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
     // DIP/gradient mode
     // This is the retry point; put static inits above this
     if(1)zv=(D*)(ZVDP+ZVSPRNOTFOUND);else{retryinquad: zv=(D*)ZVSPRNOTFOUND;}  // if we need to retry in qp, so indicate
-    if(likely(bv!=0)){
+    if(likely(bvgrd0!=ONECOLGRD0)){
      minspr=_mm256_set1_pd(inf);  // DIP: minimum valid SPR found so far, in each qword-lane
      minimpspr=unlikely(Frow[colx]==0)?_mm256_setzero_pd():_mm256_set1_pd(minimp/Frow[colx]);  //minimum SPR that will not cut off
     }else{
-     // gradient mode: limitcs/bk0thresh are Kahan accumulator for sumsq; minspr holds max col value; limitrows holds index of max column values
-     minspr=_mm256_set1_pd(infm); limitcs=_mm256_set1_pd(1.0/NPAR); bk0thresh=_mm256_setzero_pd();  // gradient: the high-precision gradient sum (init to 1+)  also the largest c value
+     // gradient mode: limitcs/colbk0thresh are Kahan accumulator for sumsq; minspr holds max col value; limitrows holds index of max column values
+     minspr=_mm256_set1_pd(infm); limitcs=_mm256_set1_pd(1.0/NPAR); colbk0thresh=_mm256_setzero_pd();  // gradient: the high-precision gradient sum (init to 1+)  also the largest c value
      minimpspr=_mm256_set1_pd(minimp*Frow[colx]*Frow[colx]);  // Frow^2 * best sumsq / best Frow^2, which is cutoff point for sumsq in new column (Frow^2)/sumsq > bestFrow^2/bestsumsq)
      // we must back up the column pointer each time to top-of-column
      rownums=rownums0;
@@ -963,7 +963,7 @@ endqp: ;
     }  // end of creating NPAR values
     // process the NPAR generated values
     if((I)zv&ZVISDIP){
-     if(likely(bv!=0)){
+     if(likely(bvgrd0!=ONECOLGRD0)){
       // skip the block if all values are negative or near 0
       __m256d cnon0=_mm256_cmp_pd(dotproducth,col0thresh,_CMP_GT_OQ);  // ~0 for words that have positive c
       if(!_mm256_testz_pd(cnon0,endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process.  if one is big enough...
@@ -1004,16 +1004,20 @@ endqp: ;
        }
       }
      }else{
-      // gradient mode.  All b values are assumed 0
+      // gradient mode.
       // because of the sparsity of the Ak matrix, it is worth testing for all the column values close to 0.  We could more easily test for all exactly equal 0, but we
       // don't know how many near-0s we are going to get
       if(!_mm256_testz_pd(_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),col0thresh,_CMP_GT_OQ),endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process.  if one is big enough...
-       // add new value^2 to gradient total, using Kahan summation (in limitcs/bk0thresh)
-       __m256d y, t; y=_mm256_fmadd_pd(dotproducth,dotproducth,bk0thresh); t=_mm256_add_pd(limitcs,y); bk0thresh=_mm256_sub_pd(y,_mm256_sub_pd(t,limitcs)); limitcs=t;  // accumulate col^2; 16 cycles latency, which will limit perf (slightly)
+       // add new value^2 to gradient total, using Kahan summation (in limitcs/colbk0thresh)
+       __m256d y, t; y=_mm256_fmadd_pd(dotproducth,dotproducth,colbk0thresh); t=_mm256_add_pd(limitcs,y); colbk0thresh=_mm256_sub_pd(y,_mm256_sub_pd(t,limitcs)); limitcs=t;  // accumulate col^2; 16 cycles latency, which will limit perf (slightly)
+       // fetch the 4 bk values and see which ones are near0
+       __m256d bk4=likely(bvgrd<bvgrde)?_mm256_loadu_pd(bv+(bvgrd-ONECOLGRD0)):_mm256_maskload_pd(bv+(bvgrd-ONECOLGRD0),endmask);  // the next bk values
+       dotproducth=_mm256_and_pd(dotproducth,_mm256_cmp_pd(bk4,bk0thresh,_CMP_GT_OQ));   // clear any column values for which bk is not near0
        // remember column position (of the NPAR-word block) of largest value (in limitrows)
        limitrows=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(limitrows),_mm256_castsi256_pd(_mm256_set1_epi64x((I)bvgrd)),_mm256_cmp_pd(dotproducth,minspr,_CMP_GT_OQ)));
        // find largest column value to date (in minspr)
        minspr=_mm256_max_pd(minspr,dotproducth);  // find the winner
+       // if the virtual row is eligible, remember that fact.  We will make it the winner of this column evebn if it is not the largest value  scaf not done yet
        // if gradient total cuts off, abort the column.  We have to collect the total across all lanes
        dotproducth=_mm256_add_pd(_mm256_permute_pd(t,0b0101),t); dotproducth=_mm256_add_pd(_mm256_permute4x64_pd(dotproducth,0b01001110),dotproducth);   // combine into one
        if(unlikely(!_mm256_testz_pd(_mm256_cmp_pd(dotproducth,minimpspr,_CMP_GT_OQ),endmask))){  // cutoff if Frow^2/sumsq<(best Frow^2/sumsq) => sumsq>(best sumsq)*(Frow/best Frow)^2  we save min of (best sumsq)/(best Frow^2) which is max of FOM
@@ -1116,8 +1120,8 @@ endqp: ;
    }else{  // DIP/gradient
 // obsolete  if(exlist==0){  // DIP.  looking for nonimproving pivots?
     union __attribute__((aligned(CACHELINESIZE))) {I quadI[NPAR]; D quadD[NPAR]; } extractarea;  // place where we can see individual values
-    if(unlikely(bv==0)){
-     // gradient mode: limitcs/bk0thresh are Kahan accumulator for sumsq; minspr holds max col value; limitrows holds index of max column values
+    if(unlikely(bvgrd0==ONECOLGRD0)){
+     // gradient mode: limitcs/colbk0thresh are Kahan accumulator for sumsq; minspr holds max col value; limitrows holds index of max column values
      // We switch the sign of minspr because the code for SPR searches for smallest value
      _mm256_store_pd(&extractarea.quadD[0],minspr);   // we want the biggest positive value
      minspr=_mm256_sub_pd(_mm256_setzero_pd(),minspr);  // now the lanes have -(max value)
@@ -1159,7 +1163,7 @@ endqp: ;
 // obsolete        D minimpthiscol=(Frow[colx]*_mm256_cvtsd_f64(oldbk))/_mm256_cvtsd_f64(oldcol);  // this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This updates our local best
        D minimpthiscol;  // the best FOM we found for this column
        // get FOM for this column, and for gradient mode convert the bvgrd index to the correct index#
-       if(likely(bv!=0))minimpthiscol=Frow[colx]*spratmin;  // (DIP) this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This is our local best for this column
+       if(likely(bvgrd0!=ONECOLGRD0))minimpthiscol=Frow[colx]*spratmin;  // (DIP) this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This is our local best for this column
        else{  // (gradient)
         limitcs=_mm256_add_pd(_mm256_permute_pd(limitcs,0b0101),limitcs); limitcs=_mm256_add_pd(_mm256_permute4x64_pd(limitcs,0b11100110),limitcs);   // combine into one
         *(I*)&minimpthiscol=_mm256_extract_epi64(_mm256_castpd_si256(limitcs),0);  // total sumsq+1 of column
@@ -1323,7 +1327,7 @@ return4:  // we have a preemptive DIP result.  store and set minimp =-inf to cut
 //   rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //   rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // gradient mode:
-//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;Frow;sched
+//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bk;Frow;sched
 //   find the (col,row) to maximize colvalue on the edge with the most negative gradient, which is Frow/sqrt(>: sum of squared column values)
 //  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
 // nonimp mode:
@@ -1421,13 +1425,13 @@ if(AN(w)==0){
    Frow=0;  // indicate not gradient
    minimp=0.0;  // minimp not used, but passes through to result
 // obsolete   if(AN(w)==8){bv=0; zv=0;   // Frow omitted: that's nonimp, indicated by bv=zv=Frow=0
-  }else if(AN(w)==8){  // gradient mode  ndx;Ax;Am;Av;(M, shape 2,m,n);(parms as above);Frow;sched
-   bv=0;  // indicate not DIP
-   A box6=C(AAV(w)[6]), box7=C(AAV(w)[7]);
-   ASSERT(AR(box6)<=1,EVRANK); ASSERT(AT(box6)&FL,EVDOMAIN); ASSERT(AN(box6)==n+AS(box1)[0],EVLENGTH);  // Frow must be as long as the NTT
-   Frow=DAV(box6);  // Frow, one per row of M and column of A.  Nonzero indicates gradient
-   ASSERT(AR(box7)<=1,EVRANK) ASSERT(((AN(box7)-1)|SGNIF(AT(box7),INTX))<0,EVDOMAIN)   // must be INT if not empty
-   sched=box7;  // exit schedule
+  }else if(AN(w)==8){  // gradient mode  ndx;Ax;Am;Av;(M, shape 2,m,n);(parms as above);bk;Frow;sched
+   A box6=C(AAV(w)[6]), box7=C(AAV(w)[7]), box8=C(AAV(w)[8]);
+   ASSERT(AT(box6)&FL,EVDOMAIN); ASSERT(AR(box6)==AR(box4)-1,EVRANK); ASSERT(AS(box6)[0]==AS(box4)[0]&&AS(box6)[1]==AS(box4)[1],EVLENGTH); bv=DAV(box6);  // bk, one per row of M
+   ASSERT(AR(box7)<=1,EVRANK); ASSERT(AT(box7)&FL,EVDOMAIN); ASSERT(AN(box7)==n+AS(box1)[0],EVLENGTH);  // Frow must be as long as the NTT
+   Frow=DAV(box7);  // Frow, one per row of M and column of A.  Nonzero indicates gradient
+   ASSERT(AR(box8)<=1,EVRANK) ASSERT(((AN(box8)-1)|SGNIF(AT(box8),INTX))<0,EVDOMAIN)   // must be INT if not empty
+   sched=box8;  // exit schedule
    minimp=inf;  // improvements are positive and work down from infinity
   }else{  // DIP
 // obsolete /Dpiv

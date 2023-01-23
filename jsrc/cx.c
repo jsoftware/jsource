@@ -755,7 +755,7 @@ static I jtxop(J jt,A w){I i,k;
    }  // 'name is not empty'
   } // 'is name'
   if(AT(w)&VERB){
-    if((FAV(w)->id&-2)==CUDOT)fndflag|=4;  // u./v.
+    if((FAV(w)->id&-2)==CUDOT)fndflag|=(4<<(FAV(w)->id&1));  // u./v.
   }
   // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
   if(fndflag>=8+4+2)R fndflag;

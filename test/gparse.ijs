@@ -73,6 +73,14 @@ t =: 3 : 'y'
 t =: {{ x [ y }}
 'valence error' -: t etx 5
 
+t=: {{
+inner =. {{ x + y}}
+10 inner y
+}}
+
+15 = t 5
+'valence error' -: 6 t etx 5
+
 NB. Test display of error spacing
 '|domain error: efx|   1    +''a''' -:&(}.~ i:&'|') efx '1 + ''a'''
 '|domain error: efx|   2    /' -:&(}.~ i:&'|') efx '2/'

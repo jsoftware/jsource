@@ -1019,7 +1019,7 @@ endqp: ;
        // add new value^2 to gradient total, using Kahan summation (in limitcs/colbk0thresh)
        __m256d y, t; y=_mm256_fmadd_pd(dotproducth,dotproducth,colbk0thresh); t=_mm256_add_pd(limitcs,y); colbk0thresh=_mm256_sub_pd(y,_mm256_sub_pd(t,limitcs)); limitcs=t;  // accumulate col^2; 16 cycles latency, which will limit perf (slightly)
        // fetch the 4 bk values and see which ones are near0
-       __m256d bk4=likely(bvgrd<bvgrde)?_mm256_loadu_pd(bv+(bvgrd-ONECOLGRD0)):_mm256_maskload_pd(bv+(bvgrd-ONECOLGRD0),endmask);  // the next bk values
+       __m256d bk4=likely(bvgrd<bvgrde)?_mm256_loadu_pd(bv+(bvgrd-ONECOLGRD0)):_mm256_maskload_pd(bv+(bvgrd-ONECOLGRD0),_mm256_castpd_si256(endmask));  // the next bk values
        dotproducth=_mm256_and_pd(dotproducth,_mm256_cmp_pd(bk4,bk0thresh,_CMP_LT_OQ));   // clear any column values for which bk is not near0
        // remember column position (of the NPAR-word block) of largest value (in limitrows)
        limitrows=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(limitrows),_mm256_castsi256_pd(_mm256_set1_epi64x((I)bvgrd)),_mm256_cmp_pd(dotproducth,minspr,_CMP_GT_OQ)));

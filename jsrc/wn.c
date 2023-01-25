@@ -4,6 +4,7 @@
 /* Words: Numeric Input Conversion                                         */
 
 #include "j.h"
+#include <ctype.h>
 
 #if (SYS & SYS_UNIX)
 #include <stdlib.h>
@@ -97,9 +98,16 @@ static NUMH(jtnume){C*t,*td,*te;I e,ne,nf,ni;Q f,i,*v,x,y;
 
 static NUMH(jtnumr){C c,*t;I m,p,q;Q*v;
  v=(Q*)vv;
- if('-'==s[0]) { // infinity?
-  if(!s[1]){v->n=X1; v->d=X0; R 1;} // _
-  if('-'==s[1]){ASSERT(!s[2], EVILNUM); v->n=X_1; v->d=X0; R 1;} // __
+ if('-'==s[0] && (!s[1] || 'r'==s[1] || '-'==s[1])) { // infinity?
+  I n= 1, j= 1;
+  if ('-'==s[j]) {n=-1; j=2;}
+  if (s[j]) {
+   ASSERT('r'==s[j], EVILNUM); j++;
+   if ('-'==s[j] && isdigit(s[j+1])) {n=-n; j++;}
+   while (isdigit(s[j])) j++;
+   ASSERT(!s[j], EVILNUM);
+  }
+  v->n= 1==n ?X1 :X_1; v->d= X0; R 1;
  }
  m=(t=memchr(s,'r',n))?t-s:n; if(!(jtnumxTEMP(jt,m,s,&v->n)))R 0; v->d=X1;
  if(t){

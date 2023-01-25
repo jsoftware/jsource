@@ -16,6 +16,8 @@ xi   =: x:^:_1
 
 0r1 -:  5r_
 0r1 -: _5r_
+_   -:  _r1
+__  -: __r1
 
 'ill-formed number' -: ex ' _r_ '
 'ill-formed number' -: ex ' _r__'

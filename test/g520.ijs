@@ -42,8 +42,8 @@ elseif. 10 = #y do.  NB. DIP
       'nndx nbkg' =. 35 + ? 20 20   NB. product must exceed 1000
       saferc =. <: {: $ bk  NB. last row/col doesn't change anything
       ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
-      ndx =. ndx (0 (0})^:(prirow={.ndx) /:~ (#ndx) ? nndx)} nndx # saferc  NB. Keep prirow at head, if given, to avoid cutoff
-      bkg =. bkg (/:~ (#bkg) ? nbkg)} nbkg # saferc
+      ndx =. ndx (/:~ (#ndx) ? nndx)} nndx # saferc  NB. Keep prirow at head, if given, to avoid cutoff
+      bkg =. bkg (0 (0})^:(prirow={.bkg) /:~ (#bkg) ? nbkg)} nbkg # saferc
       savy =: (ndx;M;bkg;bk;Frow) 0 4 6 7 8} y
       if. #opts do.
         assert. opts e.~ 3 {. savres =: 128!:9 savy  NB. alternative results
@@ -55,20 +55,29 @@ elseif. 10 = #y do.  NB. DIP
 elseif. 9=#y do.  NB. gradient mode
   if. 0=nthr do.  NB. single-threaded, compare for exact result
     assert. x -: savres =: 128!:9 y
-  else.  NB. multiple threads.  Expand M with one harmless row/col, Frow to match; pad ndx and bkg, preserving order, to make work
+  else.  NB. multiple threads.  Expand M with one harmless row/col, Frow to match;
     if. -. opts -: 0 do.  NB. opts of 0 means single thread only
-      'ndx M bk Frow cons' =. 0 4 6 7 5 { y
+      'ndx M cons bk Frow' =. 0 4 5 6 7 { y
       prirow =. 6 { cons
       msiz =. {:$M  NB. size of M part
-      M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.1e_10 M  NB. One column of small c above threshold, ending row of 0
-      bk =. (0 1 + $bk) {. bk   NB. zeros are active here, but they do nothing
+      M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.0. M  NB. One column of small c above threshold, ending row of 0
       Frow =. (1 + $Frow) {.!.1e_20 Frow
+      bk =. (0 1 + $bk) {. bk   NB. zeros are active here, but they do nothing
       'nndx nbkg' =. 35 + ? 20 20   NB. product must exceed 1000
       saferc =. <: {: $ M  NB. last row/col doesn't change anything
+      Frow =. (({:$Frow) + nbkg - {:$M) {. Frow
+      M =.nbkg {."1 M  NB. unused M, but needed to match size of bk
       ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
-      ndx =. ndx (0 (0})^:(prirow={.ndx) /:~ (#ndx) ? nndx)} nndx # saferc  NB. Keep prirow at head, if given, to avoid cutoff
-      savy =: (ndx;M;bk;Frow) 0 4 6 7} y
+      ndx =. ndx (/:~ (#ndx) ? nndx)} nndx # saferc
+      bkg=.i. msiz   NB. we don't use bkg as a parameter, but we must shuffle bk
+      bkg =. bkg (/:~ (#bkg) ? nbkg)} nbkg # saferc
+      bk =. bkg {"1 bk
+      M =. bkg {"2 M
+      if. prirow>: 0 do. cons =. (bkg i. prirow) 6} cons end.  NB. priority row can float; find it
+      savx =: x =. bkg (i. 2&{)`2:`]} x  NB. replace row #s with positions in bkg
+      savy =: (ndx;M;cons;bk;Frow) 0 4 5 6 7} y
       if. #opts do.
+        opts =. bkg (i. 2&{)`2:`]}"1 opts
         assert. opts e.~ 3 {. savres =: 128!:9 savy  NB. alternative results
       else.
         assert. x -:&(3&{.) savres =: 128!:9 savy  NB. exact match
@@ -81,20 +90,18 @@ else.  NB. nonimp
     assert. x -: savres =: 128!:9 y
   else.  NB. multiple threads.  Expand M with one harmless row/col. pad ndx and bkg, preserving order, to make work
     if. -. opts -: 0 do.  NB. opts of 0 means single thread only
-      'ndx M bkg' =. 0 4 6 { y
+      'M bkg' =. 4 6 { y
       msiz =. {:$M  NB. size of M part
       M =. (0 1 1 + $M) {. M  NB. last row/col of 0s
-      'nndx nbkg' =. 35 + ? 20 20   NB. product must exceed 1000
+      nbkg =. 2000 + ? 200   NB. product must exceed 1000
       saferc =. <: {: $ M  NB. last row/col doesn't change anything
       ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
-      mndx =. ndx (/:~ (#ndx) ? nndx)} nndx # saferc  NB. Keep prirow at head, if given, to avoid cutoff
       bkg =. bkg (/:~ (#bkg) ? nbkg)} nbkg # saferc
-      savres =: 128!:9 savy =: (mndx;M;bkg) 0 4 6} y
-      modres =. ((1}~) (ndx&i.)@({&mndx)@(1&{))^:(0={.) savres  NB. Translate col ndx to col#, if good return
+      savres =: 128!:9 savy =: (ndx;M;bkg) 0 4 6} y
       if. #opts do.
-        assert. opts e.~ 3 {. modres  NB. alternative results
+        assert. opts e.~ 3 {. savres  NB. alternative results
       else.
-        assert. x -:&(3&{.) modres  NB. exact match
+        assert. x -:&(3&{.) savres  NB. exact match
       end.
     end.
   end.
@@ -302,24 +309,24 @@ for_t. i. 4 do.
   NB. nonimproving pivots
   bk =. dptoqp 4 $ 0.
   M =. dptoqp |: _4 ]\ 0. 1 0 0        0 1e_10 3 0   1 1e_7 0 0   1e5 1e_5 0 0   NB. input by columns
-  assert. 0 0 1 0 1 0 ('' run128_9) (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2
-  assert. 0 0 1 0 1 0 ('' run128_9) (0 1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
-  assert. 0 0 2 0 1 0 ('' run128_9) (1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
-  assert. 0 1 1 0 6 0 ('' run128_9) (1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;3 0 1
-  assert. 0 0 0 0 1 0 ('' run128_9) (3 0 1);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-  assert. 0 0 0 0 1 0 ('' run128_9) (4 0 1);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-  assert. 0 0 1 0 1 0 ('' run128_9) (4 0 1);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;1 0 2
-  assert. 3 0 0 0 0 0 ('' run128_9) (4 3 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;2 3
+  assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2
+  assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
+  assert. 0 0 2 0 1 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
+  assert. 3 0 0 0 0 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;3 0 1
+  assert. 0 0 0 0 1 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+  assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+  assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;1 0 2
+  assert. 3 0 0 0 0 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;2 3
   M =. M 1}~ |: _4 ]\ 0. _1 0 0  0 0 0 0        0 0 0 0     0 _1e_5 1e_5 0 
-  assert. 0 0 1 0 1 0 ('' run128_9) (0 1 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-  assert. 0 0 1 0 1 0 ('' run128_9) (4 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2
-  assert. 0 0 0 0 1 0 ('' run128_9) (4 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+  assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+  assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2
+  assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
-  assert. 0 0 1 0 1 0 ('' run128_9) (4 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
+  assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
   M =. 1e_20 (<0 3 3)} M 
   assert. 0 0 0 0 1 0 ((0 0 0,:0 0 1) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
-  assert. 0 0 2 0 1 0 ((0 1 1,0 0 1,:0 0 2) run128_9) (4 0);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2  NB. qp triggered; but not necessarily in all rows
-  assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (4 2);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
+  assert. 0 0 2 0 1 0 ((0 1 1,0 0 1,:0 0 2) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2  NB. qp triggered; but not necessarily in all rows
+  assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
 
   NB. gradient-stall mode
   M =. dptoqp |: _4 ]\ 1. 2 5 4    1 2 3 _10   _1 _2 _20 _10   1 2 3 0   NB. input by columns
@@ -328,10 +335,13 @@ for_t. i. 4 do.
   assert. 0 0 2 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 3 2 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 0 2 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
+  assert. 0 0 3 3 7 __ ('' run128_9) 3 2 1 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(3 (6)}cons);bk;Frow;sched  NB. prirow gets priority
   bk=. dptoqp 0. 0 1 0  NB. don't look where b not 0 
   assert. 0 0 3 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 3 1 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 0 3 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
+  assert. 0 0 1 0 1 __ ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bk;Frow;sched  NB. prirow gets priority
+  assert. 0 3 1 0 1 __ ((0 3 1,0 0 1,:0 1 1) run128_9) 3 1 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bk;Frow;sched
   M =. dptoqp |: _6 ]\ 1. 2 5 4 5 6    1 2 3 _1 1 10   _1 _2 0 0 1 4   1 _2 _3 4 5 6    1 1 1 1 1 1   1 2 3 _1 1 0   NB. input by columns
   bk=. dptoqp 6 $ 1e_29
   Frow =. _4. _5 _2.5 _1 _1 _5 _1e_20 

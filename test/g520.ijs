@@ -340,7 +340,7 @@ for_t. i. 4 do.
   assert. 0 0 3 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 3 1 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 0 3 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
-  assert. 0 0 1 0 1 __ ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bk;Frow;sched  NB. prirow gets priority
+  assert. 0 0 1 0 1 __ ((0 0 1,:0 1 1) run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bk;Frow;sched  NB. prirow gets priority
   assert. 0 3 1 0 1 __ ((0 3 1,0 0 1,:0 1 1) run128_9) 3 1 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bk;Frow;sched
   M =. dptoqp |: _6 ]\ 1. 2 5 4 5 6    1 2 3 _1 1 10   _1 _2 0 0 1 4   1 _2 _3 4 5 6    1 1 1 1 1 1   1 2 3 _1 1 0   NB. input by columns
   bk=. dptoqp 6 $ 1e_29
@@ -348,11 +348,11 @@ for_t. i. 4 do.
   assert. 0 1 5 2 16 4.68 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 5 2 2 16 0.68 ('' run128_9) 00 5;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   assert. 0 2 5 3 24 3.68 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
-  M =. dptoqp |: _4 ]\ 1e_4 _1e_4 1e_4 _1e_4    1 2 3 _10   1e_4 _1e_4 1e_4 _10   1 2 3 0   NB. input by columns
+  M =. dptoqp |: _4 ]\ 1.0001e_4 _1e_4 1e_4 _1e_4    1 2 3 _10   1e_4 _1e_4 1e_4 _10   1 2 3 0   NB. input by columns
   bk=. dptoqp 4 $ 1e_29
   Frow =. _1.e10 _5 _2.5 _2e10 _1e_20 
   assert. 0 1 2 3 9 4.6 ('' run128_9) 00 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bk;Frow;sched  NB. Test discarding small column values
-  assert. 0 0 0 2 5 1.00000004e_20 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(cons);bk;Frow;sched
+  assert. 0 0 0 2 5 1.000000040002e_20 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(cons);bk;Frow;sched
 
 
   NB. end of tests, add a thread

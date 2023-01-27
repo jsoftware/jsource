@@ -310,7 +310,11 @@ Q jtQmpq(J jt, mpq_t mpq) {
   #define LIBEXT10 LIBEXT 
  #else
   #define LIBEXT ".so"
+  #ifdef __OpenBSD__
+  #define LIBEXT10 ".so.11.0"    /* symlink of .so only available when devel package installed */
+  #else
   #define LIBEXT10 ".so.10"    /* symlink of .so only available when devel package installed */
+  #end
  #endif
  #define LIBGMPNAME "libgmp" LIBEXT
  #define LIBGMPNAME10 "libgmp" LIBEXT10
@@ -364,6 +368,7 @@ void jgmpinit(C*libpath) {
    i++;
   }
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
+  if(!(libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY)))  /* first try system libgmp */
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
   libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
  } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);

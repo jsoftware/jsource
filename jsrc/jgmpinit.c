@@ -314,7 +314,7 @@ Q jtQmpq(J jt, mpq_t mpq) {
   #define LIBEXT10 ".so.11.0"    /* symlink of .so only available when devel package installed */
   #else
   #define LIBEXT10 ".so.10"    /* symlink of .so only available when devel package installed */
-  #end
+  #endif
  #endif
  #define LIBGMPNAME "libgmp" LIBEXT
  #define LIBGMPNAME10 "libgmp" LIBEXT10

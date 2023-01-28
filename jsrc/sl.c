@@ -501,7 +501,7 @@ noextend: ;
  }
  // if op!=0, we have to install xv as the new path.  If the path has changed, we know it was changed to 0 or zpath, so we can ignore it; it is the other guy's responsibility to
  // free oldpath.  If the path hasn't changed, we have to free op.  This must be done under system lock, since we know op was not PERMANENT
- if(op!=0 && oldpath!=__atomic_exchange_n(&LOCPATH(g),xv,__ATOMIC_ACQ_REL))op=0;  // if path changed, suppress free below
+ if(op!=0 && oldpath!=(A*)__atomic_exchange_n(&LOCPATH(g),xv,__ATOMIC_ACQ_REL))op=0;  // if path changed, suppress free below
  WRITEUNLOCK(JT(jt,locdellock))  // mustn't hold a lock when we call for systemlock
  if(op!=0){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}
 // obsolete  A *oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=xv;   // use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
@@ -525,7 +525,7 @@ static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
   A *gp;  // pointer to path
   if(gp=LOCPATH(g)){
 #else
-  A *gp=__atomic_exchange_n(&LOCPATH(g),0,__ATOMIC_ACQ_REL);  // pointer to path, and clear path to 0
+  A *gp=(A*)__atomic_exchange_n(&LOCPATH(g),0,__ATOMIC_ACQ_REL);  // pointer to path, and clear path to 0
   if(gp){
 #endif
    // rare case of reinitializing a locale that has not been deleted.  This is allowed only if it has no symbols
@@ -660,7 +660,7 @@ exitlock:
 // usecount.  When the locale is no longer in any paths, it will be freed along with its name.
 B jtlocdestroy(J jt,A g){
  // see if the locale has been deleted already.  Return fast if so
- A *path=__atomic_exchange_n(&LOCPATH(g),0,__ATOMIC_ACQ_REL);
+ A *path=(A*)__atomic_exchange_n(&LOCPATH(g),0,__ATOMIC_ACQ_REL);
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)

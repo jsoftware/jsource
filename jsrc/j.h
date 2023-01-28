@@ -817,12 +817,21 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
 #define __atomic_load_n(aptr, memorder) *aptr
+#if defined(__clang__) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 8))
 #define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
 #define __atomic_exchange_n(aptr, val, memorder) ({__auto_type rrres=*aptr; *aptr =val; rrres;})
 #define __atomic_fetch_or(aptr, val, memorder)   ({__auto_type rrres=*aptr; *aptr|=val; rrres;})
 #define __atomic_fetch_sub(aptr, val, memorder)  ({__auto_type rrres=*aptr; *aptr-=val; rrres;})
 #define __atomic_fetch_add(aptr, val, memorder)  ({__auto_type rrres=*aptr; *aptr+=val; rrres;})
 #define __atomic_fetch_and(aptr, val, memorder)  ({__auto_type rrres=*aptr; *aptr&=val; rrres;})
+#else
+#define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=(void*)desired,1)
+#define __atomic_exchange_n(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr=val; rrres;})
+#define __atomic_fetch_or(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr|=val; rrres;})
+#define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr-=val; rrres;})
+#define __atomic_fetch_add(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr+=val; rrres;})
+#define __atomic_fetch_and(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr&=val; rrres;})
+#endif
 #define __atomic_add_fetch(aptr, val, memorder) (*aptr+=val)
 #define __atomic_sub_fetch(aptr, val, memorder) (*aptr-=val)
 #define __atomic_and_fetch(aptr, val, memorder) (*aptr&=val)

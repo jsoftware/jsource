@@ -37,6 +37,13 @@ NB. no more thread can be created
 ('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. 'worker' 4  NB. pyx error is so flagged
 ('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. '' 4  NB. pyx error is so flagged
 
+NB. delay
+pyx=. (6!:3) t. (<'worker';0) "0 [ 1#~3*N
+1:&> pyx
+
+pyx=. (6!:3) t. (<'worker';1) "0 [ 1#~3*N
+1:&> pyx
+
 f=: 4 : 0
 pyx=. g t. (<'worker';x) "0 i.y
 while. do.

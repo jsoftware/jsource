@@ -46,7 +46,7 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 'stack error' -: ex '6!:2 t' [ t=: '6!:2 t'
 'stack error' -: ex '7!:2 t' [ t=: '7!:2 t'
 'stack error' -: ex '0!:0 t' [ t=: '0!:0 t'
-(+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: 380  NB. 400 was failing on 32 bit linux running under gdb (debian bullseye)
+(+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: 370  NB. 400 was failing on 32 bit linux running under gdb (debian bullseye)
 'stack error' -: 0:`([: $: %)@.* etx 5
 
 600 < c=: $:@>: :: <: 0

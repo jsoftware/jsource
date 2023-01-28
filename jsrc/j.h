@@ -817,7 +817,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
 #define __atomic_load_n(aptr, memorder) *aptr
-+#if defined(__clang__) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 8))
+#if defined(__clang__) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 8))
 #define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
 #define __atomic_exchange_n(aptr, val, memorder) ({__auto_type rrres=*aptr; *aptr =val; rrres;})
 #define __atomic_fetch_or(aptr, val, memorder)   ({__auto_type rrres=*aptr; *aptr|=val; rrres;})

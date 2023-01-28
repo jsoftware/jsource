@@ -296,19 +296,19 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
 
  /* J calls for input in 3 cases:
     debug suspension for normal input
-    n : 0 input lines up to terminating )
+    n : 0 input lines up to terminating ), or {{ reading for trailing }}
     1!:1[1 read from keyboard */
- // if we are already prompting, a second prompt would be unrecoverable & we fail this request
- ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
+ ASSERT(IJT(jt,promptthread)==THREADID(jt),EVINPRUPT)  // only one thread is allowed to read from m : 0 or stdin - make sure we are it
+ ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)   // if we are already prompting, a second prompt would be unrecoverable & we fail this request
+ ASSERT(IJT(jt,nfe)||IJT(jt,sminput),EVBREAK);  // make sure there is a routine to read with
  showerr();  // there may be error text that has not been emitted.  jt->jerr will be clear.
  // read from the front end. This is either through the nfe path or via the callback to the FE
+ // make sure only one thread prompts at a time.  Prompting is rare & we just kludge up a spinlock for this
+ jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
  if(IJT(jt,nfe)){
   // Native Front End
-  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
   v=nfeinput(JJTOJ(jt),*p?"input_jfe_'      '":"input_jfe_''");   // use jt so always emit prompt
  }else{
-  ASSERT(IJT(jt,sminput),EVBREAK); 
-  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
   v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
  jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state

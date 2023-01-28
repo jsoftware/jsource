@@ -10,6 +10,7 @@
 // inlinable functions are moved to vg.c
 // functions differing between merge & sort are moved to those modules
 B compcu(I n, UC *a, UC *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
+// interesting but no faster B compcu(I n, UC *a, UC *b){I lsh=(-n&(SZI-1))<<LGSZI; do{UI ai=*(UI*)a; UI bi=*(UI*)b; I sh=(n-SZI)<=0?lsh:0; UI comp=(ai^bi)<<sh; if(comp){sh+=BW-SZI-(CTTZI(comp)&-SZI); R (ai<<sh)<(bi<<sh);} if((n=n-SZI)<=0)break; a+=SZI; b+=SZI;}while(1); R a<b;}
 B compcd(I n, UC *a, UC *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B compuu(I n, US *a, US *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B compud(I n, US *a, US *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}

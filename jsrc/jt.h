@@ -72,6 +72,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C ppn;              // print precision (field width for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task  could merge into .db or boxpos
+// 1 byte free
  union {  // this union is 4 bytes long on a 4-byte bdy
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -145,8 +146,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATEFUTEXWAKE (1LL<<TASKSTATEFUTEXWAKEX)
  C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
+// 1 bytes free
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
-// 2 bytes free
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution
  UI cstackmin;        // red warning for C stack pointer
@@ -214,8 +215,10 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory friendly than a straight chain?
  I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
- I filler7[1];
+ I filler7[5];
 // end of cacheline 7
+ C _cl8[0];
+
 // stats I totalpops;
 // stats I nonnullpops;
 // the following lines are engaged only for low-performance builds, and must not be set in 64-bit builds lest blocks get too big
@@ -292,7 +295,8 @@ typedef struct JSTstruct {
  S symlock;          // r/w lock for symbol pool
  // rest of cacheline used only in exceptional paths
  S locdellock;  // lock to serialize user request to delete locale
-// 4 bytes free
+ S promptlock;  // lock to serialize prompt call to the FE
+ US promptthread;  // The thread that is allowed to prompt from keyboard.  0=master normally, but set to debug thread during suspension
 // front-end interface info
  C *capture;          // capture output for python->J etc.
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
@@ -310,10 +314,10 @@ typedef struct JSTstruct {
  UI4 baselocalehash;   // name hash for base locale
  UC seclev;           /* security level                                  */
  UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script.  See TRACEDB* flags above
- B assert;           /* 1 iff evaluate assert. statements               */
+ B assert;           /* 1 iff evaluate assert. statements     
+// 1 byte free          */
  // rest of cacheline used only in exceptional paths
 // obsolete  UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)
-// 1 byte free
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
  I filler3[3];
@@ -368,7 +372,7 @@ typedef struct JSTstruct {
  FLOAT16 dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
 // 4 bytes free 
-A evm;              /* event messages                                  */
+ A evm;              // message text for the EVxxx codes
  I (*emptylocale)[MAXTHREADS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
  I filler6[2];
 // end of cacheline 6
@@ -387,9 +391,12 @@ A evm;              /* event messages                                  */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
 #if PYXES
  JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
-#endif
  I filler7[1];
+#else
+ I filler7[2];
+#endif
 // end of cacheline 7
+ C _cl8[0];
 
  JTT threaddata[MAXTHREADS] __attribute__((aligned(JTFLAGMSK+1)));
 } JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed on windows
@@ -432,6 +439,7 @@ _Static_assert(offsetof(JTT,_cl4)==4*64,"cacheline 4 offset wrong");
 _Static_assert(offsetof(JTT,_cl5)==5*64,"cacheline 5 offset wrong");
 _Static_assert(offsetof(JTT,_cl6)==6*64,"cacheline 6 offset wrong");
 _Static_assert(offsetof(JTT,_cl7)==7*64,"cacheline 7 offset wrong");
+_Static_assert(offsetof(JTT,_cl8)==8*64,"cacheline 8 offset wrong");
 _Static_assert(offsetof(JST,_cl0)==0*64,"cacheline 0 offset wrong");
 _Static_assert(offsetof(JST,_cl1)==1*64,"cacheline 1 offset wrong");
 _Static_assert(offsetof(JST,_cl2)==2*64,"cacheline 2 offset wrong");
@@ -440,4 +448,5 @@ _Static_assert(offsetof(JST,_cl4)==4*64,"cacheline 4 offset wrong");
 _Static_assert(offsetof(JST,_cl5)==5*64,"cacheline 5 offset wrong");
 _Static_assert(offsetof(JST,_cl6)==6*64,"cacheline 6 offset wrong");
 _Static_assert(offsetof(JST,_cl7)==7*64,"cacheline 7 offset wrong");
+_Static_assert(offsetof(JST,_cl8)==8*64,"cacheline 8 offset wrong");
 #endif

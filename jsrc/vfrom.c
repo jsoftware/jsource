@@ -1039,6 +1039,7 @@ endqp: ;
 // obsolete        if(unlikely(_mm256_extract_epi64(dotproducth,0)>_mm256_extract_epi64(minimpspr,0))){
 // obsolete         if(likely(_mm256_testz_si256(rowstride,_mm256_cmpeq_epi64(_mm256_set1_epi64x(prirow),limitrows))))   // rowstride is any 256i with nonzero in all lanes
 // obsolete         if((I)(bvgrd-ONECOLGRD0)>=(prirow&-NPAR))goto abortcol;  // If we have already checked the virtual row, we can abort
+        // The column can be cut off.  But if there is a priority row, make sure we check it
         I skipamt=((prirow&-NPAR)-NPAR)-(bvgrd-ONECOLGRD0);  // number of rows to hop over to get to one row before prirow
         if(skipamt<0)goto abortcol;  // If we have already checked the virtual row, we can abort
         bvgrd+=skipamt;  // if we haven't checked the virtual row, skip to just before it.  If it isn't eligible we will abort next time
@@ -1047,7 +1048,7 @@ endqp: ;
       }
      }
 #if 0  // obsolete 
-    if(bv!=0){  // scaf use limitrow
+    if(bv!=0){
      // this table gives the values to use in permutevar32 to push all the nonzeros to the bottom of the 256 bytes, with 0s at the top
      // the index is the mask of zeros
      static __attribute__((aligned(CACHELINESIZE))) UI4 permvals[16][8] ={
@@ -1694,7 +1695,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 // 128!:12  calculate
 // Qk/bk=: (((<prx;pcx) { Qk) ((~:!.absfuzz) * -) pivotcolnon0 */ newrownon0 [* mplr]) (<prx;pcx)} Qk/bk
 // with high precision
-// a is prx;pcx;pivotcolnon0;newrownon0;absfuzz/mplr (mplr if not atom) scaf TODO: make fuzz absolute
+// a is prx;pcx;pivotcolnon0;newrownon0;absfuzz/mplr (mplr if not atom)
 // w is Qk or bk.  If bk, prx must be scalar 0
 // If Qk has rank > rank newrownon0 + rank prx, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
 // Qk/bk is modified in place

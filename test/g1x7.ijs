@@ -19,14 +19,15 @@ wslhack =: (nn$0 0,wsl) +. ]
 
 test  =: 3 : ('((,nn)-:$y) *. *./y e."_1 nn$''rwx'',.''-''')
 
-erase ::1: ('brandnew/'&,)&.> {."1[ 1!:0<'brandnew/*'
-erase ::1: <'brandnew'
-d =. <'brandnew'
+brandnew =. 'brandnew',(":2!:6''),'_',":3&T.''
+erase ::1: ((brandnew,'/')&,)&.> {."1[ 1!:0<brandnew,'/*'
+erase ::1: <brandnew
+d =. <brandnew
 mkdir d
 test perm d
 erase d
 
-f =. <jpath (UNAME-:'Android'){::'~temp/foogoo5.x';'~bin/foogoo5.x'
+f =. <jpath ((UNAME-:'Android'){::'~temp/';'~bin/'),'foogoo5.x',(":2!:6''),'_',":3&T.''
 'foo upon thee' write f
 test perm f
 
@@ -84,7 +85,7 @@ perm =: 1!:7
 
 'length error'      -: 'wx'  perm etx <jpath '~temp/foo.x'
 
-4!:55 ;:'close d erase f h mkdir nn open perm test unix write '
+4!:55 ;:'brandnew close d erase f h mkdir nn open perm test unix write '
 
 
 

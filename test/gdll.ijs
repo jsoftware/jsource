@@ -169,9 +169,11 @@ f=: 3 : 0
 if. UNAME-:'Android' do. 2 0 return. end.
 echo 'LIBTSDLL:',LIBTSDLL
 i=. LIBTSDLL i:'.'
-t=. dltb jpath '~temp',(}.~ i:&'/') jpathsep (i{.LIBTSDLL),(":2!:6''),(8 u: 16b1f601),'ê',i}.LIBTSDLL
+,(":2!:6''),'_',":3&T.''
+t=. dltb jpath '~temp',(}.~ i:&'/') jpathsep (i{.LIBTSDLL),(":2!:6''),'_',(":3&T.''),(8 u: 16b1f601),'ê',i}.LIBTSDLL
 if. -.fexist t do. (fread dltb LIBTSDLL)fwrite t end. NB. no write if exists - could be in use
 try. ((dquote t),' fubar x')cd '' catch. end.
+1!:55 ::1: <t
 cder''
 )
 

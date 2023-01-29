@@ -368,7 +368,9 @@ void jgmpinit(C*libpath) {
    i++;
   }
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
+#if defined(__LP64__)||!defined(__linux__)  /* bug in gmpz_mul/gmpz_gcd stock libgmp.so in 32-bit linux */
   if(!(libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY)))  /* first try system libgmp */
+#endif
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
   libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
  } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);

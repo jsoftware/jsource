@@ -84,21 +84,25 @@ assert. 1. = >pyx
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a2' NB. master should wait
 wthr nwthreads
 pyx =. 6!:3 t. 'worker'"0 (>:N) # 1.0  NB. fill up with delaying threads
+echo^:chk 'gtdot3 a13d'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a3' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker') "0 (>:N) # 1.0  NB. fill up with delaying threads
+echo^:chk 'gtdot3 a13e'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a4' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';1) "0 (>:N) # 1.0  NB. fill up with delaying threads
+echo^:chk 'gtdot3 a13f'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a5' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';0) "0 (>:N) # 1.0  NB. fill up with delaying threads
+echo^:chk 'gtdot3 a13g'
 t0 =. 6!:1''
 1. = >pyx
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a6' NB. master should wait
@@ -123,6 +127,7 @@ tod =. 6!:1''
 echo^:chk 'gtdot3 a32a'
 assert. 0 = >{{11 T. y}}t.''mtx  NB. boxed mtx OK
 echo^:chk 'gtdot3 a32b'
+NB. the following line hang on freebsd
 assert. 1 = 11 T. mtx;2.0
 echo^:chk 'gtdot3 a32c'
 assert. GITHUBCI +. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay

@@ -152,7 +152,7 @@ end.
 f=: 18!:4
 f <'base'
 1 [ unmap_jmf_ 'q'
-f=: <jpath '~temp/q.jmf'
+f=: <jpath'~temp/q','.jmf',~(":2!:6''),'_',":3&T.''
 1 [ createjmf_jmf_ f,<3e5      NB. 3e5 bytes for data
 map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 '' -: q
@@ -178,10 +178,11 @@ map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 
 
 1 [ unmap_jmf_ 'q'
+1!:55 ::1: f
 
 NB. Test usecount on mapped arrays
 NB. create clean mapped noun a
-f=: jpath'~temp/t.jmf'
+f=: jpath'~temp/t','.jmf',~(":2!:6''),'_',":3&T.''
 1 [ createjmf_jmf_ f;1000
 1 [ 1 unmap_jmf_'a' NB. 1 forces unmap - even with dangling refs
 1 [ map_jmf_ 'a';f
@@ -200,6 +201,7 @@ NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 1 [ 1 foo '' NB. a NB. ".&.> <'a' [ !a
 (<,2) -: (<1,MAPREFS_jmf_) { showmap_jmf_''
 1 [ unmap_jmf_ 'a'
+1!:55 ::1: <f
 
 18!:55 <'jmf'
 

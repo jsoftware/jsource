@@ -14,6 +14,7 @@ ECHOFILENAME=: 1   NB. echo file name
 stdout LF ,~ 9!:14''
 
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
+ddall=: ddall -. blacklist=: blacklist, ('FreeBSD'-:UNAME)#(<testpath),each <'gtdot3.ijs' NB. temporarily disable
 
 NB. smoke test
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'

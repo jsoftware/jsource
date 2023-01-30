@@ -87,7 +87,7 @@ NB. Verify that f. verbs are functionally equivalent, without checking reps
 i =: 0&$: : s
 'domain error' -: ex 'i&> b. 1'  NB. used to hang
 
-load 'foo.ijs' [(3!:6 'a001 =: ]',LF,'a001`]@.1: f.') 1!:2 <'foo.ijs'
+load foo [(3!:6 'a001 =: ]',LF,'a001`]@.1: f.') 1!:2 <foo=: 'foo','.ijs',~(":2!:6''),'_',":3&T.''
 
 
 1: 0 : 0
@@ -182,7 +182,7 @@ f=: (C +:)"0 f.
 (f -: (!+:)) y=: 10 ?@$ 6
 
 
-4!:55 ;:'a a001 ambi ar b C cap dec dyad eachh f fact fact1 eq g i inc lr '
+4!:55 ;:'a a001 ambi ar b C cap dec dyad eachh eq f fact fact1 foo g i inc lr '
 4!:55 ;:'mat monad plus s sgn slash t v ws y'
 
 

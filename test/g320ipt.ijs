@@ -76,6 +76,7 @@ THRESHOLD +. threshold < y rsq y1
 
 1 [ unmap_jmf_ 'q'
 1 [ unmap_jmf_ 'r'
+1!:55 ::1: f,f1
 
 NB. Verify that AFNOSMREL is propagated through structural verbs
 f =: 1 : 0

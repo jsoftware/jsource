@@ -118,9 +118,11 @@ NB. mutex
 mtx =. 10 T. 0
 assert. 0 = >{{11 T. y;0}}t.''mtx
 assert. 1 = 11 T. mtx;0
+13 T. mtx
 mtx =. 10 T. 0
 assert. 0 = 11 T. mtx
 'domain error' -: 11 T. etx >:&.> mtx
+13 T. mtx
 mtx =. 10 T. 0
 echo^:chk 'gtdot3 a32'
 tod =. 6!:1''
@@ -138,10 +140,10 @@ assert. GITHUBCI +. (0.3 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0
 assert. GITHUBCI +. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
+13 T. mtx
 mtx=.10 T. 1  NB. recursive
 assert. 0 = 11 T. mtx
 assert. 0 = 11 T. mtx  NB. lock count=2
-13 T. mtx
 13 T. mtx
 assert. '' -: $ mtx  NB. mtx looks atomic
 assert. 1 = #mtx

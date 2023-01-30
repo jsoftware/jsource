@@ -422,11 +422,19 @@ typedef JST* JS;  // shared part of struct
 #define JT(p,n) (JJTOJ(p)->n)
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
+#define MDTHREAD(jjt) (&jjt->threaddata[jjt->promptthread])     // jt for master/debug thread.  jjt is the shared jt pointer
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
 #define NALLTHREADS(jt) (1+JT(jt,nwthreads))
 #define THREADIDFORWORKER(n) ((n)+1)  // convert worker# to thread#
+// given a pointer which might be a JST* or JTT*, set pointers to use for the shared and thread regions.
+// If we were given JST*, keep it as shared & use master thread; if JTT*, keep it as thread & use shared region
+#define SETJTJM(injstout,jttout) \
+ JJ jttout; \
+ if((I)injstout&(JTALIGNBDY-1)){jttout=(JJ)injstout; injstout=JJTOJ(injstout);   /* if jt is a thread pointer, keep it as jm and set jt to the shared */ \
+ }else{jttout=MDTHREAD(injstout);}  /* if jt is a shared pointer, keep it as jt and use the master/debug thread as jm */
+
 _Static_assert(sizeof(struct JSTstruct)<=JTALIGNBDY,"too many threads");  // assert not too many threads
 _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected
 

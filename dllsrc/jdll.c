@@ -25,13 +25,7 @@
 #include "../jsrc/jlib.h"
 #undef JT
 #define JT(p,n) p->n  // used for references in JS, which most references in this module are
-#define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
-// given a pointer which might be a JST* or JTT*, set pointers to use for the shared and thread regions.
-// If we were given JST*, keep it as shared & use master thread; if JTT*, keep it as thread & use shared region
-#define SETJTJM(in,jstout,jttout) \
- JJ jttout; \
- if((I)in&(JTALIGNBDY-1)){jttout=(JJ)in; jstout=JJTOJ(in);   /* if jt is a thread pointer, use it and set jt to the shared */ \
- }else{jttout=MTHREAD(in);}  /* if jt is a shared pointer, use the master thread */
+#define IJT(p,n) JT(JJTOJ(p),n)    // used in functions that interface to internal functions and thus take a JJ
 
 extern void wtom(US* src, I srcn, UC* snk);
 extern void utow(C4* src, I srcn, US* snk);
@@ -282,13 +276,13 @@ static int jget(JJ jt, C* name, VARIANT* v, int dobstr)  // jt is a thread point
 
 CDPROC int _stdcall JGet(JS jt, C* name, VARIANT* v)
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
 	return jget(jm, name, v, 0); // no bstrs; run in master thread
 }
 
 CDPROC int _stdcall JGetB(JS jt, C* name, VARIANT* v)
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
 	return jget(jm, name, v, 1); // do bstrs; run in master thread
 }
 
@@ -613,13 +607,13 @@ static int jsetx(JJ jt, C* name, VARIANT* v, int dobstrs)   // jt is a thread po
 
 CDPROC int _stdcall JSet(JS jt, C* name, VARIANT* v)
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
 	return jsetx(jm, name, v, 0);	// no bstrs, use master thread
 }
 
 CDPROC int _stdcall JSetB(JS jt, C* name, VARIANT* v)
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
 	return jsetx(jm, name, v, 1);	// do bstrs
 }
 
@@ -820,14 +814,14 @@ CDPROC JS _stdcall JInit2(C *libpath)
 	};
 	if(libpath){strcpy(dllpath,libpath);if(strlen(dllpath)&&('\\'==dllpath[strlen(dllpath)-1]))dllpath[strlen(dllpath)-1]=0;}
 	jgmpinit(dllpath); // mp support for 1x and 2r3
-	return jt;  // return (JS)MTHREAD(jt);
+	return jt;  // return shared block
 }
 
 // clean up at the end of a J instance
 CDPROC int _stdcall JFree(JS jt)
 {
 	if(!jt) return 0;
-	SETJTJM(jt,jt,jm)
+	SETJTJM(jt,jm)
 #if !SY_WINCE
 	dllquit(jm);  // clean up call dll
 #endif

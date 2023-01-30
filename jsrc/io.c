@@ -110,7 +110,7 @@ JHS routines are J socket code to talk with javascript browser page
 DD NOTE: DD is not supported on special sentences: iep, dbssexec, dbtrap.  This is mostly because I don't understand how these work.
 
 DD is supported on ". y, but only if the DD is fully contained in the string
-A recursive JDo may use a DD, but only if it is fully contained in the string
+A reentrant JDo may use a DD, but only if it is fully contained in the string
 
 */
 
@@ -196,12 +196,6 @@ JHS has the additional complication of critical sections of J code
 #undef JT
 #define JT(p,n) p->n  // used for references in JS, which most references in this module are
 #define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
-// given a pointer which might be a JST* or JTT*, set pointers to use for the shared and thread regions.
-// If we were given JST*, keep it as shared & use master thread; if JTT*, keep it as thread & use shared region
-#define SETJTJM(in,jstout,jttout) \
- JJ jttout; \
- if((I)in&(JTALIGNBDY-1)){jttout=(JJ)in; jstout=JJTOJ(in);   /* if jt is a thread pointer, use it and set jt to the shared */ \
- }else{jttout=MTHREAD(in);}  /* if jt is a shared pointer, use the master thread */
 
 
 
@@ -220,7 +214,7 @@ void jtwri(JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,*v=buf;I 
   MC(v,t,e); v+=e;   // join prompt/body/EOL
   *v=0;   // NUL termination
 #ifdef ANDROID
-  A z=jttocesu8(MTHREAD(jt),jtstr(MTHREAD(jt),strlen(buf),buf));  // calling internal jt... functions
+  A z=jttocesu8(MDTHREAD(jt),jtstr(MDTHREAD(jt),strlen(buf),buf));  // calling internal jt... functions
   CAV(z)[AN(z)]=0;
   jsto(jt,type,CAV(z));
 #else
@@ -269,7 +263,7 @@ void breakclose(JS jt);
 #define WITHATTNDISABLED(s) {DISABLEATTN s ENABLEATTN}
 
 static C* nfeinput(JS jt,C* s){A y;
- WITHATTNDISABLED(y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s),ds(CEXEC));)  // exec the sentence with break interrupts disabled
+ WITHATTNDISABLED(y=jtexec1(MDTHREAD(jt),jtcstr(MDTHREAD(jt),s),ds(CEXEC));)  // exec the sentence with break interrupts disabled
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
@@ -388,7 +382,7 @@ static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
  }
 }
 
-static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)
+static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread struct we are executing in (the master/debug thread)
  jm->jerr=0; jm->etxn=0; /* clear old errors */
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
@@ -420,7 +414,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
 
 #define SZINT             ((I)sizeof(int))
 
-C* getlocale(JS jt){JJ jm=MTHREAD(jt); A y=jtlocname(jm,mtv); y=AAV(y)[0]; R CAV(jtstr0(jm,y));}   // return current locale of master thread
+C* getlocale(JS jt){JJ jm=MDTHREAD(jt); A y=jtlocname(jm,mtv); y=AAV(y)[0]; R CAV(jtstr0(jm,y));}   // return current locale of executing thread
 
 // Front-ends can call any functions exposed by JE, but the callback function for 11!:0 only calls jga to allocate a new literal array for returning result.
 // A front-end knows nothing how J memory pool works and it won't try to free or pop memory itself. This was just a design decision. eg,
@@ -498,7 +492,7 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
 int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
   // Normal output.  Call the output routine
  if(unlikely(jm->recurstate>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
@@ -537,7 +531,7 @@ C* _stdcall JGetR(JS jt){
 // it preserves the interface
 // If the pointer to the name is NULL we just free the block
 A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
  if(name==0){if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;} R 0;}
  jm->jerr=0;
  A *old=jm->tnextpushp;
@@ -563,7 +557,7 @@ A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;
 
 /* socket protocol CMDSET */
 I _stdcall JSetA(JS jt,I n,C* name,I dlen,C* d){
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
  jm->jerr=0;
  if(!jtvnm(jm,n,name)){jtjsignal(jm,EVILNAME); R EVILNAME;}
  A *old=jm->tnextpushp;
@@ -584,7 +578,7 @@ typedef C* (_stdcall * polltype) (J,int,int);
 
 void _stdcall JSM(JS jt, void* callbacks[])
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
  JT(jt,smoutput) = (outputtype)callbacks[0];  // callback function for output to J session
 // output type
 // #define MTYOFM  1 /* formatted result array output */
@@ -633,7 +627,7 @@ void _stdcall JSM(JS jt, void* callbacks[])
 /* set jclient callbacks from values - easier for nodejs */
 void _stdcall JSMX(JS jt, void* out, void* wd, void* in, void* poll, I opts)
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
  JT(jt,smoutput) = (outputtype)out;
  JT(jt,smdowd) = wd;
  JT(jt,sminput) = (inputtype)in;
@@ -658,7 +652,7 @@ void _stdcall JSMX(JS jt, void* out, void* wd, void* in, void* poll, I opts)
 
 // return pointer to string name of current locale, or 0 if error
 C* _stdcall JGetLocale(JS jt){
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
  A *old=jm->tnextpushp;  // set free-back-to point
  if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;}  // free old block if any
  C* z=getlocale(jt);  // get address of string to return
@@ -668,14 +662,14 @@ C* _stdcall JGetLocale(JS jt){
 }
 
 A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;
- SETJTJM(jjt,jjt,jt)  // the name 'jt' is used by ga() for the shared pointer
+ SETJTJM(jjt,jt)  // the name 'jt' is used by ga() for the shared pointer
  GA(z,t,n,r,s);
  ACINIT(z,ACUC1)  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
 }
 
 void _stdcall JInterrupt(JS jt){
- SETJTJM(jt,jt,jm);
+ SETJTJM(jt,jm);
  // increment adbreak by 1, capping at 2
  C old=lda(jt->adbreak);
  while(1){
@@ -691,7 +685,7 @@ void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
 // type is mtyo of string, s->null-terminated string
 void jsto(JS jt,I type,C*s){C e;I ex;
  if(JT(jt,nfe))
- {JJ jm=MTHREAD(jt);  // get address of thread struct we are using
+ {JJ jm=MTHREAD(jt);  // get address of thread struct we are using.  For the nonce we always use the master in case there is stored state there, since we aren't executing sentences
   // here for Native Front End state, toggled by 15!:16
   // we execute the sentence:  type output_jfe_ s    in the master thread
   fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1
@@ -747,11 +741,11 @@ __attribute__((constructor)) static void Initializer(){
  getsopath();
  JS jt=jvmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
  if(!jt)R;
- I sz=offsetof(JST,threaddata[1]); // #relevant bytes: just JS and the first JT
+ I sz=offsetof(JST,threaddata[1]); // #relevant bytes: just JS and the first JT.  This makes MDTHREAD() valid
  if(!jvmcommit(jt,sz)){jvmrelease(jt,sizeof(JST));R;}
  if(!jtglobinit(jt)){jvmrelease(jt,sizeof(JST)); R;}
  dll_initialized=1;
- jvmrelease(jt,sizeof(JST)); //the jt block itself can be released; we effectively orphan any blocks pointed to there by, because they are used by the globals we've just initialised
+ jvmrelease(jt,sizeof(JST)); //the jt block itself can be released; we effectively orphan any blocks pointed to thereby, because they are used by the globals we've just initialised
 }
 
  // Init for a new J instance.  Globals have already been initialized.
@@ -766,7 +760,7 @@ JS _stdcall JInit(void){
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
  jgmpinit(sopath); // mp support for 1x and 2r3
- R jt;  // R (JS)MTHREAD(jt);
+ R jt;  // return JST
 }
 
  // Init for a new J instance.  Globals have already been initialized.
@@ -782,13 +776,13 @@ JS _stdcall JInit2(C*libpath){
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
  if(libpath){strcpy(sopath,libpath);if(strlen(sopath)&&('/'==sopath[strlen(sopath)-1]))sopath[strlen(sopath)-1]=0;}
  jgmpinit(sopath); // mp support for 1x and 2r3
- R jt;  // R (JS)MTHREAD(jt);
+ R jt;  // return JST
 }
 
 // clean up at the end of a J instance
 int _stdcall JFree(JS jt){
   if(!jt) R 0;
-  SETJTJM(jt,jt,jm)
+  SETJTJM(jt,jm)
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
   dllquit(jm);  // clean up call dll
@@ -849,7 +843,7 @@ int valid(C* psrc, C* psnk)
 
 int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
  A a; char gn[256]; int z;
  A *old=jm->tnextpushp;
  if(strlen(name) >= sizeof(gn)){jtjsignal(jm,z=EVILNAME);
@@ -868,7 +862,7 @@ int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 }
 
 static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
-{JJ jt=MTHREAD(jtt);   // use master thread
+{JJ jt=MTHREAD(jtt);   // use master thread always since there is no execution
  A a;
  I k=1,i,n;
  char gn[256];
@@ -917,7 +911,7 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 
 int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
- SETJTJM(jt,jt,jm)
+ SETJTJM(jt,jm)
  int er;
 
  A *old=jm->tnextpushp;

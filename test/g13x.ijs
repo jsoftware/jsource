@@ -182,6 +182,13 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 )
 13!:4 ''   NB. finish sentences, test result
 foo =: foo , goo2 -: 5  NB. the sentence is aborted before assignment
+
+NB. Verify task not started during suspension
+{{ while. 1 T. '' do. 55 T. '' end. 1 }} ''  NB. delete threads
+1 T. ''
+foo =: foo , 1.5 < (6!:1'') - (6!:1'') ([  >@:(6!:3 t. ''"0)) 1 1
+NB. leave with 1 thread running
+
 13!:0 ] 0  NB. Revert suspension input back to prompt
 13!:0 [1
 i. 0 0 [ 9!:7 original
@@ -396,6 +403,8 @@ f =: 1:`(-: ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if d
 '|length error in f, executing dyad $|extending an empty array requires fill|   2 3    $$0' f '2 3 $ $0'
 '|domain error in f, executing dyad $|x has nonintegral value (2.5) at position 0|   2.5 3    $$0' f '2.5 3 $ $0'
 '|domain error in f, executing dyad $|x has invalid value (_1) at position 1|   2 _1    $$0' f '2 _1 $ $0'
+
+'|index error in f, executing dyad {|x is 4; too long for y, whose length is only 3|   (2+2)    {i.3' f '(2 + 2) { i. 3'
 
 g =: {{ y + 5 }}
 '|valence error in g|explicit definition has no dyadic valence|   2     g 3' f '2 g 3'

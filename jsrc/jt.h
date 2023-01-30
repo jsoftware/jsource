@@ -265,8 +265,8 @@ typedef struct JSTstruct {
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
- //void *heap;            // heap handle for large allocations
- I mmax;             /* space allocation limit                          */
+// obsolete  //void *heap;            // heap handle for large allocations
+ I mmax;             // space allocation limit could be float or short float
  A stloc;            // named locales symbol table - this pointer never changes
  A *zpath;         // path 'z', used for all initial paths
  I filler0[2];
@@ -295,8 +295,8 @@ typedef struct JSTstruct {
  S symlock;          // r/w lock for symbol pool
  // rest of cacheline used only in exceptional paths
  S locdellock;  // lock to serialize user request to delete locale
- S promptlock;  // lock to serialize prompt call to the FE
- US promptthread;  // The thread that is allowed to prompt from keyboard.  0=master normally, but set to debug thread during suspension
+ US promptthread;  // The thread that is allowed to prompt from keyboard.  0=master normally, but set to debug thread during suspension.  Host sentences are sent to this thread
+// 2 bytes free
 // front-end interface info
  C *capture;          // capture output for python->J etc.
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
@@ -314,8 +314,8 @@ typedef struct JSTstruct {
  UI4 baselocalehash;   // name hash for base locale
  UC seclev;           /* security level                                  */
  UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script.  See TRACEDB* flags above
- B assert;           /* 1 iff evaluate assert. statements     
-// 1 byte free          */
+ B assert;           // 1 iff evaluate assert. statements     
+ B suspensionrunning;  // 1 if debug suspension is running
  // rest of cacheline used only in exceptional paths
 // obsolete  UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)
  void *smpoll;           /* re-used in wd                                   */
@@ -350,9 +350,9 @@ typedef struct JSTstruct {
  S sblock;           // r/w lock for sbu
  S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
- I4 outmaxafter;      /* output: maximum # lines after truncation     scaf could be S   */
- I4 outmaxbefore;     /* output: maximum # lines before truncation       */
- I4 outmaxlen;        /* output: maximum line length before truncation   */
+ I4 outmaxafter;      // output: maximum # lines after truncation    could be short float   */
+ I4 outmaxbefore;     // output: maximum # lines before truncation     could be short float   */
+ I4 outmaxlen;        // output: maximum line length before truncation  could be short float  */
  I peekdata;         /* our window into the interpreter                 */
  A iep;              /* immediate execution phrase                      */
  A pma;              /* perf. monitor: data area                        */

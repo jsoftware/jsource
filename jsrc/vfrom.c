@@ -526,7 +526,7 @@ F2(jtfrom){I at;A z;
   // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
   // We allow FL only if it is the same saize as INT
-  if(!((AT(a)&(NOUN&~(B01|INT|(SY_64*FL))))+(AT(w)&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // NJAwhy
+  if(!((AT(a)&(NOUN&~(B01|INT|(SY_64*FL))))+(AT(w)&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // scaf NJAwhy
    I av;  // selector value
    if(likely(!SY_64||AT(a)&(B01|INT))){av=BIV0(a);  // INT index
    }else{  // FL index
@@ -538,7 +538,7 @@ F2(jtfrom){I at;A z;
     // Get the area to use for the result: the a input if possible, else an INT atom
     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
-    I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j];
+    I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=AT(w);   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
     // Here we transferred an atom out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
     PRISTXFERF(z,w)  // this destroys w
    }else{

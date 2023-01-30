@@ -121,6 +121,7 @@ static A jtsusp(J jt){A z;
  J jtold=jt;  // save the thread that we started in
  UI savcstackmin=0;  // when we switch threads, we keep our stack; so we must use our stack-end.  If this is not zero, we must reset the stack on exit/change
  JT(jt,promptthread)=THREADID(jt);  // set that the debug thread is the one allowed to prompt
+ JT(jt,suspensionrunning)=1;    // indicate suspension is active
  while(1){A  inp;
 // obsolete   RESETERR
   jt->jerr=0;   // scaf not needed now since done in showerr
@@ -154,6 +155,7 @@ static A jtsusp(J jt){A z;
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info
  JT(jt,promptthread)=0;  // suspension over - the master thread is the one that can prompt
+ JT(jt,suspensionrunning)=0;    // indicate suspension is over
  if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
  jt=jtold;  // Reset to original debug thread.  NOTE that old is no longer valid, so don't tpop
  // Reset stack

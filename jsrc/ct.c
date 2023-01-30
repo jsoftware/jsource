@@ -543,7 +543,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  // extract parms given to t.: threadpool number, worker-only flag
  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
  JOBQ *jobq=&(*JT(jt,jobqueue))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
- if((UI)jobq->nthreads>(forcetask&__atomic_load_n(&jobq->nuunfin,__ATOMIC_ACQUIRE))){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
+ if(likely(!JT(jt,suspensionrunning)))if((UI)jobq->nthreads>(forcetask&__atomic_load_n(&jobq->nuunfin,__ATOMIC_ACQUIRE))){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
+      // we don't start tasks during suspension, because if the user changed the debug thread to a running task's there would be chaos
  // realize virtual arguments; raise the usecount of the arguments including self scaf
   // clone an UNINCORPABLE argument (a utility block used in a loop); then ra() the arguments to protect them until the task completes.  It would be
   // nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we
@@ -584,7 +585,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
- if(likely((-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
+ if(likely(!JT(jt,suspensionrunning)))if(likely((-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
+      // we don't start tasks during suspension, because if the user changed the debug thread to a running task's there would be chaos
   JOB *oldjob=JOBLOCK(jobq);  // lock jobq before mutex
   _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
   // When we finish all tasks, we will have a problem.  The job block is on the jobq somewhere, but not necessarily at the top.

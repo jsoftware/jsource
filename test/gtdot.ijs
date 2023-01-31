@@ -41,7 +41,13 @@ NB. delay
 pyx=. (6!:3) t. (<'worker';0) "0 [ 1#~3*N
 1:&> pyx
 
+pyx=. (6!:3) t. (<'worker';0) "0 [ 0.1#~30*N
+1:&> pyx
+
 pyx=. (6!:3) t. (<'worker';1) "0 [ 1#~3*N
+1:&> pyx
+
+pyx=. (6!:3) t. (<'worker';1) "0 [ 0.1#~30*N
 1:&> pyx
 
 f=: 4 : 0

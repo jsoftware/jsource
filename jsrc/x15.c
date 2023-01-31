@@ -1761,10 +1761,60 @@ F1(jtcallbackx){
  R vec(INT,cbxn,cbx);
 } /* 15!:17 return x callback arguments */
 
+F1(jtcddlopen){HMODULE h;
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
+ ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT(1>=AR(w),EVRANK);
+ ASSERT(AN(w),EVLENGTH);
+ C*lib=CAV(str0(w));
+#ifdef _WIN32
+ wchar_t wlib[1024];
+ MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,1024);
+ h=LoadLibraryW(wlib);
+#else
+ h=dlopen((*lib)?lib:0,RTLD_LAZY);
+#endif
+R sc((I)(intptr_t)h);
+}    /* 15!:20 return library handle */
+
+F2(jtcddlsym){C*proc;FARPROC f;HMODULE h;
+ ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE)
+ ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT(1>=AR(w),EVRANK);
+ ASSERT(AN(w),EVLENGTH);
+ proc=CAV(str0(w));
+ RE(h=(HMODULE)i0(a));
+#ifdef _WIN32
+ f=GetProcAddress(h,(LPCSTR)proc);
+#else
+ f=(FARPROC)dlsym(h,proc);
+/*
+ char *error;
+ if(!f){
+  if ((error = dlerror()) != NULL)  {
+   fprintf(stderr, "%s\n", error);
+  }
+ }
+*/
+#endif
+ R sc((I)(intptr_t)f);
+}    /* 15!:21 return proc address */
+
+F1(jtcddlclose){HMODULE h;I rc;
+ ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
+ RE(h=(HMODULE)i0(w));
+#ifdef _WIN32
+ rc= !FreeLibrary(h);   /* FreeLibrary return non-zero on success */
+#else
+ rc= !!dlclose(h);      /* dlcose return zero on success */
+#endif
+R sc(rc);   /* return zero on success */
+}    /* 15!:22 close lilbrary handle */
+
 F1(jtcdjt){
  ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
  R sc((I)(intptr_t)jt);
-} /* 15!:19 return jt */
+} /* 15!:23 return jt */
 
 F1(jtcdlibl){
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
@@ -1773,7 +1823,7 @@ F1(jtcdlibl){
  ASSERT(AN(w),EVLENGTH);
  if(!AM(JT(jt,cdarg)))R num(0);
  R sc((I)cdlookupl(CAV(w)));
-}    /* 15!:20 return library handle */
+}    /* 15!:24 return library handle */
 
 F1(jtcdproc1){CCT*cc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
@@ -1782,7 +1832,7 @@ F1(jtcdproc1){CCT*cc;
  ASSERT(AN(w),EVLENGTH);
  C* enda=&CAV(w)[AN(w)]; C endc=*enda; *enda=0; cc=cdparse(w,1); *enda=endc; RE(cc); // should do outside rank2 loop?
  R sc((I)cc->fp);
-}    /* 15!:21 return proc address */
+}    /* 15!:25 return proc address */
 
 #ifdef MMSC_VER
 #pragma warning(disable: 4276)
@@ -1890,5 +1940,4 @@ F2(jtcdproc2){C*proc;FARPROC f;HMODULE h;
  }
  CDASSERT(f!=0,DEBADFN);
  R sc((I)f);
-}    /* 15!:21 return proc address */
-
+}    /* 15!:25 return proc address */

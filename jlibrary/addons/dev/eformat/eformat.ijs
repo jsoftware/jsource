@@ -359,24 +359,29 @@ eformat_j_ =: {{
 NB. extract internal state quickly, before anything disturbs it
 fill =. 9!:22''  NB. This also clears jt->fill
 'e curn ovr selfar a' =. 5{.y
-self =. selfar 5!:0  NB. self as an entity
-psself =. 4!:0 <'self'  NB. part of speech of self
 if. ism=.ovr-:'' do. ovr=.63 63 [ y =. }:y [ ind=._1{::y end.  NB. orv is the special value '' for m}.  Take the m arg in that case
 if. dyad =. 5<#y do. w =. 5{::y end.
 NB. now a and possibly w are args 4&5.  If self is a verb these will be the arg value(s) and dyad will be the valence
 NB. if the verb is m}, there will be an m argument
 NB. if self is not a verb, a and w are ARs and dyad indicates a conjunction
 NB. Start parsing self
-while. do.
-  if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0 break.  NB. primitive or single name: self-defining
-  else.
-    prim =. {. > selfar [ args =. (0;1) {:: selfar  NB. entity, args if any
-    if. prim ~: ;:'!.' do. break. end.
-    NB. self is u!.n - discard the !.n
-    selfar =. {. args
+if. selfar -: <,' ' do.
+  NB. The special AR of SP is used to indicate errors found in preparsing.  a is the word list and w is the index of the failing word
+  NB. We don't do any analysis yet, but we assign a special part of speech (5) to self
+  psself =. 5 [ prim =. ''   NB. No primitive or sentence was executed
+else.
+  self =. selfar 5!:0  NB. self as an entity
+  psself =. 4!:0 <'self'  NB. part of speech of self
+  while. do.
+    if. 2 = 3!:0 > selfar do. prim =. selfar [ args=.0$0 break.  NB. primitive or single name: self-defining
+    else.
+      prim =. {. > selfar [ args =. (0;1) {:: selfar  NB. entity, args if any
+      if. prim ~: ;:'!.' do. break. end.
+      NB. self is u!.n - discard the !.n
+      selfar =. {. args
+    end.
   end.
 end.
-
 NB. See if the executing value is m : .  If so, don't show the lines of the name
 isexplicit =. 0 if.  prim -: {. ;:':' do. if. efarisnoun {.args do. isexplicit =. 1 end. end.
 
@@ -395,8 +400,9 @@ case. EVASSERT do. emsg =. 'the result was expected to be all 1'
 end.
 if. #emsg do. hdr1 , emsg return. end.  NB. pee
 
-if. selfar -:  {. ;:':' do. hdr =. (}:hdr1) , ', defining explicit entity' , LF
-else. hdr =. (}:hdr1) , ((', executing ',' ',~(0 2#.psself,dyad){::2 2 2 1 1#;:'noun adv conj monad dyad')&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
+if. selfar -: {. ;:':' do. hdr =. (}:hdr1) , ', defining explicit entity' , LF
+elseif. psself<5 do. hdr =. (}:hdr1) , ((', executing ',' ',~(0 2#.psself,dyad){::2 2 2 1 1#;:'noun adv conj monad dyad')&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
+else. hdr =. (}:hdr1) , ', before sentence execution' , LF
 end.
 
 NB. Handle environment-dependent and non-execution errors
@@ -823,7 +829,6 @@ case. 2 do.
     end.
   end.
 end.
-
 NB. not yet specifically diagnosed nan or nonce error
 if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
 if. (0=#emsg) *. e=EVNONCE do. hdr , 'this computation is not yet supported' return. end.

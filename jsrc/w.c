@@ -132,8 +132,9 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 // a is never a pyx
 // w holds the string text of the sentence
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
-// result is a list of parsable words, with types right.  The result is input only to parsing, never to verbs, and thus may be nonrecursive
+// result is a list of parsable words, with type-flags installed in the lower address bits.  The result is input only to parsing, never to verbs, and thus may be nonrecursive
 // The input is words from a single sentence.  It never contains control words, which were used as frets by the explicit definition
+#define EFORMENQ R jteformat(jt,ds(CENQUEUE),w,sc(i),0);   // call eformat, indicating error in word formation, giving the list of words and the number of the failing word
 A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  ARGCHK2(a,w);
  s=CAV(w); u=AV(a);
@@ -163,15 +164,15 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     // starts with alpha; must be a name.
     if(unlikely(b)){
      // Inflection is illegal except for trailing _: in name_:
-     if(!(wl>2&&wi[wl-2]=='_'&&wi[wl-1]==CESC2)){jsignal3(EVSPELL|EMSGINVINFL|EMSGSPACEAFTEREVM,w,wi-s); R 0;}  // error if not *_:
+     if(!(wl>2&&wi[wl-2]=='_'&&wi[wl-1]==CESC2)){jsignal3(EVSPELL|EMSGINVINFL|EMSGSPACEAFTEREVM,w,wi-s); EFORMENQ}  // error if not *_:
      wl-=2;  // remove _: from name; leave b set to indicate inflection
     }
-    ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));  // error if invalid name; create name block and install it in result
+    RZ(*x=nfs(wl,wi)); {if(unlikely(!vnm(wl,wi))){jtjsignale(jt,EVILNAME|EMSGLINEISNAME,*x,0); EFORMENQ}}  //  ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi));   // error if invalid name; create name block and install it in result
     if(unlikely(b)){AT(*x)|=NAMEBYVALUE|NAMEABANDON;}  // flag name_: for stack processing
-   }else if(unlikely(b)){jsignal3(EVSPELL|EMSGINVINFL|EMSGSPACEAFTEREVM,w,wi-s); R 0;  // inflections when starting with not (alpha, ASCII graphic) and not num:
-   }else if(p==C9){if(unlikely(!(*x=connum(wl,wi)))){I lje=jt->jerr; RESETERR; jsignal3(lje,w,u[0]); R 0;}   // starts with numeric, create numeric constant.  If error, give a message showing the bad number
+   }else if(unlikely(b)){jsignal3(EVSPELL|EMSGINVINFL|EMSGSPACEAFTEREVM,w,wi-s); EFORMENQ  // inflections when starting with not (alpha, ASCII graphic) and not num:
+   }else if(p==C9){if(unlikely(!(*x=connum(wl,wi)))){I lje=jt->jerr; RESETERR; jsignal3(lje,w,u[0]); EFORMENQ}   // starts with numeric, create numeric constant.  If error, give a message showing the bad number
    }else if(p==CQ){ RZ(*x=constr(wl,wi));   // start with ', make string constant
-   }else{jsignal3(EVSPELL|EMSGINVCHAR|EMSGSPACEAFTEREVM,w,wi-s); R 0;}   // bad first character or inflection
+   }else{jsignal3(EVSPELL|EMSGINVCHAR|EMSGSPACEAFTEREVM,w,wi-s); EFORMENQ}   // bad first character or inflection
   }
   // Since the word is being incorporated into a list, we must realize it
   rifv(*x);

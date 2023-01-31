@@ -205,6 +205,7 @@ PRIM primtab[256] = {
  // sequences supported as atomics.  The vaid is used only for ss and to reserve a slot in ds
 
  /*  DUMMY*/ PRIMACV(CDUMMY,   VERB, 0, 0,  0,   0,   0   ,VFLAGNONE,VF2NONE),  // DUMMYSELF, used for flags only
+ /*   */     PRIMACV(CENQUEUE,   VERB, 0,    0,  RMAX,RMAX,RMAX,VFLAGNONE,VF2NONE),  // used to create AR to send to eformat for word-formation errors
 
 };
 

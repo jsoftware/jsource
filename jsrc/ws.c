@@ -70,7 +70,7 @@ static US spellouttab[256] = {
 [CWORDS  ]=(UC)';'+CO0,       [CBASE   ]=(UC)'#'+DOT0,      [CABASE  ]=(UC)'#'+CO0,       [CFIT    ]=(UC)'!'+DOT0,       
 [CIBEAM  ]=(UC)'!'+CO0,       [CSLDOT  ]=(UC)'/'+DOT0,      [CGRADE  ]=(UC)'/'+CO0,       [CBSDOT  ]=(UC)'\\'+DOT0,       
 [CDGRADE ]=(UC)'\\'+CO0,      [CLEV    ]=(UC)'['+DOT0,      [CCAP    ]=(UC)'['+CO0,
-[CDEX    ]=(UC)']'+DOT0,      [CIDENT ]=(UC)']'+CO0,
+[CDEX    ]=(UC)']'+DOT0,      [CIDENT ]=(UC)']'+CO0,        [CENQUEUE]=(UC)' ',   // enqueue has no spellin
 [CHEAD   ]=(UC)'{'+DOT0,      [CTAIL   ]=(UC)'{'+CO0,       
 [CBEHEAD ]=(UC)'}'+DOT0,      [CCTAIL  ]=(UC)'}'+CO0,       [CEXEC   ]=(UC)'"'+DOT0,       
 [CTHORN  ]=(UC)'"'+CO0,       [CGRDOT  ]=(UC)'`'+DOT0,      [CGRCO   ]=(UC)'`'+CO0,       [CATDOT  ]=(UC)'@'+DOT0,       

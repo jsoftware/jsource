@@ -136,7 +136,7 @@ typedef long                mpir_si;
 #endif
 extern void jgmpinit(C*);
 extern B nogmp(void);
-#define GMP ASSERT(!nogmp(), EVNONCE); GEMP0 // nonce error if libgmp is not available
+#define GMP ASSERT(!nogmp(), EVMISSINGGMP); GEMP0 // interface error if libgmp is not available
 extern void*jmalloc4gmp(size_t);
 #define GAGMP(z,n) (z=({n ?({GEMP0; mpz_t mpd= {n/SZI, n/SZI, jmalloc4gmp(n)}; Xmp(d);}) :X0;}))
 extern X jtXmpzcommon(J, mpz_t, B);

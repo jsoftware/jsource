@@ -68,6 +68,7 @@ EVINHOMO
 EVINDEXDUP
 EVEMPTYT
 EVEMPTYDD
+EVMISSINGGMP
 )
 
 NB.x is (1 if all of main name always needed),(max # characters allowed),(par); y is AR
@@ -197,7 +198,7 @@ NB. _4 means too many exclusion lists
 NB. (in these cases, axis# and offi should be ignored)
 NB. pathlist is a;...;d, where the offender can be found as a{:: ... d{::x (TODO is there a nicer way to represent this?), except that ''{::<a is <a, not a
 efindexaudit_j_ =: {{
- if. (0=L.) x do. NB.simple array of integers
+ if. 0 (>:L.) x do. NB.simple array of integers
   rc=. (,x) 9!:23] 0;(-{.!.1 y),<:{.!.1 y NB. !.1 ensures correct behaviour for scalar
   if. 0-:0{::rc do. NB.no error
    ($x),}.y return.
@@ -207,18 +208,18 @@ efindexaudit_j_ =: {{
  auditindex =. {{
   NB.((<x);...){y.  y is dimension of the given axis.  Result spec is shape or rc,&<path
   auditselector =. {{
-   if. (0=L.) x do. (0&{ , }.&.>@(1&{) , 2&{)^:(0~:L.) x efindexaudit y return. end. NB.punt to ordinary audit for simple list of integers, and then strip out y-axis on error
+   if. 0 (>:L.) x do. (0&{ , }.&.>@(1&{) , 2&{)^:(0&(<L.)) x efindexaudit y return. end. NB.punt to ordinary audit for simple list of integers, and then strip out y-axis on error
    rs=. 0$0                               NB.result shape
    if. 0 ~: #$x do. _4;0 0;'' return. end.NB.too many exclusion lists
    x=. ,0{::,x
-   if. (0~:L.) x do. _3;1 0;($x)#:i return. end. NB.too much boxing!
-   if. (0~:L.) t=. x efindexaudit y do. (0&{ , (1 , {:)&.>@(1&{) , 2&{) t return. end. NB.oob excluded index
+   if. 0 (<L.) x do. _3;1 0;($x)#:i return. end. NB.too much boxing!
+   if. 0 (<L.) t=. x efindexaudit y do. (0&{ , (1 , {:)&.>@(1&{) , 2&{) t return. end. NB.oob excluded index
    y - #@~. x + y * x<0                    NB.overall length.  Need to regularise to correctly compute #excluded hyperrows(?), which needs linear space.  But { would have needed at least that much space anyway, and more besides, so it seems 
   }}
   if. 1<#@$x  do. _2;0 0 0;'' return. end.NB.rank too high
   if. x >&# y do. _1;(0 0,#x);'' return. end.NB.index list too long
   'f cs'=. (#x)({.;}.)y                   NB.frame; cell shape
-  if. (0=L.) x do.                        NB.simple list of integers
+  if. 0 (>:L.) x do.                        NB.simple list of integers
    offi=. /:~ (x I.@:>: f) , (x I.@:< -f) NB.list of offending indices
    if. ''-:offi do.                       NB.everything in range
     (#x) }. y return.
@@ -226,14 +227,14 @@ efindexaudit_j_ =: {{
   NB.boxed x; consider each element in turn
   rs=. 0$0                                NB.result shape
   for_i. i.#x do.
-   if. (0=L.) t=. (i{::x) auditselector i{f do.
+   if. 0 (>:L.) t=. (i{::x) auditselector i{f do.
     rs=. rs , t
    else. (0{t) , (i&,&.>1{t) , (($x)#:i)&;&.> 2{t return. end. end.
   rs , cs
  }}
  rs=. 0$0                                 NB.result shape
  for_i. i.*/$x do.                        NB.boxed x; consider each index in turn
-  if. (0=L.) t=. (i{::,x) auditindex y do. NB.if no error, then pad out shape appropriately
+  if. 0 (>:L.) t=. (i{::,x) auditindex y do. NB.if no error, then pad out shape appropriately
    rs=. rs shapeunion t                   NB. and update result shape
   else.
    (2{.t) , (($x)#:i)&;&.>2{t return. end. end.NB.otherwise, add top-level path and return error desc
@@ -418,6 +419,7 @@ NB.todo also perform spellchecking for top-level forms in loaded files
 case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
                   elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
                   if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
+case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''  or refer to your installation instructions'
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee
 
@@ -545,7 +547,7 @@ case. 3 do.
     case. ;:'/./..' do.
       if. e=EVLENGTH do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:'{' do.
-      if. e e. EVINDEX,EVLENGTH,EVDOMAIN do. if. L. rc=. a efindexaudit $w do. emsg=. ($w) ('x';'y') effrommsg rc end. end.
+      if. e e. EVINDEX,EVLENGTH,EVDOMAIN do. if. 0 (<L.) rc=. a efindexaudit $w do. emsg=. ($w) ('x';'y') effrommsg rc end. end.
     fcase. ;:'{.{:' do.
       if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
     case. ;:'}.}:' do.
@@ -581,7 +583,7 @@ case. 3 do.
         end.
         if. e e. EVINDEX,EVLENGTH,EVDOMAIN do.  NB. index-type error -  see if any index box had an error
           if. 1 (< L.) selshape do.  NB. there is an index-type error
-            errbox =.  1 i.~ 0 ~: L.@> ,selshape
+            errbox =.  1 i.~ 0&(<L.)@> ,selshape
             hdr,((1 < #@, selshape) # 'in box ' , (":errbox) , ' of m, ') , ($w) ('m';'y') effrommsg errbox {:: ,selshape return.
           end.
         end.
@@ -822,8 +824,9 @@ case. 2 do.
   end.
 end.
 
-NB. not yet specifically diagnosed nan error
+NB. not yet specifically diagnosed nan or nonce error
 if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
+if. (0=#emsg) *. e=EVNONCE do. hdr , 'this computation is not yet supported' return. end.
 
 (}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}

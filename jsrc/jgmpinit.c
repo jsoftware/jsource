@@ -321,7 +321,7 @@ Q jtQmpq(J jt, mpq_t mpq) {
  #define LIBJGMPNAME "libjgmp" LIBEXT
 #endif
 
-static void*libgmp;
+static void*libgmp=0;
 #ifdef IMPORTGMPLIB
 B nogmp(){R 0;}
 #else
@@ -368,9 +368,13 @@ void jgmpinit(C*libpath) {
    i++;
   }
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
-#if defined(__LP64__)||!defined(__linux__)  /* bug in gmpz_mul/gmpz_gcd stock libgmp.so in 32-bit linux */
-  if(!(libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY)))  /* first try system libgmp */
-#endif
+  if((libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY))){
+   if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
+    dlclose(libgmp); libgmp= 0;
+   }
+  }
+//  fprintf(stderr, "%s\n", (libgmp)?"using system libgmp":"not using system libgmp");
+  if(!libgmp)
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
   libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
  } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);

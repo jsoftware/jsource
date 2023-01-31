@@ -190,6 +190,14 @@ assert. (,{.a.) -: memr p,11,1,2
 1
 )
 
+f=: 3 : 0
+t=. LIBFILE
+assert. 0~: h=. 15!:20 t
+assert. 0~: p=. h 15!:21 'JInit'
+assert. 0= 15!:22 h
+1
+)
+
 f''
 
 4!:55 ;:'a a1 add address b b1 cdrc dcd f i lib n obj_add pc s s0 s1 td td1a td3 td4 tf tf3'

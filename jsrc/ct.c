@@ -543,8 +543,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  // extract parms given to t.: threadpool number, worker-only flag
  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
  JOBQ *jobq=&(*JT(jt,jobqueue))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
- if(likely(!JT(jt,suspensionrunning)))if((UI)jobq->nthreads>(forcetask&__atomic_load_n(&jobq->nuunfin,__ATOMIC_ACQUIRE))){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
-      // we don't start tasks during suspension, because if the user changed the debug thread to a running task's there would be chaos
+ if((UI)jobq->nthreads>(forcetask&__atomic_load_n(&jobq->nuunfin,__ATOMIC_ACQUIRE))){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
  // realize virtual arguments; raise the usecount of the arguments including self scaf
   // clone an UNINCORPABLE argument (a utility block used in a loop); then ra() the arguments to protect them until the task completes.  It would be
   // nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we
@@ -585,7 +584,8 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
- if(likely(!JT(jt,suspensionrunning)))if(likely((-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
+ I lastqueuedtask=-1;  // if nonneg, the task# of the last task (i. e. n-1).  If this task is taken here we have to leave it in the queue
+ if(likely((-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
       // we don't start tasks during suspension, because if the user changed the debug thread to a running task's there would be chaos
   JOB *oldjob=JOBLOCK(jobq);  // lock jobq before mutex
   _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
@@ -594,11 +594,15 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   // (possibly immediately), that condition will cause the job to be dequeued, and then (as a special case) fa()d.  Since we might still
   // be processing the job, we ra the job now to protect it.  It will be freed at the later of (coming to the top of the job list) and
   // (all tasks finished and waited for here).  We fa explicitly rather than calling tpop
+  // NOTE that this is problematic during debug suspension, which is a systemlock.  During the systemlock no thread will start a new task, which means that
+  // all jobs will be processed single-threaded, and everything will be run here by the originator.  The jobs will be left on the job queue
+  // until thread processing resumes.  They could pile up.  Perhaps we should do something special during systemlock?  scaf
   job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
   oldjob=(oldjob==0)?job:oldjob;   //  Keep old head unless it was empty
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added a job
   JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.
   if(jobq->waiters!=0)jfutex_wakea(&jobq->futex);  // if there are waiting threads, wake them up.  We test in case there are no worker threads
+  lastqueuedtask=n-1;  // if we take this task here, it is special
    // todo scaf: would be nice to wake only as many as we have work for
  }
  // We have started all the threads, but we pitch in and and process tasks ourselves, starting with task 0
@@ -615,13 +619,14 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   ++job->internal.nf;  // we have finished a block - account for it
   i=job->ns; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status
   // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
-  if(unlikely(i==n-1))if(i!=0){ACINIT(jobA,ACUC2);}  // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that
+// obsolete   if(unlikely(i==n-1))if(i!=0){ACINIT(jobA,ACUC2);}  // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that
+  if(unlikely(i==lastqueuedtask)){ACINIT(jobA,ACUC2);}  // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that
   job->ns=i+(i<n);  // we're taking the block if it's not past the end - account for it
   JOBUNLOCK(jobq,oldjob)
   if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()
  }
  // There are no more tasks to start.  Wait for all to finish.
- // The threads and us acquire job->internal.nf to ensure all write have been seen.  For this reason the call and the threads do not need atomic ops when accessing the ctx block
+ // The threads and us acquire job->internal.nf to ensure all writes have been seen.  For this reason the call and the threads do not need atomic ops when accessing the ctx block
  while(__atomic_load_n(&job->internal.nf,__ATOMIC_ACQUIRE)<n){_mm_pause(); YIELD}  // scaf  should we have a mutex & wait for a wakeup from the finisher?
  C r=__atomic_load_n(&job->internal.err,__ATOMIC_ACQUIRE); fa(jobA); R r;  // extract return code from the job, then free the job and return the error code
  // job may still be in the job list - if so it will be fa()d when it reaches the top

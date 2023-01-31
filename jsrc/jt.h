@@ -315,7 +315,7 @@ typedef struct JSTstruct {
  UC seclev;           /* security level                                  */
  UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script.  See TRACEDB* flags above
  B assert;           // 1 iff evaluate assert. statements     
- B suspensionrunning;  // 1 if debug suspension is running
+// 1 byte free
  // rest of cacheline used only in exceptional paths
 // obsolete  UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)
  void *smpoll;           /* re-used in wd                                   */

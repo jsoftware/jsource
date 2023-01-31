@@ -108,6 +108,7 @@ static A jtsusp(J jt){A z;
  if(d&&!(JT(jt,dbuser)&TRACEDBSUSFROMSCRIPT))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
  JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // when we start a new suspension, wait for a new clear
  // Make sure we have a decent amount of stack space left to run sentences in suspension
+ // ****** no errors till end of routine, where jt and stacks have been restored *******
 #if USECSTACK
  jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
 #else
@@ -121,7 +122,6 @@ static A jtsusp(J jt){A z;
  J jtold=jt;  // save the thread that we started in
  UI savcstackmin=0;  // when we switch threads, we keep our stack; so we must use our stack-end.  If this is not zero, we must reset the stack on exit/change
  JT(jt,promptthread)=THREADID(jt);  // set that the debug thread is the one allowed to prompt
- JT(jt,suspensionrunning)=1;    // indicate suspension is active
  while(1){A  inp;
 // obsolete   RESETERR
   jt->jerr=0;   // scaf not needed now since done in showerr
@@ -155,7 +155,6 @@ static A jtsusp(J jt){A z;
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info
  JT(jt,promptthread)=0;  // suspension over - the master thread is the one that can prompt
- JT(jt,suspensionrunning)=0;    // indicate suspension is over
  if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
  jt=jtold;  // Reset to original debug thread.  NOTE that old is no longer valid, so don't tpop
  // Reset stack

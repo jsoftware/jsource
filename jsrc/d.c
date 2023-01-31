@@ -116,7 +116,7 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  case BOXX:
   if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!(nflag&1)); break;}
   // If this is an array of names, turn it back into a character string with spaces between
-  else{w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
+  else{if((w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself))))==0)R 0;}  // }: (string&.> names) ,&.> ' '  then fall through to display it
  case LITX:  eputq(w,(nflag&1));                break;
  case NAMEX: ep(AN(w),NAV(w)->s); if(unlikely((AT(w)&NAMEABANDON)!=0)){ep(2,"_:");}     break;
  case LPARX: eputc('(');              break;

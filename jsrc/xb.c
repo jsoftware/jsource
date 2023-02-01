@@ -307,14 +307,28 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   if(likely(!g||LIT!=t)){
    GA00(z,t,n,r);
   }else{
-   GAGMP(z,n); if(ACISPERM(AC(z)))R z;
-  } }else{
+   // j32 big digits (limbs) are half the width of j64 limbs
+   if (unlikely(C_64 > d) && n&(SZI>>1)) { 
+    I N= n+(SZI>>1);
+    GAGMP(z,N);
+    if(unlikely(ACISPERM(AC(z))))R z; // guard against future optimization
+    UIAV1(z)[N/SZI-1]= 0; // clean our extra SZI>>1 bytes
+   } else {
+    GAGMP(z,n);
+    if(ACISPERM(AC(z)))R z;
+   }
+  }
+ }else{
   GASPARSE0(z,t,n,r)
  }
- I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d));     // s[]: shape
- I j=1; DO(r, ASSERT(g&&LIT==t ?llabs(s[i])*SZI<=n :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];);                                      // j: to verify n
- if (g&&LIT==t) {AFHRH(z)= FHRHISGMP;}
- else {ASSERT(j==n,EVLENGTH);}
+ I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,C_64,d));      // s[]: shape
+ I j=1; DO(r, ASSERT(g&&LIT==t ?llabs(s[i])*SZI<=n*(1+(C_64>d)) :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); // j: to verify n
+ if (unlikely(g&&LIT==t)) {
+  AFHRH(z)= FHRHISGMP;                                 // libgmp value
+  if (unlikely(C_64>d)) {                              // word size increased?
+   s[0]= (s[0]<0 ?-1 :1)*(llabs(s[0]) * (1+d) + C_64) / (1+C_64);  // fix XSGN()
+  }
+ } else {ASSERT(j==n,EVLENGTH);}
  A y; I *vv; if(t&BOX+XNUM+RAT+SPARSE){                // y: locator for values in v
   GATV0(y,INT,e,1);
   vv=AV(y);                                            // vv: y's offsets
@@ -610,14 +624,14 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
 static I eft(I n,UI* e,UI* t)
 {
 #if SY_64
-	I i; UI4 kk,M,Y,D; UI k,hh,mm,ss;  // use unsigned to make / and % generate better code
-	for(i=0;i<n;++i){
-	 k=t[i];  // read the yyyymmddhhmnss value
-	 ss=k%100U; k=k/100U;  // ss yyyymmddhhmn
-	 mm=k%100U; k=k/100U;  // ss mn yyyymmddhh
-	 hh=k%100U; kk=(UI4)(k/100U);  // ss mn hh yyyymmdd.  yyyymmdd fits in UI4, so switch to that (faster /, %)
-	 D=kk%100U; kk=kk/100U;  // ss mn hh D yyyymm
-	 M=kk%100U;   // ss mn hh D M
+ I i; UI4 kk,M,Y,D; UI k,hh,mm,ss;  // use unsigned to make / and % generate better code
+ for(i=0;i<n;++i){
+  k=t[i];  // read the yyyymmddhhmnss value
+  ss=k%100U; k=k/100U;  // ss yyyymmddhhmn
+  mm=k%100U; k=k/100U;  // ss mn yyyymmddhh
+  hh=k%100U; kk=(UI4)(k/100U);  // ss mn hh yyyymmdd.  yyyymmdd fits in UI4, so switch to that (faster /, %)
+  D=kk%100U; kk=kk/100U;  // ss mn hh D yyyymm
+  M=kk%100U;   // ss mn hh D M
   Y=kk/100U;  // ss mn hh D M Y
 
   // Now calculate number of days from epoch.  First reorder months so that the irregular February comes last, i. e. make the year start Mar 1
@@ -635,10 +649,10 @@ static I eft(I n,UI* e,UI* t)
   // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gregorian leapyears up to 2000
   I temp=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch - can be negative
   // Combine everything into one # and store
- 	e[i]=(NANOS*24LL*60LL*60LL)*temp + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
-	}
+  e[i]=(NANOS*24LL*60LL*60LL)*temp + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
+ }
 #endif
-	return 0;
+ return 0;
 }
 
 
@@ -663,7 +677,7 @@ static const I nanopowers[9] = {100000000, 10000000, 1000000, 100000, 10000, 100
 // prec of 7*SZI-21 means 'produce 7 ints per input time'
 static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
 #if SY_64
-	UI k; UI4 ymd,E,N,M,HMS,d,j,g,m,t,y;I i;A z;  // unsigned for faster / %
+ UI k; UI4 ymd,E,N,M,HMS,d,j,g,m,t,y;I i;A z;  // unsigned for faster / %
  // Validate input.  We will accept FL input, but it's not going to have nanosecond precision
  RZ(w=vi(w));  // convert to INT
  // Figure out size of result. 10 for date, 9 for time, 1 for binary point (opt), 1 for each fractional digit (opt), 1 for timezone
@@ -679,27 +693,27 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
  C *s=CAV(z);  // pointer to result
 
  // Loop for each time
-	for(i=0;i<rows;++i, s+=linelen){
+ for(i=0;i<rows;++i, s+=linelen){
   // fetch the time.  If it is negative, add days amounting to the earliest allowed time so that the modulus calculations can always
   // be positive to get hmsn.  We will add the days back for all the day calculations, since they are in the Julian epoch anyway
-		k= e[i] + (REPSGN(e[i])&(MIND*(I)24*(I)3600*(I)NANOS));  // ymdHMSN
+  k= e[i] + (REPSGN(e[i])&(MIND*(I)24*(I)3600*(I)NANOS));  // ymdHMSN
   if((UI)k>=(UI)(MAXD*(I)24*(I)3600*(I)NANOS)){if(linelen==7*SZI)DO(7, ((I*)s)[i]=0;)else{DO(linelen, s[i]=' ';) s[0]='?';} continue;}  // input too low - probably DATAFILL(=IMIN) - return fast unknown
     // we use the fact that MAXD>MIND to get the out-of-bounds test right
   N=(UI4)(k%NANOS); k=k/NANOS;  // can't fast-divide by more than 32 bits.  k=ymdHMS N=nanosec
-		HMS=(UI4)(k%((I)24*(I)3600));	ymd=(UI4)(k/((I)24*(I)3600));
+  HMS=(UI4)(k%((I)24*(I)3600)); ymd=(UI4)(k/((I)24*(I)3600));
   ymd-=(REPSGN(e[i])&MIND);  // remove negative-year bias if given
   E=HMS%60; HMS/=60;  // sec
   M=HMS%60; HMS/=60;  // minutes; HMS now=hours
   // Now the leap-year calculations.  We follow Richards at https://en.wikipedia.org/wiki/Julian_day#Julian_or_Gregorian_calendar_from_Julian_day_number
-		j=ymd+2451545;  // Julian day number, by adding day-from-epoch to JD of epoch
-		g=((3*((4*j+274277)/146097))>>2)-38;  // Gregorian correction for leapyears from year 0
-		j+=1401+g;  // Julian day, plus 1401 (Julian leapyears to year 0), plus Gregorian leapyears
+  j=ymd+2451545;  // Julian day number, by adding day-from-epoch to JD of epoch
+  g=((3*((4*j+274277)/146097))>>2)-38;  // Gregorian correction for leapyears from year 0
+  j+=1401+g;  // Julian day, plus 1401 (Julian leapyears to year 0), plus Gregorian leapyears
   // now find position within 1461-day 4-year cycle
-		t=4*j+3;   // temp
-		y=t/1461-4716;  // year number from Julian epoch, plus starting year of Julian epoch
-		t=(t%1461)>>2;  // day number within year, which starts Mar 1
-		m=(t*5+461)/153;  // razzmatazz to convert day# to month, 3-14
-// Richards version		d=((t*5+2)%153)/5;
+  t=4*j+3;   // temp
+  y=t/1461-4716;  // year number from Julian epoch, plus starting year of Julian epoch
+  t=(t%1461)>>2;  // day number within year, which starts Mar 1
+  m=(t*5+461)/153;  // razzmatazz to convert day# to month, 3-14
+// Richards version  d=((t*5+2)%153)/5;
   d=(t+((0x444332221100000>>(m<<2))&0xf))%31+1;  // # days   start-of-month must advance to be on 31-day multiple, by month: x x x 0(Mar) 0(Apr) 1 1 2 2 2 3 3 4 4 4
   I4 janfeb=(I4)(12-m)>>(32-1); y-=janfeb; m-=janfeb&12;  // move jan-feb into next year number
   // Now write the result yyyy-mm-ddThh:mm:ss.nnnnnnnnn
@@ -731,7 +745,7 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
    ((I*)s)[0]=y; ((I*)s)[1]=m; ((I*)s)[2]=d; ((I*)s)[3]=HMS; ((I*)s)[4]=M; ((I*)s)[5]=E; ((I*)s)[6]=N;
   }
  }
-	RETF(z);
+ RETF(z);
 #else
 R 0;
 #endif
@@ -744,14 +758,14 @@ R 0;
 // if local is given we convert all UTC times to times in the 'local' zone, where local is in seconds
 static A efs(J jt,A w,I prec,I local){
 #if SY_64
-	I i;A z;
+ I i;A z;
  // Allocate result area
  I n; PROD(n,AR(w)-1,AS(w)); GATV(z,INT,n,AR(w)-1,AS(w))
  I strglen=AS(w)[AR(w)-1];
  C *s=CAV(w);  // point to start of first string
  UC afterday=(UC)((~prec)>>8);  //  0x00 if we stop  after the day, 0xff if we continue
-	for(i=0;i<n;++i,s+=strglen){
- 	UI4 Y,M,D,ss; I4 hh,mm;  // hh,mm are I because they may go negative during TZ adjustment
+ for(i=0;i<n;++i,s+=strglen){
+  UI4 Y,M,D,ss; I4 hh,mm;  // hh,mm are I because they may go negative during TZ adjustment
   // It's OK to overfetch from a string buffer, as long as you don't rely on the contents fetched.  They're padded
   // We will store an invalid byte on top of the character after the end of the string.  We'll be sure to restore it!
   UC savesentinel = s[strglen]; s[strglen]=0;  // install end-of-string marker
@@ -912,7 +926,7 @@ F2(jtiso8601toe){A z;I prec;I local;
 // prec is -1 (day only) or 0 for that many fractional digits below seconds
 static A efstring(J jt,A w,I prec){
 #if SY_64
-	I i;A z;
+ I i;A z;
  // Allocate result area
  I n; PROD(n,AR(w)-1,AS(w)); GATV(z,INT,n,AR(w)-1,AS(w))
  I strglen=AS(w)[AR(w)-1];

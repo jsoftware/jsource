@@ -432,8 +432,8 @@ typedef JST* JS;  // shared part of struct
 // If we were given JST*, keep it as shared & use master thread; if JTT*, keep it as thread & use shared region
 #define SETJTJM(injstout,jttout) \
  JJ jttout; \
- if((I)injstout&(JTALIGNBDY-1)){jttout=(JJ)injstout; injstout=JJTOJ(injstout);   /* if jt is a thread pointer, keep it as jm and set jt to the shared */ \
- }else{jttout=MDTHREAD(injstout);}  /* if jt is a shared pointer, keep it as jt and use the master/debug thread as jm */
+ if((I)injstout&((JTALIGNBDY-1)&~JTFLAGMSK)){jttout=(JJ)injstout; injstout=JJTOJ(injstout);   /* if jt is a thread pointer, keep it as jm and set jt to the shared */ \
+ }else{jttout=MTHREAD(injstout);}  /* if jt is a shared pointer, keep it as jt and use the master/debug thread as jm   scaf should be MDTHREAD */
 
 _Static_assert(sizeof(struct JSTstruct)<=JTALIGNBDY,"too many threads");  // assert not too many threads
 _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected

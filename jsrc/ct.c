@@ -595,8 +595,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   // be processing the job, we ra the job now to protect it.  It will be freed at the later of (coming to the top of the job list) and
   // (all tasks finished and waited for here).  We fa explicitly rather than calling tpop
   // NOTE that this is problematic during debug suspension, which is a systemlock.  During the systemlock no thread will start a new task, which means that
-  // all jobs will be processed single-threaded, and everything will be run here by the originator.  The jobs will be left on the job queue
-  // until thread processing resumes.  They could pile up.  Perhaps we should do something special during systemlock?  scaf
+  // all jobs will be processed single-threaded even though they are on the queue: everything will be run here by the originator.
   job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
   oldjob=(oldjob==0)?job:oldjob;   //  Keep old head unless it was empty
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added a job
@@ -621,7 +620,16 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
 // obsolete   if(unlikely(i==n-1))if(i!=0){ACINIT(jobA,ACUC2);}  // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that
 // scaf if job is the only job in q, remove it when we start the last task
-  if(unlikely(i==lastqueuedtask)){ACINIT(jobA,ACUC2);}  // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that
+  if(unlikely(i==lastqueuedtask)){
+   // We are taking the last task.
+   if(job==oldjob&&job->next==0){
+    // special case where the job we are working on is the only job in the queue.  This is the usual case, but its importance is in debug suspension, where as noted
+    // above all jobs are queued but run only in this thread.  We mustn't wait for the other threads to see the job because they aren't looking during the
+    // suspension.  If we leave the job it will stay on the queue till the end of suspension.  So, we dequeue it.
+    jobq->ht[1]=(JOB *)&jobq->ht[1];   // the queue is going empty.  In that condition tail points to itself
+    oldjob=0;  // when we release the lock, this will make the queue empty
+   }else ACINIT(jobA,ACUC2) // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that.  We ra() cheaply since AC is still in init state
+  } 
   job->ns=i+(i<n);  // we're taking the block if it's not past the end - account for it
   JOBUNLOCK(jobq,oldjob)
   if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()

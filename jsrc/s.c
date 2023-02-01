@@ -637,17 +637,17 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
   // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicit character
   f=d->dcf;
-  ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSTACK,d->dca);
+  ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSIDAMAGE,d->dca);
   d->dcf=w;
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.
   // Reassignment outside of debug continues executing the old definition
   if(CCOLON==FAV(w)->id){d->dcredef=1;}
-  // Erase any stack entries after the redefined call
-  c=jt->sitop; NOUNROLL while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
+  // Erase any stack entries after the redefined call, except for SCRIPT type which must be preserved for linf
+  c=jt->sitop; NOUNROLL while(c&&DCCALL!=c->dctype){if(DCSCRIPT!=c->dctype)c->dctype=DCJUNK; c=c->dclnk;}
  }
  // Don't allow redefinition of a name that is suspended higher up on the stack
- c=d; NOUNROLL while(c=c->dclnk){ ASSERTN(!(DCCALL==c->dctype&&v==(A)c->dcn),EVSTACK,c->dca);}
+ c=d; NOUNROLL while(c=c->dclnk){ ASSERTN(!(DCCALL==c->dctype&&v==(A)c->dcn),EVSIDAMAGE,c->dca);}
  R v;   // good return: recycle v to save a register
 }    /* check for changes to stack */
 

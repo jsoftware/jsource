@@ -69,6 +69,7 @@ EVINDEXDUP
 EVEMPTYT
 EVEMPTYDD
 EVMISSINGGMP
+EVSIDAMAGE
 )
 
 NB.x is (1 if all of main name always needed),(max # characters allowed),(par); y is AR
@@ -146,15 +147,6 @@ bshape =. (<"1 +:x) ;@:((;:'<>')"_`[`]})&.> (a: 0 _1} (<' ') (,@,. , [) (":&.>))
 (0 {:: bshape) , ' and ' , (1 {:: bshape)  
 }}
 
-NB. obsolete NB. y is message;selfar;ovr ; result has the executing entity prepended
-NB. obsolete efaddself_j_ =: {{
-NB. obsolete 'msg selfar ovr' =. y
-NB. obsolete if. #msg do.
-NB. obsolete   if. #selfmsg =. ovr eflinearself selfar do. msg =. msg ,~ selfmsg ,~ ', in ' end.
-NB. obsolete end.
-NB. obsolete msg
-NB. obsolete }}
-NB. obsolete 
 NB. y is a;w;ivr;ovr
 NB. Create msg if frames of a & w do not agree
 efckagree_j_ =: {{
@@ -411,7 +403,7 @@ case. EVATTN do. emsg =. 'the executing entity was interrupted by user action'
 case. EVBREAK do. emsg =. 'the executing sentence was aborted by user action'
 case. EVFACE do. emsg =. 'file system error'
 case. EVLIMIT do. emsg =. 'a system limit was exceeded'
-case. EVSTACK do. emsg =. 'infinite recursion'
+case. EVSTACK do.  emsg =. 'infinite recursion'
 case. EVFACCESS do. emsg =. 'nonexistent file or missing permissions'
 case. EVFNAME do. emsg =. 'nonexistent file or invalid filename '
 case. EVFNUM do. emsg =. 'the specified file number is not open'
@@ -426,6 +418,7 @@ case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
                   elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
                   if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
 case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''  or refer to your installation instructions'
+case. EVSIDAMAGE do. emsg =. 'you must turn debugging off before you redefine an entity other than the one at the top of the execution stack'
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee
 

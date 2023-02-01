@@ -46,19 +46,20 @@
 #define EVEMPTYT        40    // empty T block for select or for - converted to EVCTRL
 #define EVEMPTYDD       41    // empty {{ }} - converted to EVCTRL
 #define EVMISSINGGMP    42    // libgmp not installed - converted to EVFACE
-#define NEVM            42      /* number of event codes       */
+#define EVSIDAMAGE      43    // reload of running function
+#define NEVM            43      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */
-#define EVFOLDEXIT      43      // abort current execution and return the current result
-#define EVFOLDSKIP      44      // abort current execution and resume with the next iteration
-#define EWIMAG          45      /* imaginary  result           */
-#define EWIRR           46      /* irrational result           */
-#define EWRAT           47      /* rational   result           */
-#define EWDIV0          48      /* division by zero            */
-#define EWOV            50      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.  Leave at 50 until asm routines are retired
-#define EWOV1           51      // integer overflow that can be recovered because the float version has already been saved
-#define EWOVIP          52      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
+#define EVFOLDEXIT      59      // abort current execution and return the current result
+#define EVFOLDSKIP      60      // abort current execution and resume with the next iteration
+#define EWIMAG          61      /* imaginary  result           */
+#define EWIRR           62      /* irrational result           */
+#define EWRAT           63      /* rational   result           */
+#define EWDIV0          64      /* division by zero            */
+#define EWOV            66      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.  Leave at 50 until asm routines are retired
+#define EWOV1           67      // integer overflow that can be recovered because the float version has already been saved
+#define EWOVIP          68      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
 #define EWOVIPPLUSII    1  //0b001
 #define EWOVIPPLUSBI    0  //0b000  // bit 2=XOR value, bit0=AND value, bits 1:0 indicate function to use
 #define EWOVIPPLUSIB    4  //0b100
@@ -66,9 +67,9 @@
 #define EWOVIPMINUSBI   2  //0b010
 #define EWOVIPMINUSIB   6  //0b110
 #define EWOVIPMULII     5
-#define EWOVFLOOR0      52   // minor oflo in <./>., can be left as INT
-#define EWOVFLOOR1      53   // major oflo in <./>., must be converted to FL
-#define EVCUTSTACK      60  // set when Cut Stack executed; passed into caller to force its termination; intercepted when terminated line finishes, to revert to suspension
+#define EWOVFLOOR0      68   // minor oflo in <./>., can be left as INT
+#define EWOVFLOOR1      69   // major oflo in <./>., must be converted to FL
+#define EVCUTSTACK      76  // set when Cut Stack executed; passed into caller to force its termination; intercepted when terminated line finishes, to revert to suspension
 #define EVDEBUGEND      79  // EVEXIT+64 set when debug wants to fail all avoiding all try blocks
 #define EVSUPPRESS      255  // turn off error reporting: don't change anything.  Not used
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors

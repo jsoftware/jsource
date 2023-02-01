@@ -326,7 +326,7 @@ A jteformat(J jt,A self,A a,A w,A m){
     }
    }
    // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
-   e=e==EVINHOMO?EVDOMAIN:e; e=e==EVINDEXDUP?EVINDEX:e; e=e==EVEMPTYT?EVCTRL:e; e=e==EVEMPTYDD?EVCTRL:e; e=e==EVMISSINGGMP?EVFACE:e;  // revert internal numbers to external codes after formatting 
+   C oe=e; e=oe==EVINHOMO?EVDOMAIN:e; e=oe==EVINDEXDUP?EVINDEX:e; e=oe==EVEMPTYT?EVCTRL:e; e=oe==EVEMPTYDD?EVCTRL:e; e=oe==EVMISSINGGMP?EVFACE:e;  e=oe==EVSIDAMAGE?EVSTACK:e; // revert internal numbers to external codes after formatting 
    jt->jerr=jt->jerr1=e;  // save reverted value
   }
   jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it

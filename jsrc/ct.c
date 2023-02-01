@@ -543,6 +543,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  // extract parms given to t.: threadpool number, worker-only flag
  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
  JOBQ *jobq=&(*JT(jt,jobqueue))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
+ // scaf bug: if we are suspension we will enqueue the job but no thread will take it until suspension ends
  if((UI)jobq->nthreads>(forcetask&__atomic_load_n(&jobq->nuunfin,__ATOMIC_ACQUIRE))){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
  // realize virtual arguments; raise the usecount of the arguments including self scaf
   // clone an UNINCORPABLE argument (a utility block used in a loop); then ra() the arguments to protect them until the task completes.  It would be

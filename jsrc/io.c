@@ -273,6 +273,7 @@ static C* nfeinput(JS jt,C* s){A y;
 // if *p is (C)1 (which comes from m : 0), the request is for unprocessed 'literal input'
 // otherwise processed in inpl
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
+// scaf should rewrite this interface to keep the control info in locals in 0!:x
 A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  __atomic_store_n(IJT(jt,adbreak),0,__ATOMIC_RELEASE);  // turn off any pending break
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */

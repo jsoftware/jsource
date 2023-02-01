@@ -325,7 +325,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  I j=1; DO(r, ASSERT(g&&LIT==t ?llabs(s[i])*SZI<=n*(1+(C_64>d)) :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); // j: to verify n
  if (unlikely(g&&LIT==t)) {
   AFHRH(z)= FHRHISGMP;                                 // libgmp value
-  if (unlikely(C_64>d)) {                              // word size increased?
+  if (unlikely(C_64!=d)) {                             // word size changed?
    s[0]= (s[0]<0 ?-1 :1)*(llabs(s[0]) * (1+d) + C_64) / (1+C_64);  // fix XSGN()
   }
  } else {ASSERT(j==n,EVLENGTH);}

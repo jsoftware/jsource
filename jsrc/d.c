@@ -65,6 +65,7 @@ static I jtdisp(J jt,A w,I nflag);
 // format one non-noun entity into the error line
 // nflags contains display flags: 1=space before number, 2=parens around non-primitive
 // The entity came from a single sentence but may be compound.  Display it on a single line
+// maintenance note: don't use GA().  This gets called after jbreak, which causes all memory requests to fail.
 static void jtdspell(J jt,C id,A w,I nflag){C c,s[5];
  // constant verbs require looking at h
  if(id==CFCONS){if((nflag&1))eputc(' '); eputv(FAV(w)->fgh[2]); eputc(':');}
@@ -96,6 +97,7 @@ static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME bl
 EVERYFS(sfn0overself,jtsfn0,jtover,0,VFLAGNONE)
 
 // print a noun; nflag if space needed before name/numeric; return new value of nflag
+// maintenance note: don't use GA().  This gets called after jbreak, which causes all memory requests to fail.
 static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  // if this is a noun from a (( )) block, we have to take its linear rep, since it might not be displayable in 1 line
  if(AFLAG(w)&AFDPAREN&&AT(w)&NOUN){
@@ -116,7 +118,9 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  case BOXX:
   if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!(nflag&1)); break;}
   // If this is an array of names, turn it back into a character string with spaces between
-  else{if((w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself))))==0)R 0;}  // }: (string&.> names) ,&.> ' '  then fall through to display it
+  // we can't do this by simply executing }: (string&.> names) ,&.> ' ' because if we are out of memory we need to get the string out.  So we do it by hand
+  eputc('\''); DO(AN(w), if(i!=0)eputc(' '); A b=AAV(w)[i]; ep(AN(b),NAV(b)->s);) eputc('\''); break;
+// obsolete  else{if((w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself))))==0)R 0;}  // }: (string&.> names) ,&.> ' '  then fall through to display it
  case LITX:  eputq(w,(nflag&1));                break;
  case NAMEX: ep(AN(w),NAV(w)->s); if(unlikely((AT(w)&NAMEABANDON)!=0)){ep(2,"_:");}     break;
  case LPARX: eputc('(');              break;

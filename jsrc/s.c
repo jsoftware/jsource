@@ -631,7 +631,7 @@ F1(jtsymbrdlock){A y;
 // If the modified name is executing higher on the stack, fail
 // returns v for OK to allow the assignment to proceed, 0 if error
 A jtredef(J jt,A w,A v){A f;DC c,d;
- // find the most recent DCCALL, exit if none
+ // find the most recent DCCALL with error, exit if none
  d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R v;
  if(v==(A)d->dcn){  // if we reassign any name whose value equals the executing value, we treat it as a reassignment of the executing name.  This is for comp ease
   // attempted reassignment of the executing name

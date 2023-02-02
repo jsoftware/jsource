@@ -116,6 +116,7 @@ C spellin(I n,C*s){
  }
 }
 // s is a buffer long enough to hold the longest spelling.  Fill it with the spelling of c
+// maintenance note: don't use GA().  This gets called after jbreak, which causes all memory requests to fail.
 void spellit(UC c,UC *s){
  I spell=spellouttab[c]; // Fetch inf2/inf1 graphic
  s[0]=(C)spell; s[1]=(C)(0x203a2e00>>(((spell>>8)&0x3)<<3)); s[2]=(C)(0x203a2e00>>(((spell>>10)&0x3)<<3));   // 00100000 00111010 00101110 00000000  for NUL . :, with overlap

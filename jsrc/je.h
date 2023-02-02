@@ -979,6 +979,7 @@ extern CR       condrange4(C4 *,I,I,I,I);
 extern B        evoke(A);
 extern void     forcetomemory(void *);
 extern void     freesymb(J,A);
+extern void     freetstackallo(J);
 extern UI       hic(I,UC*);
 extern UI       hic2(I,UC*);
 extern UI       hic4(I,UC*);

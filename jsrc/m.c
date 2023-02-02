@@ -1128,6 +1128,15 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
  R pushp+1;  // Return pointer to first usable slot in the allocated block
 }
 
+// back the tpush stack up to the previous allocation.  We have just popped off the last element of the current allocation
+// (that is, we have moved tnextpushp to the chain field at the start of the allocation)
+// we keep one allocation in hand in tstacknext to avoid hysteresis.  If there is one already there
+void freetstackallo(J jt){
+ if(jt->tstacknext){FREECHK(jt->tstacknext); __atomic_fetch_sub(&jt->malloctotal,NTSTACK+NTSTACKBLOCK,__ATOMIC_ACQ_REL);}   // account for malloc'd memory
+ // We will set the block we are vacating as the next-to-use.  We keep only 1 such; if there is one already, free it
+ jt->tstacknext=jt->tstackcurr;  // save the next-to-use, after removing bias
+ jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
+}
 
 // pop stack,  ending when we have freed the entry with tnextpushp==old.  tnextpushp is left pointing to an empty slot
 // return value is pushp
@@ -1184,13 +1193,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
   if(endingtpushp!=old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block
    // end-of-block.  np=*pushp is the chain to the end of the previous block.  We will go there, but first see if we have finished the current allocation
    // There is no way two allocations could back up so as to make the end of one exactly the beginning of the other
-   if((A*)np!=pushp-1){
-    // if there is another block in this allocation, step to it.  Otherwise:
-    if(jt->tstacknext){FREECHK(jt->tstacknext); __atomic_fetch_sub(&jt->malloctotal,NTSTACK+NTSTACKBLOCK,__ATOMIC_ACQ_REL);}   // account for malloc'd memory
-  // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
-    jt->tstacknext=jt->tstackcurr;  // save the next-to-use, after removing bias
-    jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
-   }
+   if(unlikely((A*)np!=pushp-1))freetstackallo(jt);    // if the new block ends just before the current one, they are in the same allocation and we just continue.  Otherwise switch allocations
    pushp=(A*)np; // move to the next block, whichever allocation it is in 
   } else {
    // The return point:

@@ -177,7 +177,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl4[0];
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
 // things needed for allocation of large blocks
- A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
+ A* tstacknext;       // if not 0, points to the recently-used tstack allocation, whose first entry points to the current allocation  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
  PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
 // end of cacheline 4

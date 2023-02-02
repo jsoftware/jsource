@@ -539,6 +539,9 @@ typedef I SI;
 #define ACSET(a,v)      __atomic_store_n(&AC(a),(v),__ATOMIC_RELEASE);  // used when a might be shared, but atomic not needed
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
+#define ACINITUNPUSH(a)  {A *pushp=jt->tpushnext; --pushp; \
+                          if(unlikely((I)pushp&(NTSTACKBLOCK-1))){A *nextp=(A*)*pushp; if(unlikely(nextp!=pushp-1)){freetstackallo(); pushp=nextp;}} /* check start of block and start of allo */ \
+                          jt->tpushnext=pushp; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by backing the tpush pointer
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
 #define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0 ACIPNO(x);}else ra(x);}
 #define ACX(a)          {AC(a)=ACPERMANENT; AFLAGORLOCAL(a,AT(a)&RECURSIBLE);}   // used only in initializations
@@ -576,7 +579,7 @@ typedef I SI;
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFUNINCORPABLEX SBTX      // matches SBTX 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
-                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
+                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes.  AFVIRTUAL must also be set
 #define AFVIRTUALX      C2TX      // matches C2TX 17
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it

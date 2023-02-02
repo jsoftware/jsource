@@ -549,6 +549,9 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   // clone an UNINCORPABLE argument (a utility block used in a loop); then ra() the arguments to protect them until the task completes.  It would be
   // nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
+// 9.05  if(dyad){if(AFLAG(arg3&AFUNINCORPABLE){RZ(arg3=clonevirtual(arg3)) ACINITZAP(arg3)}else{ra(arg3);}} rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);
+// 9.05  if(AFLAG(arg1&AFUNINCORPABLE){RZ(arg1=clonevirtual(arg1)) ACINITZAP(arg1)}else{ra(arg1);}
+// 9.05  if(AFLAG(arg2&AFUNINCORPABLE){RZ(arg2=clonevirtual(arg2)) ACINITZAP(arg2)}else{ra(arg2);}
   if(dyad){rifv(arg3);ra(arg3);} rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
   job->n=0;  // indicate this is a user job.  ns is immaterial since it will always trigger a deq
@@ -566,9 +569,9 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
    JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.
    jfutex_wake1(&jobq->futex);  // wake 1 waiting thread, if there is one
    R pyx;
-  } else JOBUNLOCK(jobq,oldjob);  // return lock if there is no task to take the job
 
  // No thread for the job.  Run it here
+  } else JOBUNLOCK(jobq,oldjob);  // return lock if there is no task to take the job
   fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now to match ra before test
  }
  fa(jobA); ACINITZAP(pyx); fa(pyx); // better to allocate then conditionally free than to perform the allocation under lock.  The pyx has 2 owners: the job and the tpop stack.  We remove both

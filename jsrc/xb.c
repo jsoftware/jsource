@@ -294,7 +294,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  I t; RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d)); // t: type
  I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));         // n: quantity
  I r; RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d));         // r: rank
- C*v=BV(d,w,r);                                        // v[]: n values go here
+ C*v=BV(d,w,r);                                        // v[]: n values come from here
  ASSERT(t==LOWESTBIT(t),EVDOMAIN);
  t=fromonehottype(t);
  ASSERT(t&NOUN,EVDOMAIN);
@@ -322,7 +322,11 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   GASPARSE0(z,t,n,r)
  }
  I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,C_64,d));      // s[]: shape
- I j=1; DO(r, ASSERT(g&&LIT==t ?llabs(s[i])*SZI<=n*(1+(C_64>d)) :0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); // j: to verify n
+ I j=1; DO(r,
+  I si= unlikely(g&&LIT==t) ?llabs(s[i])*SZI :s[i];
+  ASSERT(unlikely(g&&LIT==t) ?si<=n*(1+(C_64>d)) :0<=si,EVLENGTH);
+  if(!ISSPARSE(t))j*=si;
+ ); // j: to verify n
  if (unlikely(g&&LIT==t)) {
   AFHRH(z)= FHRHISGMP;                                 // libgmp value
   if (unlikely(C_64!=d)) {                             // word size changed?
@@ -361,6 +365,11 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
    A xbase= scx(XgetI(10000)); RZ(xbase); // FIXME: make xbase a jgmpinit constant, use here and in vrand.c
    RZ(z= XAV(poly2(z, xbase))[0]);
   } else{ASSERT(LIT==t, EVDOMAIN)};
+ }
+ if (unlikely(g&&LIT==t) && unlikely(C_64<d)) {
+  if (!XLIMBn(z)) { // libgmp does not like leading 0 big digits which we might have inherited from 64 bit representation
+   XSGN(z)= XSGN(z) - (XSGN(z)>0 ?1 :-1);
+  }
  }
  RE(z); RETF(z);
 }    /* b iff reverse the bytes; d iff argument is 64-bits */

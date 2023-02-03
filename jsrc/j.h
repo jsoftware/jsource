@@ -2028,11 +2028,11 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #else
 #define FSYNC_STDERR fsync(STDERR_FILENO);
 #endif
-#define SEGFAULT        do{ \
+#define SEGFAULT        ({do{ \
                          fprintf(stderr,"trap : file %s line %d\n",__FILE__,__LINE__); \
                          FSYNC_STDERR; \
                          (void)__builtin_trap(); \
-                        }while(0)
+                        }while(0);0;})
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535
 #define SMIN            (-65536)

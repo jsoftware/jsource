@@ -218,13 +218,15 @@ ICAgICAgICAgICAgICAgIA==
 ) 
 
 s=: ('zero';(7&u:'one');(10&u:'two');0;01;(i.3 4);(%.%:i.3 3);(1 2x);(3r5);(x:_ __);(1r0);(_r0);(0r0);(<(i.2 3);'abcd'))
+echo _64]\ 5!:5 <'s'
+s -: ". 5!:5 <'s'
 F=: jpath '~temp/t1-','.ijf',~(":2!:6''),'_',":3&T.''
 
-1: F fwrite~ j32
+_1 ~: F fwrite~ j32
 echo s ,: jread"1 (<F),.<"0[i.#s
 s = jread"1 (<F),.<"0[i.#s
 
-1: F fwrite~ j64
+_1 ~: F fwrite~ j64
 echo s ,: jread"1 (<F),.<"0[i.#s
 s = jread"1 (<F),.<"0[i.#s
 

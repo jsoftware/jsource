@@ -73,15 +73,21 @@ F2(jtnouninfo2){A z;
 
 #define LGWS(d)         ((d)+2)  // LG(WS(d))
 #define WS(d)           (((I)1)<<LGWS(d))                 /* word size in bytes              */
-#define BH(d)           (4LL<<LGWS(d))               /* # non-shape header bytes in A   */
-#define BF(d,a)         ((C*)(a)        )       /* flag                            */
-#define BT(d,a)         ((C*)(a)+  WS(d))       /* type                            */
+#define BH(d)           (4LL<<LGWS(d))                    /* # non-shape header bytes in A   */
+#define BF(d,a)         ((C*)(a)        )                 /* flag                            */
+#define BT(d,a)         ((C*)(a)+  WS(d))                 /* type                            */
 #define BTX(d,pre601,a) ((C*)(a)+  WS(d)*!pre601)
-#define BN(d,a)         ((C*)(a)+(2LL<<LGWS(d)))       /* # elements in ravel             */
-#define BR(d,a)         ((C*)(a)+(3LL<<LGWS(d)))       /* rank                            */
-#define BS(d,a)         ((C*)(a)+(4LL<<LGWS(d)))       /* shape                           */
-#define BV(d,a,r)       (BS(d,a)+((r)<<LGWS(d)))     /* value                           */
-#define BU              (C_LE ? 1 : 0)
+#define BN(d,a)         ((C*)(a)+(2LL<<LGWS(d)))          /* # elements in ravel             */
+#define BR(d,a)         ((C*)(a)+(3LL<<LGWS(d)))          /* rank                            */
+#define BS(d,a)         ((C*)(a)+(4LL<<LGWS(d)))          /* shape                           */
+#define BV(d,a,r)       (BS(d,a)+((r)<<LGWS(d)))          /* value                           */
+#define BU              (C_LE ? 1 : 0)                    /* little endian?                  */
+
+// for libgmp the AN() value should be the bytes of memory allocated to store the magnitude
+// of the integer. But this needs to be padded with a zero word when we go from 32 to 64 bit
+// if the corresponding count of 32 bit words would be odd
+#define BSZ(d,a)    (ISGMP(a) ?(XLIMBLEN(a)+(1&XLIMBLEN(a)&d>C_64))*SZI :AN(a))
+
 
 static A jtbrep(J jt,B b,B d,A w);  // forward declaration
 static A jthrep(J jt,B b,B d,A w);
@@ -106,7 +112,7 @@ static I bsize(J jt,B d,B tb,I t,I n,I r){
 // like bsize, but recursive.  Add up the size of this block and the sizes of the descendants
 // size is rounded to integral # words
 static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
- I totalsize = bsize(jt,d,tb&&!ISGMP(w), AT(w), ISGMP(w)?XLIMBLEN(w)*SZI:AN(w), AR(w));
+ I totalsize = bsize(jt,d,tb&&!ISGMP(w), AT(w), BSZ(d, w), AR(w));
  I t= AT(w); if((t&DIRECT)>0)R totalsize;
  I nchildren= AN(w)<<((t>>RATX)&1);  // # subblocks
  DO(nchildren, totalsize+=bsizer(jt,d,tb,C(wv[i]));)
@@ -145,16 +151,86 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
  R 1;
 }    /* move n words from u to v */
 
+// n:  # of bytes
+// v:  ptr to result
+// u:  ptr to argument
+// bv: 1 iff result is little-endian (LE)
+// bu: 1 if LE argument, 0 if BE (big-endian)
+// dv: 1 iff result is 64-bit
+// du: 1 iff argument is 64-bit
+static void jtmvgmp(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){
+ // libgmp integer magnitudes are a sequence of 32 or 64 bit words 
+ // * if dv!=du and 4&n we must extend the result to include a high
+ //   order 0 word (32 bits wide).  BSZ() will have given us an
+ //   extra 4 bytes for this purpose.
+ // * other than that, LE to LE is a literal memcopy
+ // * BE to BE with matched word sizes is a literal memcopy
+ // * BE to BE with mismatch word sizes requires swapping the
+ //   lower and upper 32 bit halves
+ // * in LE to BE and BE to LE, we must reverse byte order
+ //   within each bigendian word
+ if (likely(bu == bv)) {
+  if (likely(bu)) { // LE -> LE
+   if (unlikely(dv!=du) && n&4) {
+    ((I4*)v)[n>>2]= (I4)0;
+   }
+   MC(v,u,n);
+  } else { // BE -> BE
+   if (du==dv) { // matched word sizes
+    MC(v,u,n);
+   } else { // mismatched word sizes
+    I j= -2, N= n>>3; I4*u4= (I4*)u, *v4= (I4*)v;
+    while (N > (j=j+2)) {
+     v4[j+1]= u4[j];
+     v4[j]= u4[j+1];
+    }
+    if (dv&&4&n) {
+     v4[j+1]= u4[j];
+     v4[j]= 0;
+    }
+   }
+  }
+ } else { // LE to BE or BE to LE
+  if (dv!=du) { // mismatched word sizes needs leading zero 32 bit word
+   I m= (n+4>>3)-1;
+   if (C_64) {
+    ((I*)v)[m]= 0;
+   } else { // we handle both LE to BE and BE to LE so zero both 32 bit words
+    m<<=1;
+    ((I*)v)[m++]= 0;
+    ((I*)v)[m]= 0;
+   }
+  }
+  I BEWS= 4; switch (4*bv+2*dv+du) {case 2: case 3: case 5: case 7: BEWS= 8; default:;}
+  I i= -BEWS, j, k; // BEWS: word size of big-endian word
+  while (n>(i+=BEWS)) {
+   for (j= 0, k= BEWS; k-->0 && n>i+j; j++) {
+    v[i+k]= u[i+j];
+   }
+  }
+ }
+}
+
 // d: 1 if 64 bit format in target architecture, 0 if 32 bit
 // b: 1 if reversed bytes in target architecture
 // move the header, return new move point
 static C*jtbrephdrq(J jt,B b,B d,A w,C *q){
- I t=toonehottype(AT(w)), n=ISGMP(w)?XLIMBLEN(w)*SZI:AN(w), r=AR(w), f=0;
+ I t=toonehottype(AT(w)), n= BSZ(d, w), r=AR(w), f=0;
  RZ(mvw(BF(d,q),(C*)&f,1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
  RZ(mvw(BT(d,q),(C*)&t,1L,b,BU,d,SY_64));
  RZ(mvw(BN(d,q),(C*)&n,1L,b,BU,d,SY_64));
  RZ(mvw(BR(d,q),(C*)&r,1L,b,BU,d,SY_64));  // r is an I
- RZ(mvw(BS(d,q),(C*) AS(w),r, b,BU,d,SY_64));
+ if (unlikely(ISGMP(w)) && unlikely(d!=SY_64)) {
+  I s0= XSGN(w);
+  if (SY_64) {
+   s0<<=1; s0-= XLIMBn(w)<((UI)1<<32);
+  } else {
+   s0= s0+1; s0>>=1;
+  }
+  RZ(mvw(BS(d,q),(C*)&s0,1,b,BU,d,SY_64));
+ } else {
+  RZ(mvw(BS(d,q),(C*) AS(w),r, b,BU,d,SY_64));
+ }
  R BV(d,q,r);
 }
 
@@ -189,7 +265,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
  zv=jtbrephdrq(jt,b,d,w,zv);   // fill in the header, advance pointer to after it
  C* u=CAV(w);  // input pointer
  I t=AT(w);  // input type
- I n= ISGMP(w) ?XLIMBLEN(w)*SZI :AN(w);  // #input atoms
+ I n= BSZ(d, w);  // #input atoms
  I klg=bplg(t), kk=WS(d);
  if((t&DIRECT)>0){
   I blksize=bsizer(jt,d,1,w);  // get size of this block (never needs recursion)
@@ -199,15 +275,20 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
   case FLX:   RZ(mvw(zv,u,n,  b,BU,1,1    )); break;
   case CMPXX: RZ(mvw(zv,u,n+n,b,BU,1,1    )); break;
   default:
-   // 1- and 2-byte C4T types, all of which have LAST0*.  We need to clear the last
-   // bytes, because the datalength is rounded up in bsize, and thus there are
-   // up to 3 words at the end of y that will not be copied to.  We clear them to
-   // 0 to provide repeatable results.
-   // Make sure there is a zero byte if the string is empty
-   // * an exception is that LIT is also used for libgmp pseudo-arrays, without LAST0
-   {I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
-   if (!ISGMP(w))mvc(suffsize,(origzv+blksize)-suffsize,1,MEMSET00);   // clear suffix
-   MC(zv,u,n<<klg); break;}      // copy the valid part of the data
+   if (!ISGMP(w)) {
+    // 1- and 2-byte C4T types, all of which have LAST0*.  We need to clear the last
+    // bytes, because the datalength is rounded up in bsize, and thus there are
+    // up to 3 words at the end of y that will not be copied to.  We clear them to
+    // 0 to provide repeatable results.
+    // Make sure there is a zero byte if the string is empty
+    // * an exception is that LIT is also used for libgmp pseudo-arrays, without LAST0
+    I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
+    mvc(suffsize,(origzv+blksize)-suffsize,1,MEMSET00);   // clear suffix
+    MC(zv,u,n<<klg);           // copy the valid part of the data
+   } else {
+    jtmvgmp(jt,zv,u,llabs(XSGN(w))*SZI,b,BU,d,C_64); // copy the valid part of the data
+   }
+   break;
   }
   R origzv+blksize;  // return next output position
  }
@@ -283,6 +364,8 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  RE(z); RETF(z);
 }
 
+extern void jgmpguard(X);
+
 // create A from 3!:1 form (recursive -- start at jtunbin)
 // b: 0: big-endian 1: little-endian
 // d: 0: 32 bits,   1: 64 bits
@@ -304,7 +387,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  I e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n;          // e: n or 2*n (if RAT)
  ASSERT(m>=p,EVLENGTH);
  A z; if(likely(!ISSPARSE(t))){                        // z: result array
-  if(likely(!g||LIT!=t)){
+  if(likely(!g)||LIT!=t){
    GA00(z,t,n,r);
   }else{
    // j32 big digits (limbs) are half the width of j64 limbs
@@ -323,14 +406,19 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  }
  I*s=AS(z); RZ(mvw((C*)s,BS(d,w),r,BU,b,C_64,d));      // s[]: shape
  I j=1; DO(r,
-  I si= unlikely(g&&LIT==t) ?llabs(s[i])*SZI :s[i];
-  ASSERT(unlikely(g&&LIT==t) ?si<=n*(1+(C_64>d)) :0<=si,EVLENGTH);
+  I si= unlikely(g)&&likely(LIT==t) ?llabs(s[i])*SZI :s[i];
+  ASSERT(unlikely(g)&&likely(LIT==t) ?si<=n*(1+(C_64>d)) :0<=si,EVLENGTH);
   if(!ISSPARSE(t))j*=si;
  ); // j: to verify n
- if (unlikely(g&&LIT==t)) {
+ if (unlikely(g)&&likely(LIT==t)) {
   AFHRH(z)= FHRHISGMP;                                 // libgmp value
   if (unlikely(C_64!=d)) {                             // word size changed?
-   s[0]= (s[0]<0 ?-1 :1)*(llabs(s[0]) * (1+d) + C_64) / (1+C_64);  // fix XSGN()
+   if (C_64) {                                         // word size increased
+    I smag= llabs(s[0]), ssgn= s[0]<0 ?-1 :1;
+    s[0]= ssgn*(smag+1>>1);
+   } else {                                            // word size decreased
+    s[0]<<= 1;
+   }
   }
  } else {ASSERT(j==n,EVLENGTH);}
  A y; I *vv; if(t&BOX+XNUM+RAT+SPARSE){                // y: locator for values in v
@@ -358,18 +446,24 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   case FLX:   RZ(mvw(CAV(z),v,n,  BU,b,1,    1)); break;
   case CMPXX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;
   default: e=n<<bplg(t);
-   ASSERTSYS(e<=allosize(z),"unbinr"); MC(CAV(z),v,e);
+   ASSERTSYS(e<=allosize(z),"unbinr");
+   if (unlikely(g)&&likely(LIT==t)) {
+    jtmvgmp(jt,CAV(z),v,n,BU,b,C_64,d);
+   } else {
+    MC(CAV(z),v,e);
+   }
  }
  if (unlikely(g)) { // container is XNUM or RAT
   if (INT==t) { // old style XNUM format
    A xbase= scx(XgetI(10000)); RZ(xbase); // FIXME: make xbase a jgmpinit constant, use here and in vrand.c
    RZ(z= XAV(poly2(z, xbase))[0]);
   } else{ASSERT(LIT==t, EVDOMAIN)};
- }
- if (unlikely(g&&LIT==t) && unlikely(C_64<d)) {
-  if (!XLIMBn(z)) { // libgmp does not like leading 0 big digits which we might have inherited from 64 bit representation
-   XSGN(z)= XSGN(z) - (XSGN(z)>0 ?1 :-1);
+  if (!XLIMBn(z)) { // libgmp hates leading 0 limb that word size change requires
+   XSGN(z)= XSGN(z)-(XSGN(z)>0 ?1 :-1);
   }
+#if MEMAUDIT&0x40
+  jgmpguard(z);
+#endif
  }
  RE(z); RETF(z);
 }    /* b iff reverse the bytes; d iff argument is 64-bits */

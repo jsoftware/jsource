@@ -261,10 +261,9 @@ typedef struct JSTstruct {
 #define LOCK78MEM 4  // lock is requested for 7!:8, total memory in use
 #define LOCKPRIDEBUG 8  // lock is requested for debug suspension
 #define LOCKALL (LOCKPRISYM+LOCKPRIPATH+LOCK78MEM+LOCKPRIDEBUG)  // for lockaccept, when we can accept anything
- S systemlocktct;   // counter field, used for systemlock sync
+ S systemlocktct;   // counter field, used for systemlock sync, # running tasks
+ S systemlockthreadct;  // for system lock, total # threads active
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
- B stch;             /* enable setting of changed bit                   */
- C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
 // obsolete  //void *heap;            // heap handle for large allocations
  I mmax;             // space allocation limit could be float or short float
  A stloc;            // named locales symbol table - this pointer never changes
@@ -293,10 +292,11 @@ typedef struct JSTstruct {
  C _cl2[0];
  L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
  S symlock;          // r/w lock for symbol pool
+ B stch;             // enable setting of changed bit during assignment
+ C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
  // rest of cacheline used only in exceptional paths
  S locdellock;  // lock to serialize user request to delete locale
  US promptthread;  // The thread that is allowed to prompt from keyboard.  0=master normally, but set to debug thread during suspension.  Host sentences are sent to this thread
-// 2 bytes free
 // front-end interface info
  C *capture;          // capture output for python->J etc.
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
@@ -327,7 +327,7 @@ typedef struct JSTstruct {
  C _cl4[0];
  A flkd;             /* file lock data: number, index, length           */
  A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
- S flock;            // r/w lock for flkd/fopa/fopf
+ S flock;            // r/w lock for flkd/fopa/fopf, also used for thread creation/deletion
  // rest of cacheline used only in exceptional paths
  US nwthreads;    // number of worker threads allocated so far - changes protected by flock
  UC sm;               /* sm options set by JSM()                         */

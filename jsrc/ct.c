@@ -113,12 +113,15 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
  // threads.  Thus, it is possible that our request will still be pending whe we finish.  In that case, loop till it is satisfied
  while(priority!=0){
 // obsolete scaflog((UI4*)priority,JT(jt,systemlock),THREADID(jt),0x45);
-  I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &(S){0}, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);  // go to state 1; set leader if we are the first to do so
+  // go to state 1; set leader if we are the first to do so
+  I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &(S){0}, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
   // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
   // Also, wake up all tasks that are in a loop that needs interrupting on system action.  Those loops will honor it when we are in state 1/2
 // obsolete scaflog((UI4*)leader,JT(jt,systemlock),THREADID(jt),0x46);
-  if(leader){DONOUNROLL(NALLTHREADS(jt), nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;)}
+  // We take a lock on the thread info to ensure a thread is not added while we are counting
+  I nlocked;  // in the leader and executor, the number of threads that were found when we started
+  if(leader){WRITELOCK(JT(jt,flock)) DONOUNROLL(nlocked=NALLTHREADS(jt), nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) WRITEUNLOCK(JT(jt,flock))}
   // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop.  We wake all threads that are waiting on pyx/mutex, which is harder
   // than it sounds: we don't know immediately whether a thread has gone to wait, because there may be delay in our seeing the futexwt.  We repeatedly wake up the waiting threads until
   // all the active ones have entered systemlock
@@ -127,11 +130,11 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
   // state 3: all threads get the final request priorities
   C finalpriority; DOINSTATE(leader,3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);,)
   I winningpri=LOWESTBIT(finalpriority); I executor=winningpri&priority&~oldpriority;  // priority to execute: were we the first to request it?
-  // state 4: transfer nrunning to executor and run the locked function.  Other tasks must do nothing and wait for state 5.
-  if(leader){__atomic_store_n(&JT(jt,systemlocktct),nrunning,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),4,__ATOMIC_RELEASE);}  // leader advances to state 4
+  // state 4: transfer nrunning/nlocked to executor and run the locked function.  Other tasks must do nothing and wait for state 5.
+  if(leader){__atomic_store_n(&JT(jt,systemlocktct),nrunning,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlockthreadct),nlocked,__ATOMIC_RELEASE); __atomic_store_n(&JT(jt,systemlock),4,__ATOMIC_RELEASE);}  // leader advances to state 4
   if(executor){  // if we were the first to request the winning priority
    // This is the winning thread.  Perform the function and save the error status
-   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE);  // executor waits for state 4 and picks up nrunning.  Not actually necessary, but otherwise we have to guarantee tct unchanged by function
+   while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=4)YIELD nrunning=__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE); nlocked=__atomic_load_n(&JT(jt,systemlockthreadct),__ATOMIC_ACQUIRE);  // executor waits for state 4 and picks up nrunning/nlocked.
    // remove the lock request from the break field so that it doesn't cause the function to think a lock is requested
    __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);
    z=(*lockedfunction)(jt);  // perform the locked function
@@ -139,13 +142,14 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
   }
   // state 5: everybody gets the result of the operation
   DOINSTATE(executor,5,__atomic_load_n(&((C*)&JT(jt,breakbytes))[1],__ATOMIC_ACQUIRE);,)
-  // Now wind down the lock.  taskct is known to be 0.  Turn off all the LOCK bits and then set state to 0.  Other tasks will
+  // Now wind down the lock.  systemlocktct is known to be 0.  Turn off all the LOCK bits and then set state to 0.  Other tasks will
   // wait for state to move off 5.  There is no guarantee they will see state 0 of the next systemlock, but state cannot advance beyond 1 until they have finished this one.
   // There is also no guarantee they will see their LOCK removed
   if(executor){
    __atomic_store_n(&((C*)&JT(jt,breakbytes))[1],0,__ATOMIC_RELEASE);  // clear the error flag from the interrupt request
-   // go through all threads, turning off SYSLOCK in each.  This allows other tasks to run and new tasks to start
-   DO(NALLTHREADS(jt), __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
+   // go through all threads, turning off SYSLOCK in each.  This allows other tasks to run and new tasks to start.
+   // threads may have been marked for deletion, or even deleted, but we must turn off the lock bit in every thread where we set it
+   DO(nlocked, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
    // set the systemlock to 0, completing the operation
    __atomic_store_n(&JT(jt,systemlock),0,__ATOMIC_RELEASE);
   }else{
@@ -838,26 +842,33 @@ ASSERT(0,EVNONCE)
   break;}
  case 0:  { // create a thread and start it.  Optional arg is threadpool number
 #if PYXES
+  // We must not increase the # running tasks while suspension is running.  If we do, we have no way to tell the task that a system lock is active, and we also have
+  // no way to prevent the created task from starting up running, thus violating the lock rules.
+  ASSERT(lda(&JT(jt,systemlock))<=2,EVSIDAMAGE)  // if the lock has already started, this must be an execution from debug suspension.  Fail it
   I poolno=0;  // default to threadpool 0
   if(AN(w)){   // arg is [threadpool #]
    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   }
   // if the threadslot we will use is being terminated, we have to wait for termination to finish, so that we can restart it with the correct threadpool
+  // We also have to ensure that the thread data is initialized and the virtual memory for it is mapped
+  // Finally, we have to ensure that we don't add a thread during systemlock, from the time the threads are counted until the end.  If systemlock has started at all, we defer to it
   I resthread;  // thread# we will be allocating
+  // ***** start of lock on thread info
   while(1){
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
+   if(unlikely(lda(&JT(jt,systemlock))>0)){WRITEUNLOCK(JT(jt,flock)) jtsystemlockaccept(jt,LOCKALL); continue;}  // allow syslock if requested
    resthread=THREADIDFORWORKER(JT(jt,nwthreads));  // number of current worker threads.  Next worker is nwthreads; convert worker# to thread#
    ASSERTSUFF(resthread<MAXTHREADS,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if new 0-origin thread# exceeds limit
    if(!jvmcommit(JTFORTHREAD(jt,resthread),sizeof(JTT))){ // attempt to commit thread data (in case it's not already committed); if failed, then bail
     WRITEUNLOCK(JT(jt,flock));
     ASSERT(0,EVWSFULL);}
    if(unlikely(!jtjinitt(JTFORTHREAD(jt,resthread)))){WRITEUNLOCK(JT(jt,flock)); R 0;} // initialise thread-local state
-   if(!(__atomic_load_n(&JTFORTHREAD(jt,resthread)->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE))break;
+   if(!(lda(&JTFORTHREAD(jt,resthread)->taskstate)&TASKSTATETERMINATE))break;  // normal case: not terminating, continue holding lock
    WRITEUNLOCK(JT(jt,flock))  // release lock for next poll
-   if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKALL);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
+   YIELD  // let other threads run while we wait for the on-deck thread to terminate
   }
-  // we have a lock on the overall thread info; and resthread, the slot we want to fill, is idle.  keep the lock while we fill it
+  // we have a lock on the overall thread info; and resthread, the slot we want to fill, is idle.  keep the lock while we fill it.  systemlock will not count threads until we have finished adding and starting the new one
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
   ASSERTSUFF(jobq->nthreads<MAXTHREADSINPOOL,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if threadpool limit exceeded.  OK to CHECK outside of job lock
   // We also have to lock the threadpool before changing nthreads, because jobq->nthreads is used to decide whether to start a job
@@ -872,6 +883,7 @@ ASSERT(0,EVNONCE)
   }else resthread=0;  // if error, mark invalid thread#; error signaled earlier
   JOBUNLOCK(jobq,job);  // We don't add a job - just unlock
   WRITEUNLOCK(JT(jt,flock))  // release lock on global thread data
+  // ***** end of lock on thread info
   jvmwire(JTFORTHREAD(jt,resthread),sizeof(JTT)); // try to wire thread data.  Do this outside of the lock, since failure is not catastrophic.  Also don't check for error before doing the wiring; if there was an error, resthread=0, so we just harmlessly wire thread 0's data again.
   z=resthread?sc(resthread):0;  // if no error, return thread# started
 #else
@@ -969,13 +981,15 @@ ASSERT(0,EVNONCE)
   JOBQ *jobq;  // JOBQ for the thread
   JOB *job;  // the first job on the JOBQ
   // Acquire locks, and make sure that we don't delete the last thread in a pool that has jobs pending.  Wait till the jobs finish
+  // NOTE that it is OK to reduce nthreads even if a systemlock is running, because systemlock will always unlock any thread it locked initially.  The blocks are never unmapped
+  // ***** start of lock
   while(1){
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
    resthread=THREADIDFORWORKER(JT(jt,nwthreads)-1);  // number of thread to stop.  It will always be ACTIVE
    ASSERTSUFF(resthread>=1,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if no thread to delete
    jobq=&(*JT(jt,jobqueue))[JTFORTHREAD(jt,resthread)->threadpoolno];
    job=JOBLOCK(jobq);  // must change status under lock for the threadpool
-   if(job==0||jobq->nthreads>1)break;  // exit if not last thread in a busy pool
+   if(job==0||jobq->nthreads>1)break;  // normal continuation: not last thread in a busy pool.  Wait for that
    JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
    WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
    if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKALL);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
@@ -988,6 +1002,7 @@ ASSERT(0,EVNONCE)
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work: not a job, but the thread
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
+  // ***** end of lock
   jfutex_wakea(&jobq->futex);  // wake em all up
   z=mtm;
 #else

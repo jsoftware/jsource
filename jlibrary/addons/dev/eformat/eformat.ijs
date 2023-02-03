@@ -418,7 +418,7 @@ case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
                   elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
                   if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
 case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''  or refer to your installation instructions'
-case. EVSIDAMAGE do. emsg =. 'you must turn debugging off before you redefine an entity other than the one at the top of the execution stack'
+case. EVSIDAMAGE do. if. prim -.@-: ;:'T.' do. emsg =. 'you must turn debugging off before you redefine an entity other than the one at the top of the execution stack' end.
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee
 
@@ -681,9 +681,10 @@ NB. most decoding omitted
         end.
         if. e = EVLIMIT do. hdr,'thread# exceeds system limit' return. end.
       case. 0 do.
-        if. e e. EVRANK,EVLENGTH do. hdr,'y must be an integer atom or empty' return. end.
+        if. e e. EVRANK,EVLENGTH do. hdr,'pool# must be an integer atom or empty' return. end.
         if. e=EVLIMIT do. hdr,'too many threads for pool or system' return. end.
         if. e=EVFACE do. hdr,'the OS refused to create a thread' return. end.
+        if. e=EVSIDAMAGE do. hdr,'thread creation not allowed during debug suspension' return. end.
       case. 10;11;13;16;17;18 do.   NB. no decoding for these yet
       case. do. hdr,'unknown x value' return.
       end.

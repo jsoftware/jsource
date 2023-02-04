@@ -213,7 +213,7 @@ static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
    // If we failed on an iteration, perturb the highest coefficient a little bit and see if we can solve that instead.
    if(real){RZ(x1=cvt(FL,vec(CMPX,1+m,xv))); u=  DAV(x1)+m-1;      if(*u)*u*=1+1e-12; else *u=1e-12;}
    else    {RZ(x1=       vec(CMPX,1+m,xv) ); u=&(ZAV(x1)+m-1)->re; if(*u)*u*=1+1e-12; else *u=1e-12;}
-   RZ(z=rfcz(m,x1)); zv=ZAV(z);
+   STACKCHKOFL RZ(z=rfcz(m,x1)); zv=ZAV(z);
    DO(m, zv[i]=newt(m,xv,zv[i],10L););
  }}
  if(real){B b=1; DO(m, if(zv[i].im){b=0; break;}); if(b)z=cvt(FL,z);}

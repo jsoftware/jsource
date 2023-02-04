@@ -549,6 +549,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  JOBQ *jobq=&(*JT(jt,jobqueue))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
  if((((I)(forcetask&lda(&jobq->nuunfin))-jobq->nthreads)&(lda(&JT(jt,systemlock))-3))<0){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
     // in suspension (systemlock state>2) we do not start any task anywhere
+    // scaf bug: opening an unfinished pyx during suspension will lock the system
  // realize virtual arguments; raise the usecount of the arguments including self scaf
   // clone an UNINCORPABLE argument (a utility block used in a loop); then ra() the arguments to protect them until the task completes.  It would be
   // nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we

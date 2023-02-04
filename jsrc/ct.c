@@ -253,7 +253,10 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   // if someone is starting a system lock, we must go accept it.  To avoid reads from other cores, we look at our taskstate, where the lock requester
   // tell us that a lock is running.  In normal use we will be the owner of this cacheline already.  It is not vital to get this right the first time, because the
   // lock code will wake us 
-  if(lda(&jt->taskstate)&TASKSTATELOCKACTIVE)jtsystemlockaccept(jt,LOCKALL);  // process systemlock and keep waiting.
+  if(lda(&jt->taskstate)&TASKSTATELOCKACTIVE){
+   if(unlikely(JT(jt,systemlock)>2)){err=EVDEADLOCK; goto fail;}  // if in suspension, the pyx cannot be filled if we block, since the thread is paused
+   jtsystemlockaccept(jt,LOCKALL);  // process systemlock and keep waiting.
+  }
 // obsolete   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // process systemlock and keep waiting.  Prevent multiple wakeups to the same thread
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){err=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit

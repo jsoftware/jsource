@@ -46,8 +46,9 @@
 #define EVEMPTYT        40    // empty T block for select or for - converted to EVCTRL
 #define EVEMPTYDD       41    // empty {{ }} - converted to EVCTRL
 #define EVMISSINGGMP    42    // libgmp not installed - converted to EVFACE
-#define EVSIDAMAGE      43    // reload of running function
-#define NEVM            43      /* number of event codes       */
+#define EVSIDAMAGE      43    // reload of running function - converted to stack error
+#define EVDEADLOCK      44    // action would deadlock the system
+#define NEVM            44      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */

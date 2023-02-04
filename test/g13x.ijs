@@ -184,12 +184,13 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 foo =: foo , goo2 -: 5  NB. the sentence is aborted before assignment
 
 NB. Verify task not started during suspension
-1:`{{ while. 0 < 1 T. '' do. 55 T. '' end.
+1:`{{ while. 1 < 1 T. '' do. 55 T. '' end.
 assert. 1 = 1 T. ''
 foo =: foo , 1.5 < (6!:1'') - (6!:1'') ([  >@:(6!:3 t. ''"0)) 1 1
-1
+i. 0 0
 }}@.(IF64) ''
-'stack error' -: 0 T. etx ''
+
+foo =: foo , 'stack error' -: 0 T. etx ''   NB. can't create thread during suspension
 
 13!:0 ] 0  NB. Revert suspension input back to prompt
 13!:0 [1

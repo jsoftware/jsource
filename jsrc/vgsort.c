@@ -275,20 +275,38 @@ static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  wv=AV(w);
  // figure out whether we should do small-range processing.  Comments in vg.c
  // First, decide, based on the length of the list, what the threshold for small-range sorting will be.
- // This is what we are trying to calculate, based on n:
- // n<800: if range<5n, use smallrange, otherwise qsort
- // 800<n<50000: if range<2n use smallrange, otherwise qsort
- // 100000<n<600000: if range<3n use smallrange, otherwise radix
- // 600000<n<1000000: if range<2n use smallrange, otherwise radix
- // 1000000<n if range<n use smallrange, otherwise radix
- I nrange=(n>=800)+(n>=50000)+(n>=600000)+(n>=1000000);  // TUNE
- CR rng = condrange(wv,AN(w),IMAX,IMIN,n*((0x12325>>(nrange<<2))&7)); // 1 2 3 2 5 5 are the shift amounts for the ranges
- // smallrange always wins if applicable; otherwise use the table above
+#if 1  // set to 0 to TUNE
+ I nrange;   // range allowed, as multiple of size
+ if(BETWEENC(n,1024,100000000)){
+  I lzn; CTLZI(n,lzn); lzn=((((UI)n<<1)<<((BW-1)-lzn))>>(BW-8))+(lzn<<8);  // approx lg(n), binary point 8
+  lzn=lzn*709-1006633;  // 0.0108333 2^.x - 0.06, binary point at 24
+  nrange=16777216/lzn;  // 1/lzn, binary point back to 0
+ }else{nrange=n<=1023?25:2;}  // for small or large, use limit.  On the high end we don't want to run out of memory
+// obsolete  I nrange=(n>=800)+(n>=50000)+(n>=600000)+(n>=1000000);  // TUNE
+ CR rng = condrange(wv,AN(w),IMAX,IMIN,n*nrange); // see if smallrange allowed
+ // smallrange always wins if applicable
  if(!rng.range){  // range was too large
-  if(n<50000)R jtsortiq(jtinplace,m,n,w);  // qsort for very short lists.  TUNE
-  if(n<100000)R jtsortdirect(jtinplace,m,1,n,w);  // 800-99999, mergesort   TUNE
-  R sorti1(m,n,w);  // 100000+, radix  TUNE
+  R jtsortiq(jtinplace,m,n,w);  // qsort always wins as of 2/2023 Alder Lake
+//  if(n<100000)R jtsortdirect(jtinplace,m,1,n,w);  // 800-99999, mergesort   TUNE
+//  R sorti1(m,n,w);  // 100000+, radix  TUNE
  }
+#else
+  CR rng = condrange(wv,AN(w),IMAX,IMIN,n*50); // testing on Alder Lake 2/2023
+  if(!rng.range){  // range was too large
+   if((n&3)==0b00)R jtsortiq(jtinplace,m,n,w);  // qsort  TUNE
+   if((n&3)==0b01)R jtsortdirect(jtinplace,m,1,n,w);  //  mergesort   TUNE
+   if((n&2)==0b10)R sorti1(m,n,w);  // radix  TUNE
+// {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  y ?@$ 1e9}}"0 <.&.(%&4) 10000 * 10 ^ 10 %~ i. 41  NB. tuning not including smallrange: qsort merge radix.  range up to 1e9
+// {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  y ?@$ 1e9}}"0 <.&.(%&4) 1e9 1e10 1e11  NB. tuning not including smallrange: qsort merge radix, big arrays, range to 1e9
+// (] , ] {{ 6!:2 '/:~ nn' [ nn =. x ?@$ y }}"0 (1e18) , *&(>:2 * i. 10))"0 (3) + <.&.(%&4) 10000 * 10 ^ 10 %~ i. 41  NB. smallrange, buckets of length 2
+   // n&3==0b11 for smallrange
+   // smallrange results 
+   // 2e3 25x 3e3 20x 6e3 11x 8e3 8x 1e4 7x 1e5 7x 1.6e6 6x 6e6 5x 1e8 5x
+   // we approximate this by the line in (lg x,%y space) from (12,.07) to (24,0.2)
+   // %y-.07 % 2^.x-12 = .13%12
+   // %y = 0.0108333 2^.x - 0.06
+  }
+#endif
  // allocate area for the data, and result area
  GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;  // yv->totals area
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
@@ -369,10 +387,14 @@ static SF(jtsortdq){F1PREFIP;  // m=#sorts, n=#items in each sort, w is block
 
 // We are known to have 1 atom per item
 static SF(jtsortd){F1PREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
- // Use quicksort for normal-sized lists
- if(n<50000)R jtsortdq(jtinplace,m,n,w);  // TUNE
-// testing if(n&1)R jtsortdq(jtinplace,m,n,w);
-// testing if(n&2)R jtsortdirect(jtinplace,m,1,n,w);  // TUNE - it never wins
+#if 1  // normal case
+ // Use quicksort always
+ R jtsortdq(jtinplace,m,n,w);  // TUNE
+#else
+ if((n&3)==0b00)R jtsortdq(jtinplace,m,n,w);
+ if((n&3)==0b01)R jtsortdirect(jtinplace,m,1,n,w);  // TUNE
+// {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  (1.e8) * y ?@$ 0}}"0 <.&.(%&4) 100 * 10 ^ 10 %~ i. 41  NB. tuning not including smallrange: qsort merge radix.  range up to 1e9
+#endif
  // falling through for radix sort
  GA(z,AT(w),AN(w),AR(w),AS(w));
  wv=DAV(w); zu=DAV(z);

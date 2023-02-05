@@ -124,7 +124,7 @@ static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,dx,g,g2,h,p,q,s,sq,y,
   if(zmag(zminus(x,y))<=EPS*zmag(x))R x;  // if we didn't move much, call it converged.  We hope it's a root.
   // This algorithm is subject to hitting limit cycles (_48 1 0 0 0 1 is an example)
   // To prevent that, every so often we make a partial move
-  if(!--kicktimer){kicktimer=CSZ1; x=zplus(x,ztymes(dx,zrj0(cyclefracs[i&7])));} //since CSZ1 shares no factors with 8, i&7 will cycle through all elements of cyclefracs, howbeit not in order
+  if(!--kicktimer){kicktimer=CSZ1; x=zplus(x,ztymes(dx,zrj0(cyclefracs[(i^(i>>2))&7])));} //since CSZ1 shares no factors with 8, i&7 will cycle through all elements of cyclefracs, howbeit not in order
 }}   // Press et al., "Numerical Recipes in C" with additions from 2d edition
 
 static Q jtmultiple(J jt,D x,Q m){A y;Q q1,q2,q1r2;

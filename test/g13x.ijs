@@ -187,10 +187,9 @@ NB. Verify task not started during suspension
 1:`{{ while. 1 < 1 T. '' do. 55 T. '' end.
 assert. 1 = 1 T. ''
 foo =: foo , 1.5 < (6!:1'') - (6!:1'') ([  >@:(6!:3 t. ''"0)) 1 1
+foo =: foo , 'stack error' -: 0 T. etx ''   NB. can't create thread during suspension
 i. 0 0
 }}@.(IF64) ''
-
-foo =: foo , 'stack error' -: 0 T. etx ''   NB. can't create thread during suspension
 
 13!:0 ] 0  NB. Revert suspension input back to prompt
 13!:0 [1

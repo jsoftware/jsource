@@ -49,9 +49,9 @@ chk=. ('FreeBSD'-:UNAME)
 try.
 while. 2 > 1 T. '' do. 0 T. '' end.  NB. make sure we have 2 worker threads
 catch.
-assert. -. IF64  NB. threads should be supported on all 64-bit systems
+assert. -. (1<{:8&T.'')  NB. threads should be supported on all 64-bit systems
 end.
-if. IF64 do.
+if. (1<{:8&T.'') do.
 assert. (<@i."0 i. 5) -: (i. t. ''"0 i. 5)
 assert. 2 <: 1 T. ''
 NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores

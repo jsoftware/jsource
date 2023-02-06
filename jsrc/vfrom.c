@@ -1644,10 +1644,10 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      TWOPRODQD(prowdh,prowdl,mabsfuzz,iph,ipl) prowdh=iph; prowdl=ipl;
     }
     // (iph,ipl) = - prowdh*pcoldh
-    TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,prowdl) to high precision
+    TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
     ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);  // accumulate middle pps
     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
-    // Because we added 3 low-order values (with the same shift) - 4 if nplr used - , we are limiting precision to 104 bits
+    // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
     if(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh))){  // all 0?  our numbers can never be -0 since they come out of addition
      // qkvh is all 0 - the result is simply (-iph,-ipl) 
      TWOSUMBS(iph,ipl,qkvh,qkvl)  // canonical form
@@ -1668,9 +1668,9 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 // obsolete       maxabs=_mm256_fnmadd_pd(maxabs,mabsfuzz,_mm256_andnot_pd(sgnbit,qkvh));
       maxabs=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),mabsfuzz,_CMP_GT_OQ);   // maxabs = 0 if result too small
 // obsolete       qkvl=_mm256_blendv_pd(qkvl,_mm256_setzero_pd(),maxabs);
-     qkvl=_mm256_and_pd(qkvl,maxabs); // zero if lower than fuzz (low part)
+      qkvl=_mm256_and_pd(qkvl,maxabs); // zero if lower than fuzz (low part)
 // obsolete       qkvh=_mm256_blendv_pd(qkvh,_mm256_setzero_pd(),maxabs);
-     qkvh=_mm256_and_pd(qkvh,maxabs); // zero if lower than fuzz (high part)
+      qkvh=_mm256_and_pd(qkvh,maxabs); // zero if lower than fuzz (high part)
      }
     }
     // scatter the results (both parts)

@@ -39,6 +39,9 @@ zz  =: 4.20  NB. Z(3.90)=0.99995
 mean=: +/ % #
 var =: <:@# %~ +/@:*:@:(- mean)
 
+NB. This tests if the mean is within 4 sigma of the middle of the range.
+NB. That should be rare but not impossible, so we count the number of failures
+a =: 0  NB. number of failures
 testmean=: 4 : 0
  m=: x
  t=: y
@@ -48,7 +51,7 @@ testmean=: 4 : 0
  end.
  c=: zz * (var t)%&%:#t
  d=: (mean t) - |-:<:m
- assert. c > | d 
+ a =: a + c <: | d  NB. if mean too extreme, add to error count
  1
 )
 
@@ -62,21 +65,23 @@ test1"0 ]   10^1 2 6 7 8 9
 test1"0 ] 2*10^1 2 6 7 8 9
 test1"0 ]    2^1 2 3 4 5 28 29 30 
 test1"0 ]  1+2^1 2 3 4 5 28 29 30 
-NB. failed for J64
-NB. test1"0 ] IF64#<.  10^10 11 17 18
-NB. test1"0 ] IF64#<.4*10^10 11 17 18
-NB. test1"0 ] IF64#<.   2^3 7 9 32 33 47 53 62
-NB. test1"0 ] IF64#<. 1+2^3 7 9 32 33 47 53 62
-NB. test1"0 ] IF64#<._1+2^3 7 9 32 33 47 53 62
+test1"0 ] IF64#<.  10^10 11 17 18
+test1"0 ] IF64#<.4*10^10 11 17 18
+test1"0 ] IF64#<.   2^3 7 9 32 33 47 53 62
+test1"0 ] IF64#<. 1+2^3 7 9 32 33 47 53 62
+test1"0 ] IF64#<._1+2^3 7 9 32 33 47 53 62
 test1"0 ] IF64#<.  10^10 11 17
 test1"0 ] IF64#<.4*10^10 11 17
 test1"0 ] IF64#<.   2^3 7 9 32 33 47
 test1"0 ] IF64#<. 1+2^3 7 9 32 33 47
 test1"0 ] IF64#<._1+2^3 7 9 32 33 47
+a <: 1   NB. more than 1 20000-to-1 shot needs an investigation
 
+a =: 0
 1 [ 9!:57 (1)  NB. disable auditing, since next line is slow
 test1"0 x: 5 555 55555
 1 [ 9!:57 (2)
+a = 0
 
 64 = 3!:0 ?10$20x
 

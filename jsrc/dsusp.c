@@ -26,17 +26,17 @@ DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
  if(jt->sitop&&t!=DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
-  case DCPARSE:  d->dcy=(A)x; d->dcn=(I)y; break;
-  case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
-  case DCCALL:   
-   d->dcx=x; d->dcy=y; d->dcf=fs; 
-   d->dca=jt->curname; d->dcm=NAV(d->dca)->m;
-   d->dcstop=-2;
-   // dcn fill in in caller
-   // if we were waiting to step into a function, this is it: mark this function as stoppable
-   // and remove the stop in the caller
-   DC e=d->dclnk; NOUNROLL while(e&&DCCALL!=e->dctype)e=e->dclnk;  // find previous call
-   if(e&&e->dcss==SSSTEPINTOs){d->dcss=SSSTEPINTOs; e->dcss=0;}
+ case DCPARSE:  d->dcy=(A)x; d->dcn=(I)y; break;
+ case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
+ case DCCALL:   
+  d->dcx=x; d->dcy=y; d->dcf=fs; 
+  d->dca=jt->curname; d->dcm=NAV(d->dca)->m;
+  d->dcstop=-2;
+  // dcn fill in in caller
+  // if we were waiting to step into a function, this is it: mark this function as stoppable
+  // and remove the stop in the caller
+  DC e=d->dclnk; NOUNROLL while(e&&DCCALL!=e->dctype)e=e->dclnk;  // find previous call
+  if(e&&e->dcss==SSSTEPINTOs){d->dcss=SSSTEPINTOs; e->dcss=0;}
  }
  R d;
 }    /* create new top of si stack */
@@ -78,7 +78,7 @@ I lnumsi(DC d){A c;I i;
 
 
 static DC suspset(DC d){DC e=0;
- NOUNROLL while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  // find bottommost call, e=previous ele
+ NOUNROLL while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  // find topmost call, e=previous ele
  if(!(d&&DCCALL==d->dctype))R 0;                /* don't suspend if no such call     */
  if(d->dcc){RZQ(e); e->dcsusp=1;}               // if explicit, set susp on line - there should always be a following frame, but if not do nothing
  else      d->dcsusp=1;                         /* if not explicit, set susp on call */

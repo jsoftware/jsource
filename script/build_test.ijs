@@ -1,8 +1,9 @@
 man=: 0 : 0
 manage building/testing J releases/betas from J
 
-   git_status''           NB. report git status and jversion
-   build_for'J904-beta-e' NB. set build globals and jversion.h
+   git_status''            NB report git status and jversion
+   build_for'9.4.1'        NB/set build globals and jversion.h
+   build_for'9.5.0-beta11'
    
 tags
  $ cd git/jsource
@@ -14,18 +15,16 @@ tags
  $ cd git/jsource
  $ git checkout tags/j904-beta-x
 
-
-
 build uses make2 for linux/macos
 JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
+   build_for'9.5.0-beta1'
+   get_jversion''
+
    build'jconsole'
    build'libtsdll'
    build'libj'       NB. 'libjavx' 'libjavx2' - with current jvserion.h
    build_all''       NB. build all - with current jversion.h
    
-   get_jversion''
-   set_jversion''    NB. version and type set by build_for
-   build_for'J904-beta-f'
 
 windows builds done with vs2019
 
@@ -46,7 +45,7 @@ spawn - linux/macos/windows
    git branch -a  -list branches
    git checkout branch
    
-   build_for 'J904-beta-f'
+   build_for '9.5.0-beta1'
    
 
 *** script segfault can be hard to isolate with previous tool

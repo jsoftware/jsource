@@ -91,7 +91,8 @@ NB. Test display of error spacing
 '|value error: undefname|   i__undefname    =:5' -:&(}.~ i:&'|') efx 'i__undefname =: 5'
 '|domain error: efx|   n__efx    =:5' -:&(}.~ i:&'|') efx 'n__efx =: 5'
 '|domain error: efx|public assignment to a name with a private value|   y    =:1' -:&(}.~ i:&'|')  efx '{{ y =: 1}} 2'
-'|syntax error: efx|   )123' -:&(}.~ i:&'|') efx ')123'
+'|syntax error: efx|       )123' -:&(}.~ i:&'|') efx ')123'
+'|syntax error: efx|   )123    (' -:&(}.~ i:&'|') efx ')123('
 '|value error: undef|   (undef undef)    (1+undef+".)''5 + 6''' -:&(}.~ i:&'|') efx '(undef undef) (1 + undef + ".) ''5 + 6'''
 '|value error: undef|   (undef undef)    (1+undef+".)''+ 6''' -:&(}.~ i:&'|') efx '(undef undef) (1 + undef + ".) ''+ 6'''
 

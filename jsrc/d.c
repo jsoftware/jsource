@@ -134,12 +134,13 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
 }
 
 // display DCPARSE stack frame
-static void jtseeparse(J jt,DC d){A*v;I m;
+static void jtseeparse(J jt,DC d){A*v;
  v=(A*)d->dcy;  /* list of tokens */
- m=d->dcix-1;         /* index of active token when error found */
+ I etok=(US)d->dcix-1;         /* index of active token when error found */
+ I ptok=(d->dcix>>16)-1; ptok=ptok==etok?0:ptok;  // get location of paren error.  If same as error token, give only one spacing
  I nflag=0;
  I m1=jt->etxn;  // starting index of sentence text
- DO(d->dcn, if(i==m)eputs("    "); nflag=disp(QCWORD(v[i]),nflag););  // display tokens with spaces before error
+ DO(d->dcn, if(i==etok||i==ptok)eputs("    "); nflag=disp(QCWORD(v[i]),nflag););  // display tokens with spaces before error(s)
  if(jt->etxn<NETX){  // if we overran the buffer, don't reformat it.  Reformatting requires splitting to words
   // We displayed the sentence.  See if it contains (9 :'string'); if so, replace with {{ string }}
   fauxblock(fauxw); A z=(A)&fauxw;
@@ -183,6 +184,7 @@ void jtdebdisp(J jt,DC d){A*x,y;I e,t;
                  eputc(CLF); break;
 }}
 
+// display the current stack frame; if it is PARSE, also display the previous frame if it is SCRIPT or CALL
 static B jtdebsi1(J jt,DC d){I t;
  RZ(d);
  t=d->dctype;
@@ -297,6 +299,7 @@ A jteformat(J jt,A self,A a,A w,A m){
       if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
        // we are going to try to run eformat.
        // we have to reset the state of the error system after saving what we will need
+       I pareninfo = (jt->emsgstate&EMSGSTATEPAREN)>>EMSGSTATEPARENX;  // unbalanced-paren info from infererrtok
        RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
        A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
        if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
@@ -324,9 +327,9 @@ A jteformat(J jt,A self,A a,A w,A m){
        if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // Convert self to AR.  If self is not a verb convert a/w to AR also
        A selfar; if((selfar=arep(self))==0)goto noeformat;
-       // run the analyzer
+       // run the analyzer.  Fold the unbalanced-paren info into the error number
        deba(DCJUNK,0,0,0);  // create spacer frame so eformat calls don't overwrite stack
-       WITHDEBUGOFF(df1(msg,jlink(sc(e),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_
+       WITHDEBUGOFF(df1(msg,jlink(sc(e|(pareninfo<<8)),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_
        debz();
       }
      }else msg=a;  // self not given, use given message text
@@ -494,7 +497,7 @@ DF1(jtemsglevel){
  if(!AN(w))R mtm;
  RZ(w=vi(w)); I e=AV(w)[0]; 
  ASSERT(e<=7,EVDOMAIN);  // must be integer in range 0-7
- I ostate=jt->emsgstate; jt->emsgstate=(jt->emsgstate&~7)|e;
+ I ostate=jt->emsgstate; jt->emsgstate=(jt->emsgstate&~(EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT))|e;
  R sc(ostate);
 }
 

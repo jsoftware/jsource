@@ -355,7 +355,14 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   I rtnx=TYPE2(AT(a),AT(w));  // the combination being parsed
   AF rtn=bidents[rtnx].fn;  // action routine
   I t=bidents[rtnx].type;  // type: ADV/CONJ
-  ASSERT(t,EVSYNTAX);  // error if unimplemented combination
+// obsolete   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
+  if(unlikely(t==0)){
+   // unexecutable bident.  Fail as a syntax error and call eformat as a pre-exec error with a holding an INT
+   // list of the parts of speech of the unexecutable fragment
+   jsignal(EVSYNTAX);
+   GAT0(z,INT,2,1); IAV1(z)[0]=rtnx&3; IAV1(z)[1]=rtnx>>2;  // install parts of speech in order
+   jteformat(jt,ds(CENQUEUE),z,zeroionei(1),0); R0;
+  }
   if(rtn==0)R df1(z,t==VERB?a:w,t==VERB?w:a);  // V N, N/V A: we must execute immediately rather than returning a modifier for the trident.  VERB means N/V A
   // special processing: for display purposes only, we flag the gerunds in gerund@. gerund` gerund`:   `gerund ^:gerund
   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
@@ -369,7 +376,14 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   I rtnx=TYPE3(AT(a),AT(w),AT(h));  // the combination being parsed
   AF rtn=tridents[rtnx].fn;  // action routine
   I t=tridents[rtnx].type;  // type: ADV/CONJ
-  ASSERT(t,EVSYNTAX);  // error if unimplemented combination
+// obsolete   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
+  if(unlikely(t==0)){
+   // unexecutable trident.  Fail as a syntax error and call eformat as a pre-exec error with a holding an INT
+   // list of the parts of speech of the unexecutable fragment
+   jsignal(EVSYNTAX);
+   GAT0(z,INT,2,1); IAV1(z)[0]=rtnx&3; IAV1(z)[1]=(rtnx>>2)&3; IAV1(z)[2]=rtnx>>4;  // install parts of speech in order
+   jteformat(jt,ds(CENQUEUE),z,zeroionei(1),0); R0;
+  }
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
   fdeffill(z,0,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used

@@ -119,6 +119,8 @@ PT cases[] = {
 // We distinguish local and global assignments by having local assignments enable line 6 (hook) which must be rejected in jthook
 #define PTNOUN 0xDFC17CBE
 #define PTMARK 0xC900007F
+#define PTLPAR 0x0100007F
+#define PTRPAR 0xC9000000
 // table for translating AT type to QC type flags
 static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [LASTNOUNX-LASTNOUNX] = PTNOUN,  // PN
@@ -129,9 +131,9 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [VALTYPENAMELESSADV-1] = 0xC9C8403E, // gap [SYMBX-LASTNOUNX]  only in syrd() results, i. e. from symbol
 [VALTYPESPARSE-1] = PTNOUN,  // gap [CONWX-LASTNOUNX]  only in syrd() results, i. e. from symbol
 [VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
-[LPARX-LASTNOUNX] = 0x0100007F,  // PL
+[LPARX-LASTNOUNX] = PTLPAR,  // PL
 [CONJX-LASTNOUNX] = 0xC9D04000,  // PC
-[RPARX-LASTNOUNX] = 0xC9000000,  // PR
+[RPARX-LASTNOUNX] = PTRPAR,  // PR
 // the LOCAL and ASGNTONAME flags are passed into PT
 [QCASGN-1] = 0xC900807F,
 [QCASGN+QCASGNISLOCAL-1] = 0xC940807F,
@@ -348,7 +350,8 @@ static A nameundco(J jt, A name, A y){F1PREFIP;
 }
 
 #define FP goto failparse;   // indicate parse failure and exit
-#define FPS goto failparsestack;  // indicate parse failure during stacking
+#define FPS goto failparsestack;  // indicate parse failure during stacking or (
+#define FPE goto failparseeformat;  // call eformat after parse failure
 #define EP(x) {pt0ecam=(x); goto exitparse;}   // exit parser with success; x = 1 if final assignment
 #define FPZSUFF(x,suff) if(unlikely(!(x))){suff FP}   // exit parser w/failure if x==0, doing suff on the way out
 #define FPSZSUFF(x,suff) if(unlikely(!(x))){suff FPS}   // exit parser w/failure if x==0, doing suff on the way out
@@ -399,19 +402,34 @@ I statafaowed=0, statafainh=0, statafafa=0, statapop=0, statapopfa=0, statapopnu
 #define INCRSTAT(x)
 #endif
 
-// Given that we took an error executing the block starting at jt->parserstackframe.parserstkend1, figure out what the error-token number should be
-I infererrtok(J jt){
- // if the error was pee, use the error set then
- if(jt->parserstackframe.parseroridetok!=0xffff)R jt->parserstackframe.parseroridetok;  // Will always be 0 if not -1
+// Given that we took an error executing the block starting at jt->parserstackframe.parserstkend1, figure out what the error-token number(s) should be
+// There may be 2 numbers: the location of a mismatched parenthesis and the location of the error itself.
+I infererrtok(J jt){I errtok;
+ jt->emsgstate&=~EMSGSTATEPAREN;  // set no mismatched () found   (cannot have one for pee, and not really needed for a single word)
  // if the sentence had only one token, that token is the error token
  if(jt->parserstackframe.parserstkbgn[-1].t==1)R 1;  // just one token, return it
- // error detected during execution - reparse the fragment to get the line# that was executed
- I pmask=(I)((C*)&jt->parserstackframe.parserstkend1[0].pt)[0] & (I)((C*)&jt->parserstackframe.parserstkend1[1].pt)[1] &(I)((C*)&jt->parserstackframe.parserstkend1[2].pt)[2];  // emulate parse
- if(pmask!=0)pmask&=(I)((C*)&jt->parserstackframe.parserstkend1[3].pt)[3];  // if we fail when the stack is empty the only thing one the stack is 3 marks, so we'd better not fetch the fourth.  marks are not executable
- // see if ( was executable
- pmask|=jt->parserstackframe.parserstkend1[0].pt&PTNOTLPAR?0:0x100;  // ( any any any is line 8 - but it couldn't fail
- // Get the number that was executed.  Take the token# from entry (9-0): 2 1 1 1 1 2 2 2 2 1 (line 9 is no match, must be ending syntax error)
- R jt->parserstackframe.parserstkend1[((0x21e>>CTTZI(pmask|0x200))&1)+1].t;  // return failing token#
+ // if the error was pee or preexecution error, use the error set then
+ if(jt->parserstackframe.parseroridetok!=0xffff){errtok=jt->parserstackframe.parseroridetok;  // Will always be 0 if not -1
+ }else{
+  // error detected during execution - reparse the fragment to get the line# that was executed
+  I pmask=(I)((C*)&jt->parserstackframe.parserstkend1[0].pt)[0] & (I)((C*)&jt->parserstackframe.parserstkend1[1].pt)[1] &(I)((C*)&jt->parserstackframe.parserstkend1[2].pt)[2];  // emulate parse
+  if(pmask!=0)pmask&=(I)((C*)&jt->parserstackframe.parserstkend1[3].pt)[3];  // if we fail when the stack is empty the only thing on the stack is 3 marks, so we'd better not fetch the fourth.  marks are not executable
+  // see if ( was executable
+  pmask|=jt->parserstackframe.parserstkend1[0].pt&PTNOTLPAR?0:0x100;  // ( any any any is line 8 - but it couldn't fail
+  // Get the number that was executed.  Take the token# from entry (9-0): 2 1 1 1 1 2 2 2 2 1 (line 9 is no match, must be ending syntax error)
+  errtok=jt->parserstackframe.parserstkend1[((0x21e>>CTTZI(pmask|0x200))&1)+1].t;  // get failing token#
+ }
+ // see if the sentence had unbalanced parens.
+ I lastlwd, lastrwd, nesting=0;   // 1-origin wd# of leftwost unmatched ( and rightmost unmatched ) found so far, and nesting level
+ A *wds=(A*)jt->parserstackframe.parserstkbgn[-1].a; I nwds=jt->parserstackframe.parserstkbgn[-1].t;  // address/count of the words of the sentence
+ for(;nwds!=0;--nwds){if(nesting<0)break; if(QCTYPE(wds[nwds-1])==LPARX-LASTNOUNX+1){lastlwd=nwds; --nesting;} if(QCTYPE(wds[nwds-1])==RPARX-LASTNOUNX+1){if(nesting==0)lastrwd=nwds; ++nesting;}}  // CTYPE to ensure NAME bit is off
+ if(nesting!=0){   // if unbalanced parens...
+  I ptok=(nesting<0)?lastlwd:lastrwd;  // select the error location depending on which failed
+  jt->emsgstate|=((nesting>0)?EMSGSTATEPARENTYPE:0)|((ptok<=errtok)?EMSGSTATEPARENPOSL:0)|((ptok>=errtok)?EMSGSTATEPARENPOSR:0);  // remember type and location
+  if(errtok==0)jt->emsgstate|=EMSGSTATEPARENPOSL|EMSGSTATEPARENPOSR;  // if the ONLY error is from paren, indicate the error is at the paren
+  errtok|=ptok<<16;   // install second error number 
+ }
+ R errtok;  // return the error token(s)
 }
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
@@ -445,7 +463,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 
  // the first element of the parser stack is where we save unchanging error info for the sentence
  currstk->a=(A)queue; currstk->t=(US)nwds;  // addr & length of words being parsed
- jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area jt->parserstackframe.parserstkbgn[-1] has the error info
+ jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
 
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
@@ -974,7 +992,7 @@ RECURSIVERESULTSCHECK
       if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
        SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
        stack+=2;  // advance stack pointer to result
-      }else{jt->parserstackframe.parserstkend1=stack; jsignal(((I)fs|(I)fs1)!=0?EVSYNTAX:0); FP}  // error if contents of ( not valid.  Set stackpointer so we see the failing exec
+      }else{jt->parserstackframe.parserstkend1=stack; jsignal(((I)fs|(I)fs1)!=0?EVSYNTAX:0); FPS}  // error if contents of ( not valid.  Set stackpointer so we see the failing exec
         // the fs/fs1!=0 above is to trick the compiler.  We really want to start loading fs as early as possible, even though it is used only in lines 0-4.  By mentioning fs here, we get the load started early
       // we fall through to rescan after ( )
      }else{pt0ecam&=~CONJ;  break;}   // parse failed, return to stack next word.  Must clear 'stack 2' flag
@@ -992,17 +1010,20 @@ RECURSIVERESULTSCHECK
   if(likely(1)){  // no error on this branch
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
    // stack[1] is the initial mark (not written out), stack[2] is the result, and stack[3] had better be the first ending mark
-   if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FP}
-   if(unlikely(&stack[3]!=stackend1)){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FP}
+   if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FPE}
+   if(unlikely(&stack[3]!=stackend1)){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FPE}
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error.  STKFAOWED semantics
    // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x).  The fa must be deferred till after the result has been used.  We turn it into a tpush
    if(unlikely(ISSTKFAOWED(z))){tpushna(QCWORD(z));}  // if the result needs a free, do it via tpush
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
-                // we set the error word# for the failing word and then resignal the error to get the spacing right
+                // we set the error word# for the failing word and then resignal the error to get the spacing right and call eformat to annotate it
                 // Here pt0ecam has NOT been repurposed to final assignment yet; we must do so
-   {C olderr=jt->jerr; RESETERR jt->parserstackframe.parseroridetok=(US)pt0ecam; jsignal(olderr);}  // recreate the error with the correct spacing
-failparse:  
+                // we call eformat with empty a to indicate 'stacking error'
+   {C olderr=jt->jerr; RESETERR jt->parserstackframe.parseroridetok=(US)pt0ecam; jsignal(olderr);}
+failparseeformat:
+   jteformat(jt,ds(CENQUEUE),mtv,zeroionei(0),0);  // recreate the error with the correct spacing
+failparse:
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
    // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address

@@ -103,6 +103,11 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define EMSGSTATENOTEXT 1  // Set to suppress message text
 #define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
 #define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis
+#define EMSGSTATEPARENX 3  // set if there are mismatched parens
+#define EMSGSTATEPAREN (7<<EMSGSTATEPARENX)  // mask for the field
+#define EMSGSTATEPARENTYPE (1<<EMSGSTATEPARENX)  // type of extra paren: 0=L 1=R
+#define EMSGSTATEPARENPOSL (2<<EMSGSTATEPARENX)  // location of extra paren: to left or exactly at the error
+#define EMSGSTATEPARENPOSR (4<<EMSGSTATEPARENX)  // location of extra paren: to right or exactly at the error
 #define EMSGSTATEFORMATTED 0x80  // line has been through eformat - do not call again until errors reset
 // 1 byte free
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1

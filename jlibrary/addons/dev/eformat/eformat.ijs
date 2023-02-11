@@ -348,10 +348,12 @@ end.
 
 NB. y is jerr;curname;jt->ranks;AR of failing self;a[;w][;m]
 NB. if self is a verb, a/w/m are nouns; otherwise a/w are ARs
+NB. result is string to replace the original emsg, or empty string to make no change
 eformat_j_ =: {{
 NB. extract internal state quickly, before anything disturbs it
 fill =. 9!:22''  NB. This also clears jt->fill
 'e curn ovr selfar a' =. 5{.y
+'perr e' =. 0 256 #: e  NB. top   bits are paren info
 if. ism=.ovr-:'' do. ovr=.63 63 [ y =. }:y [ ind=._1{::y end.  NB. orv is the special value '' for m}.  Take the m arg in that case
 if. dyad =. 5<#y do. w =. 5{::y end.
 NB. now a and possibly w are args 4&5.  If self is a verb these will be the arg value(s) and dyad will be the valence
@@ -394,8 +396,21 @@ end.
 if. #emsg do. hdr1 , emsg return. end.  NB. pee
 
 if. selfar -: {. ;:':' do. hdr =. (}:hdr1) , ', defining explicit entity' , LF
+elseif. (e=EVSYNTAX) *. isexplicit do. hdr =. hdr1  NB. syntax error is not associated with any execution, unless in (". y) 
 elseif. psself<5 do. hdr =. (}:hdr1) , ((', executing ',' ',~(0 2#.psself,dyad){::2 2 2 1 1#;:'noun adv conj monad dyad')&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
-else. hdr =. (}:hdr1) , ', before sentence execution' , LF
+else.  NB. error not associated with any execution.  a distinguishes types
+  if. 32 = 3!:0 a do. hdr =. (}:hdr1) , ', before sentence execution' , LF  NB. error in enqueue
+  elseif. 0 = #a do.  NB. error during parse
+    if. e=EVSYNTAX do. hdr =. (}:hdr1) , ', sentence did not parse to a single result' , LF  NB. stack not empty at end
+    else. hdr =. (}:hdr1) , ', error evaluating name' , LF
+    end.
+  else. hdr =. (}:hdr1) , ', unexecutable fragment (' , (;:^:_1 a{;:'noun adv conj verb') , ')' , LF 
+  end.
+end.
+NB. If there were unbalanced parentheses, add a second line describing them
+if. perr do.
+  'ppos pt' =. 0 2 #: perr   NB. paren pos left-or-equal error pos, parenpos right-or-equal error pos, paren type
+  hdr =. hdr , 'unmatched ' , (pt{'()') , (ppos{::'';' to the left of';' to the right of';' at') , ' the word in error' , LF
 end.
 
 NB. Handle environment-dependent and non-execution errors

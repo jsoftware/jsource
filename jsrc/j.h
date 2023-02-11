@@ -1966,10 +1966,10 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define REGOTO(exp,lbl) {if(unlikely(((exp),jt->jerr!=0)))goto lbl;}
-#define RESETERRT(t)    {t->etxn=t->jerr=0;t->emsgstate&=~EMSGSTATEFORMATTED;}
+#define RESETERRT(t)    {t->etxn=t->jerr=0;t->emsgstate&=~(EMSGSTATEFORMATTED|EMSGSTATEPAREN);}
 #define RESETERR        RESETERRT(jt)
 #define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen.  Used only when formatting ARs
-#define RESETERRNO      {jt->jerr=0;jt->emsgstate&=~EMSGSTATEFORMATTED;}  // reset the number but not the message; used in adverse/throw. to keep the user's message
+#define RESETERRNO      {jt->jerr=0;jt->emsgstate&=~(EMSGSTATEFORMATTED|EMSGSTATEPAREN);}  // reset the number but not the message; used in adverse/throw. to keep the user's message
 // obsolete #define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;jt->emsgstate&=0x7f;}
 #define RESETRANK       (jt->ranks=R2MAX)
 #define RZSUFF(exp,suff) {if(unlikely(!(exp))){suff}}

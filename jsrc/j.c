@@ -129,7 +129,7 @@ TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR
 #define hw ""
 #endif
 
-const char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
+const char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
 
 F1(jtversq){
  char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p;

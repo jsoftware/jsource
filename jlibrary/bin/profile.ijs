@@ -18,7 +18,7 @@ end.
 install
 )
 fhs=. (FHS"_)^:(0=4!:0<'FHS')(5=systype)*.0=#1!:0<install,'/system/util/boot.ijs'
-install=. (0&~:fhs){::install;install,'/share/j/',omitversion{::'9.04';'0'
+install=. (0&~:fhs){::install;install,'/share/j/',omitversion{::'9.4';'0'
 install=. (INSTALLROOT"_)^:(0=4!:0<'INSTALLROOT') install
 addons=. install,'/addons'
 system=. install,'/system'
@@ -58,4 +58,5 @@ md snap
 md temp
 
 NB. boot up J and load startup.ijs if it exists
+0 0$1!:2&2 ^: (-.@*@#@(1!:0)@<) system,'/util/boot.ijs'
 0!:0 <jpathsep (4!:55 (;:'systype fhs isroot userx ids md omitversion'), ids)]system,'/util/boot.ijs'

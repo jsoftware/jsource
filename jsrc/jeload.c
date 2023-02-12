@@ -270,11 +270,11 @@ void jepath(char* arg,char* lib)
  }}
  }
  if (FHS) {
-  char _jdllver[20];
-  strcpy(_jdllver,jversion);
-  jdllver[0]=_jdllver[0];
-  jdllver[1]='.';
-  strcat(jdllver+2,_jdllver+1);
+  char *jv1;
+// jversion   "9.4.0-betaX"
+  if (jv1=strchr(jversion,'.')) if (jv1=strchr(jv1+1,'.')){ memcpy(jdllver,jversion,jv1-(jversion));jdllver[jv1-jversion]=0; }
+  if (!jv1) strcpy(jdllver,"9.4");
+  if (5<strlen(jdllver)) strcpy(jdllver,"9.4");
   strcpy(pathdll,JDLLNAME);
 #if defined(__APPLE__)
   strcat(pathdll,".");

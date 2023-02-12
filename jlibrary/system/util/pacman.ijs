@@ -326,7 +326,7 @@ else.
 end.
 )
 getjqtversion=: 3 : 0
-suffix=. (IFUNIX>'/'e.LIBFILE)#'-9.04'
+suffix=. (IFUNIX>'/'e.LIBFILE)#'-9.4'
 dat=. fread '~bin/jqt',suffix,IFWIN#'.exe'
 if. dat-:_1 do. '' return. end.
 ndx=. I. 'jqtversion:' E. dat
@@ -1622,7 +1622,7 @@ ldd=. ('Darwin'-:UNAME){::'ldd';'otool -L'
 suffix=. ('Darwin'-:UNAME){::'so';'dylib'
 vsuffix=. ('Darwin'-:UNAME){::('so.',JQTVERSION);(JQTVERSION,'.dylib')
 if. FHS*.IFUNIX do.
-  d=. <;._2 hostcmd_jpacman_ ldd,' ',BINPATH,'/jqt-9.04'
+  d=. <;._2 hostcmd_jpacman_ ldd,' ',BINPATH,'/jqt-9.4'
   d=. d,<;._2 hostcmd_jpacman_ ldd,' ',y,'/libjqt.',vsuffix
 else.
   d=. <;._2 hostcmd_jpacman_ ldd,' ',jpath'~bin/jqt'
@@ -1678,11 +1678,11 @@ else.
     end.
     echo 'install libjqt.',suffix,' to ',d1
     hostcmd_jpacman_ 'rm -f ',BINPATH,'/jqt'
-    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.04 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
-    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.04 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
+    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.4 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
+    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.4 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
     if. 'Linux'-:UNAME do.
-      echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.04 904'
-      hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.04 904'
+      echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 904'
+      hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 904'
     end.
   else.
     hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)

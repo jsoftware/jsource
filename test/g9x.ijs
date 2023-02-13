@@ -437,6 +437,13 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 1: 6 *@+ 3 4
 (271828;6) -: 9!:54''
 
+9!:55 (271828)   NB. suppress msg but test
+1: ". '+/@*'  NB. f@atomic dyad
+(271827;'') -: 9!:54''
+9!:55 (271828;8)   NB.
+1: ". '+/@*'  NB. f@atomic dyad
+(271828;8) -: 9!:54''
+
 9!:55 (0)  NB. reset
 
 

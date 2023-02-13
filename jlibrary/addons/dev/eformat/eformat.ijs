@@ -401,10 +401,11 @@ elseif. psself<5 do. hdr =. (}:hdr1) , ((', executing ',' ',~(0 2#.psself,dyad){
 else.  NB. error not associated with any execution.  a distinguishes types
   if. 32 = 3!:0 a do. hdr =. (}:hdr1) , ', before sentence execution' , LF  NB. error in enqueue
   elseif. 0 = #a do.  NB. error during parse
-    if. e=EVSYNTAX do. hdr =. (}:hdr1) , ', sentence did not parse to a single result' , LF  NB. stack not empty at end
+    if. e=EVSYNTAX do. hdr =. (}:hdr1) , ', sentence did not execute to a single result' , LF  NB. stack not empty at end
     else. hdr =. (}:hdr1) , ', error evaluating name' , LF
     end.
-  else. hdr =. (}:hdr1) , ', unexecutable fragment (' , (;:^:_1 a{;:'noun adv conj verb') , ')' , LF 
+  else. hdr =. (}:hdr1) , ', unexecutable fragment (' , (;:^:_1 a{;:'noun adv conj verb') , ')' , LF
+    if. *./ a=0 do. hdr =. hdr , 'to concatenate nouns use a verb such as ,' , LF end.
   end.
 end.
 NB. If there were unbalanced parentheses, add a second line describing them

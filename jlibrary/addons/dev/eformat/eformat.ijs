@@ -73,6 +73,8 @@ EVSIDAMAGE
 EVDEADLOCK
 )
 
+NB. x and y are strings to be joined.  We insert a space if not doing so would change the words
+efjoinstgs_j_ =: (([,' ',]) [^:(-.@-:&;:) (,))
 NB.x is (1 if all of main name always needed),(max # characters allowed),(par); y is AR
 NB. par is:0=no parens needed; 1=parens needed for train but not AC exec; parens needed for train and AC
 NB. result is string to display, or ... if string too long
@@ -111,13 +113,8 @@ else.
     stgs =. stgs ,~ <stg =. (0 >. 0 , (posy{0 1 1 0) ,~  max =. max -#stg) eflinAR {. aro1
     if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , (posy{0 0 2 0) ,~  max =. max -#stg) eflinAR {: aro1 end.
     if. (frc=0) *. *./ stgs = <'...' do. '...' return. end.
-    NB. string not too long; leave spaces where needed (before letter, digit or inflection)
-    NB. leading space needed before inflection always, or num/letter preceded by num/letter
-    fpad =. i.&1@:(e.&>&('.:';'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'))"0 {.@> stgs
-    NB. trailing space after num/letter
-    bpad =. i.&1@:(e.&>&('.:';'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'))"0 {:@> stgs
-    npad =. 0 (0}) 2 > fpad+|.!._1 bpad
-    (')' ,~ '('&,)^:(par=2) ; npad ((' ' #~ [) , ])&.> stgs return. 
+    NB. string not too long; leave spaces where needed
+    (')' ,~ '('&,)^:(par=2) ; efjoinstgs&.>/ stgs return. 
   end.
 end.
 }}

@@ -92,7 +92,7 @@ setfiles=: 3 : 0
 ADDCFG=: jpath '~addons/config/'
 makedir ADDCFG
 ADDCFGIJS=: ADDCFG,'config.ijs'
-JRELEASE=: 'j','.'-.~({.~i:&'.') JLIB
+JRELEASE=: getJverold ''
 LIBTREE=: readtree''
 if. IFIOS do.
   WWW=: '/jal/',JRELEASE,'/'
@@ -324,6 +324,9 @@ if. x -: fread y do.
 else.
   x fwrite y
 end.
+)
+getJverold=: 3 : 0
+'j', ": 100 #. 2 {. 100 #.inv 0 pick revinfo_j_''
 )
 getjqtversion=: 3 : 0
 suffix=. (IFUNIX>'/'e.LIBFILE)#'-9.4'
@@ -883,7 +886,7 @@ A=: ' ~addons/ide/jhs/config/jhs.cfg'
 L=: hostpathsep jpath'~/Desktop/'
 W=: hostpathsep jpath'~'
 I=: hostpathsep jpath'~bin/icons/'
-N=: (1 2 3{9!:14''),;IF64{'-32';''
+N=: (}.getJverold''),;IF64{'-32';''
 DS=: ;(('Win';'Linux';'OpenBSD';'FreeBSD';'Darwin')i.<UNAME){'.lnk';'.desktop';'.desktop';'.desktop';'.app'
 LIB=: ''
 )
@@ -1131,7 +1134,7 @@ if. #PLATFORMS do.
 end.
 if. #RELEASE do.
   rel=. <./0 ". 'j' -.~ RELEASE
-  ver=. 0 ". 'j' -.~ ({.~i.&'/')9!:14''
+  ver=. 100 #. 2 {. 100 #.inv 0 pick revinfo_j_''
   if. rel > ver do.
     0[echo 'Release not supported for this addon: ',9!:14'' return.
   end.
@@ -1495,10 +1498,9 @@ end.
 )
 je_update=: 3 : 0
 if. IFIOS+.UNAME-:'Android' do. log'upgrade not supported for this platform' return. end.
-'jxxx jbithw platform br comm web dt'=. 7 {. <;._1 '/',9!:14''
-if. -.(comm-:'commercial')*.web-:'www.jsoftware.com' do. log'upgrade not possible for this install' return. end.
-br=. (br i.'-'){.br
-path=. 'http://www.jsoftware.com/download/jengine/',jxxx,'-',br,'/'
+'jvno jxxx jbithw platform lic web dt'=. 7 {. revinfo_j_''
+if. -.(lic-:'GPL3')*.web-:'www.jsoftware.com' do. log'upgrade not possible for this install' return. end.
+path=. je_dlpath jvno
 'plat name bname'=. je_sub''
 DLL=. hostpathsep jpath bname
 OLD=. hostpathsep jpath bname,'.old'
@@ -1522,8 +1524,7 @@ else.
   name=. <name
 end.
 
-arg=. (<jxxx),(<br),(<platform),(<3{.jbithw),name
-r=. je_get arg
+r=. je_get jxxx;platform;(3{.jbithw);name
 if. _1=r do. log'upgrade file not found' return. end.
 if. r-:fread DLL do. log'upgrade not required - already current' return. end.
 
@@ -1550,22 +1551,26 @@ else.
 end.
 'upgrade installed - exit, restart J, and check JVERSION'
 )
+je_dlpath=: 3 : 0
+'a b c d'=. 100 #.inv JVERSION_NUMBER
+p=. 'j',(":a),_2{.'0',":b
+p=. p,'-',(d=0) pick 'beta';'release'
+'http://www.jsoftware.com/download/jengine/',p,'/'
+)
 je_get=: 3 : 0
-'jxxx br plat bits name'=. y
-arg=. 'http://www.jsoftware.com/download/jengine/',jxxx,'-',br,'/',plat,'/',bits,'/',name
+'jvno plat bits name'=. y
+arg=. (je_dlpath''),plat,'/',bits,'/',name
 ferase'~temp/',name
 httpget arg
 fread '~temp/',name
 )
-
 je_sub=: 3 : 0
 i=. ('Win';'Darwin')i.<UNAME
 plat=. ;i{'windows';'darwin';IFRASPI{::'linux';'raspberry'
 name=. ;i{'j.dll';'libj.dylib';'libj.so'
 bname=. '~bin/',name
 if. FHS*.IFUNIX do.
-  v=. ({.~i.&'/')}.9!:14''
-  sub=. '.',({.v),'.',}.v
+  sub=. ; ('.',":) each 2 {. 100 #.inv JVERSION_NUMBER
   if. 'Darwin'-:UNAME do.
     d1=. (({.~ i:&'/')BINPATH),'/lib/'
   elseif. IFRASPI do.

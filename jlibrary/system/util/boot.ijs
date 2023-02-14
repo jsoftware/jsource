@@ -49,22 +49,15 @@ NB. JVERSION_z_ (used in about box)
 v=. 9!:14''
 if. 6>+/v='/' do.
   r=. 'Engine: ',v
-  f=. 'www.jsoftware.com'
+  contact=. 'www.jsoftware.com'
   JVERSION_NUMBER=: 10000 * {. 0". }.({.~ i.&'/')v
 else.
-  if. '.' e. (v i. '/') {. v do.
-    'a b c d e f g h'=. 8 {. <;._1 '/',v
-    r=. 'Engine: ', a,'/',b,'/',c
-    r=. r,LF,('Build: '),d,'/',f,'/',g,'/',h
-    contact=. e
-    JVERSION_NUMBER=: 100 #. {.@(0&".)&> 4{. '.' splitstring ('-beta';'.') rplc~ }.a
-  else.
-    'a b c d e f g'=. 7 {. <;._1 '/',v
-    r=. 'Engine: ', a,'/',b,'/',c
-    r=. r,LF,(toupper {.d),(}.d),': ',e,'/',g
-    contact=. f
-    JVERSION_NUMBER=: 10000 * {. 0". }.a
-  end.
+NB. vno;vst;architecture;OS;license;builder;date;compiler;<[otheroptions]
+  'a b c d e f g h i'=. revinfo_j_''
+  JVERSION_NUMBER=: a
+  contact=. f
+  r=. 'Engine: ', b,'/',c,'/',d
+  r=. r,LF,'Build: ',e,'/',g,'/',h,'/',i
 end.
 r=. r,LF,'Library: ',JLIB
 if. IFQT do.

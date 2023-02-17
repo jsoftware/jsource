@@ -80,8 +80,7 @@ NB. par is:0=no parens needed; 1=parens needed for train but not AC exec; parens
 NB. result is string to display, or ... if string too long
 eflinAR_j_ =: {{
 NB. parse the AR, recursively
-if. y -: 0 0 do. '...' return. end.  NB. If no room for formatting, stop looking
-posy =. 4!:0 <'y'   NB. part of speech of y
+if. (2{.x) -: 0 0 do. '...' return. end.  NB. If no room for formatting, stop looking
 'frc max par' =. x
 aro =. >y
 if. 2 = 3!:0 aro do.   NB. primitive or named entity
@@ -96,22 +95,24 @@ else.
     if. 30 < #aro1  do. '...' return. end.  NB. or too many atoms
     if. (3!:0 aro1) e. 32 64 128 do. '...' return. end.  NB. or boxed/extended
     lin =. 5!:5<'aro1'  NB. value is small, take its linrep
-    if. max >: #lin do. lin return. end.  NB. return value if short enough
+    if. max >: #lin do. (')' ,~ '('&,)^:(par~:0) lin return. end.  NB. return value if short enough
     (_3 }. lin) , '...' return.
   case. ,&.>'234' do.  NB. hook/fork/train
     NB. these cases are not so important because they don't give verb-execution errors
     stgs=.0$a:  NB. list of strings
     for_i. aro1 do.
-      stg =. ((i_index<<:#aro1) ,~ 0., 0. >. max%(#aro1)-i_index) eflinAR i  NB. collect strings for each AR; paren trains except the right
+      stg =. ((1 1 p. i_index~:0) ,~ 0., 0. >. max%(#aro1)-i_index) eflinAR i  NB. collect strings for each AR; paren trains except the right
       max =. max - #stg [ stgs =. stgs , <stg  NB. don't allow total size to be exceeded
     end.
     NB. We have strings for each component.  If nothing has a display, return '...' unless this is top-level
     if. (frc=0) *. *./ stgs = <'...' do. '...' return. end.
-    (')' ,~ '('&,)^:(par~:0) ;:^:_1 stgs return. 
+    (')' ,~ '('&,)^:(par~:0) ; efjoinstgs&.>/ stgs return. 
   case. do.  NB. default: executed A/C
+    ac =. ({.aro) 5!:0  NB. the actual ac
+    posac =. 4!:0 <'ac'   NB. part of speech being executed here
     stgs =. <stg=. (0 >. (<:frc) , max , 1) eflinAR {. aro   NB. get (stg) for AC
-    stgs =. stgs ,~ <stg =. (0 >. 0 , (posy{0 1 1 0) ,~  max =. max -#stg) eflinAR {. aro1
-    if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , (posy{0 0 2 0) ,~  max =. max -#stg) eflinAR {: aro1 end.
+    stgs =. stgs ,~ <stg =. (0 >. 0 , (posac{0 1 1 0) ,~  max =. max -#stg) eflinAR {. aro1
+    if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , (posac{0 1 2 1) ,~  max =. max -#stg) eflinAR {: aro1 end.
     if. (frc=0) *. *./ stgs = <'...' do. '...' return. end.
     NB. string not too long; leave spaces where needed
     (')' ,~ '('&,)^:(par=2) ; efjoinstgs&.>/ stgs return. 

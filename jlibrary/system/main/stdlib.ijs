@@ -1954,7 +1954,7 @@ if. 'd' ~: 4 { 4 pick {. d do. r return. end.
 if. IFWIN do.
   shell_jtask_ 'rmdir "',y,'" /S /Q'
 else.
-  hostcmd_j_ 'rm -rf ',((-.UNAME-:'Darwin')#'--preserve-root '),y
+  hostcmd_j_ 'rm -rf ',((UNAME-:'Linux')#'--preserve-root '),y
 end.
 (#1!:0 y);''
 )

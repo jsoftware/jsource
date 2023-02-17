@@ -1498,8 +1498,8 @@ end.
 )
 je_update=: 3 : 0
 if. IFIOS+.UNAME-:'Android' do. log'upgrade not supported for this platform' return. end.
-'jvno jxxx jbithw platform lic web dt'=. 7 {. revinfo_j_''
-if. -.(lic-:'GPL3')*.web-:'www.jsoftware.com' do. log'upgrade not possible for this install' return. end.
+'jvno jxxx jbithw platform comm web dt'=. 7 {. revinfo_j_''
+if. -.(comm-:'commercial')*.web-:'www.jsoftware.com' do. log'upgrade not possible for this install' return. end.
 path=. je_dlpath jvno
 'plat name bname'=. je_sub''
 DLL=. hostpathsep jpath bname

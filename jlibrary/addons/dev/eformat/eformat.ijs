@@ -95,7 +95,7 @@ else.
     if. 30 < #aro1  do. '...' return. end.  NB. or too many atoms
     if. (3!:0 aro1) e. 32 64 128 do. '...' return. end.  NB. or boxed/extended
     lin =. 5!:5<'aro1'  NB. value is small, take its linrep
-    if. max >: #lin do. (')' ,~ '('&,)^:(par~:0) lin return. end.  NB. return value if short enough
+    if. max >: #lin do. (')' ,~ '('&,)^:((1<#;:lin)*.par~:0) lin return. end.  NB. return value if short enough; if multiword, parenthesize
     (_3 }. lin) , '...' return.
   case. ,&.>'234' do.  NB. hook/fork/train
     NB. these cases are not so important because they don't give verb-execution errors

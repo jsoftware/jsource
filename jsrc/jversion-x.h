@@ -1,4 +1,5 @@
-#define jversion   "9.4.0-betaX"
+#include "../version.txt"
+//#define jversion   "9.4.0-betaX"
 #ifdef _WIN32
 #define jplatform "windows"  // windows/linux/darwin/raspberry/android/...
 #elif defined(RASPI)

@@ -102,7 +102,20 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to ra() the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
  x=levs1(w,recurself);
- if(x){AT(AKASA(recurself))=BOX; AN(AKASA(recurself))=AS(AKASA(recurself))[0]; z=ope(AKASA(recurself)); AT(AKASA(recurself))=INT;} // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
+ if(x){
+  x=AKASA(recurself);  // short name for the current list of result boxes
+  AT(x)=BOX; AN(x)=AS(x)[0]; z=ope(x); AT(x)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
+  // if the open failed with domain error, convert it to assembly error after localizing the error.  As with all assembly errors, the caller will eformat
+  if(unlikely(z==0&&jt->jerr==EVDOMAIN)){
+   jt->etxinfo->asseminfo.assemframelen=1;  // len of frame of error
+   jt->etxinfo->asseminfo.assemorigt=jt->etxinfo->asseminfo.assemwreckt=0;  // init dissimilar types not found
+   DO(AN(x), if(AN(AAV(x)[i])){if(jt->etxinfo->asseminfo.assemorigt==0)jt->etxinfo->asseminfo.assemorigt=AT(AAV(x)[i]);  // look at nonempties: save the first and any incompatible
+             else if(!HOMO(jt->etxinfo->asseminfo.assemorigt,AT(AAV(x)[i]))){jt->etxinfo->asseminfo.assemwreckt=AT(AAV(x)[i]); jt->etxinfo->asseminfo.assemwreckofst=i; break;}}
+   )
+   jt->etxinfo->asseminfo.assemshape[0]=AS(x)[0];  // results were in a list
+   jt->jerr=EVASSEMBLY;  // switch t o assembly error type
+  }
+ }
  fa(AKASA(recurself));  // match the ra(), but not necessarily on the same block
  // always returns non-pristine
  EPILOG(z);
@@ -121,7 +134,21 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to ra() the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
  x=levs2(a,w,recurself);
- if(x){AT(AKASA(recurself))=BOX; AN(AKASA(recurself))=AS(AKASA(recurself))[0]; z=ope(AKASA(recurself)); AT(AKASA(recurself))=INT;} // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
+// obsolete  if(x){AT(AKASA(recurself))=BOX; AN(AKASA(recurself))=AS(AKASA(recurself))[0]; z=ope(AKASA(recurself)); AT(AKASA(recurself))=INT;} // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
+ if(x){
+  x=AKASA(recurself);  // short name for the current list of result boxes
+  AT(x)=BOX; AN(x)=AS(x)[0]; z=ope(x); AT(x)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
+  // if the open failed with domain error, convert it to assembly error after localizing the error.  As with all assembly errors, the caller will eformat
+  if(unlikely(z==0&&jt->jerr==EVDOMAIN)){
+   jt->etxinfo->asseminfo.assemframelen=1;  // len of frame of error
+   jt->etxinfo->asseminfo.assemorigt=jt->etxinfo->asseminfo.assemwreckt=0;  // init dissimilar types not found
+   DO(AN(x), if(AN(AAV(x)[i])){if(jt->etxinfo->asseminfo.assemorigt==0)jt->etxinfo->asseminfo.assemorigt=AT(AAV(x)[i]);  // look at nonempties: save the first and any incompatible
+             else if(!HOMO(jt->etxinfo->asseminfo.assemorigt,AT(AAV(x)[i]))){jt->etxinfo->asseminfo.assemwreckt=AT(AAV(x)[i]); jt->etxinfo->asseminfo.assemwreckofst=i; break;}}
+   )
+   jt->etxinfo->asseminfo.assemshape[0]=AS(x)[0];  // results were in a list
+   jt->jerr=EVASSEMBLY;  // switch t o assembly error type
+  }
+ }
  fa(AKASA(recurself));  // match the ra(), but not necessarily on the same block
  // always returns non-pristine
  EPILOG(z);

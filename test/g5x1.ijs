@@ -192,7 +192,7 @@ x=:y=:f=:&
 -:&ar / ;:'f x'
 -:&ar / ;:'f y'
 
-4!:55 ;:'a adv ar c conj dr f fnn fork fvv g gd hook mtv n3 nar '
+4!:55 ;:'a adv ar c conj dr f fnn fold fork fvv g gd hook mtv n3 nar '
 4!:55 ;:'one or over plus tv two x y'
 
 

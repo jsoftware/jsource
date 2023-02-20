@@ -85,7 +85,7 @@ perm =: 1!:7
 
 'length error'      -: 'wx'  perm etx <jpath '~temp/foo.x'
 
-4!:55 ;:'brandnew close d erase f h mkdir nn open perm test unix write '
+4!:55 ;:'brandnew close d erase f h mkdir nn open perm test unix write wsl wslhack'
 
 
 

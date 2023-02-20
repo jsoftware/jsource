@@ -92,6 +92,8 @@ f1=: 4 : 0
  1
 )
 
+5 = 0.0+*:_1+2*(+%)/1e3#1x
+
 NB. f1"0 ]10^2 3 9
 NB. This test seems to be valid but the prior k.c would
 NB. silently truncate small rationals to zero in the

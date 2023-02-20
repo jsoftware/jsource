@@ -335,8 +335,7 @@ static KF1(jtDfromQ){
    D d=0.0; f=1.0;    v=UIAV1(r.d); DO(XLIMBLEN(r.d), UI u= v[i]; d+=f*(L&u); f*=hba; d+=f*(u>>hb); f*=hba;)
    D xi= n/d;
    if (e) {
-    D ex= 1.0, xbase=hba; xbase*= hba;
-    DQ(llabs(e), ex*=xbase;)
+    D ex= 1.0; DQ(llabs(e), ex*=2;)
     xi= e>0 ?xi*ex :xi/ex;
    }
    x[i]= (QSGN(r)>0 ?1 :-1)*xi;

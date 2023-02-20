@@ -253,11 +253,12 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
  // startatend is 0 for forward, ~0 for reverse
  // Create a homogeneous array of results, by processing zzbox and zz one cell at a time from the end.
  //  Allocate the result area. (1) if USEOPEN and zz is empty, use zzbox; (2) if the largest cell-result is not bigger than the cells
- //  in zz, use zz.  Otherwise allocate a new area.
+ //  in zz, use zz.  Otherwise allocate a new area.  We normally copy from the end of the array to the front, so that we can stop, leaving
+ //  values in place, when everything fits
 
  I zzt=AT(zz);  // type of zz
  I natomszzcell; PROD(natomszzcell,AR(zz)-zzwf,AS(zz)+zzwf);  // number of atoms in cell of zz
- A* box0=AAV(zzbox)+(startatend&(AN(zzbox)-1));  // address of last valid box pointer, depending on direction of movement
+ A* box0=AAV(zzbox)+(startatend&(AN(zzbox)-1));  // address of last/first valid box pointer, depending on direction of movement
  C* zzcell=CAV(zz)+zzcellp;  // address of last+1 cell moved to zz
 
  if(likely(!(ZZFLAGWORD&ZZFLAGUSEOPEN))){

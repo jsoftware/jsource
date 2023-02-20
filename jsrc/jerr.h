@@ -48,7 +48,8 @@
 #define EVMISSINGGMP    42    // libgmp not installed - converted to EVFACE
 #define EVSIDAMAGE      43    // reload of running function - converted to stack error
 #define EVDEADLOCK      44    // action would deadlock the system
-#define NEVM            44      /* number of event codes       */
+#define EVASSEMBLY      45    // inhomogeneous results during assembly (i. e. result.h) - converted to EVDOMAIN after eformat
+#define NEVM            45      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */

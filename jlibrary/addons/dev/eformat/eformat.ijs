@@ -71,6 +71,7 @@ EVEMPTYDD
 EVMISSINGGMP
 EVSIDAMAGE
 EVDEADLOCK
+EVASSEMBLY
 )
 
 NB. x and y are strings to be joined.  We insert a space if not doing so would change the words
@@ -351,8 +352,10 @@ eformat_j_ =: {{
 NB. extract internal state quickly, before anything disturbs it
 fill =. 9!:22''  NB. This also clears jt->fill
 'e curn ovr selfar a' =. 5{.y
-'perr e' =. 0 256 #: e  NB. top   bits are paren info
-if. ism=.ovr-:'' do. ovr=.63 63 [ y =. }:y [ ind=._1{::y end.  NB. orv is the special value '' for m}.  Take the m arg in that case
+'perr e' =. 0 256 #: e  NB. top bits are paren info
+if. e=EVASSEMBLY do. y =. }:y [ ind=._1{::y   NB. assembly errors have a dope vector in y
+elseif. ism=.ovr-:'' do. ovr=.63 63 [ y =. }:y [ ind=._1{::y  NB. ovr is the special value '' for m}.  Take the m arg in that case
+end.
 if. dyad =. 5<#y do. w =. 5{::y end.
 NB. now a and possibly w are args 4&5.  If self is a verb these will be the arg value(s) and dyad will be the valence
 NB. if the verb is m}, there will be an m argument
@@ -395,7 +398,7 @@ if. #emsg do. hdr1 , emsg return. end.  NB. pee
 
 if. selfar -: {. ;:':' do. hdr =. (}:hdr1) , ', defining explicit entity' , LF
 elseif. (e=EVSYNTAX) *. isexplicit do. hdr =. hdr1  NB. syntax error is not associated with any execution, unless in (". y) 
-elseif. psself<5 do. hdr =. (}:hdr1) , ((', executing ',' ',~(0 2#.psself,dyad){::2 2 2 1 1#;:'noun adv conj monad dyad')&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
+elseif. psself<5 do. hdr =. (}:hdr1) , ((((e=EVASSEMBLY){::', executing ';', assembling results for '),' ',~(0 2#.psself,dyad){::2 2 2 1 1#;:'noun adv conj monad dyad')&,^:(*@#) ovr eflinearself selfar) , LF  NB. finish header lines
 else.  NB. error not associated with any execution.  a distinguishes types
   if. 32 = 3!:0 a do. hdr =. (}:hdr1) , ', before sentence execution' , LF  NB. error in enqueue
   elseif. 0 = #a do.  NB. error during parse
@@ -445,6 +448,12 @@ if. (e=EVVALENCE) do.
     if.  isexplicit do. hdr1 , 'explicit definition has no ',(dyad{::'monad';'dyad'),'ic valence' return. end.  NB. could be {{ or m : and we can't distinguish
     hdr ,  ('verb has no ',(dyad{::'monad';'dyad'),'ic valence') return.
   end.
+end.
+
+NB. Assembly errors are not associated with any primitive, but to some combining operation.  Handle them
+if. e=EVASSEMBLY do.
+  'flen wreck oldt newt' =. 4 {. ind [ frame =. 4 }. ind
+  hdr , 'First results were ' , (;efhomo oldt) , ', but result for cell ' , (('(' , ,&')')^:(flen>1) (": frame #: wreck)) , ' was ' , (;efhomo newt) return.
 end.
 
 NB. Further errors are related to details of primitive execution.

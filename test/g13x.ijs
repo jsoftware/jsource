@@ -408,6 +408,8 @@ f =: 1:`(-: ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if d
 
 '|index error in f, executing dyad {|x is 4; too long for y, whose length is only 3|   (2+2)    {i.3' f '(2 + 2) { i. 3'
 
+'|domain error in f, assembling results for monad 3 : ..."0|First results were numeric, but result for cell (1 3) was character|       {{(9|y) {:: (<"0 i. 7) , <''a''}}"0 i.3 4' f '{{ (9|y) {:: (<"0 i. 7) , <''a'' }}"0 i. 3 4'
+
 g =: {{ y + 5 }}
 '|valence error in g|explicit definition has no dyadic valence|   2     g 3' f '2 g 3'
 g =: {{ y + x }}

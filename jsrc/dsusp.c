@@ -88,7 +88,7 @@ static DC suspset(DC d){DC e=0;
 static B jterrcap(J jt){A y,*yv;
  GAT0(y,BOX,4,1); yv=AAV(y);
  RZ(yv[0]=sc(jt->jerr1));
- RZ(yv[1]=str(jt->etxn1,jt->etx));
+ RZ(yv[1]=str(jt->etxn1,jt->etxinfo->etx));
  RZ(yv[2]=dbcall(mtv));
  RZ(yv[3]=locname(mtv));
  RZ(symbis(nfs(22L,"STACK_ERROR_INFO_base_"),y,mark));

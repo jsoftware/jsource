@@ -18,7 +18,7 @@
 // add n chars at *s to the error buffer at jt->etxn, increment jt->etxn
 static void jtep(J jt,I n,C*s){I m;
  m=NETX-jt->etxn; m=MIN(n,m); 
- if(0<m){MC(jt->etx+jt->etxn,s,m); jt->etxn+=m;}
+ if(0<m){MC(jt->etxinfo->etx+jt->etxn,s,m); jt->etxn+=m;}
 }
 
 static void jteputs(J jt,C*s){ep((I)strlen(s),s);}
@@ -28,7 +28,7 @@ static void jteputc(J jt,C c){ep(1L,&c);}
 static void jteputlnolf(J jt,A w){ep(AN(w),CAV(w));}
 static void jteputl(J jt,A w){jteputlnolf(jt,w); eputc(CLF);}
 
-static void jteputv(J jt,A w){I m=NETX-jt->etxn; if(m>0){jt->etxn+=thv(w,~MIN(m,200),jt->etx+jt->etxn);}} // stop writing when there is no room in the buffer.  Complement for decoration
+static void jteputv(J jt,A w){I m=NETX-jt->etxn; if(m>0){jt->etxn+=thv(w,~MIN(m,200),jt->etxinfo->etx+jt->etxn);}} // stop writing when there is no room in the buffer.  Complement for decoration
      /* numeric vector w */
 
 static void jteputq(J jt,A w,I nflag){C q=CQUOTE,*s;
@@ -40,13 +40,13 @@ static void jteputq(J jt,A w,I nflag){C q=CQUOTE,*s;
 }}   /* string w, possibly with quotes */
 
 static void jtefmt(J jt,C*s,I i){
- if(15<NETX-jt->etxn){C*v=jt->etx+jt->etxn; sprintf(v,s,i); jt->etxn+=strlen(v);}
+ if(15<NETX-jt->etxn){C*v=jt->etxinfo->etx+jt->etxn; sprintf(v,s,i); jt->etxn+=strlen(v);}
 }
 
 // jt has the typeout flags.  Display error text if any, then reset errors
 void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
  if(jt->etxn&&!((I)jtinplace&JTPRNOSTDOUT)){  // if there is a message and it is not suppressed...
-  p=b; q=jt->etx; r=q+jt->etxn;
+  p=b; q=jt->etxinfo->etx; r=q+jt->etxn;
   NOUNROLL while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,OUTSEQ); p+=strlen(OUTSEQ); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
   *p=0;
 #ifdef ANDROID
@@ -144,7 +144,7 @@ static void jtseeparse(J jt,DC d){A*v;
  if(jt->etxn<NETX){  // if we overran the buffer, don't reformat it.  Reformatting requires splitting to words
   // We displayed the sentence.  See if it contains (9 :'string'); if so, replace with {{ string }}
   fauxblock(fauxw); A z=(A)&fauxw;
-  AK(z)=jt->etx+m1-(C*)z; AFLAGFAUX(z,0) AT(z)=LIT; ACFAUX(z,ACUC1) AR(z)=1; AN(z)=AS(z)[0]=jt->etxn-m1;  // point to etx for parsed line
+  AK(z)=jt->etxinfo->etx+m1-(C*)z; AFLAGFAUX(z,0) AT(z)=LIT; ACFAUX(z,ACUC1) AR(z)=1; AN(z)=AS(z)[0]=jt->etxn-m1;  // point to etx for parsed line
   jtunDD((J)((I)jt|JTINPLACEW|JTINPLACEA),z);  // reformat in place
   jt->etxn=m1+AN(z);  // set new end-of-sentence pointer
  }
@@ -155,7 +155,7 @@ static void jtseeparse(J jt,DC d){A*v;
 A jtunparse(J jt,A w,I nflag){A*v,z;
  ARGCHK1(w);
  jt->etxn=0;
- v=AAV(w); DO(AN(w), nflag=disp(QCWORD(v[i]),nflag);); z=str(jt->etxn,jt->etx);
+ v=AAV(w); DO(AN(w), nflag=disp(QCWORD(v[i]),nflag);); z=str(jt->etxn,jt->etxinfo->etx);
  jt->etxn=0;
  R z;
 }
@@ -205,7 +205,7 @@ F1(jtdbstack){DC d=jt->sitop;
 
 F1(jtdbstackz){A y,z; 
  RE(dbstack(w)); 
- RZ(y=str(jt->etxn,jt->etx)); 
+ RZ(y=str(jt->etxn,jt->etxinfo->etx)); 
  jt->etxn=0; 
  R df1(z,y,cut(ds(CLEFT),num(-2)));
 }    /* 13!:18  SI stack as result */
@@ -293,7 +293,7 @@ A jteformat(J jt,A self,A a,A w,A m){
    if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
     A saverr;   // savearea for the initial message
     A *old=jt->tnextpushp;  // we must free all memory that we allocate here
-    if((saverr=str(jt->etxn,jt->etx))!=0){  // save error code and message; if error in str, skip formatting
+    if((saverr=str(jt->etxn,jt->etxinfo->etx))!=0){  // save error code and message; if error in str, skip formatting
      A msg=0;   // indicate no formatted message
      if(self){
       if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
@@ -321,8 +321,12 @@ A jteformat(J jt,A self,A a,A w,A m){
        // The header will be  made recursive, which will increment usecounts in the contents; that's OK.  We will decrement the usecounts before we
        // exit, simultaneously freeing the header before it can refer to garbage
        A awm=0; // where we build the a/w/m arguments
-       if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;}  // if m exists, make it the last arg, and set rank to ''
-       if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
+       if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;  // if m exists, make it the last arg, and set rank to ''
+       }else if(e==EVASSEMBLY){
+        // assembly errors are special.  They require an info vector, which has been stored in jt->etxinfo.  We pass this vector as m
+        if((awm=box(vec(INT,jt->etxinfo->asseminfo.assemframelen+(offsetof(struct assem,assemshape)/sizeof(I)),&jt->etxinfo->asseminfo)))==0)goto noeformat;
+       }
+      if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
         {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
        if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // Convert self to AR.  If self is not a verb convert a/w to AR also
@@ -347,8 +351,10 @@ A jteformat(J jt,A self,A a,A w,A m){
     }
     tpop(old);
    }
-   // some errors are distinguished internally to make eformat easier.  We revert them to the normal message after eformatting
-   C oe=e; e=oe==EVINHOMO?EVDOMAIN:e; e=oe==EVINDEXDUP?EVINDEX:e; e=oe==EVEMPTYT?EVCTRL:e; e=oe==EVEMPTYDD?EVCTRL:e; e=oe==EVMISSINGGMP?EVFACE:e;  e=oe==EVSIDAMAGE?EVSTACK:e; // revert internal numbers to external codes after formatting 
+   // some errors are distinguished internally to make eformat_j_ easier.  We revert them to the normal message after eformatting
+   C oe=e; e=oe==EVINHOMO?EVDOMAIN:e; e=oe==EVINDEXDUP?EVINDEX:e; e=oe==EVEMPTYT?EVCTRL:e; e=oe==EVEMPTYDD?EVCTRL:e; e=oe==EVMISSINGGMP?EVFACE:e;
+   e=oe==EVSIDAMAGE?EVSTACK:e; e=oe==EVASSEMBLY?EVDOMAIN:e;  // revert internal numbers to external codes after formatting 
+
    jt->jerr=jt->jerr1=e;  // save reverted value
   }
   jt->emsgstate|=EMSGSTATEFORMATTED;  // indicate formatting attempted even if we skipped it
@@ -509,7 +515,7 @@ F1(jtdbetx){
  ASSERTMTV(w);
  if(jt->jerr1==0)R mtv;  // if no error, no text either
  if(jt->etxn1==0 && BETWEENC(jt->jerr1,1,NEVM))R AAV(JT(jt,evm))[jt->jerr1];  // no text, supply it now
- R str(jt->etxn1,jt->etx);  // leave the text that's there
+ R str(jt->etxn1,jt->etxinfo->etx);  // leave the text that's there
 }
 
 

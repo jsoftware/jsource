@@ -62,6 +62,18 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {
 } JOBQ;
 #endif
 
+// area used for formatting errors.  This includes the buffer that holds the error message, and also information about a failure during assembly
+typedef struct etxdata {
+ C etx[NETX+1];   // error message, with trailing NUL
+ struct assem {
+  I assemframelen;  // length of frame of assembled data
+  I assemwreckofst;  // offset to unrecoverable wreck
+  I assemorigt;  // AT of first result
+  I assemwreckt;  // AT of incompatible value
+  I assemshape[RMAX];  // shape of assembled data
+ } asseminfo;
+} ETXDATA;
+
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
 struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl0[0];          // marker for the start of cacheline 0
@@ -201,7 +213,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 
  C _cl6[0];
 // seldom used,  but contended during system lock 
- C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
+ ETXDATA *etxinfo;  // error display string and other info
  void *dtoa;             /* use internally by dtoa.c                        */
  PSTK initparserstack[1];  // 2 words stack used for messages when we don't have a real one Only .a and .t are used, leaving 6 bytes free (.pt and .filler)
  I4 getlasterror;     // DLL error info from previous DLL call

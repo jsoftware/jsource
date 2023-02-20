@@ -328,7 +328,9 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     zz=rank1ex(w,z,wr,FAV(z)->valencefns[0]);  // Execute on all cells8
    }
   }
+
   EPILOG(zz);
+assemblyerror: ASSERT(0,EVDOMAIN)
  }else{
   // There was only 1 cell in the result.  Apply the selected verb, inplace if possible
   I vx=i0(vres); RE(0);  // fetch index of gerund

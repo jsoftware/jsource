@@ -127,6 +127,7 @@ static B jtevinit(JS jjt){A q,*v;JJ jt=MTHREAD(jjt);
  v[EVMISSINGGMP  ]=v[EVFACE];ras(v[EVFACE]);
  v[EVSIDAMAGE  ]=v[EVSTACK];ras(v[EVSTACK]);
  v[EVDEADLOCK  ]=INCORPNA(cstr("would deadlock"                ));
+ v[EVASSEMBLY  ]=INCORPNA(cstr("domain error"               ));
  ACINITZAPRECUR(q,BOX); INITJT(jjt,evm)=q;   // q and its contents are not on tstack; this way the contents are freed on assignment
  if(jt->jerr){printf("evinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }
@@ -195,7 +196,7 @@ static B jtbufferinits(JS jjt){
 
 // initialise thread-local buffers for thread threadno.  Requires synchronisation
 B jtbufferinitt(J jt){
- RZ(jt->etx=malloc(1+NETX));  // error-message buffer
+ RZ(jt->etxinfo=malloc(sizeof(ETXDATA)));  // error-message buffer
  RZ(jt->callstack=malloc(sizeof(LS)*(1+NFCALL)));  // function-call stack
  RZ(jt->rngdata=aligned_malloc(sizeof(RNG),CACHELINESIZE)); // place to hold RNG data, aligned to cacheline
  memset(jt->rngdata,0,sizeof(RNG));
@@ -213,7 +214,7 @@ static B jtinitfinis(J jt){
 
 // Initialise thread-specific data for jt.  Idempotent.  Requires synchronisation.
 C jtjinitt(J jt){
- if(jt->etx)R 1; // already initialised; ok
+ if(jt->etxinfo)R 1; // already initialised; ok
  RZ(jtbufferinitt(jt));  // init thread-local buffers
  RZ(jtmeminitt(jt));
  RZ(jtconsinitt(jt));

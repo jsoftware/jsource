@@ -14,6 +14,21 @@
 #define STATENEEDNEWPOW (((I)1)<<STATENEEDNEWPOWX)
 #define ZZFLAGWORD state
 
+// x is a block that contains cell results.  We open it; if that creates domain error we track down the error and change it to assembly error
+A jtopenforassembly(J jt, A x){
+ ARGCHK1(x);
+ A z=ope(x);
+ if(z==0&&jt->jerr==EVDOMAIN){
+  jt->etxinfo->asseminfo.assemframelen=1;  // len of frame of error
+  jt->etxinfo->asseminfo.assemorigt=jt->etxinfo->asseminfo.assemwreckt=0;  // init dissimilar types not found
+  DO(AN(x), if(AN(AAV(x)[i])){if(jt->etxinfo->asseminfo.assemorigt==0)jt->etxinfo->asseminfo.assemorigt=AT(AAV(x)[i]);  // look at nonempties: save the first and any incompatible
+            else if(!HOMO(jt->etxinfo->asseminfo.assemorigt,AT(AAV(x)[i]))){jt->etxinfo->asseminfo.assemwreckt=AT(AAV(x)[i]); jt->etxinfo->asseminfo.assemwreckofst=i; break;}}
+  )
+  jt->etxinfo->asseminfo.assemshape[0]=AS(x)[0];  // results were in a list
+  jt->jerr=EVASSEMBLY;  // switch t o assembly error type
+ }
+ R z;
+}
 
 static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  ARGCHK1(w);
@@ -25,7 +40,7 @@ static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
   if(equ(x,y)){AN(z)=AS(z)[0]=i; break;}
   ++i;
  }
- z=ope(z);
+ z=jtopenforassembly(jt,z);
  EPILOG(z);
 }    /* f^:(<_) w */
 

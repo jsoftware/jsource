@@ -826,6 +826,7 @@ extern I        jtmult(J,I,I);
 extern A        jtnamerefacv(J, A, A);
 extern A        jtnfs(J,I,C*);
 extern A        jtodom(J,I,I,I* RESTRICT);
+extern A        jtopenforassembly(J,A);
 extern A        jtparsea(J,A*,I);
 extern A        jtparsex(J,A*,I,CW*,DC);
 extern A        jtpaxis(J,I,A);

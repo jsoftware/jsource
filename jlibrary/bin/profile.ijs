@@ -26,7 +26,7 @@ tools=. install,'/tools'
 home=. >(systype-5){(2!:5'HOME');2!:5'USERPROFILE'
 home=. >(0-:home){home;,'/'
 isroot=. (0=#1!:0'/data') *. ('root'-:2!:5'USER') +. (<home) e. '/var/root';'/root';'';,'/'
-userx=. omitversion{::'/j904-user';'/j-user'
+userx=. omitversion{::'/j9.4-user';'/j-user'
 user=. home,userx
 user=. >isroot{user;install,'/user'
 home=. >isroot{home;install

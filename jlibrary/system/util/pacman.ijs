@@ -1663,7 +1663,7 @@ elseif. do.
   z=. 'jqt-mac',((y-:'slim')#'slim'),'-',arch,'.zip'
   z1=. 'libjqt.',suffix
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j904/qtide/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j9.4/qtide/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
@@ -1686,8 +1686,8 @@ else.
     echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.4 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
     hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.4 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
     if. 'Linux'-:UNAME do.
-      echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 904'
-      hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 904'
+      echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 9.4'
+      hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 9.4'
     end.
   else.
     hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
@@ -1718,7 +1718,7 @@ if. IFWIN do.
 else.
   z=. 'qt62-mac-',((y-:'slim')#'slim-'),arch,'.zip'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j904/qtlib/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j9.4/qtlib/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.

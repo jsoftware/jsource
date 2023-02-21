@@ -76,13 +76,13 @@ EVASSEMBLY
 
 NB. x and y are strings to be joined.  We insert a space if not doing so would change the words
 efjoinstgs_j_ =: (([,' ',]) [^:(-.@-:&;:) (,))
-NB.x is (1 if all of main name always needed),(max # characters allowed),(par); y is AR
+NB.x is (1 if all of main name always needed),(max # characters allowed),(par),(use gerund if possible); y is AR
 NB. par is:0=no parens needed; 1=parens needed for train but not AC exec; parens needed for train and AC
 NB. result is string to display, or ... if string too long
 eflinAR_j_ =: {{
 NB. parse the AR, recursively
 if. (2{.x) -: 0 0 do. '...' return. end.  NB. If no room for formatting, stop looking
-'frc max par' =. x
+'frc max par ger' =. x
 aro =. >y
 if. 2 = 3!:0 aro do.   NB. primitive or named entity
   if. (*frc) +. max >: #aro do. aro return. end.  NB. return value if short enough or we want all of it
@@ -93,16 +93,16 @@ else.
   select. {. aro
   case. ;:'0' do.  NB. noun
     if. 1 < #@$ aro1 do. '...' return. end.  NB. don't try to format ranks>1
-    if. 30 < #aro1  do. '...' return. end.  NB. or too many atoms
-    if. (3!:0 aro1) e. 32 64 128 do. '...' return. end.  NB. or boxed/extended
+    if. 8192 < 7!:5<'aro1' do. '...' return. end.  NB. or anything big
     lin =. 5!:5<'aro1'  NB. value is small, take its linrep
+    if. ger do. if. ';:'-:2{.lin do. lin =. (,'`'&,)&:>/ aro1 end. end.  NB. If we expect gerunds, convert word-list to gerund form
     if. max >: #lin do. (')' ,~ '('&,)^:((1<#;:lin)*.par~:0) lin return. end.  NB. return value if short enough; if multiword, parenthesize
     (_3 }. lin) , '...' return.
   case. ,&.>'234' do.  NB. hook/fork/train
     NB. these cases are not so important because they don't give verb-execution errors
     stgs=.0$a:  NB. list of strings
     for_i. aro1 do.
-      stg =. ((1 1 p. i_index~:0) ,~ 0., 0. >. max%(#aro1)-i_index) eflinAR i  NB. collect strings for each AR; paren trains except the right
+      stg =. 0.,~ ((1 1 p. i_index~:0) ,~ 0., 0. >. max%(#aro1)-i_index) eflinAR i  NB. collect strings for each AR; paren trains except the right
       max =. max - #stg [ stgs =. stgs , <stg  NB. don't allow total size to be exceeded
     end.
     NB. We have strings for each component.  If nothing has a display, return '...' unless this is top-level
@@ -111,9 +111,9 @@ else.
   case. do.  NB. default: executed A/C
     ac =. ({.aro) 5!:0  NB. the actual ac
     posac =. 4!:0 <'ac'   NB. part of speech being executed here
-    stgs =. <stg=. (0 >. (<:frc) , max , 1) eflinAR {. aro   NB. get (stg) for AC
-    stgs =. stgs ,~ <stg =. (0 >. 0 , (posac{0 1 1 0) ,~  max =. max -#stg) eflinAR {. aro1
-    if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , (posac{0 1 2 1) ,~  max =. max -#stg) eflinAR {: aro1 end.
+    stgs =. <stg=. (0 >. (<:frc) , max , 1 0) eflinAR {. aro   NB. get (stg) for AC
+    stgs =. stgs ,~ <stg =. (0 >. 0 , (({.aro) e. ;:'^:}@.') ,~ (posac{0 1 1 0) ,~  max =. max -#stg) eflinAR {. aro1
+    if. 1 < #aro1 do. stgs =. stgs , <stg =. (0 >. 0 , 0 ,~ (posac{0 1 2 1) ,~  max =. max -#stg) eflinAR {: aro1 end.
     if. (frc=0) *. *./ stgs = <'...' do. '...' return. end.
     NB. string not too long; leave spaces where needed
     (')' ,~ '('&,)^:(par=2) ; efjoinstgs&.>/ stgs return. 
@@ -129,7 +129,7 @@ eflinearself_j_ =: {{
 '' eflinearself y
 :
 NB. create self as an entity; if entity has IRS, apply "n
-sstg =. 2 30 0 eflinAR y
+sstg =. 2 30 0 0 eflinAR y
 if. 63 (+./@:~:) x do. sstg =. sstg , '"' , ": (_1 x: <. (%63&~:) x) end.
 sstg
 }}
@@ -819,7 +819,7 @@ NB. } x domain
     case. ;:'/' do.
       if. e=EVDOMAIN do. if. 0=#a do. hdr,'y is empty but the verb has no identity element' return. end. end.
     case. ;:'@.' do.
-      if. ism do.  NB. the errors in @. must include the selectors
+      if. ism do.  NB. if selectors given, the error is in the selection stage
         if. e=EVRANK do. if. (#@$ind) > >.&(#@$) a do.
           hdr,'the rank of the selectors (' , (":#$ind) , ') must not exceed the argument rank (' , (":#a) , ')' return. end.
         end.
@@ -831,6 +831,8 @@ NB. } x domain
           ngerunds=.# efarnounvalue {. args  NB. number of gerunds
           if. #emsg=. 'selector has '&,^:(*@#) ind efindexmsg ind 9!:23 (0;(- , <:) ngerunds) do. hdr,emsg return. end.
         end.
+      else.  NB. error following selection
+        if. e=EVRANK do. hdr,'each gerund must return a result whose shape agrees with its inputs ' , emsg return. end.   NB. must be numeric
       end.
     end.
   end.

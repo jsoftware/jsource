@@ -397,6 +397,7 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
 
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
 static void *jtthreadmain(void *arg){J jt=arg;I dummy;
+ // One-time initialization
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
  // not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
@@ -404,6 +405,7 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  __atomic_store_n(&jt->cstackmin,jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
  // Note: we use cstackmin as an indication that this thread is ready to use.
  JOBQ *jobq=&(*JT(jt,jobqueue))[jt->threadpoolno];   // The jobq block for the threadpool we are in - never changes
+
  // loop forever executing tasks.  First time through, the thread-creation code holds the job lock until the initialization finishes
 nexttask: ; 
   JOB *job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
@@ -552,8 +554,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  JOBQ *jobq=&(*JT(jt,jobqueue))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
  if((((I)(forcetask&lda(&jobq->nuunfin))-jobq->nthreads)&(lda(&JT(jt,systemlock))-3))<0){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
     // in suspension (systemlock state>2) we do not start any task anywhere
-    // scaf bug: opening an unfinished pyx during suspension will lock the system
- // realize virtual arguments; raise the usecount of the arguments including self scaf
+  // realize virtual arguments; raise the usecount of the arguments including self scaf
   // clone an UNINCORPABLE argument (a utility block used in a loop); then ra() the arguments to protect them until the task completes.  It would be
   // nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
@@ -602,7 +603,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   JOB *oldjob=JOBLOCK(jobq);  // lock jobq before mutex
   _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun the JOBQ as a JOB, when the q is empty
   // When we finish all tasks, we will have a problem.  The job block is on the jobq somewhere, but not necessarily at the top.
-  // We can't dequeue the job or free it.  What we do is leave it on the jobq, with ns=n.  When the job is next taken for a task
+  // If not at the top, we can't dequeue the job or free it.  What we do is leave it on the jobq, with ns=n.  When the job is next taken for a task
   // (possibly immediately), that condition will cause the job to be dequeued, and then (as a special case) fa()d.  Since we might still
   // be processing the job, we ra the job now to protect it.  It will be freed at the later of (coming to the top of the job list) and
   // (all tasks finished and waited for here).  We fa explicitly rather than calling tpop

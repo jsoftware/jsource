@@ -306,7 +306,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; incorp(Zz); *za++=Zz;); \
    }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); incorp(Zz); *za++=Zz; ); \
    }                                                                         \
-   z=ope(z);                                                                 \
+   z=jtopenforassembly(jt,z);                                                                 \
    {EPILOG(z);}                                                                \
  }
 
@@ -418,7 +418,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
     }
     break;
   }
-  z=ope(z);
+  z=jtopenforassembly(jt,z);
   EPILOG(z);
 }}   // (sparse or dense)  f;.n (dense or sparse)
 

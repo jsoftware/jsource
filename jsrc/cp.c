@@ -16,9 +16,9 @@
 
 // x is a block that contains cell results.  We open it; if that creates domain error we track down the error and change it to assembly error
 A jtopenforassembly(J jt, A x){
- ARGCHK1(x);
+ ARGCHK1(x);  // if error on x, abort this
  A z=ope(x);
- if(z==0&&jt->jerr==EVDOMAIN){
+ if(z==0&&jt->jerr==EVDOMAIN){  // domain error on open can only be assembly
   jt->etxinfo->asseminfo.assemframelen=1;  // len of frame of error
   jt->etxinfo->asseminfo.assemorigt=jt->etxinfo->asseminfo.assemwreckt=0;  // init dissimilar types not found
   DO(AN(x), if(AN(AAV(x)[i])){if(jt->etxinfo->asseminfo.assemorigt==0)jt->etxinfo->asseminfo.assemorigt=AT(AAV(x)[i]);  // look at nonempties: save the first and any incompatible

@@ -453,7 +453,9 @@ end.
 NB. Assembly errors are not associated with any primitive, but to some combining operation.  Handle them
 if. e=EVASSEMBLY do.
   'flen wreck oldt newt' =. 4 {. ind [ frame =. 4 }. ind
-  hdr , 'First results were ' , (;efhomo oldt) , ', but result for cell ' , (('(' , ,&')')^:(flen>1) (": frame #: wreck)) , ' was ' , (;efhomo newt) return.
+  if. flen do. hdr , 'First results were ' , (;efhomo oldt) , ', but result for cell ' , (('(' , ,&')')^:(flen>1) (": frame #: wreck)) , ' was ' , (;efhomo newt)
+  else. hdr , 'results from the cells have incompatible types'  NB. 0-len frame means we couldn't localize
+  end. return.
 end.
 
 NB. Further errors are related to details of primitive execution.

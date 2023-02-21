@@ -116,7 +116,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(C(*hv))->valencefns[0],  w,C(*hv)))); ++hv;);
- R ope(z);
+ R jtopenforassembly(jt,z);
 }
 
 static DF2(jtcon2){A h,*hv,*x,z;V*sv;
@@ -124,7 +124,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(C(*hv))->valencefns[1],a,w,C(*hv)))); ++hv;);
- R ope(z);
+ R jtopenforassembly(jt,z);
 }
 
 // u`:3 insert 
@@ -315,6 +315,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     // first, install the actual number of boxes of result, which might differ from the calculated maximum
     AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
     zz=ev2(gradepm,zz,"(/:~   >@:;@:((<\"_1)&.>))");  // (> ; <"_1&.> zz) /: gradepm
+    if(unlikely(zz==0&&jt->jerr==EVDOMAIN))goto assemblyerror;   // domain error here must be incompatible types
    }
    // If the original input had structure, rearrange the result to match it
    if(vr>1)RZ(zz=reitem(shape(vres),zz));
@@ -330,7 +331,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   }
 
   EPILOG(zz);
-assemblyerror: ASSERT(0,EVDOMAIN)
+assemblyerror: RESETERR jt->etxinfo->asseminfo.assemframelen=0; jt->jerr=EVASSEMBLY;  // framelen=0 means we can't localize it; switch error to assembly.  Will be eformatted up the line
  }else{
   // There was only 1 cell in the result.  Apply the selected verb, inplace if possible
   I vx=i0(vres); RE(0);  // fetch index of gerund

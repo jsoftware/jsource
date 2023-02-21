@@ -407,7 +407,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,take(sc(1+i),w),C(hv[imod]))); ++imod;);
- R ope(z);
+ R jtopenforassembly(jt,z);
 }    /* g\"r w for gerund g */
 
 
@@ -481,7 +481,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
  if(SETIC(x,n)){
   GATV0(z,BOX,n,1); zv=AAV(z);
   DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),C(hv[i%d]))););
-  R ope(z);
+  R jtopenforassembly(jt,z);
  }else{A s;
   RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABS(m);
   RZ(df1(x,reshape(s,filler(w)),C(*hv)));

@@ -191,7 +191,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,drop(sc(i),w),C(hv[imod]))); ++imod;);
- R ope(z);
+ R jtopenforassembly(jt,z);
 }    /* g\."r w for gerund g */
 
 #define SSGULOOP(T)  \
@@ -344,7 +344,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,repeat(from(sc(i),x),w),C(hv[imod]))); ++imod;);
- R ope(z);
+ R jtopenforassembly(jt,z);
 }
 
 static DF2(jtoutfix){F2PREFIP;PROLOG(117);DECLF ;A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}

@@ -88,7 +88,8 @@ int jedo(char* sentence)
 
 void jeinterrupt()
 {
- jinterrupt(jt);
+
+	jinterrupt(jt);
 }
 
 A jegeta(I n, char* s){return jgeta(jt,n,(C*)s);}

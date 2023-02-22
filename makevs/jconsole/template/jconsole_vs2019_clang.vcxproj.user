@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|x64'">
-    <LocalDebuggerCommand>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\$(targetname).exe</LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\j64\bin\j.jdll_vs2019_clang.dll</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommand>$(userprofile)\git\jsource\jlibrary\bin\jconsole</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>
+    </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(userprofile)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>

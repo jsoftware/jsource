@@ -315,7 +315,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
 void breakclose(JS jt)
 {
  if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
- __atomic_store_n((US*)&JT(jt,breakbytes)[0],*(US*)(JT(jt,adbreak)),__ATOMIC_RELEASE);  // copy over any pending break request, plus other breakdata
+ __atomic_store_n(&JT(jt,breakbytes),*(US*)(JT(jt,adbreak)),__ATOMIC_RELEASE);  // copy over any pending break request, plus other breakdata
 // obsolete  *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
  if(JT(jt,adbreakr)==JT(jt,adbreak))__atomic_store_n(&JT(jt,adbreakr),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move to look at the new data - but not if attn disabled
  C *oldbreak=JT(jt,adbreak); __atomic_store_n(&JT(jt,adbreak),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move request pointer in any case

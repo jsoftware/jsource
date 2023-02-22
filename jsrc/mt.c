@@ -244,7 +244,7 @@ C jtjsleep(J jt,UI ns){
   UI4 waitval=lda(&ftx);
   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);goto retime;} //systemlock can take a long time
   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;break;}
-  I i=jfutex_waitn(&ftx,waitval|1,ns);
+  I i=jfutex_waitn(&ftx,waitval|1,ns);  // the 1 is PYXWAIT defined in ct.c - we wait for the state to move off WAIT state
   if(unlikely(i>0)){r=EVFACE;break;}
   if(i==-1){r=0;break;} //timed out
 retime:

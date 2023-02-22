@@ -286,7 +286,7 @@ F1(jtdl){D m,n,*v;UINT ms,s;
 #if SYS & SYS_MACINTOSH
  {I t=TickCount()+(I)(60*n); while(t>TickCount())JBREAK0;}
 #else
- DQ(s, sleepms(1000); JBREAK0;);
+ DQ(s, sleepms(1000); JBREAK0;);  // wait for BREAK (2 attns)
  sleepms(ms);
 #endif
 #endif

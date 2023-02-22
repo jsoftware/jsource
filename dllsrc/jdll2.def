@@ -15,4 +15,5 @@ EXPORTS
                 JGetR               @29
                 JSMX                @30
                 JInit2              @31
+                JInterrupt          @32
                 

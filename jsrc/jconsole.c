@@ -36,6 +36,16 @@ static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
 static int norl=0;         /* disable readline/linenoise */
 static void sigint(int k){jeinterrupt();signal(SIGINT,sigint);}
 static void sigint2(int k){jeinterrupt();}
+#if defined(_WIN32)
+static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType){
+ switch (fdwCtrlType){
+// Handle the CTRL-C signal.
+  case CTRL_C_EVENT:
+   jeinterrupt(); return TRUE;
+  default: return FALSE;
+ }
+}
+#endif
 #if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) //temporary
 static int err_write(void *data, uintptr_t pc, const char *file, int line, const char *function){
  char buf[512];
@@ -332,7 +342,11 @@ int main(int argc, char* argv[])
   sigaction(SIGINT, &sa, NULL);
  }else
 #endif
+#if defined(_WIN32)
+  SetConsoleCtrlHandler(CtrlHandler, TRUE);
+#else
   signal(SIGINT,sigint);
+#endif
  
 #ifdef READLINE
  if(!norl){

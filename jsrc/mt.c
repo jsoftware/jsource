@@ -237,18 +237,19 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){ //release m
 // attempt to sleep for ns ns, with proper handling of systemlock and jbreak.  Returns error code
 C jtjsleep(J jt,UI ns){
  C r=0,breakb;
- struct jtimespec tgt=jtmtil(ns);
+ struct jtimespec tgt=jtmtil(ns);  // target time for end of wait
  UI4 ftx=0;
  sta(&jt->futexwt,&ftx);
  while(1){
   UI4 waitval=lda(&ftx);
   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);goto retime;} //systemlock can take a long time
   if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){r=breakb==1?EVATTN:EVBREAK;break;}
-  I i=jfutex_waitn(&ftx,waitval|1,ns);  // the 1 is PYXWAIT defined in ct.c - we wait for the state to move off WAIT state
+  I i=jfutex_waitn(&ftx,waitval|1,MIN(ns,1000000000));  // the 1 is PYXWAIT defined in ct.c - we wait for the state to move off WAIT state
+   // ATTN doesn't wake us, so we have to sleep at most 1s at a time
   if(unlikely(i>0)){r=EVFACE;break;}
   if(i==-1){r=0;break;} //timed out
 retime:
-  if(-1ull==(ns=jtmdif(tgt))){r=0;break;}}
+  if(-1ull==(ns=jtmdif(tgt))){r=0;break;}}  // recalculate time-to-target
  CLRFUTEXWT;
  R r;}
 #endif //PYXES

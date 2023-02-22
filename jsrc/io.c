@@ -275,7 +275,7 @@ static C* nfeinput(JS jt,C* s){A y;
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
 // scaf should rewrite this interface to keep the control info in locals in 0!:x
 A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
- __atomic_store_n(IJT(jt,adbreak),0,__ATOMIC_RELEASE);  // turn off any pending break
+ __atomic_store_n(&IJT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // turn off any pending break
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
@@ -315,12 +315,13 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
 void breakclose(JS jt)
 {
  if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
- *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
- munmap(JT(jt,adbreak),1);
- if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
- JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move request pointer in any case
+ __atomic_store_n((US*)&JT(jt,breakbytes)[0],*(US*)(JT(jt,adbreak)),__ATOMIC_RELEASE);  // copy over any pending break request, plus other breakdata
+// obsolete  *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
+ if(JT(jt,adbreakr)==JT(jt,adbreak))__atomic_store_n(&JT(jt,adbreakr),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move to look at the new data - but not if attn disabled
+ C *oldbreak=JT(jt,adbreak); __atomic_store_n(&JT(jt,adbreak),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move request pointer in any case
+ munmap(oldbreak,1);  // don't unmap the old area until pointers have been moved
  close((intptr_t)JT(jt,breakfh));
- JT(jt,breakfh)=0;
+ JT(jt,breakfh)=0;  // scaf does this leave a window where breakfh/breakfn are invalid?
  unlink(JT(jt,breakfn));
  *JT(jt,breakfn)=0;
 }
@@ -328,12 +329,15 @@ void breakclose(JS jt)
 void breakclose(JS jt)
 {
  if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
- *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
- UnmapViewOfFile(JT(jt,adbreak));
- if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
- JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move attn-request pointer in any case
+ __atomic_store_n(&JT(jt,breakbytes),*(US*)(JT(jt,adbreak)),__ATOMIC_RELEASE);  // copy over any pending break request, plus other breakdata
+// obsolete  *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
+// obsolete  if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
+// obsolete  JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move attn-request pointer in any case
+ if(JT(jt,adbreakr)==JT(jt,adbreak))__atomic_store_n(&JT(jt,adbreakr),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move to look at the new data - but not if attn disabled
+ C *oldbreak=JT(jt,adbreak); __atomic_store_n(&JT(jt,adbreak),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move request pointer in any case
+ UnmapViewOfFile(oldbreak); // don't unmap the old area until pointers have been moved
  CloseHandle(JT(jt,breakmh));
- JT(jt,breakmh)=0;
+ JT(jt,breakmh)=0;  // scaf does this leave a window where breakfh/breakfn are invalid?
  CloseHandle(JT(jt,breakfh));
  JT(jt,breakfh)=0;
 #if SY_WINCE
@@ -392,7 +396,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  I4 savcallstack = jm->callstacknext;
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
- __atomic_store_n(JT(jt,adbreak),0,__ATOMIC_RELEASE);  // remove pending ATTN before executing the sentence
+ __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // remove pending ATTN before executing the sentence
  x=jtinpl(jm,0,(I)strlen(lp),lp);
  I wasidle=jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
       // but if the master task is already running, this is a recursion, and just stay in running state
@@ -672,10 +676,10 @@ A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;
 void _stdcall JInterrupt(JS jt){
  SETJTJM(jt,jm);
  // increment adbreak by 1, capping at 2
- C old=lda(jt->adbreak);
+ C old=lda(&jt->adbreak[0]);
  while(1){
   if(old>=2)break;
-  if(casa(jt->adbreak,&old,1+old))break;}
+  if(casa(&jt->adbreak[0],&old,1+old))break;}
  wakeall(jm);}
 
 void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
@@ -825,7 +829,8 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  strcpy(IJT(jt,breakfn),CAV(w));
  IJT(jt,breakfh)=fh;
  IJT(jt,breakmh)=mh;
- *(US*)ad==*(US*)IJT(jt,adbreak);  // copy breakstatus from current setting
+ __atomic_store_n((US*)ad,*(US*)IJT(jt,adbreak),__ATOMIC_RELEASE);  // copy breakstatus from current setting
+// obsolete  *(US*)ad==*(US*)IJT(jt,adbreak);  // copy breakstatus from current setting
  if(IJT(jt,adbreakr)==IJT(jt,adbreak))IJT(jt,adbreakr)=ad;  // move attn-read pointer, unless interrupts disabled
  IJT(jt,adbreak)=ad;  // start using the mapped area
  R mtm;

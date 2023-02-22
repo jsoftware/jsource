@@ -45,7 +45,7 @@ DF1(jtexec1){A z;
 // We check for system locks before executing the sentence
 F1(jtimmex){F1PREFJT;A z;
  if(!w)R A0;  // if no string, return error
- if(unlikely(JT(jt,adbreak)[1])!=0)jtsystemlockaccept(jt,LOCKALL);
+ if(unlikely(JT(jt,adbreak)[1])!=0)jtsystemlockaccept(jt,LOCKALL);  // if a systemlock has been requested, accept it.
  // When we start a sentence, we need to establish AKGST in locsyms as a shadow of jt->global, because that's
  // the normal condition and u./v. will rely on it.  This is not needed for a recursive call, but it doesn't hurt either,
  // because if AKGST has been set it will already hold jt->global.  Of course, any event code must restore everything

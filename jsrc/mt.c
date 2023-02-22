@@ -243,7 +243,7 @@ C jtjsleep(J jt,UI ns){
  while(1){
   UI4 waitval=lda(&ftx);
   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);goto retime;} //systemlock can take a long time
-  if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))>1){r=EVBREAK;break;}   // ignore ATTN, but exit on BREAK
+  if(unlikely(lda(&JT(jt,adbreak)[0])>1)){r=EVBREAK;break;}   // ignore ATTN, but exit on BREAK
   I i=jfutex_waitn(&ftx,waitval|1,MIN(ns,1000000000));  // the 1 is PYXWAIT defined in ct.c - we wait for the state to move off WAIT state
    // ATTN doesn't wake us, so we have to sleep at most 1s at a time
   if(unlikely(i>0)){r=EVFACE;break;}

@@ -191,7 +191,7 @@ char* Jinput_stdio(char* prompt)
 	fputs(prompt,stdout);
 	fflush(stdout); /* windows emacs */
   }
-	if(!fgets(input, sizeof(input), stdin))
+	while(!fgets(input, sizeof(input), stdin))  // loop if there is an error.  If it's ctrl-c, read again; otherwise terminate
 	{
 #ifdef _WIN32
 		/* ctrl+c gets here for win */

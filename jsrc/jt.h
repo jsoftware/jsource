@@ -430,20 +430,20 @@ typedef JST* JS;  // shared part of struct
 
 #undef J
 #define J JJ
-#define JorJJTOJ(jj)  ((JS)((I)(jj)&-JTALIGNBDY))
+#define JorJJTOJ(jj)  ((JS)((I)(jj)&-JTALIGNBDY))  // get the JST address, given address of JST or any JTT
 #if MAXTHREADS>1  // for multithreading
-#define JJTOJ(jj) JorJJTOJ(jj)
+#define JJTOJ(jj) JorJJTOJ(jj)  // JST address from any JTT address
 #else
 #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)))
 #endif
-#define JT(p,n) (JJTOJ(p)->n)
+#define JT(p,n) (JJTOJ(p)->n)  // reference name n in the JST
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
 #define MDTHREAD(jjt) (&jjt->threaddata[jjt->promptthread])     // jt for master/debug thread.  jjt is the shared jt pointer
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
-#define NALLTHREADS(jt) (1+JT(jt,nwthreads))
+#define NALLTHREADS(jt) (1+JT(jt,nwthreads))   // total number of threads that have been activated
 #define THREADIDFORWORKER(n) ((n)+1)  // convert worker# to thread#
 // given a pointer which might be a JST* or JTT*, set pointers to use for the shared and thread regions.
 // If we were given JST*, keep it as shared & use master thread; if JTT*, keep it as thread & use shared region

@@ -85,17 +85,16 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 #define DOINSTATEA(n,expr) {while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)!=(n))YIELD expr __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL);}
 // wake all threads currently waiting on a futex.  wakea can do extraneous work; mac/linux have a way to wake just one thread.  But we want to wake up everybody anyway, so it makes not much difference
 // we increment the store counter in the futex before we wake, in case a thread has sampled the system info but not yet waited
-// jtsignal calls here when a BREAK/ATTN is seen, to wake up any thread that may be locked up
 #if PYXES
 // So that we wake each thread only once, we clear the futexwt when we wakeup.  wta is a pointer to the state of the waiting pyx, used as the futex
-void wakeall(J jt){UI4 *wta;
+static void wakeall(J jt){UI4 *wta;
  DONOUNROLL(NALLTHREADS(jt),
    __atomic_fetch_or(&JTTHREAD0(jt)[i].taskstate,TASKSTATEFUTEXWAKE,__ATOMIC_ACQ_REL);
    if((wta=lda(&JTTHREAD0(jt)[i].futexwt))!=0){sta(&JTTHREAD0(jt)[i].futexwt,0); aadd(wta,0x100); jfutex_wakea(wta);}
    __atomic_fetch_and(&JTTHREAD0(jt)[i].taskstate,~TASKSTATEFUTEXWAKE,__ATOMIC_ACQ_REL);)
 }
 #else
-void wakeall(J jt){}
+static void wakeall(J jt){}
 #endif
 
 // Take lock on the entire system, waiting till all threads acknowledge
@@ -259,14 +258,15 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   }
 // obsolete   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // process systemlock and keep waiting.  Prevent multiple wakeups to the same thread
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
-  if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))!=0){err=breakb==1?EVATTN:EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
+  if(unlikely((breakb=lda(&JT(jt,adbreak)[0])))>1){err=EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
   if(uncommon(-1ull==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
    if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;  // if time wrapped around, reset to infinite
    else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
 // obsolete scaflog(&blok->seqstate,scaf,THREADID(jt),state|PYXWAIT|4);  // scaf
 // obsolete scaflog(&blok->seqstate,0xff,THREADID(jt),lda(&blok->seqstate));  // scaf
   sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per systemlock
-  I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,ns);if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
+  I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,MIN(ns,1000000000));if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
+   // because ATTN doesn't wake tasks, we have to check for JBREAK every so often
 // obsolete scaflog(&blok->seqstate,lda(&JT(jt,systemlock)),THREADID(jt),0x80|lda(&blok->seqstate));  // scaf
  }
  // We have the value; but if someone has started a system lock, they may erroneously try to wake up our futex, which is no longer needed.  We clear the futex pointer,

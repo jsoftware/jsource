@@ -674,13 +674,15 @@ A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;
 }
 
 void _stdcall JInterrupt(JS jt){
- SETJTJM(jt,jm);
+ jt=JorJJTOJ(jt);
  // increment adbreak by 1, capping at 2
  C old=lda(&jt->adbreak[0]);
  while(1){
   if(old>=2)break;
   if(casa(&jt->adbreak[0],&old,1+old))break;}
- wakeall(jm);}
+ // There is no need to wakeup waiting threads (good thing, because jbreak.bat can't do that, and anyway the master/debug thread may already be running).  All wait loops time out to recheck break status.
+// obsolete  wakeall(jm);
+}
 
 void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
 

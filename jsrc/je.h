@@ -1007,7 +1007,7 @@ extern D        tod(void);
 extern void     va1primsetup(A);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
-extern void     wakeall(J);
+// obsolete extern void     wakeall(J);
 #if PYXES
 extern void     readlock(S*,S);
 extern void     writelock(S*,S);

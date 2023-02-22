@@ -367,8 +367,7 @@
       <OutputFile>$(outdir)\jconsole.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\$(targetname).exe %userprofile%\jbld\j64\bin\jconsole.exe
-copy $(outdir)\$(targetname).exe %userprofile%\git\jsource\jlibrary\bin\jconsole.exe
+      <Command>copy $(outdir)\$(targetname).exe  ..\..\jlibrary\bin\jconsole.exe
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -556,8 +555,7 @@ copy $(outdir)\$(targetname).exe %userprofile%\git\jsource\jlibrary\bin\jconsole
       <OutputFile>$(outdir)/jconsole.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\$(targetname).exe %userprofile%\jbld\j64\bin\jconsole.exe
-copy $(outdir)\$(targetname).exe %userprofile%\git\jsource\jlibrary\bin\jconsole.exe
+      <Command>copy $(outdir)\$(targetname).exe ..\..\jlibrary\bin\jconsole.exe
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

@@ -304,10 +304,10 @@ jobs:
      uses: vmactions/openbsd-vm@v0
      with:
       usesh: true
-      sync: sshfs
+      sync: rsync
       prepare: |
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2
+       pkg_add curl zip gmake nasm pcre2 libedit
 
       run: |
        rm -f jobdone
@@ -369,7 +369,7 @@ jobs:
       run: |
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2
+       sudo pkg_add curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1
@@ -430,7 +430,7 @@ jobs:
       run: |
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2
+       sudo pkg_add curl zip gmake gmp pcre2 libedit
        /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1
@@ -479,10 +479,10 @@ jobs:
      uses: vmactions/freebsd-vm@v0
      with:
       usesh: true
-      sync: sshfs
+      sync: rsync
       prepare: |
        rdate time.cloudflare.com || true
-       pkg install -y curl zip gmake nasm pcre2
+       pkg install -y curl zip gmake nasm pcre2 libedit
 
       run: |
        rm -f jobdone
@@ -545,7 +545,7 @@ jobs:
        rm -f jobdone
        export IGNORE_OSVERSION=yes
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
        export CC=clang
        export USE_SLEEF=1

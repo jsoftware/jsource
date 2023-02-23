@@ -304,7 +304,7 @@ jobs:
      uses: vmactions/openbsd-vm@v0
      with:
       usesh: true
-      sync: rsync
+      sync: sshfs
       prepare: |
        rdate time.cloudflare.com || true
        pkg_add curl zip gmake nasm pcre2 libedit
@@ -469,7 +469,6 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD vmactions)
-  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -479,7 +478,7 @@ jobs:
      uses: vmactions/freebsd-vm@v0
      with:
       usesh: true
-      sync: rsync
+      sync: sshfs
       prepare: |
        rdate time.cloudflare.com || true
        pkg install -y curl zip gmake nasm pcre2 libedit
@@ -528,6 +527,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -656,7 +656,7 @@ jobs:
  tests:
   name: Test Results
   runs-on: ubuntu-20.04
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jeandroid, jefreebsd2, jeopenbsd2]
+  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jeandroid, jefreebsd, jeopenbsd2]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

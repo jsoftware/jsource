@@ -316,7 +316,6 @@ void breakclose(JS jt)
 {
  if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
  __atomic_store_n(&JT(jt,breakbytes),*(US*)(JT(jt,adbreak)),__ATOMIC_RELEASE);  // copy over any pending break request, plus other breakdata
-// obsolete  *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
  if(JT(jt,adbreakr)==JT(jt,adbreak))__atomic_store_n(&JT(jt,adbreakr),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move to look at the new data - but not if attn disabled
  C *oldbreak=JT(jt,adbreak); __atomic_store_n(&JT(jt,adbreak),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move request pointer in any case
  munmap(oldbreak,1);  // don't unmap the old area until pointers have been moved
@@ -330,9 +329,6 @@ void breakclose(JS jt)
 {
  if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
  __atomic_store_n(&JT(jt,breakbytes),*(US*)(JT(jt,adbreak)),__ATOMIC_RELEASE);  // copy over any pending break request, plus other breakdata
-// obsolete  *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
-// obsolete  if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
-// obsolete  JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move attn-request pointer in any case
  if(JT(jt,adbreakr)==JT(jt,adbreak))__atomic_store_n(&JT(jt,adbreakr),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move to look at the new data - but not if attn disabled
  C *oldbreak=JT(jt,adbreak); __atomic_store_n(&JT(jt,adbreak),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move request pointer in any case
  UnmapViewOfFile(oldbreak); // don't unmap the old area until pointers have been moved
@@ -679,7 +675,6 @@ void _stdcall JInterrupt(JS jt){
   if(old>=2)break;
   if(casa(&jt->adbreak[0],&old,1+old))break;}
  // There is no need to wakeup waiting threads (good thing, because jbreak.bat can't do that, and anyway the master/debug thread may already be running).  All wait loops time out to recheck break status.
-// obsolete  wakeall(jm);
 }
 
 void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
@@ -830,7 +825,6 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  IJT(jt,breakfh)=fh;
  IJT(jt,breakmh)=mh;
  __atomic_store_n((US*)ad,*(US*)IJT(jt,adbreak),__ATOMIC_RELEASE);  // copy breakstatus from current setting
-// obsolete  *(US*)ad==*(US*)IJT(jt,adbreak);  // copy breakstatus from current setting
  if(IJT(jt,adbreakr)==IJT(jt,adbreak))IJT(jt,adbreakr)=ad;  // move attn-read pointer, unless interrupts disabled
  IJT(jt,adbreak)=ad;  // start using the mapped area
  R mtm;

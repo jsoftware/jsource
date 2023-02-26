@@ -89,7 +89,6 @@ AHDR1(absI,D,D){
 
 #else
 static AMONPS(sqrtD,  D,D, I ret=EVOK; , if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
-// obsolete static AMONPS(absI,   I,I, UI vtot=0; , UI val=*(UI*)x; val=(val^(UI)REPSGN(val))-(UI)REPSGN(val); vtot |= val; *z=(I)val; , R (I)vtot<0?EWOV:EVOK;)
 static AMONPS(absI,   I,I, UI vtot=0; , UI val=*(UI*)x; I nval=(I)((0U-val)); val=nval>0?nval:val; vtot |= val; *z=(I)val; , R (I)vtot<0?EWOV:EVOK;)
 #if BW==64
 static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)

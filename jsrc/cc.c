@@ -571,7 +571,6 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
-// obsolete  PREF2(jtcut2);  // this whole routine runs with left rank 1
  F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _.  Right rank always _.  For the monad, mark has rank 0
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else
@@ -599,7 +598,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  if(FAV(fs)->mr>=r){
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
   state |= ((FAV(fs)->flag2>>(issldotdot*(VF2BOXATOP2X-VF2BOXATOP1X)))&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Remember <@ . Don't touch fs yet, since we might not loop
-// obsolete   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  }
  AF f1=FAV(fs)->valencefns[issldotdot];  // point to the action routine now that we have handled gerunds
@@ -1046,7 +1044,6 @@ static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
 #define STATETAKE 0x1000  // subarray must be shortened at the end
 static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
  PROLOG(600);
-// obsolete PREF2(jttess2);   // enforce left rank 2
  F2RANK(2,RMAX,jttess2,self)
 #define ZZFLAGWORD state
  I state;
@@ -1338,7 +1335,6 @@ success:;
 DF1(jtboxcutm21){
  if(AR(w)!=1||!(AT(w)&LIT)||AN(w)<=65536)R jtcut1(jt,w,self);
  F1PREFIP;PROLOG(0026);
-// obsolete  PREF1(jtboxcutm21);
 #if 1
  I nchunk=(AN(w)+65535)/65536; //try out 64k chunks for now
  I incfretp=1-(FAV(self)->localuse.lu1.gercut.cutn>>31), incfretm=-1+incfretp;
@@ -1395,7 +1391,6 @@ F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
  switch(k){
  case 0:          if(FAV(a)->id==CBOX){   // <;.0
   fdeffillall(z,0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,FAV(z)->localuse.boxcut0.parm=~0, FAV(z)->localuse.boxcut0.func=jtcut02);
-// obsolete   FAV(z)->localuse.boxcut0.parm=~0; FAV(z)->localuse.boxcut0.func=jtcut02;  // store parms to specify start/len format
   R z;
   }
   fdeffillall(z,0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
@@ -1403,8 +1398,6 @@ F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
 #if 0 && C_AVX2 && PYXES //temp. disabled; broken scaf
  if(FAV(a)->id==CBOX){ //<;._2
   fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
-// obsolete   FAV(z)->localuse.lu1.gercut.cutn=k;
-// obsolete   R z;
  }
 #endif
 // fall through to...
@@ -1412,7 +1405,4 @@ F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
  case 3: case -3: case 259: case -259: fdeffillall(z,0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  default:         ASSERT(0,EVDOMAIN);
  }
-// obsolete  RZ(z);
-// obsolete  FAV(z)->localuse.lu1.gercut.cutn=k;  // remember the integer form of the cut selector  This is saved for all cases EXCEPT jtboxcut0.  0-cut will not look at it
-// obsolete  R z;
 }

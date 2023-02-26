@@ -48,7 +48,6 @@ static DF2(jtbdot2){R from(plusA(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]
 static DF1(jtbdot1){R bdot2(num(0),w,self);}
 
 static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
-// obsolete  PREF1(jtbasis1);
  F1RANK(0,jtbasis1,self);
  RZ(w=vi(w));
  switch(AV(w)[0]){
@@ -67,7 +66,6 @@ F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
  ARGCHK1(w);
  A z; fdefallo(z)
  if(VERB&AT(w)){fdeffill(z,0,CBDOT,VERB,(AF)(jtbasis1),jtvalenceerr,w,0L,0L,VFLAGNONE,0,0,0) RETF(z);}
-// obsolete R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}

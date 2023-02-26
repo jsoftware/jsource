@@ -156,7 +156,6 @@ AHDR2(powDD,D,D,D) {D v;
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
    if(v==0){DQ(n, *z++=1.0;) x+=n;}
-// obsolete    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
     AVXATOMLOOP(1,  // build result in u, which is also the input

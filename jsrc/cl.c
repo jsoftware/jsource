@@ -124,7 +124,6 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to ra() the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
  x=levs2(a,w,recurself);
-// obsolete  if(x){AT(AKASA(recurself))=BOX; AN(AKASA(recurself))=AS(AKASA(recurself))[0]; z=ope(AKASA(recurself)); AT(AKASA(recurself))=INT;} // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
  if(x){
   x=AKASA(recurself); AT(x)=BOX; AN(x)=AS(x)[0]; z=jtopenforassembly(jt,x); AT(x)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
  }

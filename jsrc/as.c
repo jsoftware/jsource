@@ -221,7 +221,6 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
 
  // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
  // Without WILLBEOPENED, there is no need to set COUNTITEMS
-// obsolete  state |= (-state) & (I)jtinplace & JTCOUNTITEMS; // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
  // Allocate virtual block for the running x argument.  UNINCORPABLE.
@@ -348,7 +347,6 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
 }
 
 static DF2(jtoutfix){F2PREFIP;PROLOG(117);DECLF ;A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
-// obsolete PREF2(jtoutfix);
 
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANKW(0,RMAX,jtofxinv,self);
@@ -397,7 +395,6 @@ F1(jtbsdot){F1PREFIP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag
  ARGCHK1(w);
  A z; fdefallo(z)
  if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|VAV(ds(CBSDOT))->flag, RMAX,0L,RMAX); RETF(z);}
-// obsolete  if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); R fdef(0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|VAV(ds(BSDOT))->flag, RMAX,0L,RMAX);}
  v=FAV(w);  // verb info for w
  switch(v->id){
  default: break;
@@ -411,11 +408,9 @@ F1(jtbsdot){F1PREFIP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag
   {CCMWDS(xassoc) CCMCAND(xassoc,cand,id) f2=CCMTST(cand,id)?jtofxassoc:f2;}
   break;
  }
-// obsolete  RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
  fdeffillall(z,0,CBSDOT,VERB,f1,f2,w,0L,0L,flag,RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .
  RETF(z);
  // Fill in the lvp[1] field: with 0 if not f/\.; with the lookup field for f/ if f/\. .
-// obsolete  FAV(f)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0;   // f is nonnull if f/\ .
  R f;
 }

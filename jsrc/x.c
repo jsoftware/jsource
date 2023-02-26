@@ -11,15 +11,6 @@
 #include "j.h"
 #include "x.h"
 
-// obsolete #define SDERIV(id,f1,f2,flag,m,l,r)  \
-// obsolete  fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr),(I)(f2?(AF)f2:jtvalenceerr)),(flag),(I)m,(I)l,(I)r)
-// obsolete 
-// obsolete #define SDERI2(id,f1,f2,flag,m,l,r)  \
-// obsolete  fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?(AF)f1:jtvalenceerr),(I)(f2?(AF)f2:jtvalenceerr)),(flag),(I)m,(I)l,(I)r)
-// obsolete 
-// obsolete 
-// obsolete static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL1IP((AF)AV(h)[0],  w,self);}
-// obsolete static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECURE); R CALL2IP((AF)AV(h)[1],a,w,self);}
 
 // undocumented 13!: functions, used to test condrange
 static DF2(jtfindrange){

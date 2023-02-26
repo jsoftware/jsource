@@ -250,8 +250,6 @@ B jtmeminitt(JJ jt){I k;
 #else
 #define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefL:0)
 #endif
-// obsolete #pragma clang diagnostic push
-// obsolete #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 // your code for which the warning gets suppressed 
 void jtauditmemchains(J jt){
 #if MEMAUDIT&0x30
@@ -261,7 +259,6 @@ void jtauditmemchains(J jt){
 }
 #endif
 }
-// obsolete #pragma clang diagnostic pop
 // 13!:23  check the memory free list, a la auditmemchains()
 // return error info, a 2-atom list where
 //  atom 0 is return code 0=OK 1=pool number corrupted 2=header corrupted 3=usecount corrupted (valid only if MEMAUDIT&0x4) 4=loop in chain 
@@ -538,11 +535,6 @@ static void auditsimverify0(J jt,A w){
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
   if((AT(w)&(RAT|XNUM|BOX|SPARSE))>0) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt, unlikely(AT(w)&XNUM+RAT) ?*v :CNULLNOERR(QCWORD(*v))); ++v;)}  // check descendants even if nonrecursive
   if((AT(w)&BOX+SPARSE)>0){
-// obsolete    I n=AN(w); I af=AFLAG(w);
-// obsolete    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-// obsolete    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; otherwise wv[] is a direct pointer
-// obsolete    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
-// obsolete    DO(n, auditsimverify0(jt,(A)(intptr_t)((I)CNULLNOERR(QCWORD(wv[i]))+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimverify0(jt,v->fgh[0]); auditsimverify0(jt,v->fgh[1]); auditsimverify0(jt,v->fgh[2]);
   }else if(AT(w)&(RAT|XNUM)) {
@@ -1184,7 +1176,6 @@ void jttpop(J jt,A *old){A *endingtpushp;
        // NOTE: a sparse recursive would cause trouble, because the sparseness is not in the flag and we would have to test the type as well.  To avoid this,
        // we make sure no such block is created in sprz()
      }
-// obsolete else ACDECRNOPERM(np)  // scaf must test for going to 0 here
     }
    }
    np=np0;  // Advance to next block

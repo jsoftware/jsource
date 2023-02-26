@@ -276,7 +276,6 @@ typedef struct JSTstruct {
  S systemlocktct;   // counter field, used for systemlock sync, # running tasks
  S systemlockthreadct;  // for system lock, total # threads active
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
-// obsolete  //void *heap;            // heap handle for large allocations
  I mmax;             // space allocation limit could be float or short float
  A stloc;            // named locales symbol table - this pointer never changes
  A *zpath;         // path 'z', used for all initial paths
@@ -329,7 +328,6 @@ typedef struct JSTstruct {
  B assert;           // 1 iff evaluate assert. statements     
 // 1 byte free
  // rest of cacheline used only in exceptional paths
-// obsolete  UC wakeallct;  // number of calls to wakeall in process (can't be more than 2)
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
  I filler3[3];

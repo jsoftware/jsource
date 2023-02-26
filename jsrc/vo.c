@@ -638,7 +638,6 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
 F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
  ARGCHK1(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
-// obsolete  if(!n)R mtv;   // if empty operand, return boolean empty
  if(unlikely(!(BOX&AT(w))))R n?ravel(w):mtv;   // if not boxed, just return ,w (but $0 if empty)
  if(unlikely(n<=1)){if(!n)R mtv; z=C(*v); PRISTCLRF(w) R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
  // If there is more than 1 box w can remain pristine, because the (necessarily DIRECT) contents are copied to a new block

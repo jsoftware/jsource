@@ -274,8 +274,6 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  GA0(q,INT,16*MAXTHREADS,1) INITJT(jjt,emptylocale)=(I(*)[MAXTHREADS][16])((I*)q+8-3);   //  this mangles the header; OK since the block will never be freed
  DONOUNROLL(MAXTHREADS, A ei=(A)&((I*)q)[16*i+8-3]; MC(ei,emptyloc,(8+3)*SZI); AM(ei)=(I)ei;)
  jt->locsyms=(A)(*INITJT(jjt,emptylocale))[0];  // init jt->locsyms for master thread to the emptylocale for the master thread.  jt->locsyms in other threads must be initialized for each user task
-// obsolete  // Go back and fix the path for z locale to be empty
-// obsolete  GAT0(q,BOX,1,1); ACX(q); LOCPATH(zloc)=q;   // make z locale have no path, and make that path permanent.  The path is one 0 value at end of boxed list 
  R 1;
 }
 
@@ -431,11 +429,8 @@ DF1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self); ASS
  A *gp=LOCPATH(g);  // the path for the current locale.  It must be non0 normally, but if another deleted the locale while we are running it might be 0
  if(gp==0)RETF(mtv)   // if locale has been deleted, return something
  I npath; for(npath=0;*gp;--gp,++npath);  // npath is # names in path
-// obsolete  GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV1(g);  // allocate result, point to input & output areas
  GATV0(z,BOX,npath,1); AFLAGINIT(z,BOX) A *zv=AAV1(z); gp+=npath;  // allocate result, point to input & output areas
-// obsolete  DO(AN(g), if(*gv){A gg=sfn(0,LOCNAME(C(*gv))); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator
  DO(npath, A t; RZ(t=sfn(0,LOCNAME(C(*gp)))); ACINITZAP(t); *zv++=t; --gp;)  // move strings except for the null terminator
-// obsolete  AN(z)=AS(z)[0]=npath;
  RETF(z); 
 }
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored, and must incorporate it
@@ -463,7 +458,6 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
   DO(AN(a), AK(locatom)-=SZI; RZ(h=locale(1,locatom)); if(likely(h!=g)){*++xv=h; ra(h);}) AN(x)=(xv-AAV1(x))+1;  // move locales for the names into the recursive path, but don't allow a locale in its own path
  }
  // xv points to end of path
-// obsolete  *xv=0;  // terminate locale list with null.
  // We have the new path in x, and we can switch to it, but we have to call a system lock before we free the old path, to purge the old one from the system
  // This really sucks, but the alternative is to hold a lock on the path during the entire time the path is in use, which is worse.  better to
  // have a per-thread RFO flag indicating 'path in use', and wait here till all threads have been seen with that off
@@ -471,7 +465,6 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
  // we move the path pointer but we don't have the free anything, so we need no systemlock.  The test and exchange must be under a lock (which one isn't important,
  // because this is the only place that stores a non-PERMANENT path that might get freed) to avoid ABA trouble.  We still have to use exchange to set the path because
  // a deleting thread may be installing 0 or zpath
-// obsolete  WRITELOCK(JT(jt,locdellock)) A oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=x; WRITEUNLOCK(JT(jt,locdellock))  // use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
 #if 0 // obsolete
  WRITELOCK(JT(jt,locdellock)) A *oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=xv; WRITEUNLOCK(JT(jt,locdellock))  // use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
  while(*oldpath)--oldpath; A op=UNvoidAV1(oldpath); if(!ACISPERM(AC(op))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}  // if the old path is not PERMANENT, wait for a lock before freeing
@@ -504,8 +497,6 @@ noextend: ;
  if(op!=0 && oldpath!=(A*)__atomic_exchange_n(&LOCPATH(g),xv,__ATOMIC_ACQ_REL))op=0;  // if path changed, suppress free below
  WRITEUNLOCK(JT(jt,locdellock))  // mustn't hold a lock when we call for systemlock
  if(op!=0){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}
-// obsolete  A *oldpath=LOCPATH(g); ACINITZAP(x); LOCPATH(g)=xv;   // use cas switch paths in a critical region.  Transfer ownership to LOCPATH(g) now that no error possible
-// obsolete while(*oldpath)--oldpath; A op=UNvoidAV1(oldpath); if(!ACISPERM(AC(op))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}  // if the old path is not PERMANENT, wait for a lock before freeing
 #endif
  R mtm;
 }    /* 18!:2  set locale path */
@@ -645,7 +636,6 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-// obsolete    ASSERTSYS(!(LXAV0(g)[SYMLEXECCT]&(EXECCTNOTDELD>>1)),"execct has gone < 0")  //  remove for release
    DELEXECCT(g)  // say that the user doesn't want this locale any more.  Paths etc. still might.
   }
  }
@@ -665,7 +655,6 @@ B jtlocdestroy(J jt,A g){
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
  freesymb(jt,g);   // delete all the names.  Anything executing will have been fa()d
-// obsolete  fa(path);   // delete the path too.  block is recursive; must fa() to free sublevels
  while(*path)--path; fa(UNvoidAV1(path))   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  LOCBLOOM(g)=0;

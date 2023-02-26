@@ -27,10 +27,6 @@
 // next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP and lower than all recursible type-flags
 #define ZZFLAGWILLBEOPENEDX 4  // the result will be unboxed by the next primitive, so we can leave virtual blocks in it, as long as they aren't ones we will modify.  Requires BOXATOP also.
 #define ZZFLAGWILLBEOPENED (((I)1)<<ZZFLAGWILLBEOPENEDX)
-// obsolete #define ZZFLAGHASUNBOXX BOXX  // result contains a nonempty non-box (this must equal BOX)
-// obsolete #define ZZFLAGHASUNBOX (((I)1)<<ZZFLAGHASUNBOXX)
-// obsolete #define ZZFLAGHASBOXX (ZZFLAGHASUNBOXX+1)  // result contains a nonempty box (must be one bit above FLAGHASUNBOX)
-// obsolete #define ZZFLAGHASBOX (((I)1)<<ZZFLAGHASBOXX)
 // next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP, and spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define ZZFLAGCOUNTITEMSX 7  // RA should count the items and verify they are homogeneous (the next primitive is ;)
 #define ZZFLAGCOUNTITEMS (((I)1)<<ZZFLAGCOUNTITEMSX)
@@ -127,12 +123,6 @@ do{
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&zzzaflag)|~ZZFLAGPRISTINE;
    // first check the shape
    I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzframelen; I zexprank=zzr-zzframelen;
-// obsolete    // The main result must be recursive if boxed, because it has to get through EPILOG.  To avoid having to pass through the result issuing
-// obsolete    // ra() on the elements, we ra() each one as it comes along, while we have it in cache.  This leads to some fancy footwork at the end,
-// obsolete    // if we have to transfer the boxes from zz to a different output block: we want to avoid having to do usecount work then.  To assist
-// obsolete    // this, we want to be able to know that a result that contains boxes contains ONLY boxes - that way we know there will be no
-// obsolete    // conversion and no possible error during assembly.  We keep 2 flag bits to indicate the presence of boxed/nonboxed
-// obsolete    I zzbxm = (zt&BOX)+ZZFLAGHASUNBOX; zzbxm=AN(z)?zzbxm:0; ZZFLAGWORD |= zzbxm;  // accumulate error mask
      // change in rank/shape: a wreck, fail
    zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
    DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
@@ -374,7 +364,6 @@ do{
   RETF(zz);
  }
 
-// obsolete  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail
  if(ZZFLAGWORD&ZZFLAGBOXALLO){
   RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzframelen,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
  }else if(unlikely(0)){

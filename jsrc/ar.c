@@ -1016,7 +1016,6 @@ F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;I flag=0;
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
  fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull);
  // set localuse to point to the VARPSA block for w if w is atomic dyad; otherwise to the null VARPSA block
-// obsolete  FAV(h)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull;
  R z;
 }
 

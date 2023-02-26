@@ -390,7 +390,6 @@
 #define fauxvirtual(z,v,w,r,c) {if(likely((r)<=4)){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); \
                               AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); ACFAUX(z,(c))} \
                               else{RZ(z=virtual((w),0,(r))); AFLAGORLOCAL(z,AFUNINCORPABLE) if((c)!=ACUC1)ACINIT(z,(c))} }
-// obsolete #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 // for function definition we don't call a subroutine, because that results in pushing all the arguments, popping them, and storing them back.
 // furthermore, we do better to allocate the block early, before the fill has been calculated so that (1) values can be dropped in as they are calculated (2) there is no
 // register-destroying subroutine call at the end of the function using fdef
@@ -428,7 +427,6 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 // x is locale number, result is address of symbol table, or 0 if nonexistent locale
 // only for non-reuse #define findnlz(x,z)                {if((UI)(n)>=jt->numlocsize)z=0; else {z=(A)(jt->numloctbl[n]); z=((UI)((I*)z-jt->numloctbl)<jt->numlocsize)?0:z;}}
 #define fit(x,y)                    jtfit(jt,(x),(y))
-// obsolete #define fitct(x,y,n)                jtfitct(jt,(x),(y),(n)) 
 #define fix(x,y)                    jtfix(jt,(x),(y))
 #define fixa(x,y)                   jtfixa(jt,(x),(y))
 #define fixrecursive(x,y)           jtfixrecursive(jt,(x),(y))

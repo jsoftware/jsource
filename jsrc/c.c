@@ -13,7 +13,6 @@ static DF2(obv2){PREF2(obv2cell); R obv2cell(jt,a,w,self);}
 
 // Set ASGSAFE from a&w; set INPLACE from a
 F2(jtobverse){F2PREFIP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VJTFLGOK1|VJTFLGOK2))),mr(a),lr(a),rr(a));}
-// obsolete  CDERIV(COBVERSE,obv1,obv2,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VJTFLGOK1|VJTFLGOK2))),mr(a),lr(a),rr(a));}
 
 // Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun)
 static DF1(ad1){DECLFG;A z;
@@ -36,5 +35,4 @@ static DF2(ad2){DECLFG;A z;
 
 // Set ASGSAFE from operands.  Noun operand is always safe
 F2(jtadverse){F2PREFIP;ASSERTVVn(a,w); R fdef(0L,CADVERSE,VERB,ad1,ad2,a,w ,0L,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
-// obsolete  CDERIV(CADVERSE,ad1,ad2,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
 

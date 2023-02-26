@@ -583,7 +583,6 @@ F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;PROLOG(889);
  if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
  else mvc(m*SZI,x,1,MEMSET00);
  EPILOG(z);
-// obsolete  RETF(z);
 }
 
 F2(jtbase2){I ar,at,c,t,wr,wt;PROLOG(888);

@@ -759,7 +759,6 @@ RECURSIVERESULTSCHECK
         jteformat(jt,jt->parserstackframe.sf,QCWORD(stack[(pmask+1)&3].a),QCWORD(pmask&4?stack[3].a:0),0);
         FP
        }
-// obsolete       FPZ(y);
 #if AUDITEXECRESULTS
        auditblock(jt,y,1,1);
 #endif
@@ -869,7 +868,6 @@ RECURSIVERESULTSCHECK
         jteformat(jt,fs,QCWORD(stack[1].a),QCWORD(pmask&2?stack[3].a:0),0);
         FP
        }
-// obsolete        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
 #if AUDITEXECRESULTS
        auditblock(jt,yy,1,1);
 #endif
@@ -906,15 +904,6 @@ RECURSIVERESULTSCHECK
        auditmemchains();
 #endif
        CLEARZOMBIE   // in case assignsym was set, clear it until next use
-// obsolete        if(unlikely(rc==0))FP  // fail parse if error.
-// obsolete {
-// obsolete         // except for catastrophic errors, the only things that can happen in an assignment are domain (assignment to global when local is defined) and agreement (multiple assignment)
-// obsolete         // The agreement is self-explanatory, but we put out a message for the domain error, provided it is an assignment to a valid non-locative
-// obsolete         A assignand=QCWORD(stack[0].a);
-// obsolete         if(jt->jerr==EVDOMAIN && GETSTACK0PT&PTNAME0 && !(NAV(assignand)->flag&NMLOC+NMILOC+NMIMPLOC))
-// obsolete jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);
-// obsolete         FP
-// obsolete        }
        FPZ(rc)  // fail if error.  
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.

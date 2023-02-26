@@ -118,7 +118,6 @@ B jteqnx(J,I,X*,X*),jteqnq(J,I,Q*,Q*),jteqa(J,I,A*,A*);
 // Hash a single INT-sized atom
 #define hici1(x) CRC32L(-1LL,*(x))
 
-// obsolete #define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
 #define RETCRC3 R CRC32L(crc0,(UI)rol32(crc1,9)+((UI)rol32(crc2,21)<<32))
 
 // Hash an INT list

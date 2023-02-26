@@ -815,7 +815,6 @@ static A jtsent12c(J jt,A w,I userm){C*p,*q,*r,*s,*x;A z;
  ASSERT(!AN(w)||LIT&AT(w),EVDOMAIN);
  ASSERT(2>=AR(w),EVRANK);
  if(AR(w)>1)R rank1ex(w,DUMMYSELF,1,jtboxddline); // table, just box lines individually after checking for {{ }} (which come when we have an AR)
-// obsolete  IRS1(w,0L,1,jtbox,z); 
 
  // otherwise we have a single string.  Could be from 9 : string.  If not, scan it for {{ }}
  if(userm!=9){RZ(w=ddtokens(w,0b1110))}  // scan for {{ }}.  Don't allow calling for another line, and return result as string

@@ -112,7 +112,6 @@ PRIM jtfxself[2]={
 DF1(jtfxeach){RETF(every(w,self));}
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
-// obsolete  PREF1(jtcon1);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(C(*hv))->valencefns[0],  w,C(*hv)))); ++hv;);
@@ -120,7 +119,6 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
 }
 
 static DF2(jtcon2){A h,*hv,*x,z;V*sv;
-// obsolete  PREF2(jtcon2);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(C(*hv))->valencefns[1],a,w,C(*hv)))); ++hv;);
@@ -170,7 +168,6 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
  vres=FAV(self)->fgh[1];   // temp: verb to execute
-// obsolete RZ(vres=(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jt,a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
  RZ(vres=CALL2(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX],a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
  // Now vres is the array of selectors into the gerund.  There should be one for each cell of the input.  Check that
  // The rank of the result must be no more than the larger rank

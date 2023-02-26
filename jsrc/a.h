@@ -37,7 +37,6 @@
 #define PREF2IP(f)      {I l=lr(self),r=rr(self); F2RANKIP(l,r,f,self);}
 
 
-// obsolete #define ADERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),w,0L,0L,(flag),(I)(m),(I)(l),(I)(r))
 #define CDERIVF(id,f1,f2,flag,flag2,m,l,r)  fdef(flag2,id,VERB,(f1)?(AF)(f1):(AF)jtvalenceerr,(f2)?(AF)(f2):(AF)jtvalenceerr,a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))
 #define CDERIV(id,f1,f2,flag,m,l,r)  CDERIVF(id,f1,f2,flag,0,m,l,r)
 

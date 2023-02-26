@@ -220,7 +220,6 @@ static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible mon
 
 // old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
 DF2(jtply2){PROLOG(107);DECLFG;A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
-// obsolete  PREF2(jtply2);
 
 
 static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
@@ -248,7 +247,6 @@ else{RESETERR; RZ(u = powop(fs,u,(A)1));
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);
 }
-// obsolete static DF1(fjtpowv1){PREF1(jtpowv1cell); R jtpowv1cell(jt,w,self);}
 // here for x u^:v y 
 static DF2(jtpowv2cell){F2PREFIP;DECLFG;A z;PROLOG(0109);
 A u; A v; RZ(u=CALL2(g2,a,w,gs));  /* execute v */
@@ -256,7 +254,6 @@ if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[1])
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
 z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);}
 EPILOG(z);}
-// obsolete static DF2(jtpowv2){PREF2(jtpowv2cell); R jtpowv2cell(jt,a,w,self);}
 // here for x u@:]^:v y and x u@]^:v y
 static DF2(jtpowv2acell){F2PREFIP;DECLFG;A z;PROLOG(0110);
 jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */
@@ -265,7 +262,6 @@ if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);}
-// obsolete static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
 // contains verb v or gerund v, it executes v on the xy arguments and then calls jtpowop
@@ -284,7 +280,6 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
   // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
   fdeffill(z,0L,CPOWOP,VERB,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,a,w,0L,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX)
   RETF(z);
-// obsolete   R CDERIV(CPOWOP,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
  }
  // u^:n.  Check for special types.
  if(BOX&AT(w)){A x,y;AF f1,f2;
@@ -299,7 +294,6 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
    }
    fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)
    RETF(z);
-// obsolete    R CDERIV(CPOWOP,f1,f2,VFLAGNONE, RMAX,RMAX,RMAX);  // create the derived verb for <n
   }
 //    ASSERT(self!=0,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
   R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2

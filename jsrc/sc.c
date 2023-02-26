@@ -161,7 +161,6 @@ DF2(jtunquote){A z;
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
-// obsolete   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
   if(unlikely(z==0)){jteformat(jt,fs,a,w,0);}  // make this a format point
  } else {
   // Extra processing is required.  Check each option individually

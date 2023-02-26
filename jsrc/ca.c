@@ -163,9 +163,6 @@ DF2(atcomp){A z;AF f;
 F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
  av=FAV(a); c=av->id;
-// obsolete  if (av->fgh[0]) {
-// obsolete   A f= av->fgh[0];
-// obsolete  }
  A z; fdefallo(z)
  if(unlikely((AT(w)&NOUN)!=0)){  // u@n
   if(c==CEXEC){  // ".@n
@@ -183,7 +180,6 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the  // monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-// obsolete   flag2|=(av->flag2&VF2BOXATOP1)*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + (av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
   fdeffill(z,flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
@@ -263,7 +259,6 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==0?jton10:f1; f1=wv->flag&VISATOMIC1?jton10atom:f1; f1=wv->mr==RMAX?on1cell:f1;}
  if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==0?jtupon20:f2; f2=wv->flag&VISATOMIC2?jtupon20atom:f2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2;}
  fdeffillall(z,flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct); R z;
-// obsolete   RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
 }
 
 // u@:v
@@ -346,7 +341,6 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
  flag2|=(wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1PROPX));
 
  fdeffillall(z,flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct); R z;
-// obsolete  RZ(z); ; R z;
 }
 
 // u&:v
@@ -378,7 +372,6 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
  fdeffillall(z,flag2,CAMPCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype) R z;
-// obsolete  FAV(z)->localuse.lu1.linkvb=linktype; R z;
 }
 
 // m&v and u&n.  Never inplace the noun argument, since the verb may
@@ -398,18 +391,6 @@ static DF1(ixfixedright){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexof
 
 static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
-// obsolete // a is a noun block that is going into a derived entity.  We flag it so that it cannot be modified by in-place assignment.
-// obsolete A makenounasgsafe(J jt, A w){
-// obsolete  // if w is virtual, realize it
-// obsolete  INCORP(w);
-// obsolete  // if w if PERMANENT or NJA, or if usecount is not exactly 1, it's OK: either the value can't present for inplacing or it will be rejected because of usecount.
-// obsolete  if((AC(w)|REPSGN(SGNIF(AC(w),ACPERMANENTX)))!=ACUC1||AFLAG(w)&AFNJA){ACIPNO(w); R w;}
-// obsolete  // the ambiguous case is usecount=1.  This might be an assigned name, and there might or might not be other outstanding references to the name.  We trickily
-// obsolete  // knock the usecount off 1 by ra()ing the value and also tpushing it: no net change to the usecount, but the value will be non-inplaceable permanently
-// obsolete  // this trick will cover the usecount up until the derived entity is deleted or saved; after that it is OK on its own
-// obsolete  ra(w); tpush(w); R w;  // raise usecount (making recursive), then tpush
-// obsolete }
-// obsolete 
 // u&v
 F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
  ARGCHK2(a,w);
@@ -420,7 +401,6 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   f1=withl; v=FAV(w); c=v->id;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
   flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-// obsolete   RZ(a=makenounasgsafe(jt, a))   // adjust usecount so that the value cannot be inplaced
   // a will be INCORPed by fdef
 
   if((-AN(a)&-AR(a))<0){  // a is not atomic and not empty
@@ -443,7 +423,6 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
   flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
   // w will be INCORPed by fdef
-// obsolete   RZ(w=makenounasgsafe(jt, w))   // adjust usecount so that the value cannot be inplaced
   if((-AN(w)&-AR(w))<0){
     // 
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n

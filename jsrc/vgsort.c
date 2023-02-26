@@ -57,7 +57,6 @@ static const US orderfromcomp5[1024] = {
 
 // Comparison functions.  Do one comparison before the loop for a fast exit if it differs.
 // On VS this sequence, where a single byte is returned, creates a CMP/JE/SETL sequence, performing only one (fused) compare
-// obsolete // #define COMPGRADE(T,t) T av=*a, bv=*b; if(av!=bv) R av t bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av t bv;} R a<b;
 #define COMPGRADE(T,t) do{T av=*a, bv=*b; if(av!=bv) R av t bv; if(!--n)break; ++a; ++b;}while(1); R 1;
 static __forceinline B compiu(I n, I *a, I *b){COMPGRADE(I,<)}
 static __forceinline B compid(I n, I *a, I *b){COMPGRADE(I,>)}
@@ -282,7 +281,6 @@ static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
   lzn=lzn*709-1006633;  // 0.0108333 2^.x - 0.06, binary point at 24
   nrange=16777216/lzn;  // 1/lzn, binary point back to 0
  }else{nrange=n<=1023?25:2;}  // for small or large, use limit.  On the high end we don't want to run out of memory
-// obsolete  I nrange=(n>=800)+(n>=50000)+(n>=600000)+(n>=1000000);  // TUNE
  CR rng = condrange(wv,AN(w),IMAX,IMIN,n*nrange); // see if smallrange allowed
  // smallrange always wins if applicable
  if(!rng.range){  // range was too large

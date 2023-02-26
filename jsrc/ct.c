@@ -77,8 +77,6 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
   if(l)while(__atomic_load_n(&JT(jt,systemlocktct),__ATOMIC_ACQUIRE)!=0){wtact YIELD} else __atomic_fetch_sub(&JT(jt,systemlocktct),1,__ATOMIC_ACQ_REL); \
  }
 
-// obsolete static I scaflogarea[256][2]; C scafndx=0;
-// obsolete static void scaflog(UI4 *wta,I systemlock,I threadid, I state){I ndx=__atomic_fetch_add(&scafndx,1,__ATOMIC_ACQ_REL); scaflogarea[ndx][0]=(I)wta; scaflogarea[ndx][1]=(systemlock<<48)|(threadid<<32)|state;}
 
 
 // Similar function, for systemlockaccept
@@ -104,27 +102,23 @@ static void wakeall(J jt){}
 // whether the thread ran the function: in the thread that ran the function, value/error from lockedfunction is passed through;
 // in other threads, 1 is returned always with no error signaled
 A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
-// obsolete scaflog((UI4*)priority,JT(jt,systemlock),THREADID(jt),0x44);
  // If the system is already in systemlock, the system is essentially single-threaded.  Just execute the user's function.
  // This would happen if a sentence executed in debug suspension needed symbols, or had an error
  if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2){R (*lockedfunction)(jt);}
  // Process the request.  We don't know what the highest-priority request is until we have heard from all the
  // threads.  Thus, it is possible that our request will still be pending whe we finish.  In that case, loop till it is satisfied
  while(priority!=0){
-// obsolete scaflog((UI4*)priority,JT(jt,systemlock),THREADID(jt),0x45);
   // go to state 1; set leader if we are the first to do so
   I leader=__atomic_compare_exchange_n(&JT(jt,systemlock), &(S){0}, (S)1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);
   I nrunning=0; JTT *jjbase=JTTHREAD0(jt);  // #running threads, base of thread blocks
   // In the leader task only, go through all tasks (including master), turning on the SYSLOCK task flag in each thread.  Count how many are running after the flag is set
   // Also, wake up all tasks that are in a loop that needs interrupting on system action.  Those loops will honor it when we are in state 1/2
-// obsolete scaflog((UI4*)leader,JT(jt,systemlock),THREADID(jt),0x46);
   // We take a lock on the thread info to ensure a thread is not added while we are counting
   I nlocked;  // in the leader and executor, the number of threads that were found when we started
   if(leader){WRITELOCK(JT(jt,flock)) DONOUNROLL(nlocked=NALLTHREADS(jt), nrunning+=(__atomic_fetch_or(&jjbase[i].taskstate,TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL)>>TASKSTATERUNNINGX)&1;) WRITEUNLOCK(JT(jt,flock))}
   // state 2: lock requesters indicate request priority and we wait for all tasks to come to a stop.  We wake all threads that are waiting on pyx/mutex, which is harder
   // than it sounds: we don't know immediately whether a thread has gone to wait, because there may be delay in our seeing the futexwt.  We repeatedly wake up the waiting threads until
   // all the active ones have entered systemlock
-// obsolete scaflog((UI4*)leader,JT(jt,systemlock),THREADID(jt),0x47);
   C oldpriority; DOINSTATE(leader,2,oldpriority=__atomic_fetch_or(&JT(jt,adbreak)[1],priority,__ATOMIC_ACQ_REL);,wakeall(jt);)  // remember priority before we made our request
   // state 3: all threads get the final request priorities
   C finalpriority; DOINSTATE(leader,3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);,)
@@ -157,7 +151,6 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
    z=(A)1;  // just use a value of 1 to indicate we were not the executing thread.  The real z goes to the executor
    // NOTE that a non-executor thread here does not use the error status
   }
-// obsolete scaflog((UI4*)executor,JT(jt,systemlock),THREADID(jt),0x48);
   priority&=~winningpri;  // if our request was serviced, remove it, regardless of who serviced it
  }
  // here a request was processed at the level we requested.  We have the value to return; error
@@ -170,7 +163,6 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
 // Result is 0 if the lock processing failed
 I jtsystemlockaccept(J jt, I priority){
  do{C finalpriority; C res;
-// obsolete scaflog(0,JT(jt,systemlock),THREADID(jt),0x40);
   DOINSTATEA(2,)  // state 2: requests at different priorities
   DOINSTATEA(3,finalpriority=__atomic_load_n(&JT(jt,adbreak)[1],__ATOMIC_ACQUIRE);)  // state 3: get winning priority
   // state 4: transfer nrunning to executor and run the function.  Other threads wait for the result
@@ -181,7 +173,6 @@ I jtsystemlockaccept(J jt, I priority){
   // loop back if there is another request that this can tolerate
   I winningpri=LOWESTBIT(finalpriority); finalpriority&=~winningpri; priority&=finalpriority; // final<-remaining requests; leave priority as the ones we are OK with
  }while(priority);  // if our priority was SYM-only and the remaining request is DEBUG, we have to return to get to a DEBUG point
-// obsolete scaflog(0,JT(jt,systemlock),THREADID(jt),0x41);
  R 1;
 }
 
@@ -248,7 +239,6 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   // The wait may time out because of a pending system action (BREAK or system lock).  If so, we accept it now...
   UI4 state=lda(&blok->seqstate); C breakb;  // get store sequence # before we check for system event
   if(PYXFULL==((C)state))break; // if pyx was filled, exit and return its value
-// obsolete   I scaf;
   // if someone is starting a system lock, we must go accept it.  To avoid reads from other cores, we look at our taskstate, where the lock requester
   // tell us that a lock is running.  In normal use we will be the owner of this cacheline already.  It is not vital to get this right the first time, because the
   // lock code will wake us 
@@ -256,23 +246,18 @@ A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
    if(unlikely(JT(jt,systemlock)>2)){err=EVDEADLOCK; goto fail;}  // if in suspension, the pyx cannot be filled if we block, since the thread is paused
    jtsystemlockaccept(jt,LOCKALL);  // process systemlock and keep waiting.
   }
-// obsolete   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);}  // process systemlock and keep waiting.  Prevent multiple wakeups to the same thread
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
   if(unlikely(lda(&JT(jt,adbreak)[0])>1)){err=EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
   if(uncommon(-1ull==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
    if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;  // if time wrapped around, reset to infinite
    else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
-// obsolete scaflog(&blok->seqstate,scaf,THREADID(jt),state|PYXWAIT|4);  // scaf
-// obsolete scaflog(&blok->seqstate,0xff,THREADID(jt),lda(&blok->seqstate));  // scaf
   sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per systemlock
   I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,MIN(ns,1000000000));if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
    // because ATTN doesn't wake tasks, we have to check for JBREAK every so often
-// obsolete scaflog(&blok->seqstate,lda(&JT(jt,systemlock)),THREADID(jt),0x80|lda(&blok->seqstate));  // scaf
  }
  // We have the value; but if someone has started a system lock, they may erroneously try to wake up our futex, which is no longer needed.  We clear the futex pointer,
  // and then wait until system lock is over
  CLRFUTEXWT;   // clear the futex wait till no one is using it
-// obsolete scaflog((UI4*)0,JT(jt,systemlock),THREADID(jt),0x49);
 done:  // pyx has been filled in.  jt->futexwt must be 0
  if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
  ASSERTPYX(blok->errcode); // if error, return the error code, noting that it was extenally generated
@@ -473,7 +458,6 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // This block is done.  Since we will need the lock when we go to look for work, we take it now.
    jttpop(jt,old);  // release any resources used by internal job
    JOB *nextjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
-// obsolete   ++job->internal.nf;  // account that this task has finished
    __atomic_fetch_add(&job->internal.nf,1,__ATOMIC_ACQ_REL);    // account that this task has finished; must do atomic to ensure handshake with end-of-job code
    job=nextjob;  // set up for loop
    if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
@@ -631,7 +615,6 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   ++job->internal.nf;  // we have finished a block - account for it
   i=job->ns; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status
   // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
-// obsolete   if(unlikely(i==n-1))if(i!=0){ACINIT(jobA,ACUC2);}  // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that
 // scaf if job is the only job in q, remove it when we start the last task
   if(unlikely(i==lastqueuedtask)){
    // We are taking the last task.

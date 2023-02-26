@@ -445,25 +445,20 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   I i; I nextpartitionx;  // loop index, cell index of place to store next partition
   I * RESTRICT wv=IAV(w);   // source pointer: w cells in order
   C * RESTRICT wpermv0=CAV(wperm);   // target pointer: the permuted w area
-// obsolete   for(i=0, nextpartitionx=(I)IAV(wperm);i<nitems;++i){
   NOUNROLL for(i=0, nextpartitionx=0;i<nitems;++i){
    I partitionptr;  // index to where output will go
    I avvalue=av[i];  // fetch partition length/index
    if(avvalue<i){  // this value extends its partition
-// obsolete    partitionptr=(I*)av[avvalue];  // addr of end of selected partition
     partitionptr=av[avvalue];  // index of current end of selected partition
    }else{
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue-=i;  // length of partition
     if(avvalue<255)*fretp++ = (UC)avvalue; else{*fretp++ = 255; *(UI4*)fretp=(UI4)avvalue; fretp+=SZUI4;}
-// obsolete     partitionptr=(I*)nextpartitionx;  // copy this item's data to the start of the partition
-// obsolete     nextpartitionx+=avvalue*celllen;  // reserve output space for the partition
     partitionptr=nextpartitionx;  // set copy index to the start of the partition
     nextpartitionx+=avvalue;  // reserve output space for the partition
     avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
    }
 
-// obsolete   av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
    av[avvalue]=partitionptr+1;  // update/init end-of-partition after move; always points to last moved data+1
    JMCR(wpermv0+partitionptr*celllen,wv,celllen,1,endmask); wv=(I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 

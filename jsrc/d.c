@@ -58,7 +58,6 @@ void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
 #endif
  }
  RESETERR
-// obsolete  jt->etxn=0;
 }
 
 static I jtdisp(J jt,A w,I nflag);
@@ -120,7 +119,6 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
   // If this is an array of names, turn it back into a character string with spaces between
   // we can't do this by simply executing }: (string&.> names) ,&.> ' ' because if we are out of memory we need to get the string out.  So we do it by hand
   eputc('\''); DO(AN(w), if(i!=0)eputc(' '); A b=AAV(w)[i]; ep(AN(b),NAV(b)->s);) eputc('\''); break;
-// obsolete  else{if((w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself))))==0)R 0;}  // }: (string&.> names) ,&.> ' '  then fall through to display it
  case LITX:  eputq(w,(nflag&1));                break;
  case NAMEX: ep(AN(w),NAV(w)->s); if(unlikely((AT(w)&NAMEABANDON)!=0)){ep(2,"_:");}     break;
  case LPARX: eputc('(');              break;
@@ -426,7 +424,6 @@ A jtjsignale(J jt,I eflg,A line,I info){
   }
   // if this error was forwarded from a pyx or 13!:8, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
   if(eflg&EMSGNOEFORMAT)jt->emsgstate|=EMSGSTATEFORMATTED;
-// obsolete    jt->curname=0;  // clear the name always
  R 0;
 }
 #endif

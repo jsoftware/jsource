@@ -229,7 +229,6 @@ extern Q jtQmpq(J, mpq_t);
 
 // declare and initialize mpz_t mp##x reflecting 0x 
 // (use this for hypothetical x -- when x does not exist)
-// obsolete #define mpX0(x) mpz_t mp##x= {0, 0, 0}
 #define mpX0(x) GEMP0; mpz_t mp##x; (jmpz_init)(mp##x)
 
 // dehydrate a gmp (mpz_t) as a J (X), produces the X result as a C rvalue

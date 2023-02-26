@@ -277,7 +277,6 @@ DF1(jtjferase){A y,fn;US*s;I h;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjferase,self);
  RE(h=fnum(w));
-// obsolete  if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(C(AAV(w)[0])),EVFNUM);
  if(h) {ASSERT((y=fname(sc(h)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT((y=vslit(C(AAV(w)[0])))!=0,EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)

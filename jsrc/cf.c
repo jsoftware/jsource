@@ -57,7 +57,6 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  D cct=0.0;  // cct to use for comparison/setintersect, 0='use default'
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
-// obsolete   RZ(f=makenounasgsafe(jt, f))   // adjust usecount so that the value cannot be inplaced
   // f will be INCORPed by fdef
   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
   fline=5;  // set left argtype
@@ -176,10 +175,8 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
   if(fi==CCAP){f=g; g=h; h=0;}  // dehydrate capped fork
   // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
   // argument.  In that case h can inplace the unused argument.
-// obsolete fline=(CTTZI(atoplr(f)|0x80)+1)&7;  // codes are none,[,],@[,@],noun in f
   fline=atoplr(f);  // codes are none,[,],@[,@],noun in f
  }
-// obsolete  hcol=(CTTZI(atoplr(h)|0x80)+1)&7;  // codes are none,[,],@[,@] in h
  hcol=atoplr(h);  // codes are none,[,],@[,@] in h
 
  // if we are using the default functions, pull them from the tables
@@ -189,21 +186,8 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  }else{hcol=-1;}   // select the value we will put into localuse: hcol=-1 means cct, other hcol=routine address of h or h@]
 
  fdeffillall(z,flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,if(hcol<0)FAV(z)->localuse.lu1.cct=cct;else FAV(z)->localuse.lu1.fork2hfn=hcol<=2?hv->valencefns[1]:FAV(hv->fgh[0])->valencefns[0]);
-// obsolete  RZ(z);
  
  // set localuse: for intersect or comparison combination, cct; for echt fork, the h routine to call
-// obsolete  if(!f2){
-// obsolete   // if using the default handler, set the entry point
-// obsolete   AF hfn=fork2tbl[fline][hcol]; hfn=(I)jtinplace&JTFOLKNOHFN?jtfolk2:hfn;  // NOHFN means the caller is going to fool with the result fork, so the EP is unreliable
-// obsolete   FAV(z)->valencefns[1]=hfn;
-// obsolete   FAV(z)->localuse.lu1.fork2hfn=hcol<=2?hv->valencefns[1]:FAV(hv->fgh[0])->valencefns[0];
-// obsolete  }else{FAV(z)->localuse.lu1.cct=cct;
-// obsolete  }
-// obsolete  if(!f1){
-// obsolete   fline=(0x200110>>(fline<<2))&3;  // 0/3/4->0,  1/2->1, 5->2
-// obsolete   hcol=(0b00110>>hcol)&1;  // / 0/3/4->0,  1/2->1
-// obsolete   FAV(z)->valencefns[0]=fork1tbl[fline][hcol];
-// obsolete  }
  R z;
 }
 
@@ -347,7 +331,6 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    }
    // Return the derived verb
    fdeffillall(z,0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype); R z;
-// obsolete    if(unlikely(linktype!=0))FAV(z)->localuse.lu1.linkvb=linktype;  // if it's a form of ;, install the form
    R z;
   // All other cases produce a modifier unless they are immediately executable (V N or N/V A)
   }else{
@@ -355,7 +338,6 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   I rtnx=TYPE2(AT(a),AT(w));  // the combination being parsed
   AF rtn=bidents[rtnx].fn;  // action routine
   I t=bidents[rtnx].type;  // type: ADV/CONJ
-// obsolete   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
   if(unlikely(t==0)){
    // unexecutable bident.  Fail as a syntax error and call eformat as a pre-exec error with a holding an INT
    // list of the parts of speech of the unexecutable fragment
@@ -376,7 +358,6 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   I rtnx=TYPE3(AT(a),AT(w),AT(h));  // the combination being parsed
   AF rtn=tridents[rtnx].fn;  // action routine
   I t=tridents[rtnx].type;  // type: ADV/CONJ
-// obsolete   ASSERT(t,EVSYNTAX);  // error if unimplemented combination
   if(unlikely(t==0)){
    // unexecutable trident.  Fail as a syntax error and call eformat as a pre-exec error with a holding an INT
    // list of the parts of speech of the unexecutable fragment

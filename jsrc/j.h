@@ -952,9 +952,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
 #endif
-// obsolete #define ASSERTAGREE(x,y,l) ASSERTAGREE2(x,y,l,l,l)
 #define ASSERTAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERT)
-// obsolete #define ASSERTEAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERTE)
 #define ASSERTAGREESEGFAULT (x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
@@ -998,11 +996,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CALL2COMMON(f,a,w,fs,j,pop)   ({A carg1=(a), carg2=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg2,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,carg2,0);} cargz;})
 #define CALL2(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jt,)
 #define CALL2IP(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jtinplace,)
-// obsolete #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs),(A)(fs)))
-// obsolete #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
-// obsolete #define CALL1IP(f,w,fs)   ({A carg1=(w), carg3=(A)(fs), cargz; cargz=(f)(jtinplace,carg1,carg3,carg3); if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(jtinplace,carg3,carg1,0,0);} cargz;})
-// obsolete // obsolete #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
-// obsolete #define CALL2IP(f,a,w,fs)   ({A carg1=(a), carg2=(w), carg3=(A)(fs), cargz; cargz=(f)(jtinplace,carg1,carg2,carg3); if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(jtinplace,carg3,carg1,carg2,0);} cargz;})
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
 #define MODESRESET(jm)      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
@@ -1469,7 +1462,6 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
 #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
 #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)
-// obsolete #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=MAX(0,fl); I fr=(I)AR(w)-(r); fr=MAX(0,fr); ASSERTAGREE2(AS(a),AS(w),MIN(fl,fr),fl,fr) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // no longer used #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lc=FAV(ds(cxx))->lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
@@ -1953,12 +1945,10 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define RESETERR        RESETERRT(jt)
 #define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen.  Used only when formatting ARs
 #define RESETERRNO      {jt->jerr=0;jt->emsgstate&=~(EMSGSTATEFORMATTED|EMSGSTATEPAREN);}  // reset the number but not the message; used in adverse/throw. to keep the user's message
-// obsolete #define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;jt->emsgstate&=0x7f;}
 #define RESETRANK       (jt->ranks=R2MAX)
 #define RZSUFF(exp,suff) {if(unlikely(!(exp))){suff}}
 #define RZ(exp)         RZSUFF(exp,R0)
 #define RZQ(exp)         RZSUFF(exp,R 0;)  // allows FINDNULLRET without jt
-// obsolete #define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}
 #define RE(exp)         RZ(((exp),jt->jerr==0))  // execute exp, then return if error
 #define RZGOTO(exp,lbl) RZSUFF(exp,goto lbl;)
 #define RNE(exp)        {R unlikely(jt->jerr!=0)?0:(exp);}  // always return, with exp if no error, 0 if error

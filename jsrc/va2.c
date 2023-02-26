@@ -1237,14 +1237,9 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
-// obsolete   z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,(awr<<RANK2TX)+selfranks);  // if retryable error, retry it
-// obsolete if(jt->jerr>NEVM)SEGFAULT;  // scaf
-// obsolete 
-// obsolete  if(unlikely(z==0)){
  // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
  // convert 0 rank back to R2MAX to avoid "0 0 in msg
  jt->ranks=selfranks?selfranks:R2MAX; jteformat(jt,self,a,w,0); RESETRANK;
-// obsolete  }
  RETF(z);
 }
 

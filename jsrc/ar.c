@@ -379,7 +379,7 @@ DF1(jtcompsum){
 // the launch rate of 2 cycles per iteration.  This requires spilling results to memory, which will add more latency, but it's still better than unrolling only 4.
 // Unfortunately, clang goes nuts trying to handle this loop, and ends up doing 14 loads and 14 stores for every iteration.  So we have to unroll it
 // by hand using an array to hold the state
-#if 0
+#if 0  // early clang had trouble
    acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
    UI n2=DUFFLPCT(n-1,2);  /* # turns through duff loop */
    if(n2>0){
@@ -407,14 +407,14 @@ DF1(jtcompsum){
    KAHANA(_mm256_maskload_pd(wv,endmask),7) wv+=((n-1)&(NPAR-1))+1;
    __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
    // add all the low parts together into c0 - the low bits of the low will not make it through to the result
-#if 0
+#if 0  // clang
    c1=_mm256_add_pd(c1,c5); c2=_mm256_add_pd(c2,c6); c3=_mm256_add_pd(c3,c7); c0=_mm256_add_pd(c0,c4);
 #else
    c0=_mm256_add_pd(accc[1][6],accc[1][5]); c1=_mm256_add_pd(accc[1][4],accc[1][3]); c2=_mm256_add_pd(accc[1][2],accc[1][1]); c3=_mm256_add_pd(accc[1][0],accc[1][7]);
 #endif 
    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);
    // TWOSUM the accumulators into acc0, adding all the resulting low parts into c0
-#if 0
+#if 0  // clang
    TWOSUM(acc0,acc4,acc0,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(acc1,acc5,acc1,c1) c0=_mm256_add_pd(c0,c1); 
    TWOSUM(acc2,acc6,acc2,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(acc3,acc7,acc3,c1) c0=_mm256_add_pd(c0,c1);
 #else
@@ -439,7 +439,7 @@ DF1(jtcompsum){
    __m256d acc0; __m256d acc1; __m256d acc2; __m256d acc3; __m256d c0; __m256d c1; __m256d c2; __m256d c3;  // accumulators, error terms
    DQ((d-1)>>LGNPAR,
     wv0=wv;
-#if 0
+#if 0  // clang
     n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
     switch(n0&3){
     label1:
@@ -464,7 +464,7 @@ DF1(jtcompsum){
    )
    // repeat for partial column
    wv0=wv;
-#if 0
+#if 0  // clang
    n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
    switch(n0&3){
    label2:

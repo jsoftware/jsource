@@ -42,19 +42,7 @@ static void* MERGEFNNAME(CMP comp, I compn, I bpi, T * lo, I lon, T * hi, I hin,
  T *hiend=PTRADD(hi,hin);  // end+1 of hi
  // Perform the merge into wk[].
  do{
-#if 0
-  if(COMPFN(compn,lo,hi)){
-   MVITEMS(wkptr,lo,1);
-   if(lo==loend){
-    if(wkptr!=hi)MCL(wkptr,hi,(C*)hiend-(C*)hi); break;
-   }
-  }else{
-   MVITEMS(wkptr,hi,1);
-   if(hi==hiend){
-    MCL(wkptr,lo,(C*)loend-(C*)lo); break;
-   }
-  }
-#else  // this version does not requires prediction of the test.  Faster, because we are mostly in cache and there is not a long delay for any fetch
+  // this version does not requires prediction of the test.  Faster, because we are mostly in cache and there is not a long delay for any fetch
   // We keep processing until one of the lists has been exhausted.  At that point, we copy the other list
   // to the output and return.
   if(lo!=loend){
@@ -82,7 +70,6 @@ static void* MERGEFNNAME(CMP comp, I compn, I bpi, T * lo, I lon, T * hi, I hin,
    if(wkptr!=hi)MCL(wkptr,hi,(C*)hiend-(C*)hi); 
    break;  // all finished
   }
-#endif
  }while(1);
  R wk;  // We have merged into the workarea
 }

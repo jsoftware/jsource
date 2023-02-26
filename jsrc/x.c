@@ -312,7 +312,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(15,10): R CDERIV(CIBEAM, jtcder,       0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,11): R CDERIV(CIBEAM, jtcderx,      0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,12): R CDERIV(CIBEAM, jtdllsymhdr,  0,            VASGSAFE,RMAX,RMAX,RMAX);
-#if 0
+#if 0  //
   case XC(15,12): R CDERIV(CIBEAM, jtsmmblks,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 #endif
   case XC(15,13): R CDERIV(CIBEAM, jtcallback,   jtcallback2,  VASGSAFE,RMAX,RMAX,RMAX);
@@ -324,7 +324,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(15,20): R CDERIV(CIBEAM, jtcddlopen,   0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,21): R CDERIV(CIBEAM, 0,            jtcddlsym,    VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,22): R CDERIV(CIBEAM, jtcddlclose,  0,            VASGSAFE,RMAX,RMAX,RMAX);
-#if 0
+#if 0  //
   case XC(15,23): R CDERIV(CIBEAM, jtcdjt,       0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,24): R CDERIV(CIBEAM, jtcdlibl,     0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,25): R CDERIV(CIBEAM, jtcdproc1,    jtcdproc2,    VASGSAFE,RMAX,RMAX,RMAX);

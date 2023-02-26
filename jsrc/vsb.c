@@ -837,10 +837,6 @@ F2(jtsb2){A z;I j,k,n;
   case -6:   R sbunind(w);
   case  7:   R sborder(w);
   case 10:   R sbsetdata(w);
-#if 0
-  case 11:   R sbsetdata2(w);
-  case 12:   R sbtestbox(w);
-#endif
   case 16:   GAP = 4;                                       R sc(GAP);
   case 17:   GAP++;         ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(GAP);
   case 18:   GAP--;                                         R sc(GAP);

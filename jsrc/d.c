@@ -208,27 +208,6 @@ F1(jtdbstackz){A y,z;
  R df1(z,y,cut(ds(CLEFT),num(-2)));
 }    /* 13!:18  SI stack as result */
 
-#if 0
-// here for errors not from explicit definition
-// explicit errors also come here, so stop here to see the point at which error was detected
-static void jtjsigstr(J jt,I e,I n,C*s){
- if(jt->jerr){jt->curname=0; R;}   // if not first error, trash diagnostic information and bail out
- jt->jerr=(C)e; jt->jerr1=(C)e; if(jt->etxn<0)R;  // remember error for testing, but if the error line is frozen, don't touch it
- if(e!=EVSTOP)moveparseinfotosi(jt); jt->etxn=0;  // before we display, move error info from parse variables to si; but if STOP, it's already installed
- dhead(0,0L);  // | left-header for the error line
- if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}
- ep(n,s);
- if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}
- eputc(CLF);
- if(n&&!jt->glock)debsi1(jt->sitop);
- jt->etxn1=jt->etxn;
-}    /* signal error e with error text s of length n */ 
-
-static void jtjsig(J jt,I e,A x){jsigstr(e,AN(x),CAV(x));}
-     /* signal error e with error text x */ 
-
-#endif
-
 // ratify the current emsg and call eformat_j_ to give a full message
 // This is called from CALL[12] when we know the arguments and self.  The error code will have been signaled earlier
 // self is the self for the failing entity; but if self is 0, a is a string to display for the error
@@ -375,20 +354,9 @@ A jtjsignale(J jt,I eflg,A line,I info){
  R 0;
 }
 
-
 // here for errors coming from explicit definition
 A jtjsignal(J jt,I e){A x;
-#if 0
-// template for debug break point
-// if(EVDOMAIN==e){
-// fprintf(stderr,"domain error\n");
-// }
- // Errors > NEVM are internal-only errors that should never make it to the end of execution.
- // Ignore them here - they will not be displayed
- x=BETWEENC(e,1,NEVM)?AAV(JT(jt,evm))[e]:mtv; jsigstr(e,AN(x),CAV(x));
-#else
  R jtjsignale(jt,e,0,0);  // just the error
-#endif
 }
 
 void jtjsignal2(J jt,I e,A dummy){jtjsignal(jt,e);}  // used in unquote to reschedule instructions

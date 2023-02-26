@@ -939,7 +939,7 @@ int _stdcall JErrorTextM(JS jt, I ec, I* p)
  return 0;
 }
 
-#if 0
+#if 0  // for debugging
 int enabledebug=0;
 F1(jttest1){
  ARGCHK1(w);

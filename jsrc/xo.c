@@ -130,17 +130,6 @@ F1(jtjopen){A z;I h;
   R sc(h);
 }}   /* open the file named w if necessary; return file# */
 
-#if 0  // doesn't work
-B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;I ct=AM(JT(jt,fopf));
- if(f1==NULL) {AM(JT(jt,fopf))=ct+2;R 1;};
- GATV0(c,LIT,1+strlen(cmd),1);MC(CAV(c)+1,cmd,AN(c)-1);cmd=CAV(c);
- if(ct+2>AN(JT(jt,fopf))){RZ(JT(jt,fopa)=ext(1,JT(jt,fopa))); RZ(JT(jt,fopf)=ext(1,JT(jt,fopf))); AM(JT(jt,fopf))=ct;}
- *cmd='<';x=cstr(cmd); ACINITZAP(x) RZ(AAV(JT(jt,fopa))[ct]=x); RZ(IAV(JT(jt,fopf))[ct]=(I)f1);
- *cmd='>';x=cstr(cmd); ACINITZAP(x) RZ(AAV(JT(jt,fopa))[ct+1]=x); RZ(IAV(JT(jt,fopf))[ct+1]=(I)f2);
- R 1;
-}   /* add 2 entries to AM(JT(jt,fopf)) table (for hostio); null arg commits entries */
-#endif
-
 // 1!:22
 F1(jtjclose){A*av;I*iv,j,h;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)

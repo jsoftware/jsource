@@ -61,7 +61,7 @@
 #define FHRHRESETROOT(b) (FHRHROOT + (((I)1)<<(b)))     // value to set root to after garbage-collection if the allocation was NOT freed
 #define FHRHENDVALUE(b) (FHRHROOTFREE + (((I)1)<<(b)))     // value representing last+1 block in allo.  Subtract FHRHBININCR to get to previous
 
-#if 1 || (MEMAUDIT==0 || !_WIN32)  // windows makes free() a void
+#if (MEMAUDIT==0 || !_WIN32) || 1  // windows makes free() a void
 #define FREECHK(x) FREE(x)
 #else
 #define FREECHK(x) if(!FREE(x))SEGFAULT;  // crash on error
@@ -340,7 +340,7 @@ B jtspfree(J jt){I i;A p;
    for(p=baseblockproxyroot;p;){A np = AFPROXYCHAIN(p);  // next-in-chain
     A baseblock = FHRHROOTADDR(p,offsetmask);  // get address of corresponding base block
     if(FHRHISROOTALLOFREE(AFHRH(baseblock))){ // Free fully-unused base blocks;
-#if 1 || ALIGNTOCACHE   // with short headers, always align to cache bdy
+#if ALIGNTOCACHE || 1   // with short headers, always align to cache bdy
      FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
      jt->malloctotal-=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // return storage+bdy
      jt->mfreegenallo-=TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // only the pad is net allocation

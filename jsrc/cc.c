@@ -1335,7 +1335,7 @@ success:;
 DF1(jtboxcutm21){
  if(AR(w)!=1||!(AT(w)&LIT)||AN(w)<=65536)R jtcut1(jt,w,self);
  F1PREFIP;PROLOG(0026);
-#if 1
+#if 1   // test code
  I nchunk=(AN(w)+65535)/65536; //try out 64k chunks for now
  I incfretp=1-(FAV(self)->localuse.lu1.gercut.cutn>>31), incfretm=-1+incfretp;
  _Alignas(64) char ctxbuf[sizeof(PBOXCUTSTATE)+nchunk*sizeof(PBOXCUTCHUNK)];PBOXCUTSTATE *ctx=(PBOXCUTSTATE*)ctxbuf;

@@ -291,7 +291,6 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define uncommon(x) (!!(x))
 #endif
 
-#if 1
 #include <stdint.h>
 #include <float.h>
 #include <limits.h>
@@ -303,9 +302,6 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #include <stdlib.h>
 #undef link
 #undef qdiv
-#else
-#define const /*nothing*/   /* blame rx.h */
-#endif
 
 #if ! SY_WINCE
 #include <errno.h>

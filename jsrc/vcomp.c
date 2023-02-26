@@ -202,57 +202,6 @@ AHDR2(name,B,D,D){ \
  R EVOK; \
 }
 
-#if 0
-   DQNOUNROLL((m-1)>>LGNPAR, \
-     u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
-     *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(intolres)); \
-     x+=NPAR; y+=NPAR; z+=NPAR;) \
-   /* runout, using mask */ \
-
-   u=_mm256_maskload_pd(x,endmask);v=_mm256_maskload_pd(y,endmask); \
-   STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(intolres)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
-
-      DQ((n-1)>>LGNPAR, \
-        v=_mm256_loadu_pd(y); \
-        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(intolres)); \
-        y+=NPAR; z+=NPAR;) \
-      v=_mm256_maskload_pd(y,endmask); \
-      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(intolres)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
-      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
-
-#define PRMALIGN(zzop,xy,fz,len)  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
-  if((-alignreq&(8*NPAR-len))<0){ \
-   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-   if(xy&2)LDBID(xx,x,fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,y,fz,0x10,0x80,0x200)  \
-   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
-   len-=alignreq;  /* leave remlen>0 */ \
-  } \
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
-
-      DQ((n-1)>>LGNPAR, \
-        u=_mm256_loadu_pd(x); \
-        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(intolres)); \
-        x+=NPAR; z+=NPAR;) \
-      u=_mm256_maskload_pd(x,endmask); \
-      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(intolres)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
-      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
-
-
-#define primop256(name,fz,pref,zzop,suff) \
-I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
- __m256d xx,yy,zz; \
- __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupperx(VOIDARG) \
-   /* will be removed except for divide */ \
- CVTEPI64DECLS pref \
- if(n-1==0){ \
-  /* vector-to-vector, no repetitions */ \
-  /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
-  PRMALIGN(zzop,3,fz,m)  /* this changes m */ \
- }else{ \
-
-#endif
 primcmpD256(geDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_GE_OQ)) , _mm256_cmp_pd(u,v,_CMP_GE_OQ) , , PCOMPID)
 primcmpD256(gtDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GT_OQ) ,  , PCOMPID)
 primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LE_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) ,  , PCOMPID)

@@ -1131,7 +1131,7 @@ void SHA3_squeeze(uint64_t A[5][5], unsigned char *out, size_t len, size_t r)
 #endif
 
 // #ifdef SELFTEST
-#if 0
+#if 0  // for testing
 /*
  * Post-padding one-shot implementations would look as following:
  *

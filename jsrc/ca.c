@@ -272,7 +272,6 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  // obsolete ((av->flag2&VF2BOXATOP1))*((VF2BOXATOP2+VF2BOXATOP1)/VF2BOXATOP1) + 
   fdeffill(z,flag2,CATCO,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;  // must go through onright1 to set self
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may

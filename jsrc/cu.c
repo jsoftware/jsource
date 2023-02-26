@@ -397,7 +397,4 @@ F2(jtundco){F2PREFIP;AF f1=0,f2;I gside=-1, flag=0;
  // just in case the calculated verb is not inplaceable
  if(!f1)f1=flag&VFUNDERHASINV?jtunderh1:jtundco1; f2=flag&VFUNDERHASINV?jtunderh2:jtundco2; flag |= (FAV(a)->flag&FAV(wvb)->flag&VASGSAFE) + (FAV(h)->flag&(VJTFLGOK1|VJTFLGOK2));
  fdeffillall(z,0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;
-/// obsolete  // install wvb into the verb so we can get to it if needed
-/// obsolete  FAV(h)->localuse.lu1.wvb=wvb;
-/// obsolete  R h;
 }

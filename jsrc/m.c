@@ -960,7 +960,7 @@ A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
 #if AUDITEXECRESULTS
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
-   if((np=QCWORD(np))!=0){/* obsolete if(unlikely(AC(np)<0)){printf("system error: contents not incorped\n");while(1);}*/racontents(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.
+   if((np=QCWORD(np))!=0){racontents(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };

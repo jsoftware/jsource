@@ -633,9 +633,6 @@ extern void jfree4gmp(void*,size_t);
 #define jsig(x,y)                   jtjsig(jt,(x),(y))
 #define jsigd(x)                    jtjsigd(jt,(x))
 #define jsignal(x)                  jtjsignal(jt,(x))
-#if 0 // obsolete
-#define jsignalf(x,y...)            jtjsignalf(jt,(x),y)
-#endif
 #define jsignal3(x,y,z)             jtjsignal3(jt,(x),(y),(z))
 #define jsigstr(x,y,z)              jtjsigstr(jt,(x),(y),(z))
 #define jstd(x,y,z)                 jtjstd(jt,(x),(y),(z))
@@ -931,11 +928,7 @@ extern void jfree4gmp(void*,size_t);
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))
-#if 1
 #define REX2R(lr,rr,lcr,rcr)        (((UI)(lr)<<RANKTX)+(UI)(rr)+((((UI)(lcr)<<RANKTX)+(UI)(rcr))<<RANK2TX))
-#else  // obsolete
-#define REX2R(lr,rr,lcr,rcr)        (((I)(lr)<<RANKTX)+(I)(rr)),(((I)(lcr)<<RANKTX)+(I)(rcr))
-#endif
 #define rank2ex(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jt,(x0),(x1),(x2),REX2R((x3),(x4),(x5),(x6)),(x7))
 #define rank2exip(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jtinplace,(x0),(x1),(x2),REX2R((x3),(x4),(x5),(x6)),(x7))
 #define rank2ex0(x0,x1,x2,x3)       jtrank2ex0(jt,(x0),(x1),(x2),(x3))

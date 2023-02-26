@@ -229,12 +229,8 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
  EPILOG(zz);
 }
 
-#if 1
 A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
  I lrrr=(RANK2T)lrrrlcrrcr; I lcrrcr=lrrrlcrrcr>>RANK2TX;  // inner, outer ranks
-#else  // obsolete
-A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){  // scaf must combine 
-#endif
  F2PREFIP;PROLOG(0042);A virta,virtw,z;I acn,ak,mn,wcn,wk;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
  ARGCHK2(a,w);

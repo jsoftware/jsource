@@ -871,20 +871,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
-#if 0   // obsolete
-// support for eformat_j_
-// Put the appropriate macro at the start of any routine that will do ASSERTE.
-// the piece at the beginning of the routine will vector off to ASSERTE, passing in the error code, the ranks, the original self, and the args
-// The EFORMAT macro must follow PREFIP.  The args are the ranks
-#define ESECT(callstg) if(0){eformat: R jtjsignale callstg;}
-#define EFORMAT1(m) A origw=w, origself=self; ESECT((jt,(R2MAX<<RANK2TX)|m,origself,0,origw))
-#define EFORMAT2(l,r) A origa=a, origw=w, origself=self; ESECT((jt,(R2MAX<<RANK2TX)|((I)l<<RANKTX)|r,origself,origa,origw))
-#define EFORMAT1IRS(m) A origw=w, origself=self; RANK2T origr=jt->ranks;  ESECT((jt,(origr<<RANK2TX)|m,origself,0,origw))  // use when verb supports IRS
-#define EFORMAT2IRSCOMMON(l,r,irsr) A origa=a, origw=w, origself=self; RANK2T origr=irsr;  ESECT((jt,(origr<<RANK2TX)|((I)l<<RANKTX)|r,origself,origa,origw))
-#define EFORMAT2IRS(l,r) EFORMAT2IRSCOMMON(l,r,jt->ranks)
-#define ASSERTE(b,e) {if(unlikely(!(b))){jt=(J)((I)jt+e); goto eformat;}}
-#define ASSERTF(b,e,s...){if(unlikely(!(b))){R jtjsignale((J)((I)jt+e),0,0,0,0);}}
-#endif
 #include "jr0.h" // #define ASSERT(b,e) {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTF(b,e,s...)     {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto

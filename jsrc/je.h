@@ -800,9 +800,6 @@ extern I        jtjset(J,C*,A);
 extern A     jtjsigd(J,C*) __attribute__((cold));
 extern A     jtjsignal(J,I) __attribute__((cold));
 extern A     jtjsignale(J,I,A,I) __attribute__((cold));
-#if 0  // obsolete
-extern void     jtjsignalf(J,I,C*,...) __attribute__((cold));
-#endif
 extern void     jtjsignal2(J,I,A) __attribute__((cold));
 extern A     jtjsignal3(J,I,A,I) __attribute__((cold));
 extern A        jtleakblockread(J,A);
@@ -849,11 +846,7 @@ extern A        jtras(J,AD* RESTRICT);
 extern A        jtra00s(J,AD* RESTRICT);
 extern A        jtrank1ex(J,AD * RESTRICT,A,I,AF);
 extern A        jtrank1ex0(J,AD * RESTRICT,A,AF);
-#if 1
 extern A        jtrank2ex(J,AD * RESTRICT,AD * RESTRICT,A,UI,AF);
-#else // obsolete
-extern A        jtrank2ex(J,AD * RESTRICT,AD * RESTRICT,A,UI,UI,AF);
-#endif
 extern A        jtrank2ex0(J,AD * RESTRICT,AD * RESTRICT,A,AF);
 extern A        jtrd(J,F,I,I);
 extern A        jtrealize(J,A);

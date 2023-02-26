@@ -8,21 +8,6 @@
 static I jtfdepger(J jt,A w){R 0;
 }
 
-#if !USECSTACK
-I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
- ARGCHK1(w);
- v=VAV(w);
- if(v->fdep)R v->fdep;  // for speed, use previous value if it has been calculated
- if(f=v->fgh[0]) d=VERB&AT(f)?fdep(f):NOUN&AT(f)&&VGERL&v->flag?fdepger(f):0;
- if(g=v->fgh[1]){k=VERB&AT(g)?fdep(g):NOUN&AT(g)&&VGERR&v->flag?fdepger(g):0; d=MAX(d,k);}
- if(CFORK==v->id){k=fdep(v->fgh[2]); d=MAX(d,k);}
- if(!jt->jerr)v->fdep=(UI4)(1+d);  //Save computed value for next time, but not if error; that would lose the error next time
- R 1+d;
-}    /* function depth:  1 + max depth of components */
-
-F1(jtfdepadv){ARGCHK1(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
-#endif
-
 
 DF1(jtdfs1){F1PREFIP;A s=jt->parserstackframe.sf,z; RZ(self); df1(z,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
@@ -41,34 +26,6 @@ A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr, 0L,0L,0L, VFLAGNONE, RMAX,RM
 A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 
 F1(jtvalenceerr){F1PREFIP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
-
-#if 0
-// create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
-// if there has been a previous error this function returns 0
-// This creates a recursive block and raises fgh
-A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
- RE(0);
- GAT0(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will be all filled in
- AN(z)=0xdeadbeef;  // AN field of function is used for actual rank
- if(fs)INCORPRA(fs); if(gs)INCORPRA(gs); if(hs)INCORPRA(hs);   // indicate fgh are about to be incorporated, and raise
- memset(&v->localuse,0,sizeof(v->localuse));
- v->valencefns[0]    =f1?f1:jtvalenceerr;  /* monad C function */
- v->valencefns[1]    =f2?f2:jtvalenceerr;  /* dyad  C function */
- v->fgh[0]     =fs;                  /* monad            */
- v->fgh[1]     =gs;                  /* dyad             */      
- v->fgh[2]     =hs;                  /* fork right tine or other auxiliary stuff */
- v->flag  =(UI4)flag;
-#if !USECSTACK
- v->fdep  =0;                   /* function depth   */
-#endif
- v->flag2 = (UI4)flag2;         // more flags
- v->mr    =(RANKT)m;                   /* monadic rank     */
- v->lrr=(RANK2T)((l<<RANKTX)+r);
- v->id    =(C)id;                  /* spelling         */
- AT(z)=t; AFLAGINIT(z,t&RECURSIBLE); // install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens
- R z;
-}
-#endif
 
 // return 1 if w contains no names or explicit definitions
 B nameless(A w){A f,g,h;C id;V*v;

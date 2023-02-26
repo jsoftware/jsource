@@ -134,10 +134,6 @@ DF2(jtunquote){A z;
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif
-#if !USECSTACK  // obsolete 
- I d=FAV(fs)->fdep; if(!d)REGOTO(d=fdep(fs));  // get stack depth of this function, for overrun prevention
- FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
-#endif
  STACKCHKOFLSUFF(z=0; goto exitfa;)
  flgd0cpC|=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
  if(unlikely(explocale!=0)){  // there is a locative or implied locative
@@ -192,9 +188,6 @@ DF2(jtunquote){A z;
    if(jt->uflags.spfreeneeded)spfree();}        // if garbage collection required, do it
   if(d)debz();  // release stack frame if allocated
  }
-#if !USECSTACK  // obsolete 
- FDEPDEC(d);
-#endif
 
  // Now pop the stack.  Execution may have added entries, but our stack frame always starts in the same place.
  // We may add entries to the end of the caller's stack frame

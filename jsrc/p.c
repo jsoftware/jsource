@@ -164,7 +164,6 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
-// pt0 i the PT code for the left-hand side, pt0 is the PT code for the assigptnment, m is the token number to be assigned next (0 if the next thing is MASK)
 // jt has flag set for final assignment (passed into symbis)
 // The return must be 0 for bad, anything else for good
 static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
@@ -173,7 +172,7 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
   if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
   else{
-   // True multiple assignment
+   // multiple assignment to fixed names
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],C(vv[i]),symtab);)}  // v is boxed list
    else {A *nv=AAV(n); DO(AN(n), jtsymbis((J)((I)jtinplace|JTFINALASGN),nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment
@@ -192,7 +191,7 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
   }
  }
  // if simple assignment to a name (normal case), do it.  To get here it must have been a length-1 list of names
- if(unlikely((NAME&AT(n))!=0)){
+ if(likely((NAME&AT(n))!=0)){
 #if FORCEVIRTUALINPUTS
    // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
    // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
@@ -202,7 +201,7 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
 #endif
   jtsymbis(jtinplace,n,v,symtab);
  }else{
-  // computed name(s)
+  // computed name(s), now boxed character strings
   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
   if(!AR(n))jtsymbis(jtinplace,onm(n),v,symtab);
@@ -214,7 +213,8 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
    ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN);
    // create faux fs to pass args to the multiple-assignment function, in AM and valencefns.  AT must be 0 for eformat, too
    PRIM asgfs; ABACK((A)&asgfs)=symtab; AT((A)&asgfs)=0; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
-   I rr=AR(v)-1; rr&=~REPSGN(rr); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf);
+   I rr=AR(v)-1; rr&=~REPSGN(rr); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf); 
+   if(unlikely(jt->jerr==EVLENGTH))jteformat(jt,0,str(strlen("number of assigned names does not match number of values"),"number of assigned names does not match number of values"),0,0);
   }
  }
 retstack:  // return, but 0 if error

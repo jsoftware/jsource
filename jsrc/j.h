@@ -566,13 +566,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 // Now we are trying to watch the C stack directly
-#define USECSTACK       1   // 0 to go back to counting J recursions
-#if USECSTACK
-// NEW WAY
+
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
 #if defined(_WIN32)
-#define CSTACKSIZE      (SY_64?12009472:1015808)  // size we allocate in the calling function, aligned to 16k system page size
+#define CSTACKSIZE      (SY_64?12009472:1015808)  // size we allocate in the calling function, aligned to 16k system page size  9961472 for 10MB
 #else
 #if (defined(ANDROID) && !defined(__LP64__)) || (defined(__OpenBSD__) && defined(__aarch64__))
 #define CSTACKSIZE      (SY_64?4194304:1015808)  // OS default stack size 4MB, aligned to 16k system page size
@@ -581,15 +579,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 #endif
 #define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
-#else
-// OBSOLETE OLD WAY (with USECSTACK off)
-// Sizes for the internal stacks.  The goal here is to detect a runaway recursion before it creates a segfault.  This cannot
-// be done with precision because we don't know how much C stack we have, or how much is used by a recursion (and anyway it depends on
-// what J functions are running).
-// There are two limits: maximum depth of J functions, and maximum depth of named functions.
-// increase OS stack limit instead of restricting NFDEP/NFCALL
-#define NFDEP           2000L  // 4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
-#endif 
 //The named-function stack is intelligent
 // and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
 // The depth of the C stack will normally limit stack use.
@@ -1058,16 +1047,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // define fs block used in every/every2.  It is the self for the f in f&.>, and contains only function pointers, an optional param in AK, and the flag field
 #define EVERYFS(name,f0,f1,akparm,flg) PRIM name={{akparm,0,0,0,0,0,0},{.primvb={.valencefns={f0,f1},.flag=flg}}};
 
-#if USECSTACK  // obsolete, always
 #define FDEPDEC(d)
 #define FDEPINC(d)
 #define STACKCHKOFL {D stackpos; ASSERT((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK);}
 #define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK,suff);}
-#else  // old style counting J recursion levels
-#define FDEPDEC(d)      jt->fdepi-=(I4)(d)  // can be used in conditional expressions
-#define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)(d),EVSTACK); jt->fdepi+=(I4)(d);}
-#define STACKVERIFY
-#endif
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance

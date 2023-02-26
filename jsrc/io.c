@@ -505,13 +505,11 @@ int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstack
   ASSERTTHREAD(!(jm->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
   // we know that in PROMPT state there is no volatile C state about, such as zombie status
  }
-#if USECSTACK
  if(JT(jt,cstacktype)==2){
   // multithreaded FE.  Reinit the stack limit on every call, as long as cstackmin is nonzero
   JT(jt,qtstackinit) = (uintptr_t)&jt;
   if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
-#endif
  ++jm->recurstate;  // advance, to BUSY or RECUR state
  r=(int)jdo(jt,lp);
  if(unlikely(--jm->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state

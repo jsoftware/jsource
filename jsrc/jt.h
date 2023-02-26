@@ -250,11 +250,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #if !(C_CRC32C && SY_64)
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
 #endif
-#if !USECSTACK
- I4   fdepi;            /* fn calls: current depth                         */
- I4   fdepn;            /* fn calls: maximum permissible depth             */
-#else
-#endif
 #endif
 
 };

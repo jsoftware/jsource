@@ -1344,7 +1344,7 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 // obsolete //   DPiv mode: If bk is empty, we are looking in bkgrd columns and counting the #places where c>=PivTol and accumulating into Dpiv under control of Dpivdir (-1=decr, 1=incr; init to 0 if neg)
 //  Result is rc,best row,best col,#cols scanned,#dot-products evaluated,best gain  (if rc e. 0 1 2)
 //            rc,failing column of NTT, an element of ndx (if rc=4)
-//   rc=0 is good; rc=1 means the pivot found is dangerously small; rc=2 nonimproving pivot found; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
+//   rc=0 is good; rc=1 pivot requires forcefeasible; rc=3 no pivot found, stall; rc=4 means the problem is unbounded (only the failing column follows)
 //   rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // gradient mode:
 //  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bk;Frow;sched

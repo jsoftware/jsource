@@ -113,6 +113,10 @@ ln -sf ../../hostdefs .
 ln -sf ../../jsrc .
 ln -sf ../../netdefs .
 cd ../..
+# build binary for armeabi-v7a x86 x86_64 arm64-v8a
+cd android
+ndk-build
+cd ..
 # build binary for armeabi
 cd ~/
 wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
@@ -123,10 +127,6 @@ sed -i "" -e "s/^APP_ABI/#   APP_ABI/g" jni/Application.mk
 sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
 sed -i "" -e "s/android-16/android-9/g" jni/Application.mk
 NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
-cd ..
-# build binary for the rest
-cd android
-ndk-build
 cd ..
 exit 0
 fi

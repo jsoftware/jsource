@@ -605,9 +605,6 @@ jobs:
       USE_SLEEF: 1
      run: |
       script/buildga.sh android || exit 1
-      cd android
-      zip -r ../androidlibs.zip libs
-      cd ..
 
    - name: Release JE (android)
      uses: ncipollo/release-action@v1

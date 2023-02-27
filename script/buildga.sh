@@ -116,6 +116,17 @@ cd ../..
 cd android
 ndk-build
 cd ..
+cd ~/
+# build binary for armeabi
+wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
+unzip android-ndk-r16b-darwin-x86_64.zip
+cd -
+cd android
+sed -i "" -e "s/^APP_ABI/# APP_ABI/g" jni/Application.mk
+sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
+sed -i "" -e "s/android-16/android-9/g" jni/Application.mk
+NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
+cd ..
 exit 0
 fi
 

@@ -7,6 +7,11 @@
 #undef FAIL
 #define FAIL Q0
 #include "jr0.h"
+#ifdef ANDROID
+#if __ANDROID_API__ < 15
+#define log2(x) (log(x)/0.6931471805599453)
+#endif
+#endif
 
 // qstd is invoked in QEPILOG
 QF1(jtqstd){ // canonical form for w: 1155r210 -> 11r2

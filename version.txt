@@ -1,4 +1,4 @@
 // set version info for github build
 // any change to this file triggers copy build to jsoftware server
 // make a trivial change to this comment to rebuild and copy with the same version
-#define jversion "9.4.0-beta13"
+#define jversion "9.4.1"

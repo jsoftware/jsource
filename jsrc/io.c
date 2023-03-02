@@ -693,6 +693,7 @@ void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
 void jsto(JS jt,I type,C*s){C e;I ex;
  if(JT(jt,nfe))
  {JJ jm=MTHREAD(jt);  // get address of thread struct we are using.  For the nonce we always use the master in case there is stored state there, since we aren't executing sentences
+ if(MTYOEXIT==type) { JFree(JJTOJ(jt)); exit((int)(intptr_t)s); }
   // here for Native Front End state, toggled by 15!:16
   // we execute the sentence:  type output_jfe_ s    in the master thread
   fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1

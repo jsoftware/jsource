@@ -359,7 +359,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(outdir)\jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>10000000</StackReserveSize>
+      <StackReserveSize>12000000</StackReserveSize>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <Bscmake>

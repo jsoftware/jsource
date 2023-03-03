@@ -479,7 +479,7 @@ typedef I SI;
 #define SGNIFDENSE(t)   (~(t))  // set sign bit if t is dense
 #define ISDENSE(t)      ((t)>=0)  // true if dense
 // Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.
-// The inplaceability applies to the data area, but not necessarily to the block header: if UNINCORPORABLE is set, the header must not be modified (we clone the header in that case)
+// The inplaceability applies to the data area, but not necessarily to the block header: if UNINCORPORABLE is set, the header must not be modified (we clonevirtual() the header in that case)
 // For speedy singletons, there is the additional problem that the operation expects always to write a FL value to the result area, which is OK for any
 // real block but not for an inplaced virtual block, whose virtual data may be shorter than a FL.  The pure solution would be for the singleton code
 // to refrain from modifying a virtual block that is shorter than a FL, but that means we would have to test for it for every arithmetic operation.  Thus
@@ -578,7 +578,8 @@ typedef I SI;
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFUNINCORPABLEX SBTX      // matches SBTX 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
-                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes.  AFVIRTUAL must also be set
+                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes.  AFVIRTUAL must also be set.  If this block is
+                                // inplaceable, the data may be overwritten but the header must not be: clonevirtual() in that case to get a modifiable header
 #define AFVIRTUALX      C2TX      // matches C2TX 17
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it

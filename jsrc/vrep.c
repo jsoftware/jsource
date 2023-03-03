@@ -75,6 +75,8 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   n=0;  // cannot skip prefix of 1s if not inplace
  }else{
   z=w; // inplace
+  // We are going to change the type/shape/rank of the virtual block.  If it is UNINCORPABLE (meaning it will be reused), create a new clone.  We will still inplace the data area
+  if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));}
   AN(z)=zn;  // Install the correct atom count
   // see how many leading values of the result are already in position.  We don't need to copy them in the first cell
   UI *avv=IAV(a); for(n=0;n<((m-1)>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;  // n ends pointing to a word that is known not all valid, because there MUST be a 0 somewhere

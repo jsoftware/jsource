@@ -161,8 +161,6 @@ UI hic(I k, UC *v) {
  RETCRC3;
 }
 
-#define hicnz hic  // hicnz omits 0/255 bytes.  If this is just for performance, get rid of it
-
 // collect count LS sections of size lgsize (in bits) from v, where sections are separated by lgspacing bytes and we start with section number index 
 static UI fetchspread(UC *v, I lgspacing, I lgsize, I count, I index){UI ret = 0;
  DO(count, ret |= (UI)*(US*)(v+((index+i)<<lgspacing))<<(i<<lgsize););  // read 2 bytes to avoid overrun; expand to 64, shift
@@ -263,7 +261,7 @@ UI jthiau(J jt,A y){I m,n;UI z;X*u,x;
  switch(AT(y)){
  case INT:  R hici(n,AV(y));
  case RAT:  m+=n;  /* fall thru */
- case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; z=CRC32((UI4)z,(UI4)hicnz(XLIMBLEN(x)*SZI,UAV(x)));); R z;
+ case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; z=CRC32((UI4)z,(UI4)hic(XLIMBLEN(x)*SZI,UAV(x)));); R z;
  default:   R hic(n<<bplg(AT(y)),UAV(y));
  }
 }

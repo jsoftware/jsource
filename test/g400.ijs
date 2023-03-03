@@ -680,7 +680,7 @@ NB. zapped virtual block - used to corrupt memory
 3 : 'y=. [:^:0: y' y  NB. passes into verb, comes back, without freeing backer
 )
 
-a=: 3#.inv 49401 10852 55070 6484 14621 8515
+a=: 3#.^:_1 ] 49401 10852 55070 6484 14621 8515
 0 1 1 1 1 0 0 1 0 0 -: ([: {. (#~ <&2))"1 |: a  NB. # overwrites & changes shape of virtual block; must use a clone
 
 

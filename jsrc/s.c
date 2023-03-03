@@ -386,7 +386,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
   // during creation of the local symbol tables, where we will keep the lock once we take it
   SYMRESERVE(1) L *l=probeis(a,jt->locsyms); WRITEUNLOCK(jt->locsyms->lock);  // release the unneeded lock
   RZ(l);
-  AR(jt->locsyms)|=(~l->flag)&LPERMANENT;  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
+  AR(jt->locsyms)|=((~l->flag)&LPERMANENT)<<(ARNAMEADDEDX-LPERMANENTX);  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
   R l;
  }
 }

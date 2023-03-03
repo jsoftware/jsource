@@ -193,7 +193,7 @@ struct AD {
 #endif
  US h;   // reserved for allocator.  Not used for AFNJA memory
  UC filler;
- RANKT r;  // rank
+ RANKT r;  // rank  Used as flags in SYMB types (i. e. locales)
 #endif
  I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
   // when AFUNIFORMITEMS is set, s[0] holds the number of items in the raze of the block
@@ -636,9 +636,8 @@ typedef I SI;
 // rank flags in the AR field of symbol tables.  The allocated rank is always 0
 #define ARNAMEDX 0   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 #define ARNAMED ((I)1<<ARNAMEDX)   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
+// bit 1 not used
 // the rest of the flags apply only to local symbol tables
-#define ARNAMEADDEDX LPERMANENTX  // 2 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
-#define ARNAMEADDED (1LL<<ARNAMEADDEDX)
 #define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
 #define ARHASACVX 3   // set if this local symbol table contains an ACV
@@ -646,6 +645,8 @@ typedef I SI;
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original local symbol table when it is in use
 #define ARINVALID 64  // This (named or numbered) symbol table was never filled in and must not be analyzed when freed
+#define ARNAMEADDEDX 7  // 128 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag.  Keep as sign bit
+#define ARNAMEADDED (1LL<<ARNAMEADDEDX)
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 

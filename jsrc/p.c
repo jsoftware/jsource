@@ -470,19 +470,21 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (
   //         25 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  free
-  //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON, 21 flag to indicate global symbol table used
-  //  18-19 AR flags from symtab
-  //  16 set if value has been added to NVR stack
+  //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
+// obsolete , 21 flag to indicate global symbol table used
+  //  19 free
+  //  18   AR flag from symtab
+  //  16 free
   //  0-15 m (word# in sentence)
 #define NOTFINALEXECX 25  // bit must be >= VJTFLGOK2X and less than 32+PTISCAVNX, because we test values 
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
-#define LOCSYMFLGX (18-ARNAMEADDEDX)
+#define LOCSYMFLGX (18-ARLCLONEDX)  // add LOCSYMFLGX to AR*X to get to the flag bit in pt0ecam
 #define PLINESAVEX 20  // 3 bits of pline
-// above #define USEDGLOBALX 21
-// above #define USEDGLOBAL (1LL<<USEDGLOBALX)
+// obsolete #define USEDGLOBALX 21
+// obsolete #define USEDGLOBAL (1LL<<USEDGLOBALX)
 #define NAMEFLAGSX 17  // 17 and 20
-#define NVRSTACKEDX 16
-#define NVRSTACKED (1LL<<NVRSTACKEDX)
+// obsolete #define NVRSTACKEDX 16
+// obsolete #define NVRSTACKED (1LL<<NVRSTACKEDX)
   // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
 #if SY_64
 #define SETSTACK0PT(v) pt0ecam=(UI4)pt0ecam, pt0ecam|=(I)(v)<<32;
@@ -495,7 +497,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 #define STACK0PTISCAVN (PTISCAVN(stack0pt)<<(NOTFINALEXECX+1-PTISCAVNX))  // move the bit to above NOTFINALX
 #endif
   jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
-  UI pt0ecam = (AR(jt->locsyms)&(ARLCLONED|ARNAMEADDED))<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl.  locsyms cannot change during this execution
+  UI pt0ecam = (AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl.  locsyms cannot change during this execution
 
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
 
@@ -553,8 +555,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       I4 symx, buck;
       symx=NAV(QCWORD(y))->symx; buck=NAV(QCWORD(y))->bucket;
       L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
-      I bx=NAVV(QCWORD(y))->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
-      pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);
+      pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       y=QCWORD(y);  // back y up to the NAME block
       if((symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using primary table and there is a symbol stored there...
@@ -562,10 +563,13 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCGLOBAL semantics, as y does.
        raposlocalqcgsv(s->val,s->valtype,y);  // ra() the value to match syrd.  type has global flag clear
-      }else if(likely(buck!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic name
-       if((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0)goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
+      }else if(likely(buck!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
+       I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
+// obsolete        if(likely((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
+       if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
+       // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table
        if((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
-       raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra() the value to match syrd
+       raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // value found in local table.  ra() the value to match syrd
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
 rdglob: ;  // here when we tried the buckets and failed

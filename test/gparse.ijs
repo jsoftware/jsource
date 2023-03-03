@@ -102,6 +102,8 @@ undefname/ if. 0 do. return. end.
 v/
 )
 
+0 = {{ test [ [ [ (]'test')=. y }} 0  NB. stacking name that is defined earlier in the line by indirect assignment
+
 '|value error: t|       v/' -: efx '+ t 5'
 
 '|ill-formed number: efx|   1+1qs|     ^|   3     :(''1+1qs'',(10{a.))' -:&(}.~ i:&'|') efx '3 : (''1+1qs'',(10{a.))'

@@ -615,7 +615,6 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   ++job->internal.nf;  // we have finished a block - account for it
   i=job->ns; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status
   // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
-// scaf if job is the only job in q, remove it when we start the last task
   if(unlikely(i==lastqueuedtask)){
    // We are taking the last task.
    if(job==oldjob&&job->next==0){

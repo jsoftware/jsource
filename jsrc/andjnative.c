@@ -488,3 +488,19 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetc
   (*env)->ReleaseStringUTFChars(env, jsb, sb);
   (*env)->ExceptionClear(env);
 }
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JInterrupt
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JInterrupt
+(JNIEnv *env, jclass jcls)
+{
+  LOGD("JInterrupt");
+  jeinterrupt();
+  inputId = 0;
+  outputId = 0;
+  wdId = 0;
+}
+

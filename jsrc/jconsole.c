@@ -110,25 +110,25 @@ char histfile[512];
 static int readlineinit()
 {
  if(hreadline)return 0; // already run
+ static const char *libedit[] = {
 #ifndef __APPLE__
- if(!(hreadline=dlopen("libedit.so.5.2",RTLD_LAZY)))
- if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
- if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
-  if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))
-   if(!(hreadline=dlopen("libedit.so.0",RTLD_LAZY))){
+  "libedit.so.5.2","libedit.so.3","libedit.so.2","libedit.so.1","libedit.so.0","libedit.so",
 #else
- if(!(hreadline=dlopen("libedit.dylib",RTLD_LAZY))){
+  "libedit.dylib",
 #endif
+  0};
+ for(const char **l = libedit;*l;l++) if((hreadline=dlopen(*l,RTLD_LAZY))) goto ledit;
+ // couldn't find libedit
 #if defined(USE_LINENOISE)
-    add_history=linenoiseHistoryAdd;
-    read_history=linenoiseHistoryLoad;
-    write_history=linenoiseHistorySave;
-    readline=linenoise;
-    return 2;
+ add_history=linenoiseHistoryAdd;
+ read_history=linenoiseHistoryLoad;
+ write_history=linenoiseHistorySave;
+ readline=linenoise;
+ return 2;
 #else
-    return 0;
+ return 0;
 #endif
-   }
+ledit:
  add_history=(ADD_HISTORY)GETPROCADDRESS(hreadline,"add_history");
  read_history=(READ_HISTORY)GETPROCADDRESS(hreadline,"read_history");
  write_history=(WRITE_HISTORY)GETPROCADDRESS(hreadline,"write_history");
@@ -326,8 +326,10 @@ int main(int argc, char* argv[])
   if(!norl) norl|=!!getenv("SHELL");  // only works on real windows terminals
 #endif
 #endif
-  if(!norl&&_isatty(_fileno(stdin)))
+  if(!norl&&_isatty(_fileno(stdin))){
    breadline=readlineinit();
+   dlerror(); //clear error
+  }
 #endif
 
  jt=jeload(callbacks);

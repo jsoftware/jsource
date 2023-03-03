@@ -13,7 +13,9 @@ $ cd ..
 $ ndk-build
 
 for armeabi target, use gcc and older version of ndk
-$ NDK_TOOLCHAIN_VERSION=4.9 ~/android/android-ndk-r16b/ndk-build
+wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
+unzip android-ndk-r16b-darwin-x86_64.zip
+$ NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
 
 debug built
 in Application.mk change to APP_OPTIM=debug

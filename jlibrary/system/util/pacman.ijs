@@ -65,6 +65,7 @@ end.
 3 : 0''
 HTTPCMD=: ''
 nc=. '--no-cache'
+RELNO=: ,'0,p<.>0' (8!:2) 2 {. 100 #.inv JVERSION_NUMBER
 if. IFUNIX do.
   IFWGET=. IFCURL=. 0
   if. -. IFIOS +. UNAME-:'Android' do.
@@ -97,7 +98,7 @@ LIBTREE=: readtree''
 if. IFIOS do.
   WWW=: '/jal/',JRELEASE,'/'
 else.
-  WWW=: 'http://www.jsoftware.com/jal/',JRELEASE,'/'
+  WWW=: 'https://www.jsoftware.com/jal/',JRELEASE,'/'
 end.
 )
 destroy=: codestroy
@@ -326,10 +327,10 @@ else.
 end.
 )
 getJverold=: 3 : 0
-'j', ": 100 #. 2 {. 100 #.inv 0 pick revinfo_j_''
+'j', ": 100 #. 2 {. 100 #.inv JVERSION_NUMBER
 )
 getjqtversion=: 3 : 0
-suffix=. (IFUNIX>'/'e.LIBFILE)#'-9.4'
+suffix=. (IFUNIX>'/'e.LIBFILE)#'-',RELNO
 dat=. fread '~bin/jqt',suffix,IFWIN#'.exe'
 if. dat-:_1 do. '' return. end.
 ndx=. I. 'jqtversion:' E. dat
@@ -886,7 +887,7 @@ A=: ' ~addons/ide/jhs/config/jhs.cfg'
 L=: hostpathsep jpath'~/Desktop/'
 W=: hostpathsep jpath'~'
 I=: hostpathsep jpath'~bin/icons/'
-N=: (}.getJverold''),;IF64{'-32';''
+N=: RELNO
 DS=: ;(('Win';'Linux';'OpenBSD';'FreeBSD';'Darwin')i.<UNAME){'.lnk';'.desktop';'.desktop';'.desktop';'.app'
 LIB=: ''
 )
@@ -1026,7 +1027,7 @@ end.
 )
 plist=: 0 : 0
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>apprun</string>
 <key>CFBundleIconFile</key><string>i.icns</string>
@@ -1134,7 +1135,7 @@ if. #PLATFORMS do.
 end.
 if. #RELEASE do.
   rel=. <./0 ". 'j' -.~ RELEASE
-  ver=. 100 #. 2 {. 100 #.inv 0 pick revinfo_j_''
+  ver=. 100 #. 2 {. 100 #.inv JVERSION_NUMBER
   if. rel > ver do.
     0[echo 'Release not supported for this addon: ',9!:14'' return.
   end.
@@ -1552,10 +1553,7 @@ end.
 'upgrade installed - exit, restart J, and check JVERSION'
 )
 je_dlpath=: 3 : 0
-'a b c d'=. 100 #.inv JVERSION_NUMBER
-p=. 'j',(":a),_2{.'0',":b
-p=. p,'-',(d=0) pick 'beta';'release'
-'http://www.jsoftware.com/download/jengine/',p,'/'
+'https://www.jsoftware.com/download/jengine/j',RELNO,'/'
 )
 je_get=: 3 : 0
 'jvno plat bits name'=. y
@@ -1570,7 +1568,7 @@ plat=. ;i{'windows';'darwin';IFRASPI{::'linux';'raspberry'
 name=. ;i{'j.dll';'libj.dylib';'libj.so'
 bname=. '~bin/',name
 if. FHS*.IFUNIX do.
-  sub=. ; ('.',":) each 2 {. 100 #.inv JVERSION_NUMBER
+  sub=. '.',RELNO
   if. 'Darwin'-:UNAME do.
     d1=. (({.~ i:&'/')BINPATH),'/lib/'
   elseif. IFRASPI do.
@@ -1627,7 +1625,7 @@ ldd=. ('Darwin'-:UNAME){::'ldd';'otool -L'
 suffix=. ('Darwin'-:UNAME){::'so';'dylib'
 vsuffix=. ('Darwin'-:UNAME){::('so.',JQTVERSION);(JQTVERSION,'.dylib')
 if. FHS*.IFUNIX do.
-  d=. <;._2 hostcmd_jpacman_ ldd,' ',BINPATH,'/jqt-9.4'
+  d=. <;._2 hostcmd_jpacman_ ldd,' ',BINPATH,'/jqt-',RELNO
   d=. d,<;._2 hostcmd_jpacman_ ldd,' ',y,'/libjqt.',vsuffix
 else.
   d=. <;._2 hostcmd_jpacman_ ldd,' ',jpath'~bin/jqt'
@@ -1646,24 +1644,24 @@ bin=. 'JQt ',(((y-:'slim')#'slim ')),'binaries.'
 suffix=. IFUNIX{::'dll';('Darwin'-:UNAME){::'so';'dylib'
 vsuffix=. IFUNIX{::(JQTVERSION,'.dll');('Darwin'-:UNAME){::('so.',JQTVERSION);(JQTVERSION,'.dylib')
 smoutput 'Installing ',bin,'..'
-arch=. (#.IF64,~'x86'-:3{.9!:56'cpu'){::'32';'64';'x86';'x64'
+
 if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
   if. IFRASPI do.
-    z=. 'jqt-raspi',((y-:'slim')#'slim'),'-',arch,'.tar.gz'
-  elseif. 'Linux'-:UNAME do.
-    z=. 'jqt-',((y-.@-:'slim')#tolower UNAME),((y-:'slim')#'slim'),'-',arch,'.tar.gz'
-  elseif. do.
-    z=. 'jqt-',(tolower UNAME),((y-:'slim')#'slim'),'-',arch,'.tar.gz'
+    z=. 'jqt-raspi',((-.IF64)#'-arm32'),((y-:'slim')#'-slim'),'.tar.gz'
+  else.
+    z=. 'jqt-',(tolower UNAME),(('arm64'-:9!:56'cpu')#'-arm64'),((y-:'slim')#'-slim'),'.tar.gz'
   end.
   z1=. 'libjqt.',suffix
 elseif. IFWIN do.
-  z=. 'jqt-win',((y-:'slim')#'slim'),'-',arch,'.zip'
+  z=. 'jqt-win',((y-:'slim')#'-slim'),'.zip'
   z1=. 'jqt.',suffix
 elseif. do.
-  z=. 'jqt-mac',((y-:'slim')#'slim'),'-',arch,'.zip'
+  z=. 'jqt-mac',((y-:'slim')#'-slim'),'.zip'
   z1=. 'libjqt.',suffix
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j9.4/qtide/',z
+
+www=. 'https://www.jsoftware.com/download/j',RELNO
+'rc p'=. httpget_jpacman_ www,'/qtide/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
@@ -1683,11 +1681,11 @@ else.
     end.
     echo 'install libjqt.',suffix,' to ',d1
     hostcmd_jpacman_ 'rm -f ',BINPATH,'/jqt'
-    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.4 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
-    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-9.4 && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
+    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-',RELNO,' && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
+    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-',RELNO,' && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
     if. 'Linux'-:UNAME do.
-      echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 9.4'
-      hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-9.4 9.4'
+      echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-',RELNO,' ',RELNO
+      hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-',RELNO,' ',RELNO
     end.
   else.
     hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
@@ -1712,13 +1710,13 @@ tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt6Core.dll'
 y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
-arch=. (#.IF64,~'x86'-:3{.9!:56'cpu'){::'32';'64';'x86';'x64'
+arch=. IF64{::'x86';'x64'
 if. IFWIN do.
   z=. 'qt62-win-',((y-:'slim')#'slim-'),arch,'.zip'
 else.
   z=. 'qt62-mac-',((y-:'slim')#'slim-'),arch,'.zip'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j9.4/qtlib/',z
+'rc p'=. httpget_jpacman_ www,'/qtlib/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
@@ -1778,7 +1776,7 @@ elseif. IFWIN do.
 elseif. do.
   z=. libname,~ 'apple/macos/'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/jengine/mpir/',z
+'rc p'=. httpget_jpacman_ 'https://www.jsoftware.com/download/jengine/mpir/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.

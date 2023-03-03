@@ -80,4 +80,4 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 #endif //PYXES
 
 // remove wakeup to this thread; if wakeup in progress, wait till it finishes
-#define CLRFUTEXWT {sta(&jt->futexwt,0); while(unlikely(__atomic_fetch_add(&jt->taskstate,0,__ATOMIC_ACQ_REL)&TASKSTATEFUTEXWAKE))YIELD;}  // must use RFO cycle to the semaphore
+#define CLRFUTEXWT {sts(&jt->futexwt,0); while(unlikely(lda(&jt->taskstate)&TASKSTATEFUTEXWAKE))YIELD;}  // must seqcst access to futexwt to ensure it happens before the load of taskstate; could equivalently fence in between.  (Another option is to membarrier, a la hazard pointers, but considering we just did a syscall, I don't think it matters.)

@@ -222,11 +222,14 @@ static C*jtbrephdrq(J jt,B b,B d,A w,C *q){
  RZ(mvw(BR(d,q),(C*)&r,1L,b,BU,d,SY_64));  // r is an I
  if (unlikely(ISGMP(w)) && unlikely(d!=SY_64)) {
   I s0= XSGN(w);
-  if (SY_64) {
+#if defined(_WIN64)||defined(__LP64__)
+//  if (SY_64) {
    s0<<=1; s0-= XLIMBn(w)<((UI)1<<32);
-  } else {
+//  } else {
+#else
    s0= s0+1; s0>>=1;
-  }
+#endif
+//  }
   RZ(mvw(BS(d,q),(C*)&s0,1,b,BU,d,SY_64));
  } else {
   RZ(mvw(BS(d,q),(C*) AS(w),r, b,BU,d,SY_64));

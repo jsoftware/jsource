@@ -91,6 +91,14 @@ JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JGetLocale
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
   (JNIEnv *, jclass, jstring, jstring);
 
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JInterrupt
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JInterrupt
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

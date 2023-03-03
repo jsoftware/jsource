@@ -213,7 +213,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(outdir)/jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>10000000</StackReserveSize>
+      <StackReserveSize>12000000</StackReserveSize>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
@@ -265,7 +265,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug/jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>10000000</StackReserveSize>
+      <StackReserveSize>12000000</StackReserveSize>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <Bscmake>
@@ -312,7 +312,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug64/jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>10000000</StackReserveSize>
+      <StackReserveSize>12000000</StackReserveSize>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -359,7 +359,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(outdir)\jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>10000000</StackReserveSize>
+      <StackReserveSize>12000000</StackReserveSize>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <Bscmake>
@@ -407,7 +407,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>$(outdir)\jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>5000000</StackReserveSize>
+      <StackReserveSize>12000000</StackReserveSize>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <Bscmake>
@@ -456,7 +456,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\Release/jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>5000000</StackReserveSize>
+      <StackReserveSize>12000000</StackReserveSize>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <Bscmake>

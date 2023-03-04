@@ -18,8 +18,6 @@
 #endif
 
 #if SY_64
-typedef long long          A1;
-typedef unsigned long long BT;
 typedef long long          I;
 typedef long long          SB;
 typedef unsigned long long UI;
@@ -30,11 +28,9 @@ typedef long long          IL;
 #define NANFLAG 0x7ff28da91LL  // signaling NaN with a particular value
 
 #else
-typedef long               A1;
-typedef unsigned long      BT;
-typedef long               I;
-typedef long               SB;
-typedef unsigned long      UI;
+typedef int                I;
+typedef int                SB;
+typedef unsigned int       UI;
 typedef unsigned long long UIL;
 typedef long long          IL;
 #endif

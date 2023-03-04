@@ -355,10 +355,10 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define IMIN            (~2147483647L)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define FLIMAX          ((D)IMAX+0.4)     // largest FL value that can be converted to I
 #define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
-#define FMTI            "%li"
-#define FMTI02          "%02li"
-#define FMTI04          "%04li"
-#define FMTI05          "%05li"
+#define FMTI            "%d"
+#define FMTI02          "%02d"
+#define FMTI04          "%04d"
+#define FMTI05          "%05d"
 #define strtoI          strtol
 #endif
 
@@ -528,7 +528,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if C_USEMULTINTRINSIC
 #if !defined(MMSC_VER)
 #if defined(__clang__)
-#if !__has_builtin(__builtin_smull_overflow)
+#if !__has_builtin(__builtin_smul_overflow)
 #undef C_USEMULTINTRINSIC
 #define C_USEMULTINTRINSIC 0
 #endif
@@ -2385,9 +2385,9 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULD(x,y,z,s) _p = __emul(x,y); z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU){s}
 #else
 #define DPMULDECLS
-#define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z)){s}
+#define DPMUL(x,y,z,s) if(__builtin_smul_overflow(x,y,z)){s}
 #define DPMULDDECLS
-#define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z)){s}
+#define DPMULD(x,y,z,s) if(__builtin_smul_overflow(x,y,&z)){s}
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (32-bit)
 #define DPMULDECLS D _p;

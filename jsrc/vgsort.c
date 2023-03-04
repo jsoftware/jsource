@@ -290,8 +290,8 @@ static SF(jtsortiq){F1PREFIP;  // m=#sorts, n=#items in each sort, w is block
  else GA(z,AT(w),AN(w),AR(w),AS(w));
  I *zv=IAV(z),*wv=IAV(w);
  DQ(m,
-  if(inplace)vvsortqs8ai(zv,n);
-  else vvsortqs8ao(zv,wv,n),wv+=n;
+  if(inplace)vvsortqiai(zv,n);
+  else vvsortqiao(zv,wv,n),wv+=n;
   if((I)jtinplace&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} //scaf strawman reverse if desc
   zv+=n;)
  RETF(z);}

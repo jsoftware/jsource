@@ -246,10 +246,13 @@ static SF(jtsorti1){F1PREFJT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  R z;
 }    /* w grade"r w on large-range integers */
 
+//todo should use for avx2 too
+//maybe even swar??
+#if !C_AVX512
 // sort a single integer list using quicksort without misprediction, inplace
 #define SORTQCOND ((C_AVX2&&SY_64) || EMU_AVX2)
-#define SORTQNAME sortiq1
-#define SORTQTYPE I
+#define SORTQNAME vvsortqs8ai
+#define SORTQTYPE IL
 #define SORTQSCOPE
 #define SORTQSET256 _mm256_set_epi64x
 #define SORTQTYPE256 __m256i
@@ -261,14 +264,37 @@ static SF(jtsorti1){F1PREFJT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 #define SORTQULOADTYPE __m256i*
 #include "vgsortq.h"
 
+#define SORTQCOND 0 //todo--avx2 vectorised version wants 8-byte quantities so disable for now.  Fine as should switch to 
+#define SORTQNAME vvsortqs4ai
+#define SORTQTYPE I4
+#define SORTQSCOPE
+#define SORTQSET256 _mm256_set_epi32
+#define SORTQTYPE256 __m256i
+#define SORTQCASTTOPD _mm256_castsi256_pd
+#define SORTQCMP256 _mm256_cmpgt_epi32
+#define SORTQCMPTYPE 
+#define SORTQMASKLOAD _mm256_maskload_epi32
+#define SORTQULOAD _mm256_loadu_si256
+#define SORTQULOADTYPE __m256i*
+#include "vgsortq.h"
+// scaf
+void vvsortqs8ao(IL *z,IL *w,I n){ memcpy(z,w,8*n); vvsortqs8ai(z,n); }
+void vvsortqs4ao(I4 *z,I4 *w,I n){ memcpy(z,w,4*n); vvsortqs4ai(z,n); }
+#endif
+
+
 // JTDESCEND set in jt
 static SF(jtsortiq){F1PREFIP;  // m=#sorts, n=#items in each sort, w is block
- A z; 
- if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
- I *zv=IAV(z); DQ(m, sortiq1(zv,n); if((I)jtinplace&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
- RETF(z);
-}
-
+ A z;I inplace=ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w); //inplace sort?
+ if(inplace)z=w;
+ else GA(z,AT(w),AN(w),AR(w),AS(w));
+ I *zv=IAV(z),*wv=IAV(w);
+ DQ(m,
+  if(inplace)vvsortqs8ai(zv,n);
+  else vvsortqs8ao(zv,wv,n),wv+=n;
+  if((I)jtinplace&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} //scaf strawman reverse if desc
+  zv+=n;)
+ RETF(z);}
 
 static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  wv=AV(w);

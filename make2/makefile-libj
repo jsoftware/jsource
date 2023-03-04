@@ -119,6 +119,7 @@ OBJS=  \
  vgcomp.o \
  vgranking.o \
  vgsort.o \
+ vgsortiqavx512.o \
  vgsp.o \
  viix.o \
  visp.o \

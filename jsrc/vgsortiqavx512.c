@@ -347,7 +347,7 @@ static INLINE void pivotqs8ob(I *z,I *w,I n,I **zm,I *min,I *max,I *pivot){
 // sort u4 in place and then explode to s8 high, descending from zh
 // returns zl (useful for recursion)
 I *sortqu4iehi(UI4 *wl,UI4 *wh,I *zh,UI4 min,UI4 max,I base){
- if(wh-wl<=16*8){I *r=zh-(wh-wl);sortnu4e(wl,wh-wl,base,r);R r;}
+ if(wh-wl<=10*16){I *r=zh-(wh-wl);sortnu4e(wl,wh-wl,base,r);R r;}
  UI4 *wm,p;
  pivotqu4ip(wl,wh,&wm,&p);
  // must sort high before low, else exploding low may overwrite high
@@ -355,7 +355,7 @@ I *sortqu4iehi(UI4 *wl,UI4 *wh,I *zh,UI4 min,UI4 max,I base){
 
 // ditto, but low and ascending
 I *sortqu4ielo(UI4 *wl,UI4 *wh,I *zl,UI4 min,UI4 max,I base){
- if(wh-wl<=16*8){sortnu4e(wl,wh-wl,base,zl);R zl+(wh-wl);}
+ if(wh-wl<=10*16){sortnu4e(wl,wh-wl,base,zl);R zl+(wh-wl);}
  UI4 *wm,p;
  pivotqu4ip(wl,wh,&wm,&p);
  R sortqu4ielo(wm,wh,sortqu4ielo(wm,wh,zl,min,p,base),p,max,base);}
@@ -363,7 +363,7 @@ I *sortqu4ielo(UI4 *wl,UI4 *wh,I *zl,UI4 min,UI4 max,I base){
 static void sort_or_squishlos8(I*,I*,I,I);
 
 void sortqs8i(I *zl,I *zh,I min,I max){I *zm,p;
- if(zh-zl<=8*8){sortns8(zl,zl,zh-zl);R;}
+ if(zh-zl<=10*8){sortns8(zl,zl,zh-zl);R;}
  p=PIVOT(zl,(zh-zl));
 #if 0
  if((UI)(p-min)<(1ull<<32)){
@@ -429,7 +429,7 @@ static void sort_or_squishlos8(I *zl,I *zh,I min,I max){
   sortqs8i(zl,zh,min,max);}}
 
 void vvsortqs8ao(I *zl,I*w,I n){
- if(n<=8*8){sortns8(zl,w,n);R;}
+ if(n<=10*8){sortns8(zl,w,n);R;}
  I min,max,pivot,*zm;
  pivotqs8ob(zl,w,n,&zm,&min,&max,&pivot);
  I *zh=zl+n;
@@ -455,7 +455,7 @@ void vvsortqs8ao(I *zl,I*w,I n){
 #endif
 }
 void vvsortqs8ai(I *zl,I n){
- if(n<=8*8){sortns8(zl,zl,n);R;}
+ if(n<=10*8){sortns8(zl,zl,n);R;}
  I min,max,pivot,*zm;
  pivotqs8ib(zl,zl+n,&zm,&min,&max,&pivot);
  I *zh=zl+n;

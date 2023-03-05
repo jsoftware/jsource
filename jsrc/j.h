@@ -451,12 +451,16 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define RESTRICTF __declspec(restrict)
 #define PREFETCH(x) _mm_prefetch((x),_MM_HINT_T0)
 #define PREFETCH2(x) _mm_prefetch((x),_MM_HINT_T1)   // prefetch into L2 cache but not L1
-#endif
-#ifdef __GNUC__
-#define RESTRICT __restrict
-// No RESTRICTF on GCC
+#elif defined(__GNUC__)
+#define RESTRICT restrict
+#define RESTRICTF __attribute__((malloc))
 #define PREFETCH(x) __builtin_prefetch(x)
 #define PREFETCH2(x) __builtin_prefetch((x),0,2)   // prefetch into L2 cache but not L1
+#else
+#define RESTRICT
+#define RESTRICTF
+#define PREFETCH(x)
+#define PREFETCH2(x)
 #endif
 
 #ifdef __MINGW32__

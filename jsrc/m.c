@@ -954,9 +954,7 @@ A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
   np=*wv;  // prefetch first box
   NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
-#ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
-#endif
 #if AUDITEXECRESULTS
 if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
@@ -1008,9 +1006,7 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
      np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
      // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
      // value has been installed.  Thus we ensure that fa() never causes a system lock.
-#ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
-#endif
      // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
      if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
       if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
@@ -1160,10 +1156,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
     // We never tpush a PERMANENT block, but a block can become PERMANENT during the run, so we have to check
     if(likely(!ACISPERM(c))){     // if block not PERMANENT...
      I flg=AFLAG(np);  // fetch flags, just in case
-
-#ifdef PREFETCH
      PREFETCH((C*)np0);   // prefetch the next box.  Might be 0; that's no crime
-#endif
      // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
      // Otherwise just decrement the count
      if(c<=1||ACDECRNOPERM(np)<=1){  // avoid RFO if count is 1

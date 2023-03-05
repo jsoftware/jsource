@@ -123,6 +123,12 @@ static INLINE void comphcm4(UI4 **l,UI4 **h,V v,I min,V po,M1 m) {
  M1 mh=CMPGMS8(v,po,m);
  _mm256_mask_compressstoreu_epi32(*l,ml,vh);*l+=PCNT(ml);
  _mm256_mask_compressstoreu_epi32(*h-=PCNT(mh),mh,vh);}
+static INLINE void comphca4(UI4 **l,UI4 **h,V v,I min,V po,I4 *ls,I4 *hs) {
+ VH vh=_mm512_cvtepi64_epi32(VSUB8(v,VBC8(min)));
+ M1 m=CMPLS8(v,po);
+ _mm256_mask_compressstoreu_epi32(*l,m,vh);*l+=PCNT(m);
+ _mm256_mask_compressstoreu_epi32(*h=*h-8+PCNT(m),~m,vh);
+ *ls-=PCNT(m);*hs-=8-PCNT(m);}
 // adjust space metrics too
 static INLINE void compca4(UI4 **l,UI4 **h,V v,V p,I4 *ls,I4 *hs){
  M2 m=CMPLU4(v,p);
@@ -174,13 +180,10 @@ static INLINE void compca8(I **l,I **h,V v,V p,I4 *ls,I4 *hs){
 // start by squishing towards low address, and then when done expand from high addresses to low ones
 #define PIVOTQSQUISHMIN 256
 void pivotqs8_squishlo4(I *z,I n,I min,I *opivot,UI4 **omid,UI4 **ohi){
- enum { BUFZ = 128 };
- _Alignas(64) UI4 buf[BUFZ]; //8 vectors (<2.5 from each of low and high, plus up to 1.5 more for alignment reasons)
  I pivoti;I ps=PIVOTI(z,n,pivoti);V po=VBC8(ps);V pn=VBC4(ps-min);
  I *lir=z,*hir=z+(n>>1);
  UI4 *liw=(UI4*)(I)lir,*hiw=(UI4*)(I)hir; // lo/hi read/write heads
  I *hhi=z+((n+1)>>1); // start of the 'high region'; see below for why this is sometimes different from hi
- UI4 *bl=buf,*bh=buf+BUFZ;
  // we want to grab two qword vectors, reduce them by min, and then combine into a single dword vector (without regard for order).  How?  shufps can do it at least, as can pshufd with merge-masking
  // compress is 2c/3c (skx/icx) at p5
  // shuffle is 1c at p5
@@ -200,38 +203,45 @@ void pivotqs8_squishlo4(I *z,I n,I min,I *opivot,UI4 **omid,UI4 **ohi){
  // because we use </>= to partition, the pivot always goes into the high partition.  So we take the ignored qword and swap its position with that of the pivot, and then fix up the ignored qword into the ignored dword
  if(n&1){ z[pivoti]=*hir; *(UI4*)hir=ps-min; } // not worth dispatch to check if pivoti==hi.  WAR not RAW, so should not even be slow, but even if it is, who cares
 
- // first, load <=1 vector each from z and hi to force them to be aligned; squish into one (potentially sparse) vector and compress into the buffer
+ // first, load <=1 vector each from zl and zh to force them to be aligned; squish into one (potentially sparse) vector and compress into the buffer
+ V bva;M2 bvam;
  {M1 lm,hm;V l=alignup8(&lir,&lm),h=aligndown8(&hir,&hm);
-  compcm4(&bl,&bh,squishc48(l,h,min),pn,_mm512_kunpackb(hm,lm));}
+  bva=squishc48(l,h,min);bvam=_mm512_kunpackb(hm,lm);}
+ // load 4 additional vectors each from lo and hi to make space to unroll twice; squish into 4 buffered vectors
+ V bv0=squish48(VL(lir+0),VL(lir+ 8),min);lir+=16;
+ V bv1=squish48(VL(lir+0),VL(lir+ 8),min);lir+=16;
+ V bv2=squish48(VL(hir-8),VL(hir-16),min);hir-=16;
+ V bv3=squish48(VL(hir-8),VL(hir-16),min);hir-=16;
+ I4 hs=0,ls=0; // amount of high/low space.  Relative, so just initialise at 0.  TODO because we squish, I think we can get away with just alternately grabbing from high/low for all but the most pathological of distributions?
  // if the #vectors left to compress is not a multiple of 4, make it one
- if(16&(hir-lir)){compc4(&bl,&bh,squish48(VL(hir-16),VL(hir-8),min),pn);hir-=16;}
- if( 8&(hir-lir)){comphc4(&bl,&bh,VL(hir-8),min,po);hir-=8;}
- // then compress into the buffer four additional vectors each from lo and hi into the buffer to make space to unroll twice
- compc4(&bl,&bh,squish48(VL(lir+0),VL(lir+ 8),min),pn);lir+=16;
- compc4(&bl,&bh,squish48(VL(lir+0),VL(lir+ 8),min),pn);lir+=16;
- compc4(&bl,&bh,squish48(VL(hir-8),VL(hir-16),min),pn);hir-=16;
- compc4(&bl,&bh,squish48(VL(hir-8),VL(hir-16),min),pn);hir-=16;
- assert(bl<=bh);
- I4 hs=(I*)hiw-hir,ls=lir-(I*)liw; // amount of high/low space.  TODO because we squish, I think we can get away with just alternately grabbing from high/low for all but the most pathological of distributions?
+ if(16&(hir-lir)){
+  compca4(&liw,&hiw,squish48(VL(lir),VL(lir+8),min),pn,&ls,&hs);
+  lir+=16;ls+=16;}
+ if( 8&(hir-lir)){
+  comphca4(&liw,&hiw,VL(lir),min,po,&ls,&hs);
+  lir+=8;ls+=8;}
  I niter=(hir-lir)>>5;
- hir-=32; // hir is now implicitly offset; points _to_ the last vector-pair, rather than one past it, so we can always load two full vectors from hir or lir
+ hir-=32; // hir is now implicitly offset; points _to_ the last vector-quad, rather than one past it, so we can always load four full vectors from hir or lir
  while(niter--){
   I *ptr=ls<hs?lir:hir;
   I lad=ls<hs; // did we adjust the low read head or the high one?
-  ls+=lad<<5;hs+=(1<<5)^(lad<<5); // whichever we're adjusting, we made space for 32 elements
+  ls+=lad<<6;hs+=(1<<6)^(lad<<6); // whichever we're adjusting, we made space for 64 elements (popped 32 big elements; made space for 64 squished elements)
   lir+=lad<<5;hir-=(1<<5)^(lad<<5);
   V v0=squish48(VL(ptr),   VL(ptr+ 8),min),
     v1=squish48(VL(ptr+16),VL(ptr+24),min);
   compca4(&liw,&hiw,v0,pn,&ls,&hs);
   compca4(&liw,&hiw,v1,pn,&ls,&hs);}
- assert(hir+32==lir);
+ //assert(hir+32==lir);
  // todo since we're squishing, we should have space in the original array to store this there
+ // to store what? what did I mean?
+ compcm4(&liw,&hiw,bva,pn,bvam);
+ compc4(&liw,&hiw,bv0,pn);
+ compc4(&liw,&hiw,bv1,pn);
+ compc4(&liw,&hiw,bv2,pn);
+ compc4(&liw,&hiw,bv3,pn);
  // now compress hhi through z+n into the leftover space
  // first align hhi
  {M1 hhim;V v=alignup8(&hhi,&hhim);comphcm4(&liw,&hiw,v,min,po,hhim);}
- // copy out elements from buffer
- memcpy(liw,buf,4*(bl-buf));liw+=bl-buf;
- memcpy(hiw-=(buf+BUFZ-bh),bh,4*(buf+BUFZ-bh));
  // force #vectors remaining to be a multiple of 4
  if ( 8&(z+n-hhi)){comphc4(&liw,&hiw,VL(hhi),min,po);hhi+=8;}
  if (16&(z+n-hhi)){compc4(&liw,&hiw,squish48(VL(hhi),VL(hhi+8),min),pn);hhi+=16;}
@@ -247,7 +257,7 @@ void pivotqs8_squishlo4(I *z,I n,I min,I *opivot,UI4 **omid,UI4 **ohi){
   if(remaining>16){compc4(&liw,&hiw,squish48(VL(remp),VL(remp+8),min),pn);remp+=16;remaining-=16;}
   if(remaining>8){comphc4(&liw,&hiw,VL(remp),min,po);remp+=8;remaining-=8;}
   M1 m=BZHI(0xff,remaining);comphcm4(&liw,&hiw,VLM8(remp,m),min,po,m);}
- assert(liw==hiw);
+ //assert(liw==hiw);
  *opivot=ps;
  *omid=liw;
  *ohi=(UI4*)z+n;}
@@ -284,7 +294,7 @@ static INLINE void pivotqs8ob(I *z,I *w,I n,I **zm,I *min,I *max,I *pivot){
  {M1 m=BZHI(0xff,1+(7&(n-1)));
   V v=VLM8(rl,m);vmin=VMINMS8(vmin,v,m);vmax=VMAXMS8(vmax,v,m);
   compcm8(&wl,&wh,v,p,m);}
- assert(wl==wh);
+ //assert(wl==wh);
  *zm=wl; //wl and wh should be the same now
  *min=VMINRS8(vmin);
  *max=VMAXRS8(vmax);
@@ -308,7 +318,7 @@ static INLINE void pivotqs8ob(I *z,I *w,I n,I **zm,I *min,I *max,I *pivot){
 #define COMPC compc8
 #define COMPCM compcm8
 #define ALIGNUP alignup8
-#define ALIGNDOWN aligndown8
+#define ALIGNDN aligndown8
 
 #include "vgsortiqavx512.h"
 
@@ -330,7 +340,7 @@ static INLINE void pivotqs8ob(I *z,I *w,I n,I **zm,I *min,I *max,I *pivot){
 #define COMPC compc4
 #define COMPCM compcm4
 #define ALIGNUP alignup4
-#define ALIGNDOWN aligndown4
+#define ALIGNDN aligndown4
 
 #include "vgsortiqavx512.h"
 

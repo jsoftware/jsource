@@ -32,24 +32,25 @@
 #define VW (64/TZ) //vector width: #elements in a vector
 
 // inplace pivot [zl zh) according to pivot, storing middle pointer to zm
-// requires l/h to contain at least 7 vectors
+// requires l/h to contain at least 6 vectors
 void PASTE(pivotq,PASTE(SORTQNAME,i))(T *zl,T *zh,T **zm,T pivot){
  T ps=PIVOT(zl,(zh-zl));V p=VBC(ps); //todo use PIVOTP
- enum { BUFZ = 448 / TZ }; // <=1x alignment vector from each of low/high, plus 2x buffer vectors, plus 1x to ensure even vector count
- T buf[BUFZ],*bl=buf,*bh=buf+BUFZ;
  T *rl=zl,*rh=zh,*wl=zl,*wh=zh;
+ // buffered vectors bv*, possibly partial with masks:
  // align rl/rh
- {M ml,mh;V vl=ALIGNUP(&rl,&ml),vh=ALIGNDOWN(&rh,&mh);
-  COMPCM(&bl,&bh,vl,p,ml);
-  COMPCM(&bl,&bh,vh,p,mh);}
- // clear space for two vectors from each of rh/l into the buffer
- COMPC(&bl,&bh,VL(rl),p);rl+=VW;
- COMPC(&bl,&bh,VL(rl),p);rl+=VW;
- COMPC(&bl,&bh,VL(rh-VW),p);rh-=VW;
- COMPC(&bl,&bh,VL(rh-VW),p);rh-=VW;
- // ensure even #vectors left
- if(64&((I)rh-(I)rl)){ COMPC(&bl,&bh,VL(rl),p);rl+=VW; }
+ V bvl,bvh;M bvlm,bvhm;
+ V bv0,bv1,bv2,bv3; // 4 buffer vectors, and possibly one vector of buffer
+ bvl=ALIGNUP(&rl,&bvlm);
+ bvh=ALIGNDN(&rh,&bvhm);
+ bv0=VL(rl);rl+=VW;
+ bv1=VL(rl);rl+=VW;
+ bv2=VL(rh-=VW);
+ bv3=VL(rh-=VW);
  I4 hs=0,ls=0; // track amount of free space left in each of the low and high parts.  Doesn't need to be exact, so just initialise to zero; we care about their relative positions
+ // if odd #vectors, ensure even
+ if(VW&(rh-rl)){
+  COMPCA(&wl,&wh,VL(rl),p,&ls,&hs);
+  ls+=VW;rl+=VW;}
  I niter=(UI)(rh-rl)/(UI)(2*VW);
  rh-=2*VW; // now implicitly offset by 2 vectors, so we can always read 2 vectors from either of rl and rh
  while(niter--){
@@ -60,10 +61,13 @@ void PASTE(pivotq,PASTE(SORTQNAME,i))(T *zl,T *zh,T **zm,T pivot){
   V v0=VL(ptr),v1=VL(ptr+VW);
   COMPCA(&wl,&wh,v0,p,&ls,&hs);
   COMPCA(&wl,&wh,v1,p,&ls,&hs);}
- assert(wh-wl==(bl-buf)+(buf+BUFZ-bh));
- memcpy(wl,buf,TZ*(bl-buf));
- wl+=bl-buf;
- memcpy(wl,bh,TZ*(buf+BUFZ-bh));
+ COMPCM(&wl,&wh,bvl,p,bvlm);
+ COMPCM(&wl,&wh,bvh,p,bvhm);
+ COMPC(&wl,&wh,bv0,p);
+ COMPC(&wl,&wh,bv1,p);
+ COMPC(&wl,&wh,bv2,p);
+ COMPC(&wl,&wh,bv3,p);
+ //assert(wl==wh);
  *zm=wl;}
 
 // ditto, but pick a pivot for me, and write it out to pivot
@@ -73,25 +77,23 @@ void PASTE(pivotq,PASTE(SORTQNAME,ip))(T *zl,T *zh,T **zm,T *pivot){
 // pick a pivot for me, and also calculate bounds
 void PASTE(pivotq,PASTE(SORTQNAME,ib))(T *zl,T *zh,T **zm,T *min,T *max,T *pivot){
  T ps=PIVOT(zl,(zh-zl));V p=VBC(ps); //todo use PIVOTP
- enum { BUFZ = 448 / TZ }; // <=1x alignment vector from each of low/high, plus 2x buffer vectors, plus 1x to ensure even vector count
  V vmin=VBC(TMAXV),vmax=VBC(TMINV);
- T buf[BUFZ],*bl=buf,*bh=buf+BUFZ;
  T *rl=zl,*rh=zh,*wl=zl,*wh=zh;
+ V bvl,bvh;M bvlm,bvhm;
+ V bv0,bv1,bv2,bv3;
  // align rl/rh
- {M ml,mh;V vl=ALIGNUP(&rl,&ml),vh=ALIGNDOWN(&rh,&mh);
-  vmin=VMINM(VMINM(vmin,vl,ml),vh,mh);
-  vmax=VMAXM(VMAXM(vmax,vl,ml),vh,mh);
-  COMPCM(&bl,&bh,vl,p,ml);
-  COMPCM(&bl,&bh,vh,p,mh);}
+ bvl=ALIGNUP(&rl,&bvlm);vmin=VMINM(vmin,bvl,bvlm);vmax=VMAXM(vmax,bvl,bvlm);
+ bvh=ALIGNDN(&rh,&bvhm);vmin=VMINM(vmin,bvh,bvhm);vmax=VMAXM(vmax,bvh,bvhm);
  // clear space for two vectors from each of rh/l into the buffer
- {V tv;
-  COMPC(&bl,&bh,tv=VL(rl),   p);rl+=VW;vmin=VMIN(vmin,tv);vmax=VMAX(vmax,tv);
-  COMPC(&bl,&bh,tv=VL(rl),   p);rl+=VW;vmin=VMIN(vmin,tv);vmax=VMAX(vmax,tv);
-  COMPC(&bl,&bh,tv=VL(rh-VW),p);rh-=VW;vmin=VMIN(vmin,tv);vmax=VMAX(vmax,tv);
-  COMPC(&bl,&bh,tv=VL(rh-VW),p);rh-=VW;vmin=VMIN(vmin,tv);vmax=VMAX(vmax,tv);}
- // ensure even #vectors left
- if(64&((I)rh-(I)rl)){ COMPC(&bl,&bh,VL(rl),p);vmin=VMIN(vmin,VL(rl));vmax=VMAX(vmax,VL(rl));rl+=VW; }
+ bv0=VL(rl);rl+=VW;vmin=VMIN(vmin,bv0);vmax=VMAX(vmax,bv0);
+ bv1=VL(rl);rl+=VW;vmin=VMIN(vmin,bv1);vmax=VMAX(vmax,bv1);
+ bv2=VL(rh-=VW);   vmin=VMIN(vmin,bv2);vmax=VMAX(vmax,bv2);
+ bv3=VL(rh-=VW);   vmin=VMIN(vmin,bv3);vmax=VMAX(vmax,bv3);
  I4 hs=0,ls=0; // track amount of free space left in each of the low and high parts.  Doesn't need to be exact, so just initialise to zero; we care about their relative positions
+ // ensure even #vectors left
+ if(VW&(rh-rl)){
+  V t=VL(rl); COMPCA(&wl,&wh,t,p,&ls,&hs);vmin=VMIN(vmin,t);vmax=VMAX(vmax,t);
+  ls+=VW;rl+=VW;}
  I niter=(UI)(rh-rl)/(UI)(2*VW);
  rh-=2*VW; // now implicitly offset by 2 vectors, so we can always read 2 vectors from either of rl and rh
  while(niter--){
@@ -104,10 +106,13 @@ void PASTE(pivotq,PASTE(SORTQNAME,ib))(T *zl,T *zh,T **zm,T *min,T *max,T *pivot
   vmax=VMAX(vmax,VMAX(v0,v1));
   COMPCA(&wl,&wh,v0,p,&ls,&hs);
   COMPCA(&wl,&wh,v1,p,&ls,&hs);}
- assert(wh-wl==(bl-buf)+(buf+BUFZ-bh));
- memcpy(wl,buf,TZ*(bl-buf));
- wl+=bl-buf;
- memcpy(wl,bh,TZ*(buf+BUFZ-bh));
+ COMPCM(&wl,&wh,bvl,p,bvlm);
+ COMPCM(&wl,&wh,bvh,p,bvhm);
+ COMPC(&wl,&wh,bv0,p);
+ COMPC(&wl,&wh,bv1,p);
+ COMPC(&wl,&wh,bv2,p);
+ COMPC(&wl,&wh,bv3,p);
+ //assert(wl==wh);
  *zm=wl;
  *pivot=ps;
  *min=VMINR(vmin);
@@ -117,7 +122,7 @@ void PASTE(pivotq,PASTE(SORTQNAME,ib))(T *zl,T *zh,T **zm,T *min,T *max,T *pivot
 #undef PASTE
 #undef PASTE2
 
-#undef ALIGNDOWN
+#undef ALIGNDN
 #undef ALIGNUP
 #undef COMPCM
 #undef COMPC

@@ -477,7 +477,11 @@ extern int __cdecl _isnan (double);
 extern unsigned int __cdecl _clearfp (void);
 #endif
 #ifndef _MAX_PATH
+#ifdef PATH_MAX
+#define _MAX_PATH  PATH_MAX
+#else
 #define _MAX_PATH  (260)
+#endif
 #endif
 #endif
 

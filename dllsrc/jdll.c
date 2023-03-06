@@ -738,12 +738,12 @@ JS heapinit()
 
 #ifdef JAMALGAM
 // DllMain not called, so jconsole must call this
-static int attach_process()
+int attach_process()
 {
 	if(!(g_jt=(JS)_Initializer(0))) return 0;
 	return TRUE;
 }
-static int detach_process()
+int detach_process()
 {
 	if(g_jt){jvmrelease(g_jt,sizeof(JST));g_jt=0;}
 	return TRUE;
@@ -850,7 +850,7 @@ CDPROC int _stdcall JFree(JS jt)
 // previously in jwin32.c
 
 #ifndef _JDLL
-char sopath[] = "";				    /* dll path is empty */
+extern char sopath[];				    /* dll path is empty */
 #endif
 
 #ifdef _MAC

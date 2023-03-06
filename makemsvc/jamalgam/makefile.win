@@ -136,6 +136,7 @@ OBJS=  \
  ../../dllsrc/jdll.o \
  ../../dllsrc/jdllcomx.o \
  ../../jsrc/jdlllic.o \
+ ../../jsrc/jgmpinit.o \
  ../../jsrc/k.o \
  ../../jsrc/m.o \
  ../../jsrc/mbx.o \
@@ -182,9 +183,17 @@ OBJS=  \
  ../../jsrc/vgcomp.o \
  ../../jsrc/vgranking.o \
  ../../jsrc/vgsort.o \
+ ../../jsrc/vgsortiqavx512.o \
  ../../jsrc/vgsp.o \
  ../../jsrc/vi.o \
  ../../jsrc/viavx.o \
+ ../../jsrc/viavx1-2.o \
+ ../../jsrc/viavx1-4.o \
+ ../../jsrc/viavx2.o \
+ ../../jsrc/viavx3.o \
+ ../../jsrc/viavx4.o \
+ ../../jsrc/viavx5.o \
+ ../../jsrc/viavx6.o \
  ../../jsrc/viix.o \
  ../../jsrc/visp.o \
  ../../jsrc/vm.o \
@@ -221,6 +230,10 @@ OBJS=  \
  ../../jsrc/xsha.o \
  ../../jsrc/xt.o \
  ../../jsrc/xu.o \
+ ../../jsrc/crc32c.o \
+ ../../jsrc/str.o \
+ ../../jsrc/strptime.o \
+ ../../jsrc/mt.o \
  ../../jsrc/openssl/sha/keccak1600.o \
  ../../jsrc/openssl/sha/md4_dgst.o \
  ../../jsrc/openssl/sha/md4_one.o \
@@ -230,19 +243,33 @@ OBJS=  \
  ../../jsrc/openssl/sha/sha1_one.o \
  ../../jsrc/openssl/sha/sha256.o \
  ../../jsrc/openssl/sha/sha3.o \
- ../../jsrc/openssl/sha/sha512.o
+ ../../jsrc/openssl/sha/sha512.o \
+ ../../base64/lib/arch/avx2/codec-avx2.o \
+ ../../base64/lib/arch/generic/codec-generic.o \
+ ../../base64/lib/arch/neon32/codec-neon32.o \
+ ../../base64/lib/arch/neon64/codec-neon64.o \
+ ../../base64/lib/arch/ssse3/codec-ssse3.o \
+ ../../base64/lib/arch/sse41/codec-sse41.o \
+ ../../base64/lib/arch/sse42/codec-sse42.o \
+ ../../base64/lib/arch/avx/codec-avx.o \
+ ../../base64/lib/lib.o \
+ ../../base64/lib/codec_choose.o \
+ ../../base64/lib/tables/tables.o
+
 
 !ifdef NO_SHA_ASM
 CFLAGS1= /D NO_SHA_ASM
 !else
 !ifdef x64
 OBJS_ASM= \
+ ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
  ../../openssl-asm/sha1-x86_64-nasm.o \
  ../../openssl-asm/sha256-x86_64-nasm.o \
  ../../openssl-asm/sha512-x86_64-nasm.o
 !else
 OBJS_ASM= \
+ ../../openssl-asm/md5-586-nasm.o \
  ../../openssl-asm/keccak1600-mmx-nasm.o \
  ../../openssl-asm/sha1-586-nasm.o \
  ../../openssl-asm/sha256-586-nasm.o \
@@ -250,11 +277,20 @@ OBJS_ASM= \
 !endif
 !endif
 
+!if "1"=="$(USE_SLEEF)"
+OBJS_SLEEF= \
+ ../../sleef/src/common/arraymap.o \
+ ../../sleef/src/common/common.o \
+ ../../sleef/src/libm/rempitab.o \
+ ../../sleef/src/libm/sleefsimddp.o
+!endif
+
 !ifdef READLINE
 OBJSLN=  ../../jsrc/linenoise.o
 CFLAGSLN= -DREADLINE -DUSE_LINENOISE
 !endif
 
+DEF= ../../dllsrc/jdll3.def
 RCS= ../../makevs/jconsole/jconsole.rc
 
 !ifndef LD
@@ -271,10 +307,10 @@ LD=link
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
 !ifdef x64
-!ifdef JAVX2
+!if "1"=="$(JAVX2)"
 TARGET= jamalgam-avx2.exe
 !else
-!ifdef JAVX
+!if "1"=="$(JAVX)"
 TARGET= jamalgam-avx.exe
 !else
 TARGET= jamalgam.exe
@@ -291,7 +327,7 @@ SYNCLIB= synchronization.lib
 !endif
 
 $(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jconsole.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) jconsole.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jconsole.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) jconsole.res
 
 jconsole.res : $(RCS)
 	$(RC) /L 0x409 /D _USING_V110_SDK71_ -R -FO$@ $(RCS)

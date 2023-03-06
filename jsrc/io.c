@@ -717,8 +717,8 @@ void jsto(JS jt,I type,C*s){C e;I ex;
 C dll_initialized= 0; // dll init sets to 1
 
 #ifdef _WIN32
-char modulepath[_MAX_PATH];
-char sopath[_MAX_PATH];
+char modulepath[_MAX_PATH]="";
+char sopath[_MAX_PATH]="";
 
 void getsopath(HINSTANCE hi, char* path)
 {
@@ -733,7 +733,7 @@ void getsopath(HINSTANCE hi, char* path)
 
 #else
 // SYS&SYS_UNIX
-char sopath[PATH_MAX];
+char sopath[PATH_MAX]="";
 
 void getsopath(char* path){
 const char *sym_name = "JGetLocale";

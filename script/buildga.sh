@@ -211,7 +211,7 @@ fi
 if [ $m64 -eq 1 ]; then
 chmod 644 j64/*
 chmod 755 j64/jconsole
-chmod 755 j32/jamalgam
+chmod 755 j64/jamalgam
 ls -l j64
 else
 chmod 644 j32/*

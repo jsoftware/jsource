@@ -740,7 +740,7 @@ JS heapinit()
 // DllMain not called, so jconsole must call this
 static int attach_process()
 {
-	if(!(g_jt=(JS)_Initializer((void*)hDLL))) return 0;
+	if(!(g_jt=(JS)_Initializer(0) return 0;
 	return TRUE;
 }
 static int detach_process()

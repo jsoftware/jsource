@@ -128,6 +128,8 @@ else
 # linux/raspberry 64-bit
 cop j64 jconsole bin jconsole
 cop j64 jconsole bin jconsole-lx
+cop j64 jamalgam bin jamalgam
+cop j64 jamalgam bin jamalgam-lx
 cop j64 libtsdll.so bin libtsdll.so
 cop j64 libj.so bin libj.so
 cop j64avx libj.so bin libjavx.so
@@ -136,11 +138,13 @@ cop j64avx512 libj.so bin libjavx512.so
 
 # linux/raspberry 32-bit
 cop j32 jconsole bin32 jconsole
+cop j32 jamalgam bin32 jamalgam
 cop j32 libtsdll.so bin32 libtsdll.so
 cop j32 libj.so bin32 libj.so
 
 if [ $jplatform = "openbsd" ]; then
 cop j64arm jconsole bin jconsole
+cop j64arm jamalgam bin jamalgam
 cop j64arm libtsdll.so bin libtsdll.so
 cop j64arm libj.so bin libj.so
 fi

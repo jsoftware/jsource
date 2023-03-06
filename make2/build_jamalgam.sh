@@ -35,6 +35,7 @@ case "$jplatform64" in
  darwin/*)      macmin="-arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
+ wasm*) NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;USE_SLEEF=0;OPTLEVEL=" -O2 ";;
 esac
 make="${make:=make}"
 
@@ -178,6 +179,7 @@ fi
 
 case "$jplatform64" in
  *32*) USE_EMU_AVX=0;;
+ wasm*) USE_EMU_AVX=0;;
   *) USE_EMU_AVX="${USE_EMU_AVX:=1}";;
 esac
 if [ $USE_EMU_AVX -eq 1 ] ; then
@@ -728,6 +730,24 @@ case $jplatform64 in
   FLAGS_BASE64=""
  ;;
 
+ wasm/j32) # webassembly
+  TARGET=jamalgam.js
+  CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=65536 -D CSTACKRESERVE=10000 -D TESTS "
+# these flags do not work on iOS
+# -msse2 -msimd128
+# EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
+  LDFLAGS=" ../../../../mpir/linux/wasm32/libgmp.a \
+ -s WASM=1 -s ASSERTIONS=1 -s INITIAL_MEMORY=220MB -s TOTAL_MEMORY=600MB -s ALLOW_MEMORY_GROWTH=1 \
+ -s BINARYEN_EXTRA_PASSES="--pass-arg=max-func-params@80" -s EMULATE_FUNCTION_POINTER_CASTS=1 -s NO_EXIT_RUNTIME=1 \
+ -s EXPORTED_FUNCTIONS='[\"_main\"]' \
+ -s EXPORTED_RUNTIME_METHODS='[\"cwrap\",\"ccall\", \"UTF8ToString\", \"lengthBytesUTF8\", \"stringToUTF8\"]' \
+ --embed-file ../../../../jlibrary/ --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll --exclude-file *.exe --exclude-file bin32 --embed-file ../../../../test/ "
+  SRC_ASM=""
+  GASM_FLAGS=""
+  FLAGS_SLEEF=""
+  FLAGS_BASE64=""
+ ;;
+
  *)
   echo no case for those parameters
   exit
@@ -754,6 +774,12 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
+case "$jplatform64" in
+ wasm/j32)
+  mkdir -p ../bin/$jplatform64 || exit 1
+  cp -p ../mpir/linux/wasm32/libgmp.a ../bin/$jplatform64/libj.a || exit 1
+  ;;
+esac
 export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM OBJSLN jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then

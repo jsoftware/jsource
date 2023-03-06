@@ -518,7 +518,9 @@ void OPENSSL_setcap(void)
 }
 
 int getNumberOfCores(void) {
-#ifdef _WIN32
+#if defined(__wasm__)
+ return 1;
+#elif defined(_WIN32)
  DWORD_PTR ProcessAffinityMask, SystemAffinityMask;
  if(GetProcessAffinityMask(GetCurrentProcess(), &ProcessAffinityMask, &SystemAffinityMask)){
 #if defined(_WIN64)||defined(__LP64__)

@@ -181,7 +181,9 @@ JHS has the additional complication of critical sections of J code
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#if !defined(__wasm__)
 #include <dlfcn.h>
+#endif
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #else // Linux
@@ -739,6 +741,10 @@ char sopath[PATH_MAX]="";
 
 void getsopath(char* path){
 const char *sym_name = "JGetLocale";
+#if defined(__wasm__)
+//  *path=0;  /* missing dladdr function */
+ strcpy(sopath,"/");
+#else
  void *sym_ptr = dlsym(RTLD_DEFAULT,sym_name);
 // fprintf(stdout,"SYMBOL %s ADDRESS %p\n", sym_name, sym_ptr);
  if (sym_ptr){
@@ -749,6 +755,7 @@ const char *sym_name = "JGetLocale";
    if((p1=strrchr(info.dli_fname,filesep))){path[p1-(char*)info.dli_fname]=0;}
   } else *path=0;
  } else *path=0;
+#endif
 // fprintf(stdout,"sopath: %s\n", path);
 }
 

@@ -7,7 +7,9 @@
 #ifdef _WIN32
  #include <windows.h>
 #else
+#if !defined(__wasm__)
  #include <dlfcn.h>  // -ldl
+#endif
 #endif
 #include "j.h"      // includes jgmp.h
 
@@ -332,8 +334,13 @@ B nogmp(){R!libgmp;}
 void dldiag(){}
 #define jgmpfn(fn) j##fn= GetProcAddress(libgmp,"__g"#fn); if(!(j##fn)){fprintf(stderr,"%s\n","error loading "#fn);};
 #else
+#if defined(__wasm__)
+void dldiag(){}
+#define jgmpfn(fn) 
+#else
 void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
 #define jgmpfn(fn) j##fn= dlsym(libgmp,"__g"#fn); dldiag();
+#endif
 #endif
 
 // referenced gmp routines are declared twice:
@@ -350,7 +357,9 @@ void jgmpinit(C*libpath) {
 #endif
 #ifndef IMPORTGMPLIB
  C dllpath[1000];
-#ifdef _WIN32
+#if defined(__wasm__)
+ libgmp= 0;
+#elif defined(_WIN32)
  if(libpath&&*libpath){
   strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBGMPNAME);
   if(!(libgmp= LoadLibraryA(dllpath)))  /* first try current directory */

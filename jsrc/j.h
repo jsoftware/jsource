@@ -52,6 +52,10 @@
 #endif
 #endif
 
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+#endif
+
 // for debugging
 #define NANTEST0        (fetestexcept(FE_INVALID))  // test but does not clear
 #define dump_m128i(a,x) {__m128i _b=x;fprintf(stderr,"%s %x %x %x %x \n", a, ((unsigned int*)(&_b))[0], ((unsigned int*)(&_b))[1], ((unsigned int*)(&_b))[2], ((unsigned int*)(&_b))[3]);}
@@ -2334,6 +2338,15 @@ extern JS gjt; // global for JPF (procs without jt)
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
 #define ZZ(x)
+
+#if defined(__wasm__)
+#define FE_INVALID    1
+#define __FE_DENORM   2
+#define FE_DIVBYZERO  4
+#define FE_OVERFLOW   8
+#define FE_UNDERFLOW  16
+#define FE_INEXACT    32
+#endif
 
 /* workaround clang branch prediction side effect */
 #if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 3)))

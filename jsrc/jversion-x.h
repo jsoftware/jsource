@@ -14,6 +14,8 @@
 #define jplatform "freebsd"
 #elif defined(__OpenBSD__)
 #define jplatform "openbsd"
+#elif defined(__wasm__)
+#define jplatform "wasm"
 #else
 #define jplatform "unknown"
 #endif

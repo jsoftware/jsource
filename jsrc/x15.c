@@ -109,7 +109,9 @@ char *toascbuf(wchar_t *src);
 
 #if (SYS & SYS_UNIX)
 
+#if !defined(__wasm__)
 #include <dlfcn.h>
+#endif
 
 #if SYS & SYS_FREEBSD
 /* resolve some harmless name clashes */
@@ -824,7 +826,9 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
  #endif
  CDASSERT((UI)h>HINSTANCE_ERROR,DEBADLIB);
 #endif
-#if SYS & SYS_UNIX
+#if defined(__wasm__)
+  CDASSERT(0,DEBADLIB);
+#elif SYS & SYS_UNIX
   CDASSERT(h=dlopen((*lib)?lib:0,RTLD_LAZY),DEBADLIB);
 #endif
   cc->h=h;   // remember the handle; leave cc->li set to cause the library name to be hashed into cdhashl
@@ -835,7 +839,9 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
 #if SY_WINCE
  f=GetProcAddress(h,tounibuf(proc));
 #endif
-#if (SYS & SYS_UNIX)
+#if defined(__wasm__)
+  CDASSERT(0,DEBADLIB);
+#elif (SYS & SYS_UNIX)
  f=(FARPROC)dlsym(h,proc);
 #endif
  CDASSERT(f!=0,DEBADFN);
@@ -1284,7 +1290,9 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 #if SY_WIN32
 #define FREELIB FreeLibrary
 #endif
-#if (SYS & SYS_UNIX)
+#if defined(__wasm__)
+#define FREELIB(x) 0
+#elif (SYS & SYS_UNIX)
 #define FREELIB dlclose
 #endif
 
@@ -1329,7 +1337,9 @@ F1(jtcderx){I4 t;C buf[1024];
  }
 #endif
 
-#if SYS&SYS_UNIX
+#if defined(__wasm__)
+ {strcpy (buf, "");}
+#elif SYS&SYS_UNIX
  {const char *e = dlerror(); strcpy (buf, e?e:"");}
 #endif
  R jlink(sc(t),cstr(buf));
@@ -1775,13 +1785,21 @@ F1(jtcddlopen){HMODULE h;
  MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,_MAX_PATH);
  h=LoadLibraryW(wlib);
 #else
+#if defined(__wasm__)
+ CDASSERT(0,DEBADLIB);
+#else
  h=dlopen((*lib)?lib:0,RTLD_LAZY);
+#endif
 #endif
  }else{
 #ifdef _WIN32
  h=GetModuleHandle(NULL);
 #else
+#if defined(__wasm__)
+ CDASSERT(0,DEBADLIB);
+#else
  h=dlopen(0,RTLD_LAZY);
+#endif
 #endif
  }
 R sc((I)(intptr_t)h);
@@ -1797,7 +1815,11 @@ F2(jtcddlsym){C*proc;FARPROC f;HMODULE h;
 #ifdef _WIN32
  f=GetProcAddress(h,(LPCSTR)proc);
 #else
+#if defined(__wasm__)
+ CDASSERT(0,DEBADLIB);
+#else
  f=(FARPROC)dlsym(h,proc);
+#endif
 /*
  char *error;
  if(!f){

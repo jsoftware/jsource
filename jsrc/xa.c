@@ -316,7 +316,11 @@ F1(jtcpufeature){
  ASSERT(1>=AR(w),EVRANK);
  w=str0(w);
  if (!strcasecmp(CAV(w),"CPU")) {
-#if defined(__aarch64__)||defined(_M_ARM64)
+#if defined(__wasm32__)
+  R cstr("wasm32");
+#elif defined(__wasm__)
+  R cstr("wasm64");
+#elif defined(__aarch64__)||defined(_M_ARM64)
   R cstr("arm64");
 #elif defined(__arm__)||defined(_M_ARM)
   R cstr("arm");

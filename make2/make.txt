@@ -67,3 +67,10 @@ j64x=j64avx2 ./build_all.sh
 
 # and follow instructions there
 
+# webassembly:
+# first install emscripten or emsdk
+
+# build libj wasm
+USE_WASM=1 CC=emcc AR=emar ./build_libj.sh
+# output file libj.a under the bin/wasm/j32 folder
+

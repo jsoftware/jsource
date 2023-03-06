@@ -11,11 +11,15 @@
 #define filesep '\\'
 #else
 #if defined(__GNUC__) && defined(_GNU_SOURCE)
+#if !defined(__wasm__)
 #include <dlfcn.h>
+#endif
 #endif
 #include <sys/types.h>
 #include <unistd.h>
+#if !defined(__wasm__)
 #include <fts.h>
+#endif
 #define filesep '/'
 #ifdef ANDROID
 /*
@@ -368,7 +372,7 @@ char p[_MAX_PATH]; extern C sopath[];
  R cstr(p);
 }
 
-#if (SYS & SYS_UNIX)
+#if (SYS & SYS_UNIX) && !defined(__wasm__)
 int rmdir2(const char *dir)
 {
  int ret=0;

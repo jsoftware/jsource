@@ -35,6 +35,7 @@ case "$jplatform64" in
  darwin/*)      macmin="-arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
+ wasm*) NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;USE_SLEEF=0;OPTLEVEL=" -O2 ";;
 esac
 make="${make:=make}"
 
@@ -169,6 +170,7 @@ fi
 
 case "$jplatform64" in
  *32*) USE_EMU_AVX=0;;
+ wasm*) USE_EMU_AVX=0;;
   *) USE_EMU_AVX="${USE_EMU_AVX:=1}";;
 esac
 if [ $USE_EMU_AVX -eq 1 ] ; then
@@ -719,6 +721,19 @@ case $jplatform64 in
   FLAGS_BASE64=""
  ;;
 
+ wasm/j32) # webassembly
+  TARGET=libj.a
+  CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=65536 -D CSTACKRESERVE=10000 "
+# these flags do not work on iOS
+# -msse2 -msimd128
+# EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
+  LDFLAGS=""
+  SRC_ASM=""
+  GASM_FLAGS=""
+  FLAGS_SLEEF=""
+  FLAGS_BASE64=""
+ ;;
+
  *)
   echo no case for those parameters
   exit
@@ -745,6 +760,13 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
+case "$jplatform64" in
+ wasm/j32)
+  mkdir -p ../bin/$jplatform64 || exit 1
+  cp -p ../mpir/linux/wasm32/libgmp.a ../bin/$jplatform64/libj.a || exit 1
+  sed -i"" -e "s/\$(CC) -o \$@/\$(AR) rs \$@/" obj/$jplatform64/makefile-libj
+  ;;
+esac
 export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then

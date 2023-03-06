@@ -13,7 +13,9 @@
 #include <sys/resource.h>
 #define _isatty isatty
 #define _fileno fileno
+#if !defined(__wasm__)
 #include <dlfcn.h>
+#endif
 #define GETPROCADDRESS(h,p) dlsym(h,p)
 #endif
 #include <signal.h>
@@ -26,7 +28,7 @@
 #include "j.h"
 #include "jeload.h"
 
-#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) //temporary
+#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__wasm__) //temporary
 #include "../libbacktrace/backtrace.h"
 #endif
 
@@ -48,7 +50,7 @@ static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType){
  }
 }
 #endif
-#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) //temporary
+#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__wasm__) //temporary
 static int err_write(void *data, uintptr_t pc, const char *file, int line, const char *function){
  char buf[512];
  file = file ? file : "?";
@@ -78,7 +80,7 @@ static void sigsegv(int k){
 
 static char input[30000];
 
-#if defined(ANDROID) || defined(_WIN32)
+#if defined(ANDROID) || defined(_WIN32) || defined(__wasm__)
 #undef USE_LINENOISE
 #ifdef READLINE
 #define USE_LINENOISE
@@ -108,7 +110,7 @@ char* rl_readline_name;
 int hist=1;
 char histfile[512];
 
-#if !defined(ANDROID) && !defined(_WIN32)
+#if !defined(ANDROID) && !defined(_WIN32) && !defined(__wasm__)
 static int readlineinit()
 {
  if(hreadline)return 0; // already run
@@ -264,7 +266,7 @@ JST* jt;
 
 int main(int argc, char* argv[])
 {
-#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) //temporary
+#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__wasm__) //temporary
  signal(SIGSEGV,sigsegv);
  signal(SIGILL,sigsegv);
 #ifdef __APPLE__
@@ -330,7 +332,9 @@ int main(int argc, char* argv[])
 #endif
   if(!norl&&_isatty(_fileno(stdin))){
    breadline=readlineinit();
+#if !defined(__wasm__)
    dlerror(); //clear error
+#endif
   }
 #endif
 
@@ -380,7 +384,11 @@ int main(int argc, char* argv[])
 #endif
  if(runjscript)type|=256;
  int r=jefirst(type,input);
+#if !defined(TESTS)
  if(!runjscript)while(1){r=jedo((char*)Jinput(jt,(forceprmpt||_isatty(_fileno(stdin)))?(C*)"   ":(C*)""));}
+#else
+ r=jedo((char*)"RUN4 ddall[ECHOFILENAME=:1[(0!:0)<'test/tsu.ijs'");
+#endif
  jefree();
 #if !(defined(ANDROID)||defined(_WIN32))
  if(loc)freelocale(loc);

@@ -628,6 +628,31 @@ jobs:
 
 #   - name: Copy Test (android)
 
+# wasm -----------------------------------------------------------------
+ jewasm:
+  name: JE (wasm)
+  runs-on: macos-12
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (wasm)
+     uses: mymindstorm/setup-emsdk@v16
+     run: |
+      emcc -v
+
+   - name: Build, Test JE (wasm)
+     env:
+      CC: emcc
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh wasm || exit 1
+      script/testga.sh wasm || exit 1
+
+#   - name: Release JE (wasm)
+
+#   - name: Copy Test (wasm)
+
 # windows --------------------------------------------------------------
  jewin:
   name: JE (Windows)

@@ -762,10 +762,10 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 		getpath(0, modulepath);
 		getpath(hDLL, sopath);
 		g_jt=heapinit();
-		if(!g_jt) R 0;   // abort if no memory
-		if(!jtglobinit(g_jt)) {jvmrelease(g_jt,sizeof(JST)); g_jt=0; R 0;};  // free & abort if initialization error
+		if(!g_jt) return 0;   // abort if no memory
+		if(!jtglobinit(g_jt)) {jvmrelease(g_jt,sizeof(JST)); g_jt=0; return 0;};  // free & abort if initialization error
 #else
-		if(!(g_jt=(JS)_Initializer((void*)hDLL))) R0;
+		if(!(g_jt=(JS)_Initializer((void*)hDLL))) return 0;
 #endif
 		break;
 

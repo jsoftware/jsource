@@ -1,8 +1,9 @@
 
 LOCAL_PATH := $(call my-dir)
 
-LOCAL_MODULE    := j
-LOCAL_MODULE_FILENAME    := libj
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := jamalgam
 
 # ndk r21 : OpenMP is now available as a dynamic library (and this is the new default behavior, so link with -static-openmp if you want to stick with the static runtime)
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
@@ -36,10 +37,26 @@ ifeq ($(TARGET_ARCH),x86)
 endif
 LOCAL_LDLIBS := -ldl -llog
 
-LOCAL_SRC_FILES := a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c amn.c ao.c ap.c ar.c as.c au.c c.c ca.c cc.c cd.c cf.c cg.c ch.c cip.c cl.c cp.c cpdtsp.c cpuinfo.c cr.c crs.c \
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
+
+LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c \
+../libbacktrace/atomic.c \
+../libbacktrace/backtrace.c \
+../libbacktrace/dwarf.c \
+../libbacktrace/fileline.c \
+../libbacktrace/mmap.c \
+../libbacktrace/mmapio.c \
+../libbacktrace/posix.c \
+../libbacktrace/print.c \
+../libbacktrace/simple.c \
+../libbacktrace/sort.c \
+../libbacktrace/state.c \
+../libbacktrace/elf.c \
+ a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c amn.c ao.c ap.c ar.c as.c au.c c.c ca.c cc.c cd.c cf.c cg.c ch.c cip.c cl.c cp.c cpdtsp.c cpuinfo.c cr.c crs.c \
 	ct.c cu.c cv.c cx.c d.c dc.c dss.c dstop.c dsusp.c dtoa.c f.c f2.c fbu.c gemm.c i.c io.c j.c jdlllic.c jgmpinit.c k.c m.c mbx.c mt.c p.c pv.c px.c r.c rl.c rt.c s.c sc.c sl.c \
 	sn.c t.c u.c v.c v0.c v1.c v2.c va1.c va1ss.c va2.c va2s.c va2ss.c vamultsp.c vb.c vbang.c vbit.c vcant.c vchar.c vcat.c vcatsp.c vcomp.c vcompsc.c vd.c vdx.c ve.c \
-	vf.c vfft.c vfrom.c  vfromsp.c vg.c vgauss.c vgcomp.c vgranking.c vgsort.c vgsortiqavx512.c vgsp.c vi.c viavx.c viavx1-2.c viavx1-4.c viavx2.c viavx3.c viavx4.c viavx5.c viavx6.c viix.c visp.c vm.c vo.c vp.c vq.c vrand.c vrep.c vs.c vsb.c \
+	vf.c vfft.c vfrom.c  vfromsp.c vg.c vgauss.c vgcomp.c vgranking.c vgsortiqavx512.c vgsort.c vgsp.c vi.c viavx.c viavx1-2.c viavx1-4.c viavx2.c viavx3.c viavx4.c viavx5.c viavx6.c viix.c visp.c vm.c vo.c vp.c vq.c vrand.c vrep.c vs.c vsb.c \
 	vt.c vu.c vx.c vz.c w.c wc.c wn.c ws.c x.c x15.c xa.c xaes.c xb.c xc.c xcrc.c xd.c xf.c xfmt.c xh.c xi.c xl.c xo.c xs.c xsha.c xt.c xu.c crc32c.c str.c strptime.c \
 	blis/gemm_c-ref.c blis/gemm_int-aarch64.c blis/gemm_int-avx.c blis/gemm_int-fma.c blis/gemm_int-sse2.c blis/gemm_vec-ref.c \
   openssl/sha/keccak1600.c openssl/sha/md4_dgst.c openssl/sha/md4_one.c openssl/sha/md5_dgst.c \
@@ -114,4 +131,4 @@ LOCAL_SRC_FILES += \
   ../sleef/src/libm/sleefsimddp.c
 endif
 
-include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_EXECUTABLE)

@@ -8,6 +8,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
+#define filesep '\\'
 #else
 #if defined(__GNUC__) && defined(_GNU_SOURCE)
 #include <dlfcn.h>
@@ -15,6 +16,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fts.h>
+#define filesep '/'
 #ifdef ANDROID
 /*
  * Strictly these functions were available before Lollipop/21, but there was an accidental ABI
@@ -359,15 +361,10 @@ F1(jtpathdll){
 #if (SYS & SYS_UNIX)
 char p[PATH_MAX]; extern C sopath[];
 #else
-char p[MAX_PATH]; extern C dllpath[];
+char p[_MAX_PATH]; extern C sopath[];
 #endif
-#if (SYS & SYS_UNIX)
  strcpy(p,sopath);
- if(strlen(p)&&('/'==p[strlen(p)-1])) p[strlen(p)-1]=0;
-#else
- strcpy(p,dllpath);
- if(strlen(p)&&('\\'==p[strlen(p)-1])) p[strlen(p)-1]=0;
-#endif
+ if(strlen(p)&&(filesep==p[strlen(p)-1])) p[strlen(p)-1]=0;
  R cstr(p);
 }
 

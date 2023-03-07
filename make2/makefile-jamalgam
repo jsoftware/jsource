@@ -1,4 +1,4 @@
-vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
+vpath % ../../../../jsrc:../../../../libbacktrace:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
 
 ifndef jplatform64
 jplatform64=linux/j64x
@@ -7,6 +7,29 @@ endif
 ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o
+
+ifneq (bsd,$(findstring bsd,$(jplatform64)))
+
+BACKTRACE_OBJS := \
+ atomic.o \
+ backtrace.o \
+ dwarf.o \
+ fileline.o \
+ mmap.o \
+ mmapio.o \
+ posix.o \
+ print.o \
+ simple.o \
+ sort.o \
+ state.o
+
+ifeq (darwin,$(findstring darwin,$(jplatform64)))
+BACKTRACE_OBJS := $(BACKTRACE_OBJS) macho.o
+else
+BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
+endif
+
+endif
 
 # note: the slowest builds have been placed at the top, to avoid starvation in parallel builds
 # (viavx is still longer than everything else combined--should maybe be broken up into multiple tus...)
@@ -169,7 +192,10 @@ OBJS=  \
  sha1_one.o \
  sha256.o \
  sha3.o \
- sha512.o
+ sha512.o \
+ jconsole.o \
+ jeload.o \
+ $(BACKTRACE_OBJS)
 
 %.o: %.cpp
 	$(CXX) -c $(CPPFLAGS) -o$@ $^
@@ -188,15 +214,15 @@ $(OBJS_AESNI) : CFLAGS_AESNI := -maes
 $(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
 $(OBJS_SLEEF) : CFLAGS_SLEEF := $(FLAGS_SLEEF) -DSLEEF_STATIC_LIBS -DNDEBUG -DDORENAME=1 -Wno-sign-compare -ffp-contract=off -fno-math-errno -fno-trapping-math -I../../../../sleef/src/arch -I../../../../sleef/src/common
 $(OBJS_BASE64) : CFLAGS_BASE64 := $(FLAGS_BASE64)
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
-	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN)
+	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS) $(OBJSLN)
 
-$(LIBJRES): jdll.rc
+$(LIBJRES): jamalgam.rc
 	$(WINDRES) -o$@ $^
 
 all: $(ODIR)/$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
+	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN) linenoise.o
 
 .PHONY: all clean

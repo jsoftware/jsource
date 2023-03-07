@@ -27,6 +27,7 @@
 #define JT(p,n) p->n  // used for references in JS, which most references in this module are
 #define IJT(p,n) JT(JJTOJ(p),n)    // used in functions that interface to internal functions and thus take a JJ
 
+extern JS _Initializer(void*);
 extern void wtom(US* src, I srcn, UC* snk);
 extern void utow(C4* src, I srcn, US* snk);
 extern I utowsize(C4* src, I srcn);
@@ -687,17 +688,18 @@ CDPROC int _stdcall JDoR(JS jt, C* p, VARIANT* v)
 #endif
 
 // previously in separate file when jdll.c and jcom.c both exisited
-char modulepath[_MAX_PATH];
-char dllpath[_MAX_PATH];
+extern char modulepath[];
+extern char sopath[];
 void dllquit(JJ);
 void oleoutput(JS,I n,char* s);
 HINSTANCE g_hinst;
-JS g_jt;
+JS g_jt=0;
 
 extern C* getlocale(JS);
 extern void  FreeGL(HANDLE hglrc);
 
 
+#if 0
 #if SY_WINCE
 void getpath(HINSTANCE hi, C* path)
 {
@@ -732,6 +734,21 @@ JS heapinit()
  jvmwire(jt,sz); //try to wire JS.  Don't bother with error checking; failure is non-catastrophic
 	R jt;
 }
+#endif
+
+#ifdef JAMALGAM
+// DllMain not called, so jconsole must call this
+int attach_process()
+{
+	if(!(g_jt=(JS)_Initializer(0))) return 0;
+	return TRUE;
+}
+int detach_process()
+{
+	if(g_jt){jvmrelease(g_jt,sizeof(JST));g_jt=0;}
+	return TRUE;
+}
+#endif
 
 int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 {
@@ -751,15 +768,19 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 			}
 		}
 */
+#if 0
         // Initialize J globals.  This is done only once.  Many of the globals are in static memory, initialized
         // by the compiler; some must be initialized a run-time in static memory; some must be allocated into A blocks
         // pointed to by static names.  Because of the A blocks, we have to perform a skeletal initialization of jt,
         // just enough to do GA().  The rest of jt is never used
 		getpath(0, modulepath);
-		getpath(hDLL, dllpath);
+		getpath(hDLL, sopath);
 		g_jt=heapinit();
-		if(!g_jt) R 0;   // abort if no memory
-		if(!jtglobinit(g_jt)) {jvmrelease(g_jt,sizeof(JST)); g_jt=0; R 0;};  // free & abort if initialization error
+		if(!g_jt) return 0;   // abort if no memory
+		if(!jtglobinit(g_jt)) {jvmrelease(g_jt,sizeof(JST)); g_jt=0; return 0;};  // free & abort if initialization error
+#else
+		if(!(g_jt=(JS)_Initializer((void*)hDLL))) return 0;
+#endif
 		break;
 
     case DLL_THREAD_ATTACH:
@@ -775,6 +796,7 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 return TRUE;
 }
 
+#if 0
 CDPROC JS _stdcall JInit()
 {
 	JST* jt;
@@ -789,7 +811,7 @@ CDPROC JS _stdcall JInit()
 		jvmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
-	jgmpinit(dllpath); // mp support for 1x and 2r3
+	jgmpinit(sopath); // mp support for 1x and 2r3
 	return jt;  // return (JS)MTHREAD(jt);
 }
 
@@ -807,8 +829,8 @@ CDPROC JS _stdcall JInit2(C *libpath)
 		jvmrelease(jt,sizeof(JST));  // if error during init, fail
 		R 0;
 	};
-	if(libpath){strcpy(dllpath,libpath);if(strlen(dllpath)&&('\\'==dllpath[strlen(dllpath)-1]))dllpath[strlen(dllpath)-1]=0;}
-	jgmpinit(dllpath); // mp support for 1x and 2r3
+	if(libpath){strcpy(sopath,libpath);if(strlen(sopath)&&('\\'==sopath[strlen(sopath)-1]))sopath[strlen(sopath)-1]=0;}
+	jgmpinit(sopath); // mp support for 1x and 2r3
 	return jt;  // return shared block
 }
 
@@ -823,11 +845,12 @@ CDPROC int _stdcall JFree(JS jt)
 	jvmrelease(jt,sizeof(JST));
 	return 0;
 }
+#endif
 
 // previously in jwin32.c
 
 #ifndef _JDLL
-char dllpath[] = "";				    /* dll path is empty */
+extern char sopath[];				    /* dll path is empty */
 #endif
 
 #ifdef _MAC

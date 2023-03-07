@@ -1266,6 +1266,7 @@
     <ClCompile Include="..\..\jsrc\vgcomp.c" />
     <ClCompile Include="..\..\jsrc\vgranking.c" />
     <ClCompile Include="..\..\jsrc\vgsort.c" />
+    <ClCompile Include="..\..\jsrc\vgsortiqavx512.c" />
     <ClCompile Include="..\..\jsrc\vgsp.c" />
     <ClCompile Include="..\..\jsrc\vi.c" />
     <ClCompile Include="..\..\jsrc\viavx.c" />

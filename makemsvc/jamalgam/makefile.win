@@ -1,84 +1,86 @@
-ifeq (1,$(JAVX512))
+!if "1"=="$(JAVX512)"
 FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512
-else
-ifeq (1,$(JAVX2))
+!else
+!if "1"=="$(JAVX2)"
 FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell
-else
-ifeq (1,$(JAVX))
+!else
+!if "1"=="$(JAVX)"
 FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1
-endif
-endif
-endif
-ifeq (1,$(USE_OPENMP))
+!endif
+!endif
+!endif
+!if "1"=="$(USE_OPENMP)"
 FOPENMP= -Xclang -fopenmp
-ifeq (1,$(x64))
+!if "1"=="$(x64)"
 OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
-else
+!else
 OBJS_OPENMP=../../openmp/obj/windows/libomp32.lib
-endif
-endif
+!endif
+!endif
 USE_SLEEF=1
-ifeq (1,$(x64))
-ifeq (1,$(JAVX512))
+!if "1"=="$(x64)"
+!if "1"=="$(JAVX512)"
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-else
-ifeq (1,$(JAVX2))
+!else
+!if "1"=="$(JAVX2)"
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-else
-ifeq (1,$(JAVX))
+!else
+!if "1"=="$(JAVX)"
 FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-else
+!else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-endif
-endif
-endif
-else
+!endif
+!endif
+!endif
+!else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-endif
-ifeq (1,$(USE_PYXES))
+!endif
+!if "1"=="$(USE_PYXES)"
 PTHREADINC = -I../../pthreads4w/include -DPYXES=1
-ifeq (1,$(x64))
+!if "1"=="$(x64)"
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
-else
+!else
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
-endif
-endif
+!endif
+!endif
 MPIRINC = -I../../mpir/include
 
-ifeq (1,$(x64))
+!if "1"=="$(x64)"
 # MPIRLIB = ../../mpir/dll/x64/mpir.lib
-else
+!else
 # MPIRLIB = ../../mpir/dll/win32/mpir.lib
-endif
+!endif
 
-ifeq (1,$(NOSYNCHLIB))
+!if "1"=="$(NOSYNCHLIB)"
 FNOSYNCHLIB = /DNOSYNCHLIB=1
-endif
-ifeq (1,$(_DEBUG))
+!endif
+!if "1"=="$(_DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
-endif
-ifeq (1,$(USE_BOXEDSPARSE))
+!endif
+!if "1"=="$(USE_BOXEDSPARSE)"
 FBOXEDSPARSE = /DBOXEDSPARSE
-endif
+!endif
 
-ifeq (1,$(x64))
+!if "1"=="$(x64)"
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-shift-count-overflow -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
-CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 /DEMU_AVX=1 $(FAVX) $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
+CFLAGS= $(FDEBUG) /D JAMALGAM /DC_NA=0 /DEMU_AVX=1 $(FAVX) $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
 ASMFLAGS= /Cx
-else
+!else
 CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-shift-count-overflow -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
+CFLAGS= $(FDEBUG) /D JAMALGAM $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) psapi.lib /NOLOGO /STACK:0xc00000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
 ASMFLAGS= /Cx /coff
-endif
+!endif
 
 .SUFFIXES: .o
 
 OBJS=  \
+ ../../jsrc/jconsole.o \
+ ../../jsrc/jeload.o \
  ../../jsrc/a.o \
  ../../jsrc/ab.o \
  ../../jsrc/aes-c.o \
@@ -254,83 +256,85 @@ OBJS=  \
  ../../base64/lib/codec_choose.o \
  ../../base64/lib/tables/tables.o
 
-ifdef NO_SHA_ASM
-CFLAGS1= /DNO_SHA_ASM
-else
-ifeq (1,$(x64))
+
+!ifdef NO_SHA_ASM
+CFLAGS1= /D NO_SHA_ASM
+!else
+!ifdef x64
 OBJS_ASM= \
  ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
  ../../openssl-asm/sha1-x86_64-nasm.o \
  ../../openssl-asm/sha256-x86_64-nasm.o \
  ../../openssl-asm/sha512-x86_64-nasm.o
-else
+!else
 OBJS_ASM= \
  ../../openssl-asm/md5-586-nasm.o \
  ../../openssl-asm/keccak1600-mmx-nasm.o \
  ../../openssl-asm/sha1-586-nasm.o \
  ../../openssl-asm/sha256-586-nasm.o \
  ../../openssl-asm/sha512-586-nasm.o
-endif
-endif
+!endif
+!endif
 
-ifeq (1,$(USE_SLEEF))
+!if "1"=="$(USE_SLEEF)"
 OBJS_SLEEF= \
  ../../sleef/src/common/arraymap.o \
  ../../sleef/src/common/common.o \
  ../../sleef/src/libm/rempitab.o \
  ../../sleef/src/libm/sleefsimddp.o
-endif
+!endif
 
-DEF= ../../dllsrc/jdll.def
-RCS= ../../dllsrc/jdll.rc
+!ifdef READLINE
+OBJSLN=  ../../jsrc/linenoise.o
+CFLAGSLN= -DREADLINE -DUSE_LINENOISE
+!endif
 
-ifndef LD
-LD=lld-link
-endif
+DEF= ../../dllsrc/jdll3.def
+RCS= ../../makevs/jconsole/jconsole.rc
 
-%.o: %.c
+!ifndef LD
+LD=link
+!endif
+
+.c.o:
 	$(CC) $(CFLAGS) $(CFLAGS1) /Fo$@ /c $<
 
-%.o: %.cpp
+.cpp.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
-%.o: %.asm
+.asm.o:
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-ifeq (1,$(x64))
-ifeq (1,$(JAVX512))
-TARGET= javx512.dll
-else
-ifeq (1,$(JAVX2))
-TARGET= javx2.dll
-else
-ifeq (1,$(JAVX))
-TARGET= javx.dll
-else
-TARGET= j.dll
-endif
-endif
-endif
-else
-TARGET= j32.dll
-endif
+!ifdef x64
+!if "1"=="$(JAVX2)"
+TARGET= jamalgam-avx2.exe
+!else
+!if "1"=="$(JAVX)"
+TARGET= jamalgam-avx.exe
+!else
+TARGET= jamalgam.exe
+!endif
+!endif
+!else
+TARGET= jamalgam32.exe
+!endif
 
-ifeq (1,$(NOSYNCHLIB))
+!if "1"=="$(NOSYNCHLIB)"
 SYNCLIB=
-else
+!else
 SYNCLIB= synchronization.lib
-endif
+!endif
 
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
+$(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jconsole.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jconsole.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
 
-jdll.res : $(RCS)
-	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)
+jconsole.res : $(RCS)
+	$(RC) /L 0x409 /D _USING_V110_SDK71_ -R -FO$@ $(RCS)
 
 all: $(TARGET)
 
 clean:
-	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJS_SLEEF) $(SRC_ASM)
+	erase /q *.lib *.exp *.res *.ilk *.pdb ..\..\jsrc\*.o ..\..\jsrc\blis\*.o ..\..\jsrc\openssl\sha\*.o ..\..\dllsrc\*.o ..\..\sleef\src\common\*.o ..\..\sleef\src\libm\*.o  ..\..\base64\lib\*.o ..\..\base64\lib\tables\*.o ..\..\base64\lib\arch\avx\*.o ..\..\base64\lib\arch\avx2\*.o ..\..\base64\lib\arch\generic\*.o ..\..\base64\lib\arch\generic\32\*.o ..\..\base64\lib\arch\generic\64\*.o ..\..\base64\lib\arch\neon64\*.o ..\..\base64\lib\arch\ssse3\*.o ..\..\base64\lib\arch\sse41\*.o ..\..\base64\lib\arch\sse42\*.o
 
 .PHONY: all clean

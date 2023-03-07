@@ -7,6 +7,8 @@ include jni/jsrc/Android.mk
 include jni/jsrc/Jnative.mk
 include jni/jsrc/Jconsole.mk
 include jni/jsrc/Jconsole-nopie.mk
+include jni/jsrc/Jamalgam.mk
+include jni/jsrc/Jamalgam-nopie.mk
 include jni/jsrc/Tsdll.mk
 include jni/hostdefs/Hostdefs.mk
 include jni/hostdefs/Hostdefs-nopie.mk

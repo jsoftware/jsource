@@ -149,21 +149,25 @@ if [ "$1" = "darwin" ]; then
 j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
 j64x=j64arm ./build_tsdll.sh
 j64x=j64arm USE_PYXES=1 ./build_libj.sh
+j64x=j64arm USE_PYXES=1 ./build_jamalgam.sh
 elif [ "$1" = "linux" ]; then
 ./clean.sh
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh
 j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
+j64x=j32 USE_PYXES=0 ./build_jamalgam.sh
 fi
 ./clean.sh
 if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then
  j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
  j64x=j64arm ./build_tsdll.sh
  j64x=j64arm USE_PYXES=1 ./build_libj.sh
+ j64x=j64arm USE_PYXES=1 ./build_jamalgam.sh
 else
  j64x=j64 USE_PYXES=1 ./build_jconsole.sh
  j64x=j64 ./build_tsdll.sh
  j64x=j64 USE_PYXES=1 ./build_libj.sh
+ j64x=j64 USE_PYXES=1 ./build_jamalgam.sh
 fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 ./clean.sh
@@ -177,6 +181,7 @@ else
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh
 j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
+j64x=j32 USE_PYXES=0 ./build_jamalgam.sh
 fi
 
 cd ..
@@ -206,10 +211,12 @@ fi
 if [ $m64 -eq 1 ]; then
 chmod 644 j64/*
 chmod 755 j64/jconsole
+chmod 755 j64/jamalgam
 ls -l j64
 else
 chmod 644 j32/*
 chmod 755 j32/jconsole
+chmod 755 j32/jamalgam
 ls -l j32
 fi
 
@@ -221,6 +228,7 @@ cp bin/$1/j32/* j32
 cp mpir/linux/i386/libgmpd.so j32/libgmp.so
 chmod 644 j32/*
 chmod 755 j32/jconsole
+chmod 755 j32/jamalgam
 fi
 
 if [ "$1" = "darwin" ]; then
@@ -231,5 +239,6 @@ dsymutil libjavx.dylib 2> /dev/null || true
 dsymutil libjavx2.dylib 2> /dev/null || true
 dsymutil libjavx512.dylib 2> /dev/null || true
 dsymutil libtsdll.dylib 2> /dev/null || true
+dsymutil jamalgam 2> /dev/null || true
 cd ..
 fi

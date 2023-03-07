@@ -64,21 +64,23 @@ endif
 
 ifeq (1,$(x64))
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-shift-count-overflow -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
-CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 /DEMU_AVX=1 $(FAVX) $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
+CFLAGS= $(FDEBUG) /D JAMALGAM /DC_NA=0 /DEMU_AVX=1 $(FAVX) $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
 ASMFLAGS= /Cx
 else
 CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-shift-count-overflow -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
+CFLAGS= $(FDEBUG) /D JAMALGAM $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) psapi.lib /NOLOGO /STACK:0xc00000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
 ASMFLAGS= /Cx /coff
 endif
 
 .SUFFIXES: .o
 
 OBJS=  \
+ ../../jsrc/jconsole.o \
+ ../../jsrc/jeload.o \
  ../../jsrc/a.o \
  ../../jsrc/ab.o \
  ../../jsrc/aes-c.o \
@@ -282,11 +284,16 @@ OBJS_SLEEF= \
  ../../sleef/src/libm/sleefsimddp.o
 endif
 
-DEF= ../../dllsrc/jdll.def
-RCS= ../../dllsrc/jdll.rc
+ifdef READLINE
+OBJSLN=  ../../jsrc/linenoise.o
+CFLAGSLN= -DREADLINE -DUSE_LINENOISE
+endif
+
+DEF= ../../dllsrc/jdll3.def
+RCS= ../../makevs/jconsole/jconsole.rc
 
 ifndef LD
-LD=lld-link
+LD=link
 endif
 
 %.o: %.c
@@ -298,22 +305,18 @@ endif
 %.o: %.asm
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-ifeq (1,$(x64))
-ifeq (1,$(JAVX512))
-TARGET= javx512.dll
-else
+ifdef x64
 ifeq (1,$(JAVX2))
-TARGET= javx2.dll
+TARGET= jamalgam-avx2.exe
 else
 ifeq (1,$(JAVX))
-TARGET= javx.dll
+TARGET= jamalgam-avx.exe
 else
-TARGET= j.dll
-endif
+TARGET= jamalgam.exe
 endif
 endif
 else
-TARGET= j32.dll
+TARGET= jamalgam32.exe
 endif
 
 ifeq (1,$(NOSYNCHLIB))
@@ -322,15 +325,15 @@ else
 SYNCLIB= synchronization.lib
 endif
 
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
+$(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jconsole.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jconsole.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
 
-jdll.res : $(RCS)
-	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)
+jconsole.res : $(RCS)
+	$(RC) /L 0x409 /D _USING_V110_SDK71_ -R -FO$@ $(RCS)
 
 all: $(TARGET)
 
 clean:
-	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJS_SLEEF) $(SRC_ASM)
+	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJSLN) $(OBJS_SLEEF) $(SRC_ASM)
 
 .PHONY: all clean

@@ -332,6 +332,12 @@ int main(int argc, char* argv[])
   }
 #endif
 
+#ifdef JAMALGAM
+#ifdef _WIN32
+ extern int attach_process();
+ attach_process();
+#endif
+#endif
  jt=jeload(callbacks);
  if(!jt){char m[1000]; jefail(m); fputs(m,stderr); exit(1);}
 #ifndef _WIN32

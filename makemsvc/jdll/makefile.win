@@ -181,6 +181,7 @@ OBJS=  \
  ../../jsrc/vgcomp.o \
  ../../jsrc/vgranking.o \
  ../../jsrc/vgsort.o \
+ ../../jsrc/vgsortiqavx512.o \
  ../../jsrc/vgsp.o \
  ../../jsrc/vi.o \
  ../../jsrc/viavx.o \

@@ -195,7 +195,7 @@ JHS has the additional complication of critical sections of J code
 #include "d.h"
 #undef JT
 #define JT(p,n) p->n  // used for references in JS, which most references in this module are
-#define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
+#define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interfaces to internal functions and thus take a JJ
 
 
 
@@ -275,7 +275,7 @@ static C* nfeinput(JS jt,C* s){A y;
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
 // scaf should rewrite this interface to keep the control info in locals in 0!:x
 A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
- __atomic_store_n(&IJT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // turn off any pending break
+ __atomic_store_n(&IJT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
@@ -392,7 +392,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  I4 savcallstack = jm->callstacknext;
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
- __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // remove pending ATTN before executing the sentence
+ __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
  x=jtinpl(jm,0,(I)strlen(lp),lp);
  I wasidle=jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
       // but if the master task is already running, this is a recursion, and just stay in running state

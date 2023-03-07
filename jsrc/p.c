@@ -506,7 +506,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
   I pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
-  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.  If neither of the last words is EDGE, we can take 3
+  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
   pt0ecam += nwds+((0b11LL<<CONJX)<<pull4);
 // debug if(jt->parsercalls==0x9d0)
 // debug jt->parsercalls=0x9d0;

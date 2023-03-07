@@ -994,6 +994,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // set the sign bit to the selected bit of the mask
 #define CCMSGN(cand,tval) (cand<<(tval&(BW-1)))   // set sign bit if value found
 #define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1))))  // test true is value found
+#define CLRATTN __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // remove any pending ATT/BREAK; at start of sentence or where error handled
 #define DF1(f)          A f(JJ jt,    A w,A self)
 #define DF2(f)          A f(JJ jt,A a,A w,A self)
 #define DO(n,stm...)          {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1

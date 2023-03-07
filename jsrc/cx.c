@@ -440,12 +440,13 @@ dobblock:
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
    // for other error, go to the error location; if that's out of range, keep the error; if not,
-   // it must be a try. block, so clear the error.  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
+   // it must be a try. block, so clear the error (and if the error is ATTN/BREAK, clear the source of the error).
+   //  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
    // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
    // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
    // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
    // was when the try. was encountered
-   }else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+   }else{i=cw[i].go; if(i<SMAX){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; POPIFTRYSTK}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
    }
    break;
 

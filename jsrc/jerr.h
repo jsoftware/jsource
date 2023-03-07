@@ -5,7 +5,7 @@
 
 
 #define EVATTN          1       /* See i.c for error texts     */
-#define EVBREAK         2
+#define EVBREAK         2  // ATTN/BREAK must be adjacent
 #define EVDOMAIN        3
 #define EVILNAME        4
 #define EVILNUM         5

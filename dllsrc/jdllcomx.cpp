@@ -1,6 +1,8 @@
-/* Copyright (c) 1990-2022, Iverson Software Inc.  All rights reserved.    */
-/* Licensed to Jsoftware Inc.                                              */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
+/* J Windows dll and com interface (old jcom.c, jdll.c, jwin32.c)          */
+
 // included in both JEXE and JDLL servers
 
 // #undef _UNICODE

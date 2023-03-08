@@ -1,3 +1,8 @@
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
+/*                                                                         */
+/* AES calculation reference implementation                                */
+
 #include <stdint.h>
 #include <string.h> // CBC mode, for memset
 

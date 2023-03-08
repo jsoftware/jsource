@@ -1,5 +1,5 @@
-/* Copyright 1990-2000, Jsoftware Inc.  All rights reserved. */
-/* Licensed use only. Any other use is in violation of copyright. */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* included in both J.EXE and J.dll                                        */
 

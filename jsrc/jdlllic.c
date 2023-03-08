@@ -1,5 +1,5 @@
-/* Copyright (c) 1990-2020, Iverson Software Inc.  All rights reserved.    */
-/* Licensed to Jsoftware Inc.                                              */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Private Jsoftware encode/decode routines - license keys and ijl         */
 

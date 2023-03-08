@@ -1,7 +1,7 @@
-/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-/* Adverbs: Reduce (Insert), Outer Product, and Fold                              */
+/* Adverbs: Reduce (Insert), Outer Product, and Fold                       */
 
 #include "j.h"
 #include "vasm.h"

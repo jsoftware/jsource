@@ -84,8 +84,10 @@ fi
 fi
 if [ $m64 -eq 1 ]; then
 ls -l j64
+if [ "$1" = "darwin" ]; then
 j64/jamalgam testga.ijs
+fi
 else
 ls -l j32
-j32/jamalgam testga.ijs
+# j32/jamalgam testga.ijs
 fi

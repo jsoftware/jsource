@@ -84,7 +84,7 @@ fi
 fi
 if [ $m64 -eq 1 ]; then
 ls -l j64
-if [ "$1" = "darwin" ]; then
+if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
 j64/jamalgam testga.ijs
 fi
 else

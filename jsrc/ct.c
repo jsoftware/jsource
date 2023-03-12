@@ -624,7 +624,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
     jobq->ht[1]=(JOB *)&jobq->ht[1];   // the queue is going empty.  In that condition tail points to itself
     oldjob=0;  // when we release the lock, this will make the queue empty
    }else ACINIT(jobA,ACUC2) // if we are starting the last task when there are threads, the threads will not free the block until it gets to the top with job->ns==n.  ra() to account for that.  We ra() cheaply since AC is still in init state
-  } 
+  }
   job->ns=i+(i<n);  // we're taking the block if it's not past the end - account for it
   JOBUNLOCK(jobq,oldjob)
   if(i>=n)break;  //  if all tasks have already started, stop looking for one.  Leave i==n so that a thread will fa()

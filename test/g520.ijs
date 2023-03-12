@@ -28,9 +28,14 @@ if. '' -: $ 0 {::y do.
     savref   =: ref =. |: (,~ 3{::y) +/@:*"1!.1 ,.~/ (2{::y){"1 (4){::y 
     assert. 1e_25 > >./ | +/ ref epsub savres   =: 128!:9 y
   end.
-elseif. 10 = #y do.  NB. DIP
+elseif. 10 13 e.~ #y do.  NB. DIP
   if. 0=nthr do.  NB. single-threaded, compare for exact result
-    assert. x -: savres =: 128!:9 y
+    if. 10 = #y do.
+      y =. y , (0$0.) ; ($&0. ; $&00) # 8 {:: y  NB. if boundbk;beta;rvt  omitted, supply it
+      y =. (< (6{::y) {"1 (7){:: y) 7} y   NB. convert bk to be read from the front
+    end.
+    savy =: y
+    assert. x -: savres =:  128!:9 y
   else.  NB. multiple threads.  Expand M with one harmless row/col, bk/Frow to match; pad ndx and bkg, preserving order, to make work
     if. -. opts -: 0 do.  NB. opts of 0 means single thread only
       'ndx M bkg bk Frow cons' =. 0 4 6 7 8 5 { y
@@ -44,7 +49,12 @@ elseif. 10 = #y do.  NB. DIP
       ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
       ndx =. ndx (/:~ (#ndx) ? nndx)} nndx # saferc  NB. Keep prirow at head, if given, to avoid cutoff
       bkg =. bkg (0 (0})^:(prirow={.bkg) /:~ (#bkg) ? nbkg)} nbkg # saferc
-      savy =: (ndx;M;bkg;bk;Frow) 0 4 6 7 8} y
+      y =. (ndx;M;bkg;bk;Frow) 0 4 6 7 8} y
+      if. 10 = #y do.
+        y =. y , (0$0.) ; ($&0. ; $&00) # Frow  NB. if boundbk;beta;rvt  omitted, supply it
+        y =. (< (6{::y) {"1 (7){:: y) 7} y   NB. convert bk to be read from the front
+      end.
+      savy =: y
       if. #opts do.
         assert. opts e.~ 3 {. savres =: 128!:9 savy  NB. alternative results
       else.
@@ -52,8 +62,9 @@ elseif. 10 = #y do.  NB. DIP
       end.
     end.
   end.
-elseif. 9=#y do.  NB. gradient mode
+elseif. 9 12 e.~ #y do.  NB. gradient mode
   if. 0=nthr do.  NB. single-threaded, compare for exact result
+    if. 9 = #y do. savy =: y =. y , (0$0.) ; ($&0. ; $&00) # 7 {:: y end.  NB. if boundbk;beta;rvt  omitted, supply it
     assert. x -: savres =: 128!:9 y
   else.  NB. multiple threads.  Expand M with one harmless row/col, Frow to match;
     if. -. opts -: 0 do.  NB. opts of 0 means single thread only
@@ -75,6 +86,7 @@ elseif. 9=#y do.  NB. gradient mode
       M =. bkg {"2 M
       if. prirow>: 0 do. cons =. (bkg i. prirow) 6} cons end.  NB. priority row can float; find it
       savx =: x =. bkg (i. 2&{)`2:`]} x  NB. replace row #s with positions in bkg
+      if. 9 = #y do. y =. y , (0$0.) ; ($&0. ; $&00) # Frow end.  NB. if boundbk;beta;rvt  omitted, supply it
       savy =: (ndx;M;cons;bk;Frow) 0 4 5 6 7} y
       if. #opts do.
         opts =. bkg (i. 2&{)`2:`]}"1 opts
@@ -174,15 +186,15 @@ for_t. i. 4 do.
   assert. 4 3 0 0 0 __ ((4 0 0,4 1 0,:4 3 0) run128_9) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 3 0 0 0 __ ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
   bkg =. 00 1
-  assert. 0 1 1 16 25 _6 ('' run128_9) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 1 1 16 22 _6 ('' run128_9) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 1 1 16 22 _6 ('' run128_9) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 3 1 1 4 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
+  assert. 0 1 1 16 19 _6 ('' run128_9) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 0 1 1 16 18 _6 ('' run128_9) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 0 1 1 16 18 _6 ('' run128_9) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 0 3 1 1 2 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
   bkg =. 0 1 2
-  assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 3 1 1 4 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
+  assert. 0 0 1 16 20 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 0 3 1 1 3 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
   NB. verify each lane
   bkg =. 1j3 #!.4 ]0 1 2 3
   assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
@@ -204,7 +216,7 @@ for_t. i. 4 do.
   assert. 6 ((0 run128_9)) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. no columns
   assert. 6 ((0 run128_9)) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. no columns
   assert. 6 ((0 run128_9)) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;($0);bk;Frow;sched  NB. no rows
-  assert. 6 ((0 run128_9)) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);(2 0 0$0.);cons;bkg;(2 0$0.);(1$0.);sched  NB. empty M
+  assert. 6 ((0 run128_9)) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);(2 0 0$0.);cons;bkg;bk;(1$0.);sched  NB. empty M
   bk =. dptoqp _2 1 3 1e_8
   M =. dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
   cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
@@ -245,11 +257,11 @@ for_t. i. 4 do.
   Frow =. _1 _1.1 _1.5 _2 1  NB. improvements are _1 _1.1 _3 _4
   sched =. 5 4 3
   assert. 3 0 0 7 7 0 ((0 run128_9)) 00 0 0 0 0 0 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;1 2 3;bk;Frow;sched
-  assert. 0 1 0 5 7 _1.1 ((0 run128_9)) 01 1 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
-  assert. 0 2 0 4 9 _1.5 ((0 run128_9)) 1 2 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
-  assert. 0 2 0 4 6 _1.5 ((0 run128_9)) 1 1 1 2 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
+  assert. 0 1 0 5 6 _1.1 ((0 run128_9)) 01 1 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
+  assert. 0 2 0 4 7 _1.5 ((0 run128_9)) 1 2 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
+  assert. 0 2 0 4 5 _1.5 ((0 run128_9)) 1 1 1 2 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
   M =. dptoqp 4 4 $!.0 ] 1e_8 1 1 1  NB. first row is pivot; first col is dangerous
-  assert. 0 2 0 5 16 _1.5 ((0 run128_9)) 0 0 0 2 2 2 2 2 2 2 2 2 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched  NB. don't count dangerous col as improvement
+  assert. 0 2 0 5 12 _1.5 ((0 run128_9)) 0 0 0 2 2 2 2 2 2 2 2 2 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched  NB. don't count dangerous col as improvement
   NB. bk thresh
   M =. dptoqp 4 4 $ 1.
   bk =. dptoqp 1e_1 1e_2 1 1
@@ -265,12 +277,12 @@ for_t. i. 4 do.
   bkg =. i.{:$M
   Frow =. _1 _1.1 _1.5 1  NB. improvements
   assert. 4 0 0 0 0 __ (((4 0 0,:4 2 0) run128_9)) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 2 0 1 4 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 4 2 0 1 3 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 4 3 0 0 0 __ (((4 4 0,4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
   M =. 1. (<1 2 2)} M   NB. now column 3 is no longer unbounded
   assert. 4 0 0 0 0 __ (((4 0 0,:4 2 0) run128_9)) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 2 0 1 4 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 2 0 2 8 __ (((4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
+  assert. 4 2 0 1 3 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  assert. 4 2 0 2 6 __ (((4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
   NB. stall
   bk =. dptoqp 0. 0 0  NB. no improving pivots
   M =. dptoqp |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns
@@ -345,9 +357,9 @@ for_t. i. 4 do.
   M =. dptoqp |: _6 ]\ 1. 2 5 4 5 6    1 2 3 _1 1 10   _1 _2 0 0 1 4   1 _2 _3 4 5 6    1 1 1 1 1 1   1 2 3 _1 1 0   NB. input by columns
   bk=. dptoqp 6 $ 1e_29
   Frow =. _4. _5 _2.5 _1 _1 _5 _1e_20 
-  assert. 0 1 5 2 16 4.68 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
-  assert. 0 5 2 2 16 0.68 ('' run128_9) 00 5;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
-  assert. 0 2 5 3 24 3.68 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
+  assert. 0 1 5 2 12 4.68 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
+  assert. 0 5 2 2 12 0.68 ('' run128_9) 00 5;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
+  assert. 0 2 5 3 18 3.68 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched
   M =. dptoqp |: _4 ]\ 1.0001e_4 _1e_4 1e_4 _1e_4    1 2 3 _10   1e_4 _1e_4 1e_4 _10   1 2 3 0   NB. input by columns
   bk=. dptoqp 4 $ 1e_29
   Frow =. _1.e10 _5 _2.5 _2e10 _1e_20 

@@ -45,6 +45,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 #define SEEKLEAK 0
 
 // handler for load command, 0!:0-112
+// w is the text of the file.  We create a debug frame, in which we will store the state of the reading
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
@@ -118,7 +119,7 @@ exit:
 }
 
 
-
+// load (0!:n), when y is boxed.  Open & read the file, then call line to loop through it
 static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->currslistx;  // push script#
  ARGCHK2(a,w);
  ASSERT(AT(w)&BOX,EVDOMAIN);
@@ -128,8 +129,10 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->cu
   ASSERT(3<n&&!memcmpne(s+n-3,".js",3L)||4<n&&!memcmpne(s+n-4,".ijs",4L),EVSECURE);
  }
  RZ(x=jfread(w));
- // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur
+ // Remove UTF8 BOM if present - disabled pending resolution.  Other BOMs should not occur
  // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num(3),x))
+ // If first line is #!, skip over the line (up through next LF)
+ if(!memcmp(CAV(x),"#!",2L))RZ(x=drop(increm(indexof(x,scc('\n'))),x))
  // if this is a new file, record it in the list of scripts
  RZ(y=fullname(C(AAV(w)[0])));
  A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];

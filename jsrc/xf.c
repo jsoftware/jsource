@@ -131,7 +131,7 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
  R 1;
 }    /* write/append string w to file f at j */
 
-
+// 1!:1 read entire file
 DF1(jtjfread){A z;F f,fp;
  ASSERT(!JT(jt,seclev),EVSECURE) 
  F1RANK(0,jtjfread,self);

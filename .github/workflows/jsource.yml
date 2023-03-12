@@ -45,7 +45,7 @@ jobs:
       strip -S libjavx2.so || true
       strip -S libjavx512.so || true
       strip -S libtsdll.so
-      strip -S jamalgam
+      strip -S jamalgam || true
       strip -S libgmp.so
       cd ..
       ls -l j64
@@ -97,7 +97,7 @@ jobs:
       strip -S libjavx2.so || true
       strip -S libjavx512.so || true
       strip -S libtsdll.so
-      strip -S jamalgam
+      strip -S jamalgam || true
       strip -S libgmp.so
       cd ..
       ls -l j64
@@ -154,7 +154,7 @@ jobs:
       strip -S libjavx2.dylib || true
       strip -S libjavx512.dylib || true
       strip -S libtsdll.dylib
-      strip -S jamalgam
+      strip -S jamalgam || true
       strip -S libgmp.dylib
       cd ..
       ls -l j64
@@ -203,7 +203,7 @@ jobs:
        strip -S jconsole
        strip -S libj.so
        strip -S libtsdll.so
-       strip -S jamalgam
+       strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
        zip -r rpi64.zip j64
@@ -265,7 +265,7 @@ jobs:
        strip -S jconsole
        strip -S libj.so
        strip -S libtsdll.so
-       strip -S jamalgam
+       strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
        zip -r rpi32.zip j32
@@ -331,7 +331,7 @@ jobs:
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
        strip -S libtsdll.so
-       strip -S jamalgam
+       strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
        ls -l j64
@@ -391,7 +391,7 @@ jobs:
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
        strip -S libtsdll.so
-       strip -S jamalgam
+       strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
        ls -l j64
@@ -449,7 +449,7 @@ jobs:
        strip -S jconsole
        strip -S libj.so
        strip -S libtsdll.so
-       strip -S jamalgam
+       strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
        ls -l j64
@@ -508,7 +508,7 @@ jobs:
        strip -S libjavx.so || true
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
-       strip -S jamalgam
+       strip -S jamalgam || true
        strip -S libtsdll.so
        strip -S libgmp.so
        cd ..
@@ -570,7 +570,7 @@ jobs:
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
        strip -S libtsdll.so
-       strip -S jamalgam
+       strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
        ls -l j64

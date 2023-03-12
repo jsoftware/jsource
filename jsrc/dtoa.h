@@ -1,6 +1,9 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
+/*                                                                         */
+/* The author of this software is David M. Gay.                            */
 /* Jsoftware Copyright applies only to changes made by Jsoftware           */
+
 #include <setjmp.h>
 
 #if SYS & SYS_MACOSX

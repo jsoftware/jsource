@@ -1647,7 +1647,7 @@ smoutput 'Installing ',bin,'..'
 
 if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
   if. IFRASPI do.
-    z=. 'jqt-raspi',((-.IF64)#'-arm32'),((y-:'slim')#'-slim'),'.tar.gz'
+    z=. 'jqt-raspberry',((-.IF64)#'-arm32'),((y-:'slim')#'-slim'),'.tar.gz'
   else.
     z=. 'jqt-',(tolower UNAME),(('arm64'-:9!:56'cpu')#'-arm64'),((y-:'slim')#'-slim'),'.tar.gz'
   end.

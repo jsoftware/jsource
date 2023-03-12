@@ -1,3 +1,8 @@
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
+/*                                                                         */
+/* java interface                                                          */
+
 #include "j.h"
 #include "jeload.h"
 #include "com_jsoftware_j_JInterface.h"

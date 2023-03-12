@@ -1,5 +1,5 @@
-/* Copyright (c) 1990-2022, Jsoftware Inc.                                 */
-/* Licensed use only.                                                      */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* libgmp support for extended precision and rational types                */
 

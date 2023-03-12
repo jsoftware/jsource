@@ -1,4 +1,4 @@
-/* Copyright 1990-2003, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Extended Precision Floating Point                                */

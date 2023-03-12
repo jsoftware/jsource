@@ -1,6 +1,8 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
-/* J console */
+/*                                                                         */
+/* J console                                                               */
+
 /* #define READLINE for Unix readline support */
 #ifdef _WIN32
 #include <windows.h>

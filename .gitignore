@@ -90,3 +90,6 @@ jlibrary/bin32/
 !jlibrary/system/config/
 !jlibrary/tools/
 !jlibrary/bin
+
+# misc
+jsrc/toc.txt

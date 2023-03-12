@@ -1,3 +1,9 @@
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
+/*                                                                         */
+/* line editing library                                                    */
+/* Jsoftware Copyright applies only to changes made by Jsoftware           */
+
 #define USE_UTF8
 
 /* clang-cl */

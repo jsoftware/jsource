@@ -1,5 +1,8 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
+/*                                                                         */
+/* utilities for JFE to load JE, initiallize, and run profile sentence     */
+
 void jepath(char*,char *);
 void jesetpath(char*);
 void* jeload(void* callbacks); // returns J

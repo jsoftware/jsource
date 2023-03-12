@@ -1,6 +1,8 @@
-/* Copyright (c) 1990-2022, Jsoftware Inc.  All rights reserved.    */
-/* Licensed to Jsoftware Inc.                                              */
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
+/* J Windows dll and com interface (old jcom.c, jdll.c, jwin32.c)          */
+
 // jdll.rc2 - resources App Studio does not edit directly
 #ifdef APSTUDIO_INVOKED
 	#error this file is not editable by App Studio
@@ -31,7 +33,7 @@ BEGIN
 			VALUE "FileDescription", "J\0"
 			VALUE "FileVersion",     "904\0"
 			VALUE "InternalName",    "J\0"
-			VALUE "LegalCopyright",  "Copyright Jsoftware Inc. 2022\0"
+			VALUE "LegalCopyright",  "Copyright Jsoftware Inc. 2023\0"
 			VALUE "LegalTrademarks", "J\0"
 			VALUE "OriginalFilename","J\0"
 			VALUE "ProductName",     "J\0"

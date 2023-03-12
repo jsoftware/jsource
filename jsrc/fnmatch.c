@@ -1,3 +1,9 @@
+/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Licensed use only. Any other use is in violation of copyright.          */
+/*                                                                         */
+/* required in some J Unix systems                                         */
+/* Jsoftware Copyright applies only to changes made by Jsoftware           */
+
 /* required in some J Unix systems */
 /*	$NetBSD: fnmatch.c,v 1.13 1997/07/21 14:06:58 jtc Exp $	*/
 

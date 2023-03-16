@@ -752,6 +752,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 #endif
 
+#define ANASARGEEMENT 0 // set to check whether or not AN() is equal to */AS()
+
 #define MAXTHREADS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
                        // threads will be paged out.
 #define MAXTHREADSRND 64  // MAXTHREADS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
@@ -886,8 +888,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
 #define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
-// version for debugging
-// #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jtjsignale(jt,e|EMSGLINEISNAME,(nm),0); R 0;}}  // signal error, overriding the running name with a different one
@@ -1965,6 +1965,12 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define ARGCHK3(x,y,z)  {ARGCHK1(x) ARGCHK1(y) ARGCHK1(z)}
 
 
+#if ANASARGEEMENT
+#define CHECKANAS(exp)  {A ZZZm=(A)(exp); if(ZZZm && !jt->jerr){ if(NOUN&AT(ZZZm)){I ZZZn; PRODRNK(ZZZn,AR(ZZZm),AS(ZZZm)); if(AN(ZZZm)!=ZZZn){fprintf(stderr,"AN() not agreed with */AS() : file %s line %d\n",__FILE__,__LINE__);SEGFAULT;}}}}
+#else
+#define CHECKANAS(exp)
+#endif
+
 // RETF is the normal function return.  For debugging we hook into it
 #if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
 #define RETF(exp)       A ZZZz = (exp); if (!ZZZz && !jt->jerr) SEGFAULT; auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
@@ -1975,7 +1981,11 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
 #define RETF(exp)       {A ZZZz = (exp); if(ZZZz==0)R0 R ZZZz;}
 #else
+#if ANASARGEEMENT   // For noun, AN() should always equal to */AS()  trap if not
+#define RETF(exp)       {A ZZZz = (exp); CHECKANAS(ZZZz); R ZZZz;}
+#else
 #define RETF(exp)       R exp;
+#endif
 #endif
 #endif
 // Input is a byte.  It is replicated to all lanes of a UI

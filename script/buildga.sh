@@ -147,6 +147,8 @@ if [ "$1" = "wasm" ]; then
 cd make2
 ./clean.sh
 USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_jamalgam.sh
+./clean.sh
+USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_libj.sh
 cd ..
 ls -l bin/$1/j32
 cp bin/$1/j32/* j32

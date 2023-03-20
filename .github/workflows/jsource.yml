@@ -646,8 +646,17 @@ jobs:
      run: |
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1
+      ls -l j32
+      zip -r wasm32.zip j32
 
-#   - name: Release JE (wasm)
+   - name: Release JE (wasm)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "wasm32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
 #   - name: Copy Test (wasm)
 

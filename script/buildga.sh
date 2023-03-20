@@ -151,7 +151,6 @@ cd ..
 ls -l bin/$1/j32
 cp bin/$1/j32/* j32
 chmod 644 j32/*
-chmod 755 j32/jamalgam
 ls -l j32
 exit 0
 fi

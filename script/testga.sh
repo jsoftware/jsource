@@ -48,8 +48,8 @@ fi
 ulimit -a || true
 
 if [ "$1" = "wasm" ]; then
-ls -l j64
-cd j64
+ls -l j32
+cd j32
 node jamalgam.js
 exit 0
 fi

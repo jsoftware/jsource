@@ -33,22 +33,6 @@ b -: isnan x
 'valence error' -: 0 (128!:5) etx 3 4 5
 'valence error' -: 1 (128!:5) etx 3 4 5
 
-1: 0 : 0  NB. mapped boxed no longer supported
-NB. 128!:5 and mapped boxed arrays --------------------------------------
-
-0!:0 <testpath,'gmbx.ijs'
-
-r=: x=: 1 2 3 ; _. ; 3j4 _. ; (] , <@(s:"0)) 'abc' ; (u: 128+a.i. 'ABC') ; (10&u: 65536+a.i. 'Abc')
-(isnan x) -: isnan r
-
-r=: x=: (5!:1 <'mean') ; _. ; (<<<3j4 _.) ; (] , <@(s:"0)) 'abc' ; (u: 128+a.i. 'ABC') ; (10&u: 65536+a.i. 'Abc')
-(isnan x) -: isnan r
-
-0 = unmap_jmf_ 'q'
-0 = unmap_jmf_ 'r'
-1!:55 ::1: f,f1
-)
-
 NB. [x] 128!:8 y   hashing --------------------------------------------------------------
 ('') -: $ (128!:8) 0
 ('') -: $ (128!:8) 1

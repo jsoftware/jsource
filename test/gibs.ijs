@@ -94,23 +94,6 @@ y test y
 x test y [ x=: 811 0$a: [ y=: 947 0$a:
 y test y
 
-1: 0 : 0  NB. mapped boxed no longer supported
-NB. mapped boxed arrays 
-
-0!:0 <testpath,'gmbx.ijs'
-q=: x=: (811 2 ?@$ #u){u=: 17 3;(<"0] 30 ?@$ 100), (<5!:2 <'mean'), (] , <@(s:"0)) (;:'Cogito, ergo sum.'), (<;._1 u: 128+a.i. ' COGITO, ERGO SUM.'), <;._1[ 10&u: 65536+a.i. ' Cogito, Ergo Sum.'
-r=: y=: (547 2 ?@$ #u){u
-
-(mbxcheck_jmf_ q), q test y
-(mbxcheck_jmf_ r), x test r
-(mbxcheck_jmf_ q), q test r
-(mbxcheck_jmf_ q), q test q
-
-1 [ unmap_jmf_ 'q'
-1 [ unmap_jmf_ 'r'
-1!:55 ::1: f,f1
-)
-
 4!:55 ;:'a b f f1 g mean q r test u x y'
 
 

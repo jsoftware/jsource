@@ -58,25 +58,27 @@ tip =: tbase -~ 6!:2 '(<1) ,~ (<2) ,~ (<3) ,~ (<4) ,~ (<5) ,~ (<6) ,~ (<7) ,~ <"
 tnip =: tbase -~ 6!:2 '(<1) , (<2) , (<3) , (<4) , (<5) , (<6) , (<7) , <"0 i. 1e6'
 THRESHOLD +. tip < 0.25 * tnip
 
+3 : 0^:(15!:23'') 1
 0!:0 <testpath,'gmbx.ijs'
 
-g=: 3 : 0
+g=: {{
  q=: i.0
  for_i. i.y do.
   q=: q,i
  end.
-)
+}}
 
-(i. -: g)"0 ] 2 10?@$2e3
+assert. (i. -: g)"0 ] 2 10?@$2e3
 
-x =: 800 * 2^i.8
-y =: timer 'g ',"1 ":,.x
-y1=: (1,.x) +/ .*y %. 1,.x
-THRESHOLD +. threshold < y rsq y1
+x2 =: 800 * 2^i.8
+y2 =: timer 'g ',"1 ":,.x2
+y1=: (1,.x) +/ .*y2 %. 1,.x2
+assert. THRESHOLD +. threshold < y2 rsq y1
 
 1 [ unmap_jmf_ 'q'
 1 [ unmap_jmf_ 'r'
 1!:55 ::1: f,f1
+)
 
 NB. Verify that AFNOSMREL is propagated through structural verbs
 f =: 1 : 0
@@ -113,7 +115,7 @@ a:&, f a
 -.&a: f a
 ;&a f a
 
-4!:55 ;:'a f f1 g h h1 mean q r rsq ss tbase timenoa timea tip tnip x x1 y y1'
+4!:55 ;:'a f f1 g h h1 mean q r rsq ss tbase timenoa timea tip tnip x x1 x2 y y1 y2'
 
 
 

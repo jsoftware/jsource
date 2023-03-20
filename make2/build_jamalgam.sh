@@ -774,12 +774,6 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
-case "$jplatform64" in
- wasm/j32)
-  mkdir -p ../bin/$jplatform64 || exit 1
-  cp -p ../mpir/linux/wasm32/libgmp.a ../bin/$jplatform64/libj.a || exit 1
-  ;;
-esac
 export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM OBJSLN jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then

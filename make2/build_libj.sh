@@ -762,8 +762,6 @@ mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
 case "$jplatform64" in
  wasm/j32)
-  mkdir -p ../bin/$jplatform64 || exit 1
-  cp -p ../mpir/linux/wasm32/libgmp.a ../bin/$jplatform64/libj.a || exit 1
   sed -i"" -e "s/\$(CC) -o \$@/\$(AR) rs \$@/" obj/$jplatform64/makefile-libj
   ;;
 esac

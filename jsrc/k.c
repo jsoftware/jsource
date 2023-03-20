@@ -239,7 +239,9 @@ static KF1(jtIfromX){
   if (1==XSGN(W)) // w[i] is positive
    if (IMAX<XLIMB0(W)) R 0; else *y++= XLIMB0(W);
   else if (-1==XSGN(W)) // w[i] is negative
-   if ((UI)-IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
+   if ((UI)IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
+// -IMIN = IMIN for 2's compliment
+// if ((UI)-IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
   else if (0==XSGN(W)) *y++= 0; // w[i] is 0
   else R0; // w[i] is too big
  )

@@ -631,7 +631,7 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
-  runs-on: macos-12
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

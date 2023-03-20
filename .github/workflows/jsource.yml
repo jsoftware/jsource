@@ -638,8 +638,6 @@ jobs:
 
    - name: Setup Environment (wasm)
      uses: mymindstorm/setup-emsdk@v16
-     run: |
-      emcc -v
 
    - name: Build, Test JE (wasm)
      env:

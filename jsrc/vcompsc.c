@@ -660,7 +660,12 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   comp^=(0x606010>>(((search&1)+(comp&6))<<2))&7; search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
   if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01+INT+FL)))){
    // numeric types that we can handle here, for sure
+#if !defined(__wasm__)
    R (AF)((I)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)]+postflags);
+#else
+// function pointer is sequential index
+   R (AF)(((UI)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)])<<2+postflags);
+#endif
   }
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
   if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+SBT)){R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);}

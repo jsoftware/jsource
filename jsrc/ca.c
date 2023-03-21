@@ -123,7 +123,11 @@ DF2(atcomp){A z;AF f;
  // call analysis routine with the arguments.  Low 2 bits of return are postprocessing flags
  f=atcompf(a,w,self);
  I postflags=(I)f&3;  // extract postprocessing from return
+#if !defined(__wasm__)
  f=(AF)((I)f&-4);    // restore function address
+#else
+ f=(AF)(((I)f)>>2);    // restore function address
+#endif
  // If the compound includes CT, apply it
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
  if(f!=0){

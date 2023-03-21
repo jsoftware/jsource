@@ -7,6 +7,8 @@ NB. test failed on small ct
 ct   =: 9!:18''
 9!:19[2^_40
 
+'NaN error' -: +/ etx _ __   NB. smoke test
+
 insert =: 1 : '{. ` ({. u $:@}.) @. (1&<@#)'     NB. one or more items
 
 (= /t) -: = insert t=: 20 ?@$ 2

@@ -7,7 +7,7 @@ errnox =: 2!:8
 2 -: >{.errnox ''
 
 1:@(1!:0) jpath '~temp'
-2 -: >{.errnox ''
+IFWASM +. 2 -: >{.errnox ''
 
 'length error' -: errnox etx 1 2 3
 'length error' -: errnox etx 1.2 3

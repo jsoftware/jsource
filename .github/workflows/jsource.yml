@@ -571,6 +571,7 @@ jobs:
        /sbin/ldconfig -r
        ls -a -l ~/
        ls -a -l ~/.ssh
+       sudo chown runner:runner .ssh || true
        sudo chmod 700 .ssh || true
        sudo chmod 600 .ssh/* || true
        ls -a -l ~/

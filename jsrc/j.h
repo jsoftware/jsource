@@ -830,7 +830,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define __atomic_fetch_add(aptr, val, memorder)  ({__auto_type rrres=*aptr; *aptr+=val; rrres;})
 #define __atomic_fetch_and(aptr, val, memorder)  ({__auto_type rrres=*aptr; *aptr&=val; rrres;})
 #else
-#define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=(void*)desired,1)
+#define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
 #define __atomic_exchange_n(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr=val; rrres;})
 #define __atomic_fetch_or(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr|=val; rrres;})
 #define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr-=val; rrres;})

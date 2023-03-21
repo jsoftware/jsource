@@ -569,8 +569,12 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
-       ls -a ~/
-       ls -a ~/.ssh
+       ls -a -l ~/
+       ls -a -l ~/.ssh
+       sudo chmod 700 .ssh || true
+       sudo chmod 600 .ssh/* || true
+       ls -a -l ~/
+       ls -a -l ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
        sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true

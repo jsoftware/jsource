@@ -318,7 +318,11 @@ jobs:
       run: |
        rm -f jobdone
        /sbin/ldconfig -r
-       echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
+       ls -al ~/
+       ls -al ~/.ssh
+       echo "Host *" >>~/.ssh/config || true
+       echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
        export CC=clang
@@ -381,7 +385,11 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
-       sudo echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
        export CC=clang
@@ -446,7 +454,11 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 libedit
        /sbin/ldconfig -r
-       sudo echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
        export CC=clang
@@ -505,7 +517,11 @@ jobs:
       run: |
        rm -f jobdone
        /sbin/ldconfig -r
-       echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
+       ls -al ~/
+       ls -al ~/.ssh
+       echo "Host *" >>~/.ssh/config || true
+       echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
        export CC=clang
@@ -569,13 +585,8 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
-       ls -a -l ~/
-       ls -a -l ~/.ssh
-       sudo chown runner:runner .ssh || true
-       sudo chmod 700 .ssh || true
-       sudo chmod 600 .ssh/* || true
-       ls -a -l ~/
-       ls -a -l ~/.ssh
+       ls -al ~/
+       ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
        sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true

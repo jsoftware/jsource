@@ -381,9 +381,9 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
-       echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
+       sudo echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
        echo "client ssh config"
-       cat ~/.ssh/config || true
+       sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -446,9 +446,9 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 libedit
        /sbin/ldconfig -r
-       echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
+       sudo echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
        echo "client ssh config"
-       cat ~/.ssh/config || true
+       sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -569,9 +569,9 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
-       echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
+       sudo echo "Host *\n ServerAliveInterval 20\n ServerAliveCountMax 2000000" >>~/.ssh/config
        echo "client ssh config"
-       cat ~/.ssh/config || true
+       sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh freebsd || exit 1

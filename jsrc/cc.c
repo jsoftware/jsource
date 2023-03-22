@@ -206,7 +206,7 @@ DF2(jtboxcut0){A z;
 }
 
 
-// a ;@:(<;.0) w where a has one column.  We allocate a single area and copy in the items
+// a ;@:(<;.0) w where a has one column (i. e. 1={:$a).  We allocate a single area and copy in the items
 // if we encounter a reversal, we abort
 // if it's a case we can't handle, we fail over to the normal code, with BOXATOP etc flags set
 DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;

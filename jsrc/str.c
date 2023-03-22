@@ -62,7 +62,7 @@ static size_t slchr(char* str, char ch, size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
  // align to 16 bytes
  while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
  const __m128i xmm0 = _mm_set1_epi8( ch );
@@ -126,7 +126,7 @@ static size_t slchr2(unsigned short* str, unsigned short ch, size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
  // align to 16 bytes
  while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
  const __m128i xmm0 = _mm_set1_epi16( ch );
@@ -190,7 +190,7 @@ static size_t slchr4(unsigned int* str, unsigned int ch, size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
  // align to 16 bytes
  while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
  const __m128i xmm0 = _mm_set1_epi32( ch );
@@ -257,7 +257,7 @@ static size_t srchr(char* str, char ch, size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi8( ch );
@@ -326,7 +326,7 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi16( ch );
@@ -395,7 +395,7 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi32( ch );
@@ -455,7 +455,7 @@ void StringToLower(char *str,size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
 
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
@@ -508,7 +508,7 @@ void StringToUpper(char *str,size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
 
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
@@ -562,7 +562,7 @@ void StringToLowerUCS2(unsigned short *str,size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
 
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
@@ -616,7 +616,7 @@ void StringToUpperUCS2(unsigned short *str,size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
 
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
@@ -670,7 +670,7 @@ void StringToLowerUCS4(unsigned int *str,size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
 
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
@@ -724,7 +724,7 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
  }
 #endif
 
-#if defined(__SSE2__) || EMU_AVX
+#if defined(__SSE2__) || EMU_AVX2
 
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {

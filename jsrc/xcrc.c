@@ -9,8 +9,6 @@
 #include "../base64/include/libbase64.h"
 #if C_AVX2
 #define B64CODEC BASE64_FORCE_AVX2
-#elif C_AVX
-#define B64CODEC BASE64_FORCE_AVX
 #elif defined(__aarch64__)
 #define B64CODEC BASE64_FORCE_NEON64
 #else

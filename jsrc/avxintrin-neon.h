@@ -1496,6 +1496,14 @@ FORCE_INLINE __m256 _mm256_blendv_ps(__m256 a, __m256 b, __m256 mask)
     return result_m256;
 }
 
+FORCE_INLINE __m256i _mm256_blendv_epi8(__m256i a, __m256i b, __m256i mask)
+{
+ __m256i r;
+ r.vect_u64[0] = _mm_blendv_epi8(a.vect_u64[0], b.vect_u64[0], mask.vect_u64[0]);
+ r.vect_u64[1] = _mm_blendv_epi8(a.vect_u64[1], b.vect_u64[1], mask.vect_u64[1]);
+ return r;
+}
+
 FORCE_INLINE __m256i _mm256_blend_epi32(__m256i a, __m256i b, const int imm8)
 {
     assert(imm8 >= 0 && imm8 <= 255);

@@ -154,20 +154,9 @@ SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
 ;;
 
-linux_j64avx) # linux intel 64bit avx
-TARGET=libjavx.so
-COMPILE="$common -DC_AVX=1 "
-LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -o libjavx.so "
-CFLAGS_SIMD=" -mavx "
-OBJS_FMA=" blis/gemm_int-fma.o "
-OBJS_AESNI=" aes-ni.o "
-SRC_ASM="${SRC_ASM_LINUX}"
-GASM_FLAGS=""
-;;
-
 linux_j64avx2) # linux intel 64bit avx2
 TARGET=libjavx2.so
-COMPILE="$common -DC_AVX=1 -DC_AVX2=1"
+COMPILE="$common -DC_AVX2=1"
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -o libjavx2.so "
 CFLAGS_SIMD=" -mavx2 -mfma "
 OBJS_FMA=" blis/gemm_int-fma.o "
@@ -211,20 +200,9 @@ SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
 ;;
 
-darwin_j64avx) # darwin intel 64bit
-TARGET=libjavx.dylib
-COMPILE="$common $macmin -DC_AVX=1"
-LINK=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin -o libjavx.dylib"
-CFLAGS_SIMD=" -mavx "
-OBJS_FMA=" blis/gemm_int-fma.o "
-OBJS_AESNI=" aes-ni.o "
-SRC_ASM="${SRC_ASM_MAC}"
-GASM_FLAGS="$macmin"
-;;
-
 darwin_j64avx2) # darwin intel 64bit
 TARGET=libjavx2.dylib
-COMPILE="$common $macmin -DC_AVX=1 -DC_AVX2=1"
+COMPILE="$common $macmin -DC_AVX2=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin -o libjavx2.dylib"
 CFLAGS_SIMD=" -mavx2 -mfma "
 OBJS_FMA=" blis/gemm_int-fma.o "

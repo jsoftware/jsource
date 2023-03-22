@@ -281,7 +281,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   NAN0;
   // latency of add is 4, so use 8 accumulators for 2 reads per cycle
   if(d==1){
-#if (C_AVX&&SY_64) || EMU_AVX
+#if (C_AVX2&&SY_64) || EMU_AVX2
    redprim256rk1(_mm256_add_pd,dzero)
 #else
   DQ(m, I n0=n; D acc0=0.0; D acc1=0.0; D acc2=0.0; D acc3=0.0;
@@ -295,7 +295,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
 #endif
   }
   else{
-#if (C_AVX&&SY_64) || EMU_AVX
+#if (C_AVX2&&SY_64) || EMU_AVX2
    redprim256rk2(_mm256_add_pd,dzero)
 #elif 1
    // add down the columns to reduce memory b/w.  4 accumulators
@@ -363,7 +363,7 @@ DF1(jtcompsum){
  // Do the operation
  NAN0;
  D *wv=DAV(w), *zv=DAV(z);
-#if (C_AVX&&SY_64) || EMU_AVX
+#if (C_AVX2&&SY_64) || EMU_AVX2
  __m256d __attribute__((aligned(64))) accc[2][8];   // accumulators and error terms
  __m256i endmask; /* length mask for the last word */
  if(d==1){

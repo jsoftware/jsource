@@ -105,7 +105,7 @@ else
 USE_EMU_AVX="${USE_EMU_AVX:=1}"
 fi
 if [ $USE_EMU_AVX -eq 1 ] ; then
-common="$common -DEMU_AVX=1"
+common="$common -DEMU_AVX2=1"
 fi
 
 if [ "${USE_GMP_H:=1}" -eq 1 ] ; then

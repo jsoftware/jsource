@@ -822,7 +822,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    ) \
   }
 
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 
 // Do one 2x2 product of length dplen.  Leave results in accxx0.  dplen must be >0
 // av, wv, wv1 are set up.  Special branch for case of len<=4
@@ -948,7 +948,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
 I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,I ndpi,void *zvp){
  if(it&FL){
   NAN0;
-#if C_AVX || EMU_AVX
+#if C_AVX2 || EMU_AVX2
   SUMATLOOP2(D,D,ONEPRODAVXD2(D2,CELL2X2M,CELL2X2L),ONEPRODAVXD1(D1,CELL1X1M,CELL1X1L));
 #else
   SUMATLOOP(D,D,ONEPRODD)

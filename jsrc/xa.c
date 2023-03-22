@@ -620,7 +620,7 @@ F2(jtcpufeature2){I k;
 #endif
 }
 OPENSSL_setcap();
-#if C_AVX && !defined(ANDROID)
+#if defined(__x86_64__)
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
 #endif
 R mtm;

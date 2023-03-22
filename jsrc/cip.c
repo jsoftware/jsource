@@ -65,7 +65,7 @@ static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
      DQ(nn, if(*u++){vi=(UI*)v; d=ti; DQ(nw, *d+++=*vi++;);} v+=n;);  \
      x=zv; c=tc; DQ(n, *x+++=*c++;);
 
-#if (C_AVX || EMU_AVX) && defined(PREFETCH)
+#if C_AVX2 || EMU_AVX2
 // blocked multiply, processing vertical mx16 strips of y.  Good when y has few rows
 // *av is mxp, *wv is pxn, *zv is mxn
 // flgs is 0 for float, 1 for complex, i. e. lg2(# values per atom), 2 for upper-tri, 4 for INT.  If FLGCMP is set, n and p are even, and give the lengths of the arguments in values
@@ -924,7 +924,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 #endif
 #else
    // not single column.  Choose the algorithm to use
-#if (C_AVX || EMU_AVX) && defined(PREFETCH)
+#if C_AVX2 || EMU_AVX2
     smallprob=0;  // never use Dic method; but used to detect pick up NaN errors
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w

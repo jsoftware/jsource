@@ -1,12 +1,8 @@
 ifeq (1,$(JAVX512))
-FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512 -mno-vzeroupper
+FAVX512= /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512 -mno-vzeroupper
 else
 ifeq (1,$(JAVX2))
-FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell -mno-vzeroupper
-else
-ifeq (1,$(JAVX))
-FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1 -mno-vzeroupper
-endif
+FAVX2= /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell -mno-vzeroupper
 endif
 endif
 ifeq (1,$(USE_OPENMP))
@@ -25,11 +21,7 @@ else
 ifeq (1,$(JAVX2))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
-ifeq (1,$(JAVX))
-FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-endif
 endif
 endif
 else
@@ -64,7 +56,7 @@ endif
 
 ifeq (1,$(x64))
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-shift-count-overflow -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
-CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 /DEMU_AVX=1 $(FAVX) $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
 ASMFLAGS= /Cx
 else
@@ -305,11 +297,7 @@ else
 ifeq (1,$(JAVX2))
 TARGET= javx2.dll
 else
-ifeq (1,$(JAVX))
-TARGET= javx.dll
-else
 TARGET= j.dll
-endif
 endif
 endif
 else

@@ -174,7 +174,7 @@ case "$jplatform64" in
   *) USE_EMU_AVX="${USE_EMU_AVX:=1}";;
 esac
 if [ $USE_EMU_AVX -eq 1 ] ; then
- common="$common -DEMU_AVX=1"
+ common="$common -DEMU_AVX2=1"
 fi
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"
@@ -298,7 +298,7 @@ case $jplatform64 in
 
  linux/j64avx512*) # linux intel 64bit avx512
   TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+  CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -311,7 +311,7 @@ case $jplatform64 in
 
  linux/j64avx2*) # linux intel 64bit avx2
   TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
+  CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -320,19 +320,6 @@ case $jplatform64 in
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
-
- linux/j64avx*) # linux intel 64bit avx
-  TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
-  OBJS_FMA=" gemm_int-fma.o "
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_LINUX}"
-  GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX "
-  FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
  ;;
 
  linux/j64*) # linux intel 64bit nonavx
@@ -395,7 +382,7 @@ case $jplatform64 in
 
  openbsd/j64avx512*) # openbsd intel 64bit avx512
   TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+  CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -408,7 +395,7 @@ case $jplatform64 in
 
  openbsd/j64avx2*) # openbsd intel 64bit avx2
   TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
+  CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -419,19 +406,6 @@ case $jplatform64 in
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
- openbsd/j64avx*) # openbsd intel 64bit avx
-  TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
-  OBJS_FMA=" gemm_int-fma.o "
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_LINUX}"
-  GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX "
-  FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
- ;;
- 
  openbsd/j64*) # openbsd intel 64bit nonavx
   TARGET=libj.so
   CFLAGS="$common -msse3 "
@@ -471,7 +445,7 @@ case $jplatform64 in
 
  freebsd/j64avx512*) # freebsd intel 64bit avx512
   TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+  CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -484,7 +458,7 @@ case $jplatform64 in
 
  freebsd/j64avx2*) # freebsd intel 64bit avx2
   TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
+  CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -495,19 +469,6 @@ case $jplatform64 in
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
- freebsd/j64avx*) # freebsd intel 64bit avx
-  TARGET=libj.so
-  CFLAGS="$common -DC_AVX=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
-  OBJS_FMA=" gemm_int-fma.o "
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_LINUX}"
-  GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX "
-  FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
- ;;
- 
  freebsd/j64*) # freebsd intel 64bit nonavx
   TARGET=libj.so
   CFLAGS="$common -msse3 "
@@ -532,7 +493,7 @@ case $jplatform64 in
 
  darwin/j64avx512*) # darwin intel 64bit
   TARGET=libj.dylib
-  CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
+  CFLAGS="$common $macmin -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -545,7 +506,7 @@ case $jplatform64 in
 
  darwin/j64avx2*) # darwin intel 64bit
   TARGET=libj.dylib
-  CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 "
+  CFLAGS="$common $macmin -DC_AVX2=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
@@ -554,19 +515,6 @@ case $jplatform64 in
   GASM_FLAGS="$macmin"
   FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
-
- darwin/j64avx*) # darwin intel 64bit
-  TARGET=libj.dylib
-  CFLAGS="$common $macmin -DC_AVX=1 "
-  LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
-  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
-  OBJS_FMA=" gemm_int-fma.o "
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_MAC}"
-  GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_AVX "
-  FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
  ;;
 
  darwin/j64arm*) # darwin arm
@@ -625,7 +573,7 @@ case $jplatform64 in
    DOLECOM="-DOLECOM"
   fi
   TARGET=j.dll
-  CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
+  CFLAGS="$common $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
@@ -651,7 +599,7 @@ case $jplatform64 in
    DOLECOM="-DOLECOM"
   fi
   TARGET=j.dll
-  CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
+  CFLAGS="$common $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
@@ -669,32 +617,6 @@ case $jplatform64 in
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
-
- windows/j64avx*) # windows intel 64bit avx
-  jolecom="${jolecom:=0}"
-  if [ $jolecom -eq 1 ] ; then
-   DOLECOM="-DOLECOM"
-  fi
-  TARGET=j.dll
-  CFLAGS="$common $DOLECOM -DC_AVX=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
-  LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
-  if [ $jolecom -eq 1 ] ; then
-   DLLOBJS=" jdll.o jdllcomx.o "
-   LIBJDEF=" ../../../../dllsrc/jdll.def "
-  else
-   DLLOBJS=" jdll.o "
-   LIBJDEF=" ../../../../dllsrc/jdll2.def "
-  fi
-  LIBJRES=" jdllres.o "
-  OBJS_FMA=" gemm_int-fma.o "
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_WIN}"
-  OBJS_ASM="${OBJS_ASM_WIN}"
-  GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX "
-  FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
  ;;
 
  windows/j64*) # windows intel 64bit nonavx

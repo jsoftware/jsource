@@ -95,7 +95,6 @@
 #define IOFSMALLRANGE(f,T,Ttype)    \
  IOF(f){IH *hh=IHAV(h);I l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
-  _mm256_zeroupperx(VOIDARG)  \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
   I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \

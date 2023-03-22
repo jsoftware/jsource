@@ -144,7 +144,6 @@
         D tl=jt->cct,tr=1/tl;I il,jx;   \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=calcctmask(jt->cct);   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupperx(VOIDARG)  \
   INITXVAL dcls; \
   vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \

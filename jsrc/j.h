@@ -1627,12 +1627,16 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #endif
 
 #define NOUNROLL _Pragma("clang loop unroll(disable)") _Pragma("clang loop vectorize(disable)")  // put this just before a loop to disable unroll
+
+#if C_AVX
+#define ZEROUPPER _mm256_zeroupper()
+#define EXTERNCALL(expr) ({ _mm256_zeroupper(); expr; })
+#else
+#define ZEROUPPER
+#define EXTERNCALL(expr) (expr)
+#endif
+
 #if (C_AVX&&SY_64) || EMU_AVX
-// j64avx gcc _mm256_zeroupper -O2 failed SLEEF for expression % /\ ^:_1 ,: 1 2 3  => 1 2 0
-// upper half of all YMM registers clear AFTER loading endmask
-// ??? is_mm256_zeroupper really needed
-// -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
-#define _mm256_zeroupperx(x)
 // this is faster than reusing another register as the source anyway, because it's not a recognized idiom, so we would have a false dependency on the other register
 #define _mm_setone_si128() _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128()) // set to all ~0
 #define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
@@ -1647,7 +1651,6 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 // parms: bit0=suppress unrolling, bit1=use maskload for any aligning fetch
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
- _mm256_zeroupperx(VOIDARG) \
  preloop \
  I n0=n; \
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
@@ -1697,7 +1700,6 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 // the loop is never unrolled: there is one even and one odd block in the loop
 #define AVXATOMLOOPEVENODD(parms,preloop,loopbody0,loopbody1,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
- _mm256_zeroupperx(VOIDARG) \
  preloop \
  I n0=n; \
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
@@ -2228,19 +2230,15 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 
 #ifdef MMSC_VER
 #define NOINLINE __declspec(noinline)
+#define INLINE __forceinline
 #else
 #define NOINLINE __attribute__((noinline))
-#ifndef __forceinline
-#define __forceinline inline __attribute__((__always_inline__))
-#endif
+#define INLINE inline __attribute__((__always_inline__))
 #endif
 #ifdef __MINGW32__
 // original definition
-// #define __forceinline extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
-#ifdef __forceinline
-#undef __forceinline
-#endif
-#define __forceinline __inline__ __attribute__((__always_inline__,__gnu_inline__))
+// #define INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
 #endif
 
 #ifdef __GNUC__
@@ -2454,7 +2452,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 // end of addition builtins
 
 // aligned memory allocation, assume align is power of 2
-static __forceinline void* aligned_malloc(size_t size, size_t align) {
+static INLINE void* aligned_malloc(size_t size, size_t align) {
  void *result;
  align = (align>=sizeof(void*))?align:sizeof(void*);
 #ifdef _WIN32
@@ -2471,7 +2469,7 @@ static __forceinline void* aligned_malloc(size_t size, size_t align) {
  return result;
 }
 
-static __forceinline void aligned_free(void *ptr) {
+static INLINE void aligned_free(void *ptr) {
 #ifdef _WIN32
  _aligned_free(ptr);
 #elif ( !defined(ANDROID) || defined(__LP64__) )

@@ -309,7 +309,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
@@ -322,7 +322,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
   LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
@@ -335,7 +335,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 "
   LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx "
+  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
@@ -406,7 +406,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm -lkvm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
@@ -419,7 +419,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
   LDFLAGS=" -lm -lkvm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
@@ -432,7 +432,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 "
   LDFLAGS=" -lm -lkvm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx "
+  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
@@ -482,7 +482,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
@@ -495,7 +495,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
   LDFLAGS=" -lm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
@@ -508,7 +508,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX=1 "
   LDFLAGS=" -lm $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx "
+  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
@@ -543,7 +543,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
@@ -556,7 +556,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 "
   LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin"
-  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
@@ -569,7 +569,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX=1 "
   LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin"
-  CFLAGS_SIMD=" -mavx "
+  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
@@ -636,7 +636,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
@@ -662,7 +662,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt "
+  CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
@@ -688,7 +688,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $DOLECOM -DC_AVX=1 -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
-  CFLAGS_SIMD=" -mavx "
+  CFLAGS_SIMD=" -mavx -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "

@@ -339,7 +339,6 @@ static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
   UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV0(hvpa,INT,3+(p>>LGBW),0); hvp=UCAV(hvpa)-BYTENO(minimum)+SZI;} \
   \
-  _mm256_zeroupperx(VOIDARG)  \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
    /* zv progresses through the result - for those versions that support IRS */ \

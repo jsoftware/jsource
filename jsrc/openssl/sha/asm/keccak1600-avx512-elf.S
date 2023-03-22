@@ -134,8 +134,6 @@ SHA3_absorb:
 	lea	96(%rsp),%r10
 	lea	rhotates_left(%rip),%r8
 
-	vzeroupper
-
 	vpbroadcastq	-96(%rdi),%ymm0	# load A[5][5]
 	vmovdqu		8+32*0-96(%rdi),%ymm1
 	vmovdqu		8+32*1-96(%rdi),%ymm2
@@ -272,8 +270,6 @@ SHA3_absorb:
 	vmovdqu	%ymm5,8+32*4-96(%rdi)
 	vmovdqu	%ymm6,8+32*5-96(%rdi)
 
-	vzeroupper
-
 	lea	(%r11),%rsp
 	lea	(%rdx,%rcx),%rax		# return value
 	ret
@@ -288,8 +284,6 @@ SHA3_squeeze:
 	lea	96(%rdi),%rdi
 	lea	rhotates_left(%rip),%r8
 	shr	$3,%rcx
-
-	vzeroupper
 
 	vpbroadcastq	-96(%rdi),%ymm0
 	vpxor		%ymm7,%ymm7,%ymm7
@@ -536,8 +530,6 @@ SHA3_squeeze:
 	jnz	.Loop_tail_avx512vl
 
 .Ldone_squeeze_avx512vl:
-	vzeroupper
-
 	lea	(%r11),%rsp
 	ret
 .size	SHA3_squeeze,.-SHA3_squeeze

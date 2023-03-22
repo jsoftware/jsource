@@ -622,7 +622,7 @@ static float NOOPTIMIZE altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
 static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alternate){
 #define vdresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'*')+CCM(w,'n')
  CCMWDS(vdres) CCMCAND(vdres,cand,zl)   // see if zl is one of the direct results, which can be moved into the result directly
-
+ ZEROUPPER; // see comment in io.c
  if(CCMTST(cand,zl)){I r;
   // result has integer type.  Call with that linkage
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
@@ -1434,6 +1434,7 @@ static I cbold(I n,I *pi){char d[256],*p;A r;I i;
  if (!n) { *p++='\''; *p++='\''; }
  *p=0;
  r=exec1(cstr(d));
+ ZEROUPPER;
  if(!r||AR(r)) R 0;
  if(INT&AT(r)) R AV(r)[0];
  if(B01&AT(r)) R ((BYTE*)AV(r))[0];
@@ -1443,6 +1444,7 @@ static I cbold(I n,I *pi){char d[256],*p;A r;I i;
 static I cbnew(){A r;
  J jt=cbjt;
  r=exec1(cstr("cdcallback''"));
+ ZEROUPPER; // see comment in io.c
  if(!r||AR(r)) R 0;
  if(INT&AT(r)) R AV(r)[0];
  if(B01&AT(r)) R ((BYTE*)AV(r))[0];

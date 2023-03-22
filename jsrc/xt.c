@@ -147,31 +147,6 @@ F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 // 6!:5, window into the running J code
 F1(jtpeekdata){ I opeek=JT(jt,peekdata); JT(jt,peekdata) = i0(w); R sc(opeek); }
 
-/*
-// 6!:6: set y as processor architecture and return previous value.  Now cannot set.  Bit 0=AVX instructions supported
-F1 (jtprocarch){
-//RE(newval=i0(w));
-//jt->cpuarchavx=(C)newval;
-R sc(C_AVX);
-}
-
-// 6!:7: return cpu features
- enum in android ndk
-    CPU_X86_FEATURE_SSSE3  = (1 << 0),
-    CPU_X86_FEATURE_POPCNT = (1 << 1),
-    CPU_X86_FEATURE_MOVBE  = (1 << 2),
-    CPU_X86_FEATURE_SSE4_1 = (1 << 3),
-    CPU_X86_FEATURE_SSE4_2 = (1 << 4),
-    CPU_X86_FEATURE_AES_NI = (1 << 5),
-    CPU_X86_FEATURE_AVX =    (1 << 6),
-    CPU_X86_FEATURE_RDRAND = (1 << 7),
-    CPU_X86_FEATURE_AVX2 =   (1 << 8),
-    CPU_X86_FEATURE_SHA_NI = (1 << 9),
-F1 (jtprocfeat){
-R sc((I)getCpuFeatures());
-}
-*/
-
 #if SY_WIN32
  /* defined in jdll.c */
 #else

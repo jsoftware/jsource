@@ -102,7 +102,6 @@ elif [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/libj.dylib" ]; then
 cop j64arm libj.dylib bin libj.dylib
 fi
 
-cop j64avx libj.dylib bin libjavx.dylib
 cop j64avx2 libj.dylib bin libjavx2.dylib
 cop j64avx512 libj.dylib bin libjavx512.dylib
 
@@ -132,7 +131,6 @@ cop j64 jamalgam bin jamalgam
 cop j64 jamalgam bin jamalgam-lx
 cop j64 libtsdll.so bin libtsdll.so
 cop j64 libj.so bin libj.so
-cop j64avx libj.so bin libjavx.so
 cop j64avx2 libj.so bin libjavx2.so
 cop j64avx512 libj.so bin libjavx512.so
 

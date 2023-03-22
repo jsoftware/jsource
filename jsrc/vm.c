@@ -5,7 +5,7 @@
 
 #include "j.h"
 #include "ve.h"
-#if defined(__GNUC__) && !((C_AVX&&SY_64) || EMU_AVX)
+#if defined(__GNUC__) && !(C_AVX2 || EMU_AVX2)
 static int64_t m7f = 0x7fffffffffffffffLL;
 #define COMMA ,
 #endif
@@ -56,7 +56,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 
 // Call SLEEF after checking symmetric 2-sided limits.  If comp is not true everywhere, signal err, else call sleeffn
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 #define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1, \
  __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
  __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax); \
@@ -114,7 +114,7 @@ AHDR1(expD,D,D) {  AVXATOMLOOP(1,
  )
 }
 
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 AHDR1(logD,D,D) {  AVXATOMLOOP(1,
  __m256d zero; zero=_mm256_setzero_pd();
  ,

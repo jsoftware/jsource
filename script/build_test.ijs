@@ -22,14 +22,14 @@ JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.s
 
    build'jconsole'
    build'libtsdll'
-   build'libj'       NB. 'libjavx' 'libjavx2' - with current jvserion.h
+   build'libj'       NB. 'libjavx2' - with current jvserion.h
    build_all''       NB. build all - with current jversion.h
    
 
 windows builds done with vs2019
 
 fork - linux/macos/windows   
-   run'libj'      NB. 'libjavx' 'libjavx2'
+   run'libj'      NB. 'libjavx2'
    
 spawn - linux/macos/windows   
    runit LIB       ;FILE
@@ -154,7 +154,6 @@ echo done
 
 same=: 'SUFFIX';suffix;'PLATFORM';platform;'MAKE2';pmake2;'CLEAN';clean;'COMPILER';compiler
 shlibj    =: shtemplate rplc 'TARGET';'libj'    ;'TYPE';''    ;same
-shlibjavx =: shtemplate rplc 'TARGET';'libjavx' ;'TYPE';'avx' ;same
 shlibjavx2=: shtemplate rplc 'TARGET';'libjavx2';'TYPE';'avx2';same
 
 shcommon=: }:0 : 0 rplc 'MAKE2';pmake2
@@ -196,8 +195,6 @@ case. 'libtsdll' do.
  shlibtsdll fwrite psh
 case. 'libj' do.
  shlibj fwrite psh
-case. 'libjavx' do.
- shlibjavx fwrite psh
 case. 'libjavx2' do.
  shlibjavx2 fwrite psh
 case.            do.
@@ -218,10 +215,10 @@ echo fread stderr
 build_all=: 3 : 0
 'do not run in JHS'assert -.IFJHS
 git_status''
-build each 'jconsole';'libtsdll';'libj';'libjavx';'libjavx2'
+build each 'jconsole';'libtsdll';'libj';'libjavx2'
 )
 
-NB. run libj or libjavx or libjavx2
+NB. run libj or libjavx2
 run=: 3 : 0
 if. UNAME-:'Linux' do.
  t=. terminal,pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/run.ijs'
@@ -252,15 +249,12 @@ report=: ptemp,'/report.txt'
 runit_all=: 3 : 0
 report fwrite~ ''
 report fappend~runit'libj'    ;'rundd.ijs'
-report fappend~runit'libjavx' ;'rundd.ijs'
 report fappend~runit'libjavx2';'rundd.ijs'
 
 report fappend~runit'libj'    ;'runpm.ijs'
-report fappend~runit'libjavx' ;'runpm.ijs'
 report fappend~runit'libjavx2';'runpm.ijs'
 
 report fappend~runit'libj'    ;'runjd.ijs'
-report fappend~runit'libjavx' ;'runjd.ijs'
 report fappend~runit'libjavx2';'runjd.ijs'
 
 echo 'fread report'

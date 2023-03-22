@@ -46,7 +46,7 @@ static AMONPS(sgnZ,   Z,Z, , if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(
 
 static AMON(sqrtI,  D,I, ASSERTWR(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 AHDR1(sqrtD,D,D){
  AVXATOMLOOP(1,
  __m256d zero; zero=_mm256_setzero_pd();
@@ -244,7 +244,7 @@ DF1(jtatomic1){A z;
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
 
 // special code for x ((<[!.0] |) * ]) y, implemented as if !.0
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 DF2(jtdeadband){A zz;
  F2PREFIP;ARGCHK2(a,w);
  I n=AN(w);  // number of atoms to process

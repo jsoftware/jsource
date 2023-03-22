@@ -1,4 +1,4 @@
-how to build/test j32/j64/j64avx/j64avx2 for linux/darwin/raspberry/...
+how to build/test j32/j64/j64avx2/j64avx512 for linux/darwin/raspberry/...
 
 **************************************************************************
 # commands are assumed to run in make2 folder
@@ -19,7 +19,7 @@ jplatform=(..) j64x=(..) ./build_libj.sh
 
 where 
 jplatform : linux darwin raspberry  (default host)
-j64x : j64 j64avx j64avx2 j64avx512 j64arm j32  (default host or j64avx)
+j64x : j64 j64avx2 j64avx512 j64arm j32  (default host or j64avx2)
 
 # binaries generated inside the bin folder under jsource
 
@@ -33,7 +33,6 @@ jplatform=darwin j64x=j64arm ./build_libj.sh
 jplatform=darwin j64x=j64 ./build_libj.sh
 
 # target apple intel
-jplatform=darwin j64x=j64avx ./build_libj.sh
 jplatform=darwin j64x=j64avx2 ./build_libj.sh
 
 # linux and j64 is the default on 64-bit linux, so this is fine
@@ -50,7 +49,6 @@ j64x=j64arm ./build_all.sh
 j64x=j64 ./build_all.sh
 
 # target apple intel
-j64x=j64avx ./build_all.sh
 j64x=j64avx2 ./build_all.sh
 
 # test
@@ -60,8 +58,8 @@ j64x=j64avx2 ./build_all.sh
 # cd the jlibrary/bin or jlibrary/bin32 folder and run depending on the cpu architecture
 # avx2 / x86 / arm
 ./jconsole ../../test/tsu.ijs
-# avx
-./jconsole -lib libjavx.so ../../test/tsu.ijs
+# avx512
+./jconsole -lib libjavx512.so ../../test/tsu.ijs
 # nonavx
 ./jconsole -lib libj-nonavx.so ../../test/tsu.ijs
 

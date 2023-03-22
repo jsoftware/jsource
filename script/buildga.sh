@@ -196,8 +196,6 @@ else
 fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 ./clean.sh
-j64x=j64avx USE_PYXES=1 ./build_libj.sh
-./clean.sh
 j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
 ./clean.sh
 j64x=j64avx512 USE_PYXES=1 ./build_libj.sh
@@ -229,7 +227,6 @@ lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 lipo bin/$1/j64/jamalgam bin/$1/j64arm/jamalgam -create -output j64/jamalgam
 fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
-cp bin/$1/j64avx/libj.$ext j64/libjavx.$ext
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
@@ -261,7 +258,6 @@ if [ "$1" = "darwin" ]; then
 cd j64
 dsymutil jconsole 2> /dev/null || true
 dsymutil libj.dylib 2> /dev/null || true
-dsymutil libjavx.dylib 2> /dev/null || true
 dsymutil libjavx2.dylib 2> /dev/null || true
 dsymutil libjavx512.dylib 2> /dev/null || true
 dsymutil libtsdll.dylib 2> /dev/null || true

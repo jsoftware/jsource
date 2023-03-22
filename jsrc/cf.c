@@ -105,7 +105,7 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
    }
    break;
  // special code for x ((<[!.0] |) * ]) y, implemented as if !.0, also if <:
- #if (C_AVX&&SY_64) || EMU_AVX
+ #if (C_AVX2&&SY_64) || EMU_AVX2
   case CHOOK:    // (< |[!.0]) * ]  or  ] * (< |[!.0])
    if(BOTHEQ8(gi,hi,CSTAR,CRIGHT) || BOTHEQ8(gi,fi,CSTAR,CRIGHT)){        
     V *hka=hi==CRIGHT?fv:hv;  // point to the time that must be the hook                           

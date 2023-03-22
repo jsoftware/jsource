@@ -31,16 +31,6 @@
 #include <stddef.h>       // offsetof
 #endif
 
-#ifndef EMU_AVX
-#define EMU_AVX 0
-#endif
-#if defined(MMSC_VER)
-#undef EMU_AVX
-#define EMU_AVX 0
-#endif
-#undef EMU_AVX2
-#define EMU_AVX2 0
-
 /* msvc does not define __SSE2__ */
 #if !defined(__SSE2__)
 #if defined(MMSC_VER)
@@ -65,6 +55,21 @@
 #define dump_m256i32(a,x) {__m256i _b=x;fprintf(stderr,"%s %x %x %x %x %x %x %x %x \n", a, ((unsigned int*)(&_b))[0], ((unsigned int*)(&_b))[1], ((unsigned int*)(&_b))[2], ((unsigned int*)(&_b))[3], ((unsigned int*)(&_b))[4], ((unsigned int*)(&_b))[5], ((unsigned int*)(&_b))[6], ((unsigned int*)(&_b))[7]);}
 #define dump_m256d(a,x) {__m256d _b=x;fprintf(stderr,"%s %f %f %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1], ((double*)(&_b))[2], ((double*)(&_b))[3]);}
 #define dump_m128d(a,x) {__m128d _b=x;fprintf(stderr,"%s %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1]);}
+
+
+#ifdef MMSC_VER
+#define NOINLINE __declspec(noinline)
+#define INLINE __forceinline
+#else
+#define NOINLINE __attribute__((noinline))
+#define INLINE inline __attribute__((__always_inline__))
+#endif
+#ifdef __MINGW32__
+// original definition
+// #define INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#endif
+
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
 #ifndef C_AVX512
@@ -94,56 +99,37 @@
 #define C_AVX2 0
 #endif
 #endif
-
-#if !C_AVX
-#if C_AVX2
-#ifdef C_AVX
-#undef C_AVX
-#endif
-#define C_AVX 1
-#endif
-#ifndef C_AVX
-#define C_AVX 0
-#endif
-#endif
 #endif
 
 #ifdef _WIN32
-#if EMU_AVX || EMU_AVX2 || C_AVX || C_AVX2
+#if EMU_AVX2 || C_AVX2
 #ifndef _WIN64
 #error not 64-bit compiler
 #endif
 #endif
 #endif
 
-#if C_AVX
+#if C_AVX2
 #if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
 #include <immintrin.h>
 #endif
-#if (defined(MMSC_VER))
-#include <intrin.h>
 #endif
+
+#if !defined(EMU_AVX2) && ((defined(__SSE2__) && defined(__x86_64__)) || defined(__aarch64__) || defined(_M_ARM64))
+#define EMU_AVX2 1
+#endif
+
 // no EMU_AVX512; avx512 is not widespread yet, and older chips still downclock (so not worth it for small arrays), so still maintain avx2-specific paths
+
 #if C_AVX2
 #undef EMU_AVX2
 #define EMU_AVX2 0
-#else
-#undef EMU_AVX2
-#define EMU_AVX2 1
-#include <stdint.h>
-#include <string.h>
-#include "avx2intrin-emu.h"
-#endif
-#undef EMU_AVX
-#define EMU_AVX 0
-
-#elif defined(__SSE2__)
-#if EMU_AVX
-#undef EMU_AVX2
-#define EMU_AVX2 1   // test avx2 emulation
+#elif defined(__SSE2__) && defined(__x86_64__)
+#if EMU_AVX2
 #include <stdint.h>
 #include <string.h>
 #include "avxintrin-emu.h"
+//#include "avx2intrin-emu.h"
 #else
 #include <emmintrin.h>
 #endif
@@ -167,19 +153,14 @@
 #define _CMP_LE_OQ _CMP_LE
 #define _CMP_LT_OQ _CMP_LT
 #define _CMP_NEQ_OQ _CMP_NEQ
-#endif
+#endif //__SSE2__
 
 #ifndef C_AVX2
 #define C_AVX2 0
 #endif
-#ifndef C_AVX
-#define C_AVX 0
-#endif
 
 #if defined(__aarch64__)||defined(_M_ARM64)
-#if EMU_AVX
-#undef EMU_AVX2
-#define EMU_AVX2 1   // test avx2 emulation
+#if EMU_AVX2
 #include <stdint.h>
 #include <string.h>
 #include "sse2neon.h"
@@ -663,7 +644,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ISFUX           15
 #define ISFU            (((I)1)<<ISFUX)  // i.!.1 - sequential file update
 
-#if C_AVX   // _mm_round_pd requires sse4.1, mm256 needs avx
+#if C_AVX2   // _mm_round_pd requires sse4.1, mm256 needs avx
 #define jceil(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)))   // ugly but clang understands
 #define jfloor(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_NEG_INF |_MM_FROUND_NO_EXC)))
 #define jround(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC)))
@@ -693,7 +674,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
 // Tuning options for cip.c
-#if ((C_AVX || EMU_AVX) && PYXES) || !defined(_OPENMP)
+#if ((C_AVX2 || EMU_AVX2) && PYXES) || !defined(_OPENMP)
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
@@ -920,11 +901,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    r=!!_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
-#elif (C_AVX2&&SY_64) || EMU_AVX
+#elif C_AVX2 || EMU_AVX2
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
- {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
+ {I *aaa=(I*)(x), *aab=(I*)(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
-   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
+   endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
    ASTYPE(_mm256_testz_si256(endmask,endmask),EVLENGTH); /* result is 1 if all match */ \
   }else{NOUNROLL do{--aai; ASTYPE(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
  }
@@ -1336,7 +1317,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
 // Use when shape is known to be present but rank is not SDT.
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
 #else
 // in this version one value is always written to shape
@@ -1568,11 +1549,11 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
  {void *_d=dest,*_s=src; I _n=n;\
   if(likely(_n<=8)){__mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));}\
   else{memmove(_d,_s,_n<<LGSZI);}}
-#elif C_AVX
+#elif C_AVX2
 #define MCISH(dest,src,n) \
- {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
+ {I *_d=(I*)(dest), *_s=(I*)(src); I _n=(I)(n); \
   if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \
-   _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
+   _mm256_maskstore_epi64(_d,endmask,_mm256_maskload_epi64(_s,endmask)); \
   }else{memmove(_d,_s,_n<<LGSZI);} \
  }
 #else
@@ -1596,10 +1577,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MODBLOCKTYPE(z,t)  {if(unlikely((AFLAG(z)&AFUNINCORPABLE)!=0)){RZ(z=clonevirtual(z));} AT(z)=(t);}
 #define MODIFIABLE(x)   (x)   // indicates that we modify the result, and it had better not be read-only
 // define multiply-add
-#if C_AVX2 || (EMU_AVX  && (defined(__aarch64__)||defined(_M_ARM64)))
+#if C_AVX2 || EMU_AVX2
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
-#elif C_AVX || EMU_AVX
-#define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
 #elif defined(__SSE2__)
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
 #endif
@@ -1620,15 +1599,13 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 
 // can't just emu vblendvb using vblendvps because different sizing => different behaviour; so use BLENDVI when the masks are guaranteed at least 32 bits.
 // Use ps over pd for greater granularity and because old cpus don't have separate single/double domains; newer cpus will have the int blend so don't care
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 #define BLENDVI _mm256_blendv_epi8
-#elif C_AVX || EMU_AVX
-#define BLENDVI(x,y,z) _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(x), _mm256_castsi256_ps(y), _mm256_castsi256_ps(z)))
 #endif
 
 #define NOUNROLL _Pragma("clang loop unroll(disable)") _Pragma("clang loop vectorize(disable)")  // put this just before a loop to disable unroll
 
-#if C_AVX
+#if C_AVX2
 #define ZEROUPPER _mm256_zeroupper()
 #define EXTERNCALL(expr) ({ _mm256_zeroupper(); expr; })
 #else
@@ -1636,7 +1613,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define EXTERNCALL(expr) (expr)
 #endif
 
-#if (C_AVX&&SY_64) || EMU_AVX
+#if (C_AVX2&&SY_64) || EMU_AVX2
 // this is faster than reusing another register as the source anyway, because it's not a recognized idiom, so we would have a false dependency on the other register
 #define _mm_setone_si128() _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128()) // set to all ~0
 #define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
@@ -2172,7 +2149,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #if !defined(C_CRC32C)
 #define C_CRC32C 0
 #endif
-#if (C_AVX&&SY_64) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX
+#if (C_AVX2&&SY_64) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX2
 #undef C_CRC32C
 #define C_CRC32C 1
 #endif
@@ -2226,19 +2203,6 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define CTLZI(in,out) _BitScanReverse(&(out),in)
 #endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
-#endif
-
-#ifdef MMSC_VER
-#define NOINLINE __declspec(noinline)
-#define INLINE __forceinline
-#else
-#define NOINLINE __attribute__((noinline))
-#define INLINE inline __attribute__((__always_inline__))
-#endif
-#ifdef __MINGW32__
-// original definition
-// #define INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
-#define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
 #endif
 
 #ifdef __GNUC__
@@ -2498,7 +2462,7 @@ static INLINE void aligned_free(void *ptr) {
 // The following definitions are used only in builds for the AVX instruction set
 // 64-bit Atom cpu in android has hardware crc32c but not AVX
 #if C_CRC32C && (defined(_M_X64) || defined(__x86_64__))
-#if C_AVX || defined(ANDROID)
+#if C_AVX2 || defined(ANDROID)
 #if defined(MMSC_VER)  // SY_WIN32
 // Visual Studio definitions
 #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
@@ -2508,7 +2472,7 @@ static INLINE void aligned_free(void *ptr) {
 #define CRC32(x,y) __builtin_ia32_crc32si(x,y)  // returns UI4
 #define CRC32L(x,y) __builtin_ia32_crc32di(x,y)  // returns UI
 #endif
-#elif EMU_AVX
+#elif EMU_AVX2
 extern uint64_t crc32csb8(uint64_t crc, uint64_t value);
 extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
 #define CRC32(x,y)  crc32csb4(x,y) // returns UI4

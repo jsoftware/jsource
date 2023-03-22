@@ -7,15 +7,12 @@ NB. todo - macos and windows
 select. UNAME
 case. 'Linux';'OpenBSD' do.
  j=:     'libj.so'
- javx=:  'libjavx.so'
  javx2=: 'libjavx2.so'
 case. 'Darwin' do.
  j=:     'libj.dylib'
- javx=:  'libjavx.dylib'
  javx2=: 'libjavx2.dylib'
 case. 'Win' do.
  j=:     'j.dll'
- javx=:  'javx.dll'
  javx2=: 'javx2.dll'
 end.
 )
@@ -38,15 +35,12 @@ load'git/jsource/test/tsu.ijs'
 runpacman'' NB. latest addons (jmf etc)
 
 'RUN ddall'     runit j
-'RUN ddall'     runit javx
 'RUN ddall'     runit javx2
 
 'runpacman''''' runit j
-'runpacman''''' runit javx
 'runpacman''''' runit javx2
 
 'runjd'''''     runit j
-'runjd'''''     runit javx
 'runjd'''''     runit javx2
 
 check''

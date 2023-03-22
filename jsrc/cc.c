@@ -631,7 +631,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   // The type of a is always one we can handle here - other types have been converted to B01.  B01 types look for 1, others look for fret value.  Select routine based on length/tolerance/byte-boolean
   I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL
   switch(rtnx){
-#if ((C_AVX2&&SY_64) || EMU_AVX)
+#if C_AVX2 || EMU_AVX2
   case 4:
    fret=&Ivalidboolean;  // point to fret, 01 for boolean.  fall through to...
   case 0: ;

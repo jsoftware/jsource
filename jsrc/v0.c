@@ -336,7 +336,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  switch(b){
  // coeffs: d/e are not set
  case 1: NAN0;  // FL
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 // loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
   switch(an){
 

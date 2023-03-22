@@ -742,6 +742,20 @@ static __emu_inline __emu__m256i __emu_mm256_broadcastsi128_si256       ( __m128
     return A;
 }
 
+static __emu_inline __m128i __emu_mm_blendv_epi8(__m128i a, __m128i b, __m128i m)
+{
+ m=_mm_cmpgt_epi8(_mm_setzero_si128(), m);
+ return ssp_logical_bitwise_select_SSE2(b, a, m);
+}
+
+static __emu_inline __emu__m256i __emu_mm256_blendv_epi8(__emu__m256i a, __emu__m256i b, __emu__m256i m)
+{
+ __emu__m256i A;
+ A.__emu_m128[0] = __emu_mm_blendv_epi8(a.__emu_m128[0], b.__emu_m128[0], m.__emu_m128[0]);
+ A.__emu_m128[1] = __emu_mm_blendv_epi8(a.__emu_m128[1], b.__emu_m128[1], m.__emu_m128[1]);
+ return A;
+}
+
 static __emu_inline __emu__m256i __emu_mm256_slli_epi64 ( __emu__m256i a, int imm )
 {
     __emu__m256i A;
@@ -1675,6 +1689,23 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 }; /* End "C" */
 #endif /* __cplusplus */
 
+#undef __EMU_M256_128_IMPL_M2
+#undef __EMU_M256_IMPL_M3
+#undef __EMU_M256_IMPL_M2I_SHIFT
+#undef __EMU_M256_IMPL2_M2I_DUP
+#undef __EMU_M256_IMPL_M2I_DUP
+#undef __EMU_M256_IMPL2_M2T
+#undef __EMU_M256_IMPL_M2
+#undef __EMU_M256_IMPL2_M1I_SHIFT
+#undef __EMU_M256_IMPL2_M1I_DUP
+#undef __EMU_M256_IMPL_M1I_DUP
+#undef __EMU_M256_IMPL_M1P_DUP
+#undef __EMU_M256_IMPL_M1_HL
+#undef __EMU_M256_IMPL_M1_LH
+#undef __EMU_M256_IMPL_M1_RET_NAME
+#undef __EMU_M256_IMPL_M1_RET
+#undef __EMU_M256_IMPL_M1
+
 #ifndef __EMU_M256_NOMAP
 
 #define __m256  __emu__m256
@@ -1913,6 +1944,7 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_sub_epi8 __emu_mm256_sub_epi8
 
 #define _mm256_mul_epu32 __emu_mm256_mul_epu32
+#define _mm256_blendv_epi8 __emu_mm256_blendv_epi8
 #define _mm256_slli_epi64 __emu_mm256_slli_epi64
 #define _mm256_srli_epi16 __emu_mm256_srli_epi16
 #define _mm256_srli_epi32 __emu_mm256_srli_epi32

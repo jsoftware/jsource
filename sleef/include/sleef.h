@@ -5430,21 +5430,8 @@ IMPORT CONST void *Sleef_finz_getPtrf1_purecfma(int);
 #define Sleef_asind4 Sleef_asind4_u35avx2
 #define Sleef_acosd4 Sleef_acosd4_u35avx2
 #define Sleef_atand4 Sleef_atand4_u35avx2
-#define IGNORENAN
-#elif C_AVX
-#define Sleef_expd4 Sleef_expd4_u10avx
-#define Sleef_logd4 Sleef_logd4_u10avx
-#define Sleef_log2d4 Sleef_log2d4_u35avx
-#define Sleef_exp2d4 Sleef_exp2d4_u35avx
-#define Sleef_sind4 Sleef_sind4_u35avx
-#define Sleef_cosd4 Sleef_cosd4_u35avx
-#define Sleef_tand4 Sleef_tand4_u35avx
-#define Sleef_tanhd4 Sleef_tanhd4_u35avx
-#define Sleef_asind4 Sleef_asind4_u35avx
-#define Sleef_acosd4 Sleef_acosd4_u35avx
-#define Sleef_atand4 Sleef_atand4_u35avx
-#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
-#elif EMU_AVX && defined(__aarch64__)
+#define IGNORENAN // NAN0 not need for avx2?--was needed for plain avx
+#elif EMU_AVX2 && defined(__aarch64__)
 #define __EMU_M256_SLEEF_IMPL_M1( type, func , ud ) \
 static inline type Sleef_##func##d4( type m256_param1 ) \
 {   type res; \
@@ -5477,7 +5464,7 @@ __EMU_M256_SLEEF_IMPL_M1( __m256d, atan, _u35 );
 #define Sleef_acosd4 Sleef_acosd2_u35advsimd
 #define Sleef_atand4 Sleef_atand2_u35advsimd
 #define IGNORENAN NAN0;  // some of these functions produce NaN along the way
-#elif EMU_AVX && defined(__SSE2__)
+#elif EMU_AVX2 && defined(__SSE2__)
 #define __EMU_M256_SLEEF_IMPL_M1( type, func , ud ) \
 static __emu_inline __emu##type Sleef_##func##d4( __emu##type m256_param1 ) \
 {   __emu##type res; \

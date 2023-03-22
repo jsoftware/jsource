@@ -219,7 +219,7 @@ A name(J jt,A a,A w){ \
  }
 
 
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 #define XCTL0(nm0) if(jt->cct==1.0)R nm0(jt,a,w); __m256d cct=_mm256_broadcast_sd(&jt->cct);  // xfer to intolerant if called for
 #define ZZTEQ zz=_mm256_xor_pd(_mm256_cmp_pd(xx,_mm256_mul_pd(yy,cct),_CMP_GT_OQ),_mm256_cmp_pd(yy,_mm256_mul_pd(xx,cct),_CMP_LE_OQ));  // tolerant =
 #define NOTZZ  zz=_mm256_xor_pd(zz,ones)

@@ -119,7 +119,7 @@ typedef struct cntx_s
 // SSE:         128
 // AVX/FMA:     256
 // AVX-512:     512
-#if C_AVX && (defined(_WIN64)||defined(__LP64__))
+#if C_AVX2 && (defined(_WIN64)||defined(__LP64__))
 #define SIMD_REGISTER_WIDTH 256
 #elif defined(__aarch64__)
 #define SIMD_REGISTER_WIDTH 128
@@ -208,7 +208,7 @@ extern void bli_zgemm2_##f                               \
      );
 
 
-#if C_AVX && (defined(_WIN64)||defined(__LP64__))
+#if C_AVX2 && (defined(_WIN64)||defined(__LP64__))
 
 #if 0
 

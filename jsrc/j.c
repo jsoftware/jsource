@@ -50,7 +50,7 @@ A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // validitymask are in jtype.h
 #if !SY_64
 long long __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
-#elif C_AVX || EMU_AVX || EMU_AVX2
+#elif C_AVX2 || EMU_AVX2
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
 #else
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
@@ -121,8 +121,6 @@ TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR
 #define hw "avx512"
 #elif C_AVX2
 #define hw "avx2"
-#elif C_AVX
-#define hw "avx"
 #elif __arm64__ || __aarch64__
 #define hw "arm"
 #else

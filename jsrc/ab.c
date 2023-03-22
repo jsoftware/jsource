@@ -9,7 +9,7 @@
 #include "ve.h"
 #include "ar.h"
 
-#if (C_AVX&&SY_64) || EMU_AVX
+#if C_AVX2 || EMU_AVX2
 primop256(bw0000II,1,,zz=_mm256_setzero_pd(),R EVOK;)
 primop256(bw0001II,1,,zz=_mm256_and_pd(xx,yy),R EVOK;)
 primop256(bw0010II,0,,zz=_mm256_andnot_pd(yy,xx),R EVOK;)

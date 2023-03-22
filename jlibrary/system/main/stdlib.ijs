@@ -29,7 +29,11 @@ end.
 if. notdef 'UNAME' do.
   if. IFUNIX do.
     if. -.IFIOS do.
-      UNAME=: (2!:0 ::('Unknown'"_)'uname')-.10{a.
+      if. 'wasm'-:4{.9!:56 ::('Unknown'"_)'cpu' do.
+        UNAME=: 'Wasm'
+      else.
+        UNAME=: (2!:0 ::('Unknown'"_)'uname')-.10{a.
+      end.
     else.
       UNAME=: 'Darwin'
     end.

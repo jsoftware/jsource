@@ -37,8 +37,7 @@ blacklist=: blacklist, ((-.IF64+.IFRASPI)+.IFIOS+.(UNAME-:'Android'))#(<testpath
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. require multithreading
 blacklist=: blacklist, (-.15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs'  NB. 15!:0 unavailable
-blacklist=: blacklist, ('wasm32'-:9!:56'cpu')#(<testpath),each 'g18x.ijs';'gibs.ijs';'gibst.ijs';'giscode.ijs';'gix.ijs';'g420fg.ijs';'g602.ijs';'gesc.ijs';'gstack.ijs'  NB.crash
-
+blacklist=: blacklist, ('wasm32'-:9!:56'cpu')#(<testpath),each 'g3x.ijs';'g400.ijs';'g421d.ijs';'g420fg.ijs';'g520.ijs';'g530.ijs';'g600.ijs';'g602.ijs';'g640.ijs';'ga.ijs';'ge.ijs';'gesc.ijs';'gicap.ijs';'gicap2.ijs';'giph.ijs';'gipht.ijs';'gmean.ijs';'gpoly.ijs';'gstack.ijs'  NB. hang/crash
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays

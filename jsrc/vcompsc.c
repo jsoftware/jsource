@@ -678,7 +678,11 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
  }else{  // E. (6) or e. (7)
   if(unlikely((AR(a)|AR(w))>1)){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or (e. returns rank>1)
   if(unlikely(((m&1)|(AN(a)-1))==0))R 0;  // E. when a is a singleton - no need for the full E. treatment
-  if(likely(m&1))R jtcombineeps;  // e. types: direct i.-family types, go to routine to vector there; postflags are 0
+#if !defined(__wasm__)
+  if(likely(m&1))R (AF)jtcombineeps;  // e. types: direct i.-family types, go to routine to vector there; postflags are 0
+#else
+  if(likely(m&1))R (AF)(((UI)jtcombineeps)<<2);  // e. types: direct i.-family types, go to routine to vector there; postflags are 0
+#endif
   // all that's left is E.
 #if !defined(__wasm__)
   R atcompX[m>>3];  // choose i.-family routine; postflags are 0

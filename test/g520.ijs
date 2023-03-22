@@ -366,6 +366,40 @@ for_t. i. 4 do.
   assert. 0 1 2 3 9 4.6 ('' run128_9) 00 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bk;Frow;sched  NB. Test discarding small column values
   assert. 0 0 0 2 5 1.000000040002e_20 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(cons);bk;Frow;sched
 
+  NB. bound variables.  These run only in a single thread
+  if. 0 = 1 T. '' do.
+  dptoqp=. 2 {. ,:
+  bk =. dptoqp         0.25 0.5
+  M =. dptoqp |: _4 ]\ 0.25 1 0 0  _0.25 0.25 0 0  _0.25 0.25 0 0  _0.25 0.25 0 0    NB. input by columns
+  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
+  Frow =. _4 _3 _2 _1. 1.
+  bkg =. i.{:$M
+  sched =.4 $ 100
+  bkbeta=.,1.
+  beta=.1. 0 1 2 0
+  rvt =. 5 5 2 5 5
+  assert. 0 0 1 1 2 _2 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);00 1;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 1 1 1 2 _6 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);00 1;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 2 4 1 2 _2 ('' run128_9) (,02);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);00 1;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 3 1 1 2 _2 ('' run128_9) (,03);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);00 1;bk;Frow;sched;bkbeta;beta;rvt
+  bk =. dptoqp         0.1 0.5
+  bkbeta=.,0.25
+  assert. 0 0 0 1 2 _1.6 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);00 1;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 1 0 1 2 _3 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);00 1;bk;Frow;sched;bkbeta;beta;rvt
+  NB. gradient with bound vars
+  bk =. dptoqp         0.1 0.5 1 0
+  bkbeta=.0.25 0
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.8 0 0  0.25 _0.1 0.9 0  0.25 _0.1 0.9 0    NB. input by columns
+  Frow =. _1 _1 _1 _1. 1.
+  assert. 0 0 1 2 5 2.145 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 0 1 2 7 2.145 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 3 1 2 8 1.955 ('' run128_9) 00 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched;bkbeta;beta;rvt
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.8 0 0  0.25 _0.1 0.9 0  0.25 _0.1 0.9 0.2    NB. input by columns
+  assert. 0 3 3 2 8 1.995 ('' run128_9) 00 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched;bkbeta;beta;rvt
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.6 0 0  0.25 _0.1 0.9 0  0.25 1 0 0    NB. input by columns
+  assert. 0 1 1 2 8 1.845 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bk;Frow;sched;bkbeta;beta;rvt
+  NB. bound nonbasic column swap
+  end.
 
   NB. end of tests, add a thread
   0 T. ''

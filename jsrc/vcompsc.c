@@ -72,7 +72,6 @@ A name(J jt,A a,A w){ \
  __m256i acc0=_mm256_setzero_si256(), acc1=acc0, acc2=acc0, acc3=acc0, acc4=acc0, acc5=acc0, acc6=acc0, acc7=acc0; \
  I natend, maskatend; \
  UI backoff; UI n2; I orign2; /* orign2 goes -1 during rev search */ \
- _mm256_zeroupperx(VOIDARG) \
    /* will be removed except for divide */ \
  CVTEPI64DECLS pref \
  I n0=AN(w); \
@@ -660,17 +659,36 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   comp^=(0x606010>>(((search&1)+(comp&6))<<2))&7; search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
   if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01+INT+FL)))){
    // numeric types that we can handle here, for sure
+#if !defined(__wasm__)
    R (AF)((I)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)]+postflags);
+#else
+// function pointer is sequential index
+   R (AF)((((UI)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)])<<2)+postflags);
+#endif
   }
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
-  if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+SBT)){R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);}
+  if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+SBT)){
+#if !defined(__wasm__)
+  R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);
+#else
+  R (AF)((((UI)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp])<<2)+postflags);
+#endif
+  }
   R 0;
  }else{  // E. (6) or e. (7)
   if(unlikely((AR(a)|AR(w))>1)){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or (e. returns rank>1)
   if(unlikely(((m&1)|(AN(a)-1))==0))R 0;  // E. when a is a singleton - no need for the full E. treatment
-  if(likely(m&1))R jtcombineeps;  // e. types: direct i.-family types, go to routine to vector there; postflags are 0
+#if !defined(__wasm__)
+  if(likely(m&1))R (AF)jtcombineeps;  // e. types: direct i.-family types, go to routine to vector there; postflags are 0
+#else
+  if(likely(m&1))R (AF)(((UI)jtcombineeps)<<2);  // e. types: direct i.-family types, go to routine to vector there; postflags are 0
+#endif
   // all that's left is E.
+#if !defined(__wasm__)
   R atcompX[m>>3];  // choose i.-family routine; postflags are 0
+#else
+  R (AF)((UI)(atcompX[m>>3])<<2);  // choose i.-family routine; postflags are 0
+#endif
  }
 }    /* function table look-up for  comp i. 1:  and  i.&1@:comp  etc. */
 

@@ -318,6 +318,13 @@ jobs:
       run: |
        rm -f jobdone
        /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       echo "Host *" >>~/.ssh/config || true
+       echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -378,6 +385,13 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -440,6 +454,13 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 libedit
        /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
@@ -496,6 +517,13 @@ jobs:
       run: |
        rm -f jobdone
        /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       echo "Host *" >>~/.ssh/config || true
+       echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh freebsd || exit 1
@@ -557,6 +585,13 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh freebsd || exit 1
@@ -627,6 +662,38 @@ jobs:
       replacesArtifacts: true
 
 #   - name: Copy Test (android)
+
+# wasm -----------------------------------------------------------------
+ jewasm:
+  name: JE (wasm)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (wasm)
+     uses: mymindstorm/setup-emsdk@v11
+
+   - name: Build, Test JE (wasm)
+     env:
+      CC: emcc
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh wasm || exit 1
+      script/testga.sh wasm || exit 1
+      ls -l j32
+      zip -r wasm32.zip j32
+
+   - name: Release JE (wasm)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "wasm32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+#   - name: Copy Test (wasm)
 
 # windows --------------------------------------------------------------
  jewin:

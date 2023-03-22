@@ -52,6 +52,10 @@
 #endif
 #endif
 
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+#endif
+
 // for debugging
 #define NANTEST0        (fetestexcept(FE_INVALID))  // test but does not clear
 #define dump_m128i(a,x) {__m128i _b=x;fprintf(stderr,"%s %x %x %x %x \n", a, ((unsigned int*)(&_b))[0], ((unsigned int*)(&_b))[1], ((unsigned int*)(&_b))[2], ((unsigned int*)(&_b))[3]);}
@@ -573,6 +577,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
+#if defined(CSTACKSIZE)
+#if !defined(CSTACKRESERVE)
+#error CSTACKSIZE and CSTACKRESERVE must be defined together
+#endif
+#else
 #if defined(_WIN32)
 #define CSTACKSIZE      (SY_64?12009472:1015808)  // size we allocate in the calling function, aligned to 16k system page size  9961472 for 10MB
 #else
@@ -583,6 +592,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 #endif
 #define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
+#endif
 //The named-function stack is intelligent
 // and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
 // The depth of the C stack will normally limit stack use.
@@ -746,6 +756,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 #endif
 
+#define ANASARGEEMENT 0 // set to check whether or not AN() is equal to */AS()
+
 #define MAXTHREADS 63    // maximum number of tasks running at once, including the master thread.   System lock polls every thread, allocated or not, which is the only real limit on size.  Unactivated
                        // threads will be paged out.
 #define MAXTHREADSRND 64  // MAXTHREADS+1, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size.  The JTT blocks come after the JTT block, which has the same size
@@ -818,7 +830,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define __atomic_fetch_add(aptr, val, memorder)  ({__auto_type rrres=*aptr; *aptr+=val; rrres;})
 #define __atomic_fetch_and(aptr, val, memorder)  ({__auto_type rrres=*aptr; *aptr&=val; rrres;})
 #else
-#define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=(void*)desired,1)
+#define __atomic_compare_exchange_n(aptr, aexpected, desired, weak, success_memorder, failure_memorder) (*aptr=desired,1)
 #define __atomic_exchange_n(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr=val; rrres;})
 #define __atomic_fetch_or(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr|=val; rrres;})
 #define __atomic_fetch_sub(aptr, val, memorder) ({I rrres=(intptr_t)*aptr; *aptr-=val; rrres;})
@@ -880,8 +892,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
 #define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
-// version for debugging
-// #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jtjsignale(jt,e|EMSGLINEISNAME,(nm),0); R 0;}}  // signal error, overriding the running name with a different one
@@ -1617,12 +1627,16 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #endif
 
 #define NOUNROLL _Pragma("clang loop unroll(disable)") _Pragma("clang loop vectorize(disable)")  // put this just before a loop to disable unroll
+
+#if C_AVX
+#define ZEROUPPER _mm256_zeroupper()
+#define EXTERNCALL(expr) ({ _mm256_zeroupper(); expr; })
+#else
+#define ZEROUPPER
+#define EXTERNCALL(expr) (expr)
+#endif
+
 #if (C_AVX&&SY_64) || EMU_AVX
-// j64avx gcc _mm256_zeroupper -O2 failed SLEEF for expression % /\ ^:_1 ,: 1 2 3  => 1 2 0
-// upper half of all YMM registers clear AFTER loading endmask
-// ??? is_mm256_zeroupper really needed
-// -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
-#define _mm256_zeroupperx(x)
 // this is faster than reusing another register as the source anyway, because it's not a recognized idiom, so we would have a false dependency on the other register
 #define _mm_setone_si128() _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128()) // set to all ~0
 #define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
@@ -1637,7 +1651,6 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 // parms: bit0=suppress unrolling, bit1=use maskload for any aligning fetch
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
- _mm256_zeroupperx(VOIDARG) \
  preloop \
  I n0=n; \
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
@@ -1687,7 +1700,6 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 // the loop is never unrolled: there is one even and one odd block in the loop
 #define AVXATOMLOOPEVENODD(parms,preloop,loopbody0,loopbody1,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
- _mm256_zeroupperx(VOIDARG) \
  preloop \
  I n0=n; \
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
@@ -1863,7 +1875,9 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
 #define PRODCOMMON(z,length,ain,type) {I _i=(length); I * RESTRICT _zzt=(ain); \
-if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+// the original sentence below confuse emscripten compiler when 1==length where zzt always becomes &oneone
+// if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
 #define PROD(z,length,ain) PRODCOMMON(z,length,ain,)
 // This version ignores bits of length above the low RANKTX bits
 #define PRODRNK(z,length,ain) PRODCOMMON(z,length,ain,(RANKT))
@@ -1957,6 +1971,12 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #define ARGCHK3(x,y,z)  {ARGCHK1(x) ARGCHK1(y) ARGCHK1(z)}
 
 
+#if ANASARGEEMENT
+#define CHECKANAS(exp)  {A ZZZm=(A)(exp); if(ZZZm && !jt->jerr){ if(NOUN&AT(ZZZm)){I ZZZn; PRODRNK(ZZZn,AR(ZZZm),AS(ZZZm)); if(AN(ZZZm)!=ZZZn){fprintf(stderr,"AN() not agreed with */AS() : file %s line %d\n",__FILE__,__LINE__);SEGFAULT;}}}}
+#else
+#define CHECKANAS(exp)
+#endif
+
 // RETF is the normal function return.  For debugging we hook into it
 #if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
 #define RETF(exp)       A ZZZz = (exp); if (!ZZZz && !jt->jerr) SEGFAULT; auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
@@ -1967,7 +1987,11 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
 #define RETF(exp)       {A ZZZz = (exp); if(ZZZz==0)R0 R ZZZz;}
 #else
+#if ANASARGEEMENT   // For noun, AN() should always equal to */AS()  trap if not
+#define RETF(exp)       {A ZZZz = (exp); CHECKANAS(ZZZz); R ZZZz;}
+#else
 #define RETF(exp)       R exp;
+#endif
 #endif
 #endif
 // Input is a byte.  It is replicated to all lanes of a UI
@@ -2206,19 +2230,15 @@ if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:
 
 #ifdef MMSC_VER
 #define NOINLINE __declspec(noinline)
+#define INLINE __forceinline
 #else
 #define NOINLINE __attribute__((noinline))
-#ifndef __forceinline
-#define __forceinline inline __attribute__((__always_inline__))
-#endif
+#define INLINE inline __attribute__((__always_inline__))
 #endif
 #ifdef __MINGW32__
 // original definition
-// #define __forceinline extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
-#ifdef __forceinline
-#undef __forceinline
-#endif
-#define __forceinline __inline__ __attribute__((__always_inline__,__gnu_inline__))
+// #define INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
 #endif
 
 #ifdef __GNUC__
@@ -2316,6 +2336,15 @@ extern JS gjt; // global for JPF (procs without jt)
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
 #define ZZ(x)
+
+#if defined(__wasm__)
+#define FE_INVALID    1
+#define __FE_DENORM   2
+#define FE_DIVBYZERO  4
+#define FE_OVERFLOW   8
+#define FE_UNDERFLOW  16
+#define FE_INEXACT    32
+#endif
 
 /* workaround clang branch prediction side effect */
 #if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 3)))
@@ -2423,7 +2452,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 // end of addition builtins
 
 // aligned memory allocation, assume align is power of 2
-static __forceinline void* aligned_malloc(size_t size, size_t align) {
+static INLINE void* aligned_malloc(size_t size, size_t align) {
  void *result;
  align = (align>=sizeof(void*))?align:sizeof(void*);
 #ifdef _WIN32
@@ -2440,7 +2469,7 @@ static __forceinline void* aligned_malloc(size_t size, size_t align) {
  return result;
 }
 
-static __forceinline void aligned_free(void *ptr) {
+static INLINE void aligned_free(void *ptr) {
 #ifdef _WIN32
  _aligned_free(ptr);
 #elif ( !defined(ANDROID) || defined(__LP64__) )

@@ -14,7 +14,6 @@
 #define M1 __mmask8
 #define M2 __mmask16
 #define M4 __mmask32
-#define INLINE inline __attribute__((always_inline))
 #define VL _mm512_loadu_epi64
 #define CMPLS8 _mm512_cmplt_epi64_mask
 #define CMPLU4 _mm512_cmplt_epu32_mask

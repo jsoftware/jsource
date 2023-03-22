@@ -23,12 +23,18 @@ elif [ $1 = "openbsd" ]; then
   ext="so"
 elif [ $1 = "freebsd" ]; then
   ext="so"
+elif [ $1 = "wasm" ]; then
+  ext=""
 else
-  echo "argument is linux|darwin|raspberry|openbsd|freebsd"
+  echo "argument is linux|darwin|raspberry|openbsd|freebsd|wasm"
   exit 1
 fi
 if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
+if [ "$1" = "wasm" ]; then
+ m64=0
+else
  m64=1
+fi
 else
  m64=0
 fi
@@ -40,6 +46,13 @@ else
 cat /proc/cpuinfo
 fi
 ulimit -a || true
+
+if [ "$1" = "wasm" ]; then
+ls -l j32
+cd j32
+node jamalgam.js
+exit 0
+fi
 
 if [ $m64 -eq 1 ]; then
 ls -l j64

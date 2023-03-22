@@ -15,7 +15,9 @@
  #define JDLLNAME "\\j.dll"
 #else
  #define _stdcall
+ #if !defined(__wasm__)
  #include <dlfcn.h>
+ #endif
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
  #ifdef __MACH__ 
   #define JDLLNAME "/libj.dylib"

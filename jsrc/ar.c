@@ -201,7 +201,6 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 
 #define redprim256rk1(prim,identity) \
  __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupperx(VOIDARG) \
  /* prim/ vectors */ \
  __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
@@ -234,7 +233,6 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 // f/ on rank>1, going down columns to save bandwidth
 #define redprim256rk2(prim,identity) \
  __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupperx(VOIDARG) \
  __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
  I xstride1=d*SZD; I xstride3=3*xstride1; I xstride5=5*xstride1; I xstride7=xstride5+2*xstride1; \
@@ -368,7 +366,6 @@ DF1(jtcompsum){
 #if (C_AVX&&SY_64) || EMU_AVX
  __m256d __attribute__((aligned(64))) accc[2][8];   // accumulators and error terms
  __m256i endmask; /* length mask for the last word */
- _mm256_zeroupperx(VOIDARG);
  if(d==1){
   // rank-1 case: operate across the row, with 4 accumulators
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */

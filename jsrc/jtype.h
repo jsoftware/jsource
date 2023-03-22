@@ -429,7 +429,11 @@ typedef I SI;
 // ** NOUN types can have the following informational bits set
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 #define SPARSEX 31  // NOTE this extends to the sign bit
+#if defined(_WIN64)||defined(__LP64__)
 #define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
+#else
+#define SPARSE            (IMIN)                    /* P  sparse boxed                 */
+#endif
 // ** NAME type can have the following information flags set
 #define NAMEBYVALUEX    MARKX     // set if the name is one of u v u. v. that is always passed by value, never by reference
 #define NAMEBYVALUE     ((I)1L<<NAMEBYVALUEX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name

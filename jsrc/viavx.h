@@ -121,7 +121,7 @@ B jteqnx(J,I,X*,X*),jteqnq(J,I,Q*,Q*),jteqa(J,I,A*,A*);
 #define RETCRC3 R CRC32L(crc0,(UI)rol32(crc1,9)+((UI)rol32(crc2,21)<<32))
 
 // Hash an INT list
-static __forceinline UI hici(I k, UI* v){
+static INLINE UI hici(I k, UI* v){
  // Owing to latency, hash 3 inputs at a time; but not if short.  Length is never 0 but can be 1.
  if((k-=3)<=0){  // fast path for len<=3.  We think all these branches will predict correctly
   UI crc; crc=CRC32L(-1LL,v[0]); if(k>=-1){crc=CRC32L(crc,v[1]); if(k==0)crc=CRC32L(crc,v[2]);} R crc;
@@ -148,7 +148,7 @@ static UI hic0(I k, UIL* v){
 }
 
 // Hash a pair of INTs.  Not compatible with hici.  Based on wyhash.
-static __forceinline UI hici2(UI x, UI y){
+static INLINE UI hici2(UI x, UI y){
  x^=0xe7037ed1a0b428db;
  y^=0xa0761d6478bd642f;
  UI l,h;DPUMULU(x,y,l,h);
@@ -167,7 +167,7 @@ static UI hiq(Q*v){A y=v->n; R hici(XLIMBLEN(y),UIAV(y));}
 static UI cthid(UIL ctmask,D d){R likely(*(UIL*)&d!=(UIL)NEGATIVE0)?CRC32LL(-1L,*(UIL*)&d&ctmask):CRC32LL(-1L,0);}
 
 // compare floats, not distinguishing -0 from +0.  Return 0 if equal, 1 if not equal
-static __forceinline I fcmp0(D* a, D* w, I n){
+static INLINE I fcmp0(D* a, D* w, I n){
  DQ(n, if(a[i]!=w[i])R 1;);
  R 0;
 }
@@ -177,7 +177,7 @@ static __forceinline I fcmp0(D* a, D* w, I n){
 #define COMPSETUP \
  __mmask8 endmask = BZHI(0xff,1+(n-1)%8);
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
-static __forceinline I icmpeq(I *x, I *y, I n, __mmask8 em) {
+static INLINE I icmpeq(I *x, I *y, I n, __mmask8 em) {
  if(common(n<=8))R !!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(em,x),_mm512_maskz_loadu_epi64(em,y));
  __m512i u,v;
  DQ((n-1)/8,
@@ -190,7 +190,7 @@ static __forceinline I icmpeq(I *x, I *y, I n, __mmask8 em) {
 #define COMPSETUP \
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
-static __forceinline I icmpeq(I *x, I *y, I n, __m256i endmask) {
+static INLINE I icmpeq(I *x, I *y, I n, __m256i endmask) {
  __m256i u,v; __m256d ones=_mm256_castsi256_pd(_mm256_cmpeq_epi64(endmask,endmask));
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  while(--i>=0){
@@ -203,7 +203,7 @@ static __forceinline I icmpeq(I *x, I *y, I n, __m256i endmask) {
 #define COMPSETUP
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n)
 // Return nonzero if *a!=*w
-static __forceinline I icmpeq(I *a, I *w, I n) {
+static INLINE I icmpeq(I *a, I *w, I n) {
  if(n)do{
   if(*a!=*w)R n;
   if(--n)++a,++w; else R n;

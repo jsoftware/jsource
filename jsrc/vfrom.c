@@ -105,7 +105,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  IDXASSERT(_v,v,b);}
  // moving I/D.  Use GATHER instruction.  Future hardware can exploit that.
  {__m256i endmask=_mm256_setzero_si256(); /* length mask for the last word */ 
-  _mm256_zeroupperx(VOIDARG)
   __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
   __m256i ones=_mm256_cmpgt_epi64(wstride,endmask);  // mask to use for gather into all bytes - set this way so compiler assigns a register
   I * RESTRICT v=(I*)wv; I* RESTRICT x=(I*)zv;  // input and output pointers

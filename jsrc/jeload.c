@@ -18,7 +18,9 @@
  #endif
 #else
  #include <unistd.h>
+ #if !defined(__wasm__)
  #include <dlfcn.h>
+ #endif
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
  #define _stdcall
  #define PLEN PATH_MAX // path length
@@ -106,7 +108,7 @@ void* jehjdll(){return hjdll;}
 // load JE, Jinit, getprocaddresses, JSM
 JST* jeload(void* callbacks)
 {
-#ifdef JAMALGAM
+#if defined(JAMALGAM) || defined(__wasm__)
  jt=JInit();
  if(!jt) return 0;
  JSM(jt,callbacks);
@@ -404,6 +406,11 @@ int jefirst(int type,char* arg)
 #else
 	strcat(input,"[IFRASPI_z_=:0");
 #endif
+#if defined(__wasm__)
+	strcat(input,"[IFWASM_z_=:1");
+#else
+	strcat(input,"[IFWASM_z_=:0");
+#endif
 #if defined(_WIN32)
 	strcat(input,"[UNAME_z_=:'Win'");
 #elif defined(__APPLE__)
@@ -425,6 +432,9 @@ int jefirst(int type,char* arg)
 	if(runjscript) strcat(input,"[RUNJSCRIPT_z_=:1");
 	else strcat(input,"[RUNJSCRIPT_z_=:0");
 	strcat(input,"[BINPATH_z_=:'");
+#if defined(__wasm__)
+  strcat(input,"/jlibrary/bin");
+#else
 	if(!FHS){
 	p=path;
 	q=input+strlen(input);
@@ -438,10 +448,11 @@ int jefirst(int type,char* arg)
 	if(0==*pathetcpx) strcat(input,"/usr/bin");
 	else {strcat(input,pathetcpx); strcat(input,"/bin"); }
 	}
+#endif
 	strcat(input,"'");
 
 	strcat(input,"[LIBFILE_z_=:'");
-#ifndef JAMALGAM
+#if !defined(JAMALGAM) && !defined(__wasm__)
 	p=pathdll;
 	q=input+strlen(input);
 	while(*p)
@@ -472,11 +483,13 @@ void jefail(char* msg)
 	 buf, (sizeof(buf)/sizeof(char)), 0);
 	strcat(msg,buf);
 #else
+#if !defined(__wasm__)
 	char *dlerr=dlerror();
 	if(dlerr)strcat(msg,dlerr);
 	else{
 		char ermsg[1024];
 		if(errno&&!strerror_r(errno,ermsg,1024))strcat(msg,ermsg);}
+#endif
 #endif
 	strcat(msg,"\n");
 }

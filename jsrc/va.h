@@ -337,7 +337,6 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
  __m256d xx,yy,zz; \
  __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupperx(VOIDARG) \
    /* will be removed except for divide */ \
  CVTEPI64DECLS pref \
  if(n-1==0){ \

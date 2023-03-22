@@ -168,6 +168,14 @@ JHS has the additional complication of critical sections of J code
 
 */
 
+/*
+Internally, on avx2/avx512 builds, JE always uses avx instructions, never sse instructions.
+Hence, we keep the cpu in avx mode all the time, instructing the compiler to avoid emitting spurious vzeroupper instructions between internal function boundaries with -mno-vzeroupper.
+However, a frontend might call into je and then try to execute some sse instructions while the cpu is still in avx mode, and thereby enter dirty high half mode, slowing down for no reason; that would be bad.
+Therefore, every function in this file MUST execute vzeroupper before returning, to put the cpu back into sse mode for the caller.
+Similarly, calls to external libraries MUST be preceded by a vzeroupper, to put the cpu into sse mode for the callee.
+*/
+
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
@@ -181,7 +189,9 @@ JHS has the additional complication of critical sections of J code
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#if !defined(__wasm__)
 #include <dlfcn.h>
+#endif
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #else // Linux
@@ -739,6 +749,10 @@ char sopath[PATH_MAX]="";
 
 void getsopath(char* path){
 const char *sym_name = "JGetLocale";
+#if defined(__wasm__)
+//  *path=0;  /* missing dladdr function */
+ strcpy(sopath,"/");
+#else
  void *sym_ptr = dlsym(RTLD_DEFAULT,sym_name);
 // fprintf(stdout,"SYMBOL %s ADDRESS %p\n", sym_name, sym_ptr);
  if (sym_ptr){
@@ -749,6 +763,7 @@ const char *sym_name = "JGetLocale";
    if((p1=strrchr(info.dli_fname,filesep))){path[p1-(char*)info.dli_fname]=0;}
   } else *path=0;
  } else *path=0;
+#endif
 // fprintf(stdout,"sopath: %s\n", path);
 }
 
@@ -792,6 +807,7 @@ CDPROC JS _stdcall JInit(void){
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
  jgmpinit(sopath); // mp support for 1x and 2r3
+ ZEROUPPER;
  R jt;  // return JST
 }
 
@@ -808,6 +824,7 @@ CDPROC JS _stdcall JInit2(C*libpath){
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
  if(libpath){strcpy(sopath,libpath);if(strlen(sopath)&&(filesep==sopath[strlen(sopath)-1]))sopath[strlen(sopath)-1]=0;}
  jgmpinit(sopath); // mp support for 1x and 2r3
+ ZEROUPPER;
  R jt;  // return JST
 }
 
@@ -822,6 +839,7 @@ CDPROC int _stdcall JFree(JS jt){
   aligned_free(JT(jt,jobqueue));
 #endif
   jvmrelease(jt,sizeof(JST)); // free the initial allocation
+  ZEROUPPER;
   R 0;
 }
 
@@ -858,6 +876,7 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  __atomic_store_n((US*)ad,*(US*)IJT(jt,adbreak),__ATOMIC_RELEASE);  // copy breakstatus from current setting
  if(IJT(jt,adbreakr)==IJT(jt,adbreak))IJT(jt,adbreakr)=ad;  // move attn-read pointer, unless interrupts disabled
  IJT(jt,adbreak)=ad;  // start using the mapped area
+ ZEROUPPER;
  R mtm;
 }
 
@@ -869,6 +888,7 @@ int valid(C* psrc, C* psnk)
  NOUNROLL while(*psrc == ' ') ++psrc;
  if(*psrc) return EVILNAME;
  *psnk = 0;
+ ZEROUPPER;
  return 0;  
 }
 
@@ -889,6 +909,7 @@ CDPROC int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdat
   z=0;  // good return
  }
  jttpop(jm,old);
+ ZEROUPPER;
  return z;
 }
 
@@ -937,6 +958,7 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  GAE(a,*jtype, k, *jrank, (I*)*jshape,R EVWSFULL);
  MC(AV(a), (void*)*jdata, n*k);
  jtjset(jt,gn, a);
+ ZEROUPPER;
  return jt->jerr;
 }
 
@@ -948,6 +970,7 @@ CDPROC int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdat
  A *old=jm->tnextpushp;
  er = setterm(jt, name, jtype, jrank, jshape, jdata);
  jttpop(jm,old);
+ ZEROUPPER;
  return er;
 }
 
@@ -967,6 +990,7 @@ CDPROC int _stdcall JErrorTextM(JS jt, I ec, I* p)
 {
  jt=JorJJTOJ(jt);
  *p = (I)esub(jt, ec);
+ ZEROUPPER;
  return 0;
 }
 

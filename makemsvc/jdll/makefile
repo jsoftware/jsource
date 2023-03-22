@@ -1,11 +1,11 @@
 ifeq (1,$(JAVX512))
-FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512
+FAVX512= /DC_AVX=1 /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512 -mno-vzeroupper
 else
 ifeq (1,$(JAVX2))
-FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell
+FAVX2= /DC_AVX=1 /DC_AVX2=1 -DHAVE_AVX2=1 -march=haswell -mno-vzeroupper
 else
 ifeq (1,$(JAVX))
-FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1
+FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1 -mno-vzeroupper
 endif
 endif
 endif

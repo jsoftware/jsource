@@ -64,6 +64,10 @@ DF2(jtshasum2)
   ASSERT(!n||AT(w)&LIT,EVDOMAIN);
   I s=AV(a)[0];
 
+  // sha1 and sha256 routines use sse instructions, since there are no avx versions of the relevant instructions
+  // see comment about vzeroupper in io.c
+  ZEROUPPER;
+
   /*
   1    SHA1
   2    SHA224

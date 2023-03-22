@@ -782,7 +782,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
 // LIT is set in it if it is OK to use 2x2 operations (viz a has no inner frame & w has no outer frame)
 #define SUMATLOOP2(ti,to,oneprod2,oneprod1) \
   {ti * RESTRICT av=avp,* RESTRICT wv=wvp; to * RESTRICT zv=zvp; \
-   _mm256_zeroupperx(VOIDARG) \
    __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    __m256d acc000; __m256d acc010; __m256d acc100; __m256d acc110; \
    __m256d acc001; __m256d acc011; __m256d acc101; __m256d acc111; \
@@ -906,7 +905,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
 
 #define ONEPRODD \
  __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupperx(VOIDARG) \
  /* +/ vectors */ \
  __m256d idreg=_mm256_setzero_pd(); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
@@ -1046,7 +1044,6 @@ DF2(jtsumattymes1){
 #if (C_AVX2&&SY_64) || EMU_AVX2
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) TWOSUM(acc##n,h,acc##n,q) c##n=_mm256_add_pd(_mm256_add_pd(q,y),c##n);
   __m256i endmask; /* length mask for the last word */
-  _mm256_zeroupperx(VOIDARG)
   __m256d idreg=_mm256_setzero_pd();
   __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */

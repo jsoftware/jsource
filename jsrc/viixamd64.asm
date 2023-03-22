@@ -15,12 +15,6 @@ global jtiixi_1a, jtiixi_1d
 global jtiixf_1a, jtiixf_1d
 global jtiixif_1a, jtiixif_1d, jtiixfi_1a, jtiixfi_1d
 
-%define MOVQ vmovq ;vex version avoids penalties in avx/avx2 build, but can switch to movq for an sse build if desired
-%define COMISD vcomisd
-%define CVTSI2SD vcvtsi2sd 
-%define SUBQ vpsubq
-%define PTEST vptest
-
 ; I. on singleton floats or mixed floats and ints, a is ascending or descending.  m is guaranteed to be divisible by 6
 ; Macro parameters:
 ; %1: function name
@@ -51,14 +45,14 @@ rdfsbase rax ;sysv doesn't require saving fs, but we do it anyway to be nice
 push	rax
 rdgsbase rax
 push	rax
-MOVQ	xmm15,rsp  ;stash rsp in xmm15
+vmovq	xmm15,rsp  ;stash rsp in xmm15
 wrfsbase rdi  ;fs is z
 wrgsbase rdx  ;gs is w
 mov	rdx,rsi
 mov	rax,r8
-MOVQ	xmm14,r9	; stash iteration ct
+vmovq	xmm14,r9	; stash iteration ct
 mov	r9d,1
-MOVQ	xmm13,r9	; set constant 1
+vmovq	xmm13,r9	; set constant 1
 ; registers:
 ; xmm0/xmm1: x0/y0
 ; xmm2/xmm3: x1/y1
@@ -101,52 +95,52 @@ mov	r10,rsp                  ;p1 (lower)
 %4	xmm1,qword [gs:rax*8-48] ;load y0
 mov     r9,rcx                   ;q1 (upper)
 mov	r8,rsp                   ;p1 (lower)
-MOVQ	xmm12,xmm14              ;set inner loop count
+vmovq	xmm12,xmm14              ;set inner loop count
 .iloop:              ;inner loop: iterate over a
 lea	rbx,[rsp+rbp+1]
 sar	rbx,1
 %3	xmm10,qword [rdx+rbx*8] ;I tried giving comisd a memory operand, and it was 5-10% slower
-COMISD	xmm10,xmm11       ;performance loss seems to come just from switching comisd operand order; probably uarch/decoder-specific stuff?  (TODO this was on zen2; should re-bench on intel)
+vcomisd	xmm10,xmm11       ;performance loss seems to come just from switching comisd operand order; probably uarch/decoder-specific stuff?  (TODO this was on zen2; should re-bench on intel)
 cmov%-2	rsp,rbx
 cmov%+2	rbp,rbx
 
 lea	rbx,[rdi+rsi+1]
 sar	rbx,1
 %3	xmm8,qword [rdx+rbx*8]
-COMISD	xmm8,xmm9
+vcomisd	xmm8,xmm9
 cmov%-2	rdi,rbx
 cmov%+2	rsi,rbx
 
 lea	rbx,[r14+r15+1]
 sar	rbx,1
 %3	xmm6,qword [rdx+rbx*8]
-COMISD	xmm6,xmm7
+vcomisd	xmm6,xmm7
 cmov%-2	r14,rbx
 cmov%+2	r15,rbx
 
 lea	rbx,[r12+r13+1]
 sar	rbx,1
 %3	xmm4,qword [rdx+rbx*8]
-COMISD	xmm4,xmm5
+vcomisd	xmm4,xmm5
 cmov%-2	r12,rbx
 cmov%+2	r13,rbx
 
 lea	rbx,[r10+r11+1]
 sar	rbx,1
 %3	xmm2,qword [rdx+rbx*8]
-COMISD	xmm2,xmm3
+vcomisd	xmm2,xmm3
 cmov%-2	r10,rbx
 cmov%+2	r11,rbx
 
 lea	rbx,[r8+r9+1]
 sar	rbx,1
 %3	xmm0,qword [rdx+rbx*8]
-COMISD	xmm0,xmm1
+vcomisd	xmm0,xmm1
 cmov%-2	r8,rbx
 cmov%+2	r9,rbx
 
-PSUBQ	xmm12,xmm13
-PTEST	xmm12,xmm12
+vpsubq	xmm12,xmm13
+vptest	xmm12,xmm12
 jnz	.iloop
 
 ; todo consider not doing redundant work, but instead reloading each parameter once it finishes?  I think this requires index registers, and I'm using all the registers already
@@ -161,7 +155,7 @@ mov	[fs:rax*8-48],r9  ;store result for y0
 sub	rax,6
 jnz	.oloop       ;continue if more items of w to process
 
-MOVQ	rsp,xmm15
+vmovq	rsp,xmm15
 ;mov	rsp,[fs:-8]
 pop	rax
 wrgsbase rax
@@ -177,12 +171,12 @@ ret
 %endmacro
 
 ;float comparisons set above/below flags
-F_1 jtiixf_1a, ae, MOVQ, MOVQ, 28
-F_1 jtiixf_1d, be, MOVQ, MOVQ, 28
-F_1 jtiixif_1a, ae, CVTSI2SD, MOVQ, 28
-F_1 jtiixif_1d, be, CVTSI2SD, MOVQ, 28
-F_1 jtiixfi_1a, ae, MOVQ, CVTSI2SD, 22
-F_1 jtiixfi_1d, be, MOVQ, CVTSI2SD, 22
+F_1 jtiixf_1a, ae, vmovq, vmovq, 28
+F_1 jtiixf_1d, be, vmovq, vmovq, 28
+F_1 jtiixif_1a, ae, vcvtsi2sd, vmovq, 28
+F_1 jtiixif_1d, be, vcvtsi2sd, vmovq, 28
+F_1 jtiixfi_1a, ae, vmovq, vcvtsi2sd, 22
+F_1 jtiixfi_1d, be, vmovq, vcvtsi2sd, 22
 
 ; I. on singleton integers, a is ascending or descending.  m is guaranteed to be divisible by 4
 ; %1: function name
@@ -209,14 +203,14 @@ rdfsbase rax ;sysv doesn't require saving fs, but we do it anyway to be nice
 push	rax
 rdgsbase rax
 push	rax
-MOVQ	xmm0,rsp  ;stash rsp in xmm0
+vmovq	xmm0,rsp  ;stash rsp in xmm0
 wrfsbase rdi  ;fs is z
 wrgsbase rdx  ;gs is w
 mov	rdx,rsi
 mov	rax,r8
-MOVQ	xmm14,r9
+vmovq	xmm14,r9
 mov	r9d,1
-MOVQ	xmm13,r9
+vmovq	xmm13,r9
 ; registers:
 ; rdi: y0
 ; r8/r9: p0/q0
@@ -249,7 +243,7 @@ mov	r11,rcx      ;q1 (upper)
 mov	r10,r14      ;p1 (lower)
 mov	r9,rcx       ;q0 (upper)
 mov	r8,r14       ;p0 (lower)
-MOVQ	xmm12,xmm14
+vmovq	xmm12,xmm14
 .iloop:              ;inner loop: iterate over a
 ; can we start the cmp before the sar by using rbx*4?  Obviously not directly, but what if we keep p/q premultiplied by 2 (would need to mask off the bottom bit--ok), and say rbx=r15+r14+2 and load rdx+rbx*2? 
 lea	rbx,[r15+r14+1]
@@ -276,8 +270,8 @@ cmp	rdi,[rdx+rbx*8]
 cmov%-2	r8,rbx
 cmov%+2	r9,rbx
 
-PSUBQ	xmm12,xmm13
-PTEST	xmm12,xmm12
+vpsubq	xmm12,xmm13
+vptest	xmm12,xmm12
 jnz	.iloop
 
 mov	[fs:rax*8-8],r15  ;store result for y3
@@ -288,7 +282,7 @@ mov	[fs:rax*8-32],r9  ;store result for y0
 sub	rax,4
 jnz	.oloop       ;continue if more items of w to process
 
-MOVQ	rsp,xmm0
+vmovq	rsp,xmm0
 ;mov	rsp,[fs:-8]
 pop	rax
 wrgsbase rax

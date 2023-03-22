@@ -119,7 +119,6 @@ AHDR2(name,B,D,D){ \
  __m256i endmask; /* length mask for the last word */ \
  __m256d u,v,cct,ctop,eq; /* args, ct, eq result and also main result */ \
  decls \
- _mm256_zeroupperx(VOIDARG) \
  if(jt->cct!=1.0){ \
   cct=_mm256_broadcast_sd(&jt->cct); \
   if(n-1==0){ \
@@ -220,7 +219,6 @@ AHDR2(name,B,I,I){ \
  __m256i endmask; /* length mask for the last word */ \
  __m256i u,v,eq; /* args, ct, main result */ \
  decls \
- _mm256_zeroupperx(VOIDARG) \
  if(n-1==0){ \
   /* vector-to-vector, no repetitions */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \

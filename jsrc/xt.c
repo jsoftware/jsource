@@ -102,7 +102,9 @@ static int read_off_memory_status(statm_t *result)
 // Return resident memory of the current process
 F1(jtspresident){
 ASSERTMTV(w);
-#if defined(_WIN32)
+#if defined(__wasm__)
+ R v2(0, 0);    // not implemented 
+#elif defined(_WIN32)
  PROCESS_MEMORY_COUNTERS mem;
  BOOL res = GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem));
  ASSERT(res != 0,EVFACE);

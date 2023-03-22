@@ -109,7 +109,9 @@ char *toascbuf(wchar_t *src);
 
 #if (SYS & SYS_UNIX)
 
+#if !defined(__wasm__)
 #include <dlfcn.h>
+#endif
 
 #if SYS & SYS_FREEBSD
 /* resolve some harmless name clashes */
@@ -620,7 +622,7 @@ static float NOOPTIMIZE altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
 static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alternate){
 #define vdresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'*')+CCM(w,'n')
  CCMWDS(vdres) CCMCAND(vdres,cand,zl)   // see if zl is one of the direct results, which can be moved into the result directly
-
+ ZEROUPPER; // see comment in io.c
  if(CCMTST(cand,zl)){I r;
   // result has integer type.  Call with that linkage
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
@@ -824,7 +826,9 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
  #endif
  CDASSERT((UI)h>HINSTANCE_ERROR,DEBADLIB);
 #endif
-#if SYS & SYS_UNIX
+#if defined(__wasm__)
+  CDASSERT(0,DEBADLIB);
+#elif SYS & SYS_UNIX
   CDASSERT(h=dlopen((*lib)?lib:0,RTLD_LAZY),DEBADLIB);
 #endif
   cc->h=h;   // remember the handle; leave cc->li set to cause the library name to be hashed into cdhashl
@@ -835,7 +839,9 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
 #if SY_WINCE
  f=GetProcAddress(h,tounibuf(proc));
 #endif
-#if (SYS & SYS_UNIX)
+#if defined(__wasm__)
+  CDASSERT(0,DEBADLIB);
+#elif (SYS & SYS_UNIX)
  f=(FARPROC)dlsym(h,proc);
 #endif
  CDASSERT(f!=0,DEBADFN);
@@ -1284,7 +1290,9 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 #if SY_WIN32
 #define FREELIB FreeLibrary
 #endif
-#if (SYS & SYS_UNIX)
+#if defined(__wasm__)
+#define FREELIB(x) 0
+#elif (SYS & SYS_UNIX)
 #define FREELIB dlclose
 #endif
 
@@ -1329,7 +1337,9 @@ F1(jtcderx){I4 t;C buf[1024];
  }
 #endif
 
-#if SYS&SYS_UNIX
+#if defined(__wasm__)
+ {strcpy (buf, "");}
+#elif SYS&SYS_UNIX
  {const char *e = dlerror(); strcpy (buf, e?e:"");}
 #endif
  R jlink(sc(t),cstr(buf));
@@ -1424,6 +1434,7 @@ static I cbold(I n,I *pi){char d[256],*p;A r;I i;
  if (!n) { *p++='\''; *p++='\''; }
  *p=0;
  r=exec1(cstr(d));
+ ZEROUPPER;
  if(!r||AR(r)) R 0;
  if(INT&AT(r)) R AV(r)[0];
  if(B01&AT(r)) R ((BYTE*)AV(r))[0];
@@ -1433,6 +1444,7 @@ static I cbold(I n,I *pi){char d[256],*p;A r;I i;
 static I cbnew(){A r;
  J jt=cbjt;
  r=exec1(cstr("cdcallback''"));
+ ZEROUPPER; // see comment in io.c
  if(!r||AR(r)) R 0;
  if(INT&AT(r)) R AV(r)[0];
  if(B01&AT(r)) R ((BYTE*)AV(r))[0];
@@ -1775,13 +1787,21 @@ F1(jtcddlopen){HMODULE h;
  MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,_MAX_PATH);
  h=LoadLibraryW(wlib);
 #else
+#if defined(__wasm__)
+ CDASSERT(0,DEBADLIB);
+#else
  h=dlopen((*lib)?lib:0,RTLD_LAZY);
+#endif
 #endif
  }else{
 #ifdef _WIN32
  h=GetModuleHandle(NULL);
 #else
+#if defined(__wasm__)
+ CDASSERT(0,DEBADLIB);
+#else
  h=dlopen(0,RTLD_LAZY);
+#endif
 #endif
  }
 R sc((I)(intptr_t)h);
@@ -1797,7 +1817,11 @@ F2(jtcddlsym){C*proc;FARPROC f;HMODULE h;
 #ifdef _WIN32
  f=GetProcAddress(h,(LPCSTR)proc);
 #else
+#if defined(__wasm__)
+ CDASSERT(0,DEBADLIB);
+#else
  f=(FARPROC)dlsym(h,proc);
+#endif
 /*
  char *error;
  if(!f){
@@ -1814,140 +1838,19 @@ F1(jtcddlclose){HMODULE h;I rc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  RE(h=(HMODULE)i0(w));
 #ifdef _WIN32
- rc= !FreeLibrary(h);   /* FreeLibrary return non-zero on success */
+ rc= !FREELIB(h);       /* FreeLibrary return non-zero on success */
 #else
- rc= !!dlclose(h);      /* dlcose return zero on success */
+ rc= !!FREELIB(h);      /* dlcose return zero on success */
 #endif
 R sc(rc);   /* return zero on success */
 }    /* 15!:22 close lilbrary handle */
 
-F1(jtcdjt){
- ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
- R sc((I)(intptr_t)jt);
-} /* 15!:23 return jt */
-
-F1(jtcdlibl){
+F1(jtcdq){I rc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
- ASSERT(LIT&AT(w),EVDOMAIN);
- ASSERT(1>=AR(w),EVRANK);
- ASSERT(AN(w),EVLENGTH);
- if(!AM(JT(jt,cdarg)))R num(0);
- R sc((I)cdlookupl(CAV(w)));
-}    /* 15!:24 return library handle */
+#if defined(__wasm__)
+ R sc(0);
+#else
+ R sc(1);
+#endif
+}    /* 15!:23 test 15!:0 availability */
 
-F1(jtcdproc1){CCT*cc;
- ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
- ASSERT(LIT&AT(w),EVDOMAIN);
- ASSERT(1>=AR(w),EVRANK);
- ASSERT(AN(w),EVLENGTH);
- C* enda=&CAV(w)[AN(w)]; C endc=*enda; *enda=0; cc=cdparse(w,1); *enda=endc; RE(cc); // should do outside rank2 loop?
- R sc((I)cc->fp);
-}    /* 15!:25 return proc address */
-
-#ifdef MMSC_VER
-#pragma warning(disable: 4276)
-#endif
-
-#if SY_WIN32 && defined(OLECOM)
-#define VARIANT void
-CDPROC int _stdcall JBreak(J jt);
-CDPROC int _stdcall JIsBusy(J jt);
-CDPROC int _stdcall JGet(J jt, C* name, VARIANT* v);
-CDPROC int _stdcall JGetB(J jt, C* name, VARIANT* v);
-CDPROC int _stdcall JSet(J jt, C* name, VARIANT* v);
-CDPROC int _stdcall JSetB(J jt, C* name, VARIANT* v);
-CDPROC int _stdcall JErrorText(J jt, long ec, VARIANT* v);
-CDPROC int _stdcall JClear(J jt);
-CDPROC int _stdcall JTranspose(J jt, long b);
-CDPROC int _stdcall JErrorTextB(J jt, long ec, VARIANT* v);
-CDPROC int _stdcall JDoR(J jt, C* p, VARIANT* v);
-CDPROC int _stdcall JInt64R(J jt, long b);
-#endif
-
-// procedures in jlib.h
-static const void* jfntaddr[]={
-JDo,
-JErrorTextM,
-JFree,
-JGetA,
-JGetLocale,
-JGetM,
-JGetR,
-JInit,
-JInit2,
-JSM,
-JSMX,
-JSetA,
-JSetM,
-Jga,
-#if SY_WIN32 && defined(OLECOM)
-JBreak,
-JClear,
-JDoR,
-JErrorText,
-JErrorTextB,
-JGet,
-JGetB,
-JIsBusy,
-JSet,
-JSetB,
-JTranspose,
-JInt64R,
-#endif
-};
-
-static const C* jfntnm[]={
-"JDo",
-"JErrorTextM",
-"JFree",
-"JGetA",
-"JGetLocale",
-"JGetM",
-"JGetR",
-"JInit",
-"JInit2",
-"JSM",
-"JSMX",
-"JSetA",
-"JSetM",
-"Jga",
-#if SY_WIN32 && defined(OLECOM)
-"JBreak",
-"JClear",
-"JDoR",
-"JErrorText",
-"JErrorTextB",
-"JGet",
-"JGetB",
-"JIsBusy",
-"JSet",
-"JSetB",
-"JTranspose",
-"JInt64R",
-#endif
-};
-
-F2(jtcdproc2){C*proc;FARPROC f;HMODULE h;
- ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE)
- ASSERT(LIT&AT(w),EVDOMAIN);
- ASSERT(1>=AR(w),EVRANK);
- ASSERT(AN(w),EVLENGTH);
- proc=CAV(w);
- RE(h=(HMODULE)i0(a));
- if(!h){I k=-1;
-  DO(sizeof(jfntnm)/sizeof(C*), if(((I)strlen(jfntnm[i])==AN(w))&&!strncmp(jfntnm[i],proc,AN(w))){k=i; break;});
-  f=(k==-1)?(FARPROC)0:(FARPROC)jfntaddr[k];
- }else{
-#if SY_WIN32 && !SY_WINCE
-  f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):(LPCSTR)proc);
-#endif
-#if SY_WINCE
-  f=GetProcAddress(h,tounibuf(proc));
-#endif
-#if (SYS & SYS_UNIX)
-  f=(FARPROC)dlsym(h,proc);
-#endif
- }
- CDASSERT(f!=0,DEBADFN);
- R sc((I)f);
-}    /* 15!:25 return proc address */

@@ -27,7 +27,9 @@ libgmp binaries are built from https://gmplib.org/download/gmp/gmp-6.2.1.tar.lz
 #endif
 #define gmp_wrapper_h
 
-#if defined(ANDROID)
+#if defined(__wasm32__)
+#include "linux/gmp-wasm32.h"
+#elif defined(ANDROID)
 #if defined(__aarch64__)
 #include "android/gmp-arm64-v8a.h"
 #elif defined(__arm__)

@@ -49,6 +49,7 @@ extern F1(jtcdlibl);
 extern F1(jtcddlopen);
 extern DF1(jtcdot1);
 extern F1(jtcdproc1);
+extern F1(jtcdq);
 // extern F1(jtceil1);
 extern F1(jtcerrno);
 extern F1(jtcheckfreepool);

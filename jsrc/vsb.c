@@ -426,7 +426,7 @@ static A jtsbunstr(J jt,I q,A w){A z;S c2;I i,j,m,wn;SB*zv;
 static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  ARGCHK1(w);
  ASSERT(!AN(w)||AT(w)&LIT+C2T+C4T,EVDOMAIN);
- ASSERT(1<AR(w),EVRANK);
+ ASSERT(0<AR(w),EVRANK);
  c2=AT(w)&C4T?SBC4:AT(w)&C2T?SBC2:0;  // c2=0 for LIT, SBC2 for C2T, SBC4 for C4T
  wr=AR(w); ws=AS(w); wc=ws[wr-1];
  PRODX(m,wr-1,ws,1);

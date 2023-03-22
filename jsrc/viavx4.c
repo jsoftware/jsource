@@ -64,7 +64,6 @@
  __m256i acc0=_mm256_setzero_si256(), acc1=acc0, acc2=acc0, acc3=acc0, acc4=acc0, acc5=acc0, acc6=acc0, acc7=acc0; \
  I maskatend, nuniq=0; \
  UI backoff; UI n2; I orign2; /* orign2 goes -1 during rev search */ \
- _mm256_zeroupperx(VOIDARG) \
    /* will be removed except for divide */ \
  CVTEPI64DECLS pref \
  y=v; void *x0=u; \

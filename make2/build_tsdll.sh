@@ -98,7 +98,7 @@ linux/j32) # linux x86
 TARGET=libtsdll.so
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
-CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
+CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 # slower, use 387 fpu and truncate extra precision
 # CFLAGS="$common -m32 -ffloat-store "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
@@ -112,7 +112,7 @@ LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 
 raspberry/j32) # linux raspbian arm
 TARGET=libtsdll.so
-CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
+CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 

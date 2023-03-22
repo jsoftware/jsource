@@ -2,8 +2,8 @@
 #
 # build linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry|android|openbsd|freebsd
-# openbsd is experimental
+# argument is linux|darwin|raspberry|android|openbsd|freebsd|wasm
+# wasm is experimental
 
 set -e
 CC=${CC-clang}
@@ -27,14 +27,21 @@ elif [ "$1" = "openbsd" ]; then
 elif [ "$1" = "freebsd" ]; then
   ext="so"
   export _DEBUG=3
+elif [ "$1" = "wasm" ]; then
+  ext=""
+  export _DEBUG=0
 else
-  echo "argument is linux|darwin|raspberry|android|openbsd|freebsd"
+  echo "argument is linux|darwin|raspberry|android|openbsd|freebsd|wasm"
   exit 1
 fi
 uname -a
 uname -m
 if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
+if [ "$1" = "wasm" ]; then
+ m64=0
+else
  m64=1
+fi
 else
  m64=0
 fi
@@ -95,7 +102,9 @@ echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
 echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
 
 if [ "x$MAKEFLAGS" = x'' ] ; then
-if [ "$1" = "linux" ] || [ "$1" = "raspberry" ] ; then
+if [ "$1" = "wasm" ] ; then
+par=2
+elif [ "$1" = "linux" ] || [ "$1" = "raspberry" ] ; then
 par=`nproc` 
 elif [ "$1" = "darwin" ] || [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] || [ "$1" = "android" ] ; then
 par=`sysctl -n hw.ncpu` 
@@ -131,6 +140,20 @@ sed -i "" -e "s/android-16/android-9/g" jni/Application.mk
 NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
 zip -r ../androidlibs.zip libs
 cd ..
+exit 0
+fi
+
+if [ "$1" = "wasm" ]; then
+cd make2
+./clean.sh
+USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_jamalgam.sh
+./clean.sh
+USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_libj.sh
+cd ..
+ls -l bin/$1/j32
+cp bin/$1/j32/* j32
+chmod 644 j32/*
+ls -l j32
 exit 0
 fi
 

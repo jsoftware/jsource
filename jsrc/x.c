@@ -324,11 +324,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(15,20): R CDERIV(CIBEAM, jtcddlopen,   0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,21): R CDERIV(CIBEAM, 0,            jtcddlsym,    VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,22): R CDERIV(CIBEAM, jtcddlclose,  0,            VASGSAFE,RMAX,RMAX,RMAX);
-#if 0  //
-  case XC(15,23): R CDERIV(CIBEAM, jtcdjt,       0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,24): R CDERIV(CIBEAM, jtcdlibl,     0,            VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(15,25): R CDERIV(CIBEAM, jtcdproc1,    jtcdproc2,    VASGSAFE,RMAX,RMAX,RMAX);
-#endif
+  case XC(15,23): R CDERIV(CIBEAM, jtcdq,        0,            VASGSAFE,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 18:

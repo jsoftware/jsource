@@ -60,9 +60,6 @@ gipht.ijs
 git.ijs
 gss.ijs
 )
-3 : 0^:('Wasm'-:UNAME) ''
-ddall=: (<testpath),each 'g131.ijs';'g2x.ijs'
-)
 
 NB. When a name executes cocurrent, all subsequent calls from that name use a slower linkage.  Thus we don't want RUN to call
 NB. 0!:x directly, because then all the calls in RUN (after a file that does cocurrent) use slow linkage.  Interpose a name

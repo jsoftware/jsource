@@ -1954,7 +1954,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 
 
 #if ANASARGEEMENT
-#define CHECKANAS(exp)  {A ZZZm=(A)(exp); if(ZZZm && !jt->jerr){ if(NOUN&AT(ZZZm)){I ZZZn; PRODRNK(ZZZn,AR(ZZZm),AS(ZZZm)); if(AN(ZZZm)!=ZZZn){fprintf(stderr,"AN() not agreed with */AS() : file %s line %d\n",__FILE__,__LINE__);SEGFAULT;}}}}
+#define CHECKANAS(exp)  {A ZZZm=(A)(exp); if(ZZZm && !jt->jerr){ if((NOUN&AT(ZZZm))&&(!(ISGMP(ZZZm)))&&!ISSPARSE(AT(ZZZm))){I ZZZn; PRODRNK(ZZZn,AR(ZZZm),AS(ZZZm)); if(AN(ZZZm)!=ZZZn){fprintf(stderr,"AN() not agreed with */AS() : file %s line %d\n",__FILE__,__LINE__);SEGFAULT;}}}}
 #else
 #define CHECKANAS(exp)
 #endif

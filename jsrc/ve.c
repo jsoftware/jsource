@@ -37,7 +37,7 @@ APFX(tymesDD, D,D,D, TYMESDD,,R EVOK;)
 APFX(  divDD, D,D,D, DIV,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
 
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 primop256(plusDI,16,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusID,8,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusDB,0xa00,,zz=_mm256_add_pd(xx,yy),R EVOK;)

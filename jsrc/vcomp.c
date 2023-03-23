@@ -113,7 +113,7 @@ APFX(gtSS, B,SB,SB, SBGT,, R EVOK;)
 #define PCOMPID(y) y
 #define PCOMPABS(y) _mm256_and_pd(y,absmask)
 
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 #define primcmpD256(name,tolres,intolres,decls,LOADFN) \
 AHDR2(name,B,D,D){ \
  __m256i endmask; /* length mask for the last word */ \

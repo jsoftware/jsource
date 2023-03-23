@@ -529,7 +529,7 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
 // Result is 0 if error, which must be NaN error
 // For historical reason (i. e. to match the non-AVX2 version) n and p have been multiplied by 2 for complex multiplies
 I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
-// TODO: bug when EMU_AVX
+// TODO: bug when EMU_AVX2
  if(((((24-m)&(24-n)&(16-p)&((DCACHED_THRESn-1)-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // TUNE blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
   // small problem, not worth splitting.  there is no size limit on the blocks
   // 16x16 multiply takes about 1us; we are guessing task-wakeup takes a similar amount of time.  So it's not worth a split unless the time gets substantially above 1us

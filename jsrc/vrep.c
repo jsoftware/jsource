@@ -59,7 +59,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
  // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
-#if ((C_AVX2&&SY_64) || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
  I exactlen;  // will be 1 if overstore is not allowed on copy
 #endif
  if(!ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
@@ -69,7 +69,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   zvv=voidAV(z);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later
-#if ((C_AVX2&&SY_64) || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
   exactlen=0;  // OK to overstore when copying to new buffer
 #endif
   n=0;  // cannot skip prefix of 1s if not inplace
@@ -86,7 +86,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
-#if ((C_AVX2&&SY_64) || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
   exactlen=!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
 #endif
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
@@ -99,7 +99,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
-#if ((C_AVX2&&SY_64) || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
   C *avv=CAV(a)+n; n=m-n;   // prime the pipeline for top of loop.
   __m256i i1=_mm256_set1_epi8(1);
   __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits
@@ -218,7 +218,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z;
   // non-sparse code.  copy the repeated items directly
   PROD(itemsize,wcr-1,AS(w)+wf+1) PROD(ncells,wf,AS(w)) DPMULDE(itemsize*ncells,p,zn) // itematoms*ncells cannot overflow in valid w unless p=0
   I itembytes=itemsize<<bplg(AT(w));  // #bytes in item
-#if ((C_AVX2&&SY_64) || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
   itemsize=itembytes==SZI?itemsize:0; itemsize=(p>>2)>m?itemsize:0;  // repurpose itemsize to # of added items to leave space for wide stores   TUNE  use word code if average # repeats > 4
 #else
 #define itemsize 0
@@ -231,7 +231,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z;
    // make x[j] copies of item wv[j]
    if(itembytes==SZI){
     if(itemsize){
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
      for(j=0;j<m;++j){  // for each repeated item
       __m256i wd=_mm256_set1_epi64x(((I*)wv)[j]);  // the word to replicate, in each lane
       I wdstomove=x[j];  // # repeats

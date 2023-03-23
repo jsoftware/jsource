@@ -1083,7 +1083,7 @@ extern VARPSA rpsnull;
 extern PRIM sfn0overself;
 extern UA va1tab[];
 extern VA va[];
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 extern __m256d initecho(void *);
 #endif
 extern D two_52;  // 2^52

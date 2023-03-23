@@ -105,7 +105,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
 DF1(jtcant1){I r; A z;
  F1PREFIP;ARGCHK1(w);
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
-#if 0  //  (C_AVX2&&SY_64) || EMU_AVX2
+#if 0  //  C_AVX2 || EMU_AVX2
  // This attempt to transpose in 4x4 blocks fails because the stores are very slow if not aligned, and cannot be aligned if the array has odd size.
  // It took 2.6 clocks/atom (instead of the expected 0.5) because of the store penalties
  if((-((r^2)|(AR(w)^2))|(AT(w)&(SPARSE|INT|FL)))>0){  // rank 2, FL/INT, not sparse

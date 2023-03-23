@@ -305,7 +305,7 @@ ZGEMM(int_d2x2)
 DGEMM(opt_8x6)
 ZGEMM(opt_4x4)
 
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && !defined(__wasm__)
 
 // gcc vector extension
 

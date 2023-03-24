@@ -23,6 +23,9 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
+   - name: Setup SDE binaries
+     uses: petarpetrovt/setup-sde@v2
+
    - name: Setup Environment (Linux)
      run: script/install-lnx.sh
 
@@ -73,6 +76,9 @@ jobs:
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
+
+   - name: Setup SDE binaries
+     uses: petarpetrovt/setup-sde@v2
 
    - name: Setup Environment (Linux gcc)
      run: script/install-lnx.sh

@@ -158,7 +158,7 @@ fi
 USE_SLEEF_SRC="${USE_SLEEF_SRC:=1}"
 case "$jplatform64" in 
  raspberry/j32*) USE_SLEEF=0;;
- wam*) USE_SLEEF=0;;
+ wasm*) USE_SLEEF=0;;
  *) USE_SLEEF="${USE_SLEEF:=1}";;
 esac
 if [ $USE_SLEEF -eq 1 ] ; then

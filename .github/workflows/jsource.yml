@@ -23,6 +23,9 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
+   - name: Setup SDE binaries
+     uses: petarpetrovt/setup-sde@v2
+
    - name: Setup Environment (Linux)
      run: script/install-lnx.sh
 
@@ -31,6 +34,8 @@ jobs:
       CC: clang
       USE_SLEEF: 1
      run: |
+      echo $SDE_PATH
+      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
@@ -74,6 +79,9 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
+   - name: Setup SDE binaries
+     uses: petarpetrovt/setup-sde@v2
+
    - name: Setup Environment (Linux gcc)
      run: script/install-lnx.sh
 
@@ -82,6 +90,8 @@ jobs:
       CC: gcc
       USE_SLEEF: 1
      run: |
+      echo $SDE_PATH
+      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux gcc)

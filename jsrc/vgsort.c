@@ -250,7 +250,7 @@ static SF(jtsorti1){F1PREFJT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 //maybe even swar??
 #if !C_AVX512
 // sort a single integer list using quicksort without misprediction, inplace
-#define SORTQCOND ((C_AVX2&&SY_64) || EMU_AVX2)
+#define SORTQCOND (C_AVX2 || EMU_AVX2)
 #define SORTQNAME vvsortqs8ai
 #define SORTQTYPE IL
 #define SORTQSCOPE
@@ -388,7 +388,7 @@ static SF(jtsortu1){F1PREFJT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 
 
 // sort a single real list using quicksort without misprediction, inplace
-#define SORTQCOND ((C_AVX2&&SY_64) || EMU_AVX2)
+#define SORTQCOND (C_AVX2 || EMU_AVX2)
 #define SORTQNAME sortdq1
 #define SORTQTYPE D
 #define SORTQSCOPE static

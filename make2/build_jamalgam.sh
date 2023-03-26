@@ -35,7 +35,7 @@ case "$jplatform64" in
  darwin/*)      macmin="-arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
- wasm*) NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;USE_SLEEF=0;OPTLEVEL=" -O2 ";;
+ wasm*) NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
 esac
 make="${make:=make}"
 
@@ -158,6 +158,7 @@ fi
 USE_SLEEF_SRC="${USE_SLEEF_SRC:=1}"
 case "$jplatform64" in 
  raspberry/j32*) USE_SLEEF=0;;
+ wasm*) USE_SLEEF=0;;
  *) USE_SLEEF="${USE_SLEEF:=1}";;
 esac
 if [ $USE_SLEEF -eq 1 ] ; then
@@ -314,7 +315,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
+  FLAGS_SLEEF=" -DENABLE_AVX512F "  #ditto
   FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
  ;;
 
@@ -348,7 +349,7 @@ case $jplatform64 in
   LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD"
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_VECEXT "    # ENABLE_NEON32 single precision, useless
+  FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
   FLAGS_BASE64=""
  ;;
 
@@ -398,7 +399,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
+  FLAGS_SLEEF=" -DENABLE_AVX512F "  #ditto
   FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
  ;;
 
@@ -461,7 +462,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
+  FLAGS_SLEEF=" -DENABLE_AVX512F "  #ditto
   FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
  ;;
 
@@ -509,7 +510,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
+  FLAGS_SLEEF=" -DENABLE_AVX512F "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -598,7 +599,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_WIN}"
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
+  FLAGS_SLEEF=" -DENABLE_AVX512F "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -666,7 +667,7 @@ case $jplatform64 in
  --embed-file ../../../../jlibrary/ --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll --exclude-file *.exe --exclude-file bin32 --embed-file ../../../../test/ "
   SRC_ASM=""
   GASM_FLAGS=""
-  FLAGS_SLEEF=""
+  FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
   FLAGS_BASE64=""
  ;;
 

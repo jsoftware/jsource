@@ -147,7 +147,7 @@ I CTLZI_(UI w, UI4*out){
 
 I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
  if(n==0)R z;
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
  // do 64 bits at a time, ending with <32 to finish
  UI b64; __m256i b0,b1,zero=_mm256_setzero_si256(),baltb=_mm256_set1_epi16(0x00ff),balt16=_mm256_set1_epi32(0x0000ffff),balt1664=_mm256_set1_epi64x(0x000000000000ffff),btotal=zero; I zbase;
  B *bx=b;
@@ -243,7 +243,7 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
  p=bsum(n,b); 
  if(p==n)R IX(n);
  GATV0(z,INT,p,1); zv=AV(z);
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
  if(unlikely(p==0))R z;
  // do 64 bits at a time
  UI b64; __m256i b0,b1,bor,zero=_mm256_setzero_si256(); I zbase;
@@ -313,7 +313,7 @@ I jtmaxtype(J jt,I s,I t){
 // This overfetches from z and w, but does not overstore z
 void mvc(I m,void*z,I n,void*w){
  if(unlikely(m==0))R;  // fast return if nothing to copy
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
  PREFETCH(w);  /* start bringing in the start of data */ 
  // The main use of mvc is memset and fill.
  // The short version has some deficiencies: it calls memcpy repeatedly, which adds overhead, including alignment
@@ -405,7 +405,7 @@ void mvc(I m,void*z,I n,void*w){
 #if SY_64
   wdi|=wdi<<shiftct; fullrepbits=n==3?6*BB:fullrepbits; // length 2/4 can set length to 2/4 bytes indiscriminately, as long as the data is filled in for the whole word
 #endif
-#if !((C_AVX2&&SY_64) || EMU_AVX2)
+#if !(C_AVX2 || EMU_AVX2)
   if(n==1){fullrepbits=BW; wdi|=wdi<<(BW/2);}  // if n=1 possible, check for it
 #endif
 
@@ -501,7 +501,7 @@ A jtvec(J jt,I t,I n,void*v){A z; GA10(z,t,n); MC(AV(z),v,n<<bplg(t)); RETF(z);}
 #pragma push_options
 #pragma optimize ("unroll-loops")
 #endif
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 A jtvecb01(J jt,I t,I n,void*v){A z;
  GA10(z,t,n);   // allocate buffer
  if(t&B01){C*p=(C*)AV(z),*q=v;

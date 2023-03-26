@@ -361,7 +361,12 @@ do{
  if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){
   AFLAGORLOCAL(zz,(ZZFLAGWORD&(ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS))<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX))
   if(ZZFLAGWORD&ZZFLAGCOUNTITEMS)AS(zz)[0]=zzcounteditems;  // Store the # items into shape[0] of result
+#if ANASARGEEMENT
+// Not applicable because Store the # items into shape[0] of result
+  R zz;
+#else
   RETF(zz);
+#endif
  }
 
  if(ZZFLAGWORD&ZZFLAGBOXALLO){

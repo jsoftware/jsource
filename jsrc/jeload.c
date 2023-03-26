@@ -407,11 +407,8 @@ int jefirst(int type,char* arg)
 	strcat(input,"[IFRASPI_z_=:0");
 #endif
 #if defined(__wasm__)
-	strcat(input,"[IFWASM_z_=:1");
-#else
-	strcat(input,"[IFWASM_z_=:0");
-#endif
-#if defined(_WIN32)
+	strcat(input,"[UNAME_z_=:'Wasm'");
+#elif defined(_WIN32)
 	strcat(input,"[UNAME_z_=:'Win'");
 #elif defined(__APPLE__)
 	strcat(input,"[UNAME_z_=:'Darwin'");

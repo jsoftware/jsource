@@ -171,6 +171,29 @@
 #endif
 #endif
 
+#if SLEEF && !defined(_CMP_EQ)
+#define _CMP_EQ          0
+#define _CMP_LT          1
+#define _CMP_LE          2
+#define _CMP_UNORD       3
+#define _CMP_NEQ         4
+#define _CMP_NLT         5
+#define _CMP_NLE         6
+#define _CMP_ORD         7
+#undef _CMP_EQ_OQ
+#undef _CMP_GE_OQ
+#undef _CMP_GT_OQ
+#undef _CMP_LE_OQ
+#undef _CMP_LT_OQ
+#undef _CMP_NEQ_OQ
+#define _CMP_EQ_OQ _CMP_EQ
+#define _CMP_GE_OQ _CMP_NLT
+#define _CMP_GT_OQ _CMP_NLE
+#define _CMP_LE_OQ _CMP_LE
+#define _CMP_LT_OQ _CMP_LT
+#define _CMP_NEQ_OQ _CMP_NEQ
+#endif
+
 #if defined(__arm__)
 #if defined(__ARM_NEON)
 #include <arm_neon.h>
@@ -673,26 +696,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
-// Tuning options for cip.c
-#if ((C_AVX2 || EMU_AVX2) && PYXES) || !defined(_OPENMP)
-#define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
-#define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#elif defined(_WIN32)
-// tuned for windows
-#define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
-#define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
-#else
-// tuned for linux
-#define IGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS
-#define DGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#define ZGEMM_THRES  (60*60*60)      // when m*n*p less than this use cached; when higher, use BLAS  
-#endif
-#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
-#define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked
-
-
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
@@ -833,6 +836,26 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define sta(p,v) __atomic_store_n(p,v,__ATOMIC_RELEASE) //technically not 'a'
 #define sts(p,v) __atomic_store_n(p,v,__ATOMIC_SEQ_CST)
 #define xchga(p,n) __atomic_exchange_n(p,n,__ATOMIC_ACQ_REL)
+
+// Tuning options for cip.c
+#if ((C_AVX2 || EMU_AVX2) && PYXES) || !defined(_OPENMP)
+#define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#elif defined(_WIN32)
+// tuned for windows
+#define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
+#else
+// tuned for linux
+#define IGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (60*60*60)      // when m*n*p less than this use cached; when higher, use BLAS  
+#endif
+#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
+#define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked
+
 
 #ifdef __x86_64__
 #define FAST_AADD 1
@@ -1613,7 +1636,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define EXTERNCALL(expr) (expr)
 #endif
 
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 // this is faster than reusing another register as the source anyway, because it's not a recognized idiom, so we would have a false dependency on the other register
 #define _mm_setone_si128() _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128()) // set to all ~0
 #define _mm256_setone_epi64() _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256())
@@ -1851,10 +1874,15 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
                            PRISTCLRF(a) PRISTCLRF(w)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
+#if !defined(__wasm__)
+#define PRODCOMMON(z,length,ain,type) {I _i=(length); I * RESTRICT _zzt=(ain); \
+if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+#else
+// the above original version confuse emscripten compiler when 1==length where zzt always becomes &oneone
+// but this version introduces mispredicted branches
 #define PRODCOMMON(z,length,ain,type) {I _i=(length); I * RESTRICT _zzt=(ain); \
 if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
-// the original sentence below confuse emscripten compiler when 1==length where zzt always becomes &oneone
-// if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+#endif
 #define PROD(z,length,ain) PRODCOMMON(z,length,ain,)
 // This version ignores bits of length above the low RANKTX bits
 #define PRODRNK(z,length,ain) PRODCOMMON(z,length,ain,(RANKT))
@@ -1949,7 +1977,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 
 
 #if ANASARGEEMENT
-#define CHECKANAS(exp)  {A ZZZm=(A)(exp); if(ZZZm && !jt->jerr){ if(NOUN&AT(ZZZm)){I ZZZn; PRODRNK(ZZZn,AR(ZZZm),AS(ZZZm)); if(AN(ZZZm)!=ZZZn){fprintf(stderr,"AN() not agreed with */AS() : file %s line %d\n",__FILE__,__LINE__);SEGFAULT;}}}}
+#define CHECKANAS(exp)  {A ZZZm=(A)(exp); if(ZZZm && !jt->jerr){ if((NOUN&AT(ZZZm))&&(!(ISGMP(ZZZm)))&&!ISSPARSE(AT(ZZZm))){I ZZZn; PRODRNK(ZZZn,AR(ZZZm),AS(ZZZm)); if(AN(ZZZm)!=ZZZn){fprintf(stderr,"AN() not agreed with */AS() : file %s line %d\n",__FILE__,__LINE__);SEGFAULT;}}}}
 #else
 #define CHECKANAS(exp)
 #endif
@@ -2040,7 +2068,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define SZS            ((I)sizeof(S))
 #define LGSZS   1  // lg (bytes in an S)
 
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 // create quad-precision product of double-precision inputs.  outhi must not be an input; outlo can
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 // create quad-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Needs sgnbit.
@@ -2149,7 +2177,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #if !defined(C_CRC32C)
 #define C_CRC32C 0
 #endif
-#if (C_AVX2&&SY_64) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX2
+#if C_AVX2 || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX2
 #undef C_CRC32C
 #define C_CRC32C 1
 #endif
@@ -2224,7 +2252,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 
 // parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
-#if (C_AVX2&&SY_64)
+#if C_AVX2
 #define PEXT(s,m) _pext_u64(s,m)
 #define PDEP(s,m) _pdep_u64(s,m)
 #define BZHI(s,i) _bzhi_u64(s,i)

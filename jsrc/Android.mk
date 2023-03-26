@@ -12,7 +12,7 @@ ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_CFLAGS :=  -DARMEABI_V7A -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare -I../mpir/include
+  LOCAL_CFLAGS := -DARMEABI_V7A -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare -I../mpir/include
   LOCAL_ARM_MODE := arm
   LOCAL_ARM_NEON := true
   LOCAL_CFLAGS += -fopenmp

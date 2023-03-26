@@ -104,7 +104,7 @@ extern ADECLP(bw1001pfxI,UI,UI);  extern ADECLR(bw1001insI,UI,UI);  extern ADECL
                                   extern ADECLR(bw1110insI,UI,UI);  extern ADECLS(bw1110sfxI,UI,UI);
 extern ADECLP(bw1111pfxI,UI,UI);  extern ADECLR(bw1111insI,UI,UI);  extern ADECLS(bw1111sfxI,UI,UI);
 
-#if (C_AVX2&&SY_64) || EMU_AVX2
+#if C_AVX2 || EMU_AVX2
 #define BID void
 #define PVB void
 #define PVI void

@@ -648,7 +648,11 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
  m=FAV(self)->flag&255;
  if((m&6)!=6){   // normal comparison
   // verify rank is OK, based on operation
+#if !defined(__wasm__)
   if((AR(a)|AR(w))>1){R (m>=(4<<3))?(AF)jtfslashatg:0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special. postflags are 0
+#else
+  if((AR(a)|AR(w))>1){R (m>=(4<<3))?(AF)(((UI)jtfslashatg)<<2):0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special. postflags are 0
+#endif
   ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom - we know ranks<=1
   if(unlikely((-AN(a)&-AN(w))>=0))R0;  // if either arg empty, skip our loop
   // split m into search and comparison

@@ -1,4 +1,4 @@
-//   Copyright Naoki Shibata and contributors 2010 - 2020.
+//   Copyright Naoki Shibata and contributors 2010 - 2021.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
@@ -37,12 +37,16 @@
 #define M_2_PIl 0.636619772367581343075535053490057448L
 #endif
 
+#if !defined(SLEEF_GENHEADER)
+
 #ifndef SLEEF_FP_ILOGB0
-#define SLEEF_FP_ILOGB0 ((int)-2147483648)
+#define SLEEF_FP_ILOGB0 ((int)0x80000000)
 #endif
 
 #ifndef SLEEF_FP_ILOGBNAN
 #define SLEEF_FP_ILOGBNAN ((int)2147483647)
+#endif
+
 #endif
 
 #define SLEEF_SNAN (((union { long long int i; double d; }) { .i = INT64_C(0x7ff0000000000001) }).d)
@@ -51,6 +55,8 @@
 #define SLEEF_FLT_MIN 0x1p-126
 #define SLEEF_DBL_MIN 0x1p-1022
 #define SLEEF_INT_MAX 2147483647
+#define SLEEF_DBL_DENORM_MIN 4.9406564584124654e-324
+#define SLEEF_FLT_DENORM_MIN 1.40129846e-45F
 
 //
 
@@ -150,10 +156,6 @@
 #define stringify(s) stringify_(s)
 #define stringify_(s) #s
 
-#if !defined(SLEEF_GENHEADER)
-typedef long double longdouble;
-#endif
-
 #if !defined(Sleef_double2_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_double2_DEFINED
 typedef struct {
@@ -166,66 +168,6 @@ typedef struct {
 typedef struct {
   float x, y;
 } Sleef_float2;
-#endif
-
-#if !defined(Sleef_longdouble2_DEFINED) && !defined(SLEEF_GENHEADER)
-#define Sleef_longdouble2_DEFINED
-typedef struct {
-  long double x, y;
-} Sleef_longdouble2;
-#endif
-
-#if !defined(Sleef_quad_DEFINED) && !defined(SLEEF_GENHEADER)
-#define Sleef_quad_DEFINED
-#if defined(ENABLEFLOAT128)
-typedef __float128 Sleef_quad;
-#else
-typedef struct { uint64_t x, y; } Sleef_quad;
-#endif
-#endif
-
-#if !defined(Sleef_quad1_DEFINED) && !defined(SLEEF_GENHEADER)
-#define Sleef_quad1_DEFINED
-typedef union {
-  struct {
-    Sleef_quad x;
-  };
-  Sleef_quad s[1];
-} Sleef_quad1;
-#endif
-
-#if !defined(Sleef_quad2_DEFINED) && !defined(SLEEF_GENHEADER)
-#define Sleef_quad2_DEFINED
-typedef union {
-  struct {
-    Sleef_quad x, y;
-  };
-  Sleef_quad s[2];
-} Sleef_quad2;
-#endif
-
-#if !defined(Sleef_quad4_DEFINED) && !defined(SLEEF_GENHEADER)
-#define Sleef_quad4_DEFINED
-typedef union {
-  struct {
-    Sleef_quad x, y, z, w;
-  };
-  Sleef_quad s[4];
-} Sleef_quad4;
-#endif
-
-#if !defined(Sleef_quad8_DEFINED) && !defined(SLEEF_GENHEADER)
-#define Sleef_quad8_DEFINED
-typedef union {
-  Sleef_quad s[8];
-} Sleef_quad8;
-#endif
-
-#if defined(__ARM_FEATURE_SVE) && !defined(Sleef_quadx_DEFINED) && !defined(SLEEF_GENHEADER)
-#define Sleef_quadx_DEFINED
-typedef union {
-  Sleef_quad s[32];
-} Sleef_quadx;
 #endif
 
 //
@@ -251,13 +193,8 @@ typedef union {
 
 #else // #if defined(SLEEF_GENHEADER)
 
-// #ifndef __INTEL_COMPILER
-#if 0
-#define CONST const
-#else
-#define CONST
-#endif
-#define INLINE inline __attribute__((always_inline))
+#define CONST __attribute__((const))
+#define INLINE __attribute__((always_inline))
 
 #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
 #ifndef SLEEF_STATIC_LIBS
@@ -268,8 +205,7 @@ typedef union {
 #define NOEXPORT
 #endif // #ifndef SLEEF_STATIC_LIBS
 #else // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
-// #define EXPORT __attribute__((visibility("default")))
-#define EXPORT __attribute__ ((visibility ("hidden")))    // J private use
+#define EXPORT __attribute__((visibility("default")))
 #define NOEXPORT __attribute__ ((visibility ("hidden")))
 #endif // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
 
@@ -318,9 +254,8 @@ typedef union {
 #define LIKELY(condition) (condition)
 #define UNLIKELY(condition) (condition)
 
-#if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__)) && !defined(SLEEF_GENHEADER)
-// #include <x86intrin.h>
-#include <immintrin.h>
+#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__)) && !defined(SLEEF_GENHEADER)
+#include <x86intrin.h>
 #endif
 
 #define SLEEF_INFINITY (1e+300 * 1e+300)

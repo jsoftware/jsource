@@ -4,10 +4,10 @@ NB. 2!:x ----------------------------------------------------------------
 errnox =: 2!:8
 
 'file name error' -: 1!:1 etx <'qifwbsxjntzrmupkovalycehdg/b/c/d/e'
-2 -: >{.errnox ''
+('Wasm'-:UNAME) +. 2 -: >{.errnox ''
 
 1:@(1!:0) jpath '~temp'
-IFWASM +. 2 -: >{.errnox ''
+('Wasm'-:UNAME) +. 2 -: >{.errnox ''
 
 'length error' -: errnox etx 1 2 3
 'length error' -: errnox etx 1.2 3

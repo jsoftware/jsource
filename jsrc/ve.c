@@ -444,9 +444,11 @@ APFX(lcmZZ, Z,Z,Z, zlcm ,,HDR1JERR)
 // instead use the range of magnitudes <2^52, and produce denormals with the
 // same ratio, as this is a bit cheaper.
 
-#define GETD          {d=*wv++; if(!d){z=0; goto end;}}
-#define INTDIVF(c,d)  (((c^d)>=0)?c/d:c%d?c/d-1:c/d)  // c/d - (c^d)<0 && c%d
-#define INTDIVC(c,d)  (((c^d)<0)?c/d:c%d?c/d+1:c/d)   // c/d + (c^d)>=0 && c%d
+#define GETD          {d=*wv++; if(unlikely(!d)){z=0; goto end;}}
+// obsolete  (((c^d)>=0)?c/d:c%d?c/d-1:c/d)
+#define INTDIVF(c,d) (c/d-(SGNTO0(c^d)&(c%d!=0)))  // c/d - (c^d)<0 && c%d
+// obsolete  (((c^d)<0)?c/d:c%d?c/d+1:c/d)
+#define INTDIVC(c,d) (c/d+(~SGNTO0((c^d))&(c%d!=0)))   // c/d + (c^d)>=0 && c%d
 
 F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
  ARGCHK2(a,w);
@@ -455,15 +457,17 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  ASSERTAGREE(as,ws,r);
  if(an&&wn){PROD(m,r,s); PROD(n,b?ar-r:wr-r,r+s);}else m=n=0; 
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
- d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;
- if(!wr&&p&&!(p&p1)){
-  CTLZI(p-1,k); ++k; k=p==1?0:k;
-  switch((0<d?0:2)+(flr?0:1)){
-   case 0: DQ(n,          *zv++=*av++>>k;);                    break;
-   case 1: DQ(n, c=*av++; *zv++=0< c?1+((c-1)>>k):(c+p1)>>k;); break;
-   case 2: DQ(n, c=*av++; *zv++=c>IMIN?-c>>k:-(-c>>k););       break;
-   case 3: DQ(n, c=*av++; *zv++=0<=c?-(c>>k):1+(-(1+c)>>k););
- }}else{
+ d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;  // p is abs(divisor), p1 is p-1 unless d=IMIN; IMIN then
+ if(!wr&&p&&!(p&p1)){  // divisor is power of 2, perhaps negative
+// obsolete   CTLZI(p-1,k); ++k; k=p==1?0:k;
+  CTLZI(p,k);  // bit# of the sole 1 bit
+// obsolete   switch((0<d?0:2)+(flr?0:1)){
+  if(d>0)if(flr){DQ(n,*zv++=*av++>>k;)}else{DQ(n, c=*av++; *zv++=likely(!__builtin_add_overflow(c,p1,&c))?c>>k:(UI)c>>k;)}
+  else if(flr){DQ(n, c=*av++; *zv++=likely(c>IMIN)?-c>>k:-(IMIN>>k);)}else{DQ(n, c=-*av++; *zv++=likely(!__builtin_add_overflow(c,p1,&c))?c>>k:(UI)c>>k;)}
+// obsolete    case 1: DQ(n, c=*av++; *zv++=0< c?1+((c-1)>>k):(c+p1)>>k;); break;
+// obsolete    case 2: DQ(n, c=*av++; *zv++=c>IMIN?-c>>k:-(-c>>k););       break;
+// obsolete    case 3: DQ(n, c=*av++; *zv++=0<=c?-(c>>k):1+(-(1+c)>>k););  break;
+ }else{
 #if C_AVX512
 #define ISBADFLT(x) _mm512_cmpgt_epu64_mask(_mm512_add_epi64(x, _mm512_set1_epi64(1ull<<53)),_mm512_set1_epi64(1ull<<54))
 // using or here instead of max admits false positives in case one argument is 2^53.  Too bad.
@@ -563,7 +567,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
   else if(b){if(flr)DQ(m,          GETD; DQ(n, c=*av++; *zv++=INTDIVF(c,d););)
              else   DQ(m,          GETD; DQ(n, c=*av++; *zv++=INTDIVC(c,d););)}
   else      {if(flr)DQ(m, c=*av++;       DQ(n, GETD;    *zv++=INTDIVF(c,d););)
-                    DQ(m, c=*av++;       DQ(n, GETD;    *zv++=INTDIVC(c,d););)}
+             else   DQ(m, c=*av++;       DQ(n, GETD;    *zv++=INTDIVC(c,d););)}
 #endif
  }
 end:

@@ -171,6 +171,29 @@
 #endif
 #endif
 
+#if SLEEF && !defined(_CMP_EQ)
+#define _CMP_EQ          0
+#define _CMP_LT          1
+#define _CMP_LE          2
+#define _CMP_UNORD       3
+#define _CMP_NEQ         4
+#define _CMP_NLT         5
+#define _CMP_NLE         6
+#define _CMP_ORD         7
+#undef _CMP_EQ_OQ
+#undef _CMP_GE_OQ
+#undef _CMP_GT_OQ
+#undef _CMP_LE_OQ
+#undef _CMP_LT_OQ
+#undef _CMP_NEQ_OQ
+#define _CMP_EQ_OQ _CMP_EQ
+#define _CMP_GE_OQ _CMP_NLT
+#define _CMP_GT_OQ _CMP_NLE
+#define _CMP_LE_OQ _CMP_LE
+#define _CMP_LT_OQ _CMP_LT
+#define _CMP_NEQ_OQ _CMP_NEQ
+#endif
+
 #if defined(__arm__)
 #if defined(__ARM_NEON)
 #include <arm_neon.h>

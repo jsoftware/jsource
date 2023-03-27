@@ -187,6 +187,7 @@ codec_choose_x86 (struct codec *codec)
 	unsigned int max_level;
 
  #if defined(_MSC_VER)
+ extern void __cpuidex( int cpuInfo[4], int function_id, int subfunction_id);
 	int info[4];
 	__cpuidex(info, 0, 0);
 	max_level = info[0];

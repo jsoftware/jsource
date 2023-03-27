@@ -21,13 +21,13 @@
 #endif
 
 // MSVC++ needs intrin.h for _byteswap_uint64 (issue #68):
-#if BASE64_LITTLE_ENDIAN && defined(_MSC_VER)
+#if BASE64_LITTLE_ENDIAN && defined(_MSC_VER) && !defined(__clang__)
 #  include <intrin.h>
 #endif
 
 // Endian conversion functions:
 #if BASE64_LITTLE_ENDIAN
-#  ifdef _MSC_VER
+#  if defined( _MSC_VER) && !defined(__clang__)
 //   Microsoft Visual C++:
 #    define BASE64_HTOBE32(x)	_byteswap_ulong(x)
 #    define BASE64_HTOBE64(x)	_byteswap_uint64(x)

@@ -316,7 +316,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
-  FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 " #ditto
  ;;
 
  linux/j64avx2*) # linux intel 64bit avx2
@@ -329,7 +329,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "
-  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 "
  ;;
 
  linux/j64*) # linux intel 64bit nonavx
@@ -400,7 +400,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
-  FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 " #ditto
  ;;
 
  openbsd/j64avx2*) # openbsd intel 64bit avx2
@@ -413,7 +413,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "
-  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 "
  ;;
 
  openbsd/j64*) # openbsd intel 64bit nonavx
@@ -463,7 +463,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
-  FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 " #ditto
  ;;
 
  freebsd/j64avx2*) # freebsd intel 64bit avx2
@@ -476,7 +476,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "
-  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 "
  ;;
 
  freebsd/j64*) # freebsd intel 64bit nonavx
@@ -511,7 +511,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
   FLAGS_SLEEF=" -DENABLE_AVX2 "
-  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 " #ditto
  ;;
 
  darwin/j64avx2*) # darwin intel 64bit
@@ -524,7 +524,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
   FLAGS_SLEEF=" -DENABLE_AVX2 "
-  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 "
  ;;
 
  darwin/j64arm*) # darwin arm
@@ -600,7 +600,7 @@ case $jplatform64 in
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "
-  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 " #ditto
  ;;
 
  windows/j64avx2*) # windows intel 64bit avx2
@@ -626,7 +626,7 @@ case $jplatform64 in
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "
-  FLAGS_BASE64=" -DHAVE_AVX2=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 "
  ;;
 
  windows/j64*) # windows intel 64bit nonavx

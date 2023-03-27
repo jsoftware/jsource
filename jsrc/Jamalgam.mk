@@ -63,6 +63,7 @@ LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c \
   openssl/sha/md5_one.c openssl/sha/openssl-util.c openssl/sha/sha1_one.c openssl/sha/sha256.c \
   openssl/sha/sha3.c openssl/sha/sha512.c \
   ../base64/lib/arch/avx2/codec-avx2.c \
+  ../base64/lib/arch/avx512/codec-avx512.c \
   ../base64/lib/arch/generic/codec-generic.c \
   ../base64/lib/arch/neon32/codec-neon32.c \
   ../base64/lib/arch/neon64/codec-neon64.c \

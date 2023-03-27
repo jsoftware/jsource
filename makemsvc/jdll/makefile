@@ -235,6 +235,7 @@ OBJS=  \
  ../../jsrc/openssl/sha/sha3.o \
  ../../jsrc/openssl/sha/sha512.o \
  ../../base64/lib/arch/avx2/codec-avx2.o \
+ ../../base64/lib/arch/avx512/codec-avx512.o \
  ../../base64/lib/arch/generic/codec-generic.o \
  ../../base64/lib/arch/neon32/codec-neon32.o \
  ../../base64/lib/arch/neon64/codec-neon64.o \

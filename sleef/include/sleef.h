@@ -6584,7 +6584,7 @@ SLEEF_IMPORT SLEEF_CONST void *Sleef_getPtrf1(int);
 #define IGNORENAN NAN0;  // some of these functions produce NaN along the way
 #elif EMU_AVX2 && defined(__aarch64__)
 #define __EMU_M256_SLEEF_IMPL_M1( type, func , ud ) \
-static inline type Sleef_##func##d4( type m256_param1 ) \
+static INLINE type Sleef_##func##d4( type m256_param1 ) \
 {   type res; \
     res.vect_i128.val[0] = Sleef_##func##d2##ud##advsimd( m256_param1.vect_i128.val[0] ); \
     res.vect_i128.val[1] = Sleef_##func##d2##ud##advsimd( m256_param1.vect_i128.val[1] ); \
@@ -6617,7 +6617,7 @@ __EMU_M256_SLEEF_IMPL_M1( __m256d, atan, _u35 );
 #define IGNORENAN NAN0;  // some of these functions produce NaN along the way
 #elif EMU_AVX2 && defined(__SSE2__)
 #define __EMU_M256_SLEEF_IMPL_M1( type, func , ud ) \
-static __emu_inline __emu##type Sleef_##func##d4( __emu##type m256_param1 ) \
+static INLINE __emu##type Sleef_##func##d4( __emu##type m256_param1 ) \
 {   __emu##type res; \
     res.__emu_m128[0] = Sleef_##func##d2##ud##sse2( m256_param1.__emu_m128[0] ); \
     res.__emu_m128[1] = Sleef_##func##d2##ud##sse2( m256_param1.__emu_m128[1] ); \

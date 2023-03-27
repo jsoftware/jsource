@@ -194,7 +194,7 @@ typedef struct {
 #else // #if defined(SLEEF_GENHEADER)
 
 #define CONST __attribute__((const))
-#define INLINE __attribute__((always_inline))
+#define INLINE inline __attribute__((__always_inline__))
 
 #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
 #ifndef SLEEF_STATIC_LIBS

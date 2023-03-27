@@ -43,7 +43,7 @@
 //@#define ACCURATE_SQRT
 
 #if !defined(SLEEF_GENHEADER)
-#if defined(MMSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #else
 #include <x86intrin.h>

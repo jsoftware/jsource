@@ -37,7 +37,7 @@
 //@#define ACCURATE_SQRT
 
 #if !defined(SLEEF_GENHEADER)
-#if defined(MMSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #else
 #include <x86intrin.h>
@@ -256,7 +256,7 @@ static INLINE void vstoreu_v_p_vd(double *ptr, vdouble v) { _mm_storeu_pd(ptr, v
 
 static INLINE vdouble vgather_vd_p_vi(const double *ptr, vint vi) { return _mm_i32gather_pd(ptr, vi, 8); }
 
-#if defined(MMSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE double vcast_d_vd(vdouble v) {
   double a[VECTLENDP];
@@ -360,7 +360,7 @@ static INLINE void vstoreu_v_p_vf(float *ptr, vfloat v) { _mm_storeu_ps(ptr, v);
 
 static INLINE vfloat vgather_vf_p_vi2(const float *ptr, vint2 vi2) { return _mm_i32gather_ps(ptr, vi2, 4); }
 
-#ifdef MMSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE float vcast_f_vf(vfloat v) {
   float a[VECTLENSP];

@@ -40,7 +40,7 @@
 //@#define ACCURATE_SQRT
 
 #if !defined(SLEEF_GENHEADER)
-#if defined(MMSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #else
 #include <x86intrin.h>
@@ -319,7 +319,7 @@ static INLINE vfloat vgetmant_vf_vf(vfloat d) { return _mm512_getmant_ps(d, _MM_
 //@#define vfixup_vd_vd_vd_vi2_i(a, b, c, imm) _mm512_fixupimm_pd((a), (b), (c), (imm))
 //@#define vfixup_vf_vf_vf_vi2_i(a, b, c, imm) _mm512_fixupimm_ps((a), (b), (c), (imm))
 
-#if defined(MMSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE double vcast_d_vd(vdouble v) {
   double s[VECTLENDP];
@@ -467,7 +467,7 @@ static INLINE vopmask visnan_vo_vf(vfloat d) { return vneq_vo_vf_vf(d, d); }
 static INLINE vint2 vilogbk_vi2_vf(vfloat d) { return vrint_vi2_vf(_mm512_getexp_ps(d)); }
 static INLINE vint2 vilogb2k_vi2_vf(vfloat d) { return vrint_vi2_vf(_mm512_getexp_ps(d)); }
 
-#ifdef MMSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE float vcast_f_vf(vfloat v) {
   float s[VECTLENSP];

@@ -303,7 +303,7 @@ static INLINE vopmask visnan_vo_vd(vdouble d)  { vopmask ret; for(int i=0;i<VECT
 
 static INLINE vdouble vsqrt_vd_vd(vdouble d) { vdouble ret; for(int i=0;i<VECTLENDP;i++) ret.d[i] = sqrt(d.d[i]); return ret; }
 
-#if defined(MMSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE double vcast_d_vd(vdouble v) { return v.d[0]; }
 #endif
@@ -419,7 +419,7 @@ static INLINE vint2   vgt_vi2_vi2_vi2(vint2 x, vint2 y) { vopmask ret; for(int i
 
 static INLINE vfloat vsqrt_vf_vf(vfloat x) { vfloat ret; for(int i=0;i<VECTLENSP;i++) ret.f[i] = sqrtf(x.f[i]); return ret; }
 
-#ifdef MMSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE float vcast_f_vf(vfloat v) { return v.f[0]; }
 #endif

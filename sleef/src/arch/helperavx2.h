@@ -37,7 +37,7 @@
 //@#define ACCURATE_SQRT
 
 #if !defined(SLEEF_GENHEADER)
-#if defined(MMSC_VER)
+#if defined(_MSC_VER)
 #include <intrin.h>
 #else
 #include <x86intrin.h>
@@ -267,7 +267,7 @@ static INLINE vopmask visnan_vo_vd(vdouble d) {
   return vreinterpret_vm_vd(_mm256_cmp_pd(d, d, _CMP_NEQ_UQ));
 }
 
-#if defined(MMSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE double vcast_d_vd(vdouble v) {
   double s[4];
@@ -373,7 +373,7 @@ static INLINE vopmask vispinf_vo_vf(vfloat d) { return veq_vo_vf_vf(d, vcast_vf_
 static INLINE vopmask visminf_vo_vf(vfloat d) { return veq_vo_vf_vf(d, vcast_vf_f(-SLEEF_INFINITYf)); }
 static INLINE vopmask visnan_vo_vf(vfloat d) { return vneq_vo_vf_vf(d, d); }
 
-#ifdef MMSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 // This function is needed when debugging on MSVC.
 static INLINE float vcast_f_vf(vfloat v) {
   float s[8];

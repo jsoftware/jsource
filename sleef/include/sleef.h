@@ -19,7 +19,7 @@
 #if defined (__GNUC__) || defined (__clang__) || defined(__INTEL_COMPILER)
 #define SLEEF_CONST __attribute__((const))
 #define SLEEF_INLINE __attribute__((always_inline))
-#elif defined(MMSC_VER)
+#elif defined(_MSC_VER)
 #define SLEEF_CONST
 #define SLEEF_INLINE __forceinline
 #endif
@@ -33,30 +33,30 @@
 #endif
 #endif
 
-#if defined(MMSC_VER) && !defined(__STDC__)
+#if defined(_MSC_VER) && !defined(__STDC__)
 #define __STDC__ 1
 #endif
 
-#if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(MMSC_VER)) && !defined(SLEEF_STATIC_LIBS)
+#if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(_MSC_VER)) && !defined(SLEEF_STATIC_LIBS)
 #ifdef SLEEF_IMPORT_IS_EXPORT
 #define SLEEF_IMPORT __declspec(dllexport)
 #else // #ifdef SLEEF_IMPORT_IS_EXPORT
 #define SLEEF_IMPORT __declspec(dllimport)
-#if (defined(MMSC_VER))
+#if (defined(_MSC_VER))
 #pragma comment(lib,"sleef.lib")
-#endif // #if (defined(MMSC_VER))
+#endif // #if (defined(_MSC_VER))
 #endif // #ifdef SLEEF_IMPORT_IS_EXPORT
-#else // #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(MMSC_VER)) && !defined(SLEEF_STATIC_LIBS)
+#else // #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(_MSC_VER)) && !defined(SLEEF_STATIC_LIBS)
 #define SLEEF_IMPORT
-#endif // #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(MMSC_VER)) && !defined(SLEEF_STATIC_LIBS)
+#endif // #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(_MSC_VER)) && !defined(SLEEF_STATIC_LIBS)
 
 #if !defined(__EMU_M256_AVXIMMINTRIN_EMU_H__)
-#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__))
+#if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
 // #include <x86intrin.h>
 #include <immintrin.h>
 #endif
 
-#if (defined(MMSC_VER))
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #endif
 #endif
@@ -94,7 +94,7 @@ typedef __vector unsigned long long SLEEF_VECTOR_ULONGLONG;
 
 //
 
-#if defined(SLEEF_ENABLE_OMP_SIMD) && (defined(__GNUC__) || defined(__CLANG__)) && !defined(__INTEL_COMPILER)
+#if defined(SLEEF_ENABLE_OMP_SIMD) && (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
 #if defined(__aarch64__)
 //#define SLEEF_PRAGMA_OMP_SIMD_DP _Pragma ("omp declare simd simdlen(2) notinbranch")
 //#define SLEEF_PRAGMA_OMP_SIMD_SP _Pragma ("omp declare simd simdlen(4) notinbranch")
@@ -131,7 +131,7 @@ SLEEF_IMPORT void *Sleef_malloc(size_t z);
 SLEEF_IMPORT void Sleef_free(void *ptr);
 SLEEF_IMPORT uint64_t Sleef_currentTimeMicros();
 
-#if defined(__i386__) || defined(__x86_64__) || defined(MMSC_VER)
+#if defined(__i386__) || defined(__x86_64__) || defined(_MSC_VER)
 SLEEF_IMPORT void Sleef_x86CpuID(int32_t out[4], uint32_t eax, uint32_t ecx);
 #endif
 

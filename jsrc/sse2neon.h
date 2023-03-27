@@ -103,6 +103,7 @@
 #define __USE_XOPEN2K  // for posix_memalign
 #endif
 #include <stdlib.h>
+#include <errno.h>
 
 /* Architecture-specific build options */
 /* FIXME: #pragma GCC push_options is only available on GCC */
@@ -1967,8 +1968,10 @@ FORCE_INLINE void *_mm_malloc(size_t size, size_t align)
         return malloc(size);
     if (align == 2 || (sizeof(void *) == 8 && align == 4))
         align = sizeof(void *);
-    if (!posix_memalign(&ptr, align, size))
-        return ptr;
+    int err;
+/* posix_memalign does NOT set errno on failure; the error is returned */
+    if (!(err=posix_memalign(&ptr, align, size)))
+        return ptr; else errno = err;
     return NULL;
 }
 

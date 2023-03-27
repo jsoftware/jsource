@@ -306,7 +306,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX512F "  #ditto
+  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
   FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
  ;;
 
@@ -390,7 +390,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX512F "  #ditto
+  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
   FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
  ;;
 
@@ -453,7 +453,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX512F "  #ditto
+  FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
   FLAGS_BASE64=" -DHAVE_AVX2=1 " #ditto
  ;;
 
@@ -501,7 +501,7 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_AVX512F "
+  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -590,7 +590,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_WIN}"
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX512F "
+  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 

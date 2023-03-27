@@ -10,7 +10,7 @@
 
 #include "misc.h"
 
-#if defined(__MINGW32__) || defined(__MINGW64__) || defined(MMSC_VER)
+#if defined(_WIN32)
 #include <sys/timeb.h>
 
 EXPORT void *Sleef_malloc(size_t z) { return _aligned_malloc(z, 256); }
@@ -23,8 +23,9 @@ EXPORT uint64_t Sleef_currentTimeMicros() {
 }
 #elif defined(__APPLE__)
 #include <sys/time.h>
+#include <errno.h>
 
-EXPORT void *Sleef_malloc(size_t z) { void *ptr = NULL; posix_memalign(&ptr, 256, z); return ptr; }
+EXPORT void *Sleef_malloc(size_t z) { int err; void *ptr = NULL; if(!(err=posix_memalign(&ptr, 256, z))) return ptr; else {errno = err; return NULL; }}
 EXPORT void Sleef_free(void *ptr) { free(ptr); }
 
 EXPORT uint64_t Sleef_currentTimeMicros() {
@@ -32,16 +33,17 @@ EXPORT uint64_t Sleef_currentTimeMicros() {
   gettimeofday(&time, NULL);
   return (uint64_t)((time.tv_sec * INT64_C(1000000)) + time.tv_usec);
 }
-#else // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(MMSC_VER)
+#else // #if defined(_WIN32)
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <stdlib.h>
 #else
 #include <malloc.h>
 #endif
 
-EXPORT void *Sleef_malloc(size_t z) { void *ptr = NULL; posix_memalign(&ptr, 4096, z); return ptr; }
+EXPORT void *Sleef_malloc(size_t z) { int err; void *ptr = NULL; if(!(err=posix_memalign(&ptr, 4096, z))) return ptr; else {errno = err; return NULL; }}
 EXPORT void Sleef_free(void *ptr) { free(ptr); }
 
 EXPORT uint64_t Sleef_currentTimeMicros() {
@@ -49,7 +51,7 @@ EXPORT uint64_t Sleef_currentTimeMicros() {
   clock_gettime(CLOCK_MONOTONIC, &tp);
   return (uint64_t)tp.tv_sec * INT64_C(1000000) + ((uint64_t)tp.tv_nsec/1000);
 }
-#endif // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(MMSC_VER)
+#endif // #if defined(_WIN32)
 
 #ifdef MMSC_VER
 #include <intrin.h>

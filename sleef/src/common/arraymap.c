@@ -13,7 +13,7 @@
 
 //
 
-#if !(defined(__MINGW32__) || defined(__MINGW64__) || defined(MMSC_VER))
+#if !defined(_WIN32)
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -231,7 +231,7 @@ ArrayMap *ArrayMap_load(const char *fn, const char *prefix, const char *idstr, i
   char *line = malloc(sizeof(char) * (LINELEN+10));
   line[idstrlen] = '\0';
   
-  if (fread(line, sizeof(char), idstrlen, fp) != idstrlen ||
+  if (fread(line, sizeof(char), idstrlen, fp) != (unsigned int)idstrlen ||
       strcmp(idstr, line) != 0) {
     if (doLock) FUNLOCK(fp);
     fclose(fp);
@@ -304,7 +304,7 @@ int ArrayMap_save(ArrayMap *thiz, const char *fn, const char *prefix, const char
   char *line = malloc(sizeof(char) * (LINELEN+10));
   line[idstrlen] = '\0';
 
-  if (fread(line, sizeof(char), idstrlen, fp) == idstrlen && strcmp(idstr, line) == 0) {
+  if (fread(line, sizeof(char), idstrlen, fp) == (unsigned int)idstrlen && strcmp(idstr, line) == 0) {
     for(;;) {
       line[LINELEN] = '\0';
       if (fgets(line, LINELEN, fp) == NULL) break;

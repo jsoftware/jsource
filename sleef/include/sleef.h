@@ -6569,7 +6569,7 @@ SLEEF_IMPORT SLEEF_CONST void *Sleef_getPtrf1(int);
 #define Sleef_acosd4 Sleef_acosd4_u35avx2
 #define Sleef_atand4 Sleef_atand4_u35avx2
 #define IGNORENAN
-#elif C_AVX
+#elif 0 // C_AVX  obsolete
 #define Sleef_expd4 Sleef_expd4_u10avx
 #define Sleef_logd4 Sleef_logd4_u10avx
 #define Sleef_log2d4 Sleef_log2d4_u35avx

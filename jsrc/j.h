@@ -70,35 +70,22 @@
 #define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
 #endif
 
-
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
 #ifndef C_AVX512
 #define C_AVX512 0
 #endif
-
-#if !C_AVX2
-#if C_AVX512
-#ifdef C_AVX2
-#undef C_AVX2
-#endif
-#define C_AVX2 1
-#endif
 #ifndef C_AVX2
 #define C_AVX2 0
 #endif
-#endif
-
-#if !C_AVX2
 #if C_AVX512
-#ifdef C_AVX2
 #undef C_AVX2
-#endif
 #define C_AVX2 1
 #endif
-#ifndef C_AVX2
+#else
+#undef C_AVX512
+#define C_AVX512 0
+#undef C_AVX2
 #define C_AVX2 0
-#endif
-#endif
 #endif
 
 #ifdef _WIN32
@@ -116,6 +103,7 @@
 #endif
 
 #if !defined(EMU_AVX2) && ((defined(__SSE2__) && defined(__x86_64__)) || defined(__aarch64__) || defined(_M_ARM64))
+#undef EMU_AVX2
 #define EMU_AVX2 1
 #endif
 
@@ -154,10 +142,6 @@
 #define _CMP_LT_OQ _CMP_LT
 #define _CMP_NEQ_OQ _CMP_NEQ
 #endif //__SSE2__
-
-#ifndef C_AVX2
-#define C_AVX2 0
-#endif
 
 #if defined(__aarch64__)||defined(_M_ARM64)
 #if EMU_AVX2
@@ -2450,7 +2434,9 @@ static INLINE void* aligned_malloc(size_t size, size_t align) {
 #ifdef _WIN32
  result = _aligned_malloc(size, align);
 #elif ( !defined(ANDROID) || defined(__LP64__) )
- if(posix_memalign(&result, align, size)) result = 0;
+/* posix_memalign does NOT set errno on failure; the error is returned */
+ int err; 
+ if((err=posix_memalign(&result, align, size))){ errno = err; result = 0;}
 #else
  void *mem = malloc(size+(align-1)+sizeof(void*));
  if(mem){

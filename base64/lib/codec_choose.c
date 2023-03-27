@@ -17,7 +17,7 @@
 #endif
 
 #ifdef BASE64_X86
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 	#include <intrin.h>
 	#define __cpuid_count(__level, __count, __eax, __ebx, __ecx, __edx) \
 	{						\
@@ -33,7 +33,9 @@
 #else
 	#include <cpuid.h>
 	#if HAVE_AVX512 || HAVE_AVX2 || HAVE_AVX
-		#if ((__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 2) || (__clang_major__ >= 3))
+		#if defined(_MSC_VER)
+			extern unsigned __int64 _xgetbv(unsigned int);
+		#elif ((__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 2) || (__clang_major__ >= 3))
 			static inline uint64_t _xgetbv (uint32_t index)
 			{
 				uint32_t eax, edx;

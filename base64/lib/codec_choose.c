@@ -48,6 +48,10 @@
 				__asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
 				return ((uint64_t)edx << 32) | eax;
 			}
+		#else
+		#if defined(_MSC_VER)
+			extern unsigned __int64 __cdecl _xgetbv(unsigned int);
+		#endif
 		#endif
 		#else
 			#error "Platform not supported"

@@ -3,6 +3,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "../include/libbase64.h"
 #include "codecs.h"

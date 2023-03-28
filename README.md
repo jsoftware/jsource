@@ -7,7 +7,7 @@ J is easy to install, has a small footprint, and has direct access to tutorials 
 
 The latest release is J9.4 with several new language features and performance improvements, available from March 2023. See [J9.4 Release Notes](https://code.jsoftware.com/wiki/System/ReleaseNotes/J9.4).
 
-<!-- A [J904 beta](https://code.jsoftware.com/wiki/System/ReleaseNotes/J904) is available from April 2022. -->
+<!-- A [J904 beta](https://code.jsoftware.com/wiki/System/ReleaseNotes/J904) is available from  April 2022. -->
 
 Documentation can be found in the [J wiki](https://code.jsoftware.com/wiki).
 

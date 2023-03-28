@@ -656,12 +656,13 @@ case $jplatform64 in
 
  wasm/j32) # webassembly
   TARGET=jamalgam.js
-  CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=65536 -D CSTACKRESERVE=10000 -D TESTS "
+# 948KB stack on v8
+  CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=1007616 -D CSTACKRESERVE=100000 -D TESTS "
 # these flags do not work on iOS
 # -msse2 -msimd128
 # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
   LDFLAGS=" ../../../../mpir/linux/wasm32/libgmp.a \
- -s WASM=1 -s ASSERTIONS=1 -s INITIAL_MEMORY=220MB -s TOTAL_MEMORY=600MB -s ALLOW_MEMORY_GROWTH=1 \
+ -s WASM=1 -s ASSERTIONS=1 -s INITIAL_MEMORY=220MB -s TOTAL_MEMORY=600MB -s ALLOW_MEMORY_GROWTH=1 -s STACK_SIZE=984KB \
  -s BINARYEN_EXTRA_PASSES="--pass-arg=max-func-params@80" -s EMULATE_FUNCTION_POINTER_CASTS=1 -s NO_EXIT_RUNTIME=1 \
  -s EXPORTED_FUNCTIONS='[\"_main\"]' \
  -s EXPORTED_RUNTIME_METHODS='[\"cwrap\",\"ccall\", \"UTF8ToString\", \"lengthBytesUTF8\", \"stringToUTF8\"]' \

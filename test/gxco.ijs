@@ -48,8 +48,8 @@ NB. 'domain error' -: x: etx _.
 ((,%)    ! 10*i.10) -: x:^:_1   (,%)    ! 10*i.10x
 (12345 % ! 10*i.10) -: x:^:_1 ] 12345 % ! 10*i.10x
 
-(+/&.(x:!.0)"1 -:!.0 ([:_1&x: [:+/"1 x:!.0)) 20 20?@$0
-(+/&.(x:!.0)   -:!.0 ([:_1&x: [:+/   x:!.0)) 1000?@$0     NB.todo bump this to a more reasonable value--in particular, one that can properly stress the large superaccumulator--once extended-precision operations are fast
+(+/&.(x:!.0)"1 -:!.0 ([:_1&x: [:+/"1 x:!.0)) (QKTEST{::20 20;10 10)?@$0
+(+/&.(x:!.0)   -:!.0 ([:_1&x: [:+/   x:!.0)) (QKTEST{1000 100)?@$0     NB.todo bump this to a more reasonable value--in particular, one that can properly stress the large superaccumulator--once extended-precision operations are fast
 
 
 (= x:) ,1 _1 */ 1e43 1e_43
@@ -81,7 +81,7 @@ f=: 4 : 0
  1
 )
 
-(10000 4 {~ 9!:57 (0) [ 9!:57 (1)) f"0 ]2*10^2 3 9
+(((QKTEST{10000 100),4) {~ 9!:57 (0) [ 9!:57 (1)) f"0 ]2*10^(QKTEST{::2 3 9;2 3 3)
 
 f1=: 4 : 0
  p=: (_1^x ?@$ 2) * x ?@$ y
@@ -94,7 +94,8 @@ f1=: 4 : 0
 
 5 = 0.0+*:_1+2*(+%)/1e3#1x
 
-e =: 1 + 1000 ?@$ 10 ^ 100x [ d =: 1 + 1000 ?@$ 10 ^ 100x  NB. test conversion to float
+NB. e =: 1 + 1000 ?@$ 10 ^ (QKTEST{100x 10x) [ d =: 1 + 1000 ?@$ 10 ^ (QKTEST{100x 10x) NB. test conversion to float
+e =: 1 + (QKTEST{1000 10) ?@$ 10 ^ (QKTEST{100x 10x) [ d =: 1 + (QKTEST{1000 10) ?@$ 10 ^ (QKTEST{100x 10x) NB. test conversion to float
 3.2e_16 > >./ x:^:_1 | 1x - (%   [: x:!.0 x:^:_1) e%d
 
 NB. f1"0 ]10^2 3 9

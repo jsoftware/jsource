@@ -185,7 +185,7 @@ f=: 4 : 0
 (t -: , x <@;"1 0 y) , (5 5$"1 x) -: x f"1 0 y [ t=: '' [ mm=: ?*/$x
 (t -: , x <@;"1   y) , x          -: x f"1   y [ t=: '' [ mm=: ?  #x
 
-testlen =: 10000  NB. following is slow during memaudit
+testlen =: QKTEST{10000 100 NB. following is slow during memaudit
 NB. Verify all kinds of changes of shape and precision.  This is testing assembly, which is common to monad & dyad
 ops =: (0$0);(0$'a');(0$4);(0$1.5);(0$1j1);(0$a:);(0$5x);(0$4r6);(0$u:'a');(0$10 u:'a')
 ops =: ops , (0 1$0);(1 0$'a');(0 2$4);(2 0$1.5);(0 1 3$a:);(3 2 0$5x);(1 0 4$4r6);(4 0 5$u:'a');(0 5 0$10 u:'a')

@@ -647,7 +647,8 @@ case $jplatform64 in
 
  wasm/j32) # webassembly
   TARGET=libj.a
-  CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=65536 -D CSTACKRESERVE=10000 "
+# 948KB stack on v8
+  CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=1007616 -D CSTACKRESERVE=100000 "
 # these flags do not work on iOS
 # -msse2 -msimd128
 # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1

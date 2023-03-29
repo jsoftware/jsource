@@ -20,9 +20,9 @@ if. '' -: $ 0 {::y do.
     end.
   else.  NB. random values, compare results.  column must be in A
     if. 0~:nthr do.   NB. multiple threads: expand M with 0s to make size threadable, scramble rows in the data
-      expsiz =. 1200 + ?. 50  NB. size we grow y to
+      expsiz =. 1200 + ? 50  NB. size we grow M to
       y =. (< (0{:: y) + expsiz - {:$4{::y) 0} y  NB. adjust ndx to match column# in A we are calculating
-      y =. (< ({"2~ ?~@{:@$) (2 , 2 # expsiz) {. 4 {:: y) 4} y
+      y =. (< ({"2~ ?~@{:@$) (2 , 2 # expsiz) {. 4 {:: y) 4} y  NB. expand M and scramble rows
       savy =: y
     end.
     savref   =: ref =. |: (,~ 3{::y) +/@:*"1!.1 ,.~/ (2{::y){"1 (4){::y 
@@ -132,20 +132,21 @@ delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. start with no threads
 for_t. i. 4 do.
   M =. (,:   ] * 1e_20 * i.@#) 0. + =/~ i. 6
-  assert. (_6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0
-  assert. (_6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0
-  assert. (_6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0
-  assert. (_6 ]\ 0 0 1 2 0 3  0 0 2e_20 6e_20 0 15e_20) ('' run128_9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M;0.0
+  Yt=. 2000 $ 00
+  assert. (_6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;Yt
+  assert. (_6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;Yt
+  assert. (_6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0;Yt
+  assert. (_6 ]\ 0 0 1 2 0 3  0 0 2e_20 6e_20 0 15e_20) ('' run128_9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M;0.0;Yt
   NB. clamping to threshold
   M =. 1 1e_20 (<1;3;2 3)} 2 {. ,: |: _4 ]\ _1. 0 1 2  _1e_5 _2e_9 0 1e_9   0 0 0 0 0 0 0 1e_10   NB. input by columns
-  assert. (2 {. ,: _1. 0 1 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.5
-  assert. (2 {. ,: 0. 0 0 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1.5
-  assert. (2 {. ,: 0. 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2.5
-  assert. (2 {. ,: _1e_5 _2e_9 0 1e_9) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_10
-  assert. (2 {. ,: _1e_5 _2e_9 0 1e_9) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;9e_11
-  assert. (2 {. ,: _1e_5 0 0 0) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8
-  assert. (2 {. ,: 0 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8  NB. low part ignored because high part 0
-  assert. (2 {. ,: 0 0 0 0) ('' run128_9) 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8  NB. low part cleared when high part is
+  assert. (2 {. ,: _1. 0 1 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.5;Yt
+  assert. (2 {. ,: 0. 0 0 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1.5;Yt
+  assert. (2 {. ,: 0. 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2.5;Yt
+  assert. (2 {. ,: _1e_5 _2e_9 0 1e_9) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_10;Yt
+  assert. (2 {. ,: _1e_5 _2e_9 0 1e_9) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;9e_11;Yt
+  assert. (2 {. ,: _1e_5 0 0 0) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8;Yt
+  assert. (2 {. ,: 0 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8;Yt  NB. low part ignored because high part 0
+  assert. (2 {. ,: 0 0 0 0) ('' run128_9) 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8;Yt  NB. low part cleared when high part is
   NB. Test every different length.  Different size of M are not so important
   for_l. >: i. (*1 T. ''){51 5 do.
     M =. (*  0.25 < 0 ?@$~ $)  _0.5 + (2 # l+?20)?@$ 0  NB. random values of random sizes, with 25% 0s
@@ -156,7 +157,7 @@ for_t. i. 4 do.
       v =. l ?@$ 0  NB. vector values
       pad =. ? 20  NB. number of dummy columns to install
       ref =. |: (,~ v) +/@:*"1!.1 ,.~/ ix{"1 M  NB. M values, small first, weighted by v
-      assert. '' ('' run128_9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M;0.0
+      assert. '' ('' run128_9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M;0.0;Yt
  NB. obsolete      if. -. 1e_25 > >./ re=. | +/ ref epsub act do. 13!:8]4 [ 'pad__ r__ c__ re__ ix__ v__ ref__ act__ M__' =: pad;r;c;re;ix;v;ref;act;M end.
     end.
   end.
@@ -318,28 +319,28 @@ for_t. i. 4 do.
   assert. 3 0 0 4 16 0 (((0 4,"1 0 i. 4) run128_9)) 0 1 4 3;(,."1 (_2) ]\ 00 1);(1$00);(1$1.0);M;(1e_21 (0}) cons);bkg;bk;Frow;sched  NB. multithreaded, col4 is a pivot
   assert. 0 4 0 4 16 _1 (((0 4,"1 0 i. 4) run128_9)) 0 1 4 3;(,."1 (_2) ]\ 00 1);(1$00);(1$1.0);M;(1e_19 (0}) cons);bkg;bk;Frow;sched
   
-  NB. nonimproving pivots
-  bk =. dptoqp 4 $ 0.
-  M =. dptoqp |: _4 ]\ 0. 1 0 0        0 1e_10 3 0   1 1e_7 0 0   1e5 1e_5 0 0   NB. input by columns
-  assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2
-  assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
-  assert. 0 0 2 0 1 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
-  assert. 3 0 0 0 0 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;3 0 1
-  assert. 0 0 0 0 1 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-  assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-  assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;1 0 2
-  assert. 3 0 0 0 0 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;2 3
-  M =. M 1}~ |: _4 ]\ 0. _1 0 0  0 0 0 0        0 0 0 0     0 _1e_5 1e_5 0 
-  assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-  assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2
-  assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-  assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
-  assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
-  M =. 1e_20 (<0 3 3)} M 
-  assert. 0 0 0 0 1 0 ((0 0 0,:0 0 1) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
-  assert. 0 0 2 0 1 0 ((0 1 1,0 0 1,:0 0 2) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2  NB. qp triggered; but not necessarily in all rows
-  assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
-
+NB. obsolete   NB. nonimproving pivots
+NB. obsolete   bk =. dptoqp 4 $ 0.
+NB. obsolete   M =. dptoqp |: _4 ]\ 0. 1 0 0        0 1e_10 3 0   1 1e_7 0 0   1e5 1e_5 0 0   NB. input by columns
+NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2
+NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
+NB. obsolete   assert. 0 0 2 0 1 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
+NB. obsolete   assert. 3 0 0 0 0 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;3 0 1
+NB. obsolete   assert. 0 0 0 0 1 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+NB. obsolete   assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;1 0 2
+NB. obsolete   assert. 3 0 0 0 0 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;2 3
+NB. obsolete   M =. M 1}~ |: _4 ]\ 0. _1 0 0  0 0 0 0        0 0 0 0     0 _1e_5 1e_5 0 
+NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2
+NB. obsolete   assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
+NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
+NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
+NB. obsolete   M =. 1e_20 (<0 3 3)} M 
+NB. obsolete   assert. 0 0 0 0 1 0 ((0 0 0,:0 0 1) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
+NB. obsolete   assert. 0 0 2 0 1 0 ((0 1 1,0 0 1,:0 0 2) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2  NB. qp triggered; but not necessarily in all rows
+NB. obsolete   assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
+NB. obsolete 
   NB. gradient-stall mode
   M =. dptoqp |: _4 ]\ 1. 2 5 4    1 2 3 _10   _1 _2 _20 _10   1 2 3 0   NB. input by columns
   Frow =. _4. _5 _2 _5 _1e_20

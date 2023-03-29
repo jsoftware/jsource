@@ -25,8 +25,11 @@ f1=: 4 : 0
 (17*2 300 ?@$ 100) f1 32 17
 (17*2 300 ?@$ 100) f1~32 17
 
+f1"0/~ i: 20
+f1/~ i: 20
+
 3 : 0 ''
- if. -. IF64 do.
+ if. -. IF64 do.   NB. floating-point messes up 64-bit
   imax f1 32
   imax f1~32
   imax f1 17

@@ -57,7 +57,7 @@ void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
   jsto(JJTOJ(jt),MTYOER,b);
 #endif
  }
- RESETERR
+ RESETERR   // leave the error text until we start a new sentence from jdo, so that if the user looks at the stack it will still be there
 }
 
 static I jtdisp(J jt,A w,I nflag);
@@ -173,7 +173,9 @@ static void jtdhead(J jt,C k,DC d){C s[]="    ";
 void jtdebdisp(J jt,DC d){A*x,y;I e,t;
  e=d->dcj;   // error #, or 0 if no error (if DCCALL or DCPARSE frame)
  t=d->dctype;
- if(e&&!jt->etxn&&(t==DCPARSE||t==DCCALL)){x=e+AAV(JT(jt,evm)); dhead(0,0L); eputl(*x);}  // if error, display error header
+ if(e&&!jt->etxn&&(t==DCPARSE||t==DCCALL)){  // if error, and nothing formatted already, display error header
+  dhead(0,0L); if(e<=NEVM){eputl(AAV(JT(jt,evm))[e]);}else{eputs("Application error "); C buf[10]; sprintf(buf,"%i",(US)e); eputs(buf); eputc(CLF);}
+ }
  switch(t){
   case DCPARSE:  dhead(3,d); seeparse(d); if(NETX==jt->etxn)--jt->etxn; eputc(CLF); break;
   case DCCALL:   dhead(0,d); seecall(d);  eputc(CLF); break;

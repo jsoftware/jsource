@@ -846,6 +846,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
     rownums=rownums0;
     bvgrde=bvgrdesect[0];  // first section is bound vbls
    } // other modes do not alter any control variables, and run just one column
+   __m256d impliedsign=likely(rvtv[colx]!=8)?_mm256_setzero_pd():sgnbit;   // remember if we are fetching an enforcing bound column.  We must use _1 for the implied value for slacks then
    __m256d endmask=_mm256_setone_pd(); // mask for validity of next 4 words: used to control fetch from column and store into result row
 
    I *bvgrd;
@@ -919,9 +920,9 @@ notendcolumn: ;
     // Now mv and indexes are set up to read the correct rows
     // get the next NPAR values by dot-product with Av
     if(an<0){
-     // fetching from the Ek matrix itself.  Just fetch the values from the column
-     dotproducth=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+colx,indexes,endmask,SZI);
-     if(!((I)zv&ZVDP)){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI);}  // if quad-prec (onecol or DIP retry)
+     // fetching from the Ek matrix itself.  Just fetch the values from the column; multiply by the value in the implied row of the column, which is -1 if the col is enforcing
+     dotproducth=_mm256_xor_pd(impliedsign,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0+colx,indexes,endmask,SZI));
+     if(!((I)zv&ZVDP)){dotproductl=_mm256_xor_pd(impliedsign,_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv0lo+colx,indexes,endmask,SZI));}  // if quad-prec (onecol or DIP retry)
     }else{
      // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows.  There must be at least 1 column selected
      if((I)zv&ZVDP){
@@ -1241,8 +1242,8 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 
 // 128!:9 matrix times sparse vector with optional early exit, quad precision
 // product mode (aka one-column mode):
-//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);threshold  where ndx is an atom
-//  if ndx<m, the column is ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
+//  y is ndx;Ax;Am;Av;(M, shape 2,m,n);threshold;RVT  where ndx is an atom
+//  if ndx<m, the column is (- 8 = ndx { RVT) * ndx {"1 M; otherwise ((((ndx-m){Ax) ];.0 Am) {"1 M) +/@:*"1 ((ndx-m){Ax) ];.0 Av
 //  Do the product in quad precision
 //  Result for product mode (exitvec is scalar) is the product, one column of M, shape 2,m.  Values closer to 0 than the threshold are clamped to 0
 // DIP mode:
@@ -1259,7 +1260,7 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 //  bkgrd is the list of indexes of rows we will consider, in order
 //  bks is bkgrd{bk values qp or dp, only dp is used
 //  bkbound is (b-beta) for the Bound variables, which are at the start of bks always dp
-//  beta is the beta for each column, not changing during the run always dp
+//  beta is the beta for each column, not changing during the run always dp (used for bound columns)
 //  RVT is the Rose Variable Type for each column
 //  Frow is the selector row
 //  sched is list of integers: after i{sched columns, stop if we have found i improvements
@@ -1270,6 +1271,7 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 // gradient mode:
 //  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bk;Frow;sched;bkbound;beta;RVT
 //   find the (col,row) to maximize colvalue on the nonimproving edge with the most negative gradient, which is Frow/sqrt(>: sum of squared column values)
+//   bk/bkbound permuted by the original bkgrd
 //  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
 //  bk is qp or dp, only dp is used
 // nonimp mode:
@@ -1330,14 +1332,15 @@ if(AN(w)==0){
 
  if(AR(box0)==0){
   // single index value.  set bv=0, zv non0 as a flag that we are storing the column
-  bv=0; Frow=0; ASSERT(AN(w)==6,EVLENGTH);  // if column is an atom, set bv=0 to indicate that bv is not used; Frow=0 to indicate not gradient and verify no more input
+  bv=0; Frow=0; ASSERT(AN(w)==7,EVLENGTH);  // if column is an atom, set bv=0 to indicate that bv is not used; Frow=0 to indicate not gradient and verify no more input
   nthreads=(*JT(jt,jobqueue))[0].nthreads+1; nthreads=n<1000?1:nthreads;  // a wild guess at what 'too small' would be for a single column
   if(unlikely(n==0)){R reshape(drop(num(-1),shape(box4)),zeroionei(0));}   // empty M, each product is 0
   ASSERT(AR(box5)==0,EVRANK);  // thresh must be a float atom
   I epcol=AR(box4)==3;  // flag if we are doing an extended-precision column fetch
   GATV(z,FL,n<<epcol,1+epcol,AS(box4)); zv=DAV(z);  // allocate the result area for column extraction.  Set zv nonzero so we use bkgrd of i. #M
   bvgrd0=ONECOLGRD0;  // for comp. ease, shift bv to constant value; length calculated per thread
- }else{
+  A box6=C(AAV(w)[6]); ASSERT(AT(box6)&INT,EVDOMAIN); ASSERT(AR(box6)==1,EVRANK); rvtv=IAV(box6);  // rvts, one per each column (unchanging)
+}else{
   // A list of index values.  We are doing the DIP calculation/gradient/nonimp
   zv=0;  // clear zv as flag to indicate not one-col
   ASSERT(AR(box5)<=1,EVRANK); ASSERT(AT(box5)&FL,EVDOMAIN); ASSERT(BETWEENC(AN(box5),4,8),EVLENGTH);  // 4-8 float constants

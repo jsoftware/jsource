@@ -52,9 +52,16 @@ static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
 static I dmodpow(D x,I n,D m){D z=1; while(n){if(1&n)z=fmod(z*x,m); x=fmod(x*x,m); n>>=1;} R(I)z;}
 #endif
 
-// m|x^n by repeated squaring.  m>0, 0<=x<m
-static I imodpow(I x,I n,I m){I z=m>1; while(n){if(1&n)z=(z*x)%m; x=(x*x)%m; n>>=1;} R z;}  // if n=0 result is 1 unless m=1, then 0; repeated square/mod
-
+// m&|x^n by repeated squaring.  m>0, 0<=x<m<%:IMAX
+static I imodpow(UI x,I n,UI m){
+ if(unlikely(m==1))R 0; I z=1; // if n=0 result is 1 unless m=1, then 0
+// UI mrecip=((UI)(-IMIN)/m)<<1;  // 2^64%m, possibly low by as much as 2^-63
+//#define modm(x) (x)-(UI)(((unsigned __int128)(x)*mrecip)>>64)*m  // result may be m if recip is low; never higher
+#define modm(x) (x)%m
+ while(n){UI zz=modm(z*x); x=modm(x*x); z=n&1?zz:z; n>>=1;}  //  repeated square/mod
+// z=unlikely(z==m)?0:z;  // in case mod was too high, put it back in range
+ R z;
+}
 static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  PREF2(jtmodpow2);
  h=FAV(self)->fgh[2]; 
@@ -67,16 +74,19 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  n=AV(w)[0];
  if(!(INT&at&&INT&wt&&0<=n))R residue(h,expn2(a,w));
  m=AV(h)[0]; x=AV(a)[0];
- if(!m)R expn2(a,w);
- if(XMOD<m||XMOD<-m||m==IMIN||x==IMIN)R cvt(INT,xmodpow(a,w,h));
- if(b=0>m)m=-m;
- if(c=0>x)x=-x; x=x%m; if(c)x=m-x;
+ if(!m)R expn2(a,w);   // if 0 divisor, same as infinitxe modulus
+// obsolete  if(XMOD<m||XMOD<-m||m==IMIN||x==IMIN)R cvt(INT,xmodpow(a,w,h));
+ if(b=0>m)m=-m; if(c=0>x)x=(I)(0-(UI)x);  // b=m neg, c=x neg; take abs of m and x (might be IMIN)
+ if(((I)(XMOD-(UI)m)|x)<0)R cvt(INT,xmodpow(a,w,h));  // if m>XMOD, or x=IMIN, revert to extended
+ if(unlikely(x>=m))x=x%m;  // bring x in range if needed
+ if(c)x=m-x;
 #if SY_64
  z=imodpow(x,n,m);
 #else
  z=m>DMOD?dmodpow((D)x,n,(D)m):imodpow(x,n,m);
 #endif
- R sc(b?z-m:z);
+// obsolete R sc(b?z-m:z);
+ R sc(z-((-b)&m));  // if m neg, move result to range -m..-1
 }    /* a m&|@^ w ; m guaranteed to be INT or XNUM */
 
 static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic

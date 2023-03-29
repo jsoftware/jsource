@@ -463,7 +463,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
   CTLZI(p,k);  // bit# of the sole 1 bit
 // obsolete   switch((0<d?0:2)+(flr?0:1)){
   if(d>0)if(flr){DQ(n,*zv++=*av++>>k;)}else{DQ(n, c=*av++; *zv++=likely(!__builtin_add_overflow(c,p1,&c))?c>>k:(UI)c>>k;)}
-  else if(flr){DQ(n, c=*av++; *zv++=likely(c>IMIN)?-c>>k:-(IMIN>>k);)}else{DQ(n, c=-*av++; *zv++=likely(!__builtin_add_overflow(c,p1,&c))?c>>k:(UI)c>>k;)}
+  else if(flr){DQ(n, c=*av++; *zv++=likely(c>IMIN)?-c>>k:-(IMIN>>k);)}else{DQ(n, *zv++=((~*av++)>>k)+1;)}
 // obsolete    case 1: DQ(n, c=*av++; *zv++=0< c?1+((c-1)>>k):(c+p1)>>k;); break;
 // obsolete    case 2: DQ(n, c=*av++; *zv++=c>IMIN?-c>>k:-(-c>>k););       break;
 // obsolete    case 3: DQ(n, c=*av++; *zv++=0<=c?-(c>>k):1+(-(1+c)>>k););  break;

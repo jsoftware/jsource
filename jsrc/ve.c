@@ -475,7 +475,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
                                                                _mm512_add_epi64(y,_mm512_set1_epi64(1ull<<53))),\
                                                _mm512_set1_epi64(1ull<<54))
 #define DIVRN(vn,vd,mode) ({ __m512d quot=_mm512_div_round_pd(_mm512_cvtepi64_pd(vn),_mm512_cvtepi64_pd(vd),_MM_FROUND_NO_EXC); /*must suppress exceptions here*/\
-                             quot=_mm512_fixupimm_pd(quot,quot,_mm512_castsi128_si512(_mm_cvtsi32_si128(0x00550088)),0xa0); /*convert nan to 0 (because we want 0%0 to be 0).  Trap on -inf and inf*/\
+                             quot=_mm512_fixupimm_pd(quot,quot,_mm512_set1_epi64(0x00550088),0xa0); /*convert nan to 0 (because we want 0%0 to be 0).  Trap on -inf and inf.  Pass everything else through.*/\
                              _mm512_cvt_roundpd_epi64(quot, mode|_MM_FROUND_NO_EXC); })
   if(1==n){
 #define EVEN(mode,div) \

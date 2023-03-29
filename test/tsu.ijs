@@ -37,7 +37,7 @@ blacklist=: blacklist, ((-.IF64+.IFRASPI)+.IFIOS+.(UNAME-:'Android'))#(<testpath
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. require multithreading
 blacklist=: blacklist, (-.15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs'  NB. 15!:0 unavailable
-blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each 'g331.ijs';'g400.ijs';'g410.ijs';'g411.ijs';'g420.ijs';'g420fg.ijs';'g421d.ijs';'g421e.ijs';'g422.ijs';'g432.ijs';'g520.ijs';'g530.ijs';'g600.ijs';'g602.ijs';'g620a.ijs';'g640.ijs';'ga.ijs';'gstack.ijs'  NB. hang/crash
+blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays

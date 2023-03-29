@@ -47,19 +47,21 @@ static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
 
 #if SY_64
 #define XMOD 3037000499    /* <. %: _1+2^63 */
+#define doubletype unsigned __int128
 #else
 #define XMOD 94906265      /* <. %: _1+2^53 */
+#define doubletype uint64_t
 static I dmodpow(D x,I n,D m){D z=1; while(n){if(1&n)z=fmod(z*x,m); x=fmod(x*x,m); n>>=1;} R(I)z;}
 #endif
 
-// m&|x^n by repeated squaring.  m>0, 0<=x<m<%:IMAX
-static I imodpow(UI x,I n,UI m){
- if(unlikely(m==1))R 0; I z=1; // if n=0 result is 1 unless m=1, then 0
-// UI mrecip=((UI)(-IMIN)/m)<<1;  // 2^64%m, possibly low by as much as 2^-63
-//#define modm(x) (x)-(UI)(((unsigned __int128)(x)*mrecip)>>64)*m  // result may be m if recip is low; never higher
-#define modm(x) (x)%m
- while(n){UI zz=modm(z*x); x=modm(x*x); z=n&1?zz:z; n>>=1;}  //  repeated square/mod
-// z=unlikely(z==m)?0:z;  // in case mod was too high, put it back in range
+// m&|x^n by repeated squaring.  m>0, 0<=x<m<%:IMAX.  We expect large powers so we take the reciprocal of m
+static UI imodpow(UI x,I n,UI m){
+ if(unlikely(m==1))R 0; UI z=1; // if n=0 result is 1 unless m=1, then 0
+ UI mrecip=((UI)(-IMIN)/m); mrecip=(mrecip<<1)+((((UI)(-IMIN)-mrecip*m)<<1)>=m);  // 2^64%m, possibly low by as much as 2^-64
+#define modm(x) ({UI t; doubletype tt; tt=(doubletype)(x)*(doubletype)mrecip; t=tt>>BW; t=(x)-t*m; if(unlikely(t>=m))t-=m; t;})
+ // x%m using mrecip.  mrecip may be low by 2^-64; x*mrecip is truncated.  Resulting modulus may be high by at most m
+// #define modm(x) (x)%m
+ while(n){UI zz=z*x; zz=modm(zz); x=x*x; x=modm(x); z=n&1?zz:z; n>>=1;}  //  repeated square/mod
  R z;
 }
 static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;

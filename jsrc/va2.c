@@ -476,9 +476,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else{
 
-   // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
-   //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
-   // when there is an empty - but it guarantees that execution on an empty never fails.
    // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
    // support nonnumeric sparse now
    // if an operand is sparse, replace its type with the corresponding non-sparse type, for purposes of testing operand precisions
@@ -486,12 +483,22 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     at&=~SPARSE; wt&=~SPARSE;
     jtinplace=0;  // We use jtinplace==0 as a flag meaning 'sparse'
    }
+   // Get the result type and routine
+   adocv=var(self,at,wt);
+   if(unlikely(adocv.f==0)){
+    // There is no routine for these argument types.
+    // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
+    //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
+    // when there is an empty - but it guarantees that execution on an empty never fails.
+    at=((-AN(a)&(-AN(w)|-(at&NUMERIC)))>=0)?B01:at;
+    wt=((-AN(w)&(-AN(a)|-(wt&NUMERIC)))>=0)?B01:wt;
+// obsolete     if(AN(a)==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
+// obsolete     if(AN(w)==0){wt=B01;if(!(at&NUMERIC))at=B01;}
+    adocv=var(self,at,wt);   // rerun the decode with safer types
+   }
+   aadocv=&adocv;  // we save the address of the struct
    // We could allocate the result block here & avoid the test after the allocation later.  But we would have to check for agreement etc
-   if(AN(a)==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
-   if(AN(w)==0){wt=B01;if(!(at&NUMERIC))at=B01;}
-
-   // Figure out the result type.  Don't signal the error from it yet, because domain has lower priority than agreement
-   adocv=var(self,at,wt); aadocv=&adocv;
+   // Don't signal domain error on the types yet, because domain has lower priority than agreement
   }
  }
 

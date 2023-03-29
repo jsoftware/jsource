@@ -59,7 +59,8 @@ static UI imodpow(UI x,I n,UI m){
  if(unlikely(m==1))R 0; UI z=1; // if n=0 result is 1 unless m=1, then 0
  UI mrecip=((UI)(-IMIN)/m); mrecip=(mrecip<<1)+((((UI)(-IMIN)-mrecip*m)<<1)>=m);  // 2^64%m, possibly low by as much as 2^-64
 #define modm(x) ({UI t; doubletype tt; tt=(doubletype)(x)*(doubletype)mrecip; t=tt>>BW; t=(x)-t*m; if(unlikely(t>=m))t-=m; t;})
- // x%m using mrecip.  mrecip may be low by 2^-64; x*mrecip is truncated.  Resulting modulus may be high by at most m
+ // x%m using mrecip.  x*mrecip is truncated, which gives the remainder.  mrecip may be 2^-64 low, so the remainder may be x*m/2^64 high.  This is never more than m too high, so a single correction suffices
+ // we expect the correction to be rare so we use a branch
 // #define modm(x) (x)%m
  while(n){UI zz=z*x; zz=modm(zz); x=x*x; x=modm(x); z=n&1?zz:z; n>>=1;}  //  repeated square/mod
  R z;

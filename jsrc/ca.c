@@ -59,10 +59,6 @@ static I dmodpow(D x,I n,D m){D z=1; while(n){if(1&n)z=fmod(z*x,m); x=fmod(x*x,m
 static UI imodpow(UI x,I n,UI m,UI mrecip){
  if(unlikely(m==1))R 0; UI z=1; // if n=0 result is 1 unless m=1, then 0
 // obsolete  UI mrecip=((UI)(-IMIN)/m); mrecip=(mrecip<<1)+((((UI)(-IMIN)-mrecip*m)<<1)>=m);  // 2^64%m, possibly low by as much as 2^-64
-// integer overflow and -MIN == MIN for 2's complement
- UI mrecip=((UI)(IMIN)/m); mrecip=(mrecip<<1)+((((UI)(IMIN)-mrecip*m)<<1)>=m);  // 2^64%m, possibly low by as much as 2^-64
-#else
-#endif
 #define modm(x) ({UI t; doubletype tt; tt=(doubletype)(x)*(doubletype)mrecip; t=tt>>BW; t=(x)-t*m; if(unlikely(t>=m))t-=m; t;})
  // x%m using mrecip.  x*mrecip is truncated, which gives the remainder.  mrecip may be 2^-64 low, so the remainder may be x*m/2^64 high, i. e. m^3/2^64.  This is never more than m too high, so a single correction suffices
  // we expect the correction to be rare so we use a branch

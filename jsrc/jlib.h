@@ -3,18 +3,56 @@
 /*                                                                         */
 /* libj header                                                             */
 
+#ifndef JLIB_H
+#define JLIB_H
+
 /* maintainer note: define JFRONTEND for non jsource front-ends */
+// #define JFRONTEND
 #ifdef JFRONTEND
-#undef JS
-typedef void* JS;
+#ifndef _WIN32
+#define _stdcall
 #endif
+#ifdef _WIN32
+#define CDPROC
+#elif defined(__GNUC__)
+#define CDPROC __attribute__ ((visibility ("default")))
+#else
+#define CDPROC
+#endif
+#if defined(_WIN64)||defined(__LP64__)
+typedef long long I;
+#define FMTI            "%lli"
+#else
+typedef long I;
+#define FMTI            "%li"
+#endif
+typedef char C;
+typedef void* JS;
+typedef struct A_RECORD {
+  I k,flag,m,t,c,n,r,s[1];
+}* A;
+typedef struct AREP_RECORD {
+  I n,t,c,r,s[1];
+}* AREP;
+#define AK(x)           ((x)->k)        /* offset of ravel wrt x           */
+#define AT(x)           ((x)->t)        /* Type; one of the #define below  */
+#define AC(x)           ((x)->c)        /* Reference count.                */
+#define AN(x)           ((x)->n)        /* # elements in ravel             */
+#define AR(x)           ((x)->r)        /* Rank                            */
+#define AS(x)           ((x)->s)
+#define LIT 2
+#define INT 4
+#define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
+#define CAV(x)          (      (C*)(x)+AK(x) )  /* character               */
+#define IAV(x)          AV(x)                   /* integer                 */
+#endif  // JFRONTEND
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 CDPROC JS _stdcall JInit(void);                     /* init instance */
 CDPROC JS _stdcall JInit2(C*libpath);               /* init instance with libpath */
-CDPROC void _stdcall JSM(JS jt, void*callbacks[]);  /* set callbacks */
+CDPROC void _stdcall JSM(JS jt, void**callbacks);  /* set callbacks */
 CDPROC void _stdcall JSMX(JS jt, void*, void*, void*, void*, I);
 CDPROC int _stdcall JDo(JS jt,C*);                  /* run sentence */
 CDPROC void _stdcall JInterrupt(JS jt);             /* signal interrupt */
@@ -36,7 +74,7 @@ typedef void* (_stdcall *JInit2Type)    (C*);
 typedef int   (_stdcall *JDoType)       (JS, C*);
 typedef void  (_stdcall *JInterruptType)(JS);
 typedef C*    (_stdcall *JGetLocaleType)(JS);
-typedef void  (_stdcall *JSMType)       (JS, void*);
+typedef void  (_stdcall *JSMType)       (JS, void**);
 typedef void  (_stdcall *JSMXType)      (JS, void*, void*, void*, void*, I);
 typedef int   (_stdcall *JFreeType)     (JS);
 typedef A     (_stdcall *JgaType)       (JS jt, I t, I n, I r, I*s);
@@ -59,7 +97,7 @@ typedef C* (_stdcall * polltype) (JS,int,int);
 extern "C" {
 #endif
 void _stdcall Joutput(JS jt, int type, C* s);
-int _stdcall Jwd(JS jt, int x, A parg, A* pres);
+int _stdcall Jwd(JS jt, int x, A parg, A* pres, C* loc);
 C* _stdcall Jinput(JS jt, C*);
 #ifdef __cplusplus
 }
@@ -84,3 +122,5 @@ C* _stdcall Jinput(JS jt, C*);
 #define SMOPTNOJGA  2  /* result not allocated by jga */
 #define SMOPTPOLL   4  /* use smpoll to get last result */
 #define SMOPTMTH    8  /* multithreaded */
+
+#endif

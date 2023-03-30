@@ -1387,8 +1387,8 @@ if(AN(w)==0){
    ASSERT(AR(box9)<=1,EVRANK) ASSERT(((AN(box9)-1)|SGNIF(AT(box9),INTX))<0,EVDOMAIN)   // must be INT if not empty
    sched=box9;  // exit schedule
    bkbound=C(AAV(w)[9+isDIP]); ASSERT(AT(bkbound)&FL,EVDOMAIN); ASSERT(AR(bkbound)==1,EVRANK);  // bkbound, for the bound variables
-   A box11=C(AAV(w)[10+isDIP]); ASSERT(AT(box11)&FL,EVDOMAIN); ASSERT(AR(box11)==1,EVRANK); ASSERT(AN(box11)==AN(box8),EVLENGTH); betav=DAV(box11);  // betas, one per each column (unchanging)
-   A box12=C(AAV(w)[11+isDIP]); ASSERT(AT(box12)&INT,EVDOMAIN); ASSERT(AR(box12)==1,EVRANK); ASSERT(AN(box12)==AN(box8),EVLENGTH); rvtv=IAV(box12);  // rvts, one per each column (unchanging)
+   A box11=C(AAV(w)[10+isDIP]); ASSERT(AT(box11)&FL,EVDOMAIN); ASSERT(AR(box11)==1,EVRANK); ASSERT(AN(box11)>=AN(box8),EVLENGTH); betav=DAV(box11);  // betas, one per each column (unchanging)
+   A box12=C(AAV(w)[11+isDIP]); ASSERT(AT(box12)&INT,EVDOMAIN); ASSERT(AR(box12)==1,EVRANK); ASSERT(AN(box12)>=AN(box8),EVLENGTH); rvtv=IAV(box12);  // rvts, one per each column (unchanging)
 // obsolete    minimp=0.0;  // improvements are negative and work down from 0.  Mustn't go positive because of inequality
   }
  }

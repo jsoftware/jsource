@@ -119,8 +119,8 @@ typedef AD *A;
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
-#define JTEMPTYX        5  // in va2, this bit indicates the result is empty
-#define JTEMPTY         (((I)1)<<JTEMPTYX)
+// obsolete #define JTEMPTYX        5  // in va2, this bit indicates the result is empty
+// obsolete #define JTEMPTY         (((I)1)<<JTEMPTYX)
 #define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
 #define JTRETRY         (((I)1)<<JTRETRYX)
 
@@ -1024,6 +1024,7 @@ typedef struct {
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
+    UI mrecip;  // for m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

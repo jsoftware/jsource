@@ -55,38 +55,44 @@ static I dmodpow(D x,I n,D m){D z=1; while(n){if(1&n)z=fmod(z*x,m); x=fmod(x*x,m
 #endif
 
 // m&|x^n by repeated squaring.  m>0, 0<=x<m<%:IMAX.  We expect large powers so we take the reciprocal of m
-static UI imodpow(UI x,I n,UI m){
+// mrecip is 2^64/m
+static UI imodpow(UI x,I n,UI m,UI mrecip){
  if(unlikely(m==1))R 0; UI z=1; // if n=0 result is 1 unless m=1, then 0
- UI mrecip=((UI)(-IMIN)/m); mrecip=(mrecip<<1)+((((UI)(-IMIN)-mrecip*m)<<1)>=m);  // 2^64%m, possibly low by as much as 2^-64
+// obsolete  UI mrecip=((UI)(-IMIN)/m); mrecip=(mrecip<<1)+((((UI)(-IMIN)-mrecip*m)<<1)>=m);  // 2^64%m, possibly low by as much as 2^-64
 #define modm(x) ({UI t; doubletype tt; tt=(doubletype)(x)*(doubletype)mrecip; t=tt>>BW; t=(x)-t*m; if(unlikely(t>=m))t-=m; t;})
- // x%m using mrecip.  x*mrecip is truncated, which gives the remainder.  mrecip may be 2^-64 low, so the remainder may be x*m/2^64 high.  This is never more than m too high, so a single correction suffices
+ // x%m using mrecip.  x*mrecip is truncated, which gives the remainder.  mrecip may be 2^-64 low, so the remainder may be x*m/2^64 high, i. e. m^3/2^64.  This is never more than m too high, so a single correction suffices
  // we expect the correction to be rare so we use a branch
 // #define modm(x) (x)%m
  while(n){UI zz=z*x; zz=modm(zz); x=x*x; x=modm(x); z=n&1?zz:z; n>>=1;}  //  repeated square/mod
  R z;
 }
-static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
- PREF2(jtmodpow2);
+static DF2(jtmodpow2){A h;B b,c;I m,n,x,z;
  h=FAV(self)->fgh[2]; 
- if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a)); 
- if(RAT&AT(w))RZ(w=pcvt(XNUM,w)) else if(!(AT(w)&INT+XNUM))RZ(w=pcvt(INT,w));
- at=AT(a); wt=AT(w);
- if(((AT(h)|at|wt)&XNUM)&&!((at|wt)&(NOUN&~(XNUM+INT)))){A z;
+ if(unlikely(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)){  // convert any non-INT arg to INT if it can be done exactly
+  if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a)); 
+  if(RAT&AT(w))RZ(w=pcvt(XNUM,w)) else if(!(AT(w)&INT+XNUM))RZ(w=pcvt(INT,w));
+  if(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)R residue(h,expn2(a,w));  // if not (both args INT and power positive) revert to long form
+ }
+ // both args are integral, but possibly extended
+ PREF2(jtmodpow2);
+ if(((AT(h)|AT(a)|AT(w))&XNUM)&&!((AT(a)|AT(w))&(NOUN&~(XNUM+INT)))){A z;  // if all values are integral and one is XNUM, process as extended
   z=xmodpow(a,w,h); if(!jt->jerr)R z; RESETERR; R residue(h,expn2(a,w)); 
  }
+ // all values are INT
  n=AV(w)[0];
- if(!(INT&at&&INT&wt&&0<=n))R residue(h,expn2(a,w));
- m=AV(h)[0]; x=AV(a)[0];
- if(!m)R expn2(a,w);   // if 0 divisor, same as infinitxe modulus
+// obsolete  if(!(INT&at&&INT&wt&&0<=n))R residue(h,expn2(a,w));
+ if(unlikely(n<0))R residue(h,expn2(a,w));  // if negative exponent revert to long form
+ m=AV(h)[0]; x=AV(a)[0];  // m=modulus, x=base
+ if(unlikely(!m))R expn2(a,w);   // if 0 divisor, same as infinite modulus
 // obsolete  if(XMOD<m||XMOD<-m||m==IMIN||x==IMIN)R cvt(INT,xmodpow(a,w,h));
  if(b=0>m)m=-m; if(c=0>x)x=(I)(0-(UI)x);  // b=m neg, c=x neg; take abs of m and x (might be IMIN)
- if(((I)(XMOD-(UI)m)|x)<0)R cvt(INT,xmodpow(a,w,h));  // if m>XMOD, or x=IMIN, revert to extended
+ if(((I)(XMOD-(UI)m)|x)<0)R cvt(INT,xmodpow(a,w,h));  // if m>XMOD, or x=IMIN, revert to extended calculation but convert result back to INT
  if(unlikely(x>=m))x=x%m;  // bring x in range if needed
- if(c)x=m-x;
+ if(c)x=m-x;  // if x was neg, correct modulus to modular negative
 #if SY_64
- z=imodpow(x,n,m);
+ z=imodpow(x,n,m,FAV(self)->localuse.lu1.mrecip);
 #else
- z=m>DMOD?dmodpow((D)x,n,(D)m):imodpow(x,n,m);
+ z=m>DMOD?dmodpow((D)x,n,(D)m):imodpow(x,n,m,FAV(self)->localuse.lu1.mrecip);
 #endif
 // obsolete R sc(b?z-m:z);
  R sc(z-((-b)&m));  // if m neg, move result to range -m..-1
@@ -204,6 +210,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  // unless v can handle it
  flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VJTFLGOK1|VJTFLGOK2));
  // special cases of u
+ UI mrecip=0;  // used only for m&|@^, where it is non0
  switch(c){
   case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
@@ -235,12 +242,14 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    break;
   case CSLDOT:  if(d==CSLASH&&AT(wv->fgh[0])&VERB&&FAV(wv->fgh[0])->flag&VISATOMIC2 && CSLASH==ID(av->fgh[0])&&AT(FAV(av->fgh[0])->fgh[0])&VERB&&FAV(FAV(av->fgh[0])->fgh[0])->flag&VISATOMIC2){f2=jtpolymult; flag&=~VJTFLGOK2;} break;  // f//.@(g/) for atomic fg
   case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&av->fgh[1]==num(0)){f1=jtdigits10; flag&=~VJTFLGOK1;} break;  // "."0@":
-  case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;
+  case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;   // ^@o.
   case CAMP:
    x=av->fgh[0];
    if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
-   if((d==CEXP||d==CAMP&&CEXP==ID(wv->fgh[1]))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==ID(av->fgh[1])){
-    h=x; flag+=VMOD; 
+   if((d==CEXP||d==CAMP&&CEXP==ID(wv->fgh[1]))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==ID(av->fgh[1])){  // m&|@^ and m&|@(n&^) where m is atomic INT/XNUM
+    h=x; flag+=VMOD; UI m=ABS(IAV(x)[0]);
+    // precalculate 2^64/m so it is there if we need it
+    if(AT(x)&INT&&m>1){mrecip=((UI)(-IMIN)/m); mrecip=(mrecip<<1)+((((UI)(-IMIN)-mrecip*m)<<1)>=m);}  // 2^64%m, possibly low by as much as 2^-64
     if(d==CEXP){f2=jtmodpow2; flag&=~VJTFLGOK2;} else{f1=jtmodpow1; flag&=~VJTFLGOK1;}
   }
  }
@@ -275,7 +284,9 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop; if v is atomic, switch to the loop that gives a msg if executed on non-atom
  if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==0?jton10:f1; f1=wv->flag&VISATOMIC1?jton10atom:f1; f1=wv->mr==RMAX?on1cell:f1;}
  if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==0?jtupon20:f2; f2=wv->flag&VISATOMIC2?jtupon20atom:f2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2;}
- fdeffillall(z,flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct); R z;
+ fdeffillall(z,flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
+ if(unlikely(mrecip!=0))FAV(z)->localuse.lu1.mrecip=mrecip;   // replace cct with mrecip if it is defined
+ R z;
 }
 
 // u@:v

@@ -469,8 +469,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-  if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args, no empties
-   // Here for the fast and important case, where the arguments are both B01/INT/FL
+// obsolete   if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args, no empties
+  if(likely(!(((I)jtinplace&JTRETRY)+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args
+   // Here for the fast and important case, where the arguments are both dense B01/INT/FL
    VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
    aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
@@ -486,7 +487,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    // Get the result type and routine
    adocv=var(self,at,wt);
    if(unlikely(adocv.f==0)){
-    // There is no routine for these argument types.
+    // There is no routine for these argument types.  That's an error unless an argument is empty
     // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
     //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
     // when there is an empty - but it guarantees that execution on an empty never fails.
@@ -1231,8 +1232,8 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   // self, awr, and selfranks are needed in the retry
  } 
  
- // while it's convenient, check for empty result
- jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));
+// obsolete  // while it's convenient, check for empty result
+// obsolete  jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
  NOUNROLL while(1){
   // Run the full dyad, retrying if a retryable error is returned

@@ -486,9 +486,9 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   jt->recurstate|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
-  if(e==-1){      // e==-1 is lit
   if(SMOPTPOLL&IJT(jt,smoption)){jt->recurstate=RECSTATEPROMPT; z=(A)((polltype)(IJT(jt,smpoll)))(JJTOJ(jt), (int)t, (int)e); jt->recurstate=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
   if(SMOPTNOJGA&IJT(jt,smoption)) z=ca(z);  // front-end promised not to use Jga to allocate memory, but not yet used in any front-end
+  if(e==-1){      // e==-1 is lit or int
   RETF(z);
   } else if(e==-2){      // e==-2 is lit pairs
 // callback result z is a rank-1 literal array 
@@ -496,7 +496,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 // and then reshape into rank-2  ((n%2),2)$
     A x=z; RZ(df1(z,x,cut(ds(CBOX),num(-2))));
     RETF(reshape(v2(AN(z)>>1,2L),z));
-  } else {RETF(z);}
+  } else {RETF(z);}      // no need to fix anything
 }
 
 static char breaknone=0;

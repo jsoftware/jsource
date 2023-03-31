@@ -1114,7 +1114,8 @@ typedef struct {
 #define VIRS2           (((I)1)<<VIRS2X)         /* 12 dyad  has integral rank support */
 #define VFLR            (I)0x2000         /* function is <.@g                */
 #define VCEIL           (I)0x4000       /* function is >.@g                */
-#define VMOD            (I)0x8000        /* function is m&|@g               */
+// bit 15 free
+// obsolete #define VMOD            (I)0x8000        /* function is m&|@g               */
 #define VLOCK           (I)0x10000        /* function is locked              */
 // bit 17 free
 #define VFIX            (I)0x40000       /* f. applied                      */

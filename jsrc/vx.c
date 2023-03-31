@@ -215,27 +215,30 @@ XF1(jtxfact){ // !w
 F1(jtdigits10){ // "."0@":
  PROLOG(0117);
  ARGCHK1(w);
- if(!AR(w))switch(CTTZ(AT(w))){
-   case INTX: 
-    if(0<=AV(w)[0]){
-     A z; GATV0(z,INT,SY_64?19:10,1);
-     I c= AV(w)[0], *zv= AV(z), *zv0=zv;
-     do{*zv++=c%10;}while(c/=10);
-     I n= AN(z)= AS(z)[0]= zv-zv0;
-     zv=zv0; I*v=zv+n-1; DQ(n>>1, c=*zv; *zv++=*v; *v--=c;); /* reverse in place */
-     EPILOG(z);
-    }
-   case RATX: if (!ISQINT(QAV(w)[0])) break;
-   case XNUMX: w= XAV(w)[0];
-   case LITX: ASSERT(likely(ISGMP(w)), EVDOMAIN);
-    if(0<=XSGN(w)){
-     C*s= SgetX(w);
-     I n= strlen(s); // maybe better to use AN(UNvoidAV1(s))-1 ??
-     A z; GATV0(z,INT,n,1); I*zv= AV(z);
-     DQ(n, zv[i]= s[i]-'0';);
-     EPILOG(z);
-    }
-  }
+ // see if a fast case applies
+ if(!AR(w))  // must be an atom
+  switch(CTTZ(AT(w))){  // must be integral or string type
+  case INTX: 
+   if(0<=AV(w)[0]){  // must be nonnegative
+    A z; GATV0(z,INT,SY_64?19:10,1);  // allocate a max-sized string
+    I c= AV(w)[0], *zv= AV(z), *zv0=zv;
+    do{*zv++=c%10;}while(c/=10);  // create digits in reverse order
+    I n= AN(z)= AS(z)[0]= zv-zv0;   // install length
+    zv=zv0; I*v=zv+n-1; DQ(n>>1, c=*zv; *zv++=*v; *v--=c;); /* reverse in place */
+    EPILOG(z);
+   }
+  case RATX: if (!ISQINT(QAV(w)[0])) break;  // if integral, fall through to continue
+  case XNUMX: w= XAV(w)[0];
+  case LITX: ASSERT(ISGMP(w), EVDOMAIN);  // LIT must be a GMP-allocated block (can it ever?)
+   if(0<=XSGN(w)){
+    C*s= SgetX(w);
+    I n= strlen(s); // maybe better to use AN(UNvoidAV1(s))-1 ??
+    A z; GATV0(z,INT,n,1); I*zv= AV(z);
+    DQ(n, zv[i]= s[i]-'0';);  // convert ASCII to integer
+    EPILOG(z);
+   }
+ }
+ // if none of the fast cases applies, do it the long way
  EPILOG(rank1ex0(thorn1(w),DUMMYSELF,jtexec1));
 }
 

@@ -1378,7 +1378,6 @@ extern void jfree4gmp(void*,size_t);
 #define xpi(x)                      jtxpi(jt,(x))
 #define xplus(x,y)                  jtxplus(jt,(x),(y))
 #define xpow(x,y)                   jtxpow(jt,(x),(y))
-#define xpowmodinv(x,y)             jtxpowmodinv(jt,(x),(y))
 #define xprimeq(x,y)                jtxprimeq(jt,(x),(y)) 
 #define xprimetest(x)               jtxprimetest(jt,(x))
 #define Xmpzcommon(x,b)             jtXmpzcommon(jt,(x),b)

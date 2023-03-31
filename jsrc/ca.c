@@ -29,18 +29,11 @@ static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
 static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
  if(!(XNUM&AT(a)))RZ(a=cvt(XNUM,a));
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
- if (XNUM==AT(h)) { // special case
-  ox=jt->xmod; jt->xmod=h;
-  GAT0(z,XNUM,1,0); XAV(z)[0]=xpowmodinv(XAV(a)[0],XAV(w)[0]);
-  jt->xmod=ox;
-  RNE(z);
- } else {
-  if(!(XNUM&AT(h)))RZ(h=cvt(XNUM,h));
-  ox=jt->xmod; jt->xmod=h;
-  GAT0(z,XNUM,1,0); XAV(z)[0]=xpow(XAV(a)[0],XAV(w)[0]);
-  jt->xmod=ox;
-  RNE(z);
- }
+ if(!(XNUM&AT(h)))RZ(h=cvt(XNUM,h));
+ ox=jt->xmod; jt->xmod=h;
+ GAT0(z,XNUM,1,0); XAV(z)[0]=xpow(XAV(a)[0],XAV(w)[0]);
+ jt->xmod=ox;
+ RNE(z);
 }
 
 #define DMOD 46340         /* <. %: _1+2^31 */

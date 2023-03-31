@@ -72,16 +72,12 @@ elif [ $1 = "linux" ]; then
 if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
   j64/jconsole -lib libjavx2.$ext testga.ijs
 elif [ -f "$SDE_PATH/sde" ] && [ -f "j64/libjavx2.$ext" ] ; then
-# don't know why complaint illegal instruction
-#  $SDE_PATH/sde -hsw -- j64/jconsole -lib libjavx2.$ext testga.ijs
-  $SDE_PATH/sde -- j64/jconsole -lib libjavx2.$ext testga.ijs
+  $SDE_PATH/sde -skx -- j64/jconsole -lib libjavx2.$ext testga.ijs
 fi
 if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
   j64/jconsole -lib libjavx512.$ext testga.ijs
 elif [ -f "$SDE_PATH/sde" ] && [ -f "j64/libjavx512.$ext" ] ; then
-# don't know why complaint illegal instruction
-#  $SDE_PATH/sde -skl -- j64/jconsole -lib libjavx512.$ext testga.ijs
-  $SDE_PATH/sde -- j64/jconsole -lib libjavx512.$ext testga.ijs
+  $SDE_PATH/sde -skx -- j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
 if [ -f "j32/libj.$ext" ] ; then
   j32/jconsole -lib libj.$ext testga.ijs

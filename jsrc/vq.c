@@ -20,7 +20,7 @@
 
 // qstd is invoked in QEPILOG
 QF1(jtqstd){ // canonical form for w: 1155r210 -> 11r2
- if (!w.n || !w.d) RQ0; // quick exit for jsignal from an xnum routine
+ if (unlikely(!w.n || !w.d)) RQ0; // quick exit for jsignal from an xnum routine
  if (ISQ0(w)) RQ0;
  if (ISQinf(w)) switch (QSGN(w)) { // libgmp does not handle infinity
    case -1: w.n= X_1; R w;

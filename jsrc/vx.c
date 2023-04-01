@@ -43,6 +43,7 @@ XF2(jtxminus){ // a-w  NB. X a, w
 }
 XF2(jtxtymes){ // a*w  NB. X a, w
  ARGCHK2(a,w); A z;
+ ASSERT(1+NBITS(a)+NBITS(w)<GMPMAXBITS, EVWSFULL); // result should fit in emergency gmp memory pool
  R XmulXX(a,w);
 }
 B jtxdivrem(J jt,X a,X w,X*qz,X*rz){ // a (<.@%,|~) w
@@ -104,7 +105,7 @@ XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather
    ASSERT(0<(I)XLIMB0(w), EVLIMIT);
    ASSERT(0<XSGN(w), EWRAT); // want rational result if w is negative
    I wi= IgetX(w);
-   ASSERT(8*GMPMAXSZ > (1+NBITS(a))*wi, EVWSFULL); // GEMP (gmp emergency memory pool) heuristic
+   ASSERT(GMPMAXBITS > (1+NBITS(a))*wi, EVWSFULL); // GEMP (gmp emergency memory pool) heuristic
    EPILOG(XpowXU(a, wi)); // a^w
   } 
  } else {

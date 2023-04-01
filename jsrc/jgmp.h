@@ -522,6 +522,7 @@ extern void jfree4gmp(void*, size_t);
 #define BITSPERLIMB (8*sizeof (UI))
 #define NBITS(x) (likely(0!=XLIMBLEN(x)) ?(CTLZI(XLIMB0(x))+1)+BITSPERLIMB*(XLIMBLEN(x)-1) :0)
 #define GMPMAXSZ (1<<20)       // allowed #bytes for exponential contexts
+#define GMPMAXBITS (GMPMAXSZ*8) // corresponding #bits
 #define GEMPSIZE (GMPMAXSZ<<6) // corresponding emergency pool size
 EXTERN C gempool[GEMPSIZE];    // the pool itself
 EXTERN C*gemptr;               // next available location in the pool

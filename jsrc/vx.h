@@ -28,7 +28,6 @@ extern XF2(jtxlcm);
 extern XF2(jtxminus);
 extern XF2(jtxplus);
 extern XF2(jtxpow);
-extern XF2(jtxpowmodinv);
 extern XF2(jtxtymes);
 
 extern X   jtxc(J,I);

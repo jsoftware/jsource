@@ -82,11 +82,15 @@ static X jtxexp(J jt,X w,I mode) {ASSERT(0, EWIRR);} // u ^w NB. u is <. or >. o
 
 #define LG2 0.693147180559945286 /* log(2) */
 XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather than jt->xmod
- if (0 == XSGN(w)) { // a^0  NB. m is irrelevant, a is irrelevant
-  R X1;
- }
  X m= 0; A xmod= jt->xmod;
  if (xmod) {m= XAV(xmod)[0]; if (!XSGN(m)) m= 0;}
+ if (0 == XSGN(w)) { // a^0  NB. a is irrelevant, check for 1=|m
+  if (m && 1==XLIMBLEN(m) && 1==XLIMB0(m)) {
+   R X0;
+  } else {
+   R X1;
+  }
+ }
  if (0 == m) { // a^w
   if (0 == XSGN(a)) { // 0^w
    if (0<XSGN(w)) R X0; 
@@ -112,17 +116,6 @@ XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather
   if (0>XSGN(m)) jmpz_fdiv_r(mpz, mpz, mpm); // jmpz_powm ignores sign of m
   EPILOG(Xmp(z));
  }
-}
-
-// https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
-XF2(jtxpowmodinv){PROLOG(0113); // special case when xmod is extended (and w is negative)
- X m= 0; A xmod= jt->xmod;
- if (xmod) {m= XAV(xmod)[0]; if (!XSGN(m)) m= 0;}
- if (0 == m) R xpow(a, w);
- mpX(a); mpX(w); mpX(m); mpz_t mpz;
- jmpz_init(mpz); jmpz_powm(mpz, mpa, mpw, mpm); GEMP0; // m | a ^ w
- if (0>XSGN(m)) jmpz_fdiv_r(mpz, mpz, mpm); // jmpz_powm ignores sign of m
- EPILOG(Xmp(z));
 }
 
 XF1(jtxsq){ // *: w

@@ -104,9 +104,7 @@ XF2(jtxpow){PROLOG(10101); // a m&|@^ w // FIXME: m should be a parameter rather
    ASSERT(0<(I)XLIMB0(w), EVLIMIT);
    ASSERT(0<XSGN(w), EWRAT); // want rational result if w is negative
    I wi= IgetX(w);
-   D estimate= log(fabs(DgetX(a)));
-   if (isinf(estimate)) estimate= XLIMBLEN(w)*SZI*LG2*8;
-   ASSERT(LG2*8*GMPMAXSZ > estimate*wi, EVWSFULL); // GEMP (gmp emergency memory pool) heuristic
+   ASSERT(8*GMPMAXSZ > (1+NBITS(a))*wi, EVWSFULL); // GEMP (gmp emergency memory pool) heuristic
    EPILOG(XpowXU(a, wi)); // a^w
   } 
  } else {

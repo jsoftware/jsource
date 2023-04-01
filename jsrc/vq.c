@@ -140,12 +140,9 @@ static QF2(jtqpow){PROLOG(10008); // a^w
  QASSERT(ISQINT(w), 0<QSGN(a) ?EWIRR :EWIMAG);  // use float or complex for roots (when w.d is larger than 1) // might make sense here to special case exact roots?
  QASSERT(1==XLIMBLEN(w.n) && INT_MAX>XLIMB0(w.n), EVWSFULL); // w is too large
  I W= QSGN(w)*XLIMB0(w.n); D DW= llabs(W); // DW=: 0.0+|W=: w
- if (1==W) QEPILOG(a);            // a^1
- QASSERT(XLIMBLIM>XLIMBLEN(a.n)*DW, EVWSFULL) // a^w would be too large
- if (1==XLIMBLEN(a.n)) { // approximate result to check size
-  D est= (log2(fabs(DgetX(a.n)))+log2(DgetX(a.d)))*DW/(8*sizeof (UI));
-  QASSERT(XLIMBLIM > est, EVWSFULL); // a^w would be too bulky
- }
+ if (1==W) QEPILOG(a);                     // a^1
+	if (-1==W) {Q z= {a.d, a.n}; QEPILOG(z);} // a^_1
+ // handled in xpow: QASSERT(XLIMBLIM*8*sizeof (UI) > (NBITS(a.n)+NBITS(a.d))*DW, EVWSFULL); // a^w would be too bulky?
  if (0>W) {
   X p= XabsX(w.n); // we could simplify this, using XpowXU, when 0==jt->xmod
   Q z= {xpow(a.d, p), xpow(a.n, p)}; // use reciprocal of a and |w

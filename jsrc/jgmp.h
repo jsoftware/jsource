@@ -519,6 +519,8 @@ extern void jfree4gmp(void*, size_t);
  * in low memory circumstances.
  * (In a future revision, we may instead inspect the libgmp result)
  */
+#define BITSPERLIMB (8*sizeof (UI))
+#define NBITS(x) (likely(0!=XLIMBLEN(x)) ?(CTLZI(XLIMB0(x))+1)+BITSPERLIMB*(XLIMBLEN(x)-1) :0)
 #define GMPMAXSZ (1<<20)       // allowed #bytes for exponential contexts
 #define GEMPSIZE (GMPMAXSZ<<6) // corresponding emergency pool size
 EXTERN C gempool[GEMPSIZE];    // the pool itself

@@ -55,7 +55,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
   // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
   // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
   // approximate lg(n) with bit count.  And always use small-range if range is < 256
-  UI4 lgn; CTLZI(wn,lgn);
+  UI4 lgn=CTLZI(wn);
   I maxrange = wn<64?256:(I)((lgn*4-6)*(D)wn/(4.5*(D)icn));
   rng = ISDENSETYPE(wt,INT)?condrange((I*)wv,wn,IMAX,IMIN,maxrange):condrange4((C4*)wv,wn,-1,0,maxrange);
  }else if(unlikely(((k-1)&-2)==0)){

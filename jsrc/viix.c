@@ -192,7 +192,7 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
    // I haven't actually tuned this; new I. invalidated the previous tuning, but partitioning w will invalidate it again.  Hence the &0 above disabling this path.  Current code is damn fast when a is small enough for this to matter, so minimal loss
    // (above is also a good way of benchmarking the routine in general at various points at the cache hierarchy; check also float char matrix ...)
    UI r=IAV(a)[n-1]-IAV(a)[0]; r=IAV(a)[n-1]<IAV(a)[0]?0-r:r;  // get range, which may overflow I but will stay within UI
-   UI4 nlg; CTLZI(n,nlg); nlg=(nlg<<1)+(SGNTO0(SGNIF((n<<1),nlg)));   // approx lg with 1 bit frac precision.  Can't shift 64 bits in case r=1
+   UI4 nlg=CTLZI(n); nlg=(nlg<<1)+(SGNTO0(SGNIF((n<<1),nlg)));   // approx lg with 1 bit frac precision.  Can't shift 64 bits in case r=1
    if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores
   }
  }

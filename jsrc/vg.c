@@ -270,7 +270,7 @@ static GF(jtgrdq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
  I sortdown63=SGNIF((I)jtinplace,JTDESCENDX)&IMIN;  // sign bit set if sorting down; other bits 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
- unsigned long hbit; CTLZI(n-1,hbit); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
+ unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
  // Loop over each grade
  I *wv=IAV(w);  // we interpret the floats in w as if they were integers.
  while(--m>=0){
@@ -420,7 +420,7 @@ static GF(jtgriq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
  I gradedown=REPSGN(SGNIF(jtinplace,JTDESCENDX));  // ~0 if sorting down, else 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
- unsigned long hbit; CTLZI(n-1,hbit); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
+ unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
  I itemmsb=(I)1<<(BW-1-hbit); I itemsigmsk=2*-itemmsb;  // get bit at place we will shift into sign bit, and a mask for all higher bits
  // Loop over each grade
  I *wv=IAV(w);  // we interpret the floats in w as if they were integers.
@@ -535,7 +535,7 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,* RESTRICT v,*wv,*xv;UI4 * RESTRICT y
 #if SY_64  // no quickgrade unless INTs are 64 bits
  if(ai==1){  // for atoms, usually use smallrange or quicksort
   if(n<10)R jtgriq(jtinplace,m,ai,n,w,zv);  // for short lists just use qsort
-  UI4 lgn3; CTLZI(n,lgn3); lgn3 = (UI4)((lgn3*8) - 8 + (n>>(lgn3-3)));  // approx lg(n)<<3
+  UI4 lgn3=CTLZI(n); lgn3 = (UI4)((lgn3*8) - 8 + (n>>(lgn3-3)));  // approx lg(n)<<3
   rng = condrange(wv,AN(w),IMAX,IMIN,MIN((L2CACHESIZE>>LGSZI),(n*lgn3)>>(3-1)));  // let range go up to 2n lgn, but never more than L2 size
   if(!rng.range){
    if(!BETWEENC(n,5500,500000))R jtgriq(jtinplace,m,ai,n,w,zv);  // quicksort except for 5500-500000
@@ -655,7 +655,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  }
 
 static GF(jtgrb){F1PREFJT;A x;B b,up;I *g,*h,i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
- UI4 lgn; CTLZI(n,lgn);
+ UI4 lgn=CTLZI(n);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
  q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
  if(1<q){GATV0(x,INT,n,1); xv=AV(x);}
@@ -669,7 +669,7 @@ static GF(jtgrb){F1PREFJT;A x;B b,up;I *g,*h,i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=a
 }    /* grade"r w on boolean w, works 4 columns at a time (d%4 guaranteed to be 0)*/
 
 static GF(jtgrc){F1PREFJT;A x;B b,q,up;I *g,*h,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
- UI4 lgn; CTLZI(n,lgn);
+ UI4 lgn=CTLZI(n);
  if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
  ai<<=((AT(w)>>C2TX)&1);
  p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;

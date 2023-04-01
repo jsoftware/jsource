@@ -132,7 +132,7 @@ I CTTZI(I w){R CTTZ(w);}
 #endif
 #endif
 
-I CTLZI_(UI w, UI4*out){
+UI4 CTLZI_(UI w){
  UI4 t = 0;
 #if BW==64
  if (w & 0xffffffff00000000LL){ w >>= 32; t += 32; }
@@ -141,8 +141,7 @@ I CTLZI_(UI w, UI4*out){
  if (w & 0xff00LL){ w >>= 8; t += 8; }
  if (w & 0xf0LL){ w >>= 4; t += 4; }
  if (w & 0xcLL){ w >>= 2; t += 2; }
- *out = t + (UI4)(w >>= 1);
- R 0;
+ R t + (UI4)(w >>= 1);
 }
 
 I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;

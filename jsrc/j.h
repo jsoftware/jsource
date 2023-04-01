@@ -1232,7 +1232,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
-#define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz;  CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1,zzz); z = ((((I)1<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
+#define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz=CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1); z = ((((I)1<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
 // Memory-allocation macros
 #if MEMHISTO   // create histogram of allocation calls
 #define HISTOCALL memhashadd(__LINE__,__FILE__);
@@ -2203,6 +2203,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 
 // CTLZ(I) returns the bit position of the highest 1-bit
 
+#if 0 // obsolete
 #if defined(MMSC_VER)  // SY_WIN32
 // do not include intrin.h
 // #include <intrin.h>
@@ -2216,15 +2217,16 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
+#endif
 
 #ifdef __GNUC__
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
 #if SY_64
 #define CTTZI(w) __builtin_ctzll((UI)(w))
-#define CTLZI(w,out) (out=(63-__builtin_clzll((UI)(w))))
+#define CTLZI(w) (63-__builtin_clzll((UI)(w)))
 #else
 #define CTTZI(w) __builtin_ctzl((UINT)(w))
-#define CTLZI(w,out) (out=(31-__builtin_clzl((UI)(w))))
+#define CTLZI(w) (31-__builtin_clzl((UI)(w)))
 #endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
@@ -2273,8 +2275,8 @@ extern I CTTZI(I);
 extern I CTTZZ(I);
 #endif
 #if !defined(CTLZI)
-extern I CTLZI_(UI,UI4*);
-#define CTLZI(in,out) CTLZI_(in,&(out))
+extern UI4 CTLZI_(UI,UI4*);
+#define CTLZI(in) CTLZI_(in)
 #endif
 
 #if C_AVX2&&__x86_64__

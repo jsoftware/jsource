@@ -303,7 +303,7 @@ static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
 #if 1  // set to 0 to TUNE
  I nrange;   // range allowed, as multiple of size
  if(BETWEENC(n,1024,100000000)){
-  I lzn; CTLZI(n,lzn); lzn=((((UI)n<<1)<<((BW-1)-lzn))>>(BW-8))+(lzn<<8);  // approx lg(n), binary point 8
+  I lzn=CTLZI(n); lzn=((((UI)n<<1)<<((BW-1)-lzn))>>(BW-8))+(lzn<<8);  // approx lg(n), binary point 8
   lzn=lzn*709-1006633;  // 0.0108333 2^.x - 0.06, binary point at 24
   nrange=16777216/lzn;  // 1/lzn, binary point back to 0
  }else{nrange=n<=1023?25:2;}  // for small or large, use limit.  On the high end we don't want to run out of memory
@@ -477,7 +477,7 @@ F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
    // for 1e6 items - 80 bytes; 1e5 - 64 bytes; 1e4 - 40 bytes - 1e3 - 48 bytes
    // We roughly approximate this curve
   if(!z){  // not a special case
-   UI4 lgn; CTLZI(n,lgn);
+   UI4 lgn=CTLZI(n);
    if(d<40||(UI4)d<(lgn<<4))RZ(z=jtsortdirect(jtinplace,m,api,n,w))  //  TUNE
   }
  }

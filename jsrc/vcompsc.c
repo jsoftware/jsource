@@ -172,7 +172,7 @@ A name(J jt,A a,A w){ \
 
 #define ASSIGNX(v)     {x=*(C*)v; x|=x<<8; x|=x<<16; x|=x<<(32&(BW-1)); }
 #define INDB3          {n=(UI)n>i*(UI)SZI+(CTTZI(y)>>LGBB)?i*SZI+(CTTZI(y)>>LGBB):n; break;}
-#define JNDB3          {UI4 bitno; CTLZI(y,bitno); n=(i*SZI+(bitno>>LGBB)); break;}
+#define JNDB3          {UI4 bitno=CTLZI(y); n=(i*SZI+(bitno>>LGBB)); break;}
 
 #define INDB(f,T0,T1,F)  \
  static F2(f){I an,*av,n,q,wn,*wv,x,y;                                 \

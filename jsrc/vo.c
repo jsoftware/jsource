@@ -162,7 +162,7 @@ F2PREFIP;ARGCHK2(a,w);
   // w was abandoned.  We will store back-to-front, on the assumption that ; usually happens in bunches and w probably came from ;
   // if new w has no space before the beginning, allocate a bigger block and move w to the end of it
   if(unlikely(AK(w)==AKXR(1))){A neww;   // no space at the beginning of w
-   I neededn=AN(w)+4+8; CTLZI(neededn,neededn); neededn=(2LL<<neededn)-8;  // number of atoms needed in larger block: room for at least 4 more, rounded up to power of 2 after header
+   I neededn=AN(w)+4+8; neededn=CTLZI(neededn); neededn=(2LL<<neededn)-8;  // number of atoms needed in larger block: room for at least 4 more, rounded up to power of 2 after header
    GATV0(neww,BOX,neededn,1); AN(neww)=AS(neww)[0]=AN(w); AK(neww)+=(neededn-(AN(w)+4))*SZI;  // allocate and position AK to put AN(w) atoms at end, with several spaces extra in case user wants to append in place
    MC(AAV(neww),AAV(w),AN(w)*SZI);  // copy the atoms from old to new
    AFLAGINIT(neww,AFLAG(w)) AFLAGANDLOCAL(w,~RECURSIBLE)  // If w recursive: transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive.  If w nonrecursive, so is neww and they are independent

@@ -237,7 +237,7 @@ static UIL calcctmask(D cct){
  // user specified ct.  Calculate the mask for it
  D p=2.0 - (4.0*(1.0-cct))/(2.0-cct);
  UIL q=(~*(UIL*)&p)<<16;  // shift exponent away & complement
- I zeropos; CTLZI(q,zeropos);   // get bit# of highest 0 bit (+ 16, because of shift) - 15 if all bits were 1
+ I zeropos=CTLZI(q);   // get bit# of highest 0 bit (+ 16, because of shift) - 15 if all bits were 1
  R ((UIL)~0LL)<<(zeropos-15);
 }
 

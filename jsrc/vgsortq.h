@@ -88,14 +88,14 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
      // There MUST have been at least 1 equal value, because the pivot was the median of three and yet nothing compared low the first time; one value at least must compare equal.
      if(!(cstk&(cstk+1))) {
       // There are still no exchanges.  Find the partition sizes.
-      UI4 xchgx04; CTLZI(cstk,xchgx04); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
+      UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
       if(xchgx1!=r-l)goto finmedxchg;  // there are no exchanges, but we have to process both partitions (one of which might be empty)
       r=l; continue;  // all equal -- abort this partition and go to the next one
      }
      // ...falling through if there are exchanges after a rescan
     } else {
      // The lower partition is not empty.  Set the partition pointer above the lowest 1-bit
-     UI4 xchgx04; CTLZI(cstk,xchgx04); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
+     UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
      goto finmedxchg;
     }
     // ...falling through if there are exchanges after a rescan
@@ -107,7 +107,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
     // find the exchange points.  This is the dependency loop (actually the CTTZI is not part of the dependency).  The cstk^= could be replaced with cstk&=(1<<xchgx0)-1 if that would
     // generate a BZHI instruction.  After we get the exchange points we complement the bits of the exchange.  This guarantees that the number of set bits is invariant.
     // Therefore, when we terminate xchgx0 will always be the end of the low side and xchgx1 that of the high side
-    UI4 xchgx04; CTLZI(cstk,xchgx04); xchgx0=xchgx04; xchgx1=CTTZI(~cstk); cstk|=cstk+1; cstk^=(I)1<<xchgx0;  // get indexes of the swaps
+    UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=CTTZI(~cstk); cstk|=cstk+1; cstk^=(I)1<<xchgx0;  // get indexes of the swaps
     if(xchgx0<xchgx1)break;  // terminate when the swap would be retrograde
     SORTQTYPE temp=v0[xchgx0]; v0[xchgx0]=v0[xchgx1]; v0[xchgx1]=temp;  // do the exchange
    }

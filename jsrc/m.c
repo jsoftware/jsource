@@ -1344,7 +1344,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
- CTLZI((UI)bytes,j);  // 3 or 4 should return 2; 5 should return 3
+ j=CTLZI((UI)bytes);  // 3 or 4 should return 2; 5 should return 3
  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }

@@ -745,7 +745,7 @@ F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
  case 2*4+1: ;  // lzcnt, used
   v1=(I)w, v2=AN(w);  // two unpredictable values
   NOUNROLL for(i=100000000; i; --i){
-   I temp; CTLZI(v1,temp); v1=v1+(63^temp);
+   I temp=CTLZI(v1); v1=v1+(63^temp);
   }
   break;
  }

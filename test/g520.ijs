@@ -424,7 +424,7 @@ NB. obsolete
   beta=.1. 1.5 1 2 0
   Frow =. _1 _2 _1 _1. 1.
   assert. 0 2 4 1 4 _1 ('' run128_9) (,2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 4 1 4 _3 ('' run128_9) (,1);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 1 4 1 4 _3 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 4 2 8 _3 ('' run128_9) (1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 4 2 8 _3 ('' run128_9) (2 1);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   end.  NB. one thread

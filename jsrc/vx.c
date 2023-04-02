@@ -343,14 +343,21 @@ AMONPS( pixX, X,X, , *z=   rifvsdebug(xpi(*x)); , HDR1JERR)
  // x%m using mrecip.  x*mrecip is truncated, which gives the remainder.  mrecip may be 2^-64 low, so the remainder may be x*m/2^64 high, i. e. m^3/2^64.  This is never more than m too high, so a single correction suffices
  // we expect the correction to be rare so we use a branch
 
-// w is an atom, either INT or XNUM, result is w(mod n).  n is > 1
+// w is an atom, either INT or XNUM, result is w(mod n) always nonnegative.  n is > 1
 static UI modarg(A w, UI n, UI nrecip){UI z;
+ I wsign;  // holds sign of w
  if(AT(w)&INT){
-  I x=IAV(w)[0];  // fetch value
-  z=ABS(x); if(unlikely(z>=n))z=z%n; if(unlikely(x<0))z=n-z;  // bring value into range
+  wsign=IAV(w)[0];  // fetch value
+  z=ABS(wsign); if(unlikely(z>=n))z=z%n;  // modulus of ABS(w)
  }else{
-z=0;
+  // XNUM arg.  First thing is to take its modulus, which we do here since n is small
+  wsign=XSGN(w); RZ(wsign)  // sign/size of w, if 0 modulus is 0
+  I wlimbs=ABS(wsign); UI *wdig=&XLIMB0(w);  // get # limbs and a pointer to the least significant
+  UI modBW=0-n*nrecip;  // this is 2^BW(mod n)
+  z=0;  // modulus inherited from higher digits, and result
+  DQ(wlimbs, z=(z*modBW)+wdig[i]%n; z=modn(z);)
  }
+ if(unlikely(wsign<0))z=n-z;  // if w neg, correct to complementary modulus
  R z;
 } 
 
@@ -375,9 +382,39 @@ static DF2(jtmodopextexp){A z;PROLOG(000);
 static DF1(jtmodopext1){if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w)) R rank1ex0(w,self,FAV(w)->localuse.lu0.modatomfn);}
 static DF2(jtmodopext2){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w)) R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
-static DF2(jtmodopinttimes){R 0;}
+// modular multiply with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
+static DF2(jtmodopinttimes){PROLOG(000);
+ // fetch n from h and nrecip from self
+ I nsign=XSGN(FAV(self)->fgh[2]); UI n=XLIMB0(FAV(self)->fgh[2]); UI nrecip=FAV(self)->localuse.lu1.mrecip;
+ // fetch x(mod n) and y(mod n)
+ UI x=modarg(a,n,nrecip), y=modarg(w,n,nrecip);  // multiplicands
+ UI z=x*y; z=modn(z);   // multiply and take modulus
+ // correct for negative n
+ A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
+ // if modulus was XNUM, make result extended
+ if(AT(FAV(self)->fgh[1])&XNUM)zzz=cvt(XNUM,zzz);
+ EPILOG(zzz)
+}
 
-static DF2(jtmodopintdiv){R 0;}
+// modular divide/reciprocal with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
+// bivalent
+static DF2(jtmodopintdiv){PROLOG(000);
+ self=AT(w)&VERB?w:self;  // if monad, take self from w
+ // fetch n from h and nrecip from self
+ I nsign=XSGN(FAV(self)->fgh[2]); UI n=XLIMB0(FAV(self)->fgh[2]); UI nrecip=FAV(self)->localuse.lu1.mrecip;
+ // fetch [x(mod n)] and y(mod n)
+ UI x=modarg(a,n,nrecip), y;
+ if(AT(w)&VERB)y=modarg(w,n,nrecip);else{y=x; x=1;}  // arguments
+ // Take modular inverse of y
+ A ynum=cvt(XNUM,sc(y)); RZ(ynum); RZ(ynum=jtmodopextexp(jt,ynum,X_1,self)) y=XLIMB0(ynum);  // modular inverse must be nonzero and fit in 1 limb.  The inverse may fail
+ UI z=x*y; z=modn(z);   // multiply and take modulus
+ // correct for negative n
+ A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
+ // if modulus was XNUM, make result extended
+ if(AT(FAV(self)->fgh[1])&XNUM)zzz=cvt(XNUM,zzz);
+ EPILOG(zzz)
+}
+
 
 // modular power with small integer modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
 static DF2(jtmodopintexp){PROLOG(000);
@@ -389,7 +426,7 @@ static DF2(jtmodopintexp){PROLOG(000);
  UI x=modarg(a,n,nrecip); I y=IAV(w)[0];  // the base and exponent
  if(y<0){
   // Negative y.  Convert x to XNUM and take x=modular power x^_1(mod n).  Use GMP for now
-  A xnum=cvt(XNUM,a); RZ(xnum); RZ(xnum=jtmodopextexp(jt,xnum,X_1,self)) x=XLIMB0(xnum);  // modular inverse must be nonzero and fit in 1 limb.  The inverse may fail
+  A xnum=cvt(XNUM,sc(x)); RZ(xnum); RZ(xnum=jtmodopextexp(jt,xnum,X_1,self)) x=XLIMB0(xnum);  // modular inverse must be nonzero and fit in 1 limb.  The inverse may fail
   y=-y;  // use positive power of modular inverse
  }
  // take modular power by repeated squaring

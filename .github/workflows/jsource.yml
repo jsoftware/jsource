@@ -46,7 +46,6 @@ jobs:
       cd j64
       strip -S jconsole
       strip -S libj.so
-      strip -S libjavx.so || true
       strip -S libjavx2.so || true
       strip -S libjavx512.so || true
       strip -S libtsdll.so
@@ -103,7 +102,6 @@ jobs:
       cd j64
       strip -S jconsole
       strip -S libj.so
-      strip -S libjavx.so || true
       strip -S libjavx2.so || true
       strip -S libjavx512.so || true
       strip -S libtsdll.so
@@ -150,7 +148,6 @@ jobs:
       script/testga.sh darwin || exit 1
       rm -rf j64/jconsole.dSYM
       rm -rf j64/libj.dylib.dSYM
-      rm -rf j64/libjavx.dylib.dSYM
       rm -rf j64/libjavx2.dylib.dSYM
       rm -rf j64/libjavx512.dylib.dSYM
       rm -rf j64/libtsdll.dylib.dSYM
@@ -160,7 +157,6 @@ jobs:
       cd j64
       strip -S jconsole
       strip -S libj.dylib
-      strip -S libjavx.dylib || true
       strip -S libjavx2.dylib || true
       strip -S libjavx512.dylib || true
       strip -S libtsdll.dylib
@@ -344,7 +340,6 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so || true
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
        strip -S libtsdll.so
@@ -411,7 +406,6 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so || true
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
        strip -S libtsdll.so
@@ -543,7 +537,6 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so || true
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
        strip -S jamalgam || true
@@ -611,7 +604,6 @@ jobs:
        cd j64
        strip -S jconsole
        strip -S libj.so
-       strip -S libjavx.so || true
        strip -S libjavx2.so || true
        strip -S libjavx512.so || true
        strip -S libtsdll.so

@@ -1064,7 +1064,7 @@ endqp: ;
       __m256i loadingprirow=_mm256_cmpeq_epi64(_mm256_set1_epi64x(prirow),rownums);  // mask of lanes loading prirow
       if(unlikely(!_mm256_testz_si256(rowstride,loadingprirow))){   // rowstride is any 256i with nonzero in all lanes
        // we are looking at the priority row.  If it is eligible and not dangerous, stop right away and take it
-       if(!_mm256_testz_pd(loadingprirow,_mm256_cmp_pd(dotproducth,_mm256_set1_pd(colokpivotthresh),_CMP_GE_OQ))){
+       if(!_mm256_testz_pd(_mm256_castsi256_pd(loadingprirow),_mm256_cmp_pd(dotproducth,_mm256_set1_pd(colokpivotthresh),_CMP_GE_OQ))){
 // obsolete       if(unlikely((bvgrd-bvgrd0)==(prirow&-NPAR))){
 // obsolete        // We are looking at the virtual row.
 // obsolete        if(_mm256_movemask_pd(_mm256_cmp_pd(dotproducth,_mm256_set1_pd(colokpivotthresh),_CMP_GE_OQ))&(1<<(prirow&(NPAR-1)))){

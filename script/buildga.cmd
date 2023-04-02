@@ -25,11 +25,11 @@ cd jdll
 nmake -f makefile.win CC=clang-cl x64=1 JAVX512=1 USE_OPENMP=0 USE_PYXES=1 clean
 nmake -f makefile.win CC=clang-cl x64=1 JAVX512=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=0 JAVX2=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=0 JAVX2=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=0 JAVX2=0 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=0 JAVX2=0 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 @rem nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1 clean
 @rem nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1
@@ -42,8 +42,8 @@ IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 @rem nmake -f makefile.win CC=clang-cl x64=0
 cd ..
 cd jamalgam
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=0 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=0 JAVX2=0 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX512=0 JAVX2=0 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 @rem nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1 clean
 @rem nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=1

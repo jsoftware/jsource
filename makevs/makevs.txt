@@ -25,14 +25,14 @@ strong assumption that c:\users\name\jbld is folder for building/running things
 bat files in a folder in path can simplify running J:
 j32.bat    - jbld\j32\bin\jconsole -js "load'git/jsource/test/tsu.ijs'"
 j64.bat    - jbld\j64\bin\jconsole -js "[load'git/jsource/test/tsu.ijs'"
-j64avx.bat - jbld\j64\bin\jconsole -lib javx.dll -js "load'git/jsource/test/tsu.ijs'"
+j64avx2.bat - jbld\j64\bin\jconsole -lib javx2.dll -js "load'git/jsource/test/tsu.ijs'"
 
 VS2013
  Open Project
  browse to git\jsource\makevs\jdll
  open jdll.sln
  Build>Configuration Manager
-  Release64avx - X64 (32 bit builds must be Win32)
+  Release64avx2 - X64 (32 bit builds must be Win32)
  Build Clean Solution
  Build Solution
 

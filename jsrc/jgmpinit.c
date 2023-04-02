@@ -437,6 +437,7 @@ void jgmpinit(C*libpath) {
  jgmpfn(mpz_init_set_d);   // https://gmplib.org/manual/Simultaneous-Integer-Init-_0026-Assign
  jgmpfn(mpz_init_set_str); // https://gmplib.org/manual/Simultaneous-Integer-Init-_0026-Assign
  jgmpfn(mpz_init_set_si);  // https://gmplib.org/manual/Simultaneous-Integer-Init-_0026-Assign
+ jgmpfn(mpz_invert);       // https://gmplib.org/manual/Number-Theoretic-Functions
  jgmpfn(mpz_lcm);          // https://gmplib.org/manual/Number-Theoretic-Functions
  jgmpfn(mpz_mul);          // https://gmplib.org/manual/Integer-Arithmetic
  jgmpfn(mpz_neg);          // https://gmplib.org/manual/Integer-Arithmetic

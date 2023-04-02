@@ -314,6 +314,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_init_set_d __gmpz_init_set_d    // https://gmplib.org/manual/Simultaneous-Integer-Init-_0026-Assign
 #define jmpz_init_set_str __gmpz_init_set_str// https://gmplib.org/manual/Simultaneous-Integer-Init-_0026-Assign
 #define jmpz_init_set_si __gmpz_init_set_si  // https://gmplib.org/manual/Simultaneous-Integer-Init-_0026-Assign
+#define jmpz_invert __gmpz_invert            // https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_lcm __gmpz_lcm                  // https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_mul __gmpz_mul                  // https://gmplib.org/manual/Integer-Arithmetic
 #define jmpz_neg __gmpz_neg                  // https://gmplib.org/manual/Integer-Arithmetic
@@ -363,6 +364,7 @@ EXTERN void (*jmpz_init)(mpz_t);
 EXTERN void (*jmpz_init_set_d)(mpz_t, D); /* probably not used: see jtXfromD */
 EXTERN int  (*jmpz_init_set_str)(mpz_t, C*, int);
 EXTERN void (*jmpz_init_set_si)(mpz_t, mpir_si);
+EXTERN int  (*jmpz_invert)(mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_lcm)(mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_mul)(mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_neg)(mpz_t, const mpz_t);
@@ -461,6 +463,8 @@ extern void jfree4gmp(void*, size_t);
 #define XshimUU(f, Ub,Uc) ({mpX0(a); f(mpa, Ub, Uc); Xmp(a);})
 #define XshimXU(f, Xb,Uc) ({mpX0(a); X b= Xb; mpX(b); f(mpa, mpb, Uc); Xmp(a);})
 #define XshimXX(f, Xb,Xc) ({mpX0(xa); X xb= Xb, xc= Xc; mpX(xb); mpX(xc); f(mpxa, mpxb, mpxc); Xmp(xa);})
+#define XshimXXerr(f, Xb,Xc) ({mpX0(xa); X xb= Xb, xc= Xc; mpX(xb); mpX(xc); I ok=f(mpxa, mpxb, mpxc); ok?Xmp(xa):0;})  // like XshimXX but returns 0 if function failed
+#define XshimXXX(f, Xb,Xc,Xd) ({mpX0(xa); X xb= Xb, xc= Xc, xd=Xd; mpX(xb); mpX(xc); mpX(xd); f(mpxa, mpxb, mpxc, mpxd); Xmp(xa);})
 
 // Rational implementation
 #define QgetX(x) ({Q q= {x,X1}; q;})  // cast an X as a Q
@@ -504,11 +508,13 @@ extern void jfree4gmp(void*, size_t);
  X Sy=Xy; mpX(Sy); C*s= jmpz_get_str(0,10,mpSy); \
  X tempx= UNvoidAV1(s); mpX(tempx); X safex= jtXmpzcommon(jt, mptempx, 0); \
  CAV1(safex);}) // ": y
+#define XinvertXX(x, y) XshimXXerr(jmpz_invert, x, y)            // modular inverse of x(mod y), but returns 0 if error
 #define XlcmXX(x, y) XshimXX(jmpz_lcm, x, y)            // x*.y
-#define XmulXX(x, y) XshimXX(jmpz_mul, x, y)            // x+y
+#define XmulXX(x, y) XshimXX(jmpz_mul, x, y)            // x*y
 #define XnegX(y) XshimX(jmpz_neg, y)                    // -y
 #define XpowXU(x, y) XshimXU(jmpz_pow_ui, x, y)         // x^y
 #define XpowUU(x, y) XshimUU(jmpz_ui_pow_ui, x, y)      // x^y  // (UI)x^(UI)y
+#define XpowmXXX(x,y,z) XshimXXX(jmpz_powm, x, y, z)         // x^y
 #define IsizeinbaseXI(x,y) shimXI(jmpz_sizeinbase, x,y)
 #define IbitsX(x) IsizeinbaseXI(x,2)
 #define XsubXX(x, y) XshimXX(jmpz_sub, x, y)            // x-y

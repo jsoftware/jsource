@@ -368,13 +368,12 @@ static DF2(jtmodopextdiv){R 0;}
 // modular power on extendeds, one atom
 static DF2(jtmodopextexp){A z;PROLOG(000);
  X n=XAV(FAV(self)->fgh[2])[0];  // extract modulus, which may be negative
- mpX(a); mpX(w); mpX(n); mpz_t mpz;  // init values as GMP values
- jmpz_init(mpz);
- // if power is negative, take the modulus
- if(XSGN(n)<0){mpz_invert(mpa,mpa,mpn); Xmp(a); ASSERT(XSGN(a)!=0,EVDOMAIN)}  // replace a by modular inv; error if nonexistent
- jmpz_powm(mpz, mpa, mpw, mpn); GEMP0; // take a^w(mod n)
- if(unlikely(XSGN(n)<0))jmpz_add(mpz, mpz, mpn); // jmpz_powm ignores sign of n; if n negative, move result to range -n.._1
- EPILOG(Xmp(z));  // return atomic XNUM
+ X xa=XAV(a)[0], xw=XAV(w)[0];  // the atomic ops
+ // if power is negative, take the modular inverse of the base
+ if(XSGN(xw)<0){ASSERT(XinvertXX(xa,n)!=0,EVDOMAIN)}  // verify inverse exists
+ X xz=XpowmXXX(xa,xw,n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
+ if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // jmpz_powm ignores sign of n; if n negative, move result to range -n.._1
+ GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
 // modular operation on extendeds (function for one atom is in self)

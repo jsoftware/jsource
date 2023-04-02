@@ -507,33 +507,3 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
  case NN: ASSERT(0,EVDOMAIN);
  }
 }
-
-// modular power on extendeds, one atom
-// call GMP to do the operation.  It understands negative power and ignores the sign of the modulus
-// correct for negative n
-
-// modular power on integers, one atom
-// if either arg is extended, transfer to extended-atom code
-// fetch n from h and nrecip from self
-// if y is negative, convert x to XNUM and take x=modular power x^_1(mod n)
-// if x>=n, replace it with x%n
-// take modular power by repeated squaring
-// correct for negative n
-
-// modular operation on extendeds (function for one integer atom is in self)
-// convert arguments to extended if needed
-// rank2ex0 to loop over integer atoms
-
-// modular operation on integers (function for one integer atom is in self)
-// try converting args to integer; if that fails, try extended
-// if an argument is extended, transfer to extended code
-// rank2ex0 to loop over integer atoms
-
-// Modular arithmetic u m. n
-F2(jtmdot){A z=0;
- // Verify that n is an integer and create a XNUM form for it
- // If n is small enough to have an integer form, take its reciprocal
- // Verify that u is a supported verb, and point to its functions
- // Create the result function.  h points to the original n as XNUM, lu0 points to the function for one integer atom, lu1 is the reciprocal of n if valid
- R z;
-}

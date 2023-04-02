@@ -1006,6 +1006,7 @@ typedef struct {
     I filler;  // pad to cacheline
     A cachedloc;   //  for namerefs ('name'~), the locale address if the name is a direct named lookup (after the first reference)
     A gerundself;  // in gerund iterators, the address of the self block for m@.v, for diagnostic purposes
+    AF modatomfn;  // in u m. n, the verb to process atoms of u
    } lu0;
    // end of first cacheline, which is not used much during execution
    union {  // 8 bytes in the second (main) cacheline.  Aligned to 8-byte bdy even on 32-bit system
@@ -1024,7 +1025,7 @@ typedef struct {
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
-    UI mrecip;  // for m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
+    UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

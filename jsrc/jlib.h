@@ -39,9 +39,20 @@ typedef struct AREP_RECORD {
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
 #define AR(x)           ((x)->r)        /* Rank                            */
+#define ARNK(x)         ((unsigned char)((x)->r))  /* Rank lowest byte     */
 #define AS(x)           ((x)->s)
-#define LIT 2
-#define INT 4
+#define B01             ((I)1L<<0)           // B  boolean
+#define LIT             ((I)1L<<1)           // C  literal (character)
+#define INT             ((I)1L<<2)           // I  integer
+#define FL              ((I)1L<<3)           // D  double (IEEE floating point)
+#define CMPX            ((I)1L<<4)           // Z  complex
+#define BOX             ((I)1L<<5)           // A  boxed
+#define XNUM            ((I)1L<<6)           // X  extended precision integer
+#define RAT             ((I)1L<<7)           // Q  rational number
+#define PYX             ((I)1L<<8) // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
+#define SBT             ((I)1L<<16)          // SB symbol
+#define C2T             ((I)1L<<17)          // C2 unicode (2-byte characters)
+#define C4T             ((I)1L<<18)          // C4 unicode (4-byte characters)
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define CAV(x)          (      (C*)(x)+AK(x) )  /* character               */
 #define IAV(x)          AV(x)                   /* integer                 */

@@ -351,8 +351,8 @@ static UI modarg(A w, UI n, UI nrecip){UI z;
   z=ABS(wsign); if(unlikely(z>=n))z=z%n;  // modulus of ABS(w)
  }else{
   // XNUM arg.  First thing is to take its modulus, which we do here since n is small
-  wsign=XSGN(w); RZ(wsign)  // sign/size of w, if 0 modulus is 0
-  I wlimbs=ABS(wsign); UI *wdig=&XLIMB0(w);  // get # limbs and a pointer to the least significant
+  X wx=XAV(w)[0]; wsign=XSGN(wx); RZ(wsign)  // sign/size of w, if 0 modulus is 0
+  I wlimbs=ABS(wsign); UI *wdig=&XLIMB0(wx);  // get # limbs and a pointer to the least significant
   UI modBW=0-n*nrecip;  // this is 2^BW(mod n)
   z=0;  // modulus inherited from higher digits, and result
   DQ(wlimbs, z=(z*modBW)+wdig[i]%n; z=modn(z);)
@@ -424,7 +424,7 @@ static DF2(jtmodopinttimes){PROLOG(000);
  // correct for negative n
  A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
  // if modulus was XNUM, make result extended
- if(AT(FAV(self)->fgh[1])&XNUM)zzz=cvt(XNUM,zzz);
+ if(AT(FAV(self)->fgh[1])&XNUM+RAT)zzz=cvt(XNUM,zzz);
  EPILOG(zzz)
 }
 
@@ -444,7 +444,7 @@ static DF2(jtmodopintdiv){PROLOG(000);
  // correct for negative n
  A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
  // if modulus was XNUM, make result extended
- if(AT(FAV(self)->fgh[1])&XNUM)zzz=cvt(XNUM,zzz);   // cvt is slow
+ if(AT(FAV(self)->fgh[1])&XNUM+RAT)zzz=cvt(XNUM,zzz);   // cvt is slow
  EPILOG(zzz)
 }
 
@@ -470,7 +470,7 @@ static DF2(jtmodopintexp){PROLOG(000);
  // correct for negative n
  A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
  // if modulus was XNUM, make result extended
- if(AT(FAV(self)->fgh[1])&XNUM)zzz=cvt(XNUM,zzz);
+ if(AT(FAV(self)->fgh[1])&XNUM+RAT)zzz=cvt(XNUM,zzz);
  EPILOG(zzz)
 }
 
@@ -487,7 +487,8 @@ F2(jtmdot){F2PREFIP;A z=0;
  // Verify that n is an integer and create a XNUM form for it
  ASSERT(AT(w)&NOUN,EVDOMAIN) ASSERT(AR(w)==0,EVRANK)  // n must be a noun atom
  A h=w;  // XNUM form of w
- if(!(AT(w)&XNUM))RZ(h=cvt(XNUM,w));  // must be integral
+ if(!(AT(w)&XNUM))RZ(h=bcvt(2,w));   // convert to smallest type that fits
+ ASSERT(AT(h)&INT+XNUM+RAT,EVDOMAIN) RZ(h=cvt(XNUM,w));  // must be an exact integer; then take it to XNUM
  I nrecip=0;  // will hold reciprocal of abs(n), init to invalid
  UI n=2;  // init integer value of modulus to 'not special'
  // If n is small enough to use integer ops, take its reciprocal
@@ -505,7 +506,7 @@ F2(jtmdot){F2PREFIP;A z=0;
  fn1=(0b100&(1<<fnx))?fn1:jtvalenceerr;  // if u doesn't support monad, take that valence away
 
  // u is valid.  If n is _1, 0, or 1, modulus is degenerate and we just use a constant result
- if(unlikely(n<2)){df2(z,zeroionei(0),zeroionei(0),a);R qq(z,zeroionei(0));}  // return (0 u 0)"0
+ if(unlikely(n<2)){R qq(zeroionei(0),zeroionei(0));}  // return 00"0
 
  // Create the result function.  h points to the original n as XNUM, lu0 points to the function for one atom, lu1 is the reciprocal of n if valid
  fdefallo(z)

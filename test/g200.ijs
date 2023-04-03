@@ -330,7 +330,7 @@ f=: 3 : 0
 )
 
 f 1e9
-f"0 1+<.%:<:2^IF64{31 63
+f"0 (i. 3)+<.%:<:2^IF64{31 63
 f"0 (i:2)+<.%:<:2^53
 f"0 i. 1000
 f"0 (-i. 1000) + <.%:<:2^IF64{31 63
@@ -407,6 +407,7 @@ _ -:  1r2 ^ {. __ 1r1
 'domain error' -: __ 1r1 ^ etx {._  1r1
 'domain error' -: _1r2   ^ etx {.__ 1r1
 
+1: 0 : 0
 NB. Modular arithmetic ------------------------------------------------------
 
 NB. ^ m. n
@@ -423,7 +424,47 @@ NB. ^ m. n
 'domain error' -: a: (^ m. 5)~ etx 4
 'domain error' -: 1j1 (^ m. 5)~ etx 4
 
-'a' (^ m. 5) 0$0
+'domain error' -: 5 (^ m. 10) etx _10
+9 -: 3 (^ m. 10) _10
+
+'' -: 'a' (^ m. 5) 0$0
+'' -: 5 (^ m. 5) ''
+'domain error' -: ". etx '5 m. 5'
+'domain error' -: ". etx '^ m. 1.5'
+'domain error' -: ". etx '^ m. a:'
+'domain error' -: ". etx '^ m. 1j2'
+'domain error' -: ". etx '^ m. 1r2'
+1 = 2 ^ m. 5r1 ] 4
+64 = 3!:0 ] 2 ^ m. 5r1 ] 4
+64 = 3!:0 ] 2 ^ m. 5x ] 4
+4 = 3!:0 ] 2 ^ m. 5 ] 4
+
+0 = 2 3 4 ^ m. 1/ 5 6 7 8 9
+0 = 2 3 4 ^ m. _1/ 5 6 7 8 9
+
+f=: {{
+ysv   =: y
+ assert. 2     (^ m. y -: y&|@^&x:) esv   =: ?10000
+ assert. 3     (^ m. y -: y&|@^&x:) esv   =: ?10000
+ assert. 5     (^ m. y -: y&|@^&x:) esv   =: ?10000
+ assert. 64    (^ m. y -: y&|@^&x:) esv   =: ?10000
+ assert. 17393 (^ m. y -: y&|@^&x:) esv   =: ?10000
+ if. IF64 do.
+ assert. 1327569234056 (^ m. y -: y&|@^&x:) esv   =: ?10000
+ assert. 580697153620649816294933768369x (^ m. y -: y&|@^&x:) esv   =: ?10000
+ end.
+ for. i. 10 do. esv   =: 'b e' =. >: 2 ?@$ 10000 if. 1 = b +. y do. assert. 1 = (b ^ m. y e) * m. y (b ^ m. y -e) else. assert. 'domain error' -: b (^ m. y) etx -e end. end.
+ 1
+}}
+f 1e9
+f"0 (i. 3)+<.%:<:2^IF64{31 63
+f"0 (i:2)+<.%:<:2^53
+f"0 (2) + i. 1000
+f"0 (-i. 1000) + <.%:<:2^IF64{31 63
+f 7700892415753674751x
+
+
+)
 
 
 4!:55 ;:'a exp f h n pow rou s x y'

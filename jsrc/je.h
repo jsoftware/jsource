@@ -529,6 +529,7 @@ extern F2(jtlowerupper);
 extern F2(jtlrtrim);
 extern F2(jtmatch);
 extern DF2(jtmdiv);
+extern F2(jtmdot);
 extern F2(jtmemu2);
 extern F2(jtmemw);
 extern F2(jtnamerefop);

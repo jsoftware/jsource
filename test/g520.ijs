@@ -74,7 +74,7 @@ elseif. 10 13 e.~ #y do.  NB. DIP/gradient
         msiz =. {:$M  NB. size of M part
         M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.0. M  NB. One column of small c above threshold, ending row of 0
         Frow =. (1 + $Frow) {.!.1e_20 Frow
-        bk =. (0 1 + $bk) {. bk   NB. zeros are active here, but they do nothing
+NB. obsolete         bk =. (0 1 + $bk) {. bk   NB. zeros are active here, but they do nothing
         'nndx nbkg' =. 35 + ? 20 20   NB. product must exceed 1000
         saferc =. <: {: $ M  NB. last row/col doesn't change anything
         Frow =. (({:$Frow) + nbkg - {:$M) {. Frow
@@ -82,8 +82,9 @@ elseif. 10 13 e.~ #y do.  NB. DIP/gradient
         ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
         ndx =. ndx (/:~ (#ndx) ? nndx)} nndx # saferc
 NB. obsolete         bkg=.i. msiz   NB. we don't use bkg as a parameter, but we must shuffle bk
-        bkg =. bkg (/:~ (#bkg) ? nbkg)} nbkg # saferc
-        bk =. bkg {"1 bk
+        ordpts =. /:~ (#bkg) ? nbkg
+        bkg =. bkg ordpts} nbkg # saferc
+        bk =. bk ordpts}"1 (nbkg _1} $bk) $ 0.0
         M =. nbkg {."2 M
         if. prirow>: 0 do. cons =. (bkg i. prirow) 6} cons end.  NB. priority row can float; find it
 NB. obsolete         modx =: x =. bkg (i. 2&{)`2:`]} x  NB. replace row #s with positions in bkg
@@ -356,12 +357,18 @@ NB. obsolete
   assert. 0 3 2 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 2 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 3 3 7 __ (0 run128_9) 3 2 1 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(3 (6)}cons);bkg;bk;Frow;sched  NB. prirow gets priority; can't multithread since we don't move it to top
+  assert. 0 0 2 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
+  assert. 0 3 2 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
+  assert. 0 0 2 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
   bk=. dptoqp 0. 0 1 0  NB. don't look where b not 0 
   assert. 0 0 3 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 3 1 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 3 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
   assert. 0 0 1 0 1 __ (0 run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bkg;bk;Frow;sched  NB. prirow gets priority
   assert. 0 3 1 0 1 __ (0 run128_9) 3 1 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bkg;bk;Frow;sched
+  assert. 0 0 3 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
+  assert. 0 3 1 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
+  assert. 0 0 3 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
   M =. dptoqp |: _6 ]\ 1. 2 5 4 5 6    1 2 3 _1 1 10   _1 _2 0 0 1 4   1 _2 _3 4 5 6    1 1 1 1 1 1   1 2 3 _1 1 0   NB. input by columns
   bk=. dptoqp 6 $ 1e_29
   bkg=. i. {: $ bk
@@ -427,6 +434,20 @@ NB. obsolete
   assert. 0 1 4 1 4 _3 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 4 2 8 _3 ('' run128_9) (1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 4 2 8 _3 ('' run128_9) (2 1);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+
+  NB. gradient nonbasic col swap
+  bk =. dptoqp         0.0 0.0 0 0
+  bkg=. i. {: $ bk
+  bkbeta=.0$0.
+  beta=. ({:$Frow) $ 0.
+  M =. dptoqp |: _4 ]\ 0.25 0.25 0.30 0.25  0.25 0.25 1.30 0.25   1 1 1 1    1 1 1 1    NB. input by columns
+  Frow =. _1 _1 _1 _1. 1.
+  sched =.4 $ 100
+  rvt =. 2 2 2 5 5
+  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
+  assert. 0 0 4 1 4 2.2775 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 1 2 1 4 3.8775 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+
   end.  NB. one thread
 
   NB. end of tests, add a thread

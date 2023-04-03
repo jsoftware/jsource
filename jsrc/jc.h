@@ -220,7 +220,7 @@
 #define CLCAPCO    (C)0xcf       /* 207 317 cf L:                           */
 #define CMDOT      (C)0xd9       /* 208 320 d0 m.                           */
 #define CMCAP      (C)0xd1       /* 209 321 d1 M.                           */
-#define CNDOT      (C)0xd2       /* 210 322 d2 n.                           */
+// obsolete #define CNDOT      (C)0xd2       /* 210 322 d2 n.                           */
 #define CTDOT      (C)0xd3  // t.
 #define CTCAPDOT   (C)0xd4  // T.
 #define CQCAPCO    (C)0xd6       /* 214 326 d6 Q:                           */

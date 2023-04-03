@@ -316,6 +316,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_init_set_si __gmpz_init_set_si  // https://gmplib.org/manual/Simultaneous-Integer-Init-_0026-Assign
 #define jmpz_invert __gmpz_invert            // https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_lcm __gmpz_lcm                  // https://gmplib.org/manual/Number-Theoretic-Functions
+#define jmpz_mod __gmpz_mod                  // https://gmplib.org/manual/Integer-Division
 #define jmpz_mul __gmpz_mul                  // https://gmplib.org/manual/Integer-Arithmetic
 #define jmpz_neg __gmpz_neg                  // https://gmplib.org/manual/Integer-Arithmetic
 #define jmpz_out_str __gmpz_out_str          // (for debugging) https://gmplib.org/manual/I_002fO-of-Integers
@@ -366,6 +367,7 @@ EXTERN int  (*jmpz_init_set_str)(mpz_t, C*, int);
 EXTERN void (*jmpz_init_set_si)(mpz_t, mpir_si);
 EXTERN int  (*jmpz_invert)(mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_lcm)(mpz_t, const mpz_t, const mpz_t);
+EXTERN void (*jmpz_mod)(mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_mul)(mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_neg)(mpz_t, const mpz_t);
 EXTERN void (*jmpz_out_str)(FILE*,int,const mpz_t); // for debugging
@@ -510,6 +512,7 @@ extern void jfree4gmp(void*, size_t);
  CAV1(safex);}) // ": y
 #define XinvertXX(x, y) XshimXXerr(jmpz_invert, x, y)            // modular inverse of x(mod y), but returns 0 if error
 #define XlcmXX(x, y) XshimXX(jmpz_lcm, x, y)            // x*.y
+#define XmodXX(x, y) XshimXX(jmpz_mod, x, y)            // x(mod y)
 #define XmulXX(x, y) XshimXX(jmpz_mul, x, y)            // x*y
 #define XnegX(y) XshimX(jmpz_neg, y)                    // -y
 #define XpowXU(x, y) XshimXU(jmpz_pow_ui, x, y)         // x^y

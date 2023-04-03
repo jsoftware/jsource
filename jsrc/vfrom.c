@@ -820,6 +820,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   {  // this is a loop: we branch back to retry
    // col init
    __m256d minimpspr;  // minimp/Frow of the current column, which is the minimum SPR that does not cut off
+   limitrows=_mm256_set1_epi64x(n);  // init to out-of-bounds row so that if we don't improve we do a swap
    if(((I)zv&(ZVISDIPGRAD|ZVISDIP))>ZVISDIP){  // DIP
     // This is the retry point; put static inits above this
     if(1)zv=(D*)(ZVDP+ZVSPRNOTFOUND+ZVISDIP);else{retryinquad: zv=(D*)(ZVSPRNOTFOUND+ZVISDIP);}  // if we need to retry in qp, so indicate.  Start with UNBOUND off, no FFREQD
@@ -833,15 +834,20 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      // Bound column.  we must initialize the SPR to beta and set the row# to out of bounds
      if(unlikely(cutoffspr>betav[colx]))goto abortcol;  // if thw swap would cut off, skip the column - any other pivot would have even lower SPR
      minspr=_mm256_set1_pd(betav[colx]);  // DIP: init nonbasic column to SPR of beta
-     limitrows=_mm256_set1_epi64x(n);  // init to out-of-bounds row so that if we don't improve we do a swap
      limitcs=_mm256_set1_pd(1.0);  // set c value in the implied row
      zv=(D*)((I)zv^(ZVSPRNOTFOUND|ZVPOSCVFOUND));  // this implied pivot is a valid one
     }
    }else if(likely((I)zv&ZVISDIPGRAD)){
     // gradient mode: limitcs/colbk0thresh are Kahan accumulator for sumsq; minspr holds max col value; limitrows holds index of max column values
     I isboundcol=(0b100000100>>rvtv[colx])&1;
+    if(!isboundcol){   // not bound column
+     minspr=_mm256_setzero_pd(); limitcs=_mm256_set1_pd(1.0/NPAR);  // set biggest value seen yet, and total column norm of 1
+    }else{
+     // Bound column.  We must init to the implied row, which has a column value of 1 which goes into the total and is a valid initial magnitude
+     minspr=_mm256_set1_pd(1.0); limitcs=_mm256_set1_pd(2.0/NPAR);  // biggest value (1) on the implied row
+    }
     zv=(D*)(ZVDP+ZVSPRNOTFOUND);  // set flag 101 indicating dp, gradient; don't set DIP
-    minspr=_mm256_setzero_pd(); limitcs=_mm256_set1_pd(isboundcol?2.0/NPAR:1.0/NPAR); colbk0thresh=_mm256_setzero_pd();  // gradient: the high-precision gradient sum (init to 1+, 2+ if bound col)  also the largest c value
+    limitcs=_mm256_set1_pd(isboundcol?2.0/NPAR:1.0/NPAR); colbk0thresh=_mm256_setzero_pd();  // gradient: the high-precision gradient sum (init to 1+, 2+ if bound col)  also the largest c value
        // minspr is set to 0 because there MUST be a positive column value, or the problem would be unbounded; and we use negative pivot to indicate Swap needed
     minimpspr=_mm256_set1_pd(minimp*Frow[colx]*Frow[colx]);  // Frow^2 * best sumsq / best Frow^2, which is cutoff point for sumsq in new column (Frow^2)/sumsq > bestFrow^2/bestsumsq)
 // obsolete     // we must back up the column pointer each time to top-of-column

@@ -361,30 +361,59 @@ static UI modarg(A w, UI n, UI nrecip){UI z;
  R z;
 } 
 
-static DF2(jtmodopexttimes){R 0;}
+// modular inverse of a(mod n).  0<=a<n, and n is a small integer.  nrecip is 2^64/n rounded down
+// code from RosettaCode
+static I mod_inv(I a, I n){
+ I t = 0;  I nt = 1;  I r = n;  I nr = a;
+ while(nr!=0) {
+  I q = r/nr;
+  I tmp = nt;  nt = t - q*nt;  t = tmp;
+  tmp = nr;  nr = r - q*nr;  r = tmp;
+ }
+ if(unlikely(r>1))return -1;  /* No inverse */
+ t+=REPSGN(t)&n;  // correct for overshoot
+ return t;
+}
 
-static DF2(jtmodopextdiv){R 0;}
+// modular multiply on extendeds, one atom
+static DF2(jtmodopexttimes){A z;PROLOG(000);
+ X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
+ X xz=XmodXX(XmulXX(xa,xw),n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
+ if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
+ GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
+}
+
+// modular reciprocal/divide on extendeds, one atom.  Bivalent.
+static DF2(jtmodopextdiv){A z;PROLOG(000);
+ X *axa=XAV(a), *axw=XAV(w);  // pointers to ops.  w pointer is invalid for monad
+ self=AT(w)&VERB?w:self;  // if monad, take self from w
+ X xw=XAV(AT(w)&VERB?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
+ ASSERT((xw=XinvertXX(xw,n))!=0,EVDOMAIN)  // take inverse of divisor, which fails if coprime
+ X xz; if(!(AT(w)&VERB)){xz=XmodXX(XmulXX(XAV(a)[0],xw),n);}else{xz=xw;}   // perform multiply and modulus if dyad
+ if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
+ GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
+}
 
 // modular power on extendeds, one atom
 static DF2(jtmodopextexp){A z;PROLOG(000);
- X n=XAV(FAV(self)->fgh[2])[0];  // extract modulus, which may be negative
- X xa=XAV(a)[0], xw=XAV(w)[0];  // the atomic ops
+ X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  // if power is negative, take the modular inverse of the base
- if(XSGN(xw)<0){ASSERT(XinvertXX(xa,n)!=0,EVDOMAIN)}  // verify inverse exists
- X xz=XpowmXXX(xa,xw,n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
+ if(XSGN(xw)<0){ASSERT((xa=XinvertXX(xa,n))!=0,EVDOMAIN) xw=XabsX(xw);}  // verify inverse exists
+ X xz=XpowmXXX(xa,xw,n);   // perform modular power - using inverse if negative power.
  if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // jmpz_powm ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
 // modular operation on extendeds (function for one atom is in self)
 // Convert args to XNUM and call rankex to loop over atoms
-static DF1(jtmodopext1){if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w)) R rank1ex0(w,self,FAV(w)->localuse.lu0.modatomfn);}
+static DF1(jtmodopext1){if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w)) R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
 static DF2(jtmodopext2){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w)) R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
 // modular multiply with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
 static DF2(jtmodopinttimes){PROLOG(000);
  // fetch n from h and nrecip from self
- I nsign=XSGN(FAV(self)->fgh[2]); UI n=XLIMB0(FAV(self)->fgh[2]); UI nrecip=FAV(self)->localuse.lu1.mrecip;
+ X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
+ I nsign=XSGN(hx0); UI n=XLIMB0(hx0); UI nrecip=FAV(self)->localuse.lu1.mrecip;
  // fetch x(mod n) and y(mod n)
  UI x=modarg(a,n,nrecip), y=modarg(w,n,nrecip);  // multiplicands
  UI z=x*y; z=modn(z);   // multiply and take modulus
@@ -400,17 +429,17 @@ static DF2(jtmodopinttimes){PROLOG(000);
 static DF2(jtmodopintdiv){PROLOG(000);
  self=AT(w)&VERB?w:self;  // if monad, take self from w
  // fetch n from h and nrecip from self
- I nsign=XSGN(FAV(self)->fgh[2]); UI n=XLIMB0(FAV(self)->fgh[2]); UI nrecip=FAV(self)->localuse.lu1.mrecip;
+ X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
+ I nsign=XSGN(hx0); UI n=XLIMB0(hx0); UI nrecip=FAV(self)->localuse.lu1.mrecip;
  // fetch [x(mod n)] and y(mod n)
- UI x=modarg(a,n,nrecip), y;
- if(AT(w)&VERB)y=modarg(w,n,nrecip);else{y=x; x=1;}  // arguments
+ UI y=modarg(!(AT(w)&VERB)?w:a,n,nrecip);
  // Take modular inverse of y
- A ynum=cvt(XNUM,sc(y)); RZ(ynum); RZ(ynum=jtmodopextexp(jt,ynum,X_1,self)) y=XLIMB0(ynum);  // modular inverse must be nonzero and fit in 1 limb.  The inverse may fail
- UI z=x*y; z=modn(z);   // multiply and take modulus
+ ASSERT((I)(y=mod_inv(y,n))>=0,EVDOMAIN)
+ UI z; if(!(AT(w)&VERB)){z=modarg(a,n,nrecip)*y; z=modn(z);}else{z=y;}   // multiply and take modulus if dyad
  // correct for negative n
  A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
  // if modulus was XNUM, make result extended
- if(AT(FAV(self)->fgh[1])&XNUM)zzz=cvt(XNUM,zzz);
+ if(AT(FAV(self)->fgh[1])&XNUM)zzz=cvt(XNUM,zzz);   // cvt is slow
  EPILOG(zzz)
 }
 
@@ -420,17 +449,18 @@ static DF2(jtmodopintexp){PROLOG(000);
  // if w is XNUM, transfer to extended code
  if(AT(w)&XNUM){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) R jtmodopextexp(jt,a,w,self);}
  // fetch n from h and nrecip from self
- I nsign=XSGN(FAV(self)->fgh[2]); UI n=XLIMB0(FAV(self)->fgh[2]); UI nrecip=FAV(self)->localuse.lu1.mrecip;
+ X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
+ I nsign=XSGN(hx0); UI n=XLIMB0(hx0); UI nrecip=FAV(self)->localuse.lu1.mrecip;
  // fetch x(mod n) and y
  UI x=modarg(a,n,nrecip); I y=IAV(w)[0];  // the base and exponent
  if(y<0){
-  // Negative y.  Convert x to XNUM and take x=modular power x^_1(mod n).  Use GMP for now
-  A xnum=cvt(XNUM,sc(x)); RZ(xnum); RZ(xnum=jtmodopextexp(jt,xnum,X_1,self)) x=XLIMB0(xnum);  // modular inverse must be nonzero and fit in 1 limb.  The inverse may fail
+  // Negative y.  Convert x to XNUM and take x=modular inverse x^_1(mod n).
+  ASSERT((I)(x=mod_inv(x,n))>=0,EVDOMAIN)
   y=-y;  // use positive power of modular inverse
  }
  // take modular power by repeated squaring
  UI z=1;  // init x^0
- while(y){UI zz=z*x; zz=modn(zz); x*=x; x=modn(x); z=n&1?zz:z; y>>=1;}  //  repeated square/mod
+ while(y){UI zz=z*x; zz=modn(zz); x*=x; x=modn(x); z=y&1?zz:z; y>>=1;}  //  repeated square/mod
  // correct for negative n
  A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
  // if modulus was XNUM, make result extended
@@ -440,7 +470,7 @@ static DF2(jtmodopintexp){PROLOG(000);
 
 // modular operation with small integer modulus (function for one integer atom is in self)
 // convert arg(s) to integral and call the function through the rank loop
-static DF1(jtmodopint1){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w)) R rank1ex0(w,self,FAV(w)->localuse.lu0.modatomfn);}
+static DF1(jtmodopint1){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w)) R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
 static DF2(jtmodopint2){if(!(AT(a)&INT+XNUM))RZ(a=cvt(AT(a)&RAT?XNUM:INT,a)) if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w)) R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
 // index is (fn#,extended)
@@ -450,13 +480,14 @@ F2(jtmdot){A z=0;
  // Verify that n is an integer and create a XNUM form for it
  ASSERT(AT(w)&NOUN,EVDOMAIN) ASSERT(AR(w)==0,EVRANK)  // n must be a noun atom
  A h=w;  // XNUM form of w
- if(!AT(w)&XNUM)RZ(h=cvt(XNUM,w));  // must be integral
+ if(!(AT(w)&XNUM))RZ(h=cvt(XNUM,w));  // must be integral
  I nrecip=0;  // will hold reciprocal of abs(n), init to invalid
  UI n=2;  // init integer value of modulus to 'not special'
  // If n is small enough to use integer ops, take its reciprocal
- ASSERT(XSGN(w)!=0,EVDOMAIN)  // modulus cannot be 0
- if(ABS(XSGN(w))==1){
-  n=XLIMB0(w);  // absolute value of modulus
+ X hx0=XAV(h)[0];  // the atom as an X
+ ASSERT(XSGN(hx0)!=0,EVDOMAIN)  // modulus cannot be 0
+ if(ABS(XSGN(hx0))==1){
+  n=XLIMB0(hx0);  // absolute value of modulus
   if(BETWEENC(n,2,XMOD)){nrecip=((UI)IMIN/n); nrecip=(nrecip<<1)+((((UI)IMIN-nrecip*n)<<1)>=n);}  // if n small enough, 2^64%m, possibly low by as much as 2^-64
  }
  // Verify that u is a supported verb, and point to its functions
@@ -471,6 +502,6 @@ F2(jtmdot){A z=0;
 
  // Create the result function.  h points to the original n as XNUM, lu0 points to the function for one atom, lu1 is the reciprocal of n if valid
  fdefallo(z)
- fdeffillall(z,VF2NONE,CAT,VERB, fn1,fn2, a,w,h,VASGSAFE, 0,0,0,fffv->localuse.lu0.modatomfn=modoptbl[fnx][nrecip==0],FAV(z)->localuse.lu1.mrecip=nrecip);
+ fdeffillall(z,VF2NONE,CMDOT,VERB, fn1,fn2, a,w,h,VASGSAFE, 0,0,0,fffv->localuse.lu0.modatomfn=modoptbl[fnx][nrecip==0],FAV(z)->localuse.lu1.mrecip=nrecip);
  R z;
 }

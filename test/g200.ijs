@@ -407,6 +407,24 @@ _ -:  1r2 ^ {. __ 1r1
 'domain error' -: __ 1r1 ^ etx {._  1r1
 'domain error' -: _1r2   ^ etx {.__ 1r1
 
+NB. Modular arithmetic ------------------------------------------------------
+
+NB. ^ m. n
+
+'domain error' -: 'a' (^ m. 5) etx 4
+'domain error' -: 7.2 (^ m. 5) etx 4
+'domain error' -: 1r3 (^ m. 5) etx 4
+'domain error' -: a: (^ m. 5) etx 4
+'domain error' -: 1j1 (^ m. 5) etx 4
+
+'domain error' -: 'a' (^ m. 5)~ etx 4
+'domain error' -: 7.2 (^ m. 5)~ etx 4
+'domain error' -: 1r3 (^ m. 5)~ etx 4
+'domain error' -: a: (^ m. 5)~ etx 4
+'domain error' -: 1j1 (^ m. 5)~ etx 4
+
+'a' (^ m. 5) 0$0
+
 
 4!:55 ;:'a exp f h n pow rou s x y'
 

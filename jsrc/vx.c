@@ -377,6 +377,7 @@ static I mod_inv(I a, I n){
 
 // modular multiply on extendeds, one atom
 static DF2(jtmodopexttimes){A z;PROLOG(000);
+ ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  X xz=XmodXX(XmulXX(xa,xw),n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
  if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
@@ -385,6 +386,7 @@ static DF2(jtmodopexttimes){A z;PROLOG(000);
 
 // modular reciprocal/divide on extendeds, one atom.  Bivalent.
 static DF2(jtmodopextdiv){A z;PROLOG(000);
+ ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X *axa=XAV(a), *axw=XAV(w);  // pointers to ops.  w pointer is invalid for monad
  self=AT(w)&VERB?w:self;  // if monad, take self from w
  X xw=XAV(AT(w)&VERB?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
@@ -396,6 +398,7 @@ static DF2(jtmodopextdiv){A z;PROLOG(000);
 
 // modular power on extendeds, one atom
 static DF2(jtmodopextexp){A z;PROLOG(000);
+ ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  // if power is negative, take the modular inverse of the base
  if(XSGN(xw)<0){ASSERT((xa=XinvertXX(xa,n))!=0,EVDOMAIN) xw=XabsX(xw);}  // verify inverse exists
@@ -406,11 +409,12 @@ static DF2(jtmodopextexp){A z;PROLOG(000);
 
 // modular operation on extendeds (function for one atom is in self)
 // Convert args to XNUM and call rankex to loop over atoms
-static DF1(jtmodopext1){if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w)) R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
-static DF2(jtmodopext2){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w)) R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
+static DF1(jtmodopext1){if(likely(AN(w)!=0)){if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
+static DF2(jtmodopext2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
 // modular multiply with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
 static DF2(jtmodopinttimes){PROLOG(000);
+ ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // must test here if empty args
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
  I nsign=XSGN(hx0); UI n=XLIMB0(hx0); UI nrecip=FAV(self)->localuse.lu1.mrecip;
@@ -427,6 +431,7 @@ static DF2(jtmodopinttimes){PROLOG(000);
 // modular divide/reciprocal with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
 // bivalent
 static DF2(jtmodopintdiv){PROLOG(000);
+ ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // bivalent must test here if empty args
  self=AT(w)&VERB?w:self;  // if monad, take self from w
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
@@ -446,6 +451,7 @@ static DF2(jtmodopintdiv){PROLOG(000);
 
 // modular power with small integer modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
 static DF2(jtmodopintexp){PROLOG(000);
+ ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // must test here if empty args
  // if w is XNUM, transfer to extended code
  if(AT(w)&XNUM){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) R jtmodopextexp(jt,a,w,self);}
  // fetch n from h and nrecip from self
@@ -470,13 +476,14 @@ static DF2(jtmodopintexp){PROLOG(000);
 
 // modular operation with small integer modulus (function for one integer atom is in self)
 // convert arg(s) to integral and call the function through the rank loop
-static DF1(jtmodopint1){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w)) R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
-static DF2(jtmodopint2){if(!(AT(a)&INT+XNUM))RZ(a=cvt(AT(a)&RAT?XNUM:INT,a)) if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w)) R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
+// if an arg is empty skip the conversion.  We have to check each atom's type then
+static DF1(jtmodopint1){if(likely(AN(w)!=0)){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
+static DF2(jtmodopint2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&INT+XNUM))RZ(a=cvt(AT(a)&RAT?XNUM:INT,a)) if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
 // index is (fn#,extended)
 static AF modoptbl[][2]={ {jtmodopintexp,jtmodopextexp} , {jtmodopinttimes,jtmodopexttimes} , {jtmodopintdiv,jtmodopextdiv} };
 // Modular arithmetic u m. n
-F2(jtmdot){A z=0;
+F2(jtmdot){F2PREFIP;A z=0;
  // Verify that n is an integer and create a XNUM form for it
  ASSERT(AT(w)&NOUN,EVDOMAIN) ASSERT(AR(w)==0,EVRANK)  // n must be a noun atom
  A h=w;  // XNUM form of w

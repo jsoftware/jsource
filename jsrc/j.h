@@ -2223,10 +2223,18 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
 #if SY_64
 #define CTTZI(w) __builtin_ctzll((UI)(w))
+#if (!C_AVX2) && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
+#define CTLZI(w) ((w)==0 ? 64 :(63-__builtin_clzll((UI)(w))))
+#else
 #define CTLZI(w) (63-__builtin_clzll((UI)(w)))
+#endif
 #else
 #define CTTZI(w) __builtin_ctzl((UINT)(w))
+#if (!C_AVX2) && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
+#define CTLZI(w) ((w)==0 ? 32 : 31-__builtin_clzl((UI)(w)))
+#else
 #define CTLZI(w) (31-__builtin_clzl((UI)(w)))
+#endif
 #endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif

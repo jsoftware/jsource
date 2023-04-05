@@ -674,6 +674,156 @@ static NOINLINE void sort_10v_alts8(I *d, I *s, M1 mask) {
  _mm512_mask_storeu_epi64((__m512i *) d + 9, mask, d10);
 }
 
+static NOINLINE void sort_01v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    sort_01v_ascendings8(&d01);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+}
+
+static NOINLINE void sort_02v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+    sort_02v_ascendings8(&d01, &d02);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+    _mm512_storeu_si512((__m512i *) d + 1, d02);
+}
+
+static NOINLINE void sort_03v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+    __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+    sort_03v_ascendings8(&d01, &d02, &d03);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+    _mm512_storeu_si512((__m512i *) d + 1, d02);
+    _mm512_storeu_si512((__m512i *) d + 2, d03);
+}
+
+static NOINLINE void sort_04v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+    __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+    __m512i d04 = _mm512_loadu_si512((__m512i const *) d + 3);;
+    sort_04v_ascendings8(&d01, &d02, &d03, &d04);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+    _mm512_storeu_si512((__m512i *) d + 1, d02);
+    _mm512_storeu_si512((__m512i *) d + 2, d03);
+    _mm512_storeu_si512((__m512i *) d + 3, d04);
+}
+
+static NOINLINE void sort_05v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+    __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+    __m512i d04 = _mm512_loadu_si512((__m512i const *) d + 3);;
+    __m512i d05 = _mm512_loadu_si512((__m512i const *) d + 4);;
+    sort_05v_ascendings8(&d01, &d02, &d03, &d04, &d05);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+    _mm512_storeu_si512((__m512i *) d + 1, d02);
+    _mm512_storeu_si512((__m512i *) d + 2, d03);
+    _mm512_storeu_si512((__m512i *) d + 3, d04);
+    _mm512_storeu_si512((__m512i *) d + 4, d05);
+}
+
+static NOINLINE void sort_06v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+    __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+    __m512i d04 = _mm512_loadu_si512((__m512i const *) d + 3);;
+    __m512i d05 = _mm512_loadu_si512((__m512i const *) d + 4);;
+    __m512i d06 = _mm512_loadu_si512((__m512i const *) d + 5);;
+    sort_06v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+    _mm512_storeu_si512((__m512i *) d + 1, d02);
+    _mm512_storeu_si512((__m512i *) d + 2, d03);
+    _mm512_storeu_si512((__m512i *) d + 3, d04);
+    _mm512_storeu_si512((__m512i *) d + 4, d05);
+    _mm512_storeu_si512((__m512i *) d + 5, d06);
+}
+
+static NOINLINE void sort_07v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+    __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+    __m512i d04 = _mm512_loadu_si512((__m512i const *) d + 3);;
+    __m512i d05 = _mm512_loadu_si512((__m512i const *) d + 4);;
+    __m512i d06 = _mm512_loadu_si512((__m512i const *) d + 5);;
+    __m512i d07 = _mm512_loadu_si512((__m512i const *) d + 6);;
+    sort_07v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+    _mm512_storeu_si512((__m512i *) d + 1, d02);
+    _mm512_storeu_si512((__m512i *) d + 2, d03);
+    _mm512_storeu_si512((__m512i *) d + 3, d04);
+    _mm512_storeu_si512((__m512i *) d + 4, d05);
+    _mm512_storeu_si512((__m512i *) d + 5, d06);
+    _mm512_storeu_si512((__m512i *) d + 6, d07);
+}
+
+static NOINLINE void sort_08v_alts8nm(I *d) {
+    __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+    __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+    __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+    __m512i d04 = _mm512_loadu_si512((__m512i const *) d + 3);;
+    __m512i d05 = _mm512_loadu_si512((__m512i const *) d + 4);;
+    __m512i d06 = _mm512_loadu_si512((__m512i const *) d + 5);;
+    __m512i d07 = _mm512_loadu_si512((__m512i const *) d + 6);;
+    __m512i d08 = _mm512_loadu_si512((__m512i const *) d + 7);;
+    sort_08v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07, &d08);
+    _mm512_storeu_si512((__m512i *) d + 0, d01);
+    _mm512_storeu_si512((__m512i *) d + 1, d02);
+    _mm512_storeu_si512((__m512i *) d + 2, d03);
+    _mm512_storeu_si512((__m512i *) d + 3, d04);
+    _mm512_storeu_si512((__m512i *) d + 4, d05);
+    _mm512_storeu_si512((__m512i *) d + 5, d06);
+    _mm512_storeu_si512((__m512i *) d + 6, d07);
+    _mm512_storeu_si512((__m512i *) d + 7, d08);
+}
+
+static NOINLINE void sort_09v_alts8nm(I *d) {
+ __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+ __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+ __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+ __m512i d04 = _mm512_loadu_si512((__m512i const *) d + 3);;
+ __m512i d05 = _mm512_loadu_si512((__m512i const *) d + 4);;
+ __m512i d06 = _mm512_loadu_si512((__m512i const *) d + 5);;
+ __m512i d07 = _mm512_loadu_si512((__m512i const *) d + 6);;
+ __m512i d08 = _mm512_loadu_si512((__m512i const *) d + 7);;
+ __m512i d09 = _mm512_loadu_si512((__m512i const *) d + 8);;
+ sort_09v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07, &d08, &d09);
+ _mm512_storeu_si512((__m512i *) d + 0, d01);
+ _mm512_storeu_si512((__m512i *) d + 1, d02);
+ _mm512_storeu_si512((__m512i *) d + 2, d03);
+ _mm512_storeu_si512((__m512i *) d + 3, d04);
+ _mm512_storeu_si512((__m512i *) d + 4, d05);
+ _mm512_storeu_si512((__m512i *) d + 5, d06);
+ _mm512_storeu_si512((__m512i *) d + 6, d07);
+ _mm512_storeu_si512((__m512i *) d + 7, d08);
+ _mm512_storeu_si512((__m512i *) d + 8, d09);
+}
+
+static NOINLINE void sort_10v_alts8nm(I *d) {
+ __m512i d01 = _mm512_loadu_si512((__m512i const *) d + 0);;
+ __m512i d02 = _mm512_loadu_si512((__m512i const *) d + 1);;
+ __m512i d03 = _mm512_loadu_si512((__m512i const *) d + 2);;
+ __m512i d04 = _mm512_loadu_si512((__m512i const *) d + 3);;
+ __m512i d05 = _mm512_loadu_si512((__m512i const *) d + 4);;
+ __m512i d06 = _mm512_loadu_si512((__m512i const *) d + 5);;
+ __m512i d07 = _mm512_loadu_si512((__m512i const *) d + 6);;
+ __m512i d08 = _mm512_loadu_si512((__m512i const *) d + 7);;
+ __m512i d09 = _mm512_loadu_si512((__m512i const *) d + 8);;
+ __m512i d10 = _mm512_loadu_si512((__m512i const *) d + 9);;
+ sort_10v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07, &d08, &d09, &d10);
+ _mm512_storeu_si512((__m512i *) d + 0, d01);
+ _mm512_storeu_si512((__m512i *) d + 1, d02);
+ _mm512_storeu_si512((__m512i *) d + 2, d03);
+ _mm512_storeu_si512((__m512i *) d + 3, d04);
+ _mm512_storeu_si512((__m512i *) d + 4, d05);
+ _mm512_storeu_si512((__m512i *) d + 5, d06);
+ _mm512_storeu_si512((__m512i *) d + 6, d07);
+ _mm512_storeu_si512((__m512i *) d + 7, d08);
+ _mm512_storeu_si512((__m512i *) d + 8, d09);
+ _mm512_storeu_si512((__m512i *) d + 9, d10);
+}
+
 
 static INLINE void sort_01v_ascendingu4(__m512i *d01) {
     __m512i  min, s;
@@ -1594,6 +1744,22 @@ static void sortns8(I *d,I *s,I n){
   case  8: sort_08v_alts8(d,s,m); break;
   case  9: sort_09v_alts8(d,s,m); break;
   case 10: sort_10v_alts8(d,s,m); break;
+  default: __builtin_unreachable();
+ }
+}
+static void sortnns8(__seg_gs BASEQUEUE *qs,I nv,I i){
+ switch(nv){
+  case  0:                        break;
+  case  1: for(;i<BASEQUEUESZ;i++)sort_01v_alts8nm(qs->dst[i]); break;
+  case  2: for(;i<BASEQUEUESZ;i++)sort_02v_alts8nm(qs->dst[i]); break;
+  case  3: for(;i<BASEQUEUESZ;i++)sort_03v_alts8nm(qs->dst[i]); break;
+  case  4: for(;i<BASEQUEUESZ;i++)sort_04v_alts8nm(qs->dst[i]); break;
+  case  5: for(;i<BASEQUEUESZ;i++)sort_05v_alts8nm(qs->dst[i]); break;
+  case  6: for(;i<BASEQUEUESZ;i++)sort_06v_alts8nm(qs->dst[i]); break;
+  case  7: for(;i<BASEQUEUESZ;i++)sort_07v_alts8nm(qs->dst[i]); break;
+  case  8: for(;i<BASEQUEUESZ;i++)sort_08v_alts8nm(qs->dst[i]); break;
+  case  9: for(;i<BASEQUEUESZ;i++)sort_09v_alts8nm(qs->dst[i]); break;
+  case 10: for(;i<BASEQUEUESZ;i++)sort_10v_alts8nm(qs->dst[i]); break;
   default: __builtin_unreachable();
  }
 }

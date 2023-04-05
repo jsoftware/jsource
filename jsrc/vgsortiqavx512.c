@@ -6,48 +6,25 @@
 #include <assert.h>
 #include "j.h"
 
-#if C_AVX512
+#if C_AVX512 && C_FSGSBASE
+// sort basecase involves a hard-to-predict switch on the length of the base array
+// because of quicksort
+// to amortise this, we queue basecase arrays, partitioned according to their length
+// a pointer to the queue is stored in gs
+#define MAX_BASEUNROLL 10
+#define BASEQUEUESZ 32
 
-#define PCNT __builtin_popcountll
-#define V __m512i
-#define VH __m256i
-#define M1 __mmask8
-#define M2 __mmask16
-#define M4 __mmask32
-#define VL _mm512_loadu_epi64
-#define CMPLS8 _mm512_cmplt_epi64_mask
-#define CMPLU4 _mm512_cmplt_epu32_mask
-#define CMPLMS8(x,y,m) _mm512_mask_cmplt_epi64_mask(m,x,y)
-#define CMPLMU4(x,y,m) _mm512_mask_cmplt_epu32_mask(m,x,y)
-#define CMPGS8 _mm512_cmpge_epi64_mask
-#define CMPGU4 _mm512_cmpge_epu32_mask
-#define CMPGMS8(x,y,m) _mm512_mask_cmpge_epi64_mask(m,x,y)
-#define CMPGMU4(x,y,m) _mm512_mask_cmpge_epu32_mask(m,x,y)
-#define COMP8(x,m) _mm512_maskz_compress_epi64(m,x)
-#define COMP4(x,m) _mm512_maskz_compress_epi32(m,x)
-#define COMPS8(p,m,x) _mm512_mask_compressstoreu_epi64(p,m,x)
-#define COMPS4(p,m,x) _mm512_mask_compressstoreu_epi32(p,m,x)
-#define VMINS8 _mm512_min_epi64
-#define VMINU4 _mm512_min_epu32
-#define VMINMS8(x,y,m) _mm512_mask_min_epi64(x,m,x,y)
-#define VMINMU4(x,y,m) _mm512_mask_min_epu32(x,m,x,y)
-#define VMAXS8 _mm512_max_epi64
-#define VMAXU4 _mm512_max_epu32
-#define VMAXMS8(x,y,m) _mm512_mask_max_epi64(x,m,x,y)
-#define VMAXMU4(x,y,m) _mm512_mask_max_epu32(x,m,x,y)
-#define VMINRS8 _mm512_reduce_min_epi64
-#define VMINRU4 _mm512_reduce_min_epu32
-#define VMAXRS8 _mm512_reduce_max_epi64
-#define VMAXRU4 _mm512_reduce_max_epu32
-#define VLM8(p,m) _mm512_maskz_loadu_epi64(m,p)
-#define VLM4(p,m) _mm512_maskz_loadu_epi32(m,p)
-#define VLM2(p,m) _mm512_maskz_loadu_epi16(m,p)
-#define VBC8 _mm512_set1_epi64
-#define VBC4 _mm512_set1_epi32
-#define VBC2 _mm512_set1_epi16
-#define VSUB8 _mm512_sub_epi64
+typedef struct {
+  void *dst[BASEQUEUESZ];
+} BASEQUEUE;
 
-#include "vgsortinavx512.h"
+typedef struct {
+ void *lastvec;
+ I nqueued[1+MAX_BASEUNROLL]; // stored biased; actually BASEQUEUESZ-nqueued, so we can dec+jz
+ BASEQUEUE queues[1+MAX_BASEUNROLL];
+} BASEQUEUES;
+
+#include "vgsortavx512.h"
 
 // avx512 utilities; todo pull these out so they can be used more generally
 
@@ -348,10 +325,12 @@ static INLINE void pivotqs8ob(I *z,I *w,I n,I **zm,I *min,I *max,I *pivot){
 
 #include "vgsortiqavx512.h"
 
+// todo figure out how to queueing for exploding sorts
+
 // sort u4 in place and then explode to s8 high, descending from zh
 // returns zl (useful for recursion)
 I *sortqu4iehi(UI4 *wl,UI4 *wh,I *zh,UI4 min,UI4 max,I base){
- if(wh-wl<=10*16){I *r=zh-(wh-wl);sortnu4e(wl,wh-wl,base,r);R r;}
+ if(wh-wl<=MAX_BASEUNROLL*16){I *r=zh-(wh-wl);sortnu4e(wl,wh-wl,base,r);R r;}
  UI4 *wm,p;
  pivotqu4ip(wl,wh,&wm,&p);
  // must sort high before low, else exploding low may overwrite high
@@ -359,7 +338,7 @@ I *sortqu4iehi(UI4 *wl,UI4 *wh,I *zh,UI4 min,UI4 max,I base){
 
 // ditto, but low and ascending
 I *sortqu4ielo(UI4 *wl,UI4 *wh,I *zl,UI4 min,UI4 max,I base){
- if(wh-wl<=10*16){sortnu4e(wl,wh-wl,base,zl);R zl+(wh-wl);}
+ if(wh-wl<=MAX_BASEUNROLL*16){sortnu4e(wl,wh-wl,base,zl);R zl+(wh-wl);}
  UI4 *wm,p;
  pivotqu4ip(wl,wh,&wm,&p);
  R sortqu4ielo(wm,wh,sortqu4ielo(wm,wh,zl,min,p,base),p,max,base);}
@@ -367,7 +346,20 @@ I *sortqu4ielo(UI4 *wl,UI4 *wh,I *zl,UI4 min,UI4 max,I base){
 static void sort_or_squishlos8(I*,I*,I,I);
 
 void sortqs8i(I *zl,I *zh,I min,I max){I *zm,p;
- if(zh-zl<=10*8){sortns8(zl,zl,zh-zl);R;}
+ if(zh-zl<=MAX_BASEUNROLL*8){
+#if 1
+  __seg_gs BASEQUEUES *qs=0;
+  if(unlikely(zh>=(I*)qs->lastvec)){sortns8(zl,zl,zh-zl);R;}
+  I qz=((zh-zl)+7)>>3;
+  I qi=qs->nqueued[qz];
+  qs->queues[qz].dst[qi-1] = zl;
+  if(common(--qi)){
+   qs->nqueued[qz]=qi;
+  }else{
+   qs->nqueued[qz]=BASEQUEUESZ;
+   sortnns8(qs->queues+qz,qz,0);}
+#endif
+  R;}
  p=PIVOT(zl,(zh-zl));
 #if 0
  if((UI)(p-min)<(1ull<<32)){
@@ -433,14 +425,19 @@ static void sort_or_squishlos8(I *zl,I *zh,I min,I max){
   sortqs8i(zl,zh,min,max);}}
 
 void vvsortqs8ao(I *zl,I*w,I n){
- if(n<=10*8){sortns8(zl,w,n);R;}
+ if(n<=MAX_BASEUNROLL*8){sortns8(zl,w,n);R;}
  I min,max,pivot,*zm;
  pivotqs8ob(zl,w,n,&zm,&min,&max,&pivot);
  I *zh=zl+n;
  if(unlikely(max==IMAX))filter_imax(zl,&zh,&max);
  max++;
+ BASEQUEUES qs;UI gsbase=_readgsbase_u64();_writegsbase_u64((UI)&qs);
+ qs.lastvec=zh-8;
+ DO(1+MAX_BASEUNROLL,qs.nqueued[i]=BASEQUEUESZ;);
  sort_or_squishlos8(zl,zm,min,pivot);
  sort_or_squishlos8(zm,zh,pivot,max);
+ for(I i=1;i<=MAX_BASEUNROLL;i++)sortnns8(((__seg_gs BASEQUEUES*)0)->queues+i,i,qs.nqueued[i]);
+ _writegsbase_u64(gsbase);
 #if 0
  if((UI)(pivot-min)<=(1ull<<32)&&zm-zl>=PIVOTQSQUISHMIN){
   UI4 *wl=(UI4*)zl,*wm,*wh;
@@ -459,12 +456,17 @@ void vvsortqs8ao(I *zl,I*w,I n){
 #endif
 }
 void vvsortqs8ai(I *zl,I n){
- if(n<=10*8){sortns8(zl,zl,n);R;}
+ if(n<=MAX_BASEUNROLL*8){sortns8(zl,zl,n);R;}
  I min,max,pivot,*zm;
  pivotqs8ib(zl,zl+n,&zm,&min,&max,&pivot);
  I *zh=zl+n;
  if(unlikely(max==IMAX))filter_imax(zl,&zh,&max);
  max++;
+ BASEQUEUES qs;UI gsbase=_readgsbase_u64();_writegsbase_u64((UI)&qs);
+ qs.lastvec=zl+n-8;
+ DO(1+MAX_BASEUNROLL,qs.nqueued[i]=BASEQUEUESZ;);
  sort_or_squishlos8(zl,zm,min,pivot);
- sort_or_squishlos8(zm,zh,pivot,max);}
+ sort_or_squishlos8(zm,zh,pivot,max);
+ for(I i=1;i<=MAX_BASEUNROLL;i++)sortnns8(((__seg_gs BASEQUEUES*)0)->queues+i,i,qs.nqueued[i]);
+ _writegsbase_u64(gsbase);}
 #endif //C_AVX512

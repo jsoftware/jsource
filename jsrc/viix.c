@@ -102,11 +102,8 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
 #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
 
 // parallel implementations of I. in assembly
-// fsgsbase is supported on all hardware supporting avx2, but software support came a bit later for linux/freebsd, so gate it to the avx512 build for them
-// mac doesn't support fsgsbase (but x86 mac is a dead-end, so w/e)
-// openbsd doesn't support it, but is super slow anyway...
-// according to hearsay, support is present but spotty on windows (? todo investigate).  Also, the windows abi doc says you have to always have a valid stack pointer and we clobber it; probably SEH related stuff or something?  Do we have to actually do that?
-#if C_AVX512 && (SY_LINUX || SY_FREEBSD)
+// currently not supported on windows because fsgsbase isn't enabled there.  But once it is: the windows abi doc says you have to always have a valid stack pointer and we clobber it; probably SEH related stuff or something?  Do we have to actually do that?
+#if C_AVX512 && C_FSGSBASE
 #define FAST_IIX
 #define IIXIA 4 //iix on ints alignemnt.  Update below code if this exceeds 8
 __attribute__((sysv_abi)) void jtiixi_1a(I*z,I*a,I*w,I n,I m,I nct),jtiixi_1d(I*,I*,I*,I,I,I);

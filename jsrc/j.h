@@ -233,6 +233,13 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #include "js.h"
 #endif
 
+// todo look into whether windows supports this or not; I have heard support is spotty?
+#if C_AVX512 && (SY_FREEBSD || SY_LINUX)
+#define C_FSGSBASE 1
+#else
+#define C_FSGSBASE 0
+#endif
+
 // If you are porting to a new compiler or architecture, see the bottom of this file
 // for instructions on defining the CTTZ macros
 

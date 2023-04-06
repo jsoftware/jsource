@@ -275,7 +275,7 @@ A jteformat(J jt,A self,A a,A w,A m){
       if(self==0){ep(copyoffset+1,savtext);}  // if internal msg, it is terse-msg LF internal-msg LF remaining lines
       I waslf=1; C *msgtext=CAV(msg); DO(AN(msg) , if(waslf)dhead(0,0L); eputc(msgtext[i]); waslf=msgtext[i]==CLF;)  // copy out message if any; every nonempty line must start with the suspension/error prefix * or |
      }
-     ep(AN(saverr)-copyoffset,savtext+copyoffset);  // copy out the rest (or all) of the original message, plus trailing LF
+     if(AN(saverr)==0)eputc(CLF);else ep(AN(saverr)-copyoffset,savtext+copyoffset);  // copy out the rest (or all) of the original message, plus trailing LF; but if the message was never formatted (AN=0), just add LF
      jt->etxn1=jt->etxn;
     }
     tpop(old);

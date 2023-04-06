@@ -18,7 +18,7 @@ jobs:
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

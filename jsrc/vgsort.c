@@ -248,7 +248,7 @@ static SF(jtsorti1){F1PREFJT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 
 //todo should use for avx2 too
 //maybe even swar??
-#if !C_AVX512
+#if !(C_AVX512 && C_FSGSBASE)
 // sort a single integer list using quicksort without misprediction, inplace
 #define SORTQCOND (C_AVX2 || EMU_AVX2)
 #define SORTQNAME vvsortqs8ai

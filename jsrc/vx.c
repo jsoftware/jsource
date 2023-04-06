@@ -379,6 +379,7 @@ static I mod_inv(I a, I n){
 static DF2(jtmodopexttimes){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
+ if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n); if(unlikely(icmpXX(xw,n)>0))xw=XmodXX(xw,n);  // extra work if x is (unlikely) neg, but we don't want the abs
  X xz=XmodXX(XmulXX(xa,xw),n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
  if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
@@ -387,11 +388,10 @@ static DF2(jtmodopexttimes){A z;PROLOG(000);
 // modular reciprocal/divide on extendeds, one atom.  Bivalent.
 static DF2(jtmodopextdiv){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
- X *axa=XAV(a), *axw=XAV(w);  // pointers to ops.  w pointer is invalid for monad
  self=AT(w)&VERB?w:self;  // if monad, take self from w
  X xw=XAV(AT(w)&VERB?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
  ASSERT((xw=XinvertXX(xw,n))!=0,EVDOMAIN)  // take inverse of divisor, which fails if coprime
- X xz; if(!(AT(w)&VERB)){xz=XmodXX(XmulXX(XAV(a)[0],xw),n);}else{xz=xw;}   // perform multiply and modulus if dyad
+ X xz; if(!(AT(w)&VERB)){X xa=XAV(a)[0]; if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n);  xz=XmodXX(XmulXX(xa,xw),n);}else{xz=xw;}   // perform multiply and modulus if dyad
  if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
@@ -400,6 +400,7 @@ static DF2(jtmodopextdiv){A z;PROLOG(000);
 static DF2(jtmodopextexp){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
+ if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n);  // take modulus of a
  // if power is negative, take the modular inverse of the base
  if(XSGN(xw)<0){ASSERT((xa=XinvertXX(xa,n))!=0,EVDOMAIN) xw=XabsX(xw);}  // verify inverse exists
  X xz=XpowmXXX(xa,xw,n);   // perform modular power - using inverse if negative power.

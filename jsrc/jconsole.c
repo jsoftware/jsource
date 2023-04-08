@@ -38,6 +38,7 @@ static int runjscript=0;   /* exit after running script */
 static int forceprmpt=0;   /* emit prompt even if isatty is false */
 static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
 static int norl=0;         /* disable readline/linenoise */
+static int noel=0;         /* disable readline but not linenoise */
 static void sigint(int k){jeinterrupt();signal(SIGINT,sigint);}
 static void sigint2(int k){jeinterrupt();}
 #if defined(_WIN32)
@@ -121,7 +122,7 @@ static int readlineinit()
   "libedit.dylib",
 #endif
   0};
- for(const char **l = libedit;*l;l++) if((hreadline=dlopen(*l,RTLD_LAZY))) goto ledit;
+ if(!noel) for(const char **l = libedit;*l;l++) if((hreadline=dlopen(*l,RTLD_LAZY))) goto ledit;
  // couldn't find libedit
 #if defined(USE_LINENOISE)
  add_history=linenoiseHistoryAdd;
@@ -281,22 +282,23 @@ int main(int argc, char* argv[])
  setlocale(LC_NUMERIC,"C");
 #endif
  void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type;
- int i,poslib=0,poslibpath=0,posnorl=0,posprmpt=0,posscrpt=0; // assume all absent
+ int i,poslib=0,poslibpath=0,posnorl=0,posnoel=0,posprmpt=0,posscrpt=0; // assume all absent
  for(i=1;i<argc;i++){
   if(!poslib&&!strcmp(argv[i],"-lib")){poslib=i; if((i<argc-1)&&('-'!=*(argv[i+1])))poslibpath=i+1;}
   else if(!posnorl&&!strcmp(argv[i],"-norl")) {posnorl=i; norl=1;}
+  else if(!posnoel&&!strcmp(argv[i],"-noel")) {posnoel=i; noel=1;}
   else if(!posprmpt&&!strcmp(argv[i],"-prompt")) {posprmpt=i; forceprmpt=1;}
-  else if(!posscrpt&&!strcmp(argv[i],"-jscript")) {posscrpt=i; runjscript=1; norl=1; forceprmpt=0;}
+  else if(!posscrpt&&!strcmp(argv[i],"-jscript")) {posscrpt=i; runjscript=1; norl=1; noel=1; forceprmpt=0;}
  }
-// fprintf(stderr,"poslib %d,poslibpath %d,posnorl %d,posprmpt %d,posscrpt %d\n",poslib,poslibpath,posnorl,posprmpt,posscrpt);
+// fprintf(stderr,"poslib %d,poslibpath %d,posnorl %d,posnoel %d,posprmpt %d,posscrpt %d\n",poslib,poslibpath,posnorl,posnoel,posprmpt,posscrpt);
  jepath(argv[0],(poslibpath)?argv[poslibpath]:"");
  // remove processed arg
- if(poslib||poslibpath||posnorl||posprmpt||posscrpt){
+ if(poslib||poslibpath||posnorl||posnoel||posprmpt||posscrpt){
   int j=0; 
   char **argvv = malloc(argc*sizeof(char*));
   argvv[j++]=argv[0];
   for(i=1;i<argc;i++){
-   if(!(i==poslib||i==poslibpath||i==posnorl||i==posprmpt||i==posscrpt))argvv[j++]=argv[i];
+   if(!(i==poslib||i==poslibpath||i==posnorl||i==posnoel||i==posprmpt||i==posscrpt))argvv[j++]=argv[i];
   }
   argc=j;
   for(i=1;i<argc;++i)argv[i]=argvv[i];

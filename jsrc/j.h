@@ -2088,7 +2088,8 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
 #define WITHDEBUGOFF(stmt) {UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
   C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT; \
-  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug turned off; restore at end
+  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end
+#define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
 #if C_LE
 #if BW==64
 #define IHALF0  0x00000000ffffffffLL
@@ -2231,19 +2232,19 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #if SY_64
 #define CTTZI(w) __builtin_ctzll((UI)(w))
 #if (!C_AVX2) && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
-#define CTLZI(w) ((w)==0 ? 64 :(63-__builtin_clzll((UI)(w))))
+#define CTLZI(w) (63-__builtin_clzll((UI)(w)|1))  // use this if we fear garbage if w=0
 #else
 #define CTLZI(w) (63-__builtin_clzll((UI)(w)))
 #endif
 #else
 #define CTTZI(w) __builtin_ctzl((UINT)(w))
 #if (!C_AVX2) && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
-#define CTLZI(w) ((w)==0 ? 32 : 31-__builtin_clzl((UI)(w)))
+#define CTLZI(w) (31-__builtin_clzl((UI)(w)|1))  // use this if we fear garbage if w=0
 #else
 #define CTLZI(w) (31-__builtin_clzl((UI)(w)))
 #endif
 #endif
-#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))   // use this if we need 32 when w=0
 #endif
 
 // For older processors, TZCNT is executed as BSF, which differs from TZCNT in that it does not

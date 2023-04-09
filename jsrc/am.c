@@ -328,7 +328,7 @@ skippre:;
   }while(--n1>0);
   if(n1==0)goto skippre;  // finish up last block if any
   // We have finished a cell in the last 2 axes.  Advance to next cell if any
-  I rinc=r-2;  // odomoter pointer to the cell being incremented
+  I rinc=r-2;  // odometer pointer to the cell being incremented
   while(1){
    if(rinc<=0)goto endamend;  // level 0 is the array in full.  It can't be incremented.  This is the loop exit, taken immediately if there are <=2 axes
    av+=axes[rinc+1].resetadder;  // if a resets for previous level, make that happen
@@ -546,7 +546,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
       }
      }
      if(likely(indn>=2)){
-      // here we have succeeded in using the axes.  Indicate that fact by taking the two's comp of the framelen
+      // here we have succeeded in using the axes.  Indicate that fact by taking the ones comp of the framelen
       cellframelen=~indn; z=(A)axes;
      }else{
       // rare case where so many trailing axes were deleted that we don't have 2 axes left.  Revert to ind form, where ax is known to have the ind for axis 0

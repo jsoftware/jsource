@@ -479,7 +479,7 @@ extern DF2(jtfoldZ);
 extern DF2(jtfolk2);
 extern F2(jtforeign);
 extern F2(jtforeignextra);
-extern F2(jtfrom);
+extern DF2(jtfrom);
 extern F2(jtfrombs);
 extern F2(jtfromis);
 extern F2(jtfromr);

@@ -206,7 +206,7 @@ F1(jthead){I wcr,wf,wr;
   }else{
    // frame not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
    // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
-   RETF(jtfrom(jtinplace,zeroionei(0),w));  // could call jtfromi directly for non-sparse w
+   RETF(jtfrom(jtinplace,zeroionei(0),w,ds(CFROM)));  // could call jtfromi directly for non-sparse w
   }
  }else{RETF(ISSPARSE(AT(w))?irs2(num(0),take(num( 1),w),0L,0L,wcr,jtfrom):rsh0(w));  // sparse or cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }
@@ -230,7 +230,7 @@ F1(jttail){I wcr,wf,wr;
   }else{
    // frame not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
    // left rank is garbage, but since num(-1) is an atom it doesn't matter
-   RETF(jtfrom(jtinplace,num(-1),w));  // could call jtfromi directly for non-sparse w
+   RETF(jtfrom(jtinplace,num(-1),w,ds(CFROM)));  // could call jtfromi directly for non-sparse w
   }
  }else{RETF(ISSPARSE(AT(w))?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w));  // sparse or cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }

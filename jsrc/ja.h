@@ -464,7 +464,7 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 #define frgmp(x)                    frcommon(x,mfgmp) // to free GMP blocks
 #define mfgmp(x)                    gmpmfree(x)  // to free GMP blocks
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
-#define from(x,y)                   jtfrom(jt,(x),(y))   
+#define from(x,y)                   jtfrom(jt,(x),(y),ds(CFROM))   
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))
 #define frombs1(x,y,z)              jtfrombs1(jt,(x),(y),(z))
 #define frombsn(x,y,z)              jtfrombsn(jt,(x),(y),(z))

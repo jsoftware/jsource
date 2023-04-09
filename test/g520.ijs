@@ -32,7 +32,7 @@ elseif. 10 13 e.~ #y do.  NB. DIP/gradient
   if. 8 = $ 5 {:: y do.  NB. DIP
     if. 0=nthr do.  NB. single-threaded, compare for exact result
       if. 10 = #y do.
-        y =. y , (0$0.) ; ($&0. ; $&00) # 8 {:: y  NB. if boundbk;beta;rvt  omitted, supply it
+        y =. y , (0$0.) ; ($&0. ; $&'4') # 8 {:: y  NB. if boundbk;beta;rvt  omitted, supply it
         y =. (< (6{::y) {"1 (7){:: y) 7} y   NB. convert bk to be read from the front
       end.
       savy =: y
@@ -52,7 +52,7 @@ elseif. 10 13 e.~ #y do.  NB. DIP/gradient
         bkg =. bkg (0 (0})^:(prirow={.bkg) /:~ (#bkg) ? nbkg)} nbkg # saferc
         y =. (ndx;M;bkg;bk;Frow) 0 4 6 7 8} y
         if. 10 = #y do.
-          y =. y , (0$0.) ; ($&0. ; $&00) # Frow  NB. if boundbk;beta;rvt  omitted, supply it
+          y =. y , (0$0.) ; ($&0. ; $&'4') # Frow  NB. if boundbk;beta;rvt  omitted, supply it
           y =. (< (6{::y) {"1 (7){:: y) 7} y   NB. convert bk to be read from the front
         end.
         savy =: y
@@ -65,7 +65,7 @@ elseif. 10 13 e.~ #y do.  NB. DIP/gradient
     end.
   else.  NB. gradient mode
     if. 0=nthr do.  NB. single-threaded, compare for exact result
-      if. 10 = #y do. savy =: y =. y , (0$0.) ; ($&0. ; $&00) # 8 {:: y end.  NB. if boundbk;beta;rvt  omitted, supply it
+      if. 10 = #y do. savy =: y =. y , (0$0.) ; ($&0. ; $&'4') # 8 {:: y end.  NB. if boundbk;beta;rvt  omitted, supply it
       assert. x -: savres =: 128!:9 y
     else.  NB. multiple threads.  Expand M with one harmless row/col, Frow to match;
       if. -. opts -: 0 do.  NB. opts of 0 means single thread only
@@ -88,7 +88,7 @@ NB. obsolete         bkg=.i. msiz   NB. we don't use bkg as a parameter, but we 
         M =. nbkg {."2 M
         if. prirow>: 0 do. cons =. (bkg i. prirow) 6} cons end.  NB. priority row can float; find it
 NB. obsolete         modx =: x =. bkg (i. 2&{)`2:`]} x  NB. replace row #s with positions in bkg
-        if. 10 = #y do. y =. y , (0$0.) ; ($&0. ; $&00) # Frow end.  NB. if boundbk;beta;rvt  omitted, supply it
+        if. 10 = #y do. y =. y , (0$0.) ; ($&0. ; $&'4') # Frow end.  NB. if boundbk;beta;rvt  omitted, supply it
         savy =: (ndx;M;cons;bkg;bk;Frow) 0 4 5 6 7 8} y
         if. #opts do.
           opts =. bkg (i. 2&{)`2:`]}"1 opts
@@ -135,15 +135,15 @@ delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. start with no threads
 for_t. i. 4 do.
   M =. (,:   ] * 1e_20 * i.@#) 0. + =/~ i. 6
-  Yt=. 2000 $ 00
+  Yt=. 2000 $ '4'
   assert. (_6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;Yt
   assert. (_6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;Yt
   assert. (_6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0;Yt
   assert. (_6 ]\ 0 0 1 2 0 3  0 0 2e_20 6e_20 0 15e_20) ('' run128_9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M;0.0;Yt
-  NB. change sign of result when Yt = 8 & fetch is from a Slack
-  assert. (- _6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;(8 (0}) Yt)
-  assert. (- _6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;(8 (2}) Yt)
-  assert. (_6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0;(8 (6}) Yt)
+  NB. change sign of result when Yt = '1'
+  assert. (- _6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;('1' (0}) Yt)
+  assert. (- _6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;('1' (2}) Yt)
+  assert. (- _6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0;('1' (6}) Yt)
   NB. clamping to threshold
   M =. 1 1e_20 (<1;3;2 3)} 2 {. ,: |: _4 ]\ _1. 0 1 2  _1e_5 _2e_9 0 1e_9   0 0 0 0 0 0 0 1e_10   NB. input by columns
   assert. (2 {. ,: _1. 0 1 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.5;Yt
@@ -394,7 +394,7 @@ NB. obsolete
   sched =.4 $ 100
   bkbeta=.,1.
   beta=.1. 0 1 2 0
-  rvt =. 5 5 2 5 5
+  rvt =. '44044'
   assert. 0 0 1 1 2 _2 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 1 1 2 _6 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 2 4 1 2 _2 ('' run128_9) (,02);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
@@ -404,6 +404,7 @@ NB. obsolete
   bkbeta=.,0.25
   assert. 0 0 0 1 2 _1.6 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 0 1 2 _3 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 2 4 1 2 _2 ('' run128_9) (,02);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
 
   NB. gradient with bound vars
   bk =. dptoqp         0.1 0.5 1 0
@@ -426,7 +427,7 @@ NB. obsolete
   bk =. dptoqp         2. 2 2 2
   bkbeta=.0. 0
   bkg=. i. {: $ bk
-  rvt =. 5 2 2 5 5
+  rvt =. '40044'
   sched =.4 $ 100
   beta=.1. 1.5 1 2 0
   Frow =. _1 _2 _1 _1. 1.
@@ -443,7 +444,7 @@ NB. obsolete
   M =. dptoqp |: _4 ]\ 0.25 0.25 0.30 0.25  0.25 0.25 1.30 0.25   1 1 1 1    1 1 1 1    NB. input by columns
   Frow =. _1 _1 _1 _1. 1.
   sched =.4 $ 100
-  rvt =. 2 2 2 5 5
+  rvt =. '00044'
   cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
   assert. 0 0 4 1 4 2.2775 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 2 1 4 3.8775 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt

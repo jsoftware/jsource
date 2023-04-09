@@ -332,7 +332,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
         // display the message in line, according to its mode
         C *text; I textlen;
         if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type
-        if(eflg&EMSGINVCHAR){eputs("(invalid character in sentence, codepoint "); efmt("%d)\n",(I)text[info]);}  // if invalid character, show the hex value
+        if(eflg&EMSGINVCHAR){eputs("(invalid character in sentence, code unit "); efmt("%d)\n",(I)text[info]);}  // if invalid character, show the value
         if(eflg&EMSGINVINFL){eputs("(invalid inflection)\n");}  // if invalid inflection, say so
         if(eflg&EMSGCXINFO){ // if line has decoration from tokenizing
          dhead(3,0L);  // start with error header

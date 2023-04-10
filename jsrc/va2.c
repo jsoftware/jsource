@@ -993,21 +993,28 @@ DF2(jtsumattymes1){
 
  I fit=0; if(unlikely(FAV(self)->id==CFIT))fit=1+FAV(self)->localuse.lu1.fittype;  // fit 0=normal, 1=!.0, 2=!.1
 
- // if an argument is empty, sparse, has cell-rank 0, or not a fast arithmetic type, revert to the code for f/@:g atomic
- if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
+ // if an argument is empty, sparse, or not a fast arithmetic type, or only one arg has rank 0, revert to the code for f/@:g atomic
+ if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|((acr-1)^(wcr-1)))<0) { // test for all unusual cases
+  ASSERT(fit!=2,EVNONCE)  // user expected 2 atoms per result, but we don't support that for repeated atomic arg
   if(fit!=0)self=FAV(self)->fgh[0];  // lose the !.[01] if we revert
   RESETRANK;  // This is required if we go to slower code
   R rank2ex(a,w,FAV(self)->fgh[0],MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
- // We can handle it here, and both ranks are at least 1.
+ // We can handle it here, and both ranks are at least 1 or both are rank 0.
+
+ I *as=AS(a), *ws=AS(w);
+ if(acr==0){A t;
+  // cell-ranks are 0: append a length-1 trailing axis to the shape and add to the rank
+  ++ar; RZ(t=vec(INT,ar,as)); as=IAV(t); as[ar-1]=1; acr=1;  // ,"0 a
+  ++wr; RZ(t=vec(INT,wr,ws)); ws=IAV(t); ws[wr-1]=1; wcr=1;  // ,"0 w
+ }
 
  // If there is no additional rank (i. e. highest cell-rank is 1), ignore the given rank (which must be 1 1) and use the argument rank
  // This promotes the outer loops to inner loops
  {I rankgiven = (acr|wcr)-1; acr=rankgiven?acr:ar; wcr=rankgiven?wcr:wr;}
 
-
  // Exchange if needed to make the cell-rank of a no greater than that of w.  That way we know that w will never repeat in the inner loop
- if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
+ if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr; I *ts=as; as=ws; ws=ts;}
 
  // Convert arguments as required
  I it=MAX(AT(a),AT(w)); it=fit!=0?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.[01], convert everything to float
@@ -1017,22 +1024,22 @@ DF2(jtsumattymes1){
  }
 
  // Verify inner frames match
- ASSERTAGREE(AS(a)+ar-acr, AS(w)+wr-wcr, acr-1) ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
+ ASSERTAGREE(as+ar-acr, ws+wr-wcr, acr-1) ASSERT(as[ar-1]==ws[wr-1],EVLENGTH);  // agreement error if not prefix match
 
  // calculate inner repeat amounts and result shape
- I dplen = AS(a)[ar-1];  // number of atoms in 1 dot-product
- I ndpo; PROD(ndpo,acr-1,AS(w)+wr-wcr);  // number of cells of a = # 2d-level loops
- I ndpi; PROD(ndpi,wcr-acr,AS(w)+wr-wcr+acr-1);  // number of times each cell of a must be repeated (= excess frame of w)
+ I dplen = as[ar-1];  // number of atoms in 1 dot-product
+ I ndpo; PROD(ndpo,acr-1,ws+wr-wcr);  // number of cells of a = # 2d-level loops
+ I ndpi; PROD(ndpi,wcr-acr,ws+wr-wcr+acr-1);  // number of times each cell of a must be repeated (= excess frame of w)
 
  A z; 
  // if there is frame, create the outer loop values
  I nfro,nfri;  // outer loop counts, and which arg is repeated
  if(likely(((ar-acr)|(wr-wcr))==0)){  // normal case of no frame
   nfro=nfri=1;  // no outer loops, repeata immaterial
-  GA(z,FL>>(it&B01),(ndpo*ndpi)<<(fit>>1),wcr-1+(fit>>1),AS(w));  // type is INT if inputs booleans, otherwise FL
+  GA(z,FL>>(it&B01),(ndpo*ndpi)<<(fit>>1),wcr-1+(fit>>1),ws);  // type is INT if inputs booleans, otherwise FL
  }else{
   // There is frame, analyze and check it
-  I af=ar-acr; I wf=wr-wcr; I commonf=wf; I *as=AS(a), *ws=AS(w); I *longs=as;
+  I af=ar-acr; I wf=wr-wcr; I commonf=wf; I *longs=as;
   it|=(ndpo==1)>wf?LIT:0;  // if there is no inner frame for a, and no outer frame for w, signal OK to use 2x2 multiplies.  Mainly this is +/@:*"1/
   commonf=wf>=af?af:commonf; longs=wf>=af?ws:longs; it|=wf>=af?BOX:0;  // repeat flag, length of common frame, pointer to long shape
   af+=wf; af-=2*commonf;  // repurpose af to be length of surplus frame

@@ -1040,6 +1040,8 @@ extern I Bmark[];
 #define mark ((A)&Bmark)
 extern I Bchrcolon[];
 #define chrcolon ((A)&Bchrcolon)
+extern struct Bd1 Bmarkd;
+#define markd ((A)&Bmarkd)
 extern I Bchrspace[];
 #define chrspace ((A)&Bchrspace)
 #if !SY_64

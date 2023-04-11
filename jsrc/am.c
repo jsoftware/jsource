@@ -4,7 +4,7 @@
 /* Adverbs: Amend                                                          */
 
 #include "j.h"
-
+#include "ve.h"
 
 #define MCASE(t,k)  ((t)+4*(k))
 #define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(BETWEENO(j,0,m),EVINDEX);}
@@ -188,7 +188,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  I avnreset=-AN(a)<<lgk;  // amount to add to an av that has overrun to get it back to av0; after setup, the reset adder for axis -1
  C * RESTRICT av=CAV(a);
  JMCDECL(endmask)
- I n0,n1;  // # of iterations of axis -1,-2
+ I n0,n1;  // # of iterations of axis -1,-2.  When ind is indices, these are calculated directly as (#indexes) and (#repetitions of a).  When axes, these are reloaded for each pass through the last 2 axes
  I *scan0, scan0reset;  // pointer to first index of last axis OR first index of ind; and the amount to add after an iteration to either continue or reset
  I *scan1;  // pointer to index of _2-cell being filled
  C *base;  // address of _1-cell being filled
@@ -203,7 +203,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   // because it's common & avoids a lot of setup
   if(AN(ind)<2){  // 0/1 cell to move (but 1 only if not -@:{`[`]})
    if(unlikely(AN(ind)==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
-   if(likely(AN(a)>=0)){  // AN(a)<0 means we are running -@:{`[`]}, i. e. complementing FL atoms - so go through the code for that, below
+   if(likely(AN(a)>=0)){  // AN(a)<0 means we are running -@:{`[`]}, i. e. complementing FL atoms - so go through the code for that, below  scaf also no rank
     if(!UCISRECUR(z)){mvc(cellsize<<lgk,CAV(z)+IAV(ind)[0]*(cellsize<<lgk),AN(a)<<lgk,CAV(a)); // nonrecursive: copy in all of a, repeating as needed to fill the cell
     }else{cellsize<<=(t>>RATX); I ix0=IAV(ind)[0]*cellsize; I as=AN(a)<<(t>>RATX); base=CAV(z); do{A *avv=AAV(a); DQU(as, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)}while(cellsize-=as);  // recursive z: increment usecount while installing
     }
@@ -214,7 +214,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   PROD(n1,AR(ind)-MAX(0,AR(a)-(AR(w)-cellframelen)),AS(ind))  // frame of ind
   if(unlikely(n0*n1==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
   // set size of _2-cell to 0 so that 'successive' cells stay on the array in full
-  r=2;  // general ind is processed as if rank 2
+  r=2;  // general ind is processed as if rank 2 (if there is rank, use 3 and fill in the first axis)
   axes=localaxes;  // use the temp block for ind version
   scan0=IAV(ind);  // store pointer to the index list where we will use it - as indexes of last axis
   base=axes[0].base=CAV(z);  // the array in full is in play
@@ -299,8 +299,9 @@ do{ \
  case 0b111100+2: ((D*)base)[scan0[2]]=-((D*)base)[scan0[2]]; case 0b111100+3: ((D*)base)[scan0[3]]=-((D*)base)[scan0[3]]; \
  scan0+=4;  /* advance pointers */ \
 }while(--i0);
-// cells of arbitrary size 
-#define CP1xvneg case 0b101111: DQNOUNROLL(n0, av=base+cellsize**scan0++; DQ(cellsize>>LGSZD, *(D*)av=-*(D*)av; av+=SZD;))  // complement all of each cell
+// cells of arbitrary size
+#define CP1xvneg case 0b101111: DQNOUNROLL(n0, av=base+cellsize**scan0++; minusDD(~(cellsize>>LGSZD),1,(D*)&dzero,av,av,jt);)  // complement all of each cell
+ 
 // macros for copying axis -1
 // cases 0ll...: ll is lg2(atom length) 0-3
 #define CP11(t)  /* each index copies a different cell to the result */ \
@@ -627,9 +628,9 @@ exitra:
 static A jtamendn2c(J jt,A a,A w,A self){R jtamendn2(jt,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
 
 // Execution of x -@:{`[`]} y
-DF2(amnegate){F2PREFIP;
+static DF2(jtamnegate){F2PREFIP;
  ARGCHK2(a,w); 
- // if y is FL, execute markd x} y which will negate
+ // if y is FL, execute markd x} y which means negate
  if(AT(w)&FL)R jtamendn2(jtinplace,markd,w,a,self);
  // otherwise, revert to x -@:{`[`]} y, processed by jtgav2
  R jtgav2(jtinplace,a,w,self);
@@ -710,8 +711,13 @@ B jtgerexact(J jt, A w){A*wv;
 F1(jtamend){F1PREFIP;
  ARGCHK1(w);
  if(VERB&AT(w)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
- else if(ger(jt,w))R gadv(w,CRBRACE);   // v0`v1`v2}
- else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2c,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
+ else if(ger(jt,w)){A z;
+  RZ(z=gadv(w,CRBRACE))   // get verbs for v0`v1`v2}, as verbs
+  A *hx=AAV(FAV(z)->fgh[2]);
+  if((FAV(hx[0])->id&~1)==CATCO&&FAV(FAV(hx[0])->fgh[0])->id==CMINUS&&AT(FAV(hx[0])->fgh[1])&VERB&&FAV(FAV(hx[0])->fgh[1])->id==CFROM&&FAV(hx[1])->id==CLEFT&&FAV(hx[2])->id==CRIGHT)
+   FAV(z)->valencefns[1]=jtamnegate;    // if gerund is -@[:]{`[`], change the dyad function pointer to the special code
+  R z;
+ }else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2c,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
 }
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}

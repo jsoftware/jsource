@@ -465,8 +465,36 @@ f 7700892415753674751x
 1
 )
 
+a =: (<"0 i: 8) , (<"0 <. 2 ^ (2 2 p. IF64) * 1 + i. 10) , (<"0 ] 10 ?@$ 2^100x)
+mod =: (<"0 ] _5 _2 3 7 9) ,  (<"0 <. 2 ^ (1 + IF64) * 1 + i. 10) , (<"0 ] 10 ?@$ 2^100x)
+f =: +`-`*
+h =: {{ 'aa bb modm ff' =. y__ =: y
+ff =. (<ff)`: 6
+assert. (aa (ff f. m. modm) bb) -: modm | (modm | aa) ff (modm | bb)
+1
+}}
+*./ , h@> { a;a;mod;<f
 
-4!:55 ;:'a exp f h n pow rou s x y'
+NB. % needs relative primes
+a =: (#~ 0&~:@>) a
+mod =: (<"0 ] 7919 104729 487417075631) , (<"0 ] 744708194707569769849x 162075339522463187576448020971x 41275321003050015370291839686835963242582144522177x)
+h =: {{ 'aa bb modm' =. y__ =: y
+assert. 0 = aa - m. modm bb * m. modm (aa (% m. modm) bb)
+1
+}}
+*./ , h@> { a;a;<mod
+
+a =: a:;0.5;1j2;5r2  NB. domain error
+f =: +`-`*`%
+h =: {{ 'aa bb modm ff' =. y__ =: y
+ff =. (<ff)`: 6
+assert. 'domain error' -: aa ff f. m. modm etx bb
+1
+}}
+NB. not working yet *./ , h@> { (<01);a;mod;<f
+NB. not working yet *./ , h@> { a;(<01);mod;<f
+
+4!:55 ;:'a exp f h mod n pow rou s x y'
 
 
 

@@ -568,6 +568,7 @@ assert. 'length error' -: (128!:13) etx (1.,:0.);(1.,:0.);0 1. 1.
 
 
 NB. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk ------------------------
+
 epdefuzzsub =: {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
 NB. normal precision
 f =: 1:`({{
@@ -611,6 +612,36 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
   Qk =. (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
   expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
+  Qk =. (prx;pcx;({.pivotcolnon0);({.newrownon0);absfuzz) 128!:12 Qk
+  if. -. 1e_30 > >./ re =. , | (+/  expQk epsub Qk) % (| +/ Qk) >. (| +/ preQk) >. (| +/ expQk) do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
+  0 T. 0  NB. allocate a worker thread
+ end.
+ while. 1 T. '' do. 55 T. '' end.
+ 1
+}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+
+NB. quad precision Qk but dp row and col
+f =: 1:`({{
+ epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
+ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
+ epsub =. (epadd -)
+NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
+ epcanon =. (epadd   0 $~ $)
+ siz =. y  NB. size of Qk
+ while. 1 T. '' do. 55 T. '' end.
+ while. 2 > 1. T. '' do.
+  'r c' =. 2 ?@$ >:siz  NB. size of modified area
+  prx =. 00 + r ? siz [ pcx =. 00 + c ? siz  NB. indexes of mods
+  pivotcolnon0 =. (] {~ r ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + r ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
+  pivotcolnon0 =. 2 {. ,: pivotcolnon0  NB. append extended part - all 0
+  pivotcolnon0 =. 0. + pivotcolnon0  NB. force to float
+  newrownon0 =. (] {~ c ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + c ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
+  newrownon0 =. 2 {. ,: newrownon0  NB. append extended part
+  newrownon0 =. 0. + newrownon0  NB. force to float
+  absfuzz =. 1e_25 * ? 0  NB. tolerance
+  Qk =. (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
+  Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
+  expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk
   if. -. 1e_30 > >./ re =. , | (+/  expQk epsub Qk) % (| +/ Qk) >. (| +/ preQk) >. (| +/ expQk) do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
   0 T. 0  NB. allocate a worker thread
@@ -618,6 +649,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
  while. 1 T. '' do. 55 T. '' end.
  1
 }}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+
 
 f i. 65
 

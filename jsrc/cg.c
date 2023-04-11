@@ -442,6 +442,7 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  RZ(ffm);  // OK to fail after FDEPDEC
  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (x v1 y)}  .  Alas, ffm can no longer be virtual
  // Protect any input that was returned by v1 (must be ][)
+ // scaf we should free up unused results which might allow for inplacing the amend
  if(a==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEW);
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is

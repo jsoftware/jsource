@@ -1482,12 +1482,13 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
  __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from newrownon0
  __m256d mabsfuzz=_mm256_set1_pd(*mplrd);  // comparison tolerance (if given)
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
- I dpflag=0;  // precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0 8=mplr exists
+ I dpflag=0;  // qp precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0 8=mplr exists 16=both mpcands dp, no mplr
  D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I t=AR(prx)+1; t=(t!=1)?qksize:t; I qksizesq=qksize*t; dpflag|=AR(qk)>AR(prx)+1;  // pointer to qk data, length of a row, offset to low part if present.  offset is qksize^2, or bksize
  UI rowx=ti*rowsperthread, rown=AN(prx), slicen=rown; slicen=rown<rowx+rowsperthread?slicen:rowx+rowsperthread;   // current row, ending row+1 taken for the current task#
  I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // address of row indexes, column data
  UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
  dpflag|=AR(absfuzzmplr)<<3;  // set flag if mplr is given
+ dpflag|=((dpflag&0b1110)==0)<<4;  // set 'single-precision multiply' flag if that is enough
  // for each row
  for(;rowx<slicen;++rowx){
   // get the address of this row in Qk
@@ -1566,9 +1567,9 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      // mplr is dp, prow is qp.
      TWOPRODQD(prowdh,prowdl,mabsfuzz,iph,ipl) prowdh=iph; prowdl=ipl;
     }
-    // (iph,ipl) = - prowdh*pcoldh
+    // (iph,ipl) = - prowdh*pcoldh    scaf we could skip the extended calc if both mpcands are dp, as they are for swaps
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
-    ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);  // accumulate middle pps
+    if(!(dpflag&16)){ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);}  // accumulate middle pps - can skip for b0 when both mpcands are dp
     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
     // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
     if(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh))){  // all 0?  our numbers can never be -0 since they come out of addition

@@ -756,6 +756,25 @@ NB. Verify values out of execution are still inplaceable
 a =: i. 1e6
 IGNOREIFFVI 10000 > 7!:2 'a =: (#a) 0} a'
 
+NB. x -@{`[`]} y
+
+test1 =: -@{`[`]} -: -"-@{`[`]}
+a =: 0. + b =: i. 4 5
+a: test1 a
+a: test1 b
+2 test1 a
+3 test1 b
+(<2;3 4) test1 a
+(<2;3 4) test1 b
+(<2 1;3) test1 a
+(<2 1;3) test1 b
+(<a:;3) test1 a
+(<a:;3) test1 b
+(<a:;<<3) test1 a
+(<a:;<<3) test1 b
+a =: 0. + i. 100 100
+10000 > 7!:2 'a =: 2 -@{`[`]} a'  NB. inplace
+
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '

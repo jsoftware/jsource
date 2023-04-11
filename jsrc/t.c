@@ -180,7 +180,7 @@ PRIM primtab[256] = {
  /*  j. */  PRIMACV(CJDOT,   VERB, jtjdot1,   jtjdot2,  0,   0,   0   ,VISATOMIC1|VASGSAFE,VF2NONE),
  /*  L. */  PRIMACV(CLDOT,   VERB, jtlevel1,  jtvalenceerr, RMAX,RMAX,RMAX,VASGSAFE,VF2WILLOPEN1),
  /*  L: */  PRIMACV(CLCAPCO, CONJ, jtvalenceerr, jtlcapco, 0,   0,   0   ,VFLAGNONE,VF2NONE),
-// /*  m. */  PRIMACV(CMDOT,   CONJ, jtvalenceerr, jtmdot, 0,   0,   0   ,VFLAGNONE,VF2NONE),
+ /*  m. */  PRIMACV(CMDOT,   CONJ, jtvalenceerr, jtmdot, 0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  M. */  PRIMACV(CMCAP,   ADV,  jtmemo,    jtvalenceerr, 0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  o. */  PRIMATOMIC12(CCIRCLE, VERB, jtpix, jtatomic2, 0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE),
  /*  p. */  PRIMACV(CPOLY,   VERB, jtpoly1,   jtpoly2,  1,   1,   0   ,VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE),

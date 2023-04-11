@@ -380,7 +380,7 @@ static DF2(jtmodopextadd){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  X xz=XmodXX(XaddXX(xa,xw),n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
- if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
+ if(unlikely(XSGN(n)<0&&XSGN(xz)>0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
@@ -389,7 +389,7 @@ static DF2(jtmodopextsub){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  X xz=XmodXX(XsubXX(xa,xw),n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
- if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
+ if(unlikely(XSGN(n)<0&&XSGN(xz)>0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
@@ -399,7 +399,7 @@ static DF2(jtmodopexttimes){A z;PROLOG(000);
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n); if(unlikely(icmpXX(xw,n)>0))xw=XmodXX(xw,n);  // take moduli before product.  extra work if x is (unlikely) neg, but we don't want the abs
  X xz=XmodXX(XmulXX(xa,xw),n);   // perform modular multiply
- if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
+ if(unlikely(XSGN(n)<0&&XSGN(xz)>0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
@@ -410,7 +410,7 @@ static DF2(jtmodopextdiv){A z;PROLOG(000);
  X xw=XAV(AT(w)&VERB?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
  ASSERT((xw=XinvertXX(xw,n))!=0,EVDOMAIN)  // take inverse of divisor, which fails if coprime
  X xz; if(!(AT(w)&VERB)){X xa=XAV(a)[0]; if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n);  xz=XmodXX(XmulXX(xa,xw),n);}else{xz=xw;}   // perform multiply and modulus if dyad
- if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
+ if(unlikely(XSGN(n)<0&&XSGN(xz)>0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
@@ -422,14 +422,14 @@ static DF2(jtmodopextexp){A z;PROLOG(000);
  // if power is negative, take the modular inverse of the base
  if(XSGN(xw)<0){ASSERT((xa=XinvertXX(xa,n))!=0,EVDOMAIN) xw=XabsX(xw);}  // verify inverse exists
  X xz=XpowmXXX(xa,xw,n);   // perform modular power - using inverse if negative power.
- if(unlikely(XSGN(n)<0))xz=XsubXX(xz,n); // jmpz_powm ignores sign of n; if n negative, move result to range -n.._1
+ if(unlikely(XSGN(n)<0&&XSGN(xz)>0))xz=XsubXX(xz,n); // jmpz_powm ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
 // modular operation on extendeds (function for one atom is in self)
 // Convert args to XNUM and call rankex to loop over atoms
-static DF1(jtmodopext1){if(likely(AN(w)!=0)){if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
-static DF2(jtmodopext2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
+static DF1(jtmodopext1){if(likely(AN(w)!=0)){if(!(AT(w)&XNUM))RZ(w=cvt(XMODETOCVT(2)|XNUM,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}   // (2) means exact conversion only
+static DF2(jtmodopext2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&XNUM))RZ(a=cvt(XMODETOCVT(2)|XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XMODETOCVT(2)|XNUM,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}   // (2) means exact conversion only
 
 // modular add with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
 static DF2(jtmodopintadd){PROLOG(000);
@@ -441,7 +441,7 @@ static DF2(jtmodopintadd){PROLOG(000);
  UI x=modarg(a,n,nrecip), y=modarg(w,n,nrecip);  // multiplicands
  UI z=x+y; z=modn(z);   // add and take modulus
  // correct for negative n
- A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
+ A zzz; RZ(zzz=sc(z-(REPSGN(nsign&-z)&n)));  // if m neg, move result to range -m+1..0
  // if modulus was XNUM, make result extended
  if(unlikely(AT(FAV(self)->fgh[1])&XNUM+RAT))zzz=cvt(XNUM,zzz);
  EPILOG(zzz)
@@ -457,7 +457,7 @@ static DF2(jtmodopintsub){PROLOG(000);
  UI x=modarg(a,n,nrecip), y=modarg(w,n,nrecip);  // multiplicands
  UI z=n+x-y; z=modn(z);   // subtract and take modulus (keep intermediates positive)
  // correct for negative n
- A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
+ A zzz; RZ(zzz=sc(z-(REPSGN(nsign&-z)&n)));  // if m neg, move result to range -m+1..0
  // if modulus was XNUM, make result extended
  if(unlikely(AT(FAV(self)->fgh[1])&XNUM+RAT))zzz=cvt(XNUM,zzz);
  EPILOG(zzz)
@@ -474,7 +474,7 @@ static DF2(jtmodopinttimes){PROLOG(000);
  UI x=modarg(a,n,nrecip), y=modarg(w,n,nrecip);  // multiplicands
  UI z=x*y; z=modn(z);   // multiply and take modulus
  // correct for negative n
- A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
+ A zzz; RZ(zzz=sc(z-(REPSGN(nsign&-z)&n)));  // if m neg, move result to range -m+1..0
  // if modulus was XNUM, make result extended
  if(unlikely(AT(FAV(self)->fgh[1])&XNUM+RAT))zzz=cvt(XNUM,zzz);
  EPILOG(zzz)
@@ -494,7 +494,7 @@ static DF2(jtmodopintdiv){PROLOG(000);
  ASSERT((I)(y=mod_inv(y,n))>=0,EVDOMAIN)
  UI z; if(!(AT(w)&VERB)){z=modarg(a,n,nrecip)*y; z=modn(z);}else{z=y;}   // multiply and take modulus if dyad
  // correct for negative n
- A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
+ A zzz; RZ(zzz=sc(z-(REPSGN(nsign&-z)&n)));  // if m neg, move result to range -m+1..0
  // if modulus was XNUM, make result extended
  if(unlikely(AT(FAV(self)->fgh[1])&XNUM+RAT))zzz=cvt(XNUM,zzz);   // cvt is slow
  EPILOG(zzz)
@@ -520,7 +520,7 @@ static DF2(jtmodopintexp){PROLOG(000);
  UI z=1;  // init x^0
  while(y){UI zz=z*x; zz=modn(zz); x*=x; x=modn(x); z=y&1?zz:z; y>>=1;}  //  repeated square/mod
  // correct for negative n
- A zzz; RZ(zzz=sc(z-(REPSGN(nsign)&n)));  // if m neg, move result to range -m..-1
+ A zzz; RZ(zzz=sc(z-(REPSGN(nsign&-z)&n)));  // if m neg, move result to range -m+1..0
  // if modulus was XNUM, make result extended
  if(unlikely(AT(FAV(self)->fgh[1])&XNUM+RAT))zzz=cvt(XNUM,zzz);
  EPILOG(zzz)

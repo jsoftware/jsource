@@ -486,6 +486,7 @@ extern F2(jtfromr);
 extern F2(jtfromsd);
 extern F2(jtfromss);
 extern F2(jtfsm);
+extern DF2(jtgav2);
 extern F2(jtgemmtune2);
 // extern F2(jtgenbitwiserotate);
 // extern F2(jtgenbitwiseshift);

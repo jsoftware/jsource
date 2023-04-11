@@ -224,7 +224,7 @@ assert. (3 2 $ 1.00000000010000111850 1.11022311648542148964e_25 2.0000000002000
 assert. 'nonce error' -: (1 2 3+1e_15) +/@:*"1!.1 etx (1+1e_10)
 assert. 26 0 -: 1 2 3 +/@:*"1!.1 ] 3 4 5
 y
-}}^:IF64 1
+}}^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1
 
 NB. Test for NaN
 'NaN error' -: 0 _ 1 (+/@:*"1!.0) etx _ 0 2   NB. in exact calculation, any infinity causes a NaN

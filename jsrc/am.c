@@ -487,8 +487,9 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
 }    /* convert ind in a ind}w into integer atom-offsets */
 
 // Execution of x m} y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
-static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
- AD * RESTRICT ind; ind=C(VAV(self)->fgh[0]);  // ind=m, the indexes to be modified
+static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
+  // ind=m, the indexes to be modified
+// obsolete  AD * RESTRICT ind; ind=VAV(self)->fgh[0];  // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  if(likely(!ISSPARSE(AT(w)|AT(ind)))){
   // non-sparse.  The fast cases are: (1) numeric m; (2) single box m.  numeric m turns into a single list of validated indexes; single box m turns into
@@ -623,6 +624,16 @@ exitra:
  if(ip)ra(w);
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
+static A jtamendn2c(J jt,A a,A w,A self){R jtamendn2(jt,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
+
+// Execution of x -@:{`[`]} y
+DF2(amnegate){F2PREFIP;
+ ARGCHK2(a,w); 
+ // if y is FL, execute markd x} y which will negate
+ if(AT(w)&FL)R jtamendn2(jtinplace,markd,w,a,self);
+ // otherwise, revert to x -@:{`[`]} y, processed by jtgav2
+ R jtgav2(jtinplace,a,w,self);
+}
 
 // Execution of x u} y.  Call (x u y) to get the indices, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
@@ -700,7 +711,7 @@ F1(jtamend){F1PREFIP;
  ARGCHK1(w);
  if(VERB&AT(w)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(ger(jt,w))R gadv(w,CRBRACE);   // v0`v1`v2}
- else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
+ else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2c,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
 }
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}

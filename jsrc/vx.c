@@ -336,7 +336,7 @@ AMONPS( pixX, X,X, , *z=   rifvsdebug(xpi(*x)); , HDR1JERR)
 #define XMOD 3037000499    /* <. %: _1+2^63 */
 #define doubletype unsigned __int128
 #else
-#define XMOD 94906265      /* <. %: _1+2^53 */
+#define XMOD 46340      /* <. %: _1+2^31 */
 #define doubletype uint64_t
 #endif
 #define modn(x) ({UI t; doubletype tt; tt=(doubletype)(x)*(doubletype)nrecip; t=tt>>BW; t=(x)-t*n; if(unlikely(t>=n))t-=n; t;})

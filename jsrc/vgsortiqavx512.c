@@ -346,6 +346,11 @@ I *sortqu4ielo(UI4 *wl,UI4 *wh,I *zl,UI4 min,UI4 max,I base){
 static void sort_or_squishlos8(I*,I*,I,I);
 
 void sortqs8i(I *zl,I *zh,I min,I max){I *zm,p;
+fprintf(stderr,"MAX_BASEUNROLL*8 %d \n",MAX_BASEUNROLL*8);
+fprintf(stderr,"zh %p \n",zh);
+fprintf(stderr,"zl %p \n",zl);
+fprintf(stderr,"zh-zl %ld \n",zh-zl);
+fprintf(stderr,"zh-zl<=MAX_BASEUNROLL*8 %d \n",zh-zl<=MAX_BASEUNROLL*8);
  if(zh-zl<=MAX_BASEUNROLL*8){
 #if 1
   __seg_gs BASEQUEUES *qs=0;

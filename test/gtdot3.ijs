@@ -3,7 +3,7 @@ NB. T. t. ------------------------------------------------------------------
 NB. mutex
 
 NB. **************************************** threads & tasks **********************************
-NB. j904 64-bit only
+NB. 64-bit only
 
 NB. wait until there are y free threads
 wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}

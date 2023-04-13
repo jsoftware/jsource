@@ -33,7 +33,7 @@ If the latest commit has any change to the repo version.txt file, then the JE bi
 
 From there, they can be copied to a distribution folder, e.g. in jengine run:
 
-  cp -r staged/* j904-beta
+  cp -r staged/* j9.5-beta
 
 Github actions are documented at https://docs.github.com/en/actions
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 if [[ $# -ne 1 ]]; then
-    echo "parameter of form: j904-beta-b"
+    echo "parameter of form: j9.5-beta-b"
     exit 2
 fi
 

@@ -2,7 +2,7 @@ man=: 0 : 0
 manage building/testing J releases/betas from J
 
    git_status''            NB report git status and jversion
-   build_for'9.4.1'        NB/set build globals and jversion.h
+   build_for'9.5.1'        NB/set build globals and jversion.h
    build_for'9.5.0-beta11'
    
 tags
@@ -11,9 +11,9 @@ tags
  $ git pull
  
  $ cd ~
- $ git/jsource/script/tag.sh j904-beta-?
+ $ git/jsource/script/tag.sh j9.5-beta-?
  $ cd git/jsource
- $ git checkout tags/j904-beta-x
+ $ git checkout tags/j9.5-beta-x
 
 build uses make2 for linux/macos
 JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
@@ -65,7 +65,7 @@ jversion_template=: 0 : 0
 )
 
 build_for=: 3 : 0
-'invalid'assert '9.4'=3{.y
+'invalid'assert '9.5'=3{.y
 v=: y
 platform=: ;(('Win';'Linux';'Darwin')i.<UNAME){'windows';'linux';'darwin'
 t=. jversion_template rplc 'XXX';v;'PLATFORM';platform
@@ -292,7 +292,7 @@ build_test segfault closes window and gives no info
 these steps determine the script and lines that led to the crash
 can run in jhs
 
-   load'git/jsource/test/tsu.ijs' NB. later 904 required for load to work
+   load'git/jsource/test/tsu.ijs' NB. later 9.5 required for load to work
    crashrun ddall
    
 ...$ crashline (from above) - wait until finished

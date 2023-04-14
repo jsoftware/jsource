@@ -816,7 +816,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   if(firstcol>=nc)break;  // exit if all columns have been processed
   I colx=ndx0[firstcol];  // get next column# to work on
   I an; D *vv; I *iv;  // number of sparse atoms in each row (0 if Ek column), pointers to row#s, values for this column
-  if(colx>=n){  // not a basis column
+  if(colx>=n){  // not a basis column (=slack)
    an=axv[colx][1];  // number of sparse atoms in each row
    vv=avv0+axv[colx][0];  // pointer to values for this section of A
    iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
@@ -844,7 +844,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      zv=(D*)((I)zv^(ZVSPRNOTFOUND|ZVPOSCVFOUND));  // this implied pivot is a valid one
      zv=(D*)((I)zv|((rvtv[colx]&1)<<ZVNEGATECOLX));  // If this column is Enforcing, remember so we change its sign
     }
-    minsprshared=minspr;  // we keep this version to reduce the number of divides
+    minsprshared=minspr;  // we keep this min-across-lanes version to reduce the number of divides
    }else if(likely((I)zv&ZVISDIPGRAD)){
     // gradient mode: limitcs/colbk0thresh are Kahan accumulator for sumsq; minsprshared holds max col value where bk near0; limitrows holds index of max column values
     I isboundcol=(rvtv[colx]&0b110)==0;  // rvt 0 & 1 are Bound variables
@@ -1308,7 +1308,7 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 //   rc=5 (not created - means problem is infeasible) rc=6=empty M, problem is malformed
 // gradient mode:
 //  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bkgrd;bks;Frow;sched;bkbound;beta;RVT
-//   find the (col,row) to maximize colvalue on the nonimproving edge with the most negative gradient, which is Frow/sqrt(>: sum of squared column values)
+//   find the (col,row) to maximize (colvalue at zero bk) on the nonimproving edge with the most negative gradient, which is Frow/sqrt(>: sum of squared column values)
 //   bks/bkbound etc same as for DIP mode
 //  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow (absence of Overshoot indicates gradient mode)
 // nonimp mode:

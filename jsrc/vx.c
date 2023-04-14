@@ -532,12 +532,39 @@ static DF2(jtmodopintexp){PROLOG(000);
 static DF1(jtmodopint1){if(likely(AN(w)!=0)){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
 static DF2(jtmodopint2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&INT+XNUM))RZ(a=cvt(AT(a)&RAT?XNUM:INT,a)) if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
+// entry point to execute monad/dyad %. m. n after the noun argument(s) are supplied
+static DF2(jtmodulardominox){F2PREFIP;  // this stands in place of jtxdefn, which inplaces
+ // the only reason we need this routine is to reformat any error to avoid exposing internals
+ A z=(*(FAV(self)->localuse.lu1.foldfn))(jt,a,w,self);
+ // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
+ if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
+ R z;
+}
+
+// entry point for monad and dyad %. m. n
+static F2(jtmodulardomino){F2PREFIP;
+ // Apply Md_j_ to the input arguments, creating a derived verb to do the work
+ A xadv; ASSERT(xadv=jtfindnameinscript(jt,"~addons/dev/modular/modular.ijs","Md_j_",ADV),EVNONCE);
+ A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),w,xadv,xadv));
+ // If the returned verb has VXOPCALL set, that means we are in debug and a namerefop has been interposed for Foldr_j_.  We don't want that - get the real verb
+ if(unlikely(FAV(derivvb)->flag&VXOPCALL))derivvb=FAV(derivvb)->fgh[2];  // the verb is saved in h of the reference
+ // Modify the derived verb to go to our preparatory stub.  Save the dyadic entry point for the derived verb so the stub can call it
+ FAV(derivvb)->localuse.lu1.foldfn=FAV(derivvb)->valencefns[1];
+ FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtmodulardominox;
+ // For display purposes, give the fold the spelling of the original
+ FAV(derivvb)->id=CMDOT;
+ R derivvb;
+}
+
 // index is (fn#,extended)
 static AF modoptbl[][2]={ {jtmodopintexp,jtmodopextexp} , {jtmodopinttimes,jtmodopexttimes} , {jtmodopintdiv,jtmodopextdiv} , {jtmodopintadd,jtmodopextadd} , {jtmodopintsub,jtmodopextsub} };
 // Modular arithmetic u m. n
 F2(jtmdot){F2PREFIP;A z=0;
+ ASSERT(AT(a)&VERB,EVDOMAIN)  // u must be a verb
  // Verify that n is an integer and create a XNUM form for it
  ASSERT(AT(w)&NOUN,EVDOMAIN) ASSERT(AR(w)==0,EVRANK)  // n must be a noun atom
+ // Handle the forms that use external libraries
+ if(FAV(a)->id==CDOMINO)R jtmodulardomino(jt,a,w);
  A h=w;  // XNUM form of w
  if(!(AT(w)&XNUM))RZ(h=cvt(XNUM,w));   // convert to XNUM
  I nrecip=0;  // will hold reciprocal of abs(n), init to invalid
@@ -551,7 +578,6 @@ F2(jtmdot){F2PREFIP;A z=0;
  }
  // Verify that u is a supported verb, and point to its functions
  AF fn1=nrecip==0?jtmodopext1:jtmodopint1, fn2=nrecip==0?jtmodopext2:jtmodopint2;  // top-level verbs monad/dyad, and the verb for atoms
- ASSERT(AT(a)&VERB,EVDOMAIN)  // u must be a verb
  I fnx=sizeof(modoptbl)/sizeof(modoptbl[0]); fnx=FAV(a)->id==CEXP?0:fnx;  fnx=FAV(a)->id==CSTAR?1:fnx; fnx=FAV(a)->id==CDIV?2:fnx;  // convert verb id to table index
  fnx=FAV(a)->id==CPLUS?3:fnx;  fnx=FAV(a)->id==CMINUS?4:fnx;
  ASSERT(fnx!=sizeof(modoptbl)/sizeof(modoptbl[0]),EVDOMAIN)   // u must be supported

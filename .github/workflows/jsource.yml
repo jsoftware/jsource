@@ -739,6 +739,48 @@ jobs:
        name: dist
        path: testwin.txt
 
+# windows --------------------------------------------------------------
+ jewin32:
+  name: JE (Windows 32)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v2
+
+   - name: Setup Environment (Windows)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: x86
+
+   - name: Build JE (Windows)
+     shell: cmd
+     run: |
+      script\buildga32.cmd
+
+   - name: Test JE (Windows)
+     shell: cmd
+     run: |
+      script\testga32.cmd
+
+   - name: Compress Files (Windows)
+     shell: pwsh
+     run: Compress-Archive j32 w32.zip
+
+   - name: Release JE (Windows)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Windows)
+     uses: actions/upload-artifact@v2
+     with:
+       name: dist
+       path: testwin32.txt
+
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results

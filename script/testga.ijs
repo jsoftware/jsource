@@ -4,6 +4,7 @@ testpath=: (1!:43''),'/test/'
 
 os=: (('Linux';'Darwin';'OpenBSD';'FreeBSD') i. <UNAME) pick ;:'linux darwin openbsd freebsd win'
 os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os
+os=: ((IF64{::'win32';'win')"_)^:IFWIN os
 os=: os, ((<os)e.'openbsd';'freebsd')#(('arm64'-:9!:56'cpu'){::'';'arm64')
 testres=: 'test',os,'.txt'
 

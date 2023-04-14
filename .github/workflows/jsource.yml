@@ -713,12 +713,12 @@ jobs:
    - name: Build JE (Windows)
      shell: cmd
      run: |
-      script\buildga.cmd
+      script\buildga.cmd x64
 
    - name: Test JE (Windows)
      shell: cmd
      run: |
-      script\testga.cmd
+      script\testga.cmd x64
 
    - name: Compress Files (Windows)
      shell: pwsh
@@ -755,12 +755,12 @@ jobs:
    - name: Build JE (Windows)
      shell: cmd
      run: |
-      script\buildga32.cmd
+      script\buildga.cmd x86
 
    - name: Test JE (Windows)
      shell: cmd
      run: |
-      script\testga32.cmd
+      script\testga.cmd x86
 
    - name: Compress Files (Windows)
      shell: pwsh
@@ -785,7 +785,7 @@ jobs:
  tests:
   name: Test Results
   runs-on: ubuntu-20.04
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jeandroid, jefreebsd2, jeopenbsd2]
+  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jeopenbsd2]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

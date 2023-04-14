@@ -747,26 +747,26 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Setup Environment (Windows)
+   - name: Setup Environment (Windows 32)
      uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: x86
 
-   - name: Build JE (Windows)
+   - name: Build JE (Windows 32)
      shell: cmd
      run: |
       script\buildga.cmd x86
 
-   - name: Test JE (Windows)
+   - name: Test JE (Windows 32)
      shell: cmd
      run: |
       script\testga.cmd x86
 
-   - name: Compress Files (Windows)
+   - name: Compress Files (Windows 32)
      shell: pwsh
      run: Compress-Archive j32 w32.zip
 
-   - name: Release JE (Windows)
+   - name: Release JE (Windows 32)
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -775,7 +775,7 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
-   - name: Copy Test (Windows)
+   - name: Copy Test (Windows 32)
      uses: actions/upload-artifact@v2
      with:
        name: dist

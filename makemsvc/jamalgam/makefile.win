@@ -253,7 +253,7 @@ OBJS=  \
 !ifdef NO_SHA_ASM
 CFLAGS1= /D NO_SHA_ASM
 !else
-!ifdef x64
+!if "1"=="$(x64)"
 OBJS_ASM= \
  ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -299,7 +299,7 @@ LD=link
 .asm.o:
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-!ifdef x64
+!if "1"=="$(x64)"
 !if "1"=="$(JAVX2)"
 TARGET= jamalgam-avx2.exe
 !else

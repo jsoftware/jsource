@@ -298,7 +298,7 @@ endif
 %.o: %.asm
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-ifdef x64
+ifeq (1,$(x64))
 ifeq (1,$(JAVX2))
 TARGET= jamalgam-avx2.exe
 else

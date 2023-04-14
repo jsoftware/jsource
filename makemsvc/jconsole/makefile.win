@@ -45,7 +45,7 @@ TARGET= jconsole32.exe
 !endif
 
 $(TARGET) : $(OBJS) $(OBJSLN) jconsole.res
-	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) jconsole.res libcmt.lib
+	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) jconsole.res /target i686-pc-windows-msvc
 
 jconsole.res : $(RCS)
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)

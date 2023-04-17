@@ -117,13 +117,13 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 #define AMFLAGDUFFW ((I)1<<AMFLAGDUFFWX)  // duff backoff for w, 0-7
 #define AMFLAGDUFFAX 24
 #define AMFLAGDUFFA ((I)1<<AMFLAGDUFFAX)  // duff backoff for a, 0-7.  Must be highest field
- struct axis{
+ struct __attribute__((aligned(CACHELINESIZE))) axis{
   UI size;  // First, the length of this axis in the result.  Later, size in bytes of a cell of this axis
   C *base;  //  pointer to cell of higher axis that this axis is indexing within.  base for axis i does not include index i.
   I max;  // number of indexes for this axis (if in full, total axis length).  Set to -1 at init to indicate the axis was an atom
   I *indexes;  // pointer to index array, or 0 if axis is taken in full
   UI scan;  // index number being worked on currently
-  I resetadder;  // #bytes to add to av when this axis rolls over (used to tell how to repeat a).  For ind forms, always resets after last axis; for axis forms, resets after a rollover of the lowest
+  I resetadder;  // #atoms (later, bytes) to add to av when this axis advances (used to tell how to repeat a).  For ind forms, always resets after last axis; for axis forms, resets after a rollover of the lowest
                   // axis whose cell size is as big as a.  But if a single atom is repeated, always 0 to avoid destroying the value
  };
 // Handle a ind} w after indices have been converted to integer atom indexes, dense
@@ -138,7 +138,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // <---a   a a
  // audit shape of a: must be a suffix of (shape of ind),(shape of selected cell)
  I compalen;  // len of shape of a that has been compared
- I wframelen=0;  // length of frame of w
+ I aframelen=0, wframelen=0;  // length of frame of a and w
  if(cellframelen>=0){  // ind is indexes
 // later  wframelen=cellframelen>>RANKTX; cellframelen=(RANKT)cellframelen;  // split arg into wframe/cellframe
   compalen=MAX(0,AR(a)-(AR(w)-cellframelen));  // #axes of a that are outside of the cell in w
@@ -205,7 +205,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   // because it's common & avoids a lot of setup
   if(AN(ind)<2){  // 0/1 cell to move (but 1 only if not -@:{`[`]})
    if(unlikely(AN(ind)==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
-   if(likely((AN(a)|wframelen)>=0)){  // wframelen!=0 means repeated store.  AN(a)<0 means we are running -@:{`[`]}, i. e. complementing FL atoms - so go through the code for that, below  scaf also no rank
+   if(likely((AN(a)|aframelen|wframelen)>=0)){  // framelen!=0 means repeated store.  AN(a)<0 means we are running -@:{`[`]}, i. e. complementing FL atoms - so go through the code for that, below  scaf also no rank
     if(!UCISRECUR(z)){mvc(cellsize<<lgk,CAV(z)+IAV(ind)[0]*(cellsize<<lgk),AN(a)<<lgk,CAV(a)); // nonrecursive: copy in all of a, repeating as needed to fill the cell
     }else{cellsize<<=(t>>RATX); I ix0=IAV(ind)[0]*cellsize; I as=AN(a)<<(t>>RATX); base=CAV(z); do{A *avv=AAV(a); DQU(as, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)}while(cellsize-=as);  // recursive z: increment usecount while installing
     }
@@ -214,34 +214,45 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   }
   PROD(n0,MAX(0,AR(a)-(AR(w)-cellframelen)),AS(ind)+AR(ind)-MAX(0,AR(a)-(AR(w)-cellframelen)))  // axes shared by a and ind
   PROD(n1,AR(ind)-MAX(0,AR(a)-(AR(w)-cellframelen)),AS(ind))  // frame of ind wrt a
-  if(unlikely(n0*n1==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
+  if(unlikely((n0|n1)==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
   axes=localaxes;  // use the temp block for ind version
   base=axes[0].base=CAV(z);  // the array in full is in play
-  scan0reset=0;  // index pointer rolls along between iterations of 'axis -2'
-  scan0=IAV(ind);  // store pointer to the index list where we will use it - as indexes of last axis
+  scan0reset=0;  // last-axis index pointer rolls along between iterations of 'axis -2'
+  scan0=IAV(ind);  // keep pointer to the index list where we will use it - as indexes of last axis
   r=2;  // normally we will need only 2 axes
   // scan1 is not used
-  amflags=AMFLAGINFULL1;  // there are no indexes for axis 1, so we say it is 'taken in full' to avoid fetching indexes...
- // if wframelen is not 0, the first axis must be for looping over the top-level cells of w.  If there is only one row in ind (i. e. only one level of looping is needed per top-level cell),
-  // only the last-ind axis is needed.  If a must be advanced between rows of ind, another axis is needed for looping over the a-cells.
-  if(wframelen!=0){
-   // axis 1 must loop over the top-level cells.
-   I nt; PROD(nt,wframelen,AS(w))  //  number of outer cells
-   PROD(axes[1].size,AR(w)-wframelen,AS(w)+wframelen)  // size of each outer cell in atoms
-   if(n1==1){
-    // a separate axis to split a is not needed.
-    scan0reset=-n0;   // reset pointer to a between rows of ind
-   }else{
-    r=3;  // in this case we have 1 axis for outer cells and 2 for a/ind
-    axes[3].indexes=scan0;  // we will be reloading the scan pointer after each loop through the last 2 axes
-    axes[2].max=n1;  // we will restore the axis _2-size after each pass through the last 2 axes
-    axes[2].size=0;   // don't reset to beginning of a between rows
-    axes[1].max=nt;   // with 3 axes, we have to set axis 1 up for looping through the outer axis
-    axes[1].indexes=0;  // indicate outer axis taken in full
-    axes[1].base=base;  // starting point through the cells
+  amflags=AMFLAGINFULL1;  // there are no indexes for axis 1, so we say it is 'taken in full' to avoid fetching indexes.  This is true whether it is outer frame or not
+ // if wframelen is not 0, the first axis must be for looping over the top-level cells of w.  If there is only one row in ind (i. e. only one level of looping is needed per last-level cell),
+  // only the last ind-axis is needed.  If a must be advanced between rows of ind, another axis is needed for looping over the a-cells.
+  if(likely(wframelen==0)){
+   // no frame.  we must always have at least 2 axes, so fill in first axis even if it is only 1 long.  We don't have to allow for repeating the last 2 axes
+   axes[1].size=0;   // don't reset to beginning of a between rows
+   // n0 and n1 are set up as the loop counts for the last 2 axes
+  }else{
+   // there is outer frame
+   axes[1].scan=0; axes[1].indexes=0; PROD(axes[1].resetadder,AS(a)-aframelen,AS(a)+aframelen)  // axis in full, and advance to next outer cell of a after filling it 
+   PROD(axes[1].size,aframelen,AS(a)) axes[1].max=axes[1].size;  // #cells in the common frame of w and a
+   // if wframe>aframe, the next loop repeats major cells of a
+   if(unlikely(wframelen>aframelen)){
+    axes[2].scan=0; axes[2].indexes=0; axes[2].resetadder=0;  // axis in full, and repeat the cell of a
+    PROD(axes[2].size,wframelen-aframelen,AS(w)+aframelen) axes[2].max=axes[2].size;  // #cells in the size of surplus frame of w
+    r=3;  // we will need at least 3 axes
    }
-  }else axes[1].size=0;   // don't reset to beginning of a between rows
- }else{  // 'ind' is actually orthogonal axes, filled in in terms of atoms
+   // if the inner cells of a do not need to be repeated, we do not need a separate axis to repeat them
+   if(n1==1){
+    scan0reset=-n0;   // a inner cell not repeated: reset the index pointer after the last axis
+    n1=axes[r-1].max;   // replace # repeats of inner a with # repeats of outer a
+   }else{  //  if we must repeat cells of a within the last 2 axes
+    ++r;  // add the new axis, now numbered r-1
+    axes[r-1].max=n1;  // # repeats of a.  we will restore the axis _2-size after each pass through the last 2 axes
+    axes[r-1].size=0;   // when we take a step in axis r-1, do not add to a, thus repeating a
+    axes[r-1].indexes=0;  // indicate outer axis taken in full
+    axes[r].max=n0;   // length of last access: enough for 1 pass through ind
+   }
+   axes[r].indexes=scan0;  // we will be reloading the scan pointer after each loop through the last 2 axes
+  }
+ }else{
+  // 'ind' is actually orthogonal axes, filled in in terms of atoms
   axes=(struct axis *)ind;  // use the input block for all the axes
   // now that we have the size of an atom, convert the cell-sizes-in-atoms to bytes
   // set the reset value at the correct level (if any)
@@ -512,7 +523,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
   // ind=m, the indexes to be modified
 // obsolete  AD * RESTRICT ind; ind=VAV(self)->fgh[0];  // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
- I wframelen=0;  // number of axes in frame of w
+ I aframelen=0,wframelen=0;  // number of axes in frame of w
  if(likely(!ISSPARSE(AT(w)|AT(ind)))){
   // non-sparse.  The fast cases are: (1) numeric m; (2) single box m.  numeric m turns into a single list of validated indexes; single box m turns into
   // a list of boxes, one  for each index.  multiple-box m is converted to a list of indexes, possibly very inefficiently.  If we end up with a list of indexes,
@@ -552,14 +563,27 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
       // empty list of selectors, that means 'all taken in full' - one selection of the whole.
       cellframelen=0; z=zeroionei(0);  // select everything
      }
-    }else{I i;I indn=AN(ind0); A *indv=AAV(ind0);  // number of axes and pointer to first
+    }else{I i; I indn=AN(ind0); A *indv=AAV(ind0);  // number of axes and pointer to first
      // At least 2 axes given.  use/allocate the axis struct
-     I indn1=indn+(wframelen>0);  // we must add an axis for the array in full, and another if there is frame.  account for those; indn1 is #axis blocks - 1
-     if(likely((UI)indn1<sizeof(localaxes)/sizeof(localaxes[0]))){axes=localaxes;}else{GATV0(alloaxes,INT,(indn1+1)*(sizeof(localaxes)/(sizeof(I))),0); axes=(struct axis *)voidAV0(alloaxes);}  // allo as needed
-     // fill in the struct for each axis.  check indexes for validity (allocating a new block  if any are negative); handle complementaries, and axes taken in full
+     I awframelen=MAX(wframelen,aframelen);  // if a frame is longer than wframe, we are going to have to copy w to match it; use the longer
+     // The axis block has one entry for the whole array, one for each axis in ind, one if there is wframe, and one if there is inner wframe (repeated cells of a)
+     I indn1=indn+(awframelen!=0)+(awframelen>aframelen);  // indn1 is #axis blocks needed - 1
+     if(likely((UI)indn1<sizeof(localaxes)/sizeof(localaxes[0]))){axes=localaxes;}else{GATV0(alloaxes,INT,(indn1+1)*(sizeof(localaxes)/(sizeof(I))),RCALIGN); axes=(struct axis *)voidAVCACHE(alloaxes);}  // allo as needed.  Rank 1 for cache alignment
+     // fill in the blocks for the frame
+     // if there is wframe, the outer loop is where we advance to the next cell of a
+     if(unlikely(awframelen!=0)){
+      axes[1].scan=0; axes[1].indexes=0; PROD(axes[1].resetadder,AS(a)-aframelen,AS(a)+aframelen)  // axis in full, and advance to next outer cell of a after filling it 
+      PROD(axes[1].size,aframelen,AS(a)) axes[1].max=axes[1].size;  // #cells is the common frame of w and a
+      // if wframe>aframe, the next loop repeats major cells of a
+      if(unlikely(awframelen>aframelen)){
+       axes[2].scan=0; axes[2].indexes=0; axes[2].resetadder=0;  // axis in full, and repeat the cell of a
+       PROD(axes[2].size,wframelen-aframelen,AS(w)+aframelen) axes[2].max=axes[2].size;  // #cells is the size of surplus frame of w
+      }
+     }
+     // fill in the struct for each axis.  check indexes for validity (allocating a new block if any are negative); handle complementaries, and axes taken in full
      A ax;  // holds the index block for the current axis.  At end of loop, holds the ind block for axis 0, after complementation
      I lastn=indn1;  // number of axis blocks in use after trailing taken-in-full removed
-     for(i=indn+wframelen-1;i>=wframelen;--i,--indn1){  // for each axis, rolling up from the bottom.  The input axis in w is i, the output axis slot is i-wframelen+1+(wframelen>0)=indn1 (because we add the leading axis for wframelen);
+     for(i=indn+wframelen-1;i>=wframelen;--i,--indn1){  // for each axis, rolling up from the bottom.  The input axis in w is i, the output axis slot is indn1 (counting back from last slot);
       ax=C(indv[i]);  // point to the index block
       I axlen=AS(w)[i];  // length of axis
       axes[indn1].size=axlen;  // save in axis struct
@@ -600,10 +624,6 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
      if(likely(lastn-wframelen>=2)){
       // here we have succeeded in using the axes.  Indicate that fact by taking the ones comp of the framelen.
       cellframelen=~(lastn-wframelen); z=(A)axes;
-      if(wframelen!=0){
-// later        axes[1] must be filled in to cause looping over the frame
-       wframelen=0;    // the frame has been accounted for in the axes
-      }
      }else{
       // rare case where so many trailing axes were deleted that we don't have 2 axes left.  Revert to ind form, where ax is known to have the ind for axis 0
       cellframelen=lastn-wframelen; z=lastn?ax:zeroionei(0);  // set cell size, and axes if there are any; if no axes, just select array in full
@@ -618,7 +638,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
   }
 noaxes:;
   if(unlikely(z==0))z=jstd(w,ind,&cellframelen,wframelen);  // get ind and framelen for complex indexes
-  z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,cellframelen+(wframelen<<RANKTX));  //  dense a if needed; dense amend
+  z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,cellframelen+(wframelen<<RANKTX)+(aframelen<<RANK2TX));  //  dense a if needed; dense amend
   if(unlikely(z==0))jteformat(jt,self,a,w,ind);  // eformat this error while we have access to ind
   // We modified w which is now not pristine.
   PRISTCLRF(w)

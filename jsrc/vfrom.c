@@ -848,15 +848,16 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    }else if(likely((I)zv&ZVISDIPGRAD)){
     // gradient mode: limitcs/colbk0thresh are Kahan accumulator for sumsq; minsprshared holds max col value where bk near0; limitrows holds index of max column values
     I isboundcol=(rvtv[colx]&0b110)==0;  // rvt 0 & 1 are Bound variables
+    minsprshared=_mm256_setzero_pd();   // biggest value seen yet - init to 0
     if(!isboundcol){   // not bound column
-     minsprshared=_mm256_setzero_pd(); limitcs=_mm256_set1_pd(1.0/NPAR);  // set biggest value seen yet, and total column norm of 1
+     limitcs=_mm256_set1_pd(1.0/NPAR);  //  total column norm of 1
     }else{
      // Bound column.  We must init to the implied row, which has a column value of 1 which goes into the total and is a valid initial magnitude
-     minsprshared=_mm256_set1_pd(1.0); limitcs=_mm256_set1_pd(2.0/NPAR);  // biggest value (1) on the implied row
+     limitcs=_mm256_set1_pd(2.0/NPAR);  // column norm of 2, 1 for the implied row
      zv=(D*)((I)zv|((rvtv[colx]&1)<<ZVNEGATECOLX));  // If this column is Enforcing, remember so we change its sign
     }
     zv=(D*)(ZVDP+ZVSPRNOTFOUND);  // set flag 101 indicating dp, gradient; don't set DIP
-    limitcs=_mm256_set1_pd(isboundcol?2.0/NPAR:1.0/NPAR); colbk0thresh=_mm256_setzero_pd();  // gradient: the high-precision gradient sum (init to 1+, 2+ if bound col)  also the largest c value
+    colbk0thresh=_mm256_setzero_pd();  // gradient: the high-precision gradient sum (init to 1+, 2+ if bound col)  also the largest c value
        // minsprshared is set to 0 because there MUST be a positive column value, or the problem would be unbounded; and we use negative pivot to indicate Swap needed
     minimpspr=_mm256_set1_pd(minimp*Frow[colx]*Frow[colx]);  // Frow^2 * best sumsq / best Frow^2, which is cutoff point for sumsq in new column (Frow^2)/sumsq > bestFrow^2/bestsumsq)
 // obsolete     // we must back up the column pointer each time to top-of-column

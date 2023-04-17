@@ -253,6 +253,7 @@ typedef I SI;
 /* r|1 to make sure array values are double-word aligned */
 #endif
 #define AKX(x)          AKXR(AR(x))
+#define RCALIGN         1   // the rank to use to put the data on a cacheline boundary
 
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define BAV(x)          (      (B*)(x)+AK(x) )  /* boolean                 */
@@ -299,6 +300,7 @@ typedef I SI;
 #define voidAV0(x)       voidAVn(x,0)  // unknown, but scalar
 #define voidAV1(x)       voidAVn(x,1)  // unknown, but list
 #define voidAV2(x)       voidAVn(x,2)  // unknown, but table
+#define voidAVCACHE(x)   voidAVn(x,RCALIGN)  // unknown, aligned to cache
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
 #define UNvoidAV0(x)     ((A)((I)(x)-AKXR(0)))   // go from a pointer to *AV0 back to the base of the A block
 #define UNvoidAV1(x)     ((A)((I)(x)-AKXR(1)))   // go from a pointer to *AV1 back to the base of the A block

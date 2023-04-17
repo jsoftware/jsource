@@ -436,7 +436,7 @@ NB. obsolete
   assert. 0 1 4 2 8 _3 ('' run128_9) (1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 4 2 8 _3 ('' run128_9) (2 1);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
 
-  NB. gradient nonbasic col swap
+  NB. gradient nonbasic col swap - should never happen
   bk =. dptoqp         0.0 0.0 0 0
   bkg=. i. {: $ bk
   bkbeta=.0$0.
@@ -446,7 +446,7 @@ NB. obsolete
   sched =.4 $ 100
   rvt =. '00044'
   cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
-  assert. 0 0 4 1 4 2.2775 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 0 2 1 4 2.2775 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 2 1 4 3.8775 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
 
   end.  NB. one thread

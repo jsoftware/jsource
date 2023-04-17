@@ -402,7 +402,8 @@ NB. Full test with everything allowed
 
 27 b. testinplacer 'VBI';'lr/l/lr/r/I/r/lr/l/lr/    lr/l/lr/r//r/lr/l/lr/   lr/l/lr/r//r/lr/l/lr/'
 
-! testinplacer 'VBID';'B/LRI/L/LRI/LRI/L/R/R/D/    /LRI/L/LRI/LRI/L/R/R//   /LRI/L/LRI/LRI/L/R/R//'
+! testinplacer 'VID';'B/LRI/L/LRI/LR/L/R/R/D/    /LRI/L/LRI/LR/L/R/R//   /LRI/L/LRI/LR/L/R/R//'   NB. Can't test B because it converts back to I
+! testinplacer 'B';'B/LRI/L/LRI/LRI/L/R/R/D/    /LRI/L/LRI/LRI/L/R/R//   /LRI/L/LRI/LRI/L/R/R//' 
 
 % testinplacer 'VBID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d////   D/d//D/d//D/d//'
 

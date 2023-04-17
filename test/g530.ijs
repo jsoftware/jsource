@@ -770,8 +770,13 @@ a: test1 b
 (<2 1;3) test1 b
 (<a:;3) test1 a
 (<a:;3) test1 b
+(<a:;3 1 4) test1 b
 (<a:;<<3) test1 a
 (<a:;<<3) test1 b
+a =: 0. + b =: i. 4 5 6
+(<a:;3) test1 a
+(<a:;3) test1 b
+ 
 a =: 0. + i. 100 100
 10000 > 7!:2 'a =: 2 -@{`[`]} a'  NB. inplace
 

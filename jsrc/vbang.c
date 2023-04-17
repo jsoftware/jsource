@@ -126,16 +126,19 @@ D jtbindd(J jt,D x,D y){B id,ix,iy;D d;
  ix=x==jfloor(x); 
  iy=y==jfloor(y);
  switch(4*(I )(ix&&0>x)+2*(I )(iy&&0>y)+(I )(id&&0>d)){
-  default: ASSERTSYS(0,"bindd");
-  case 5: /* 1 0 1 */  /* Impossible */
-  case 0: /* 0 0 0 */
-  case 2: /* 0 1 0 */  R ix&&iy?ibin(x,y):dbin(x,y);
-  case 3: /* 0 1 1 */  R (MOD2(x)?-1:1)*ibin(x,x-y-1);
-  case 6: /* 1 1 0 */  R (MOD2(d)?-1:1)*ibin(-1-y,-1-x);
-  case 1: /* 0 0 1 */ 
-  case 4: /* 1 0 0 */ 
-  case 7: /* 1 1 1 */  R 0;
-}}   /* P.C. Berry, Sharp APL Reference Manual, 1979, p. 132 */
+ default: ASSERTSYS(0,"bindd");
+ case 5: /* 1 0 1 */  /* Impossible */
+ case 0: /* 0 0 0 */
+ case 2: /* 0 1 0 */  d=ix&&iy?ibin(x,y):dbin(x,y); break;
+ case 3: /* 0 1 1 */  d=(MOD2(x)?-1:1)*ibin(x,x-y-1); break;
+ case 6: /* 1 1 0 */  d=(MOD2(d)?-1:1)*ibin(-1-y,-1-x); break;
+ case 1: /* 0 0 1 */ 
+ case 4: /* 1 0 0 */ 
+ case 7: /* 1 1 1 */  R 0;
+ }
+ if(d>2251799813685248.)jt->jerr=EVNOCONV;  // if the result is at the limit of double precision, suppress conversion back to integer
+ R d;
+}   /* P.C. Berry, Sharp APL Reference Manual, 1979, p. 132 */
 
 static Z jtbinzz(J jt,Z x,Z y){B id,ix,iy;D rd,rx,ry;Z d;
  if(!x.im&&!y.im)R zrj0(bindd(x.re,y.re));

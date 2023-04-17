@@ -73,6 +73,7 @@
 #define EWOVFLOOR1      69   // major oflo in <./>., must be converted to FL
 #define EVCUTSTACK      76  // set when Cut Stack executed; passed into caller to force its termination; intercepted when terminated line finishes, to revert to suspension
 #define EVDEBUGEND      79  // EVEXIT+64 set when debug wants to fail all avoiding all try blocks
+#define EVNOCONV        128  // must be higher than other error for the type.  Set when a FL has lost precision and must not be converted to INT
 #define EVSUPPRESS      255  // turn off error reporting: don't change anything.  Not used
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors
 #define EVOKCLEANUP     512  // no error, but there is cleanup work to do

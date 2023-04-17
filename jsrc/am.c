@@ -306,12 +306,12 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
      I backupct=(-n0)&3;  //  duff backup
      n0=(n0+3)>>2;  // convert n0 into # turns through duff loop, giving 4 cells per turn
      amflags|=0b111100 + (backupct*((1+AMFLAGDUFFW)));  // routine is 0b1111dd (dd=duff backoff)
-    }else amflags=0b101111;  // block-negate routine
+    }else amflags|=0b101111;  // block-negate routine
    }
   }
   cellsize<<=lgk;  // convert cellsize to bytes for the rest of the processing
  }else{
-  // replacing recursive indirect blocks - or -@:{`[`]}, where a is a FL that has a RECURSIBLE bit set
+  // replacing recursive indirect blocks
   // cases: multiple cells of a; single cell of a, repeated; single cell of a, duped; single atom of a, repeated
   I repa=cellsize>=AN(a);  // 1 if a has a single cell
   I nodupa=cellsize<=AN(a);  // 1 if the single cell of a must be duplicated in each replaced cell

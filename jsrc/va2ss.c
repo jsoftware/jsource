@@ -357,7 +357,7 @@ nozv:;  // here when we have zv or don't need it
   // To prevent this, we force them out to a new memory variable and refer to those copies.  And, we finish our use of zdv before the call
   // to NAN1
   {((D*)jt->shapesink)[0]=adv, ((D*)jt->shapesink)[1]=wdv; NAN0; zdv=bindd(((D*)jt->shapesink)[0],((D*)jt->shapesink)[1]); }
-  SSSTORE(zdv,z,FL,D)
+  SSSTORE(zdv,z,FL,D) if(unlikely(jt->jerr==EVNOCONV))jt->jerr=0;
   if(unlikely(zdv==0))if(jt->jerr!=0)R 0; NAN1;   // NaN error picked up in the routine sets result=0
   R z;  // Return the value if valid
 

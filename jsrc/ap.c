@@ -697,7 +697,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  // if inplaceable, reuse the input area for the result
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  I rc=((AHDRPFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
- if(255&rc){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
 static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 

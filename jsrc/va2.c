@@ -718,7 +718,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      // m is the number of outer loops the caller will run
      // n is the number of times the inner-loop atom is repeated for each outer loop: n=1 means no inner loop needed; n>1 means each atom of y is repeated n times; n<0 means each atom of x is repeated ~n times.  n*m cannot=0. 
     I i=mf; I jj=nf;
-    lp000: {I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt);    // run one section
+    lp000: {I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt);    // run one section.  Result of 0 means error
      if(unlikely(lrc!=EVOK)){
       // section did not complete normally.
       if(unlikely(lrc<0)){mulofloloc=(mf-i)*m*(n^REPSGN(n))+~lrc; rc=EWOVIP+EWOVIPMULII; goto lp000e;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
@@ -732,7 +732,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    }
 
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
-   if(likely(rc==EVOK)){if(unlikely((I)jtinplace&VRI+VRD))z=cvz((I)jtinplace,z); RETF(z);  // normal return is here.  The rest is error recovery
+   if(likely(rc&(EVOK|EVNOCONV))){if(unlikely((I)jtinplace&VRI+VRD&&rc!=EVNOCONV))z=cvz((I)jtinplace,z); RETF(z);  // normal return is here.  The rest is error recovery
    
 
    // ********* error recovery starts here **********

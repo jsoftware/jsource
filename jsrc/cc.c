@@ -878,11 +878,11 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
    EACHCUT(if(d>1){ I lrc=((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); rc=lrc<rc?lrc:rc;} else if(d==1){copyTT(zc,v1,wcn,zt,wt);} else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
        if(!z0){if(z)R z; else{rc=jt->jerr; break;}}} mvc(zk,zc,atomsize,z0);} zc+=zk;
    );
-   if(255&rc){
+   if(unlikely((255&~EVNOCONV)&rc)){
     jsignal(rc);
     if(FAV(self)->id!=CCUT)CUTFRETCOUNT(a)=m;  // if we are going to retry, we have to reset the # frets indicator which has been destroyed
     R rc>=EWOV?cut2(a,w,self):0;
-   }else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
+   }else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,zz):zz;
    break;
   }
  }
@@ -992,18 +992,18 @@ DF2(jtrazecut2){A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
  zt=rtype(adocv.cv); zk=d<<bplg(zt);
  GA(z,zt,AN(w),r,s); zv=CAV(z); // allocate size of w, which is as big as it can get if there are no discarded items
+ I rc=EVOK;
  while(p){I n;
   if(u=memchr(v+pfx,sep,p-pfx))u+=pfx^1; else{if(!pfx)break; u=v+p;}
   q=u-v;
   if(n=q-neg){  // number of items in this section
-   I rc=EVOK;
    if(d){rc=((AHDRPFN*)adocv.f)(d,n,(I)1,wv+k*(b+wi-p),zv,jt);}  // do the prefix, but not if items empty
-   if(rc&255){jsignal(rc); R rc>=EWOV?razecut2(a,w,self):0;}  // if overflow, restart the whole thing with conversion to float
+   if(rc&(255&~EVNOCONV)){jsignal(rc); R rc>=EWOV?razecut2(a,w,self):0;}  // if overflow, restart the whole thing with conversion to float
    m+=n; zv+=n*zk; 
   }
   p-=q; v=u;  
  }
- AS(z)[0]=m; AN(z)=m*d; R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ AS(z)[0]=m; AN(z)=m*d; R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }   
 
 DF1(jtrazecut1){R razecut2(mark,w,self);}

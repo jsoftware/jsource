@@ -378,11 +378,11 @@ jobs:
      uses: actions/checkout@v2
 
    - name: Build, Test JE (OpenBSD)
-     uses: cross-platform-actions/action@v0.7.0
+     uses: cross-platform-actions/action@v0.10.0
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.1'
+      version: '7.3'
       shell: bash
 
       run: |
@@ -439,18 +439,17 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-#  if: ${{ false }}
-  runs-on: macos-12
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.7.0
+     uses: cross-platform-actions/action@v0.10.0
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.1'
+      version: '7.3'
       shell: bash
 
       run: |
@@ -576,11 +575,11 @@ jobs:
      uses: actions/checkout@v2
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.7.0
+     uses: cross-platform-actions/action@v0.10.0
      with:
       operating_system: freebsd
       architecture: x86-64
-      version: '13.0'
+      version: '13.1'
       shell: bash
 
       run: |

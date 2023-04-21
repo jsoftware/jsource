@@ -378,11 +378,11 @@ jobs:
      uses: actions/checkout@v2
 
    - name: Build, Test JE (OpenBSD)
-     uses: cross-platform-actions/action@v0.10.0
+     uses: cross-platform-actions/action@v0.7.0
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.3'
+      version: '7.1'
       shell: bash
 
       run: |
@@ -439,23 +439,24 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: macos-12
+  if: ${{ false }}
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.10.0
+     uses: cross-platform-actions/action@v0.7.0
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.3'
+      version: '7.1'
       shell: bash
 
       run: |
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 libedit
+       sudo pkg_add curl zip gmake gmp pcre2 libedit
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -574,11 +575,11 @@ jobs:
      uses: actions/checkout@v2
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.10.0
+     uses: cross-platform-actions/action@v0.7.0
      with:
       operating_system: freebsd
       architecture: x86-64
-      version: '13.1'
+      version: '13.0'
       shell: bash
 
       run: |

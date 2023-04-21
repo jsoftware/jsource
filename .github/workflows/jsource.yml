@@ -439,7 +439,7 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: ubuntu-22.04
+  runs-on: macos-12
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
@@ -449,7 +449,7 @@ jobs:
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.3'
+      version: '7.1'
       shell: bash
 
       run: |

@@ -448,7 +448,7 @@ jobs:
      uses: cross-platform-actions/action@v0.10.0
      with:
       operating_system: openbsd
-      architecture: arm64
+      architecture: x86-64
       version: '7.3'
       shell: bash
 

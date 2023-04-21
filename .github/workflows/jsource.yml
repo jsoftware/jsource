@@ -439,6 +439,7 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -448,7 +449,7 @@ jobs:
      uses: cross-platform-actions/action@v0.10.0
      with:
       operating_system: openbsd
-      architecture: x86-64
+      architecture: arm64
       version: '7.3'
       shell: bash
 

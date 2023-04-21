@@ -1258,7 +1258,9 @@ A jtddtokens(J jt,A w,I env){
  // loop till all DDs found
  while(firstddbgnx<nw){
   // We know that firstddbgnx is DDBGN
-  I *fillv=&wilv[ddschbgnx][1]; DQ(2*(firstddbgnx-ddschbgnx)-1, *fillv++=wilv[firstddbgnx][0];)  // set each end-of-word pointer to end of [ddbgnx], and all start pointers except thwe first.  This preserves spacing from schbgn to firstddbgn
+  // If there are words before the DDBGN, back the starting word to include leading whitespace.  This loses space between two adjacent DDs, bfd
+  if(ddschbgnx<firstddbgnx)wilv[ddschbgnx][0]=ddschbgnx>0?wilv[ddschbgnx-1][1]:0;  // back up to start of line or end of word
+  I *fillv=&wilv[ddschbgnx][1]; DQ(2*(firstddbgnx-ddschbgnx)-1, *fillv++=wilv[firstddbgnx][0];)  // set each end-of-word pointer to end at the start of [ddbgnx], and all start pointers except the first.  This preserves spacing from schbgn to firstddbgn
   I ddendx=-1, ddbgnx=firstddbgnx;  // end/start of DD, indexes into wilv.  This will be the pair we process.  We advance ddbgnx and stop when we hit ddendx
   I scanstart=firstddbgnx;  // start looking for DDEND/nounDD at the first known DDBGN.  But if there turns out to be no DDEND, advance start ptr to avoid rescanning
   while(1){I i;  // loop till we find a complete DD
@@ -1373,7 +1375,7 @@ A jtddtokens(J jt,A w,I env){
    if(++ddendx<nw){wilv[ddendx][0]=trailstart; wilv[ddendx][1]=bodystart; AN(wil)=2*(AS(wil)[0]=ddendx+1);}  // make one string of DDEND to end of string
    RZ(w=unwordil(wil,w,0)); RZ(wil=wordil(w));  // run chars in order; get index to words
    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
-   ddschbgnx=0;  // start scan back at the beginning
+   ddschbgnx=0; wilv[0][0]=0;  // start scan back at the beginning.  Preserve leading space; too bad about interior spacing
   }
 
   // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen

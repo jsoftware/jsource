@@ -15,7 +15,7 @@ while. (i<r) *. j<c do.
     if. r=i+k do. 'singular matrix' 13!:8 (3) end.
     A=. (<i,i+k) C. A
   end.
-  A=. (i,j)m modular_pivot A
+  A=. (i,j)m modular_pivot_j_ A
   i=. >:i
   j=. >:j
 end.
@@ -29,58 +29,48 @@ col=. c{"1 y
 y - m. m (col-r=i.#y) * m. m/ (r{y) % m. m r{col
 )
 
-
 NB. modular inverse square monad
 Md0=: 1 : 0
-(r*1 _1){.m modular_gauss_jordan y,.=i.r=. #y
+(r*1 _1){.m modular_gauss_jordan_j_ y,.=i.r=. #y
 )
 
 NB. #rows>:#cols; ambivalent
 NB. Md is meant to be like %. mod m
-Md=: 1 : 0
+Mdrank=: 1 : 0
 mp=. + m. m/ . (* m. m)
+if. </$y do.  'singular matrix' 13!:8 (3) end.
 if. >/$y
 do. yty=. (yt=. |:y)mp y
-  (m Md0 yty)mp yt
-else. m Md0 y
+  (m Md0_j_ yty)mp yt
+else. m Md0_j_ y
 end.
 :
 mp=. + m. m/ . (* m. m)
-(m Md y) mp x
+(m Md_j_ y) mp x
+)
+Md=:1 : 0  NB. The result of (n Md) must be bivalent inside JE.  Explicit definitions are.
+(m Mdrank_j_)"2 _ 2 y
+:
+x (m Mdrank_j_)"2 _ 2 y
 )
 
-
 try=: 0 : 0
+ts=:6!:2 ,7!:2@]
 
--/ . * a=:?.3 3$5
-a
-]ai=: 17 Md a
-ai + m. 17/ . (* m. 17) a
-1 2 3 (17) Md a
+mmp=:1 : '+ m. m/ . (* m. m)'
 
-NB. Non square case
-$A=:a,1
-17 Md A
-17|(17 Md A)mp A
-b=:1 2 3 4
-s=:b 17 Md A
-17| (B=:17|b-A mp s)  mp A
-B
-
-mp=.1 : '+ m. m/ . (* m. m)'
-det=: 1 : '(- m. m)/ . (* m. m)'
-
-NB. bigger tests
+NB. tests
 __ q: | -/ . * x: c=:?.30 30$5
-M=.103*101
-10 10{. ci=:M Md c
-ci M mp c
+M=:103*101
+10 10{. ci=:%. m. M c
+5 5{.ci M mmp c
 
-__ q: | -/ . * (|: M mp ])x: c=:?.40 30$5
-M=.103*101
-10 10{. ci=:M Md c
-ci M mp c
-
-(i.40 2) M Md c
+__ q: | -/ . * (|: M mmp ])x: c2=:?.40 30$5
+5 5{. c2i=:%. m. M c2
+5 5{.c2i M mmp c2
+6!:2 '(i.40 2) %. m. M c2'
+NB. errors:
+%. m. M d2=:?.30 40$5
+%. m. M i. 3 3
 
 )

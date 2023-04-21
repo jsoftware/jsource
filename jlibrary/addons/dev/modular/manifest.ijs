@@ -6,7 +6,7 @@ DESCRIPTION=: 0 : 0
 modular arithmetic
 )
 
-VERSION=: '1.0.1'
+VERSION=: '1.0.3'
 
 FILES=: 0 : 0
 modular.ijs

@@ -439,7 +439,6 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -468,7 +467,6 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
-#       script/testga.sh openbsd || exit 1
        ls -l j64
        zip -r obsdarm64d.zip j64
        cd j64

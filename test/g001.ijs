@@ -342,6 +342,12 @@ a > 7!:0''
 
 0 = ('=',':') +./@:E. a =. 2 , :: (13!:12@'') '2'  NB. For a while the =. was changed to =:
 
+NB. assignment messages
+'|length error: efx|number of assigned names does not match number of values|   ''a b c''    =:5 6'  -:&(1 {:: <;._1) efx '''a b c'' =: 5 6'
+'|domain error: efx|error opening an item for assignment|   ''a b''    =:2 2$5;;:''a b c'''  -:&(1 {:: <;._1) efx '''a b'' =: 2 2 $ 5;;:''a b c'''
+'|spelling error: efx|error evaluating atomic representation for assignment|   ''`a''    =:<''123'''  -:&(1 {:: <;._1) efx '''`a'' =: <''123'''
+'|domain error: ex02|public assignment to a name with a private value|   y    =:5' -:&(1 {:: <;._1) {{ y=: 5 }} eftx ''
+
 NB. Test that arithmetic dyads migrate outer loop to inner loop
 p =: 0.5 * i. 10000 [ q =: 0.5
 (p +"+"1 _ q) -: (p +"1 _ q)

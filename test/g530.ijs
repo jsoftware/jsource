@@ -780,6 +780,33 @@ a =: 0. + b =: i. 4 5 6
 a =: 0. + i. 100 100
 10000 > 7!:2 'a =: 2 -@{`[`]} a'  NB. inplace
 
+NB. x m}"n y with IRS
+
+NB. y is (min axis size),(surplus a frame),(common frame),(rank of ind),(# repeated axes of a),((cell rank)
+test =: {{
+'minaxis asf cf indr areps rcell' =. y
+aframe =. (asf>.0) ?@$ minaxis+3
+wframe = (0<.-asf) ?@$ minaxis+3
+commonframe =. cf ?@$ minaxis+3
+indshape =. indr ?@$ minaxis+3
+ashapein =. areps }. indshape
+cellshape =. rcell ?@$ minaxis+3
+wcellfame =. ($indshape) ?@$ minaxis+3
+ar =. ashapein + cellshape
+wr =. wcellframe + cellshape
+ashape =. aframe , commonframe , ashapein , cellshape
+wshape =. wframe , commonframe , wcellframe , cellshape
+ind =. indshape ?@$&.> wcellframe
+if. *./ (,1)&-:@> ind do. ind =. < ; ind
+elseif. 1=#ind do.
+  ind =. , > ind
+  if. 1 = #ind do. if. ?2 do. ind =. {. ind end. end.  NB. singletons sometimes list, sometimes atom
+end.
+c =: ind
+smoutput ashape;wshape;$ind
+(a =: ashape ?@$ 1e6) (ind}"r -: ind}"]"r) b =: wshape ?@$ 1e6
+}}
+
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '

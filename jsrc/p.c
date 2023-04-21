@@ -162,7 +162,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 // We flag all multiple assignments as final because the value is protected in the source
-static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
+static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,self),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
 // jt has flag set for final assignment (passed into symbis)
@@ -215,7 +215,15 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
    // create faux fs to pass args to the multiple-assignment function, in AM and valencefns.  AT must be 0 for eformat, too
    PRIM asgfs; ABACK((A)&asgfs)=symtab; AT((A)&asgfs)=0; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
    I rr=AR(v)-1; rr&=~REPSGN(rr); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf); 
-   if(unlikely(jt->jerr==EVLENGTH))jteformat(jt,0,str(strlen("number of assigned names does not match number of values"),"number of assigned names does not match number of values"),0,0);
+   if(unlikely(jt->jerr!=0)){
+    // If the assignment failed, try to explain why, since there is nowhere else to do so.  jtis may have formatted a message already (for invalid =:); if so, it will survive.  Otherwise
+    // we infer an agreement error from EVLENGTH, or an error in opening from EVDOMAIN
+    char* emsg=0; I msglen;
+    emsg=jt->jerr==EVLENGTH?"number of assigned names does not match number of values":emsg;  // infer agreement error from EVLENGTH
+    emsg=(((jt->jerr==EVDOMAIN)|(jt->jerr==EVSPELL)))&ger?"error evaluating atomic representation for assignment":emsg;   // if error evaluating gerund
+    emsg=(jt->jerr==EVDOMAIN)&!ger?"error opening an item for assignment":emsg;  // otherwise must be domain error on open
+    if(emsg)jteformat(jt,0,str(strlen(emsg),emsg),0,0);
+   }
   }
  }
 retstack:  // return, but 0 if error

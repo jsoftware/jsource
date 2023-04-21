@@ -689,7 +689,7 @@ static DF1(rank1q){  // fast version: nonneg rank, no check for multiple RANKONL
  // rank is considered nugatory if the rank of u<=n or rank of arg <=n or if n=rank of u, i. e. if n>=MIN(ranku,rankarg)
  // This gives error in the case
  // (1&+@>)"1 ] 2 2 $ 1 2;3;4;0
- // If you run this at rank 0, the fill will be calculated onver the whole array, while if you interpose a rank-1 step.
+ // If you run this at rank 0, the fill will be calculated onver the whole array, while if you interpose a rank-1 step
  // the last row will fill separately.  User can give a floating-point rank to mean 'force the rank regardless'
  I r=AR(w); A fs=FAV(self)->fgh[0]; I m=FAV(self)->localuse.lu1.srank[0];   // r=arg rank  fs->u  m=rank from n
  I um=FAV(fs)->mr;
@@ -743,7 +743,7 @@ static DF2(rank2q){
  RETF(rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
 }
 
-// Version for rank 0.  Call rank1ex0, pointing to the u"r
+// Version for rank 0.  Call rank2ex0, pointing to the u"r
 static DF2(jtrank20atom){ A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jt,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceability through.
 

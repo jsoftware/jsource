@@ -439,7 +439,7 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: ubuntu-latest
+  runs-on: macos-12
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
@@ -455,7 +455,7 @@ jobs:
       run: |
        rm -f jobdone
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 libedit
+       sudo pkg_add curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh

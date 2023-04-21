@@ -440,7 +440,7 @@ jobs:
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
 #  if: ${{ false }}
-  runs-on: ubuntu-22.04
+  runs-on: macos-12
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

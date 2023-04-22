@@ -83,7 +83,8 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.
  if(wf>=af){RETF(w);}  // no replication - quick out
- RESETRANK; RETF(reitem(vec(INT,af-wf,AS(a)),lamin1(w)));  // could use virtual block, but this case is so rare...
+// obsolete  RESETRANK; RETF(reitem(vec(INT,af-wf,AS(a)),lamin1(w)));  // could use virtual block, but this case is so rare...
+ RESETRANK; a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); A z; IRS2(a,w,0L,RMAX,wcr,jtreshape,z); RETF(z);  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
 } 
 
 // ][.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate

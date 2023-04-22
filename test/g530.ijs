@@ -782,7 +782,7 @@ a =: 0. + i. 100 100
 
 NB. x m}"n y with IRS
 
-NB. y is (min axis size),(surplus a frame),(common frame),(rank of ind),(# repeated axes of a),((cell rank)
+NB. y is (min axis size),(surplus a frame),(common frame),(rank of ind),(# repeated axes of a),(cell rank)
 test =: {{
 'minaxis asf cf indr areps rcell' =. y
 aframe =. (asf>.0) ?@$ minaxis+3
@@ -804,6 +804,7 @@ elseif. 1=#ind do.
 end.
 c =: ind
 smoutput ashape;wshape;$ind
+r =. (ashapein +&# cellshape) , (wcellframe +&# cellshape)
 (a =: ashape ?@$ 1e6) (ind}"r -: ind}"]"r) b =: wshape ?@$ 1e6
 }}
 

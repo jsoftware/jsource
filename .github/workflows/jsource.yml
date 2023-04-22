@@ -467,6 +467,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh openbsd || exit 1
+       script/testga.sh openbsd || exit 1
        ls -l j64
        zip -r obsdarm64d.zip j64
        cd j64

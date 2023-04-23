@@ -1,23 +1,18 @@
-name: JE
+# jsource for previous JEP version
+# names have "P" (prev) suffix, e.g. l64P.zip
+
+name: JEP
 
 on:
  push:
   branches:
-   - '**'
-
-# trigger workflow on file change
-#on:
-# push:
-#  paths:
-#   - 'version.txt'
-
-# if: ${{ false }}
+   - '9.4'
 
 jobs:
 
 # linux ----------------------------------------------------------------
  jelinux:
-  name: JE (Linux)
+  name: JEP (Linux)
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -29,7 +24,7 @@ jobs:
    - name: Setup Environment (Linux)
      run: script/install-lnx.sh
 
-   - name: Build JE (Linux)
+   - name: Build JEP (Linux)
      env:
       CC: clang
       USE_SLEEF: 1
@@ -38,11 +33,10 @@ jobs:
       $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
-   - name: Test JE (Linux)
+   - name: Test JEP (Linux)
      run: |
       script/testga.sh linux || exit 1
       ls -l j64
-      zip -r l64d.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.so
@@ -53,13 +47,13 @@ jobs:
       strip -S libgmp.so
       cd ..
       ls -l j64
-      zip -r l64.zip j64
+      zip -r l64P.zip j64
 
-   - name: Release JE (Linux)
+   - name: Release JEP (Linux)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "l64.zip,l64d.zip,version.txt"
+      artifacts: "l64P.zip,versionP.txt"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -70,80 +64,22 @@ jobs:
        name: dist
        path: testlinux.txt
 
-# linux gcc ------------------------------------------------------------
- jelinux-gcc:
-  name: JE (Linux gcc)
-  runs-on: ubuntu-20.04
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v2
-
-   - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2
-
-   - name: Setup Environment (Linux gcc)
-     run: script/install-lnx.sh
-
-   - name: Build JE (Linux gcc)
-     env:
-      CC: gcc
-      USE_SLEEF: 1
-     run: |
-      echo $SDE_PATH
-      $SDE_PATH/sde -help || true
-      script/buildga.sh linux || exit 1
-
-   - name: Test JE (Linux gcc)
-     run: |
-      script/testga.sh linux || exit 1
-      mv testlinux.txt  testlinuxgcc.txt
-      ls -l j64
-      zip -r lgcc64d.zip j64
-      cd j64
-      strip -S jconsole
-      strip -S libj.so
-      strip -S libjavx2.so || true
-      strip -S libjavx512.so || true
-      strip -S libtsdll.so
-      strip -S jamalgam || true
-      strip -S libgmp.so
-      cd ..
-      ls -l j64
-      zip -r lgcc64.zip j64
-
-   - name: Release JE (Linux gcc)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "lgcc64.zip,lgcc64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Linux gcc)
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testlinuxgcc.txt
-
 # macOS ----------------------------------------------------------------
  jemacos:
-  name: JE (macOS)
+  name: JEP (macOS)
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-#   - name: Setup Environment (macOS)
-
-   - name: Build JE (macOS)
+   - name: Build JEP (macOS)
      env:
       CC: clang
       USE_SLEEF: 1
      run: |
       script/buildga.sh darwin || exit 1
 
-   - name: Test JE (macOS)
+   - name: Test JEP (macOS)
      run: |
       script/testga.sh darwin || exit 1
       rm -rf j64/jconsole.dSYM
@@ -153,7 +89,6 @@ jobs:
       rm -rf j64/libtsdll.dylib.dSYM
       rm -rf j64/jamalgam.dSYM
       ls -l j64
-      zip -r m64d.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.dylib
@@ -164,13 +99,13 @@ jobs:
       strip -S libgmp.dylib
       cd ..
       ls -l j64
-      zip -r m64.zip j64
+      zip -r m64P.zip j64
 
-   - name: Release JE (macOS)
+   - name: Release JEP (macOS)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "m64.zip,m64d.zip"
+      artifacts: "m64P.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -183,13 +118,13 @@ jobs:
 
 # rpi64 ----------------------------------------------------------------
  jerpi64:
-  name: JE (Raspberry)
+  name: JEP (Raspberry)
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build, Test JE (Raspberry)
+   - name: Build, Test JEP (Raspberry)
      uses: pguyot/arm-runner-action@v2
      with:
       cpu: cortex-a53
@@ -204,7 +139,6 @@ jobs:
        script/buildga.sh raspberry || exit 1
        script/testga.sh raspberry || exit 1
        ls -l j64
-       zip -r rpi64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -212,11 +146,10 @@ jobs:
        strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
-       zip -r rpi64.zip j64
+       zip -r rpi64P.zip j64
        rm -rf j64
        mkdir j64
-       mv rpi64.zip j64/.
-       mv rpi64d.zip j64/.
+       mv rpi64P.zip j64/.
        mv testrpi64.txt j64/.
        find j64 -type d -exec chmod a+rwx {} \;
        find j64 -type f -exec chmod a+rw {} \;
@@ -226,11 +159,11 @@ jobs:
       ls -l j64
       mv j64/* .
 
-   - name: Release JE (Raspberry)
+   - name: Release JEP (Raspberry)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi64.zip,rpi64d.zip"
+      artifacts: "rpi64P.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -243,13 +176,13 @@ jobs:
 
 # rpi32 ----------------------------------------------------------------
  jerpi32:
-  name: JE (Raspberry32)
+  name: JEP (Raspberry32)
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build, Test JE (Raspberry 32)
+   - name: Build, Test JEP (Raspberry 32)
      uses: pguyot/arm-runner-action@v2
      with:
       cpu: arm1176
@@ -266,7 +199,6 @@ jobs:
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
        ls -l j32
-       zip -r rpi32d.zip j32
        cd j32
        strip -S jconsole
        strip -S libj.so
@@ -274,11 +206,10 @@ jobs:
        strip -S jamalgam || true
        strip -S libgmp.so
        cd ..
-       zip -r rpi32.zip j32
+       zip -r rpi32P.zip j32
        rm -rf j32
        mkdir j32
-       mv rpi32.zip j32/.
-       mv rpi32d.zip j32/.
+       mv rpi32P.zip j32/.
        mv testrpi32.txt j32/.
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
@@ -288,11 +219,11 @@ jobs:
       ls -l j32
       mv j32/* .
 
-   - name: Release JE (Raspberry32)
+   - name: Release JEP (Raspberry32)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi32.zip,rpi32d.zip"
+      artifacts: "rpi32P.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -304,80 +235,14 @@ jobs:
        path: testrpi32.txt
 
 # openbsd --------------------------------------------------------------
- jeopenbsd:
-  name: JE (OpenBSD vmactions)
-  if: ${{ false }}
-  runs-on: macos-12
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v2
-
-   - name: Build, Test JE (OpenBSD)
-     uses: vmactions/openbsd-vm@v0
-     with:
-      usesh: true
-      sync: sshfs
-      prepare: |
-       rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 libedit
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export CC=clang
-       export USE_SLEEF=1
-       script/buildga.sh openbsd || exit 1
-       script/testga.sh openbsd || exit 1
-       ls -l j64
-       zip -r obsd64d.zip j64
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so
-       cd ..
-       ls -l j64
-       zip -r obsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (OpenBSD)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "obsd64.zip,obsd64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (OpenBSD)
-     uses: actions/upload-artifact@v2
-     with:
-      name: dist
-      path: testopenbsd.txt
-
-# openbsd --------------------------------------------------------------
  jeopenbsd2:
-  name: JE (OpenBSD cross-platform-actions)
+  name: JEP (OpenBSD cross-platform-actions)
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build, Test JE (OpenBSD)
+   - name: Build, Test JEP (OpenBSD)
      uses: cross-platform-actions/action@v0.10.0
      with:
       operating_system: openbsd
@@ -402,7 +267,6 @@ jobs:
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        ls -l j64
-       zip -r obsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -413,18 +277,18 @@ jobs:
        strip -S libgmp.so
        cd ..
        ls -l j64
-       zip -r obsd64.zip j64
+       zip -r obsd64P.zip j64
        touch jobdone
 
    - name: Check Status (OpenBSD)
      run: |
       test -f jobdone || exit 1
 
-   - name: Release JE (OpenBSD)
+   - name: Release JEP (OpenBSD)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "obsd64.zip,obsd64d.zip"
+      artifacts: "obsd64P.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -435,145 +299,15 @@ jobs:
       name: dist
       path: testopenbsd.txt
 
-# openbsd arm64 --------------------------------------------------------
-# too slow, comment out   script/testga.sh openbsd || exit 1
- jeopenbsdarm64:
-  name: JE (OpenBSD arm64)
-  runs-on: ubuntu-22.04
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v2
-
-   - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.10.0
-     with:
-      operating_system: openbsd
-      architecture: arm64
-      version: '7.2'
-      shell: bash
-
-      run: |
-       rm -f jobdone
-       sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 libedit
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       sudo echo "Host *" >>~/.ssh/config || true
-       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       sudo cat ~/.ssh/config || true
-       export CC=clang
-       export USE_SLEEF=1
-       script/buildga.sh openbsd || exit 1
-       ls -l j64
-       zip -r obsdarm64d.zip j64
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so
-       cd ..
-       ls -l j64
-       zip -r obsdarm64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD arm64)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (OpenBSD arm64)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "obsdarm64.zip,obsdarm64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (OpenBSD arm64)
-     uses: actions/upload-artifact@v2
-     with:
-      name: dist
-      path: testopenbsdarm64.txt
-
-# freebsd --------------------------------------------------------------
- jefreebsd:
-  name: JE (FreeBSD vmactions)
-  if: ${{ false }}
-  runs-on: macos-12
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v2
-
-   - name: Build, Test JE (FreeBSD)
-     uses: vmactions/freebsd-vm@v0
-     with:
-      usesh: true
-      sync: sshfs
-      prepare: |
-       rdate time.cloudflare.com || true
-       pkg install -y curl zip gmake nasm pcre2 libedit
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export CC=clang
-       export USE_SLEEF=1
-       script/buildga.sh freebsd || exit 1
-       script/testga.sh freebsd || exit 1
-       ls -l j64
-       zip -r fbsd64d.zip j64
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
-       strip -S jamalgam || true
-       strip -S libtsdll.so
-       strip -S libgmp.so
-       cd ..
-       ls -l j64
-       zip -r fbsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (FreeBSD)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (FreeBSD)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "fbsd64.zip,fbsd64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (FreeBSD)
-     uses: actions/upload-artifact@v2
-     with:
-      name: dist
-      path: testfreebsd.txt
-
 # freebsd --------------------------------------------------------------
  jefreebsd2:
-  name: JE (FreeBSD cross-platform-actions)
-  runs-on: macos-12
+  name: JEP (FreeBSD cross-platform-actions)
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2
 
-   - name: Build, Test JE (FreeBSD)
+   - name: Build, Test JEP (FreeBSD)
      uses: cross-platform-actions/action@v0.10.0
      with:
       operating_system: freebsd
@@ -599,7 +333,6 @@ jobs:
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
-       zip -r fbsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -610,18 +343,18 @@ jobs:
        strip -S libgmp.so
        cd ..
        ls -l j64
-       zip -r fbsd64.zip j64
+       zip -r fbsd64P.zip j64
        touch jobdone
 
    - name: Check Status (FreeBSD)
      run: |
       test -f jobdone || exit 1
 
-   - name: Release JE (FreeBSD)
+   - name: Release JEP (FreeBSD)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "fbsd64.zip,fbsd64d.zip"
+      artifacts: "fbsd64P.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -634,7 +367,7 @@ jobs:
 
 # android --------------------------------------------------------------
  jeandroid:
-  name: JE (android)
+  name: JEP (android)
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -646,59 +379,25 @@ jobs:
       ndk-version: r25c
       local-cache: true
 
-   - name: Build JE (android)
+   - name: Build JEP (android)
      env:
       CC: clang
       USE_SLEEF: 1
      run: |
       script/buildga.sh android || exit 1
 
-   - name: Release JE (android)
+   - name: Release JEP (android)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "androidlibs.zip"
+      artifacts: "androidlibsP.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
-
-#   - name: Copy Test (android)
-
-# wasm -----------------------------------------------------------------
- jewasm:
-  name: JE (wasm)
-  runs-on: ubuntu-22.04
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v2
-
-   - name: Setup Environment (wasm)
-     uses: mymindstorm/setup-emsdk@v11
-
-   - name: Build, Test JE (wasm)
-     env:
-      CC: emcc
-      USE_SLEEF: 1
-     run: |
-      script/buildga.sh wasm || exit 1
-      script/testga.sh wasm || exit 1
-      ls -l j32
-      zip -r wasm32.zip j32
-
-   - name: Release JE (wasm)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "wasm32.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-#   - name: Copy Test (wasm)
 
 # windows --------------------------------------------------------------
  jewin:
-  name: JE (Windows)
+  name: JEP (Windows)
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -709,25 +408,25 @@ jobs:
      with:
       arch: amd64
 
-   - name: Build JE (Windows)
+   - name: Build JEP (Windows)
      shell: cmd
      run: |
       script\buildga.cmd x64
 
-   - name: Test JE (Windows)
+   - name: Test JEP (Windows)
      shell: cmd
      run: |
       script\testga.cmd x64
 
    - name: Compress Files (Windows)
      shell: pwsh
-     run: Compress-Archive j64 w64.zip
+     run: Compress-Archive j64 w64P.zip
 
-   - name: Release JE (Windows)
+   - name: Release JEP (Windows)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "w64.zip"
+      artifacts: "w64P.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -738,53 +437,11 @@ jobs:
        name: dist
        path: testwin.txt
 
-# windows --------------------------------------------------------------
- jewin32:
-  name: JE (Windows 32)
-  runs-on: windows-2022
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v2
-
-   - name: Setup Environment (Windows 32)
-     uses: ilammy/msvc-dev-cmd@v1
-     with:
-      arch: x86
-
-   - name: Build JE (Windows 32)
-     shell: cmd
-     run: |
-      script\buildga.cmd x86
-
-   - name: Test JE (Windows 32)
-     shell: cmd
-     run: |
-      script\testga.cmd x86
-
-   - name: Compress Files (Windows 32)
-     shell: pwsh
-     run: Compress-Archive j32 w32.zip
-
-   - name: Release JE (Windows 32)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "w32.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Windows 32)
-     uses: actions/upload-artifact@v2
-     with:
-       name: dist
-       path: testwin32.txt
-
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results
   runs-on: ubuntu-20.04
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jeopenbsd2]
+  needs: [jelinux, jemacos, jerpi64, jerpi32, jewin, jeandroid, jefreebsd2, jeopenbsd2]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v2

@@ -97,5 +97,4 @@ j64/jamalgam testga.ijs
 fi
 else
 ls -l j32
-# j32/jamalgam testga.ijs
 fi

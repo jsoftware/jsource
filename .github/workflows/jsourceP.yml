@@ -385,6 +385,7 @@ jobs:
       USE_SLEEF: 1
      run: |
       script/buildga.sh android || exit 1
+      mv androidlibs.zip androidlibsP.zip
 
    - name: Release JEP (android)
      uses: ncipollo/release-action@v1

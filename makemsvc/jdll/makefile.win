@@ -68,7 +68,7 @@ FLAGS= $(LDEBUG) psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 !endif
 
-.SUFFIXES: .o
+.SUFFIXES: .o .S
 
 OBJS=  \
  ../../jsrc/a.o \

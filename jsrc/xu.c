@@ -10,8 +10,9 @@
 #include "cpuinfo.h"
 
 #if C_AVX512
-extern size_t utf16le_to_utf8_avx512(unsigned char out[restrict], const short int in[restrict], I len, I *outlen);
-extern size_t utf8_to_utf16le_avx512(short int out[restrict], const unsigned char in[restrict], I len, I *outlen);
+typedef short int char16_t;
+extern size_t utf16le_to_utf8_avx512(unsigned char out[restrict], const char16_t in[restrict], size_t len, size_t *outlen);
+extern size_t utf8_to_utf16le_avx512(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen);
 #endif
 
 // utf-8 to c2v - assumes valid utf-8 data and snk of right size
@@ -767,7 +768,7 @@ F1(jttoutf16){A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   GATV0(z,C2T,q,1);
 #if C_AVX512
   if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
-   utf8_to_utf16le_avx512(USAV(z),UAV(w),n,&n1);
+   utf8_to_utf16le_avx512(USAV(z),UAV(w),(size_t)n,(size_t*)&n1);
   else
    mtow(UAV(w),n,USAV(z));
 #else
@@ -820,7 +821,7 @@ q=(q<0)?(-q):q;
 GATV0(z,LIT,q,1);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf16le_to_utf8_avx512(UAV(z),USAV(w),n,&n1);
+ utf16le_to_utf8_avx512(UAV(z),USAV(w),(size_t)n,(size_t*)&n1);
 else
  wtom(USAV(w),n,UAV(z));
 #else
@@ -869,7 +870,7 @@ ASSERT(q>=0,EVDOMAIN);
 GATV0(z,LIT,q,1);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf16le_to_utf8_avx512(UAV(z),USAV(w),n,&n1);
+ utf16le_to_utf8_avx512(UAV(z),USAV(w),(size_t)n,(size_t*)&n1);
 else
  wtom(USAV(w),n,UAV(z));
 #else
@@ -900,7 +901,7 @@ ASSERT(q>=0,EVDOMAIN);
 GATV0(z,C2T,q,1);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf8_to_utf16le_avx512(USAV(z),UAV(w),n,&n1);
+ utf8_to_utf16le_avx512(USAV(z),UAV(w),(size_t)n,(size_t*)&n1);
 else
  mtow(UAV(w),n,USAV(z));
 #else
@@ -922,7 +923,7 @@ q=wtomsize(fw,wcslen((wchar_t*)fw));
 q=(q<0)?(-q):q;
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf16le_to_utf8_avx512(f,fw,wcslen((wchar_t*)fw),&n1);
+ utf16le_to_utf8_avx512(f,fw,(size_t)wcslen((wchar_t*)fw),(size_t*)&n1);
 else
  wtom(fw,wcslen((wchar_t*)fw),f);
 #else
@@ -1038,7 +1039,7 @@ GATV0(z,C2T,q,1);
 c2v=USAV(z);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf8_to_utf16le_avx512(c2v,wv,n,&n1);
+ utf8_to_utf16le_avx512(c2v,wv,(size_t)n,(size_t*)&n1);
 else
  mtow(wv,n,c2v);
 #else

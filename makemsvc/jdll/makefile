@@ -329,6 +329,6 @@ jdll.res : $(RCS)
 all: $(TARGET)
 
 clean:
-	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJS_SLEEF) $(SRC_ASM)
+	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJS_SLEEF) $(OBJS_SIMDUTF8) $(SRC_ASM)
 
 .PHONY: all clean

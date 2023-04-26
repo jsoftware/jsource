@@ -1,4 +1,4 @@
-#ifndef __APPLE__
+#if !defined(__APPLE__)
 	.section .rodata
 #endif
 	.balign 4
@@ -43,14 +43,16 @@
  */
 
 	.text
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(_WIN32)
 	.globl		utf16le_to_utf8_avx512
 	.type		utf16le_to_utf8_avx512, @function
+#elif defined(_WIN32)
+	.globl		utf16le_to_utf8_avx512
 #else
 	.globl		_utf16le_to_utf8_avx512
 #endif
 	.balign		16
-#ifndef __APPLE__
+#if !defined(__APPLE__)
 utf16le_to_utf8_avx512:
 #else
 _utf16le_to_utf8_avx512:
@@ -301,13 +303,13 @@ _utf16le_to_utf8_avx512:
 	xor		%edx, %edx		// no further input to be processed
 	jmp		.Lfailiteration
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(_WIN32)
 	.size		utf16le_to_utf8_avx512, .-utf16le_to_utf8_avx512
 #endif
 
 
 // return the length of the output buffer for transcoding the given number of characters
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(_WIN32)
 	.type		utf16le_to_utf8_buflen_avx512, @function
 #endif
 	.globl		utf16le_to_utf8_buflen_avx512
@@ -319,6 +321,6 @@ utf16le_to_utf8_buflen_avx512:
 #endif
 	ret
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(_WIN32)
 	.size		utf16le_to_utf8_buflen_avx512, .-utf16le_to_utf8_buflen_avx512
 #endif

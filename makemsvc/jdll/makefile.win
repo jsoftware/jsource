@@ -275,6 +275,12 @@ OBJS_SLEEF= \
  ../../sleef/src/libm/sleefsimddp.o
 !endif
 
+!if "1"=="$(JAVX512)"
+OBJS_SIMDUTF8= \
+ ../../jsrc/utf/utf8_to_utf16le_avx512.o \
+ ../../jsrc/utf/utf16le_to_utf8_avx512.o
+!endif
+
 DEF= ../../dllsrc/jdll.def
 RCS= ../../dllsrc/jdll.rc
 
@@ -288,7 +294,7 @@ LD=lld-link
 .cpp.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
-S.o:
+.S.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
 .asm.o:
@@ -323,6 +329,6 @@ jdll.res : $(RCS)
 all: $(TARGET)
 
 clean:
-	erase /q *.lib *.exp *.res *.ilk *.pdb ..\..\jsrc\*.o ..\..\jsrc\blis\*.o ..\..\jsrc\openssl\sha\*.o ..\..\dllsrc\*.o ..\..\sleef\src\common\*.o ..\..\sleef\src\libm\*.o  ..\..\base64\lib\*.o ..\..\base64\lib\tables\*.o ..\..\base64\lib\arch\avx\*.o ..\..\base64\lib\arch\avx2\*.o ..\..\base64\lib\arch\avx512\*.o ..\..\base64\lib\arch\generic\*.o ..\..\base64\lib\arch\generic\32\*.o ..\..\base64\lib\arch\generic\64\*.o ..\..\base64\lib\arch\neon64\*.o ..\..\base64\lib\arch\ssse3\*.o ..\..\base64\lib\arch\sse41\*.o ..\..\base64\lib\arch\sse42\*.o
+	erase /q *.lib *.exp *.res *.ilk *.pdb ..\..\jsrc\*.o ..\..\jsrc\blis\*.o ..\..\jsrc\openssl\sha\*.o ..\..\dllsrc\*.o ..\..\sleef\src\common\*.o ..\..\sleef\src\libm\*.o  ..\..\jsrc\utf\*.o  ..\..\base64\lib\*.o ..\..\base64\lib\tables\*.o ..\..\base64\lib\arch\avx\*.o ..\..\base64\lib\arch\avx2\*.o ..\..\base64\lib\arch\avx512\*.o ..\..\base64\lib\arch\generic\*.o ..\..\base64\lib\arch\generic\32\*.o ..\..\base64\lib\arch\generic\64\*.o ..\..\base64\lib\arch\neon64\*.o ..\..\base64\lib\arch\ssse3\*.o ..\..\base64\lib\arch\sse41\*.o ..\..\base64\lib\arch\sse42\*.o
 
 .PHONY: all clean

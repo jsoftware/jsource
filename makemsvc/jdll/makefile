@@ -275,6 +275,12 @@ OBJS_SLEEF= \
  ../../sleef/src/libm/sleefsimddp.o
 endif
 
+ifeq (1,$(JAVX512))
+OBJS_SIMDUTF8= \
+ ../../jsrc/utf/utf8_to_utf16le_avx512.o \
+ ../../jsrc/utf/utf16le_to_utf8_avx512.o
+endif
+
 DEF= ../../dllsrc/jdll.def
 RCS= ../../dllsrc/jdll.rc
 
@@ -286,6 +292,9 @@ endif
 	$(CC) $(CFLAGS) $(CFLAGS1) /Fo$@ /c $<
 
 %.o: %.cpp
+	$(CC) $(CFLAGS) /Fo$@ /c $<
+
+%.o: %.S
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
 %.o: %.asm
@@ -311,8 +320,8 @@ else
 SYNCLIB= synchronization.lib
 endif
 
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
+$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_SIMDUTF8) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jdll.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_SIMDUTF8) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)

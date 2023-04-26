@@ -110,34 +110,34 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
 #elif defined(_WIN32)
 // defined in cd.c to avoid name collisions between j.h and windows.h
 #elif defined(__FreeBSD__)
-void jfutex_wake1(UI4 *p){_umtx_op(p,UMTX_OP_WAKE,1,0,0);}
-void jfutex_waken(UI4 *p,UI4 n){_umtx_op(p,UMTX_OP_WAKE,n,0,0);}
-void jfutex_wakea(UI4 *p){_umtx_op(p,UMTX_OP_WAKE,INT_MAX,0,0);}
+void jfutex_wake1(UI4 *p){_umtx_op(p,UMTX_OP_WAKE_PRIVATE,1,0,0);}
+void jfutex_waken(UI4 *p,UI4 n){_umtx_op(p,UMTX_OP_WAKE_PRIVATE,n,0,0);}
+void jfutex_wakea(UI4 *p){_umtx_op(p,UMTX_OP_WAKE_PRIVATE,INT_MAX,0,0);}
 C jfutex_wait(UI4 *p,UI4 v){
- int r=_umtx_op(p,UMTX_OP_WAIT_UINT,v,0,0);
+ int r=_umtx_op(p,UMTX_OP_WAIT_UINT_PRIVATE,v,0,0);
  if (r==0)R 0;
  if (errno==EINTR)R 0;
  R EVFACE;}
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
- int r=_umtx_op(p,UMTX_OP_WAIT_UINT,v,(void*)sizeof(struct timespec),&ts);
+ int r=_umtx_op(p,UMTX_OP_WAIT_UINT_PRIVATE,v,(void*)sizeof(struct timespec),&ts);
  if (r==0)R 0;
  if (errno==ETIMEDOUT)R -1;
  if (errno==EINTR)R 0;
  R EVFACE;}
 #elif defined(__OpenBSD__)
 // see comment in mt.h
-void jfutex_wake1(UI4 *p){futex(p,FUTEX_WAKE,1,0,0);}
-void jfutex_waken(UI4 *p,UI4 n){futex(p,FUTEX_WAKE,n,0,0);}
-void jfutex_wakea(UI4 *p){futex(p,FUTEX_WAKE,0x7fffffff,0,0);}
+void jfutex_wake1(UI4 *p){futex(p,FUTEX_WAKE_PRIVATE,1,0,0);}
+void jfutex_waken(UI4 *p,UI4 n){futex(p,FUTEX_WAKE_PRIVATE,n,0,0);}
+void jfutex_wakea(UI4 *p){futex(p,FUTEX_WAKE_PRIVATE,0x7fffffff,0,0);}
 C jfutex_wait(UI4 *p,UI4 v){
- int r=futex(p,FUTEX_WAIT,v,0,0);
+ int r=futex(p,FUTEX_WAIT_PRIVATE,v,0,0);
  if(r>=0)R 0;
  if(errno==EAGAIN||errno==EINTR||errno==ECANCELED)R 0;
  R EVFACE;}
 I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
- int r=futex(p,FUTEX_WAIT,v,&ts,0);
+ int r=futex(p,FUTEX_WAIT_PRIVATE,v,&ts,0);
  if(r>=0)R 0;
  if(errno==ETIMEDOUT)R -1;
  if(errno==EAGAIN||errno==EINTR||errno==ECANCELED)R 0;

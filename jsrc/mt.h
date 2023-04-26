@@ -57,8 +57,8 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 #define ULF_WAIT_CANCEL_POINT           0x00020000 // This wait is a cancelation point.  [What does that mean?]
 #define ULF_WAIT_ADAPTIVE_SPIN          0x00040000 // Use adaptive spinning when the thread that currently holds the unfair lock is on core.
 
-// operation bits [31, 24] contain the generic flags
-#define ULF_NO_ERRNO                    0x01000000 // I think this means return errors as negative codes instead of setting errno?
+// operation bits [31, 24] contain the generic flags, which can be used with both __ulock_wait and __ulock_wake
+#define ULF_NO_ERRNO                    0x01000000 // return errors as negative codes instead of setting errno
 
 #define UL_OPCODE_MASK          0x000000FF
 #define UL_FLAGS_MASK           0xFFFFFF00

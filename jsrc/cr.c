@@ -787,8 +787,8 @@ F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   }
  }else{
   V* av=FAV(a);   // point to verb info
-  // give a warning for }"n
-  if(unlikely(av->id==CAMEND&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,4,"(004) m}\"n should be executed without \" using leading axes of a: in m\n"));
+// obsolete   // give a warning for }"n
+// obsolete   if(unlikely(av->id==CAMEND&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,4,"(004) m}\"n should be executed without \" using leading axes of a: in m\n"));
   // if the rank is superfluous (meaning it is exactly the same as the rank of the verb) ignore it, returning the original verb.  We have seen
   // enough beginner code with +"0 to make this worthwhile.  The display will leave out the "0, to emphasize the equivalence.  We do this only
   // for noun w, to allow use of +"+ to avoid special code

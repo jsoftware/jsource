@@ -140,6 +140,71 @@ Y =: i. 8 2
 FSM=: (1 ; STATE ; <@:map) Y
 (0 2 4 6 { Y) -: FSM ;: Y
 
+NB. Example 7.  CSV, showing empty results (from Danil Opsichuk)
+
+(faliases)  =: i.6  [ faliases =: <;._2 'fbox flist fsl fcr fslcr ftrace '                        NB. name output functions
+(opaliases) =: i.11 [ opaliases=: <;._2 'noop jtoi ewji ewnj evji evnj stop back jfwi ewfj evfj ' NB. operation codes	
+(csvStates) =: i.7  [ csvStates=: <;._2 'NEWROW NEWFLD INFLD FQTE1 INQTE QQTE1 SERR '	      NB. states (rows)
+(csvEvents) =: i.5  [ csvEvents=: <;._2 'eCOMMA eQUOTE eLF eOTHER eFINAL '                        NB. events (columns)
+
+imap =: (',';'"';LF)  NB. input mapping, 2 less than number of columns in state tbl, due to the default item eOTHER and eFINAL event
+
+s =: {{               NB. csv state in a form of a call to an anonymous verb compiling a human readable form into a table of integers
+ NB.   0 COMMA       1 QUOTE      2 LF         3 OTHER     4  FINAL   <-input/ states should be the in same order as definitions above:
+ l=.   NEWFLD,ewfj,  INQTE,jfwi,  NEWROW,ewfj, INFLD,noop, NEWROW,noop   NB. 0 NEWROW -- start of each row, a special case of new field in beg or after LF separator
+ l=.l, NEWFLD,ewfj,  INQTE,jfwi,  NEWROW,ewfj, INFLD,noop, NEWFLD,noop   NB. 1 NEWFLD -- start of a new field, has to be a separate state to handle starting quote
+ l=.l, NEWFLD,ewfj,  FQTE1,jfwi,  NEWROW,ewfj, INFLD,noop, NEWROW,ewnj   NB. 2 INFLD  -- inside of unquoted field
+ l=.l, SERR,ewnj,    INFLD,noop,  SERR,ewnj,   SERR,ewnj,  SERR,ewnj 	 NB. 3 FQTE1  -- 1st quote occured in unquoted field, anything but 2nd quote is an error
+ l=.l, INQTE,noop,   QQTE1,ewfj,  INQTE,noop,  INQTE,noop, SERR,ewnj     NB. 4 INQTE  -- inside of a quoted field, emit eating quote, error on final (not closed)
+ l=.l, NEWFLD,ewfj,  INQTE,noop,  NEWROW,ewfj, SERR,ewnj,  NEWROW,ewnj   NB. 5 QQTE1  -- 1st quote inside quoted field, can only be followed by another quote or comma or lf
+ l=.l, SERR,stop,    SERR,stop,   SERR,stop,   SERR,stop,  SERR,ewnj     NB. 6 SERR  -- an error occured, stop, last word is a cause 
+ ((csvStates ,&# csvEvents), 2) $ l   NB. reshape based on events and state dims
+}}''
+
+NB. SM itself: use fslcr because both start/lengths and row/column indexes are needed to reshape words into records and to check for errors
+NB. final d=4 event is needed to flag error from the errouneous states, if sm moved into it just after having handled last input item
+smcsv =: (fslcr;s;imap;0 0 0 4)&;:  
+traceAnnotate =: (<;._2'i j state evt next op '),((<"0)`(<"0)`(csvStates{~])`(csvEvents{~])`(csvStates{~])`(opaliases{~]))"1&.|:  NB. provide symbolic names the for sm trace output
+tracecsv =: [:traceAnnotate (ftrace;s;imap;0 0 0 4)&;:  NB. human readable trace sm
+
+unquote =: (1;(2 2 2$1 9 0 0  0 0 0 0);(<'"');0 0 0 0)&;:    NB. (not used) tiny sm removing odd (every a single or any first in a pair) quotes, from the early version
+uSL =: 1 : '(,."1@[)u;.0]'  				NB. utility adverb to apply u at x start-lengths of y input, like in ex: (i. 2 2) <uSL i.10
+coalescesm =: (2;(3 2 2 $ 0 0 1 1  2 0 1 0  0 3 1 2))& ;:    NB. y is bool vector: coalesc consecutive 1s with trailing 0, used later to join quote-emitted words 
+
+csv =: {{  NB. dyad csv parses y text into boxes, bool x is a flag to enable checks, monad csv has checks disabled by default
+ 0 csv y	                                    NB. most files have variying number of records per line, empty lines, etc, disable checks
+: 
+ chk =. x                                      NB. flag to enable checks                           
+ islf  =. e.&(I.NEWROW = ,{."1 s)    	      NB. a helper to check if a particular cr has been yielded as a new row
+ isqte =. e.&(I.(FQTE1,QQTE1)e.~ ,{."1 s)      NB. helper to check if word was emited by quoted field state
+ iserr =. e.&(I.-.(NEWFLD,NEWROW,QQTE1)e.~ ,{."1 s)  NB. helper to check if sm landed in wrong state - everything emited but the 3 is ungood
+ 'words cr' =. (2&{."1 ; {:"1) smcsv y         NB. run the sm and split start/lengths and coded rows/cols into a pair
+ words  =. words <uSL y                        NB. convert start/lengths into boxed words
+ qte =. isqte cr                               NB. mark words emited by quote
+ slqte =. coalescesm qte                       NB. start/lengths of quote emitted words traling with normal emit
+ qwords =. slqte (<@:;)uSL words               NB. coalesce quoted words with last normal emit
+ words =. qwords (<:+/|:slqte)} words          NB. amend the normal trailings with combined words
+ words =. words #~ -. qte                      NB. drop the quoted words preceding trailings which are now combined
+ cr =. cr #~ -.qte                             NB. drop the cr of quoted words
+ if. iserr {: cr *. chk    do.		      NB. check if the last state is error
+   errmsg =. 'Malformed input around row #', (":>:+/islf cr) , ' at ' , >{:words  NB. count lines and take the last word 
+   errmsg (13!:8) 1                            NB. throw a parsing error
+ end.                       
+ if. chk do.
+   mf =. 1+(I.|~(1 + 1 i.~ ])) islf cr	      NB. collect mods of fields per each record, based on 1st row LF offset
+   ei =. 1 i.~ 2 ~:/\  mf		      NB. compare number of fields per records, look for a mismatch
+   if. ei <<:#mf do. ('Row ',(":2+ei),' has a different number of fields') (13!:8) 1 end. NB. throw a error of inconsistent field size
+ end.
+  (islf cr) [;.2 words	                NB. rearrange words into a table according to LF placement
+}}
+
+txt=: 0 : 0			      NB. an example to play with: csv txt or tracecsv txt
+a,b,c
+d,"hello, "" cruel"" world",f
+d,e,"r"
+)
+
+(3 3$<;._1 '|a|b|c|d|hello, " cruel" world|f|d|e|r') -: csv txt
 
 
 f=: ;:
@@ -212,12 +277,17 @@ x testj y
 'index error'  -: ( 0;se;256$0,#se)     ;: etx 'abcd montegu'
 'index error'  -: ( 0;sh;mh;4 _1 1 0)   ;: etx 'qqq0x30x50x40x0xxxx'  NB. invalid output string
 'index error'  -: ( 0;sh;mh;0 _1 0 4)   ;: etx 'qqq0x30x50x40x0xxxx'
-'index error'  -: ( 0;sh;mh;19 _1 0 0)  ;: etx 'qqq0x30x50x40x0xxxx'
+''  -: ( 0;sh;mh;19 _1 0 0)  ;: etx 'qqq0x30x50x40x0xxxx'
+'index error'  -: ( 0;sh;mh;20 _1 0 0)  ;: etx 'qqq0x30x50x40x0xxxx'
 'index error'  -: ( 0;sh;mh;_1 _1 0 0)  ;: etx 'qqq0x30x50x40x0xxxx'
 
 
 4!:55 ;:'A f me mh mj mj1 mq mv remq remq1 remq2 se sh sj sq sqx sv'
 4!:55 ;:'t t testj x y STATE Y map FSM'
+4!:55 ;:'faliases opaliases csvStates csvEvents fbox flist fsl fcr fslcr ftrace noop jtoi ewji ewnj evji evnj stop back jfwi ewfj evfj NEWROW NEWFLD INFLD FQTE1 INQTE QQTE1 SERR '
+4!:55 ;:'eCOMMA eQUOTE eLF eOTHER eFINAL imap s '
+4!:55 ;:'smcsv traceAnnotate tracecsv unquote uSL coalescesm csv txt '
+
 
 
 

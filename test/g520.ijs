@@ -413,6 +413,7 @@ NB. obsolete
   M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.8 0 0  0.25 _0.1 0.9 0  0.25 _0.1 0.9 0    NB. input by columns
   Frow =. _1 _1 _1 _1. 1.
   cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
+  rvt =. '44044'
   assert. 0 0 1 2 8 2.145 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 0 1 2 7 2.145 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 3 1 2 8 1.955 ('' run128_9) 00 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
@@ -420,6 +421,19 @@ NB. obsolete
   assert. 0 3 3 2 8 1.995 ('' run128_9) 00 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.6 0 0  0.25 _0.1 0.9 0  0.25 1 0 0    NB. input by columns
   assert. 0 1 1 2 8 1.845 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  rvt =. '44144'
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns
+  assert. 0 0 1 2 7 2.145 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 0.9 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns
+  assert. 0 0 1 2 7 1.955 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns - col 2 has the hidden 1
+  assert. 0 0 1 2 7 2.145 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 2 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns  - hidden 1 overwhelmed
+  assert. 0 2 1 2 8 3.015 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 2 0  _0.25 _0.6 0 0  _0.25 0.1 _0.9 0  0.25 1 0 0    NB. input by columns
+  assert. 0 2 1 2 8 2.955 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  M =. dptoqp |: _4 ]\ 0.25 _0.1 2 0  _0.25 _0.6 0 0  _0.25 0.1 _0.9 _0.5  0.25 1 0 0    NB. input by columns
+  assert. 0 2 3 2 8 3.205 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
 
   NB. bound nonbasic column swap
   cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 0 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,BkOvershoot

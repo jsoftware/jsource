@@ -847,6 +847,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
     minsprshared=minspr;  // we keep this min-across-lanes version to reduce the number of divides
    }else if(likely((I)zv&ZVISDIPGRAD)){
     // gradient mode: limitcs/colbk0thresh are Kahan accumulator for sumsq; minsprshared holds max col value where bk near0; limitrows holds index of max column values
+    zv=(D*)(ZVDP+ZVSPRNOTFOUND);  // set flag 101 indicating dp, gradient; don't set DIP
     I isboundcol=(rvtv[colx]&0b110)==0;  // rvt 0 & 1 are Bound variables
     minsprshared=_mm256_setzero_pd();   // biggest value seen yet - init to 0
     if(!isboundcol){   // not bound column
@@ -856,7 +857,6 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      limitcs=_mm256_set1_pd(2.0/NPAR);  // column norm of 2, 1 for the implied row
      zv=(D*)((I)zv|((rvtv[colx]&1)<<ZVNEGATECOLX));  // If this column is Enforcing, remember so we change its sign
     }
-    zv=(D*)(ZVDP+ZVSPRNOTFOUND);  // set flag 101 indicating dp, gradient; don't set DIP
     colbk0thresh=_mm256_setzero_pd();  // gradient: the high-precision gradient sum (init to 1+, 2+ if bound col)  also the largest c value
        // minsprshared is set to 0 because there MUST be a positive column value, or the problem would be unbounded; and we use negative pivot to indicate Swap needed
     minimpspr=_mm256_set1_pd(minimp*Frow[colx]*Frow[colx]);  // Frow^2 * best sumsq / best Frow^2, which is cutoff point for sumsq in new column (Frow^2)/sumsq > bestFrow^2/bestsumsq)
@@ -1002,14 +1002,14 @@ endqp: ;
     }  // end of creating NPAR values
 
     // process the NPAR generated values
-    if(((I)zv&(ZVISDIPGRAD|ZVISDIP))>ZVISDIP){  // DIP
+    if(((I)zv&(ZVISDIPGRAD|ZVISDIP))>ZVISDIP){  // ********************************* DIP
 // obsolete     if(!(bvgrd0!=ONECOLGRD0)){  // DIP
      // DIP mode, looking for pivots.  process the values in parallel
      // if the column is Enforcing, we must negate the calculated value
      // fetch the b values for the rows. Handle bound vars, which choose from 2 possible b values
      __m256d cnon0, bk4;  // will be ~0 for words that have positive c; the 4 bk values we will use
      if((I)zv&ZVUNBOUND){  // normal unbound case.  The b values come in order
-      if((I)zv&ZVNEGATECOL)dotproducth=_mm256_xor_pd(sgnbit,dotproducth);  // Handle Enforcing. branch will predict correctly and will seldom need the XOR
+      if((I)zv&ZVNEGATECOL)dotproducth=_mm256_xor_pd(sgnbit,dotproducth);  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
       // skip the block if all values are negative or near 0
       cnon0=_mm256_cmp_pd(dotproducth,col0thresh,_CMP_GT_OQ);  // ~0 for valid positive c values
       if(_mm256_testz_pd(cnon0,endmask))goto skip0col;  // testz is 1 if all comparisons fail, i. e. no product is big enough to process.  if one is big enough...
@@ -1058,29 +1058,30 @@ endqp: ;
        minsprshared=_mm256_min_pd(minsprshared,_mm256_permute4x64_pd(minsprshared,0b00001010));  // minsprshared=min value in all lanes
       }
      skip0col: ;  // all column values were 0/small so we skipped them all
-    }else if(likely((I)zv&ZVISDIPGRAD)){  // gradient mode
+    }else if(likely((I)zv&ZVISDIPGRAD)){  // ********************************************* gradient mode
      // gradient mode.  Gradient is sum of squares of column values.  We pick the column with the largest gradient, and the row with the largest value with b near0
      // because of the sparsity of the Ak matrix, it is worth testing for all the column values close to 0.  We could more easily test for all exactly equal 0, but we
      // don't know how many near-0s we are going to get
      __m256d absdph=_mm256_andnot_pd(sgnbit,dotproducth);
      if(!_mm256_testz_pd(_mm256_cmp_pd(absdph,col0thresh,_CMP_GT_OQ),endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process.  if one is big enough...
-      // add new value^2 to gradient total, using Kahan summation (in limitcs/colbk0thresh)
-      // if the rows are Bound vars, they have to count twice (with the same column value)
-      __m256d y, t; y=_mm256_fmadd_pd(dotproducth,dotproducth,colbk0thresh); if(!((I)zv&ZVUNBOUND))y=_mm256_fmadd_pd(dotproducth,dotproducth,y);
-      t=_mm256_add_pd(limitcs,y); colbk0thresh=_mm256_sub_pd(y,_mm256_sub_pd(t,limitcs)); limitcs=t;  // accumulate col^2; 16 cycles latency, which will limit perf (slightly)
-      if((I)zv&ZVNEGATECOL)dotproducth=_mm256_xor_pd(sgnbit,dotproducth);  // Handle Enforcing. branch will predict correctly and will seldom need the XOR
+      __m256d colsq, t; colsq=_mm256_fmadd_pd(dotproducth,dotproducth,colbk0thresh);   // colsq is column value^2 (for unbound col)
+      if((I)zv&ZVNEGATECOL)dotproducth=_mm256_xor_pd(sgnbit,dotproducth);  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
       // fetch the 4 bk values and see which ones are near0
       // for Bound rows, select the b/b-beta that corresponds to the sign of c
       __m256d bk4;  // b value, to be tested against 0
-      if(((I)zv&ZVUNBOUND)){
+      if(((I)zv&ZVUNBOUND)){  // we are into the unbound rows
        bk4=likely(bvgrd<bvgrde)?_mm256_loadu_pd(bv+(bvgrd-bvgrd0)):_mm256_maskload_pd(bv+(bvgrd-bvgrd0),_mm256_castpd_si256(endmask));  // the next bk values.  Need 0s at end
-      }else{
+      }else{  // still checking bound rows
+       // if the rows are Bound vars, they have to count twice (with the same column value)
        __m256d bkbound4;  // b-beta to use if c<0
        if(likely(bvgrd<bvgrde))bk4=_mm256_loadu_pd(bv+(bvgrd-bvgrd0)), bkbound4=_mm256_loadu_pd(bkboundv+(bvgrd-bvgrd0));
        else bk4=_mm256_maskload_pd(bv+(bvgrd-bvgrd0),_mm256_castpd_si256(endmask)), bkbound4=_mm256_maskload_pd(bkboundv+(bvgrd-bvgrd0),_mm256_castpd_si256(endmask));  // the next bk values.  Need 0s at end
+       colsq=_mm256_fmadd_pd(dotproducth,dotproducth,colsq);   // for bound col, 
        bk4=_mm256_blendv_pd(bk4,bkbound4,dotproducth);  // bk if c positive, b-beta if negative
        dotproducth=absdph;  // now dotproducth is the c value in the direction we can go, and bk4 is the b value for that var
       }
+      // add new value^2 (possibly doubled) to gradient total, using Kahan summation (in limitcs/colbk0thresh)
+      t=_mm256_add_pd(limitcs,colsq); colbk0thresh=_mm256_sub_pd(colsq,_mm256_sub_pd(t,limitcs)); limitcs=t;  // accumulate col^2; 16 cycles latency, which will limit perf (slightly)
       // find the largest column value occurring on a row where bk is near0
       dotproducth=_mm256_and_pd(dotproducth,_mm256_cmp_pd(bk4,bk0thresh,_CMP_LT_OQ));   // clear any column values for which bk is not near0
       // remember column position of largest value in each lane
@@ -1121,7 +1122,7 @@ endqp: ;
 // obsolete       ndotprods+=bvgrd-bvgrd0+1; bestcol=(bvgrd-bvgrd0)+CTTZI(mask1); bestcolrow=bvgrd[CTTZI(mask1)]; goto return2;
 // obsolete      }
     }else{
-     // one-column mode: just store out the values, setting to 0 if below threshold
+     // ************************************************************************** one-column mode: just store out the values, setting to 0 if below threshold
      __m256d okmask=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),qpthresh,_CMP_GT_OQ);  // 1s where we need to clamp
      dotproducth=_mm256_and_pd(_mm256_xor_pd(dotproducth,minsprshared),okmask);  // set values < threshold to +0
      dotproductl=_mm256_and_pd(_mm256_xor_pd(dotproductl,minsprshared),okmask);  // low part too.

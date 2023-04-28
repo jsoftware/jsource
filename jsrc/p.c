@@ -609,7 +609,7 @@ rdglob: ;  // here when we tried the buckets and failed
         else y=SETFAOWED(y);
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESSADV)){
         // nameless modifier, and not a locative.  This handles 'each'.  Don't create a reference; maybe cache the value
-        A origy=QCWORD(*(volatile A*)queue);  // refetch y so we can look at its flags
+        A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
         y=(A)((I)y+QCADV-VALTYPENAMELESSADV);  // convert type to normal adverb, which the parser looks for
         if(NAV(origy)->flag&NMCACHED){  // nameless mod is cachable - replace it by its value in the name
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent

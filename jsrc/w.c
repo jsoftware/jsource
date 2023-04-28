@@ -248,7 +248,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 // enqueue produces nonrecursive result, and so does tokens.  This is OK because the result is always parsed and is never an argument to a verb
 
 // u is output pointer  uu->end+1 of output area  p is length of 
-#define CHKJ(j)             ASSERT(BETWEENO((j),0,i),EVINDEX);
+#define CHKJ(j)             ASSERT(BETWEENC((j),0,i),EVINDEX);
 #define EXTZ(T,p)           NOUNROLL while(uu<p+u){k=u-(T*)AV(z); RZ(z=ext(0,z)); u=k+(T*)AV(z); uu=(T*)AV(z)+AN(z);}
 
 #define EMIT0c(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=incorp(str(p,(j)+wv)));}
@@ -260,7 +260,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 #define EMIT2(T,j,i,r,c)    {CHKJ(j); p=(i)-(j); EXTZ(T,2); *u++=(j); *u++=p;}
 #define EMIT3(T,j,i,r,c)    {CHKJ(j);            EXTZ(T,1);                   *u++=(c)+q*(r);}
 #define EMIT4(T,j,i,r,c)    {CHKJ(j); p=(i)-(j); EXTZ(T,3); *u++=(j); *u++=p; *u++=(c)+q*(r);}
-#define EMIT5(T,j,x,r,c)    {if(!BETWEENO((j),0,i))i=n; ASSERT(zv!=AV(z)+AN(z),EVNONCE)}
+#define EMIT5(T,j,x,r,c)    {if(!BETWEENC((j),0,i))i=n; ASSERT(zv!=AV(z)+AN(z),EVNONCE)}
 
 #define DO_ONE(T,EMIT) \
  switch(e=v[1]){                                                          \
@@ -269,7 +269,10 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
   case 4: case 5: if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i; j=4==e?i:-1; break;  \
   case 1:         j=i; break;                                                    \
   case 7: i-=2; i=i<0?0:i; break;  /* backtrack */ \
- }
+  case 8:         j=i+1; break;                                                    \
+  case 9:         if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);        j=i+1; break;  \
+  case 10:        if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i;  j=i+1; break;  \
+}
 
 #define ZVAx                {}
 #define ZVA5                {*zv++=i; *zv++=j; *zv++=r; *zv++=c; *zv++=v[0]; *zv++=v[1];}
@@ -333,14 +336,14 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  RZ(s=vi(C(av[1]))); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
  v=AS(s); p=v[0]; q=v[1]; ASSERT(2==v[2],EVLENGTH);
- v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT((UI)k<(UI)p&&(UI)e<=(UI)7,EVINDEX););
+ v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT((UI)k<(UI)p&&(UI)e<=(UI)10,EVINDEX););
  ijrd[0]=0; ijrd[1]=-1; ijrd[2]=0; ijrd[3]=-1;
  if(4==an){I d,i,j,n,r;
   RZ(x=vi(C(av[3]))); n=AN(x); v=AV(x);
   ASSERT(1==AR(x),EVRANK);
   ASSERT(4>=n,EVLENGTH);
   if(1<=n) ijrd[0]=i=*v++;
-  if(2<=n){ijrd[1]=j=*v++; ASSERT(BETWEENO(j, -1, i),EVINDEX);}
+  if(2<=n){ijrd[1]=j=*v++; ASSERT(BETWEENC(j, -1, i),EVINDEX);}
   if(3<=n){ijrd[2]=r=*v++; ASSERT((UI)r<(UI)p,EVINDEX);}
   if(4==n){ijrd[3]=d=*v++; ASSERT(BETWEENO(d, -1, q),EVINDEX);}
  }
@@ -363,7 +366,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  f=i0(C(av[0])); s=C(av[1]); m=C(av[2]); ijrd=AV(C(av[3]));
  n=AN(w); v=AS(s);
  q=v[1];
- ASSERT((UI)ijrd[0]<(UI)n,EVINDEX);
+ ASSERT((UI)ijrd[0]<=(UI)n,EVINDEX);
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // b=w is atom/list, either literal or empty; c is # columns mapped to input through m
  if(((c-1)&((AR(m)^1)-1))<0){  // m is omitted or empty, use column numbers in y; audit them first   m is empty list
   ASSERT(1>=AR(w),EVRANK);

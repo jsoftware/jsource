@@ -489,6 +489,7 @@ ip =. 1 |. y  NB. inplaceable version
 for_i. i.#selshape do.
  repldata =. (,y) {~ (i}.selshape)?@$ */@$ y
 NB. obsolete rd   =: repldata
+'repldata__ axes__ exaxes__ y__'   =: repldata;axes;exaxes;<y
  assert. repldata ((<axes)} -: (<^:(1=#@$) exaxes)}) y
  NB. Also execute inplace, to exercise usecount management
  ip =. repldata (<axes)} ip
@@ -782,36 +783,60 @@ a =: 0. + i. 100 100
 
 NB. x m}"n y with IRS
 
-NB. y is (min axis size),(surplus a frame),(common frame),(rank of ind),(# repeated axes of a),(cell rank)
-test =: {{
-'minaxis asf cf indr areps rcell' =. y
-aframe =. (asf>.0) ?@$ minaxis+3
-wframe = (0<.-asf) ?@$ minaxis+3
-commonframe =. cf ?@$ minaxis+3
-indshape =. indr ?@$ minaxis+3
-ashapein =. areps }. indshape
-cellshape =. rcell ?@$ minaxis+3
-wcellfame =. ($indshape) ?@$ minaxis+3
-ar =. ashapein + cellshape
-wr =. wcellframe + cellshape
-ashape =. aframe , commonframe , ashapein , cellshape
-wshape =. wframe , commonframe , wcellframe , cellshape
-ind =. indshape ?@$&.> wcellframe
-if. *./ (,1)&-:@> ind do. ind =. < ; ind
-elseif. 1=#ind do.
-  ind =. , > ind
-  if. 1 = #ind do. if. ?2 do. ind =. {. ind end. end.  NB. singletons sometimes list, sometimes atom
+NB. y is (axis size profile);(surplus a frame);(common frame);(rank of ind);(# repeated axes of a);(cell rank);(type of data)
+testm =: {{
+'axisprof asf cf indr areps rcell dtype' =. y
+ranshape =. axisprof I. 0 ?@$~ ]  NB. y is rank, result is shape using axis-length profile
+aframe =. ranshape (asf>.0)   NB. neg means surplus is in w
+wframe =. ranshape (0>.-asf)
+commonframe =. ranshape cf
+cellshape =. ranshape rcell  NB. shape of inner cell
+indshape =. ranshape indr  NB. selectors lengths
+wcellframe =. 1 >. ranshape ($indshape)   NB. frame of minor cells in w
+ind =. indshape ?@$&.> wcellframe   NB. selector values for each leading axis of w-cell
+selframe =. ((#ind) {. # S:0 ind)   NB. axes preserved by the selection
+NB. Use simplest suitable form of ind, which is now a list of boxes
+if. 1=#ind do.  NB. just one axis.
+  ind =. ,>ind
+  if. 1 = #ind do. if. (?2) do. ind =. {. ind [ selframe =. $0 end. end.   NB. Singleton.  Can be atom or list; if atom, lose the axis from the selection
+  ind =. <@<^:(?2) ind   NB. Value can be bare or double-boxed
+elseif. *./ (,1)&-:@$@> ind do.   NB. all singletons, make into list of successive axes
+  selframe =. $0  NB. these axes are lost to the selection result  
+  ind =. < ; ind   NB. Run the axes together in one box
+else. ind =. <ind   NB. normal case, box the selectors
 end.
 c =: ind
-smoutput ashape;wshape;$ind
-r =. (ashapein +&# cellshape) , (wcellframe +&# cellshape)
-(a =: ashape ?@$ 1e6) (ind}"r -: ind}"]"r) b =: wshape ?@$ 1e6
+ashapein =. areps }. selframe , cellshape  NB. a may be any length suffix of selection
+ashape =. commonframe , aframe , ashapein
+wshape =. commonframe , wframe , wcellframe , cellshape
+d =: r =. (#ashapein) , (wcellframe +&# cellshape)
+select. dtype
+case. 1 do. a =: ashape ?@$ 2 [ b =: wshape ?@$ 2
+case. 2 do. a =: ashape (] {~ (?@$ #)) a. [ b =: wshape (] {~ (?@$ #)) a.
+case. 4 do. a =: ashape ?@$ 1e6 [ b =: wshape ?@$ 1e6
+case. 8 do. a =: ashape ?@$ 0 [ b =: wshape ?@$ 0
+case. 16 do. a =: 2 j. ashape ?@$ 0 [ b =: 3 j. wshape ?@$ 0
+case. 64 do. a =: ashape ?@$ 1000000x [ b =: wshape ?@$ 1000000x
+case. 128 do. a =: 1r7 * ashape ?@$ 1000000x [ b =: 1r7 * wshape ?@$ 1000000x
+case. do. 13!:8 ] 2
+end.
+assert. a (ind}"r -: ind}"]"r) b
+1
 }}
+
+NB. y is # tests;precision
+testn =: {{
+'ntests prec' =. y
+for. i. ntests do.
+  testm 0.02 0.1 0.5 0.9;(2-?4);(?4);(?4);(?2);(?2);prec
+end.
+}}"1
+testn 10000 ,. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
 
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 test2 x xx xyz y yy z z1 zz '
+4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 test2 testm testn x xx xyz y yy z z1 zz '
 4!:55 ;:'lim lm mody rx ry selshape tm tx ty' 
 randfini''
 

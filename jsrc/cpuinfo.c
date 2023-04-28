@@ -368,8 +368,49 @@ void cpuInit(void)
     if ((regs[1] & (1 << 5)) != 0) {
       g_cpuFeatures |= CPU_X86_FEATURE_AVX2;
     }
+/*
+EAX=07H, ECX=0
+EBX[bit 16]  AVX512F
+EBX[bit 17]  AVX512DQ
+EBX[bit 21]  AVX512_IFMA
+EBX[bit 26]  AVX512PF
+EBX[bit 27]  AVX512ER
+EBX[bit 28]  AVX512CD
+EBX[bit 30]  AVX512BW
+EBX[bit 31]  AVX512VL
+ECX[bit 01]  AVX512_VBMI
+ECX[bit 06]  AVX512_VBMI2
+ECX[bit 08]  GFNI
+ECX[bit 09]  VAES
+ECX[bit 10]  VPCLMULQDQ
+ECX[bit 11]  AVX512_VNNI
+ECX[bit 12]  AVX512_BITALG
+ECX[bit 14]  AVX512_VPOPCNTDQ
+EDX[bit 02]  AVX512_4VNNIW
+EDX[bit 03]  AVX512_4FMAPS
+EDX[bit 08]  AVX512_VP2INTERSECT
+EDX[bit 23]  AVX512_FP16
+*/
     if ((regs[1] & (1 << 16)) != 0) {
-      g_cpuFeatures |= CPU_X86_FEATURE_AVX512;
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512F;
+    }
+    if ((regs[1] & (1 << 17)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512DQ;
+    }
+    if ((regs[1] & (1 << 21)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512IFMA;
+    }
+    if ((regs[1] & (1 << 30)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512BW;
+    }
+    if ((regs[1] & (1 << 31)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512VL;
+    }
+    if ((regs[2] & (1 << 1)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512VBMI;
+    }
+    if ((regs[2] & (1 << 6)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX512VBMI2;
     }
     if ((regs[1] & (1 << 29)) != 0) {
       g_cpuFeatures |= CPU_X86_FEATURE_SHA_NI;
@@ -419,7 +460,13 @@ void cpuInit(void)
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX;
     g_cpuFeatures &= ~CPU_X86_FEATURE_FMA;
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX2;
-    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512F;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512VL;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512DQ;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512BW;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512IFMA;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512VBMI;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512VBMI2;
   }
 #endif
 
@@ -487,7 +534,13 @@ void OPENSSL_setcap(void)
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX;
     g_cpuFeatures &= ~CPU_X86_FEATURE_FMA;
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX2;
-    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512F;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512VL;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512DQ;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512BW;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512IFMA;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512VBMI;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_AVX512VBMI2;
   }
   OPENSSL_ia32cap_P[1] &= ~(1 << 9);
   OPENSSL_ia32cap_P[1] |= (g_cpuFeatures & CPU_X86_FEATURE_SSSE3) ? (1 << 9) : 0;

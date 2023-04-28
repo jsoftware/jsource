@@ -281,6 +281,11 @@ OBJS_BASE64=" \
   ../../../../base64/lib/tables/tables.o \
 "
 
+OBJS_SIMDUTF8_ASM=" \
+  ../../../../jsrc/utf/utf8_to_utf16le_avx512.o \
+  ../../../../jsrc/utf/utf16le_to_utf8_avx512.o \
+"
+
 case $jplatform64 in
 
  linux/j32*) # linux x86
@@ -305,6 +310,7 @@ case $jplatform64 in
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
@@ -389,6 +395,7 @@ case $jplatform64 in
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
@@ -452,6 +459,7 @@ case $jplatform64 in
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_AVX2 "  #ditto
@@ -500,6 +508,7 @@ case $jplatform64 in
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
   FLAGS_SLEEF=" -DENABLE_AVX2 "
@@ -588,6 +597,7 @@ case $jplatform64 in
   LIBJRES=" jdllres.o "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_WIN}"
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
@@ -692,7 +702,7 @@ case "$jplatform64" in
   sed -i"" -e "s/\$(CC) -o \$@/\$(AR) rs \$@/" obj/$jplatform64/makefile-libj
   ;;
 esac
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform64
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then
  if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi

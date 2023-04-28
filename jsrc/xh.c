@@ -48,7 +48,7 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}  // 2!:1
 F1(jtjgetx){
 ASSERT(!JT(jt,seclev),EVSECURE)
 #if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
-if(getCpuFeatures()&CPU_X86_FEATURE_AVX512) R cstr("avx2 avx512");
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX512F) R cstr("avx2 avx512");
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX2)   R cstr("avx2");
 #endif
 

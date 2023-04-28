@@ -29,6 +29,12 @@ echo '1: (3x ^ 2 ^ i. 10x)'
 echo '1: (128!:10)@(1000x ?@$~ ,~)"0 i. 15'
 1: (128!:10)@(1000x ?@$~ ,~)"0 i. 15
 
+echo 'avx512f: ',":9!:56'avx512f'
+echo 'avx512vl: ',":9!:56'avx512vl'
+echo 'avx512bw: ',":9!:56'avx512bw'
+echo 'avx512vbmi: ',":9!:56'avx512vbmi'
+echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
+
 echo 'RUN4 ddall'
 RES=: RUN4 ddall
 

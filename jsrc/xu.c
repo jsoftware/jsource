@@ -7,6 +7,13 @@
 
 #include "j.h"
 #include "x.h"
+#include "cpuinfo.h"
+
+#if C_AVX512
+typedef short int char16_t;
+extern size_t utf16le_to_utf8_avx512(unsigned char out[restrict], const char16_t in[restrict], size_t len, size_t *outlen);
+extern size_t utf8_to_utf16le_avx512(char16_t out[restrict], const unsigned char in[restrict], size_t len, size_t *outlen);
+#endif
 
 // utf-8 to c2v - assumes valid utf-8 data and snk of right size
 void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
@@ -736,7 +743,7 @@ I utousize(C4* src, I srcn){ C4 w,w1; I r=0;
  R r;
 }
 
-F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
+F1(jttoutf16){A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  PROLOG(0000);
  ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -759,7 +766,14 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   q=mtowsize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV0(z,C2T,q,1);
+#if C_AVX512
+  if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
+   utf8_to_utf16le_avx512(USAV(z),UAV(w),(size_t)n,(size_t*)&n1);
+  else
+   mtow(UAV(w),n,USAV(z));
+#else
   mtow(UAV(w),n,USAV(z));
+#endif
  }
  else if(C2T&t)
  {
@@ -794,7 +808,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
 
 // Similar to jttoutf8, but allow invalid unicode
 // w is C2T C4T or LIT.  Result is U8 string
-A jttoutf8a(J jt,A w,A prxthornuni){A z;I n,t,q;  // prxthornuni is unused
+A jttoutf8a(J jt,A w,A prxthornuni){A z;I n,n1,t,q;  // prxthornuni is unused
 PROLOG(0000);
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -805,7 +819,14 @@ if(t&C2T)
 q=wtomsize(USAV(w),n);
 q=(q<0)?(-q):q;
 GATV0(z,LIT,q,1);
+#if C_AVX512
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
+ utf16le_to_utf8_avx512(UAV(z),USAV(w),(size_t)n,(size_t*)&n1);
+else
+ wtom(USAV(w),n,UAV(z));
+#else
 wtom(USAV(w),n,UAV(z));
+#endif
 }
 else
 {
@@ -818,7 +839,7 @@ EPILOG(z);
 }    // called by monad ":
 
 // w is C2T C4T or LIT INT.  Result is U8 string
-F1(jttoutf8){A z;I n,t,q,j; A c4; C4* c4v; I *v;
+F1(jttoutf8){A z;I n,n1,t,q,j; A c4; C4* c4v; I *v;
 PROLOG(0000);
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -847,13 +868,20 @@ else
 q=wtomsize(USAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV0(z,LIT,q,1);
+#if C_AVX512
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
+ utf16le_to_utf8_avx512(UAV(z),USAV(w),(size_t)n,(size_t*)&n1);
+else
+ wtom(USAV(w),n,UAV(z));
+#else
 wtom(USAV(w),n,UAV(z));
+#endif
 }
 EPILOG(z);
 }    // 8 u: x - utf8 from LIT or C2T C4T
 
 // Similar to jttoutf16, but unlike 7&u: this one always returns unicode
-F1(jttoutf16x){A z;I n,t,q;
+F1(jttoutf16x){A z;I n,n1,t,q;
 PROLOG(0000);
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty list
@@ -871,7 +899,14 @@ else // u16 from u8
 q=mtowsize(UAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV0(z,C2T,q,1);
+#if C_AVX512
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
+ utf8_to_utf16le_avx512(USAV(z),UAV(w),(size_t)n,(size_t*)&n1);
+else
+ mtow(UAV(w),n,USAV(z));
+#else
 mtow(UAV(w),n,USAV(z));
+#endif
 }
 EPILOG(z);
 }
@@ -883,10 +918,17 @@ R str0(toutf8a(w,0));
 }
 
 // External function - just convert wide-char fw[] to U8 in f[], and null-terminate
-void jttoutf8w(J jt,C* f, I n, US* fw){I q;
+void jttoutf8w(J jt,C* f, I n, US* fw){I q;I n1;
 q=wtomsize(fw,wcslen((wchar_t*)fw));
 q=(q<0)?(-q):q;
+#if C_AVX512
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
+ utf16le_to_utf8_avx512(f,fw,(size_t)wcslen((wchar_t*)fw),(size_t*)&n1);
+else
+ wtom(fw,wcslen((wchar_t*)fw),f);
+#else
 wtom(fw,wcslen((wchar_t*)fw),f);
+#endif
 f[q]=0;
 }
 
@@ -985,7 +1027,7 @@ F1(jttou32){A z;I n,t,b=0,j; US* c2v; C4* c4v; I* v; UC* c1v;
 }    // 10 u: x - literal4 similar to monad u: for whcar
 
 // cnull 0: cesu-8  1: modified utf-8
-static A tocesu8a(J jt, A w, I cnul) {A z,z1; UC* wv=UAV(w); I n,t,q; C4* c4v; US* c2v;
+static A tocesu8a(J jt, A w, I cnul) {A z,z1; UC* wv=UAV(w); I n,n1,t,q; C4* c4v; US* c2v;
 PROLOG(0000);
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty list
@@ -995,7 +1037,14 @@ q=mtowsize(wv,n);
 if(q<0)RCA(w);
 GATV0(z,C2T,q,1);
 c2v=USAV(z);
+#if C_AVX512
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
+ utf8_to_utf16le_avx512(c2v,wv,(size_t)n,(size_t*)&n1);
+else
+ mtow(wv,n,c2v);
+#else
 mtow(wv,n,c2v);
+#endif
 // promote wchar to literal4
 // change 0 to its over long version
 GATV0(z1,C4T,q,1);

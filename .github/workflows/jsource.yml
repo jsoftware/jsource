@@ -21,7 +21,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Setup SDE binaries
      uses: petarpetrovt/setup-sde@v2
@@ -76,7 +76,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Setup SDE binaries
      uses: petarpetrovt/setup-sde@v2
@@ -132,7 +132,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
 #   - name: Setup Environment (macOS)
 
@@ -187,7 +187,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Build, Test JE (Raspberry)
      uses: pguyot/arm-runner-action@v2
@@ -247,7 +247,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Build, Test JE (Raspberry 32)
      uses: pguyot/arm-runner-action@v2
@@ -310,7 +310,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Build, Test JE (OpenBSD)
      uses: vmactions/openbsd-vm@v0
@@ -375,7 +375,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Build, Test JE (OpenBSD)
      uses: cross-platform-actions/action@v0.10.0
@@ -442,7 +442,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Build, Test JE (OpenBSD arm64)
      uses: cross-platform-actions/action@v0.10.0
@@ -506,7 +506,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Build, Test JE (FreeBSD)
      uses: vmactions/freebsd-vm@v0
@@ -571,7 +571,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Build, Test JE (FreeBSD)
      uses: cross-platform-actions/action@v0.10.0
@@ -638,7 +638,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Setup Environment (android)
      uses: nttld/setup-ndk@v1
@@ -670,7 +670,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Setup Environment (wasm)
      uses: mymindstorm/setup-emsdk@v11
@@ -702,7 +702,7 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Setup Environment (Windows)
      uses: ilammy/msvc-dev-cmd@v1
@@ -744,7 +744,7 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Setup Environment (Windows 32)
      uses: ilammy/msvc-dev-cmd@v1
@@ -787,7 +787,7 @@ jobs:
   needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jeopenbsd2]
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v2
+     uses: actions/checkout@v3
 
    - name: Get Test Results
      uses: actions/download-artifact@v2

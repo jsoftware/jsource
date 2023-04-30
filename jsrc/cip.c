@@ -1085,7 +1085,7 @@ static F1(jtminors){A d,z;
  R drop(d,df2(z,num(1),w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
 }
 
-static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
+DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
  ARGCHK1(w);
  r=AR(w); s=AS(w);
  A z; if(h&&1<r&&2==s[r-1]&&s[r-2]==s[r-1])R df1(z,w,h);

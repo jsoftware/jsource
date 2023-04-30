@@ -90,6 +90,7 @@ extern F1(jtdbtrapq);
 extern F1(jtdbtraps);
 extern F1(jtdecrem);
 extern F1(jtdenseit);
+extern DF1(jtdet);
 extern F1(jtdgrade1);
 extern F1(jtdigits10);
 extern F1(jtdispq);

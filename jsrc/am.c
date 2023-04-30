@@ -658,7 +658,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
         if(likely(indn1!=lastn)){    // non-trailing axis
          axes[indn1].max=axlen; axes[indn1].indexes=0;   // total axis length, and 0 pointer to mean 'in full'
         }else{   // trailing axis taken in full: delete it
-         if(likely(lastn!=1))--lastn;else{RZ(ax=IX(axlen)) axes[indn1].max=AN(ax); axes[indn1].indexes=IAV(ax);}   // if rare (<<<'') in all axes, must instantiate the index vector & install in case there is rank
+         if(likely(i!=wframelen))--lastn;else{RZ(ax=IX(axlen)) axes[indn1].max=AN(ax); axes[indn1].indexes=IAV(ax);}   // if rare (<<<'') in all axes, must instantiate the index vector & install in case there is rank
         }
        }
       }

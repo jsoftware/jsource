@@ -535,7 +535,7 @@ static DF1(jtmodopint1){if(likely(AN(w)!=0)){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)
 static DF2(jtmodopint2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&INT+XNUM))RZ(a=cvt(AT(a)&RAT?XNUM:INT,a)) if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
 // entry point to execute monad/dyad %. m. n after the noun argument(s) are supplied
-static DF2(jtmodulardominox){F2PREFIP;  // this stands in place of jtxdefn, which inplaces
+static DF2(jtmodularexplicitx){F2PREFIP;  // this stands in place of jtxdefn, which inplaces
  // the only reason we need this routine is to reformat any error to avoid exposing internals
  A z=jtxdefn(jt,a,w,self);   // the imp must be in an explicit def
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
@@ -543,16 +543,17 @@ static DF2(jtmodulardominox){F2PREFIP;  // this stands in place of jtxdefn, whic
  R z;
 }
 
-// entry point for monad and dyad %. m. n
-static F2(jtmodulardomino){F2PREFIP;
+// entry point for monad and dyad %. m. n (type=0) and -/ . * m. n (type=1)
+static A jtmodularexplicit(J jt,A a,A w,I type){
  // Apply Md_j_ to the input arguments, creating a derived verb to do the work
- A xadv; ASSERT(xadv=jtfindnameinscript(jt,"~addons/dev/modular/modular.ijs","Md_j_",ADV),EVNONCE);
+ A xadv; ASSERT(xadv=jtfindnameinscript(jt,"~addons/dev/modular/modular.ijs",type?"Md_j_":"Mdet_j_",ADV),EVNONCE);
  A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),w,xadv,xadv));
  // If the returned verb has VXOPCALL set, that means we are in debug and a namerefop has been interposed for Foldr_j_.  We don't want that - get the real verb
  if(unlikely(FAV(derivvb)->flag&VXOPCALL))derivvb=FAV(derivvb)->fgh[2];  // the verb is saved in h of the reference
  // Modify the derived verb to go to our preparatory stub.  We require that the continuation be at jtxdefn because we call bivalently and with flags
  ASSERT(FAV(derivvb)->valencefns[1]==jtxdefn,EVSYSTEM);
- FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtmodulardominox;
+ FAV(derivvb)->valencefns[0]=jtmodularexplicitx;   // monad always defined
+ FAV(derivvb)->valencefns[1]=type?jtvalenceerr:(AF)jtmodularexplicitx;  // dyad defined only for %.
  // For display purposes, give the fold the spelling of the original
  FAV(derivvb)->id=CMDOT;
  R derivvb;
@@ -566,7 +567,8 @@ F2(jtmdot){F2PREFIP;A z=0;
  // Verify that n is an integer and create a XNUM form for it
  ASSERT(AT(w)&NOUN,EVDOMAIN) ASSERT(AR(w)==0,EVRANK)  // n must be a noun atom
  // Handle the forms that use external libraries
- if(FAV(a)->id==CDOMINO)R jtmodulardomino(jt,a,w);
+ I type=-1; type=FAV(a)->id==CDOMINO?0:type; type=FAV(a)->valencefns[0]==jtdet?1:type;
+ if(type>=0)R jtmodularexplicit(jt,a,w,type);
  A h=w;  // XNUM form of w
  if(!(AT(w)&XNUM))RZ(h=cvt(XNUM,w));   // convert to XNUM
  I nrecip=0;  // will hold reciprocal of abs(n), init to invalid

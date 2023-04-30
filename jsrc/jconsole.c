@@ -274,11 +274,14 @@ int main(int argc, char* argv[])
  signal(SIGTRAP,sigsegv); //catch SEGFAULT
 #endif
 #endif
- setlocale(LC_ALL, "");
 #if !(defined(ANDROID)||defined(_WIN32)||defined(__APPLE__))
- locale_t loc;
- if ((loc = newlocale(LC_NUMERIC_MASK, "C", (locale_t) 0))) uselocale(loc);
+ locale_t loc=0;
+ if ((loc = newlocale(LC_ALL_MASK, "", (locale_t)0 )))
+  if ((loc = newlocale(LC_NUMERIC_MASK, "C", loc ))) uselocale(loc);
+/* Test effect of LC_NUMERIC. */
+/*  printf("%8.3f\n", 123456.789); */
 #else
+ setlocale(LC_ALL, "");
  setlocale(LC_NUMERIC,"C");
 #endif
  void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type;

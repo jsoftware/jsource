@@ -274,7 +274,7 @@ int main(int argc, char* argv[])
  signal(SIGTRAP,sigsegv); //catch SEGFAULT
 #endif
 #endif
-#if !(defined(ANDROID)||defined(_WIN32)||defined(__APPLE__))
+#if !(defined(ANDROID)||defined(_WIN32))
  locale_t loc=0;
  if ((loc = newlocale(LC_ALL_MASK, "", (locale_t)0 )))
   if ((loc = newlocale(LC_NUMERIC_MASK, "C", loc ))) uselocale(loc);
@@ -395,7 +395,7 @@ int main(int argc, char* argv[])
  r=jedo((char*)"RUN4 ddall[ECHOFILENAME=:1[(0!:0)<'test/tsu.ijs'");
 #endif
  jefree();
-#if !(defined(ANDROID)||defined(_WIN32)||defined(__APPLE__))
+#if !(defined(ANDROID)||defined(_WIN32))
  if(loc)freelocale(loc);
 #endif
  return r;

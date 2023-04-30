@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
 #endif
 #endif
  setlocale(LC_ALL, "");
-#if !(defined(ANDROID)||defined(_WIN32))
+#if !(defined(ANDROID)||defined(_WIN32)||defined(__APPLE__))
  locale_t loc;
  if ((loc = newlocale(LC_NUMERIC_MASK, "C", (locale_t) 0))) uselocale(loc);
 #else
@@ -392,7 +392,7 @@ int main(int argc, char* argv[])
  r=jedo((char*)"RUN4 ddall[ECHOFILENAME=:1[(0!:0)<'test/tsu.ijs'");
 #endif
  jefree();
-#if !(defined(ANDROID)||defined(_WIN32))
+#if !(defined(ANDROID)||defined(_WIN32)||defined(__APPLE__))
  if(loc)freelocale(loc);
 #endif
  return r;

@@ -462,13 +462,33 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  RETF(z);   // return block
 }   /* (<p;q){"r w  for positive integer arrays p,q */
 
+// axislen is length of axis, ind is doubly-boxed selector that is itself a boxed type, therefore complementary
+// return block of indexes, or ds(CACE) if axis is taken in full
+A jtcompidx(J jt,I axislen,A ind){
+ ASSERT(!AR(ind),EVINDEX)  // contents must be a scalar box
+ ind=C(AAV(ind)[0]);  // move to the contents
+ if(AN(ind)==0)R ds(CACE);  // axis taken in full: return flag value
+ ASSERT(axislen>0,EVINDEX)  // empty axis - no index would be valid, but we have indexes
+ // there are values.  go through them, validating, and cross out the ones that are used
+ // Since we expect the count to be small, we allocate a return block of the maximum size.  We then use the tail end
+ // to hold a bitmask of the values that have not been crossed off
+ RZ(ind=ISDENSETYPE(AT(ind),INT)?ind:cvt(INT,ind));  // ind is now an INT vector, possibly the input argument
+ A z; GATV0(z,INT,axislen-1,1) I *zv0=IAV1(z), *zv=zv0;   // allocate the result/temp block.  There must be at least one value crossed off
+ I bwds=(axislen+(BW-1))>>LGBW; I *bv=zv+axislen-bwds; mvc(bwds*SZI,bv,32,validitymask); bv[bwds-1]=~((~1)<<((axislen-1)&(BW-1)));  // fill the block with 1s to indicate we need to write; clear ending 0s
+ I *iv=IAV(ind); DO(AN(ind), I ix=iv[i]; if((UI)ix>=(UI)axislen){ix+=axislen; ASSERT((UI)ix<(UI)axislen,EVINDEX)} bv[ix>>LGBW]&=~(1<<(ix&(BW-1))); )  // turn off the bit for each index
+ I zbase=0; DO(bwds, I bmask=*bv++; while(bmask){I bitno=CTTZI(bmask); *zv++=zbase+bitno; bmask&=bmask-1;} zbase+=BW;)  // copy an index for each remaining bit, clearing LSBs one by one
+ AN(z)=AS(z)[0]=zv-zv0;
+ R z;
+}
+
 // n is length of axis, w is doubly-unboxed selector
 // result is list of selectors - complementary if w is boxed, with a: standing for axis taken in full
 static A jtafi(J jt,I n,A w){A x;
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R pind(n,w);   // empty or not boxed
- ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
- x=C(AAV(w)[0]);
- R AN(x)?less(IX(n),pind(n,x)):ds(CACE);   // complementary
+ R jtcompidx(jt,n,w);
+// obsolete  ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
+// obsolete  x=C(AAV(w)[0]);
+// obsolete  R AN(x)?less(IX(n),pind(n,x)):ds(CACE);   // complementary
 }
 
 // general boxed a

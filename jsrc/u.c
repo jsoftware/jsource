@@ -91,7 +91,8 @@ A jtapvwr(J jt,I n,I b,I m){A z;
 
 
 // w must be 0 or an atom equal to 0 or 1.  Result is its value
-B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R BAV(w)[0];}
+B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(likely(ISDENSETYPE(AT(w),INT+B01))){I z; ASSERT(!((z=BIV0(w))&~1),EVDOMAIN); R z;} RZ(w=cvt(B01,w)); R BAV(w)[0];}
+   // INT/B01 quickly
 
 // NOTE: the caller modifies this result inplace, so it must not be shared or readonly
 B*jtbfi(J jt,I n,A w,B p){A t;B* RESTRICT b;I* RESTRICT v;

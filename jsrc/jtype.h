@@ -1209,8 +1209,8 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 #define PSTK2NOTFINALASGN ((PSTK*)(validitymask+12)-2)  // 0 in position [2], signifying NOT final assignment (used for errors)
 #define BREAK0 ((C*)(validitymask+12))  // 0 to indicate no ATTN requested
 #define MEMSET00 ((C*)(iotavec-IOTAVECBEGIN+0))  // 8 bytes of 0, for memset
-#define MEMSETFF ((C*)(iotavec-IOTAVECBEGIN+0xff))  // 8 bytes of 0xff, for memset
-#define MEMSET01 ((C*)(iotavec-IOTAVECBEGIN+1))  // 8 bytes of 0x01, for memset
+#define MEMSETFF ((C*)(iotavec-IOTAVECBEGIN+0xff))  // 1 byte of 0xff, for memset
+#define MEMSET01 ((C*)(iotavec-IOTAVECBEGIN+1))  // 1 byte of 0x01, for memset
 
 
 

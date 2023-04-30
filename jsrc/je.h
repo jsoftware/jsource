@@ -963,6 +963,7 @@ extern I        boxat(A,I,I,I);
 extern I        bsum(I,B*);
 extern C        cf(A);
 extern C        cl(A);
+extern A        jtcompidx(J,I,A);
 extern CR       condrange(I *,I,I,I,I);
 extern CR       condrange2(US *,I,I,I,I);
 extern CR       condrange4(C4 *,I,I,I,I);

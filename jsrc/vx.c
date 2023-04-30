@@ -403,13 +403,14 @@ static DF2(jtmodopexttimes){A z;PROLOG(000);
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
 
-// modular reciprocal/divide on extendeds, one atom.  Bivalent.
+// modular reciprocal/divide on extendeds, one atom.  Bivalent. 0%0=0
 static DF2(jtmodopextdiv){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  self=AT(w)&VERB?w:self;  // if monad, take self from w
  X xw=XAV(AT(w)&VERB?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
- ASSERT((xw=XinvertXX(xw,n))!=0,EVDOMAIN)  // take inverse of divisor, which fails if coprime
- X xz; if(!(AT(w)&VERB)){X xa=XAV(a)[0]; if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n);  xz=XmodXX(XmulXX(xa,xw),n);}else{xz=xw;}   // perform multiply and modulus if dyad
+ xw=XinvertXX(xw,n); // take inverse of divisor, returning 0 if coprime
+ X xz;  // will hold result
+ if(!(AT(w)&VERB)){xz=XAV(a)[0]; if(unlikely(icmpXX(xz,n)>0))xz=XmodXX(xz,n); if(XSGN(xz)!=0){ASSERT(xw!=0,EVDOMAIN) xz=XmodXX(XmulXX(xz,xw),n);}}else{ASSERT(xw!=0,EVDOMAIN) xz=xw;}   // perform multiply and modulus if dyad
  if(unlikely(XSGN(n)<0&&XSGN(xz)>0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
@@ -491,8 +492,9 @@ static DF2(jtmodopintdiv){PROLOG(000);
  // fetch [x(mod n)] and y(mod n)
  UI y=modarg(!(AT(w)&VERB)?w:a,n,nrecip);
  // Take modular inverse of y
- ASSERT((I)(y=mod_inv(y,n))>=0,EVDOMAIN)
- UI z; if(!(AT(w)&VERB)){z=modarg(a,n,nrecip)*y; z=modn(z);}else{z=y;}   // multiply and take modulus if dyad
+ y=mod_inv(y,n); // modular inverse, ~0 if inverse not defined
+ UI z;  // will hold result
+ if(!(AT(w)&VERB)){z=modarg(a,n,nrecip); if(z!=0){ASSERT((I)y>=0,EVDOMAIN); z*=y; z=modn(z);}}else{ASSERT((I)y>=0,EVDOMAIN) z=y;}   // multiply and take modulus if dyad 0%0=0
  // correct for negative n
  A zzz; RZ(zzz=sc(z-(REPSGN(nsign&-z)&n)));  // if m neg, move result to range -m+1..0
  // if modulus was XNUM, make result extended
@@ -512,7 +514,7 @@ static DF2(jtmodopintexp){PROLOG(000);
  // fetch x(mod n) and y
  UI x=modarg(a,n,nrecip); I y=IAV(w)[0];  // the base and exponent
  if(y<0){
-  // Negative y.  Convert x to XNUM and take x=modular inverse x^_1(mod n).
+  // Negative y.  Take x=modular inverse x^_1(mod n).
   ASSERT((I)(x=mod_inv(x,n))>=0,EVDOMAIN)
   y=-y;  // use positive power of modular inverse
  }

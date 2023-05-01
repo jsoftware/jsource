@@ -546,7 +546,7 @@ static DF2(jtmodularexplicitx){F2PREFIP;  // this stands in place of jtxdefn, wh
 // entry point for monad and dyad %. m. n (type=0) and -/ . * m. n (type=1)
 static A jtmodularexplicit(J jt,A a,A w,I type){
  // Apply Md_j_ to the input arguments, creating a derived verb to do the work
- A xadv; ASSERT(xadv=jtfindnameinscript(jt,"~addons/dev/modular/modular.ijs",type?"Md_j_":"Mdet_j_",ADV),EVNONCE);
+ A xadv; ASSERT(xadv=jtfindnameinscript(jt,"~addons/dev/modular/modular.ijs",type?"Mdet_j_":"Md_j_",ADV),EVNONCE);
  A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),w,xadv,xadv));
  // If the returned verb has VXOPCALL set, that means we are in debug and a namerefop has been interposed for Foldr_j_.  We don't want that - get the real verb
  if(unlikely(FAV(derivvb)->flag&VXOPCALL))derivvb=FAV(derivvb)->fgh[2];  // the verb is saved in h of the reference
@@ -554,7 +554,7 @@ static A jtmodularexplicit(J jt,A a,A w,I type){
  ASSERT(FAV(derivvb)->valencefns[1]==jtxdefn,EVSYSTEM);
  FAV(derivvb)->valencefns[0]=jtmodularexplicitx;   // monad always defined
  FAV(derivvb)->valencefns[1]=type?jtvalenceerr:(AF)jtmodularexplicitx;  // dyad defined only for %.
- // For display purposes, give the fold the spelling of the original
+ // For display purposes, give the compound the spelling of the original
  FAV(derivvb)->id=CMDOT;
  R derivvb;
 }

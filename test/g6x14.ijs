@@ -9,14 +9,26 @@ efs=: 6!:17
 efp=: 6!:18
 
 empty 0 : 0
-// apple
-#define LC_ALL  0
-#define LC_COLLATE 1
-#define LC_CTYPE 2
-#define LC_MONETARY 3
-#define LC_NUMERIC 4
-#define LC_TIME  5
-#define LC_MESSAGES 6
+// apple freebsd openbsd
+#define LC_ALL          0
+#define LC_COLLATE      1
+#define LC_CTYPE        2
+#define LC_MONETARY     3
+#define LC_NUMERIC      4
+#define LC_TIME         5
+#define LC_MESSAGES     6
+
+/* Bit shifting order of LC_*_MASK should match XLC_* and LC_* order. */
+#define LC_COLLATE_MASK  (1<<0)
+#define LC_CTYPE_MASK    (1<<1)
+#define LC_MONETARY_MASK (1<<2)
+#define LC_NUMERIC_MASK  (1<<3)
+#define LC_TIME_MASK     (1<<4)
+#define LC_MESSAGES_MASK (1<<5)
+#define LC_ALL_MASK      (LC_COLLATE_MASK | LC_CTYPE_MASK | LC_MESSAGES_MASK | \
+                          LC_MONETARY_MASK | LC_NUMERIC_MASK | LC_TIME_MASK)
+#define LC_VERSION_MASK  (1<<6)
+#define LC_GLOBAL_LOCALE ((locale_t)-1)
 
 // linux
 #define LC_CTYPE		 0
@@ -36,12 +48,12 @@ empty 0 : 0
 #define LC_TIME         5
 )
 
-loc=: 'libc.so.6 duplocale > x x'&(15!:0) ^:(UNAME-:'Linux') <_1
-loc=: 'libc.so.6 newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Linux') 4;(,'C');loc   NB. LC_TIME_MASK  1 << 2
-empty 'libc.so.6 uselocale > x x'&(15!:0) ^:(UNAME-:'Linux') <loc
-loc=: 'libc.dylib duplocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <_1
-loc=: 'libc.dylib newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Darwin') 32;(,'C');loc   NB. LC_TIME_MASK  5 << 2
-empty 'libc.dylib uselocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <loc
+loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:(UNAME-:'Linux') <_1
+loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:(UNAME-:'Linux') 4;(,'C');loc   NB. LC_TIME_MASK  1 << 2
+empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:(UNAME-:'Linux') <loc
+loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
+loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc   NB. LC_TIME_MASK  5 << 2
+empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
 0 = efs '2000-01-01'                   NB. epochdt 0 is 2000-01-01
 3313526400000000000 = efs '2105'       NB. nanoseconds from 2000 to 2105
@@ -262,38 +274,38 @@ NB. tzsec parameter
 
 NB. parse datetime string
 
-loc=: 'libc.dylib duplocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <_1
-loc=: 'libc.dylib newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Darwin') 32;(,'fr_FR.UTF-8');loc
-empty 'libc.dylib uselocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <loc
+loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
+loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'fr_FR.UTF-8');loc
+empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20 déc 2022 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20T14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20T02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20 02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '2022-12-20'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '12/20/2022 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '12/20/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '12/20/2022'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20/12/2022 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20/12/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20/12/2022'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20/Déc/2022 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20/Déc/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20/Déc/2022'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc/20/2022 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc/20/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc/20/2022'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20 Déc 2022 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20 Déc 2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20 Déc 2022'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc 20 2022 14:30:18'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc 20 2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc 20 2022'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp '20 déc 2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20T14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20T02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T00:00:00' -: sfe@:efp '2022-12-20'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp '12/20/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp '12/20/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T00:00:00' -: sfe@:efp '12/20/2022'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp '20/12/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp '20/12/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T00:00:00' -: sfe@:efp '20/12/2022'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp '20/Déc/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp '20/Déc/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T00:00:00' -: sfe@:efp '20/Déc/2022'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc/20/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc/20/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc/20/2022'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp '20 Déc 2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp '20 Déc 2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T00:00:00' -: sfe@:efp '20 Déc 2022'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc 20 2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc 20 2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin FreeBSD OpenBSD') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc 20 2022'
 
-loc=: 'libc.dylib duplocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <_1
-loc=: 'libc.dylib newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Darwin') 32;(,'C');loc
-empty 'libc.dylib uselocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <loc
+loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
+loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc
+empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
 4!:55 ;:'IMIN efs efp sfe a e t loc '
 

@@ -739,8 +739,9 @@ typedef struct {I e,p;X x;} DX;
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
 // values 0-11 are the same in all contexts:
 // the CAVN types are selected for comp ease in the typeval field of an assigned value.  They are indexes into ptcol.
-// The value which might also hold VALTYPESPARSE, or VALTYPENAMELESSADV, which is converted to ADV before the lookup).  These types are seen only in valtypes in named blocks, which have QCGLOBAL semantics
-#define ATYPETOVALTYPE(t) (((t)&NOUN)?(ISSPARSE(t)?VALTYPESPARSE:QCNOUN):CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value'
+// The value which might also hold VALTYPESPARSE, or VALTYPENAMELESS which is converted to correct type before the lookup).  These types are seen only in valtypes in named blocks, which have QCGLOBAL semantics
+#define ATYPETOVALTYPEACV(t) (CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value'
+#define ATYPETOVALTYPE(t) (((t)&NOUN)?(unlikely(ISSPARSE(t))?VALTYPESPARSE:QCNOUN):ATYPETOVALTYPEACV(t))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value'
 #define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 #define QCNOUNX 0
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any non-noun CAVN type, i. e. not in ACV.  But it must be set in SPARSE.  It can be used to test for FUNC in a named QCTYPE
@@ -766,8 +767,9 @@ typedef struct {I e,p;X x;} DX;
 #define QCGLOBAL 0x10  // set if the name was found in a global table
 #define SETGLOBAL(w) (A)((I)(w)|QCGLOBAL)
 #define CLRGLOBAL(w) (A)((I)(w)&~QCGLOBAL)
-#define VALTYPENAMELESSADV ((SYMBX-LASTNOUNX)+1) // 6 set in nameless & non-locative adv, to suppress reference creation.
+#define VALTYPENAMELESS ((SYMBX-LASTNOUNX)+1) // 6 set in nameless non-locative ACV, to suppress reference creation.
 #define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
+#define NAMELESSQCTOTYPEDQC(q) q=QCWORD(q), q=(A)((I)q+ATYPETOVALTYPEACV(AT(q)));  // q is name of NAMELESS QC; result has QC type for t
 // In the LSBs returned by syrd1() bit 4 means:
 #define QCNAMEDX 4  // set if the value was found in a named locale, clear if numbered
 #define QCNAMED ((I)1<<QCNAMEDX)  // set if the value was found in a named locale, clear if numbered
@@ -1194,6 +1196,10 @@ typedef struct {
 #define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))
 #define VF2CACHEABLEX 21   // In a nameref, indicates the nameref is cacheable
 #define VF2CACHEABLE  ((I)(((I)1)<<VF2CACHEABLEX))
+#define VF2PRIMX 22   // Set in primitive ACV
+#define VF2PRIM  ((I)(((I)1)<<VF2PRIMX))
+#define VF2NAMELESSX 23   // Indicates value should be stacked instead of nameref
+#define VF2NAMELESS  ((I)(((I)1)<<VF2NAMELESSX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit

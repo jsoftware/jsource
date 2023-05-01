@@ -696,10 +696,12 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  }
  // g has the locale we are writing to
 
- // if the value we are assigning is an ADV, and it contains no name references, and the name is not a locative, mark the value as NAMELESS to speed up later parsing.
- // NOTE that the value may be in use elsewhere; may even be a primitive.  Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
  if(unlikely((valtype&QCNOUN)==0)){
-  if(valtype==QCADV)if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))valtype=VALTYPENAMELESSADV;
+  // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
+  // NOTE that the value may be in use elsewhere; may even be a primitive.
+
+// obsolete   if(valtype==QCADV)if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))valtype=VALTYPENAMELESSADV;
+  if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate
   if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
   if((AR(g)&ARLOCALTABLE)!=0)AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up
  }

@@ -349,7 +349,10 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   // special processing: for display purposes only, we flag the gerunds in gerund@. gerund` gerund`:   `gerund ^:gerund
   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
-  fdeffill(z,0,CADVF, t, rtn,rtn, a,w,0, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used.  h=0 to indicate bident
+  // if the unexecutable bident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.  This is aimed mostly at each and every
+  I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));  // CPLUS to make bouns look primitive
+                         ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));
+  fdeffill(z,flag2,CADVF, t, rtn,rtn, a,w,0, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used.  h=0 to indicate bident
 
   }
  }else{
@@ -367,6 +370,10 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   }
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
-  fdeffill(z,0,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used
+  // if the unexecutable trident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.
+  I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));  // CPLUS to make bouns look primitive
+                         ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));
+                         ta=h; ta=AT(h)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));
+  fdeffill(z,flag2,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used
  }
 }

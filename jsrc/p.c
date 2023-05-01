@@ -129,7 +129,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [MARKX-LASTNOUNX] = PTMARK,  // PM
 [ADVX-LASTNOUNX] = 0xC9C8403E,  // PA
 // gap[ASGNX-LASTNOUNX]   must be left open in enqueue() tokens to avoid messing up the pull queue
-[VALTYPENAMELESSADV-1] = 0xC9C8403E, // gap [SYMBX-LASTNOUNX]  only in syrd() results, i. e. from symbol
+[VALTYPENAMELESS-1] = 0xC9C8403E, // gap [SYMBX-LASTNOUNX]  only in syrd() results, i. e. from symbol
 [VALTYPESPARSE-1] = PTNOUN,  // gap [CONWX-LASTNOUNX]  only in syrd() results, i. e. from symbol
 [VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
 [LPARX-LASTNOUNX] = PTLPAR,  // PL
@@ -607,10 +607,11 @@ rdglob: ;  // here when we tried the buckets and failed
        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|((I)y&QCNOUN)){   // use value if noun or special name, or name_:
         if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)}  // if name_:, go delete the name, leaving the value to be deleted later
         else y=SETFAOWED(y);
-       }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESSADV)){
-        // nameless modifier, and not a locative.  This handles 'each'.  Don't create a reference; maybe cache the value
+       }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
+        // nameless modifier, and not a locative.  This handles 'each', u m. n, and the like.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
-        y=(A)((I)y+QCADV-VALTYPENAMELESSADV);  // convert type to normal adverb, which the parser looks for
+// obsolete         y=(A)((I)y+QCADV-VALTYPENAMELESSADV);  // convert type to normal adverb, which the parser looks for
+        NAMELESSQCTOTYPEDQC(y)  // convert type to normal adverb, which the parser looks for
         if(NAV(origy)->flag&NMCACHED){  // nameless mod is cachable - replace it by its value in the name
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(y); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal

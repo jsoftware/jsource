@@ -262,41 +262,35 @@ NB. tzsec parameter
 
 NB. parse datetime string
 
-loc=: 'libc.so.6 duplocale > x x'&(15!:0) ^:(UNAME-:'Linux') <_1
-loc=: 'libc.so.6 newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Linux') 4;(,'fr_FR');loc
-empty 'libc.so.6 uselocale > x x'&(15!:0) ^:(UNAME-:'Linux') <loc
 loc=: 'libc.dylib duplocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <_1
-loc=: 'libc.dylib newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Darwin') 32;(,'fr_FR');loc
+loc=: 'libc.dylib newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Darwin') 32;(,'fr_FR.UTF-8');loc
 empty 'libc.dylib uselocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <loc
 
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20 déc 2022 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20T14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20T02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20 02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '2022-12-20'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '12/20/2022 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '12/20/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '12/20/2022'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20/12/2022 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20/12/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20/12/2022'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20/Déc/2022 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20/Déc/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20/Déc/2022'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc/20/2022 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc/20/2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc/20/2022'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20 Déc 2022 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20 Déc 2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20 Déc 2022'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc 20 2022 14:30:18'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc 20 2022 02:30:18 PM'
-((<UNAME)-.@e.;:'Linux Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc 20 2022'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20 déc 2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20T14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20T02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '2022-12-20 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '2022-12-20'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '12/20/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '12/20/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '12/20/2022'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20/12/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20/12/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20/12/2022'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20/Déc/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20/Déc/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20/Déc/2022'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc/20/2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc/20/2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc/20/2022'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20 Déc 2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp '20 Déc 2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp '20 Déc 2022'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp 'Déc 20 2022 14:30:18'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc 20 2022 02:30:18 PM'
+((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc 20 2022'
 
-loc=: 'libc.so.6 duplocale > x x'&(15!:0) ^:(UNAME-:'Linux') <_1
-loc=: 'libc.so.6 newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Linux') 4;(,'C');loc
-empty 'libc.so.6 uselocale > x x'&(15!:0) ^:(UNAME-:'Linux') <loc
 loc=: 'libc.dylib duplocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <_1
 loc=: 'libc.dylib newlocale > x i *c x'&(15!:0) ^:(UNAME-:'Darwin') 32;(,'C');loc
 empty 'libc.dylib uselocale > x x'&(15!:0) ^:(UNAME-:'Darwin') <loc

@@ -737,7 +737,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  __m256d qpthresh=_mm256_set1_pd(parms[0]);  // if |column value| < QpThresh, recalculate in quad precision.  In one-column mode, this holds the Store0Threshold: column values less than this are set to 0
  __m256d col0thresh;  //  minimum value considered valid for a column value (smaller are considered 0)
  __m256d colbk0thresh;  //  minimum value that will block a pivot when bk=0.  In nonimp mode this is the smallest value we will accept for a random pivot, coming from ColOkPivot
- __m256d bkovershoot;  //  maximum negative bk excursion allowed during a pivot
+ D swapbounty;  //  factor to increase gain by for Nonbasic swaps
  D coldangerpivotthresh;  //  smallest allowed pivot, but is dangerous
  D colokpivotthresh;  // smallest pivot value considered non-dangerous.
  __m256d bk0thresh;  // smallest bk value considered nonzero
@@ -799,7 +799,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete   zv=(D*)(ZVDP+ZVSPRNOTFOUND+ZVISDIP);  // set flag 101 indicating DIP, dp, waiting for first c>0; bit 4 (ffreqd) starts clear
   maxdangerc=0.0;  // indicate no dangerous pivot found yet
   bkboundv=DAV(bkbound);  // addr of bound-var info
-  if((I)zv&ZVISDIP)bkovershoot=_mm256_set1_pd(parms[7]);  // overshoot only for DIP
+  if((I)zv&ZVISDIP)swapbounty=parms[7];  // swapbounty only for DIP
 // obsolete   if(AN(parms)==7){  // gradient mode: set up for sequential processing
 // obsolete    rownums0=rownums=_mm256_mul_epu32(rowstride,_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
 // obsolete    rowstride=_mm256_slli_epi64(rowstride,LGNPAR);   // length of NPAR rows for gradient
@@ -858,7 +858,8 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
      minspr=_mm256_set1_pd(inf);  // DIP: minimum valid SPR found so far, in each qword-lane
     }else{
      // Bound column.  we must initialize the SPR to beta and set the row# to out of bounds
-     if(unlikely(cutoffspr>betav[colx]))goto abortcol;  // if the swap would cut off, skip the column - any other pivot would have even lower SPR
+     if(unlikely(prirow>=0&&cutoffspr>swapbounty*betav[colx]))goto abortcol;  // if the swap would cut off, skip the column - any other pivot would have even lower SPR.  If there is a prirow, wait till we have looked at it
+                     // we must apply the swap bounty to the gain, since if this survives it will be a Nonbasic Bound Swap
      minspr=_mm256_set1_pd(betav[colx]);  // DIP: init nonbasic column to SPR of beta
      limitcs=_mm256_set1_pd(1.0);  // set c value in the implied row
      zv=(D*)((I)zv^(ZVSPRNOTFOUND|ZVPOSCVFOUND));  // this implied pivot is a valid one
@@ -1201,8 +1202,10 @@ endqp: ;
       D minimpthiscol;  // the best FOM we found for this column
       // get FOM for this column
 // obsolete       if(likely(bvgrd0!=ONECOLGRD0))minimpthiscol=Frow[colx]*spratmin;  // (DIP) this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This is our local best for this column
-      if(likely((I)zv&ZVISDIP))minimpthiscol=Frow[colx]*spratmin;  // (DIP) this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This is our local best for this column
-      else{  // (gradient)
+      if(likely((I)zv&ZVISDIP)){
+       minimpthiscol=Frow[colx]*spratmin;  // (DIP) this MUST be nonzero, but it decreases in magnitude till we find the smallest pivotratio.  This is our local best for this column
+       if(minrownum==n)minimpthiscol*=swapbounty;  // if the min SPR was for a (nonbasic) bound swap, exaggerate its improvement
+      }else{  // (gradient)
        limitcs=_mm256_add_pd(_mm256_permute_pd(limitcs,0b0101),limitcs); limitcs=_mm256_add_pd(_mm256_permute4x64_pd(limitcs,0b11100110),limitcs);   // take total across lanes
        *(I*)&minimpthiscol=_mm256_extract_epi64(_mm256_castpd_si256(limitcs),0);  // total sumsq+1 of column
        minimpthiscol=minimpthiscol/(Frow[colx]*Frow[colx]);  // gradient mode: save minimum of sumsq/Frow^2 which is recip of the maximum gradient (so smaller=better)
@@ -1308,7 +1311,7 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 // DIP mode:
 //  Only the high part of M is used normally
 //  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bkgrd;bks;Frow;sched;bkbound;beta;RVT
-//  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,BkOvershoot
+//  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,NonbasicSwapBounty
 //   QpThresh: if |column value| < QpThresh, recalculate in quad precision
 //   Col0Threshold is minimum value considered valid for a column value (smaller are considered 0)
 //   ColBk0Threshold is minimum value that will block a pivot when bk=0
@@ -1316,7 +1319,7 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 //   ColOkPivot is the smallest pivot value considered non-dangerous
 //   Bk0Threshold is the smallest bk value considered nonzero
 //   PriRow is the priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so
-//   BkOvershoot is the amount by which a bk value can overshoot 0 on a pivot.  We take the smallest SPR that overshoots by no miore than that
+//   NonbasicSwapBounty is the factor by which to increase the gain expected from a Nonbasic Swap
 //  bkgrd is the list of indexes of rows we will consider, in order
 //  bks is bkgrd{bk values only dp
 //  bkbound is (b-beta) for the Bound variables, which are at the start of bks always dp
@@ -1332,7 +1335,7 @@ return4:  // we have a preemptive DIP/gradient result.  store and set minimp =-i
 //  y is ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bkgrd;bks;Frow;sched;bkbound;beta;RVT
 //   find the (col,row) to maximize (colvalue at zero bk) on the nonimproving edge with the most negative gradient, which is Frow/sqrt(>: sum of squared column values)
 //   bks/bkbound etc same as for DIP mode
-//  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow (absence of Overshoot indicates gradient mode)
+//  parms is QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow (absence of SwapBounty indicates gradient mode)
 // nonimp mode:
 //  y is ndx;Ax;Am;Av;(M, shape 2,m,n);(parms as above, only first 4 needed);bkgrd
 //   stop when first nonimproving pivot if sound.  ndx must be a singleton list
@@ -1401,7 +1404,7 @@ if(AN(w)==0){
   A box6=C(AAV(w)[6]); ASSERT(AT(box6)&LIT,EVDOMAIN); ASSERT(AR(box6)==1,EVRANK); rvtv=CAV(box6);  // rvts, one per each column (unchanging)
 }else{
   // A list of index values.  We are doing the DIP calculation/gradient/nonimp
-  ASSERT(AR(box5)<=1,EVRANK); ASSERT(AT(box5)&FL,EVDOMAIN); ASSERT(BETWEENC(AN(box5),7,8),EVLENGTH);  // 7-8 float constants
+  ASSERT(AR(box5)<=1,EVRANK); ASSERT(AT(box5)&FL,EVDOMAIN); ASSERT(AN(box5)>=7,EVLENGTH);  // 7-8 float constants
   ASSERT(AN(w)>=7,EVLENGTH); 
   if(unlikely(n==0)){RETF(num(6))}   // empty M - should not occur, give error result 6
   if(AN(box0)==0){RETF(num(6))}  // empty ndx - give error/empty result 6
@@ -1433,7 +1436,7 @@ if(AN(w)==0){
 // obsolete    sched=box8;  // exit schedule
 // obsolete    minimp=inf;  // improvements are positive and work down from infinity
 // obsolete   }else{  // DIP/gradient
-  I isDIP=AN(box5)==8;  // DIP has the extra parameter
+  I isDIP=AN(box5)>7;  // DIP has extra parameters, not all used
   minimp=isDIP?0.0:inf;  // for DIP, improvements are negative and go down; for gradient they work down from infinity
   zv=(D*)(ZVDP+ZVSPRNOTFOUND+(isDIP<<ZVISDIPX));  // set flag d000101 DIP, dp, waiting for first c>0; bit 4 (ffreqd) starts clear, d set if DIP
   A box7=C(AAV(w)[7]), box8=C(AAV(w)[8]), box9=C(AAV(w)[9]);

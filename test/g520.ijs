@@ -173,7 +173,7 @@ for_t. i. 4 do.
   prtpms =. -:
   bk =. dptoqp _2 1 3 1e_8
   M =. dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 0 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,BkOvershoot
+  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,NonbasicSwapBounty
   Frow =. _4 _3 _2 _1. 1.
   bkg =. i.{:$M
   sched=.100 $ 100
@@ -388,7 +388,7 @@ NB. obsolete
   dptoqp=. 2 {. ,:
   bk =. dptoqp         0.25 0.5
   M =. dptoqp |: _4 ]\ 0.25 1 0 0  _0.25 0.25 0 0  _0.25 0.25 0 0  _0.25 0.25 0 0    NB. input by columns
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 0 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,BkOvershoot
+  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,NonbasicSwapBounty
   Frow =. _4 _3 _2 _1. 1.
   bkg=. 00 1
   sched =.4 $ 100
@@ -436,7 +436,7 @@ NB. obsolete
   assert. 0 2 3 2 8 3.205 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
 
   NB. bound nonbasic column swap
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 0 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,BkOvershoot
+  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,NonbasicSwapBounty
   M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  1 1 1 1  1 1 1 1  0.25 1 0 0    NB. input by columns
   bk =. dptoqp         2. 2 2 2
   bkbeta=.0. 0
@@ -449,6 +449,10 @@ NB. obsolete
   assert. 0 1 4 1 4 _3 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 4 2 8 _3 ('' run128_9) (1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
   assert. 0 1 4 2 8 _3 ('' run128_9) (2 1);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  NB. test swap bounty
+  Frow =. _1 _2 _1 _4. 1.
+  assert. 0 3 1 2 8 _8 ('' run128_9) (1 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  assert. 0 1 4 2 5 _12 ('' run128_9) (1 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(4. (7}) cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
 
   NB. gradient nonbasic col swap - should never happen
   bk =. dptoqp         0.0 0.0 0 0

@@ -264,15 +264,15 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 
 #define DO_ONE(T,EMIT) \
  switch(e=v[1]){                                                          \
-  case 6:         i=n; break;                                             \
-  case 2: case 3: if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);       j=2==e?i:-1; break;  \
-  case 4: case 5: if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i; j=4==e?i:-1; break;  \
-  case 1:         j=i; break;                                                    \
-  case 7: i-=2; i=i<0?0:i; break;  /* backtrack */ \
-  case 8:         j=i+1; break;                                                    \
-  case 9:         if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);        j=i+1; break;  \
-  case 10:        if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i;  j=i+1; break;  \
-}
+ case 6:         i=n; break;                                             \
+ case 2: case 3: if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);       j=2==e?i:-1; break;  \
+ case 4: case 5: if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i; j=4==e?i:-1; break;  \
+ case 1:         j=i; break;                                                    \
+ case 7: i-=2; i=i<0?-1:i; break;  /* backtrack */ \
+ case 8:         j=i+1; break;                                                    \
+ case 9:         if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);        j=i+1; break;  \
+ case 10:        if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i;  j=i+1; break;  \
+ }
 
 #define ZVAx                {}
 #define ZVA5                {*zv++=i; *zv++=j; *zv++=r; *zv++=c; *zv++=v[0]; *zv++=v[1];}
@@ -301,26 +301,26 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  i=ijrd[0]; j=ijrd[1]; r=ijrd[2]; d=ijrd[3]; vi=vj=vr=vc=-1;
  if(t&INT){t0=AT(w0); wr=AR(w0); PROD(wm,AR(w0)-1,AS(w0)+1) wk=wm<<bplg(AT(w0)); wv0=CAV(w0);}
  switch(f+(t&(B01+LIT))*6){
-  case 0+0: {I *wv= AV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break; // other
-  case 0+1: {I *wv= AV(w); FSMF(C *u=(C*)AV(z); C*uu=u+AN(z);,C,bpnoun(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
-  case 0+2: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case 0+3: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case 0+4: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case 0+5: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
+ case 0+0: {I *wv= AV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break; // other
+ case 0+1: {I *wv= AV(w); FSMF(C *u=(C*)AV(z); C*uu=u+AN(z);,C,bpnoun(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
+ case 0+2: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+ case 0+3: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+ case 0+4: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+ case 0+5: {I *wv= AV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
 
-  case 6+0: {B *wv=BAV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;  // B01
-  case 6+1: {B *wv=UAV(w); FSMF(B *u=(B*)AV(z); B*uu=u+AN(z);,B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
-  case 6+2: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case 6+3: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case 6+4: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case 6+5: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
+ case 6+0: {B *wv=BAV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;  // B01
+ case 6+1: {B *wv=UAV(w); FSMF(B *u=(B*)AV(z); B*uu=u+AN(z);,B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
+ case 6+2: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+ case 6+3: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+ case 6+4: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+ case 6+5: {B *wv=BAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
 
-  case 12+0: {UC*wv=UAV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;  // LIT
-  case 12+1: {UC*wv=UAV(w); FSMF(C *u=(B*)AV(z); C*uu=u+AN(z);,C,1,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
-  case 12+2: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
-  case 12+3: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
-  case 12+4: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
-  case 12+5: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
+ case 12+0: {UC*wv=UAV(w); FSMF(A *u=(A*)AV(z); A*uu=u+AN(z);,A,1,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;  // LIT
+ case 12+1: {UC*wv=UAV(w); FSMF(C *u=(B*)AV(z); C*uu=u+AN(z);,C,1,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
+ case 12+2: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
+ case 12+3: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
+ case 12+4: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
+ case 12+5: {UC*wv=UAV(w); FSMF(I *u=(I*)AV(z); I*uu=u+AN(z);,I,1,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
  }
  R z;
 }

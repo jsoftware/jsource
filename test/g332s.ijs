@@ -207,6 +207,14 @@ d,e,"r"
 (3 3$<;._1 '|a|b|c|d|hello, " cruel" world|f|d|e|r') -: csv txt
 
 
+
+0 -: (<1 0){ (5; (2 2 2 $ 1 7 1 0   1 6 1 6);(<'<');0 0 0 _1) ;: '<'             NB. backtrack from the position 0 goes to the first item at i=0
+
+0 -: (<2 0){ (5; (3 2 2 $ 1 7 1 0   2 7 2 0  2 6 2 6);(<'<');0 0 0 _1) ;: ' <'   NB. backtrack from the 1st position goes to the first item at i=0
+
+  
+
+
 f=: ;:
 
 (<;._1 ' Cogito ergo sum')    -: (0;se;me) f y=: 'Cogito, ergo sum.'

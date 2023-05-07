@@ -234,6 +234,14 @@ lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/li
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 lipo bin/$1/j64/jamalgam bin/$1/j64arm/jamalgam -create -output j64/jamalgam
 fi
+if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphoneos" ]; then
+mkdir -p j64/ios
+cp -r bin/$1/j64iphoneos j64/ios/.
+fi
+if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphonesimulator" ]; then
+mkdir -p j64/ios
+cp -r bin/$1/j64iphonesimulator j64/ios/.
+fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext

@@ -237,6 +237,8 @@ fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
+cp bin/$1/j64avx2/libj.a j64/libjavx2.a
+cp bin/$1/j64avx512/libj.a j64/libjavx512.a
 fi
 
 if [ $m64 -eq 1 ]; then

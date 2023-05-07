@@ -744,13 +744,13 @@ case $jplatform64 in
  ;;
 
  wasm/j32) # webassembly
-  TARGET=libj.a
+  TARGET_a=libj.a
 # 948KB stack on v8
   CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=1007616 -D CSTACKRESERVE=100000 "
 # these flags do not work on iOS
 # -msse2 -msimd128
 # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
-  LDFLAGS=""
+  LDFLAGS_a=" rs "
   SRC_ASM=""
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
@@ -787,7 +787,6 @@ case "$jplatform64" in
  wasm/j32)
   mkdir -p ../bin/$jplatform64 || exit 1
   cp -p ../mpir/linux/wasm32/libgmp.a ../bin/$jplatform64/libj.a || exit 1 # the next $(AR) rs .. combine libgmp.a with libj.a
-  sed -i"" -e "s/\$(CC) -o \$@/\$(AR) rs \$@/" obj/$jplatform64/makefile-libj
   ;;
 esac
 export CC AR CFLAGS LDFLAGS LDFLAGS_a TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64

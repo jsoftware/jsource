@@ -173,6 +173,14 @@ j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
 j64x=j64arm ./build_tsdll.sh
 j64x=j64arm USE_PYXES=1 ./build_libj.sh
 j64x=j64arm USE_PYXES=1 ./build_jamalgam.sh
+./clean.sh
+j64x=j64iphoneos USE_PYXES=1 ./build_jconsole.sh
+j64x=j64iphoneos ./build_tsdll.sh
+j64x=j64iphoneos USE_PYXES=1 ./build_libj.sh
+./clean.sh
+j64x=j64iphonesimulator USE_PYXES=1 ./build_jconsole.sh
+j64x=j64iphonesimulator ./build_tsdll.sh
+j64x=j64iphonesimulator USE_PYXES=1 ./build_libj.sh
 elif [ "$1" = "linux" ]; then
 ./clean.sh
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh

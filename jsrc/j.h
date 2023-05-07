@@ -315,8 +315,11 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define logcat_d(msg) __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",msg)
 #endif
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
 #if defined(TARGET_OS_IPHONE)||defined(TARGET_OS_IOS)||defined(TARGET_OS_TV)||defined(TARGET_OS_WATCH)||defined(TARGET_OS_SIMULATOR)||defined(TARGET_OS_EMBEDDED)||defined(TARGET_IPHONE_SIMULATOR)
 #define TARGET_IOS 1
+#endif
 #endif
 
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)

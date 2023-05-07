@@ -13,7 +13,7 @@ ODIR=../../../../bin/$(jplatform64)
 # alloc.o -- alternative to mmap.o
 # read.o -- alternative to mmapio.o; probably mmap is more robust in this case
 
-ifneq (bsd,$(findstring bsd,$(jplatform64)))
+ifneq (bsd,$(findstring bsd,$(jplatform64))) 
 
 BACKTRACE_OBJS := \
  atomic.o \

@@ -173,6 +173,14 @@ j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
 j64x=j64arm ./build_tsdll.sh
 j64x=j64arm USE_PYXES=1 ./build_libj.sh
 j64x=j64arm USE_PYXES=1 ./build_jamalgam.sh
+./clean.sh
+j64x=j64iphoneos USE_PYXES=1 ./build_jconsole.sh
+j64x=j64iphoneos ./build_tsdll.sh
+j64x=j64iphoneos USE_PYXES=1 ./build_libj.sh
+./clean.sh
+j64x=j64iphonesimulator USE_PYXES=1 ./build_jconsole.sh
+j64x=j64iphonesimulator ./build_tsdll.sh
+j64x=j64iphonesimulator USE_PYXES=1 ./build_libj.sh
 elif [ "$1" = "linux" ]; then
 ./clean.sh
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh
@@ -226,9 +234,19 @@ lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/li
 lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
 lipo bin/$1/j64/jamalgam bin/$1/j64arm/jamalgam -create -output j64/jamalgam
 fi
+if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphoneos" ]; then
+mkdir -p j64/ios
+cp -r bin/$1/j64iphoneos j64/ios/.
+fi
+if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphonesimulator" ]; then
+mkdir -p j64/ios
+cp -r bin/$1/j64iphonesimulator j64/ios/.
+fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
+cp bin/$1/j64avx2/libj.a j64/libjavx2.a
+cp bin/$1/j64avx512/libj.a j64/libjavx512.a
 fi
 
 if [ $m64 -eq 1 ]; then

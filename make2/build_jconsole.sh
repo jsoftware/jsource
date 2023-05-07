@@ -31,8 +31,24 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 # too early to move main linux release package to gcc 5
 
 case "$jplatform64" in
-	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
-	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	darwin/j64iphoneos)
+	 USE_OPENMP=0
+	 CC="$(xcrun --sdk iphoneos --find clang)"
+	 AR="$(xcrun --sdk iphoneos --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64";;
+	darwin/j64iphonesimulator)
+	 USE_OPENMP=0
+	 CC="$(xcrun --sdk iphonesimulator --find clang)"
+	 AR="$(xcrun --sdk iphonesimulator --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64";;
+	darwin/j64arm)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11";;
+	darwin/*)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
 esac
@@ -125,66 +141,73 @@ case $jplatform64 in
 
 linux/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-LDFLAGS=" -m32 -ldl $LDTHREAD"
+LDFLAGS=" -m32 -ldl $LDTHREAD "
 ;;
 linux/j64*)
 CFLAGS="$common"
-LDFLAGS=" -ldl $LDTHREAD"
+LDFLAGS=" -ldl $LDTHREAD "
 ;;
 raspberry/j32)
 CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
-LDFLAGS=" -ldl $LDTHREAD"
+LDFLAGS=" -ldl $LDTHREAD "
 ;;
 raspberry/j64)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
-LDFLAGS=" -ldl $LDTHREAD"
+LDFLAGS=" -ldl $LDTHREAD "
 ;;
 openbsd/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-LDFLAGS=" -m32 $LDTHREAD"
+LDFLAGS=" -m32 $LDTHREAD "
 ;;
 openbsd/j64arm)
 CFLAGS="$common -march=armv8-a+crc"
-LDFLAGS=" $LDTHREAD"
+LDFLAGS=" $LDTHREAD "
 ;;
 openbsd/j64*)
 CFLAGS="$common"
-LDFLAGS=" $LDTHREAD"
+LDFLAGS=" $LDTHREAD "
 ;;
 freebsd/j32)
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-LDFLAGS=" -m32 $LDTHREAD"
+LDFLAGS=" -m32 $LDTHREAD "
 ;;
 freebsd/j64arm)
 CFLAGS="$common -march=armv8-a+crc"
-LDFLAGS=" $LDTHREAD"
+LDFLAGS=" $LDTHREAD "
 ;;
 freebsd/j64*)
 CFLAGS="$common"
-LDFLAGS=" $LDTHREAD"
+LDFLAGS=" $LDTHREAD "
 ;;
 darwin/j32)
-CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
+CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin "
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
 darwin/j64arm) # darwin arm
 CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
 ;;
-#-mmacosx-version-min=10.5
+darwin/j64iphoneos) # iphone
+CFLAGS="$common $macmin -march=armv8-a+crc "
+LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+;;
+darwin/j64iphoneimulator) # iphone simulator
+CFLAGS="$common $macmin "
+LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+;;
 darwin/j64*)
-CFLAGS="$common $macmin"
+CFLAGS="$common $macmin "
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 windows/j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
-LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
+LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
 ;;
 windows/j64*)
 TARGET=jconsole.exe
 CFLAGS="$common"
-LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD"
+LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
 ;;
 *)
 echo no case for those parameters
@@ -200,9 +223,9 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64
 cp makefile-jconsole obj/$jplatform64/.
-export CFLAGS LDFLAGS TARGET OBJSLN jplatform64
+export CC AR CFLAGS LDFLAGS TARGET OBJSLN jplatform64
 cd obj/$jplatform64/
-$make -f makefile-jconsole
+$make -f makefile-jconsole all
 retval=$?
 cd -
 exit $retval

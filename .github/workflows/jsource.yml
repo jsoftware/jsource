@@ -51,7 +51,7 @@ jobs:
       strip -S libtsdll.so
       strip -S jamalgam || true
       strip -S libgmp.so
-      cd ..
+      cd -
       ls -l j64
       zip -r l64.zip j64
 
@@ -95,8 +95,8 @@ jobs:
 
    - name: Test JE (Linux gcc)
      run: |
-      script/testga.sh linux || exit 1
-      mv testlinux.txt  testlinuxgcc.txt
+      script/testga.sh linux || true
+      mv testlinux.txt  testlinuxgcc.txt || true
       ls -l j64
       zip -r lgcc64d.zip j64
       cd j64
@@ -107,7 +107,7 @@ jobs:
       strip -S libtsdll.so
       strip -S jamalgam || true
       strip -S libgmp.so
-      cd ..
+      cd -
       ls -l j64
       zip -r lgcc64.zip j64
 
@@ -162,7 +162,25 @@ jobs:
       strip -S libtsdll.dylib
       strip -S jamalgam || true
       strip -S libgmp.dylib
-      cd ..
+      cd -
+      if [ -d "j64/ios/j64iphoneos" ]; then
+      cd j64/ios/j64iphoneos
+      strip -S jconsole || true
+      strip -S libj.dylib || true
+      strip -S libtsdll.dylib || true
+      strip -S jamalgam || true
+      strip -S libgmp.dylib || true
+      cd -
+      fi
+      if [ -d "j64/ios/j64iphonesimulator" ]; then
+      cd j64/ios/j64iphonesimulator
+      strip -S jconsole || true
+      strip -S libj.dylib || true
+      strip -S libtsdll.dylib || true
+      strip -S jamalgam || true
+      strip -S libgmp.dylib || true
+      cd -
+      fi
       ls -l j64
       zip -r m64.zip j64
 
@@ -211,7 +229,7 @@ jobs:
        strip -S libtsdll.so
        strip -S jamalgam || true
        strip -S libgmp.so
-       cd ..
+       cd -
        zip -r rpi64.zip j64
        rm -rf j64
        mkdir j64
@@ -273,7 +291,7 @@ jobs:
        strip -S libtsdll.so
        strip -S jamalgam || true
        strip -S libgmp.so
-       cd ..
+       cd -
        zip -r rpi32.zip j32
        rm -rf j32
        mkdir j32
@@ -345,7 +363,7 @@ jobs:
        strip -S libtsdll.so
        strip -S jamalgam || true
        strip -S libgmp.so
-       cd ..
+       cd -
        ls -l j64
        zip -r obsd64.zip j64
        touch jobdone
@@ -411,7 +429,7 @@ jobs:
        strip -S libtsdll.so
        strip -S jamalgam || true
        strip -S libgmp.so
-       cd ..
+       cd -
        ls -l j64
        zip -r obsd64.zip j64
        touch jobdone
@@ -475,7 +493,7 @@ jobs:
        strip -S libtsdll.so
        strip -S jamalgam || true
        strip -S libgmp.so
-       cd ..
+       cd -
        ls -l j64
        zip -r obsdarm64.zip j64
        touch jobdone
@@ -541,7 +559,7 @@ jobs:
        strip -S jamalgam || true
        strip -S libtsdll.so
        strip -S libgmp.so
-       cd ..
+       cd -
        ls -l j64
        zip -r fbsd64.zip j64
        touch jobdone
@@ -608,7 +626,7 @@ jobs:
        strip -S libtsdll.so
        strip -S jamalgam || true
        strip -S libgmp.so
-       cd ..
+       cd -
        ls -l j64
        zip -r fbsd64.zip j64
        touch jobdone

@@ -29,8 +29,22 @@ echo "jplatform64=$jplatform64"
 # too early to move main linux release package to gcc 5
 
 case "$jplatform64" in
-	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
-	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	darwin/j64iphoneos)
+	 CC="$(xcrun --sdk iphoneos --find clang)"
+	 AR="$(xcrun --sdk iphoneos --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64";;
+	darwin/j64iphonesimulator)
+	 CC="$(xcrun --sdk iphonesimulator --find clang)"
+	 AR="$(xcrun --sdk iphonesimulator --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64";;
+	darwin/j64arm)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11";;
+	darwin/*)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
 esac
@@ -96,84 +110,126 @@ case $jplatform64 in
 
 linux/j32) # linux x86
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 # slower, use 387 fpu and truncate extra precision
 # CFLAGS="$common -m32 -ffloat-store "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl "
+LDFLAGS_a=" crv "
 ;;
 
 linux/j64*) # linux intel 64bit
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
+LDFLAGS_a=" crv "
 ;;
 
 raspberry/j32) # linux raspbian arm
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
+LDFLAGS_a=" crv "
 ;;
 
 raspberry/j64) # linux arm64
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common -march=armv8-a+crc -DRASPI "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
+LDFLAGS_a=" crv "
 ;;
 
 openbsd/j32) # openbsd x86
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
+LDFLAGS_a=" crv "
 ;;
 
 openbsd/j64arm) # openbsd arm64
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common -march=armv8-a+crc "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
+LDFLAGS_a=" crv "
 ;;
 
 openbsd/j64*) # openbsd intel 64bit nonavx
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
+LDFLAGS_a=" crv "
 ;;
 
 freebsd/j32) # freebsd x86
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
+LDFLAGS_a=" crv "
 ;;
 
 freebsd/j64arm) # freebsd arm64
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common -march=armv8-a+crc "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
+LDFLAGS_a=" crv "
 ;;
 
 freebsd/j64*) # freebsd intel 64bit nonavx
 TARGET=libtsdll.so
+TARGET_a=libtsdll.a
 CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm"
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
+LDFLAGS_a=" crv "
 ;;
 
 darwin/j32) # darwin x86
 TARGET=libtsdll.dylib
+TARGET_a=libtsdll.a
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl -m32 $macmin"
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl -m32 $macmin "
+LDFLAGS_a=" -static -o "
 ;;
 
 darwin/j64arm) # darwin arm
 TARGET=libtsdll.dylib
+TARGET_a=libtsdll.a
 CFLAGS="$common $macmin -march=armv8-a+crc "
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin  "
+LDFLAGS_a=" -static -o "
+;;
+
+darwin/j64iphoneos) # iphone
+TARGET=libtsdll.dylib
+TARGET_a=libtsdll.a
+CFLAGS="$common $macmin -march=armv8-a+crc "
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin  "
+LDFLAGS_a=" -static -o "
+;;
+
+darwin/j64iphonesimulator) # iphone simulator
+TARGET=libtsdll.dylib
+TARGET_a=libtsdll.a
+CFLAGS="$common $macmin "
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
+LDFLAGS_a=" -static -o "
 ;;
 
 darwin/j64*) # darwin intel 64bit
 TARGET=libtsdll.dylib
+TARGET_a=libtsdll.a
 CFLAGS="$common $macmin"
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin"
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
+LDFLAGS_a=" -static -o "
 ;;
 
 *)
@@ -186,9 +242,9 @@ echo "CFLAGS=$CFLAGS"
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-tsdll obj/$jplatform64/.
-export CFLAGS LDFLAGS TARGET jplatform64
+export CC AR CFLAGS LDFLAGS LDFLAGS_a TARGET TARGET_a jplatform64
 cd obj/$jplatform64/
-$make -f makefile-tsdll
+$make -f makefile-tsdll all
 retval=$?
 cd -
 exit $retval

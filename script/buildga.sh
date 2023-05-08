@@ -174,13 +174,13 @@ j64x=j64arm ./build_tsdll.sh
 j64x=j64arm USE_PYXES=1 ./build_libj.sh
 j64x=j64arm USE_PYXES=1 ./build_jamalgam.sh
 ./clean.sh
-j64x=j64iphoneos USE_PYXES=1 ./build_jconsole.sh
-j64x=j64iphoneos ./build_tsdll.sh
-j64x=j64iphoneos USE_PYXES=1 ./build_libj.sh
+j64x=j64iphoneos _DEBUG=0 USE_PYXES=1 ./build_jconsole.sh
+j64x=j64iphoneos _DEBUG=0 ./build_tsdll.sh
+j64x=j64iphoneos _DEBUG=0 USE_PYXES=1 ./build_libj.sh
 ./clean.sh
-j64x=j64iphonesimulator USE_PYXES=1 ./build_jconsole.sh
-j64x=j64iphonesimulator ./build_tsdll.sh
-j64x=j64iphonesimulator USE_PYXES=1 ./build_libj.sh
+j64x=j64iphonesimulator _DEBUG=0 USE_PYXES=1 ./build_jconsole.sh
+j64x=j64iphonesimulator _DEBUG=0 ./build_tsdll.sh
+j64x=j64iphonesimulator _DEBUG=0 USE_PYXES=1 ./build_libj.sh
 elif [ "$1" = "linux" ]; then
 ./clean.sh
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh
@@ -188,6 +188,7 @@ j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
 # j64x=j32 USE_PYXES=0 ./build_jamalgam.sh
 fi
+ls -l bin/$1 || true
 ./clean.sh
 if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then
  j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
@@ -237,10 +238,14 @@ fi
 if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphoneos" ]; then
 mkdir -p j64/ios
 cp -r bin/$1/j64iphoneos j64/ios/.
+ls -l j64/ios || true
+ls -l j64/ios/j64iphoneos || true
 fi
 if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphonesimulator" ]; then
 mkdir -p j64/ios
 cp -r bin/$1/j64iphonesimulator j64/ios/.
+ls -l j64/ios || true
+ls -l j64/ios/j64iphonesimulator || true
 fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext

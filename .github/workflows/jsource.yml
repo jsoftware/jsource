@@ -95,8 +95,8 @@ jobs:
 
    - name: Test JE (Linux gcc)
      run: |
-      script/testga.sh linux || true
-      mv testlinux.txt  testlinuxgcc.txt || true
+      script/testga.sh linux || exit 1
+      mv testlinux.txt  testlinuxgcc.txt
       ls -l j64
       zip -r lgcc64d.zip j64
       cd j64

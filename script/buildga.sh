@@ -152,7 +152,8 @@ USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_libj.sh
 cd ..
 ls -l bin/$1/j32
 cp bin/$1/j32/* j32
-chmod 644 j32/*
+find j32 -type d -exec chmod 755 {} \;
+find j32 -type f -exec chmod 644 {} \;
 ls -l j32
 exit 0
 fi
@@ -188,7 +189,6 @@ j64x=j32 ./build_tsdll.sh
 j64x=j32 USE_PYXES=0 ./build_libj.sh
 # j64x=j32 USE_PYXES=0 ./build_jamalgam.sh
 fi
-ls -l bin/$1 || true
 ./clean.sh
 if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then
  j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
@@ -238,14 +238,10 @@ fi
 if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphoneos" ]; then
 mkdir -p j64/ios
 cp -r bin/$1/j64iphoneos j64/ios/.
-ls -l j64/ios || true
-ls -l j64/ios/j64iphoneos || true
 fi
 if [ "$1" = "darwin" ] && [ -d "bin/$1/j64iphonesimulator" ]; then
 mkdir -p j64/ios
 cp -r bin/$1/j64iphonesimulator j64/ios/.
-ls -l j64/ios || true
-ls -l j64/ios/j64iphonesimulator || true
 fi
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
 cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
@@ -253,12 +249,14 @@ cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
 
 if [ $m64 -eq 1 ]; then
-chmod 644 j64/*
+find j64 -type d -exec chmod 755 {} \;
+find j64 -type f -exec chmod 644 {} \;
 chmod 755 j64/jconsole
 chmod 755 j64/jamalgam || true
 ls -l j64
 else
-chmod 644 j32/*
+find j32 -type d -exec chmod 755 {} \;
+find j32 -type f -exec chmod 644 {} \;
 chmod 755 j32/jconsole
 # chmod 755 j32/jamalgam || true
 ls -l j32
@@ -270,8 +268,8 @@ cp bin/profile.ijs j32
 cp bin/$1/j32/* j32
 # cp mpir/linux/i386/libgmp.so j32
 cp mpir/linux/i386/libgmpd.so j32/libgmp.so
-chmod 644 j32/*
-chmod 755 j32/jconsole
+find j32 -type d -exec chmod 755 {} \;
+find j32 -type f -exec chmod 644 {} \;
 # chmod 755 j32/jamalgam || true
 fi
 

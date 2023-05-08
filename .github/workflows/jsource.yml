@@ -163,24 +163,6 @@ jobs:
       strip -S jamalgam || true
       strip -S libgmp.dylib
       cd -
-      if [ -d "j64/ios/j64iphoneos" ]; then
-      cd j64/ios/j64iphoneos
-      strip -S jconsole || true
-      strip -S libj.dylib || true
-      strip -S libtsdll.dylib || true
-      strip -S jamalgam || true
-      strip -S libgmp.dylib || true
-      cd -
-      fi
-      if [ -d "j64/ios/j64iphonesimulator" ]; then
-      cd j64/ios/j64iphonesimulator
-      strip -S jconsole || true
-      strip -S libj.dylib || true
-      strip -S libtsdll.dylib || true
-      strip -S jamalgam || true
-      strip -S libgmp.dylib || true
-      cd -
-      fi
       ls -l j64
       zip -r m64.zip j64
 

@@ -150,10 +150,10 @@ USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_jamalgam.sh
 ./clean.sh
 USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_libj.sh
 cd ..
-ls -l bin/$1/j32
 cp bin/$1/j32/* j32
 find j32 -type d -exec chmod 755 {} \;
 find j32 -type f -exec chmod 644 {} \;
+find j32 \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
 ls -l j32
 exit 0
 fi
@@ -275,13 +275,13 @@ fi
 if [ -d j64 ]; then
 find j64 -type d -exec chmod 755 {} \;
 find j64 -type f -exec chmod 644 {} \;
-find j64 \( -name 'jconsole' -o -name 'amalgam' \) -type f -exec chmod 755 {} \;
+find j64 \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
 ls -l j64
 fi
 
 if [ -d j32 ]; then
 find j32 -type d -exec chmod 755 {} \;
 find j32 -type f -exec chmod 644 {} \;
-find j32 \( -name 'jconsole' -o -name 'amalgam' \) -type f -exec chmod 755 {} \;
+find j32 \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
 ls -l j32
 fi

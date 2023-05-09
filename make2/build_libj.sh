@@ -35,11 +35,13 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 case "$jplatform64" in
 	darwin/j64iphoneos)
 	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
 	 CC="$(xcrun --sdk iphoneos --find clang)"
 	 AR="$(xcrun --sdk iphoneos --find libtool)"
 	 macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64";;
 	darwin/j64iphonesimulator)
 	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
 	 CC="$(xcrun --sdk iphonesimulator --find clang)"
 	 AR="$(xcrun --sdk iphonesimulator --find libtool)"
 	 macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64";;
@@ -53,7 +55,10 @@ case "$jplatform64" in
 	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
- wasm*) NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
+ wasm*)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
 esac
 make="${make:=make}"
 
@@ -569,7 +574,7 @@ case $jplatform64 in
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
- darwin/j64iphoneimulator) # iphone simulator
+ darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libj.a
   CFLAGS="$common $macmin $common -mno-outline-atomics -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "

@@ -564,7 +564,7 @@ case $jplatform64 in
 
  darwin/j64iphoneos) # iphone
   TARGET_a=libj.a
-  CFLAGS="$common $macmin $common -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
   LDFLAGS_a=" -static -o "
   OBJS_AESARM=" aes-arm.o "
@@ -576,7 +576,7 @@ case $jplatform64 in
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libj.a
-  CFLAGS="$common $macmin $common -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
   LDFLAGS_a=" -static -o "
   OBJS_AESNI=" aes-ni.o "
@@ -709,7 +709,7 @@ case $jplatform64 in
 # these flags do not work on iOS
 # -msse2 -msimd128
 # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
-  LDFLAGS_a=" rs "
+  LDFLAGS_a=" rcs "
   SRC_ASM=""
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
@@ -742,12 +742,6 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
-case "$jplatform64" in
- wasm/j32)
-  mkdir -p ../bin/$jplatform64 || exit 1
-  cp -p ../mpir/linux/wasm32/libgmp.a ../bin/$jplatform64/libj.a || exit 1 # the next $(AR) rs .. combine libgmp.a with libj.a
-  ;;
-esac
 export CC AR CFLAGS LDFLAGS LDFLAGS_a TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then

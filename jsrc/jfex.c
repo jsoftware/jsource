@@ -4,7 +4,7 @@
 /* J Front End Example                                                     */
 
 // J Front End Example
-// define _WIN32 for Windows, __MACH__ for MAC, J64 for 64-bit
+// define _WIN32 for Windows, __APPLE__ for MAC, J64 for 64-bit
 // JE is loaded from current working directory
 
 #ifdef _WIN32
@@ -19,7 +19,7 @@
  #include <dlfcn.h>
  #endif
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
- #ifdef __MACH__ 
+ #ifdef __APPLE__
   #define JDLLNAME "/libj.dylib"
  #else
   #define JDLLNAME "/libj.so"

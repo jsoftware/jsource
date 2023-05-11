@@ -5,7 +5,7 @@
 #define jplatform "raspberry"
 #elif defined(ANDROID)
 #define jplatform "android"
-#elif defined(__MACH__)
+#elif defined(__APPLE__)
 #define jplatform "darwin"
 #elif defined(__linux__)
 #define jplatform "linux"

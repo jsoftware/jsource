@@ -56,7 +56,7 @@ media/wav
 )
 
 Ignore=: 3 : 0''
-if. IFIOS do.
+if. IFIOS>IFQT do.
   <;._2 IgnoreIOS
 else.
   <'ide/ios'
@@ -65,7 +65,7 @@ end.
 3 : 0''
 HTTPCMD=: ''
 nc=. '--no-cache'
-RELNO=: ,'0,p<.>0' (8!:2) 2 {. 100 #.inv JVERSION_NUMBER
+RELNO=: ,'0,p<.>0' (8!:2) 2 {. 100 #.inv >{.revinfo_j_''
 if. IFUNIX do.
   IFWGET=. IFCURL=. 0
   if. -. IFIOS +. UNAME-:'Android' do.
@@ -93,7 +93,7 @@ setfiles=: 3 : 0
 ADDCFG=: jpath '~addons/config/'
 makedir ADDCFG
 ADDCFGIJS=: ADDCFG,'config.ijs'
-JRELEASE=: getJverold ''
+JRELEASE=: 'j', ": 100 #. 2 {. 100 #.inv >{.revinfo_j_''
 LIBTREE=: readtree''
 if. IFIOS do.
   WWW=: '/jal/',JRELEASE,'/'
@@ -327,7 +327,7 @@ else.
 end.
 )
 getJverold=: 3 : 0
-'j', ": 100 #. 2 {. 100 #.inv JVERSION_NUMBER
+'j', ": 100 #. 2 {. 100 #.inv >{.revinfo_j_''
 )
 getjqtversion=: 3 : 0
 suffix=. (IFUNIX>'/'e.LIBFILE)#'-',RELNO
@@ -1135,7 +1135,7 @@ if. #PLATFORMS do.
 end.
 if. #RELEASE do.
   rel=. <./0 ". 'j' -.~ RELEASE
-  ver=. 100 #. 2 {. 100 #.inv JVERSION_NUMBER
+  ver=. 100 #. 2 {. 100 #.inv >{.revinfo_j_''
   if. rel > ver do.
     0[echo 'Release not supported for this addon: ',9!:14'' return.
   end.

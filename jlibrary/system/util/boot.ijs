@@ -51,11 +51,11 @@ v=. 9!:14''
 if. 6>+/v='/' do.
   r=. 'Engine: ',v
   contact=. 'www.jsoftware.com'
-  JVERSION_NUMBER=: 10000 * {. 0". }.({.~ i.&'/')v
+  JVERSION_NUMBER=: 10000 * {. 0". }.({.~ i.&'/')v   NB. not needed after jd updated
 else.
 NB. vno;vst;architecture;OS;license;builder;date;compiler;<[otheroptions]
   'a b c d e f g h i'=. revinfo_j_''
-  JVERSION_NUMBER=: a
+  JVERSION_NUMBER=: a   NB. not needed after jd updated
   contact=. f
   r=. 'Engine: ', b,'/',c,'/',d
   r=. r,LF,'Build: ',e,'/',g,'/',h,'/',i

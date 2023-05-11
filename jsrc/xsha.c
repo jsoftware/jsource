@@ -5,7 +5,7 @@
 
 #ifdef ANDROID
 #include <endian.h>
-#elif defined(__MACH__)
+#elif defined(__APPLE__)
 #include <machine/endian.h>
 #else
 #include <sys/types.h>

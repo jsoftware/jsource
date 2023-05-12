@@ -21,7 +21,7 @@ endif
 
 ifdef TARGET_a
 $(ODIR)/$(TARGET_a) : $(OBJS)
-	$(AR) $(LDFLAGS_a) $@ $(OBJS)
+	$(AR) $(LDFLAGS_a) $@ $(OBJS) $(LDFLAGS_b)
 endif
 
 all: $(ODIR)/$(TARGET) $(ODIR)/$(TARGET_a)

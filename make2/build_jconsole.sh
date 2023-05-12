@@ -225,7 +225,12 @@ mkdir -p obj/$jplatform64
 cp makefile-jconsole obj/$jplatform64/.
 export CC AR CFLAGS LDFLAGS TARGET OBJSLN jplatform64
 cd obj/$jplatform64/
-$make -f makefile-jconsole all
+if [ "x$MAKEFLAGS" = x'' ] ; then
+ if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+ $make -j$par -f makefile-jconsole all
+else
+ $make -f makefile-jconsole all
+fi
 retval=$?
 cd -
 exit $retval

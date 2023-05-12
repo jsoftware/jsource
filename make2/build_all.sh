@@ -5,8 +5,9 @@ set -e
 cd "$(dirname "$0")"
 echo "entering `pwd`"
 
-./clean.sh
-
+if [ "$1" != "noclean" ] ; then
+./clean.sh || true
+fi
 ./build_jconsole.sh
 ./build_libj.sh
 ./build_tsdll.sh

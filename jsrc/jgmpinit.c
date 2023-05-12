@@ -7,7 +7,7 @@
 #ifdef _WIN32
  #include <windows.h>
 #else
-#if !defined(__wasm__)
+#if !defined(__wasm__) && !defined(TARGET_IOS)
  #include <dlfcn.h>  // -ldl
 #endif
 #endif

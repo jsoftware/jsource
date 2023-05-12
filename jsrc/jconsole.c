@@ -13,10 +13,10 @@
 #include <sys/resource.h>
 #define _isatty isatty
 #define _fileno fileno
-#if !defined(__wasm__)
+#if !defined(__wasm__) && !defined(TARGET_IOS)
 #include <dlfcn.h>
-#endif
 #define GETPROCADDRESS(h,p) dlsym(h,p)
+#endif
 #endif
 #include <signal.h>
 #include <stdint.h>

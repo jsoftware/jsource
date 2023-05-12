@@ -163,8 +163,7 @@ DF1(jtfrombase64){
  A z; GATV0(z,LIT,(wn>>2)*3 + (((wn&3)+1)>>1),1);  // 3 bytes per full set, plus 0, 1, or 2
  // process the input in full 4-byte groups.  We may overread the input AND overwrite the result, but we will always stay in the padding area,
  // which is OK because we allocated the result here
-// #if defined(__wasm__)  // superseded by library
-#if 0  // superseded by library
+#if defined(__wasm__)  // superseded by library
  UI4 *wv4=UI4AV(w); C *zv=CAV(z);  // write result as bytes, to avoid requiring heroic action in the write combiners
  for(wn-=3;wn>0;wn-=4){  // for each block of 4, not counting an incomplete last one
   // translate the UTF8 via table lookup.  We could avoid the table reads if we didn't feel the need to validate the input

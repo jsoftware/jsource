@@ -15,6 +15,34 @@ on:
 
 jobs:
 
+# create tarball -------------------------------------------------------
+ tarball:
+  name: Tarball
+  runs-on: ubuntu-20.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v3
+
+   - name: Test JE (Linux)
+     run: |
+      cd ..
+      ls 
+      ls jsource || true
+      zip -r jsource.zip jsource
+      tar -czf jsouce.tar.gz jsource
+      cd -
+      mv ../jsource.zip .
+      mv ../jsource.tar.gz .
+
+   - name: Release Tarball
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "jsource.zip,jsource.tar.gz"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)

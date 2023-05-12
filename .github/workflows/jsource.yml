@@ -26,10 +26,8 @@ jobs:
    - name: Test JE (Linux)
      run: |
       cd ..
-      ls 
-      ls jsource || true
-      zip -r jsource.zip jsource
-      tar -czf jsouce.tar.gz jsource
+      zip -r jsource.zip jsource -x "jsource/.*"
+      tar -czv --exclude ".*" -f jsource.tar.gz jsource
       cd -
       mv ../jsource.zip .
       mv ../jsource.tar.gz .

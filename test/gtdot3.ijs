@@ -71,38 +71,38 @@ pyx =. 6!:3 t. ''"0 N # 1.0  NB. fill up with delaying threads
 NB. Verify forcetask arg
 t0 =. 6!:1''
 assert. 1. = >pyx
-echo^:chk 'gtdot3 a13'
+techo^:chk 'gtdot3 a13'
 NB. Verify forcetask arg
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a1' NB. master should not wait
-echo^:chk 'gtdot3 a13a'
+techo^:chk 'gtdot3 a13a'
 wthr nwthreads
-echo^:chk 'gtdot3 a13b'
+techo^:chk 'gtdot3 a13b'
 pyx =. 6!:3 t. ''"0 (>:N) # 1.0  NB. fill up with delaying threads
-echo^:chk 'gtdot3 a13c'
+techo^:chk 'gtdot3 a13c'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a2' NB. master should wait
 wthr nwthreads
 pyx =. 6!:3 t. 'worker'"0 (>:N) # 1.0  NB. fill up with delaying threads
-echo^:chk 'gtdot3 a13d'
+techo^:chk 'gtdot3 a13d'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a3' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker') "0 (>:N) # 1.0  NB. fill up with delaying threads
-echo^:chk 'gtdot3 a13e'
+techo^:chk 'gtdot3 a13e'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a4' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';1) "0 (>:N) # 1.0  NB. fill up with delaying threads
-echo^:chk 'gtdot3 a13f'
+techo^:chk 'gtdot3 a13f'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a5' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';0) "0 (>:N) # 1.0  NB. fill up with delaying threads
-echo^:chk 'gtdot3 a13g'
+techo^:chk 'gtdot3 a13g'
 t0 =. 6!:1''
 1. = >pyx
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a6' NB. master should wait
@@ -122,16 +122,16 @@ mtx =. 10 T. 0
 assert. 0 = 11 T. mtx
 'domain error' -: 11 T. etx >:&.> mtx
 mtx =. 10 T. 0
-echo^:chk 'gtdot3 a32'
+techo^:chk 'gtdot3 a32'
 tod =. 6!:1''
-echo^:chk 'gtdot3 a32a'
+techo^:chk 'gtdot3 a32a'
 assert. 0 = >{{11 T. y}}t.''mtx  NB. boxed mtx OK
-echo^:chk 'gtdot3 a32b'
+techo^:chk 'gtdot3 a32b'
 NB. the following line hang on freebsd
 assert. 1 = 11 T. mtx;2.0
-echo^:chk 'gtdot3 a32c'
+techo^:chk 'gtdot3 a32c'
 assert. GITHUBCI +. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
-echo^:chk 'gtdot3 a32d'
+techo^:chk 'gtdot3 a32d'
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0.1
 assert. GITHUBCI +. (0.3 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay

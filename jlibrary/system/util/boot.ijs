@@ -63,6 +63,7 @@ end.
 r=. r,LF,'Library: ',JLIB
 if. IFQT do.
   r=. r,LF,'Qt IDE: ',wd'version'
+  r=. r,LF,'OS Ver: ',wd'qosver'
 elseif. IFJA do.
   r=. r,LF,'J Android: ',wd'version'
 end.

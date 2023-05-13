@@ -48,12 +48,12 @@ empty 0 : 0
 #define LC_TIME         5
 )
 
-loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:(UNAME-:'Linux') <_1
-loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:(UNAME-:'Linux') 4;(,'C');loc   NB. LC_TIME_MASK  1 << 2
-empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:(UNAME-:'Linux') <loc
-loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
-loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc   NB. LC_TIME_MASK  5 << 2
-empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
+loc=: >@{. ((unxlib 'c'),' duplocale x x')&(15!:0) ^:(UNAME-:'Linux') <_1
+loc=: >@{. ((unxlib 'c'),' newlocale x i *c x')&(15!:0) ^:(UNAME-:'Linux') 4;(,'C');loc   NB. LC_TIME_MASK  1 << 2
+empty ((unxlib 'c'),' uselocale x x')&(15!:0) ^:(UNAME-:'Linux') <loc
+loc=: >@{. ((unxlib 'c'),' duplocale x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
+loc=: >@{. ((unxlib 'c'),' newlocale x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc   NB. LC_TIME_MASK  5 << 2
+empty ((unxlib 'c'),' uselocale x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
 0 = efs '2000-01-01'                   NB. epochdt 0 is 2000-01-01
 3313526400000000000 = efs '2105'       NB. nanoseconds from 2000 to 2105
@@ -274,9 +274,9 @@ NB. tzsec parameter
 
 NB. parse datetime string
 
-loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
-loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'fr_FR.UTF-8');loc
-empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
+loc=: >@{. ((unxlib 'c'),' duplocale x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
+loc=: >@{. ((unxlib 'c'),' newlocale x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'fr_FR.UTF-8');loc
+empty ((unxlib 'c'),' uselocale x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
 ((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '20 déc 2022 14:30:18'
 ((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T14:30:18' -: sfe@:efp '2022-12-20T14:30:18'
@@ -303,9 +303,9 @@ empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD 
 ((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T02:30:18' -: sfe@:efp 'Déc 20 2022 02:30:18 PM'
 ((<UNAME)-.@e.;:'Darwin') +. '2022-12-20T00:00:00' -: sfe@:efp 'Déc 20 2022'
 
-loc=: ((unxlib 'c'),' duplocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
-loc=: ((unxlib 'c'),' newlocale > x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc
-empty ((unxlib 'c'),' uselocale > x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
+loc=: >@{. ((unxlib 'c'),' duplocale x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <_1
+loc=: >@{. ((unxlib 'c'),' newlocale x i *c x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc
+empty ((unxlib 'c'),' uselocale x x')&(15!:0) ^:((<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
 4!:55 ;:'IMIN efs efp sfe a e t loc '
 

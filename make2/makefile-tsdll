@@ -16,7 +16,7 @@ OBJS=  \
 
 ifdef TARGET
 $(ODIR)/$(TARGET) : $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 endif
 
 ifdef TARGET_a

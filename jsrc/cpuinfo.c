@@ -444,7 +444,7 @@ EDX[bit 23]  AVX512_FP16
   AVX=1;
 #endif
   if (!(g_cpuFeatures & CPU_X86_FEATURE_AVX) || !check_xcr0_ymm()) AVX=0;
-#elif defined(__MACH__)
+#elif defined(__APPLE__)
 // TODO
   AVX=1;
 #else

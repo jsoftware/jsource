@@ -317,7 +317,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
-#if defined(TARGET_OS_IPHONE)||defined(TARGET_OS_IOS)||defined(TARGET_OS_TV)||defined(TARGET_OS_WATCH)||defined(TARGET_OS_SIMULATOR)||defined(TARGET_OS_EMBEDDED)||defined(TARGET_IPHONE_SIMULATOR)
+#if TARGET_OS_IPHONE||TARGET_OS_IOS||TARGET_OS_TV||TARGET_OS_WATCH||TARGET_OS_SIMULATOR||TARGET_OS_EMBEDDED||TARGET_IPHONE_SIMULATOR
 #define TARGET_IOS 1
 #endif
 #endif

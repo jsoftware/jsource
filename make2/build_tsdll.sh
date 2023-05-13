@@ -110,106 +110,81 @@ case $jplatform64 in
 
 linux/j32) # linux x86
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
 CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 # slower, use 387 fpu and truncate extra precision
 # CFLAGS="$common -m32 -ffloat-store "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl "
-LDFLAGS_a=" crv "
 ;;
 
 linux/j64*) # linux intel 64bit
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
-LDFLAGS_a=" crv "
 ;;
 
 raspberry/j32) # linux raspbian arm
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
-LDFLAGS_a=" crv "
 ;;
 
 raspberry/j64) # linux arm64
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common -march=armv8-a+crc -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
-LDFLAGS_a=" crv "
 ;;
 
 openbsd/j32) # openbsd x86
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-LDFLAGS_a=" crv "
 ;;
 
 openbsd/j64arm) # openbsd arm64
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common -march=armv8-a+crc "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-LDFLAGS_a=" crv "
 ;;
 
 openbsd/j64*) # openbsd intel 64bit nonavx
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-LDFLAGS_a=" crv "
 ;;
 
 freebsd/j32) # freebsd x86
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-LDFLAGS_a=" crv "
 ;;
 
 freebsd/j64arm) # freebsd arm64
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common -march=armv8-a+crc "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-LDFLAGS_a=" crv "
 ;;
 
 freebsd/j64*) # freebsd intel 64bit nonavx
 TARGET=libtsdll.so
-TARGET_a=libtsdll.a
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-LDFLAGS_a=" crv "
 ;;
 
 darwin/j32) # darwin x86
 TARGET=libtsdll.dylib
-TARGET_a=libtsdll.a
 CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl -m32 $macmin "
-LDFLAGS_a=" -static -o "
 ;;
 
 darwin/j64arm) # darwin arm
 TARGET=libtsdll.dylib
-TARGET_a=libtsdll.a
 CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin  "
-LDFLAGS_a=" -static -o "
 ;;
 
 darwin/j64iphoneos) # iphone
-TARGET=libtsdll.dylib
 TARGET_a=libtsdll.a
 CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin  "
@@ -217,7 +192,6 @@ LDFLAGS_a=" -static -o "
 ;;
 
 darwin/j64iphonesimulator) # iphone simulator
-TARGET=libtsdll.dylib
 TARGET_a=libtsdll.a
 CFLAGS="$common $macmin "
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
@@ -226,10 +200,8 @@ LDFLAGS_a=" -static -o "
 
 darwin/j64*) # darwin intel 64bit
 TARGET=libtsdll.dylib
-TARGET_a=libtsdll.a
 CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
-LDFLAGS_a=" -static -o "
 ;;
 
 *)

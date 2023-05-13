@@ -61,12 +61,12 @@ DF1(jthost){A z;
  F1RANK(1,jthost,self);
  RZ(w=vslit(w));
 // #if SY_WINCE
-#if SY_WINCE || SY_WIN32
+#if SY_WINCE || SY_WIN32 || defined(TARGET_IOS)
  ASSERT(0,EVDOMAIN);
 #else
 {
  A t;I b=0;C*fn,*s;F f;I n;
-#if defined(ANDROID) || defined(TARGET_IOS)
+#if defined(ANDROID)
  const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
 #endif
  n=AN(w);
@@ -87,7 +87,7 @@ DF1(jthost){A z;
 #endif
  strcat(fn,"/tmp.XXXXXX");
  {int fd=mkstemp(fn); close(fd);}
-#if defined(ANDROID) || (defined(__MACH__) && !defined(TARGET_IOS))
+#if defined(ANDROID) || (defined(__APPLE__) && !defined(TARGET_IOS))
 /* no posix_spawn */
  b=!system(s);
 #else
@@ -102,7 +102,7 @@ DF1(jthost){A z;
  char * argv[] = {"/bin/sh","-c",NULL,NULL};
  argv[2] = s;
  if (!(status = posix_spawn(&pid, argv[0], &action, NULL, &argv[0], environ))){
-#if defined(__MACH__)
+#if defined(__APPLE__)
 /* macos different behavior (from linux) for SIGCHLD */
 /* no interface error will be reported */
    waitpid(pid, &status, 0); b = WIFEXITED(status) && !WEXITSTATUS(status);

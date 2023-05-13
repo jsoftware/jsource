@@ -99,8 +99,7 @@ DF1(jttobase64){
  // Allocate result
  A z; GATV0(z,LIT,zn<<2,1); UI4 *zv=UI4AV(z);  // result block, pointer into it
  C *wv=CAV(w);  // input pointer
-// #if defined(__wasm__)  // superseded by library
-#if 0   // superseded by library
+#if defined(__wasm__)  // superseded by library
  // Handle each 3-byte group, producing a 4-byte result.  We load 3 bytes at a time, so we may read into the padding area, but never
  // past the valid allocation.  We don't worry about load alignment
  for(;n3;--n3){

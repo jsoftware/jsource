@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.4.22'
+JLIB=: '9.5.1'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -1648,7 +1648,7 @@ b=. b > (1,}:b) +. }.c,0
 )
 18!:4 <'z'
 3 : 0''
-if. IFIOS do.
+if. IFIOS>IFQT do.
   r=. 'Engine: ',9!:14''
   r=. r,LF,'Library: ',JLIB
   r=. r,LF,'J/iOS Version: ',VERSION
@@ -1813,7 +1813,7 @@ if. 1 e. p e. CasePaths_j_ do. y else. tolower y end.
 )
 3 : 0''
 if. UNAME-:'Darwin' do.
-  filecase=: tolower
+  filecase=: tolower`]@.IFIOS
   isroot=: '/' = {.
 elseif. IFUNIX do.
   filecase=: ]
@@ -2043,7 +2043,7 @@ end.
 if. IFJHS do.
   redirecturl_jijxm_=: file2url cmd
   EMPTY return.
-elseif. IFIOS do.
+elseif. IFIOS>IFQT do.
   jh '<a href="',(file2url cmd),'"</a>'
   EMPTY return.
 end.
@@ -2117,7 +2117,7 @@ end.
 if. IFJHS do.
   redirecturl_jijxm_=: file2url cmd
   EMPTY return.
-elseif. IFIOS do.
+elseif. IFIOS>IFQT do.
   jh '<a href="',(file2url cmd),'"</a>'
   EMPTY return.
 end.
@@ -2434,7 +2434,7 @@ end.
 if. IFJHS do.
   redirecturl_jijxm_=: file2url cmd
   EMPTY return.
-elseif. IFIOS do.
+elseif. IFIOS>IFQT do.
   jh '<a href="',(file2url cmd),'"</a>'
   EMPTY return.
 end.

@@ -18,7 +18,7 @@
  #define filesepx "\\"
 #else
  #define filesepx "/"
- #ifdef __MACH__
+ #ifdef __APPLE__
   #define JDLLNAME "libj.dylib"
  #else
   #define JDLLNAME "libj.so"

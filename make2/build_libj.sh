@@ -5,6 +5,8 @@ cd "$(dirname "$0")"
 echo "entering `pwd`"
 
 jplatform64=$(./jplatform64.sh)
+unset TARGET
+unset TARGET_a
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -33,11 +35,13 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 case "$jplatform64" in
 	darwin/j64iphoneos)
 	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
 	 CC="$(xcrun --sdk iphoneos --find clang)"
 	 AR="$(xcrun --sdk iphoneos --find libtool)"
 	 macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64";;
 	darwin/j64iphonesimulator)
 	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
 	 CC="$(xcrun --sdk iphonesimulator --find clang)"
 	 AR="$(xcrun --sdk iphonesimulator --find libtool)"
 	 macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64";;
@@ -51,7 +55,10 @@ case "$jplatform64" in
 	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
- wasm*) NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
+ wasm*)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
 esac
 make="${make:=make}"
 
@@ -306,14 +313,12 @@ case $jplatform64 in
 
  linux/j32*) # linux x86
   TARGET=libj.so
-  TARGET_a=libj.a
   # faster, but sse2 not available for 32-bit amd cpu
   # sse does not support mfpmath=sse in 32-bit gcc
   CFLAGS="$common -m32 -msse2 -mfpmath=sse "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
   LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
@@ -323,10 +328,8 @@ case $jplatform64 in
 
  linux/j64avx512*) # linux intel 64bit avx512
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -339,10 +342,8 @@ case $jplatform64 in
 
  linux/j64avx2*) # linux intel 64bit avx2
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -354,10 +355,8 @@ case $jplatform64 in
 
  linux/j64*) # linux intel 64bit nonavx
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -msse3 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
@@ -367,10 +366,8 @@ case $jplatform64 in
 
  raspberry/j32*) # linux raspbian arm
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -std=gnu99 -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
@@ -379,10 +376,8 @@ case $jplatform64 in
 
  raspberry/j64*) # linux arm64
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
@@ -392,14 +387,12 @@ case $jplatform64 in
 
  openbsd/j32*) # openbsd x86
   TARGET=libj.so
-  TARGET_a=libj.a
   # faster, but sse2 not available for 32-bit amd cpu
   # sse does not support mfpmath=sse in 32-bit gcc
   CFLAGS="$common -m32 -msse2 -mfpmath=sse "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
   LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -lkvm $LDOPENMP32 $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
@@ -409,10 +402,8 @@ case $jplatform64 in
 
  openbsd/j64arm) # openbsd arm64
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -march=armv8-a+crc -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
@@ -422,10 +413,8 @@ case $jplatform64 in
 
  openbsd/j64avx512*) # openbsd intel 64bit avx512
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -438,10 +427,8 @@ case $jplatform64 in
 
  openbsd/j64avx2*) # openbsd intel 64bit avx2
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -453,10 +440,8 @@ case $jplatform64 in
 
  openbsd/j64*) # openbsd intel 64bit nonavx
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -msse3 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -lkvm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
@@ -466,14 +451,12 @@ case $jplatform64 in
  
  freebsd/j32*) # freebsd x86
   TARGET=libj.so
-  TARGET_a=libj.a
   # faster, but sse2 not available for 32-bit amd cpu
   # sse does not support mfpmath=sse in 32-bit gcc
   CFLAGS="$common -m32 -msse2 -mfpmath=sse "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
   LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm $LDOPENMP32 $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
@@ -483,10 +466,8 @@ case $jplatform64 in
 
  freebsd/j64arm) # freebsd arm64
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -march=armv8-a+crc -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
@@ -496,10 +477,8 @@ case $jplatform64 in
 
  freebsd/j64avx512*) # freebsd intel 64bit avx512
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -512,10 +491,8 @@ case $jplatform64 in
 
  freebsd/j64avx2*) # freebsd intel 64bit avx2
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -527,10 +504,8 @@ case $jplatform64 in
 
  freebsd/j64*) # freebsd intel 64bit nonavx
   TARGET=libj.so
-  TARGET_a=libj.a
   CFLAGS="$common -msse3 "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
@@ -540,10 +515,8 @@ case $jplatform64 in
  
  darwin/j32*) # darwin x86
   TARGET=libj.dylib
-  TARGET_a=libj.a
   CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin "
-  LDFLAGS_a=" -static -o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC32}"
   GASM_FLAGS="-m32 $macmin "
@@ -553,10 +526,8 @@ case $jplatform64 in
 
  darwin/j64avx512*) # darwin intel 64bit
   TARGET=libj.dylib
-  TARGET_a=libj.a
   CFLAGS="$common $macmin -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
-  LDFLAGS_a=" -static -o "
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -569,10 +540,8 @@ case $jplatform64 in
 
  darwin/j64avx2*) # darwin intel 64bit
   TARGET=libj.dylib
-  TARGET_a=libj.a
   CFLAGS="$common $macmin -DC_AVX2=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
-  LDFLAGS_a=" -static -o "
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -584,10 +553,8 @@ case $jplatform64 in
 
  darwin/j64arm*) # darwin arm
   TARGET=libj.dylib
-  TARGET_a=libj.a
   CFLAGS="$common $macmin $common -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
-  LDFLAGS_a=" -static -o "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
@@ -596,9 +563,8 @@ case $jplatform64 in
  ;;
 
  darwin/j64iphoneos) # iphone
-  TARGET=libj.dylib
   TARGET_a=libj.a
-  CFLAGS="$common $macmin $common -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
   LDFLAGS_a=" -static -o "
   OBJS_AESARM=" aes-arm.o "
@@ -608,10 +574,9 @@ case $jplatform64 in
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
- darwin/j64iphoneimulator) # iphone simulator
-  TARGET=libj.dylib
+ darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libj.a
-  CFLAGS="$common $macmin $common -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
   LDFLAGS_a=" -static -o "
   OBJS_AESNI=" aes-ni.o "
@@ -623,10 +588,8 @@ case $jplatform64 in
 
  darwin/j64*) # darwin intel 64bit nonavx
   TARGET=libj.dylib
-  TARGET_a=libj.a
   CFLAGS="$common $macmin -msse3 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
-  LDFLAGS_a=" -static -o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
@@ -646,7 +609,6 @@ case $jplatform64 in
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP32 $LDTHREAD "
-  LDFLAGS_a=" crv "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
@@ -671,7 +633,6 @@ case $jplatform64 in
   TARGET=j.dll
   CFLAGS="$common $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
@@ -699,7 +660,6 @@ case $jplatform64 in
   TARGET=j.dll
   CFLAGS="$common $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   CFLAGS_SIMD=" -march=haswell -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
@@ -726,7 +686,6 @@ case $jplatform64 in
   TARGET=j.dll
   CFLAGS="$common -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD "
-  LDFLAGS_a=" crv "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
@@ -750,7 +709,7 @@ case $jplatform64 in
 # these flags do not work on iOS
 # -msse2 -msimd128
 # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
-  LDFLAGS_a=" rs "
+  LDFLAGS_a=" rcs "
   SRC_ASM=""
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
@@ -783,12 +742,6 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
-case "$jplatform64" in
- wasm/j32)
-  mkdir -p ../bin/$jplatform64 || exit 1
-  cp -p ../mpir/linux/wasm32/libgmp.a ../bin/$jplatform64/libj.a || exit 1 # the next $(AR) rs .. combine libgmp.a with libj.a
-  ;;
-esac
 export CC AR CFLAGS LDFLAGS LDFLAGS_a TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then

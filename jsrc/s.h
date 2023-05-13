@@ -14,6 +14,7 @@
 /* PROCESS - processing on a selected name                      */
 
 // The created function is called as f(jt,a,w).  Within SELECT and PROCESS, L* d is the symbol being processed
+// w is the symbol table to be traversed, a is unused in the macro
 
 #define SYMWALK(f,T,TYPE,COUNT,COL,SELECT,PROCESS)  \
  F2(f){A z;LX *e,j,k;I i,m=0,n;L*d;T*zv;                         \

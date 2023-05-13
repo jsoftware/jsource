@@ -276,8 +276,9 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
 }
 #endif
 
-
-
+#if 0  // for debugging
+static SYMWALK(jtchkval0k, I,INT,1,1, AT(d->val)&NOUN&&AK(d->val)==0?SEGFAULT:0 , ;)
+#endif
 
 // Run parser, creating a new debug frame.  Explicit defs, which make other tests first, go through jtparsea except during debug/pm
 // the result has bit 0 set if final assignment

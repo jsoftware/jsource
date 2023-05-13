@@ -473,8 +473,10 @@ A jtcompidx(J jt,I axislen,A ind){
  // Since we expect the count to be small, we allocate a return block of the maximum size.  We then use the tail end
  // to hold a bitmask of the values that have not been crossed off
  RZ(ind=likely(ISDENSETYPE(AT(ind),INT))?ind:cvt(INT,ind));  // ind is now an INT vector, possibly the input argument
- A z; GATV0(z,INT,axislen-1,1) I *zv0=IAV1(z), *zv=zv0;   // allocate the result/temp block.  There must be at least one value crossed off
- I bwds=(axislen+(BW-1))>>LGBW; I *bv=zv+axislen-bwds; mvc(bwds*SZI,bv,SY_64?4*SZI:2*SZI,validitymask); bv[bwds-1]=~((~1ll)<<((axislen-1)&(BW-1)));  // fill the block with 1s to indicate we need to write; clear ending 0s
+ I allolen=MAX(axislen-1,1);  // number of words needed.  There must be at least one value crossed off, but we always need at least 1 word for bitmask
+ A z; GATV0(z,INT,allolen,1) I *zv0=IAV1(z), *zv=zv0;   // allocate the result/temp block.  
+ I bwds=(axislen+(BW-1))>>LGBW;  // number of words needed: one bit for each valid index vallue
+ I *bv=zv+allolen-bwds; mvc(bwds*SZI,bv,SY_64?4*SZI:2*SZI,validitymask); bv[bwds-1]=~((~1ll)<<((axislen-1)&(BW-1)));  // fill the block with 1s to indicate we need to write; clear ending 0s
  I *iv=IAV(ind); DO(AN(ind), I ix=iv[i]; if((UI)ix>=(UI)axislen){ix+=axislen; ASSERT((UI)ix<(UI)axislen,EVINDEX)} bv[ix>>LGBW]&=~(1ll<<(ix&(BW-1))); )  // turn off the bit for each index
  I zbase=0; DO(bwds, I bmask=*bv++; while(bmask){I bitno=CTTZI(bmask); *zv++=zbase+bitno; bmask&=bmask-1;} zbase+=BW;)  // copy an index for each remaining bit, clearing LSBs one by one
  AN(z)=AS(z)[0]=zv-zv0;

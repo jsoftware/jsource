@@ -212,12 +212,12 @@ static X jtxd1(J jt, D p, I mode) {PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  ASSERT(p!= inf, EWRAT);
  ASSERT(p!=-inf, EWRAT);
  GEMP0; mpz_t mpz; jmpz_init_set_d(mpz, p); X z= Xmp(z);
- EPILOG(z); // FIXME: haven't properly implemented gc support for X
+ EPILOG(z); 
 }
 
 static KF2(jtXfromD){ // array content yv as X from array w of D
- GMP; X*y= (X*)yv; I wn= AN(w); D*wv= DAV(w); mpz_t mpw;
- DO(wn, D wvi= wv[i]; ASSERT(!(inf==wvi||infm==wvi),EWIRR); GEMP0; jmpz_init_set_d(mpw, wvi); y[i]= Xmp(w););
+ GMP; X*y= (X*)yv; I wn= AN(w); D*wv= DAV(w);
+ DO(wn, D wvi= wv[i]; ASSERT(!(inf==wvi||infm==wvi),EWIRR); y[i]= xd1(wvi, mode););
  R !jt->jerr;
 }
 

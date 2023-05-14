@@ -606,7 +606,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
- GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=(~(I)jtinplace>>JTDESCENDX);
+ GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=(~(I)jtinplace>>JTDESCENDX)&1;
  if(1<ai){GATV0(x,INT,n,1); xv=AV(x);
  }
  for(i=0;i<m;++i){

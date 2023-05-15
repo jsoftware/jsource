@@ -14,6 +14,7 @@ x=: <._1+2^31
 (1&p: -: isprime) x-2*i.50x
 (1&p: -: isprime) x+  i:50
 (1&p: -: isprime) x+2*i:50
+(1&p: -: isprime) _3+2^4.0
 
 1 p: x=: p: 10 ?@$ 1e7
 1 p: x=: {:@q: 10 #. 6 18 ?@$ 10x

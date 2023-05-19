@@ -188,7 +188,7 @@ do{
     // We free only the z block itself, not its children: children were incorporated above
     // if the value iz zappable, zap it (it may have become zappable, if it turned recursive above).  Free only the root block
     // We should do this for virtual blocks also, to get the full effect of tpop.  When we can zap virtuals we will
-    if(likely(zzoktozap<0)){*AZAPLOC(z)=0; mf(z);}  // free the root block.  If is has descendants their ownership was transferred to zz.
+    if(likely(zzoktozap<0)){*AZAPLOC(z)=0; mf(z);}  // free the root block.  If it has descendants their ownership was transferred to zz.
 #if !ZZSTARTATEND
     zzcellp+=zzcelllen;  // advance to next cell
 #else

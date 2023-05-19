@@ -1403,21 +1403,22 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GASPARSE0(n,t,a,r) {GATV0(n,BOX,(sizeof(P)/sizeof(A)),r); AN(n)=1; AT(n)=(t)|SPARSE; ACINIT(n,ACUC1);}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
-// Item count given frame and rank: AS(f) unless r is 0; then 1 
-#define SETICFR(w,f,r,targ) (targ=(I)(AS(w)+f), targ=(r)?targ:(I)&I1mem, targ=*(I*)targ)
-// Shape item s, but 1 if index is < 0
-#define SHAPEN(w,s,targ) (targ=AS(w)[s], targ=(s)<0?1:targ)
+#define SHAPEN(w,s,targ) (targ=AS(w)[s], targ=(s)<0?1:targ)  // s must not be very negative, and will be safe to fetch
 // Item count
-#define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? AS(w)[0] : 1L)
+#define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? AS(w)[0] : 1L).  Always safe to fetch from AS()[0]
+// Item count given frame and rank: AS(f) unless r is 0; then 1 
+#define SETICFR(w,f,r,targ) (targ=(I)(AS(w)+f), targ=(r)?targ:(I)I1mem, targ=*(I*)targ)
+// Shape item s, but 1 if index is < 0
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 // compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched
 #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \
-         if((len)<5)stmt  /*  len 5 or less, hash is enough */ \
-         else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL for(;lzz;c0+=((lzz-1)&(SZI-1))+1,c1+=((lzz-1)&(SZI-1))+1,lzz=(lzz-1)&-SZI)if(((*(I*)c0^*(I*)c1)<<((-lzz&(SZI-1))<<LGBB))!=0)break; \
-          if(likely(lzz==0)){stmt} \
+         if((len)<=5){stmt}  /*  len 5 or less, hash is enough */ \
+         else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL do{lzz-=SZI; I t=*(I*)(c0+lzz)^*(I*)(c1+lzz); if(t&(~0<<(REPSGN(lzz)&-lzz)))break;}while(lzz>0); \
+          if(likely(lzz<=0)){stmt} \
          } \
         }
+// obsolete          else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL for(;lzz;c0+=((lzz-1)&(SZI-1))+1,c1+=((lzz-1)&(SZI-1))+1,lzz=(lzz-1)&-SZI)if(((*(I*)c0^*(I*)c1)<<((-lzz&(SZI-1))<<LGBB))!=0)break; \
 
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable and non-pristine

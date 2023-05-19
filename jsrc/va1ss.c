@@ -72,9 +72,9 @@ A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
 
  case SSINGCASE(VA1CEXP-VA1ORIGIN,SSINGENC(B01)): SSSTORENV((B)wiv?2.71828182845904523536:1.0,z,FL,D) R z;
  case SSINGCASE(VA1CEXP-VA1ORIGIN,SSINGENC(INT)):
-    SSSTORE(wiv<EMIN?0.0:EMAX<wiv?inf:exp((D)wiv),z,FL,D) R z;
+    SSSTORE(unlikely(wiv<EMIN)?0.0:unlikely(EMAX<wiv)?inf:exp((D)wiv),z,FL,D) R z;
  case SSINGCASE(VA1CEXP-VA1ORIGIN,SSINGENC(FL)):
-    SSSTORENVFL(wdv<EMIN?0.0:EMAX<wdv?inf:exp(wdv),z,FL,D) R z;
+    SSSTORENVFL(unlikely(wdv<EMIN)?0.0:unlikely(EMAX<wdv)?inf:exp(wdv),z,FL,D) R z;
 
 
  case SSINGCASE(VA1CLOG-VA1ORIGIN,SSINGENC(B01)): SSSTORENV((B)wiv?0.0:infm,z,FL,D) R z;

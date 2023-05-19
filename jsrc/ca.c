@@ -94,6 +94,12 @@ static DF2(jtmodpow2){A h;B b,c;I m,n,x,z;
 static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
+// #@> y
+static DF1(jttallyatopopen){F1PREFIP; A z; ARGCHK1(w); I an=AN(w); GATV(z,INT,an,AR(w),AS(w)) I *zv=IAV(z);
+ if(likely(AT(w)&BOX)){A *wv=AAV(w); DO(an, A wc=C(wv[i]); I ic; SETIC(wc,ic); zv[i]=ic;)}
+ else{mvc(an*SZI, zv, SZI, (iotavec-IOTAVECBEGIN+1));}
+ RETF(z);
+}
 
 
 // u@v and u@:v
@@ -213,8 +219,9 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    // are both set only in atomic primitives
    if(unlikely((wv->lrr|wv->mr|(~wv->flag&(VISATOMIC1|VJTFLGOK1)))==0))if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,8,"(008) f/@g is the same as g when g is atomic\n"));
    break;
-  case CPOUND:  if(d==CCOMMA)f1=jtnatoms; if(d==CDOLLAR)f1=jtrank; break;    // #@,  or #@$
-  case CSTAR:   if(d==CPOUND)f1=jtisitems; break;  // *@#
+// obsolete   case CPOUND:  if(d==CCOMMA)f1=jtnatoms; if(d==CDOLLAR)f1=jtrank; break;    // #@,  #@$
+  case CPOUND:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
+  case CSTAR:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
   case CCEIL:   f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
   case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2);  break;
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
@@ -475,8 +482,9 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
   case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y
   case CCOMMA: if(c==CBOX){f2=jtjlink; linktype=ACINPLACE;} break;  // x ,&< y   supports IP 
-  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;  // >.@g
-  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;   // <.@g
+  case CPOUND: f1=c==COPE?jttallyatopopen:f1; break;    //  #&>
+  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;  // >.&g
+  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;   // <.&g
   case CRAZE:  // detect ;@(<@(f/\));.
    if(c==CCUT&&boxatop(w)){  // w is <@g;.k
     if((((I)1)<<(v->localuse.lu1.gercut.cutn+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?

@@ -18,10 +18,10 @@
  #endif
 #else
  #include <unistd.h>
- #if !defined(__wasm__)
+ #if !defined(__wasm__) && !defined(TARGET_IOS)
  #include <dlfcn.h>
- #endif
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
+ #endif
  #define _stdcall
  #define PLEN PATH_MAX // path length
  #define filesep '/'
@@ -108,7 +108,7 @@ void* jehjdll(){return hjdll;}
 // load JE, Jinit, getprocaddresses, JSM
 JST* jeload(void* callbacks)
 {
-#if defined(JAMALGAM) || defined(__wasm__)
+#if defined(JAMALGAM)
  jt=JInit();
  if(!jt) return 0;
  JSM(jt,callbacks);
@@ -119,6 +119,8 @@ JST* jeload(void* callbacks)
  jgetlocale=JGetLocale;
  jgeta=JGetA;
  jseta=JSetA;
+#elif defined(__wasm__) || defined(TARGET_IOS)
+ exit(1);    /* not applicable to these platforms */
 #else
 #ifdef _WIN32
  WCHAR wpath[PLEN];
@@ -147,6 +149,10 @@ JST* jeload(void* callbacks)
 // WIN arg is 0, Unix arg is argv[0]
 void jepath(char* arg,char* lib)
 {
+#if defined(__wasm__) || defined(TARGET_IOS)
+ *pathdll = *libpathj = *path = 0;  /* libj is static library */
+ return;
+#else
 #ifndef _WIN32
  struct stat st;
 #endif
@@ -329,6 +335,7 @@ void jepath(char* arg,char* lib)
 	 if((p1=strrchr(pathdll,filesep))){strcpy(libpathj,pathdll);libpathj[p1-pathdll]=0;}
 #endif
  }
+#endif
 }
 
 // called by jwdp (java jnative.c) to set path
@@ -350,9 +357,6 @@ int jefirst(int type,char* arg)
 {
 	int r; char* p,*q;
 	char* input=malloc(2000+strlen(arg));
-#if 0
-	char buf[50];
-#endif
 	int runjscript=!!(type&256);
 	type=type&255;
 	*input=0;
@@ -421,16 +425,17 @@ int jefirst(int type,char* arg)
 #endif
 	if(FHS) strcat(input,"[FHS_z_=:1");
 	else strcat(input,"[FHS_z_=:0");
-#if 0
-	sprintf(buf,"(" FMTI ")",(I)(intptr_t)hjdll);
-	strcat(input,"[HLIBJ_z_=:");
-	strcat(input,buf);
-#endif
 	if(runjscript) strcat(input,"[RUNJSCRIPT_z_=:1");
 	else strcat(input,"[RUNJSCRIPT_z_=:0");
 	strcat(input,"[BINPATH_z_=:'");
 #if defined(__wasm__)
-  strcat(input,"/jlibrary/bin");
+  char* homedir;
+  if((homedir = getenv("HOME"))) strcat(input,homedir);
+  strcat(input,"/j/bin");
+#elif defined(TARGET_IOS)
+  char* homedir;
+  if((homedir = getenv("HOME"))) strcat(input,homedir);
+  strcat(input,"/Documents/j/bin");
 #else
 	if(!FHS){
 	p=path;
@@ -449,7 +454,6 @@ int jefirst(int type,char* arg)
 	strcat(input,"'");
 
 	strcat(input,"[LIBFILE_z_=:'");
-#if !defined(JAMALGAM) && !defined(__wasm__)
 	p=pathdll;
 	q=input+strlen(input);
 	while(*p)
@@ -458,7 +462,6 @@ int jefirst(int type,char* arg)
 		*q++=*p++;
 	}
 	*q=0;
-#endif
 	strcat(input,"'");
 
 	r=jedo(input);
@@ -480,7 +483,7 @@ void jefail(char* msg)
 	 buf, (sizeof(buf)/sizeof(char)), 0);
 	strcat(msg,buf);
 #else
-#if !defined(__wasm__)
+#if !defined(__wasm__) && !defined(TARGET_IOS)
 	char *dlerr=dlerror();
 	if(dlerr)strcat(msg,dlerr);
 	else{

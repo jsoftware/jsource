@@ -187,14 +187,14 @@ LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin  "
 darwin/j64iphoneos) # iphone
 TARGET_a=libtsdll.a
 CFLAGS="$common $macmin -march=armv8-a+crc "
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin  "
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin  "
 LDFLAGS_a=" -static -o "
 ;;
 
 darwin/j64iphonesimulator) # iphone simulator
 TARGET_a=libtsdll.a
 CFLAGS="$common $macmin "
-LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
+LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin "
 LDFLAGS_a=" -static -o "
 ;;
 
@@ -214,9 +214,14 @@ echo "CFLAGS=$CFLAGS"
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-tsdll obj/$jplatform64/.
-export CC AR CFLAGS LDFLAGS LDFLAGS_a TARGET TARGET_a jplatform64
+export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a jplatform64
 cd obj/$jplatform64/
-$make -f makefile-tsdll all
+if [ "x$MAKEFLAGS" = x'' ] ; then
+ if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+ $make -j$par -f makefile-tsdll all
+else
+ $make -f makefile-tsdll all
+fi
 retval=$?
 cd -
 exit $retval

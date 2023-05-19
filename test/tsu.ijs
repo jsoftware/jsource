@@ -29,6 +29,16 @@ testfiles=: 3 : 0   NB. y. is prefix - e.g., 'g' or 'gm' or 'gs'
  testpath&,&.> /:~ {."1 [1!:0 testpath,y,'*.ijs'
 )
 
+NB. redirect test messages to logcat if available
+3 : 0''
+if. 3=nc<'logcat_z_' do.
+ techo_z_=: echo_z_ empty logcat_z_
+else.
+ techo_z_=: echo_z_ empty 1!:2&5
+end.
+EMPTY
+)
+
 NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
@@ -38,6 +48,8 @@ blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. require multithreading
 blacklist=: blacklist, (-.15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs'  NB. 15!:0 unavailable
 blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
+blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp422.ijs';'gsp432.ijs'  NB. crash
+blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays
@@ -76,12 +88,12 @@ eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[4!:55'x';'y'[echo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
+prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[4!:55'x';'y'[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0
 10 s: GLOBALSYMBOL
 empty 0&T.^:(0=1&T.) ::1:''
-1: echo^:ECHOFILENAME RUNFILE,'  time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
+1: techo^:ECHOFILENAME RUNFILE,'  time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
 )
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 
@@ -209,7 +221,7 @@ RUND=: RBAD@('RB'&RSET)@(ex02`(0!:2)@.(*@".@'Debug'))@('RF'&RSET)  NB. Run w/dis
 
 RUN1=: 13 : 'ex02`(0!:2)@.(*@".@''Debug'') <testpath,y,''.ijs'''
 
-RESUB1=: 3 : 'y[echo >y'
+RESUB1=: 3 : 'y[techo >y'
 RESUB2=: (13 : '-.ex03 RESUB1 y')"0
 RESUB4=: (13 : '-.ex04 RESUB1 y')"0
 RECHO=: 13 : '+/ RESUB2 y'
@@ -218,7 +230,7 @@ RECHO4=: 13 : '+/ RESUB4 y'
 NB. bill extensions
 
 GITHUBCI=: 0       NB. running on github action
-ECHOFILENAME=: 0   NB. echo file name
+ECHOFILENAME=: IFIOS+.IFRASPI+.((<UNAME)e.'Android';'Wasm')  NB. echo file name
 PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
@@ -234,14 +246,14 @@ assert. (<'base')-:18!:5''
 assert. 0=(;:'x y oldnl RLAST') e. nl''
 oldnl=: nl''
 for_y234. y123 do.
- echo RLAST=: >y234
+ techo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
+  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
@@ -249,16 +261,16 @@ for_y234. y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
+  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
-  echo (+/ % #) 0 s: 12
+  techo (+/ % #) 0 s: 12
  end.
 end.
 4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
-echo 'Finish'
+techo 'Finish'
 ''
 )
 
@@ -268,19 +280,19 @@ y123=. y
 d123=. Debug
 assert. (<'base')-:18!:5''
 4!:55 ;:'x y oldnl RLAST'
-echo (;:'x y oldnl RLAST') (e.#[) nl''
+techo (;:'x y oldnl RLAST') (e.#[) nl''
 assert. 0=(;:'x y oldnl RLAST') e. nl''
 oldnl=: nl''
 while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
-  echo RLAST=: >y234
+  techo RLAST=: >y234
   save_ran=:9!:44''
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  echo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
+  techo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
@@ -288,17 +300,17 @@ while. x123~:0 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  echo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
+  techo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
 NB.   11 s: ''    NB. reset symbol
-  echo (+/ % #) 0 s: 12
+  techo (+/ % #) 0 s: 12
  end.
  x123=. <:x123
 end.
 4!:55 ;:'oldnl save_ran'
 Debug=: d123
 dbr 0
-echo 'Finish'
+techo 'Finish'
 ''
 )
 
@@ -311,14 +323,14 @@ assert. (<'base')-:18!:5''
 assert. 0=(;:'x y oldnl RLAST') e. nl''
 oldnl=: nl''
 for_y234. y123{~?~#y123 do.
- echo RLAST=: >y234
+ techo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
+  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
@@ -326,16 +338,16 @@ for_y234. y123{~?~#y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  echo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
+  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
   assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
-  echo (+/ % #) 0 s: 12
+  techo (+/ % #) 0 s: 12
  end.
 end.
 4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
-echo 'Finish'
+techo 'Finish'
 ''
 )
 
@@ -353,7 +365,7 @@ while. x123~:0 do.
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
  assert. (<'base')-:18!:5''
- echo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
+ techo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
  assert. ((;:'oldnl')-.~nl'') -: oldnl
  Debug=: 1
  0!:2<testpath,y123,'.ijs'
@@ -361,16 +373,16 @@ while. x123~:0 do.
  assert. 0 s: 11
  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
  assert. (<'base')-:18!:5''
- echo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
+ techo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
  assert. ((;:'oldnl')-.~nl'') -: oldnl
  x123=. <:x123
 NB.  11 s: ''    NB. reset symbol
- echo (+/ % #) 0 s: 12
+ techo (+/ % #) 0 s: 12
 end.
 4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
-echo 'Finish'
+techo 'Finish'
 ''
 )
 
@@ -425,7 +437,7 @@ tsu_pacman=: 0 : 0
 runpacman=: 3 : 0
 if. IFWIN do.
  if. -.fexist'~tools/ftp/busybox.exe' do.
-  echo'copy production J ~tools/ftp folder to jbld/j64/tools'
+  techo'copy production J ~tools/ftp folder to jbld/j64/tools'
   'need ~tools/ftp/busybox.exe'assert 0
  end.
 end.
@@ -446,11 +458,11 @@ allorcmdline=: 3 :0
   if. #args do. 
     files=. ;testfiles L:0 args
     if. #files do.
-      echo }.@(}.~i:&'/')each files
+      techo }.@(}.~i:&'/')each files
       files
     else.
-      echo 'no testfiles found for:'
-      echo args
+      techo 'no testfiles found for:'
+      techo args
       NB. fail
     end.
   else.
@@ -458,7 +470,7 @@ allorcmdline=: 3 :0
   end.
 )
 
-echo 0 : 0
+techo 0 : 0
 see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 
    RUN  ddall  NB. report scripts that fail
@@ -467,5 +479,5 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 
 
 empty 0&T.^:(0=1&T.) ::1:''
-echo 9!:14''
-echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
+techo 9!:14''
+techo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''

@@ -15,10 +15,10 @@
  #define JDLLNAME "\\j.dll"
 #else
  #define _stdcall
- #if !defined(__wasm__)
+ #if !defined(__wasm__) && !defined(TARGET_IOS)
  #include <dlfcn.h>
- #endif
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
+ #endif
  #ifdef __APPLE__
   #define JDLLNAME "/libj.dylib"
  #else

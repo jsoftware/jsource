@@ -189,10 +189,10 @@ Similarly, calls to external libraries MUST be preceded by a vzeroupper, to put 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#if !defined(__wasm__)
+#if !defined(__wasm__) && !defined(TARGET_IOS)
 #include <dlfcn.h>
 #endif
-#ifdef __APPLE__
+#ifdef __MACH__
 #include <mach-o/dyld.h>
 #else // Linux
 #include <link.h>

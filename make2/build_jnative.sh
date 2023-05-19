@@ -29,10 +29,32 @@ echo "jplatform64=$jplatform64"
 # too early to move main linux release package to gcc 5
 
 case "$jplatform64" in
-	darwin/j64arm) macmin="-arch arm64 -mmacosx-version-min=11";;
-	darwin/*) macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	darwin/j64iphoneos)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 CC="$(xcrun --sdk iphoneos --find clang)"
+	 AR="$(xcrun --sdk iphoneos --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64";;
+	darwin/j64iphonesimulator)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 CC="$(xcrun --sdk iphonesimulator --find clang)"
+	 AR="$(xcrun --sdk iphonesimulator --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64";;
+	darwin/j64arm)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11";;
+	darwin/*)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
+ wasm*)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
 esac
 make="${make:=make}"
 
@@ -174,6 +196,16 @@ TARGET=libjnative.dylib
 CFLAGS="$common $macmin -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
 ;;
+darwin/j64iphoneos) # iphone
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
+;;
+darwin/j64iphonesimulator) # iphone simulator
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib -install_name libjnative.dylib "
+;;
 darwin/j64*)
 TARGET=libjnative.dylib
 CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
@@ -189,9 +221,14 @@ echo "CFLAGS=$CFLAGS"
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jnative obj/$jplatform64/.
-export CFLAGS LDFLAGS TARGET jplatform64
+export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a jplatform64
 cd obj/$jplatform64/
-$make -f makefile-jnative
+if [ "x$MAKEFLAGS" = x'' ] ; then
+ if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+ $make -j$par -f makefile-jnative all
+else
+ $make -f makefile-jnative
+fi
 retval=$?
 cd -
 exit $retval

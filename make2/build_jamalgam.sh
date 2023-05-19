@@ -31,11 +31,32 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 # too early to move main linux release package to gcc 5
 
 case "$jplatform64" in
- darwin/j64arm*) macmin="-arch arm64 -mmacosx-version-min=11";;
- darwin/*)      macmin="-arch x86_64 -mmacosx-version-min=10.6";;
+	darwin/j64iphoneos)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 CC="$(xcrun --sdk iphoneos --find clang)"
+	 AR="$(xcrun --sdk iphoneos --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64";;
+	darwin/j64iphonesimulator)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 CC="$(xcrun --sdk iphonesimulator --find clang)"
+	 AR="$(xcrun --sdk iphonesimulator --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64";;
+	darwin/j64arm)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11";;
+	darwin/*)
+	 CC="$(xcrun --sdk macosx --find clang)"
+	 AR="$(xcrun --sdk macosx --find libtool)"
+	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
 	openbsd/*) make=gmake;;
 	freebsd/*) make=gmake;;
- wasm*) NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
+ wasm*)
+	 USE_OPENMP=0
+	 LDTHREAD=" -pthread "
+	 NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
 esac
 make="${make:=make}"
 
@@ -539,6 +560,28 @@ case $jplatform64 in
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
+ darwin/j64iphoneos) # iphone
+  TARGET=jamalgam
+  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
+  LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin "
+  OBJS_AESARM=" aes-arm.o "
+  SRC_ASM="${SRC_ASM_IOS}"
+  GASM_FLAGS="$macmin"
+  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
+  FLAGS_BASE64=" -DHAVE_NEON64=1 "
+ ;;
+
+ darwin/j64iphonesimulator) # iphone simulator
+  TARGET=jamalgam
+  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -DC_CRC32C=1 "
+  LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin "
+  OBJS_AESNI=" aes-ni.o "
+  SRC_ASM="${SRC_ASM_MAC}"
+  GASM_FLAGS="$macmin"
+  FLAGS_SLEEF=" -DENABLE_SSE2 "
+  FLAGS_BASE64=""
+ ;;
+
  darwin/j64*) # darwin intel 64bit nonavx
   TARGET=jamalgam
   CFLAGS="$common $macmin -msse3 "
@@ -661,12 +704,14 @@ case $jplatform64 in
 # these flags do not work on iOS
 # -msse2 -msimd128
 # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
-  LDFLAGS=" ../../../../mpir/linux/wasm32/libgmp.a \
+  LDFLAGS=" -L../../../../mpir/linux/wasm32 -lgmp \
  -s WASM=1 -s ASSERTIONS=1 -s INITIAL_MEMORY=220MB -s TOTAL_MEMORY=600MB -s ALLOW_MEMORY_GROWTH=1 -s STACK_SIZE=984KB \
- -s BINARYEN_EXTRA_PASSES="--pass-arg=max-func-params@80" -s EMULATE_FUNCTION_POINTER_CASTS=1 -s NO_EXIT_RUNTIME=1 \
+ -s BINARYEN_EXTRA_PASSES="--pass-arg=max-func-params@80" -s EMULATE_FUNCTION_POINTER_CASTS=1 -s EXIT_RUNTIME=1 \
  -s EXPORTED_FUNCTIONS='[\"_main\"]' \
  -s EXPORTED_RUNTIME_METHODS='[\"cwrap\",\"ccall\", \"UTF8ToString\", \"lengthBytesUTF8\", \"stringToUTF8\"]' \
- --embed-file ../../../../jlibrary/ --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll --exclude-file *.exe --exclude-file bin32 --embed-file ../../../../test/ "
+ --embed-file ../../../../jlibrary/@/home/web_user/j --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll \
+ --exclude-file *.exe --exclude-file jconsole* --exclude-file jamalgam* --exclude-file bin32 \
+ --embed-file ../../../../test/@/home/web_user/j/test "
   SRC_ASM=""
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream

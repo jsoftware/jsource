@@ -82,6 +82,7 @@ assert. IFQT *: IFJA
 jcwdpath=: jpathsep@(1!:43@(0&$) ,`(, }.)@.(('/' = {:)@:[ *. ('/' = {.)@:]) ])@((*@# # '/'"_) , ])
 jsystemdefs=: 3 : 0
 xuname=. UNAME
+xuname=. 'Linux'"_^:(xuname-:'Wasm') xuname
 if. 0=4!:0 <f=. y,'_',(tolower xuname),(IF64#'_64'),'_j_' do.
   0!:100 toHOST f~
 else.

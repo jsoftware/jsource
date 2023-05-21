@@ -13,11 +13,12 @@ static B ip(A w,C c,C d){A f,g;V*v;
  R CSLASH==ID(f)&&c==ID(FAV(f)->fgh[0])&&d==ID(g);
 }
 
-static B consf(A w){A f;C c;
+static B jtconsf(J jt,A w){C c;
  c=ID(w);
- if(c==CFCONS||c==CQQ&&(f=FAV(w)->fgh[0],NOUN&AT(f)))R 1;
+ if(c==CFCONS||c==CQQ&&(NUMERIC&AT(FAV(w)->fgh[0])))R 1;  // 9: or m"n  (scaf should test infinite rank?)
+ if(c==CFORK&&FAV(w)->fgh[2])R jtconsf(jt,unname(FAV(w)->fgh[0]))&&jtconsf(jt,unname(FAV(w)->fgh[2]));  //constant g constant
  R 0;
-}    /* 1 iff w is a constant function */
+}    // 1 iff w is a constant function or (constant function) g (constant function)
 
 static F2(jtfong){A f;C c;V*v;
  ARGCHK2(a,w);
@@ -29,19 +30,20 @@ static F2(jtfong){A f;C c;V*v;
 static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  ARGCHK1(w);
  v=FAV(w);
+ // extract fgh; replace nameref with value in fh
  if(v->fgh[2]){RZ(f=unname(v->fgh[0])); g=v->fgh[1]; RZ(h=unname(v->fgh[2]));}else{f=ds(CCAP); g=v->fgh[0]; RZ(h=unname(v->fgh[1]));}  // reconsitute capped fork
- if(CCAP==ID(f))R fong(invrecur(h),invrecur(g));
- c=1&&NOUN&AT(f); b=c||consf(f);
- ASSERT(b!=consf(h),EVDOMAIN);
- RZ(k=c?f:df1(gi,num(0),b?f:h));
- RZ(gi=invrecur(b?amp(k,g):amp(g,k)));
- RZ(fi=invrecur(b?h:f));
+ if(CCAP==ID(f))R fong(invrecur(h),invrecur(g));  //  [: g h => h^:_1 @: g^:-1, simplified
+ c=1&&NOUN&AT(f); b=c||jtconsf(jt,f);  // c if NVV fork; b if NVV or f is 9: = 'f is constant'
+ ASSERT(b!=jtconsf(jt,h),EVDOMAIN);  // must have a const, but not 2 - no verb to invert then
+ RZ(k=c?f:df1(gi,num(0),b?f:h));  // evaluate the constant on atomic 0
+ RZ(gi=invrecur(b?amp(k,g):amp(g,k)));  // if f const get const&g^_1; if h const g&const^:_1
+ RZ(fi=invrecur(b?h:f));  // invert the non-const arg
  if(CAMP==ID(gi)){
   v=FAV(gi); 
   if     (NOUN&AT(v->fgh[0]))RZ(gi=folk(v->fgh[0],     v->fgh[1], ds(CRIGHT)))
   else if(NOUN&AT(v->fgh[1]))RZ(gi=folk(v->fgh[1],swap(v->fgh[0]),ds(CRIGHT)));
  }
- R fong(fi,gi);
+ R fong(fi,gi);  // if f const, h^:_1 @: const&g^:_1   if h const, f^:_1 @: g&const^:_1
 }
 
 static DF1(jtexpandf){A f; ARGCHK2(w,self); f=FAV(self)->fgh[0]; R expand(VAV(f)->fgh[0],w);}

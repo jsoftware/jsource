@@ -1294,7 +1294,7 @@ extern void jfree4gmp(void*,size_t);
 #define unlk(x)                     jtunlk(jt,(x))
 #define unlock1(x)                  jtunlock1(jt,(x))
 #define unlock2(x,y)                jtunlock2(jt,(x),(y))
-#define unname(x)                   jtunname(jt,(x))
+#define unname(x)                   jtunname(jt,(x),0)
 #define unparse(x)                  jtunparse(jt,(x),0)
 #define unparse1(x0,x1,x2,x3)       jtunparse1(jt,(x0),(x1),(x2),(x3))
 #define unparse1a(x,y,z)            jtunparse1a(jt,(x),(y),(z))

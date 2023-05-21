@@ -395,7 +395,7 @@ extern F1(jtmemhashq);
 extern F1(jtmemhashs);
 void memhashadd(I,C*);
 extern F1(jtunlock1);
-extern F1(jtunname);
+extern A jtunname(J,A,I);
 extern F1(jtunzero);
 extern F1(jtvaspz);
 extern F1(jtversq);

@@ -5,11 +5,12 @@
 
 #include "j.h"
 
-
-F1(jtunname){A x;V*v;
- ARGCHK1(w); 
+// if w is a reference, replace it with its value, recursively
+A jtunname(J jt,A w,I recurct){A x;V*v;
+ ARGCHK1(w);
+ if(recurct>100)RETF(w);  // avoid infinite recursion
  v=VAV(w);
- if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x))R symbrd(x);}
+ if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x))R jtunname(jt,symbrd(x),recurct+1);}
  RETF(w);
 }
 

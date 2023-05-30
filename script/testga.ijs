@@ -35,11 +35,6 @@ echo 'avx512bw: ',":9!:56'avx512bw'
 echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
-NB. test crash
-list=:_1 4 6 8 3 5 8 _1 7 4
-1: abc`0:`*: "0 :: 1: list
-4!:55 ;:'list abc'
-
 echo 'RUN4 ddall'
 RES=: RUN4 ddall
 

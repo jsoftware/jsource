@@ -23,11 +23,11 @@
 static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
  // find the real self, valence-dependent
   F2PREFIP;ARGCHK1(w);
- I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
+ I ismonad=AT(w)==0; self=ismonad?w:self;
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=C(AAV(FAV(self)->fgh[2])[nexttoexec]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
- if(unlikely(z==0)){jteformat(jt,vbtoexec,a,ismonad?0:w,0);}  // if error, we must format it here because cyclic gerund is invalid
+ if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund is invalid
  R z;
 }
 
@@ -35,7 +35,7 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
 static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
  // find the real self, valence-dependent
  F2PREFIP;ARGCHK1(w);
- I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
+ I ismonad=AT(w)==0; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;  // index of cell we are working on
  I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];  // selector for that cell
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);  // if negative, back up from end
@@ -43,7 +43,7 @@ static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // advance to next cell
  w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
- if(unlikely(z==0)){jteformat(jt,vbtoexec,a,ismonad?0:w,0);}  // if error, we must format it here because cyclic gerund is invalid
+ if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund is invalid
  R z;
 // in case of index error we have to call eformat right here, because our caller does not have the self block for the overall gerund.  The a and w values are unused except for valence.  We pass in all the selectors
 errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
@@ -54,7 +54,7 @@ errorwind:;  // here if there is an error in the result of calculating the selec
 static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
  // find the real self, valence-dependent
  F2PREFIP;ARGCHK1(w);
- I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
+ I ismonad=AT(w)==0; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
@@ -62,7 +62,7 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec;
  w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
- if(unlikely(z==0)){jteformat(jt,vbtoexec,a,ismonad?0:w,0);}  // if error, we must format it here because cyclic gerund can't
+ if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund can't
  R z;
 errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
   jteformat(jt,FAV(self)->localuse.lu0.gerundself,ismonad?0:a,w,FAV(self)->fgh[1]);
@@ -76,7 +76,7 @@ errorwind:;  // here if there is an error in the result of calculating the selec
 A jtcreatecycliciterator(J jt, A z, A w){
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number (.gerx) to 0
  // AT is 0 to suppress eformat, as this 'verb' has invalid fgh
- ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lu1.gercut.cgerx=0;
+ ACFAUX(z,ACPERMANENT) AT(z)=0; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lu1.gercut.cgerx=0;
  FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
  if(MEMAUDIT&0xc)AFLAGFAUX(z,0)  // in debug, flags must be valid
  R z;
@@ -88,7 +88,7 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
  if(!ISDENSETYPE(AT(r),(INT|B01)))RZ(r=cvt(INT,r));
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
  // AT is 0 to suppress eformat, as this 'verb' has invalid fgh
- ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;  // h->gerunds, g->values
+ ACFAUX(z,ACPERMANENT) AT(z)=0; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;  // h->gerunds, g->values
  FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lu1.gercut.cgerx=0;
  FAV(z)->localuse.lu0.gerundself=w;  // save the self for m@.v so we can call eformat with it
  FAV(z)->flag2=0;

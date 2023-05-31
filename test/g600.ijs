@@ -1015,6 +1015,9 @@ f =: ^
 0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:$`*`f
 0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:(5 5 5"_)`*`f
 
+a=:_1 4 6 8 3 5 8 _1 7 4
+'value error' -: undefname`0:`*: "0 etx a
+
 
 4!:55 ;:'a adot1 adot2 sdot0 agree appcyc asm b boxr c c1 c2 cells crank cs cshape cycinit dr er f fr frame '
 4!:55 ;:'ger glob lag minus mm mrk msh prevmod ops pfx rag rank rk savger s1 svy t testlen x xx y '

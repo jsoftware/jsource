@@ -74,3 +74,72 @@ NB. errors:
 %. m. M i. 3 3
 
 )
+
+NB. modular determinant
+NB. modification of gaussian elimination from
+NB. math/misc/linear.ijs
+
+NB. failsafe case; never seen in practice
+mdetx=: 4 : 'x|-/ . * x: y'
+
+NB. main adverb
+modular_det=: 1 : 0
+mult=.* m. m
+diff=. - m. m
+div=.% m. m
+A=. y
+r =. #A
+i=. 0
+p=. 1
+while. i<r-1 do.
+  k=. 1 i.~ 1=m +. tc=.i}. i{"1 A   NB. need an invertible pivot
+  if. r=i+k do.  NB. if so, no invertible pivot in lower column
+     if. 0=#tc-.0 do. 0 return. NB. level 1: lower column all 0, det is 0
+     end.
+     p=. p mult mult/(<0 1)|:(i,i){.A    NB. reduce to the unprocessd block
+     B=.(i,i)}.A
+     if. 2=#B do.               NB. level 2: do 2 by 2 det
+       'a b c d'=.,B
+       p mult (a mult d)diff b mult c return.
+     end.
+     if. 1 e. m +. {.B do.      NB. level 3: look for pivot in  row
+       p mult m modular_det_j_ |:B return.
+     end.
+     if. 1 e. t=.,m +. B do.   NB. level 4: look for a pivot anywhere (won't be in 0th row or col by above levels)
+       'I J'=.($B)#: t i. 1
+       B=.(<0,I)C. B
+       B=.(<0,J) C."1 B
+       p mult m modular_det_j_ B return.
+     end.
+     if. 1 < >./g=.+./B do.     NB. level 5: try to factor gcds out of columns
+      p mult (mult/g) mult m modular_det_j_ B %"1 g return.
+     end.
+     if. 1 < >./g=.+./"1 B do.  NB. level 6: try to factor gcds out of rows
+      p mult (mult/g) mult m modular_det_j_ B %"1 0 g return.
+     end.
+     if. 1 e. ,m +. S=.({. , }. diff"1 {.)B do.  NB. level 7: try row shear
+     p mult m modular_det_j_ S  return.
+     end.
+     if. 1 e. ,m +. S=.({."1 ,. }."1 diff"1 0 {."1)B do.  NB. level 8: try column shear
+     p mult m modular_det_j_ S  return.
+     end.
+     p mult m mdetx_j_ B     return.       NB. level 9: use extended
+  end.
+NB. end of dealing with no easy pivot
+NB. this is where the main work is done and most of the above is usually skipped:
+    if. k do.     NB. move a pivot from lower in column
+      A=. (<i,i+k) C. A
+      p=. p mult _1
+    end.
+NB. Time to partial pivot
+    r1=.>:i
+    col=.i{"1 A
+    A=.(r1{.A),(r1}.A) diff (r1}.col) mult/ (i{A) div i{col
+    i=. >:i
+end.
+p mult mult/(<0 1)|:A
+)
+
+Mdet=:1 : 0
+(m modular_det_j_)"2 y
+)

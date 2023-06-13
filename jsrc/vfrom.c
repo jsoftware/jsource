@@ -32,7 +32,7 @@ DF1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv
  EPILOG(z);
 }
 
-#define SETNDX(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // if ndxvbl>p, adding p can never make it OK
+#define SETNDX(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if(unlikely((UI)ndxvbl>=(UI)limexp)){ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // if ndxvbl>p, adding p can never make it OK
 #define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // this version write to input if the value was negative
 #define SETJ(jexp) SETNDX(j,jexp,p)
 
@@ -42,11 +42,146 @@ DF1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv
   else              DQ(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
  }
 
+// block used to hold axis info, leading axis first
+struct faxis {
+ I lenaxis;  // the length of the axes (including frame) represented by this faxis struct, in items
+ I lencell;  // size of item of this axis in atoms
+ I nsel;  // number of selectors.  If negative, axis is complementary and *sels is a bitmask, value is ~len
+ I currselx;  // the next selector index to use.  For complementary, points after the previous 1-bit.  Init to 0 in axisfrom; not used in last axis
+ I *sels;  // selectors.  If 0, axis is taken in full
+ I currselv;  // value of current selector (i. e. index of value being copied).  init=sel0.  Not set in last axis.  Not used if taken in full
+ I sel0;  // value of first selector in this axis (index of first 1, if complementary).  Not set in last axis.  0 if taken in full
+ A ind;  // the original block of selectors for this axis, for rank purposes, or 0 if none
+};
+
+#if C_AVX2
+#else
+#endif
+#define AXFCKST0 0x8  // 0x18 is 11 to check neg&index, 10 for no checks, 01 to check neg, 00 for complementary axis
+// macros to move the last axis.  base points to base of cell selected by axis -2, zbase to next output location
+// ns is axes[r].nsel, nl is axes[r].lenaxis, ss is axes[r].sels
+// T is cell type, S is shift lg(cellsize)
+// xxxNI: check for negative and out-of-bounds indexes, once
+#define fcopyNI(T,S) {T *zv=zbase,*bv=(T*)base; DO(ns, I sel=ss[i]; if(unlikely((UI)sel>=(UI)nl)){sel+=nl; axflags&=~AXFCKST0; ASSERT(((UI)sel<(UI)nl),EVINDEX)} zv[i]=bv[sel];) zbase=(C*)zbase+(ns<<S); axflags-=AXFCKST0;}
+    // once we have vetted the parameters, there's no need to check for index error.  But possibly neg
+#define fcopyNI8 fcopyNI(I,LGSZI)
+#define fcopyNI4 fcopyNI(I4,2)
+#define fcopyNI2 fcopyNI(S,1)
+#define fcopyNI1 fcopyNI(C,0)
+#define fcopyNIv(b) {C *zv=zbase,*bv=(C*)base; DO(ns, I sel=ss[i]; if(unlikely((UI)sel>=(UI)nl)){sel+=nl; axflags&=~AXFCKST0; ASSERT(((UI)sel<(UI)nl),EVINDEX)} JMCR(zv+i*celllen,bv+sel*celllen,celllen,(b),endmask) ) zbase=(C*)zbase+ns*celllen; axflags-=AXFCKST0;}
+// xxxN: check for negative only
+#define fcopyN(T,S) {T *zv=zbase,*bv=(T*)base; DO(ns, I sel=ss[i]; sel+=REPSGN(sel)&nl; zv[i]=bv[sel];) zbase=(C*)zbase+(ns<<S);}
+#define fcopyN8 fcopyN(I,LGSZI)
+#define fcopyN4 fcopyN(I4,2)
+#define fcopyN2 fcopyN(S,1)
+#define fcopyN1 fcopyN(C,0)
+#define fcopyNv(b) {C *zv=zbase,*bv=(C*)base; DO(ns, I sel=ss[i]; sel+=REPSGN(sel)&nl; JMCR(zv+i*celllen,bv+sel*celllen,celllen,(b),endmask) ) zbase=(C*)zbase+ns*celllen;}
+// xxx: no checks
+#define fcopy(T,S) {T *zv=zbase,*bv=(T*)base; DO(ns, I sel=ss[i]; zv[i]=bv[sel];) zbase=(C*)zbase+(ns<<S);}
+#define fcopy8 fcopy(I,LGSZI)
+#define fcopy4 fcopy(I4,2)
+#define fcopy2 fcopy(S,1)
+#define fcopy1 fcopy(C,0)
+#define fcopyv(b) {C *zv=zbase,*bv=(C*)base; DO(ns, I sel=ss[i]; JMCR(zv+i*celllen,bv+sel*celllen,celllen,(b),endmask) ) zbase=(C*)zbase+ns*celllen;}
+// xxxC: complementary indexing: sels are a mask
+#define fcopyC(T) {T *zv=zbase,*bv=(T*)base; I *ssv=ss; I msk=*ssv; DO(ns, while(msk==0){bv+=BW; msk=*++ssv;} *zv++=bv[CTLZI(msk)]; msk&=msk-1;) zbase=zv;}
+#define fcopyC8 fcopyC(I)
+#define fcopyC4 fcopyC(I4)
+#define fcopyC2 fcopyC(S)
+#define fcopyC1 fcopyC(C)
+#define fcopyCv(b) {C *zv=zbase,*bv=(C*)base; I *ssv=ss; I msk=*ssv; DO(ns, while(msk==0){bv+=BW; msk=*++ssv;} JMCR(zv,bv+CTLZI(msk)*celllen,celllen,(b),endmask) zv+=celllen; msk&=msk-1;) zbase=zv;}
+
+static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags,A z){F2PREFIP;I i;
+ I r=(C)rflags;  // number of axes-1;
+ C *base=voidAV(w);  // will be starting cell number in all axes before last
+ // convert lencell to bytes & roll it up; calculate base from sel0 values
+ I k=bplg(AT(w));  // lg of size of atom
+ I framesize=1;  // will hold #cells in frame of last axis
+ for(i=r-1;i>=0;--i){  // for axes before the last
+  framesize*=axes[i].nsel^REPSGN(axes[i].nsel);  // count # cells in frame
+  axes[i].lencell<<=k;  // convert cellsize to bytes
+  base+=axes[i].lencell*axes[i].sel0;  // for axes before last, add offset of first index
+  axes[i].currselx=0;  // init first position being processed
+ }
+ I celllen=axes[r].lencell;  // length of cell of last axis, in atoms
+ // collect the result shape from the original selectors
+ if(framesize==1){  // if the last axis is applied only once
+  // see if the result can be virtual
+  axes+=r; r=0;  // all previous axes are in base; only one selection pass needed (gives early exit)
+ }
+ // allocate the result
+
+ celllen<<=k;  // convert last-axis len to bytes
+ // decide what copy routines to use for last axis
+ JMCDECL(endmask)  // in case cellsize is irregular, define mask for JMC
+ I axflags=(AXFCKST0*3)&~REPSGN(axes[r].nsel);  // init axis-r test flags: 11 normally, 00 for complementary 
+ if(celllen==(celllen&-celllen&(2*SZI-1))){  // check for size 1 2 4 8
+  // size can be moved by primitive store.  set size
+  axflags|=CTLZI(celllen);  // bits 0-2 give size
+ }else{
+  JMCSETMASK(endmask,celllen,0)  // allow overcopy
+  axflags|=0b100;  // size 100 means 'use move'
+ }
+ // loop over all axes.
+ I ns=axes[r].nsel, nl=axes[r].lenaxis, *ss=axes[r].sels; ns=REPSGN(ns)^ns;  // bring last-axis info into registers
+ void *zbase=voidAV(z);  // running output pointer
+ while(1){
+  // move one _1-cell using the indexes.  We are in a loop through the _1-cells; each case in the switch below copies one _1-cell
+  switch(axflags&0x1f){
+  case 0b11000: fcopyNI1 break; case 0b10000: fcopy1 break; case 0b01000: fcopyN1 break;  case 0b00000: fcopyC1 break; 
+  case 0b11001: fcopyNI2 break; case 0b10001: fcopy2 break; case 0b01001: fcopyN2 break;  case 0b00001: fcopyC2 break; 
+  case 0b11010: fcopyNI4 break; case 0b10010: fcopy4 break; case 0b01010: fcopyN4 break;  case 0b00010: fcopyC4 break; 
+  case 0b11011: fcopyNI8 break; case 0b10011: fcopy8 break; case 0b01011: fcopyN8 break;  case 0b00011: fcopyC8 break; 
+  case 0b11100: fcopyNIv(0) break; case 0b10100: fcopyv(0) break; case 0b01100: fcopyNv(0) break;  case 0b00100: fcopyCv(0) break;
+  default: break;
+  }
+  if(likely(r==0))break;  // if there is only 1 axis, we're done
+  // roll up the axes, advancing the odometer 
+  I rodo=r-1;  // start on axis -2
+  while(1){  // till we have handled all changing wheels
+   if(axes[rodo].sels==0){
+    // axis taken in full.  advance to next cell
+    base+=axes[rodo].lencell;  // advance to next sequential cell
+    if(++axes[rodo].currselx!=axes[rodo].nsel)break;  // if this wheel doesn't roll over, stop here
+    base-=axes[rodo].nsel*axes[rodo].lencell;  // rollover: back this wheel to the beginning
+    axes[rodo].currselx=0;  // look at next wheel; reset this one
+   }else if(++axes[rodo].currselx!=(REPSGN(axes[rodo].nsel)^axes[rodo].nsel)){
+    // axis not in full and did not roll over.  Advance to next index
+    I nextx;  // will be the next index to use
+    if(likely(axes[rodo].nsel>=0)){  // complementary index?
+     // normal non-complementary index.  Step to the next row
+     SETNDX(nextx,axes[rodo].sels[axes[rodo].currselx],axes[rodo].lenaxis);  // fetch next index
+    }else{
+     // complementary index.  Start after currselv and find the next 1-bit
+     nextx=axes[rodo].currselv+1;  // bit# to start look
+     while(1){  // it's gotta be there
+      UI nextbits=axes[rodo].sels[nextx&-BW]>>(nextx&(BW-1));  // the rest of this word
+      if(nextbits){nextx+=CTTZI(nextbits); break;}  // get index of lowest 1 bit
+      nextx=(nextx+(BW-1))&-BW;  // if none, advance to next word and keep looking
+     }
+    }
+    base+=(nextx-axes[rodo].currselv)*axes[rodo].lencell;  // move base by amount of index movement
+    axes[rodo].currselv=nextx;  // set next index
+    break;  // when wheel doesn't roll over, stop processing wheels
+   }
+   // here the current axis is rolling over.
+   if(rodo==0)goto endaxes;  // when first axis rolls over, we are finished
+   axes[rodo].currselx=0;   // back to start
+   base+=(axes[rodo].sel0-axes[rodo].currselv)*axes[rodo].lencell;  // move base by amount of index movement
+   axes[rodo].currselv=axes[rodo].sel0;  // set starting index for wheel
+   --rodo;  // back up to increment previous axis
+  }  // wheel rolled over, advance to next wheel
+  // base has been advanced
+ }  // loop till all _1-cells moved
+endaxes:;
+ RETF(z);
+}
+
 // a is not boxed and not boolean (except when a is a singleton, which we pass through here to allow a virtual result)
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  F1PREFIP;
  ARGCHK2(a,w);
- // IRS supported but only at infinite rank.  This has implications for empty arguments.
+ // IRS supported but only for a single a value.  This has implications for empty arguments.
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(unlikely(ar>acr))R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
@@ -59,11 +194,11 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // If w is empty, portions of its shape may overflow during calculations, and there is no data to move (we still need to
  // audit for index error, though).  If w is not empty, there is no need to check for such overflow.  So we split the computation here.
  // Either way, we need   zn: #atoms in result   p: #items in a cell of w
- p=wcr?ws[wf]:1;
+ p=likely(wcr!=0)?ws[wf]:1;  // p=number of items to be selected from
  av=AV(a);  // point to the selectors
  I wflag=AFLAG(w);
- if(likely(wn!=0)){
-  // For virtual results we need: kn: number of atoms in an item of a cell of w;   
+ if(likely(wn!=0)){  // w has atoms; get # atoms in result
+  // For virtual results we need: k: number of atoms in an item of a cell of w;   
   PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
   // Also m: #wcr-cells in w 
   PROD(m,wf,ws); zn=k*m;  DPMULDE(an,zn,zn);
@@ -75,7 +210,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
    if(indexn==index0+an-1){
      I indexp=index0; DO(an-1, indexn=av[1+i]; indexn+=REPSGN(indexn)&p; if(indexn!=indexp+1){indexn=p; break;} indexp=indexn;);
    }else indexn=p;
-   if((index0|(p-indexn-1))>=0){  // index0>0 and indexn<=p-1
+   if((index0|(p-indexn-1))>=0){  // index0>=0 and indexn<=p-1
     // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
     RZ(z=virtualip(w,index0*k,ar+wr-1));
     // fill in shape and number of atoms.  ar can be anything.
@@ -83,13 +218,22 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wn,wr,*ws,zn;
     RETF(z);
    }
   }
-  // for copying items, we need    k: size in bytes of an item of a cell of w
-  k<<=bplg(AT(w));
+  // for copying items, we need k: size in bytes of an item of a cell of w
+// obsolete   k<<=bplg(AT(w));  // convert cellsize to bytes
  } else {zn=0;}  // No data to move
- // Allocate the result area and fill in the shape
- GA00(z,AT(w),zn,ar+wr-(I )(0<wcr));  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
+ // Allocate the result area and fill in the shape.  Could inplace here
+ GA00(z,AT(w),zn,ar+wr-(I)(0<wcr));  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
  MCISH(AS(z),AS(w),wf); MCISH(&AS(z)[wf],AS(a),ar); if(wcr)MCISH(&AS(z)[wf+ar],1+wf+ws,wcr-1);
  if(unlikely(!zn)){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
+ // set up axis structs
+ struct faxis axes[2];  // one for frame, one for data
+ I r=m>1;  // #axes-1.  We need a leading axis in full if there are multiple cells of w
+ if(r>0){
+  axes[0].lenaxis=m; axes[0].nsel=m; axes[0].lencell=p*k; axes[0].sels=0; axes[0].sel0=0; axes[0].ind=mtv;  // fill in frame axis
+ }
+ // fill in last axis, for the indexes
+ axes[r].lenaxis=p; axes[r].lencell=k; axes[r].nsel=an; axes[r].sels=av; axes[0].ind=a;  // fill in selection axis
+ RETF(jtaxisfrom(jt,w,axes,r,z))  // move the values and return the result
  // from here on we are moving items
  wv=CAV(w); zv=CAV(z); SETJ(*av);
  switch(k){

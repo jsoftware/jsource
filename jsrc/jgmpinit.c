@@ -419,6 +419,7 @@ void jgmpinit(C*libpath) {
  jgmpfn(mpz_bin_ui);       // https://gmplib.org/manual/Number-Theoretic-Functions
  jgmpfn(mpz_cdiv_q);       // https://gmplib.org/manual/Integer-Division
  jgmpfn(mpz_fdiv_q);       // https://gmplib.org/manual/Integer-Division
+ jgmpfn(mpz_fits_slong_p); // https://gmplib.org/manual/Miscellaneous-Integer-Functions
  jgmpfn(mpz_clear);        // https://gmplib.org/manual/Initializing-Integers
  jgmpfn(mpz_cmp);          // https://gmplib.org/manual/Integer-Comparisons
  jgmpfn(mpz_cmpabs_ui);    // https://gmplib.org/manual/Integer-Comparisons

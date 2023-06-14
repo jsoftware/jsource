@@ -235,7 +235,7 @@ I jti0(J jt,A w){ARGCHK1(w);
   }
   R cval;  // too-large values don't convert, handle separately
  }
- if (AT(w)&(RAT+XNUM)) {
+ if (AT(w)&XNUM) {
   X x= XAV(w)[0];
   if (ifits_slong_pX(x)) {
    I r= IgetX(x);
@@ -245,7 +245,7 @@ I jti0(J jt,A w){ARGCHK1(w);
   if (XSGN(x)>0) R IMAX; else R -IMAX;
  }
  if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK);
- if (ISGMP(w)) SEGFAULT; // this should never happen
+ if (ISGMP(w)||AT(w)&RAT) SEGFAULT; // this should never happen
  R IAV(w)[0];
 }  // can't move the ASSERT earlier without breaking a lot of tests
 

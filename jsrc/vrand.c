@@ -620,6 +620,9 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata-
   // Output the rest, one bit at a time
   t=NEXT;  // Get random # for bits
   B*c=(B*)u; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
+ }else if(unlikely(IMAX==m&&XNUM&AT(w))){
+  // extended output
+  X*xv=XAV(z); AT(z)= XNUM; DO(n,(*xv++)=XAV(roll(w))[0];)
  }else{
   // integer output
   r=n; s=GMOF(m,x); if(s==x)s=0;

@@ -802,7 +802,7 @@ DF2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata
   // calculate the number of values to deal: m, plus a factor times the expected number of collisions, plus 2 for good measure.  Will never exceed n.  Repeats a little less than 1% of the time for n between 30 and 300
   A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); RZ(z=jttake(JTIPW,a,z));
 #else
-  if(unlikely(n==IMAX&&XNUM&AT(w))){NOUNROLL do{RZ(z=nub(rollksub(a,w)));}while(AN(z)<m);R z;}
+  if(unlikely(n==IMAX&&XNUM&AT(w))){A h= plus(num(2),a); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m);R take(a,z);}
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
   GATV0(h,INT,p,1); hv=AV(h); DO(p, hv[i]=0;);

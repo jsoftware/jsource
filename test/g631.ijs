@@ -281,7 +281,8 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '2' ,\ ckprist 0 0 0 0 ] 5
 (<@>@]^:((<4)-:]))/\. ckprist 0 0  ] 5  NB. not inplace virtw
 /:~ ckprist 0 1 ] 5  NB. Passes pristinity through 
-/:~ ckprist 3 0 ] 4 5  NB. Creates virtual block but also clears pristinity of a
+/:~ ckprist 0 1 ] 4 1  NB. Creates nonvirtual block
+/:~ ckprist 1 0 ] 4 10  NB. Creates virtual block and does not affect pristinity of a
 \:~ ckprist  0 1 ] 5  NB. This could pass pristinity through 
 \:~ ckprist  0 1 ] 4 5  NB. This could pass pristinity through 
 '<"0 i. 4 3 5' \:"1 ckprist  0 0 2 ] 4 5  NB. Repeated cells - not pristine 
@@ -293,7 +294,8 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '2' { ckprist 1 1  ] 4 5   NB. virtual+pristine because this goes through virtualip
 '1' { ckprist 1 1  ] 4 5
 '1 3' { ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
-'<1' { ckprist 3 0  ] 4 5   NB. virtual block but also clears pristine in w (OK)
+'<1' { ckprist 1 0  ] 4 50   NB. virtual block, does not clear w prist
+'<1' { ckprist 0 0  ] 4 1   NB. nonvirtual block, clears w prist
 '2' A. ckprist 0 0  ] 4 5   NB. result is permutation, which is not virtual
 '1' A. ckprist 0 0  ] 4 5
 '1 3' A. ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated

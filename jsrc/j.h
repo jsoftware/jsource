@@ -1849,7 +1849,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #endif
 
 // same but destroy w
-#define PRISTCLRF(w) if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGPRISTNO(w)   // used only at end, when w can be destroyed
+#define PRISTCLRF(w) {if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGPRISTNO(w)}   // used only at end, when w can be destroyed
 #define PRISTCOMMON(w) awback=(w); PRISTCLRF(awback)
 #define PRISTCLRNODCL(w) PRISTCOMMON(w)
 // normal entry points.  clear PRISTINE flag in w (or its backer, if virtual) because we have removed something from it

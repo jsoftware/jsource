@@ -296,7 +296,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_bin_ui __gmpz_bin_ui            // https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_cdiv_q __gmpz_cdiv_q            // https://gmplib.org/manual/Integer-Division
 #define jmpz_fdiv_q __gmpz_fdiv_q            // https://gmplib.org/manual/Integer-Division
-// #define jmpz_fits_slong_p                    // https://gmplib.org/manual/Miscellaneous-Integer-Functions
+#define jmpz_fits_slong_p __gmpz_fits_slong_p // https://gmplib.org/manual/Miscellaneous-Integer-Functions
 #define jmpz_clear __gmpz_clear              // https://gmplib.org/manual/Initializing-Integers
 #define jmpz_cmp __gmpz_cmp                  // https://gmplib.org/manual/Integer-Comparisons
 #define jmpz_cmpabs_ui __gmpz_cmpabs_ui      // https://gmplib.org/manual/Integer-Comparisons

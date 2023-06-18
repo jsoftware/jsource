@@ -51,7 +51,7 @@ struct faxis {
  I nsel;  // number of selectors.  If negative, axis is complementary and *sels is a bitmask, value is ~len
  I currselx;  // the next selector index to use.  For complementary, points after the previous 1-bit.  Init to 0 in axisfrom; not used in last axis
  I *sels;  // selectors.  If 0, axis is taken in full
- I currselv;  // value of current selector (i. e. index of value being copied).  init=sel0.  Not set in last axis.  Not used if taken in full
+ I currselv;  // value of current selector (i. e. index of value being copied).  init=sel0.  Not used in last axis.  Not used if taken in full
  I sel0;  // value of first selector in this axis (index of first 1, if complementary).  Not set in last axis except when complementary.  0 if taken in full
  A ind;  // the original block of selectors for this axis, for rank purposes, or 0 if none
 };
@@ -93,9 +93,8 @@ struct faxis {
 #define fcopyC1 fcopyC(C)
 #define fcopyCv(b) {C *zv=zbase,*bv=(C*)base; I *ssv=ss; I msk=*ssv; DO(ns, while(msk==0){bv+=BW; msk=*++ssv;} JMCR(zv,bv+CTLZI(msk)*celllen,celllen,(b),endmask) zv+=celllen; msk&=msk-1;) zbase=zv;}
 
-// rflags is w minor cell rank/len of w frame/1B rank of result/1B last axis is B01/6B dimension of axes-1
-static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP;I i;
-#define RFLGI
+// rflags is w minor cell rank/len of w frame/1B rank of result/1B /6B dimension of axes-1
+static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
  I r=rflags&0x3f, zr=(C)(rflags>>8), wf=(C)(rflags>>16), wcr=(C)(rflags>>24), hasr=(rflags>>7)&1;  // number of axes-1; result rank; w framelen; 1 iff 1st axis is from rank
  C *base=voidAV(w);  // will be starting cell number in all axes before last
  // convert lencell to bytes & roll it up; calculate base from sel0 values
@@ -104,7 +103,6 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP;I i;
  I zn;  // number of atoms in result
  I celllen=axes[r].lencell;  // length of cell of last axis, in atoms
  A z;  // result
-auditmemchains();  // scaf
  if(likely(AN(w)!=0)){  // normal case, w has atoms
   for(i=r-1;i>=0;--i){  // for axes before the last
    DPMULDE(framesize,axes[i].nsel^REPSGN(axes[i].nsel),framesize);  // count # cells in frame and selectors
@@ -114,13 +112,12 @@ auditmemchains();  // scaf
    axes[i].currselv=axes[i].sel0;  // set current=start, to begin
    axes[i].currselx=0;  // init first position being processed
   }
-auditmemchains();  // scaf
   DPMULDE(framesize,celllen,zn);  // frame size * cell size
   I nsel=axes[r].nsel;  // #selectors, neg if complementary
   I lenaxis=axes[r].lenaxis;  // length of last axis
   DPMULDE(zn,nsel^REPSGN(nsel),zn);  // * last-axis size, gives result size
 #define MINVIRTSIZE 32  // must have this many atoms to be virtual  scaf
-  if(((framesize-2)&(MINVIRTSIZE-zn))<0){  // if the last axis is applied only once, and result is big enough
+  if(((framesize-2)&(MINVIRTSIZE-zn))<0){  // if the last axis is applied only once, and result is big enough, and last axis not B01
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
    // Whether we should do so is a tricky question.  Surely, if the argument is big, since we may save a large indexed copy.
    // If the argument is small, the virtual is still better if it doesn't have to be realized; but it might be
@@ -150,9 +147,10 @@ auditmemchains();  // scaf
    }
    if((index0|(lenaxis-indexn-1))>=0){  // index0>=0 and indexn<=lenaxis-1
     // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
-    RZ(z=virtualip(w,index0*celllen,zr));
+    I baseadj=base-CAV(w);  // movement of base needed from upper selectors.  Must calculate before virtual in case it self-virtuals and moves w
+    RZ(z=virtualip(w,index0*celllen,zr));  // inplace w OK since no cells repeated
     // fill in shape and number of atoms, and offset the data pointer using base
-    AK(z)+=base-CAV(w);  // move offset from start of w data to the cell selected by upper selectors
+    AK(z)+=baseadj;  // move offset from start of w data to the cell selected by upper selectors
     // shape is 1s for upper axes/last-axis selectors/shape of cell lof last axis
     AN(z)=zn;
      I *zs=AS(z)+zr-wcr;  // pointer into result shape, moved around as we calculate; start pointing to cellshape
@@ -168,13 +166,10 @@ auditmemchains();  // scaf
    }
   }
  }else{zn=0;}  // if w empty, z must be empty too, since no nonempty selector is valid on 0-len axis
-auditmemchains();  // scaf
- // allocate the result
+ // allocate the result   scaf should inplace a if possible, need a flag from ifrom
  GA00(z,AT(w),zn,zr);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
  // install shape: w frame, followed by shape of each selector, then shape of cell
-auditmemchains();  // scaf
  MCISH(AS(z),AS(w),wf);  // axes coming from w frame
-auditmemchains();  // scaf
  I *zs=&AS(z)[wf];
  for(i=hasr;i<=r;++i){  // for each axis coming from a
   if(axes[i].sels!=0){  // normal or complementary
@@ -182,12 +177,9 @@ auditmemchains();  // scaf
    }else{*zs++=~axes[i].nsel;  // complementary, treat as list of appropriate length
    }
   }else{*zs++=axes[i].nsel;}  // in full, treat as length with length of axis
-auditmemchains();  // scaf
  }
  // install the axes for the cell of w: trailing axes, using zr since we don't know how many axes were discarded
-auditmemchains();  // scaf
  MCISH(zs,AS(w)+AR(w)-wcr,wcr)
-auditmemchains();  // scaf
 
  if(unlikely(zn==0)){I j;  // If no data to move, just audit the indexes and quit
   for(j=hasr;j<=r;++j){  // for each axis coming from a
@@ -198,7 +190,7 @@ auditmemchains();  // scaf
 
  I noframe=REPSGN(framesize-2); axes+=r&noframe; r-=r&noframe;  // F..F if all previous axes are in base; only one selection pass needed (gives early exit)
  celllen<<=k;  // convert last-axis len to bytes
- // decide what copy routines to use for last axis
+ // decide what copy routines to use for last axis.  
  JMCDECL(endmask)  // in case cellsize is irregular, define mask for JMC
  I axflags=(AXFCKST0*3)&~REPSGN(axes[r].nsel);  // init axis-r test flags: 11 normally, 00 for complementary 
  if(celllen==(celllen&-celllen&(2*SZI-1))){  // check for size 1 2 4 8
@@ -208,7 +200,6 @@ auditmemchains();  // scaf
   JMCSETMASK(endmask,celllen,0)  // allow overcopy
   axflags|=0b100;  // size 100 means 'use move'
  }
-auditmemchains();  // scaf
  // loop over all axes.
  I ns=axes[r].nsel, nl=axes[r].lenaxis, *ss=axes[r].sels; ns=REPSGN(ns)^ns;  // bring last-axis info into registers
  void *zbase=voidAV(z);  // running output pointer
@@ -222,7 +213,6 @@ auditmemchains();  // scaf
   case 0b11100: fcopyNIv(0) break; case 0b10100: fcopyv(0) break; case 0b01100: fcopyNv(0) break;  case 0b00100: fcopyCv(0) break;
   default: break;
   }
-auditmemchains();  // scaf
   if(likely(r==0))break;  // if there is only 1 axis, we're done
   // roll up the axes, advancing the odometer 
   I rodo=r-1;  // start on axis -2
@@ -260,7 +250,6 @@ auditmemchains();  // scaf
    --rodo;  // back up to increment previous axis
   }  // wheel rolled over, advance to next wheel
   // base has been advanced
-auditmemchains();  // scaf
  }  // loop till all _1-cells moved
 endaxes:;
  RETF(z);
@@ -276,7 +265,9 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  if(unlikely(ar>acr))R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
  // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
- if(unlikely(!ISDENSETYPE(AT(a),INT)))RZ(a=cvt(INT,a));  // convert boolean or other arg to int
+ if(unlikely(!ISDENSETYPE(AT(a),INT))){
+  if(AR(a)<(AT(a)&B01))a=zeroionei(BAV(a)[0]);else RZ(a=cvt(INT,a));  // convert boolean or other arg to int, with special check for scalar boolean
+ }
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
 // if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;     defer this pending analysis
@@ -297,7 +288,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // fill in last axis, for the indexes
  I wncr=wcr-1; wncr-=REPSGN(wncr);  // rank of the cell that gets copied
  axes[r].lenaxis=p; axes[r].lencell=k; axes[r].nsel=an; axes[r].sels=AV(a); axes[r].ind=a;  // fill in selection axis
- RETF(jtaxisfrom(jt,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
+ RETF(jtaxisfrom(jtinplace,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
 
 #if 0  // obsolete 
  I wflag=AFLAG(w);
@@ -475,6 +466,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
 #endif
 }    /* a{"r w for numeric a */
 
+#if 0 // obsolete
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
 #define BSETV(b)                MC(v,wv+b*k,k); v+=k;
 
@@ -589,6 +581,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,*u=0,wcr,wf,wk,wn,wr,*
  }
  RETF(z);
 }    /* a{"r w for boolean a */
+#endif
 
 // a is array whose 1-cells are index lists, w is array
 // result is (<"1 a) { w
@@ -639,7 +632,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;I m,*u,*v,wcr,wr,*ws;
  I *av=IAV(a); I *wsl=ws+wf;  // point to 1-cell of ind, and the axis lengths
  DO(nia, I s=0; DO(naxa, I v=av[i]; if((UI)v>=(UI)wsl[i]){v+=wsl[i]; ASSERT((UI)v<(UI)wsl[i],EVINDEX)} s=s*wsl[i]+v;) indv[i]=s; av+=naxa;)
  // sel0 not needed in last axis
-     RETF(jtaxisfrom(jt,w,axes,((wcr-naxa)<<24)+(wf<<16)+(zr<<8)+r*0x81))  // move the values and return the result
+ RETF(jtaxisfrom(jtinplace,w,axes,((wcr-naxa)<<24)+(wf<<16)+(zr<<8)+r*0x81))  // move the values and return the result
 #if 0   // obsolete
 
  fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DQ(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
@@ -775,15 +768,19 @@ static A jtafi(J jt,I n,A w){A x;
 }
 
 // general boxed a
-static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,pr,*s,t,wcr,wf,wr;
+static F2(jtafrom){F2PREFIP; PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,pr,*s,t,wcr,wf,wr;
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
+ // We have IRS on w, but not a.  If there are multiple cells of a we use a rank loop.
  if(ar){  // if there is an array of boxes
-  if(((ar^acr)|(wr^wcr))==0){RZ(ind=aindex(a,w,wf)); ind=(A)((I)ind&~1LL); if(ind)R frombu(ind,w,wf);}  // if boxing doesn't contribute to shape, open the boxes of a and copy the values
+  // Since the native rank of a is 0, if w has only one cell we can loop over boxes of a
+// obsolete   if(((ar^acr)|(wr^wcr))==0){RZ(ind=aindex(a,w,wf)); ind=(A)((I)ind&~1LL); if(ind)R frombu(ind,w,wf);}  // if boxing doesn't contribute to shape, open the boxes of a and copy the values
   R wr==wcr?rank2ex(a,w,DUMMYSELF,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
-      df2(p,IRS1(a,0L,acr,jtbox,c),IRS1(w,0L,wcr,jtbox,ind),amp(ds(CLBRACE),ds(COPE)));  // (<"arank a) {&> <"wrank w
+    // If both a and w have cells, we must match them up by boxing
+      df2(p,IRS1(a,0L,acr,jtbox,c),IRS1(w,0L,wcr,jtbox,ind),amp(ds(CLBRACE),ds(COPE)));  // > (<"arank a) {&> <"wrank w
  }
+ // a is an atom.  Open it
  c=C(AAV(a)[0]); t=AT(c); SETIC(c,n); v=AAV(c);   // B prob not reqd 
  s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
@@ -824,7 +821,7 @@ DF2(jtfrom){I at;A z;
  if(likely(!ISSPARSE(AT(a)|AT(w)))){
   // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
-  // We allow FL only if it is the same saize as INT
+  // We allow FL only if it is the same size as INT
   if(!((AT(a)&(NOUN&~(B01|INT|(SY_64*FL))))+(AT(w)&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // scaf NJAwhy
    I av;  // selector value
    if(likely(!SY_64||AT(a)&(B01|INT))){av=BIV0(a);  // INT index
@@ -852,10 +849,11 @@ DF2(jtfrom){I at;A z;
    }
   }else{
    // not atom{array.  Process according to type of a
-   A (*fn)(J,A,A);
-   fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;  // boxed; boolean (not singleton); other (will be converted to INT)
-   RANK2T origranks=jt->ranks;  // remember original ranks in case of error
-   z=(*fn)(jtinplace,a,w);
+    RANK2T origranks=jt->ranks;  // remember original ranks in case of error
+// obsolete   A (*fn)(J,A,A);
+// obsolete   fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;  // boxed; boolean (not singleton); other (will be converted to INT)
+// obsolete   z=(*fn)(jtinplace,a,w);
+   if(!(at&BOX))z=jtifrom(jtinplace,a,w);else z=jtafrom(jtinplace,a,w);
    // If there was an error, call eformat while we still have the ranks.  convert default rank back to R2MAX to avoid "0 0 in msg
 // obsolete   if(unlikely(jt->jerr)){jt->ranks=origranks!=RMAX?origranks:R2MAX; jteformat(jt,self,a,w,0); RESETRANK;}
    if(unlikely(z==0)){jt->ranks=origranks!=RMAX?origranks:R2MAX; jteformat(jt,self,a,w,0); RESETRANK; R0}

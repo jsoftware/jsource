@@ -294,7 +294,9 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '2' { ckprist 1 1  ] 4 5   NB. virtual+pristine because this goes through virtualip
 '1' { ckprist 1 1  ] 4 5
 '1 3' { ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
-'<1' { ckprist 1 0  ] 4 50   NB. virtual block, does not clear w prist
+'2 3' { ckprist 0 0  ] 4 5   NB. virtual+pristine because this goes through virtualip
+'2 3' { ckprist 1 1  ] 4 50   NB. virtual+pristine because this goes through virtualip
+'<1' { ckprist 1 1  ] 4 50   NB. virtual block, does not clear w prist
 '<1' { ckprist 0 0  ] 4 1   NB. nonvirtual block, clears w prist
 '2' A. ckprist 0 0  ] 4 5   NB. result is permutation, which is not virtual
 '1' A. ckprist 0 0  ] 4 5

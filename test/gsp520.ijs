@@ -83,6 +83,7 @@ h&>c [ i=: <$0
 
 NB. index from sparse y should result in the same error as index from dense array
 spd=: {etx -: ({etx $.)
+spde=: { :: ('error'"_) -: ({ :: ('error'"_))  NB. use when order of analysis causes different error
 
       'abc'   spd i.2 3
 (u:   'abc')  spd i.2 3
@@ -95,11 +96,11 @@ spd=: {etx -: ({etx $.)
 _3 spd i.2 3
 
 (<'ab')       spd i.2 3
-(<2;'a')      spd i.2 3
+(<2;'a')      spde i.2 3
 (<u:'ab')     spd i.2 3
-(<2;u:'a')    spd i.2 3
+(<2;u:'a')    spde i.2 3
 (<10&u:'ab')  spd i.2 3
-(<2;10&u:'a') spd i.2 3
+(<2;10&u:'a') spde i.2 3
 
 
 4!:55 ;:'c d f g h i r s x spd'

@@ -460,7 +460,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;  // p is abs(divisor), p1 is p-1 unless d=IMIN; IMIN then
  if(!wr&&p&&!(p&p1)){  // divisor is power of 2, perhaps negative
 // obsolete   CTLZI(p-1,k); ++k; k=p==1?0:k;
-  k=CTLZI(p);  // bit# of the sole 1 bit
+  k=CTTZI(p);  // bit# of the sole 1 bit
 // obsolete   switch((0<d?0:2)+(flr?0:1)){
   if(d>0)if(flr){DQ(n,*zv++=*av++>>k;)}else{DQ(n, c=*av++; *zv++=likely(!__builtin_add_overflow(c,p1,&c))?c>>k:(UI)c>>k;)}
   else if(flr){DQ(n, c=*av++; *zv++=likely(c>IMIN)?-c>>k:-(IMIN>>k);)}else{DQ(n, *zv++=((~*av++)>>k)+1;)}

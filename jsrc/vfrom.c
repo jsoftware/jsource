@@ -63,7 +63,44 @@ struct __attribute__((aligned(CACHELINESIZE))) faxis {
 // macros to move the last axis.  base points to base of cell selected by axis -2, zbase to next output location
 // ns is axes[r].nsel, nl is axes[r].lenaxis, ss is axes[r].sels
 // T is cell type, S is shift lg(cellsize)
+// in AVX2, sl holds selectors, al=lenaxis, al1=(lenaxis^sgnbit)-1, endmask is mask, sgnbit is 0x8..0
 // xxxNI: check for negative and out-of-bounds indexes, once
+// copyval: make sl valid
+#define fcopyvalNI {__m256i slv=_mm256_cmpgt_epi64(_mm256_xor_si256(sl,sgnbit),al1); /* index>size-1, in offset binary */ \
+  if(unlikely(!_mm256_testz_si256(slv,endmask))){  /* if any valid lane too high */ \
+   sl=_mm256_add_epi64(sl,_mm256_and_si256(al,slv)); slv=_mm256_cmpgt_epi64(_mm256_xor_si256(sl,sgnbit),al1); /* add axislen to invalid lanes, test again */ \
+   ASSERT(_mm256_testz_si256(slv,endmask),EVINDEX) axflags&=~AXFCKST0;  /* verify all lanes valid; indic we hit a negative */ \
+  }}
+#define fcopyvalN {__m256i slv=_mm256_cmpgt_epi64(_mm256_xor_si256(sl,sgnbit),al1); /* index>size-1, in offset binary */ \
+  sl=_mm256_add_epi64(sl,_mm256_and_si256(al,slv));  /* adjust negative values */ \
+  }
+#define fcopyval  // if all indexes valid, nothing needed
+
+// move 8-byte aligned cells using gather
+#define fcopygather8(val)  {__m256i sl; \
+ /* we want to keep the stores aligned on a cacheline boundary, so we back up the pointers accordingly */ \
+ I bun=((I)zbase>>LGSZI)&(NPAR-1); I zvtoss=(I)ss-(I)zbase; C *zv=(C*)((I*)zbase-bun); /* backup amount, offset to bv, aligned zv */ \
+ endmask=_mm256_loadu_si256((__m256i*)(validitymask+2*NPAR-bun));  /* valid part of first batch */ \
+ C *lastzv=(C*)((I*)zv+((bun+ns-1)&-NPAR));  /* start of the block containing the last word */ \
+ if(zv!=lastzv){  /* if there is a section using only the leading mask... */ \
+  /* first section, masked at the front */ \
+  sl=_mm256_maskload_epi64((I*)(zv+zvtoss),endmask); val /* load and validate a block of selectors */ \
+  _mm256_maskstore_epi64((I*)zv, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),(I*)base,sl,endmask,SZI));   /* scatter read, write sequential */ \
+  endmask=_mm256_cmpeq_epi64(endmask,endmask);  /* leading mask has now been used */ \
+  while((zv+=NPAR*SZI)!=lastzv){  /* middle section, unmasked */ \
+   sl=_mm256_loadu_si256((__m256i*)(zv+zvtoss));  val  /* load and validate selectors */ \
+   _mm256_storeu_si256((__m256i*)zv, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),(I*)base,sl,endmask,SZI)); \
+  } \
+ } \
+ /* always put out the last block, combining any unused mask */ \
+ endmask=_mm256_and_si256(endmask,_mm256_loadu_si256((__m256i*)(validitymask+((NPAR-1)&-(bun+ns))))); /* mask at end, 0 3 2 1 */ \
+ sl=_mm256_maskload_epi64((I*)(zv+zvtoss),endmask);   val \
+ _mm256_maskstore_epi64((I*)zv, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),(I*)base,sl,endmask,SZI));   /* scatter read, write sequential */ \
+\
+ zbase=(I*)zbase+ns;   /* advance result pointer */ \
+}
+
+
 #define fcopyNI(T,S) {T *zv=zbase,*bv=(T*)base; DO(ns, I sel=ss[i]; if(unlikely((UI)sel>=(UI)nl)){sel+=nl; axflags&=~AXFCKST0; ASSERT(((UI)sel<(UI)nl),EVINDEX)} zv[i]=bv[sel];) zbase=(C*)zbase+(ns<<S); axflags-=AXFCKST0;}
     // once we have vetted the parameters, there's no need to check for index error.  But possibly neg
 #define fcopyNI8 fcopyNI(I,LGSZI)
@@ -211,9 +248,17 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   axflags|=0b100;  // size 100 means 'use move'
  }
  axflags&=~REPSGN(axes[r].nsel);   // for complementary axis, use single block-copying routine
- // loop over all axes.
  I ns=axes[r].nsel, nl=axes[r].lenaxis, *ss=axes[r].sels; ns=REPSGN(ns)^ns;  // bring last-axis info into registers
  void *zbase=voidAV(z);  // running output pointer
+#if C_AVX2
+ __m256i al,al1,sgnbit;
+ if(((axflags^0b11011)+((I)zbase&(SZI-1)))==0){
+  // 8-byte aligned cell.  Switch to the routine using gather, and initialize the needed values
+  // it in conceivable that we could have an unaligned 8-byte cell if somebody reshaped a cell of irregular boundary
+  axflags=0b11111; al=_mm256_set1_epi64x(nl); al1=_mm256_set1_epi64x(nl-(IMIN+1)); sgnbit=_mm256_set1_epi64x(IMIN);  
+ }
+#endif
+ // loop over all axes.
  while(1){
   // move one _1-cell using the indexes.  We are in a loop through the _1-cells; each case in the switch below copies one _1-cell
   switch(axflags&0x1f){
@@ -222,6 +267,9 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   case 0b11010: fcopyNI4 break; case 0b10010: fcopy4 break; case 0b01010: fcopyN4 break;
   case 0b11011: fcopyNI8 break; case 0b10011: fcopy8 break; case 0b01011: fcopyN8 break;
   case 0b11100: fcopyNIv(0) break; case 0b10100: fcopyv(0) break; case 0b01100: fcopyNv(0) break;
+  case 0b11111: fcopygather8(fcopyvalNI) axflags-=AXFCKST0; break; case 0b10111: fcopygather8(fcopyval) break; case 0b01111: fcopygather8(fcopyvalN) break;
+    // carry on with fewer audits if gather repeated
+
   case 0b00000: fcopyC break;
   default: break;
   }
@@ -761,7 +809,7 @@ A jtcompidx(J jt,I axislen,A ind){
  // Since we expect the count to be small, we allocate a return block of the maximum size.  We then use the tail end
  // to hold a bitmask of the values that have not been crossed off
  RZ(ind=likely(ISDENSETYPE(AT(ind),INT))?ind:cvt(INT,ind));  // ind is now an INT vector, possibly the input argument
- I allolen=MAX(axislen-1,1);  // number of words needed.  There must be at least one value crossed off, but we always need at least 1 word for bitmask
+ I allolen=MAX(axislen,1);  // number of words needed.  There must be at least one value crossed off, but we always need at least 1 word for bitmask
  A z; GATV0(z,INT,allolen,1) I *zv0=IAV1(z), *zv=zv0;   // allocate the result/temp block.  
  I bwds=(axislen+(BW-1))>>LGBW;  // number of words needed: one bit for each valid index vallue
  I *bv=zv+allolen-bwds; mvc(bwds*SZI,bv,SY_64?4*SZI:2*SZI,validitymask); bv[bwds-1]=~((~1ll)<<((axislen-1)&(BW-1)));  // fill the block with 1s to indicate we need to write; clear ending 0s

@@ -835,6 +835,8 @@ testn 10000 ,. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
 
 (,:~"2 i. 3 4 5) -:  (i. 3 4 5) (<a:,&<a:)}"2 i. 3 2 4 5  NB. verify last axis can't be removed
 
+23334 -: +/ , 0 (<1;0;<<_1) } i. 2 2 65
+
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '

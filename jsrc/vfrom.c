@@ -237,6 +237,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
 
  I noframe=REPSGN(framesize-2); axes+=r&noframe; r-=r&noframe;  // F..F if all previous axes are in base; only one selection pass needed (gives early exit)
  celllen<<=k;  // convert last-axis len to bytes
+
  // decide what copy routines to use for last axis.  
  JMCDECL(endmask)  // in case cellsize is irregular, define mask for JMC
  I axflags=(AXFCKST0*3);  // init axis-r test flags: 11 normally, 00 for complementary 
@@ -251,11 +252,21 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
  I ns=axes[r].nsel, nl=axes[r].lenaxis, *ss=axes[r].sels; ns=REPSGN(ns)^ns;  // bring last-axis info into registers
  void *zbase=voidAV(z);  // running output pointer
 #if C_AVX2
- __m256i al,al1,sgnbit;
- if(((axflags^0b11011)+((I)zbase&(SZI-1)))==0){
-  // 8-byte aligned cell.  Switch to the routine using gather, and initialize the needed values
-  // it in conceivable that we could have an unaligned 8-byte cell if somebody reshaped a cell of irregular boundary
-  axflags=0b11111; al=_mm256_set1_epi64x(nl); al1=_mm256_set1_epi64x(nl-(IMIN+1)); sgnbit=_mm256_set1_epi64x(IMIN);  
+ axflags=(((axflags^0b11011)+((I)zbase&(SZI-1)))==0)?0b11111:axflags;
+ // For 8-byte aligned cell, switch to the routine using gather, and initialize the needed values
+ // it is conceivable that we could have an unaligned 8-byte cell if somebody reshaped a cell of irregular boundary
+ __m256i al=_mm256_set1_epi64x(axes[r].lenaxis);  // in all lanes: axis len
+ __m256i al1=_mm256_add_epi64(al,_mm256_set1_epi64x(Iimax));  // len-1 in offset binary
+ __m256i sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
+ if(unlikely((((0b11110-axflags)&(axes[r].nsel-2))<0)&&axes[r-((UI)r>0)].sels==0)){  // atom {"1 y &c  last axis is 1 long, gatherable, and previous axis taken in full
+  // switch to code that goes down the column, gathering
+  I sel=*ss; sel+=REPSGN(sel)&nl; ASSERT((UI)sel<(UI)nl,EVINDEX)  // validate the single selector in the last axis
+  base+=sel<<LGSZI;  // offset base to account for indexing in the discarded axis
+  nl<<=LGNPAR;  // nl becomes the stride in atoms between groups of gathers, 4*length of last axis
+  --r;  // remove the last axis
+  ns=axes[r].nsel;  // ns now has the length of the axis taken in full
+  // al still holds the length of the last axis
+  axflags=0b11110;  // switch to gather-in-full code
  }
 #endif
  // loop over all axes.
@@ -269,6 +280,39 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   case 0b11100: fcopyNIv(0) break; case 0b10100: fcopyv(0) break; case 0b01100: fcopyNv(0) break;
   case 0b11111: fcopygather8(fcopyvalNI) axflags-=AXFCKST0; break; case 0b10111: fcopygather8(fcopyval) break; case 0b01111: fcopygather8(fcopyvalN) break;
     // carry on with fewer audits if gather repeated
+  case 0b11110:
+  { \
+ /* we want to keep the stores aligned on a cacheline boundary, so we back up the pointers accordingly */ 
+ I bun=((I)zbase>>LGSZI)&(NPAR-1); C *zv=(C*)((I*)zbase-bun); /* backup amount, aligned zv */ 
+ /* we have to avoid fetching out of bounds, lest we take a microprogram check that is slow. */ 
+ /* For the first batch (including when it is last also), leave bv pointing to item 0 and put invalid indexes at 0 */ 
+ I *bv=(I*)base;  /* back base to match adj to zbase */ 
+ al1=_mm256_mul_epu32(al,_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN-bun])));  /* offset 0 lands on first item */
+ endmask=_mm256_loadu_si256((__m256i*)(validitymask+2*NPAR-bun));  /* valid part of first batch */ 
+ C *lastzv=(C*)((I*)zv+((bun+ns-1)&-NPAR));  /* start of the block containing the last word */ 
+ if(zv!=lastzv){  /* if there is a section using only the leading mask... */ 
+  /* first section, masked at the front */ 
+  _mm256_maskstore_epi64((I*)zv, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),bv,_mm256_and_si256(al1,endmask),endmask,SZI));   /* scatter read, write sequential */ 
+  bv+=nl; /* advance to second group of lines */ 
+  /* put out the middle blocks.  We must adjust bv and the masks to make index 0 valid at the first position */ 
+  al1=_mm256_mul_epu32(al,_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  /* offset 0 lands on first item */
+  bv-=bun*(nl>>LGNPAR);  /* Because the negative index gives an invalid offset from the 32-bit multiply, */
+  /* advance al1 to 0 1 2 3 and back base pointer to match amount we advanced al1.  Now index 0 is in bounds */ 
+  endmask=_mm256_cmpeq_epi64(endmask,endmask);  /* set mask=1s for middles */ 
+  while((zv+=NPAR*SZI)!=lastzv){  /* middle section, unmasked */ 
+   _mm256_storeu_si256((__m256i*)zv, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),bv,al1,endmask,SZI)); 
+   bv+=nl; /* advance to next group of lines */ 
+  } 
+  /* put out the last block. */ 
+  endmask=_mm256_loadu_si256((__m256i*)(validitymask+((NPAR-1)&-(bun+ns)))); /* mask at end, 0 3 2 1 */  
+  _mm256_maskstore_epi64((I*)zv, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),bv,_mm256_and_si256(al1,endmask),endmask,SZI));   /* scatter read, write sequential */ 
+ }else{  /* there is only one section, masked at both ends.  Leave bv pointing to item 0 */ 
+  endmask=_mm256_and_si256(endmask,_mm256_loadu_si256((__m256i*)(validitymask+((NPAR-1)&-(bun+ns))))); /* mask at end, 0 3 2 1 */ 
+  _mm256_maskstore_epi64((I*)zv, endmask, _mm256_mask_i64gather_epi64(_mm256_setzero_si256(),bv,_mm256_and_si256(al1,endmask),endmask,SZI));   /* scatter read, write sequential */ 
+ } 
+ zbase=(I*)zbase+ns;   /* advance result pointer */ 
+}
+ break;
 
   case 0b00000: fcopyC break;
   default: break;
@@ -648,7 +692,7 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  ARGCHK2(a,w)
  if(unlikely(!(AT(a)&INT)))RZ(a=cvt(INT,a));  // integral indexes required
  I *as=AS(a); I af=AR(a)-1; I naxa=as[af]; naxa=af>=0?naxa:1; af=af>=0?af:0;  // naxa is length of the index list, i. e. number of axes of w that disappear during indexing
- I nia; PROD(nia,MAX(af,0),as);     // number of 1-cells of a
+ I nia; PROD(nia,af,as);     // number of 1-cells of a
  I wr=AR(w); I *ws=AS(w); I wcr=wr-wf;
  ASSERT(naxa<=wcr,EVLENGTH)  // the number of axes must not exceed the length of a major cell
  if(unlikely((-AN(a)&-AN(w))>=0)){A z;  // empty array, either a or w   scaf could avoid this?
@@ -658,8 +702,9 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
   GA00(z,AT(w),0,wf+(wcr-naxa)+af); MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AS(a),af)  MCISH(AS(z)+wf+af,AS(w)+wf+naxa,wcr-naxa)
   R z;
  }
- // get #cells in selected portion, and #atoms in the cell being indexed
+ // get #cells in selected portion, #cells indexed, and #atoms in the cell being indexed
  I wnk; PROD(wnk,wcr-naxa,ws+wf+naxa);  // #atoms in minor cell, below the indexing
+ I ncx; PROD(ncx,naxa,ws+wf);  // # minor cells in major cell
  // calculate the rank of the result
  I zr=wr-naxa+af;  // remove the index axes from the result; if there are multiple indexes, keep their _1-axes
  // create the axis struct, with 1 or 2 axes.  The axis for the selectors is marked as having rank
@@ -672,7 +717,7 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  axes[0].currselx=0; axes[0].sels=0; axes[0].currselv=0; axes[0].sel0=0;  // fill in frame axis - should be 1 store
  I r=m>1;  // remember if frame is included as an axis.  #axes-1.  We need a leading axis in full if there are multiple cells of w
  // fill in last axis, for the indexes
- axes[r].lenaxis=IMAX; axes[r].lencell=wnk; axes[r].nsel=nia;  // fill in selection axis
+ axes[r].lenaxis=ncx; axes[r].lencell=wnk; axes[r].nsel=nia;  // fill in selection axis, including # indexed items
  // convert a into an array of indexes
  //  first decide where to put the selectors
  I *indv;  // will point to where selectors will be put

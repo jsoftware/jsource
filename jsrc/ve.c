@@ -583,7 +583,7 @@ F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;PROLOG(889);
  ASSERT(!ISSPARSE(t),EVNONCE);
  if(((c-BW)&SGNIF(t,B01X))>=0)R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num(2)):num(2)));  // 
  CPROD(,m,r-1,s);
- GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
+ GATV(z,INT,m,r-((UI)r>0),s); x=AV(z); v=BAV(w);
  if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
  else mvc(m*SZI,x,1,MEMSET00);
  EPILOG(z);

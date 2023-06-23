@@ -171,7 +171,7 @@ static void jtiixfi(I*z,D*a,I*w,I n,I m,I c,B ge){I k,p,q;C x,y;
 // x I. y
 DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  ARGCHK2(a,w);
- ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
+ ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-((UI)ar>0);  // n=length of 1-cell of a, r=frame of a
  wr=AR(w); wt=AT(w); ws=AS(w);
  ASSERT(r<=wr,EVRANK);
  ASSERTAGREE(as+ar-r,ws+wr-r,r)

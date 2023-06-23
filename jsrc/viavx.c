@@ -775,7 +775,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   //  See if we need to abort owing to shapes.
   // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
-  f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;  // see below.  f1<0 here means cell of w has rank smaller than the item of a-cell, thus there are no matches possible
+  f=af?af:wf; s=af?as:ws; r=acr-((UI)acr>0); f1=wcr-r;  // see below.  f1<0 here means cell of w has rank smaller than the item of a-cell, thus there are no matches possible
         // f1 is length of frame in w
   I f1clamp=REPSGN(f1); I disagree; TESTDISAGREE(disagree,as+af+1,ws+wf+(~f1clamp&f1),r)
   if(unlikely(f1clamp<disagree)){I f0,*v;A z;   // true if f1<0 OR disagree!=0

@@ -67,7 +67,8 @@ F1(jttable){A z,zz;I r,wr;
  F1PREFIP;ARGCHK1(w);
  // We accept the pristine calculations from ravel
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
- RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items
+//  obsolete  RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items
+ RZ(IRSIP1(w,0L,r-((UI)r>0),jtravel,z));  // perform ravel on items
  R r?z:IRSIP1(z,0L,0L,jtravel,zz);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
 

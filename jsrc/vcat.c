@@ -233,7 +233,8 @@ DF2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,
   if(likely(2*lr-1<=ar+wr)){  // if ranks differ by at most 1
    // items have the same rank or one argument is an item of the other (cases where the ranks differ by more than 1 follow the general path below)
    // see if the shapes agree up to the shape of an item of the longer argument
-   I mismatch=0; I cr=lr-1; cr=cr<0?0:cr;
+// obsolete    I mismatch=0; I cr=lr-1; cr=cr<0?0:cr;
+   I mismatch=0; I cr=lr-((UI)lr>0);
    TESTDISAGREE(mismatch,as+ar-cr,ws+wr-cr,cr)  // compare the tail of the shapes, for the length of an item of the longer shape
    if(likely(!mismatch)){
     // The data can be copied in toto, with only the number of items changing.

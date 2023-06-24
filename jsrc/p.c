@@ -214,7 +214,7 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
    ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN);
    // create faux fs to pass args to the multiple-assignment function, in AM and valencefns.  AT must be 0 for eformat, too
    PRIM asgfs; ABACK((A)&asgfs)=symtab; AT((A)&asgfs)=0; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
-   I rr=AR(v)-1; rr&=~REPSGN(rr); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf); 
+   I rr=AR(v)-((UI)AR(v)>0); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf); 
    if(unlikely(jt->jerr!=0)){
     // If the assignment failed, try to explain why, since there is nowhere else to do so.  jtis may have formatted a message already (for invalid =:); if so, it will survive.  Otherwise
     // we infer an agreement error from EVLENGTH, or an error in opening from EVDOMAIN

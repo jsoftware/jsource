@@ -134,7 +134,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   L *asym=&SYMORIGIN[cv->itemsym]; A val=asym->val;  // stored reference address; incumbent value there
   fa(val); asym->val=0; asym->valtype=0;   // free the incumbent if any, clear val in symbol in case of error
   // Calculate the item size and save it
-  I isz; I r=AR(t)-1; r=r<0?0:r; PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
+  I isz; I r=AR(t)-((UI)AR(t)>0); PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
   // Allocate a virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=&asym->val; A svb=virtual(t,0,r); jt->tnextpushp=pushxsave;  // since we can't ZAP a virtual, allocate this offstack to take ownership
   RZ(svb) AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINIT(svb,2); AN(svb)=isz; MCISH(AS(svb),AS(t)+1,r)  // AC=2 since we store in symbol and cv

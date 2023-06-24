@@ -1016,7 +1016,7 @@ DF2(jtsumattymes1){
  {I rankgiven = (acr|wcr)-1; acr=rankgiven?acr:ar; wcr=rankgiven?wcr:wr;}
 
  // Exchange if needed to make the cell-rank of a no greater than that of w.  That way we know that w will never repeat in the inner loop
- if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr; I *ts=as; as=ws; ws=ts;}
+ if(acr>wcr){A t=w; w=a; a=t; I tr=wr; wr=ar; ar=tr; I tcr=wcr; wcr=acr; acr=tcr; I *ts=as; as=ws; ws=ts;}
 
  // Convert arguments as required
  I it=MAX(AT(a),AT(w)); it=fit!=0?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.[01], convert everything to float

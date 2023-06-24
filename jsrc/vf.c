@@ -283,7 +283,7 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; r=wcr-1; RESETRANK;
- if((I )(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreitem); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity  // We handle only single operations here, where a has rank<2
+ if((I)(1<acr)|(I)(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreitem); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity  // We handle only single operations here, where a has rank<2
  // acr<=ar; ar<=acr; therefore ar==acr here
  fauxblockINT(yfaux,4,1);
  if(1>=wcr)y=a;  // y is atom or list: $ is the same as ($,)

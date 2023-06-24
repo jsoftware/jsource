@@ -280,8 +280,8 @@ R z;
 }
 
 // apply f2 on items of a or w against the entirety of the other argument.  Pass on rank of f2 to reduce rank nesting
-DF2(jteachl){ARGCHK3(a,w,self); I lcr=AR(a)-1<0?0:AR(a)-1; I lr=lr(self); lr=lcr<lr?lcr:lr; I rr=rr(self); rr=AR(w)<rr?AR(w):rr; R rank2ex(a,w,self,lr,rr,lcr,AR(w),FAV(self)->valencefns[1]);}
-DF2(jteachr){ARGCHK3(a,w,self); I rcr=AR(w)-1<0?0:AR(w)-1; I rr=rr(self); rr=rcr<rr?rcr:rr; I lr=lr(self); lr=AR(a)<lr?AR(a):lr; R rank2ex(a,w,self,lr,rr,AR(a),rcr,FAV(self)->valencefns[1]);}
+DF2(jteachl){ARGCHK3(a,w,self); I lcr=AR(a)-((UI)AR(a)>0); I lr=lr(self); lr=lcr<lr?lcr:lr; I rr=rr(self); rr=AR(w)<rr?AR(w):rr; R rank2ex(a,w,self,lr,rr,lcr,AR(w),FAV(self)->valencefns[1]);}
+DF2(jteachr){ARGCHK3(a,w,self); I rcr=AR(w)-((UI)AR(w)>0); I rr=rr(self); rr=rcr<rr?rcr:rr; I lr=lr(self); lr=AR(a)<lr?AR(a):lr; R rank2ex(a,w,self,lr,rr,AR(a),rcr,FAV(self)->valencefns[1]);}
 
 // u&.v
 // PUSH/POP ZOMB is performed in atop/amp/ampco

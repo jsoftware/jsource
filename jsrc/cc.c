@@ -1211,7 +1211,8 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
      RZ(opcell=take((hkeep-hsz)>=0?sc(vkeep):v2(vkeep,hkeep),virtw));
     }
     if(state&STATEREFLECTY)RZ(opcell=reverse(opcell));  // reverse vertical
-    if(state&STATEREFLECTX)RZ(opcell=df1(z,opcell,qq(ds(CREV),num(-1))));  // reverse horizontal
+// obsolete     if(state&STATEREFLECTX)RZ(opcell=df1(z,opcell,qq(ds(CREV),num(-1))));  // reverse horizontal
+    if(state&STATEREFLECTX){A t; I tr=AR(opcell)-((UI)AR(opcell)>0); RZ(opcell=IRS1(opcell,0L,tr,jtreverse,t));}  // reverse horizontal
    }
    // execute the verb on the cell and assemble results
    RZ(z=CALL1(f1,opcell,fs)); 

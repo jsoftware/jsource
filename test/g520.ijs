@@ -1742,6 +1742,10 @@ a =: 10000 ?@$ 0
 1000 > (7!:2 '(60 6 ?@$ #a) { a') -  (7!:2 '(60 6 ?@$ #a)')
 1000 < (7!:2 '(60 6 ?@$ #a) {"1 _ a') -  (7!:2 '(60 6 ?@$ #a)')
 
+NB. returning w in full as extreme virtualing
+a =: 3 10000 ?@$ 0
+7!:2 'a =: 0 1 2 { a'
+
 
 NB. test long names
 abcdefghijabcdefghijabcdefghij0 =. 1

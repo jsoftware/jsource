@@ -137,7 +137,7 @@
 #define cap(x)                      jtcap(jt,(x))
 #define caro(x)                     jtcaro(jt,(x))
 // if we ensured that setting AFRO always removed inplaceability, we could simplify this test
-#define makewritable(x)             RZ(x=(AC(x)<(AFLAG(x)<<((BW-1)-AFROX)))?x:ca(x))  // OK if AC is 0x8..1 and AFRO is 0
+#define makewritable(x)             RZ(x=likely(AC(x)<(AFLAG(x)<<((BW-1)-AFROX)))?x:ca(x))  // OK if AC is 0x8..1 and AFRO is 0
 #define mkwris(x)                   jtmkwris(jt,x)
 #define case1a(x,y)                 jtcase1a(jt,(x),(y))
 #define casev(x)                    jtcasev(jt,(x))
@@ -465,6 +465,7 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 #define mfgmp(x)                    gmpmfree(x)  // to free GMP blocks
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y),ds(CFROM))   
+#define fromA(x,y)                  jtfrom((J)((I)jt|JTINPLACEA),(x),(y),ds(CFROM))  // a arg is not reused
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))
 #define frombs1(x,y,z)              jtfrombs1(jt,(x),(y),(z))
 #define frombsn(x,y,z)              jtfrombsn(jt,(x),(y),(z))

@@ -121,7 +121,7 @@ DF2(jtcdot2){A p;I k;
  F2RANK(1,RMAX,jtcdot2,self);
  SETIC(w,k);
  RZ(p=BOX&AT(a)?dfc(k,a):pfill(k,a));
- R AR(w)?from(p,w):w;
+ R AR(w)?fromA(p,w):w;
 }
 
 F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
@@ -173,7 +173,7 @@ F2(jtadot2){A m,p;I n;
  ASSERT(all1(le(negate(m),a))&&all1(lt(a,m)),EVINDEX);
  if(!AR(w)){RZ(vi(a)); RCA(w);}
  RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));
- R equ(w,IX(n))?p:from(p,w);  // special case when w is index vector - just return permutation.  Otherwise shuffle items of w
+ R equ(w,IX(n))?p:fromA(p,w);  // special case when w is index vector - just return permutation.  Otherwise shuffle items of w  scaf detect this in from
  // pristinity unchanged here: if w boxed, it was set by {
 }
 

@@ -760,7 +760,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
   k=bsum(n,p); m=i+j?1:0;  // k=# 1s  m is 1 if there are 0s and 1s
   GATV0(x,INT,m+1,1); v=AV(x); v[m]=i+j; v[0]=0;  // 0=index of first item (always 0); 1 if it exists is the other
   GATV0(y,INT,m+1,1); v=AV(y); j=n-k; k=i?j:k; k&=-m; v[0]=k; v[m]=n-k;  // if 1st value is 0, complement k; if only 1 value, clear k
-  if(!(wt&VERB))RZ(x=from(x,w)); w=x; x=b?x:y; y=b?y:w; R stitch(x,y);  // select using index (unless i.@#, then keep index); set order & ,.
+  if(!(wt&VERB))RZ(x=fromA(x,w)); w=x; x=b?x:y; y=b?y:w; R stitch(x,y);  // select using index (unless i.@#, then keep index); set order & ,.
  }
  // for other types of a, we handle it quickly only if w is B01/INT/FL or i.@# which has type of VERB
  if(wt&B01+INT+FL+VERB){

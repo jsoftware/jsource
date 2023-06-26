@@ -217,18 +217,23 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     index0 = sels[0]; index0+=REPSGN(index0)&lenaxis; indexn=0;  // index of first item, set last item OK
     // check the last item before checking the middle.
     DQ(nsel-1, indexn=sels[1+i]; indexn+=REPSGN(indexn)&lenaxis; if(indexn!=index0+1+i){indexn=lenaxis; break;});
+    nsel=AR(axes[r].ind)!=1?0:nsel;  // if shape changes, set flag value to suppress returning entire w unchanged
    }else{
     // complementary indexing.  See if the inner bits are consecutive (in-full is impossible)
     // the number of leading 0s is .sel0.  If #leading+#trailing+nsel=lenaxis, the 1s are consecutive
+    nsel=~nsel;  // convert nsel to positive length
     I nzeros=index0=axes[r].sel0;  // init pos of first 1, and count of lower 0s
     I trailx=(lenaxis-1)>>LGBW;  // last word containing bits
     nzeros-=(BW-1)-((lenaxis-1)&(BW-1));  // we will clear bits past the end; they will reappear as 0s so subtract their count
     UI trailwd=(UI)sels[trailx]<<((BW-1)-((lenaxis-1)&(BW-1)))>>((BW-1)-((lenaxis-1)&(BW-1)));  // clear upper bits
     while(1){if(trailwd!=0){nzeros+=(BW-1)-CTLZI(trailwd); break;} nzeros+=BW; if(trailx==0)break; trailwd=(UI)sels[--trailx];}  // go till we hit a 1, which might not exist if nsel=0
-    indexn=lenaxis-!!(lenaxis<=(nzeros+~nsel));  // lenaxis-1 if consecutive (equality), lenaxis if not
+    indexn=lenaxis-!!(lenaxis<=(nzeros+nsel));  // lenaxis-1 if consecutive (equality), lenaxis if not
    }
+   // nsel has been modified if shape changes
    if((index0|(lenaxis-indexn-1))>=0){  // index0>=0 and indexn<=lenaxis-1
     // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
+    // if the selected length is the axis length, and there is only one axis, we are taking the entire w arg - just return it
+    if(unlikely((r+(nsel^lenaxis))==0))R RETARG(w);
     I baseadj=base-CAV(w);  // movement of base needed from upper selectors.  Must calculate before virtual in case it self-virtuals and moves w
     RZ(z=virtualip(w,index0*celllen,zr));  // inplace w OK since no cells repeated
     // fill in shape and number of atoms, and offset the data pointer using base

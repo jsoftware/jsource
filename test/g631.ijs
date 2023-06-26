@@ -136,19 +136,21 @@ NB.      (1 if result pristine/unboxed on noninplaceable input)
 NB. If y is negative a pristine scalar box is used
 ckprist =: 2 : 0
 boxr =. 0 [ boxs =. y
-if. y < 0 do. boxr =. _ [ boxs =. 1000 end.   NB. scalar box, not RO
+if. 8 = 3!:0 y do. iboxs =. y
+elseif. y < 0 do. boxr =. _ [ iboxs =. i. 1000   NB. scalar box, not RO
+else. iboxs =. i. boxs end.
 'virt prist wprist rprist' =. 4 {. n
 NB. virt: produces virtual result when applied inplace
 NB. virtnip: produces virtual result when applied not-in-place
 NB. virtprist: produces virtual result leaves pristine set in the arg it came from
 'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
 NB. Verify taking from a pristine loses its pristinity
-a =: <"boxr i. boxs  NB. Sets prist
+a =: <"boxr memu iboxs  NB. Sets prist
 1: u a
 assert. ((virtprist +. wprist) = ispristorunbox) 13!:_4 a   NB. Making a virtual does not turn off pristinity in the backer
 NB. Verify pristinity is passed to an only successor but not a shared successor
-assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:_4@] u) <"boxr i. boxs
-assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:_4@[ 0:) <"boxr i. boxs
+assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:_4@] u) <"boxr memu iboxs
+assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:_4@[ 0:) <"boxr memu iboxs
 1 return. y
 :
 NB. Verify taking from a pristine loses its pristinity
@@ -282,7 +284,8 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 (<@>@]^:((<4)-:]))/\. ckprist 0 0  ] 5  NB. not inplace virtw
 /:~ ckprist 0 1 ] 5  NB. Passes pristinity through 
 /:~ ckprist 0 1 ] 4 1  NB. Creates nonvirtual block
-/:~ ckprist 1 0 ] 4 10  NB. Creates virtual block and does not affect pristinity of a
+/:~ ckprist 0 1 ] 0.5 +|. i. 4 10  NB. creates nonvirtual block
+/:~ ckprist 0 1 ] 4 10  NB. return original y arg
 \:~ ckprist  0 1 ] 5  NB. This could pass pristinity through 
 \:~ ckprist  0 1 ] 4 5  NB. This could pass pristinity through 
 '<"0 i. 4 3 5' \:"1 ckprist  0 0 2 ] 4 5  NB. Repeated cells - not pristine 

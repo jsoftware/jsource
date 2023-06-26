@@ -794,6 +794,7 @@ extern A        jtiovxs(J,I,A,A);
 extern D        jtintpow(J,D,I);
 extern A        jtirs1(J,A,A,I,AF);
 extern A        jtirs2(J,A,A,A,I,I,AF);
+extern I        jtisravelix(J,A);
 extern A        jtjerrno(J);
 extern A        jtjgets(JJ,C*);
 extern C        jtjinit2(JS,int,C**);

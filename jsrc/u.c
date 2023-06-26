@@ -220,6 +220,15 @@ A jtcstr(J jt,C*s){A z; RZ(z=mkwris(str((I)strlen(s),s))); CAV(z)[AN(z)]=0; R z;
 // Return 1 iff w is the evocation of a name.  w must be a FUNC
 B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 
+// return 1 if (,w) -: i. # ,w
+// if there is an error, we just return 0
+I jtisravelix(J jt,A w){
+ I wt=AT(w); if(unlikely(!(wt&B01+INT))){RZ(w=cvt(INT,w)) wt=AT(w);}  // get type, force to numeric
+ if(wt&INT){I *wv=IAV(w); DO(AN(w), if(wv[i]!=i)R 0;)}
+ else{C *wv=BAV(w); DO(AN(w), if(wv[i]!=i)R 0;)}
+ R 1;  // return 1 if all match
+}
+
 // Extract the integer value from w, return it.  Set error if non-integral or non-atomic.  Values whose abs > IMAX are converted to IMAX/-IMAX
 I jti0(J jt,A w){ARGCHK1(w);
  if(likely(ISDENSETYPE(AT(w),INT+B01))){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly

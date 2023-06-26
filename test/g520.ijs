@@ -1744,7 +1744,7 @@ a =: 10000 ?@$ 0
 
 NB. returning w in full as extreme virtualing
 a =: 3 10000 ?@$ 0
-7!:2 'a =: 0 1 2 { a'
+5000 > 7!:2 'a =: 0 1 2 { a'
 
 
 NB. test long names

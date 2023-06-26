@@ -296,6 +296,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_bin_ui __gmpz_bin_ui            // https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_cdiv_q __gmpz_cdiv_q            // https://gmplib.org/manual/Integer-Division
 #define jmpz_fdiv_q __gmpz_fdiv_q            // https://gmplib.org/manual/Integer-Division
+#define jmpz_fits_slong_p __gmpz_fits_slong_p // https://gmplib.org/manual/Miscellaneous-Integer-Functions
 #define jmpz_clear __gmpz_clear              // https://gmplib.org/manual/Initializing-Integers
 #define jmpz_cmp __gmpz_cmp                  // https://gmplib.org/manual/Integer-Comparisons
 #define jmpz_cmpabs_ui __gmpz_cmpabs_ui      // https://gmplib.org/manual/Integer-Comparisons
@@ -305,6 +306,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_fdiv_qr __gmpz_fdiv_qr          // https://gmplib.org/manual/Integer-Division
 #define jmpz_fdiv_qr_ui __gmpz_fdiv_qr_ui    // https://gmplib.org/manual/Integer-Division
 #define jmpz_fdiv_r __gmpz_fdiv_r            // https://gmplib.org/manual/Integer-Division
+#define jmpz_fits_slong_p __gmpz_fits_slong_p // https://gmplib.org/manual/Miscellaneous-Integer-Functions
 #define jmpz_gcd __gmpz_gcd                  // https://gmplib.org/manual/Number-Theoretic-Functions
 #define jmpz_get_d __gmpz_get_d              // https://gmplib.org/manual/Converting-Integers
 #define jmpz_get_d_2exp __gmpz_get_d_2exp    // https://gmplib.org/manual/Converting-Integers
@@ -356,6 +358,7 @@ EXTERN void (*jmpz_fdiv_q)(mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_fdiv_qr)(mpz_t, mpz_t, const mpz_t, const mpz_t);
 EXTERN void (*jmpz_fdiv_qr_ui)(mpz_t, mpz_t, const mpz_t, mpir_ui);
 EXTERN void (*jmpz_fdiv_r)(mpz_t, const mpz_t, const mpz_t);
+EXTERN int  (*jmpz_fits_slong_p)(const mpz_t);
 EXTERN void (*jmpz_gcd)(mpz_t, const mpz_t, const mpz_t);
 EXTERN D    (*jmpz_get_d)(const mpz_t);
 EXTERN D    (*jmpz_get_d_2exp)(long int*, const mpz_t);
@@ -501,6 +504,7 @@ extern void jfree4gmp(void*, size_t);
 #define icmpXX(x,y) shimXX(jmpz_cmp, x,y)           // *x-y
 #define icmpXI(x,y) shimXI(jmpz_cmp_si, x,y)
 #define Xfdiv_qXX(x, y) XshimXX(jmpz_fdiv_q, x, y)      // <.x%y
+#define ifits_slong_pX(x) shimX(jmpz_fits_slong_p, x)   // x = IMIN<.IMAX>.x (nonzero result if true)
 #define XgcdXX(x, y) XshimXX(jmpz_gcd, x, y)            // x+.y
 #define DgetX(y) shimX(jmpz_get_d, y)    // y+0.0
 #define IgetX(y) shimX(jmpz_get_si, y)   // (I)y  NB. UINT_MAX&|&.(-&INT_MIN) y

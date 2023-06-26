@@ -620,6 +620,9 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata-
   // Output the rest, one bit at a time
   t=NEXT;  // Get random # for bits
   B*c=(B*)u; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
+ }else if(unlikely(IMAX==m&&XNUM&AT(w))){
+  // extended output
+  X*xv=XAV(z); RZ(xv); AT(z)= XNUM; mvc(n*SZI, xv, SZI, MEMSET00); DO(n,(*xv++)=XAV(roll(w))[0];)
  }else{
   // integer output
   r=n; s=GMOF(m,x); if(s==x)s=0;
@@ -799,6 +802,7 @@ DF2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata
   // calculate the number of values to deal: m, plus a factor times the expected number of collisions, plus 2 for good measure.  Will never exceed n.  Repeats a little less than 1% of the time for n between 30 and 300
   A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); RZ(z=jttake(JTIPW,a,z));
 #else
+  if(unlikely(n==IMAX&&XNUM&AT(w))){A h= plus(num(2),a); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m);R take(a,z);}
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
   GATV0(h,INT,p,1); hv=AV(h); DO(p, hv[i]=0;);

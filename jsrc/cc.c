@@ -1206,9 +1206,11 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
    C *dvlrc=dvv, *svlrc=svv; DQ(vlrc, I sh=sdataend-(svlrc+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvlrc,svlrc,sh); svlrc+=vss1; dvlrc+=vds1;);
    // If a copy was truncated, take only the valid elements.
    if(state&(STATEREFLECTX|STATEREFLECTY|STATETAKE)){  // something might be truncated/reflected
-    I vkeep=vkeep1-(vtrunc-vi)*vmv; vkeep=(vkeep>vsz)?vsz:vkeep; // vertical length to keep
-    if(((vkeep-vsz)|(hkeep-hsz))<0){   // if either axis must be shortened...
-     RZ(opcell=take((hkeep-hsz)>=0?sc(vkeep):v2(vkeep,hkeep),virtw));
+    if(state&STATETAKE){  // if the cell-size variables are valid...
+     I vkeep=vkeep1-(vtrunc-vi)*vmv; vkeep=(vkeep>vsz)?vsz:vkeep; // vertical length to keep
+     if(((vkeep-vsz)|(hkeep-hsz))<0){   // if either axis must be shortened...
+      RZ(opcell=take((hkeep-hsz)>=0?sc(vkeep):v2(vkeep,hkeep),virtw));  // shorten 1 or 2 zxes
+     }
     }
     if(state&STATEREFLECTY)RZ(opcell=reverse(opcell));  // reverse vertical
 // obsolete     if(state&STATEREFLECTX)RZ(opcell=df1(z,opcell,qq(ds(CREV),num(-1))));  // reverse horizontal

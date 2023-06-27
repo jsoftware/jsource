@@ -56,9 +56,6 @@ struct __attribute__((aligned(CACHELINESIZE))) faxis {
  I sel0;  // value of first selector in this axis (index of first 1, if complementary).  Not set in last axis except when complementary.  0 if taken in full
 };
 
-#if C_AVX2
-#else
-#endif
 #define AXFCKST0 0x8  // 0x18 is 11 to check neg&index, 10 for no checks, 01 to check neg, 00 for complementary axis
 // macros to move the last axis.  base points to base of cell selected by axis -2, zbase to next output location
 // ns is axes[r].nsel, nl is axes[r].lenaxis, ss is axes[r].sels
@@ -132,6 +129,9 @@ struct __attribute__((aligned(CACHELINESIZE))) faxis {
  } \
  zbase=(I*)zbase+ns;   /* advance result pointer */ \
 }
+// version not using gather, atom {"1 array
+#define fcopyinfull(T) { T *zv=(T*)zbase, *bv=(T*)base; DQ(ns, *zv++=*bv; bv+=nl;) zbase=zv;} break;
+
 
 
 #define fcopyNI(T,S) {T *zv=zbase,*bv=(T*)base; DO(ns, I sel=ss[i]; if(unlikely((UI)sel>=(UI)nl)){sel+=nl; axflags&=~AXFCKST0; ASSERT(((UI)sel<(UI)nl),EVINDEX)} zv[i]=bv[sel];) zbase=(C*)zbase+(ns<<S); axflags-=AXFCKST0;}
@@ -282,7 +282,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
 
  // decide what copy routines to use for last axis.  
  JMCDECL(endmask)  // in case cellsize is irregular, define mask for JMC
- I axflags=(AXFCKST0*3);  // init axis-r test flags: 11 normally, 00 for complementary 
+ I axflags=(AXFCKST0*3);  // init axis-r test flags: 11 to check neg & invalid
  if(celllen==(celllen&-celllen&(2*SZI-1))){  // check for size 1 2 4 8
   // size can be moved by primitive store.  set size
   axflags|=CTTZI(celllen);  // bits 0-2 give size
@@ -290,26 +290,32 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   JMCSETMASK(endmask,celllen,0)  // allow overcopy
   axflags|=0b100;  // size 100 means 'use move'
  }
- axflags&=~REPSGN(axes[r].nsel);   // for complementary axis, use single block-copying routine
+#if C_AVX2
+ __m256i al=_mm256_set1_epi64x(axes[r].lenaxis), al1, sgnbit;  // in all lanes: axis len
+#endif
+ axflags=axes[r].nsel<0?0b00111:axflags;   // for complementary axis, use single block-copying routine 0b00111
  I ns=axes[r].nsel, nl=axes[r].lenaxis, *ss=axes[r].sels; ns=REPSGN(ns)^ns;  // bring last-axis info into registers
  void *zbase=voidAV(z);  // running output pointer
-#if C_AVX2
- axflags=(((axflags^0b11011)+((I)zbase&(SZI-1)))==0)?0b11111:axflags;
- // For 8-byte aligned cell, switch to the routine using gather, and initialize the needed values
- // it is conceivable that we could have an unaligned 8-byte cell if somebody reshaped a cell of irregular boundary
- __m256i al=_mm256_set1_epi64x(axes[r].lenaxis);  // in all lanes: axis len
- __m256i al1=_mm256_add_epi64(al,_mm256_set1_epi64x(Iimax));  // len-1 in offset binary
- __m256i sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
- if(unlikely((((0b11110-axflags)&(axes[r].nsel-2))<0)&&axes[r-((UI)r>0)].sels==0)){  // atom {"1 y &c  last axis is 1 long, gatherable, and previous axis taken in full
-  // switch to code that goes down the column, gathering
+ if(unlikely((UI)(~(axflags>>2)&SGNTO0(axes[r].nsel-2))>(UI)axes[r-((UI)r>0)].sels)){  // atom {"1 y &c.  last axis is 1 long, length 1/2/4/8 non-complementary, and previous axis taken in full
+  // atom {"1 y, with short cells.  Process last 2 axes together; switch to code that goes down the column
   I sel=*ss; sel+=REPSGN(sel)&nl; ASSERT((UI)sel<(UI)nl,EVINDEX)  // validate the single selector in the last axis
-  base+=sel<<LGSZI;  // offset base to account for indexing in the discarded axis
-  nl<<=LGNPAR;  // nl becomes the stride in atoms between groups of gathers, 4*length of last axis
+  base+=sel*celllen;  // offset base to account for indexing in the discarded axis
   --r;  // remove the last axis
   ns=axes[r].nsel;  // ns now has the length of the axis taken in full
+  axflags&=0b00011;  // select the copy-in-full code for the appropriate length of cell
+#if C_AVX2
+  // if gather is supported, change nl to distance between gathers
+  nl<<=(celllen>>LGSZI)<<(LGLGNPAR);  // nl becomes the stride in atoms between groups of gathers, 4*length of last axis
+#endif
   // al still holds the length of the last axis
-  axflags=0b11110;  // switch to gather-in-full code
  }
+#if C_AVX2  // WARNING!!! this conditional starts with else
+else{   // normal last axis
+ axflags=(((axflags^0b11011)+((I)zbase&(SZI-1)))==0)?0b11111:axflags; // For 8-byte aligned cell, switch to the routine using gather.  it is conceivable that we could have an unaligned 8-byte cell if somebody reshaped a cell of irregular boundary
+ // init vars needed for gather.  It is faster to set these than to test for whether we need to
+ al1=_mm256_add_epi64(al,_mm256_set1_epi64x(Iimax));  // len-1 in offset binary
+ sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
+}
 #endif
  // loop over all axes.
  while(1){
@@ -320,11 +326,17 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   case 0b11010: fcopyNI4 break; case 0b10010: fcopy4 break; case 0b01010: fcopyN4 break;
   case 0b11011: fcopyNI8 break; case 0b10011: fcopy8 break; case 0b01011: fcopyN8 break;
   case 0b11100: fcopyNIv(0) break; case 0b10100: fcopyv(0) break; case 0b01100: fcopyNv(0) break;
+#if C_AVX2
   case 0b11111: fcopygather8(fcopyvalNI) axflags-=AXFCKST0; break; case 0b10111: fcopygather8(fcopyval) break; case 0b01111: fcopygather8(fcopyvalN) break;
     // carry on with fewer audits if gather repeated
-  case 0b11110: fcopygatherinfull break;
+  case 0b00011: fcopygatherinfull break;  // scaf should have non-AVX version for 1/2/4-byte
+#else
+  case 0b00011: fcopyinfull(I) break;
+#endif
+  // routines for atom {"1 y, depending on size
+  case 0b00010: fcopyinfull(I4) break; case 0b00001: fcopyinfull(S) break; case 0b00000: fcopyinfull(C) break;
 
-  case 0b00000: fcopyC break;
+  case 0b00111: fcopyC break;  // complementary axis of any size
   default: break;
   }
   if(likely(r==0))break;  // if there is only 1 axis, we're done

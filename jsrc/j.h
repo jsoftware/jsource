@@ -1640,6 +1640,7 @@ static inline __m256i LOADV32I(void *x) { return _mm256_loadu_si256(x); }
 static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
+#define LGLGNPAR 1  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input (as D*), z->result (as D*), u=input atom4 and result
 //                                                                                                  __SSE2__    atom2
 // loop advances x and y to end +1 of region
@@ -1790,6 +1791,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 
 #define NPAR ((I)(sizeof(float64x2_t)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 1  // 128-bit no good automatic way to do this
+#define LGLGNPAR 0
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 //                                                                                  __SSE2__    atom2
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \

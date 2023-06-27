@@ -1204,8 +1204,9 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   for(vi=rs[0];vi;--vi){A opcell=virtw;
    // move in the lower-right corner.  Avoid overrun, and detect if there was overrun.  Watch out for addresses wrapping around the end of memory (length=lcrhsiz)
    C *dvlrc=dvv, *svlrc=svv; DQ(vlrc, I sh=sdataend-(svlrc+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvlrc,svlrc,sh); svlrc+=vss1; dvlrc+=vds1;);
-   // If a copy was truncated, take only the valid elements.
+   // check for cell reflection/truncation
    if(state&(STATEREFLECTX|STATEREFLECTY|STATETAKE)){  // something might be truncated/reflected
+    // If a copy was truncated, take only the valid elements.
     if(state&STATETAKE){  // if the cell-size variables are valid...
      I vkeep=vkeep1-(vtrunc-vi)*vmv; vkeep=(vkeep>vsz)?vsz:vkeep; // vertical length to keep
      if(((vkeep-vsz)|(hkeep-hsz))<0){   // if either axis must be shortened...

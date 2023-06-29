@@ -409,12 +409,14 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 1: 0 ((2 2);<3 3)} i. 10 10
 (271828;2) -: 9!:54''
 
+1: 0 : 0   NB. axes containing table now OK
 9!:55 (271828)   NB. suppress msg but test
 1: 0 (<1;<i. 2 2)} i. 10 10  NB. axes containing table
 (271827;'') -: 9!:54''
 9!:55 (271828;3)   NB.
 1: 0 (<1;<i. 2 2)} i. 10 10 
 (271828;3) -: 9!:54''
+)
 
 1: 0 : 0   NB. m}"r is now OK
 9!:55 (271828)   NB. suppress msg but test

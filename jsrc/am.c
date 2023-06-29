@@ -108,11 +108,12 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 }   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
 #define AMFLAGRTNX 0
-#define AMFLAGRTN ((I)1<<AMFLAGRTNX)  // switch routine: 0llddd: cells have length 1<<ll with duff offset ddd; 1ll0dd single cell of length 1<<ll, duff offset dd;
+#define AMFLAGRTN ((I)0x3f<<AMFLAGRTNX)  // switch routine: 0llddd: cells have length 1<<ll with duff offset ddd; 1ll0dd single cell of length 1<<ll, duff offset dd;
                                  // 10b1xx non-atomic length cell, xx is 00=multiple cells of a, 01=single cell of a (length abytes) repeated in each result cell; 10=a is a single cell of length abytes=cellsize not repeated.  When xx is x0, b=0 means cellsize is a multiple of SZI
                                  // 1101xx recursive types, xx is 00=multiple cells of a, 01=single cell of a (length abytes) repeated in each result cell; 1y=a is a single cell of length abytes=(cellsize<<lgk), with y=1 if abytes=SZI
-#define AMFLAGINFULL1X 8
+#define AMFLAGINFULL1X 7
 #define AMFLAGINFULL1 ((I)1<<AMFLAGINFULL1X)  // axis 1 is taken in full
+#define AMFLAGSPLITX 8  // axis number of the axis (if any) that a expires in the middle of.  Possible only if selector has rank>1.  We must reset a in the middle of processing the axis
 #define AMFLAGDUFFWX 16
 #define AMFLAGDUFFW ((I)1<<AMFLAGDUFFWX)  // duff backoff for w, 0-7
 #define AMFLAGDUFFAX 24
@@ -120,15 +121,17 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  struct __attribute__((aligned(CACHELINESIZE))) axis{
   UI size;  // First, the length of this axis in the result.  Later, size in bytes of a cell of this axis
   C *base;  //  pointer to result cell of higher axis that this axis is indexing within.  base for axis i does not include index i.  Not needed for axis -1, or -2 if taken in full
-  I max;  // number of indexes for this axis (if in full, total axis length).  Set to -1 at init to indicate the axis was an atom
+  I max;  // number of indexes for this axis (if in full, total axis length).
   I *indexes;  // pointer to index array, or 0 if axis is taken in full
   UI scan;  // index number being worked on currently
   I resetadder;  // #atoms (later, bytes) to add to av when this axis rolls over (used to tell how to repeat a).  For ind forms, always resets after last axis; for axis forms, resets after a rollover of the lowest
                   // axis whose cell size is as big as a.  But if a single atom is repeated, always 0 to avoid destroying the value
+  A ind;  // If there are indexes, pointer to the A block for them (used to check shape).  If no indexes, &mtv.  Thus the rank is always right even if the selector values are not
+  I resetmod;  // if there is a split selector, requiring a to be reset in the middle of the selector, this is the number of items between resets
  };
 // Handle a ind} w after indices have been converted to integer atom indexes, dense
-// cellframelen is the number of axes of w that were used in computing the cell indexes, complemented if ind is axes.  Lower axes of w are the cell shape
-//   Value is (number of axes added for frame)/(framelen wrt a)/(framelen wrt w)/(#axes in index)
+// cellframelen is the number of axes of w that were used in computing the cell indexes, complemented if ind is axes.  Later axes of w are the cell shape
+//   Value is (number of axes added for frame)/(framelen wrt a)/(framelen wrt w)/(#axes in ind)
 // ind is the assembled indices OR a pointer to axes[]
 static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  ARGCHK2(a,w); RZ(ind);
@@ -139,21 +142,30 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // audit shape of a: must be a suffix of (shape of ind),(shape of selected cell)
  I compalen;  // len of shape of a that has been compared
  I acr=AR(a)-aframelen, wcr=AR(w)-wframelen;  // inner cell ranks
- I surplusind=AR(ind)-cellframelen; surplusind=cellframelen<0?0:surplusind;  // get # extra axes in ind beyond the ones that selected cells.  for axes, all axes select
- ASSERT(acr<=wcr+surplusind,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
+// obsolete  I surplusind=AR(ind)-cellframelen; surplusind=cellframelen<0?0:surplusind;  // get # extra axes in ind beyond the ones that selected cells.  for axes, all axes select
  I *as=AS(a)+aframelen, *ws=AS(w)+wframelen;  // address of shapes of cells of a/w
  if(cellframelen>=0){  // ind is indexes
+  ASSERT(acr<=wcr+AR(ind)-cellframelen,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
   compalen=MAX(0,acr-(wcr-cellframelen));  // #axes of a that are outside of the cell in w
   ASSERTAGREE(as,AS(ind)+AR(ind)-compalen,compalen);  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
- }else{  // ind is axes.  The cell-frame part of the shape of a must be a suffix of the cell-frame part of axes
-  I aaxis=compalen=MAX(0,acr-(wcr-~cellframelen));  // #axes of a that are outside of the cell in w
+ }else{I wi; struct axis *axes=(struct axis*)ind;  // ind is axes.  The cell-frame part of the shape of a must be a suffix of the cell-frame part of axes
+  I ai=compalen=MAX(0,acr-(wcr-~cellframelen));  // #axes of a that are outside of the cell in w
 // obsolete   nframeaxes = (wframelen!=0)+BETWEENO(aframelen,1,wframelen); // number of axes added for frame
-  // scan through the frame of ind, backwards.  If an axis has max<0, that was a selector that contained an atom: it disappeared from the shape of m{y and we skip it here (while resetting its len to +1).
-  // compare the unskipped axes of ind with those of a.  Stop when a is exhausted.  If a has surplus axes, that's an error
-  DQ(~cellframelen, if(((struct axis*)ind)[i+nframeaxes+1].max<0)((struct axis*)ind)[i+nframeaxes+1].max=1; else if(aaxis){ASSERT(((struct axis*)ind)[i+nframeaxes+1].max==as[--aaxis],EVLENGTH)})
-  ASSERT(aaxis==0,EVRANK);  // error if unmatched axes of a
+  // scan through the frame of ind, backwards.  Match each axis-shape with trailing shape of ind.  Stop when a is exhausted.  If a has surplus axes, that's an error
+  for(wi=(~cellframelen);((ai-1)|(wi-1))>=0;--wi){  // loop through each axis of w, starting at the last.  Stop when wi OR ai hits 0
+   // ai is the index+1 of the next axis of a to match
+   struct axis *wx=&axes[wi+nframeaxes];  // the next axis of w to match to a.  axis 0 is left empty (bad decision)
+   // the shape of the next selector of a comes from max if the axis is taken in full, or ind if it is not
+   I *inds=AS(wx->ind); I indr=AR(wx->ind); inds=wx->indexes==0?&wx->max:inds;   // get rank/shape of selectors
+   I aslen=MIN(ai,indr); ASSERTAGREE(as+ai-aslen,inds+AR(wx->ind)-aslen,aslen)  // verify that the shape of a matches ind at the tail of each
+   ai-=aslen;  // account for axes of a that we have tested
+  }
+// obsolete   If an axis has max<0, that was a selector that contained an atom: it disappeared from the shape of m{y and we skip it here (while resetting its len to +1).
+// obsolete   // compare the unskipped axes of ind with those of a.  
+// obsolete   DQ(~cellframelen, if(((struct axis*)ind)[i+nframeaxes+1].max<0)((struct axis*)ind)[i+nframeaxes+1].max=1; else if(aaxis){ASSERT(((struct axis*)ind)[i+nframeaxes+1].max==as[--aaxis],EVLENGTH)})
+  ASSERT(ai==0,EVRANK);  // error if unmatched axes of a
  }
- ASSERTAGREE(as+compalen,ws+wcr-(acr-compalen),acr-compalen);  // the rest of the shape of m{y comes from shape of y
+ ASSERTAGREE(as+compalen,ws+wcr-(acr-compalen),acr-compalen)  // the rest of the shape of m{y comes from shape of y
 
 // obsolete  ASSERT(HOMO(AT(a),AT(w))||(-AN(a)&-AN(w))>=0,EVINHOMO);  // error if xy both not empty and not compatible
  // if there is surplus outer frame for a, replicate w to match the result size
@@ -202,6 +214,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  I an=AN(a);  // # atoms in a, negative if -@{`[`]}
  I acatoms; PROD(acatoms,acr,as) acatoms=an<0?an:acatoms;   // number of atoms in a major cell of a, negative (as flag) if -@{`[`]}
  I avnreset=-(acatoms<<lgk);  // amount to add to an av that has overrun to get it back to av0; after setup, the reset adder for axis -1
+ I acresetcell=avnreset;  // copy, used for rare case of split selector
  C * RESTRICT av=CAV(a);
  JMCDECL(endmask)
  I n0,n1;  // # of iterations of axis -1,-2.  When ind is indices, these are calculated directly as (#indexes) and (#repetitions of a).  When axes, these are reloaded for each pass through the last 2 axes
@@ -280,6 +293,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  }else{I i;
   // 'ind' is actually orthogonal axes, already filled in (in terms of atoms)
   axes=(struct axis *)ind;  // use the input block for all the axes
+  amflags=0;  // init
   // now that we have the size of an atom, convert the cell-sizes-in-atoms to bytes
   // set the reset value at the correct level (if any)
   r=~cellframelen+nframeaxes;  // number of axes to process.  [0] is the array in full, [r] is the last axis
@@ -290,14 +304,20 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   // roll up cell sizes, convert resetadder from atoms to bytes, and insert a resetadder at the point where a major cell of a is exhausted & must be repeated
   I prevsize=cellsize<<lgk;  //  size of cell of w at previous axis, in bytes.  Init to size of cell of last axis
   I axisressize=cellsize;  // size in atoms of full cell of a at this axis: following axis result size*number of indexes at this axis.  When this is = size of a, we must wrap a
+  I awrappt=acatoms;  // wrap a when axis size is >= size of a major cell
   for(i=r;;--i){
-   axisressize*=axes[i].max;  // ressize if size of an a-cell of the next axis
+   axisressize*=axes[i].max;  // ressize is size of an a-cell of the next axis
    I tsz=axes[i].size; axes[i].size=prevsize;  // .size is size of cell of w at this axis.
+   if(unlikely(((awrappt-axisressize)&(1-AR(axes[i].ind)))<0)&&acatoms>cellsize){   // axisressize>awrappt && AR(axes[i].ind)>1; but not if a is repeated: reset doesn't happen then
+    // a is exhausted in the middle of this axis.  We must reset repeatedly in the axis
+    axes[i].resetmod=axes[i].max/(axisressize/awrappt); amflags|=i<<AMFLAGSPLITX;  // remember the axis that is split, and how often it must reset.  The case is very rare
+   }
    if(i==1)break;
    prevsize*=tsz;  // Leave prevsize with size of cell of next axis
    axes[i].resetadder<<=lgk; // size in atoms of a cell of the NEXT axis; convert resetadder to bytes
-   if(axisressize>=acatoms){axes[i].resetadder+=avnreset; avnreset=0;} // if this axis is the first whose size is as big as a, reset after axis exhausted
-      // the += on resetadder is because the next axis may have asked for a rollover while this axis is asking for a reset; that cancels out to 0 (=advance to next cell)
+   if(axisressize>=awrappt){    // if this axis is the first whose size is as big as a, reset after axis exhausted
+    axes[i].resetadder+=avnreset; awrappt=IMAX;  // the += on resetadder is because the next axis may have asked for a rollover while this axis is asking for a reset; that cancels out to 0 (=advance to next cell)
+   }
   }
   if(unlikely(axisressize==0))RCA(w);  // if nothing to move, exit so we can use UNTIL loops.  Have to wait till here for error-checking
   avnreset=axes[r].resetadder;  // move last-axis reset to known location for comp ease.  [1].resetadder is immaterial
@@ -308,64 +328,72 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
    base+=*andx*axes[i+1].size;  // get address of cell being worked on, for the next axis
   )
   // now base points to the base cell for axis -1, which includes the offset from the first index in axis -2.  scan1 has the address of the indexes for axis -2
-  amflags=(scan1==0)<<AMFLAGINFULL1X; ++scan1;  // Remember if axis -2 taken in full.  the calculation of base was a prefetch of the first index in axis -2.  Increment to the next position if any.  scan1 is unused if axis taken in full
+  amflags|=(scan1==0)<<AMFLAGINFULL1X; ++scan1;  // Remember if axis -2 taken in full.  the calculation of base was a prefetch of the first index in axis -2.  Increment to the next position if any.  scan1 is unused if axis taken in full
  }
 
  // select routine to use based on argument size/type
  // cellsize is now atoms; change it to bytes when we have the routine, EXCEPT for recursive/-@{`[`]} types which stay as atoms
- if(!UCISRECUR(z)){
-  // not replacement of recursive indirect blocks
-  if(cellsize<=acatoms){
-   // a major cell of a is at least as big as a cell being replaced, and function is not -@{`[`]}
-   if(((LOWESTBIT(cellsize)-cellsize)|(SZI-(cellsize<<lgk))|-aframelen)>=0){  // if cellsize is power of 2 and total cell is <= 8 bytes, and is the only cell of a
-    // the cell can be moved as a primitive type.  We will use a Duff loop.  Calculate the offets and index, which depends on whether the cell is repeated
-    // We don't have a loop that moves a single cell and allows an av address (ex: 99 100 (<1 2;2 3)}"0 2 i. 5 6 where 99 & 100 need to be replicated), so we can't come here & have to treat them as general cells
-    C *avv=(C*)*(A*)av;  I repeatatom=(cellsize==acatoms); av=(cellsize==acatoms)?avv:av; avnreset=(cellsize==acatoms)?0:avnreset;  // repeatatom is 1 if the single atom is repeated (and there is only 1 outer cell).  In that case, replace av with the atom itself and clear the reset adder so it doesn't change
-    I duffmask=0x7>>repeatatom;  // for nonrepeated cells, duff loop is 8 cells; for repeated atom, 4
-    I backupct=(-n0)&duffmask;  //  duff backup
-    n0=(n0+duffmask)>>(3-repeatatom);  // convert n0 into # turns through duff loop, giving 8/4 cells per turn
-    amflags|=CTTZI(cellsize<<lgk)*8 + (repeatatom<<5) + (backupct*((1+AMFLAGDUFFW+AMFLAGDUFFA)^(repeatatom<<AMFLAGDUFFAX)));  // routine is 0brccDdd (r=repeat, cc=cellsize, ddd=duff backoff, D=0 if repeat)
-   }else{
-    // cell is not 1-, 2-, 4-, or 8-size, or there are multiple outer cells of a. We will have to use move loops.  No duff
+ if(likely(((C)(amflags>>AMFLAGSPLITX))<(C)(r-1))){  // normal case with no split selector in last 2 axes
+  if(!UCISRECUR(z)){
+   // not replacement of recursive indirect blocks
+   if(cellsize<=acatoms){
+    // a major cell of a is at least as big as a cell being replaced, and function is not -@{`[`]}
+    if(((LOWESTBIT(cellsize)-cellsize)|(SZI-(cellsize<<lgk))|-aframelen)>=0){  // if cellsize is power of 2 and total cell is <= 8 bytes, and is the only cell of a
+     // the cell can be moved as a primitive type.  We will use a Duff loop.  Calculate the offets and index, which depends on whether the cell is repeated
+     // We don't have a loop that moves a single cell and allows an av address (ex: 99 100 (<1 2;2 3)}"0 2 i. 5 6 where 99 & 100 need to be replicated), so we can't come here & have to treat them as general cells
+     C *avv=(C*)*(A*)av;  I repeatatom=(cellsize==acatoms); av=(cellsize==acatoms)?avv:av; avnreset=(cellsize==acatoms)?0:avnreset;  // repeatatom is 1 if the single atom is repeated (and there is only 1 outer cell).  In that case, replace av with the atom itself and clear the reset adder so it doesn't change
+     I duffmask=0x7>>repeatatom;  // for nonrepeated cells, duff loop is 8 cells; for repeated atom, 4
+     I backupct=(-n0)&duffmask;  //  duff backup
+     n0=(n0+duffmask)>>(3-repeatatom);  // convert n0 into # turns through duff loop, giving 8/4 cells per turn
+     amflags|=CTTZI(cellsize<<lgk)*8 + (repeatatom<<5) + (backupct*((1+AMFLAGDUFFW+AMFLAGDUFFA)^(repeatatom<<AMFLAGDUFFAX)));  // routine is 0brccDdd (r=repeat, cc=cellsize, ddd=duff backoff, D=0 if repeat)
+    }else{
+     // cell is not 1-, 2-, 4-, or 8-size, or there are multiple outer cells of a. We will have to use move loops.  No duff
 // obsolete     I mvnoinc=cellsize==acatoms;  // 1 if a contains a single cell, and thus must not increment address after the move
-    I mvinc=REPSGN((cellsize-acatoms)|(-aframelen));  // ~0 normally; 0 if a contains a single cell, and thus must not increment address after the move  (aca>csz or aframe)
-    I mvbytelen=((cellsize<<lgk)&(SZI-1))!=0;  // 1 if cells are not word multiples, in which case we must not overstore
+     I mvinc=REPSGN((cellsize-acatoms)|(-aframelen));  // ~0 normally; 0 if a contains a single cell, and thus must not increment address after the move  (aca>csz or aframe)
+     I mvbytelen=((cellsize<<lgk)&(SZI-1))!=0;  // 1 if cells are not word multiples, in which case we must not overstore
 // obsolete     amflags|=0b100100+(mvnoinc<<1)+(mvbytelen<<3);  // select appropriate code
-    amflags|=0b100110+(mvinc<<1)+(mvbytelen<<3);  // select appropriate code
+     amflags|=0b100110+(mvinc<<1)+(mvbytelen<<3);  // select appropriate code
 // obsolete     avnreset&=mvnoinc-1;  // if increment is supressed, also clear avnreset
-    // avnreset is set to make the proper adjustment to av after it has been incremented in the loop.  If the loop doesn't increment, compensate by
-    // adding the increment to avnreset
+     // avnreset is set to make the proper adjustment to av after it has been incremented in the loop.  If the loop doesn't increment, compensate by
+     // adding the increment to avnreset
 // obsolete    avnreset&=mvinc;  // if increment is supressed, also clear avnreset
-    avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
-    JMCSETMASK(endmask,cellsize<<lgk,mvbytelen)   // prepare for repeated move
+     avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
+     JMCSETMASK(endmask,cellsize<<lgk,mvbytelen)   // prepare for repeated move
+    }
+   }else if(unlikely(acatoms<0)){  // AN<0 is a flag indicating -@:{`[`]}.  Type must be FL.  There is no a
+    if(cellsize==1){  // just 1 word per cell, use duff loop
+     I backupct=(-n0)&3;  //  duff backup
+     n0=(n0+3)>>2;  // convert n0 into # turns through duff loop, giving 4 cells per turn
+     amflags|=0b111100 + (backupct*((1+AMFLAGDUFFW)));  // routine is 0b1111dd (dd=duff backoff)
+    }else amflags|=0b101111;  // block-negate routine
+   }else{
+    // a must be repeated to fill a replaced cell.  The address of a is never incremented in the loop
+    amflags|=0b100101;   // use repeating code, with no duff bias.
+    acatoms<<=lgk;  // repurpose atom count to byte count for this loop
+    avnreset+=acatoms;  // compensate for not incrementing in the loop
    }
-  }else if(unlikely(acatoms<0)){  // AN<0 is a flag indicating -@:{`[`]}.  Type must be FL.  There is no a
-   if(cellsize==1){  // just 1 word per cell, use duff loop
-    I backupct=(-n0)&3;  //  duff backup
-    n0=(n0+3)>>2;  // convert n0 into # turns through duff loop, giving 4 cells per turn
-    amflags|=0b111100 + (backupct*((1+AMFLAGDUFFW)));  // routine is 0b1111dd (dd=duff backoff)
-   }else amflags|=0b101111;  // block-negate routine
+   cellsize<<=lgk;  // convert cellsize to bytes for the rest of the processing
   }else{
-   // a must be repeated to fill a replaced cell.  The address of a is never incremented in the loop
-   amflags|=0b100101;   // use repeating code, with no duff bias.
-   acatoms<<=lgk;  // repurpose atom count to byte count for this loop
-   avnreset+=acatoms;  // compensate for not incrementing in the loop
-  }
-  cellsize<<=lgk;  // convert cellsize to bytes for the rest of the processing
- }else{
-  // replacing recursive indirect blocks
-  // cases: multiple cells of a; single cell of a, repeated; single cell of a, duped; single atom of a, repeated
+   // replacing recursive indirect blocks
+   // cases: multiple cells of a; single cell of a, repeated; single cell of a, duped; single atom of a, repeated
 // obsolete   I repa=cellsize>=acatoms;  // 1 if a has a single cell
 
-  I mvinc=REPSGN((cellsize-acatoms)|(-aframelen));  // ~0 normally; 0 if a contains a single cell with no frame, and thus must not increment address after the move  (aca>csz or aframe)
-  I nodupa=cellsize<=acatoms;  // 0 if the single cell of a must be duplicated in each replaced cell
+   I mvinc=REPSGN((cellsize-acatoms)|(-aframelen));  // ~0 normally; 0 if a contains a single cell with no frame, and thus must not increment address after the move  (aca>csz or aframe)
+   I nodupa=cellsize<=acatoms;  // 0 if the single cell of a must be duplicated in each replaced cell
 // obsolete   avnreset&=repa-1;  // if a has a single cell, don't increment its address/value
-  avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
+   avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
 // obsolete   amflags|=0b110011+2*repa+nodupa;  // 110100=incremented a; 110110=single cell of a; 110101=single cell of a, no frame, duped
-  amflags|=0b110101+2*mvinc+nodupa;  // 110100=incremented a; 110110=single cell of a; 110101=single cell of a, duped
-  I oneatom=(an+(t>>RATX))==1; C *avv=(C*)*(A*)av; av=oneatom?avv:av; avnreset=oneatom?0:avnreset; amflags|=3*oneatom;   // if a is one single atom, fetch the atom and set code to 110111
-  cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower.  Leave cellsize as #indirect references
-  acatoms<<=(t>>RATX);  // repurpose # atoms to be # recursibles per atom
+   amflags|=0b110101+2*mvinc+nodupa;  // 110100=incremented a; 110110=single cell of a; 110101=single cell of a, duped
+   I oneatom=(an+(t>>RATX))==1; C *avv=(C*)*(A*)av; av=oneatom?avv:av; avnreset=oneatom?0:avnreset; amflags|=3*oneatom;   // if a is one single atom, fetch the atom and set code to 110111
+   cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower.  Repurpose cellsize as #indirect references
+   acatoms<<=(t>>RATX);  // repurpose # atoms to be # recursibles per atom
+  }
+ }else{
+  // the very rare case where a selector is split in one of the last 2 axes.  We use a routine that copies cells, resetting as needed
+  amflags|=UCISRECUR(z)?0b101101:0b100111;  // recursive or normal
+  // make changes like in the main line above
+  if(cellsize>acatoms)acatoms<<=lgk;  // repurpose atom count to byte count for this loop
+  cellsize<<=UCISRECUR(z)?(t>>RATX):lgk;
  }
 
 // macros for negating axis -1
@@ -417,8 +445,7 @@ skippre:;
    UI i0=n0;  /* number of duff loops for last axis */ \
    scan0-=((amflags>>AMFLAGDUFFWX)&0x7);  // pointer to first 0-cell index, biased by duff adj
    av-=cellsize*(amflags>>AMFLAGDUFFAX);  // bias output pointer too, but not if it is repeated
-   switch(amflags&0x3f){
-   case 0b100111: case 0b101101:   // unused cases
+   switch(amflags&AMFLAGRTN){
    CP11neg break; CP1xvneg break; // negate FL atoms
    CP11(B) break; CP11(US) break; CP11(UI4) break; CP1n(B) break; CP1n(US) break; CP1n(UI4) break;
 #if SY_64
@@ -426,6 +453,12 @@ skippre:;
 #endif
    CP1xv(1,0) break; CP1xv(1,1) break; CP1xv(0,0) break; CP1xv(0,1) break;
    CPn1v break; CP11recur break; CP1nrecur break; CPn1recur break; CP1narecur break;
+   case 0b100111: case 0b101101:  // do-all copier when one of the last 2 axes is split.  Very rare.  100111 is normal, 101101 is recursive boxed
+    DONOUNROLL(n0, if(amflags&8){I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,(A)av) ++ix0;)}
+                                else JMC(base+cellsize**scan0++,av,cellsize,0)  // move 1 cell
+                   av+=cellsize; if(((C)(amflags>>AMFLAGSPLITX))==(C)r&&(i+1)<n0&&(i+1)%axes[r].resetmod==0)av+=acresetcell;  // if axis -1 split, reset for it
+    )
+    if(((C)(amflags>>AMFLAGSPLITX))==(C)(r-1)&&n1!=0&&n1%axes[r-1].resetmod==0)av+=acresetcell;  // if axis -2 split, reset for it
    }
    base=basepre;  // use prefetch
    av+=avnreset;  // if we repeat a after _1-cell, do so.  If av holds a value, this will always add 0
@@ -438,8 +471,15 @@ skippre:;
    if(rinc<=0)goto endamend;  // level 0 is the array in full.  It can't be incremented.  This is the loop exit, taken immediately if there are <=2 axes
    av+=axes[rinc+1].resetadder;  // if a resets for previous level, make that happen
    axes[rinc].scan++;  //  step to next position
-   if(axes[rinc].scan!=(UI)axes[rinc].max)break;  // stop odo if wheel didn't roll over
-   axes[rinc].scan=0;  // reset on rollover
+   if(axes[rinc].scan!=(UI)axes[rinc].max){  // if wheel didn't roll over
+    if(unlikely((C)rinc==(C)(amflags>>AMFLAGSPLITX))){
+     // The very unusual case of a expiring mid-axis, which can happen when a selector has rank>1 (the bottom part of the selector matches the end of a).  When scan hits the reset point, we
+     // back a to the start of the major cell and continue with the same selector.  This can happen for only one axis.  At the end we leave a pointing past the end of the cell
+     if(axes[rinc].scan%axes[rinc].resetmod==0)av+=acresetcell;
+    }
+    break;  // stop odo if wheel didn't roll over
+   }
+   axes[rinc].scan=0;  // rollover.  reset the index pointer
    --rinc;  // back to previous wheel
   }
   // recalc base pointer for next block.  rinc is the last wheel that moved.  Its base is unchanged.  Calculate new bases from rinc+1 through r-1.  'base' will be the base of the last axis,
@@ -634,16 +674,16 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
       axes[indn1].resetadder=0;  // init to no reset at end of axis
       // resolve complementary index
       if((-AN(ax)&SGNIF(AT(ax),BOXX))>=0){   // notempty and boxed means complementary indexing
-       // not complementary indexing: create or keep valid integer index list
-       // the selector may have any shape.  If it is not a list, it will affect the rank of m{y.  We will handle two cases: atom and list selector.
-       // If the selector is an atom, we mark its max as -1 to indicate that the axis is to be skipped when checking frames
+       // not complementary indexing: create or keep valid integer index selectors
+       // the selector may have any shape.  If it is not a list, it will affect the rank of m{y.  We store into .ind to indicate the shape of the selector
        RZSUFF(ax=pind(axlen,ax),R jteformat(jt,self,a,w,ind););  // audit selectors
-       if(unlikely(AR(ax)>1)){
-        // one of the selectors has rank >1.  We have to go to general case
-        if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
-        goto noaxes;  // table in selectors: abort axis work
-       }
-       axes[indn1].max=(AR(ax)-1)|AN(ax);  // note how many there are, or -1 if atom
+// obsolete        if(unlikely(AR(ax)>1)){
+// obsolete         // one of the selectors has rank >1.  We have to go to general case
+// obsolete         if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
+// obsolete         goto noaxes;  // table in selectors: abort axis work
+// obsolete        }
+// obsolete       axes[indn1].max=(AR(ax)-1)|AN(ax);  // note how many there are, or -1 if atom
+       axes[indn1].max=AN(ax);  // note how many selectors there are
        axes[indn1].indexes=IAV(ax);  // save pointer to the indexes
       }else{
        // here for complementary indexing
@@ -656,20 +696,21 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
         axes[indn1].max=AN(ax); axes[indn1].indexes=IAV(ax);  // set number of indexes, and their address
        }else{     // axis taken in full.  Tag with 0 pointer.  BUT the last axis cannot be taken in full: if we try, discard all trailing in-full axes  
         if(likely(indn1!=lastn)){    // non-trailing axis
-         axes[indn1].max=axlen; axes[indn1].indexes=0;   // total axis length, and 0 pointer to mean 'in full'
+         axes[indn1].max=axlen; axes[indn1].indexes=0; ax=mtv;   // total axis length, and 0 pointer to mean 'in full'; in-full always looks like a rank-1 selector
         }else{   // trailing axis taken in full: delete it
          if(likely(i!=wframelen))--lastn;else{RZ(ax=IX(axlen)) axes[indn1].max=AN(ax); axes[indn1].indexes=IAV(ax);}   // if rare (<<<'') in all axes, must instantiate the index vector & install in case there is rank
         }
        }
       }
+      axes[indn1].ind=ax;  // save the selectors given or created - only the rank is used
      }
      if(unlikely(awframelen!=0)){
       // There is frame.  Fill in the first one or two axes
-      axes[1].scan=0; axes[1].indexes=0;  // axis in full, and advance to next outer cell of a after filling it 
+      axes[1].scan=0; axes[1].indexes=0; axes[1].ind=mtv;  // axis in full, and advance to next outer cell of a after filling it.  In-full axes are always rank 1
         // #cells in the common frame of w and a
       // if wframe>aframe, 2 loops are required, the second repeating major cells of a.  Cell2 3 and above have been filled in.
       if(unlikely(BETWEENO(aframelen,1,awframelen))){
-       axes[2].scan=0; axes[2].indexes=0;  // axis in full, and repeat the cell of a
+       axes[2].scan=0; axes[2].indexes=0; axes[2].ind=mtv; // axis in full, and repeat the cell of a; In-full axis has rank 1
        PROD(axes[2].size,wframelen-aframelen,AS(w)+aframelen) axes[2].max=axes[2].size;  // #cells is the size of surplus frame of w
        PROD(axes[1].size,aframelen,AS(w)) axes[1].max=axes[1].size;   // shared frame gives # outer cells of a
        PROD(axes[2].resetadder,acr,AS(a)+aframelen)  // inner cell gives size of each one; roll over after repeats
@@ -699,7 +740,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
     if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }
   }
-noaxes:;
+// obsolete noaxes:;
   // at this point z contains the ind/axes info, and cellframelen indicates which.  If z=0 we have a complex form that will be converted to ind form in z
   if(unlikely(z==0))z=jstd(w,ind,&cellframelen,wframelen);  // get ind and framelen for complex indexes
   z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,(cellframelen&255)+(wframelen<<RANKTX)+(aframelen<<RANK2TX)+(nframeaxes<<(3*RANKTX)));  //  dense a if needed; dense amend

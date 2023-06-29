@@ -884,7 +884,7 @@ A jtcompidx(J jt,I axislen,A ind){
                             // We also reserve one word of buffer between the indices and the bitmask since, in the case of (for example) (<<<_1) { i.65, we could end up overwriting the last word of the bitmask before reading it
                             // An alternative would be to pipeline the loop, loading the mask for the next iteration before completing the previous iteration, but this would be annoying and bloat
  A z; GATV0(z,INT,allolen,1) I *zv0=IAV1(z), *zv=zv0;   // allocate the result/temp block.  
- I bwds=(axislen+(BW-1))>>LGBW;  // number of words needed: one bit for each valid index vallue
+ I bwds=(axislen+(BW-1))>>LGBW;  // number of words needed: one bit for each valid index value
  I *bv=zv+allolen-bwds; mvc(bwds*SZI,bv,SY_64?4*SZI:2*SZI,validitymask); bv[bwds-1]=~((~1ll)<<((axislen-1)&(BW-1)));  // fill the block with 1s to indicate we need to write; clear ending 0s
  I *iv=IAV(ind); DO(AN(ind), I ix=iv[i]; if((UI)ix>=(UI)axislen){ix+=axislen; ASSERT((UI)ix<(UI)axislen,EVINDEX)} bv[ix>>LGBW]&=~(1ll<<(ix&(BW-1))); )  // turn off the bit for each index
  I zbase=0; DO(bwds, I bmask=*bv++; while(bmask){I bitno=CTTZI(bmask); *zv++=zbase+bitno; bmask&=bmask-1;} zbase+=BW;)  // copy an index for each remaining bit, clearing LSBs one by one

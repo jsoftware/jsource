@@ -451,8 +451,6 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 
 9!:55 (0)  NB. reset
 
-270869761 1880044261 -: q: IF64{:: 509247139646491621x ; 509247139646491621   NB. catch limit error
-
 4!:55 ;:'a a12 a6 a9 b boxq boxs c dispq disps '
 4!:55 ;:'drop1 erase evmq evms initspace namedvb nub old p ppq pps promptq '
 4!:55 ;:'prompts q read rlq rls s t v '

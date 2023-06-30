@@ -55,6 +55,8 @@ seed -: 9!:0 ''
 
 'length error' -: 2 3 ?. etx 4 5 6
 
+NB. fails with nonce error, but only after this test has been run:   q: 509247139646491621x
+
 4!:55 ;:'a b s seed x'
 
 

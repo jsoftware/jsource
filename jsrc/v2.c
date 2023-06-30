@@ -438,7 +438,7 @@ F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
 
 
 /*
- http://ww2.lafayette.edu/~reiterc/j/vector/factor_ecj.html
+ https://webbox.lafayette.edu/~reiterc/j/vector/factor_ecj.html
  Elliptic curve arithmetic and factorization.
  factor_ecj.ijs
  Cliff Reiter

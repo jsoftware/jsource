@@ -31,10 +31,14 @@ testfiles=: 3 : 0   NB. y. is prefix - e.g., 'g' or 'gm' or 'gs'
 
 NB. redirect test messages to logcat if available
 3 : 0''
-if. 3=nc<'logcat_z_' do.
- techo_z_=: echo_z_ empty logcat_z_
+if. IFIOS +. IFQT +. UNAME-:'Wasm' do.
+ if. 3=nc<'logcat_z_' do.
+  techo_z_=: echo_z_ empty logcat_z_
+ else.
+  techo_z_=: echo_z_ empty 1!:2&5
+ end.
 else.
- techo_z_=: echo_z_ empty 1!:2&5
+ techo_z_=: echo_z_
 end.
 EMPTY
 )

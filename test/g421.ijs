@@ -454,6 +454,8 @@ NB. x f/.. y ------------------------------------------------------------
 
 1: */..~ memu i. 10000   NB. crashed overwriting w, which was also a
 
+'' -: ;@(<@(# # +/ % $)@]/.. >:@i.@#) (0$0)   NB. no frets, execute on fills
+
 NB. x f/.y on empty x ---------------------------------------------------
 
 test=: 2 : 0

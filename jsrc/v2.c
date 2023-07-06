@@ -409,30 +409,42 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
 
 static F1(jtxfactor);
 
-F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
+F1(jtfactor){PROLOG(0063);A y,z;
  ARGCHK1(w);
+ if(unlikely(AN(w)==0)){R df1(z,w,qq(mtv,zeroionei(0)));}  // if w empty return an empty list for each value
  RZ(init4792(jt));
- if(AT(w)&XNUM+RAT)R xfactor(w);
- if(ISDENSETYPE(AT(w),FL+CMPX)){
+ if(AT(w)&XNUM+RAT)R xfactor(w);  // if XNUM, use elliptic routines
+ if(ISDENSETYPE(AT(w),FL+CMPX)){  //  only integers can be factored
   RZ(y=pcvt(INT,w)); 
   if(INT&AT(y))w=y; 
   else{RZ(y=pcvt(XNUM,xco1(w))); ASSERT(XNUM&AT(y),EVDOMAIN); R pcvt(INT,xfactor(y));}
  }
+ F1RANK(0,jtfactor,DUMMYSELF);
+ // from here on we are operating on a single atom in w
  RZ(w=vi(w));
- wn=AN(w); wv=AV(w);
- n=0; DO(wn, k=wv[i]; ASSERT(0<k,EVDOMAIN); n=MAX(n,k););
-#if SY_64
- if(n>2147483647)R cvt(INT,xfactor(w));
-#endif
- u=AV(JT(jt,p4792)); c=8*SZI-2;
- GATV0(z,INT,c*wn,1+AR(w)); MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=c; v=zv=AV(z);
- for(i=m=0;i<wn;++i){
-  n=*wv++;
-  DO(AN(JT(jt,p4792)), d=u[i]; q=n/d; while(n==q*d){*v++=d; n=q; q/=d;} if(q<d)break;);
-  if(1<n)*v++=n;
-  d=v-zv; m=MAX(m,d); zv+=c; while(v<zv)*v++=0; 
- }
- z=c==m?z:taker(m,z);
+// obsolete  wn=AN(w); wv=AV(w);
+// obsolete  n=0; DO(wn, k=wv[i]; ASSERT(0<k,EVDOMAIN); n=MAX(n,k););
+ I nn=BIV0(w); ASSERT(nn>0,EVDOMAIN)  // n=value to factor
+ UI n=nn;  // use unsigned for the rest
+// obsolete #if SY_64
+// obsolete  if(n>2147483647)R cvt(INT,xfactor(w));
+// obsolete #endif
+ I *u=AV(JT(jt,p4792));
+// obsolete  c=8*SZI-2;
+ I factors[BW-1]; I *v=factors;   // max number of factors is (BW-2) since 2^(BW-1) is IMIN
+// obsolete MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=c;
+// obsolete  for(i=m=0;i<wn;++i){
+// obsolete   n=*wv++;
+ UI d,q; DO(AN(JT(jt,p4792)), d=u[i]; q=n/d; while(n==q*d){*v++=d; n=q; q/=d;} if(q<d)break;);
+ *v=n;
+ z=vec(INT,(v-factors)+BETWEENC(n,2,0x7fffffff),factors);  // create a suitable result block; could be 2147117569 for 64-bit.
+ // If the unfactored part is bigger than the reach of our prime list we will have to treat it as extended
+ if(n>0x7fffffff)z=over(z,xfactor(cvt(XNUM,sc(n))));  // append factors bigger than our prime list
+// obsolete *v++=n;  // if there is a remnant, add it on, it is prime
+// obsolete   d=v-zv; m=MAX(m,d); zv+=c; while(v<zv)*v++=0; 
+// obsolete  }
+// obsolete  z=c==m?z:taker(m,z);
+// obsolete  z=take(sc(v-zv),z);  // discard unfilled values
  EPILOG(z);
 }    /* q:"r w */
 

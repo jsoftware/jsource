@@ -101,9 +101,13 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
 }
 
 // obsolete #define MAXIFACTOR 0x7fffffffLL
+#if SY_64
 #define TOTALPRIMES 30000  // pollard beats sieve when the values are big enough
 #define MAXIFACTOR (350411ULL*350411ULL-1ULL)  // <: *: p: >: TOTALPRIMES, which is the largest value we can reliably factor using our prime table
 #define N64BITRECIPS (4792-((4792-54)&-8))   // we process 72-bit recips in batches of 8; this many 64-bit reciprs aligns
+#else
+#define MAXIFACTOR 0x7fffffff  // in 32-bit we can factor any I
+#endif
 // init prime table.  The prime table contains:
 // the first 4792 primes, which gets up to above (%: <: 2^31)
 //  followed on 64-bit by:
@@ -725,10 +729,8 @@ static F1(jtxfactor){PROLOG(0064);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  X x=XAV(w)[0]; UI m=XLIMBn(x)%10000;
  // ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);
-#if SY_64
  if(1>xcompare(x,xc(MAXIFACTOR)))  // if factorable as I, do that
 	 R xco1(factor(sc(xint(x))));
-#endif
  A z;RZ(smallprimes(1229L,x,&z,&x));
  A st;GAT0(st,XNUM,20,1); X*sv0,*sv=sv0=XAV(st); *sv++=x;
  B b=0;while(sv-sv0){

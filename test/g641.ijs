@@ -14,6 +14,14 @@ seed -: 9!:0 ''
 
 NB.  0 1 0 6 7 4 1 52 162 406 942 1905 -: ?. 2x ^ i. 12 NB. tentative
 
+9!:43 ] 2
+'domain error' -: ?. etx _1
+2 -: 9!:42 ''
+'domain error' -: 5 ?. etx _1
+2 -: 9!:42 ''
+1: ?. 10$10
+2 -: 9!:42 ''
+
 'domain error' -: ?. etx 0 _1                          
 'domain error' -: ?. etx 'abc'                         
 'domain error' -: ?. etx u:'abc'                         
@@ -55,7 +63,7 @@ seed -: 9!:0 ''
 
 'length error' -: 2 3 ?. etx 4 5 6
 
-NB. fails with nonce error, but only after this test has been run:   q: 509247139646491621x
+270869761 1880044261 -: q: 509247139646491621x
 
 4!:55 ;:'a b s seed x'
 

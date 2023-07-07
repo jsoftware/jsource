@@ -100,8 +100,34 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  while(n>k)zv[dv[k++]]=p; RETF(z);
 }
 
+// obsolete #define MAXIFACTOR 0x7fffffffLL
+#define TOTALPRIMES 30000  // pollard beats sieve when the values are big enough
+#define MAXIFACTOR (350411ULL*350411ULL-1ULL)  // <: *: p: >: TOTALPRIMES, which is the largest value we can reliably factor using our prime table
+#define N64BITRECIPS (4792-((4792-54)&-8))   // we process 72-bit recips in batches of 8; this many 64-bit reciprs aligns
+// init prime table.  The prime table contains:
+// the first 4792 primes, which gets up to above (%: <: 2^31)
+//  followed on 64-bit by:
+// the 64-bit reciprocal of each prime.  The binary point is at bit 64 for the first 54, at bit 72 after that
+// the primes up to prime 1000000, encoded as the prime gap: nnn->2-14, nnn000->16-28, nnnnnn000000->30-156 (154 is the largest gap found in the first 1e6)
 static I init4792(J jt) {
- if(!JT(jt,p4792)){RZ(JT(jt,p4792)=prime1(IX(4792L))); ACX(JT(jt,p4792));} R 1;
+ if(!JT(jt,p4792)){  // init only once
+  RZ(JT(jt,p4792)=prime1(IX(4792L)));  // init early to speed the sieve
+#if SY_64
+  A p; RZ(p=prime1(IX(TOTALPRIMES))); I *pv=IAV(p);  // get the first million.  If we do more we must change the encoding if the max gap increases
+  A z; GATV0(z,INT,2*4792+((TOTALPRIMES*6)/BW)+100,1); AS(z)[0]=AN(z)=4792; I *zv=IAV(z);  // the length is of the small primes, plus some slop
+  zv[0]=pv[0]; zv[4792+0]=0x8000000000000000;  // first reciprocal is exact: don't round up
+  UI q1,r1;
+  DO(N64BITRECIPS-1, zv[i+1]=pv[i+1]; q1=0x8000000000000000/pv[i+1]; r1=0x8000000000000000%pv[i+1]; zv[4792+i+1]=q1*2+(r1*2/pv[i+1])+1;)  // rest of the first group are rounded up
+  DO(4792-N64BITRECIPS, zv[i+N64BITRECIPS]=pv[i+N64BITRECIPS];  q1=0x8000000000000000/pv[i+N64BITRECIPS]; r1=0x8000000000000000%pv[i+N64BITRECIPS]; zv[4792+i+N64BITRECIPS]=q1*512+(r1*512/pv[i+N64BITRECIPS])+1;)  // second group is rounded up with 8 upper zeros implied
+  UI bits=0, nbits=0; US *out=(US*)&zv[2*4792];  // bitstream and output pointer 
+  DO(TOTALPRIMES-4792, I gap=(pv[i+4792]-pv[i+4792-1])>>1; I encval=gap; encval=gap>7?(gap-7)*8:encval; encval=gap>14?(gap-15)*64:encval; I enclen=gap>7?6:3; enclen=gap>14?12:enclen;  // encoded bits and count
+   bits|=encval<<nbits; nbits+=enclen; if(nbits>=16){*out++=(US)bits; bits>>=16; nbits-=16;}
+  )
+  bits|=0xfc0<<nbits; *out++=(US)bits; *out++=(US)(bits>>16);  // add stopper value, out the remnant
+  JT(jt,p4792)=z;  // save complete table
+#endif
+ ACX(JT(jt,p4792));
+ } R 1;
 }
 
 static I rem(D x,I d){R (I)jfloor(x-d*jfloor(x/(D)d));}
@@ -429,17 +455,46 @@ F1(jtfactor){PROLOG(0063);A y,z;
 // obsolete #if SY_64
 // obsolete  if(n>2147483647)R cvt(INT,xfactor(w));
 // obsolete #endif
- I *u=AV(JT(jt,p4792));
+ UI *u=AV(JT(jt,p4792));
 // obsolete  c=8*SZI-2;
  I factors[BW-1]; I *v=factors;   // max number of factors is (BW-2) since 2^(BW-1) is IMIN
 // obsolete MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=c;
 // obsolete  for(i=m=0;i<wn;++i){
 // obsolete   n=*wv++;
+#if SY_64
+ UI d,q; UI i; 
+ // first batch: 64-bit reciprocals
+ i=0; do{UI xx; UI r=u[i+4792]; d=u[i]; DPUMULU(r,n,xx,q) if(unlikely(n==d*q)){*v++=u[i]; n=q; continue;} if(q<d)goto endfac; ++i;}while(i<N64BITRECIPS);  // stop on 72-bit recip
+ // second batch: 72-bit reciprocals
+#define CKPR(ndx) {UI xx; UI r=u[i+4792+ndx]; DPUMULU(r,n,xx,q) if(unlikely((q&0xff)==0))if(n==(q>>=8)*(d=u[i+ndx])){*v++=d; n=q; continue;}}
+ do{CKPR(0) CKPR(1) CKPR(2) CKPR(3) CKPR(4) CKPR(5) CKPR(6) CKPR(7) if(q<u[i+7])goto endfac; i+=8;}while(i<4792);  // repeat groups of 8 until repeated factors removed
+ // third batch: gap-encoded primes
+ d=u[4792-1]; US *gv=(US*)&u[4792*2]; UI bits=*gv++; UI nbits=16;  // stack of bits to work on
+ while(1){
+  // d is the previous prime.  We decode the gap and add to get the next prime.
+  // The carried dependency is the number of bits in the stack, which controls whether the address is incremented.  We update this as quickly as possible.
+  // The other dependency is the divide unit
+  I code=bits;  // bits we will decode.  nbits is always in the range 0x10-0x2f here
+  bits|=(UI)*gv<<nbits;  // fetch 16 bits of gap data, append to end of list.  We may append the same value multiple times
+  I takebits=nbits&0x10; gv+=takebits>>4; nbits+=takebits;  // if nbits is 0x10-0x1f, accept the new bits and advance to next 16
+  I codesize=2*((code&0x3f)==0)+((code&0x7)==0); nbits-=3*codesize+3; bits>>=3*codesize+3;  // codesize is 0/1/3; code length is 3 6 or 12
+  // decode the gap length.  It would be OK to fetch from a table since this is out of the dependency loop
+  I maskshiftbias=0x3f6f000007370700>>(codesize<<4);  // mask (8), shift (4), bias(4) for each code length
+  I gap=(((code>>((maskshiftbias>>4)&0xf))&((maskshiftbias>>8)&0xff))+(maskshiftbias&0xf))<<1;  // gap till next prime
+  if(gap==156)break;  // max gap in first million is 154: this is the end code
+  d+=gap;  // value of next prime
+  while(n%d==0){*v++=d; n=n/d; if(n<d)goto endfac;}  // remove all multiples of d
+ }
+endfac:;  // come here when q gets too small or we run out of primes
+ *v=n;  // the last divide might have left us with a prime bigger than d but small enough to exit
+ z=vec(INT,(v-factors)+BETWEENC(n,2,MAXIFACTOR),factors);  // create a suitable result block, including the ending n if it is not too big
+ // If the factoring was incomplete, the unfactored part is bigger than the reach of our prime list and we will have to treat it as extended
+ if(unlikely(n>MAXIFACTOR))z=over(z,xfactor(cvt(XNUM,sc(n))));  // append factors bigger than our prime list
+#else
  UI d,q; DO(AN(JT(jt,p4792)), d=u[i]; q=n/d; while(n==q*d){*v++=d; n=q; q/=d;} if(q<d)break;);
- *v=n;
- z=vec(INT,(v-factors)+BETWEENC(n,2,0x7fffffff),factors);  // create a suitable result block; could be 2147117569 for 64-bit.
- // If the unfactored part is bigger than the reach of our prime list we will have to treat it as extended
- if(n>0x7fffffff)z=over(z,xfactor(cvt(XNUM,sc(n))));  // append factors bigger than our prime list
+ *v=n;  // the last divide might have left us with a prime bigger than d but small enough to exit
+ z=vec(INT,(v-factors)+(n>1),factors);  // create a suitable result block
+#endif
 // obsolete *v++=n;  // if there is a remnant, add it on, it is prime
 // obsolete   d=v-zv; m=MAX(m,d); zv+=c; while(v<zv)*v++=0; 
 // obsolete  }
@@ -670,8 +725,10 @@ static F1(jtxfactor){PROLOG(0064);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  X x=XAV(w)[0]; UI m=XLIMBn(x)%10000;
  // ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);
- if(1>xcompare(x,xc(2147483647L)))
+#if SY_64
+ if(1>xcompare(x,xc(MAXIFACTOR)))  // if factorable as I, do that
 	 R xco1(factor(sc(xint(x))));
+#endif
  A z;RZ(smallprimes(1229L,x,&z,&x));
  A st;GAT0(st,XNUM,20,1); X*sv0,*sv=sv0=XAV(st); *sv++=x;
  B b=0;while(sv-sv0){

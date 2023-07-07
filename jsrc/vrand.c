@@ -1055,7 +1055,7 @@ static DF2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t
 #define FXSDO       {i=j==GBI?jt->rngdata->rngi:jt->rngdata->rngparms[GBI].rngI;                                \
                      if(!jt->rngdata->rngfxsv){GAT0(z,INT,GBN,1); ACINITZAP(z); jt->rngdata->rngfxsv=AV(z);}  \
                      jt->rngdata->rngparms[GBI].rngV=jt->rngdata->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
-#define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; rngselects(sc(j));}
+#define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; I e=jt->jerr; jt->jerr=0; rngselects(sc(j)); jt->jerr=e;}  // rngselects doesn't function if there is error
 
 F1(jtrollx  ){FXSDECL; ARGCHK1(w);                 FXSDO; z=roll(w);         FXSOD; R z;}       
 DF2(jtdealx  ){FXSDECL; F2RANK(0,0,jtdealx,self); FXSDO; z=deal(a,w);       FXSOD; R z;}        

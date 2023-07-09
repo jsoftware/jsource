@@ -1527,7 +1527,7 @@ endqp: ;
      // DIP mode, looking for pivots.  process the values in parallel
      // if the column is Enforcing, we must negate the calculated value
      // fetch the b values for the rows. Handle bound vars, which choose from 2 possible b values
-     __m256d cnon0, bk4;  // will be ~0 for words that have positive c; the 4 bk values we will use
+     __m256d cnon0, bk4;  // will be ~0 for words that have positive c; the 4 bk values we will use (with overshoot added by caller before we start)
      if((I)zv&ZVUNBOUND){  // normal unbound case.  The b values come in order
       if((I)zv&ZVNEGATECOL)dotproducth=_mm256_xor_pd(sgnbit,dotproducth);  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
       // skip the block if all values are negative or near 0
@@ -1557,7 +1557,7 @@ endqp: ;
       __m256d bknot0=_mm256_cmp_pd(bk4,bk0thresh,_CMP_GE_OQ); // we separate b into < threshold and >= threshold.   This must match the selection made for stall exit
       if(unlikely(!_mm256_testc_pd(bknot0,cbadifbk0)))goto abortcol;  // CF is 0 if any sign of ~a&b is 1 => ~(b>=bthresh) & c>BkThresh.  Positive c and b<=0 means we cannot pivot in this column
       if(unlikely(!_mm256_testc_pd(cbadifbk0,cnon0)))zv=(D*)((I)zv|ZVFFREQD);  // CF is 0 if any sign of ~a&b is 1 => ~(c>BkThresh) & c>0thresh.  We are ignoring a non0 pivot; we will need forcefeasible; flag that
-      if(!_mm256_testz_pd(ratios,bknot0)){  // ZF is 1 if a&b signs all 0 => (new min&c ok if b!=0)&(b!=0) all 0 => no place where new min & b good & b good
+      if(!_mm256_testz_pd(ratios,bknot0)){  // ZF is 1 if a&b signs all 0 => (new min&c ok if b!=0)&(b!=0) all 0 => no place where new min & c good & b good
        // normal case bypasses this block
        // at least one new SPR is limiting (in its lane).  Find the SPRs
        __m256d sprs=_mm256_div_pd(bk4,dotproducth);  // find SPRs, valid or not.  Not worth moving this before the mispredicting branch because it ties up IUs for so many cycles

@@ -243,8 +243,8 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
    z += sizes[1];   // advance z to next output
   }
  }
- // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell)
- mvc(endoffill-z,z,jt->fillv0len,jt->fillv0);  // use atom size of default fill
+ // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell).  If fillv0len is 0, that means we are not allowed to fill; then set fillv0len to -1 as a flag that this happened
+ if(likely(jt->fillv0len>0))mvc(endoffill-z,z,jt->fillv0len,jt->fillv0); else jt->fillv0len=-1;  // use atom size of default fill
  R w;
 }
 
@@ -481,7 +481,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
-F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
+F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  ARGCHK1(w);
  v=AAV(w);
  if(likely((RANKT)((AT(w)>>BOXX)&(BOX>>BOXX))>AR(w))){   // boxed and rank=0
@@ -550,7 +550,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  GA00(z,t,zn,r+AR(w)); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape
  x=CAV(z);  // x=output pointer, init to 1st cell
   // fill is (or may be) needed: create fill area, and convert cell-shape to cell-size vector needed by copyresultcell
- fillv0(t);  // create 16 bytes of fill.
+ if(likely(!((I)jtinplace&JTNOFILL)))fillv0(t); else jt->fillv0len=0;  // create 16 bytes of fill, if allowed.  If not allowed, set that indicator
  I zfs=(I)1<<klg; u[r]=zfs; DQ(r, u[i]=zfs*=u[i];)  // convert each atom of result-cell shape to the length in bytes of the corresponding cell; u->first length
  // Now move the results.  They may need conversion or fill
  JMCDECL(endmask) JMCSETMASK(endmask,m<<klg,0)
@@ -564,6 +564,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
   else copyresultcell(jt,x,CAV(y),u,rescellrarg(zcs,r,AS(y),AR(y)),AS(y));
   x+=m<<klg;  // advance output pointer by cell length
  }
+ ASSERT(jt->fillv0len>=0,EVASSEMBLY)  // if fill length<0, there must have been a disallowed fill
  EPILOG(z);
 }
 

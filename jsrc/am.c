@@ -623,6 +623,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
   z=0;  // use z to hold reworked ind
   struct axis *axes, localaxes[6]; A alloaxes;  // put axes here usually
   I wr=AR(w); I *ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
+  A ind0;  // the contents that have the numbers
   if(unlikely(wcr==0)){RZSUFF(z=from(ind,zeroionei(0)),R jteformat(jt,self,a,w,ind);); cellframelen=0;}  // if wcell is an atom, the best you can get is indexes of 0.  No axes are used
   else if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table or higher, convert to cell indexes.  It will be used to fill in axis struct in merge2
@@ -631,9 +632,15 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
     if(!ISDENSETYPE(AT(ind),INT)){A tind; RZSUFF(tind=cvt(INT,ind),R jteformat(jt,self,a,w,ind);); ind=tind;}  // ind is now an INT vector, possibly the input selector
     if(likely((UI)IAV(ind)[0]<(UI)ws[wframelen]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[wframelen]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[wframelen]));}  // if the single index is in range, keep it; if neg, convert it quickly
    }else RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind););  // create (or keep) list of cell indexes
-  }else if(likely(AR(ind)==0)){
+  }else if(unlikely(AR(ind)!=0)){I indr=AR(ind);
+   // ind is a list of boxes.  The contents had better all be numeric, and opening them must not use fill
+   RZ(ind0=jtope((J)((I)jtinplace|JTNOFILL),ind)) ASSERT(AT(ind0)&NUMERIC,EVDOMAIN);  // open; contents must be numeric
+   if(AR(ind0)==indr){goto doubleboxednumeric;  // the boxes were created with <"0 array.  That is the same as <<array, for which we copy the code
+   }else if(AR(ind0)==indr+1){goto boxednumeric;  // the boxes were created with  <"1 array, which is like <array now    scaf must fix the continuation to look like boxed numeric
+   }else ASSERT(0,EVRANK)  // error if not <"0 or <"1
+  }else{
    // ind is a single box, <selectors.  It must have rank 0 because the rank affects the rank of m{y and thus the allowed rank of a.
-   A ind0=C(AAV(ind)[0]);  // discard ind, move to selectors
+   ind0=C(AAV(ind)[0]);  // discard ind, move to selectors
    ASSERTSUFF(AN(ind0)<=wcr,EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
    if(AT(ind0)&BOX){
     // selectors are boxed.  They have selectors for sequential axes.  Put them into a multidimensional axis struct.  In this struct a pointer of 0 means
@@ -644,7 +651,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
      if(AN(ind0)!=0){
       // the single selector is a singleton box <indexes or <<compindexes
       ind0=C(AAV(ind0)[0]);  // advance ind0 to indexes or <compindexes
-      if(!(AT(ind0)&BOX))z=pind(ws[wframelen],ind0);  // not boxed - get/keep index list for first axis
+      if(!(AT(ind0)&BOX))doubleboxednumeric: z=pind(ws[wframelen],ind0);  // not boxed - get/keep index list for first axis
       else{  // <<compidexes
        RZSUFF(z=jtcompidx(jt,ws[wframelen],ind0),R jteformat(jt,self,a,w,ind););   // resolve the comp indexes
        if(unlikely(z==ds(CACE)))RZ(z=IX(ws[wframelen]))  // rare (<<<'')} - must instantiate the in-full index vector
@@ -734,6 +741,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
      }
     }
    }else{
+boxednumeric:
     // contents are not boxed.  They must be a single list/atom of successive axes; convert to a single cell index
     ASSERTSUFF(AR(ind0)<2,EVRANK,R jteformat(jt,self,a,w,ind););  // numeric contents must be atom or list
     cellframelen=AN(ind0);  // remember the size of the cells

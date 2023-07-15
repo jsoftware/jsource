@@ -149,7 +149,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 
  C persistarea[0];  // end of area set at task startup
 // ************************************** everything after here persists over the life of the thread
- C fillv0len;   // length of fill installed in fillv0 (max 16)
+ I1 fillv0len;   // length of fill installed in fillv0 (max 16).  0 means fill not allowed; _1 means invalid fill attempted
  C taskstate;  // task state: modified by other tasks on a system lock or jbreak
 #define TASKSTATERUNNINGX 0   // This thread has started running a task
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)

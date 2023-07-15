@@ -220,7 +220,7 @@ static F1X(jtlsparse){F1PREFIP;A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
  if(bn||!AS(y)[0])R z;
  if(AN(a)){
   RZ(x=lcpx(lnoun(x)));
-  RZ(y=1==r?lnoun(ravel(y)):over(cstr("(<\"1)"),lnoun(y)));
+  RZ(y=1==r?lnoun(ravel(y)):over(cstr("(<)"),lnoun(y)));
   RZ(t=over(x,over(cstr(" ("),over(y,cstr(")}"))))); 
  }else RZ(t=over(lcpx(lnoun(head(x))),cstr(" a:}"))); 
  ba=0; v=AV(a); DO(AN(a), if(i!=*v++){ba=1; break;});

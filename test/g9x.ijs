@@ -394,6 +394,7 @@ NB.
 NB. 9!:51 old
 
 NB. 9!:54 and 9!:55
+1: 0 : 0  NB. multiple inhomo now an error
 9!:55 (271828)   NB. suppress msg but test
 1: 0 ((2;2 3);<3 2;4)} i. 10 10  NB. multiple inhomogeneous selectors
 (271827;'') -: 9!:54''
@@ -402,13 +403,20 @@ NB. 9!:54 and 9!:55
 (271828;1) -: 9!:54''
 NB. used only to debug error stop 9!:55 (_1)   NB. allow error
 NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10 10
+)
 
 9!:55 (271828)   NB. suppress msg but test
-1: 0 ((2 2);<3 3)} i. 10 10  NB. multiple homogeneous selectors
+1: 0 (<"1 (2 2$2 2 3 3))} i. 10 10  NB. multiple boxed selectors
 (271827;'') -: 9!:54''
 9!:55 (271828;2)   NB. suppress test
-1: 0 ((2 2);<3 3)} i. 10 10
+1: 0  (<"1 (2 2$2 2 3 3))} i. 10 10
 (271828;2) -: 9!:54''
+9!:55 (271828)   NB. suppress msg but test
+1: 0 (<"0 (2 2$2 2 3 3))} i. 10 10  NB. multiple boxed selectors
+(271827;'') -: 9!:54''
+9!:55 (271828;1)   NB. suppress test
+1: 0  (<"0 (2 2$2 2 3 3))} i. 10 10
+(271828;1) -: 9!:54''
 
 1: 0 : 0   NB. axes containing table now OK
 9!:55 (271828)   NB. suppress msg but test

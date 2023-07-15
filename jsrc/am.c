@@ -555,6 +555,7 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;F1PREFI
  R z;
 }
 
+#if 0 // obsolete
 // Convert ind to a list of cell offsets.  Error if inhomogeneous cells.
 // Result *cellframelen gives the number of axes of w that have been boiled down to indices in the result
 static A jtjstd(J jt,A w,A ind,I *cellframelen,I wframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr,*ws;D rkblk[16];
@@ -604,9 +605,10 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen,I wframelen){A j=0,k,*v,x;I b;I d
  // a field in jt to pass back the number of axes.
  *cellframelen=n; R j;  // insert the number of axes used in each cell of j
 }    /* convert ind in a ind}w into integer atom-offsets */
+#endif
 
 // Execution of x m}"r y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
-static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
+static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
   // ind=m, the indexes to be modified
 // obsolete  AD * RESTRICT ind; ind=VAV(self)->fgh[0];  // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
@@ -622,21 +624,28 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
   I cellframelen;
   z=0;  // use z to hold reworked ind
   struct axis *axes, localaxes[6]; A alloaxes;  // put axes here usually
-  I wr=AR(w); I *ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
+  I wr=AR(w); I *ws=AS(w); I indr=AR(ind);
+//  obsolete  b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
   A ind0;  // the contents that have the numbers
-  if(unlikely(wcr==0)){RZSUFF(z=from(ind,zeroionei(0)),R jteformat(jt,self,a,w,ind);); cellframelen=0;}  // if wcell is an atom, the best you can get is indexes of 0.  No axes are used
-  else if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
+  if(unlikely(wcr==0)){
+   // wcell is an atom.  The best you can get is indexes of 0, and that's if all the selectors are 0.  Use from to check for validity.  No axes are used
+   RZSUFF(z=from((SGNIF(AT(ind),BOXX)|(indr-2))<0?ind:box(ind),zeroionei(0)),R jteformat(jt,self,a,w,ind);); cellframelen=0;  // if numeric array rank>1, box before the call (i. 1 0 e. g.)
+  }else if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table or higher, convert to cell indexes.  It will be used to fill in axis struct in merge2
-   cellframelen=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // #axes used: 1, if m is a list; otherwise {:$m
-   if(AR(ind)==0){  // scalar ind is common enough to test for   scaf should test for 
+   cellframelen=indr<2?1:AS(ind)[indr-1];  // #axes used: 1, if m is a list; otherwise {:$m
+   if(indr==0){  // scalar ind is common enough to test for   scaf should test for 
     if(!ISDENSETYPE(AT(ind),INT)){A tind; RZSUFF(tind=cvt(INT,ind),R jteformat(jt,self,a,w,ind);); ind=tind;}  // ind is now an INT vector, possibly the input selector
     if(likely((UI)IAV(ind)[0]<(UI)ws[wframelen]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[wframelen]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[wframelen]));}  // if the single index is in range, keep it; if neg, convert it quickly
    }else RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind););  // create (or keep) list of cell indexes
-  }else if(unlikely(AR(ind)!=0)){I indr=AR(ind);
+  }else if(unlikely(indr!=0)){
    // ind is a list of boxes.  The contents had better all be numeric, and opening them must not use fill
    RZ(ind0=jtope((J)((I)jtinplace|JTNOFILL),ind)) ASSERT(AT(ind0)&NUMERIC,EVDOMAIN);  // open; contents must be numeric
-   if(AR(ind0)==indr){goto doubleboxednumeric;  // the boxes were created with <"0 array.  That is the same as <<array, for which we copy the code
-   }else if(AR(ind0)==indr+1){goto boxednumeric;  // the boxes were created with  <"1 array, which is like <array now    scaf must fix the continuation to look like boxed numeric
+   if(AR(ind0)==indr){
+    if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,1,"(001) (x (<\"0 array)} y): consider using (<<array)}\n"));
+    goto doubleboxednumeric;  // the boxes were created with <"0 array.  That is the same as <<array now
+   }else if(AR(ind0)==indr+1){
+    if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,2,"(002) (x (<\"1 array)} y): consider using array}\n"));
+    goto boxednumeric;  // the boxes were created with  <"1 array, which is like <array now
    }else ASSERT(0,EVRANK)  // error if not <"0 or <"1
   }else{
    // ind is a single box, <selectors.  It must have rank 0 because the rank affects the rank of m{y and thus the allowed rank of a.
@@ -742,15 +751,18 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
     }
    }else{
 boxednumeric:
-    // contents are not boxed.  They must be a single list/atom of successive axes; convert to a single cell index
-    ASSERTSUFF(AR(ind0)<2,EVRANK,R jteformat(jt,self,a,w,ind););  // numeric contents must be atom or list
-    cellframelen=AN(ind0);  // remember the size of the cells
+    // Singly-boxed contents.   They must be an array of index lists; convert to array of cell indexes
+// obsolete     ASSERTSUFF(AR(ind0)<2,EVRANK,R jteformat(jt,self,a,w,ind););  // numeric contents must be atom or list
+// obsolete     cellframelen=AN(ind0);  // remember the size of the cells
+    cellframelen=AS(ind0)[AR(ind0)-1]; cellframelen=AR(ind0)==0?1:cellframelen;  // length of a row of ind0 - number of axes used
+    ASSERTSUFF(cellframelen<=wcr,EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
+    // Convert the array of index lists to an array of cell indexes
     if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }
   }
 // obsolete noaxes:;
-  // at this point z contains the ind/axes info, and cellframelen indicates which.  If z=0 we have a complex form that will be converted to ind form in z
-  if(unlikely(z==0))z=jstd(w,ind,&cellframelen,wframelen);  // get ind and framelen for complex indexes
+// obsolete   // at this point z contains the ind/axes info, and cellframelen indicates which.  If z=0 we have a complex form that will be converted to ind form in z
+// obsolete   if(unlikely(z==0))z=jstd(w,ind,&cellframelen,wframelen);  // get ind and framelen for complex indexes
   z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,(cellframelen&255)+(wframelen<<RANKTX)+(aframelen<<RANK2TX)+(nframeaxes<<(3*RANKTX)));  //  dense a if needed; dense amend
   if(unlikely(z==0))jteformat(jt,self,a,w,ind);  // eformat this error while we have access to ind
   // We modified w which is now not pristine.
@@ -763,6 +775,7 @@ boxednumeric:
  atd=ISSPARSE(AT(a))?DTYPE(AT(a)):AT(a); wtd=ISSPARSE(AT(w))?DTYPE(AT(w)):AT(w);
  ASSERT(AT(ind)&NUMERIC+BOX||!AN(ind),EVDOMAIN);
  ASSERT(!ISSPARSE(AT(ind)),EVNONCE);  // m must be dense, and numeric or boxed
+ if(AR(ind)==0&&AT(ind)&BOX){A ind0=C(IAV(ind)[0]); if(AT(ind0)&NUMERIC&&AR(ind0)>1)ind=ind0;}  // if <array, extract array, which we will box presently
  if(AT(ind)&NUMERIC){  // numeric must have rank <3; if rank is 2, we treat it as <"1 ind
   ASSERT(AR(ind)<3,EVRANK);
   if(AR(ind)==2){if(AN(ind)==0)ind=mtv; else{A aa=ind; RZ(ind=IRS1(aa,0,1,jtbox,ind));}}  // Convert empty 2-d to atom so aindex doesn't fail
@@ -778,7 +791,7 @@ boxednumeric:
  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w; fa(w);}else RZ(z=cvt(t1,w));  // don't know why, but sparse amend code requires AC=1
  // call the routine to handle the sparse amend
- p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
+ p=PAV(z); e=SPA(p,e); B b=!AR(a)&&equ(a,e);   // b means 'amending with sparse element'
  p=PAV(a); if(unlikely(ISSPARSE(AT(a))&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
  if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:ISSPARSE(AT(a))?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
  else{RZ(ind=aindex(ind,z,0L)); ind=(A)((I)ind&~1LL); ASSERTSUFF(ind!=0,EVNONCE,z=0; goto exitra;); z=(b?jtamne:ISSPARSE(AT(a))?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking

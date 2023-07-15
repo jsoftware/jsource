@@ -722,8 +722,8 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  I wr=AR(w); I *ws=AS(w); I wcr=wr-wf;
  ASSERT(naxa<=wcr,EVLENGTH)  // the number of axes must not exceed the length of a major cell
  if(unlikely((-AN(a)&-AN(w))>=0)){A z;  // empty array, either a or w   scaf could avoid this?
-  // if empty a, return w in full   scaf should return as many copies as rows of a
-  if(unlikely(AN(a)==0))R RETARG(w);
+  // if empty a, return w in full, one copy per 1-cell of a, as w"1 a   (}:$a) $ ,:w
+  if(unlikely(AN(a)==0))R df1(z,a,qq(w,zeroionei(1)));
   // empty w. allocate empty result, move in shape: frame of w, frame of a, shape of item
   GA00(z,AT(w),0,wf+(wcr-naxa)+af); MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AS(a),af)  MCISH(AS(z)+wf+af,AS(w)+wf+naxa,wcr-naxa)
   R z;
@@ -919,7 +919,8 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
  }
  // a is an atomic box.  Open it
  A c=C(AAV(a)[0]);  // contents of a
- if(!(AT(c)&BOX)){ASSERT(AR(c)<=1,EVRANK) R jtfrombu(jtinplace,c,w,wf);}  // if single-boxed, handle as <"1@[ { ].  scaf  should allow any rank
+// obsolete  if(!(AT(c)&BOX)){ASSERT(AR(c)<=1,EVRANK) R jtfrombu(jtinplace,c,w,wf);}  // if single-boxed, handle as <"1@[ { ].
+ if(!(AT(c)&BOX)){R jtfrombu(jtinplace,c,w,wf);}  // if single-boxed, handle as <"1@[ { ].
  // Double-boxed. Set up axis structs
  ASSERT(1>=AR(c),EVRANK);  // boxes may not have rank > 1
  ASSERT(AN(c)<=wcr,EVLENGTH);  // number of axes must not exceed #axes in major cell

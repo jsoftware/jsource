@@ -429,7 +429,7 @@ case. EVTIME do. emsg =. 'the execution time limit was exceeded'
 case. EVRO do. emsg =. 'attempt to modify a read-only mapped file'
 case. EVCTRL do. emsg =. 'the line, with its number in its definition shown in brackets, has a mismatched control structure'
 case. EVEMPTYT do. emsg =. 'no sentences following for. or select.'
-case. EVEMPTYDD do. emsg =. 'unfinished {{ }} definition'
+case. EVEMPTYDD do. emsg =. 'unmatched {{ or }}'
 case. EVILNUM do. emsg =. 'any word beginning with a digit or _ must be a valid number'
 NB.todo also perform spellchecking for top-level forms in loaded files
 case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
@@ -855,7 +855,6 @@ end.
 NB. not yet specifically diagnosed nan or nonce error
 if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
 if. (0=#emsg) *. e=EVNONCE do. hdr , 'this computation is not yet supported' return. end.
-
 (}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}
 

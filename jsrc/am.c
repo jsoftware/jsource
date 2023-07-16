@@ -507,16 +507,14 @@ endamend:;
 // is set, in which case we treat ind as a 1-row table
 // The indexes are audited for validity and negative values
 // This is like pind/aindex1 followed by pdt, but done in registers and without worrying about checks for overflow, since the result
-// if valid will fit into an integer.  If there are no negative indexes, this method is just a teeny bit faster, because pind/aindex1 do one quick loop at full memory
-// speed to validate the input, and pdt works well for a large number of short vectors - in particular it avoids the carried dependency between axes that
-// Horner's Rule creates.  This version keeps things in registers and has less setup time; and it is much better if there are negative indexes.
+// if valid will fit into an integer.
 A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;F1PREFIP;
  ARGCHK1(w);
  if(AR(ind)<2){
   // rank of ind is 0 or 1.  Treat as list of first-axis values (as is suitable for m}) unless FROM is specified and rank=1 and length>1; then treat as list of successive axes
   if(!((I)jtinplace&(AN(ind)>1)&JTCELLOFFROM))RZ(z=pind(AS(w)[wframelen],ind));  // (m}only, or length<2) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
   // if FROM on list, leave z=0 and fall through to treat as table
- }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
+  }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
  }
  if(likely(z==0)){  // if not handled already...
   // rank of ind>1 (or = if CELLOFFFROM), and rows of ind are longer than 1. process each row to a cell offset
@@ -525,7 +523,10 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;F1PREFI
   if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // w is now an INT vector, possibly the input argument
   ASSERT(naxes<=AR(w)-wframelen,EVLENGTH);  // length of rows of table must not exceed rank of w
   GATV(z,INT,nzcells,AR(ind)-1,AS(ind)); I *zv=IAV(z);  // allocate result area, point to first cell location.
-  I *iv=IAV(ind);// point to first row
+  I *iv=IAV(ind); // point to first row
+  I *sv=&AS(w)[wframelen];  // axis lengths
+  DQ(nzcells, I r=0; if(naxes){I i=0; I s=sv[i]; while(1){r*=s; I in=iv[i]; if((UI)in>=(UI)s){in+=s; ASSERT((UI)in<(UI)s,EVINDEX);} r+=in; if(++i==naxes)break; s=sv[i];}} *zv++=r; iv+=naxes;)  // carried dependency unimportant because short; use 0 if no axes
+#if 0  // obsolete
   // Do the verify/multiply depending on number of axes.
   if(naxes<3){
    // rank 2
@@ -551,6 +552,7 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;F1PREFI
                     in=iv[naxes-1]; if((UI)in>=(UI)lnn){in+=lnn; ASSERT((UI)in<(UI)lnn,EVINDEX);} r+=in;
                     *zv++=r; iv+=naxes;)
   }
+#endif
  }
  R z;
 }
@@ -638,6 +640,7 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
     if(likely((UI)IAV(ind)[0]<(UI)ws[wframelen]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[wframelen]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[wframelen]));}  // if the single index is in range, keep it; if neg, convert it quickly
    }else RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind););  // create (or keep) list of cell indexes
   }else if(unlikely(indr!=0)){
+   // All this is deprecated, should be domain error
    // ind is a list of boxes.  The contents had better all be numeric, and opening them must not use fill
    RZ(ind0=jtope((J)((I)jtinplace|JTNOFILL),ind)) ASSERT(AT(ind0)&NUMERIC,EVDOMAIN);  // open; contents must be numeric
    if(AR(ind0)==indr){
@@ -648,9 +651,9 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
     goto boxednumeric;  // the boxes were created with  <"1 array, which is like <array now
    }else ASSERT(0,EVRANK)  // error if not <"0 or <"1
   }else{
-   // ind is a single box, <selectors.  It must have rank 0 because the rank affects the rank of m{y and thus the allowed rank of a.
+   // ind is a single box, <selectors.  It must have rank 0 unless it is a deprecated form
    ind0=C(AAV(ind)[0]);  // discard ind, move to selectors
-   ASSERTSUFF(AN(ind0)<=wcr,EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
+// obsolete   ASSERTSUFF(AN(ind0)<=wcr,EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
    if(AT(ind0)&BOX){
     // selectors are boxed.  They have selectors for sequential axes.  Put them into a multidimensional axis struct.  In this struct a pointer of 0 means
     // an axis taken in full
@@ -812,7 +815,7 @@ static DF2(jtamnegate){F2PREFIP;
 // obsolete  R jtgav2(jtinplace,a,w,self);
 }
 
-// Execution of x u} y.  Call (x u y) to get the indices, then
+// Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
 static DF2(amccv2){F2PREFIP;DECLF; 
  ARGCHK2(a,w); 
@@ -900,6 +903,7 @@ F1(jtamend){F1PREFIP;
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}
 
+// the future }::
 F1(jtemend){F1PREFIP;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  R fdef(0,CEMEND,VERB,jtvalenceerr,(AF)jtamen2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);

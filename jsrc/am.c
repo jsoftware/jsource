@@ -778,7 +778,7 @@ boxednumeric:
  atd=ISSPARSE(AT(a))?DTYPE(AT(a)):AT(a); wtd=ISSPARSE(AT(w))?DTYPE(AT(w)):AT(w);
  ASSERT(AT(ind)&NUMERIC+BOX||!AN(ind),EVDOMAIN);
  ASSERT(!ISSPARSE(AT(ind)),EVNONCE);  // m must be dense, and numeric or boxed
- if(AR(ind)==0&&AT(ind)&BOX){A ind0=C(IAV(ind)[0]); if(AT(ind0)&NUMERIC&&AR(ind0)>1)ind=ind0;}  // if <array, extract array, which we will box presently
+ if(AR(ind)==0&&AT(ind)&BOX){A ind0=(A)C(IAV(ind)[0]); if(AT(ind0)&NUMERIC&&AR(ind0)>1)ind=ind0;}  // if <array, extract array, which we will box presently
  if(AT(ind)&NUMERIC){  // numeric must have rank <3; if rank is 2, we treat it as <"1 ind
   ASSERT(AR(ind)<3,EVRANK);
   if(AR(ind)==2){if(AN(ind)==0)ind=mtv; else{A aa=ind; RZ(ind=IRS1(aa,0,1,jtbox,ind));}}  // Convert empty 2-d to atom so aindex doesn't fail

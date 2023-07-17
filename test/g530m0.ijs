@@ -489,7 +489,7 @@ ip =. 1 |. y  NB. inplaceable version
 for_i. i.#selshape do.
  repldata =. (,y) {~ (i}.selshape)?@$ */@$ y
 NB. obsolete rd   =: repldata
-'repldata__ axes__ exaxes__ y__'   =: repldata;axes;exaxes;<y
+NB. 'repldata__ axes__ exaxes__ y__'   =: repldata;axes;exaxes;<y
  assert. repldata ((<axes)} -: (<^:(1=#@$) exaxes)}) y
  NB. Also execute inplace, to exercise usecount management
  ip =. repldata (<axes)} ip

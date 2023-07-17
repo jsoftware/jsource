@@ -103,7 +103,7 @@ _3 spd i.2 3
 (<2;10&u:'a') spde i.2 3
 
 
-4!:55 ;:'c d f g h i r s x spd'
+4!:55 ;:'c d f g h i r s x spd spde'
 
 
 

@@ -479,7 +479,9 @@ NB. % needs relative primes
 a =: (#~ 0&~:@>) a
 mod =: (<"0 ] 7919 104729 487417075631) , (<"0 ] 744708194707569769849x 162075339522463187576448020971x 41275321003050015370291839686835963242582144522177x)
 h =: {{ 'aa bb modm' =. y__ =: y
+if. modm | bb do.   NB. reject bb that is modular 0
 assert. 0 = aa - m. modm bb * m. modm (aa (% m. modm) bb)
+end.
 1
 }}
 *./ , h@> { a;a;<mod

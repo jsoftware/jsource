@@ -1401,6 +1401,26 @@ F2(jtmemw){C*u;I m,n,t,*v;
  R mtm;
 }    /* 15!:2  memory write */
 
+
+// 15!:18 memalign: return block with data portion aligned to cache.  Bivalent.  If x given, it is shape to use.  Fill result with copies of y
+DF2(jtmemalign){I *s, n, r;  // shape and rank
+ if(AT(w)&VERB){  // monad
+  if(unlikely(ISSPARSE(AT(w))))R RETARG(a);  // we cannot align sparse blocks
+  if((((I)a+AK(a))&(CACHELINESIZE-1))==0)R RETARG(a);  // if the current value is already aligned, keep it unchanged
+  w=a; s=AS(w); r=AR(w); n=AN(w);  // monad: take rank/shape from w
+ }else{  // dyad
+  if(unlikely(ISSPARSE(AT(w))))R RETARG(w);  // we cannot align sparse blocks
+  RZ(a=vip(a)) s=IAV(a); r=AN(a); PRODX(n,r,s,1)  // take rank/shape from a
+ }
+ // look at the rank of w to see what rank we should request to get aligned
+ I neededrank=(-(CACHELINESIZE/SZI)&((NORMAH+r)+(CACHELINESIZE/SZI-1)))-NORMAH;  // rank to allocate to get on cacheline boundary
+ I t=AT(w);
+ A z; GA00(z,t,n,neededrank) AR(z)=r; MCISH(AS(z),s,r)  // allocate result with data on boundary; fill in correct rank
+ I k=bplg(t);
+ mvc(n<<k,voidAV(z),AN(w)<<k,voidAV(w));  // copy the data block in full
+ R z;
+}
+
 // 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
 // We have to check jt in case this usage is in a fork that will use the block later
 F1(jtmemu) { F1PREFIP; ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);

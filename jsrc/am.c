@@ -797,7 +797,7 @@ boxednumeric:
  p=PAV(z); e=SPA(p,e); B b=!AR(a)&&equ(a,e);   // b means 'amending with sparse element'
  p=PAV(a); if(unlikely(ISSPARSE(AT(a))&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
  if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:ISSPARSE(AT(a))?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
- else{RZ(ind=aindex(ind,z,0L)); ind=(A)((I)ind&~1LL); ASSERTSUFF(ind!=0,EVNONCE,z=0; goto exitra;); z=(b?jtamne:ISSPARSE(AT(a))?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
+ else{RZSUFF(ind=aindex(ind,z,0L),z=0; goto exitra;); ind=(A)((I)ind&~1LL); ASSERTSUFF(ind!=0,EVNONCE,z=0; goto exitra;); z=(b?jtamne:ISSPARSE(AT(a))?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
 exitra:
  if(ip)ra(w);
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z

@@ -151,6 +151,17 @@ NB. 0 = 15!:20 'nosuchlibrary'
 NB. 0 ~: h=: 15!:20 >IFUNIX{ 'wsock32' ; unxlib 'c'
 NB. 0 ~: h 15!:21 'gethostname'
 
+h =: i. 2 3 4
+i =: 15!:18 h
+i -: h
+0 = 64 | 0 { 13!:_4 i
+h =. 3 4 (15!:18) 'abc'
+h -: 3 4 ($,) 'abc'
+0 = 64 | 0 { 13!:_4 h
+h =. (15!:18) 'abc'
+0 = 64 | 0 { 13!:_4 h
+
+
 4!:55 ;:'CREATE_NEW FILE_BEGIN FILE_CURRENT FILE_END GENERIC_READ '
 4!:55 ;:'GENERIC_WRITE OPEN_EXISTING '
 4!:55 ;:'Fclose Fcopyto Fcreate Fcreatedir Fdelete Fdeletedir Fmoveto Fread '

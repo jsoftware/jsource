@@ -221,6 +221,7 @@ extern DF1(jtludecomp);
 extern F1(jtmap);
 extern F1(jtmat);
 extern F1(jtmema);
+extern DF2(jtmemalign);
 extern F1(jtmemf);
 extern F1(jtmemo);
 extern F1(jtmemr);

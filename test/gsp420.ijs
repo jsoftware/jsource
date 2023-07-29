@@ -261,6 +261,8 @@ NB. obsolete 'domain error' -: f etx 1 2
 2 2 1 -: $ ($. 2 2 $ 2-2) +"0 1 (,5)  NB. check rank on empty long arg
 2 2 1 -: $ (,5) +"1 0 ($. 2 2 $ 2-2)  NB. check rank on empty long arg
 
+100000 100000 -: $  +./ . *.~ 1$.1e5 1e5;0 1;0   NB. formerly crashed not detecting sparse
+
 4!:55 ;:'b c d e f g r s t x'
 4!:55 ;:'a1 a2 ' 
 

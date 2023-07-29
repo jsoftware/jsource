@@ -1,4 +1,7 @@
-prolog './g530.ijs'
+prolog './g530m0.ijs'
+NB. This version has removed all uses of multibox m} and should be considered the main line.
+NB. g530 has the old code for compatibility testing
+
 NB. m}y and u}y ---------------------------------------------------------
 
 randuni''

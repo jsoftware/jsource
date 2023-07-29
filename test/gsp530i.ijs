@@ -125,6 +125,10 @@ x=: ?($i{d)$1000
 s -: d
 (x i}d) -: x i}s
 
+'length error' -: {{ a=: $.,:5
+a=: 0 (,:1 1)} a }} etx ''   NB. formerly failed to ra and crashed
+
+
 'domain error' -: (3 4$'x') 2 0} etx $.i.2 3 4
 'domain error' -: (3 4$<4 ) 2 0} etx $.i.2 3 4
 

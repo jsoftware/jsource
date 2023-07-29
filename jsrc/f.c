@@ -795,7 +795,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  R z;
 }    /* output string from array w */
 
-// 5!:30, to debug formatted display
+// 5!:_1, to debug formatted display
 // a is the output control, (outeol, outmaxlen, outmaxbefore, outmaxafter)
 // w is any noun
 // Result is the UTF-8 byte string that would be displayed

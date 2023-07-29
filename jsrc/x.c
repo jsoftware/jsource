@@ -320,6 +320,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(15,15): R CDERIV(CIBEAM, jtmemu,       jtmemu2,      VASGSAFE|VJTFLGOK1,RMAX,0,   0   );
   case XC(15,16): R CDERIV(CIBEAM, jtnfes,       0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,17): R CDERIV(CIBEAM, jtcallbackx,  0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(15,18): R CDERIV(CIBEAM, jtmemalign,   jtmemalign,   VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,19): R CDERIV(CIBEAM, jtdllvaladdr, 0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,20): R CDERIV(CIBEAM, jtcddlopen,   0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(15,21): R CDERIV(CIBEAM, 0,            jtcddlsym,    VASGSAFE,RMAX,RMAX,RMAX);

@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 
-NB. 128!:9  g;i;v;M;thresh ---------------------------------------------------------
+NB. 128!:9  Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta ---------------------------------------------------------
 
 NB. y is 128!:9 parms, x is expected result (empty if we have to check column values).  m is parms
 NB. Save args, run 128!:9, check result.  For multithreads, expand M/bk/Frow to big enough to engage threading (leaving last row/col harmless)
@@ -12,112 +12,90 @@ epsub =. (epadd -)
 savx =: x [ savy =: y
 nthr =. 1 T. ''
 opts =. m
-if. '' -: $ 0 {::y do.
-  NB. onecol
-  if. #x do.  NB. compare value given, use it
-    if. 0=nthr do.  NB. compare values only in single-threaded mode
-      assert. x -: 128!:9 y
-    end.
-  else.  NB. random values, compare results.  column must be in A
-    if. 0~:nthr do.   NB. multiple threads: expand M with 0s to make size threadable, scramble rows in the data
-      expsiz =. 1200 + ? 50  NB. size we grow M to
-      y =. (< (0{:: y) + expsiz - {:$4{::y) 0} y  NB. adjust ndx to match column# in A we are calculating
-      y =. (< ({"2~ ?~@{:@$) (2 , 2 # expsiz) {. 4 {:: y) 4} y  NB. expand M and scramble rows
-      savy =: y
-    end.
-    savref   =: ref =. |: (,~ 3{::y) +/@:*"1!.1 ,.~/ (2{::y){"1 (4){::y 
-    assert. 1e_25 > >./ | +/ ref epsub savres   =: 128!:9 y
+if. '' -: $ colx =. 8 {::y do.
+  NB. onecol+SPR
+  NB. y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta  where ndx is an atom  (1st 8 blocks don't move)
+  NB. here RVT is chars and must be converted to mask, same for bndrowmask
+  NB. We expect bkbeta to have the correct result item count - extended to batch boundary including Fk if present
+  'Ax Am Av Qk rvt bndrowmask bk ndx parms bkbeta' =. 0 1 2 3 4 5 6 8 9 10 { y  NB. don't reassign z lest it lose KNOWNNAMED
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
+  origparms =: parms  NB. debug
+  ncol =. {:$Qk  NB. Qk defines its #cols
+  nrows =. | nflagged =. 0{::parms  NB. number of valid rows in Qk, including Fk if given
+  if. 0~:nthr do.   NB. multiple threads: expand Qk with 0 rows to make size threadable, scramble rows in the data.  Keep bndrowmask/bk/bkbeta corresponding to same values
+    NB. Create the vector of sources for each new row of Qk etc.  We will first add a harmless row and then draw, where _1 is harmless and _2 is the Fk row if present
+    nrows =. #drawvec =. ,&_2^:(nflagged<0) ({~ ?~@#) (1200 + ? 50) {.!._1 i. nrows - (nflagged<0)  NB. modify #rows to match the unpadded block
+    NB. Pad with NON-harmless values to batch boundary
+    drawvec =. ({.~ >.&.(%&4)@#) drawvec
+    NB. modify the inputs
+    Qk =. drawvec {"1 _1 Qk ,"_1 (0.)
+    bndrowmask =. drawvec { bndrowmask , '4'
+    bk =. drawvec {"1 _1 bk , 0.
+    bkbeta =. drawvec { bkbeta , 0.
+    parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. retore Fk flag to new length
+    y =. (Qk;bk;parms;bkbeta) 3 6 9 10} y
   end.
-elseif. 10 13 e.~ #y do.  NB. DIP/gradient
-  if. 8 = $ 5 {:: y do.  NB. DIP
-    if. 0=nthr do.  NB. single-threaded, compare for exact result
-      if. 10 = #y do.
-        y =. y , (0$0.) ; ($&0. ; $&'4') # 8 {:: y  NB. if boundbk;beta;rvt  omitted, supply it
-        y =. (< (6{::y) {"1 (7){:: y) 7} y   NB. convert bk to be read from the front
-      end.
-      savy =: y
-      assert. x -: savres =:  128!:9 y
-    else.  NB. multiple threads.  Expand M with one harmless row/col, bk/Frow to match; pad ndx and bkg, preserving order, to make work
-      if. -. opts -: 0 do.  NB. opts of 0 means single thread only
-        'ndx M bkg bk Frow cons' =. 0 4 6 7 8 5 { y
-        prirow =. 6 { cons
-        msiz =. {:$M  NB. size of M part
-        M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.1e_10 M  NB. One column of small c above threshold, ending row of 0
-        bk =. (0 1 + $bk) {. bk
-        Frow =. (1 + $Frow) {.!.1. Frow
-        'nndx nbkg' =. 35 + ? 20 20   NB. product must exceed 1000
-        saferc =. <: {: $ bk  NB. last row/col doesn't change anything
-        ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
-        ndx =. ndx (/:~ (#ndx) ? nndx)} nndx # saferc  NB. Keep prirow at head, if given, to avoid cutoff
-        bkg =. bkg (0 (0})^:(prirow={.bkg) /:~ (#bkg) ? nbkg)} nbkg # saferc
-        y =. (ndx;M;bkg;bk;Frow) 0 4 6 7 8} y
-        if. 10 = #y do.
-          y =. y , (0$0.) ; ($&0. ; $&'4') # Frow  NB. if boundbk;beta;rvt  omitted, supply it
-          y =. (< (6{::y) {"1 (7){:: y) 7} y   NB. convert bk to be read from the front
-        end.
-        savy =: y
-        if. #opts do.
-          assert. opts e.~ 3 {. savres =: 128!:9 savy  NB. alternative results
-        else.
-          assert. x -:&(3&{.) savres =: 128!:9 savy  NB. exact match
-        end.
-      end.
-    end.
-  else.  NB. gradient mode
-    if. 0=nthr do.  NB. single-threaded, compare for exact result
-      if. 10 = #y do. savy =: y =. y , (0$0.) ; ($&0. ; $&'4') # 8 {:: y end.  NB. if boundbk;beta;rvt  omitted, supply it
-      assert. x -: savres =: 128!:9 y
-    else.  NB. multiple threads.  Expand M with one harmless row/col, Frow to match;
-      if. -. opts -: 0 do.  NB. opts of 0 means single thread only
-        'ndx M cons bkg bk Frow' =. 0 4 5 6 7 8 { y
-        prirow =. 6 { cons
-        msiz =. {:$M  NB. size of M part
-        M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.0. M  NB. One column of small c above threshold, ending row of 0
-        Frow =. (1 + $Frow) {.!.1e_20 Frow
-NB. obsolete         bk =. (0 1 + $bk) {. bk   NB. zeros are active here, but they do nothing
-        'nndx nbkg' =. 35 + ? 20 20   NB. product must exceed 1000
-        saferc =. <: {: $ M  NB. last row/col doesn't change anything
-        Frow =. (({:$Frow) + nbkg - {:$M) {. Frow
-        M =.nbkg {."1 M  NB. unused M, but needed to match size of bk
-        ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
-        ndx =. ndx (/:~ (#ndx) ? nndx)} nndx # saferc
-NB. obsolete         bkg=.i. msiz   NB. we don't use bkg as a parameter, but we must shuffle bk
-        ordpts =. /:~ (#bkg) ? nbkg
-        bkg =. bkg ordpts} nbkg # saferc
-        bk =. bk ordpts}"1 (nbkg _1} $bk) $ 0.0
-        M =. nbkg {."2 M
-        if. prirow>: 0 do. cons =. (bkg i. prirow) 6} cons end.  NB. priority row can float; find it
-NB. obsolete         modx =: x =. bkg (i. 2&{)`2:`]} x  NB. replace row #s with positions in bkg
-        if. 10 = #y do. y =. y , (0$0.) ; ($&0. ; $&'4') # Frow end.  NB. if boundbk;beta;rvt  omitted, supply it
-        savy =: (ndx;M;cons;bkg;bk;Frow) 0 4 5 6 7 8} y
-        if. #opts do.
-          opts =. bkg (i. 2&{)`2:`]}"1 opts
-          assert. opts e.~ 3 {. savres =: 128!:9 savy  NB. alternative results
-        else.
-          assert. x -:&(3&{.) savres =: 128!:9 savy  NB. exact match
-        end.
-      end.
+  if. colx<ncol do. savref   =: ref =. colx {"1 Qk  NB. basic column, just fetch it
+  else.
+    qkcols =. (colx-ncol) { Ax  NB. start,length of column indexes/weights
+    savref   =: ref =. |: (,~ qkcols ];.0 Av) +/@:*"1!.1 ,.~/ (qkcols ];.0 Am){"1 Qk  NB. fetch cols and combine them
+  end.
+  if. '19' e.~ colx { rvt do. ref =. - ref end.  NB. change sign of column if enforcing
+  ref =. (3{parms) (((< |) {.) *"1 ]) ref  NB. Clear values below the Store0 threshold
+  NB. convert bitmasks to internal form
+  rvt =. {&a.@:#.@:(|."1) ($~  8 ,~ >.@(8 %~ #)) , ,./ rvt e."1 '19',:'01'  NB. create values in littleendian order, 2 bits/col (enforced is LSB)
+  bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ bndrowmask e. '01'  NB. 0 is for Fk
+  y =. (rvt;bndrowmask) 4 5} y
+  savy =: y
+  z =. (2, #bkbeta) $ 0.  NB. result area, big enough to hold final batch including fk if present
+  savres   =: 128!:9 (<z) 7} y
+  assert. 0 = +./ 128!:5 , z
+  assert. 1e_25 > >./ | +/ ref epsub&(nrows&{."1) z  NB. require match on valid values
+  if. #x do.  NB. if SPR result known, check it
+    if. 0=nthr do.
+      assert. x -: savres  NB. single-threaded - expect exact result
+    elseif. #opts do.
+      assert. opts e.~ 0 4 { savres  NB. multithreaded, with alternative results
+    else.
+      assert. x -:&(0 4&{) savres  NB. multithreaded, match type and minimizer
     end.
   end.
-else.  NB. nonimp
-  'ndx An Ax Av M cons bkg' =. 7 {. y
-  if. 0=nthr do.  NB. single-threaded, compare for exact result
-    assert. x -: savres =: 128!:9 y
-  else.  NB. multiple threads.  Expand M with one harmless row/col. pad ndx and bkg, preserving order, to make work
-    if. -. opts -: 0 do.  NB. opts of 0 means single thread only
-      'M bkg' =. 4 6 { y
-      msiz =. {:$M  NB. size of M part
-      M =. (0 1 1 + $M) {. M  NB. last row/col of 0s
-      nbkg =. 2000 + ? 200   NB. product must exceed 1000
-      saferc =. <: {: $ M  NB. last row/col doesn't change anything
-      ndx =. ndx + ndx >: msiz  NB. relocate indexes in A
-      bkg =. bkg (/:~ (#bkg) ? nbkg)} nbkg # saferc
-      savres =: 128!:9 savy =: (ndx;M;bkg) 0 4 6} y
-      if. #opts do.
-        assert. opts e.~ 3 {. savres  NB. alternative results
-      else.
-        assert. x -:&(3&{.) savres  NB. exact match
-      end.
+else.   NB. gradient
+  NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
+  NB.   parms is #rows,maxAx,Col0Threshold,expandQk,x,MinGradient   expandqk is internal here, means 'put each row into its own test block'
+  'Ax Am Av Qk rvt bndrowmask sched ndx parms Frow' =. 0 1 2 3 4 5 6 8 9 10 { y  NB. don't reassign z lest it lose KNOWNNAMED
+  ncol =. {:$Qk  NB. Qk defines its #cols
+  nrows =. 0{parms  NB. number of valid rows in Qk
+  if. 0~:nthr do.   NB. multiple threads: expand Qk with 0 rows to make size threadable, scramble rows in the data.  Keep bndrowmask/bk/bkbeta corresponding to same values
+    NB. Create the vector of sources for each new row of Qk etc.  We will first add a harmless row and then draw, where _1 is harmless
+    nrows =. #drawvec =. ({~ ?~@#) (1200 + ? 50) {.!._1 i. ncol  NB. update count of rows
+    NB. Pad with NON-harmless values to batch boundary
+    drawvec =. ({.~ >.&.(%&4)@#) drawvec
+  elseif. 3 { parms do.   NB. 
+   NB. spread rows by NPAR to get accurate value for cutoff.  We check cutoff one time in 64 atoms (16 batches) (subject to change)
+   nrows =. #drawvec =. 1j63 #!._1 i. nrows
+  else.
+    drawvec =. i. nrows  NB. keep input unchanged
+  end.
+  Qk =. drawvec {"1 _1 Qk ,"_1 (0.)
+  bndrowmask =. drawvec { bndrowmask , '4'
+  parms =. nrows 0} parms  NB. retore Fk flag to new length
+  y =. (Qk;parms) 3 9} y
+  NB. convert bitmasks to internal form
+  rvt =. {&a.@:#.@:(|."1) ($~  8 ,~ >.@(8 %~ #)) , ,./ rvt e."1 '19',:'01'  NB. create values in littleendian order, 2 bits/col (enforced is LSB)
+  bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ bndrowmask e. '01'  NB. 0 is for Fk
+  y =. (rvt;bndrowmask) 4 5} y
+  savy =: y
+  savres   =: 128!:9 y
+  if. #x do.  NB. if SPR result known, check it
+    'res cut' =. x
+    if. 0=nthr do.
+      assert. res -: savres  NB. single-threaded - expect exact result
+      assert. cut -: 7{::y  NB. cutoff info too
+    elseif. #opts do.
+      assert. opts e.~ 2 {. savres  NB. multithreaded, with alternative results
+    else.
+      assert. res -:&(0 4&{) savres  NB. multithreaded, match type and minimizer
     end.
   end.
 end.
@@ -133,341 +111,232 @@ dptoqp=. 2 {. ,:
 delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 
 delth''  NB. start with no threads
+
 for_t. i. 4 do.
-  M =. (,:   ] * 1e_20 * i.@#) 0. + =/~ i. 6
-  Yt=. 2000 $ '4'
-  assert. (_6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;Yt
-  assert. (_6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;Yt
-  assert. (_6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0;Yt
-  assert. (_6 ]\ 0 0 1 2 0 3  0 0 2e_20 6e_20 0 15e_20) ('' run128_9) 8;(,."1 (_2) ]\ (4$0) , 3 3);((3$0) , 2 3 5);((3$0), 1. 2. 3.);M;0.0;Yt
-  NB. change sign of result when Yt = '1'
-  assert. (- _6 ]\ 1 0 0 0 0 0  0 0 0 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;('1' (0}) Yt)
-  assert. (- _6 ]\ 0 0 1 0 0 0  0 0 2e_20 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.0;('1' (2}) Yt)
-  assert. (- _6 ]\ 1 2 0 0 0 0  0 2e_20 0 0 0 0) ('' run128_9) 6;(,."1 (_2) ]\ 0 2);(00 1);(1. 2.);M;0.0;('1' (6}) Yt)
-  NB. clamping to threshold
-  M =. 1 1e_20 (<1;3;2 3)} 2 {. ,: |: _4 ]\ _1. 0 1 2  _1e_5 _2e_9 0 1e_9   0 0 0 0 0 0 0 1e_10   NB. input by columns
-  assert. (2 {. ,: _1. 0 1 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;0.5;Yt
-  assert. (2 {. ,: 0. 0 0 2) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1.5;Yt
-  assert. (2 {. ,: 0. 0 0 0) ('' run128_9) 00;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;2.5;Yt
-  assert. (2 {. ,: _1e_5 _2e_9 0 1e_9) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_10;Yt
-  assert. (2 {. ,: _1e_5 _2e_9 0 1e_9) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;9e_11;Yt
-  assert. (2 {. ,: _1e_5 0 0 0) ('' run128_9) 01;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8;Yt
-  assert. (2 {. ,: 0 0 0 0) ('' run128_9) 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8;Yt  NB. low part ignored because high part 0
-  assert. (2 {. ,: 0 0 0 0) ('' run128_9) 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;1e_8;Yt  NB. low part cleared when high part is
+  Ax =. ,."1 (,.~  [: |.!.0 +/\) 2 2 [ Am =. 2 1  0 4 [ Av =. 0.9 0.1  0 1e_20
+  M =. (,:   ] * 1e_20 * i.@#) 0. + (i. 6) ,~ =/~ i. 6  NB. extra row of Fk, used sometimes
+  rvt =. '44444444' [ bndrowmask =. '014' {~ 8 ?@$ 3  NB. rvt must match total # columns; bndrowmask the rows in Qk incl Fk
+  parms =.        6    0.      0.           1e_25         0.              0.             0.         0.          0.          _1
+  bkbeta =. (>.&.(%&4) 6) $ 0.
+  bk =. ,:~ bkbeta
+  beta =. (#rvt) $ 0.  NB. one beta per column
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(_7 (0}) parms);bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('9' 0} rvt);bndrowmask;bk;'';00;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';01;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';01;(_7 (0}) parms);bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;bk;'';01;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('9' 1} rvt);bndrowmask;bk;'';01;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';5;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';5;(_7 (0}) parms);bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('1' 5} rvt);bndrowmask;bk;'';5;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('9' 5} rvt);bndrowmask;bk;'';5;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';6;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';6;(_7 (0}) parms);bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('1' 6} rvt);bndrowmask;bk;'';6;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;('9' 6} rvt);bndrowmask;bk;'';6;parms;bkbeta;beta 
+  assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';7;(1e_10 (3}) parms);bkbeta;beta   NB. Store threshold
   NB. Test every different length.  Different size of M are not so important
-  for_l. >: i. (*1 T. ''){51 5 do.
-    M =. (*  0.25 < 0 ?@$~ $)  _0.5 + (2 # l+?20)?@$ 0  NB. random values of random sizes, with 25% 0s
+  for_l. 2 + i. (*1 T. ''){51 5 do.  NB. l is #rows in Qk including Fk if any
+    'nQcol nAcol' =. 10 15  NB. number of cols in Qk, A0
+    M =. (*  0.25 < 0 ?@$~ $)  _0.5 + (l,nQcol) ?@$ 0  NB. random values of random sizes, with 25% 0s
     M =. 0. + epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) M  NB. append extended part, force to float
-    'r2 r c' =. $M
-    for_j. 0 $~ (*1 T. ''){100 2 do.
-      ix =. 00 + l ? c  NB. indexes
-      v =. l ?@$ 0  NB. vector values
-      pad =. ? 20  NB. number of dummy columns to install
-      ref =. |: (,~ v) +/@:*"1!.1 ,.~/ ix{"1 M  NB. M values, small first, weighted by v
-      assert. '' ('' run128_9) (c+pad);(,."1 (-pad+1) {. (_2) ]\ 0 , #ix);ix;v;M;0.0;Yt
- NB. obsolete      if. -. 1e_25 > >./ re=. | +/ ref epsub act do. 13!:8]4 [ 'pad__ r__ c__ re__ ix__ v__ ref__ act__ M__' =: pad;r;c;re;ix;v;ref;act;M end.
+    Ax =. ,."1 (,.~    [: |.!.00 +/\) >: nAcol ?@$ nQcol   NB. start,len for each Acol
+    'Am Av' =. (+/ , {: Ax) ?@$&.> nQcol,0  NB. random columns and weights 
+    NB. y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta;beta  where ndx is an atom  (1st 8 blocks don't move)
+    NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
+    parms =.        0.    0.      0.           1e_25      0       0.             0.         0.          0.          _1
+    rvt =. '014' {~ (nQcol+nAcol) ?@$ 3
+    bndrowmask =. '014' {~ l ?@$ 3
+    bkbeta =. (>.&.(%&4) l) $ 0.
+    bk =. ,:~ bkbeta
+    beta =. (#rvt) $ 0.  NB. one beta per column
+    for_ndx. i. #rvt do.  NB. for each basic and non-basic column
+      assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';ndx;((-^:(?2) l) 0} parms);bkbeta;beta 
     end.
   end.
 
-  prtpms =. ([: 1: smoutput@[ smoutput@'' smoutput@])
-  prtpms =. -:
-  bk =. dptoqp _2 1 3 1e_8
-  M =. dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,NonbasicSwapBounty
-  Frow =. _4 _3 _2 _1. 1.
-  bkg =. i.{:$M
-  sched=.100 $ 100
-  NB. Test DIP mode - on identity cols    ndx;Ax;Am;Av;(M, shape 2,m,n);parms;bkgrd;bk;Frow;sched
-  assert. 0 0 1 4 10 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 3 1 1 4 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
-  M =. (0 1 1 + $M) {. (0 0 1 + $M) {.!.1e_10 M
-  bk =. (0 1 + $bk) {. bk
-  Frow =. (1 + $Frow) {.!.1. Frow
-  assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 16 25 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg =. ,00
-  assert. 4 0 0 0 0 __ ((4 0 0,4 1 0,:4 3 0) run128_9) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 1 0 0 0 __ ((4 0 0,4 1 0,:4 3 0) run128_9) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 3 0 0 0 __ ((4 0 0,4 1 0,:4 3 0) run128_9) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 3 0 0 0 __ ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
-  bkg =. 00 1
-  assert. 0 1 1 16 19 _6 ('' run128_9) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 1 1 16 18 _6 ('' run128_9) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 1 1 16 18 _6 ('' run128_9) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 3 1 1 2 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
-  bkg =. 0 1 2
-  assert. 0 0 1 16 20 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]0 1 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]1 0 2 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 16 22 _4 (((0 0 1,:0 0 2) run128_9)) (1j3 #!.4 ]3 1 0 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 3 1 1 3 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. dangerous pivot
-  NB. verify each lane
-  bkg =. 1j3 #!.4 ]0 1 2 3
-  assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg =. _1 |.!.4 ] 1j3 #!.4 ]0 1 2 3
-  assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg =. _2 |.!.4 ] 1j3 #!.4 ]0 1 2 3
-  assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  bkg =. _3 |.!.4 ] 1j3 #!.4 ]0 1 2 3
-  assert. 0 0 1 4 42 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 4 49 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  NB. empty
-  assert. 6 ((0 run128_9)) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. no columns
-  assert. 6 ((0 run128_9)) (0$00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched  NB. no columns
-  assert. 6 ((0 run128_9)) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;($0);bk;Frow;sched  NB. no rows
-  assert. 6 ((0 run128_9)) (,3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);(2 0 0$0.);cons;bkg;bk;(1$0.);sched  NB. empty M
-  bk =. dptoqp _2 1 3 1e_8
-  M =. dptoqp |: _4 ]\ 0. 1 3 0  0 0.5 3 0   1 0 0 0   0 1e_9 0 0   NB. input by columns
-  Frow =. _4 _3 _2 _1. 1.
-  bkg =. i.-{:$M
-  sched =.4 $ 100
-  assert. 0 0 2 4 10 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 2 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 2 4 10 _4 (((0 0 1,:0 0 2) run128_9)) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 2 4 13 _4 (((0 0 1,:0 0 2) run128_9)) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  NB. row cutoff
-  M =. ({.~   0 1 0 + $) ({.!.1e_10~  0 0 1 + $) dptoqp |: _4 ]\ % 1. 2 3 4   2 1 2 3   1.8 1.2 3 4   2.3 3 4 5 
-  Frow =. _4 _3 _2 _1. 1. 1
-  bk =. dptoqp 1. 1 1 1 0
-  bkg =. 0 1 2 3  NB. test cutoff in different lanes, and then in one lane
-  assert. 0 0 0 4 7 _4 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 0 4 10 _4 ('' run128_9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 0 4 10 _4 ('' run128_9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 0 4 13 _4 ('' run128_9) 2 1 0 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 0 4 10 _4 ('' run128_9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 0 4 13 _4 ('' run128_9) 3 2 0 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 0 4 13 _4 ('' run128_9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  for_j. i. 4 do.
-    bkg =. (-j) |.!.4 ] 1j3 #!.4 ]0 1 2 3
-    assert. 0 0 0 4 23 _4 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-    assert. 0 0 0 4 34 _4 ('' run128_9) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-    assert. 0 0 0 4 38 _4 ('' run128_9) 2 0 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-    assert. 0 0 0 4 49 _4 ('' run128_9) 2 1 0 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-    assert. 0 0 0 4 38 _4 ('' run128_9) 3 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-    assert. 0 0 0 4 53 _4 ('' run128_9) 3 2 0 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-    assert. 0 0 0 4 49 _4 ('' run128_9) 3 1 0 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
+  NB. SPR.  We need only a single column for each test
+  Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
+  M =. 2 {. ,: ,.                1   1e_30  _1   _1    1    1    1    1
+  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0.   1.2  2.7  1.1   0    0    0
+  bk =. 2 {. ,: ($bkbeta) $     0.5    0     1    2    1    1    1    1
+  bndrowmask =.                 '4',  '4',  '4', '4', '4', '4', '4', '4' 
+  rvt =. ,'4'
+  beta =. (#rvt) $ 0.4
+  bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
+  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.       _1
+  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
+  assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(7 (0)} parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(_8 (0)} parms);bkbeta;beta
+  assert. 0 6 1 8 0.5 ('' run128_9) Ax;Am;Av;(2 |."_1 M);rvt;bndrowmask;(2 |."_1 bk);'';00;(parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(2 |."_1 M);rvt;bndrowmask;(2 |."_1 bk);'';00;(6 (0)} parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(2 |."_1 M);rvt;bndrowmask;(2 |."_1 bk);'';00;(_7 (0)} parms);bkbeta;beta
+  assert. 0 5 1 8 0.5 ('' run128_9) Ax;Am;Av;(3 |."_1 M);rvt;bndrowmask;(3 |."_1 bk);'';00;(parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(3 |."_1 M);rvt;bndrowmask;(3 |."_1 bk);'';00;(5 (0)} parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(3 |."_1 M);rvt;bndrowmask;(3 |."_1 bk);'';00;(_6 (0)} parms);bkbeta;beta
+  assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(4 |."_1 bk);'';00;(parms);bkbeta;beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(_4 (}."1) 4 |."_1 bk);'';00;(4 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 8 1 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(4 |."_1 bk);'';00;(_5 (0)} parms);bkbeta;beta
+  assert. 0 3 1 8 0.5 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(5 |."_1 bk);'';00;(parms);bkbeta;beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;(3 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;(_4 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 2 1 8 0.5 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(6 |."_1 bk);'';00;(parms);bkbeta;beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;(2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;(_3 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 1 1 8 0.5 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(7 |."_1 bk);'';00;(parms);bkbeta;beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(1 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+
+  NB. bound column has hidden row with SPR=beta
+  assert. 0 8 1 8 0.4 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
+  beta =. (#rvt) $ 0.75
+  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
+  NB. bound enforced complements the column
+  beta =. (#rvt) $ 0.4
+  assert. 0 8 1 8 0.4 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
+  beta =. (#rvt) $ 0.75
+  assert. 0 8 1 8 0.75 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
+  beta =. (#rvt) $ 1.5
+  assert. 0 2 1 8 1.0 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
+
+  NB. Bound row allows both values
+  assert. 0 2 1 8 0.2 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
+  assert. 0 2 1 8 0.2 ('' run128_9) Ax;Am;Av;M;rvt;('1' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
+  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 3} bndrowmask);bk;'';00;(parms);bkbeta;beta
+  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);('0' 4} bndrowmask);bk;'';00;(parms);bkbeta;beta  NB. nonenforcing
+  assert. 0 4 1 8 0.1 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);('0' 4} bndrowmask);bk;'';00;(parms);bkbeta;beta  NB. enforcing col
+  for_r. i. 8 do. assert. (0, (8 | 2-r), 1 8 0.2) ('' run128_9) Ax;Am;Av;(r |."_1 M);rvt;(r |. '1' 2} bndrowmask);(r |."_1 bk);'';00;(parms);(r |. bkbeta);beta end.
+
+  NB. first col not taken unless valid
+  M =. 2 {. ,: ,.               1. 0 0 0  0 1. 0 0
+  bk =. 2 {. ,: ($bkbeta) $     1.
+  assert. 0 5 1 8 1 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
+
+  Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
+  M =. 2 {. ,: ,.                2.   1    1    1    2    1    1    1
+  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.
+  bk =. 2 {. ,: ($bkbeta) $     1.
+  bndrowmask =. (1 { $ M) $     '4'
+  rvt =. ,'4'
+  beta =. (#rvt) $ 0.4
+  bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
+  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.       _1
+
+  NB. tie goes to last, if not in same batch
+  assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
+  M =. 2 {. ,: ,.                2.   2    1    1    1    1    1    1
+  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
+  M =. 2 {. ,: ,.                2.   1    1    1    1    2    1    1
+  assert. 0 5 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
+  M =. 2 {. ,: ,.                2.   1    1    1    1    1    2    1
+  assert. 0 6 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
+  M =. 2 {. ,: ,.                2.   1    1    1    1    1    1    2
+  assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
+
+  NB. thresholds
+  M =. 2 {. ,: ,.              8 $ 1e_4
+  bk =. 2 {. ,: ($bkbeta) $    0.5 , 7 # 1.
+  assert. 0 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
+  assert. 3 _1 1 8 _ ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 (2)} parms);bkbeta;beta
+  assert. 1 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_2 (6)} parms);bkbeta;beta
+  assert. 3 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 1e_2 (5 6)} parms);bkbeta;beta
+  assert. 2 0 1 8 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 (7)} parms);bkbeta;beta
+
+  NB. Verify random pickup of 0 bk values.  This kludge relies on a side effect left by run128_9
+  if. 0 = 1 T. '' do.  NB. in multithreaded we don't know what run128_9 does; and single-threaded test is good enough
+    for_nr. 5 6 7 8 do.
+      savy =: (<(nr,2.0) (0 7)} 9 {:: savy) 9} savy [ pickup =. 0$00 [ z =. (2, #bkbeta) $ 0.  NB. threshold makes all SPRs 0
+      for. i. 200 do.
+        assert. 2 = 0 { res =. 128!:9 (<z) 7} savy
+        pickup =. pickup , 1 { res
+      end.
+      (0{parms) = # ~. pickup
+    end.
   end.
-  bk =. dptoqp 0. 0 0 0 0
-  NB. col cutoff using schedule
-  M =. dptoqp 4 4 $ 1.  NB. every ele is valid
-  bkg =. i.{:$M
-  bk =. dptoqp 1. 2 2 0  NB. the pivot is the first row; if row 3 is in, all rows abort
-  Frow =. _1 _1.1 _1.5 _2 1  NB. improvements are _1 _1.1 _3 _4
-  sched =. 5 4 3
-  assert. 3 0 0 7 7 0 ((0 run128_9)) 00 0 0 0 0 0 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;1 2 3;bk;Frow;sched
-  assert. 0 1 0 5 6 _1.1 ((0 run128_9)) 01 1 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
-  assert. 0 2 0 4 7 _1.5 ((0 run128_9)) 1 2 1 1 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
-  assert. 0 2 0 4 5 _1.5 ((0 run128_9)) 1 1 1 2 1 1 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched
-  M =. dptoqp 4 4 $!.0 ] 1e_8 1 1 1  NB. first row is pivot; first col is dangerous
-  assert. 0 2 0 5 12 _1.5 ((0 run128_9)) 0 0 0 2 2 2 2 2 2 2 2 2 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2;bk;Frow;sched  NB. don't count dangerous col as improvement
-  NB. bk thresh
-  M =. dptoqp 4 4 $ 1.
-  bk =. dptoqp 1e_1 1e_2 1 1
-  bkg =. i.{:$M
-  sched =. 100 $ 100
-  Frow =. _1 _1.1 _1.5 _2 1  NB. improvements are _1 _1.1 _3 _4
-  assert. 3 0 0 4 4 0 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(0.5 (5}) cons);bkg;bk;Frow;sched
-  assert. 3 0 0 4 4 0 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(0.05 (5}) cons);bkg;bk;Frow;sched
-  assert. 0 3 1 4 16 _.02 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(0.005 (5}) cons);bkg;bk;Frow;sched
-  NB. unbounded
-  M =. dptoqp |: _3 ]\ 0. 0 0   1 1 1   0 0 1e_40   NB. input by columns.  Need small nonzero to ensure reading the extension.  0 2 3 unbounded
-  bk =. dptoqp 1. 2 2  NB. the first row on each col is the pivot
-  bkg =. i.{:$M
-  Frow =. _1 _1.1 _1.5 1  NB. improvements
-  assert. 4 0 0 0 0 __ (((4 0 0,:4 2 0) run128_9)) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 2 0 1 3 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 3 0 0 0 __ (((4 4 0,4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
-  M =. 1. (<1 2 2)} M   NB. now column 3 is no longer unbounded
-  assert. 4 0 0 0 0 __ (((4 0 0,:4 2 0) run128_9)) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 2 0 1 3 __ (((4 0 0,:4 2 0) run128_9)) 1 2 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 4 2 0 2 6 __ (((4 0 0,:4 2 0) run128_9)) 3 1 2;(,."1 (_2) ]\ 00 1);(1$2);(1$1.0);M;cons;bkg;bk;Frow;sched
-  NB. stall
-  bk =. dptoqp 0. 0 0  NB. no improving pivots
-  M =. dptoqp |: _3 ]\ 1. 1 1  1 1 1  1 1 1   NB. input by columns
-  assert. 3 0 0 3 3 0 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  NB. virtual row gets priority
-  M =. dptoqp |: _4 ]\ 0. 1 1 0   1 0 0 0  0 0 1 0   0 0 0 1   NB. input by columns
-  bk =. dptoqp 1. 1 1 1  NB. every row can pivot
-  bkg =. i.{:$M
-  Frow =. _4. _3 _2 _1 1  NB. improvements reduced col by col
-  assert. 0 0 1 4 7 _4 (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 1 0 1 8 __ ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(00 (6}) cons);bkg;bk;Frow;sched
-  assert. 0 0 1 0 4 __ (((0 0 1,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(01 (6}) cons);bkg;bk;Frow;sched
-  assert. 0 2 2 2 9 __ (((0 2 2,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(2 (6}) cons);bkg;bk;Frow;sched  NB. col 0 misses because row 1 gets there first
-  assert. 0 0 2 0 4 __ (((0 2 2,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(2 (6}) cons);2 0 1 3;bk;Frow;sched  NB. Tie goes to the lowest lane
-  assert. 0 0 2 1 8 __ (((0 2 2,:0 0 2) run128_9)) 1 0 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(2 (6}) cons);2 0 1 3;bk;Frow;sched
-  M =. dptoqp |: _4 ]\ 0. 1 1 0   1 0 1 0  0 0 0 1  0 0 0 1   NB. input by columns
-  assert. 0 1 0 1 8 __ (((0 0 1,0 0 2,0 1 0,:0 1 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(00 (6}) cons);bkg;bk;Frow;sched
-  M =. dptoqp |: _4 ]\ 0. 1 1 0   1 0 2 0  0 0 0 1  0 0 0 1   NB. input by columns
-  assert. 0 0 1 4 10 _4 (((0 0 1,0 1 2,:0 0 2) run128_9)) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(00 (6}) cons);bkg;bk;Frow;sched   NB. 0 0 2 may slip by if columns reordered; 0 0 1 if rows
-  NB. ColBk0 threshold
-  M =. dptoqp |: _4 ]\ 1e_8 1e_8 1e_8 1  1e_9 1e_9 1e_9 1  1e_10 1e_10 1e_10 1   0 0 0 1   NB. input by columns
-  bk =. dptoqp 0. 0 0 1  NB. every row can pivot
-  bkg =. i.{:$M
-  Frow =. _4. _3 _2 _1 1  NB. improvements reduced col by col
-  assert. 0 3 3 4 7 _1 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 1 2 3 4 7 _2 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(5e_10 (2}) cons);bkg;bk;Frow;sched
-  assert. 1 1 3 4 7 _3 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(5e_9 (2}) cons);bkg;bk;Frow;sched
-  assert. 1 0 3 4 7 _4 ('' run128_9) 0 1 2 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(5e_8 (2}) cons);bkg;bk;Frow;sched
-  NB. Switchover to qp
-  M =. 1 ,:~ 4 4 $ 1e_20   NB. input by columns
-  bk =. dptoqp 1. 1 1 1  NB. every row can pivot
-  Frow =. _4. _3 _2 _1 _1  NB. improvements reduced col by col
-  assert. 3 0 0 4 16 0 (((0 4,"1 0 i. 4) run128_9)) 0 1 4 3;(,."1 (_2) ]\ 00 1);(1$00);(1$1.0);M;(1e_21 (0}) cons);bkg;bk;Frow;sched  NB. multithreaded, col4 is a pivot
-  assert. 0 4 0 4 16 _1 (((0 4,"1 0 i. 4) run128_9)) 0 1 4 3;(,."1 (_2) ]\ 00 1);(1$00);(1$1.0);M;(1e_19 (0}) cons);bkg;bk;Frow;sched
-  
-NB. obsolete   NB. nonimproving pivots
-NB. obsolete   bk =. dptoqp 4 $ 0.
-NB. obsolete   M =. dptoqp |: _4 ]\ 0. 1 0 0        0 1e_10 3 0   1 1e_7 0 0   1e5 1e_5 0 0   NB. input by columns
-NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;0 1 2
-NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
-NB. obsolete   assert. 0 0 2 0 1 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;2 0 1
-NB. obsolete   assert. 3 0 0 0 0 0 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;3 0 1
-NB. obsolete   assert. 0 0 0 0 1 0 ('' run128_9) (,3);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-NB. obsolete   assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;1 0 2
-NB. obsolete   assert. 3 0 0 0 0 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;2 3
-NB. obsolete   M =. M 1}~ |: _4 ]\ 0. _1 0 0  0 0 0 0        0 0 0 0     0 _1e_5 1e_5 0 
-NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,00);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2
-NB. obsolete   assert. 0 0 0 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;0 1 2
-NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
-NB. obsolete   assert. 0 0 1 0 1 0 ('' run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
-NB. obsolete   M =. 1e_20 (<0 3 3)} M 
-NB. obsolete   assert. 0 0 0 0 1 0 ((0 0 0,:0 0 1) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 0
-NB. obsolete   assert. 0 0 2 0 1 0 ((0 1 1,0 0 1,:0 0 2) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1 2  NB. qp triggered; but not necessarily in all rows
-NB. obsolete   assert. 3 0 0 0 0 0 ((0 0 1,:3 0 0) run128_9) (,4);(,."1 (_2) ]\ 00 1);(1$3);(1$1.0);M;cons;3 1
-NB. obsolete 
-  NB. gradient-stall mode
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
-  M =. dptoqp |: _4 ]\ 1. 2 5 4    1 2 3 _10   _1 _2 _20 _10   1 2 3 0   NB. input by columns
-  Frow =. _4. _5 _2 _5 _1e_20
-  bk=. dptoqp 4 $ 1e_29
-  bkg=. i. {: $ bk
-  assert. 0 0 2 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 3 2 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 2 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 3 3 7 __ (0 run128_9) 3 2 1 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(3 (6)}cons);bkg;bk;Frow;sched  NB. prirow gets priority; can't multithread since we don't move it to top
-  assert. 0 0 2 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
-  assert. 0 3 2 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
-  assert. 0 0 2 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
-  bk=. dptoqp 0. 0 1 0  NB. don't look where b not 0 
-  assert. 0 0 3 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 3 1 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 3 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 0 1 0 1 __ (0 run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bkg;bk;Frow;sched  NB. prirow gets priority
-  assert. 0 3 1 0 1 __ (0 run128_9) 3 1 0;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1 (6)}cons);bkg;bk;Frow;sched
-  assert. 0 0 3 2 5 2.9375 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
-  assert. 0 3 1 3 9 0.6 ('' run128_9) 00 1 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
-  assert. 0 0 3 3 6 2.9375 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;(|.bkg);(|."1 bk);Frow;sched
-  M =. dptoqp |: _6 ]\ 1. 2 5 4 5 6    1 2 3 _1 1 10   _1 _2 0 0 1 4   1 _2 _3 4 5 6    1 1 1 1 1 1   1 2 3 _1 1 0   NB. input by columns
-  bk=. dptoqp 6 $ 1e_29
-  bkg=. i. {: $ bk
-  Frow =. _4. _5 _2.5 _1 _1 _5 _1e_20 
-  assert. 0 1 5 2 12 4.68 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 5 2 2 12 0.68 ('' run128_9) 00 5;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  assert. 0 2 5 3 18 3.68 ('' run128_9) 0 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched
-  M =. dptoqp |: _4 ]\ 1.0001e_4 _1e_4 1e_4 _1e_4    1 2 3 _10   1e_4 _1e_4 1e_4 _10   1 2 3 0   NB. input by columns
-  bk=. dptoqp 4 $ 1e_29
-  bkg=. i. {: $ bk
-  Frow =. _1.e10 _5 _2.5 _2e10 _1e_20 
-  assert. 0 1 2 3 9 4.6 ('' run128_9) 00 1 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched  NB. Test discarding small column values
-  assert. 0 0 0 2 5 1.000000040002e_20 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(cons);bkg;bk;Frow;sched
 
-  NB. bound variables.  These run only in a single thread
-  if. 0 = 1 T. '' do.
-  dptoqp=. 2 {. ,:
-  bk =. dptoqp         0.25 0.5
-  M =. dptoqp |: _4 ]\ 0.25 1 0 0  _0.25 0.25 0 0  _0.25 0.25 0 0  _0.25 0.25 0 0    NB. input by columns
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,NonbasicSwapBounty
-  Frow =. _4 _3 _2 _1. 1.
-  bkg=. 00 1
-  sched =.4 $ 100
-  bkbeta=.,1.
-  beta=.1. 0 1 2 0
-  rvt =. '44044'
-  assert. 0 0 1 1 2 _2 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 1 1 2 _6 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 2 4 1 2 _2 ('' run128_9) (,02);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 3 1 1 2 _2 ('' run128_9) (,03);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
-  bk =. dptoqp         0.1 0.5
-  bkg=. 00 1
-  bkbeta=.,0.25
-  assert. 0 0 0 1 2 _1.6 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 0 1 2 _3 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 2 4 1 2 _2 ('' run128_9) (,02);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(1e_3 (1)} cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
+  Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
+  M =. 2 {. ,: ,.               1e_12 1e_10  ,(-2^_36),  _1e_11   0   0   0   0
+  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
+  bk =. 2 {. ,: ($bkbeta) $     1e_3   1       1       1     0   0   0   0
+  bndrowmask =. (1 { $ M) $     '4'
+  rvt =. ,'4'
+  beta =. (#rvt) $ 2.0
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
+  parms =.        8    0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       _1
+  assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
+  assert. 3 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 (5)} parms);bkbeta;beta  NB. below dangerous ignored
+  assert. 1 1 1 8 1e10 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. col 0 disabled
+  assert. 0 8 1 8 2 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. bound row has hidden SPR=beta
+  assert. 0 8 1 8 2 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. bound row has hidden SPR=beta
+  assert. 1 2 1 8 1 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;((2^_36) (<0 2)} bk);'';00;(2e_12 (2)} parms);bkbeta;beta  NB. enforcing value comes up
+  assert. 1 2 1 8 1 ('' run128_9) Ax;Am;Av;M;(rvt);('0' 2} bndrowmask);(bk);'';00;(2e_12 (2)} parms);bkbeta;beta  NB. enforcing value comes up
 
-  NB. gradient with bound vars
-  bk =. dptoqp         0.1 0.5 1 0
-  bkg=. i. {: $ bk
-  bkbeta=.0.25 0
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.8 0 0  0.25 _0.1 0.9 0  0.25 _0.1 0.9 0    NB. input by columns
-  Frow =. _1 _1 _1 _1. 1.
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
-  rvt =. '44044'
-  assert. 0 0 1 2 8 2.145 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 0 1 2 7 2.145 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 3 1 2 8 1.955 ('' run128_9) 00 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.8 0 0  0.25 _0.1 0.9 0  0.25 _0.1 0.9 0.2    NB. input by columns
-  assert. 0 3 3 2 8 1.995 ('' run128_9) 00 3;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.6 0 0  0.25 _0.1 0.9 0  0.25 1 0 0    NB. input by columns
-  assert. 0 1 1 2 8 1.845 ('' run128_9) 00 1;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  rvt =. '44144'
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns
-  assert. 0 0 1 2 7 2.145 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 0.9 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns
-  assert. 0 0 1 2 7 1.955 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns - col 2 has the hidden 1
-  assert. 0 0 1 2 7 2.145 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 2 0  _0.25 _0.6 0 0  _0.25 0.2 _0.9 0  0.25 1 0 0    NB. input by columns  - hidden 1 overwhelmed
-  assert. 0 2 1 2 8 3.015 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 2 0  _0.25 _0.6 0 0  _0.25 0.1 _0.9 0  0.25 1 0 0    NB. input by columns
-  assert. 0 2 1 2 8 2.955 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 2 0  _0.25 _0.6 0 0  _0.25 0.1 _0.9 _0.5  0.25 1 0 0    NB. input by columns
-  assert. 0 2 3 2 8 3.205 ('' run128_9) 00 2;(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
+  M =. 2 {. ,: ,.               1e_14  0    0    0    0    0    0    0
+  bk =. 2 {. ,: ($bkbeta) $       1.   0    0    0    0    0    0    0
+  assert. 1 0 1 8 1e14 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
+  M =. 2 {. ,: ,.               1e_14  0    0    0  1e_14  0    0    0
+  bk =. 2 {. ,: ($bkbeta) $       1.   0    0    0    0    0    0    0
+  assert. 3 _1 1 8 0 ((3 0,:3 _) run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving with no safe pivot
+  M =. 2 {. ,: ,.               1e_14  0    0    0  1e_14  0  1e_5   0
+  assert. 2 6 1 8 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving safe
 
-  NB. bound nonbasic column swap
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow,NonbasicSwapBounty
-  M =. dptoqp |: _4 ]\ 0.25 _0.1 1 0  1 1 1 1  1 1 1 1  0.25 1 0 0    NB. input by columns
-  bk =. dptoqp         2. 2 2 2
-  bkbeta=.0. 0
-  bkg=. i. {: $ bk
-  rvt =. '40044'
-  sched =.4 $ 100
-  beta=.1. 1.5 1 2 0
-  Frow =. _1 _2 _1 _1. 1.
-  assert. 0 2 4 1 4 _1 ('' run128_9) (,2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 4 1 4 _3 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 4 2 8 _3 ('' run128_9) (1 2);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 4 2 8 _3 ('' run128_9) (2 1);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  NB. test swap bounty
-  Frow =. _1 _2 _1 _4. 1.
-  assert. 0 3 1 2 8 _8 ('' run128_9) (1 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 4 2 5 _12 ('' run128_9) (1 3);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;(4. (7}) cons);bkg;bk;Frow;sched;bkbeta;beta;rvt
+  NB. gradient mode
+NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
+  Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
+  M =. ,:   1.    1    _1    1   NB. Input by rows, i. e. NOT transposed
+  M =. M ,  _1.    1   _1   1
+  M =. M ,  _1.    1   1    1
+  M =. M ,  1.    1    1    _1
+  M =. M ,  0.    0    5    0
+  M =. M ,  7 4$0.
+  M =. 2 {. ,: M
+  Frow =.  _1.     _2   _3   _4
+  bndrowmask =. (1 { $ M) $     '4'
+  rvt =. '4444'
+NB.   parms is #rows,maxAx,Col0Threshold,expandQk,x,MinGradient
+  parms =.        8    0.      1e_25        1     0     0    NB. We expand each row to its own comparison block
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 3 4 1856 1.788854381999831; _2 ]\ _512 5 _512 5 _320 30 _512 5 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
+  Frow =.  _4.     _3   _2   _1
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 0 4 704 1.788854381999831; _2 ]\ _512 5 _128 3 64 2 0 1) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
+  if. 0 = 1 T. '' do.  NB. can't chain cutoffinfo multithreaded, because the problems change size
+    NB. roll cutoffinfo into the next test, to verify it is picked up
+    assert. (0 0 4 1152 1.788854381999831; _2 ]\ _512 5 _512 5 _320 30 _512 5) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow  NB. reversed col order
+  end.
+  NB. bound column adds 1 to total
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 0 4 1856 1.788854381999831; _2 ]\ _512 5 _512 6 _320 30 _512 5) ('' run128_9) Ax;Am;Av;M;('0' 1} rvt);bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow  NB. reversed col order
+  NB. bound row doubles the contribution of the row
+  Frow =.  _1.     _2   _3   _4
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 3 4 1856 1.788854381999831; _2 ]\ _512 5 _512 5 _320 55 _512 5) ('' run128_9) Ax;Am;Av;M;rvt;('0' 4} bndrowmask);'';cutoffinfo;0 1 2 3;(parms);Frow
 
-  NB. gradient nonbasic col swap - should never happen
-  bk =. dptoqp         0.0 0.0 0 0
-  bkg=. i. {: $ bk
-  bkbeta=.0$0.
-  beta=. ({:$Frow) $ 0.
-  M =. dptoqp |: _4 ]\ 0.25 0.25 0.30 0.25  0.25 0.25 1.30 0.25   1 1 1 1    1 1 1 1    NB. input by columns
-  Frow =. _1 _1 _1 _1. 1.
-  sched =.4 $ 100
-  rvt =. '00044'
-  cons =. 1e_11 1e_25 1e_25 1e_11 1e_6 1e_25 _1 NB.  QpThresh,Col0Threshold,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,PriRow
-  assert. 0 0 2 1 4 2.2775 ('' run128_9) (,00);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
-  assert. 0 1 2 1 4 3.8775 ('' run128_9) (,01);(,."1 (_2) ]\ 00 0);(0$00);(0$0.0);M;cons;bkg;bk;Frow;sched;bkbeta;beta;rvt
 
-  end.  NB. one thread
+  NB. unbounded problem
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (4 1 1 512 0; _2 ]\ _512 5 0 0 0 0 0 0) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
+  NB. unbounded problem cut off at start
+  Frow =.  _1.     _2   _3   _4
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 3 4 640 1.788854381999831; _2 ]\ 0 1 0 2 128 3 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow
+  if. 0 = 1 T. '' do.  NB. can't chain cutoffinfo multithreaded, because the problems change size
+    NB. roll cutoffinfo into the next test, to verify it is picked up
+    assert. (4 1 1 384 0; _2 ]\ 0 1 0 2 _512 30 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;2 1 0;(parms);Frow
+  end.
+  NB. unbounded problem cut off before detection
+  Frow =.  _1.     _3   _3   _4
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 3 4 704 1.788854381999831; _2 ]\ 0 1 64 3 128 3 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow
+  if. 0 = 1 T. '' do.  NB. can't chain cutoffinfo multithreaded, because the problems change size
+    NB. roll cutoffinfo into the next test, to verify it is picked up
+    assert. (4 1 1 320 0; _2 ]\ 0 1 64 3 _512 30 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;2 1 0;(parms);Frow
+  end.
 
   NB. end of tests, add a thread
   0 T. ''
@@ -1771,7 +1640,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
 
  
-4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j qpmulvecatom res run128_9 savx savy savref savres savspr'
+4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom res run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

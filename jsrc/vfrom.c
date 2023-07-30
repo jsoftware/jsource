@@ -1221,6 +1221,9 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 #define BNDROWBATCH 64   // the number of bits of bndrowmask that we load at a time.
 #define LGBNDROWBATCH 6
 #define CMPBATCH 64  // frequency with which we compare for cutoff.  MUST NOT BE SMALLER than BNDROWBATCH so that we restart on a bndrowmask bdy
+  // We collect the totals for every compare batch.  If we are using low precision for the gradient, we should collect totals often enough that we don't
+  // lose precision in each lane
+
 // the processing loop for one core.  We take a slice of the columns/rows, repeatedly
 // ti is the job#, not used except to detect error
 static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){

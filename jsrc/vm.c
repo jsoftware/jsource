@@ -363,7 +363,18 @@ F2(jtroot){A z;I t;
 }
 
 F1(jtjdot1){R tymes(a0j1,w);}
-F2(jtjdot2){R plus(a,tymes(a0j1,w));}
+// j. should preserve -0 when given real arguments
+F2(jtjdot2){
+ ARGCHK2(a,w); I at=AT(a), wt=AT(w);
+ if((~(SGNIFSPARSE(at)|SGNIFSPARSE(wt))&-(at&B01+INT+FL)&-(wt&B01+INT+FL))<0){A z;  // if both args real and not sparse
+  I ar=AR(a), wr=AR(w);
+  ASSERTAGREE(AS(a),AS(w),MIN(ar,wr))  // verify agreement
+  if(!(at&FL))RZ(a=cvt(FL,a)) if(!(wt&FL))RZ(w=cvt(FL,w))  // convert to FL if needed
+  RZ(IRS2(a,w,DUMMYSELF,0,0,jtover,z)) AN(z)>>=1; AR(z)=MAX(AR(a),AR(w)); AT(z)=CMPX;  // z=a ,"0 w, then switch to CMPX
+  R z;
+ }
+ R plus(a,tymes(a0j1,w));
+}
 F1(jtrdot1){R expn1(jdot1(w));}
 F2(jtrdot2){R tymes(a,rdot1(w));}
 

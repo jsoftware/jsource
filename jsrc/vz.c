@@ -12,8 +12,8 @@ static const Z z1={1,0};
 
 static D hypoth(D u,D v){D p,q,t; MMM(u,v); R INF(p)?inf:p?(t=q/p,p*sqrt(1+t*t)):0;}
 
-static ZF1(jtzjx){Z z; z.re=-v.im; z.im= v.re; R z;}
-static ZF1(jtzmj){Z z; z.re= v.im; z.im=-v.re; R z;}
+static ZF1(jtzjx){Z z; z.re=-v.im; z.im= v.re; R z;}  // v * 0j1
+static ZF1(jtzmj){Z z; z.re= v.im; z.im=-v.re; R z;}  // v * 0j_1 = v/0j1
 
 Z zrj0(D a){Z z; z.re=a; z.im=0.0; R z;}
 
@@ -205,11 +205,14 @@ static ZF1(jtzacosh){Z z;
  R z;
 }
 
-static ZF1(jtzatanh){R ztymes(zrj0((D)0.5),zlog(zdiv(zplus(z1,v),zminus(z1,v))));}
+// We follow Kahan, Branch Cuts for Complex Elementary Functions, Table 1
+// obsolete static ZF1(jtzatanh){R ztymes(zrj0((D)0.5),zlog(zdiv(zplus(z1,v),zminus(z1,v))));}
+static ZF1(jtzatanh){R ztymes(zrj0((D)0.5),zminus(zlog(zplus(z1,v)),zlog(zminus(z1,v))));}
 
 static ZF1(jtzatan){ZF1DECL;
- if(!b&&(a<-1e13||1e13<a))R zrj0(0<a?PI/2.0:-PI/2.0);
- z=zmj(zatanh(zjx(v)));
+ if(MAX(ABS(a),ABS(b))>1e13)z=zrj0(PI/2.0);  // if either component very large, result is +-pi/2
+ else z=zmj(zatanh(zjx(v)));
+ *(I*)&z.re=(*(I*)&a&IMIN)|(*(I*)&z.re&IMAX);  // The branch cut is on the imaginary axis, so we just transfer the sign of a to the sign of the real part
  if(!b)z.im=0;
  R z;
 }    /* 4.4.22 */

@@ -135,6 +135,20 @@ y=: 201.71315737028 201.71563612246
 
 1e_8 > >./|,(cir8m a) - _8 o.a
 
+NB. branch cuts
+a =. 1 % __   NB. -0
+(0.5p1 j. 1e_10) -: _3 o. 0j1e10
+(0.5p1 j. 1e_10) -: _3 o. 0 j. 1e10
+(_0.5p1 j. 1e_10) -: _3 o. a j. 1e10
+(0.5p1 j. _1e_10) -: _3 o. 0 j. _1e10
+(_0.5p1 j. _1e_10) -: _3 o. a j. _1e10
+(0.5p1 j. 0) -: _3 o. 0 j. _
+(_0.5p1 j. 0) -: _3 o. a j. _
+(0.5p1 j. 0) -: _3 o. 0 j. __
+(_0.5p1 j. 0) -: _3 o. a j. __
+(0.5p1 j. 0) -: _3 o. _ j. _
+(_0.5p1 j. 0) -: _3 o. __ j. _
+
 
 NB. circle functions of the form f&.j.  ---------------------------------
 
@@ -186,7 +200,7 @@ x =: 0.01*(+ 0j1&*)/_400+?2$900
 
 
 NB. model of x o. y  ----------------------------------------------------
-NB. See Chapter 4 of Abramowitz and Stegun [1964].
+NB. See Chapter 4 of Abramowitz and Stegun [1964], and Kahan Branch Cuts for Complex Elementary Functions, Table 1
 
 pi     =: o.1
 sin    =: 1&o.   NB. a function in the C library
@@ -214,7 +228,8 @@ zacos  =: (-:pi)&-@zasin
 zatan  =: zatanh&.j.
 zasinh =: (^.@+ zp4)`($:&.-) @. (0&>@real)
 zacosh =: ]`(j.@|@imag)@.(0&>@real) @ (^.@+ zm4)
-zatanh =: 1&+ -:@^.@% 1&-
+NB. A&S version, has incorrect branch cut   zatanh =: 1&+ -:@^.@% 1&-
+zatanh =: 1&+ -:@-&^. 1&-   NB. Kahan version
 
 cirp   =: (cir0@])`(zsin@])`(zcos@])`(ztan@])`(zp4@])`(zsinh@])`(zcosh@])`(ztanh@])`(zp8@])`(real@])`(|@])`(imag@])`(zarc@]) @. [
 cirm   =: (cir0@])`(zasin@])`(zacos@])`(zatan@])`(zm4@])`(zasinh@])`(zacosh@])`(zatanh@])`(-@zp8@])`]`(+@])`(j.@])`(r.@]) @. (|@[)

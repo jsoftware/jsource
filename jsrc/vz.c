@@ -212,7 +212,7 @@ static ZF1(jtzatanh){R ztymes(zrj0((D)0.5),zminus(zlog(zplus(z1,v)),zlog(zminus(
 static ZF1(jtzatan){ZF1DECL;
  if(MAX(ABS(a),ABS(b))>1e13)z=zrj0(PI/2.0);  // if either component very large, result is +-pi/2
  else z=zmj(zatanh(zjx(v)));
- *(I*)&z.re=(*(I*)&a&IMIN)|(*(I*)&z.re&IMAX);  // The branch cut is on the imaginary axis, so we just transfer the sign of a to the sign of the real part
+ z.re=copysign(z.re,a);  // The branch cut is on the imaginary axis, so we just transfer the sign of a to the real part
  if(!b)z.im=0;
  R z;
 }    /* 4.4.22 */

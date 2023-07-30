@@ -65,7 +65,7 @@ CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), 
 };
 
 struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[3] = {  // floating-point 0, 1, and 2, used for constants
-{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},0.0},
+{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},-0.0}, //used for -y; -y is _0.0 - y
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0}
 };

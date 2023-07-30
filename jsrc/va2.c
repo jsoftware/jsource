@@ -1278,7 +1278,8 @@ F1(jtincrem){ARGCHK1(w); SETCONPTR(1) R plus(conptr,w);}
 F1(jtduble ){ARGCHK1(w); SETCONPTR2(2) R tymes(conptr,w);}
 F1(jtsquare){ARGCHK1(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
 F1(jtrecip ){ARGCHK1(w); SETCONPTR(1) R divide(conptr,w);}
-F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
+// obsolete F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
+F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); R tymes(numvr(3),w);} 
 
 static AHDR2(zeroF,B,void,void){mvc(m*(n^REPSGN(n)),z,1,MEMSET00);R EVOK;}
 static AHDR2(oneF,B,void,void){mvc(m*(n^REPSGN(n)),z,1,MEMSET01);R EVOK;}

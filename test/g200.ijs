@@ -443,17 +443,16 @@ NB. ^ m. n
 0 = 2 3 4 ^ m. _1/ 5 6 7 8 9
 
 f=: {{
-ysv   =: y
- assert. 2     (^ m. y -: y&|@^&x:) esv   =: ?10000
- assert. 3     (^ m. y -: y&|@^&x:) esv   =: ?10000
- assert. 5     (^ m. y -: y&|@^&x:) esv   =: ?10000
- assert. 64    (^ m. y -: y&|@^&x:) esv   =: ?10000
- assert. 17393 (^ m. y -: y&|@^&x:) esv   =: ?10000
+ assert. 2     (^ m. y -: y&|@^&x:) ?10000
+ assert. 3     (^ m. y -: y&|@^&x:) ?10000
+ assert. 5     (^ m. y -: y&|@^&x:) ?10000
+ assert. 64    (^ m. y -: y&|@^&x:) ?10000
+ assert. 17393 (^ m. y -: y&|@^&x:) ?10000
  if. IF64 do.
- assert. 1327569234056 (^ m. y -: y&|@^&x:) esv   =: ?10000
- assert. 580697153620649816294933768369x (^ m. y -: y&|@^&x:) esv   =: ?10000
+ assert. 1327569234056 (^ m. y -: y&|@^&x:) ?10000
+ assert. 580697153620649816294933768369x (^ m. y -: y&|@^&x:) ?10000
  end.
- for. i. 10 do. esv   =: 'b e' =. >: 2 ?@$ 10000 if. 1 = b +. y do. assert. 1 = (b ^ m. y e) * m. y (b ^ m. y -e) else. assert. 'domain error' -: b (^ m. y) etx -e end. end.
+ for. i. 10 do. 'b e' =. >: 2 ?@$ 10000 if. 1 = b +. y do. assert. 1 = (b ^ m. y e) * m. y (b ^ m. y -e) else. assert. 'domain error' -: b (^ m. y) etx -e end. end.
  1
 }}
 f 1e9

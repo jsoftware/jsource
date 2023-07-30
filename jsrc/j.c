@@ -64,10 +64,11 @@ CBAIVAL(B01,0), CBAIVAL(B01,1),  // these values must be padded with 0 so they c
 CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), CBAIVAL(INT,7), CBAIVAL(INT,8), CBAIVAL(INT,9)
 };
 
-struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[3] = {  // floating-point 0, 1, and 2, used for constants
+struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[4] = {  // floating-point 0, 1, 2, 0.5 used for constants
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},-0.0}, //used for -y; -y is _0.0 - y
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
-{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0}
+{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0},
+{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},0.5}
 };
 // obsolete I   v00[2]={0,0};         // vector value to use for rank 0 0
 D   pf=0;                 /* performance frequency                */

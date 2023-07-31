@@ -10,7 +10,7 @@ run128_9 =: {{
 epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 savx =: x [ savy =: y
-smoutput x  NB. for github build testing
+if. #x do. smoutput x end.  NB. for github build testing
 nthr =. 1 T. ''
 opts =. m
 if. '' -: $ colx =. 8 {::y do.
@@ -88,6 +88,8 @@ else.   NB. gradient
   y =. (rvt;bndrowmask) 4 5} y
   savy =: y
   savres   =: 128!:9 y
+smoutput savres
+smoutput 7 {:: y
   if. #x do.  NB. if SPR result known, check it
     'res cut' =. x
     if. 0=nthr do.
@@ -114,6 +116,7 @@ delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. start with no threads
 
 for_t. i. 4 do.
+smoutput '# worker threads: ' , ": 1 T. ''
   Ax =. ,."1 (,.~  [: |.!.0 +/\) 2 2 [ Am =. 2 1  0 4 [ Av =. 0.9 0.1  0 1e_20
   M =. (,:   ] * 1e_20 * i.@#) 0. + (i. 6) ,~ =/~ i. 6  NB. extra row of Fk, used sometimes
   rvt =. '44444444' [ bndrowmask =. '014' {~ 8 ?@$ 3  NB. rvt must match total # columns; bndrowmask the rows in Qk incl Fk

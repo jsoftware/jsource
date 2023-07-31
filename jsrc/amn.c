@@ -80,7 +80,7 @@ static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,
  }
  if(m=AS(p)[0]){  /* new cells being added */
   RZ(y=over(y,p)); RZ(q=grade1(y)); RZ(y=from(q,y));  // y =. y {~ q =. /: y =. y,p  i. e. sort y into cell order, with q the grade vector
-  RZ(t=shape(x)); *AV(t)=m; RZ(x=from(q,over(x,reshape(t,SPA(zp,e)))));   // scaf need mkwris  x =. q { x,sparse ele $~ t =. (#p) 0} $x (x=sparse values)  i. e. x has sparse values insered in new atoms
+  RZ(t=shape(x)); RZ(mkwris(t)) *AV(t)=m; RZ(x=from(q,over(x,reshape(t,SPA(zp,e)))));   // x =. q { x,sparse ele $~ t =. (#p) 0} $x (x=sparse values)  i. e. x has sparse values insered in new atoms
   // if z is assigned to a name, the use counts need to be adjusted: the old ones need to be decremented
   // to remove the assignment, and the new ones need to be incremented to prevent them from being freed
   // until the name is freed.  We detect the case from jt->zombieval being set to the address of z

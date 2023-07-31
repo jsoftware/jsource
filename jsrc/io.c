@@ -333,7 +333,7 @@ void breakclose(JS jt)
  C *oldbreak=JT(jt,adbreak); __atomic_store_n(&JT(jt,adbreak),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move request pointer in any case
  munmap(oldbreak,1);  // don't unmap the old area until pointers have been moved
  close((intptr_t)JT(jt,breakfh));
- JT(jt,breakfh)=0;  // scaf does this leave a window where breakfh/breakfn are invalid?
+ JT(jt,breakfh)=0;
  unlink(JT(jt,breakfn));
  *JT(jt,breakfn)=0;
 }
@@ -346,7 +346,7 @@ void breakclose(JS jt)
  C *oldbreak=JT(jt,adbreak); __atomic_store_n(&JT(jt,adbreak),(C*)&JT(jt,breakbytes),__ATOMIC_RELEASE);  // move request pointer in any case
  UnmapViewOfFile(oldbreak); // don't unmap the old area until pointers have been moved
  CloseHandle(JT(jt,breakmh));
- JT(jt,breakmh)=0;  // scaf does this leave a window where breakfh/breakfn are invalid?
+ JT(jt,breakmh)=0;
  CloseHandle(JT(jt,breakfh));
  JT(jt,breakfh)=0;
 #if SY_WINCE

@@ -370,7 +370,7 @@ F2(jtjdot2){
   I ar=AR(a), wr=AR(w);
   ASSERTAGREE(AS(a),AS(w),MIN(ar,wr))  // verify agreement
   if(!(at&FL))RZ(a=cvt(FL,a)) if(!(wt&FL))RZ(w=cvt(FL,w))  // convert to FL if needed
-  RZ(IRS2(a,w,DUMMYSELF,0,0,jtover,z)) AN(z)>>=1; AR(z)=MAX(AR(a),AR(w)); AT(z)=CMPX;  // z=a ,"0 w, then switch to CMPX
+  RZ(IRS2(a,w,DUMMYSELF,0,0,jtover,z)) makewritable(z) AN(z)>>=1; AR(z)=MAX(AR(a),AR(w)); AT(z)=CMPX;  // z=a ,"0 w, then switch to CMPX
   R z;
  }
  R plus(a,tymes(a0j1,w));

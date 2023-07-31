@@ -10,7 +10,6 @@ run128_9 =: {{
 epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 savx =: x [ savy =: y
-smoutput x  NB. for github build testing
 nthr =. 1 T. ''
 opts =. m
 if. '' -: $ colx =. 8 {::y do.

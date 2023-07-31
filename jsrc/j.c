@@ -37,14 +37,11 @@ CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
 struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bmarkd={{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}};  // weird double mark: atomic FL with VERB set in flags.  Used to indicate a special case
-D   inf=INFINITY;                /* _                                    */
-D   infm=-INFINITY;               /* __                                   */
 #define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
 CREBLOCKVEC1I(iv0,INT,0)    /* ,0                                                          */
 CREBLOCKVEC1I(iv1,INT,1)     /* ,1                                                          */
 #define CREBLOCKVEC2I(name,t) I __attribute__((aligned(CACHELINESIZE)))  B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
-CREBLOCKVEC2I(mtm,B01)    /* ,0                                                          */
-D   jnan=NAN;               /* _.                                   */
+CREBLOCKVEC2I(mtm,B01)    /* i. 0 0                                                          */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // validitymask is used mostly to set a sequence of all1/all0 words in a ymm reg.  We also use it as a read-only area containing
 // 0 or 1 fields.  We put all those fields over validitymask so that we use just one cacheline for all the uses.  The mappings into
@@ -70,6 +67,9 @@ struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[3] = {  // floating-po
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0}
 };
 // obsolete I   v00[2]={0,0};         // vector value to use for rank 0 0
+D   inf=INFINITY;                /* _                                    */
+D   infm=-INFINITY;               /* __                                   */
+D   jnan=NAN;               /* _.                                   */
 D   pf=0;                 /* performance frequency                */
 // obsolete Q   zeroQ={iv0,iv1};          /* 0r1                                  */
 DX  zeroDX={0,0,iv1};       /* 0                                    */

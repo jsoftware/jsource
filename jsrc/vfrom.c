@@ -1213,7 +1213,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  A qk;  // original M block
 // obsolete  A sched;  // ending schedule, INT vector.  After the ith improvement, exit if i>:#sched or we have examined (<:i){sched columns
 // obsolete  A bkbound;  // b-beta for the bound variables; also gives the number of bound variables, which must be first in bv
- C *rvtv;  // list of Rose variable types for the columns (unchanging)   scaf should be a bitmask
+ C *rvtv;  // list of Rose variable types for the columns (unchanging)
  D (*cutoffstatus)[2];  // (ncols,2) $ array holding (number of rows processed before cutoff, 0 if row invalid,gradient total for those rows).  If cutoff total is negative, it means that no positive column value has been seen
 } ;
 // obsolete #define ONECOLGRD0 ((I*)(NPAR*SZI))  // starting value of bvgrd for onecol, offset from 0 so that backing up bvgrde won't wrap around 0
@@ -1260,7 +1260,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  __m256d col0thresh;  //  minimum value considered valid for a column value (smaller are considered 0)
 // obsolete  __m256d colbk0thresh;  //  minimum value that will block a pivot when bk=0
 // obsolete  D swapbounty;  //  factor to increase gain by for Nonbasic swaps
- D coldangerpivotthresh;  //  smallest allowed pivot, but is dangerous
+// obsolete  D coldangerpivotthresh;  //  smallest allowed pivot, but is dangerous
  D colokpivotthresh;  // smallest pivot value considered non-dangerous.
  __m256d bk0thresh;  // smallest bk value considered nonzero
  I prirow;  //  priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so.  Set to LOW_VALUE if no priority row
@@ -1322,9 +1322,10 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   nrows=nwofk-nhasfk;  // #rows to calculate, including fk if present
 // obsolete   bv=(D*)n;  // offset to low part of *zv - saves a register
   bk0thresh=_mm256_set1_pd(parms[7]);
-  colressize=8*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs TUNE.  Must be multiple of NPAR so that bvgrde is not adjusted except at end    scaf move to main
+  colressize=8*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs TUNE.   scaf move to main
   colressize=(colressize+(BNDROWBATCH-1))&-BNDROWBATCH;  // the bound/enforcing mask is built in units of BNDROWBATCH bits so as to fit in an AVX register, matching the row numbers.  There are 2 bits per value.  They must stay aligned.
-  col0thresh=_mm256_set1_pd(parms[2]); coldangerpivotthresh=parms[5]; colokpivotthresh=parms[6];
+  col0thresh=_mm256_set1_pd(parms[2]); colokpivotthresh=parms[6];
+// obsolete  coldangerpivotthresh=parms[5];
 // obsolete  colbk0thresh=_mm256_set1_pd(parms[4]);
 // obsolete   if(likely(zv!=0)){  // one-column
   // Set up for multithreading one-column mode, where we have to split the column.  Multithreading of gradient is handled

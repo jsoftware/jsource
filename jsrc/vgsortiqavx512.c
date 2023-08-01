@@ -11,17 +11,18 @@
 // because of quicksort
 // to amortise this, we queue basecase arrays, partitioned according to their length
 // a pointer to the queue is stored in gs
-#define MAX_BASEUNROLL 10
-#define BASEQUEUESZ 32
+#define MAX_BASEUNROLL 10 // basecase handles at most 10 vectors at once
+#define BASEQUEUESZ 32 // queue up to 32 basecase partitions for each size class
 
 typedef struct {
   void *dst[BASEQUEUESZ];
 } BASEQUEUE;
 
 typedef struct {
- void *lastvec;
- I nqueued[1+MAX_BASEUNROLL]; // stored biased; actually BASEQUEUESZ-nqueued, so we can dec+jz
- BASEQUEUE queues[1+MAX_BASEUNROLL];
+ void *lastvec; // the basecase overreads, rounding up the size to the next multiple of the vector size.  This is benign, except in the case when we actually read off the end of the array, so this is a pointer to one vector before the end of input array; slices which end after this need special handling
+ BASEQUEUE queues[1+MAX_BASEUNROLL]; // queues[i] is an array of pointers to slices of <=i vectors'-worth of elements to be sorted
+ I nqueued[1+MAX_BASEUNROLL]; // nqueued[i] is BASEQUEUESZ-n, for n the number of slices of size i
+ // size has to be 1+MAX_BASEUNROLL, because we also queue zero-size partitions (could happen with a bad pivot choice)
 } BASEQUEUES;
 
 #include "vgsortavx512.h"

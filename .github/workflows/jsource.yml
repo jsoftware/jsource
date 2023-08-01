@@ -55,6 +55,9 @@ jobs:
    - name: Setup Environment (Linux)
      run: script/install-lnx.sh
 
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
    - name: Build JE (Linux)
      env:
       CC: clang
@@ -85,7 +88,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "l64.zip,l64d.zip,version.txt"
+      artifacts: "l64.zip,l64d.zip,commit.txt,version.txt"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true

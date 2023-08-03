@@ -35,9 +35,11 @@ typedef unsigned long long UIL;
 typedef long long          IL;
 #endif
 
-typedef unsigned short FLOAT16;  // top 16 bits of a floating-point value, used to save space for approximate values
+typedef unsigned short FLOAT16;  // top 16 bits of a floating-point value, used to save space for approximate values.  Goes up to 1e38, more than _Float16
 #define FLOAT16TOFLOAT(f) (*(float*)&(UI4){(f)<<16})
 #define FLOATTOFLOAT16(f) ((FLOAT16)(*(UI4*)&(float){(f)}>>16))
+#define FLOAT16TOI(f) (I)FLOAT16TOFLOAT(f)
+#define ITOFLOAT16(f) FLOATTOFLOAT16(f)
 
 typedef char               B;
 typedef unsigned char      C;

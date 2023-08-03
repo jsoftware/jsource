@@ -1932,7 +1932,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
-#define CLEARZOMBIE     {jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
+#define CLEARZOMBIE     {jt->zombieval=0;}  // Used when we know there shouldn't be an zombieval, just in case
 #define PUSHZOMB A savasginfo = jt->zombieval; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
 #define POPZOMB {jt->zombieval=savasginfo;}
 #define R               return

@@ -168,7 +168,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution
  UI cstackmin;        // red warning for C stack pointer
- UI4*futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
+ UI4 *futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
  A filler1[1];
 // end of cacheline 1
 
@@ -263,7 +263,7 @@ typedef struct JSTstruct {
 // a function in the same cacheline as the data used by the function.  To avoid false cacheline sharing, we have to make sure that only
 // very-seldom-referenced data inhabits a cacheline that contains a lock.
 // Cacheline 0 is special, because it contains adbreak, which is checked very frequently by all threads.  Therefore, to keep this cacheline
-// in S state we must have everything else in the line be essentially read-only.
+// in S state we must have everything else in the line be essentially read-only (except for locks).
  C _cl0[0];
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
@@ -278,8 +278,14 @@ typedef struct JSTstruct {
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
  I mmax;             // space allocation limit could be float or short float
  A stloc;            // named locales symbol table - this pointer never changes
+ C baselocale[4];    // will be "base"
+ UI4 baselocalehash;   // name hash for base locale
+ B stch;             // enable setting of changed bit during assignment
+ C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
+ B assert;           // 1 iff evaluate assert. statements     
+ UC seclev;           /* security level                                  */
+// 4 bytes free
  A *zpath;         // path 'z', used for all initial paths
- I filler0[2];
 // end of cacheline 0
 
 // Cacheline 1: DLL variables
@@ -290,10 +296,9 @@ typedef struct JSTstruct {
  A cdstr;            // strings for cdarg/cdhashl
  S cdlock;           // r/w lock for cdarg/cdhashl
  // rest of cacheline used only in exceptional paths
-// 6 bytes free
-#if MEMAUDIT & 2
- C audittstackdisabled;   // set to 1 to disable auditing
-#endif
+ FLOAT16 outmaxafter;      // output: maximum # lines after truncation
+ FLOAT16 outmaxbefore;     // output: maximum # lines before truncation
+ FLOAT16 outmaxlen;        // output: maximum line length before truncation
  I* breakfh;          /* win break file handle                           */
  I* breakmh;          /* win break map handle                            */
  C *breakfn;  // [NPATH];   /* break file name                                 */
@@ -303,11 +308,10 @@ typedef struct JSTstruct {
  C _cl2[0];
  L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
  S symlock;          // r/w lock for symbol pool
- B stch;             // enable setting of changed bit during assignment
- C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
  // rest of cacheline used only in exceptional paths
  S locdellock;  // lock to serialize user request to delete locale
  US promptthread;  // The thread that is allowed to prompt from keyboard.  0=master normally, but set to debug thread during suspension.  Host sentences are sent to this thread
+// 2 bytes free
 // front-end interface info
  C *capture;          // capture output for python->J etc.
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
@@ -321,16 +325,15 @@ typedef struct JSTstruct {
  A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
  S stlock;           // r/w lock for stnum.  stloc is never modified, so we use the ->lock field of stloc to lock that table
  C locsize[2];       /* size indices for named and numbered locales     */
- C baselocale[4];    // will be "base"
- UI4 baselocalehash;   // name hash for base locale
- UC seclev;           /* security level                                  */
  UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script.  See TRACEDB* flags above
- B assert;           // 1 iff evaluate assert. statements     
-// 1 byte free
+#if MEMAUDIT & 2
+ C audittstackdisabled;   // set to 1 to disable auditing
+#endif
+// 2-3 byte free
  // rest of cacheline used only in exceptional paths
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
- I filler3[3];
+ I filler3[4];
 // end of cacheline 3
 
 // Cacheline 4: Files
@@ -360,12 +363,14 @@ typedef struct JSTstruct {
  S sblock;           // r/w lock for sbu
  S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
- I4 outmaxafter;      // output: maximum # lines after truncation    could be short float   */
- I4 outmaxbefore;     // output: maximum # lines before truncation     could be short float   */
- I4 outmaxlen;        // output: maximum line length before truncation  could be short float  */
+ B retcomm;          /* 1 iff retain comments and redundant spaces      */
+ UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
+ B sesm;             /* whether there is a session manager             */
+ C nfe;              /* 1 for J native front end                    */
  I peekdata;         /* our window into the interpreter                 */
  A iep;              /* immediate execution phrase                      */
  A pma;              /* perf. monitor: data area                        */
+ I filler5[1];
 // end of cacheline 5
 
 // Cacheline 6: debug, which is written so seldom that it can have read-only data
@@ -373,18 +378,13 @@ typedef struct JSTstruct {
  A dbstops;          /* stops set by the user                           */
  A dbtrap;           // trap sentence, execute when going into suspension
  S dblock;           // lock on dbstops/dbtrap
- B retcomm;          /* 1 iff retain comments and redundant spaces      */
- UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
- B sesm;             /* whether there is a session manager             */
- C nfe;              /* 1 for J native front end                    */
  // rest of cacheline is essentially read-only
- FLOAT16 igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'   scaf could be shorter
+ FLOAT16 igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
  FLOAT16 dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
-// 4 bytes free 
  A evm;              // message text for the EVxxx codes
  I (*emptylocale)[MAXTHREADS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
- I filler6[2];
+ I filler6[3];
 // end of cacheline 6
 
 // Cacheline 7: startup (scripts and deprecmsgs), essentially read-only
@@ -395,7 +395,7 @@ typedef struct JSTstruct {
  S startlock;        // lock for slist
  // rest of cacheline used only in exceptional paths
  C bx[11];               /* box drawing characters                          */
- UC disp[7];          /* # different verb displays                       */
+ UC disp[7];          // # different verb displays, followed by list thereof in order of display  could be 15 bits
  US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */

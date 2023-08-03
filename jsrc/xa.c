@@ -116,14 +116,14 @@ F1(jtieps){
  R mtm;
 }
 
-// 9!:38
+// 9!:36
 F1(jtoutparmq){A z;D*u;I*v;
  ASSERTMTV(w);
  GAT0(z,INT,4,1); v= AV(z);
  v[0]=JT(jt,outeol);
- v[1]=JT(jt,outmaxlen);
- v[2]=JT(jt,outmaxbefore);
- v[3]=JT(jt,outmaxafter);
+ v[1]=FLOAT16TOI(JT(jt,outmaxlen));
+ v[2]=FLOAT16TOI(JT(jt,outmaxbefore));
+ v[3]=FLOAT16TOI(JT(jt,outmaxafter));
  RETF(z);
 }
 
@@ -138,9 +138,9 @@ F1(jtoutparms){I*v;
  ASSERT(0<=v[2],EVDOMAIN);
  ASSERT(0<=v[3],EVDOMAIN);
  JT(jt,outeol)      =(UC)v[0];
- JT(jt,outmaxlen)   =MIN(0x7fffffff,v[1]);
- JT(jt,outmaxbefore)=MIN(0x7fffffff,v[2]);
- JT(jt,outmaxafter) =MIN(0x7fffffff,v[3]);
+ JT(jt,outmaxlen)   =ITOFLOAT16(MIN(0x7ffff000,v[1]));
+ JT(jt,outmaxbefore)=ITOFLOAT16(MIN(0x7ffff000,v[2]));
+ JT(jt,outmaxafter) =ITOFLOAT16(MIN(0x7ffff000,v[3]));
  R mtv;
 }
 

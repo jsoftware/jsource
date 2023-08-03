@@ -685,9 +685,9 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
 
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
-  // Find the symbol table to use, creating one if none found.  Unfortunately assignsym doesn't give us the symbol table
+  // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
- }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
+ }else{  // no locative: if g is a flag for zombieval, set it to the correct symbol table
   // not locative assignment
   if(unlikely(g==jt->global))
    // global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
@@ -710,7 +710,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
  // the name was invalid anyway and is subject to having the value removed
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
- if((AR(g)&ARLOCALTABLE)!=0){g=0; e=probeislocal(a);  // probe, reserving 1 symbol
+ if((AR(g)&ARLOCALTABLE)!=0){g=0; e=probeislocal(a);  // probe, reserving 1 symbol   scaf should avoid call in the common case of local direct assignment
  }else{SYMRESERVE(1)
   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
   valtype|=QCGLOBAL;  // must flag local/global type in symbol

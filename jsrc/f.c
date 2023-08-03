@@ -818,7 +818,7 @@ static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
  // extract the output type buried in jt
  I mtyo=(I)jtinplace&JTPRTYO;
  // convert the character array to a null-terminated UTF-8 string
- RZ(z=jprx(JT(jt,outeol),JT(jt,outmaxlen),JT(jt,outmaxbefore),JT(jt,outmaxafter),w));
+ RZ(z=jprx(JT(jt,outeol),FLOAT16TOI(JT(jt,outmaxlen)),FLOAT16TOI(JT(jt,outmaxbefore)),FLOAT16TOI(JT(jt,outmaxafter)),w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
  if(AN(z)){
 #ifdef ANDROID

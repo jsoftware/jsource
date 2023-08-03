@@ -10,7 +10,6 @@ run128_9 =: {{
 epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 savx =: x [ savy =: y
-if. #x do. smoutput x end.  NB. for github build testing
 nthr =. 1 T. ''
 opts =. m
 if. '' -: $ colx =. 8 {::y do.
@@ -19,10 +18,10 @@ if. '' -: $ colx =. 8 {::y do.
   NB. here RVT is chars and must be converted to mask, same for bndrowmask
   NB. We expect bkbeta to have the correct result item count - extended to batch boundary including Fk if present
   'Ax Am Av Qk rvt bndrowmask bk ndx parms bkbeta' =. 0 1 2 3 4 5 6 8 9 10 { y  NB. don't reassign z lest it lose KNOWNNAMED
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   origparms =: parms  NB. debug
   ncol =. {:$Qk  NB. Qk defines its #cols
-  nrows =. | nflagged =. 0{::parms  NB. number of valid rows in Qk, including Fk if given
+  nrows =. | nflagged =. 0{parms  NB. number of valid rows in Qk, including Fk if given
   if. 0~:nthr do.   NB. multiple threads: expand Qk with 0 rows to make size threadable, scramble rows in the data.  Keep bndrowmask/bk/bkbeta corresponding to same values
     NB. Create the vector of sources for each new row of Qk etc.  We will first add a harmless row and then draw, where _1 is harmless and _2 is the Fk row if present
     nrows =. #drawvec =. ,&_2^:(nflagged<0) ({~ ?~@#) (1200 + ? 50) {.!._1 i. nrows - (nflagged<0)  NB. modify #rows to match the unpadded block
@@ -47,11 +46,14 @@ if. '' -: $ colx =. 8 {::y do.
   rvt =. {&a.@:#.@:(|."1) ($~  8 ,~ >.@(8 %~ #)) , ,./ rvt e."1 '19',:'01'  NB. create values in littleendian order, 2 bits/col (enforced is LSB)
   bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ bndrowmask e. '01'  NB. 0 is for Fk
   y =. (rvt;bndrowmask) 4 5} y
+  y =. (15!:18&.> 3 6 10 { y) 3 6 10} y  NB. cache-align the blocks that need it
   savy =: y
-  z =. (2, #bkbeta) $ 0.  NB. result area, big enough to hold final batch including fk if present
+  z =. (2, #bkbeta) 15!:18 (0.)  NB. result area, big enough to hold final batch including fk if present
   savres   =: 128!:9 (<z) 7} y
-  assert. 0 = +./ 128!:5 , z
-  assert. 1e_25 > >./ | +/ ref epsub&(nrows&{."1) z  NB. require match on valid values
+  if. 4 ~: {. x do.  NB. if the column was aborted, don't check the values
+    assert. 0 = +./ 128!:5 , z
+    assert. 1e_25 > >./ | +/ ref epsub&(nrows&{."1) z  NB. require match on valid values
+  end.
   if. #x do.  NB. if SPR result known, check it
     if. 0=nthr do.
       assert. x -: savres  NB. single-threaded - expect exact result
@@ -86,17 +88,16 @@ else.   NB. gradient
   rvt =. {&a.@:#.@:(|."1) ($~  8 ,~ >.@(8 %~ #)) , ,./ rvt e."1 '19',:'01'  NB. create values in littleendian order, 2 bits/col (enforced is LSB)
   bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ bndrowmask e. '01'  NB. 0 is for Fk
   y =. (rvt;bndrowmask) 4 5} y
+  y =. (15!:18&.> 3 { y) 3} y  NB. cache-align the blocks that need it
   savy =: y
   savres   =: 128!:9 y
-smoutput savres
-smoutput 7 {:: y
   if. #x do.  NB. if SPR result known, check it
     'res cut' =. x
     if. 0=nthr do.
       assert. res -: savres  NB. single-threaded - expect exact result
       assert. cut -: 7{::y  NB. cutoff info too
     elseif. #opts do.
-      assert. opts e.~ 2 {. savres  NB. multithreaded, with alternative results
+      assert. opts e.~ 0 4&{ savres  NB. multithreaded, with alternative results
     else.
       assert. res -:&(0 4&{) savres  NB. multithreaded, match type and minimizer
     end.
@@ -116,11 +117,10 @@ delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. start with no threads
 
 for_t. i. 4 do.
-smoutput '# worker threads: ' , ": 1 T. ''
   Ax =. ,."1 (,.~  [: |.!.0 +/\) 2 2 [ Am =. 2 1  0 4 [ Av =. 0.9 0.1  0 1e_20
   M =. (,:   ] * 1e_20 * i.@#) 0. + (i. 6) ,~ =/~ i. 6  NB. extra row of Fk, used sometimes
   rvt =. '44444444' [ bndrowmask =. '014' {~ 8 ?@$ 3  NB. rvt must match total # columns; bndrowmask the rows in Qk incl Fk
-  parms =.        6    0.      0.           1e_25         0.              0.             0.         0.          0.          _1
+  parms =.        6    0.      0.           1e_25         0.              0.             0.         0.          0.     __      _1
   bkbeta =. (>.&.(%&4) 6) $ 0.
   bk =. ,:~ bkbeta
   beta =. (#rvt) $ 0.  NB. one beta per column
@@ -149,8 +149,8 @@ smoutput '# worker threads: ' , ": 1 T. ''
     Ax =. ,."1 (,.~    [: |.!.00 +/\) >: nAcol ?@$ nQcol   NB. start,len for each Acol
     'Am Av' =. (+/ , {: Ax) ?@$&.> nQcol,0  NB. random columns and weights 
     NB. y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta;beta  where ndx is an atom  (1st 8 blocks don't move)
-    NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
-    parms =.        0.    0.      0.           1e_25      0       0.             0.         0.          0.          _1
+    NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+    parms =.        0.    0.      0.           1e_25      0       0.             0.         0.          0.       __    _1.
     rvt =. '014' {~ (nQcol+nAcol) ?@$ 3
     bndrowmask =. '014' {~ l ?@$ 3
     bkbeta =. (>.&.(%&4) l) $ 0.
@@ -170,8 +170,8 @@ smoutput '# worker threads: ' , ": 1 T. ''
   rvt =. ,'4'
   beta =. (#rvt) $ 0.4
   bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
-  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.       _1
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.         __   _1.
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
   assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(parms);bkbeta;beta
   assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(7 (0)} parms);bkbeta;beta
@@ -228,8 +228,8 @@ smoutput '# worker threads: ' , ": 1 T. ''
   rvt =. ,'4'
   beta =. (#rvt) $ 0.4
   bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
-  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.       _1
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.        __    _1.
 
   NB. tie goes to last, if not in same batch
   assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
@@ -249,12 +249,13 @@ smoutput '# worker threads: ' , ": 1 T. ''
   assert. 3 _1 1 8 _ ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 (2)} parms);bkbeta;beta
   assert. 1 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_2 (6)} parms);bkbeta;beta
   assert. 3 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 1e_2 (5 6)} parms);bkbeta;beta
-  assert. 2 0 1 8 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 (7)} parms);bkbeta;beta
-
+  assert. 4 _1 0 0 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 0. (7 9)} parms);bkbeta;beta  NB. row 0 now below threshold but 0 cuts off, unbounded
+  assert. 2 0 1 8 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 (7)} parms);bkbeta;beta  NB. row 0 now below threshold, nonimp
+NB. put nothing here! savy is carried over to the next line
   NB. Verify random pickup of 0 bk values.  This kludge relies on a side effect left by run128_9
   if. 0 = 1 T. '' do.  NB. in multithreaded we don't know what run128_9 does; and single-threaded test is good enough
     for_nr. 5 6 7 8 do.
-      savy =: (<(nr,2.0) (0 7)} 9 {:: savy) 9} savy [ pickup =. 0$00 [ z =. (2, #bkbeta) $ 0.  NB. threshold makes all SPRs 0
+      savy =: (<(nr,2.0) (0 7)} 9 {:: savy) 9} savy [ pickup =. 0$00 [ z =. (2, #bkbeta) 15!:18 (0.)  NB. threshold makes all SPRs 0
       for. i. 200 do.
         assert. 2 = 0 { res =. 128!:9 (<z) 7} savy
         pickup =. pickup , 1 { res
@@ -270,8 +271,8 @@ smoutput '# worker threads: ' , ": 1 T. ''
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
   beta =. (#rvt) $ 2.0
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
-  parms =.        8    0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       _1
+  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.        8    0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.         __   _1.
   assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
   assert. 3 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 (5)} parms);bkbeta;beta  NB. below dangerous ignored
   assert. 1 1 1 8 1e10 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. col 0 disabled
@@ -302,8 +303,8 @@ NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;
   Frow =.  _1.     _2   _3   _4
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. '4444'
-NB.   parms is #rows,maxAx,Col0Threshold,expandQk,x,MinGradient
-  parms =.        8    0.      1e_25        1     0     0    NB. We expand each row to its own comparison block
+NB.   parms is #rows,maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
+  parms =.        8    0.      1e_25        1                                  0           0    NB. We expand each row to its own comparison block
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 3 4 1856 1.788854381999831; _2 ]\ _512 5 _512 5 _320 30 _512 5 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
   Frow =.  _4.     _3   _2   _1
@@ -341,6 +342,37 @@ NB.   parms is #rows,maxAx,Col0Threshold,expandQk,x,MinGradient
     NB. roll cutoffinfo into the next test, to verify it is picked up
     assert. (4 1 1 320 0; _2 ]\ 0 1 64 3 _512 30 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;2 1 0;(parms);Frow
   end.
+
+  NB. MinGradient
+  Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
+  M =. ,:   1.    1    1    1   NB. Input by rows, i. e. NOT transposed
+  M =. M ,  1.    1    1    1
+  M =. M ,  1.    1    1    1
+  M =. M ,  1.    1    1    1
+  M =. M ,  0.    0    5    0
+  M =. M ,  7 4$0.
+  M =. 2 {. ,: M
+  Frow =.  _4.     _3   _2   _1
+  bndrowmask =. (1 { $ M) $     '4'
+  rvt =. '4444'
+NB.   parms is #rows,maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
+  parms =.        8    0.      1e_25        1                                  0           0    NB. We expand each row to its own comparison block
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 0 4 704  1.788854381999831; _2 ]\ _512 5 _128 3 _64 2 0 1 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 3 4 1856  1.788854381999831; _2 ]\ _512 5 _512 5 _320 30 _512 5 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(0.4 (4}) parms);Frow
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 1 4 1536  1.788854381999831; _2 ]\ _512 5 _512 5 _320 30 _192 4 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(0.51 (4}) parms);Frow
+
+  NB. MinGradImp
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 0 4 1088  1.788854381999831; _2 ]\ _512 5 _512 5 _64 2 0 1 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;1 0 2 3;(parms);Frow
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 1 4 704  1.341640786499873838; _2 ]\ _192 4 _512 5 0 1 0 1 ) ((0 1.341640786499873838,:0 1.788854381999831) run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;1 0 2 3;(_0.4 (4}) parms);Frow
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 1 4 832 1.341640786499873838; _2 ]\ _256 5 _512 5 _64 2 0 1 ) ((0 1.341640786499873838,:0 1.788854381999831) run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;1 0 2 3;(_0.3 (4}) parms);Frow
+
+
 
   NB. end of tests, add a thread
   0 T. ''

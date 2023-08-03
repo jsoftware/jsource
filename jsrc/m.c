@@ -794,7 +794,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  I wip=SGNIF((I)jtip,JTINPLACEWX)&AC(w);   // sgn if w is abandoned
  // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
  // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
- // We could check for assignsym etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
+ // We could check for zombieval etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
  if((wip & (-(t&DIRECT)) & (r-(AR(w)+1)) & SGNIFNOT(wf,AFUNINCORPABLEX))<0){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   // We leave the usecount unchanged, so the block still shows as inplaceable

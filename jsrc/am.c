@@ -620,11 +620,14 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
   I aframelen=AR(a)-acr,wframelen=AR(w)-wcr;  // number of axes in frame of w
   ASSERTAGREE(AS(a),AS(w),MIN(aframelen,wframelen));  // if rank, check agreement
   I nframeaxes;  // will be # axes added to accommodate outer frame
-  // non-sparse.  The fast cases are: (1) numeric m; (2) single box m.  numeric m turns into a single list of validated indexes; single box m turns into
-  // a list of boxes, one  for each index.  multiple-box m is converted to a list of indexes, possibly very inefficiently.  If we end up with a list of indexes,
-  // we also need to know the frame of the cells
+  // non-sparse.
   I cellframelen;
   z=0;  // use z to hold reworked ind
+
+  // Now we create z, which will hold the info to be passed into merge2.  
+  // numeric m turns into a single list of validated indexes, as does singly-boxed numeric m; double-boxed m turns into
+  // a list of boxes, one for each index.
+  // We also need to know the frame of the cells, in cellframelen
   struct axis *axes, localaxes[6]; A alloaxes;  // put axes here usually
   I wr=AR(w); I *ws=AS(w); I indr=AR(ind);
 //  obsolete  b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
@@ -635,10 +638,10 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
   }else if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table or higher, convert to cell indexes.  It will be used to fill in axis struct in merge2
    cellframelen=indr<2?1:AS(ind)[indr-1];  // #axes used: 1, if m is a list; otherwise {:$m
-   if(indr==0){  // scalar ind is common enough to test for   scaf should test for 
+   if(indr==0){  // scalar ind is common enough to test for
     if(!ISDENSETYPE(AT(ind),INT)){A tind; RZSUFF(tind=cvt(INT,ind),R jteformat(jt,self,a,w,ind);); ind=tind;}  // ind is now an INT vector, possibly the input selector
     if(likely((UI)IAV(ind)[0]<(UI)ws[wframelen]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[wframelen]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[wframelen]));}  // if the single index is in range, keep it; if neg, convert it quickly
-   }else RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind););  // create (or keep) list of cell indexes
+   }else RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind););  // ind is numeric list/array: create (or keep) list of cell indexes, of rank cellframelen
   }else if(unlikely(indr!=0)){
    // All this is deprecated, should be domain error
    // ind is a list of boxes.  The contents had better all be numeric, and opening them must not use fill

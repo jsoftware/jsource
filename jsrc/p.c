@@ -918,7 +918,7 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();
 #endif
-       CLEARZOMBIE   // in case assignsym was set, clear it until next use
+       CLEARZOMBIE   // in case zombieval was set, clear it until next use
        FPZSUFF(rc,
         if(unlikely(jt->jerr==EVSIDAMAGE))jteformat(jt,0,str(strlen("Only the topmost suspended name can be redefined.  Issue 'dbr 0' and retry"),"Only the topmost suspended name can be redefined.  Issue 'dbr 0' and retry"),0,0);
        )  // fail if error, possibly with a message

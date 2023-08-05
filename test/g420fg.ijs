@@ -126,6 +126,9 @@ assert. (xx tvb1"(lvr,rvr) yy) -: (xx tvb"(lir,rir)"(lvr,rvr) yy)
 
 f (#: i.@:(*/)) 6$5
 
+(9 10,"0 _1/i.2 3) -: (9 10,"0 0 _1/i.2 3)
+(9 10,"0 _1/i.2 3) -: (9 10,"0 0 _1"0 _ i.2 3)
+
 NB. x +/@:*"1 y ---------------------------------------------------------
 
 NB. y is lvr, rvr, lnr, rnr   ranks of verbs, ranks of arguments

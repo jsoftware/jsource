@@ -735,10 +735,11 @@ static DF2(rank2q){
  ARGCHK2(a,w);
  A fs=FAV(self)->fgh[0]; I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // u, left & right ranks of u
  I ar=AR(a), wr=AR(w), l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2];  // ranks of args, ranks from n
- // See if this use of rank is nugatory.  An arg has 1 cell if rank of arg<=MIN(n,rank of u); inner cells if n<MIN(rank of arg,rank of u); unchanged rank if n=rank of u.
- // Rank can be omitted if it is true for either arg that (arg has 1 cell and other arg does not have inner cells), or both args have unchanged rank
+ // See if this use of rank is nugatory.  An arg has 1 cell if rank of arg<=MIN(n,rank of u); middle cells if n<MIN(rank of arg,rank of u) and rank of u not _; unchanged rank if n=rank of u.
+ // Rank can be omitted if it is true for either arg that (arg has 1 cell and other arg does not have middle cells), or both args have unchanged rank
  //              0=unch rnk        0=ar<=MIN     0=n>=MIN (right)      0=wr<MIN       0=n>=MIN (left)
- if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
+ ulr+=(UI)ulr>=RMAX; urr+=(UI)urr>=RMAX;  // rank _ can be hiding negative rank, for which we don't know the cells; force mismatch then, and below assume inner cells
+ if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr)|SGNIF(ulr,LGRMAX))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)|SGNIF(urr,LGRMAX)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
  ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
  RETF(rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
 }
@@ -769,7 +770,7 @@ F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   hv[1]=v[3==n]; hv[1]=hv[1]>RMAX?RMAX:hv[1]; hv[1]=hv[1]<-RMAX?-RMAX:hv[1]; r[1]=DR(hv[1]);
   hv[2]=v[n-1];  hv[2]=hv[2]>RMAX?RMAX:hv[2]; hv[2]=hv[2]<-RMAX?-RMAX:hv[2]; r[2]=DR(hv[2]);
  }
- // r is the actual verb ranks, i. e. _ if given ranks are negative
+ // r is the actual verb ranks, i. e. _ if given ranks are negative.  h may be negative
 
  // Get the action routines and flags to use for the derived verb
  if(unlikely(NOUN&AT(a))){  // could be gerund"n or noun"n
@@ -791,8 +792,10 @@ F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
 // obsolete   if(unlikely(av->id==CAMEND&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,4,"(004) m}\"n should be executed without \" using leading axes of a: in m\n"));
   // if the rank is superfluous (meaning it is exactly the same as the rank of the verb) ignore it, returning the original verb.  We have seen
   // enough beginner code with +"0 to make this worthwhile.  The display will leave out the "0, to emphasize the equivalence.  We do this only
-  // for noun w, to allow use of +"+ to avoid special code
-  if(unlikely(((VERB&AT(w))|(av->mr^hv[0])|((av->lrr>>RANKTX)^hv[1])|((av->lrr&RANKTMSK)^hv[2]))==0))R a;
+  // for noun w, to allow use of +"+ to avoid special code.  BUT: we can't trust a rank in a of _, which might be hiding an active negative rank; so we
+  // keep the rank if only one of the dyad ranks in a is _
+  I alr=av->lrr>>RANKTX, arr=av->lrr&RANKTMSK; 
+  if(unlikely((av->mr==hv[0])&&(alr==hv[1])&&(arr==hv[2])&&((alr!=RMAX&&arr!=RMAX)||alr==arr)&&!(VERB&AT(w))))R a;  // first test is usually enough
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.

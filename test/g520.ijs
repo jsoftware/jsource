@@ -14,25 +14,25 @@ nthr =. 1 T. ''
 opts =. m
 if. '' -: $ colx =. 8 {::y do.
   NB. onecol+SPR
-  NB. y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta  where ndx is an atom  (1st 8 blocks don't move)
+  NB. y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta;beta  where ndx is an atom  (1st 8 blocks don't move)
   NB. here RVT is chars and must be converted to mask, same for bndrowmask
   NB. We expect bkbeta to have the correct result item count - extended to batch boundary including Fk if present
   'Ax Am Av Qk rvt bndrowmask bk ndx parms bkbeta' =. 0 1 2 3 4 5 6 8 9 10 { y  NB. don't reassign z lest it lose KNOWNNAMED
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  NB.   parms is #cols in Qk(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   origparms =: parms  NB. debug
-  ncol =. {:$Qk  NB. Qk defines its #cols
-  nrows =. | nflagged =. 0{parms  NB. number of valid rows in Qk, including Fk if given
+  nflagged =. 0{parms  NB. # columns of Qk, with fk flag
+  nrows =. (1 { $ Qk)   NB. calculate all rows of result
+  ncol =. (|nflagged) - (nflagged<0)  NB. number of columns in basis
   if. 0~:nthr do.   NB. multiple threads: expand Qk with 0 rows to make size threadable, scramble rows in the data.  Keep bndrowmask/bk/bkbeta corresponding to same values
     NB. Create the vector of sources for each new row of Qk etc.  We will first add a harmless row and then draw, where _1 is harmless and _2 is the Fk row if present
     nrows =. #drawvec =. ,&_2^:(nflagged<0) ({~ ?~@#) (1200 + ? 50) {.!._1 i. nrows - (nflagged<0)  NB. modify #rows to match the unpadded block
-    NB. Pad with NON-harmless values to batch boundary
-    drawvec =. ({.~ >.&.(%&4)@#) drawvec
     NB. modify the inputs
     Qk =. drawvec {"1 _1 Qk ,"_1 (0.)
     bndrowmask =. drawvec { bndrowmask , '4'
-    bk =. drawvec {"1 _1 bk , 0.
+    drawvec =. ({.!._1~ >.&.(%&4)@#) drawvec NB. pad bk/bkbeta/z to batch bdy
+    bk =. drawvec {"1 _1 bk ,"_1 (0.)
     bkbeta =. drawvec { bkbeta , 0.
-    parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. retore Fk flag to new length
+NB. obsolete     parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. retore Fk flag to new length
     y =. (Qk;bk;parms;bkbeta) 3 6 9 10} y
   end.
   if. colx<ncol do. savref   =: ref =. colx {"1 Qk  NB. basic column, just fetch it
@@ -47,12 +47,11 @@ if. '' -: $ colx =. 8 {::y do.
   bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ bndrowmask e. '01'  NB. 0 is for Fk
   y =. (rvt;bndrowmask) 4 5} y
   y =. (15!:18&.> 3 6 10 { y) 3 6 10} y  NB. cache-align the blocks that need it
-  savy =: y
   z =. (2, #bkbeta) 15!:18 (0.)  NB. result area, big enough to hold final batch including fk if present
-  savres   =: 128!:9 (<z) 7} y
+  savres   =: 128!:9 savy =: (<z) 7} y
   if. 4 ~: {. x do.  NB. if the column was aborted, don't check the values
     assert. 0 = +./ 128!:5 , z
-    assert. 1e_25 > >./ | +/ ref epsub&(nrows&{."1) z  NB. require match on valid values
+    assert. 1e_25 > >./ | +/ ref epsub&((nrows-nflagged<0)&{."1) z  NB. require match on valid values
   end.
   if. #x do.  NB. if SPR result known, check it
     if. 0=nthr do.
@@ -65,15 +64,12 @@ if. '' -: $ colx =. 8 {::y do.
   end.
 else.   NB. gradient
   NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
-  NB.   parms is #rows,maxAx,Col0Threshold,expandQk,x,MinGradient   expandqk is internal here, means 'put each row into its own test block'
+  NB.   parms is #cols in Qk(flagged),maxAx,Col0Threshold,expandQk,x,MinGradient   expandqk is internal here, means 'put each row into its own test block'
   'Ax Am Av Qk rvt bndrowmask sched ndx parms Frow' =. 0 1 2 3 4 5 6 8 9 10 { y  NB. don't reassign z lest it lose KNOWNNAMED
-  ncol =. {:$Qk  NB. Qk defines its #cols
-  nrows =. 0{parms  NB. number of valid rows in Qk
+  nrows =. 1 { $ Qk  NB. number of valid rows in Qk
   if. 0~:nthr do.   NB. multiple threads: expand Qk with 0 rows to make size threadable, scramble rows in the data.  Keep bndrowmask/bk/bkbeta corresponding to same values
     NB. Create the vector of sources for each new row of Qk etc.  We will first add a harmless row and then draw, where _1 is harmless
-    nrows =. #drawvec =. ({~ ?~@#) (1200 + ? 50) {.!._1 i. ncol  NB. update count of rows
-    NB. Pad with NON-harmless values to batch boundary
-    drawvec =. ({.~ >.&.(%&4)@#) drawvec
+    nrows =. #drawvec =. ({~ ?~@#) (1200 + ? 50) {.!._1 i. nrows  NB. update count of rows
   elseif. 3 { parms do.   NB. 
    NB. spread rows by NPAR to get accurate value for cutoff.  We check cutoff one time in 64 atoms (16 batches) (subject to change)
    nrows =. #drawvec =. 1j63 #!._1 i. nrows
@@ -149,15 +145,15 @@ for_t. i. 4 do.
     Ax =. ,."1 (,.~    [: |.!.00 +/\) >: nAcol ?@$ nQcol   NB. start,len for each Acol
     'Am Av' =. (+/ , {: Ax) ?@$&.> nQcol,0  NB. random columns and weights 
     NB. y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta;beta  where ndx is an atom  (1st 8 blocks don't move)
-    NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
-    parms =.        0.    0.      0.           1e_25      0       0.             0.         0.          0.       __    _1.
+    NB.   parms is #cols,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+    parms =.          _    0.      0.           1e_25      0       0.             0.         0.          0.       __    _1.
     rvt =. '014' {~ (nQcol+nAcol) ?@$ 3
     bndrowmask =. '014' {~ l ?@$ 3
     bkbeta =. (>.&.(%&4) l) $ 0.
     bk =. ,:~ bkbeta
     beta =. (#rvt) $ 0.  NB. one beta per column
     for_ndx. i. #rvt do.  NB. for each basic and non-basic column
-      assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';ndx;((-^:(?2) l) 0} parms);bkbeta;beta 
+      assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';ndx;((_1&-^:(?2) nQcol) 0} parms);bkbeta;beta 
     end.
   end.
 
@@ -170,30 +166,32 @@ for_t. i. 4 do.
   rvt =. ,'4'
   beta =. (#rvt) $ 0.4
   bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
-  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.         __   _1.
-  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
-  assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(7 (0)} parms);bkbeta;beta
-  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(_8 (0)} parms);bkbeta;beta
+  NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.              1         0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.         __   _1.
+  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;parms;bkbeta;beta
+  assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(_2 (0)} parms);bkbeta;beta
+  assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;parms;bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 }."_1 (1) |."_1  M);rvt;bndrowmask;(1 |."_1 bk);'';00;parms;bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(1 }."_1 (1) |."_1  M);rvt;bndrowmask;(1 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 6 1 8 0.5 ('' run128_9) Ax;Am;Av;(2 |."_1 M);rvt;bndrowmask;(2 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(2 |."_1 M);rvt;bndrowmask;(2 |."_1 bk);'';00;(6 (0)} parms);bkbeta;beta
-  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(2 |."_1 M);rvt;bndrowmask;(2 |."_1 bk);'';00;(_7 (0)} parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(2 }."_1 (1) |."_1  M);rvt;bndrowmask;(2 |."_1 bk);'';00;parms;bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(2 }."_1 (1) |."_1  M);rvt;bndrowmask;(2 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 5 1 8 0.5 ('' run128_9) Ax;Am;Av;(3 |."_1 M);rvt;bndrowmask;(3 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(3 |."_1 M);rvt;bndrowmask;(3 |."_1 bk);'';00;(5 (0)} parms);bkbeta;beta
-  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(3 |."_1 M);rvt;bndrowmask;(3 |."_1 bk);'';00;(_6 (0)} parms);bkbeta;beta
+  assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(3 }."_1 (1) |."_1  M);rvt;bndrowmask;(3 |."_1 bk);'';00;parms;bkbeta;beta
+  assert. 0 1 1 8 1 ('' run128_9) Ax;Am;Av;(3 }."_1 (1) |."_1  M);rvt;bndrowmask;(3 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(4 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(_4 (}."1) 4 |."_1 bk);'';00;(4 (0)} parms);(_4 }. bkbeta);beta
-  assert. 0 0 1 8 1 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(4 |."_1 bk);'';00;(_5 (0)} parms);bkbeta;beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 4 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(4 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 3 1 8 0.5 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(5 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;(3 (0)} parms);(_4 }. bkbeta);beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;(_4 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
   assert. 0 2 1 8 0.5 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(6 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;(2 (0)} parms);(_4 }. bkbeta);beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;(_3 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
   assert. 0 1 1 8 0.5 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(7 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(1 (0)} parms);(_4 }. bkbeta);beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
+NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
 
   NB. bound column has hidden row with SPR=beta
   assert. 0 8 1 8 0.4 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
@@ -228,8 +226,8 @@ for_t. i. 4 do.
   rvt =. ,'4'
   beta =. (#rvt) $ 0.4
   bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
-  parms =.        8    0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.        __    _1.
+  NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.             1          0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.        __    _1.
 
   NB. tie goes to last, if not in same batch
   assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
@@ -271,8 +269,8 @@ NB. put nothing here! savy is carried over to the next line
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
   beta =. (#rvt) $ 2.0
-  NB.   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
-  parms =.        8    0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.         __   _1.
+  NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.         __   _1.
   assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
   assert. 3 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 (5)} parms);bkbeta;beta  NB. below dangerous ignored
   assert. 1 1 1 8 1e10 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. col 0 disabled
@@ -298,13 +296,13 @@ NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;
   M =. M ,  _1.    1   1    1
   M =. M ,  1.    1    1    _1
   M =. M ,  0.    0    5    0
-  M =. M ,  7 4$0.
+  M =. M ,  3 4$0.
   M =. 2 {. ,: M
   Frow =.  _1.     _2   _3   _4
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. '4444'
-NB.   parms is #rows,maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
-  parms =.        8    0.      1e_25        1                                  0           0    NB. We expand each row to its own comparison block
+NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
+  parms =.           4          0.      1e_25        1                                  0           0    NB. We expand each row to its own comparison block
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 3 4 1856 1.788854381999831; _2 ]\ _512 5 _512 5 _320 30 _512 5 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
   Frow =.  _4.     _3   _2   _1
@@ -350,13 +348,13 @@ NB.   parms is #rows,maxAx,Col0Threshold,expandQk (testcase option),MinGradient/
   M =. M ,  1.    1    1    1
   M =. M ,  1.    1    1    1
   M =. M ,  0.    0    5    0
-  M =. M ,  7 4$0.
+  M =. M ,  3 4$0.
   M =. 2 {. ,: M
   Frow =.  _4.     _3   _2   _1
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. '4444'
-NB.   parms is #rows,maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
-  parms =.        8    0.      1e_25        1                                  0           0    NB. We expand each row to its own comparison block
+NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
+  parms =.            4         0.      1e_25        1                                  0           0    NB. We expand each row to its own comparison block
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 0 4 704  1.788854381999831; _2 ]\ _512 5 _128 3 _64 2 0 1 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
   cutoffinfo =. (2 ,~ #rvt) $ 0.
@@ -496,13 +494,13 @@ epdefuzzsub =: {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
 NB. normal precision
 f =: 1:`({{
  while. 1 T. '' do. 55 T. '' end.
- while. 2 > 1. T. '' do.
+ while. 4 > 1. T. '' do.
   siz =. y  NB. size of Qk
   'r c' =. 2 ?@$ >:siz  NB. size of modified area
   prx =. 00 + r ? siz [ pcx =. 00 + c ? siz  NB. indexes of mods
   pivotcolnon0 =.r ?@$ 0 [ newrownon0 =. c ?@$ 0
   absfuzz =. 1e_14 * ? 0  NB. tolerance
-  Qk =. (siz,siz) ?@$ 0
+  Qk =. (>.&.(%&4) siz) {."1 (siz,siz) ?@$ 0
   expQk=. (((<prx;pcx) { Qk) ((*  absfuzz <!.0 |)@:-) pivotcolnon0 */ newrownon0) (<prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk
   if. -. r =. 1e_13 > >./ , | Qk - expQk do. 13!:8]4 [ 'prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
@@ -522,7 +520,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
  epcanon =. (epadd   0 $~ $)
  siz =. y  NB. size of Qk
  while. 1 T. '' do. 55 T. '' end.
- while. 2 > 1. T. '' do.
+ while. 4 > 1. T. '' do.
   'r c' =. 2 ?@$ >:siz  NB. size of modified area
   prx =. 00 + r ? siz [ pcx =. 00 + c ? siz  NB. indexes of mods
   pivotcolnon0 =. (] {~ r ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + r ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
@@ -532,7 +530,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
   newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
   newrownon0 =. 0. + newrownon0  NB. force to float
   absfuzz =. 1e_25 * ? 0  NB. tolerance
-  Qk =. (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
+  Qk =. (>.&.(%&4) siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
   expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;({.pivotcolnon0);({.newrownon0);absfuzz) 128!:12 Qk
@@ -562,7 +560,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
   newrownon0 =. 2 {. ,: newrownon0  NB. append extended part
   newrownon0 =. 0. + newrownon0  NB. force to float
   absfuzz =. 1e_25 * ? 0  NB. tolerance
-  Qk =. (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
+  Qk =. (>.&.(%&4) siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
   expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk

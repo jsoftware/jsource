@@ -1042,7 +1042,7 @@ DF2(jtfrom){I at;A z;
    }
    I wr1=AR(w)-1;
    if(wr1<=0){  // w is atom or list, result is atom
-    // Get the area to use for the result: the a input if possible, else an INT atom
+    // Get the area to use for the result: the a input if possible, else an INT atom. a=w OK!
     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
     I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=AT(w);   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
@@ -1193,12 +1193,12 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  I filler[3];  // pad 1st cacheline so we don't get false sharing
  // the rest is moved into static names
  UI *ndxa;   // the column indexes, always a list of ndxs
- UI4 n;  // #valid cols in Qk.  Qk may have an extra row, in onecol if frowbatchx!=~0
+// obsolete  UI4 qkrowstride;  // }:$Qk, which will be padded to row multiple
  UI4 nc;  // #cols in ndxa
  UI4 bkzstride;  // length of last axis of bk/bkbeta/z: length of extended kb/beta/z, which includes Fk if present and is padded to batch boundary
- I4 nqkrows;  // number of rows in Qk; if negative, is 1's-complement of # rows of Qk, and Fk is also a row of Qk
+ I4 nbasiswfk;  // |value| is number of rows allocated in Qk; if negative, is 1's-complement of # rows of Qk proper, and Fk is also a row of Qk
 // obsolete  frowbatchx;  // if Fk is in Qk, this is the value rowx will have when it is processed.  If Fk not included, ~0.  onecol only - gradient simply uses smaller n
- I qkstride;  // distance in atoms between halves of Qk
+// obsolete  I qkstride;  // distance in atoms between halves of Qk
  D *bk;  // pointer to bk.  If 0, this is a column extraction (if zv!=0)
  D *bkbeta;  // beta values for the rows in bk.  The values don't change, but which ones are in bk do
  D *Frow;  // the selector row
@@ -1228,7 +1228,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(ctx->x) x=ctx->x;
- YC(ndxa)YC(n)YC(nc)YC(bkzstride)YC(qkstride)YC(bk)YC(parms)YC(zv)
+ YC(ndxa)YC(nbasiswfk)YC(nc)YC(bkzstride)YC(bk)YC(parms)YC(zv)
  YC(bndrowmask)YC(cutoffstatus)YC(axv)YC(amv0)YC(avv0)YC(qk)YC(Frow)YC(bkbeta)YC(rvtv)
 #undef YC
  // perform the operation
@@ -1238,6 +1238,9 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  I ndotprods=0;  // number of dot-products we perform here
  I frowbatchx;  // in onecol, rowx of batch containing Fk, if any
  D sharedmin;  // minimum value fetched from other threads (either SPR or gradient)
+ I qkrowstride=AS(qk)[2];  // length of allocated row of Qk, padded to batch multiple
+ I nrows=AS(qk)[1];  // number of rows in Qk.  The last might be Fk, depending on the basis info; we calculate the dot-product for them all, but not the SPR on Fk
+ I qkstride=qkrowstride*nrows;  // distance between planes of Qk
  __m256i bndmskshift=_mm256_set_epi64x(0,16,32,48);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
 
  UI *ndx0=ndxa;  // origin of ordered column numbers, number of columns
@@ -1297,11 +1300,12 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 #define remflgs(zv) ((D*)((I)(zv)&~(ZVPOSCVFOUND|ZVNEGATECOL)))
 
 // obsolete  rowstride=_mm256_set1_epi64x(n);   // length of 1 row, which is right for DIP/nonimp
- rowgather=_mm256_mul_epu32(_mm256_set1_epi64x(n),_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
+ rowgather=_mm256_mul_epu32(_mm256_set1_epi64x(qkrowstride),_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
 // obsolete  rowstride=_mm256_slli_epi64(rowstride,LGNPAR);   // length of NPAR rows for onecol
  prirow=(I)parms[10];   // copy in parms
- I nrows=ctx->nqkrows;  // fetch number of rows in Qk.  If neg, is 1s-comp meaning Fk is added as an extra row (only if onecol)
+ I nbasiscols=nbasiswfk;  // number of basis columns of qk not including any Fk; this may be flagged with Fk info
  *(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE);  // in case some other thread has finished a column and given us a bogey, go get it
+ col0thresh=_mm256_set1_pd(parms[2]);  // column |values| less than this are considered 0
  if(zv==0){  // gradient initialization.
   sharingmin=1;  // normally, we are cutting off using shared minimum
   if(parms[4]<0){  // If MinImp given...
@@ -1314,6 +1318,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
    }
   }
   bk0thresh=_mm256_set1_pd(sqrt(2.0));   // bk0thresh is sqrt(2) for gradient
+  // nbasiscols needs no change
 // obsolete   zv=(D*)ZVDP;  // set flag 101 indicating DP, no positive CV found, not negating column
 // obsolete   maxdangerc=0.0;  // indicate no dangerous pivot found yet
 // obsolete   bkboundv=DAV(bkbound);  // addr of bound-var info
@@ -1329,14 +1334,14 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete   bvgrdesect[0]=bvgrd0+AN(bkbound)-(AN(bkbound)&(NPAR-1)?NPAR:0);  // first section is the bound variables, backed up to remnant
 // obsolete   bvgrdesect[1]=bvgrde-(((bvgrde-(bvgrd0+AN(bkbound)))&(NPAR-1))?NPAR:0);  // second section is the rest; the blocks are aligned to the end of the first section
  }else{  // one-column: process a single column, including SPR
-  I nhasfk=REPSGN(nrows); I nwofk=nrows^nhasfk;  // -(Fk is an extra row); get positive # rows w/o fk
-  frowbatchx=nwofk&-NPAR; frowbatchx|=~nhasfk;  // if no fk, batch is ~0, i. e. never; otherwise last (possibly full) batch   nwofk is fk position-1
-  nrows=nwofk-nhasfk;  // #rows to calculate, including fk if present
+  I nhasfk=REPSGN(nbasiscols); nbasiscols=nbasiscols^nhasfk;  // -(Fk is an extra row); # valid columns of Qk
+  frowbatchx=(nrows-1)&-NPAR; frowbatchx|=~nhasfk;  // batch# containing last row (might be by itself); if it's not fk, batch is ~0, i. e. never
+// obsolete   nrows=nbasiscols-nhasfk;  // #rows to calculate, including fk if present
 // obsolete   bv=(D*)n;  // offset to low part of *zv - saves a register
   bk0thresh=_mm256_set1_pd(parms[7]);
   colressize=8*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs TUNE.   scaf move to main
   colressize=(colressize+(BNDROWBATCH-1))&-BNDROWBATCH;  // the bound/enforcing mask is built in units of BNDROWBATCH bits so as to fit in an AVX register, matching the row numbers.  There are 2 bits per value.  They must stay aligned.
-  col0thresh=_mm256_set1_pd(parms[2]); colokpivotthresh=parms[6]; abortspr=parms[9];
+  colokpivotthresh=parms[6]; abortspr=parms[9];
 // obsolete  coldangerpivotthresh=parms[5];
 // obsolete  colbk0thresh=_mm256_set1_pd(parms[4]);
 // obsolete   if(likely(zv!=0)){  // one-column
@@ -1476,7 +1481,7 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
   // 2. we should use a ping/pong buffer to pipeline the info, giving a full column time for the transfer
   // 3. we should compress the info and transfer it in full cacheline fetches
   I an; D *vv; I *iv;  // number of sparse atoms in each row (0 if Ek column), pointers to row#s, values for this column
-  if(colx>=n){  // not a basis column (=slack)
+  if(colx>=nbasiscols){  // not a basis column (=slack)
    // scaf we could compress these and expand them here
    an=axv[colx][1];  // number of sparse atoms in each row
    vv=avv0+axv[colx][0];  // pointer to values for this section of A
@@ -1570,7 +1575,7 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
 // obsolete    // rownums, indexes, bvgrd are all set up
    __m256d dotproducth,dotproductl;  // where we build the column value
 
-   D *mv=mv0+rowx*n;  // point to the base of the block we are loading from
+   D *mv=mv0+rowx*qkrowstride;  // point to the base of the block we are loading from
 
    // if this starts a bound/enforcing block, fetch the mask for it
    if((rowx&(BNDROWBATCH/1-1))==0){
@@ -2122,14 +2127,15 @@ struct mvmctx opctx;  // parms to all threads, and return values
 // obsolete =C(AAV(w)[0]), box1=C(AAV(w)[1]), box2=C(AAV(w)[2]), box3=C(AAV(w)[3]), box4=C(AAV(w)[4]), box5=C(AAV(w)[5]);
 // obsolete  A box6=C(AAV(w)[6]), box7=C(AAV(w)[7]), box8=C(AAV(w)[8]), box9=C(AAV(w)[9]), box10=C(AAV(w)[10]);
  box=C(AAV(w)[9]); ASSERT(AT(box)&FL,EVDOMAIN); ASSERT(AR(box)==1,EVRANK); ASSERT(AN(box)>0,EVLENGTH);  // parm shape, type
- D *parms=opctx.parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nqkrows=(I)parms[0]; I ninclfk=(nandfk^REPSGN(nandfk))-REPSGN(nandfk);   // flagged n, n incl Fk
+ D *parms=opctx.parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nbasiswfk=(I)parms[0]; I nbasiscols=nandfk^REPSGN(nandfk);   // flagged n
  box=C(AAV(w)[3]); ASSERT(AR(box)==3,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.qk=box;  // Qk, possibly including space and Fk
- ASSERT(AS(box)[0]==2&&AS(box)[1]>=ninclfk,EVLENGTH)  // Qk has as many rows as advertised
+ ASSERT(AS(box)[0]==2,EVLENGTH)  // Qk is qp
+ I ninclfk=AS(box)[1];   // number of rows to be processed including Fk
  ASSERT(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,EVNONCE)  // we fetch along rows; insist on data alignment
- I n=opctx.n=AS(box)[2];  // Qk defines its # columns
- opctx.qkstride=AS(box)[1]*AS(box)[2];  // distance between planes of Qk
+// obsolete  opctx.qkrowstride=AS(box)[2];  // length of row of Qk
+// obsolete  opctx.qkstride=AS(box)[1]*AS(box)[2];  // distance between planes of Qk
  I minbkzstride=(ninclfk+NPAR-1)&-NPAR;  // size of bk/bkbeta/z: enough for last batch including Fk if present
- box=C(AAV(w)[0]); ASSERT(AR(box)==3&&AS(box)[1]==2&&AS(box)[2]==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I axn=AN(box); opctx.axv=((I(*)[2])IAV(box))-n;  // prebiased pointer to A0 part of NTT
+ box=C(AAV(w)[0]); ASSERT(AR(box)==3&&AS(box)[1]==2&&AS(box)[2]==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I axn=AN(box); opctx.axv=((I(*)[2])IAV(box))-nbasiscols;  // prebiased pointer to A0 part of NTT
  box=C(AAV(w)[1]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I amn=AN(box); opctx.amv0=IAV(box);  // col #s
  box=C(AAV(w)[2]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN); I avn=AN(box); opctx.avv0=DAV(box);  // weights
  ASSERT(amn==avn,EVLENGTH);  // weights and col#s must agree
@@ -2144,25 +2150,25 @@ struct mvmctx opctx;  // parms to all threads, and return values
   ASSERT(AN(w)==11,EVLENGTH);  // audit overall w
   // box 6 reserved for schedule
   box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.cutoffstatus=(D(*)[2])DAV(box);  // saved info from previous scans
-  ASSERT(AC(box)==3,EVNONCE) ASSERT(AFLAG(box)&AFKNOWNNAMED,EVNONCE)  // cutoffinfo unaliased
+// obsolete   ASSERT(AC(box)<=3,EVFACE) ASSERT(AFLAG(box)&AFKNOWNNAMED,EVNONCE)  // cutoffinfo unaliased.  We have to allow usecount of 3 for the tests.  Normally uc will be 2
   zv=opctx.zv=0;  // zv=0 means gradient mode
   ASSERT(nparms==6,EVLENGTH)  // gradient mode doesn't use much parms
   box=C(AAV(w)[10]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.Frow=DAV(box);  // the entire selector row
-  nthreads=likely(n*nc>1000)?nthreads:1;  // single-thread small problem
+  nthreads=likely(ninclfk*nc>1000)?nthreads:1;  // single-thread small problem
   // frowbatchx unused
   opctx.sharedmin.D=inf; // minimum improvement
   opctx.retinfo=-1;  // Init col#, should never be used
  }else{
   // onecol+SPR mode
   ASSERT(AN(w)==12,EVLENGTH);  // audit overall w
-  box=C(AAV(w)[6]); ASSERT(AR(box)>=1,EVRANK) ASSERT(AS(box)[AR(box)-1]>=minbkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) opctx.bk=DAV(box);  // bk values allow overfetch
+  box=C(AAV(w)[6]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AS(box)[AR(box)-1]>=minbkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) opctx.bk=DAV(box);  // bk values allow overfetch; we use only high part
   minbkzstride=AS(box)[AR(box)-1];  // all the strides must be equal; we have just verified they are big enough
   ASSERT(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,EVNONCE)  // we fetch along rows; insist on data alignment
   box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[0]==2,EVLENGTH) ASSERT(AS(box)[AR(box)-1]==minbkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) zv=opctx.zv=DAV(box);  // zv values allow overstore
-  ASSERT(AC(box)==3,EVNONCE) ASSERT(AFLAG(box)&AFKNOWNNAMED,EVNONCE)  // zv unaliased
+// obsolete   ASSERT(AC(box)<=3,EVFACE) ASSERT(AFLAG(box)&AFKNOWNNAMED,EVNONCE)  // zv unaliased
   ASSERT(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,EVNONCE)  // we store along rows; insist on data alignment
   ASSERT(BETWEENC(nparms,10,11),EVLENGTH)  // SPR has lots of parms
-  box=C(AAV(w)[10]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[AR(box)-1]==minbkzstride,EVLENGTH) opctx.bkbeta=DAV(box);  // beta values corresponding to bk
+  box=C(AAV(w)[10]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[AR(box)-1]==minbkzstride,EVLENGTH) opctx.bkbeta=DAV(box);  // beta values corresponding to bk; we use only high part
   ASSERT(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,EVNONCE)  // we fetch along rows; insist on data alignment
   opctx.bkzstride=minbkzstride;   // use the agreed stride
   nthreads=likely(ninclfk>256)?nthreads:1;  // single-thread small problem (qp)
@@ -2170,7 +2176,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
   // but for bound columns use #rows which indicates a Nonbasic Swap
   I colrvt=(rvtv[col0>>(LGBB-1)]>>((col0&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);  // get column info, a 2-bit field of (bound,enforcing)
   if(colrvt&0b10){
-   box=C(AAV(w)[11]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AN(box)>col0,EVINDEX)
+   box=C(AAV(w)[11]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AN(box)>col0,EVINDEX)  // betas normally dp, but we use only high part anyway.  Look up the column beta
    opctx.sharedmin.D=DAV(box)[col0];   // init bound-col min SPR to beta
    opctx.retinfo=ninclfk;  // Init col# - if no lower SPR found could survive to become a Swap
   }else{opctx.retinfo=-1; opctx.sharedmin.D=inf;} // non-bound, allow any improvement, init ret to 'no row found' - possible if no nondangerous pivot, or unbounded (should not occur)
@@ -2196,7 +2202,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
   D spr=rv[4]=opctx.sharedmin.D;  // return SPR as informational data
   // spr=0 means nonimproving dangerous pivot I. e. no pivot), spr=-1 means nonimproving nondangerous
   if(unlikely(opctx.sharedmin.I==0)){spr=inf; rv[1]=-1.;}  // detect nonimproving pivot but dangerous; other nonimproving pivots have valid rowx
-  if(unlikely(opctx.sharedmin.I==-1)){spr=0;}  // detect nonimproving pivot but dangerous; other nonimproving pivots have valid rowx
+  if(unlikely(opctx.sharedmin.I==-1)){spr=rv[4]=0;}  // detect nonimproving nondangerous pivot; give SPR of 0; row is valid
   D colval;  // the |value| in the column, provided exceptions do not apply
   if(BETWEENO(retinfo,0,ninclfk)){  // normal nonswap SPR found
    colval=ABS(zv[retinfo]);  // the value in the SPR row of the column.  If neg, we will swap before pivot, so use |value|
@@ -2237,7 +2243,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
  __m256d mabsfuzz=_mm256_set1_pd(*mplrd);  // comparison tolerance (if given)
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  I dpflag=0;  // qp precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0 8=mplr exists 16=both mpcands dp, no mplr
- D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I t=AR(prx)+1; t=(t!=1)?qksize:t; I qksizesq=qksize*t; dpflag|=AR(qk)>AR(prx)+1;  // pointer to qk data, length of a row, offset to low part if present.  offset is qksize^2, or bksize
+ D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I t=AS(qk)[AR(qk)-2]; t=AR(prx)==0?1:t; I qksizesq=qksize*t; dpflag|=AR(qk)>AR(prx)+1;  // pointer to qk data, length of a row, offset to low part if present.  offset is */_2{.$Qk, or {:$bk
  UI rowx=ti*rowsperthread, rown=AN(prx), slicen=rown; slicen=rown<rowx+rowsperthread?slicen:rowx+rowsperthread;   // current row, ending row+1 taken for the current task#
  I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // address of row indexes, column data
  UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
@@ -2391,7 +2397,7 @@ F2(jtekupdate){F2PREFIP;
  // agreement
  ASSERT(BETWEENC(AR(w),AR(prx)+1,AR(prx)+2),EVRANK)  // Qk is nxn; bk is n, treated as a single row.  Each may be quadprec
  ASSERT(AR(w)==AR(prx)+1||AS(w)[0]==2,EVLENGTH)
- if(AR(prx)!=0){ASSERT(AS(w)[AR(w)-1]==AS(w)[AR(w)-2],EVLENGTH) DO(AN(prx), ASSERT(IAV(prx)[i]<AS(w)[AR(w)-2],EVINDEX))} else{ASSERT(IAV(prx)[0]==0,EVINDEX)}  // Qk must be square; bk not; valid row indexes
+ if(AR(prx)!=0){ASSERT(AS(w)[AR(w)-1]>=AS(w)[AR(w)-2]-1,EVLENGTH) DO(AN(prx), ASSERT(IAV(prx)[i]<AS(w)[AR(w)-2],EVINDEX))} else{ASSERT(IAV(prx)[0]==0,EVINDEX)}  // Qk/bk rows may be padded (Qk might include Fk); valid row indexes
  ASSERT(AN(prx)==AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) ASSERT(AN(pcx)==AS(newrownon0)[AR(newrownon0)-1],EVLENGTH)   // indexes and values must agree
  // audit the indexes
  DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes

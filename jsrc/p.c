@@ -563,7 +563,8 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       // Registers are very tight here.  Nothing survives over a subroutine call - refetch y if necessary  If we have anything to
       // pass over a subroutine call, we have to store it in pt0ecam or some other saved name
       I4 symx, buck;
-      symx=NAV(QCWORD(y))->symx; buck=NAV(QCWORD(y))->bucket;
+      symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
+// obsolete buck=NAV(QCWORD(y))->bucket;
       L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
@@ -573,7 +574,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCGLOBAL semantics, as y does.
        raposlocalqcgsv(s->val,s->valtype,y);  // ra() the value to match syrd.  type has global flag clear
-      }else if(likely(buck!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
+      } else if(likely((buck=NAV(QCWORD(y))->bucket)!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
        I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
 // obsolete        if(likely((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab

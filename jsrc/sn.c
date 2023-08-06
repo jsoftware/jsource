@@ -75,6 +75,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2
  zv->flag=f;  // Install locative flag
  zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length, and calculate hash of simple name
+ // the bucket and symbol-id fields are left at 0
  RETF(z);
 }    /* name from string */
 

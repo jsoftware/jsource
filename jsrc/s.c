@@ -346,15 +346,16 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table (which must exist)
 // If not found, one is created
+// We know that the name block DOES NOT have a direct symbol number, because we have checked that if there was a chance (if the name block was synthetic there is no chance)
 // May call probeis which takes a lock on the local table; if so we release the lock
 L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
- // if this is a looked-up assignment in a primary symbol table, use the stored symbol#
- I4 symx, b;
- symx=u->symx; b=u->bucket;
- if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)){R sympv+(I)symx;  // local symbol given and we are using the original table: use the symbol
- }else if((likely(b!=0))){
+// obsolete  // if this is a looked-up assignment in a primary symbol table, use the stored symbol#
+ I4 b=u->bucket;
+// obsolete  symx=u->symx; b=u->bucket;
+// obsolete  if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)){R sympv+(I)symx;  // local symbol given and we are using the original table: use the symbol
+ if((likely(b!=0))){
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
    // positive bucketx (now negative); that means skip that many items and then do name search
@@ -710,7 +711,10 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
  // the name was invalid anyway and is subject to having the value removed
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
- if((AR(g)&ARLOCALTABLE)!=0){g=0; e=probeislocal(a);  // probe, reserving 1 symbol   scaf should avoid call in the common case of local direct assignment
+ if((AR(g)&ARLOCALTABLE)!=0){
+  I4 symx=NAV(a)->symx;
+  e=likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
+  g=0;   // indicate we have no lock to clear
  }else{SYMRESERVE(1)
   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
   valtype|=QCGLOBAL;  // must flag local/global type in symbol

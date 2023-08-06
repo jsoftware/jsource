@@ -317,7 +317,7 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  ARGCHK1(a);u=NAV(a);  // u->NM block
  if(likely((b = u->bucket)!=0)){
   L *sympv=SYMORIGIN;  // base of symbol array
-  // we don't check for primary symbol index because that is normally picked up in parsea
+  // we don't check for primary symbol index because that is normally picked up in parsea; when called to verify no local name we expect the index to be 0 anyway
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
    // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
@@ -684,16 +684,20 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  rifv(w); // must realize any virtual
  if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE)jtra(w,wt,0);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
+ I arloc=AR(jt->locsyms);  //
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
  }else{  // no locative: if g is a flag for zombieval, set it to the correct symbol table
   // not locative assignment
-  if(unlikely(g==jt->global))
-   // global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
+  if(unlikely(g==jt->global)){
+   // non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
-   ASSERTSUFF(!probelocal(a,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
+   I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(arloc,ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
+   localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists; now non0 if valid & known to have no assignment
+   ASSERTSUFF(localnexist||!probelocal(a,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
+  }
  }
  // g has the locale we are writing to
 
@@ -713,7 +717,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
  if((AR(g)&ARLOCALTABLE)!=0){
   I4 symx=NAV(a)->symx;
-  e=likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
+  e=likely((SGNIF(arloc,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=0;   // indicate we have no lock to clear
  }else{SYMRESERVE(1)
   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock

@@ -665,7 +665,7 @@ A jtprobequiet(J jt,A a){A g;
  R res;
 }
 
-static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
+// obsolete static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
 // assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
 // Result points to the symbol-table block for the assignment
 // flags set if jt: bit 0=this is a final assignment;
@@ -693,7 +693,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   // not locative assignment
   if(unlikely(g==jt->global)){
    // non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
-   // this will usually have a positive bucketx and will fail quickly.  Unlikely that symx is present
+   // this will usually have a positive bucketx and will not call the subroutine.  Unlikely that symx is present
    I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(arloc,ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
    localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists; now non0 if valid & known to have no assignment
    ASSERTSUFF(localnexist||!probelocal(a,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)

@@ -57,7 +57,7 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {
  UI4 futex;  // futex used by all threads in this JOBQ
  UI4 nuunfin;   // Number of unfinished user jobs, queued and running.  Modified only when the job lock is held
  UI4 keepwarmns;  // time in ns to spin-poll this jobq before going into wait state
- US nthreads;  // number of threads in this pool
+ US nthreads;  // number of threads in this pool.  Arguably should be in another cacheline, since it is referenced often outside of lock
  US waiters;  // Number of waiting threads.  Modified only when job lock is held, and may be higher than the actual number of threads waiting
 } JOBQ;
 #endif

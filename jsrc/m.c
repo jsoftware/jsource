@@ -1000,13 +1000,14 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   if((t&BOX+SPARSE)>0){AD* np;
    // boxed.  Loop through each box, recurring if called for.
    A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-   if(likely(n!=0)){  // skip everything if no boxes
+   if(likely(--n>=0)){  // skip everything if no boxes
     np=*wv;  // prefetch first box
-    NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
+    NOUNROLL do{AD* np0;  // n is always >0 to start.  Loop for n-1 times
      np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
      // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
      // value has been installed.  Thus we ensure that fa() never causes a system lock.
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
+runout:;  // 
      // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
      if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
       if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
@@ -1018,17 +1019,18 @@ void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
       }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
      }
      np=np0;  // advance to next box
-    }
-    // runout for the box, repeated from above  // scaf should use loop tricks to avoid repeat?
-    if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun
-     if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
-     else{I c=AC(np);
-      // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
-      if(--c<=0){
-       A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
-      }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
-     }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
-    }
+    }while(--n>0);
+    if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
+// obsolete     // runout for the box, repeated from above  // scaf should use loop tricks to avoid repeat?
+// obsolete     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun
+// obsolete      if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
+// obsolete      else{I c=AC(np);
+// obsolete       // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
+// obsolete       if(--c<=0){
+// obsolete        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
+// obsolete       }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
+// obsolete      }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
+// obsolete     }
    }
   } else if(t&NAME){A ref;
    if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference

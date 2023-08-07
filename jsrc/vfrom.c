@@ -1197,6 +1197,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  UI4 nc;  // #cols in ndxa
  UI4 bkzstride;  // length of last axis of bk/bkbeta/z: length of extended kb/beta/z, which includes Fk if present and is padded to batch boundary
  I4 nbasiswfk;  // |value| is number of rows allocated in Qk; if negative, is 1's-complement of # rows of Qk proper, and Fk is also a row of Qk
+ I4 nthreads;  // number of threads when we started this job (may be inaccurate; for tuning only)
 // obsolete  frowbatchx;  // if Fk is in Qk, this is the value rowx will have when it is processed.  If Fk not included, ~0.  onecol only - gradient simply uses smaller n
 // obsolete  I qkstride;  // distance in atoms between halves of Qk
  D *bk;  // pointer to bk.  If 0, this is a column extraction (if zv!=0)
@@ -1214,7 +1215,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 // obsolete  A bkbound;  // b-beta for the bound variables; also gives the number of bound variables, which must be first in bv
  C *rvtv;  // list of Rose variable types for the columns (unchanging)
  D (*cutoffstatus)[2];  // (ncols,2) $ array holding (number of rows processed before cutoff, 0 if row invalid,gradient total for those rows).  If cutoff total is negative, it means that no positive column value has been seen
-} ;
+};
 // obsolete #define ONECOLGRD0 ((I*)(NPAR*SZI))  // starting value of bvgrd for onecol, offset from 0 so that backing up bvgrde won't wrap around 0
 
 #define BNDROWBATCH 64   // the number of bits of bndrowmask that we load at a time.
@@ -1228,7 +1229,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(ctx->x) x=ctx->x;
- YC(ndxa)YC(nbasiswfk)YC(nc)YC(bkzstride)YC(bk)YC(parms)YC(zv)
+ YC(ndxa)YC(nbasiswfk)YC(nc)YC(bkzstride)YC(nthreads)YC(bk)YC(parms)YC(zv)
  YC(bndrowmask)YC(cutoffstatus)YC(axv)YC(amv0)YC(avv0)YC(qk)YC(Frow)YC(bkbeta)YC(rvtv)
 #undef YC
  // perform the operation
@@ -1256,7 +1257,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete  I collen;  // for one-col, the length of the column; for nonimp, the length of bkg.  The number of values in a single-column operation
  UI firstcol=0, lastreservedcol=0;  // we have reserved columns from firstcol to lastreservedcol-1 for us to calculate.  firstcol is the running column index
  I currcolproxy=0;   // The column pointer, approximately.  Updated only for gradient
- I resredwarn=nc-100*((*JT(jt,jobqueue))[0].nthreads+1);  // when col# gets above this, switch to reserving one at a time  scaf switch to 2/4 at a time?   move to main
+ I resredwarn=nc-10*((I)nthreads+1);  // when col# gets above this, switch to reserving fewer
 //   parms is #rows,maxAx,Col0Threshold,Store0Thresh,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
  __m256d store0thresh=_mm256_set1_pd(parms[3]);  // In one-column mode, this holds the Store0Threshold: column values less than this are set to 0 when written out
  __m256d col0thresh;  //  minimum value considered valid for a column value (smaller are considered 0)
@@ -1339,7 +1340,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete   nrows=nbasiscols-nhasfk;  // #rows to calculate, including fk if present
 // obsolete   bv=(D*)n;  // offset to low part of *zv - saves a register
   bk0thresh=_mm256_set1_pd(parms[7]);
-  colressize=8*NPAR*((*JT(jt,jobqueue))[0].nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs TUNE.   scaf move to main
+  colressize=8*NPAR*((I)nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs
   colressize=(colressize+(BNDROWBATCH-1))&-BNDROWBATCH;  // the bound/enforcing mask is built in units of BNDROWBATCH bits so as to fit in an AVX register, matching the row numbers.  There are 2 bits per value.  They must stay aligned.
   colokpivotthresh=parms[6]; abortspr=parms[9];
 // obsolete  coldangerpivotthresh=parms[5];
@@ -1383,7 +1384,8 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   if(firstcol>=lastreservedcol){
    // we have to refresh our reservation.  We never go through here for one-column; nextresv is the column reservation then
    if(firstcol>=nc)break;  // exit if all columns have been processed.  This is the exit from the column loop
-   UI ressize=currcolproxy>resredwarn?1:8;  // take 8 at a time till we get near end   scaf use longer reservations since we do all cols now
+   UI ressize=currcolproxy>resredwarn?4:32;  // take big batches till we get near the end, for 2 reasons. (1) we want contiguous allocation within column family for sharing cached data
+               // (2) with early cutoff we might process a column very quickly and me need more to even the load
    firstcol=__atomic_fetch_add(&ctx->nextresv,ressize,__ATOMIC_ACQ_REL);  // get next sequential column number, reserve a section starting from there
    if(firstcol>=nc)break;  // if no columns to reserve, exit loop
    lastreservedcol=firstcol+ressize; lastreservedcol=lastreservedcol>nc?nc:lastreservedcol;  // remember end of our reservation, never longer than the data
@@ -2187,6 +2189,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
  opctx.ndotprods=0;  // total # dotproducts evaluated
  opctx.nextresv=0;  // start in row/col 0
  opctx.ctxlock=0;  // init lock available
+ opctx.nthreads=nthreads;  // number of threads to use
 
  jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtmvmsparsex,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  // atomic sync operation on the job queue guarantee that we can use regular loads from opctx

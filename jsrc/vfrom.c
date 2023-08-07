@@ -185,9 +185,12 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
  I zn;  // number of atoms in result
  I celllen=axes[r].lencell;  // length of cell of last axis, in atoms
  A z;  // result
+ I nunitsels=r;  // number of leading axes containing exctly one selector.  When the axis below this prefix rolls over, we can stop, knowing that there are no higher selectors
  if(likely(AN(w)!=0)){  // normal case, w has atoms
-  for(i=r-1;i>=0;--i){  // for axes before the last
-   DPMULDE(framesize,axes[i].nsel^REPSGN(axes[i].nsel),framesize);  // count # cells in frame and selectors
+  for(i=r-1;i>=0;--i){  // for axes BEFORE the last
+   I absnsel=axes[i].nsel^REPSGN(axes[i].nsel);  // adjust for complementary indexing
+   DPMULDE(framesize,absnsel,framesize);  // count # cells in frame and selectors
+   nunitsels=absnsel!=1?i:nunitsels;  // if this cell-count is not 1, reset the count of # 1s.
     // note: if some selector is empty and the others overflow, this will give limit error.  Sue me.
    axes[i].lencell<<=k;  // convert cellsize to bytes
    base+=axes[i].lencell*axes[i].sel0;  // for axes before last, add offset of first index
@@ -277,7 +280,8 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   R z;
  }
 
- I noframe=REPSGN(framesize-2); axes+=r&noframe; r-=r&noframe;  // F..F if all previous axes are in base; only one selection pass needed (gives early exit)
+// obsolete  I noframe=REPSGN(framesize-2); axes+=r&noframe; r-=r&noframe;  // F..F if all previous axes are in base; only one selection pass needed (gives early exit)
+ axes+=nunitsels; r-=nunitsels;  // Now that initial selectors are rolled into base, we can delete the consecutive leading single-selector axes.  When they start to roll over we can quit
  celllen<<=k;  // convert last-axis len to bytes
 
  // decide what copy routines to use for last axis.  
@@ -356,7 +360,7 @@ else{   // normal last axis
      // normal non-complementary index.  Step to the next row
      SETNDX(nextx,axes[rodo].sels[axes[rodo].currselx],axes[rodo].lenaxis);  // fetch next index
     }else{
-     // complementary index.  Start after currselv and find the next 1-bit
+     // complementary index.  Start after currselv and find the next 1-bit   scaf should rewrite to use the complementary indexes, not a mask
      nextx=axes[rodo].currselv+1;  // bit# to start look
      while(1){  // it's gotta be there
       UI nextbits=(UI)axes[rodo].sels[nextx>>LGBW]>>(nextx&(BW-1));  // the rest of this word
@@ -369,7 +373,7 @@ else{   // normal last axis
     break;  // when wheel doesn't roll over, stop processing wheels
    }
    // here the current axis is rolling over.
-   if(rodo==0)goto endaxes;  // when first axis rolls over, we are finished
+   if(rodo<=0)goto endaxes;  // when we roll over the biggest wheel, quit
    axes[rodo].currselx=0;   // back to start
    base+=(axes[rodo].sel0-axes[rodo].currselv)*axes[rodo].lencell;  // move base by amount of index movement
    axes[rodo].currselv=axes[rodo].sel0;  // set starting index for wheel
@@ -922,6 +926,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
 // obsolete  if(!(AT(c)&BOX)){ASSERT(AR(c)<=1,EVRANK) R jtfrombu(jtinplace,c,w,wf);}  // if single-boxed, handle as <"1@[ { ].
  if(!(AT(c)&BOX)){R jtfrombu(jtinplace,c,w,wf);}  // if single-boxed, handle as <"1@[ { ].
  // Double-boxed. Set up axis structs
+ // We DO NOT treat leading scalar indexes as a special case here.  Building & using the axis block is pretty cheap.  We catch them when we fill.
  ASSERT(1>=AR(c),EVRANK);  // boxes may not have rank > 1
  ASSERT(AN(c)<=wcr,EVLENGTH);  // number of axes must not exceed #axes in major cell
  I *ws=AS(w);  // #axes-1.  We need a leading axis in full if there are multiple cells of w

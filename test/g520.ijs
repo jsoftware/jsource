@@ -370,7 +370,7 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 1 4 832 1.341640786499873838; _2 ]\ _256 5 _512 5 _64 2 0 1 ) ((0 1.341640786499873838,:0 1.788854381999831) run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;1 0 2 3;(_0.3 (4}) parms);Frow
 
-
+NB. scaf need a way to test many threads in gradient mode
 
   NB. end of tests, add a thread
   0 T. ''

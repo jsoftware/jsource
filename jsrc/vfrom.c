@@ -158,6 +158,7 @@ struct __attribute__((aligned(CACHELINESIZE))) faxis {
 #define fcopy2 fcopy(S,1)
 #define fcopy1 fcopy(C,0)
 #define fcopyv(b) {C *zv=zbase,*bv=(C*)base; DO(ns, I sel=ss[i]; JMCR(zv+i*celllen,bv+sel*celllen,celllen,(b),endmask) ) zbase=(C*)zbase+ns*celllen;}
+#if 0  // obsolete
 // xxxC: complementary indexing: sels are a mask.  Count consecutive bits and copy blocks.
 #define fcopyC {I selx=axes[r].sel0; I selr=ns; C *zv=zbase; \
 do{ \
@@ -166,6 +167,20 @@ do{ \
  I sl=selx-s1; JMC(zv,base+s1*celllen,sl*celllen,0) zv+=sl*celllen; selr-=sl; /* copy the data */ \
 }while(selr); zbase=zv;  /* loop till all 1s moved */ \
 }
+#else
+// xxxC: complementary indexing: sels are sorted list of exclusions, with no duplicates.  .sel0 has index of first gap
+#define fcopyC {I selx=axes[r].sel0, gap0=selx; C *zv=zbase; \
+I nx=nl-ns;  /* number of complementary indexes */ \
+while(1){ \
+ I gapn=selx!=nx?ss[selx]:nl;  /* end+1 of gap, running to end on last gap */ \
+ I gapl=gapn-gap0; JMC(zv,base+gap0*celllen,gapl*celllen,0) zv+=gapl*celllen; /* copy the data */ \
+ if(selx==nx)break;  /* stop after final gap-to-end */ \
+ while(1){++selx; ++gapn; if(selx==nx)break; if(ss[selx]!=gapn)break;}  /* find start of next gap */ \
+ if(gapn>=nl)break; gap0=gapn; /* if trailing indexes pushed gap off the end, finis */ \
+} \
+zbase=zv; }
+
+#endif
 
 #if 0 // obsolete 
  {T *zv=zbase,*bv=(T*)base; I *ssv=ss; I msk=*ssv; DO(ns, while(msk==0){bv+=BW; msk=*++ssv;} *zv++=bv[CTTZI(msk)]; msk&=msk-1;) zbase=zv;}
@@ -225,7 +240,8 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     DQ(nsel-1, indexn=sels[1+i]; indexn+=REPSGN(indexn)&lenaxis; if(indexn!=index0+1+i){indexn=lenaxis; break;});
     nsel=AR(axes[r].indsubx.ind)!=1?0:nsel;  // if shape changes, set flag value to suppress returning entire w unchanged
    }else{
-    // complementary indexing.  See if the inner bits are consecutive (in-full is impossible)
+    // complementary indexing.  See if the values are consecutive (in-full is impossible)
+#if 0  //  obsolete 
     // the number of leading 0s is .sel0.  If #leading+#trailing+nsel=lenaxis, the 1s are consecutive
     nsel=~nsel;  // convert nsel to positive length
     I nzeros=index0=axes[r].sel0;  // init pos of first 1, and count of lower 0s
@@ -234,6 +250,14 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     UI trailwd=(UI)sels[trailx]<<((BW-1)-((lenaxis-1)&(BW-1)))>>((BW-1)-((lenaxis-1)&(BW-1)));  // clear upper bits
     while(1){if(trailwd!=0){nzeros+=(BW-1)-CTLZI(trailwd); break;} nzeros+=BW; if(trailx==0)break; trailwd=(UI)sels[--trailx];}  // go till we hit a 1, which might not exist if nsel=0
     indexn=lenaxis-!!(lenaxis<=(nzeros+nsel));  // lenaxis-1 if consecutive (equality), lenaxis if not
+#else
+    // The first index we produce is .sel0, which means that must be the index of the first gap.  Find the width
+    // of that gap and see if it accounts for all the indexes
+    nsel=~nsel;  // convert nsel to positive length - gives number of surviving 
+    index0=axes[r].sel0; I axn=axes[r].lenaxis; indexn=likely(index0<nsel)?axes[r].sels[index0]:axn;  // start of gap, axis len, end+1 of gap (may be len of axis)
+    index0|=(indexn-index0)-nsel;  // if more cells than gap, turn index0 neg to stop virtual
+    --indexn;  // convert to end-1
+#endif
    }
    // nsel has been modified if shape changes
    if((index0|(lenaxis-indexn-1))>=0){  // index0>=0 and indexn<=lenaxis-1
@@ -268,7 +292,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   for(i=hasr;i<=r;++i){  // for each axis coming from a
    if(axes[i].sels!=0){  // normal or complementary
     if(axes[i].nsel>=0){MCISH(zs,AS(axes[i].indsubx.ind),AR(axes[i].indsubx.ind)) zs+=AR(axes[i].indsubx.ind);  // normal, copy the rank
-    }else{*zs++=~axes[i].nsel; axes[i].indsubx.subx=0; // complementary, treat as list of appropriate length and init for copy
+    }else{*zs++=~axes[i].nsel; axes[i].indsubx.subx=axes[i].sel0; // complementary, treat as list of appropriate length and init for copy
     }
    }else{*zs++=axes[i].nsel;}  // in full, treat as length with length of axis
   }
@@ -344,43 +368,54 @@ else{   // normal last axis
   // routines for atom {"1 y, depending on size
   case 0b00010: fcopyinfull(I4) break; case 0b00001: fcopyinfull(S) break; case 0b00000: fcopyinfull(C) break;
 
-  case 0b00111: fcopyC break;  // complementary axis of any size
+  case 0b00111: fcopyC break;   // complementary axis of any size
   default: break;
   }
   if(likely(r==0))break;  // if there is only 1 axis, we're done
   // roll up the axes, advancing the odometer 
   I rodo=r-1;  // start on axis -2   scaf handle axis -2 separately
   while(1){  // till we have handled all changing wheels
-   if(axes[rodo].sels==0){
+   struct faxis *axr=&axes[rodo];
+   if(axr->sels==0){
     // axis taken in full.  advance to next cell
-    base+=axes[rodo].lencell;  // advance to next sequential cell
-    if(++axes[rodo].currselx!=axes[rodo].nsel)break;  // if this wheel doesn't roll over, stop here
-    base-=axes[rodo].nsel*axes[rodo].lencell;  // rollover: back this wheel to the beginning
-    axes[rodo].currselx=0;  // look at next wheel; reset this one
-   }else if(++axes[rodo].currselx!=(REPSGN(axes[rodo].nsel)^axes[rodo].nsel)){
+    base+=axr->lencell;  // advance to next sequential cell
+    if(++axr->currselx!=axr->nsel)break;  // if this wheel doesn't roll over, stop here
+    base-=axr->nsel*axr->lencell;  // rollover: back this wheel to the beginning
+    axr->currselx=0;  // look at next wheel; reset this one
+   }else if(++axr->currselx!=(REPSGN(axr->nsel)^axr->nsel)){
     // axis not in full and did not roll over.  Advance to next index
     I nextx;  // will be the next index to use
-    if(likely(axes[rodo].nsel>=0)){  // complementary index?
+    if(likely(axr->nsel>=0)){  // complementary index?
      // normal non-complementary index.  Step to the next row
-     SETNDX(nextx,axes[rodo].sels[axes[rodo].currselx],axes[rodo].lenaxis);  // fetch next index
+     SETNDX(nextx,axr->sels[axr->currselx],axr->lenaxis);  // fetch next index
     }else{
+#if 0  // obsolete 
      // complementary index.  Start after currselv and find the next 1-bit   scaf should rewrite to use the complementary indexes, not a mask
-     nextx=axes[rodo].currselv+1;  // bit# to start look
+     nextx=axr->currselv+1;  // bit# to start look
      while(1){  // it's gotta be there
-      UI nextbits=(UI)axes[rodo].sels[nextx>>LGBW]>>(nextx&(BW-1));  // the rest of this word
+      UI nextbits=(UI)axr->sels[nextx>>LGBW]>>(nextx&(BW-1));  // the rest of this word
       if(nextbits){nextx+=CTTZI(nextbits); break;}  // get index of lowest 1 bit
       nextx=(nextx+(BW-1))&-BW;  // if none, advance to next word and keep looking
      }
+#else
+     // complementary index.  .currselv is the last index we returned; .indsubx.subx is a valid starting place to search for the next index 
+     // we know there is another valid index.
+     nextx=axr->currselv+1; I subx=axr->indsubx.subx; // bit# to start look, place to look for match
+     I nextcomp;  // next complementary index to use
+     while((nextcomp=subx<axr->lenaxis-~axr->nsel?axr->sels[subx]:axr->lenaxis)<=nextx){  // when sel doesn't limit, advance to next sel
+      nextx+=nextcomp==nextx; axr->indsubx.subx=++subx;  // if sel matches nextx, advance nextx to skip it
+     }
+#endif
     }
-    base+=(nextx-axes[rodo].currselv)*axes[rodo].lencell;  // move base by amount of index movement
-    axes[rodo].currselv=nextx;  // set next index
+    base+=(nextx-axr->currselv)*axr->lencell;  // move base by amount of index movement
+    axr->currselv=nextx;  // set next index
     break;  // when wheel doesn't roll over, stop processing wheels
    }
    // here the current axis is rolling over.
    if(rodo<=0)goto endaxes;  // when we roll over the biggest wheel, quit
-   axes[rodo].currselx=0;   // back to start
-   base+=(axes[rodo].sel0-axes[rodo].currselv)*axes[rodo].lencell;  // move base by amount of index movement
-   axes[rodo].currselv=axes[rodo].sel0;  // set starting index for wheel
+   axr->currselx=0;   // back to start
+   base+=(axr->sel0-axr->currselv)*axr->lencell;  // move base by amount of index movement
+   axr->indsubx.subx=axr->currselv=axr->sel0;  // set starting index for wheel and hint
    --rodo;  // back up to increment previous axis
   }  // wheel rolled over, advance to next wheel
   // base has been advanced
@@ -425,7 +460,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // the copy may be interrupted by index error and be left with anvalid atoms
  jtinplace=(J)((I)jtinplace&~((SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT))<=(UI)(wf|(wcr^1)|(SZI^(1LL<<bplg(AT(w))))))<<JTINPLACEAX));
  RETF(jtaxisfrom(jtinplace,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
-
 #if 0  // obsolete 
  I wflag=AFLAG(w);
  if(likely(wn!=0)){  // w has atoms; get # atoms in result
@@ -970,6 +1004,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
     axes[i].currselx=0; axes[i].sels=0; axes[i].currselv=0; axes[i].sel0=0;  // fill in startpt - should be 1 store    if(unlikely(i==naxes))--naxes;  // taken-in-full cannot be last axis
     if(unlikely(i==r)){--r; ++wncr;}  // taken-in-full cannot be last axis.  treat as if omitted, i. e. as if AN(c) decremented
    }else{
+#if 0  // obsolete
     // complementary axis.  Convert it to a bitmask of the elements that survive; get their count and first index
     I axn=axes[i].lenaxis;  // length of axis
     I cn=(axn+(BW-1))>>LGBW, *cmv;  // number of words needed for bitmask; base of mask
@@ -984,6 +1019,21 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
       )  // turn off the bit for each index, count number of 1s encountered
     axes[i].nsel=~n1; axes[i].sels=cmv;  // remember # of 1s (complement indicates complementary axis), location of mask
     if(likely(n1!=0)){for(n1=0;*cmv==0;n1+=BW,++cmv); axes[i].sel0=n1+CTTZI(*cmv);}  // find first 1
+#else
+    // complementary axis.  Sort it
+    I axn=axes[i].lenaxis, an=AN(aa), *cmv;  // length of axis, number of selectors, place to sort into
+    // copy into stataxes if possible, otherwise allocate (inplacing never possible)
+    if(an<=((I*)&stataxes[sizeof(stataxes)/sizeof(stataxes[0])]-cmbase)){cmv=cmbase; cmbase+=an;}  // fits in spare space in axes
+    else{A t; GATV0(t,INT,an,0) cmv=IAV0(t);}  // allocation required
+    // insertion sort the audited indexes into *cmv, discarding duplicates
+    I *iv=IAV(aa), cmvn=0;  // pointer to input, number of unique values sorted already
+    DO(AN(aa), I ix=iv[i]; ix+=REPSGN(ix)&axn; ASSERT((UI)ix<(UI)axn,EVINDEX)  // fetch, resolve neg, check range
+     I ins; for(ins=cmvn-1;ins>=0;--ins){if(ix==cmv[ins])goto dup; if(ix>cmv[ins])break; cmv[ins+1]=cmv[ins];}  // find insertion point
+     cmv[ins+1]=ix; ++cmvn; if(0){dup: for(++ins;ins<cmvn;++ins)cmv[ins]=cmv[ins+1];} // if dup, reclose insertion point
+    )
+    axes[i].nsel=~(axn-cmvn); axes[i].sels=cmv;  // remember # of sels (complement indicates complementary axis), location of mask
+    I gap; for(gap=0;gap<cmvn;++gap)if(cmv[gap]!=gap)break; axes[i].sel0=gap;  // find first index to write to
+#endif
    }
    axes[i].indsubx.ind=mtv; ++zr;  // triple-boxed selector gets one result axis
   }else{

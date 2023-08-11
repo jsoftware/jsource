@@ -616,20 +616,48 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
  ARGCHK3(a,w,ind);
  I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
  I wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; RESETRANK;
- if(likely(!ISSPARSE(AT(w)|AT(ind)))){
-  I aframelen=AR(a)-acr,wframelen=AR(w)-wcr;  // number of axes in frame of w
+ I at=AT(a), wt=AT(w), indt=AT(ind);
+ I cellframelen,cellx;  // frame of cell; if just 1 cell, its index
+ if(likely(!ISSPARSE(wt|indt))){
+  // non-sparse.
+  I ar=AR(a), wr=AR(w), aframelen=ar-acr,wframelen=wr-wcr;  // number of axes in frame
+  // handle fast and common case, where ind selects a single non-DIRECT cell (must be no frame), and not -@{`[`]}
+  if(aframelen+wframelen+(AN(ind)^1)+(indt&~NUMERIC)+(wt&~DIRECT)==0 && AN(a)>=0){  // | to make sure AN(ind)=0 doesn't get through
+   // get cell index and rank, and audit for validity
+   if(unlikely(!(indt&INT+B01)))RZ(ind=cvt(INT,ind))  // index of the single cell
+   I axlen=AS(w)[0]; cellframelen=wr>0; axlen=wr>0?axlen:1;  // len of frame of cell, and axis length
+   cellx=BIV0(ind); cellx+=axlen&REPSGN(cellx); ASSERT(BETWEENO(cellx,0,axlen),EVINDEX)
+   I cellsize; PROD(cellsize,wr-cellframelen,AS(w)+cellframelen)  // size of cell
+   // the selected are has shape ($ind),}.$w and must match the shape of a.  $ind is known to be all 1s.
+   // so, a must match w for the smaller of (#$a, <:#$w) axes; then any remaining axes of a must be 1s; and no axes of a beyond ind.
+   I matchrank=MIN(ar,wr-cellframelen);  // the number of axes of a and w that must match
+   if(unlikely(ar-matchrank!=0)){ASSERT(ar<=AR(ind)+wr-cellframelen,EVRANK) DO(ar-matchrank, ASSERT(AS(a)[i]==1,EVLENGTH))}  // 1s in higher axes
+   ASSERTAGREE(AS(a)+ar-matchrank,AS(w)+wr-matchrank,matchrank)  // verify a can be replicated to fill the result cell
+   // convert args as needed and check for inplaceability
+   if(unlikely(cellsize==0))R RETARG(w);  // if nothing to install, return arg unchanged
+   ASSERT((POSIFHOMO(AT(a),AT(w)))>=0,EVINHOMO);  // error if xy both not empty and not compatible
+   I t=maxtyped(AT(a),AT(w));  // get the type of the result: max of types
+   if(unlikely(TYPESNE(t,AT(a))))RZ(a=cvt(t,a));  // if a must change precision, do so
+   I k=bplg(t);  // lg2 of an atom of result
+   // inplaceability is explained in te main logic in merge2n
+   if(ASGNINPLACESGNNJA(SGNIF((I)jtinplace,JTINPLACEWX),w)
+      &&( ((AT(w)&t)>0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) )){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}  // inplaceable, use it
+   else{RZ(z=cvt(t,w));}  // copy old block, converting if needed
+   mvc(cellsize<<k,CAV(z)+(cellsize<<k)*cellx,AN(a)<<k,voidAV(a)); // copy a to the cell, replicating as needed
+   RETF(z);
+  }
+
+  // fast path not available.  Build axes
   ASSERTAGREE(AS(a),AS(w),MIN(aframelen,wframelen));  // if rank, check agreement
   I nframeaxes;  // will be # axes added to accommodate outer frame
-  // non-sparse.
-  I cellframelen;
-  z=0;  // use z to hold reworked ind
+  z=0;  // use z to hold reworked ind.  Error if not reset
 
   // Now we create z, which will hold the info to be passed into merge2.  
   // numeric m turns into a single list of validated indexes, as does singly-boxed numeric m; double-boxed m turns into
   // a list of boxes, one for each index.
   // We also need to know the frame of the cells, in cellframelen
   struct axis *axes, localaxes[6]; A alloaxes;  // put axes here usually
-  I wr=AR(w); I *ws=AS(w); I indr=AR(ind);
+  I *ws=AS(w); I indr=AR(ind);
 //  obsolete  b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
   A ind0;  // the contents that have the numbers
   if(unlikely(wcr==0)){

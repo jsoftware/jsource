@@ -49,7 +49,10 @@ struct __attribute__((aligned(CACHELINESIZE))) faxis {
  I lenaxis;  // the length of the axes (including frame) represented by this faxis struct, in items
  I lencell;  // size of item of this axis in atoms
  I nsel;  // number of selectors.  If negative, axis is complementary and *sels is a bitmask, value is ~len
- A ind;  // the original block of selectors for this axis, for rank purposes, or 0 if none.
+ union {
+  A ind;  // (up until result allocation) the original block of selectors for this axis, for rank purposes, or 0 if none.
+  I subx;   // (for complementary axes only, during the copy) index of next value to skip
+ } indsubx;
  I currselx;  // the next selector index to use.  For complementary, points after the previous 1-bit.  Init to 0 in axisfrom; not used in last axis
  I *sels;  // selectors.  If 0, axis is taken in full
  I currselv;  // value of current selector (i. e. index of value being copied).  init=sel0.  Not used in last axis.  Not used if taken in full
@@ -181,15 +184,15 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
  // convert lencell to bytes & roll it up; calculate base from sel0 values
  I wt=AT(w);
  I k=bplg(wt);  // lg of size of atom
- I framesize=1;  // will hold #cells in frame of last axis
- I zn;  // number of atoms in result
+// obsolete  I framesize=1;  // will hold #cells in frame of last axis
  I celllen=axes[r].lencell;  // length of cell of last axis, in atoms
+ I zn=celllen;  // number of atoms in result
  A z;  // result
  I nunitsels=r;  // number of leading axes containing exctly one selector.  When the axis below this prefix rolls over, we can stop, knowing that there are no higher selectors
  if(likely(AN(w)!=0)){  // normal case, w has atoms
   for(i=r-1;i>=0;--i){  // for axes BEFORE the last
    I absnsel=axes[i].nsel^REPSGN(axes[i].nsel);  // adjust for complementary indexing
-   DPMULDE(framesize,absnsel,framesize);  // count # cells in frame and selectors
+   DPMULDE(zn,absnsel,zn);  // count # cells in frame and selectors
    nunitsels=absnsel!=1?i:nunitsels;  // if this cell-count is not 1, reset the count of # 1s.
     // note: if some selector is empty and the others overflow, this will give limit error.  Sue me.
    axes[i].lencell<<=k;  // convert cellsize to bytes
@@ -197,12 +200,12 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
    axes[i].currselv=axes[i].sel0;  // set current=start, to begin
    axes[i].currselx=0;  // init first position being processed
   }
-  DPMULDE(framesize,celllen,zn);  // frame size * cell size
+// obsolete   DPMULDE(framesize,celllen,zn);  // frame size * cell size
   I nsel=axes[r].nsel;  // #selectors, neg if complementary
   I lenaxis=axes[r].lenaxis;  // length of last axis
   DPMULDE(zn,nsel^REPSGN(nsel),zn);  // * last-axis size, gives result size
 #define MINVIRTSIZE 32  // must have this many atoms to be virtual  scaf
-  if(((framesize-2)&(MINVIRTSIZE-zn))<0){  // if the last axis is applied only once, and result is big enough, and last axis not B01
+  if(((nunitsels-r)|(zn-MINVIRTSIZE))>=0){  // if there is only one axis left, and result is big enough, and last axis not B01  scaf B01???
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
    // Whether we should do so is a tricky question.  Surely, if the argument is big, since we may save a large indexed copy.
    // If the argument is small, the virtual is still better if it doesn't have to be realized; but it might be
@@ -220,7 +223,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     index0 = sels[0]; index0+=REPSGN(index0)&lenaxis; indexn=0;  // index of first item, set last item OK
     // check the last item before checking the middle.
     DQ(nsel-1, indexn=sels[1+i]; indexn+=REPSGN(indexn)&lenaxis; if(indexn!=index0+1+i){indexn=lenaxis; break;});
-    nsel=AR(axes[r].ind)!=1?0:nsel;  // if shape changes, set flag value to suppress returning entire w unchanged
+    nsel=AR(axes[r].indsubx.ind)!=1?0:nsel;  // if shape changes, set flag value to suppress returning entire w unchanged
    }else{
     // complementary indexing.  See if the inner bits are consecutive (in-full is impossible)
     // the number of leading 0s is .sel0.  If #leading+#trailing+nsel=lenaxis, the 1s are consecutive
@@ -247,7 +250,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     // install the axes for the cell of w: all axes except the frame and the selectors
     MCISH(zs,AS(w)+AR(w)-wcr,wcr)  // zs->start of cell shape
     // axes for the last selector
-    if(axes[r].nsel>=0){MCISH(zs-=AR(axes[r].ind),AS(axes[r].ind),AR(axes[r].ind));  // normal, back up to rank and copy
+    if(axes[r].nsel>=0){MCISH(zs-=AR(axes[r].indsubx.ind),AS(axes[r].indsubx.ind),AR(axes[r].indsubx.ind));  // normal, back up to rank and copy
     }else{*--zs=~axes[r].nsel;  // complementary, treat as list of appropriate length
     }
     // install 1s for the rest of the shape
@@ -264,14 +267,15 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   I *zs=&AS(z)[wf];
   for(i=hasr;i<=r;++i){  // for each axis coming from a
    if(axes[i].sels!=0){  // normal or complementary
-    if(axes[i].nsel>=0){MCISH(zs,AS(axes[i].ind),AR(axes[i].ind)) zs+=AR(axes[i].ind);  // normal, copy the rank
-    }else{*zs++=~axes[i].nsel;  // complementary, treat as list of appropriate length
+    if(axes[i].nsel>=0){MCISH(zs,AS(axes[i].indsubx.ind),AR(axes[i].indsubx.ind)) zs+=AR(axes[i].indsubx.ind);  // normal, copy the rank
+    }else{*zs++=~axes[i].nsel; axes[i].indsubx.subx=0; // complementary, treat as list of appropriate length and init for copy
     }
    }else{*zs++=axes[i].nsel;}  // in full, treat as length with length of axis
   }
   // install the axes for the cell of w: trailing axes, using zr since we don't know how many axes were discarded
   MCISH(zs,AS(w)+AR(w)-wcr,wcr)
- }else{z=axes[r].ind; AT(z)=wt;}  // if inplaceable, put the result where the axes were
+ }else{z=axes[r].indsubx.ind; AT(z)=wt;}  // if inplaceable, put the result where the axes were
+    // no need to init subx, since this path cannot have complementary indexes
 
  if(unlikely(zn==0)){I j;  // If no data to move, just audit the indexes and quit
   for(j=hasr;j<=r;++j){  // for each axis coming from a
@@ -409,13 +413,13 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  struct faxis axes[2];  // one for frame, one for data
  I m; PROD(m,wf,ws);  // #wcr-cells in w: tells if we need frame
  PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
- axes[0].lenaxis=m; axes[0].lencell=p*k; axes[0].nsel=m; axes[0].ind=mtv; // fill in frame axis
+ axes[0].lenaxis=m; axes[0].lencell=p*k; axes[0].nsel=m; axes[0].indsubx.ind=mtv; // fill in frame axis
  axes[0].currselx=0; axes[0].sels=0; axes[0].currselv=0; axes[0].sel0=0;  // fill in frame axis - should be 1 store
  I r=m>1;  // remember if frame is included as an axis.  #axes-1.  We need a leading axis in full if there are multiple cells of w
 
  // fill in last axis, for the indexes
  I wncr=wcr-((UI)wcr>0);  // rank of the cell that gets copied
- axes[r].lenaxis=p; axes[r].lencell=k; axes[r].nsel=an; axes[r].sels=AV(a); axes[r].ind=a;  // fill in selection axis
+ axes[r].lenaxis=p; axes[r].lencell=k; axes[r].nsel=an; axes[r].sels=AV(a); axes[r].indsubx.ind=a;  // fill in selection axis
  // if no frame, w cell-rank is 1, a is inplaceable, and an atom of w is the same size as an atom of a, preserve inplaceability of a (.ind is already filled in)
  // since inplacing may change the type, we further require that the block not be UNINCORPABLE, and the result also not DIRECT since
  // the copy may be interrupted by index error and be left with anvalid atoms
@@ -743,7 +747,7 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  struct faxis axes[2];  // one for frame, one for data
  I m; PROD(m,wf,ws);  // #wcr-cells in w: tells if we need frame
  I wselsz; PROD(wselsz,wcr,ws+wf);  // #atoms in major cell of w
- axes[0].lenaxis=m; axes[0].lencell=wselsz; axes[0].nsel=m; axes[0].ind=mtv; // fill in frame axis
+ axes[0].lenaxis=m; axes[0].lencell=wselsz; axes[0].nsel=m; axes[0].indsubx.ind=mtv; // fill in frame axis
  axes[0].currselx=0; axes[0].sels=0; axes[0].currselv=0; axes[0].sel0=0;  // fill in frame axis - should be 1 store
  I r=m>1;  // remember if frame is included as an axis.  #axes-1.  We need a leading axis in full if there are multiple cells of w
  // fill in last axis, for the indexes
@@ -754,10 +758,10 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  if(af==0){   // a has rank 0-1
   // the common case where a has a single atomic selector.  Build the sole selector in the axes block
   indv=&axes[r].sel0;  // there's only one number - put it into the initial-address spot
-  axes[r].ind=num(0);  // no result axes from this atomic selector - need any atom
+  axes[r].indsubx.ind=num(0);  // no result axes from this atomic selector - need any atom
  }else{
   A ind; GATV(ind,INT,nia,af,as)  // allocate a place for the results
-  axes[r].ind=ind; indv=IAV(ind);  // ind holds the values and the shape in the result
+  axes[r].indsubx.ind=ind; indv=IAV(ind);  // ind holds the values and the shape in the result
  }
  axes[r].sels=indv;  // point to the selectors from the axis block
  // now validate the indexes and calculate the selectors.  This is a short dot-product
@@ -937,7 +941,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
  else{A t; GATV0(t,INT,naxesreq*(sizeof(stataxes[0])>>LGSZI),1) axes=(struct faxis *)IAV1(t); cmbase=(I*)&stataxes[0];}  // rank 1 for alignment
   // In case user specified rank, we fill in a single axis for the frame.  If there is only 1 frame cell we will overwrite the axis
  I m; PROD(m,wf,ws);  // #wcr-cells in w: tells if we need frame
- axes[0].lenaxis=m; axes[0].nsel=m; axes[0].ind=mtv;
+ axes[0].lenaxis=m; axes[0].nsel=m; axes[0].indsubx.ind=mtv;
  axes[0].currselx=0; axes[0].sels=0; axes[0].currselv=0; axes[0].sel0=0;  // fill in frame axis - should be 1 store
  I hasr=m>1;  // remember if frame is included as an axis
  // process axes from back to front, building up cell sizes
@@ -981,13 +985,13 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
     axes[i].nsel=~n1; axes[i].sels=cmv;  // remember # of 1s (complement indicates complementary axis), location of mask
     if(likely(n1!=0)){for(n1=0;*cmv==0;n1+=BW,++cmv); axes[i].sel0=n1+CTTZI(*cmv);}  // find first 1
    }
-   axes[i].ind=mtv; ++zr;  // triple-boxed selector gets one result axis
+   axes[i].indsubx.ind=mtv; ++zr;  // triple-boxed selector gets one result axis
   }else{
    // normal axis.
    if(unlikely(!ISDENSETYPE(AT(aa),INT))){
     if(AR(aa)<(AT(aa)&B01))aa=zeroionei(BAV(aa)[0]);else RZ(aa=cvt(INT,aa));  // convert boolean or other arg to int, with special check for scalar boolean
    }
-   axes[i].nsel=AN(aa); axes[i].sels=IAV(aa); axes[i].sel0=0; axes[i].ind=aa;
+   axes[i].nsel=AN(aa); axes[i].sels=IAV(aa); axes[i].sel0=0; axes[i].indsubx.ind=aa;
    // audit and translate first index to speed reset
    if(likely(axes[i].nsel!=0)){I sel0=axes[i].sels[0]; sel0+=REPSGN(sel0)&axes[i].lenaxis; ASSERT((UI)sel0<(UI)axes[i].lenaxis,EVINDEX) axes[i].sel0=sel0;}
    zr+=AR(aa);  // each axis of selectors goes into the result

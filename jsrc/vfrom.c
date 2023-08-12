@@ -220,7 +220,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   I lenaxis=axes[r].lenaxis;  // length of last axis
   DPMULDE(zn,nsel^REPSGN(nsel),zn);  // * last-axis size, gives result size
 #define MINVIRTSIZE 32  // must have this many atoms to be virtual  scaf
-  if(((nunitsels-r)|(zn-MINVIRTSIZE))>=0){  // if there is only one axis left, and result is big enough, and last axis not B01  scaf B01???
+  if(((nunitsels-r)|(zn-MINVIRTSIZE))>=0){  // if there is only one axis left, and result is big enough
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
    // Whether we should do so is a tricky question.  Surely, if the argument is big, since we may save a large indexed copy.
    // If the argument is small, the virtual is still better if it doesn't have to be realized; but it might be
@@ -373,22 +373,27 @@ else{   // normal last axis
   }
   if(likely(r==0))break;  // if there is only 1 axis, we're done
   // roll up the axes, advancing the odometer 
-  I rodo=r-1;  // start on axis -2   scaf handle axis -2 separately
+  I rodo=r-1;  // start on axis -2   scaf handle axis -2 separately if registers are plenteous.  Have nextx/nsel/axr->sels be the values for axis 1, reloaded after the bottom of the wheel loop
   while(1){  // till we have handled all changing wheels
    struct faxis *axr=&axes[rodo];
-   if(axr->sels==0){
-    // axis taken in full.  advance to next cell
-    base+=axr->lencell;  // advance to next sequential cell
-    if(++axr->currselx!=axr->nsel)break;  // if this wheel doesn't roll over, stop here
-    base-=axr->nsel*axr->lencell;  // rollover: back this wheel to the beginning
-    axr->currselx=0;  // look at next wheel; reset this one
-   }else if(++axr->currselx!=(REPSGN(axr->nsel)^axr->nsel)){
-    // axis not in full and did not roll over.  Advance to next index
-    I nextx;  // will be the next index to use
-    if(likely(axr->nsel>=0)){  // complementary index?
-     // normal non-complementary index.  Step to the next row
-     SETNDX(nextx,axr->sels[axr->currselx],axr->lenaxis);  // fetch next index
-    }else{
+   I nextx=axr->currselx+1;  // next index number to use; if taken in full, is also the index itself
+   I nsel=REPSGN(axr->nsel)^axr->nsel;  // number of selectors in this wheel
+   if(nextx!=nsel){
+    // the current wheel is not rolling over
+    axr->currselx=nextx;  // save selector#, which is the loop counter
+    if(axr->sels!=0){  // if axis taken in full, nextx is already set
+// obsolete     // axis taken in full.  advance to next cell
+// obsolete     base+=axr->lencell;  // advance to next sequential cell
+// obsolete     if(nextx!=axr->nsel)break;  // if this wheel doesn't roll over, stop here
+// obsolete     base-=axr->nsel*axr->lencell;  // rollover: back this wheel to the beginning
+// obsolete     axr->currselx=0;  // look at next wheel; reset this one
+// obsolete      if(nextx!=(REPSGN(axr->nsel)^axr->nsel)){
+     // axis not in full and did not roll over.  Advance to next index
+     I axn=axr->lenaxis;  // length of this axis of w
+     if(likely(axr->nsel>=0)){  // complementary index?
+      // normal non-complementary index.  Step to the next row
+      SETNDX(nextx,axr->sels[nextx],axn);  // fetch next index
+     }else{
 #if 0  // obsolete 
      // complementary index.  Start after currselv and find the next 1-bit   scaf should rewrite to use the complementary indexes, not a mask
      nextx=axr->currselv+1;  // bit# to start look
@@ -398,28 +403,28 @@ else{   // normal last axis
       nextx=(nextx+(BW-1))&-BW;  // if none, advance to next word and keep looking
      }
 #else
-     // complementary index.  .currselv is the last index we returned; .indsubx.subx is a valid starting place to search for the next index 
-     // we know there is another valid index.
-     nextx=axr->currselv+1; I subx=axr->indsubx.subx; // bit# to start look, place to look for match
-     I nextcomp;  // next complementary index to use
-     while((nextcomp=subx<axr->lenaxis-~axr->nsel?axr->sels[subx]:axr->lenaxis)<=nextx){  // when sel doesn't limit, advance to next sel
-      nextx+=nextcomp==nextx; axr->indsubx.subx=++subx;  // if sel matches nextx, advance nextx to skip it
-     }
+      // complementary index.  .currselv is the last index we returned; .indsubx.subx is a valid starting place to search for the next index 
+      // we know there is another valid index.
+      nextx=axr->currselv+1; I subx=axr->indsubx.subx; // bit# to start look, place to look for match
+      I nextcomp;  // next complementary index to use
+      while((nextcomp=subx<axn-nsel?axr->sels[subx]:axn)<=nextx){  // when sel doesn't limit, advance to next sel; hidden last value of axn
+       nextx+=nextcomp==nextx; axr->indsubx.subx=++subx;  // if sel matches nextx, advance nextx to skip it
+      }
 #endif
+     }
     }
     base+=(nextx-axr->currselv)*axr->lencell;  // move base by amount of index movement
-    axr->currselv=nextx;  // set next index
+    axr->currselv=nextx;  // set next index, also saving last one used for relocation
     break;  // when wheel doesn't roll over, stop processing wheels
    }
    // here the current axis is rolling over.
    if(rodo<=0)goto endaxes;  // when we roll over the biggest wheel, quit
    axr->currselx=0;   // back to start
    base+=(axr->sel0-axr->currselv)*axr->lencell;  // move base by amount of index movement
-   axr->indsubx.subx=axr->currselv=axr->sel0;  // set starting index for wheel and hint
+   axr->indsubx.subx=axr->currselv=axr->sel0;  // set starting index for wheel (and hint, in case complementary)
    --rodo;  // back up to increment previous axis
   }  // wheel rolled over, advance to next wheel
-  // base has been advanced
- }  // loop till all _1-cells moved
+ }  // loop till all _1-cells moved.   base has been advanced
 endaxes:;
  RETF(z);
 }
@@ -763,7 +768,7 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  I nia; PROD(nia,af,as);     // number of 1-cells of a
  I wr=AR(w); I *ws=AS(w); I wcr=wr-wf;
  ASSERT(naxa<=wcr,EVLENGTH)  // the number of axes must not exceed the length of a major cell
- if(unlikely((-AN(a)&-AN(w))>=0)){A z;  // empty array, either a or w   scaf could avoid this?
+ if(unlikely((-AN(a)&-AN(w))>=0)){A z;  // empty array, either a or w
   // if empty a, return w in full, one copy per 1-cell of a, as w"1 a   (}:$a) $ ,:w
   if(unlikely(AN(a)==0))R df1(z,a,qq(w,zeroionei(1)));
   // empty w. allocate empty result, move in shape: frame of w, frame of a, shape of item
@@ -2370,7 +2375,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      // mplr is dp, prow is qp.
      TWOPRODQD(prowdh,prowdl,mabsfuzz,iph,ipl) prowdh=iph; prowdl=ipl;
     }
-    // (iph,ipl) = - prowdh*pcoldh    scaf we could skip the extended calc if both mpcands are dp, as they are for swaps
+    // (iph,ipl) = - prowdh*pcoldh    we could skip the extended calc if both mpcands are dp, as they are for some swap calcs; but we deem it not worthwhile
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
     if(!(dpflag&16)){ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);}  // accumulate middle pps - can skip for b0 when both mpcands are dp
     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract

@@ -189,6 +189,16 @@ i     -: {&m ^:_1 (i=: ?3 2$#m) { m=:?5 3$1000
 
 '3 - ]' -: ((1: + 2"_) - ]) b. _1
 '3 * ]' -: ([ % (1: + 2"_)) b. _1
+'4 * ]' -: ([ % (2"_ + 2"_)) b. _1
+'7 * ]' -: ([ % (2"_ + 5:)) b. _1
+'domain error' -: ". etx '((1: + 2"_1) - ]) b. _1'  NB. constant must have infinite rank
+'domain error' -: ". etx '([ % (1: + 2"_1)) b. _1'
+'domain error' -: ". etx '([ % (2"_1 + 2"_1)) b. _1'
+'domain error' -: ". etx '([ % (2"_1 + 5:)) b. _1'
+'domain error' -: ". etx '((1: + 2"1) - ]) b. _1'
+'domain error' -: ". etx '([ % (1: + 2"2)) b. _1'
+'domain error' -: ". etx '([ % (2"1 + 2"_)) b. _1'
+'domain error' -: ". etx '([ % (2"2 + 5:)) b. _1'
 NB. constant expressions through names
 f =: 2:
 '0.5 * ]' -: ([ * f) b. _1

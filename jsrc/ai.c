@@ -15,7 +15,7 @@ static B ip(A w,C c,C d){A f,g;V*v;
 
 static B jtconsf(J jt,A w){C c;
  c=ID(w);
- if(c==CFCONS||c==CQQ&&(NUMERIC&AT(FAV(w)->fgh[0])))R 1;  // 9: or m"n  (scaf should test infinite rank?)
+ if(c==CFCONS||c==CQQ&&(NUMERIC&AT(FAV(w)->fgh[0]))&&(FAV(w)->localuse.lu1.srank[0]==RMAX)&&(FAV(w)->localuse.lu1.srank[1]==RMAX)&&(FAV(w)->localuse.lu1.srank[2]==RMAX))R 1;  // 9: or m"_
  if(c==CFORK&&FAV(w)->fgh[2])R jtconsf(jt,unname(FAV(w)->fgh[0]))&&jtconsf(jt,unname(FAV(w)->fgh[2]));  //constant g constant
  R 0;
 }    // 1 iff w is a constant function or (constant function) g (constant function)

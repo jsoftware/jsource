@@ -139,7 +139,7 @@ F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
  R z;
 }    /* permutation parity; # interchanges to get i.n */
 
-// reduced form seems to be (>:i.-$y) #: y where y is the permutation number (note there is a redundant 0 at the end)
+// reduced form seems to be (>:i.<:-$y) #: y where y is the permutation number (note there is a redundant 0 at the end)
 static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  ARGCHK1(w);
  n=AS(w)[AR(w)-1]; PROD(m,AR(w)-1,AS(w)); v=AV(w);  // n=length of each permutation, m=#permutations
@@ -166,13 +166,13 @@ DF1(jtadot1){A y;I n;
  R base2(cvt(XNUM,apv(n,n,-1L)),rfd(y));
 }
 
-// x A. y
+// x A. y, 
 F2(jtadot2){A m,p;I n;
  ARGCHK2(a,w);
  SETIC(w,n); p=sc(n); if(XNUM&AT(a))p=cvt(XNUM,p); RZ(m=fact(p));
  ASSERT(all1(le(negate(m),a))&&all1(lt(a,m)),EVINDEX);
  if(!AR(w)){RZ(vi(a)); RCA(w);}
- RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));
+ RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));  // (i.@-&.:<: y) #: x 
 // obsolete  R equ(w,IX(n))?p:fromA(p,w);  // special case when w is index vector - just return permutation.  Otherwise shuffle items of w
  R (AR(w)==1&&AT(w)&B01+INT&&jtisravelix(jt,w))?p:fromA(p,w);  // special case when w is index vector - just return permutation.  Otherwise shuffle items of w
  // pristinity unchanged here: if w boxed, it was set by {

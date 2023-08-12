@@ -136,6 +136,30 @@ static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,wr,wcr;
  R z;
 }    /* (<ind){"r w, sparse w */
 
+#define SETNDX(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if(unlikely((UI)ndxvbl>=(UI)limexp)){ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // if ndxvbl>p, adding p can never make it OK
+// a is list of boxes, w is array, wf is frame of operation, *ind will hold the result
+// if the opened boxes have contents that are all lists with the same item shape (treating atoms as same as singleton lists), create an array of all the indexes; return that array
+// return 0 if error, 1 if the boxes were not homogeneous.
+// used externally
+A jtaindex(J jt,A a,A w,I wf){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
+ ARGCHK2(a,w);
+ an=AN(a);
+ if(!an)R (A)1;
+ ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=C(av[0]); c=AN(q);   // q=addr, c=length of first box
+ if(!c)R (A)1;  // if first box is empty, return error to revert to the slow way
+ ASSERT(c<=AR(w)-wf,EVLENGTH);
+ GATV0(z,INT,an*c,1+ar); MCISH(AS(z),AS(a),ar) AS(z)[ar]=c; v=AV(z);  // allocate array for result.  Mustn't copy shape from AS(a) - it overfetches
+ for(j=0;j<an;++j){
+  q=C(av[j]); t=AT(q);
+  if(t&BOX)R (A)1;   // if any contents is boxed, error
+  if(!ISDENSETYPE(t,INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
+  if((((c^AN(q))-1)&(AR(q)-2))>=0)R (A)1;   // if not the same length, or rank>1, error
+  u=AV(q);
+  DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);   // copy in the indexes, with correction for negative indexes
+ }
+ R z;
+}    /* <"1 a to a where a is an integer index array */
+
 F2(jtfrombs){A ind;I acr,af,ar,wcr,wf,wr;
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;

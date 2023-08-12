@@ -35,8 +35,8 @@ DF1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv
 #define SETNDX(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if(unlikely((UI)ndxvbl>=(UI)limexp)){ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // if ndxvbl>p, adding p can never make it OK
 #define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // this version write to input if the value was negative
 #define SETJ(jexp) SETNDX(j,jexp,p)
-
 #if 0  // obsolete 
+
 #define IFROMLOOP(T)        \
  {T   * RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
   if(1==an){v+=j;   DQ(m,                                    *x++=*v;       v+=p; );}  \
@@ -179,10 +179,10 @@ while(1){ \
  if(gapn>=nl)break; gap0=gapn; /* if trailing indexes pushed gap off the end, finis */ \
 } \
 zbase=zv; }
-
 #endif
-
 #if 0 // obsolete 
+
+
  {T *zv=zbase,*bv=(T*)base; I *ssv=ss; I msk=*ssv; DO(ns, while(msk==0){bv+=BW; msk=*++ssv;} *zv++=bv[CTTZI(msk)]; msk&=msk-1;) zbase=zv;}
 #define fcopyC8 fcopyC(I)
 #define fcopyC4 fcopyC(I4)
@@ -820,30 +820,8 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  EPILOG(z);  // we have to release the virtual block so that w is inplaceable later on in the sentence
 #endif
 }    /* (<"1 a){"r w, dense w, integer array a */
+#if 0  // obsolete
 
-#define AUDITPOSINDEX(x,lim) if(!BETWEENO((x),0,(lim))){if((x)<0)break; ASSERT(0,EVINDEX);}
-// a is list of boxes, w is array, wf is frame of operation, *ind will hold the result
-// if the opened boxes have contents that are all lists with the same item shape (treating atoms as same as singleton lists), create an array of all the indexes; return that array
-// return 0 if error, 1 if the boxes were not homogeneous.
-// used externally
-A jtaindex(J jt,A a,A w,I wf){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
- ARGCHK2(a,w);
- an=AN(a);
- if(!an)R (A)1;
- ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=C(av[0]); c=AN(q);   // q=addr, c=length of first box
- if(!c)R (A)1;  // if first box is empty, return error to revert to the slow way
- ASSERT(c<=AR(w)-wf,EVLENGTH);
- GATV0(z,INT,an*c,1+ar); MCISH(AS(z),AS(a),ar) AS(z)[ar]=c; v=AV(z);  // allocate array for result.  Mustn't copy shape from AS(a) - it overfetches
- for(j=0;j<an;++j){
-  q=C(av[j]); t=AT(q);
-  if(t&BOX)R (A)1;   // if any contents is boxed, error
-  if(!ISDENSETYPE(t,INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
-  if((((c^AN(q))-1)&(AR(q)-2))>=0)R (A)1;   // if not the same length, or rank>1, error
-  u=AV(q);
-  DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);   // copy in the indexes, with correction for negative indexes
- }
- R z;
-}    /* <"1 a to a where a is an integer index array */
 
 // needed for sparse
 static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
@@ -874,7 +852,6 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  R 1;
 }    /* verify that <"1 a is valid for (<"1 a){w - used only for sparse matrices */
 
-#if 0  // obsolete
 static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTRICT pv,
   qn,qr,* RESTRICT qv,* RESTRICT s,wf,wr,* RESTRICT ws,zn;
  wr=AR(w); ws=AS(w); wf=wr-r; 
@@ -909,32 +886,9 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  RETF(z);   // return block
 }   /* (<p;q){"r w  for positive integer arrays p,q */
 #endif
-
-// axislen is length of axis, ind is doubly-boxed selector that is itself a boxed type, therefore complementary
-// return block of indexes, or ds(CACE) if axis is taken in full
-// used externally
-A jtcompidx(J jt,I axislen,A ind){
- ASSERT(!AR(ind),EVINDEX)  // contents must be a scalar box
- ind=C(AAV(ind)[0]);  // move to the contents
- if(AN(ind)==0)R ds(CACE);  // axis taken in full: return flag value
- ASSERT(axislen>0,EVINDEX)  // empty axis - no index would be valid, but we have indexes
- // there are values.  go through them, validating, and cross out the ones that are used
- // Since we expect the count to be small, we allocate a return block of the maximum size.  We then use the tail end
- // to hold a bitmask of the values that have not been crossed off
- RZ(ind=likely(ISDENSETYPE(AT(ind),INT))?ind:cvt(INT,ind));  // ind is now an INT vector, possibly the input argument
- I allolen=MAX(axislen,1);  // number of words needed.  There must be at least one value crossed off, but we always need at least 1 word for bitmask
-                            // We also reserve one word of buffer between the indices and the bitmask since, in the case of (for example) (<<<_1) { i.65, we could end up overwriting the last word of the bitmask before reading it
-                            // An alternative would be to pipeline the loop, loading the mask for the next iteration before completing the previous iteration, but this would be annoying and bloat
- A z; GATV0(z,INT,allolen,1) I *zv0=IAV1(z), *zv=zv0;   // allocate the result/temp block.  
- I bwds=(axislen+(BW-1))>>LGBW;  // number of words needed: one bit for each valid index value
- I *bv=zv+allolen-bwds; mvc(bwds*SZI,bv,SY_64?4*SZI:2*SZI,validitymask); bv[bwds-1]=~((~1ll)<<((axislen-1)&(BW-1)));  // fill the block with 1s to indicate we need to write; clear ending 0s
- I *iv=IAV(ind); DO(AN(ind), I ix=iv[i]; if((UI)ix>=(UI)axislen){ix+=axislen; ASSERT((UI)ix<(UI)axislen,EVINDEX)} bv[ix>>LGBW]&=~(1ll<<(ix&(BW-1))); )  // turn off the bit for each index
- I zbase=0; DO(bwds, I bmask=*bv++; while(bmask){I bitno=CTTZI(bmask); *zv++=zbase+bitno; bmask&=bmask-1;} zbase+=BW;)  // copy an index for each remaining bit, clearing LSBs one by one
- AN(z)=AS(z)[0]=zv-zv0;
- R z;
-}
-
 #if 0 // obsolete 
+
+
 // n is length of axis, w is doubly-unboxed selector
 // result is list of selectors - complementary if w is boxed, with a: standing for axis taken in full
 static A jtafi(J jt,I n,A w){A x;
@@ -968,7 +922,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
  ASSERT(1>=AR(c),EVRANK);  // boxes may not have rank > 1
  ASSERT(AN(c)<=wcr,EVLENGTH);  // number of axes must not exceed #axes in major cell
  I *ws=AS(w);  // #axes-1.  We need a leading axis in full if there are multiple cells of w
- struct faxis stataxes[4], *axes;  // one for frame, several for data
+ struct faxis stataxes[5], *axes;  // one for frame, several for data
  I *cmbase;  // start of area we can use for complementary bitmasks
  UI naxesreq=AN(c)+!!wf;  // max # axes we might need
  if(likely(naxesreq<=sizeof(stataxes)/sizeof(stataxes[0]))){axes=stataxes; cmbase=(I*)&stataxes[naxesreq]; }
@@ -1029,7 +983,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
     I *iv=IAV(aa), cmvn=0;  // pointer to input, number of unique values sorted already
     DO(AN(aa), I ix=iv[i]; ix+=REPSGN(ix)&axn; ASSERT((UI)ix<(UI)axn,EVINDEX)  // fetch, resolve neg, check range
      I ins; for(ins=cmvn-1;ins>=0;--ins){if(ix==cmv[ins])goto dup; if(ix>cmv[ins])break; cmv[ins+1]=cmv[ins];}  // find insertion point
-     cmv[ins+1]=ix; ++cmvn; if(0){dup: for(++ins;ins<cmvn;++ins)cmv[ins]=cmv[ins+1];} // if dup, reclose insertion point
+     cmv[ins+1]=ix; ++cmvn; if(0){dup: for(++ins;ins<cmvn;++ins)cmv[ins]=cmv[ins+1];} // if dup, reclose insertion point.  Do it each time since it probably never happens
     )
     axes[i].nsel=~(axn-cmvn); axes[i].sels=cmv;  // remember # of sels (complement indicates complementary axis), location of mask
     I gap; for(gap=0;gap<cmvn;++gap)if(cmv[gap]!=gap)break; axes[i].sel0=gap;  // find first index to write to
@@ -1170,9 +1124,34 @@ F2(jtsfrom){
    }
   }
 #endif
- }else{A ind;
+ }else{
   // sparse.  See if we can audit the index list.  If we can, use it, else execute the slow way
-  RE(aindex1(a,w,0L,&ind)); if(ind)R frombsn(ind,w,0L);
+  A z;I c,i,k,n,t,*v,*ws;
+  n=AN(a); t=AT(a); if(AR(a)==0)goto mustbox;  // revert to normal code for atomic a
+  ws=AS(w); c=AS(a)[AR(a)-1];   // c = length of 1-cell
+  if(((n-1)|(c-1)|SGNIF(t,BOXX))<0)goto mustbox;  // revert to normal code for empty or boxed a
+  ASSERT(c<=AR(w),EVLENGTH);
+  PROD(n,AR(a)-1,AS(a));  v=AV(a); // n now=number of 1-cells of a   v=running pointer through a
+  // Go through a fast verification pass.  If all values nonnegative and valid, return original a
+  if(t&INT){  // if it's INT already, we don't need to move it.
+#define AUDITPOSINDEX(x,lim) if(!BETWEENO((x),0,(lim))){if((x)<0)break; ASSERT(0,EVINDEX);}
+   switch(c){I c0,c1,c2;
+   case 2:
+    c0=ws[0], c1=ws[1]; for(i=n;i>0;--i){AUDITPOSINDEX(v[0],c0) AUDITPOSINDEX(v[1],c1)  v+=2;} break;
+   case 3:
+    c0=ws[0], c1=ws[1], c2=ws[2]; for(i=n;i>0;--i){AUDITPOSINDEX(v[0],c0) AUDITPOSINDEX(v[1],c1) AUDITPOSINDEX(v[2],c2) v+=3;} break;
+   default:
+    for(i=n;i>0;--i){DO(c, k=*v; AUDITPOSINDEX(k,ws[i]) ++v;); if(k<0)break;} break; 
+   }
+  }else i=1;  // if not INT to begin with, we must convert
+  if(likely(i==0)){z=a;  // If all indexes OK, return the original block
+  }else{
+   // There was a negative index.  Allocate a new block for a and copy to it.  It must be writable
+   RZ(z=ISDENSETYPE(t,INT)?ca(a):cvt(INT,a)); v=AV(z);
+   DQ(n, DO(c, SETNDXRW(k,*v,ws[i]) ++v;););  // convert indexes to nonnegative & check for in-range
+  }
+  R frombsn(z,w,0L);  // handle the special case
+mustbox:;
  }
  // If we couldn't handle it as a special case, do it the hard way
  A z; RETF(from(IRS1(a,0L,1L,jtbox,z),w));
@@ -1227,12 +1206,14 @@ DF2(jtfetch){A*av, z;I n;F2PREFIP;
 }
 
 #if C_AVX2
+#if 0  // obsolete 
 // see if row,col is in exclusion list.  Exclusion list is a list of col|col with the smaller value in the high-order part
 // Result is 0 if OK to accept the combination
 static int notexcluded(I *exlist,I nexlist,I col,I row){I colrow=(col<row)?(col<<32)+row:(row<<32)+col;  // canonicalize column numbers into one value
  while(nexlist--)if(*exlist++==colrow)R 0;
  R 1;
 }
+#endif
 
 // everything we need for one core's execution - shared by all cores
 struct __attribute__((aligned(CACHELINESIZE))) mvmctx {

@@ -646,8 +646,8 @@ static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);
   // non-sparse.
   I ar=AR(a), wr=AR(w), aframelen=ar-acr,wframelen=wr-wcr;  // number of axes in frame
   // handle fast and common case, where ind selects a single non-DIRECT cell (must be no frame), and not -@{`[`]}
-  I notonecelldirect=aframelen+wframelen+(AN(ind)^1)+(wt&~DIRECT)+SGNTO0(AN(a));  // nonzero if cannot use single-cell code
-  if((notonecelldirect+(indt&~NUMERIC))==0){
+  I notonecelldirect=aframelen+wframelen+(wt&~DIRECT)+SGNTO0(AN(a));  // nonzero if cannot use single-cell code
+  if((notonecelldirect+(AN(ind)^1)+(indt&~NUMERIC))==0){
    // get cell index and rank, and audit for validity
    if(unlikely(!(indt&INT+B01)))RZ(ind=cvt(INT,ind))  // index of the single cell
    I axlen=AS(w)[0]; cellframelen=wr>0; axlen=wr>0?axlen:1;  // len of frame of cell, and axis length
@@ -696,7 +696,10 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
    if(indr==0){  // scalar ind is common enough to test for
     if(!ISDENSETYPE(AT(ind),INT)){A tind; RZSUFF(tind=cvt(INT,ind),R jteformat(jt,self,a,w,ind);); ind=tind;}  // ind is now an INT vector, possibly the input selector
     if(likely((UI)IAV(ind)[0]<(UI)ws[wframelen]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[wframelen]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[wframelen]));}  // if the single index is in range, keep it; if neg, convert it quickly
-   }else RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind););  // ind is numeric list/array: create (or keep) list of cell indexes, of rank cellframelen  goto boxednumeric2 with flags set
+   }else{  // ind is numeric list/array
+    if((((UI)indr<2)+notonecelldirect+(AN(ind)^cellframelen))==0){ind0=ind; goto indexforonecell;}  // if ind has rank>1, it's index lists: check for only 1 cell that can be processed quickly and xctl to it
+    RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind);); //  otherwise, create (or keep) list of cell indexes, of rank cellframelen
+   }
   }else if(unlikely(indr!=0)){
    // All this is deprecated, should be domain error
    // ind is a list of boxes.  The contents had better all be numeric, and opening them must not use fill
@@ -820,6 +823,7 @@ boxednumeric:
     if((notonecelldirect+(AN(ind0)^cellframelen))==0){
      // there is only one cell, and it can be handled by the fast code (i. e. direct and not -@{`[`]}).  The rank of the array it is in is immaterial, except for agreement with a
      // empty list (more precisely, empty 1-cells) also come through here for DIRECT one-cell types, and take the array in full (0 axes, with the rest taken in full)
+indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
      indframe=AR(ind0)-1; indframe^=REPSGN(indframe);  // number of leading singleton axes, to compare for agreement
      if(unlikely(!(AT(ind0)&INT)))RZ(ind0=cvt(INT,ind0));  // index must be integer
      cellx=0; DO(cellframelen, I axn=AS(w)[i]; I j=IAV(ind0)[i]; j+=axn&REPSGN(j); ASSERT(BETWEENO(j,0,axn),EVINDEX) cellx*=axn; cellx+=j;)  // convert the indexes to a single cell-index

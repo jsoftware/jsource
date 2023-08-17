@@ -117,9 +117,9 @@ typedef AD *A;
 #define JTTHORNY    (((I)3)<<JTTHORNYX)
 #define JTTHORNXX       4  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: vert
 #define JTTHORNX    (((I)3)<<JTTHORNXX)
-// following bit is used in the call to jtcelloffset
-#define JTCELLOFFROMX   0  // treat a single list as if a rank-2 array
-#define JTCELLOFFROM    (((I)1)<<JTCELLOFFROMX)
+// obsolete // following bit is used in the call to jtcelloffset
+// obsolete #define JTCELLOFFROMX   0  // treat a single list as if a rank-2 array
+// obsolete #define JTCELLOFFROM    (((I)1)<<JTCELLOFFROMX)
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2

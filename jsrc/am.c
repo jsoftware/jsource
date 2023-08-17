@@ -502,22 +502,25 @@ endamend:;
 
 // Convert list/table of indexes to array of cell offsets (the number of the atom starting the cell)
 // w has rank > 0.  Result has shape }:$ind
-// This is used by ind} and <"1@[ { ]  which have different specs when ind is a list.  We use a flag in jt:
-// we follow the spec for m}, in which a list ind is treated like a table with rows of length 1, unless JTCELLOFFROM
-// is set, in which case we treat ind as a 1-row table
+// This is used by ind} and (<ind)}  which have different specs when ind is a list.  We use wframelen as a flag: if positive,
+// we handle (<ind)} which treats ind as a 1-row table, otherwise ind} in which a list ind is treated like a table with rows of length 1, i. e. a list of atomic selectors
 // The indexes are audited for validity and negative values
 // This is like pind/aindex1 followed by pdt, but done in registers and without worrying about checks for overflow, since the result
 // if valid will fit into an integer.
-A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;F1PREFIP;
+static A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;
+// obsolete F1PREFIP;
  ARGCHK1(w);
  if(AR(ind)<2){
-  // rank of ind is 0 or 1.  Treat as list of first-axis values (as is suitable for m}) unless FROM is specified and rank=1 and length>1; then treat as list of successive axes
-  if(!((I)jtinplace&(AN(ind)>1)&JTCELLOFFROM))RZ(z=pind(AS(w)[wframelen],ind));  // (m}only, or length<2) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
-  // if FROM on list, leave z=0 and fall through to treat as table
-  }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
+  // rank of ind is 0 or 1.  Treat as list of first-axis values (as is suitable for (<ind)}) unless ind} is specified and rank=1 and length>1; then treat as list of successive axes
+// obsolete   if(!((I)jtinplace&(AN(ind)>1)&JTCELLOFFROM))RZ(z=pind(AS(w)[wframelen],ind));  // (m} only, or length<2) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
+  if((wframelen|(AN(ind)-2))<0)RZ(z=pind(AS(w)[~wframelen],ind));  // (m} only, or length<2) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
+  // if (<ind)} on list, leave z=0 and fall through to treat as table
  }
+// obsolete else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
+// obsolete  }
  if(likely(z==0)){  // if not handled already...
-  // rank of ind>1 (or = if CELLOFFROM), and rows of ind are longer than 1. process each row to a cell offset
+  wframelen^=REPSGN(wframelen);  // remove flag, leaving wframelen
+  // rank of ind>1 (or = if (<ind)}), and rows of ind are longer than 1. process each row to a cell offset
   I naxes = AS(ind)[AR(ind)-1];
   I nzcells; PROD(nzcells,AR(ind)-1,AS(ind));
   if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // w is now an INT vector, possibly the input argument
@@ -610,8 +613,11 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen,I wframelen){A j=0,k,*v,x;I b;I d
 #endif
 
 // axislen is length of axis, ind is doubly-boxed selector that is itself a boxed type, therefore complementary
-// return bitmask of indexes, or ds(CACE) if axis is taken in full
+// return list of indexes, or ds(CACE) if axis is taken in full
 // used externally
+// We return the actual indexes rather than a bitmask or the cleaned list of complementary indexes.  This is because
+// (1) complementary amend is rare; (2) since we handle 2 axes at a time, many final routines would be needed to treat
+// complemented axes separately 
 static A jtcompidx(J jt,I axislen,A ind){
  ASSERT(!AR(ind),EVINDEX)  // contents must be a scalar box
  ind=C(AAV(ind)[0]);  // move to the contents
@@ -623,7 +629,7 @@ static A jtcompidx(J jt,I axislen,A ind){
  RZ(ind=likely(ISDENSETYPE(AT(ind),INT))?ind:cvt(INT,ind));  // ind is now an INT vector, possibly the input argument
  I allolen=MAX(axislen,1);  // number of words needed.  There must be at least one value crossed off, but we always need at least 1 word for bitmask
                             // We also reserve one word of buffer between the indices and the bitmask since, in the case of (for example) (<<<_1) { i.65, we could end up overwriting the last word of the bitmask before reading it
-                            // An alternative would be to pipeline the loop, loading the mask for the next iteration before completing the previous iteration, but this would be annoying and bloat
+                            // An alternative would be to pipeline the loop, loading the mask for the next iteration before completing the previous iteration
  A z; GATV0(z,INT,allolen,1) I *zv0=IAV1(z), *zv=zv0;   // allocate the result/temp block.  
  I bwds=(axislen+(BW-1))>>LGBW;  // number of words needed: one bit for each valid index value
  I *bv=zv+allolen-bwds; mvc(bwds*SZI,bv,SY_64?4*SZI:2*SZI,validitymask); bv[bwds-1]=~((~1ll)<<((axislen-1)&(BW-1)));  // fill the block with 1s to indicate we need to write; clear ending 0s
@@ -698,7 +704,7 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
     if(likely((UI)IAV(ind)[0]<(UI)ws[wframelen]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[wframelen]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[wframelen]));}  // if the single index is in range, keep it; if neg, convert it quickly
    }else{  // ind is numeric list/array
     if((((UI)indr<2)+notonecelldirect+(AN(ind)^cellframelen))==0){ind0=ind; goto indexforonecell;}  // if ind has rank>1, it's index lists: check for only 1 cell that can be processed quickly and xctl to it
-    RZSUFF(z=jtcelloffset(jt,w,ind,wframelen),R jteformat(jt,self,a,w,ind);); //  otherwise, create (or keep) list of cell indexes, of rank cellframelen
+    RZSUFF(z=jtcelloffset(jt,w,ind,~wframelen),R jteformat(jt,self,a,w,ind);); //  otherwise, create (or keep) list of cell indexes, of rank cellframelen.  ~ indicates ind} semantics
    }
   }else if(unlikely(indr!=0)){
    // All this is deprecated, should be domain error
@@ -708,7 +714,7 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
     if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,1,"(001) (x (<\"0 array)} y): consider using (<<array)}\n"));
     goto doubleboxednumeric;  // the boxes were created with <"0 array.  That is the same as <<array now
    }else if(AR(ind0)==indr+1){
-    if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,2,"(002) (x (<\"1 array)} y): consider using array}\n"));
+    if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,2,"(002) (x (<\"1 array)} y): consider using <array} or array}\n"));
     goto boxednumeric;  // the boxes were created with  <"1 array, which is like <array now
    }else ASSERT(0,EVRANK)  // error if not <"0 or <"1
   }else{
@@ -830,7 +836,8 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
      goto onecellframe; // xctl to the code that handles 1-cell amend
     }
     // Convert the array of index lists to an array of cell indexes
-    if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
+// obsolete     if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
+    if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset(jt,w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }
   }
 // obsolete noaxes:;

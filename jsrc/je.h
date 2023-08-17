@@ -692,7 +692,7 @@ extern D        jtbindd(J,D,D);
 extern B        jtbitwisecharamp(J,UC*,I,UC*,UC*);
 extern B        jtboxatop(J,A);
 extern B        jtcdinit(JS);
-extern A        jtcelloffset(J,AD * RESTRICT,AD * RESTRICT,I);
+// obsolete extern A        jtcelloffset(J,AD * RESTRICT,AD * RESTRICT,I);
 extern A        jtcharmap(J,A,A,A);
 extern B        jtchecksi(J);
 extern A        jtclonelocalsyms(J,A);

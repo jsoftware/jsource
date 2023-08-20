@@ -57,7 +57,7 @@ NB. obsolete     parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. retore Fk flag
     if. 0=nthr do.
       assert. x -: savres  NB. single-threaded - expect exact result
     elseif. #opts do.
-      assert. opts e.~ 0 4 { savres  NB. multithreaded, with alternative results
+      assert. opts e.~ (({:$opts){.0 4) { savres  NB. multithreaded, with alternative results; match as many as are given
     else.
       assert. x -:&(0 4&{) savres  NB. multithreaded, match type and minimizer
     end.
@@ -167,7 +167,7 @@ for_t. i. 4 do.
   beta =. (#rvt) $ 0.4
   bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
-  parms =.              1         0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.         __   _1.
+  parms =.              1         0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.       __   _1.
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;parms;bkbeta;beta
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;parms;bkbeta;beta
@@ -241,6 +241,7 @@ NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1 
   assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
 
   NB. thresholds
+  NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   M =. 2 {. ,: ,.              8 $ 1e_4
   bk =. 2 {. ,: ($bkbeta) $    0.5 , 7 # 1.
   assert. 0 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
@@ -248,17 +249,24 @@ NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1 
   assert. 1 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_2 (6)} parms);bkbeta;beta
   assert. 3 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 1e_2 (5 6)} parms);bkbeta;beta
   assert. 4 _1 0 0 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 0. (7 9)} parms);bkbeta;beta  NB. row 0 now below threshold but 0 cuts off, unbounded
-  assert. 2 0 1 8 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 (7)} parms);bkbeta;beta  NB. row 0 now below threshold, nonimp
+  assert. 2 0 1 8 _10000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 (7)} parms);bkbeta;beta  NB. row 0 now below threshold, nonimp
+  M =. 2 {. ,: ,.              8 $ 1000.
+  bk =. 2 {. ,: ($bkbeta) $    8 $ 1.
+  assert. 0 4 1 8 0.001 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
 NB. put nothing here! savy is carried over to the next line
   NB. Verify random pickup of 0 bk values.  This kludge relies on a side effect left by run128_9
   if. 0 = 1 T. '' do.  NB. in multithreaded we don't know what run128_9 does; and single-threaded test is good enough
-    for_nr. 5 6 7 8 do.
-      savy =: (<(nr,2.0) (0 7)} 9 {:: savy) 9} savy [ pickup =. 0$00 [ z =. (2, #bkbeta) 15!:18 (0.)  NB. threshold makes all SPRs 0
+    tests =. (#~   [: +./"1 </"2) 0.2 0.5 >"(1 2) (100 2,{:$M) ?@$ 0  NB. first row zaps M, second zaps bk.  Remove tests that leave no places where M is not set and bk is
+    for_mb. tests do.
+      'mx bx' =. <@I."1 mb  NB. indexes to zap
+      savy =: (<(15!:18) 1e_12 (<0;mx)} M) 3} savy  NB. make some values of M small
+      savy =: (<(15!:18) 0. (<0;bx)} bk) 6} savy  NB. make some values of bk 0
+      pickup =. ({:$M)$00 [ z =. (2, #bkbeta) 15!:18 (0.)
       for. i. 200 do.
         assert. 2 = 0 { res =. 128!:9 (<z) 7} savy
-        pickup =. pickup , 1 { res
+        pickup =. (1{res) (>:@{`[`])} pickup
       end.
-      (0{parms) = # ~. pickup
+      assert. (</ mb) = * pickup  NB. verify that the filled places are exactly the ones that zapped bk but not m
     end.
   end.
 
@@ -270,7 +278,7 @@ NB. put nothing here! savy is carried over to the next line
   rvt =. ,'4'
   beta =. (#rvt) $ 2.0
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
-  parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.         __   _1.
+  parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
   assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
   assert. 3 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 (5)} parms);bkbeta;beta  NB. below dangerous ignored
   assert. 1 1 1 8 1e10 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. col 0 disabled
@@ -284,9 +292,25 @@ NB. put nothing here! savy is carried over to the next line
   assert. 1 0 1 8 1e14 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
   M =. 2 {. ,: ,.               1e_14  0    0    0  1e_14  0    0    0
   bk =. 2 {. ,: ($bkbeta) $       1.   0    0    0    0    0    0    0
-  assert. 3 _1 1 8 0 ((3 0,:3 _) run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving with no safe pivot
+  assert. 1 4 1 8 _1e14 ((,:1) run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving with no safe pivot
   M =. 2 {. ,: ,.               1e_14  0    0    0  1e_14  0  1e_5   0
-  assert. 2 6 1 8 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving safe
+  assert. 2 6 1 8 _100000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving safe
+
+  NB. Maximum nonimproving pivot
+  Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
+  M =. 2 {. ,: ,.               1e_12 1e_5  ,_1e_4,  _1e_11   0   0   0   0
+  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
+  bk =. 2 {. ,: ($bkbeta) $     1e_13   1       1       1     0   0   0   0
+  bndrowmask =. (1 { $ M) $     '4'
+  rvt =. ,'4'
+  beta =. (#rvt) $ 2.0
+  NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
+  assert. 1 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
+  assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(_1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
+  assert. 1 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. dangerous pivot
+  assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
+  assert. 2 2 1 8 _1e4 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);((1+1e_13) 2} bkbeta);beta  NB. nondangerous pivot
 
   NB. gradient mode
 NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list

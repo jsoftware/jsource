@@ -1309,8 +1309,8 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete  __m256d colbk0thresh;  //  minimum value that will block a pivot when bk=0
 // obsolete  D swapbounty;  //  factor to increase gain by for Nonbasic swaps
 // obsolete  D coldangerpivotthresh;  //  smallest allowed pivot, but is dangerous
- D colokpivotthresh;  // smallest pivot value considered non-dangerous. (onecol+SPR)
- D abortspr;  // if the SPR does not exceed this, abort the column  (onecol+SPR)
+// obsolete  D colokpivotthresh;  // smallest pivot value considered non-dangerous. (onecol+SPR)
+// obsolete  D abortspr;  // if the SPR does not exceed this, abort the column  (onecol+SPR)
  __m256d bk0thresh;  // smallest bk value considered nonzero
  I prirow;  //  priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so.  Set to LOW_VALUE if no priority row
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
@@ -1330,8 +1330,10 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete #define ZVMOD (1LL<<ZVMODX)  // set if the current column was an improvement
 #define ZVNEGATECOLX 0  // set if the result of the col-value calculation must be negated (for Enforcing vars)
 #define ZVNEGATECOL (1LL<<ZVNEGATECOLX)  // set if the current column was an improvement
-#define ZVFFREQDX 1  // set if we have encountered a column value that may cause us to need forcefeasible (in onecol)
-#define ZVFFREQD (1LL<<ZVFFREQDX)
+#define ZVSPR0X 1  // (in onecol) set if we have hit SPR of 0 and do not need to compute them any more
+#define ZVSPR0 (1LL<<ZVSPR0X)
+#define ZVABORT0X 2  // (in onecol) set if we are looking for improvement and want to abort when SPR=0
+#define ZVABORT0 (1LL<<ZVABORT0X)
 #define ZVPOSCVFOUNDX 1  // set if we have found a positive column value, indicating column is bounded (in gradient)
 #define ZVPOSCVFOUND (1LL<<ZVPOSCVFOUNDX)  // set if we have found a positive column value, indicating column is bounded (in gradient)
 // obsolete #define ZVDP 0b100  // set if we should start in double precision (set for gradient)
@@ -1387,7 +1389,9 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   bk0thresh=_mm256_set1_pd(parms[7]);
   colressize=8*NPAR*((I)nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs
   colressize=(colressize+(BNDROWBATCH-1))&-BNDROWBATCH;  // the bound/enforcing mask is built in units of BNDROWBATCH bits so as to fit in an AVX register, matching the row numbers.  There are 2 bits per value.  They must stay aligned.
-  colokpivotthresh=parms[6]; abortspr=parms[9];
+// obsolete   colokpivotthresh=parms[6];
+  zv=(D*)((I)zv+((parms[9]==0.0)<<ZVABORT0X));  // set flag if we want to abort the column if no improvement is possible
+// obsolete  abortspr=parms[9];
 // obsolete  coldangerpivotthresh=parms[5];
 // obsolete  colbk0thresh=_mm256_set1_pd(parms[4]);
 // obsolete   if(likely(zv!=0)){  // one-column
@@ -1408,7 +1412,6 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   lastreservedcol=1;  // cause each thread to process the same one column, without arbitrating for it.  Could branch into loop after reservation
  }
 
- D nzerobatches;  // number of batches with 0 SPR we have encountered
  // loop over all columns requested.  Low 3 bits of zv indicate mode: 000=onecol 100=nonimp other=DIP
  while(1){  // loop for each column
   // start of processing one column
@@ -1420,6 +1423,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete   __m256i limitrows=_mm256_set1_epi64x(1000000000);  // row number fetched from, valid only when there is a valid SPR.  Must be initialized so as not to match prirow.  Same for gradients
   __m256d bndmsk;  // bitstream for each lane, giving (bound) info for the row.  bigendian!!
   D accumsumsq;  // accumulator of column norm, updated periodically for precision reasons.  Only for gradient
+  D nzerobatches;  // number of batches with 0 SPR we have encountered
 
   // establish column reservation, for gradient mode
   // get next col index to work on; stop if no more cols
@@ -1509,7 +1513,7 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
 // obsolete     // one-column mode.  We don't have zv as a flag so we repurpose minsprshared to indicate that the column must be negated
 // obsolete     if(likely((rvtv[colx]&0b001)==0))minsprshared=_mm256_setzero_pd();else minsprshared=sgnbit;   // no sign-change if not Enforcing column
    rown=0;  // we get a reservation for each group of rows; so indicate the current allocation is empty
-   nzerobatches=0.0;  // init we have not encountered any 0 SPRs
+// obsolete    nzerobatches=0.0;  // init we have not encountered any 0 SPRs
    limitrowx=IMAX;  // init row found to high-value, so that we don't share a value unless we actually hit it
    // The only sharing is at startup, but we might as well take advantage of what other threads found.  We have to eliminate the flag values -1 and IMIN
    if(unlikely(*(I*)&sharedmin<0)){    // share values < 0 are special; either -1 (nonimproving nondangerous) or IMIN (abort)
@@ -1528,12 +1532,12 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
   // 2. we should use a ping/pong buffer to pipeline the info, giving a full column time for the transfer
   // 3. we should compress the info and transfer it in full cacheline fetches
   I an; D *vv; I *iv;  // number of sparse atoms in each row (0 if Ek column), pointers to row#s, values for this column
-  if(colx>=nbasiscols){  // not a basis column (=slack)
+  if(colx>=nbasiscols){  // decision variable?
    // scaf we could compress these and expand them here
    an=axv[colx][1];  // number of sparse atoms in each row
    vv=avv0+axv[colx][0];  // pointer to values for this section of A
    iv=amv0+axv[colx][0];  // pointer to row numbers of the values in *vv (these are the columns we fetch in turn from Ek)
-  }else an=-1;  // an<0 means basis column
+  }else an=-1;  // an<0 means slack variable
 
 // obsolete    I *bvgrd;
   // create the column NPAR values at a time
@@ -1796,7 +1800,7 @@ endqp: ;
 // obsolete    if(((I)zv&(ZVISDIPGRAD|ZVISDIP))>ZVISDIP){  // ********************************* DIP
 // obsolete     if(!(bvgrd0!=ONECOLGRD0)){  // DIP
     // Calculate SPR for column.  process the values in parallel
-    // Get the column values c and b values to use.  In bound columns we use abs(c).  b is b usually, but beta-b in bound columns where c was negative
+    // Get the column values c and b values to use.  In bound columns we use abs(c). 
     __m256d bnddotproducth=_mm256_andnot_pd(_mm256_and_pd(bndmsk,sgnbit),dotproducth);  // take abs of col value if bound row
     __m256d cgt0=_mm256_cmp_pd(bnddotproducth,col0thresh,_CMP_GT_OQ);  // mask of valid c-value lanes.  Will always be 0 in lanes where endmask is 0 (must pad Qk with 0)
     if(!_mm256_testz_pd(cgt0,endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process.  skip batch if so
@@ -1806,46 +1810,62 @@ endqp: ;
      bk4=_mm256_blendv_pd(bk4,_mm256_sub_pd(beta4,bk4),_mm256_and_pd(bndmsk,dotproducth));  // b, except beta-b in bound rows with originally negative col
      // if bk < threshold, set it to 0.  If col value negative, mark the column invalid
      __m256d bknon0=_mm256_cmp_pd(bk4,bk0thresh,_CMP_GE_OQ);  // remember which bks are non0
-     bk4=_mm256_and_pd(bk4,bknon0);  // make near0 bk exactly 0
-     __m256d ratios=_mm256_fmsub_pd(sharednormorspr,bnddotproducth,bk4);  // minspr*c-b: sign set if b>minspr*c => b/c>minspr => not new min-or-tied SPR.  minspr, c, and b are all nonneg in valid lanes, so no -0
+     if(!((I)zv&ZVSPR0)){  // if we have not encountered SPR of 0, sharednormorspr is the spr
+      // calculate the SPR
+      bk4=_mm256_and_pd(bk4,bknon0);  // make near0 bk exactly 0
+      __m256d ratios=_mm256_fmsub_pd(sharednormorspr,bnddotproducth,bk4);  // minspr*c-b: sign set if b>minspr*c => b/c>minspr => not new min-or-tied SPR.  minspr, c, and b are all nonneg in valid lanes, so no -0
 if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharednormorspr,bnddotproducth)),cgt0))SEGFAULT;  // scaf verify no -0
-     if(!_mm256_testc_pd(ratios,cgt0)){  // CF is 1 if ~(not new min-or-tied)&(valid) is all 0, so 0 if any (min-or-tied)
-      // SPR is a new low-or-tied (we have to accept ties so all bk=0 lines will come through here).  If any valid bk is 0, we will be returning a nonimproving pivot
-      // by simulation this code runs 4.7 times in 64 batches
-      if(_mm256_testc_pd(bknon0,cgt0)){    // if all non0 flags in valid lanes are set, that means the SPR is nonzero 
-       // New SPR is nonzero.  Calculate it and remember the new SPR in all lanes
-       // We will have to find the location of the minimum value in the new batch, because it may be tied with the current minimum.  To silence invalid lanes
-       // we keep the old minspr in them.  Could use infinity, but we might calculate an SPR of inf
-       __m256d sprs=_mm256_blendv_pd(sharednormorspr,_mm256_div_pd(bk4,bnddotproducth),cgt0);  // find SPRs, valid or not.  Not worth moving this before the mispredicting branch because it ties up IUs for so many cycles
-       // Find the new minimum
-       sharednormorspr=_mm256_min_pd(sprs,_mm256_permute_pd(sprs,0b0101)); // sharednormorspr = min01 min01 min23 min23  could use integer in AVX-512
-       sharednormorspr=_mm256_min_pd(sharednormorspr,_mm256_permute4x64_pd(sharednormorspr,0b00001010));  // sharednormorspr=min value in all lanes
-       // remember the row that had the minimum.  Make sure we take only SPRs for valid col values
-       limitrowx=rowx+CTTZI(_mm256_movemask_pd(_mm256_and_pd(cgt0,_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(sharednormorspr),_mm256_castpd_si256(sprs))))));  // index of a lane containing the minimum SPR (there must be one)
-       // it is just barely possible that the division to calculate SPR gives a zero value even though bk is not 0 (underflow).  Since SPR=0 is a flag value indicating
-       // no improvement, we will miss the limitrowx that is set here, and the pivot will be marked dangerous unless a different nondangerous nonimproving pivot
-       // is found elsehere.  This can happen only once per thread, because once SPR=0 it is impossible to get low-or-tie unless bk=0.  We ignore the possibility,
-       // because the column value would have to HUGE to underflow to 0.
-      }else{
-       // One of the valid-column bk values is 0.  We randomly choose a nondangerous pivot with bk=0.  Once we hit a 0 SPR we will come through here on all subsequent 'new' SPRs
-       I candlanes=_mm256_movemask_pd(_mm256_andnot_pd(bknon0,_mm256_cmp_pd(bnddotproducth,_mm256_set1_pd(colokpivotthresh),_CMP_GE_OQ)));   // lanes that could be the result
-       if(likely(candlanes!=0)){   // if there is a nondangerous value...
-        // deal a random value.  Low quality is OK.  We leave RNG unseeded so that repeated runs will give different sequences
-        I4 randval=rand();  // a few bits
-        // select a random candidate lane.  This distribution is not uniform, but that's OK since we are just trying to break cycles
-        I lanehere=rowx+CTLZI(LOWESTBIT(candlanes)|(candlanes&randval));  // randomly turn off candidates above the lowest, then find highest survivor
-        // randomly accept the new value so as to give a uniform distribution of batches
-        nzerobatches+=1.0;  // include the new batch in the count of batches encountered
-        limitrowx=(double)randval*nzerobatches<=(double)RAND_MAX?lanehere:limitrowx;  // accept new lane with declining probability
-       }
-       sharednormorspr=_mm256_setzero_pd();  // whether the value is dangerous or not, the new SPR is +0 (important so we can compare against integer 0).  We may find no nondangerous value
+      if(!_mm256_testc_pd(ratios,cgt0)){  // CF is 1 if ~(not new min-or-tied)&(valid) is all 0, so 0 if any (min-or-tied)
+       // SPR is a new low-or-tied.  If any valid bk is 0, we will be returning a nonimproving pivot
+       // by simulation this code runs 4.7 times in 64 batches
+       if(_mm256_testc_pd(bknon0,cgt0)){    // if all non0 flags in valid lanes are set, that means the SPR is nonzero 
+        // New SPR is nonzero.  Calculate it and remember the new SPR in all lanes
+        // We will have to find the location of the minimum value in the new batch, because it may be tied with the current minimum.  To silence invalid lanes
+        // we keep the old minspr in them.  Could use infinity, but we might calculate an SPR of inf
+        __m256d sprs=_mm256_blendv_pd(sharednormorspr,_mm256_div_pd(bk4,bnddotproducth),cgt0);  // find SPRs, valid or not.  Not worth moving this before the mispredicting branch because it ties up IUs for so many cycles
+        // Find the new minimum
+        sharednormorspr=_mm256_min_pd(sprs,_mm256_permute_pd(sprs,0b0101)); // sharednormorspr = min01 min01 min23 min23  could use integer in AVX-512
+        sharednormorspr=_mm256_min_pd(sharednormorspr,_mm256_permute4x64_pd(sharednormorspr,0b00001010));  // sharednormorspr=min value in all lanes
+        // remember the row that had the minimum.  Make sure we take only SPRs for valid col values
+        limitrowx=rowx+CTTZI(_mm256_movemask_pd(_mm256_and_pd(cgt0,_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(sharednormorspr),_mm256_castpd_si256(sprs))))));  // index of a lane containing the minimum SPR (there must be one)
+        // it is just barely possible that the division to calculate SPR gives a zero value even though bk is not 0 (underflow).  Since SPR=0 is a flag value indicating
+        // no improvement, we will miss the limitrowx that is set here, and the pivot will be marked dangerous unless a different nondangerous nonimproving pivot
+        // is found elsehere.  This can happen only once per thread, because once SPR=0 it is impossible to get low-or-tie unless bk=0.  We ignore the possibility,
+        // because the column value would have to be HUGE to underflow to 0.
+       }else{sharednormorspr=_mm256_setzero_pd(); if((I)zv&ZVABORT0){retinfo=-1; goto return4;} zv=(D*)((I)zv|ZVSPR0); goto startspr0;}   // FIRST 0 SPR: switch modes, change sharednormorspr to look for max column value; abort if SPR>0 needed; process through 0-SPR path
+              // we don't check for column aborts from other threads because the juice isn't worth the squeeze
       }
-      // if the SPR goes to the abort threshold (-inf normally, but 0.0 to indicate we expect improvement), abort the column.  We DO NOT check for aborts issued by other
-      // columns, because the case is rare and the sharing has a cost.  We do force out -inf for the share, which will at least prevent other threads from
-      // wasting bus cycles sharing their values
-      if(unlikely(_mm256_cvtsd_f64(sharednormorspr)<=abortspr)){retinfo=-1; goto return4;}  // abort if SPR low enough
-     }
-    }
+     }else{
+      // we have encountered an earlier SPR of 0.  We don't need to calculate an SPR: we choose the largest column-value where bk is near0 (if it's dangerous we catch it later), and break ties randomly
+      // here sharednormorspr is the largest column value found so far
+startspr0:;  // come here for the first 0-SPR batch, after mode switch.  The new column value may be very small but it is always > 0, so we will treat it as a starting batch below
+      // take max of sharednormorspr and new column values where bk is 0.
+      __m256d validcol=_mm256_and_pd(bnddotproducth,_mm256_andnot_pd(bknon0,cgt0));   // valid column values where bk is near0, 0 elsewhere.  Could do a single blend but we fear garbage in invalid col value   
+      if(!_mm256_testz_pd(_mm256_cmp_pd(validcol,sharednormorspr,_CMP_GE_OQ),cgt0)){  // Zf if validcol<old max in all valid lanes.  We skip the batch then
+       __m256d maxvalidcol=_mm256_max_pd(validcol,_mm256_permute_pd(validcol,0b0101)); maxvalidcol=_mm256_max_pd(maxvalidcol,_mm256_permute4x64_pd(maxvalidcol,0b00001010));  // maxvalidcol= max value in all lanes
+       I candlanes=_mm256_movemask_pd(_mm256_cmp_pd(validcol,maxvalidcol,_CMP_EQ_OQ));   // mask of lanes that could be the result
+       // Select a lane: if only one, take it, otherwise select a random lane containing the new maximum.  This distribution is not uniform, but that's OK since we are just trying to break cycles
+       I randval=-1;  // init to no random value drawn  Low quality is OK.  We leave RNG unseeded so that repeated runs will give different sequences
+       I lanehere=rowx+CTLZI(LOWESTBIT(candlanes)|(likely(candlanes==LOWESTBIT(candlanes))?0:(candlanes&(randval=rand()))));  // If multiple matches, randomly turn off candidates above the lowest; then find highest survivor
+       if(likely(!_mm256_testz_pd(_mm256_cmp_pd(validcol,sharednormorspr,_CMP_GT_OQ),cgt0))){  // Zf if validcol<=old max in all valid lanes.  If not, we have a new undisputed high
+        nzerobatches=1.0; limitrowx=lanehere;  // new maximum batch.  unconditionally take the value and set to 1 in equal group
+        sharednormorspr=_mm256_max_pd(sharednormorspr,maxvalidcol);  // update shared max value to date
+       }else{
+        // Tie value with a previous batch.  randomly accept the new value so as to give a uniform distribution of batches
+        nzerobatches+=1.0;  // include the new batch in the count of batches encountered
+        limitrowx=(double)(randval<0?rand():randval)*nzerobatches<=(double)RAND_MAX?lanehere:limitrowx;  // accept new lane with declining probability
+       }
+      }
+     } 
+    } // skip batch if all column values 0
+// obsolete        sharednormorspr=_mm256_setzero_pd();  // whether the value is dangerous or not, the new SPR is +0 (important so we can compare against integer 0).  We may find no nondangerous value
+// obsolete       }
+// obsolete       // if the SPR goes to the abort threshold (-inf normally, but 0.0 to indicate we expect improvement), abort the column.  We DO NOT check for aborts issued by other
+// obsolete       // columns, because the case is rare and the sharing has a cost.  We do force out -inf for the share, which will at least prevent other threads from
+// obsolete       // wasting bus cycles sharing their values
+// obsolete       if(unlikely(_mm256_cvtsd_f64(sharednormorspr)<=abortspr)){retinfo=-1; goto return4;}  // abort if SPR low enough
+// obsolete      }
+// obsolete     }
 // obsolete     // fetch the b values for the rows. Handle bound vars, which choose from 2 possible b values
 // obsolete     __m256d cnon0, bk4;  // will be ~0 for words that have positive c; the 4 bk values we will use (with overshoot added by caller before we start)
 // obsolete     if((I)zv&ZVUNBOUND){  // normal unbound case.  The b values come in order
@@ -1921,16 +1941,14 @@ usefullrowtotal:;  // come here when we started knowing the row total, in accums
    D recipgradsq=accumsumsq/(Frow[colx]*Frow[colx]);  // 1/gradient^2
    valuetoshareminof=*(I*)&recipgradsq;  // share the recip gradient, looking for mimimum.  We have the gradient that was completed for this column
   }else{
-   // onecol+SPR. sharednormorspr already has the nonneg value to be shared and minimized.  We might not have achieved it here, though
+   // onecol+SPR. sharednormorspr has the value to share.  We might not have achieved it here, though.
    // We recognize the value only if we actually achieved it in this thread, so that we won't report out invalid retinfo (the issue is that
    // sharednormorspr may contain the initial value and we would have no valid value to override the default with)
-   // SPR=0 poses a special challenge, because an early SPR might wipe out the default value and there might be no nondangerous value
-   // to replace it with.  So we use two different SPR values for SPR=0: 0 to mean dangerous, i. e. no valid row, and IMIN (=-0) to mean that the row
-   // is valid.  As usual, we will store the row, which might be garbage, whenever we see that we have the minimum share.  The caller must recoognize
-   // the SPR value
-   I threadspr=_mm256_extract_epi64(_mm256_castpd_si256(sharednormorspr),0);
-   valuetoshareminof=limitrowx==IMAX?IMAX:threadspr;  // if we never actually saw a minimum value, set share to greater than inf, to ensure no sharing
-   if(threadspr==0)valuetoshareminof=nzerobatches==0.?0:-1;  // if nonimproving separate into danger/nondanger cases
+   // If SPR=0, sharednormorspr has the positive column-value to maximize (it could be dangerous, but never 0).  We take the negative reciprocal, to give us something to minimize in fixed-point. 
+   if((I)zv&ZVSPR0)sharednormorspr=_mm256_div_pd(_mm256_set1_pd(-1.0),sharednormorspr);  // if 0-SPR, neg-recip.  IEEE754 is sign/magnitude so the sign bit is a flag giving priority to 0-SPR but looking for small recip-column-value
+   valuetoshareminof=_mm256_extract_epi64(_mm256_castpd_si256(sharednormorspr),0);
+// obsolete    valuetoshareminof=limitrowx==IMAX?IMAX:threadspr;  // if we never actually saw a minimum value, set share to greater than inf, to ensure no sharing
+// obsolete    if(threadspr==0)valuetoshareminof=nzerobatches==0.?0:-1;  // if nonimproving separate into danger/nondanger cases
   }
 
   // if this value is a new minimum, share it with the other cores (might not be if last batch went over but was not tested for cutoff)
@@ -2024,7 +2042,7 @@ usefullrowtotal:;  // come here when we started knowing the row total, in accums
 
   // we have finished processing the column, and reporting its gain if DIP.  Now prepare for the next column
   I impcolincr;  // value we will add to the col-stats field
-  //  ***** jump to here on aborted column *****   rowx must point to the batch after the last one we processed
+  //  ***** jump to here on aborted column *****   rowx must point to the batch after the last one we processed and must be on a BNDROW bdy
   if(1)impcolincr=0x100000001; else abortcol: impcolincr=1; // jump here if column aborted early, possibly on insufficient gain.  This is the normal path if abort, don't incr # completed columns
   // exit if we have processed enough columns (in DIP mode)
   I nimpandcols=__atomic_add_fetch(&ctx->nimpandcols,impcolincr,__ATOMIC_ACQ_REL);  // add on one finished column, and 0 or 1 improvements
@@ -2102,7 +2120,7 @@ return4:;  // we have a preemptive DIP/gradient result.  store and set minimp =-
  __atomic_fetch_add(&ctx->ndotprods,ndotprods,__ATOMIC_ACQ_REL);  // accumulate stats for the work done here: dot-products
  WRITELOCK(ctx->ctxlock)
  ctx->sharedmin.I=IMIN;  // shut off other threads
- ctx->retinfo=retinfo;  // set unbounded col or col/row of virtual pivot
+ ctx->retinfo=retinfo;  // set unbounded col or garbage, if aborting on 0 SPR
  WRITEUNLOCK(ctx->ctxlock)
  R 0;
 }
@@ -2128,7 +2146,7 @@ return4:;  // we have a preemptive DIP/gradient result.  store and set minimp =-
 //    ColOkPivot is the smallest pivot value considered non-dangerous
 //    Bk0Threshold is the smallest bk value considered nonzero
 //    BkOvershoot is the maximum excursion into negative bk that we will allow on a pivot
-//    MinSPR is the largest SPR that will abort this column
+//    MinSPR is the largest SPR that will abort this column (set to __ to allow any SPR, to 0. to require improvement)
 //    PriRow is the priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so
 //   bkbeta is beta for each row in Qk, i. e. corresponding to bk (including 0 extension)
 //   beta is betas for all columns, used to init SPR for bound column
@@ -2241,23 +2259,25 @@ struct mvmctx opctx;  // parms to all threads, and return values
 
  A r; GAT0(r,FL,5,1); D *rv=DAV(r);  // return area
  I retinfo=rv[1]=opctx.retinfo; rv[2]=(UI4)opctx.nimpandcols; rv[3]=opctx.ndotprods;
- if(unlikely(opctx.sharedmin.I==IMIN)){rv[0]=4.; rv[4]=0.;}  // if unbounded (gradient) or too-low SPR (onecol), give rc 4
+ if(unlikely(opctx.sharedmin.I==IMIN)){rv[0]=4.; rv[4]=0.;}  // early abort: if unbounded (gradient) or too-low SPR (onecol), give rc 4
  else if(isgradmode){
   // gradient mode.  We were minimizing 1/gradient^2; convert to gradient
   rv[0]=0.; rv[4]=sqrt(1/opctx.sharedmin.D);  // else give ok return w/gradient
  }else{
   // onecol+SPR.  classify as normal/dangerous/nonimproving/nonexistent/unbounded (=insufficient SPR, which sets SPR=-inf)
-  D spr=rv[4]=opctx.sharedmin.D;  // return SPR as informational data
-  // spr=0 means nonimproving dangerous pivot I. e. no pivot), spr=-1 means nonimproving nondangerous
-  if(unlikely(opctx.sharedmin.I==0)){spr=inf; rv[1]=-1.;}  // detect nonimproving pivot but dangerous; other nonimproving pivots have valid rowx
-  if(unlikely(opctx.sharedmin.I==-1)){spr=rv[4]=0;}  // detect nonimproving nondangerous pivot; give SPR of 0; row is valid
+  // sharedmin is positive SPR if improving; negative recip of max column value if nonimproving
+  D spr=rv[4]=opctx.sharedmin.D;  // return SPR/col val as informational data
+  I foundrc=spr<0?2:0;  // negative shared value is the reciprocal of the column value when SPR=0.  This is a nonimproving pivot
+// obsolete   // spr=0 means nonimproving dangerous pivot I. e. no pivot), spr=-1 means nonimproving nondangerous
+// obsolete   if(unlikely(opctx.sharedmin.I==0)){spr=inf; rv[1]=-1.;}  // detect nonimproving pivot but dangerous; other nonimproving pivots have valid rowx
+// obsolete   if(unlikely(opctx.sharedmin.I==-1)){spr=rv[4]=0;}  // detect nonimproving nondangerous pivot; give SPR of 0; row is valid
   D colval;  // the |value| in the column, provided exceptions do not apply
   if(BETWEENO(retinfo,0,ninclfk)){  // normal nonswap SPR found
    colval=ABS(zv[retinfo]);  // the value in the SPR row of the column.  If neg, we will swap before pivot, so use |value|
   }else{
    colval=inf;  // if the row# indicates a swap, use a harmless column value
   }
-  rv[0]=unlikely(spr==inf)?3:unlikely(colval<parms[5])?3:unlikely(colval<parms[6])?1:spr==0?2:0;  // SPR=0 means nonimproving; col<minpivot means dangerous
+  rv[0]=unlikely(spr==inf)?3:unlikely(colval<parms[5])?3:unlikely(colval<parms[6])?1:foundrc;  // SPR=0 means nonimproving; col<minpivot means dangerous
  }
  EPILOG(r);
 #else

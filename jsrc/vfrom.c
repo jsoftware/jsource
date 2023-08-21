@@ -373,7 +373,7 @@ else{   // normal last axis
   }
   if(likely(r==0))break;  // if there is only 1 axis, we're done
   // roll up the axes, advancing the odometer 
-  I rodo=r-1;  // start on axis -2   scaf handle axis -2 separately if registers are plenteous.  Have nextx/nsel/axr->sels be the values for axis 1, reloaded after the bottom of the wheel loop
+  I rodo=r-1;  // start on axis -2   TUNE handle axis -2 separately if registers are plenteous.  Have nextx/nsel/axr->sels be the values for axis 1, reloaded after the bottom of the wheel loop
   while(1){  // till we have handled all changing wheels
    struct faxis *axr=&axes[rodo];
    I nextx=axr->currselx+1;  // next index number to use; if taken in full, is also the index itself

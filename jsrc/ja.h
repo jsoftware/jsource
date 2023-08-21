@@ -399,9 +399,9 @@
 // This creates a recursive block and raises fgh
 #define fdeffillall(fffz,fffflag2v,fffidv,ffft,ffff1,ffff2,ffffs,fffgs,fffhs,fffflagv,fffm,fffl,fffr,ffflui0,ffflui1) \
 {V *fffv=FAV(fffz); \
-AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank scaf */ \
 fffv->valencefns[0]=(ffff1);  /* monad C function */ \
 fffv->valencefns[1]=(ffff2); /* dyad  C function */ \
+/* AN is unfilled */ \
 fffv->flag  =(UI4)(fffflagv); \
 fffv->flag2 = (UI4)(fffflag2v); \
 fffv->mr    =(RANKT)(fffm);                   /* monadic rank     */ \
@@ -414,6 +414,7 @@ fffasg=(fffgs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[1]=fffasg;  /* 
 fffasg=(fffhs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/otfher stuff and install as h */ \
 AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens */ \
 }
+// obsolete AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank scaf */
 // fdeffill replaces the original fdef, which did not know about localuse
 #define fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fdeffillall(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r,fffv->localuse.lu0.cachedloc=0,fffv->localuse.lu1.cct=0.0)
 #define fdef(flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) ({A fffz; fdefallo(fffz) fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fffz;})  // we no longer check error.  This cannot return 0

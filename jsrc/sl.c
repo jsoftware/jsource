@@ -187,9 +187,9 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // For named/numbered types, SYMLINFO (hash chain #0) is filled in to point to the name and path
 //   the name is an A type holding an NM, which has hash filled in, and, for numbered locales, the bucketx filled in with the locale number
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
-// The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
+// The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others, plus other flags
 // For k=0, we have a write lock on stlock which we must hold throughout.
-// For k=0 or 1, we have made sure there are 2-k symbols reserved (for the assignment to stloc).  Not required for k=2, which is not assigned
+// For k=0 or 1, we have made sure there are 2-k symbols reserved (for the assignments we make).  Not required for k=2, which is not assigned
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
  // allocate the symbol table itself: we have to give exactly what the user asked for so that cloned tables will hash identically; but a minimum of 1 chain field so hashes can always run
  GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB) LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  //  All SYMB tables are born recursive.  Init EXECCT to 'in use'
@@ -529,7 +529,7 @@ static F1(jtloccrenum){C s[20];I k,p;A x;
  ARGCHK1(w);
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
- SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert  scaf not needed
+ SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert
  sprintf(s,FMTI,LOCNUM(x));   // extract locale# and convert to boxed string 
  R boxW(cstr(s));  // result is boxed string of name
 }    /* create a numbered locale with hash table size n */

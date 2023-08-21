@@ -150,7 +150,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
 static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
  if(cv->w==CFOR){
   if(cv->t){  // if for_xyz. that has processed forinit ...
-   SYMORIGIN[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
+   SYMORIGIN[cv->indexsym].flag&=~LREADONLY;  // set xyz_index is no longer readonly.  It is still available for inspection
    // If xyz still points to the virtual block, we must be exiting the loop early: the value must remain, so realize it
    A svb=cv->item;  // the virtual block for the item
    if(unlikely(SYMORIGIN[cv->itemsym].val==svb)){A newb;   // loop did not complete, and xyz has not been reassigned
@@ -577,7 +577,7 @@ docase:
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-   // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)   scaf xyz_index no longer deleted, but xyz is written?
+   // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used; but the result case is rare)
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1);
    i=cw[i].go;    // continue at new location
    break;

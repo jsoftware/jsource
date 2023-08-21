@@ -247,7 +247,7 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
  RZ(jtbufferinitt(jt));  // init thread-local buffers
  RZ(jtmeminits(jjt));
  RZ(jtmeminitt(jt));
- RZ(jtsesminit(jjt,1));  // master only.  scaf pointless?
+ RZ(jtsesminit(jjt,1));  // master only
  RZ(jtcdinit(jjt));  // master only
  RZ(jtevinit(jjt));  // master only
  RZ(jtconsinits(jjt));

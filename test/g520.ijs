@@ -87,6 +87,7 @@ else.   NB. gradient
   y =. (15!:18&.> 3 { y) 3} y  NB. cache-align the blocks that need it
   savy =: y
   savres   =: 128!:9 y
+  savcut =: memu 7 {:: y
   if. #x do.  NB. if SPR result known, check it
     'res cut' =. x
     if. 0=nthr do.
@@ -346,23 +347,34 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
 
 
   NB. unbounded problem
+  M =. ,:   1.    1    _1   _1   NB. Input by rows, i. e. NOT transposed
+  M =. M ,  _1.    1   _1   _1
+  M =. M ,  _1.    1   1    _1
+  M =. M ,  1.    1    1    _1
+  M =. M ,  0.    0    5    0
+  M =. M ,  3 4$0.
+  M =. 2 {. ,: M
   cutoffinfo =. (2 ,~ #rvt) $ 0.
-  assert. (4 1 1 512 0; _2 ]\ _512 5 0 0 0 0 0 0) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
+  assert. (4 3 1 512 0; _2 ]\ _512 5 0 0 0 0 0 0) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 3 2 1;(parms);Frow
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 1 3 1344 0.89442719099991585541; _2 ]\ _512 5 _512 5 _320 30 0 0) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2;(parms);Frow
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. (0 1 3 1344 0.81649658092772603446; _2 ]\ _512 5 _512 6 _320 30 0 0) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;0 1 2;(parms);Frow
   NB. unbounded problem cut off at start
-  Frow =.  _1.     _2   _3   _4
+  Frow =.  _1.     _4   _3   _2
   cutoffinfo =. (2 ,~ #rvt) $ 0.
-  assert. (0 3 4 640 1.788854381999831; _2 ]\ 0 1 0 2 128 3 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow
+  assert. (0 1 4 768 1.63299316185545206892; _2 ]\ 0 1 _512 6 _192 4 64 2) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;1 2 3 0;(parms);Frow
   if. 0 = 1 T. '' do.  NB. can't chain cutoffinfo multithreaded, because the problems change size
     NB. roll cutoffinfo into the next test, to verify it is picked up
-    assert. (4 1 1 384 0; _2 ]\ 0 1 0 2 _512 30 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;2 1 0;(parms);Frow
+    assert. (4 3 1 256 0; _2 ]\ 0 1 _512 6 _512 30 64 2) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;2 3 0;(parms);Frow
   end.
   NB. unbounded problem cut off before detection
-  Frow =.  _1.     _3   _3   _4
+  Frow =.  _1.     _4   _3   _3
   cutoffinfo =. (2 ,~ #rvt) $ 0.
-  assert. (0 3 4 704 1.788854381999831; _2 ]\ 0 1 64 3 128 3 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow
+  assert. (0 1 4 896 1.63299316185545206892; _2 ]\ 0 1 _512 6 _192 4 192 4) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;1 2 3 0;(parms);Frow
   if. 0 = 1 T. '' do.  NB. can't chain cutoffinfo multithreaded, because the problems change size
     NB. roll cutoffinfo into the next test, to verify it is picked up
-    assert. (4 1 1 320 0; _2 ]\ 0 1 64 3 _512 30 _512 5) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;2 1 0;(parms);Frow
+    assert. (4 3 1 128 0; _2 ]\ 0 1 _512 6 _512 30 192 4) ('' run128_9) Ax;Am;Av;M;('1' 1} rvt);bndrowmask;'';cutoffinfo;2 3 0;(parms);Frow
   end.
 
   NB. MinGradient
@@ -597,6 +609,24 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
 
 
 f i. 65
+
+NB. 31-digit relative max
+1:`({{
+ epmul =. (|:~ (_1 |. i.@#@$)) @: (((0 0 1 1{[) +/@:*"1!.1 (0 1 0 1{]))"1&(0&|:))
+ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
+ epsub =. (epadd -)
+origQk =. memu Qk =. (4 4 $ 1. 10. 1e16 1e20) ,: (|: 4 4 $ 1e_20 1e_18 1e_16 1e_10)
+rows =. 1. 1 1 1 [ cols =. 1. 10. 1e16 1e20
+expQkhi =. (0:^:(<  1e_25 + 1e_31 * |))"0 {. Qk epsub 0. ,:~ 4 $ ,: cols
+Qk =. ((i. 4);(i. 4);(rows,:0.);(cols,:0.);1e_25) 128!:12 Qk
+NB. obsolete smoutput 0j_20 ": {. origQk
+NB. obsolete smoutput 0j_20 ": {. origQk epsub  0. ,:~ 4 $ ,: cols
+NB. obsolete smoutput 0j_20 ": {. Qk
+NB. obsolete smoutput 0j_20 ": expQkhi
+NB. obsolete smoutput 0j_20 ": ({.Qk)-expQkhi
+(1 1 1 0 *./ 0 0 1 1) -: 0.={. Qk
+}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 0
+
 
 NB. avoid repeated indexes
 f =: 1:`({{

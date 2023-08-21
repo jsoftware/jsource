@@ -395,7 +395,7 @@ else{   // normal last axis
       SETNDX(nextx,axr->sels[nextx],axn);  // fetch next index
      }else{
 #if 0  // obsolete 
-     // complementary index.  Start after currselv and find the next 1-bit   scaf should rewrite to use the complementary indexes, not a mask
+     // complementary index.  Start after currselv and find the next 1-bit
      nextx=axr->currselv+1;  // bit# to start look
      while(1){  // it's gotta be there
       UI nextbits=(UI)axr->sels[nextx>>LGBW]>>(nextx&(BW-1));  // the rest of this word
@@ -1268,6 +1268,7 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
 #define CMPBATCH 64  // frequency with which we compare for cutoff.  MUST NOT BE SMALLER than BNDROWBATCH so that we restart on a bndrowmask bdy
   // We collect the totals for every compare batch.  If we are using low precision for the gradient, we should collect totals often enough that we don't
   // lose precision in each lane
+#define RELSIGMAX 7.88e-31  // We set to 0 any accumulation result that was less than this fraction of one of the accumulands
 
 // the processing loop for one core.  We take a slice of the columns/rows, repeatedly
 // ti is the job#, not used except to detect error
@@ -1306,6 +1307,7 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 //   parms is #rows,maxAx,Col0Threshold,Store0Thresh,ColBk0Threshold,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,PriRow
  __m256d store0thresh=_mm256_set1_pd(parms[3]);  // In one-column mode, this holds the Store0Threshold: column values less than this are set to 0 when written out
  __m256d col0thresh;  //  minimum value considered valid for a column value (smaller are considered 0)
+ __m256d bkovershoot;  //  (onecol) maximum amount a pivot is allowed to make bk overshoot
 // obsolete  __m256d colbk0thresh;  //  minimum value that will block a pivot when bk=0
 // obsolete  D swapbounty;  //  factor to increase gain by for Nonbasic swaps
 // obsolete  D coldangerpivotthresh;  //  smallest allowed pivot, but is dangerous
@@ -1336,6 +1338,8 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 #define ZVABORT0 (1LL<<ZVABORT0X)
 #define ZVPOSCVFOUNDX 1  // set if we have found a positive column value, indicating column is bounded (in gradient)
 #define ZVPOSCVFOUND (1LL<<ZVPOSCVFOUNDX)  // set if we have found a positive column value, indicating column is bounded (in gradient)
+_Static_assert(ZVPOSCVFOUNDX==ZVNEGATECOLX+1,"Bound and Enforcing flags are adjacent in rvt");
+
 // obsolete #define ZVDP 0b100  // set if we should start in double precision (set for gradient)
 // obsolete #define ZVUNBOUNDX 5  // set if the rows we are processing are bound rows
 // obsolete #define ZVUNBOUND (1LL<<ZVUNBOUNDX)
@@ -1386,7 +1390,8 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
   frowbatchx=(nrows-1)&-NPAR; frowbatchx|=~nhasfk;  // batch# containing last row (might be by itself); if it's not fk, batch is ~0, i. e. never
 // obsolete   nrows=nbasiscols-nhasfk;  // #rows to calculate, including fk if present
 // obsolete   bv=(D*)n;  // offset to low part of *zv - saves a register
-  bk0thresh=_mm256_set1_pd(parms[7]);
+  bk0thresh=_mm256_set1_pd(parms[7]);  // bk considered 0
+  bkovershoot=_mm256_set1_pd(parms[8]);  // amount bk can overshoot on a pivot
   colressize=8*NPAR*((I)nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs
   colressize=(colressize+(BNDROWBATCH-1))&-BNDROWBATCH;  // the bound/enforcing mask is built in units of BNDROWBATCH bits so as to fit in an AVX register, matching the row numbers.  There are 2 bits per value.  They must stay aligned.
 // obsolete   colokpivotthresh=parms[6];
@@ -1453,9 +1458,9 @@ static unsigned char jtmvmsparsex(J jt,struct mvmctx *ctx,UI4 ti){
 // obsolete   limitrowx=nrows;  // init to out-of-bounds row so that if we don't improve we do a swap
   // get column info, a 2-bit field of (bound,enforcing)
   I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);
-  zv=(D*)(((I)zv&~(ZVPOSCVFOUND+ZVNEGATECOL))|((colrvt&1)<<ZVNEGATECOLX));  // If this column is Enforcing, remember so we change its sign
   if(likely(!ZVISONECOL)){    // gradient mode
    // gradient mode: sharednormorspr is accumulator for sumsq
+   zv=(D*)(((I)zv&~(ZVPOSCVFOUND+ZVNEGATECOL))|((colrvt&(ZVPOSCVFOUND+ZVNEGATECOL))<<ZVNEGATECOLX));  // If this column is Enforcing, remember so we change its sign; if Bound column, init that the hidden row has a positive column value
    // see if we have a partial (or even complete) total from a previous run.  If so, start there
    if(cutoffstatus[colx][0]){  // row# of 0 means no data
     rowx=cutoffstatus[colx][0]; accumsumsq=cutoffstatus[colx][1];  // resume point, and total at that point
@@ -1508,7 +1513,7 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
 // obsolete // obsolete      zv=(D*)((I)zv^(ZVSPRNOTFOUND|ZVPOSCVFOUND));  // this implied pivot is a valid one
 // obsolete     zv=(D*)((I)zv|((rvtv[colx]&1)<<ZVNEGATECOLX));  // If this column is Enforcing, remember so we change its sign
 // obsolete    }
-
+   zv=(D*)(((I)zv&~(ZVPOSCVFOUND+ZVNEGATECOL))|((colrvt&ZVNEGATECOL)<<ZVNEGATECOLX));  // If this column is Enforcing, remember so we change its sign
 // obsolete    minsprshared=minspr;  // we keep this min-across-lanes version to reduce the number of divides
 // obsolete     // one-column mode.  We don't have zv as a flag so we repurpose minsprshared to indicate that the column must be negated
 // obsolete     if(likely((rvtv[colx]&0b001)==0))minsprshared=_mm256_setzero_pd();else minsprshared=sgnbit;   // no sign-change if not Enforcing column
@@ -1634,6 +1639,7 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
     bndmsk=_mm256_castsi256_pd(_mm256_sllv_epi64(_mm256_set1_epi64x(*(I*)&bndrowmask[rowx>>(LGBNDROWBATCH-0)]),bndmskshift));
    }
 
+   __m256d accmaxabs;;  // (onecol only) max magnitude of the inputs to the accumulation
    // get the next NPAR values by dot-product with Av
    if(an>=0){
     // fetching from A.  Form (Ek row) . (A column) for each of the 4 rows.  There must be at least 1 column selected
@@ -1665,6 +1671,7 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
       vval=_mm256_set1_pd(vv[k]);  // load column value
       // take the two products and canonicalize
       TWOPROD(dotproducth,vval,th2,tl2)  // high qk * col
+      accmaxabs=_mm256_andnot_pd(sgnbit,dotproducth);   // init upper-significance holder
       tl2=_mm256_fmadd_pd(tl,vval,tl2);  // low qk*col, and add to high part
       TWOSUMBS(th2,tl2,dotproducth,dotproductl)  // combine parts, canonicalize
        // this is accurate to 104 bits from the largest of (new,old,new+old)
@@ -1683,6 +1690,7 @@ accumulateqp: ;
       vval=_mm256_set1_pd(vv[k]);  // load column value
       // accumulate the dot-product
       TWOPROD(th,vval,th2,tl2)  // high qk * col
+      accmaxabs=_mm256_max_pd(accmaxabs,_mm256_andnot_pd(sgnbit,dotproducth));   // update upper-significance holder
       tl2=_mm256_fmadd_pd(tl,vval,tl2);  // low qk*col, and add in extension of prev product
       TWOSUM(dotproducth,th2,dotproducth,vval)  // combine high parts in quad precision
       tl2=_mm256_add_pd(dotproductl,tl2); tl2=_mm256_add_pd(vval,tl2);  // add extensions, 3 products costs 2 bits of precision
@@ -1694,7 +1702,7 @@ endqp: ;
    }else{
     // fetching from the Ek matrix itself.  Just fetch the values from the column
     dotproducth=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv+colx,rowgather,endmask,SZI);
-    if(ZVISONECOL){dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv+qkstride+colx,rowgather,endmask,SZI);}  // if quad-prec (onecol)
+    if(unlikely(ZVISONECOL)){accmaxabs=_mm256_setzero_pd(); dotproductl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),mv+qkstride+colx,rowgather,endmask,SZI);}  // if quad-prec (onecol)
    }  // end of creating NPAR values
 
    // process the NPAR generated values
@@ -1780,7 +1788,8 @@ endqp: ;
 // obsolete      }
    }else{
     // ************************************************************************** one-column mode+SPR: store out the values, setting to 0 if below threshold
-    __m256d okmask=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),store0thresh,_CMP_GT_OQ);  // 0s where we need to clamp
+    accmaxabs=_mm256_fmadd_pd(accmaxabs,_mm256_set1_pd(RELSIGMAX),store0thresh);  // no reason to keep values that are all noise.  We take 100 bits from max significance
+    __m256d okmask=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),accmaxabs,_CMP_GT_OQ);  // 0s where we need to clamp
 // obsolete      dotproducth=_mm256_and_pd(_mm256_xor_pd(dotproducth,minsprshared),okmask);  // set values < threshold to +0
 // obsolete      dotproductl=_mm256_and_pd(_mm256_xor_pd(dotproductl,minsprshared),okmask);  // low part too.
     if((I)zv&ZVNEGATECOL){dotproducth=_mm256_xor_pd(sgnbit,dotproducth); dotproductl=_mm256_xor_pd(sgnbit,dotproductl);}  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
@@ -2136,7 +2145,7 @@ return4:;  // we have a preemptive DIP/gradient result.  store and set minimp =-
 //   bk is the current bk (must include a 0 corresponding to Fk and then MUST BE 0-EXTENDED to a batch boundary) 
 //   z is the result area for the requested column - qp, and must be able to handle overstore to a full batch, including the Fk value if any
 //   ndx is the atomic column# of NTT requested
-//   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,[BkOvershoot],[MinSPR],[PriRow]
+//   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
 //    #rows is number of rows in the Ek portion of Qk; if Fk present too, value is 1s-comp
 //    maxAx is the length of the longest dot-product
 //    Col0Threshold is minimum |value| considered non0 for a column value
@@ -2365,7 +2374,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
    // gather the high parts of Qk
    __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow,prn0x,endmask,SZI);
    // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
-   __m256d maxabs=_mm256_max_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_andnot_pd(sgnbit,_mm256_mul_pd(pcoldh,prowdh)));
+// obsolete    __m256d maxabs=_mm256_max_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_andnot_pd(sgnbit,_mm256_mul_pd(pcoldh,prowdh)));
    if(unlikely(!(dpflag&1))){
     // single-precision calculation
     // if mplr given, multiply prow by it
@@ -2374,8 +2383,8 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     qkvh=_mm256_fnmadd_pd(prowdh,pcoldh,qkvh);
     if(!(dpflag&8)){
      // thresholding - convert maxabs to abs(qkvh) > thresh: if 0, means result should be forced to 0
-     maxabs=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),mabsfuzz,_CMP_GT_OQ);   // maxabs = 0 if result too small
-     qkvh=_mm256_and_pd(qkvh,maxabs); // zero if lower than fuzz (high part)
+// obsolete      maxabs=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),mabsfuzz,_CMP_GT_OQ);   // maxabs = 0 if result too small
+     qkvh=_mm256_and_pd(qkvh,_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),mabsfuzz,_CMP_GT_OQ)); // zero if lower than fuzz (high part)
     }
     // scatter the results (high part)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
@@ -2397,6 +2406,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     }
     // (iph,ipl) = - prowdh*pcoldh    we could skip the extended calc if both mpcands are dp, as they are for some swap calcs; but we deem it not worthwhile
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
+    __m256d magqh=qkvh;   // save high part of one addend
     if(!(dpflag&16)){ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);}  // accumulate middle pps - can skip for b0 when both mpcands are dp
     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
     // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
@@ -2416,10 +2426,11 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      // Make sure qkvl is much less than qkvh
      TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
      if(!(dpflag&8)){
-      // thresholding - convert maxabs to abs(qkvh) - maxabs*thresh: if < 0, means result should be forced to 0
-      maxabs=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),mabsfuzz,_CMP_GT_OQ);   // maxabs = 0 if result too small
-      qkvl=_mm256_and_pd(qkvl,maxabs); // zero if lower than fuzz (low part)
-      qkvh=_mm256_and_pd(qkvh,maxabs); // zero if lower than fuzz (high part)
+      // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
+      magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,magqh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
+      magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
+      qkvl=_mm256_and_pd(qkvl,magqh); // zero if lower than fuzz (low part)
+      qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz (high part)
      }
     }
     // scatter the results (both parts)

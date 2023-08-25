@@ -180,7 +180,6 @@ strptime_internal (const char *rp, const char *fmt, struct tm *tm,
     start_over:
 
         /* Make back up of current processing pointer.  */
- // obsolete         rp_backup = rp;
 
         switch (*fmt++)
         {

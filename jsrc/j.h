@@ -1418,7 +1418,6 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
           if(likely(lzz<=0)){stmt} \
          } \
         }
-// obsolete          else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL for(;lzz;c0+=((lzz-1)&(SZI-1))+1,c1+=((lzz-1)&(SZI-1))+1,lzz=(lzz-1)&-SZI)if(((*(I*)c0^*(I*)c1)<<((-lzz&(SZI-1))<<LGBB))!=0)break; \
 
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable and non-pristine
@@ -2216,22 +2215,6 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // for the complete spec for CTTZ and CTTZZ.
 
 // CTLZ(I) returns the bit position of the highest 1-bit
-
-#if 0 // obsolete
-#if defined(MMSC_VER)  // SY_WIN32
-// do not include intrin.h
-// #include <intrin.h>
-#define CTTZ(w) _tzcnt_u32((UINT)(w))
-#if SY_64
-#define CTTZI(w) _tzcnt_u64((UI)(w))
-#define CTLZI(in,out) _BitScanReverse64(&(out),in)  // actually bit # of highest set bit
-#else
-#define CTTZI(w) _tzcnt_u32((UINT)(w))
-#define CTLZI(in,out) _BitScanReverse(&(out),in)
-#endif
-#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
-#endif
-#endif
 
 #ifdef __GNUC__
 #define CTTZ(w) __builtin_ctzl((UINT)(w))

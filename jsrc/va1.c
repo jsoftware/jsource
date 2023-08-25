@@ -154,16 +154,8 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  UA *u=((UA*)((I)va1tab+FAV(self)->localuse.lu1.uavandx[0]));
  F1PREFIP;ARGCHK1(w);
  wt=AT(w); n=AN(w);
-// obsolete  wt=(I)jtinplace&JTEMPTY?B01:wt;
  if(unlikely(!(wt&NUMERIC))){ASSERT(AN(w)==0,EVDOMAIN) wt=B01;}  // arg must be numeric.  If it is, keep its type even if empty; if not, fail unless empty, for which treat as boolean
-// obsolete  #if SY_64
-// obsolete  VA1 *p=&u->p1[(0x0321000054032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need xxx 011 010 001 xxx 000 xxx xxx   101 100 xxx 011 010 001 xxx 000
  VA1 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
-// obsolete  #else
-// obsolete   if(ISSPARSE(wt)){wt=AT(SPA(PAV(w),e));}
-// obsolete   VA1 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
-// obsolete  #endif
-// obsolete  ASSERT(,EVDOMAIN);
  if(likely(!((I)jtinplace&JTRETRY))){
   ado=p->f; cv=p->cv;
  }else{
@@ -190,7 +182,6 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   if(((zt^AT(w))&NUMERIC)==0)RCA(w);  // if the argument has the correct type, return the argument
   GA(z,zt,n,AR(w),AS(w)); RETF(z);  // if not, make an appropriate empty and return it
  }
-// obsolete   R w;  // if function is identity, return arg
  if(unlikely((SGNIFSPARSE(AT(w))&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv);  // extract required type of input and result
@@ -239,8 +230,6 @@ DF1(jtatomic1){A z;
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
-// obsolete  // while it's convenient, check for empty result
-// obsolete  jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));
  // Run the full dyad, retrying if a retryable error is returned
  NOUNROLL while(1){  // run until we get no error
   z=jtva1(jtinplace,w,self);  // execute the verb

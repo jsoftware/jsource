@@ -117,15 +117,10 @@ typedef AD *A;
 #define JTTHORNY    (((I)3)<<JTTHORNYX)
 #define JTTHORNXX       4  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: vert
 #define JTTHORNX    (((I)3)<<JTTHORNXX)
-// obsolete // following bit is used in the call to jtcelloffset
-// obsolete #define JTCELLOFFROMX   0  // treat a single list as if a rank-2 array
-// obsolete #define JTCELLOFFROM    (((I)1)<<JTCELLOFFROMX)
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
-// obsolete #define JTEMPTYX        5  // in va2, this bit indicates the result is empty
-// obsolete #define JTEMPTY         (((I)1)<<JTEMPTYX)
 #define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
 #define JTRETRY         (((I)1)<<JTRETRYX)
 
@@ -1126,7 +1121,6 @@ typedef struct {
 #define VFLR            (I)0x2000         /* function is <.@g                */
 #define VCEIL           (I)0x4000       /* function is >.@g                */
 // bit 15 free
-// obsolete #define VMOD            (I)0x8000        /* function is m&|@g               */
 #define VLOCK           (I)0x10000        /* function is locked              */
 // bit 17 free
 #define VFIX            (I)0x40000       /* f. applied                      */

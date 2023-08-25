@@ -100,7 +100,6 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  while(n>k)zv[dv[k++]]=p; RETF(z);
 }
 
-// obsolete #define MAXIFACTOR 0x7fffffffLL
 #if SY_64
 #define TOTALPRIMES 30000  // pollard beats sieve when the values are big enough
 #define MAXIFACTOR (350411ULL*350411ULL-1ULL)  // <: *: p: >: TOTALPRIMES, which is the largest value we can reliably factor using our prime table
@@ -452,19 +451,10 @@ F1(jtfactor){PROLOG(0063);A y,z;
  F1RANK(0,jtfactor,DUMMYSELF);
  // from here on we are operating on a single atom in w
  RZ(w=vi(w));
-// obsolete  wn=AN(w); wv=AV(w);
-// obsolete  n=0; DO(wn, k=wv[i]; ASSERT(0<k,EVDOMAIN); n=MAX(n,k););
  I nn=BIV0(w); ASSERT(nn>0,EVDOMAIN)  // n=value to factor
  UI n=nn;  // use unsigned for the rest
-// obsolete #if SY_64
-// obsolete  if(n>2147483647)R cvt(INT,xfactor(w));
-// obsolete #endif
  UI *u=AV(JT(jt,p4792));
-// obsolete  c=8*SZI-2;
  I factors[BW-1]; I *v=factors;   // max number of factors is (BW-2) since 2^(BW-1) is IMIN
-// obsolete MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=c;
-// obsolete  for(i=m=0;i<wn;++i){
-// obsolete   n=*wv++;
 #if SY_64
  UI d,q; UI i; 
  // first batch: 64-bit reciprocals
@@ -499,11 +489,6 @@ endfac:;  // come here when q gets too small or we run out of primes
  *v=n;  // the last divide might have left us with a prime bigger than d but small enough to exit
  z=vec(INT,(v-factors)+(n>1),factors);  // create a suitable result block
 #endif
-// obsolete *v++=n;  // if there is a remnant, add it on, it is prime
-// obsolete   d=v-zv; m=MAX(m,d); zv+=c; while(v<zv)*v++=0; 
-// obsolete  }
-// obsolete  z=c==m?z:taker(m,z);
-// obsolete  z=take(sc(v-zv),z);  // discard unfilled values
  EPILOG(z);
 }    /* q:"r w */
 

@@ -51,7 +51,6 @@ static I dmodpow(D x,I n,D m){D z=1; while(n){if(1&n)z=fmod(z*x,m); x=fmod(x*x,m
 // mrecip is 2^64/m
 static UI imodpow(UI x,I n,UI m,UI mrecip){
  if(unlikely(m==1))R 0; UI z=1; // if n=0 result is 1 unless m=1, then 0
-// obsolete  UI mrecip=((UI)(-IMIN)/m); mrecip=(mrecip<<1)+((((UI)(-IMIN)-mrecip*m)<<1)>=m);  // 2^64%m, possibly low by as much as 2^-64
 #define modm(x) ({UI t; doubletype tt; tt=(doubletype)(x)*(doubletype)mrecip; t=tt>>BW; t=(x)-t*m; if(unlikely(t>=m))t-=m; t;})
  // x%m using mrecip.  x*mrecip is truncated, which gives the remainder.  mrecip may be 2^-64 low, so the remainder may be x*m/2^64 high, i. e. m^3/2^64.  This is never more than m too high, so a single correction suffices
  // we expect the correction to be rare so we use a branch
@@ -73,11 +72,9 @@ static DF2(jtmodpow2){A h;B b,c;I m,n,x,z;
  }
  // all values are INT
  n=AV(w)[0];
-// obsolete  if(!(INT&at&&INT&wt&&0<=n))R residue(h,expn2(a,w));
  if(unlikely(n<0))R residue(h,expn2(a,w));  // if negative exponent revert to long form
  m=AV(h)[0]; x=AV(a)[0];  // m=modulus, x=base
  if(unlikely(!m))R expn2(a,w);   // if 0 divisor, same as infinite modulus
-// obsolete  if(XMOD<m||XMOD<-m||m==IMIN||x==IMIN)R cvt(INT,xmodpow(a,w,h));
  if(b=0>m)m=-m; if(c=0>x)x=(I)(0-(UI)x);  // b=m neg, c=x neg; take abs of m and x (might be IMIN)
  if(((I)(XMOD-(UI)m)|x)<0)R cvt(INT,xmodpow(a,w,h));  // if m>XMOD, or x=IMIN, revert to extended calculation but convert result back to INT
  if(unlikely(x>=m))x=x%m;  // bring x in range if needed
@@ -87,7 +84,6 @@ static DF2(jtmodpow2){A h;B b,c;I m,n,x,z;
 #else
  z=m>DMOD?dmodpow((D)x,n,(D)m):imodpow(x,n,m,FAV(self)->localuse.lu1.mrecip);
 #endif
-// obsolete R sc(b?z-m:z);
  R sc(z-((-b)&m));  // if m neg, move result to range -m..-1
 }    /* a m&|@^ w ; m guaranteed to be INT or XNUM */
 
@@ -219,7 +215,6 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    // are both set only in atomic primitives
    if(unlikely((wv->lrr|wv->mr|(~wv->flag&(VISATOMIC1|VJTFLGOK1)))==0))if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,8,"(008) f/@g is the same as g when g is atomic\n"));
    break;
-// obsolete   case CPOUND:  if(d==CCOMMA)f1=jtnatoms; if(d==CDOLLAR)f1=jtrank; break;    // #@,  #@$
   case CPOUND:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
   case CSTAR:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
   case CCEIL:   f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
@@ -248,7 +243,6 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
    if((d==CEXP||d==CAMP&&CEXP==ID(wv->fgh[1]))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==ID(av->fgh[1])){  // m&|@^ and m&|@(n&^) where m is atomic INT/XNUM
     h=x; UI m=ABS(IAV(x)[0]);
-// obsolete  flag+=VMOD;
     // precalculate 2^64/m so it is there if we need it
     if(AT(x)&INT&&m>1){mrecip=((UI)IMIN/m); mrecip=(mrecip<<1)+((((UI)IMIN-mrecip*m)<<1)>=m);}  // 2^64%m, possibly low by as much as 2^-64
     if(d==CEXP){f2=jtmodpow2; flag&=~VJTFLGOK2;} else{f1=jtmodpow1; flag&=~VJTFLGOK1;}

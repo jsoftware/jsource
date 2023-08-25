@@ -414,7 +414,6 @@ fffasg=(fffgs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[1]=fffasg;  /* 
 fffasg=(fffhs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/otfher stuff and install as h */ \
 AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens */ \
 }
-// obsolete AN(fffz)=0xdeadbeef;  /* AN field of function is used for actual rank scaf */
 // fdeffill replaces the original fdef, which did not know about localuse
 #define fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fdeffillall(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r,fffv->localuse.lu0.cachedloc=0,fffv->localuse.lu1.cct=0.0)
 #define fdef(flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) ({A fffz; fdefallo(fffz) fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fffz;})  // we no longer check error.  This cannot return 0

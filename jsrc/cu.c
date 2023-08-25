@@ -221,7 +221,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   I acbefore=AC(virta);if(((AC(virta)-(flags&ACPERMANENT))&ACINPLACE)<0){ACIPYESLOCAL(virta);AZAPLOC(virta)=av;}  // note uses different flag
 
   if(unlikely((x=CALL2IP(f2,virta,virtw,fs))==0)){ // run the user's verb
-// obsolete    ACIPNO(virtw); ACIPNO(virta);
    if(likely(flags&BOX))if(likely((I)*wv!=0))ACIPNO(virtw); if(likely(flags&(BOX<<1)))if(likely((I)*av!=0))ACIPNO(virta); R0;  // error: restore noninplaceability before we exit
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
@@ -247,8 +246,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
 
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
-// obsolete    // If the arg escaped (or was returned), we must also remove pristinity on the result if the arg is repeated, since it might show up again.  Not needed if WILLBEOPENED
-// obsolete    flags&=~(((((wcbefore!=AC(virtw))|(x==virtw))&flags)|(((acbefore!=AC(virta))|(x==virta))&(flags>>1)))<<ACINPLACEX);
    // normal case where we are creating the result box.  Must incorp the result
    realizeifvirtual(x); razap(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
   } else {

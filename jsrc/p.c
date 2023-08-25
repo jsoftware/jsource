@@ -481,7 +481,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
   //         25 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  free
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
-// obsolete , 21 flag to indicate global symbol table used
   //  19 free
   //  18   AR flag from symtab
   //  16 free
@@ -490,11 +489,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define LOCSYMFLGX (18-ARLCLONEDX)  // add LOCSYMFLGX to AR*X to get to the flag bit in pt0ecam
 #define PLINESAVEX 20  // 3 bits of pline
-// obsolete #define USEDGLOBALX 21
-// obsolete #define USEDGLOBAL (1LL<<USEDGLOBALX)
 #define NAMEFLAGSX 17  // 17 and 20
-// obsolete #define NVRSTACKEDX 16
-// obsolete #define NVRSTACKED (1LL<<NVRSTACKEDX)
   // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
 #if SY_64
 #define SETSTACK0PT(v) pt0ecam=(UI4)pt0ecam, pt0ecam|=(I)(v)<<32;
@@ -564,7 +559,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       // pass over a subroutine call, we have to store it in pt0ecam or some other saved name
       I4 symx, buck;
       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
-// obsolete buck=NAV(QCWORD(y))->bucket;
       L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
       pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
@@ -576,7 +570,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
        raposlocalqcgsv(s->val,s->valtype,y);  // ra() the value to match syrd.  type has global flag clear
       } else if(likely((buck=NAV(QCWORD(y))->bucket)!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
        I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
-// obsolete        if(likely((bx|SGNIF(pt0ecam,ARNAMEADDEDX+LOCSYMFLGX))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table
        if((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
@@ -612,7 +605,6 @@ rdglob: ;  // here when we tried the buckets and failed
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
         // nameless modifier, and not a locative.  This handles 'each', u m. n, and the like.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
-// obsolete         y=(A)((I)y+QCADV-VALTYPENAMELESSADV);  // convert type to normal adverb, which the parser looks for
         NAMELESSQCTOTYPEDQC(y)  // convert type to normal adverb, which the parser looks for
         if(NAV(origy)->flag&NMCACHED){  // nameless mod is cachable - replace it by its value in the name
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent

@@ -67,7 +67,6 @@ F1(jttable){A z,zz;I r,wr;
  F1PREFIP;ARGCHK1(w);
  // We accept the pristine calculations from ravel
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
-//  obsolete  RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items
  RZ(IRSIP1(w,0L,r-((UI)r>0),jtravel,z));  // perform ravel on items
  R r?z:IRSIP1(z,0L,0L,jtravel,zz);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
@@ -84,7 +83,6 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.
  if(wf>=af){RETF(w);}  // no replication - quick out
-// obsolete  RESETRANK; RETF(reitem(vec(INT,af-wf,AS(a)),lamin1(w)));  // could use virtual block, but this case is so rare...
  RESETRANK; a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); A z; IRS2(a,w,0L,RMAX,wcr,jtreshape,z); RETF(z);  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
 } 
 

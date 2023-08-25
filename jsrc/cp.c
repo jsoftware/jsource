@@ -189,8 +189,6 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
  if(pscan0){A sneg; RZ(sneg=sc(pscan0)); RZ(p=apip(drop(sneg,p),reverse(take(sneg,p))));}
  // result is ($n) $ (p i. ,n) { result - avoid the reshape if n is a list, and avoid the from if (p i. ,n) is an index vector
  if(!jtisravelix(jt,n))RZ(zz=fromA(indexof(p,rn),zz));   // if n is not i. #,n already, put zz into order of p i. ,n
-// obsolete  RZ(p=indexof(p,rn));   // for each input power, the position of its executed result   scaf test for rn=index without creating IX or performing indexof
-// obsolete  if(!equ(IX(np),p))RZ(zz=fromA(p,zz));  // order result-cells in order of the input powers
  if(AR(n)!=1)zz=reitem(shape(n),zz);  // if n is an array, use its shape
  EPILOG(zz);
 }

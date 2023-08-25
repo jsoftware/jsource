@@ -1021,16 +1021,6 @@ runout:;  //
      np=np0;  // advance to next box
     }while(--n>0);
     if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
-// obsolete     // runout for the box, repeated from above  // scaf should use loop tricks to avoid repeat?
-// obsolete     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun
-// obsolete      if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
-// obsolete      else{I c=AC(np);
-// obsolete       // virtual block.  Must be the contents of a WILLOPENED, but it may have other aliases so the usecount must be checked
-// obsolete       if(--c<=0){
-// obsolete        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
-// obsolete       }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
-// obsolete      }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
-// obsolete     }
    }
   } else if(t&NAME){A ref;
    if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference

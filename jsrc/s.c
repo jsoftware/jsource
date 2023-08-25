@@ -351,10 +351,7 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
-// obsolete  // if this is a looked-up assignment in a primary symbol table, use the stored symbol#
  I4 b=u->bucket;
-// obsolete  symx=u->symx; b=u->bucket;
-// obsolete  if(likely((SGNIF(AR(jt->locsyms),ARLCLONEDX)|(symx-1))>=0)){R sympv+(I)symx;  // local symbol given and we are using the original table: use the symbol
  if((likely(b!=0))){
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
@@ -665,7 +662,6 @@ A jtprobequiet(J jt,A a){A g;
  R res;
 }
 
-// obsolete static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
 // assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
 // Result points to the symbol-table block for the assignment
 // flags set if jt: bit 0=this is a final assignment;
@@ -705,7 +701,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
   // NOTE that the value may be in use elsewhere; may even be a primitive.
 
-// obsolete   if(valtype==QCADV)if(!(NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)&&(I)nameless(w))valtype=VALTYPENAMELESSADV;
   if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate
   if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
   if((AR(g)&ARLOCALTABLE)!=0)AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up

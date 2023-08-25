@@ -469,7 +469,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-// obsolete   if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args, no empties
   if(likely(!(((I)jtinplace&JTRETRY)+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args
    // Here for the fast and important case, where the arguments are both dense B01/INT/FL
    VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
@@ -493,8 +492,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     // when there is an empty - but it guarantees that execution on an empty never fails.
     at=((-AN(a)&(-AN(w)|-(at&NUMERIC)))>=0)?B01:at;
     wt=((-AN(w)&(-AN(a)|-(wt&NUMERIC)))>=0)?B01:wt;
-// obsolete     if(AN(a)==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
-// obsolete     if(AN(w)==0){wt=B01;if(!(at&NUMERIC))at=B01;}
     adocv=var(self,at,wt);   // rerun the decode with safer types
    }
    aadocv=&adocv;  // we save the address of the struct
@@ -1241,8 +1238,6 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   // self, awr, and selfranks are needed in the retry
  } 
  
-// obsolete  // while it's convenient, check for empty result
-// obsolete  jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
  NOUNROLL while(1){
   // Run the full dyad, retrying if a retryable error is returned

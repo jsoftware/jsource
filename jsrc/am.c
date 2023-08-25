@@ -142,7 +142,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // audit shape of a: must be a suffix of (shape of ind),(shape of selected cell)
  I compalen;  // len of shape of a that has been compared
  I acr=AR(a)-aframelen, wcr=AR(w)-wframelen;  // inner cell ranks
-// obsolete  I surplusind=AR(ind)-cellframelen; surplusind=cellframelen<0?0:surplusind;  // get # extra axes in ind beyond the ones that selected cells.  for axes, all axes select
  I *as=AS(a)+aframelen, *ws=AS(w)+wframelen;  // address of shapes of cells of a/w
  if(cellframelen>=0){  // ind is indexes
   ASSERT(acr<=wcr+AR(ind)-cellframelen,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
@@ -150,7 +149,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   ASSERTAGREE(as,AS(ind)+AR(ind)-compalen,compalen);  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
  }else{I wi; struct axis *axes=(struct axis*)ind;  // ind is axes.  The cell-frame part of the shape of a must be a suffix of the cell-frame part of axes
   I ai=compalen=MAX(0,acr-(wcr-~cellframelen));  // #axes of a that are outside of the cell in w
-// obsolete   nframeaxes = (wframelen!=0)+BETWEENO(aframelen,1,wframelen); // number of axes added for frame
   // scan through the frame of ind, backwards.  Match each axis-shape with trailing shape of ind.  Stop when a is exhausted.  If a has surplus axes, that's an error
   for(wi=(~cellframelen);((ai-1)|(wi-1))>=0;--wi){  // loop through each axis of w, starting at the last.  Stop when wi OR ai hits 0
    // ai is the index+1 of the next axis of a to match
@@ -160,24 +158,17 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
    I aslen=MIN(ai,indr); ASSERTAGREE(as+ai-aslen,inds+AR(wx->ind)-aslen,aslen)  // verify that the shape of a matches ind at the tail of each
    ai-=aslen;  // account for axes of a that we have tested
   }
-// obsolete   If an axis has max<0, that was a selector that contained an atom: it disappeared from the shape of m{y and we skip it here (while resetting its len to +1).
-// obsolete   // compare the unskipped axes of ind with those of a.  
-// obsolete   DQ(~cellframelen, if(((struct axis*)ind)[i+nframeaxes+1].max<0)((struct axis*)ind)[i+nframeaxes+1].max=1; else if(aaxis){ASSERT(((struct axis*)ind)[i+nframeaxes+1].max==as[--aaxis],EVLENGTH)})
   ASSERT(ai==0,EVRANK);  // error if unmatched axes of a
  }
  ASSERTAGREE(as+compalen,ws+wcr-(acr-compalen),acr-compalen)  // the rest of the shape of m{y comes from shape of y
 
-// obsolete  ASSERT(HOMO(AT(a),AT(w))||(-AN(a)&-AN(w))>=0,EVINHOMO);  // error if xy both not empty and not compatible
  // if there is surplus outer frame for a, replicate w to match the result size
  if(unlikely(aframelen>wframelen)){IRS2(a,w,0L,acr,wcr,jtright2,z); RZ(z); w=z; wframelen=aframelen;}  // w =. a ]"ranks w
  if(unlikely(!AN(w)))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
  if(unlikely(!AN(a)))RCA(w);  // if nothing to amend, return.  Ignore inplacing
 
  ASSERT((POSIFHOMO(AT(a),AT(w)))>=0,EVINHOMO);  // error if xy both not empty and not compatible
-// obsolete &-AN(a)&-AN(w)
-// obsolete  t=AN(a)?maxtyped(AT(a),AT(w)):AT(w);  // get the type of the result: max of types, but if x empty, leave y as is
  t=maxtyped(AT(a),AT(w));  // get the type of the result: max of types
-// obsolete  if((-AN(a)&-TYPESXOR(t,AT(a)))<0)RZ(a=cvt(t,a));  // if a must change precision, do so
  if(TYPESNE(t,AT(a)))RZ(a=cvt(t,a));  // if a must change precision, do so
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
@@ -244,7 +235,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   if(unlikely((n0|n1)==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
   axes=localaxes;  // use the temp block for ind version
   base=CAV(z);  // the array in full is in play
-// obsolete axes[0].base=
   scan0reset=0;  // last-axis index pointer rolls along between iterations of 'axis -2'
   scan0=IAV(ind);  // keep pointer to the index list where we will use it - as indexes of last axis
   r=2;  // normally we will need only 2 axes
@@ -300,7 +290,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   n0=axes[r].max; n1=axes[r-1].max;  // # iterations left on last 2 axes
   scan0=axes[r].indexes; scan0reset=-n0;  // point to the indexes for the last axis (NEVER 0 meaning 'taken in full' which were discarded earlier); reset to start of indexes after each iteration
   base=CAV(z);  // the array in full is in play
-// obsolete axes[0].base=
   // roll up cell sizes, convert resetadder from atoms to bytes, and insert a resetadder at the point where a major cell of a is exhausted & must be repeated
   I prevsize=cellsize<<lgk;  //  size of cell of w at previous axis, in bytes.  Init to size of cell of last axis
   I axisressize=cellsize;  // size in atoms of full cell of a at this axis: following axis result size*number of indexes at this axis.  When this is = size of a, we must wrap a
@@ -348,15 +337,11 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
      amflags|=CTTZI(cellsize<<lgk)*8 + (repeatatom<<5) + (backupct*((1+AMFLAGDUFFW+AMFLAGDUFFA)^(repeatatom<<AMFLAGDUFFAX)));  // routine is 0brccDdd (r=repeat, cc=cellsize, ddd=duff backoff, D=0 if repeat)
     }else{
      // cell is not 1-, 2-, 4-, or 8-size, or there are multiple outer cells of a. We will have to use move loops.  No duff
-// obsolete     I mvnoinc=cellsize==acatoms;  // 1 if a contains a single cell, and thus must not increment address after the move
      I mvinc=REPSGN((cellsize-acatoms)|(-aframelen));  // ~0 normally; 0 if a contains a single cell, and thus must not increment address after the move  (aca>csz or aframe)
      I mvbytelen=((cellsize<<lgk)&(SZI-1))!=0;  // 1 if cells are not word multiples, in which case we must not overstore
-// obsolete     amflags|=0b100100+(mvnoinc<<1)+(mvbytelen<<3);  // select appropriate code
      amflags|=0b100110+(mvinc<<1)+(mvbytelen<<3);  // select appropriate code
-// obsolete     avnreset&=mvnoinc-1;  // if increment is supressed, also clear avnreset
      // avnreset is set to make the proper adjustment to av after it has been incremented in the loop.  If the loop doesn't increment, compensate by
      // adding the increment to avnreset
-// obsolete    avnreset&=mvinc;  // if increment is supressed, also clear avnreset
      avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
      JMCSETMASK(endmask,cellsize<<lgk,mvbytelen)   // prepare for repeated move
     }
@@ -376,13 +361,10 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
   }else{
    // replacing recursive indirect blocks
    // cases: multiple cells of a; single cell of a, repeated; single cell of a, duped; single atom of a, repeated
-// obsolete   I repa=cellsize>=acatoms;  // 1 if a has a single cell
 
    I mvinc=REPSGN((cellsize-acatoms)|(-aframelen));  // ~0 normally; 0 if a contains a single cell with no frame, and thus must not increment address after the move  (aca>csz or aframe)
    I nodupa=cellsize<=acatoms;  // 0 if the single cell of a must be duplicated in each replaced cell
-// obsolete   avnreset&=repa-1;  // if a has a single cell, don't increment its address/value
    avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
-// obsolete   amflags|=0b110011+2*repa+nodupa;  // 110100=incremented a; 110110=single cell of a; 110101=single cell of a, no frame, duped
    amflags|=0b110101+2*mvinc+nodupa;  // 110100=incremented a; 110110=single cell of a; 110101=single cell of a, duped
    I oneatom=(an+(t>>RATX))==1; C *avv=(C*)*(A*)av; av=oneatom?avv:av; avnreset=oneatom?0:avnreset; amflags|=3*oneatom;   // if a is one single atom, fetch the atom and set code to 110111
    cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower.  Repurpose cellsize as #indirect references
@@ -508,16 +490,12 @@ endamend:;
 // This is like pind/aindex1 followed by pdt, but done in registers and without worrying about checks for overflow, since the result
 // if valid will fit into an integer.
 static A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;
-// obsolete F1PREFIP;
  ARGCHK1(w);
  if(AR(ind)<2){
   // rank of ind is 0 or 1.  Treat as list of first-axis values (as is suitable for (<ind)}) unless ind} is specified and rank=1 and length>1; then treat as list of successive axes
-// obsolete   if(!((I)jtinplace&(AN(ind)>1)&JTCELLOFFROM))RZ(z=pind(AS(w)[wframelen],ind));  // (m} only, or length<2) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
   if((wframelen|(AN(ind)-2))<0)RZ(z=pind(AS(w)[~wframelen],ind));  // (m} only, or length<2) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
   // if (<ind)} on list, leave z=0 and fall through to treat as table
  }
-// obsolete else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
-// obsolete  }
  if(likely(z==0)){  // if not handled already...
   wframelen^=REPSGN(wframelen);  // remove flag, leaving wframelen
   // rank of ind>1 (or = if (<ind)}), and rows of ind are longer than 1. process each row to a cell offset
@@ -529,88 +507,9 @@ static A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind,I wframelen){A z=0;
   I *iv=IAV(ind); // point to first row
   I *sv=&AS(w)[wframelen];  // axis lengths
   DQ(nzcells, I r=0; if(naxes){I i=0; I s=sv[i]; while(1){r*=s; I in=iv[i]; if((UI)in>=(UI)s){in+=s; ASSERT((UI)in<(UI)s,EVINDEX);} r+=in; if(++i==naxes)break; s=sv[i];}} *zv++=r; iv+=naxes;)  // carried dependency unimportant because short; use 0 if no axes
-#if 0  // obsolete
-  // Do the verify/multiply depending on number of axes.
-  if(naxes<3){
-   // rank 2
-   I ln0=AS(w)[wframelen+0], ln1=AS(w)[wframelen+1];
-   DQ(nzcells, I in=iv[0]; if((UI)in>=(UI)ln0){in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX);} I r=in*ln1;
-                    in=iv[1]; if((UI)in>=(UI)ln1){in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX);} r+=in;
-                    *zv++=r; iv+=2;)
-  }else if(naxes==3){
-   // rank 3  Avoid Horner's Rule, which creates a carried dependency across the multiplies
-   I ln0=AS(w)[wframelen+0], ln1=AS(w)[wframelen+1], ln2=AS(w)[wframelen+2], ln12=ln1*ln2;
-   DQ(nzcells, I in=iv[0]; if((UI)in>=(UI)ln0){in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX);} I r=in*ln12;
-                    in=iv[1]; if((UI)in>=(UI)ln1){in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX);} r+=in*ln2;
-                    in=iv[2]; if((UI)in>=(UI)ln2){in+=ln2; ASSERT((UI)in<(UI)ln2,EVINDEX);} r+=in;
-                    *zv++=r; iv+=3;)
-  }else{
-   // rank 4+.  For simplicity we use Horner's Rule since this case is rare
-   I ln0=AS(w)[wframelen+0], ln1=AS(w)[wframelen+1], lnn=AS(w)[wframelen+naxes-1];
-   DQ(nzcells, I in=iv[0]; if((UI)in>=(UI)ln0){in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX);} I r=in*ln1;
-                    in=iv[1]; if((UI)in>=(UI)ln1){in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX);}
-                    DO(naxes-3,                                               r=(r+in)*AS(w)[wframelen+i+2];
-                    in=iv[i+2]; if((UI)in>=(UI)AS(w)[wframelen+i+2]){in+=AS(w)[i+2]; ASSERT((UI)in<(UI)AS(w)[wframelen+i+2],EVINDEX);})
-                                                                              r=(r+in)*lnn;
-                    in=iv[naxes-1]; if((UI)in>=(UI)lnn){in+=lnn; ASSERT((UI)in<(UI)lnn,EVINDEX);} r+=in;
-                    *zv++=r; iv+=naxes;)
-  }
-#endif
  }
  R z;
 }
-
-#if 0 // obsolete
-// Convert ind to a list of cell offsets.  Error if inhomogeneous cells.
-// Result *cellframelen gives the number of axes of w that have been boiled down to indices in the result
-static A jtjstd(J jt,A w,A ind,I *cellframelen,I wframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr,*ws;D rkblk[16];
- wr=AR(w)-wframelen; ws=AS(w)+wframelen; b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
- if(!wr){x=from(ind,zeroionei(0)); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
- if((b&-AR(ind))<0){   // array of boxed indexes
-  RZ(j=aindex(ind,w,wframelen)); j=(A)((I)j&~1LL);  // see if the boxes are homogeneous, or erroneous
-  if(!j){  // if not homogeneous...
-   if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,1,"(001) inhomogeneous multiple selectors in (x m} y): consider applying them separately\n"));
-   RZ(x=MODIFIABLE(from(ind,increm(iota(drop(sc(wframelen),shape(w))))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
-   DQ(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
-   *cellframelen=wr; R x;   // the indexes are what we want, and they include all the axes of w
-  }
-  // Homogeneous boxes.  j has them in a single table.  turn each row into an index
-  if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,2,"(002) homogeneous multiple selectors in (x m} y): consider using rank-2 m\n"));
-  b=0; ind=j;  // use the code for numeric array
-  // later this can use the code for table m
- }
- if(b>=0){
-  // Numeric/empty m.  Each 1-cell is a list of indexes (if m is a list, each atom is a cell index)
-  RZ(j=celloffset(w,ind,wframelen));  // convert list/table to list of indexes, possibly in place
-  n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
- }else{  // a single box.  must contain heterogeneous boxes, or we would have handled it earlier
-  ind=C(AAV(ind)[0]); n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
-  ASSERT((-(n|(r^1))&((AT(ind)&BOX+NUMERIC)-1))>=0,EVINDEX);  // must be empty list or numeric or boxed
-  if(((n-1)|SGNIF(AT(ind),BOXX))>=0)RZ(ind=IRS1(ind,0,0,jtbox,j));  // if numeric, box each atom
-  v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
-  ASSERT(1>=r,EVINDEX);  // not a table
-  ASSERT(n<=wr,EVINDEX);  // not too many axes
-  DQ(n, if(!equ(ds(CACE),C(v[i])))break; --n;);  // discard trailing (boxed) empty axes
-  j=zeroionei(0);  // init list to a single 0 offset
-  for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
-   x=C(v[i]); d=ws[i];  // d=length of axis i
-   if((-AN(x)&SGNIF(AT(x),BOXX))<0){   // notempty and boxed
-    ASSERT(!AR(x),EVINDEX); 
-    x=C(AAV(x)[0]); k=IX(d);
-    if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
-   }else k=pind(d,x);
-   RZ(x=tymesA(j,sc(d)));
-   RZ(j=ATOMIC2(jt,x,k,rkblk,0, RMAX,CPLUS));
-  }
- }
- // now j is an array of offsets.  n is the number of axes that went into each atom of j.  Return the offsets
- // Because of the way ind was passed through a verb-compound in jtgav2, it cannot be virtual and thus it is safe to destroy AM.
- // It might be good to give a dispensation and allow virtual ind.  In that case, j might have survived this long and thus
- // be virtual.  In that case we must either (1) realize it; (2) use the filler field (64-bit only) to pass back the number of axes; (3) use
- // a field in jt to pass back the number of axes.
- *cellframelen=n; R j;  // insert the number of axes used in each cell of j
-}    /* convert ind in a ind}w into integer atom-offsets */
-#endif
 
 // axislen is length of axis, ind is doubly-boxed selector that is itself a boxed type, therefore complementary
 // return list of indexes, or ds(CACE) if axis is taken in full
@@ -642,7 +541,6 @@ static A jtcompidx(J jt,I axislen,A ind){
 // Execution of x m}"r y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
 static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
   // ind=m, the indexes to be modified
-// obsolete  AD * RESTRICT ind; ind=VAV(self)->fgh[0];  // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
  I wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; RESETRANK;
@@ -691,7 +589,6 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
   // We also need to know the frame of the cells, in cellframelen
   struct axis *axes, localaxes[6]; A alloaxes;  // put axes here usually
   I *ws=AS(w); I indr=AR(ind);
-//  obsolete  b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and there is at least one axis
   A ind0;  // the contents that have the numbers
   if(unlikely(wcr==0)){
    // wcell is an atom.  The best you can get is indexes of 0, and that's if all the selectors are 0.  Use from to check for validity.  No axes are used
@@ -729,7 +626,6 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
   }else{
    // ind is a single box, <selectors.  It must have rank 0 unless it is a deprecated form
    ind0=C(AAV(ind)[0]);  // discard ind, move to selectors
-// obsolete   ASSERTSUFF(AN(ind0)<=wcr,EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
    if(AT(ind0)&BOX){
     // selectors are boxed.  They have selectors for sequential axes.  Put them into a multidimensional axis struct.  In this struct a pointer of 0 means
     // an axis taken in full
@@ -743,8 +639,6 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
       else{  // <<compidexes
        RZSUFF(z=jtcompidx(jt,ws[wframelen],ind0),R jteformat(jt,self,a,w,ind););   // resolve the comp indexes
        if(unlikely(z==ds(CACE)))RZ(z=IX(ws[wframelen]))  // rare (<<<'')} - must instantiate the in-full index vector
-// obsolete        ASSERTSUFF(!AR(ind0),EVINDEX,R jteformat(jt,self,a,w,ind););   // must be just one atomic box
-// obsolete        RZ(z=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(ws[wframelen]),num(1)),pind(ws[wframelen],C(AAV(ind0)[0])),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
       }
       cellframelen=1;  // in this path, the cells are _1-cells
      }else{
@@ -772,22 +666,12 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
        // not complementary indexing: create or keep valid integer index selectors
        // the selector may have any shape.  If it is not a list, it will affect the rank of m{y.  We store into .ind to indicate the shape of the selector
        RZSUFF(ax=pind(axlen,ax),R jteformat(jt,self,a,w,ind););  // audit selectors
-// obsolete        if(unlikely(AR(ax)>1)){
-// obsolete         // one of the selectors has rank >1.  We have to go to general case
-// obsolete         if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,3,"(003) axis selectors in (x m} y) have rank>1\n"));
-// obsolete         goto noaxes;  // table in selectors: abort axis work
-// obsolete        }
-// obsolete       axes[indn1].max=(AR(ax)-1)|AN(ax);  // note how many there are, or -1 if atom
        axes[indn1].max=AN(ax);  // note how many selectors there are
        axes[indn1].indexes=IAV(ax);  // save pointer to the indexes
       }else{
        // here for complementary indexing
        RZSUFF(ax=jtcompidx(jt,axlen,ax),R jteformat(jt,self,a,w,ind););   // resolve the comp indexes
-// obsolete        ASSERTSUFF(!AR(ax),EVINDEX,R jteformat(jt,self,a,w,ind););   // must be just one box
-// obsolete        ax=C(AAV(ax)[0]);  // open it
-// obsolete        if(AN(ax)){  // if not taken in full...
        if(ax!=ds(CACE)){  // if not taken in full...
-// obsolete         RZ(ax=icap(jtmerge2((J)((I)jt+JTINPLACEW),num(0),reshape(sc(axlen),num(1)),pind(axlen,ax),1)))  // I. 0 ind} (#w) $ 1  - the unselected indexes, in ascending order
         axes[indn1].max=AN(ax); axes[indn1].indexes=IAV(ax);  // set number of indexes, and their address
        }else{     // axis taken in full.  Tag with 0 pointer.  BUT the last axis cannot be taken in full: if we try, discard all trailing in-full axes  
         if(likely(indn1!=lastn)){    // non-trailing axis
@@ -823,16 +707,11 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
      }else{
       // rare case where so many trailing axes were deleted that we don't have 2 axes left.  Revert to ind form, where ax is known to have the ind for axis 0
       cellframelen=lastn; z=ax;  // the single axis must be complementary
-// obsolete  z=lastn?ax:zeroionei(0);  // set cell size, and axes if there are any; if no axes, just select array in full
-// obsolete         // the lastn=0 case is unorthodox.  We say that there are 0 frame axes, so that the cell is the entire array; we set the index to 0, which safely points to the
-// obsolete         // whole array, because ind is interpreted as if unboxed, and an unboxed empty selector selects nothing, while we want to select everything
      }
     }
    }else{
 boxednumeric:
     // Singly-boxed contents.   They must be an array of index lists; convert to array of cell indexes
-// obsolete     ASSERTSUFF(AR(ind0)<2,EVRANK,R jteformat(jt,self,a,w,ind););  // numeric contents must be atom or list
-// obsolete     cellframelen=AN(ind0);  // remember the size of the cells
     cellframelen=AS(ind0)[AR(ind0)-1]; cellframelen=AR(ind0)==0?1:cellframelen;  // length of a row of ind0 - number of axes used
     ASSERTSUFF(cellframelen<=wcr,EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
     if((notonecelldirect+(AN(ind0)^cellframelen))==0){
@@ -845,13 +724,9 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
      goto onecellframe; // xctl to the code that handles 1-cell amend
     }
     // Convert the array of index lists to an array of cell indexes
-// obsolete     if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset((J)((I)jt+JTCELLOFFROM),w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
     if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset(jt,w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }
   }
-// obsolete noaxes:;
-// obsolete   // at this point z contains the ind/axes info, and cellframelen indicates which.  If z=0 we have a complex form that will be converted to ind form in z
-// obsolete   if(unlikely(z==0))z=jstd(w,ind,&cellframelen,wframelen);  // get ind and framelen for complex indexes
   z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,(cellframelen&255)+(wframelen<<RANKTX)+(aframelen<<RANK2TX)+(nframeaxes<<(3*RANKTX)));  //  dense a if needed; dense amend
   if(unlikely(z==0))jteformat(jt,self,a,w,ind);  // eformat this error while we have access to ind
   // We modified w which is now not pristine.
@@ -898,7 +773,6 @@ static DF2(jtamnegate){F2PREFIP;
  // otherwise, revert to x -@:{`[`]}"r y, processed by jtgav2
  US ranks=jt->ranks; RESETRANK;
  R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);
-// obsolete  R jtgav2(jtinplace,a,w,self);
 }
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then

@@ -206,7 +206,6 @@ static ZF1(jtzacosh){Z z;
 }
 
 // Here we follow Kahan, Branch Cuts for Complex Elementary Functions, Table 1 which has now-recommended branch cuts
-// obsolete static ZF1(jtzatanh){R ztymes(zrj0((D)0.5),zlog(zdiv(zplus(z1,v),zminus(z1,v))));}
 static ZF1(jtzatanh){R ztymes(zrj0((D)0.5),zminus(zlog(zplus(z1,v)),zlog(zminus(z1,v))));}
 
 static ZF1(jtzatan){ZF1DECL;

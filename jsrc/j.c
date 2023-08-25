@@ -66,12 +66,10 @@ struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[3] = {  // floating-po
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0}
 };
-// obsolete I   v00[2]={0,0};         // vector value to use for rank 0 0
 D   inf=INFINITY;                /* _                                    */
 D   infm=-INFINITY;               /* __                                   */
 D   jnan=NAN;               /* _.                                   */
 D   pf=0;                 /* performance frequency                */
-// obsolete Q   zeroQ={iv0,iv1};          /* 0r1                                  */
 DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 I   iotavec[IOTAVECLEN];  // return values for i. small

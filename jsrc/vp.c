@@ -173,7 +173,6 @@ F2(jtadot2){A m,p;I n;
  ASSERT(all1(le(negate(m),a))&&all1(lt(a,m)),EVINDEX);
  if(!AR(w)){RZ(vi(a)); RCA(w);}
  RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));  // (i.@-&.:<: y) #: x 
-// obsolete  R equ(w,IX(n))?p:fromA(p,w);  // special case when w is index vector - just return permutation.  Otherwise shuffle items of w
  R (AR(w)==1&&AT(w)&B01+INT&&jtisravelix(jt,w))?p:fromA(p,w);  // special case when w is index vector - just return permutation.  Otherwise shuffle items of w
  // pristinity unchanged here: if w boxed, it was set by {
 }

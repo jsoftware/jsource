@@ -1284,21 +1284,22 @@ struct mvmctx opctx;  // parms to all threads, and return values
  ASSERT(AT(w)&BOX,EVDOMAIN);
  A box;
  box=C(AAV(w)[9]); ASSERT(AT(box)&FL,EVDOMAIN); ASSERT(AR(box)==1,EVRANK); ASSERT(AN(box)>0,EVLENGTH);  // parm shape, type
- D *parms=opctx.parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nbasiswfk=(I)parms[0]; I nbasiscols=nandfk^REPSGN(nandfk);   // flagged n
- box=C(AAV(w)[3]); ASSERT(AR(box)==3,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.qk=box;  // Qk, possibly including space and Fk
+ D *parms=opctx.parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nbasiswfk=(I)parms[0];   // flagged n
+ box=C(AAV(w)[3]); ASSERT(AR(box)==3,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.qk=box; I nbasiscols=AS(box)[2];  // Qk, possibly including space and Fk; # cols in basis
  ASSERT(AS(box)[0]==2,EVLENGTH)  // Qk is qp
  I ninclfk=AS(box)[1];   // number of rows to be processed including Fk
  ASSERT(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,EVNONCE)  // we fetch along rows; insist on data alignment
  I minbkzstride=(ninclfk+NPAR-1)&-NPAR;  // size of bk/bkbeta/z: enough for last batch including Fk if present
  box=C(AAV(w)[0]); ASSERT(AR(box)==3&&AS(box)[1]==2&&AS(box)[2]==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I axn=AN(box); opctx.axv=((I(*)[2])IAV(box))-nbasiscols;  // prebiased pointer to A0 part of NTT
- box=C(AAV(w)[1]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I amn=AN(box); opctx.amv0=IAV(box);  // col #s
+ box=C(AAV(w)[1]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I amn=AN(box); opctx.amv0=IAV(box);  // col #s in basis
  box=C(AAV(w)[2]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN); I avn=AN(box); opctx.avv0=DAV(box);  // weights
  ASSERT(amn==avn,EVLENGTH);  // weights and col#s must agree
  box=C(AAV(w)[4]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) C *rvtv=opctx.rvtv=CAV(box);  // RVT
  box=C(AAV(w)[5]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) opctx.bndrowmask=DAV(box);  // bndrowmask
- box=C(AAV(w)[8]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN) I nc=opctx.nc=AN(box);
+ box=C(AAV(w)[8]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN) I nc=opctx.nc=AN(box);   // col indexes being evaluated
  ASSERT(nc!=0,EVLENGTH)
- opctx.ndxa=IAV(box); I col0=IAV(box)[0];   // col #(s), first col#
+ I *ndxa=opctx.ndxa=IAV(box);  // addr of col#s
+ DO(nc, ASSERT(BETWEENO(ndxa[i],0,nbasiscols+axn),EVINDEX))// audit col#s, which must be in range 0 to NTT width, i. e. #slacks + #decision vbls
  I isgradmode; D *zv; I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;   // non0 if gradient mode; ptr to output if any; #threads
  if(isgradmode=(AR(box)!=0)){ 
   // gradient mode (the dominant case)
@@ -1327,10 +1328,10 @@ struct mvmctx opctx;  // parms to all threads, and return values
   nthreads=likely(ninclfk>256)?nthreads:1;  // single-thread small problem (qp)
   // The initial shared value is infinity except in bound columns: then beta.  Initialize the found-row value to -1 for 'nothing found' normally,
   // but for bound columns use #rows which indicates a Nonbasic Swap
-  I colrvt=(rvtv[col0>>(LGBB-1)]>>((col0&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);  // get column info, a 2-bit field of (bound,enforcing)
+  I colrvt=(rvtv[ndxa[0]>>(LGBB-1)]>>((ndxa[0]&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);  // get column info, a 2-bit field of (bound,enforcing)
   if(colrvt&0b10){
-   box=C(AAV(w)[11]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AN(box)>col0,EVINDEX)  // betas normally dp, but we use only high part anyway.  Look up the column beta
-   opctx.sharedmin.D=DAV(box)[col0];   // init bound-col min SPR to beta
+   box=C(AAV(w)[11]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AN(box)>ndxa[0],EVINDEX)  // betas normally dp, but we use only high part anyway.  Look up the column beta
+   opctx.sharedmin.D=DAV(box)[ndxa[0]];   // init bound-col min SPR to beta
    opctx.retinfo=ninclfk;  // Init col# - if no lower SPR found could survive to become a Swap
   }else{opctx.retinfo=-1; opctx.sharedmin.D=inf;} // non-bound, allow any improvement, init ret to 'no row found' - possible if no nondangerous pivot, or unbounded (should not occur)
  }

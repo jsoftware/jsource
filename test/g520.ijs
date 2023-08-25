@@ -312,6 +312,15 @@ NB. put nothing here! savy is carried over to the next line
   assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
   assert. 2 2 1 8 _1e4 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);((1+1e_13) 2} bkbeta);beta  NB. nondangerous pivot
 
+  NB. column audit
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. 'index error' -: 1 0 1 8 _1e12 ('' run128_9) etx Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';01;(parms);bkbeta;beta
+  Ax =. 1 2 1 $ 00 1 [ Am =. 1$00 [ Av =. 1$1.
+  rvt =. ,'44'
+  beta =. (#rvt) $ 2.0
+  assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(_1e_6 (<0 1)} bk);'';01;(parms);bkbeta;beta  NB. nondangerous pivot
+  assert. 'index error' -: 1 0 1 8 _1e12 ('' run128_9) etx Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';2;(parms);bkbeta;beta
+
   NB. gradient mode
 NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
@@ -406,6 +415,11 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   assert. (0 1 4 832 1.341640786499873838; _2 ]\ _256 5 _512 5 _64 2 0 1 ) ((0 1.341640786499873838,:0 1.788854381999831) run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;1 0 2 3;(_0.3 (4}) parms);Frow
 
 NB. scaf need a way to test many threads in gradient mode
+
+  NB. column audit
+  cutoffinfo =. (2 ,~ #rvt) $ 0.
+  assert. 'index error' -: ppp =: (0 0 0 0 0; _2 ]\ 8$0) ('' run128_9) etx Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 4;(parms);Frow
+
 
   NB. end of tests, add a thread
   0 T. ''

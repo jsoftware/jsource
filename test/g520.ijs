@@ -78,8 +78,8 @@ else.   NB. gradient
   end.
   Qk =. drawvec {"1 _1 Qk ,"_1 (0.)
   bndrowmask =. drawvec { bndrowmask , '4'
-  parms =. nrows 0} parms  NB. retore Fk flag to new length
-  y =. (Qk;parms) 3 9} y
+NB. obsolete   parms =. nrows 0} parms  NB. restore Fk flag to new length
+  y =. (<Qk) 3} y
   NB. convert bitmasks to internal form
   rvt =. {&a.@:#.@:(|."1) ($~  8 ,~ >.@(8 %~ #)) , ,./ rvt e."1 '19',:'01'  NB. create values in littleendian order, 2 bits/col (enforced is LSB)
   bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ bndrowmask e. '01'  NB. 0 is for Fk
@@ -418,6 +418,8 @@ NB. scaf need a way to test many threads in gradient mode
 
   NB. column audit
   cutoffinfo =. (2 ,~ #rvt) $ 0.
+NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
+  parms =.            4         0.      1e_25        0                                  0           0    NB. We expand each row to its own comparison block
   assert. 'index error' -: ppp =: (0 0 0 0 0; _2 ]\ 8$0) ('' run128_9) etx Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 4;(parms);Frow
 
 

@@ -1284,8 +1284,8 @@ struct mvmctx opctx;  // parms to all threads, and return values
  ASSERT(AT(w)&BOX,EVDOMAIN);
  A box;
  box=C(AAV(w)[9]); ASSERT(AT(box)&FL,EVDOMAIN); ASSERT(AR(box)==1,EVRANK); ASSERT(AN(box)>0,EVLENGTH);  // parm shape, type
- D *parms=opctx.parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nbasiswfk=(I)parms[0];   // flagged n
- box=C(AAV(w)[3]); ASSERT(AR(box)==3,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.qk=box; I nbasiscols=AS(box)[2];  // Qk, possibly including space and Fk; # cols in basis
+ D *parms=opctx.parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nbasiswfk=(I)parms[0]; I nbasiscols=nandfk^REPSGN(nandfk);   // flagged n; # cols in basis
+ box=C(AAV(w)[3]); ASSERT(AR(box)==3,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.qk=box; // Qk, possibly including space and Fk
  ASSERT(AS(box)[0]==2,EVLENGTH)  // Qk is qp
  I ninclfk=AS(box)[1];   // number of rows to be processed including Fk
  ASSERT(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,EVNONCE)  // we fetch along rows; insist on data alignment

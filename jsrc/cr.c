@@ -671,7 +671,7 @@ static DF1(rank1){DECLF;I m,wr;
  ARGCHK1(w);
  wr=AR(w); efr(m,wr,(I)sv->localuse.lu1.srank[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank  scaf should consume anyway, let user control
+ // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank  scaf should consume anyway, let user control?
  if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
   NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY1){
    I hm=FAV(fs)->localuse.lu1.srank[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort

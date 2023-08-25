@@ -1051,7 +1051,8 @@ DF2(jtfrom){I at;A z;
   // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
   // We allow FL only if it is the same size as INT
-  if(!((AT(a)&(NOUN&~(B01|INT|(SY_64*FL))))+(AT(w)&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // scaf NJAwhy
+  // We don't process NJA through here because it might create a virtual block & we don't want NJAs rendered unmodifiable by virtual blocks
+  if(!((AT(a)&(NOUN&~(B01|INT|(SY_64*FL))))+(AT(w)&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){
    I av;  // selector value
    if(likely(!SY_64||AT(a)&(B01|INT))){av=BIV0(a);  // INT index
    }else{  // FL index
@@ -1064,7 +1065,7 @@ DF2(jtfrom){I at;A z;
     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
     I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=AT(w);   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
-    // Here we transferred an atom out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
+    // Here we transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
     PRISTXFERF(z,w)  // this destroys w
    }else{
     // rank of w > 1, return virtual cell
@@ -1349,7 +1350,7 @@ _Static_assert(ZVPOSCVFOUNDX==ZVNEGATECOLX+1,"Bound and Enforcing flags are adja
 // obsolete // low 2 bits are 00 for non-DIP/gradient mode: 000=one-column, 100=nonimp
 // obsolete #define ZVISDIPGRAD (ZVPOSCVFOUND|ZVSPRNOTFOUND)
 #define ZVISONECOL (((I)zv&~(ZVPOSCVFOUND|ZVNEGATECOL))!=0)  // zv!=0, except for flag bits
-#define remflgs(zv) ((D*)((I)(zv)&~(ZVPOSCVFOUND|ZVNEGATECOL)))
+#define remflgs(zv) ((D*)((I)(zv)&~0x7))
 
 // obsolete  rowstride=_mm256_set1_epi64x(n);   // length of 1 row, which is right for DIP/nonimp
  rowgather=_mm256_mul_epu32(_mm256_set1_epi64x(qkrowstride),_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
@@ -1823,7 +1824,7 @@ endqp: ;
       // calculate the SPR
       bk4=_mm256_and_pd(bk4,bknon0);  // make near0 bk exactly 0
       __m256d ratios=_mm256_fmsub_pd(sharednormorspr,bnddotproducth,bk4);  // minspr*c-b: sign set if b>minspr*c => b/c>minspr => not new min-or-tied SPR.  minspr, c, and b are all nonneg in valid lanes, so no -0
-if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharednormorspr,bnddotproducth)),cgt0))SEGFAULT;  // scaf verify no -0
+if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharednormorspr,bnddotproducth)),cgt0))ASSERTSYS(0,"neg0");  // scaf verify no -0
       if(!_mm256_testc_pd(ratios,cgt0)){  // CF is 1 if ~(not new min-or-tied)&(valid) is all 0, so 0 if any (min-or-tied)
        // SPR is a new low-or-tied.  If any valid bk is 0, we will be returning a nonimproving pivot
        // by simulation this code runs 4.7 times in 64 batches
@@ -1855,6 +1856,7 @@ startspr0:;  // come here for the first 0-SPR batch, after mode switch.  The new
        I candlanes=_mm256_movemask_pd(_mm256_cmp_pd(validcol,maxvalidcol,_CMP_EQ_OQ));   // mask of lanes that could be the result
        // Select a lane: if only one, take it, otherwise select a random lane containing the new maximum.  This distribution is not uniform, but that's OK since we are just trying to break cycles
        I randval=-1;  // init to no random value drawn  Low quality is OK.  We leave RNG unseeded so that repeated runs will give different sequences
+// obsolete #define rand() 0  // scaf
        I lanehere=rowx+CTLZI(LOWESTBIT(candlanes)|(likely(candlanes==LOWESTBIT(candlanes))?0:(candlanes&(randval=rand()))));  // If multiple matches, randomly turn off candidates above the lowest; then find highest survivor
        if(likely(!_mm256_testz_pd(_mm256_cmp_pd(validcol,sharednormorspr,_CMP_GT_OQ),cgt0))){  // Zf if validcol<=old max in all valid lanes.  If not, we have a new undisputed high
         nzerobatches=1.0; limitrowx=lanehere;  // new maximum batch.  unconditionally take the value and set to 1 in equal group
@@ -2060,8 +2062,9 @@ usefullrowtotal:;  // come here when we started knowing the row total, in accums
 // obsolete   ndotprods+=bvgrd-bvgrd0+1;  // accumulate # products performed, including the one we aborted out of
   ndotprods+=rowx;  // accumulate # products performed, including the one we aborted out of
   if(unlikely(ZVISONECOL))break;   // onecol+SPR does not loop for another column
-  // gradient mode.  save the total we accumulated.  If the index is >= nrows it may be too high but that's OK
+  // gradient mode.  save the total we accumulated.
 if(rowx<nrows && (rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf
+  rowx=rowx>nrows?nrows:rowx;  // If rowx>nrows, back it up so accounting of reused products is accurate
   rowx=(I)zv&ZVPOSCVFOUND?-rowx:rowx;  // make rowx negative if we have verified column is unbounded.  The bounding row may not be in the total; that's OK
   D Drowx=rowx;
   __atomic_store((I*)&cutoffstatus[colx][0],(I*)&Drowx,__ATOMIC_RELEASE);  // only integers can be atomic args
@@ -2171,7 +2174,7 @@ return4:;  // we have a preemptive DIP/gradient result.  store and set minimp =-
 //   parms is #rows,maxAx,Col0Threshold,x,MinGradient/MinGradImp,x
 //    MinGradient is normally 0.
 //      if positive, we do NOT share gradient values, and we finish up gradient calculation in any column that has a larger |gradient|, storing the len/sumsq in cutoffinfo
-//      if negative, cut off a column when its gradient cannot beat the best-so-far by more than |MinGradImp|
+//      if negative, cut off a column when its gradient cannot beat the best-so-far by more than a factor of 1/(1-MinGradImp), i. e. MinGradImp=(min OK grad/actual max grad)-1
 //   Frow is the selector row
 //  result is rc,pivotcol or unbounded col,#cols processed,#rows processed,largest |gradient|
 //   rc is 0 (normal), 4 (unbounded problem)

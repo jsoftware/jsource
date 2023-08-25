@@ -257,20 +257,19 @@ NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1 
 NB. put nothing here! savy is carried over to the next line
   NB. Verify random pickup of 0 bk values.  This kludge relies on a side effect left by run128_9
   if. 0 = 1 T. '' do.  NB. in multithreaded we don't know what run128_9 does; and single-threaded test is good enough
-    tests =. (#~   [: +./"1 </"2) 0.2 0.5 >"(1 2) (100 2,{:$M) ?@$ 0  NB. first row zaps M, second zaps bk.  Remove tests that leave no places where M is not set and bk is
+    tests =. (#~   [: +./"1 </"2) 0.2 0.5 >"(1 2) (100 2,1{$M) ?@$ 0  NB. first row zaps M, second zaps bk.  Remove tests that leave no places where M is not set and bk is
     for_mb. tests do.
       'mx bx' =. <@I."1 mb  NB. indexes to zap
       savy =: (<(15!:18) 1e_12 (<0;mx)} M) 3} savy  NB. make some values of M small
       savy =: (<(15!:18) 0. (<0;bx)} bk) 6} savy  NB. make some values of bk 0
-      pickup =. ({:$M)$00 [ z =. (2, #bkbeta) 15!:18 (0.)
+      pickup =. (1{$M)$00 [ z =. (2, #bkbeta) 15!:18 (0.)
       for. i. 200 do.
         assert. 2 = 0 { res =. 128!:9 (<z) 7} savy
         pickup =. (1{res) (>:@{`[`])} pickup
       end.
-      assert. (</ mb) = * pickup  NB. verify that the filled places are exactly the ones that zapped bk but not m
+      assert. (</ mb) -: * pickup  NB. verify that the filled places are exactly the ones that zapped bk but not m
     end.
   end.
-
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.               1e_12 1e_10  ,(-2^_36),  _1e_11   0   0   0   0
   bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0

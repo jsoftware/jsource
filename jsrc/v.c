@@ -29,7 +29,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
    // We preserve pristinity between the input and the output
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
   }
-  // Not self-virtual.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
+  // Not self-virtual.  Create a (noninplace) virtual copy, but not if NJA memory (because we avoid virtualing from NJA, which makes the NJA unmodifiable)
   // Transfer pristinity from w to z, if w is abandoned.  Taking the virtual block will clear prist from w
   if(!(AFLAG(w)&(AFNJA))){I wprist=PRISTFROMW(w); RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; AFLAGORLOCAL(z,wprist) RETF(z);}
 

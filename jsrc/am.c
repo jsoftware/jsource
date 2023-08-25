@@ -698,12 +698,21 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
    RZSUFF(z=from((SGNIF(AT(ind),BOXX)|(indr-2))<0?ind:box(ind),zeroionei(0)),R jteformat(jt,self,a,w,ind);); cellframelen=0;  // if numeric array rank>1, box before the call (i. 1 0 e. g.)
   }else if((-AN(ind)&SGNIF(AT(ind),BOXX))>=0){
    // ind is empty or not boxed.  If it is a list, audit it and use it.  If it is a table or higher, convert to cell indexes.  It will be used to fill in axis struct in merge2
-   cellframelen=indr<2?1:AS(ind)[indr-1];  // #axes used: 1, if m is a list; otherwise {:$m
+   cellframelen=indr<2?1:AS(ind)[indr-1];  // #axes used: 1, if m is an atom/list; otherwise {:$m
    if(indr==0){  // scalar ind is common enough to test for
     if(!ISDENSETYPE(AT(ind),INT)){A tind; RZSUFF(tind=cvt(INT,ind),R jteformat(jt,self,a,w,ind);); ind=tind;}  // ind is now an INT vector, possibly the input selector
     if(likely((UI)IAV(ind)[0]<(UI)ws[wframelen]))z=ind; else{ASSERTSUFF(IAV(ind)[0]<0,EVINDEX,R jteformat(jt,self,a,w,ind);); ASSERTSUFF(IAV(ind)[0]+ws[wframelen]>=0,EVINDEX,R jteformat(jt,self,a,w,ind);); RZ(z=sc(IAV(ind)[0]+ws[wframelen]));}  // if the single index is in range, keep it; if neg, convert it quickly
    }else{  // ind is numeric list/array
-    if((((UI)indr<2)+notonecelldirect+(AN(ind)^cellframelen))==0){ind0=ind; goto indexforonecell;}  // if ind has rank>1, it's index lists: check for only 1 cell that can be processed quickly and xctl to it
+    if(unlikely(AN(ind)+aframelen==0)){  // no modification: leave arg unchanged.  Worth 1 lousy instruction to test for
+     if(indr==1){  // rank>1 case not worth handling
+      ASSERT(acr<=wcr,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
+      I compalen=MAX(0,acr-(wcr-cellframelen)); I *as=AS(a)+aframelen, *ws=AS(w)+wframelen;  // #axes of a that are outside of the cell in w
+      ASSERTAGREE(as,AS(ind)+1-compalen,compalen);  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
+      ASSERTAGREE(as+compalen,ws+wcr-(acr-compalen),acr-compalen)  // the rest of the shape of m{y comes from shape of y
+      R RETARG(w);
+     }
+    }
+    if((SGNTO0(indr-2)+notonecelldirect+(AN(ind)^cellframelen))==0){ind0=ind; goto indexforonecell;}  // if ind has rank>1, it's index lists: check for only 1 cell that can be processed quickly and xctl to it
     RZSUFF(z=jtcelloffset(jt,w,ind,~wframelen),R jteformat(jt,self,a,w,ind);); //  otherwise, create (or keep) list of cell indexes, of rank cellframelen.  ~ indicates ind} semantics
    }
   }else if(unlikely(indr!=0)){

@@ -407,6 +407,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  jtinplace=(J)((I)jtinplace&~((SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT))<=(UI)(wf|(wcr^1)|(SZI^(1LL<<bplg(AT(w))))))<<JTINPLACEAX));
  RETF(jtaxisfrom(jtinplace,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
 }    /* a{"r w for numeric a */
+
+
 // a is array whose 1-cells are index lists, w is array
 // result is (<"1 a) { w
 // wf is length of the frame
@@ -544,38 +546,6 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
  if(unlikely(r<hasr))R RETARG(w);  // if all axes taken in full, do nothing, return full w
  I *rla=&axes[0].lencell; rla=hasr?rla:jt->shapesink; *rla=celllen;  // if there is frame, it needs len of a major cell
  RETF(jtaxisfrom((J)((I)jtinplace&~JTINPLACEA),w,axes,(wncr<<24)+(wf<<16)+(zr<<8)+(hasr<<7)+r))  // move the values and return the result
-#if 0
- s=AS(w)+wr-wcr;
- ASSERT(1>=AR(c),EVRANK);
- ASSERT(n<=wcr,EVLENGTH);
- if((-n&SGNIFNOT(t,BOXX))<0){RZ(ind=aindex(a,w,wf)); ind=(A)((I)ind&~1LL); if(ind)R frombu(ind,w,wf);}  // not empty and not boxed, handle as 1 index list
- if(wcr==wr){
-  for(i=m=pr=0;i<n;++i){
-   p=afi(s[i],C(v[i]));
-   if(!(p&&(((AN(p)^1)-1)&-(AT(p)&NUMERIC))<0))break;  // if 1 selection from numeric axis, do selection here, by adding offset to selected cell
-   pr+=AR(p); 
-   RANKT rsav=AR(p); AR(p)=0; I px; PRODX(px,wcr-i-1,1+i+s,i0(p)) m+=px; AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
-  }
- }
- if(i){I*ys;
-  RZ(y=virtual(w,m,pr+wcr-i));
-  ys=AS(y); DO(pr, *ys++=1;); MCISH(ys,s+i,wcr-i);
-  I temp; PROD(temp,AR(y),AS(y)); AN(y)=temp;
- }
- // take remaining axes 2 at a time, properly handling omitted axes (ds(CACE)).  First time through p is set if there has been no error
- for(;i<n;i+=2){
-  j=1+i; if(!p)p=afi(s[i],C(v[i])); q=j<n?afi(s[j],C(v[j])):ds(CACE); if(!(p&&q))break;  // pq are 0 if error.  Result of ds(CACE)=axis in full
-  if(p!=ds(CACE)&&q!=ds(CACE)){y=afrom2(p,q,y,wcr-i);}
-  else{
-   if(q==ds(CACE)){q=p; j=i;}
-   if(q!=ds(CACE))y=IRS2(q,y,0L,AR(q),wcr-j,jtifrom,w);
-  }
-  RZ(y); p=0;
- }
- // We have to make sure that a virtual NJA block does not become the result, because x,y and x u}y allow modifying NJAs even when the usecount is 1 or even 2.  Realize in that case
- RE(y); if(unlikely(AFLAG(y)&AFNJA)){RZ(y=ca(y));}   // If the result is NJA, it must be virtual (otherwise we allocated a new block here)
- EPILOG(y);
-#endif
 }    /* a{"r w for boxed index a */
 
 DF2(jtfrom){I at;A z;
@@ -815,6 +785,7 @@ _Static_assert(ZVPOSCVFOUNDX==ZVNEGATECOLX+1,"Bound and Enforcing flags are adja
  rowgather=_mm256_mul_epu32(_mm256_set1_epi64x(qkrowstride),_mm256_loadu_si256((__m256i*)(&iotavec[0-IOTAVECBEGIN])));  // init atomic offset to successive rows 0 1 2 3
  prirow=(I)parms[10];   // copy in parms
  I nbasiscols=nbasiswfk;  // number of basis columns of qk not including any Fk; this may be flagged with Fk info
+ I nhasfk=REPSGN(nbasiscols); nbasiscols=nbasiscols^nhasfk;  // -(Fk is an extra row); # valid columns of Qk
  *(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE);  // in case some other thread has finished a column and given us a bogey, go get it
  col0thresh=_mm256_set1_pd(parms[2]);  // column |values| less than this are considered 0
  if(zv==0){  // gradient initialization.
@@ -829,9 +800,8 @@ _Static_assert(ZVPOSCVFOUNDX==ZVNEGATECOLX+1,"Bound and Enforcing flags are adja
    }
   }
   bk0thresh=_mm256_set1_pd(sqrt(2.0));   // bk0thresh is sqrt(2) for gradient
-  // nbasiscols needs no change
+  // nbasiscols needs no change here but has Fk cleared above for convenience in the user
  }else{  // one-column: process a single column, including SPR
-  I nhasfk=REPSGN(nbasiscols); nbasiscols=nbasiscols^nhasfk;  // -(Fk is an extra row); # valid columns of Qk
   frowbatchx=(nrows-1)&-NPAR; frowbatchx|=~nhasfk;  // batch# containing last row (might be by itself); if it's not fk, batch is ~0, i. e. never
   bk0thresh=_mm256_set1_pd(parms[7]);  // bk considered 0
   bkovershoot=_mm256_set1_pd(parms[8]);  // amount bk can overshoot on a pivot
@@ -1236,8 +1206,8 @@ return4:;  // we have a preemptive DIP/gradient result.  store and set minimp =-
 //   bk is the current bk (must include a 0 corresponding to Fk and then MUST BE 0-EXTENDED to a batch boundary) 
 //   z is the result area for the requested column - qp, and must be able to handle overstore to a full batch, including the Fk value if any
 //   ndx is the atomic column# of NTT requested
-//   parms is #rows,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
-//    #rows is number of rows in the Ek portion of Qk; if Fk present too, value is 1s-comp
+//   parms is #cols,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
+//    #cols is number of columns in the Ek portion of Qk; if Fk present as a row, value is 1s-comp
 //    maxAx is the length of the longest dot-product
 //    Col0Threshold is minimum |value| considered non0 for a column value
 //    Store0Thresh: if |column value| is less than this, force it to 0
@@ -1258,7 +1228,7 @@ return4:;  // we have a preemptive DIP/gradient result.  store and set minimp =-
 // gradient mode: (dp dotproduct)
 //  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
 //   cutoffinfo is internal stored state saved between gradient-mode calls; shape n,2
-//   parms is #rows,maxAx,Col0Threshold,x,MinGradient/MinGradImp,x
+//   parms is #cols,maxAx,Col0Threshold,x,MinGradient/MinGradImp,x
 //    MinGradient is normally 0.
 //      if positive, we do NOT share gradient values, and we finish up gradient calculation in any column that has a larger |gradient|, storing the len/sumsq in cutoffinfo
 //      if negative, cut off a column when its gradient cannot beat the best-so-far by more than a factor of 1/(1-MinGradImp), i. e. MinGradImp=(min OK grad/actual max grad)-1

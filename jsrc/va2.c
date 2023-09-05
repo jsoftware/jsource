@@ -1123,11 +1123,7 @@ DF2(jtsumattymes1){
      while(1){
       // do one dot-product, av*wv, length dplen;
       D p=0.0, s=0.0;
-#if 1  // higher precision
       DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) TWOSUM(p,h,p,q) s=q+r+s; ++av; ++wv;)
-#else
-      DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) DPADD(p,s,h,r,p,s)  ++av; ++wv;)
-#endif
       *zv++=p+s; // store the single result
       if(!--j)break; av=av0;  // repeat a if needed
      }

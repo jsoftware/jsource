@@ -14,29 +14,12 @@ static DF1(jtreduce);
 
 #define PARITYW(s) (s=BW>32?s^s>>32:s, s^=s>>16, s^=s>>8)  // parity of a word full of Bs.  Upper bits are garbage
 
-#if 0&&SY_ALIGN
-#define VDONE(T,PAR)  \
- {I q=n/sizeof(T);T s,*y=(T*)x; DQ(m, s=0; DQ(q, s^=*y++;); PAR; *z++=b==pc;);}
-
-static void vdone(I m,I n,B*x,B*z,B pc){B b,*u;
- if(1==m){UI s,*xi;
-  s=0; b=0;
-  xi=(UI*)x; DQ(n>>LGSZI, s^=*xi++;); 
-  u=(B*)xi; DQ(n&(SZI-1), b^=*u++;);
-  u=(B*)&s; DQ(SZI,   b^=*u++;);
-  *z=b==pc;
- }else if(0==(n&(sizeof(UI  )-1)))VDONE(UI,  PARITYW)
- else  if(0==(n&(sizeof(UINT)-1)))VDONE(UINT,PARITY4)
- else  if(0==(n&(sizeof(US  )-1)))VDONE(US,  PARITY2)
- else  DQ(m, b=0; DQ(n, b^=*x++;); *z++=b==pc;);
-}
-#else
 // vdo for eq/ne. take parity of *x over n bytes, store into *z; invert if !pc; repeat for m cells
 static void vdone(I m,I n,B*x,B*z,B pc){
  I nfull=(n-1)>>LGSZI; I ndisc=(-n)&(SZI-1); // number of full Is, and number of bytes to discard from the next I
  DQ(m, I s=pc^1; I *y=(I*)x; DQ(nfull, s^=*y++;); s^=(*y<<(ndisc<<3)); PARITYW(s); *z++=s; x+=n;);  // parity, discarding trailing bytes of overfetch
 }
-#endif
+
 #if SY_ALIGN
 #define RBFXODDSIZE(pfx,bpfx)  RBFXLOOP(C,bpfx)
 #define REDUCECFX              REDUCEBFX
@@ -376,31 +359,9 @@ DF1(jtcompsum){
 // the launch rate of 2 cycles per iteration.  This requires spilling results to memory, which will add more latency, but it's still better than unrolling only 4.
 // Unfortunately, clang goes nuts trying to handle this loop, and ends up doing 14 loads and 14 stores for every iteration.  So we have to unroll it
 // by hand using an array to hold the state
-#if 0  // early clang had trouble
-   acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
-   UI n2=DUFFLPCT(n-1,2);  /* # turns through duff loop */
-   if(n2>0){
-    UI backoff=DUFFBACKOFF(n-1,2);
-    wv+=(backoff+1)*NPAR;
-    switch(backoff){
-    do{
-    case -1: KAHAN(_mm256_loadu_pd(wv),0)
-    case -2: KAHAN(_mm256_loadu_pd(wv+1*NPAR),1)
-    case -3: KAHAN(_mm256_loadu_pd(wv+2*NPAR),2)
-    case -4: KAHAN(_mm256_loadu_pd(wv+3*NPAR),3)
-    case -5: KAHAN(_mm256_loadu_pd(wv+3*NPAR),4)
-    case -6: KAHAN(_mm256_loadu_pd(wv+1*NPAR),5)
-    case -7: KAHAN(_mm256_loadu_pd(wv+2*NPAR),6)
-    case -8: KAHAN(_mm256_loadu_pd(wv+3*NPAR),7)
-    wv+=4*NPAR;
-    }while(--n2!=0);
-    }
-   }
-#else
    mvc(sizeof(accc),accc,1,MEMSET00);
    UI nlp=(n-1)>>LGNPAR; 
    for(;nlp;--nlp){KAHANA(_mm256_loadu_pd(wv),nlp&7) wv+=NPAR;}
-#endif
    KAHANA(_mm256_maskload_pd(wv,endmask),7) wv+=((n-1)&(NPAR-1))+1;
    __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
    // add all the low parts together into c0 - the low bits of the low will not make it through to the result

@@ -47,8 +47,8 @@ NB. obsolete     parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. restore Fk fla
   rvt =. {&a.@:#.@:(|."1) ($~  8 ,~ >.@(8 %~ #)) , ,./ rvt e."1 '19',:'01'  NB. create values in littleendian order, 2 bits/col (enforced is LSB)
   bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ bndrowmask e. '01'  NB. 0 is for Fk
   y =. (rvt;bndrowmask) 4 5} y
-  NB. Transpose Qk.  Extend Qk, to cacheline row length, with 0 extend (bk/bkbeta padded already).  Change parms[0 1] to #valid columns of Qkt(flagged) and max # weights in a dot-product
-  parms =. ((-^:(nflagged<0) 1{$3{::y) , (>./ 0, , 1 {"2 Ax)) 0 1} parms
+  NB. Transpose Qk.  Extend Qk, to cacheline row length, with 0 extend (bk/bkbeta padded already).  Change parms[0 1] to #valid columns of Qkt(flagged).  No max # weights in a dot-product
+  parms =. ((-^:(nflagged<0) 1{$3{::y)) 0} parms
   y =. (((#bkbeta) {."1 |:"2)&.> 3 { y) 3} y  NB. Turn Qk into Qkt
   y =. (<parms) 9} y
   y =. (15!:18&.> 3 6 10 { y) 3 6 10} y  NB. cache-align the blocks that need it

@@ -698,26 +698,31 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  I nimpandcols;  // number of improvement,number of cols finished
  I ndotprods;  // total # dotproducts evaluated
  // shared section
- UI4 nextresv;  // index of next reservation. Advanced by atomic operations.  For one-column, this is a row; for gradient, a column
+ UI4 nextresv;  // index of next reservation. Advanced by atomic operations.  For one-column, this is a row; for gradient, a column.  Starts out after initial reservations
  US ctxlock;  // used to lock changes
+ // the rest of the first cacheline will be available as soon as the task starts.  Later cachelines will have to be transferred.
+ // We put the first-needed data in cacheline 0, making sure we copy it out to avoid false sharing, because the line will be taken away at the end of each reservation
+ A qk;  // original M block
  I filler[3];  // pad 1st cacheline so we don't get false sharing
+ // end of cacheline 0
  // the rest is moved into static names
  UI *ndxa;   // the column indexes, always a list of ndxs
  UI4 nc;  // #cols in ndxa
- UI4 bkzstride;  // length of last axis of bk/bkbeta/z: length of extended kb/beta/z, which includes Fk if present and is padded to batch boundary
+ UI4 zstride;  // length of last axis of z: length of extended z, which includes Fk if present and is padded to batch boundary
  I4 nbasiswfk;  // |value| is number of rows allocated in Qk; if negative, is 1's-complement of # rows of Qk proper, and Fk is also a row of Qk
- I4 nthreads;  // number of threads when we started this job (may be inaccurate; for tuning only)
- D *bk;  // pointer to bk.  If 0, this is a column extraction (if zv!=0)
- D *bkbeta;  // beta values for the rows in bk.  The values don't change, but which ones are in bk do
- D *Frow;  // the selector row
- D *zv; // pointer to output for product mode, 0 for gradient mode
- D *parms;  // parm info
+ US nthreads;  // number of threads when we started this job (may be inaccurate; for tuning only)
+ D *Frow;  // the selector-row data
+ C *rvtv;  // list of Rose variable types for the columns (unchanging)
  D *bndrowmask;  // for each row in bk, 1 bit/value, indicating bound vbl  Ordered to be right for each bytelane.
  I (*axv)[2];  // pointer to ax data, (index,length)
  I *amv0;  // pointer to am block, and to the selected column's indexes
  D *avv0;  // pointer to av data, and to the selected column's values
- A qk;  // original M block
- C *rvtv;  // list of Rose variable types for the columns (unchanging)
+ D *parms;  // parm info
+// following used by onecol only
+ D *bk;  // pointer to bk.  If 0, this is a column extraction (if zv!=0)
+ D *bkbeta;  // beta values for the rows in bk.  The values don't change, but which ones are in bk do
+ D *zv; // pointer to output for product mode, 0 for gradient mode
+// following used by gradient only
  D (*cutoffstatus)[2];  // (ncols,2) $ array holding (number of rows processed before cutoff, 0 if row invalid,gradient total for those rows).  If cutoff total is negative, it means that no positive column value has been seen
 };
 
@@ -758,10 +763,16 @@ struct __attribute__((aligned(NPAR*SZI))) pingpong {
 
 // the processing loop for one core.  Gradients, over all columns
 // ti is the job#, not used except to detect error
+// TODO
+// initial reservation
+// remove indirect refs through ctx
+// if only 1 weight, add another 0 row, remove test
+// pipeline reservation
+// no unroll mx
 static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(ctx->x) x=ctx->x;
- YC(ndxa)YC(nbasiswfk)YC(nc)YC(bkzstride)YC(nthreads)YC(parms)
+ YC(ndxa)YC(nbasiswfk)YC(nc)YC(nthreads)YC(parms)
  YC(bndrowmask)YC(cutoffstatus)YC(axv)YC(amv0)YC(avv0)YC(qk)YC(Frow)YC(rvtv)
 #undef YC
  // perform the operation
@@ -802,9 +813,9 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
  zv|=ZVMAXROWS&MAXCACHEDROWS;  // install max # rows/col in cache
  // all of zv has been initialized
 
- I mvvvtoalloc=((I)parms[1]+1+NPAR-1)&-NPAR;  // round (max Axlen+1) up to batch bdy, convert to # _256d per component
- I bytesperppb=offsetof(struct pingpong,mvvv[2*mvvvtoalloc]);
- A ppb; GATV0(ppb,LIT,2*bytesperppb,1);
+ I mvvvtoalloc=((I)parms[1]+1+NPAR-1)&-NPAR;  // round (max Axlen+1) up to batch bdy
+ I bytesperppb=offsetof(struct pingpong,mvvv[2*mvvvtoalloc]);  // space for header, then Am followed by Av
+ A ppb; GATV0(ppb,LIT,2*bytesperppb,1);  // two buffers
  struct pingpong *ppp=voidAV1(ppb);  // ping-pong pointer.  At top of loop, the block just used (=next to fill); after pipe, the block for the column to process
  I pppf=(I)ppp^((I)ppp+bytesperppb);  // (pingpong 0)^(pingpong 1), used to flip the pingpong
 
@@ -871,7 +882,10 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
     // At this point colxm1 has been set to -2 or -3 if the column doesn't need to be evaluated.  That flag info will be transferred to an
     if(colxm1>=nqkbcols){I avx;  // index of Am/Av block being moved
      // decision variable.  convert the column indexes into pointers into Qkt, and interleave them with the values
-     ASSERTSYS((anm1!=0)!=0,"column has no weights");  // column must have at least 2 weights
+     if(unlikely(!BETWEENC(anm1,2,mvvvtoalloc))){
+      ASSERTSYS(anm1!=0,"column has no weights");  // column must have at least 1 weight
+      ASSERTSYS(anm1<mvvvtoalloc,"column has too many weights");
+     }
      ppp->an=anm1-1; I *amv=amv0+axm1; D *avv=avv0+axm1;  // number of sparse atoms in each row-1; pointer to first col#; pointer to first weight
      // Stage the columns#s and weights into D1$, in the ping-pong buffer.  This does an extra write & read compared to converting them to interleaved address/value directly,
      // but that takes 12 uops/4 weights, which for a column with a lot of weights will overfill the reorder buffer.  The staging takes 6 uops/4 weights
@@ -880,7 +894,7 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
       _mm256_store_si256((__m256i *)&(ppp->mvvv)[avx+mvvvtoalloc],_mm256_loadu_si256((__m256i *)&avv[avx]));  // v0-v3
      }
     }else{
-     // Slack variable.  Skip the weighting.
+     // Slack variable or aborted with flag value.  Skip the weighting.
      colxm1=colxm1<0?colxm1:-1; ppp->an=colxm1;  // transfer the 'aborted column' flag to an; if normal Slack variable, set an=-1 as flag
     }
     // end pipe stage -1
@@ -919,19 +933,18 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
    // We do not use the new cutoff right away to set colx, because it has latency and the chance it has changed enough to cut off this column at the start is quite small
 
    D **mv0, *vv0;  // pointer to first column pointer, pointer to first weight
-   I an=ppp->an; D *nextmv;  // # weights-1 (-1 if Slack col, -2 if column finished already, -3 if aborted already); pointer to next column to use (preloaded with first or only column)
+   I an=ppp->an;  // # weights-1 (-1 if Slack col, -2 if column finished already, -3 if aborted already)
    // convert the column#s to Qkt row addresses, in place
    if(an>=0){I avx;
     if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE);  // fetch sharedmin, which we will use AFTER we process this column.  Do it early
-    mv0=(D**)&ppp->mvvv; vv0=(D*)&ppp->mvvv[mvvvtoalloc];  // the column will use addrs/weights out of ppp.  Get the starting addresses
+    mv0=(D**)&ppp->mvvv[0]; vv0=(D*)&ppp->mvvv[mvvvtoalloc];  // the column will use addrs/weights out of ppp.  Get the starting addresses
     __m256i qkt0_4=_mm256_set1_epi64x((I)qkt0), qkrowstride_4=_mm256_set1_epi64x(qkrowstride<<LGSZD);
     NOUNROLL for(avx=0;avx<=an;avx+=NPAR){  // for each block of input... (this overfetches but that's OK since we map enough for one 32-byte final fetch)
      _mm256_store_si256((__m256i *)&mv0[avx],_mm256_add_epi64(qkt0_4,_mm256_mul_epu32(_mm256_load_si256((__m256i *)&mv0[avx]),qkrowstride_4)));  // row#*row size + base of Qkt, for each row.  There may be garbage at the end
     }
-    nextmv=mv0[an];  // index of next col to process; prefetch addr of start of col, which we process end-to-front
-    mv0[-1]=nextmv;  // We pipeline fetches of mv, so we do one extra.  Make that one extra go back to the beginning so it will give the correct value.  This overwrites the shape field of wts
+    if(unlikely(an==0)){mv0[1]=mv0[0]; vv0[1]=0.0; an=1;}  // if only 1 weight (should not occur), add a weight of 0 to save testing in the loop
    }else if(an==-1){  // Slack variable.  Set flag length and repurpose nextmv to point to the sole row of Qkt.  Also refetch sharedmin
-     if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE); an=-1; nextmv=&qkt0[qkrowstride*ppp->colx];
+     if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE); vv0=&qkt0[qkrowstride*ppp->colx];  // leave an=-1
    }else{if(an==-2)goto usefullrowtotal; goto abortcol;  // immediate termination.  DO NOT fetch sharedmin, as we will be checking it presently.  rowx, accumsumsq needed
    }
 if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it must leave us on a bndrowmask bdy
@@ -956,22 +969,21 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
     __m256d avweight,acc0,acc1,acc2,acc3,acc4,acc5,acc6,acc7;  // fma latency is 4 cycles; 2 launches/cycle; need 8 accumulators
 #define GRMUL(accno,type) acc##accno=_mm256_mul_pd(avweight,_mm256_##type##_si256((__m256i *)&mv[rowx+NPAR*accno]));
 #define GRFMA(accno,type) acc##accno=_mm256_fmadd_pd(avweight,_mm256_##type##_si256((__m256i *)&mv[rowx+NPAR*accno]),acc##accno);
-#define GRLD(accno,type) acc##accno=_mm256_##type##_si256((__m256i *)&nextmv[rowx+NPAR*accno]);
+#define GRLD(accno,type) acc##accno=_mm256_##type##_si256((__m256i *)&vv0[rowx+NPAR*accno]);
     if(rowx<=zv&ZVMAXROWS){
      // for the first rows of each column of Qk, allow the values to come into the caches, where they might be reused
      #define GRLMUL(accno) GRMUL(accno,load)
      #define GRLFMA(accno) GRFMA(accno,load)
      #define GRLLD(accno) GRLD(accno,load)
-     if(an>=0){D *mv; UI mx=an;  // decision vbl
-      mv=nextmv; avweight=_mm256_set1_pd(vv0[mx]); nextmv=__atomic_load_n(&mv0[mx-1],__ATOMIC_ACQUIRE); GRLMUL(0) GRLMUL(1) GRLMUL(2) GRLMUL(3) GRLMUL(4) GRLMUL(5) GRLMUL(6) GRLMUL(7)   // initialize accumulators with first product
-      // How much to unroll this loop is a hard question.  There are 6 non-FMA instructions per loop, of which 2 are eliminable MOVs.  Estimating the average column to have 5 weights and cutoff in 256 rows,
-      // there will be 40 FMAs, 40 LOAD, 30 overhead per batch, plus the batch processing of 40 inst.  These would run in 40 cycles and would be limited by the instruction launch.
+     if(an>=0){D *mv; UI mx=an;  // decision vbl.  Count mx down from #weights-1
+      mv=mv0[mx]; avweight=_mm256_set1_pd(vv0[mx]); GRLMUL(0) GRLMUL(1) GRLMUL(2) GRLMUL(3) GRLMUL(4) GRLMUL(5) GRLMUL(6) GRLMUL(7)   // initialize accumulators with first product
+      // How much to unroll this loop is a hard question.  There are 6 non-FMA instructions per loop, of which 1 is eliminable MOVs.  Estimating the average column to have 5 weights and cutoff in 256 rows,
+      // there will be 40 FMAs, 40 LOAD, 25 overhead per batch, plus the batch processing of 40 inst.  These would run in 40 cycles and would be limited by the instruction launch.
       // By unrolling the loop we can cut the non-FMA to 2.5 inst/loop, total 13/batch, at the cost of 1 misbranch (~60 inst).
       // BUT: data will usually be coming from D2$ and will not be available at max rate.  If the actual rate is 200/320 of max rate, the 40 LOAD will limit to 32 cycles/batch, which is not limiting for the workload described.
       // However, if bound-row processing can be eliminated, the batch processing will fall to 16 inst, which will launch faster than the LOADs can run.
-      // Also note: bad code generation creates 1 extra MOV in the loop.  Eliminating this would help if bound-row processing is not performed.
       // Summary: it's a close question (in 2023) and we go for simplicity, because that will be best if bound-row is removed.
-      if(likely(mx!=0))do{mv=nextmv; avweight=_mm256_set1_pd(vv0[mx-1]); nextmv=__atomic_load_n(&mv0[mx-2],__ATOMIC_ACQUIRE); GRLFMA(0) GRLFMA(1) GRLFMA(2) GRLFMA(3) GRLFMA(4) GRLFMA(5) GRLFMA(6) GRLFMA(7)}while(--mx);
+      do{mv=mv0[mx-1]; avweight=_mm256_set1_pd(vv0[mx-1]); GRLFMA(0) GRLFMA(1) GRLFMA(2) GRLFMA(3) GRLFMA(4) GRLFMA(5) GRLFMA(6) GRLFMA(7)}while(--mx);
      }else{  // slack vbl
       GRLLD(0) GRLLD(1) GRLLD(2) GRLLD(3) GRLLD(4) GRLLD(5) GRLLD(6) GRLLD(7)  // load column directly
      }
@@ -981,8 +993,8 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
      #define GRSFMA(accno) GRFMA(accno,stream_load)
      #define GRSLD(accno) GRLD(accno,stream_load)
      if(an>=0){D *mv; UI mx=an;  // decision vbl
-      mv=nextmv; avweight=_mm256_set1_pd(vv0[mx]); nextmv=__atomic_load_n(&mv0[mx-1],__ATOMIC_ACQUIRE); GRSMUL(0) GRSMUL(1) GRSMUL(2) GRSMUL(3) GRSMUL(4) GRSMUL(5) GRSMUL(6) GRSMUL(7)   // initialize accumulators with first product
-      if(likely(mx!=0))do{mv=nextmv; avweight=_mm256_set1_pd(vv0[mx-1]); nextmv=__atomic_load_n(&mv0[mx-2],__ATOMIC_ACQUIRE); GRSFMA(0) GRSFMA(1) GRSFMA(2) GRSFMA(3) GRSFMA(4) GRSFMA(5) GRSFMA(6) GRSFMA(7)}while(--mx);
+      mv=mv0[mx]; avweight=_mm256_set1_pd(vv0[mx]); GRSMUL(0) GRSMUL(1) GRSMUL(2) GRSMUL(3) GRSMUL(4) GRSMUL(5) GRSMUL(6) GRSMUL(7)   // initialize accumulators with first product
+      do{mv=mv0[mx-1]; avweight=_mm256_set1_pd(vv0[mx-1]); GRSFMA(0) GRSFMA(1) GRSFMA(2) GRSFMA(3) GRSFMA(4) GRSFMA(5) GRSFMA(6) GRSFMA(7)}while(--mx);
      }else{  // slack vbl
       GRSLD(0) GRSLD(1) GRSLD(2) GRSLD(3) GRSLD(4) GRSLD(5) GRSLD(6) GRSLD(7)  // load column directly
      }
@@ -1106,7 +1118,7 @@ if(rowx<nqkrows && (rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf
 static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(ctx->x) x=ctx->x;
- YC(ndxa)YC(nbasiswfk)YC(nc)YC(bkzstride)YC(nthreads)YC(bk)YC(parms)YC(zv)
+ YC(ndxa)YC(nbasiswfk)YC(nc)YC(zstride)YC(nthreads)YC(bk)YC(parms)YC(zv)
  YC(bndrowmask)YC(axv)YC(amv0)YC(avv0)YC(qk)YC(Frow)YC(bkbeta)YC(rvtv)
 #undef YC
  // perform the operation
@@ -1121,19 +1133,19 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
  I qkstride=qkrowstride*nqkbcols;  // distance between planes of Qk
  D *qkt0=DAV(qk);   // start of Qk
  __m256i bndmskshift=_mm256_set_epi64x(0,16,32,48);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
- I maxnweights=parms[1];  // the max # of weights in any column
  // get column info, a 2-bit field of (bound,enforcing)
  I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);
  zv=(D*)(((I)zv&~7)|((colrvt&ZVNEGATECOL)<<ZVNEGATECOLX));  // flags: enforcing column requiring negation, abort on nonimproving row
 
  // Bring in the row address/weights for this column.  Slow if in D3$.  If we take a reservation next, that won't matter; start early in case 1 core
- I ntoalloc=(maxnweights+1+NPAR-1)&-NPAR;  // block that can hold all the pointers/weights
- A wts; GATV0(wts,INT,2*ntoalloc,1)  D **mv0=voidAV(wts); D *vv0=(D*)((I*)mv0+ntoalloc);   // place to hold the addresses/weights of the columns being combined
+ D **mv0, *vv0;   // place to hold the addresses/weights of the columns being combined
  I an;  // number of weights in this dot-product
- D *nextmv;  // pipelined pointer to the start of next row to process
  if(colx>=nqkbcols){I avx;  // index of Am/Av block being moved
   // decision variable.  convert the column indexes into pointers into Qkt, and interleave them with the values
-  an=axv[colx][1]; I *amv=amv0+axv[colx][0]; D *avv=avv0+axv[colx][0];  // number of sparse atoms in each row; pointer to first col#; pointer to first weight
+  an=axv[colx][1]; I wtofst=axv[colx][0];   // number of weights in column, offset to them
+  I ntoalloc=(an+1+NPAR-1)&-NPAR;  // block that can hold all the pointers/weights
+  A wts; GATV0(wts,INT,2*ntoalloc,1)  mv0=voidAV(wts); vv0=(D*)(mv0+ntoalloc);   // place to hold the addresses/weights of the columns being combined
+  I *amv=amv0+wtofst; D *avv=avv0+wtofst;  // number of sparse atoms in each row; pointer to first col#; pointer to first weight
   __m256i qkt0_4=_mm256_set1_epi64x(qkt0), qkrowstride_4=_mm256_set1_epi64x(qkrowstride<<LGSZD);
   for(avx=0;avx<an;avx+=NPAR){  // for each block of input... (this overfetches but that's OK since we map enough for one 32-byte final fetch)
    __m256i mv4=_mm256_loadu_si256((__m256i_u *)&amv[avx]);   // read next group of 4 row#s
@@ -1142,9 +1154,7 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
    // We have 4 row-pointers and 4 values.  Write them out
    _mm256_storeu_pd((double *)&mv0[avx],mv4); _mm256_storeu_pd((double *)&vv0[avx],av4);
   }
-  nextmv=mv0[0];  // index of next col to process; prefetch addr of start of col
-  mv0[an]=nextmv;  // We pipeline fetches of mv, so we do one extra.  Make that one extra go back to the beginning so it will give the correct value
- }else{an=-1; nextmv=&qkt0[qkrowstride*colx];}  // Slack variable.  Skip the weighting
+ }else{an=-1; vv0=(D*)&qkt0[qkrowstride*colx];}  // Slack variable.  Skip the weighting, leave an neg as flag.  Repurpose vv0 to point to col
 
  I colressize;  // for one-col, the number of rows in each reservation
  //   parms is #cols,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
@@ -1231,7 +1241,7 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
    I mx;   // row index (of the nonzero components of this A0 col)
    NOUNROLL for(mx=0;mx<an;++mx){  // for each element of the dot-product
     __m256d tl,th2,tl2,vval;  // temps for value loaded, and multiplier from A column
-    D *mv=nextmv; nextmv=mv0[mx+1];  // advance the pipeline of row addresses in Qkt
+    D *mv=mv0[mx];  // advance the pipeline of row addresses in Qkt.  We don't unroll because we have a great many dependent instructions to release
     // get column number to fetch; fetch 4 rows
     dotproducth=_mm256_load_pd(&mv[rowx]);  // fetch 4 values.  Extras should be 0.  We use load, not loadu, because these fetches MUST be aligned
     if(_mm256_testz_si256(_mm256_castpd_si256(dotproducth),_mm256_castpd_si256(endmask)))continue;  // if all values 0, skip em.  Probably worth a test
@@ -1252,7 +1262,7 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
 accumulateqp: ;
    NOUNROLL for(++mx;mx<an;++mx){  // skip the first nonzero; for each remaining element of the dot-product
     __m256d th,tl,th2,tl2,vval;  // temps for value loaded, and multiplier from A column
-    D *mv=nextmv; nextmv=mv0[mx+1];  // advance the pipeline of row addresses in Qkt
+    D *mv=mv0[mx];  // advance the pipeline of row addresses in Qkt
     // get column number to fetch; fetch 4 rows
     th=_mm256_load_pd(&mv[rowx]);  // fetch 4 values.  Extras should be 0
     if(_mm256_testz_si256(_mm256_castpd_si256(th),_mm256_castpd_si256(endmask)))continue;  // if all values 0, skip em.  Probably worth a test
@@ -1267,7 +1277,7 @@ accumulateqp: ;
     TWOSUM(dotproducth,tl2,dotproducth,dotproductl)  // combine high & extension for final form
     // this is accurate to 104 bits from the largest of (new,old,new+old).
    }
-  }else{dotproducth=_mm256_load_pd(&nextmv[rowx]); dotproductl=_mm256_load_pd(&nextmv[rowx+qkstride]); accmaxabs=_mm256_setzero_pd();}  // slack vbl, just read column value, no need for noise test
+  }else{dotproducth=_mm256_load_pd(&vv0[rowx]); dotproductl=_mm256_load_pd(&vv0[rowx+qkstride]); accmaxabs=_mm256_setzero_pd();}  // slack vbl, just read column value, no need for noise test
 endqp: ;
 
   // ************************************************************************** one-column mode+SPR: store out the values, setting to 0 if below threshold
@@ -1275,7 +1285,8 @@ endqp: ;
   __m256d okmask=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),accmaxabs,_CMP_GT_OQ);  // 0s where we need to clamp
   if((I)zv&ZVNEGATECOL){dotproducth=_mm256_xor_pd(sgnbit,dotproducth); dotproductl=_mm256_xor_pd(sgnbit,dotproductl);}  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
   dotproducth=_mm256_and_pd(dotproducth,okmask); dotproductl=_mm256_and_pd(dotproductl,okmask); // set values < threshold to +0, high and low parts
-  _mm256_store_pd(remflgs(zv)+rowx,dotproducth); _mm256_store_pd(remflgs(zv)+rowx+bkzstride,dotproductl);   // store high & low.  This may overstore, and must always be aligned
+  _mm256_store_pd(remflgs(zv)+rowx,dotproducth); _mm256_store_pd(remflgs(zv)+rowx+zstride,dotproductl);   // store high & low.  This may overstore, and must always be aligned
+if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
   // We treat Fk as part of the column, except that we don't want to include it in the SPR calculation.
   if(unlikely(rowx==frowbatchx)){
    // We hit the Fk batch.  Turn off the last lane of endmask, which must hold Fk
@@ -1463,7 +1474,6 @@ struct mvmctx opctx;  // parms to all threads, and return values
  I ninclfk=ABS(nandfk);   // number of rows to be processed including Fk
  ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"Qkt is not on cacheline bdy")  // we fetch along rows; insist on data alignment
  ASSERTSYS((AS(box)[2]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
- I minbkzstride=(ninclfk+NPAR-1)&-NPAR;  // size of bk/bkbeta/z: enough for last batch including Fk if present
  box=C(AAV(w)[0]); ASSERT(AR(box)==3&&AS(box)[1]==2&&AS(box)[2]==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I axn=AS(box)[0]; opctx.axv=((I(*)[2])IAV(box))-nbasiscols;  // prebiased pointer to A0 part of NTT
  box=C(AAV(w)[1]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I amn=AN(box); opctx.amv0=IAV(box);  // col #s in basis
  box=C(AAV(w)[2]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN); I avn=AN(box); opctx.avv0=DAV(box);  // weights
@@ -1492,16 +1502,16 @@ struct mvmctx opctx;  // parms to all threads, and return values
  }else{
   // onecol+SPR mode
   ASSERT(AN(w)==12,EVLENGTH);  // audit overall w
-  box=C(AAV(w)[6]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AS(box)[AR(box)-1]>=minbkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) opctx.bk=DAV(box);  // bk values allow overfetch; we use only high part
-  minbkzstride=AS(box)[AR(box)-1];  // all the strides must be equal; we have just verified they are big enough
-  ASSERTSYS((minbkzstride&(NPAR-1))==0,"stride of bk is not a cacheline multiple")  // every row must be aligned
+  box=C(AAV(w)[6]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AS(box)[AR(box)-1]>=((ninclfk+NPAR-1)&-NPAR),EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) opctx.bk=DAV(box);  // bk values allow overfetch; we use only high part.  Ensure big enough for pad
+  I bkzstride=AS(box)[AR(box)-1];  // all the strides must be equal; we have just verified they are big enough
+  ASSERTSYS((bkzstride&(NPAR-1))==0,"stride of bk is not a cacheline multiple")  // every row must be aligned
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"bk is not on cacheline bdy")  // we fetch along rows; insist on data alignment
-  box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[0]==2,EVLENGTH) ASSERT(AS(box)[AR(box)-1]==minbkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) zv=opctx.zv=DAV(box);  // zv values allow overstore
+  box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[0]==2,EVLENGTH) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) zv=opctx.zv=DAV(box);  // zv values allow overstore
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"column result is not on cacheline bdy")  // we store along rows; insist on data alignment
   ASSERT(BETWEENC(nparms,10,11),EVLENGTH)  // SPR has lots of parms
-  box=C(AAV(w)[10]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[AR(box)-1]==minbkzstride,EVLENGTH) opctx.bkbeta=DAV(box);  // beta values corresponding to bk; we use only high part
+  box=C(AAV(w)[10]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) opctx.bkbeta=DAV(box);  // beta values corresponding to bk; we use only high part
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"bkbeta is not on cacheline bdy")  // we fetch along rows; insist on data alignment
-  opctx.bkzstride=minbkzstride;   // use the agreed stride
+  opctx.zstride=bkzstride;   // use the agreed stride
   nthreads=likely(ninclfk>256)?nthreads:1;  // single-thread small problem (qp).  This is questionable as the result column will be read in the master thread
   // The initial shared value is infinity except in bound columns: then beta.  Initialize the found-row value to -1 for 'nothing found' normally,
   // but for bound columns use #rows which indicates a Nonbasic Swap

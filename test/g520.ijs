@@ -24,7 +24,7 @@ if. '' -: $ colx =. 8 {::y do.
   ncol =. ({: $ Qk)  NB. number of columns in basis
   if. 0~:nthr do.   NB. multiple threads: expand Qk with 0 rows to make size threadable, scramble rows in the data.  Keep bndrowmask/bk/bkbeta corresponding to same values
     NB. Create the vector of sources for each new row of Qk etc.  We will first add a harmless row and then draw, where _1 is harmless and _2 is the Fk row if present
-    nrows =. #drawvec =. ,&_2^:(nflagged<0) ({~ ?~@#) (1200 + ? 50) {.!._1 i. nrows - (nflagged<0)  NB. modify #rows to match the unpadded block
+    nrows =. #drawvec =. ,&_2^:(nflagged<0) ({~ ?~@#) (12000 + ? 50) {.!._1 i. nrows - (nflagged<0)  NB. modify #rows to match the unpadded block
     NB. modify the inputs
     Qk =. drawvec {"1 _1 Qk ,"_1 (0.)
     bndrowmask =. drawvec { bndrowmask , '4'
@@ -407,14 +407,14 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
 
   NB. Large random test
   nqcols=.20
-  for_nrow. 128 + 10 ?@$ 512 do.  NB. varying column length of Qk.  Few cols of Qk, many of A0
+  for_nrow. (2000 + 1 ?@$ 512) , (128 + 10 ?@$ 512) do.  NB. varying column length of Qk.  Few cols of Qk, many of A0.  One long col to multithread small # columns
     Qkt =. 15!:18 ] 2 {. ,: (>.&.(%&4) nrow) {."1 >: (nqcols,nrow) ?@$ 0  NB. use all positive values to avoid massive cancellation
     Ax =. ,"0 (,.~   [: |.!.0 +/\) 1 >. (256 + ? 255) ?@$ nqcols   NB. array of start,length.  Big enough for multiple reservations
     Am =. ((<1 0)&{"2 Ax) ;@:(?&.>) nqcols  NB. column #s
     Av =. >: ((<1 0)&{"2 Ax) ;@:(?@$&.>) 0  NB. weights, all positive
 NB.   parms is #cols(flagged),maxAx,                x,expandQk (testcase option),MinGradient/MinGradImp,x
     parms =.     nrow,      (>./((<1 0)&{"2 Ax)), 0.,0.                               0.             0.
-    for_nqacols. |: 0 1 >. 20 ?@$"0 (nqcols , #Ax) do.  NB. 500 pairs of #Q cols, #Acols.  Acols may not be empty
+    for_nqacols. (0 ,. 1 + i. 32) , |: 0 1 >. 20 ?@$"0 (nqcols , #Ax) do.  NB. pairs of #Q cols, #Acols.  Acols may not be empty.  Test small # columns
       qacols =. nqacols ?&.> (nqcols , #Ax)  NB. Qk col#s ; A0 col #s
       Yt =. '014' {~ 0.06 0.1 I. nrow ?@$ 0  NB. Random types, mostly normal
       nttcols =. (, +&nqcols)&>/ qacols   NB. column indexes in NTT

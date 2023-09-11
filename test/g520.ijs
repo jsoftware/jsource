@@ -1,7 +1,6 @@
 prolog './g520.ijs'
 
 NB. 128!:9  Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;bk;z;ndx;parms;bkbeta ---------------------------------------------------------
-
 NB. y is 128!:9 parms, x is expected result (empty if we have to check column values).  m is parms
 NB. Save args, run 128!:9, check result.  For multithreads, expand M/bk/Frow to big enough to engage threading (leaving last row/col harmless)
 NB. and expand bkg and ndx to  make enough work to keep the threads busy
@@ -56,7 +55,7 @@ NB. obsolete     parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. restore Fk fla
   savres   =: 128!:9 savy =: (<z) 7} y
   if. 4 ~: {. x do.  NB. if the column was aborted, don't check the values
     assert. 0 = +./ 128!:5 , z
-    assert. 1e_25 > >./ | +/ ref epsub&(nrows&{."1) z  NB. require match on valid values
+    assert. 1e_25 > >./ +/ | ref epsub&(nrows&{."1) z  NB. require match on valid values
   end.
   if. #x do.  NB. if SPR result known, check it
     if. 0=nthr do.
@@ -150,8 +149,8 @@ for_t. i. 4 do.
   assert. '' ('' run128_9) Ax;Am;Av;M;('9' 6} rvt);bndrowmask;bk;'';6;parms;bkbeta;beta 
   assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';7;(1e_10 (3}) parms);bkbeta;beta   NB. Store threshold
   NB. Test every different length.  Different size of M are not so important
-  for_l. 2 + i. (*1 T. ''){51 5 do.  NB. l is #rows in Qk including Fk if any
-    'nQcol nAcol' =. 10 15  NB. number of cols in Qk, A0
+  for_l. (2 + i. (*1 T. ''){51 5) , (250 + ?@$/ (*1 T. ''){10 100,:20 1000) do.  NB. l is #rows in Qk including Fk if any
+    'nQcol nAcol' =. 10 5  NB. number of cols in Qk, A0
     M =. (*  0.25 < 0 ?@$~ $)  _0.5 + (l,nQcol) ?@$ 0  NB. random values of random sizes, with 25% 0s
     M =. 0. + epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) M  NB. append extended part, force to float
     Ax =. ,."1 (,.~    [: |.!.00 +/\) >: nAcol ?@$ nQcol   NB. start,len for each Acol

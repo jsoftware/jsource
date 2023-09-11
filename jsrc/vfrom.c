@@ -688,14 +688,14 @@ DF2(jtfetch){A*av, z;I n;F2PREFIP;
 // everything we need for one core's execution - shared by all cores
 struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  // returned section
+
  union {
   D D;
   I I;  // we use integer arithmetic to compare floats, so the  float values must be nonnegative.  Also, we pun integer 0 = fp 0
  } sharedmin;   // minimum (=best) improvement found in any previous column, including in other threads, set to -inf to abort other threads
- I retinfo;  // returned data, col (if gradient) or row (if onecol)
-   // during the search, bit 63 indicates dangerous pivot
  I nimpandcols;  // number of improvement,number of cols finished
  I ndotprods;  // total # dotproducts evaluated
+ I4 retinfo;  // returned data, col (if gradient) or row (if onecol)
  // shared section
  UI4 nextresv;  // index of next reservation. Advanced by atomic operations.  For one-column, this is a row; for gradient, a column.  Starts out after initial reservations
  US ctxlock;  // used to lock changes
@@ -703,31 +703,39 @@ struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  US ressize;  // number of columns/rows that should be taken initially
  // the rest of the first cacheline will be available as soon as the task starts.  Later cachelines will have to be transferred.
  // We put the first-needed data in cacheline 0, making sure we copy it out to avoid false sharing, because the line will be taken away at the end of each reservation
- I4 maxweights;  // max # weights in any column (gradient only)
- float mingradimp;  //   0 normally; >0 => finish up gradient calculation in any column that has a larger |gradient|, storing the len/sumsq in cutoffinfo; <0-> accept any gradient as high as 1/(1-MinGradImp) * true max
- UI4 nc;  // #cols in ndxa
- US nthreads;  // number of threads when we started this job (may be inaccurate; for tuning only)
-// 2 bytes free
  I4 nbasiswfk;  // |value| is number of rows allocated in Qk; if negative, is 1's-complement of # rows of Qk proper, and Fk is also a row of Qk
  I4 nqkbcols;  // number of columns of Qk, i. e. # cols in basis
- // end of cacheline 0
- UI *ndx0;   // the column indexes, always a list of ndxs
- C *rvtv;  // list of Rose variable types for the columns (unchanging)
- I (*axv)[2];  // pointer to ax data, (index,length)
- D *Frow;  // the selector-row data  (gradient only)
- D (*cutoffstatus)[2];  // (gradient only)  (ncols,2) $ array holding (number of rows processed before cutoff, 0 if row invalid,gradient total for those rows).  If cutoff total is negative, it means that no positive column value has been seen
+ union __attribute__ ((aligned (4))) {
+  struct {
+   I4 maxweights;  // max # weights in any column
+   float mingradimp;  // (gradient only)  0 normally; >0 => finish up gradient calculation in any column that has a larger |gradient|, storing the len/sumsq in cutoffinfo; <0-> accept any gradient as high as 1/(1-MinGradImp) * true max
+   UI4 nc;  // #cols in ndxa
+   UI *ndx0;   // the column indexes, always a list of ndxs
+// end of cacheline 0
+   D *Frow;  // the selector-row data
+   D (*cutoffstatus)[2];  //  (ncols,2) $ array holding (number of rows processed before cutoff, 0 if row invalid,gradient total for those rows).  If cutoff total is negative, it means that no positive column value has been seen
+   C *rvtv;  // list of Rose variable types for the columns
+   I (*axv)[2];  // pointer to ax data, (index,length)
+   I4 resredwarn;  // row# beyond which we start making SMALLRESV allocations
+  } grad;
+  struct {
+   I4 colx;  // index of the single column
+   D *zv; // pointer to output for product mode, 0 for gradient mode
+   I (*axv)[2];  // pointer to ax data, (index,length)
+// end of cacheline 0
+   D *parms;  // parm info
+   D *bk;  // pointer to bk.  If 0, this is a column extraction (if zv!=0)
+   D *bkbeta;  // beta values for the rows in bk.  The values don't change, but which ones are in bk do
+   UI4 zstride;  // length of last axis of z: length of extended z, which includes Fk if present and is padded to batch boundary
+   UI4 ressize2;  // reservation size to use after the initial reservation
+  } spr;
+ } u;  // 4.5 words into cacheline 1
+ I4 qktrowstride;  // length of a padded row of Qkt
  I *amv0;  // pointer to am block, and to the selected column's indexes
  D *avv0;  // pointer to av data, and to the selected column's values
  D *qkt0;  // pointer to qkt data
  // end of cacheline 1
- I4 qktrowstride;  // length of a padded row of Qkt
  D *bndrowmask;  // for each row in bk, 1 bit/value, indicating bound vbl  Ordered to be right for each bytelane.
-// following used by onecol only
- D *parms;  // parm info
- D *bk;  // pointer to bk.  If 0, this is a column extraction (if zv!=0)
- D *bkbeta;  // beta values for the rows in bk.  The values don't change, but which ones are in bk do
- D *zv; // pointer to output for product mode, 0 for gradient mode
- UI4 zstride;  // length of last axis of z: length of extended z, which includes Fk if present and is padded to batch boundary (onecol only)
 };
 
 // the last stages of the pipeline, which are a ring (here 2 long) of info for the column
@@ -740,8 +748,8 @@ struct __attribute__((aligned(NPAR*SZI))) pingpong {
  __attribute__((aligned(NPAR*SZI))) I mvvv[];  // Am values for the column (with space for 1 extra I*), followed by Av values, each aligned
 };
 
-#define BNDROWBATCH 64   // the number of bits of bndrowmask that we load at a time.
 #define LGBNDROWBATCH 6
+#define BNDROWBATCH ((I)1<<LGBNDROWBATCH)   // the number of bits of bndrowmask that we load at a time.
 #define CMPBATCH 64  // frequency with which we compare for cutoff.  MUST NOT BE SMALLER than BNDROWBATCH so that we restart on a bndrowmask bdy
   // We collect the totals for every compare batch.  If we are using low precision for the gradient, we should collect totals often enough that we don't
   // lose precision in each lane
@@ -779,18 +787,22 @@ struct __attribute__((aligned(NPAR*SZI))) pingpong {
 static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names.  We start with the data in the first cacheline and go from there, attempting to read
  // in the order the data will be needed.  We use atomic reads to force the reads to start early, since all but the first cacheline are remote now
+#define YCUT(T,x) T x=(T)__atomic_load_n(&ctx->u.grad.x,__ATOMIC_ACQUIRE);
+#define YCU(x) YCUT(typeof(ctx->u.grad.x),x)
 #define YCT(T,x) T x=(T)__atomic_load_n(&ctx->x,__ATOMIC_ACQUIRE);
 #define YC(x) YCT(typeof(ctx->x),x)
- YC(maxweights)
- float mingradimp; *(I4 *)&mingradimp = (I4)__atomic_load_n((I4*)&ctx->mingradimp,__ATOMIC_ACQUIRE);  // needed to allocate row/weight area & init zv
- YCT(I,ressize)YC(nc)  // needed for initial reservation
+ YCU(maxweights)
+ float mingradimp; *(I4 *)&mingradimp = (I4)__atomic_load_n((I4*)&ctx->u.grad.mingradimp,__ATOMIC_ACQUIRE);  // needed to allocate row/weight area & init zv
+ YCT(I,ressize)YCU(nc)  // needed for initial reservation
  YC(nbasiswfk)YCT(I,nqkbcols)   // needed in pipe stage -1, even first time
- YC(ndx0)   // needed in final reservation stage, even first time
- YC(cutoffstatus)YC(axv)YC(Frow)YC(rvtv)  // needed in pipe stage -2
+ YCU(ndx0)   // needed in final reservation stage, even first time
+ YCU(cutoffstatus)YCU(axv)YCU(Frow)YCU(rvtv)  // needed in pipe stage -2
  YC(amv0)YC(avv0)  // needed in pipe stage -1, but not first time
- YC(qkt0)YC(bndrowmask)YCT(I4,qktrowstride)YC(nthreads)  // needed only after pipeline initialization
+ YC(qkt0)YC(bndrowmask)YCT(I4,qktrowstride)YCU(resredwarn)  // needed only after pipeline initialization
 #undef YC
 #undef YCT
+#undef YCU
+#undef YCUT
  // perform the operation
  I minvalueweshared=IMAX;  // the smallest value we have shared
  __m256d sqrt2=_mm256_set1_pd(sqrt(2.0));   // sqrt(2) for weighting bound rows
@@ -824,9 +836,9 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
  if(unlikely(nc==0))R 0;  // abort with no action if no columns
 
  I nextcol=ressize*ti;  // initial reservation - a different block for each job
+ PREFETCH2(&ndx0[nextcol]);  // start moving the reservation into L2
 
  I retinfo;  // the return data for the best value we shared (col).  No need to initialize because we don't report a value if we never shared a gradient
- I resredwarn=nc-10*((I)nthreads+1);  // when col# gets above this, switch to reserving fewer
 
  I4 __attribute__((aligned(NPAR*SZI))) localndx[BIGRESV+2];  // local storage for the indexes.  2 is for overfetch at end-of-pipe. I4 to save space - questionable decision
 
@@ -872,7 +884,7 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
      ASSERTSYS(anm1<mvvvtoalloc,"column has too many weights");
     }
     ppp->an=anm1-1; I *amv=amv0+axm1; D *avv=avv0+axm1;  // number of sparse atoms in each row-1; pointer to first col#; pointer to first weight
-    // Stage the columns#s and weights into D1$, in the ping-pong buffer.  This does an extra write & read compared to converting them to interleaved address/value directly,
+    // Stage the columnss and weights into D1$, in the ping-pong buffer.  This does an extra write & read compared to converting them to interleaved address/value directly,
     // but that takes 12 uops/4 weights, which for a column with a lot of weights will overfill the reorder buffer.  The staging takes 6 uops/4 weights
     NOUNROLL for(avx=0;avx<anm1;avx+=NPAR){  // for each block of input... (this overfetches but that's OK since we map enough for one 32-byte final fetch)
      _mm256_store_si256((__m256i *)&(ppp->mvvv)[avx],_mm256_loadu_si256((__m256i *)&amv[avx]));  // m0-m3
@@ -918,7 +930,7 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
      }
     }else if(!(zv&ZVCOLCTVALID)){
      // pipe is draining to empty; we overfetched, meaning further pipe entries are invalid: perform a harmless simulation of stage -2
-     cutrowm1=nqkrows; cutsumsqm1=0.0;  // this suffices to initialize stage -1 to bypass most processing.  Frow has a previous valid value.  colxm1 is garbage
+     cutrowm1=nqkrows; cutsumsqm1=0.0;  // this suffices to initialize stage -1 to bypass most processing.  frowm1 has a previous valid value.  colxm1 is garbage
      goto endpipem2;  // skip the fetches for stage -2 
     }
      // if we didn't take a reservation nextcol will stay set high and the pipeline will empty
@@ -928,7 +940,7 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
    colxm1=colxm2; frowm1=Frow[colxm2]; cutrowm1=cutoffstatus[colxm2][0]; cutsumsqm1=cutoffstatus[colxm2][1];  // other needed info
    colrvtm1=(rvtv[colxm2>>(LGBB-1)]>>((colxm2&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);  // bound/enforcing flag for column
    colxm2=colxm2<nqkbcols?nqkbcols:colxm2; anm1=axv[colxm2][1]; axm1=axv[colxm2][0];  // if slack column, read from harmless decision vbl 0
-endpipem2: ;
+endpipem2: ;  // come here in runout where pipe input is invalid
    // end pipe stage -2
 
    // advance the pipe, possibly with validity set for the incoming stage -2 data
@@ -987,21 +999,20 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
 
    // calculate several blocks of the dot-product
    // idea: reorder columns to use lines cached by previous columns
-   // Main accumulation loop.  We force nextmv to be pipelined by using atomic loads; this creates an extra register-to-register mov but
-   // saves 5 cycles of initial latency; since the mov is 1/4 cycle and we expect few weights per loop, the latency is worse.
+   // Main accumulation loop.  We do not pipeline mv because it looks like we are limited by instruction issue
    __m256d avweight,acc0,acc1,acc2,acc3,acc4,acc5,acc6,acc7;  // fma latency is 4 cycles; 2 launches/cycle; need 8 accumulators
-   #define GRMUL(accno,type) acc##accno=_mm256_mul_pd(avweight,_mm256_##type##_si256((__m256i *)&mv[rowx+NPAR*accno]));
-   #define GRFMA(accno,type) acc##accno=_mm256_fmadd_pd(avweight,_mm256_##type##_si256((__m256i *)&mv[rowx+NPAR*accno]),acc##accno);
-   #define GRLD(accno,type) acc##accno=_mm256_##type##_si256((__m256i *)&vv0[rowx+NPAR*accno]);
-   if(rowx<=zv&ZVMAXROWS){
+   #define GRLD(accno,type) acc##accno=_mm256_castsi256_pd(_mm256_##type##_si256((__m256i *)&vv0[rowx+NPAR*accno]));
+   #define GRMUL(accno,type) acc##accno=_mm256_mul_pd(avweight,_mm256_castsi256_pd(_mm256_##type##_si256((__m256i *)&mv[rowx+NPAR*accno])));
+   #define GRFMA(accno,type) acc##accno=_mm256_fmadd_pd(avweight,_mm256_castsi256_pd(_mm256_##type##_si256((__m256i *)&mv[rowx+NPAR*accno])),acc##accno);
+   if(rowx<=(zv&ZVMAXROWS)){
     // for the first rows of each column of Qk, allow the values to come into the caches, where they might be reused
     #define GRLMUL(accno) GRMUL(accno,load)
     #define GRLFMA(accno) GRFMA(accno,load)
     #define GRLLD(accno) GRLD(accno,load)
     if(an>=0){D *mv; UI mx=an;  // decision vbl.  Count mx down from #weights-1
      mv=mv0[mx]; avweight=_mm256_set1_pd(vv0[mx]); GRLMUL(0) GRLMUL(1) GRLMUL(2) GRLMUL(3) GRLMUL(4) GRLMUL(5) GRLMUL(6) GRLMUL(7)   // initialize accumulators with first product
-     // How much to unroll this loop is a hard question.  There are 6 non-FMA instructions per loop, of which 1 is eliminable MOVs.  Estimating the average column to have 5 weights and cutoff in 256 rows,
-     // there will be 40 FMAs, 40 LOAD, 25 overhead per batch, plus the batch processing of 40 inst.  These would run in 40 cycles and would be limited by the instruction launch.
+     // How much to unroll this loop is a hard question.  There are 5 non-FMA instructions per loop, of which 1 is eliminable MOVs.  Estimating the average column to have 5 weights and cutoff in 256 rows,
+     // there will be 40 FMAs, 40 LOAD, 25 overhead per batch, plus the batch processing of 40 inst.  These would run in 38 cycles and would be limited by the instruction launch.
      // By unrolling the loop we can cut the non-FMA to 2.5 inst/loop, total 13/batch, at the cost of 1 misbranch (~60 inst).
      // BUT: data will usually be coming from D2$ and will not be available at max rate.  If the actual rate is 200/320 of max rate, the 40 LOAD will limit to 32 cycles/batch, which is not limiting for the workload described.
      // However, if bound-row processing can be eliminated, the batch processing will fall to 16 inst, which will launch faster than the LOADs can run.
@@ -1134,28 +1145,35 @@ if(rowx<nqkrows && (rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf
 
 #define ALMOSTINF 1e300  // A very large value, used when we have seen a positive col value but have no SPR to report
 
+// we estimate processing 4 rows of QkA0 in 5 qp multiply-adds, each taking about 30 fp instructions - total 75 clocks at 2 launches per clock - plus time to write and do SPR, another
+// ~10 clocks.  That's maybe 16ns.  A RFO takes 15-30 ns.  We will take the next reservation with 12 rows left in the current one
+#define ROWSPERRESV 12   // number of rows we can process during one atomic_fetch_add
+
 // the processing loop for one core, performing column fetch+SPR.  We take a slice of the rows, repeatedly
 // ti is the job#, not used except to detect error
 static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
  // transfer everything out of ctx into local names
+#define YCUT(T,x) T x=(T)__atomic_load_n(&ctx->u.spr.x,__ATOMIC_ACQUIRE);
+#define YCU(x) YCUT(typeof(ctx->u.spr.x),x)
 #define YCT(T,x) T x=(T)__atomic_load_n(&ctx->x,__ATOMIC_ACQUIRE);
 #define YC(x) YCT(typeof(ctx->x),x)
- YC(axv)YC(amv0)YC(avv0)YC(qkt0)YCT(I4,qktrowstride)YC(ndx0)YC(rvtv)YC(nbasiswfk)YCT(I,nqkbcols)YC(zstride)YC(bk)YC(parms)YC(zv)
- YC(bndrowmask)YC(bkbeta)YC(nthreads)
+ YCUT(I,colx)YCU(zv)YCT(I,nqkbcols)YCU(axv)YC(amv0)YC(avv0)YC(qkt0)YCT(I4,qktrowstride)YC(nbasiswfk)YC(ressize)YCUT(I,zstride)YCU(parms)YCU(bk)
+ YC(bndrowmask)YCU(bkbeta)YCU(ressize2)
 #undef YC
 #undef YCT
-#define YC(x) typeof(ctx->x) x=ctx->x;
-#undef YC
+#undef YCU
+#undef YCUT
  // perform the operation
- I colx=ndx0[0];  // get next column# to work on  scaf pass in directly
+// obsolete  I colx=ndx0[0];  // get next column# to work on  scaf pass in directly
  I ndotprods=0;  // number of dot-products we perform here
  I frowbatchx;  // rowx of batch containing Fk, if any
- D sharedmin;  // minimum value fetched from other threads
+// obsolete  D sharedmin;  // minimum value fetched from other threads
  I qkstride=qktrowstride*nqkbcols;  // distance between planes of Qk
  __m256i bndmskshift=_mm256_set_epi64x(0,16,32,48);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
- // get column info, a 2-bit field of (bound,enforcing)
- I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);
- zv=(D*)(((I)zv&~7)|((colrvt&ZVNEGATECOL)<<ZVNEGATECOLX));  // flags: enforcing column requiring negation, abort on nonimproving row
+ __m256d store0thresh=_mm256_set1_pd(parms[3]);  // In one-column mode, this holds the Store0Threshold: column values less than this are set to 0 when written out
+ __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
+
+ // Initial zv has the NEGATECOL flag set if needed, others clear
 
  // Bring in the row address/weights for this column.  Slow if in D3$.  If we take a reservation next, that won't matter; start early in case 1 core
  D **mv0, *vv0;   // place to hold the addresses/weights of the columns being combined
@@ -1176,39 +1194,31 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
   }
  }else{an=-1; vv0=(D*)&qkt0[qktrowstride*colx];}  // Slack variable.  Skip the weighting, leave an neg as flag.  Repurpose vv0 to point to col
 
- I colressize;  // for one-col, the number of rows in each reservation
  //   parms is #cols,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
- __m256d store0thresh=_mm256_set1_pd(parms[3]);  // In one-column mode, this holds the Store0Threshold: column values less than this are set to 0 when written out
- __m256d col0thresh;  //  minimum value considered valid for a column value (smaller are considered 0)
- __m256d bkovershoot;  //  maximum amount a pivot is allowed to make bk overshoot
- __m256d bk0thresh;  // smallest bk value considered nonzero
- I prirow;  //  priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so.  Set to LOW_VALUE if no priority row
- __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
- prirow=(I)parms[10];   // copy in parms
+ __m256d col0thresh=_mm256_set1_pd(parms[2]);  //  minimum value considered valid for a column value (smaller are considered 0)
+ __m256d bkovershoot=_mm256_set1_pd(parms[8]);  //  maximum amount a pivot is allowed to make bk overshoot
+ __m256d bk0thresh=_mm256_set1_pd(parms[7]);  // smallest bk value considered nonzero
+ I prirow=(I)parms[10];  //  priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so.  Set to LOW_VALUE if no priority row
  I nqkrows=ABS(nbasiswfk);  // number of rows of qk including any Fk
  I nhasfk=REPSGN(nbasiswfk); // -(Fk is an extra row)
- col0thresh=_mm256_set1_pd(parms[2]);  // column |values| less than this are considered 0
  frowbatchx=(nqkrows-1)&-NPAR; frowbatchx|=~nhasfk;  // batch# containing last row (might be by itself); if there is no fk, batch is ~0, i. e. never
- bk0thresh=_mm256_set1_pd(parms[7]);  // bk considered 0
- bkovershoot=_mm256_set1_pd(parms[8]);  // amount bk can overshoot on a pivot
- colressize=8*NPAR*((I)nthreads+1);   // enough rows to allow each thread to arbitrate if they have all-zero jobs
- colressize=(colressize+(BNDROWBATCH-1))&-BNDROWBATCH;  // the bound/enforcing mask is built in units of BNDROWBATCH bits so as to fit in an AVX register, matching the row numbers.  There are 2 bits per value.  They must stay aligned.
-
  __m256d sharedspr;  // the minimum across lanes shared, to reduce minimum sightings
- I limitrowx;  // for SPR, the row of the current lowest SPR
+ I limitrowx=IMAX;  // for SPR, the row of the current lowest SPR.   init row found to high-value, so that we don't share a value unless we actually hit it
  __m256d bndmsk;  // bitstream for each lane, giving (bound) info for the row.  bigendian!!
  D nzerobatches;  // number of batches with 0 SPR we have encountered
 
- I rowx=0;  // the row number we are working on.  We stop when rowx=rown.  Always on an NPAR-row boundary
- I rown;  // index of last+1 row in current (or only) section of the column.  If there is a remnant, the value is backed up by 4.  If 0, we are processing the remnant
- rown=0;  // we get a reservation for each group of rows; so indicate the current allocation is empty
- // col init
+
+ I rowx=ressize*ti;  // the row number we are working on.  We stop when rowx=rown.  Always on an NPAR-row boundary
+ I rown=rowx+ressize;  // index of last+1 row in current (or only) section of the column.  If there is a remnant, the value is backed up by 4.  If 0, we are processing the remnant
+ I newrowx=rown;  // if we don't get a reservation, for termination purposes use the end+1 of the current one.  The only time we don't resv is when this is past the end
+ I needresvx=(rown-ROWSPERRESV)&-NPAR; needresvx=needresvx<rowx?rowx:needresvx;   // point at which we need new resv.  Might be off the end, if we never need one
+ rown=rown>nqkrows?nqkrows:rown; rown-=rown&(NPAR-1)?NPAR:0;  // clamp to end of column, and back up end if there is a remnant
+
  __m256d endmask=_mm256_setone_pd(); // mask for validity of next 4 words: used to control fetch from column and store into result row
- limitrowx=IMAX;  // init row found to high-value, so that we don't share a value unless we actually hit it
  // The init SPR is inf for normal columns; but for bound column must init to beta, the SPR of the implied row
  // This was set in the initial value in the ctx, but it may have been reduced by other threads before we get to look at it
  D initspr=ctx->sharedmin.D;
- // If another thread has found a 0 SPR, or has aborted, sharedmin has changed meaning to be -1/max column value found, or IMIN (=-0) for abort.
+ // If another thread has finished with 0 SPR, or has aborted, sharedmin has changed meaning to be -1/max column value found, or IMIN (=-0) for abort.
  // In that case we mustn't interpret the value as a positive SPR.  We abort if IMIN, because that might save a lot of work when another thread has aborted.
  // For 0 SPR, we indicate that we are looking for 0 SPR, but we don't try to start at the same value as the other thread, because owing to numerical error
  // we might end up thinking we had the winning 0 SPR with no idea what row it came from.  So we just set the max-col-value to a harmless invalid 0, which will
@@ -1225,18 +1235,13 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
    // not 4 values.  If there is no remnant, we are through with the reservation for this column
    rown=rown==0?rowx:rown;  // rown=0 means we are processing the remnant; signal that it is finished
    if(rowx==rown){  // no unprocessed remnant?
-    // one-column mode: establish row reservation
-    // quad-prec one-column mode.  Take a set of rows to process.  The issue is that some rows are faster than others: rows with all 0s skip extended-precision
-    // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
-    // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
-    // for NPAR*nthreads at least.  And, the bound/enforcing mask is constructed to match the AVX lanes: one quantum of mask has (NPAR*BW/2) bitpairs; reservation must be a multiple of that
-    if(rowx>=nqkrows)break;  // if we know we are the last reservation, no need to look at the shared value.  scaf should skip test if only one task in job
+    // Use the previously-read row reservation
+    if(newrowx>=nqkrows)break;  // if there is no new reservation, exit.  This is the loop exit
     // We are going to take a new reservation.  Deduct the size of the gap from the # products to date
-    ndotprods+=rowx;  // we will end up removing (new rowx-old rowx), i. e. the amount skipped
-    rowx=__atomic_fetch_add(&ctx->nextresv,colressize,__ATOMIC_ACQ_REL);   // reserve the next block
-    ndotprods-=rowx;  // finish removing gap
-    if(rowx>=nqkrows)break;  // finished when reservation is off the end
-    rown=rowx+colressize; rown=rown>nqkrows?nqkrows:rown; rown-=rown&(NPAR-1)?NPAR:0;  // clamp to end of column, and back up end if there is a remnant
+    ndotprods+=rowx-newrowx;  // we remove (new rowx-old rowx), i. e. the amount skipped, from the count of rows processed
+    rowx=newrowx;   // start new reservation
+    rown=rowx+ressize2; newrowx=rown; needresvx=(rown-ROWSPERRESV)&-NPAR; needresvx=needresvx<rowx?rowx:needresvx;  // set up for reading next reservation
+    rown=rown>nqkrows?nqkrows:rown; rown-=rown&(NPAR-1)?NPAR:0;  // clamp to end of column, and back up end if there is a remnant
    }
    if(rowx>rown){  // if there is a remnant (which could be the first batch of a new reservation), process it and make sure we finish next time
     // there is a remnant to process.  Get the endmask for it
@@ -1244,6 +1249,9 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
     rown=0;  // set flag value to indicate we are processing a remnant and endmask is set
    }
   }
+
+  // When we get close enough to the end of the reservation, establish the next one.  This takes a RFO cycle
+  if(unlikely(rowx==needresvx))newrowx=__atomic_fetch_add(&ctx->nextresv,ressize2,__ATOMIC_ACQ_REL);   // reserve the next block
 
   __m256d dotproducth,dotproductl;  // where we build the column value
 
@@ -1488,7 +1496,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
  ASSERT(AT(w)&BOX,EVDOMAIN);
  A box;
  box=C(AAV(w)[9]); ASSERT(AT(box)&FL,EVDOMAIN); ASSERT(AR(box)==1,EVRANK); ASSERT(AN(box)>0,EVLENGTH);  // parm shape, type
- D *parms=opctx.parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nbasiswfk=(I)parms[0];   // flagged #rows in Qk
+ D *parms=DAV(box); I nparms=AN(box); I nandfk=opctx.nbasiswfk=(I)parms[0];   // flagged #rows in Qk
  box=C(AAV(w)[3]); ASSERT(AR(box)==3,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.qkt0=DAV(box); I nbasiscols=AS(box)[1]; // Qkt, possibly including space and Fk; # cols in basis
  opctx.qktrowstride=AS(box)[2];  // length of allocated row of Qkt, padded to batch multiple
  opctx.nqkbcols=AS(box)[1];  // number of rows in Qkt which is always # basis columns of Qk
@@ -1496,28 +1504,28 @@ struct mvmctx opctx;  // parms to all threads, and return values
  I ninclfk=ABS(nandfk);   // number of rows to be processed including Fk
  ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"Qkt is not on cacheline bdy")  // we fetch along rows; insist on data alignment
  ASSERTSYS((AS(box)[2]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
- box=C(AAV(w)[0]); ASSERT(AR(box)==3&&AS(box)[1]==2&&AS(box)[2]==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I axn=AS(box)[0]; opctx.axv=((I(*)[2])IAV(box))-nbasiscols;  // prebiased pointer to A0 part of NTT
+ box=C(AAV(w)[0]); ASSERT(AR(box)==3&&AS(box)[1]==2&&AS(box)[2]==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I axn=AS(box)[0]; opctx.u.spr.axv=opctx.u.grad.axv=((I(*)[2])IAV(box))-nbasiscols;  // prebiased pointer to A0 part of NTT
  box=C(AAV(w)[1]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN); I amn=AN(box); opctx.amv0=IAV(box);  // col #s in basis
  box=C(AAV(w)[2]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN); I avn=AN(box); opctx.avv0=DAV(box);  // weights
  ASSERT(amn==avn,EVLENGTH);  // weights and col#s must agree
- box=C(AAV(w)[4]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) C *rvtv=opctx.rvtv=CAV(box);  // RVT
+ box=C(AAV(w)[4]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) C *rvtv=CAV(box);  // RVT
  box=C(AAV(w)[5]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) opctx.bndrowmask=DAV(box);  // bndrowmask
- box=C(AAV(w)[8]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN) I nc=opctx.nc=AN(box);   // col indexes being evaluated
- ASSERT(nc!=0,EVLENGTH)
- I *ndxa=opctx.ndx0=IAV(box);  // addr of col#s
- DO(nc, ASSERT(BETWEENO(ndxa[i],0,nbasiscols+axn),EVINDEX))// audit col#s, which must be in range 0 to NTT width, i. e. #slacks + #decision vbls
- I isgradmode; D *zv; I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;   // non0 if gradient mode; ptr to output if any; #threads available for processing
+ box=C(AAV(w)[8]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN)   // col indexes being evaluated
+ I isgradmode; I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;   // non0 if gradient mode; ptr to output if any; #threads available for processing
  unsigned char (*actionrtn)(JJ, void *, UI4);  // the routine to do the operation
  if(isgradmode=(AR(box)!=0)){ 
   // gradient mode (the dominant case)
-  ASSERT(AN(w)==11,EVLENGTH);  // audit overall w
+  opctx.u.grad.rvtv=rvtv;
+  I nc=opctx.u.grad.nc=AN(box);  ASSERT(AN(w)==11,EVLENGTH);  // audit overall w
+  ASSERT(nc!=0,EVLENGTH)
+  I *ndxa=opctx.u.grad.ndx0=IAV(box);  // addr of col#s
+  DO(nc, ASSERT(BETWEENO(ndxa[i],0,nbasiscols+axn),EVINDEX))// audit col#s, which must be in range 0 to NTT width, i. e. #slacks + #decision vbls
   // box 6 reserved for schedule
-  box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.cutoffstatus=(D(*)[2])DAV(box);  // saved info from previous scans
-  zv=opctx.zv=0;  // zv=0 means gradient mode
+  box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.u.grad.cutoffstatus=(D(*)[2])DAV(box);  // saved info from previous scans
   ASSERT(nparms==6,EVLENGTH)  // gradient mode doesn't use much parms
-  opctx.maxweights=parms[1];  // max # weights in any column (gradient only)
-  opctx.mingradimp=parms[4];  //   0 normally; >0 => finish up gradient calculation in any column that has a larger |gradient|, storing the len/sumsq in cutoffinfo; <0-> accept any gradient as high as 1/(1-MinGradImp) * true max
-  box=C(AAV(w)[10]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.Frow=DAV(box);  // the entire selector row
+  opctx.u.grad.maxweights=parms[1];  // max # weights in any column (gradient only)
+  opctx.u.grad.mingradimp=parms[4];  //   0 normally; >0 => finish up gradient calculation in any column that has a larger |gradient|, storing the len/sumsq in cutoffinfo; <0-> accept any gradient as high as 1/(1-MinGradImp) * true max
+  box=C(AAV(w)[10]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) opctx.u.grad.Frow=DAV(box);  // the entire selector row
   nthreads=likely(ninclfk*nc>1000)?nthreads:1;  // single-thread small problem
   // We estimate 1 gradient per ns.  Reduce number of threads to leave 2us of work for each thread
   I ressize;  // number of columns for each thread to take initially
@@ -1529,32 +1537,67 @@ struct mvmctx opctx;  // parms to all threads, and return values
   else if(nc<SMALLRESV*nthreads)ressize=nc/nthreads;  // not even a SMALL per thread - make initial alloc as big as possible, leaving just a little
   else{ressize=(nc-(nthreads*(SMALLRESV>>1)))/nthreads; ressize=MIN(ressize,BIGRESV);}  // more than a SMALL per thread - leave half a SMALL per thread
   opctx.ressize=ressize; opctx.nextresv=ressize*nthreads;  // set init resv size, and start of first to arbitrate for.  It would be OK for the last thread to have a partial allo, but we don't create that case
-  opctx.sharedmin.D=inf; // minimum improvement.  Must be valid float so we can compute cutoff value
-  opctx.retinfo=-1;  // Init col#, should never be used
+  // Switch to SMALL resv when we get close enough to the end.  The pipelined reservations are cheap, but we would like to keep column affinity
+  opctx.u.grad.resredwarn=BIGRESV+nthreads*SMALLRESV;  // switch after the last BIGRESV that leaves enough room for each thread to take 1 more resv
+  opctx.sharedmin.D=inf; // minimum improvement found.  Must be valid float so we can compute cutoff value
+  opctx.retinfo=-1;  // Init col#, should never be survive unless no column ran to completion
   actionrtn=(unsigned char (*)(JJ, void *, UI4))jtmvmsparsegradx;
  }else{
   // onecol+SPR mode
+  I colx=opctx.u.spr.colx=IAV(box)[0];  // there is only one col
+  ASSERT(BETWEENO(colx,0,nbasiscols+axn),EVINDEX)  // verify in range
   ASSERT(AN(w)==12,EVLENGTH);  // audit overall w
-  box=C(AAV(w)[6]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AS(box)[AR(box)-1]>=((ninclfk+NPAR-1)&-NPAR),EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) opctx.bk=DAV(box);  // bk values allow overfetch; we use only high part.  Ensure big enough for pad
+  opctx.u.spr.parms=parms;
+  box=C(AAV(w)[6]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AS(box)[AR(box)-1]>=((ninclfk+NPAR-1)&-NPAR),EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) opctx.u.spr.bk=DAV(box);  // bk values allow overfetch; we use only high part.  Ensure big enough for pad
   I bkzstride=AS(box)[AR(box)-1];  // all the strides must be equal; we have just verified they are big enough
   ASSERTSYS((bkzstride&(NPAR-1))==0,"stride of bk is not a cacheline multiple")  // every row must be aligned
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"bk is not on cacheline bdy")  // we fetch along rows; insist on data alignment
-  box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[0]==2,EVLENGTH) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN) zv=opctx.zv=DAV(box);  // zv values allow overstore
+  box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[0]==2,EVLENGTH) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN)
+  // get column info, a 2-bit field of (bound,enforcing)
+  I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);
+  opctx.u.spr.zv=(D*)(((I)DAV(box)&~7)|((colrvt&ZVNEGATECOL)<<ZVNEGATECOLX));  // flags: enforcing column requiring negation, abort on nonimproving row
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"column result is not on cacheline bdy")  // we store along rows; insist on data alignment
   ASSERT(BETWEENC(nparms,10,11),EVLENGTH)  // SPR has lots of parms
-  box=C(AAV(w)[10]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) opctx.bkbeta=DAV(box);  // beta values corresponding to bk; we use only high part
+  box=C(AAV(w)[10]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) opctx.u.spr.bkbeta=DAV(box);  // beta values corresponding to bk; we use only high part
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"bkbeta is not on cacheline bdy")  // we fetch along rows; insist on data alignment
-  opctx.zstride=bkzstride;   // use the agreed stride
-  nthreads=likely(ninclfk>256)?nthreads:1;  // single-thread small problem (qp).  Multithreading is questionable as the result column will be read in the master thread
+  opctx.u.spr.zstride=bkzstride;   // use the agreed stride
   // The initial shared value is infinity except in bound columns: then beta.  Initialize the found-row value to -1 for 'nothing found' normally,
   // but for bound columns use #rows which indicates a Nonbasic Swap
- opctx.nextresv=0;  // start in row 0
-  I colrvt=(rvtv[ndxa[0]>>(LGBB-1)]>>((ndxa[0]&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);  // get column info, a 2-bit field of (bound,enforcing)
   if(colrvt&0b10){
-   box=C(AAV(w)[11]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AN(box)>ndxa[0],EVINDEX)  // betas normally dp, but we use only high part anyway.  Look up the column beta
-   opctx.sharedmin.D=DAV(box)[ndxa[0]];   // init bound-col min SPR to beta
+   box=C(AAV(w)[11]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AN(box)>colx,EVINDEX)  // betas normally dp, but we use only high part anyway.  Look up the column beta
+   opctx.sharedmin.D=DAV(box)[colx];   // init bound-col min SPR to beta
    opctx.retinfo=ninclfk;  // Init col# - if no lower SPR found could survive to become a Swap
   }else{opctx.retinfo=-1; opctx.sharedmin.D=inf;} // non-bound, allow any improvement, init ret to 'no row found' - possible if no nondangerous pivot, or unbounded
+  // Calculate the number of rows to reserve.  The issue is that some rows are faster than others: rows with all 0s skip extended-precision
+  // processing.  It might take 5 times as long to process one row as another.  To keep the tasks of equal size, we take a limited number of rows at a time.
+  // Taking the reservation is an RFO cycle, which takes just about as long as checking a set of all-zero rows.  This suggests that the reservation should be
+  // for NPAR*nthreads at least.  And, the bound/enforcing mask is constructed to match the AVX lanes: one quantum of mask has (NPAR*BW/2) bitpairs; reservation must be a multiple of that
+
+  nthreads=likely(ninclfk>256)?nthreads:1;  // single-thread small problem (qp).  Multithreading is questionable as the result column will be read in the master thread
+  I nbndbatches=(ninclfk+(BNDROWBATCH-1))>>LGBNDROWBATCH;  // number of bnd batches, including a final shard
+  nthreads=MAX(1,MIN(nbndbatches,nthreads));  // each batch except the last must have a full BNDROWBATCH
+  // First, the size of each later reservation, which needs to be big enough that the fetch_adds don't pile up
+  UI4 ressize2, ressize;  // the number of rows in each reservation after the first, the number in the first
+  ressize2=ROWSPERRESV*nthreads;   // enough rows to allow each thread to arbitrate if they have normal jobs
+  ressize2=(ressize2+(BNDROWBATCH-1))&-BNDROWBATCH;  // the bound/enforcing mask is built in units of BNDROWBATCH bits so as to fit in an AVX register, matching the row numbers.
+  if(ninclfk<2*ressize2*nthreads){
+   // the amount to be reserved after the initial resv is more than half the total.  We should move that to the
+   // initial allocation, since there is no arbitration there
+   ressize=(nbndbatches/nthreads)<<LGBNDROWBATCH;  // the most ressize can be is enough batches not to overrun the input
+   ressize=MIN(ressize,32768-BNDROWBATCH);  // init alloc must fit into a US
+   ressize=MIN(ressize,ressize2);  // a good and legal starting size
+   ressize2=ninclfk/nthreads-ressize; ressize2=MAX(0,ressize2); ressize2=(ressize2+(BNDROWBATCH-1))&-BNDROWBATCH;  // distribute remaining batches evenly over the threads
+  }else{
+   // the initial allocation can be followed by allocations of size ressize2.  Allocate half the rows in the initial allocation
+   ressize=((nbndbatches>>1)/nthreads)<<LGBNDROWBATCH;  // half the total batches, evened out per thread.  There must be at least 1
+ASSERTSYS(ressize>0,"ressize")
+   ressize=MIN(ressize,32768-BNDROWBATCH);  // init alloc must fit into a US
+  }
+  ressize=((nthreads-2)&(ninclfk-32768))<0?ninclfk:ressize;  // if just 1 thread and length fits in a US, allocate it all at the beginning
+  opctx.ressize=ressize;
+  opctx.nextresv=nthreads*ressize;  // set resv pointer to after the initial allocation
+  opctx.u.spr.ressize2=ressize2;
+
   actionrtn=(unsigned char (*)(JJ, void *, UI4))jtmvmsparsesprx;
  }
 
@@ -1562,7 +1605,6 @@ struct mvmctx opctx;  // parms to all threads, and return values
  opctx.nimpandcols=0;  // number of improvement,number of cols finished
  opctx.ndotprods=0;  // total # dotproducts evaluated
  opctx.ctxlock=0;  // init lock available
- opctx.nthreads=nthreads;  // number of threads to use
 
  jtjobrun(jt,actionrtn,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  // atomic sync operation on the job queue guarantee that we can use regular loads from opctx
@@ -1582,7 +1624,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
    // sharedmin is positive SPR if improving; negative recip of max column value if nonimproving
    rv[0]=spr<0?2:0;  // rc if not dangerous: negative shared value is the reciprocal of the column value when SPR=0.  This is a nonimproving pivot, rc=2 then
    if(BETWEENO(retinfo,0,ninclfk)){  // normal nonswap row found
-    D colval=ABS(zv[retinfo]);  // the value in the SPR row of the column.  If neg, we will swap before pivot, so use |value|
+    D colval=ABS(remflgs(opctx.u.spr.zv)[retinfo]);  // the value in the SPR row of the column.  If neg, we will swap before pivot, so use |value|
     if(unlikely(colval<parms[6]))rv[0]=unlikely(colval<parms[5])?3.:1.;
    }  // if nonbasic swap row found, we will take the swap willy-nilly because its dangerousness doesn't hurt anything
   }

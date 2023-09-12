@@ -1658,135 +1658,177 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
  D *mplrd=DAV(absfuzzmplr);  // pointer to absfuzz/mplr data
  __m256d pcoldh, pcoldl=_mm256_setzero_pd();  // value from pivotcolnon0, multiplying one row
  __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from newrownon0
- __m256d mabsfuzz=_mm256_set1_pd(*mplrd);  // comparison tolerance (if given)
+ __m256d mabsfuzz=_mm256_set1_pd(ABS(*mplrd));  // comparison tolerance (if given)
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
- I dpflag=0;  // qp precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0 8=mplr exists 16=both mpcands dp, no mplr
+ I dpflag=(I)(*mplrd<0.)<<5;  // qp precision flags: 1=Qk 2=pivotcolnon0 4=newrownon0 8=mplr exists 16=both mpcands dp, no mplr 32=Qk update in batches of NPAR consecutive addrs
  D *qkv=DAV(qk); I qksize=AS(qk)[AR(qk)-1]; I t=AS(qk)[AR(qk)-2]; t=AR(prx)==0?1:t; I qksizesq=qksize*t; dpflag|=AR(qk)>AR(prx)+1;  // pointer to qk data, length of a row, offset to low part if present.  offset is */_2{.$Qk, or {:$bk
  UI rowx=ti*rowsperthread, rown=AN(prx), slicen=rown; slicen=rown<rowx+rowsperthread?slicen:rowx+rowsperthread;   // current row, ending row+1 taken for the current task#
  I *rowxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0); dpflag|=(AR(pivotcolnon0)>1)<<1;  // address of row indexes, column data
- UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes. row data
- dpflag|=AR(absfuzzmplr)<<3;  // set flag if mplr is given
+ UI coln=AN(pcx); I *colxv=IAV(pcx); D *prn0v=DAV(newrownon0); UI prnstride=AS(newrownon0)[AR(newrownon0)-1]; dpflag|=(AR(newrownon0)>1)<<2;  // # cols, address of col indexes, stride betw rows. row data.  Note: in scatter mode coln can be used instaed of prnstride
+ dpflag|=AR(absfuzzmplr)<<3; dpflag&=~(AR(absfuzzmplr)<<5);  // set flag if mplr is given; if not mplr, clear 'batch mode'
  dpflag|=((dpflag&0b1110)==0)<<4;  // set 'single-precision multiply' flag if that is enough
  // for each row
  for(;rowx<slicen;++rowx){
   // get the address of this row in Qk
   D *qkvrow=qkv+rowxv[rowx]*qksize;   // the row of Qk being modified
-  // fetch the pivotcol value into all lanes
-  pcoldh=_mm256_set1_pd(pcn0v[rowx]);  // fetch high part of pivotcol value
-  if(dpflag&2)pcoldl=_mm256_set1_pd(pcn0v[rown+rowx]);  // fetch low part if it is present
-  UI colx; I okwds=NPAR; I okmsk=(1LL<<NPAR)-1;  //  number/mask of valid wds in block
-  // for each column-group
-  __m256d endmask=sgnbit;  // mask for maskload and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
-  for(colx=0;colx<coln;colx+=okwds){
-   __m256i prn0x;  // indexes of nonzero values in row
-   // get the mask of valid values, fetch pivotrow values, fetch the Qk indexes to modify
-   if(coln-colx>=NPAR){  // all lanes valid
-    prn0x=_mm256_loadu_si256((__m256i_u*)(colxv+colx));  // load the indexes into Qk
-    prowdh=_mm256_loadu_pd(prn0v+colx);  // load next 4 non0 values in pivotrow
+  // fetch the pivotcol value into all lanes.  Change its sign so we subtract the product
+  pcoldh=_mm256_xor_pd(sgnbit,_mm256_set1_pd(pcn0v[rowx]));  // fetch high part of pivotcol value
+  if(!(dpflag&32)){  // normal mode, gather, scatter, duplicate check
+   if(dpflag&2)pcoldl=_mm256_xor_pd(sgnbit,_mm256_set1_pd(pcn0v[rown+rowx]));  // fetch low part if it is present
+   UI colx; I okwds=NPAR; I okmsk=(1LL<<NPAR)-1;  //  number/mask of valid wds in block
+   // for each column-group
+   __m256d endmask=sgnbit;  // mask for maskload and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
+   for(colx=0;colx<coln;colx+=okwds){
+    __m256i prn0x;  // indexes of nonzero values in row
+    // get the mask of valid values, fetch pivotrow values, fetch the Qk indexes to modify
+    if(coln-colx>=NPAR){  // all lanes valid
+     prn0x=_mm256_loadu_si256((__m256i_u*)(colxv+colx));  // load the indexes into Qk
+     prowdh=_mm256_loadu_pd(prn0v+colx);  // load next 4 non0 values in pivotrow
     if(likely(dpflag&4))prowdl=_mm256_loadu_pd(prn0v+coln+colx);  // and low part if present
-   }else{
-    endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
-    okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
-    prn0x=_mm256_maskload_epi64(colxv+colx,_mm256_castpd_si256(endmask));  // load the indexes into Qk
-    prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
-    if(likely(dpflag&4))prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
-   }
-   // mplr is given, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to
-   // make sure that we don't work on the same column# in one batch of NPAR, because one update would be lost.
-   // We compare the indexes against each other and set endmask so as to stop before a repetition of index
-   if(unlikely(dpflag&8)){
-    // compare 0-1 and 2-3
-    __m256i cmp01012323=_mm256_cmpeq_epi64(prn0x,_mm256_shuffle_epi32(prn0x,0b01001110));  // 0=1 0=1 2=3 2=3
-    // if 0=1, clear 1 2 3; if 2=3, clear 3
-    endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_or_si256(_mm256_permute2x128_si256(cmp01012323,cmp01012323,0b00001000),_mm256_blend_epi32(_mm256_setzero_si256(),cmp01012323,0b11001100)),_mm256_castpd_si256(endmask)));
-    // compare 0-2 and 1-3
-    __m256i cmpxxxx0213=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b01000000));  // x x 0=2 1=3
-    // if 0=2, clear 2 3; if 1=3, clear 3
-    endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0213,0b01000100),cmpxxxx0213),0b11110000),_mm256_castpd_si256(endmask)));
-    // compare 0-3 and 1-2
-    __m256i cmpxxxx0312=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b00010000));  // x x 0=3 1=2
-    // if 1=2, clear 2 3; if 0=3 clear 3
-    endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0312,0b01000100),cmpxxxx0312),0b11110000),_mm256_castpd_si256(endmask)));
-    mabsfuzz=_mm256_maskload_pd(mplrd+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
-    okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
-    okwds=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
-   }
-   // gather the high parts of Qk
-   __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow,prn0x,endmask,SZI);
-   // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
-   if(unlikely(!(dpflag&1))){
-    // single-precision calculation
-    // if mplr given, multiply prow by it
-    if(dpflag&8)prowdh=_mm256_mul_pd(prowdh,mabsfuzz);
-    // calculate old - pcol*prow
-    qkvh=_mm256_fnmadd_pd(prowdh,pcoldh,qkvh);
-    if(!(dpflag&8)){
-     // thresholding - convert maxabs to abs(qkvh) > thresh: if 0, means result should be forced to 0
-     qkvh=_mm256_and_pd(qkvh,_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),mabsfuzz,_CMP_GT_OQ)); // zero if lower than fuzz (high part)
+    }else{
+     endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
+     okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
+     prn0x=_mm256_maskload_epi64(colxv+colx,_mm256_castpd_si256(endmask));  // load the indexes into Qk
+     prowdh=_mm256_maskload_pd(prn0v+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
+     if(likely(dpflag&4))prowdl=_mm256_maskload_pd(prn0v+coln+colx,_mm256_castpd_si256(endmask));  // and low part if present
     }
-    // scatter the results (high part)
+    // mplr is given, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to
+    // make sure that we don't work on the same column# in one batch of NPAR, because one update would be lost.
+    // We compare the indexes against each other and set endmask so as to stop before a repetition of index
+    if(unlikely(dpflag&8)){
+     // compare 0-1 and 2-3
+     __m256i cmp01012323=_mm256_cmpeq_epi64(prn0x,_mm256_shuffle_epi32(prn0x,0b01001110));  // 0=1 0=1 2=3 2=3
+     // if 0=1, clear 1 2 3; if 2=3, clear 3
+     endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_or_si256(_mm256_permute2x128_si256(cmp01012323,cmp01012323,0b00001000),_mm256_blend_epi32(_mm256_setzero_si256(),cmp01012323,0b11001100)),_mm256_castpd_si256(endmask)));
+     // compare 0-2 and 1-3
+     __m256i cmpxxxx0213=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b01000000));  // x x 0=2 1=3
+     // if 0=2, clear 2 3; if 1=3, clear 3
+     endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0213,0b01000100),cmpxxxx0213),0b11110000),_mm256_castpd_si256(endmask)));
+     // compare 0-3 and 1-2
+     __m256i cmpxxxx0312=_mm256_cmpeq_epi64(prn0x,_mm256_permute4x64_epi64(prn0x,0b00010000));  // x x 0=3 1=2
+     // if 1=2, clear 2 3; if 0=3 clear 3
+     endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0312,0b01000100),cmpxxxx0312),0b11110000),_mm256_castpd_si256(endmask)));
+     mabsfuzz=_mm256_maskload_pd(mplrd+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
+     okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
+     okwds=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
+    }
+    // gather the high parts of Qk
+    __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow,prn0x,endmask,SZI);
+    // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
+    if(unlikely(!(dpflag&1))){
+     // single-precision calculation
+     // if mplr given, multiply prow by it
+     if(dpflag&8)prowdh=_mm256_mul_pd(prowdh,mabsfuzz);
+     // calculate old - pcol*prow
+     qkvh=_mm256_fmadd_pd(prowdh,pcoldh,qkvh);
+     if(!(dpflag&8)){
+      // thresholding - convert maxabs to abs(qkvh) > thresh: if 0, means result should be forced to 0
+      qkvh=_mm256_and_pd(qkvh,_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),mabsfuzz,_CMP_GT_OQ)); // zero if lower than fuzz (high part)
+     }
+     // scatter the results (high part)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
-    qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
-    if(likely(okmsk&0b1000))goto storeh1111; if(okmsk&0b100)goto storeh111; if(okmsk&0b10)goto storeh11; goto storeh1;
-    storeh1111: qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100111));
-    storeh111: qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100110));
-    storeh11: qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
-    storeh1: ;
-   }else{
-    // extended-precision calculation
-    __m256d iph,ipl,isl;  // intermediate products and sums
-    __m256d qkvl;  // low-order part of result
+     qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
+     if(likely(okmsk&0b1000))goto storeh1111; if(okmsk&0b100)goto storeh111; if(okmsk&0b10)goto storeh11; goto storeh1;
+     storeh1111: qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100111));
+     storeh111: qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100110));
+     storeh11: qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
+     storeh1: ;
+    }else{
+     // extended-precision calculation
+     __m256d iph,ipl,isl;  // intermediate products and sums
+     __m256d qkvl;  // low-order part of result
 
-    // if mplr given, multiply prow by it
-    if(dpflag&8){
-     // mplr is dp, prow is qp.
-     TWOPRODQD(prowdh,prowdl,mabsfuzz,iph,ipl) prowdh=iph; prowdl=ipl;
+     // if mplr given, multiply prow by it
+     if(dpflag&8){
+      // mplr is dp, prow is qp.
+      TWOPRODQD(prowdh,prowdl,mabsfuzz,iph,ipl) prowdh=iph; prowdl=ipl;
+     }
+     // (iph,ipl) = - prowdh*pcoldh    we could skip the extended calc if both mpcands are dp, as they are for some swap calcs; but we deem it not worthwhile
+     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
+     __m256d magqh=qkvh;   // save high part of one addend
+     if(!(dpflag&16)){ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);}  // accumulate middle pps - can skip for b0 when both mpcands are dp
+// obsolete      iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
+     // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
+     if(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh))){  // all 0?  our numbers can never be -0 since they come out of addition
+      // qkvh is all 0 - the result is simply (-iph,-ipl) 
+      TWOSUMBS(iph,ipl,qkvh,qkvl)  // canonical form
+     }else{
+      // normal case where qkvh not all 0
+      qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
+      // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
+      // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
+      // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
+      // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
+      qkvl=_mm256_add_pd(qkvl,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
+      TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
+      isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
+      // Make sure qkvl is much less than qkvh
+      TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
+      if(!(dpflag&8)){
+       // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
+       magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,magqh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
+       magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
+       qkvl=_mm256_and_pd(qkvl,magqh); // zero if lower than fuzz (low part)
+       qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz (high part)
+      }
+     }
+     // scatter the results (both parts)
+//   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
+     qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
+     qkvrow[_mm256_extract_epi64(prn0x,0)+qksizesq]=_mm256_cvtsd_f64(qkvl);
+     if(likely(okmsk&0b1000))goto storeq1111; if(okmsk&0b100)goto storeq111; if(okmsk&0b10)goto storeq11; goto storeq1;
+     storeq1111: qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100111));
+     qkvrow[_mm256_extract_epi64(prn0x,3)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvl,0b11100111));
+     storeq111: qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd (qkvh,0b11100110));
+     qkvrow[_mm256_extract_epi64(prn0x,2)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute4x64_pd (qkvl,0b11100110));
+     storeq11: qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
+     qkvrow[_mm256_extract_epi64(prn0x,1)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
+     storeq1: ;
     }
+   }
+  }else{
+   // Batch Qk update: always qp, of aligned 128-byte blocks, no check for duplicates
+   pcoldl=_mm256_xor_pd(sgnbit,_mm256_set1_pd(pcn0v[rown+rowx]));  // fetch low part of col value, i. e. the value common to this row
+   UI colx;  //  index to work on
+   // for each block
+   for(colx=0;colx<coln;++colx){
+    I blockx=colxv[colx];  // get index of next args
+    __m256d iph,ipl,isl;  // intermediate products and sums
+    __m256d prowdh=_mm256_loadu_pd(&prn0v[blockx]),qkvh=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&qkvrow[blockx]));  // high parts of row & result args
+    __m256d prowdl=_mm256_loadu_pd(&prn0v[blockx+prnstride]),qkvl=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&qkvrow[blockx+qksizesq]));  // low parts of row & result args
+
     // (iph,ipl) = - prowdh*pcoldh    we could skip the extended calc if both mpcands are dp, as they are for some swap calcs; but we deem it not worthwhile
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
-    __m256d magqh=qkvh;   // save high part of one addend
-    if(!(dpflag&16)){ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);}  // accumulate middle pps - can skip for b0 when both mpcands are dp
-    iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
-    // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
-    if(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh))){  // all 0?  our numbers can never be -0 since they come out of addition
-     // qkvh is all 0 - the result is simply (-iph,-ipl) 
+    __m256d magqh;   // will hold combined relative+absolute zero tolerance
+    ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);  // accumulate middle pps - can skip for b0 when both mpcands are dp
+// obsolete     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
+    // Because we added 3 low-order values (with the same shift), we are limiting precision to 104 bits
+    if(unlikely(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh)))){  // all 0?  our numbers can never be -0 since they have been thresholded
+     // qkvh is all 0 - the result is simply (iph,ipl) 
      TWOSUMBS(iph,ipl,qkvh,qkvl)  // canonical form
+     magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_set1_pd(RELSIGMAX),_CMP_GT_OQ);   // maxqh = 0 if result too small
+JT(jt,peekdata)+=1;  // scaf
     }else{
+JT(jt,peekdata)+=0x100000000;  // scaf
      // normal case where qkvh not all 0
-     qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
      // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
      // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
      // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
      // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
+     // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
+     magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
      qkvl=_mm256_add_pd(qkvl,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
      TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
      isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
      // Make sure qkvl is much less than qkvh
      TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
-     if(!(dpflag&8)){
-      // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
-      magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,magqh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
-      magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
-      qkvl=_mm256_and_pd(qkvl,magqh); // zero if lower than fuzz (low part)
-      qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz (high part)
-     }
+     magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
     }
-    // scatter the results (both parts)
-//   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
-    qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
-    qkvrow[_mm256_extract_epi64(prn0x,0)+qksizesq]=_mm256_cvtsd_f64(qkvl);
-    if(likely(okmsk&0b1000))goto storeq1111; if(okmsk&0b100)goto storeq111; if(okmsk&0b10)goto storeq11; goto storeq1;
-    storeq1111: qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100111));
-    qkvrow[_mm256_extract_epi64(prn0x,3)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvl,0b11100111));
-    storeq111: qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd (qkvh,0b11100110));
-    qkvrow[_mm256_extract_epi64(prn0x,2)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute4x64_pd (qkvl,0b11100110));
-    storeq11: qkvrow[_mm256_extract_epi64(prn0x,1)]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvh,0b0001));
-    qkvrow[_mm256_extract_epi64(prn0x,1)+qksizesq]=_mm256_cvtsd_f64(_mm256_permute_pd(qkvl,0b0001));
-    storeq1: ;
+    qkvl=_mm256_and_pd(qkvl,magqh); qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz
+    _mm256_store_pd(&qkvrow[blockx],qkvh); _mm256_store_pd(&qkvrow[blockx+qksizesq],qkvl);  // write out the new Qk.  Should stream? 
    }
-
   }
- }
+ }  // loop to next row
  R 0;
 }
 
@@ -1794,6 +1836,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 // Qk/bk=: (((<prx;pcx) { Qk) ((~:!.absfuzz) * -) pivotcolnon0 */ newrownon0 [* mplr]) (<prx;pcx)} Qk/bk
 // with high precision
 // a is prx;pcx;pivotcolnon0;newrownon0;absfuzz/mplr (mplr if not atom)
+//  mplr is list of dp values or atomic threshold.  If -threshold, use abs, and pcx is a list of cache-aligned offsets into blocks in newrownon0
 // w is Qk or bk.  If bk, prx must be scalar 0
 // If Qk has rank > rank newrownon0 + rank prx, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
 // Qk/bk is modified in place
@@ -1810,19 +1853,32 @@ F2(jtekupdate){F2PREFIP;
  A newrownon0=box3; ASSERT(AT(newrownon0)&FL,EVDOMAIN) ASSERT(BETWEENC(AR(newrownon0),1,2),EVRANK)
  ASSERT(AR(newrownon0)==1||AS(newrownon0)[0]==2,EVLENGTH)  // newrownon0 is float or extended list
  A absfuzzmplr=box4; ASSERT(AT(absfuzzmplr)&FL,EVDOMAIN) ASSERT(AR(absfuzzmplr)<=1,EVRANK)  // absfuzz is a float atom; mplr is a float list
+ I isbatch=0;  // set if we are doing batches of aligned accesses
  if(AR(absfuzzmplr)==1)ASSERT(AN(absfuzzmplr)==AN(pcx),EVLENGTH)  // if mplr, must be one per input in row
+ else isbatch=DAV(absfuzzmplr)[0]<0.;  // batch is negative threashold
  // agreement
  ASSERT(BETWEENC(AR(w),AR(prx)+1,AR(prx)+2),EVRANK)  // Qk is nxn; bk is n, treated as a single row.  Each may be quadprec
  ASSERT(AR(w)==AR(prx)+1||AS(w)[0]==2,EVLENGTH)
  if(AR(prx)!=0){ASSERT(AS(w)[AR(w)-1]>=AS(w)[AR(w)-2]-1,EVLENGTH) DO(AN(prx), ASSERT(IAV(prx)[i]<AS(w)[AR(w)-2],EVINDEX))} else{ASSERT(IAV(prx)[0]==0,EVINDEX)}  // Qk/bk rows may be padded (Qk might include Fk); valid row indexes
- ASSERT(AN(prx)==AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) ASSERT(AN(pcx)==AS(newrownon0)[AR(newrownon0)-1],EVLENGTH)   // indexes and values must agree
- // audit the indexes
- DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes
+ ASSERT(AN(prx)==AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH)  // indexes and values must agree
+ I m=AN(prx), n=AN(pcx);  // # rows & columns to modify
+ if(isbatch){
+  // we are processing cache-aligned blocks
+  ASSERTSYS(((I)DAV(qk)&((SZD<<LGNPAR)-1))==0,"Qkt is not on cacheline bdy")  // we fetch along rows; insist on data alignment
+  ASSERTSYS((AS(qk)[2]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
+  ASSERTSYS(((I)DAV(newrownon0)&((SZD<<LGNPAR)-1))==0,"row values not on cacheline bdy")  // we fetch along rows; insist on data alignment
+  ASSERTSYS((AS(newrownon0)[1]&(NPAR-1))==0,"stride of row values is not a cacheline multiple")  // we fetch along rows; insist on data alignment
+  DO(n, ASSERT(IAV(pcx)[i]<AS(w)[AR(w)-1],EVINDEX) ASSERTSYS((IAV(pcx)[i]&(NPAR-1))==0,"pcx not 0(mod NPAR)"))  // verify valid column indexes, aligned to batches
+  n<<=LGNPAR;  // actually NPAR values per index
+ }else{
+  ASSERT(n==AS(newrownon0)[AR(newrownon0)-1],EVLENGTH) // must have one index per value
+  DO(n, ASSERT(IAV(pcx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes
+ }
+
  // do the work
  
  // figure out how many threads to use, how many lines to take in each one
-#define TASKMINATOMS ((2*2000)/6)  // TUNE a cached atom takes 5 clocks to compute; an uncached one takes 20 (2022 Alder Lake).  We don't want to start a task with less than 2000 clocks, so insist on twice that many
- I m=AN(prx), n=AN(pcx);  // # rows & columns to modify
+#define TASKMINATOMS ((2*2000)/10)  // TUNE a cached atom takes 10 clocks to compute; an uncached one takes 15? (2022 Alder Lake).  We don't want to start a task with less than 2000 clocks, so insist on twice that many
  I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
  I rowsperthread=m;  // will be #rows each processor should take
  if(((1-m)&(1-nthreads)&(TASKMINATOMS-m*n))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread

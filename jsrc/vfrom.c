@@ -1749,28 +1749,22 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      if(!(dpflag&16)){ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);}  // accumulate middle pps - can skip for b0 when both mpcands are dp
 // obsolete      iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
      // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
-     if(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh))){  // all 0?  our numbers can never be -0 since they come out of addition
-      // qkvh is all 0 - the result is simply (-iph,-ipl) 
-      TWOSUMBS(iph,ipl,qkvh,qkvl)  // canonical form
-     }else{
-      // normal case where qkvh not all 0
-      qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
-      // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
-      // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
-      // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
-      // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
-      qkvl=_mm256_add_pd(qkvl,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
-      TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
-      isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
-      // Make sure qkvl is much less than qkvh
-      TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
-      if(!(dpflag&8)){
-       // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
-       magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,magqh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
-       magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
-       qkvl=_mm256_and_pd(qkvl,magqh); // zero if lower than fuzz (low part)
-       qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz (high part)
-      }
+     qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
+     // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
+     // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
+     // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
+     // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
+     qkvl=_mm256_add_pd(qkvl,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
+     TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
+     isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
+     // Make sure qkvl is much less than qkvh
+     TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
+     if(!(dpflag&8)){
+      // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
+      magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,magqh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
+      magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
+      qkvl=_mm256_and_pd(qkvl,magqh); // zero if lower than fuzz (low part)
+      qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz (high part)
      }
      // scatter the results (both parts)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
@@ -1794,8 +1788,10 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
    for(colx=0;colx<coln;++colx){
     I blockx=colxv[colx];  // get index of next args
     __m256d iph,ipl,isl;  // intermediate products and sums
-    __m256d prowdh=_mm256_loadu_pd(&prn0v[blockx]),qkvh=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&qkvrow[blockx]));  // high parts of row & result args
-    __m256d prowdl=_mm256_loadu_pd(&prn0v[blockx+prnstride]),qkvl=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&qkvrow[blockx+qksizesq]));  // low parts of row & result args
+    // we do not use aligned loads for the row values, because sometimes they have been copied to an unaligned temp buffer (as on a swap).  They will be from
+    // fast local cache anyway
+    __m256d prowdh=_mm256_loadu_pd(&prn0v[blockx]),qkvh=_mm256_castsi256_pd(_mm256_load_si256((__m256i *)&qkvrow[blockx]));  // high parts of row & result args
+    __m256d prowdl=_mm256_loadu_pd(&prn0v[blockx+prnstride]),qkvl=_mm256_castsi256_pd(_mm256_load_si256((__m256i *)&qkvrow[blockx+qksizesq]));  // low parts of row & result args
 
     // (iph,ipl) = - prowdh*pcoldh    we could skip the extended calc if both mpcands are dp, as they are for some swap calcs; but we deem it not worthwhile
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
@@ -1803,27 +1799,18 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);  // accumulate middle pps - can skip for b0 when both mpcands are dp
 // obsolete     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
     // Because we added 3 low-order values (with the same shift), we are limiting precision to 104 bits
-    if(unlikely(_mm256_testz_si256(_mm256_castpd_si256(qkvh),_mm256_castpd_si256(qkvh)))){  // all 0?  our numbers can never be -0 since they have been thresholded
-     // qkvh is all 0 - the result is simply (iph,ipl) 
-     TWOSUMBS(iph,ipl,qkvh,qkvl)  // canonical form
-     magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_set1_pd(RELSIGMAX),_CMP_GT_OQ);   // maxqh = 0 if result too small
-JT(jt,peekdata)+=1;  // scaf
-    }else{
-JT(jt,peekdata)+=0x100000000;  // scaf
-     // normal case where qkvh not all 0
-     // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
-     // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
-     // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
-     // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
-     // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
-     magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
-     qkvl=_mm256_add_pd(qkvl,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
-     TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
-     isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
-     // Make sure qkvl is much less than qkvh
-     TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
-     magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
-    }
+    // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
+    // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
+    // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
+    // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
+    // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
+    magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
+    qkvl=_mm256_add_pd(qkvl,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
+    TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
+    isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
+    // Make sure qkvl is much less than qkvh
+    TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
+    magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
     qkvl=_mm256_and_pd(qkvl,magqh); qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz
     _mm256_store_pd(&qkvrow[blockx],qkvh); _mm256_store_pd(&qkvrow[blockx+qksizesq],qkvl);  // write out the new Qk.  Should stream? 
    }
@@ -1866,8 +1853,8 @@ F2(jtekupdate){F2PREFIP;
   // we are processing cache-aligned blocks
   ASSERTSYS(((I)DAV(qk)&((SZD<<LGNPAR)-1))==0,"Qkt is not on cacheline bdy")  // we fetch along rows; insist on data alignment
   ASSERTSYS((AS(qk)[2]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
-  ASSERTSYS(((I)DAV(newrownon0)&((SZD<<LGNPAR)-1))==0,"row values not on cacheline bdy")  // we fetch along rows; insist on data alignment
-  ASSERTSYS((AS(newrownon0)[1]&(NPAR-1))==0,"stride of row values is not a cacheline multiple")  // we fetch along rows; insist on data alignment
+// no longer  ASSERTSYS(((I)DAV(newrownon0)&((SZD<<LGNPAR)-1))==0,"row values not on cacheline bdy")  // we fetch along rows; insist on data alignment
+// no longer  ASSERTSYS((AS(newrownon0)[1]&(NPAR-1))==0,"stride of row values is not a cacheline multiple")  // we fetch along rows; insist on data alignment
   DO(n, ASSERT(IAV(pcx)[i]<AS(w)[AR(w)-1],EVINDEX) ASSERTSYS((IAV(pcx)[i]&(NPAR-1))==0,"pcx not 0(mod NPAR)"))  // verify valid column indexes, aligned to batches
   n<<=LGNPAR;  // actually NPAR values per index
  }else{

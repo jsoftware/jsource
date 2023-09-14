@@ -1760,6 +1760,10 @@ abcdefghijabcdefghijabcdefghij001 -: 6
 abcdefghijabcdefghijabcdefghij0000 -: 7
 abcdefghijabcdefghijabcdefghij0001 -: 8
 
+ (2 0 0 0 0 1 { 2 0 0 0 0 1) -: {~ memu 2 0 0 0 0 1  NB. don't inplace when a and w are identical blocks
+
+(,40) -: $ _2 { memu i. 5 40  NB. self-inplacing failed on LIT
+(,40) -: $ _2 { memu a. {~ i. 5 40
 
 
  

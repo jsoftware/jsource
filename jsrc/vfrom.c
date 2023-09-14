@@ -223,6 +223,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     // if the selected length is the axis length, and there is only one axis, we are taking the entire w arg - just return it
     if(unlikely((r+(nsel^lenaxis))==0))R RETARG(w);
     I baseadj=base-CAV(w);  // movement of base needed from upper selectors.  Must calculate before virtual in case it self-virtuals and moves w
+    I wr=AR(w);  // get rank of w before it is destroyed by possible self-virtualing
     RZ(z=virtualip(w,index0*celllen,zr));  // inplace w OK since no cells repeated
     // fill in shape and number of atoms, and offset the data pointer using base
     AK(z)+=baseadj;  // move offset from start of w data to the cell selected by upper selectors
@@ -230,7 +231,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     AN(z)=zn;
      I *zs=AS(z)+zr-wcr;  // pointer into result shape, moved around as we calculate; start pointing to cellshape
     // install the axes for the cell of w: all axes except the frame and the selectors
-    MCISH(zs,AS(w)+AR(w)-wcr,wcr)  // zs->start of cell shape
+    MCISH(zs,AS(w)+wr-wcr,wcr)  // zs->start of cell shape
     // axes for the last selector
     if(axes[r].nsel>=0){MCISH(zs-=AR(axes[r].indsubx.ind),AS(axes[r].indsubx.ind),AR(axes[r].indsubx.ind));  // normal, back up to rank and copy
     }else{*--zs=~axes[r].nsel;  // complementary, treat as list of appropriate length
@@ -241,7 +242,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
    }
   }
  }else{zn=0;}  // if w empty, z must be empty too, since no nonempty selector is valid on 0-len axis
- // allocate the result, or use inplace the result (which must not be unincorpable or DIRECT)
+ // allocate the result, or use a inplace for the result (which must not be unincorpable or DIRECT)
  if(!((I)jtinplace&JTINPLACEA)){
   GA00(z,wt,zn,zr);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
   // install shape: w frame, followed by shape of each selector, then shape of cell
@@ -402,9 +403,9 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  I wncr=wcr-((UI)wcr>0);  // rank of the cell that gets copied
  axes[r].lenaxis=p; axes[r].lencell=k; axes[r].nsel=an; axes[r].sels=AV(a); axes[r].indsubx.ind=a;  // fill in selection axis
  // if no frame, w cell-rank is 1, a is inplaceable, and an atom of w is the same size as an atom of a, preserve inplaceability of a (.ind is already filled in)
- // since inplacing may change the type, we further require that the block not be UNINCORPABLE, and the result also not DIRECT since
- // the copy may be interrupted by index error and be left with anvalid atoms
- jtinplace=(J)((I)jtinplace&~((SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT))<=(UI)(wf|(wcr^1)|(SZI^(1LL<<bplg(AT(w))))))<<JTINPLACEAX));
+ // since inplacing may change the type, we further require that the block not be UNINCORPABLE, and the result also must be DIRECT since
+ // the copy may be interrupted by index error and be left with invalid atoms.  Also, a must not be the same block as w
+ jtinplace=(J)((I)jtinplace&~((((a!=w)&SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(SZI^(1LL<<bplg(AT(w))))))<<JTINPLACEAX));
  RETF(jtaxisfrom(jtinplace,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
 }    /* a{"r w for numeric a */
 
@@ -1790,8 +1791,8 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     __m256d iph,ipl,isl;  // intermediate products and sums
     // we do not use aligned loads for the row values, because sometimes they have been copied to an unaligned temp buffer (as on a swap).  They will be from
     // fast local cache anyway
-    __m256d prowdh=_mm256_loadu_pd(&prn0v[blockx]),qkvh=_mm256_castsi256_pd(_mm256_load_si256((__m256i *)&qkvrow[blockx]));  // high parts of row & result args
-    __m256d prowdl=_mm256_loadu_pd(&prn0v[blockx+prnstride]),qkvl=_mm256_castsi256_pd(_mm256_load_si256((__m256i *)&qkvrow[blockx+qksizesq]));  // low parts of row & result args
+    __m256d prowdh=_mm256_loadu_pd(&prn0v[blockx]),qkvh=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&qkvrow[blockx]));  // high parts of row & result args
+    __m256d prowdl=_mm256_loadu_pd(&prn0v[blockx+prnstride]),qkvl=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&qkvrow[blockx+qksizesq]));  // low parts of row & result args
 
     // (iph,ipl) = - prowdh*pcoldh    we could skip the extended calc if both mpcands are dp, as they are for some swap calcs; but we deem it not worthwhile
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
@@ -1812,7 +1813,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
     magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
     qkvl=_mm256_and_pd(qkvl,magqh); qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz
-    _mm256_store_pd(&qkvrow[blockx],qkvh); _mm256_store_pd(&qkvrow[blockx+qksizesq],qkvl);  // write out the new Qk.  Should stream? 
+    _mm256_stream_pd(&qkvrow[blockx],qkvh); _mm256_stream_pd(&qkvrow[blockx+qksizesq],qkvl);  // write out the new Qk.  Should stream? 
    }
   }
  }  // loop to next row

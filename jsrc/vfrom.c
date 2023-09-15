@@ -1466,7 +1466,7 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
 //  Do the product in quad precision
 //  the column data is written to z
 //  result is rc,pivotrow,#cols processed,#rows processed,smallest SPR
-//   rc is 0 (normal), 1 (dangerous), 2 (nonimproving), 3 (no pivot found - all 0 SPRs were dangerous), 4 (SPR was less than MinSPR (SPR=0, row=-2); unbounded (SPR=inf, row=-1)
+//   rc is 0 (normal), 1 (dangerous), 2 (nonimproving), 3 (nonimproving and dangerous), 4 (preemptive result: SPR was less than MinSPR (SPR=0, row=-2); unbounded (SPR=inf, row=-1) )
 // gradient mode: (dp dotproduct)
 //  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
 //   cutoffinfo is internal stored state saved between gradient-mode calls; shape n,2
@@ -1623,10 +1623,10 @@ ASSERTSYS(ressize>0,"ressize")
   }else if(unlikely(spr==ALMOSTINF)){rv[0]=3.;  // Positive col value found, but no pivots, not even dangerous ones (perhaps blocked by small bk)
   }else{
    // sharedmin is positive SPR if improving; negative recip of max column value if nonimproving
-   rv[0]=spr<0?2:0;  // rc if not dangerous: negative shared value is the reciprocal of the column value when SPR=0.  This is a nonimproving pivot, rc=2 then
+   rv[0]=spr<0?2.:0.;  // rc if not dangerous: negative shared value is the reciprocal of the column value when SPR=0.  This is a nonimproving pivot, rc=2 then
    if(BETWEENO(retinfo,0,ninclfk)){  // normal nonswap row found
     D colval=ABS(remflgs(opctx.u.spr.zv)[retinfo]);  // the value in the SPR row of the column.  If neg, we will swap before pivot, so use |value|
-    if(unlikely(colval<parms[6]))rv[0]=unlikely(colval<parms[5])?3.:1.;
+    if(unlikely(colval<parms[6]))rv[0]+=1.0;  // flag if dangerous
    }  // if nonbasic swap row found, we will take the swap willy-nilly because its dangerousness doesn't hurt anything
   }
  }

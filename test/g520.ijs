@@ -258,7 +258,7 @@ NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1 
   assert. 0 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
   assert. 4 _1 1 8 _ ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 (2)} parms);bkbeta;beta
   assert. 1 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_2 (6)} parms);bkbeta;beta
-  assert. 3 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 1e_2 (5 6)} parms);bkbeta;beta
+  assert. 1 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 1e_2 (5 6)} parms);bkbeta;beta
   assert. 4 _2 0 0 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 0. (7 9)} parms);bkbeta;beta  NB. row 0 now below threshold but 0 cuts off, 0 SPR
   assert. 2 0 1 8 _10000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 (7)} parms);bkbeta;beta  NB. row 0 now below threshold, nonimp
   M =. 2 {. ,: ,.              8 $ 1000.
@@ -290,7 +290,7 @@ NB. put nothing here! savy is carried over to the next line
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
   assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
-  assert. 3 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 (5)} parms);bkbeta;beta  NB. below dangerous ignored
+  assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 (5)} parms);bkbeta;beta  NB. below dangerous ignored
   assert. 1 1 1 8 1e10 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. col 0 disabled
   assert. 0 8 1 8 2 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. bound row has hidden SPR=beta
   assert. 0 8 1 8 2 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. bound row has hidden SPR=beta
@@ -302,7 +302,7 @@ NB. put nothing here! savy is carried over to the next line
   assert. 1 0 1 8 1e14 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
   M =. 2 {. ,: ,.               1e_14  0    0    0  1e_14  0    0    0
   bk =. 2 {. ,: ($bkbeta) $       1.   0    0    0    0    0    0    0
-  assert. 1 4 1 8 _1e14 ((,:1) run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving with no safe pivot
+  assert. 3 4 1 8 _1e14 ((,:3) run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving with no safe pivot
   M =. 2 {. ,: ,.               1e_14  0    0    0  1e_14  0  1e_5   0
   assert. 2 6 1 8 _100000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving safe
 
@@ -316,9 +316,9 @@ NB. put nothing here! savy is carried over to the next line
   beta =. (#rvt) $ 2.0
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
-  assert. 1 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
+  assert. 3 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous nonimp pivot
   assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(_1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
-  assert. 1 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. dangerous pivot
+  assert. 3 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. dangerous pivot
   assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
   assert. 2 2 1 8 _1e4 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);((1+1e_13) 2} bkbeta);beta  NB. nondangerous pivot
 

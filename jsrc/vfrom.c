@@ -1185,13 +1185,13 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
   I ntoalloc=(an+1+NPAR-1)&-NPAR;  // block that can hold all the pointers/weights
   A wts; GATV0(wts,INT,2*ntoalloc,1)  mv0=voidAV(wts); vv0=(D*)(mv0+ntoalloc);   // place to hold the addresses/weights of the columns being combined
   I *amv=amv0+wtofst; D *avv=avv0+wtofst;  // number of sparse atoms in each row; pointer to first col#; pointer to first weight
-  __m256i qkt0_4=_mm256_set1_epi64x(qkt0), qkrowstride_4=_mm256_set1_epi32(qktrowstride<<LGSZD);
+  __m256i qkt0_4=_mm256_set1_epi64x((I)qkt0), qkrowstride_4=_mm256_set1_epi32(qktrowstride<<LGSZD);
   for(avx=0;avx<an;avx+=NPAR){  // for each block of input... (this overfetches but that's OK since we map enough for one 32-byte final fetch)
    __m256i mv4=_mm256_loadu_si256((__m256i_u *)&amv[avx]);   // read next group of 4 row#s
    __m256d av4=_mm256_loadu_pd(&avv[avx]);   // read next group of 4 values
    mv4=_mm256_add_epi64(qkt0_4,_mm256_mul_epu32(mv4,qkrowstride_4));  // row#*row size + base of Qkt, for each row.  There may be garbage at the end
    // We have 4 row-pointers and 4 values.  Write them out
-   _mm256_storeu_pd((double *)&mv0[avx],mv4); _mm256_storeu_pd((double *)&vv0[avx],av4);
+   _mm256_storeu_si256((__m256i *)&mv0[avx],mv4); _mm256_storeu_pd((double *)&vv0[avx],av4);
   }
  }else{an=-1; vv0=(D*)&qkt0[qktrowstride*colx];}  // Slack variable.  Skip the weighting, leave an neg as flag.  Repurpose vv0 to point to col
 

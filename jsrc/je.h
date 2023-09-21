@@ -676,9 +676,6 @@ extern A        jtamne(J,A,A,A,B);
 extern A        jtamnsp(J,A,A,A,B);
 extern A        jtapv(J,I,I,I);
 extern A        jtapvwr(J,I,I,I);
-#if ARTIFPYX
-extern A        jtartiffut(J,A,I);
-#endif
 extern A        jtascan(J,C,A);
 extern A        jtaslash(J,C,A);
 extern A        jtaslash1(J,C,A);

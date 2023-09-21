@@ -65,12 +65,33 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
 
 static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s[k+1],&v->im);}}
 
+static FMTF(jtfmtE,Z){B q;C buf[1+WD],c,*t;Z x=*v;I k=0;
+ if(jt->ppn<17)jtfmtD(jt,s,&v->re);  // if only 1 float needed, display it
+ // for more digits we need more precision
+ if(!memcmpne(v,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
+ if(!memcmpne(v,&infm,SZD)){strcpy(s,"__"); R;}
+ if(_isnan(v->re)          ){strcpy(s,"_."); R;}
+// x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
+ x=*v; x.re=x.re==(-1)*0.0?0.0:x.re;  /* -0 to 0*/
+ sprintf(buf,"%0.*g",jt->ppn,x.re);
+ c=*buf; if(q=c=='-')*s++=CSIGN; q=q|(c=='+');
+ if('.'==buf[q])*s++='0';
+ MC(s,buf+q,WD+1-q);
+ if(t=strchr(s,'e')){
+  if('-'==*++t)*t++=CSIGN;
+  NOUNROLL while(c=t[k],c=='0'||c=='+')k++;
+  if(k)NOUNROLL while(t[0]=t[k])t++;
+}}
+
+
+// return default field size and function to use.  We know we have a numeric type
 static void thcase(I t,I*wd,FMTFUN *fmt){
- switch(CTTZ(t)){
-  case FLX:   *wd=WD; *fmt=jtfmtD; break;
-  case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
-  default:   *wd=WI; *fmt=jtfmtI;
- }
+ I w=WI; FMTFUN f=jtfmtI; w=t&CMPX?WZ:w; f=t&CMPX?jtfmtZ:f; w=t&FL+LEN2?WD:w; f=t&FL+LEN2?jtfmtD:f; f=t&LEN2?jtfmtE:f;  *wd=w; *fmt=f;
+// obsolete  switch(CTTZ(t)){
+// obsolete   case FLX:   *wd=WD; *fmt=jtfmtD; break;
+// obsolete   case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
+// obsolete   default:   *wd=WI; *fmt=jtfmtI;
+// obsolete  }
 }
 
 // copy numeric string to error line or result buffer.  Values in w, n/s = len/addr of output buffer
@@ -124,19 +145,20 @@ static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  RETF(z);
 }
 
+// default for for numerics
 static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
  n=AN(w); r=AR(w); s=AS(w);
- thcase(AT(w),&wd,&fmt);
+ thcase(AT(w),&wd,&fmt);  // get default field width and routine address
  GATV0(t,LIT,wd*(1+n),1); tv=CAV(t);
- if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=AS(t)[0]=p; z=t;} 
+ if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=AS(t)[0]=p; z=t;}   // rank<2, just format one string of characters, separated by 1 space
  else{ 
-  c=s[r-1]; m=n/c; k=bpnoun(AT(w));
+  c=s[r-1]; m=n/c; k=bpnoun(AT(w));  // c=length of row, m=#rows
   y=tv-wd; x=CAV(w)-k; 
   RZ(d=apvwr(c,1L,0L)); dv=AV(d);
-  DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););
+  DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););  // convert each number, remember max len in each column
   --dv[c-1]; p=0; DO(c, p+=++dv[i];);
-  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
-  y=tv; DO(m, DO(c, zv+=dv[i]; p=strlen(y); MC(zv-p-(I )(c>1+i),y,p); y+=wd;););
+  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');  // allocate final result, fill with blanks
+  y=tv; DO(m, DO(c, zv+=dv[i]; p=strlen(y); MC(zv-p-(I )(c>1+i),y,p); y+=wd;););  // copy each string after alignment
  }
  RETF(z);
 }

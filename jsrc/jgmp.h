@@ -289,6 +289,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpq_mul __gmpq_mul                  // https://gmplib.org/manual/Rational-Arithmetic
 // not used #define jmpq_out___gstr mpq_out_str          // https://gmplib.org/manual/I_002fO-of-Rationals
 #define jmpq_set __gmpq_set                  // https://gmplib.org/manual/Initializing-Rationals
+#define jmpq_set_d __gmpq_set_d              // https://gmplib.org/manual/Initializing-Rationals
 #define jmpq_sub __gmpq_sub                  // https://gmplib.org/manual/Rational-Arithmetic
 #define jmpz_abs __gmpz_abs                  // https://gmplib.org/manual/Integer-Arithmetic
 #define jmpz_add __gmpz_add                  // https://gmplib.org/manual/Integer-Arithmetic
@@ -328,6 +329,7 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_ui_pow_ui __gmpz_ui_pow_ui      // https://gmplib.org/manual/Integer-Exponentiation
 #define jmpz_root __gmpz_root                // https://gmplib.org/manual/Integer-Roots
 #define jmpz_set __gmpz_set                  // https://gmplib.org/manual/Assigning-Integers
+#define jmpz_set_d __gmpz_set_d              // https://gmplib.org/manual/Assigning-Integers
 // not used #define jmpz_set_si __gmpz_set_si            // https://gmplib.org/manual/Assigning-Integers
 #define jmpz_sizeinbase __gmpz_sizeinbase    // https://gmplib.org/manual/Miscellaneous-Integer-Functions
 #define jmpz_sub __gmpz_sub                  // https://gmplib.org/manual/Integer-Arithmetic
@@ -343,6 +345,7 @@ EXTERN void (*jmpq_init)(mpq_t);
 EXTERN void (*jmpq_out_str)(FILE*,int,const mpq_t); // for debugging
 EXTERN void (*jmpq_mul)(mpq_t, const mpq_t, const mpq_t);
 EXTERN void (*jmpq_set)(mpq_t, const mpq_t);
+EXTERN void (*jmpq_set_d)(mpq_t, const double);
 EXTERN void (*jmpq_sub)(mpq_t, const mpq_t, const mpq_t);
 EXTERN void (*jmpz_abs)(mpz_t, const mpz_t);
 EXTERN void (*jmpz_add)(mpz_t, const mpz_t, const mpz_t);
@@ -380,6 +383,7 @@ EXTERN int  (*jmpz_probab_prime_p)(const mpz_t,int);
 EXTERN void (*jmpz_ui_pow_ui)(mpz_t, mpir_ui, mpir_ui);
 EXTERN int  (*jmpz_root)(mpz_t, const mpz_t, mpir_ui);
 EXTERN void (*jmpz_set)(mpz_t, const mpz_t);
+EXTERN void (*jmpz_set_d)(mpz_t, const double);
 // not used EXTERN void (*jmpz_set_si)(mpz_t, mpir_si);
 EXTERN size_t(*jmpz_sizeinbase)(const mpz_t, int);
 EXTERN void (*jmpz_sub)(mpz_t, const mpz_t, const mpz_t);

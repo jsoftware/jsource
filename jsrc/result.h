@@ -278,7 +278,7 @@ do{
      I diff;  // Will be set to 0 if we are unable to report the # items
 #if PYXES
      // If the returned result is a pyx, we can't look into it to get its type/len.  We could see if the pyx has been resolved, but we don't
-     if(likely(!(diff=AT(z)&PYX))){  // if the result is a pyx that can't be inspected, skip it
+     if(likely(!(diff=(AT(z)&BOX+PYX)==BOX+PYX))){  // if the result is a pyx that can't be inspected, skip it
 #else
      {
 #endif
@@ -287,7 +287,7 @@ do{
 #else
        A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
 #endif
-      // if the items of the new 
+      // see if the items of the new match the old, and increment the number of items
       I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
       diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
 #if !ZZASSUMEBOXATOP  // ASSUMEBOXATOP is set only for m@.v, which never checks counteditems

@@ -177,14 +177,6 @@ I jtsystemlockaccept(J jt, I priority){
  R 1;
 }
 
-#if ARTIFPYX
-// w is a block that will become the contents of a box.  Put it inside a pyx and return the address of the pyx.
-// aflag is the boxing flag of the block the result is going to go into.  w has been prepared for that type
-A jtartiffut(J jt,A w,I aflag){A z;
- GAT0(z,BOX,1,0); AFLAG(z)|=BOX; AAV0(z)[0]=w; AT(z)|=PYX; if(aflag&BOX){ra(z);}else{ACIPNO(z); ra(w);}  // just one of z/w must be adjusted to the recursion environment
- R z;
-}
-#endif
 // ****************************** waiting for values *******************************
 
 typedef struct pyxcondmutex{
@@ -729,7 +721,7 @@ F2(jttcapdot2){A z;
  case 4: { // rattle the boxes of y and return status of each
   ASSERT((SGNIF(AT(w),BOXX)|(AN(w)-1))<0,EVDOMAIN)   // must be boxed or empty
   GATV(z,FL,AN(w),AR(w),AS(w)) D *zv=DAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
-  DONOUNROLL(AN(w), if(unlikely(!(AT(wv[i])&PYX)))zv[i]=-1001;  // not pyx: _1001
+  DONOUNROLL(AN(w), if(unlikely(!((AT(wv[i])&BOX+PYX)==BOX+PYX)))zv[i]=-1001;  // not pyx: _1001
                     else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread>=0)zv[i]=((PYXBLOK*)AAV0(wv[i]))->pyxorigthread;  // running pyx: the running thread
                     else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread==-2)zv[i]=inf; // not yet started; thread not yet known: _
                     else if(((PYXBLOK*)AAV0(wv[i]))->errcode>0)zv[i]=-((PYXBLOK*)AAV0(wv[i]))->errcode;  // finished with error: -error code
@@ -749,7 +741,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-  ASSERT(AT(pyx)&PYX,EVDOMAIN)
+  ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN)
   ASSERT(jtsetpyxval(jt,pyx,val,0)!=0,EVRO)  // install value.  Will fail if previously set
   z=mtm;  // good quiet value
 #else
@@ -761,7 +753,7 @@ ASSERT(0,EVNONCE)
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-  ASSERT(AT(pyx)&PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
+  ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
   ASSERT(jtsetpyxval(jt,pyx,0,err)!=0,EVRO)  // install error value.  Will fail if previously set
   z=mtm;  // good quiet value
 #else

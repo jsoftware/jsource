@@ -568,7 +568,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
-#define NPP             20              /* max value for quad pp           */
+#define NPP             40              /* max value for quad pp           */
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 // Now we are trying to watch the C stack directly
@@ -776,12 +776,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #undef PYXES
 #define PYXES 0
 #endif
-#define ARTIFPYX 0
-#if ARTIFPYX&&PYXES
-#define HIPIFARTIF(w,f) jtartiffut(jt,w,f) // for testing, create pyx results from <, force-box, and sometimes ;
-#else
-#define HIPIFARTIF(w,f) (w)
-#endif
 
 // if we are not multithreading, report the master thread only
 #if !PYXES
@@ -966,7 +960,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // test for equality of 2 8-bit values simultaneously
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
 #if PYXES
-#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely((res=jtpyxval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
+#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely((AT(res)&BOX+PYX)==BOX+PYX))if(unlikely((res=jtpyxval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #define READLOCK(lock) {S prev; if(unlikely(((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))&(S)-WLOCKBIT)!=0))readlock(&lock,prev);}
 #if WLOCKBIT==0x8000
 #define WRITELOCK(lock)  {S prev; if(unlikely((prev=__atomic_fetch_or(&lock,(S)WLOCKBIT,__ATOMIC_ACQ_REL))!=0))writelock(&lock,prev);}
@@ -1046,6 +1040,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance
+#define FUZZDS          0.0000152588  // for SP integer conversions
 // FEQ/FIEQ are used in bcvt, where FUZZ may be set to 0 to ensure only exact values are demoted to lower precision
 #define FEQ(u,v,fuzz)    (ABS((u)-(v))<=fuzz*MAX(ABS(u),ABS(v)))
 #define FIEQ(u,v,fuzz)   (ABS((u)-(v))<=fuzz*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end

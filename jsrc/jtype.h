@@ -205,6 +205,7 @@ typedef B                (*CMP)();    /* comparison function in sort     */
 typedef A                  X;
 typedef struct {X n,d;}    Q;
 typedef struct {D re,im;}  Z;
+typedef struct {D hi,lo;}  E;
 typedef union {D d;UINT i[2];UI ui;} DI;
 
 #if (SYS & SYS_PC+SYS_MACINTOSH)        /* for use by the session manager  */
@@ -263,6 +264,8 @@ typedef I SI;
 #define CAV1(x)         (((C*)(x)+AKXR(1)))  // character in non-virtual rank-1 array
 #define CAV2(x)         (((C*)(x)+AKXR(2)))  // character in non-virtual rank-2 array
 #define UCAV(x)         (     (UC*)(x)+AK(x) )  /* unsigned character      */
+#define EAV(x)          ( (E*)((C*)(x)+AK(x)))  /* quad-prec                */
+#define DSAV(x)          ( (DS*)((C*)(x)+AK(x)))  /* single-prec                */
 #define USAV(x)         ((US*)((C*)(x)+AK(x)))  /* wchar                   */
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define UIAV(x)         ((UI*)((C*)(x)+AK(x)))  /* unsigned integer      */
@@ -358,7 +361,21 @@ typedef I SI;
                                     // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
                                     // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
                                     // a being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
-// Bit 9 unused
+#define LEN2X 8
+#define LEN2          ((I)1L<<LEN2X)  // As the lowest set bit, this indicates that the data length is 2 bytes.  VCHAR,VINT 10=char, 01=int, 00=float
+#define QP            (CMPX+LEN2)  // E QP floating-point
+#define QPSIZE sizeof(Z)  // E QP floating-point
+#define LEN4X 9
+#define LEN4          ((I)1L<<LEN4X)  // As the lowest set bit, this indicates that the data length is 4 bytes.  VCHAR,VINT 10=char, 01=int, 00=float
+#define SP            (LEN4)   // G SP floating point
+#define SPSIZE sizeof(float)
+#define LEN1X 10
+#define LEN1          ((I)1L<<LEN1X)  // As the lowest set bit, this indicates that the data length is 1 byte, which must be 1-byte int
+#define VINTX 10
+#define VINT          ((I)1L<<VINTX)  // When LEN? set, this is set if the type is integer (future extension)
+#define VCHARX 11
+#define VCHAR          ((I)1L<<VCHARX)  // When LEN? set, this is set if the type is character.  To be used in future to replace C2T, C4T
+// 12-15 free
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       // SB symbol
 #define SBTSIZE sizeof(SB)

@@ -9,9 +9,6 @@
 #define KF1(f)          B f(J jt,A w,void*yv)
 #define KF1F(f)         B f(J jt,A w,void*yv,D fuzz)  // calls that use optional fuzz
 #define KF2(f)          B f(J jt,A w,void*yv,I mode)
-#define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
-#define CVCASECHAR(a,b) ((3*(0x40000>>(a))+(0x40000>>(b)))&07)  // distinguish character cases - note last case is impossible (equal types)
-
 static KF1(jtC1fromC2){UC*x;US c,*v;
  v=USAV(w); x=(C*)yv;
  DQ(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
@@ -48,6 +45,10 @@ static KF1(jtC4fromC2){US*v;C4*x;
  R 1;
 }
 
+typedef struct {D a; D b; D c; D d;} dbl4;
+static __attribute__((aligned(CACHELINESIZE))) dbl4 Dfours[16] = {
+{0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0}, {0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1}, {0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
+};
 typedef struct {I a; I b; I c; I d;} int4;
 static __attribute__((aligned(CACHELINESIZE))) int4 Ifours[16] = {
 {0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0}, {0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1}, {0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
@@ -86,10 +87,227 @@ static KF1(jtIfromB){
  R 1;
 }
 
-typedef struct {D a; D b; D c; D d;} dbl4;
-static __attribute__((aligned(CACHELINESIZE))) dbl4 Dfours[16] = {
-{0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0}, {0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1}, {0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
-};
+
+static KF1(jtEfromB){E *zv=yv; B *wv=BAV(w);
+ I n=AN(w); DO(n, zv->hi=((D*)&zone)[1-wv[i]]; zv->lo=0.; ++zv;)
+ R 1;
+}
+
+static KF1(jtEfromD){E *zv=yv; D *wv=DAV(w);
+ I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=0.; ++zv;)
+ R 1;
+}
+
+static KF1(jtEfromDS){E *zv=yv; DS *wv=DSAV(w);
+ I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=0.; ++zv;)
+ R 1;
+}
+
+static KF1F(jtEfromZ){D d;I n;Z*v; E*x;
+ n=AN(w); v=ZAV(w); x=(E*)yv;
+ if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){x->hi=v->re; x->lo=0.; ++x; v++;} else R 0;)
+ else        DQ(n, d=    v->im ; if(!d                            ){x->hi=v->re; x->lo=0.; ++x; v++;} else R 0;);
+ R 1;
+}
+
+static KF1(jtEfromX){
+ E*y=yv; X*wv=XAV(w);
+ DQ(AN(w), X W=*wv++; mpX(W); mpX0(z); D h=jmpz_get_d(mpW); jmpz_set_d(mpz,h); jmpz_sub(mpz,mpW,mpz); D l=jmpz_get_d(mpz);  // high & low parts as D
+    y->hi=h+l; y->lo=h-y->hi; y->lo+=l; ++y; );  // convert to canonical
+ R 1;
+}
+
+static KF1(jtEfromQ){
+ E*x= yv; Q*wv=QAV(w);
+ DQ(AN(w), Q W= *wv++;
+  if (ISQinf(W)){ x->hi= 0<QSGN(W) ?inf :infm; x->lo=0.;
+  }else{
+   mpQ(W); mpQ0(z); D h=jmpq_get_d(mpW); jmpq_set_d(mpz,h); jmpq_sub(mpz,mpW,mpz); D l=jmpq_get_d(mpz);  // high & low parts as D
+   x->hi=h+l; x->lo=h-x->hi; x->lo+=l;  // convert to canonical
+  }
+  ++x;
+ ); 
+ R 1;
+}
+
+static KF1(jtEfromI){
+ E*y=yv; I*wv=IAV(w);
+ DO(AN(w), I W=wv[i]; D h=W; D l=W-(I)h;  // high & low parts as D
+    y->hi=h+l; y->lo=h-y->hi; y->lo+=l; ++y; );  // convert to canonical
+ R 1;
+}
+
+
+
+static KF1F(jtBfromE){B*x;D p,*v;I n;
+ n=AN(w); v=DAV(w); x=(B*)yv;
+ DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
+  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; if(val==2)R 0; *x++=(B)val; )
+ R 1;
+}
+
+static KF1F(jtIfromE){D p,q; E*v;I i,k=0,n,*x;
+ n=AN(w); v=EAV(w); x=(I*)yv;
+#if SY_64
+ for(i=0;i<n;++i){
+  p=v[i].hi; q=jround(p);
+  if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
+  p=v[i].lo; if(fuzz==0.&&p!=jround(p))R 0;  // error only if intolerant and nonintegral
+  *x++=(I)q+(I)p;  // if tolerantly integral, store it.  Overflow not possible
+ }
+#else  // treat like D
+ q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
+ DO(n, p=v[i].hi; if(p<q||r<p)R 0;);
+ for(i=0;i<n;++i){
+  p=v[i]; q=jfloor(p);
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
+ }
+#endif
+ R 1;
+}
+
+static KF1(jtZfromE){
+ E *wv=EAV(w); Z *zv=yv; DQ(AN(w), zv->im=0.0; zv++->re=wv++->hi;) R 1;
+}
+
+// we implement only EXACT conversion
+static KF1(jtQfromE){
+ Q*x= yv; E*wv=EAV(w);
+ DO(AN(w), 
+   mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
+ // ???? *x=z;
+  ++x;
+ ); 
+ R 1;
+}
+
+static KF1F(jtXfromE){
+ Q*x= yv; E*wv=EAV(w);
+ DO(AN(w), 
+   mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
+ // ???? *x=z;
+  ++x;
+ ); 
+ R 1;
+}
+
+static KF1(jtDfromE){D *zv=yv; E *wv=EAV(w);
+ I n=AN(w); DO(n, zv[i]=wv->hi; ++wv;)
+ R 1;
+}
+
+
+
+
+static KF1(jtDSfromB){DS *zv=yv; B *wv=BAV(w);
+ I n=AN(w); DO(n, zv[i]=((D*)&zone)[1-wv[i]];)
+ R 1;
+}
+
+static KF1(jtDSfromD){DS *zv=yv; D *wv=DAV(w);
+ I n=AN(w); DO(n, zv[i]=wv[i];)
+ R 1;
+}
+
+static KF1(jtDSfromE){DS *zv=yv; E *wv=EAV(w);
+ I n=AN(w); DO(n, zv[i]=wv->hi; ++wv;)
+ R 1;
+}
+
+static KF1F(jtDSfromZ){D d;I n;Z*v; DS*x;
+ n=AN(w); v=ZAV(w); x=(DS*)yv;
+ if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){*x=v->re; ++x; v++;} else R 0;)
+ else        DQ(n, d=    v->im ; if(!d                            ){*x=v->re; ++x; v++;} else R 0;);
+ R 1;
+}
+
+static KF1(jtDSfromX){
+ DS*y=yv; X*wv=XAV(w);
+ DQ(AN(w), X W=*wv++; mpX(W); mpX0(z); D h=jmpz_get_d(mpW);   // fetch as D
+    *y=h; ++y; );  // convert to canonical
+ R 1;
+}
+
+static KF1(jtDSfromQ){
+ DS*x= yv; Q*wv=QAV(w);
+ DQ(AN(w), Q W= *wv++;
+  if (ISQinf(W)){ *x= 0<QSGN(W) ?inf :infm;
+  }else{
+   mpQ(W); mpQ0(z); D h=jmpq_get_d(mpW);
+   *x=h;  // convert to canonical
+  }
+  ++x;
+ ); 
+ R 1;
+}
+
+static KF1(jtDSfromI){
+ E*y=yv; I*wv=IAV(w);
+ DO(AN(w), I W=wv[i]; D h=W; D l=W-(I)h;  // high & low parts as D
+    y->hi=h+l; y->lo=h-y->hi; y->lo+=l; ++y; );  // convert to canonical
+ R 1;
+}
+
+
+
+
+static KF1F(jtBfromDS){B*x;DS p,*v;I n;
+ n=AN(w); v=DSAV(w); x=(B*)yv;
+ DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
+  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; if(val==2)R 0; *x++=(B)val; )
+ R 1;
+}
+
+static KF1F(jtIfromDS){D p,q; DS*v;I i,k=0,n,*x;
+ n=AN(w); v=DSAV(w); x=(I*)yv;
+#if SY_64
+ for(i=0;i<n;++i){
+  p=v[i]; q=jround(p);
+  if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
+  *x++=(I)q;  // if tolerantly integral, store it.  Overflow not possible
+ }
+#else  // treat like D
+ q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
+ DO(n, p=v[i].hi; if(p<q||r<p)R 0;);
+ for(i=0;i<n;++i){
+  p=v[i]; q=jfloor(p);
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
+ }
+#endif
+ R 1;
+}
+
+static KF1(jtZfromDS){
+ DS *wv=DSAV(w); Z *zv=yv; DO(AN(w), zv++->re=wv[i];) R 1;
+}
+
+// we implement only EXACT conversion
+static KF1(jtQfromDS){
+ Q*x= yv; E*wv=EAV(w);
+ DO(AN(w), 
+   mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
+ // ???? *x=z;
+  ++x;
+ ); 
+ R 1;
+}
+
+static KF1F(jtXfromDS){
+ Q*x= yv; E*wv=EAV(w);
+ DO(AN(w), 
+   mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
+ // ???? *x=z;
+  ++x;
+ ); 
+ R 1;
+}
+
+static KF1(jtDfromDS){D *zv=yv; DS *wv=DSAV(w);
+ I n=AN(w); DO(n, zv[i]=wv[i];)
+ R 1;
+}
+
+
 
 // conversion of bytes, with overfetch
 static KF1(jtDfromB){
@@ -240,7 +458,7 @@ static KF1(jtIfromX){
    if (IMAX<XLIMB0(W)) R 0; else *y++= XLIMB0(W);
   else if (-1==XSGN(W)) // w[i] is negative
    if ((UI)IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
-// -IMIN = IMIN for 2's compliment
+// -IMIN = IMIN for 2's complement
 // if ((UI)-IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
   else if (0==XSGN(W)) *y++= 0; // w[i] is 0
   else R0; // w[i] is too big
@@ -257,7 +475,7 @@ static KF1(jtDfromX){
 static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DQ(AN(w), *x++=*v++; *x++=X1;); R 1;}
 
 static KF2(jtQfromD){
- GMP; if(!(w))R 0; /* FIXME: why do we need this here, but not other conversion routines? */
+ GMP; ARGCHK1(w)
  I n=AN(w), i; D*wv=DAV(w), t; Q*x=(Q*)yv, q; S*tv=3*C_LE+(S*)&t;
  for(i=0;i<n;++i){
   t=wv[i]; q.d= X1;
@@ -421,6 +639,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
    // one of the types is literal.
    // we must account for all NOUN types.  If there is a non-char, that's an error
   ASSERT(!((t|wt)&(SBT+XD+XZ+NUMERIC+BOX)),EVDOMAIN);  // No conversions for these types
+#define CVCASECHAR(a,b) ((3*(0x40000>>(a))+(0x40000>>(b)))&07)  // distinguish character cases - note last case is impossible (equal types)
   switch (CVCASECHAR(CTTZ(t),CTTZ(wt))){
    case CVCASECHAR(LITX, C2TX): R C1fromC2(w, yv);
    case CVCASECHAR(LITX, C4TX): R C1fromC4(w, yv);
@@ -431,39 +650,68 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
    default:                ASSERT(0, EVDOMAIN);
   }
  }
- // types here must both be among B01 INT FL CMPX XNUM RAT
- switch (CVCASE(CTTZ(t),CTTZ(wt))){
-  case CVCASE(INTX, B01X): R jtIfromB(jt, w, yv);
-  case CVCASE(XNUMX, B01X): R XfromB(w, yv);
-  case CVCASE(RATX, B01X): GATV(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
-  case CVCASE(FLX, B01X): R jtDfromB(jt, w, yv);
-  case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x->im=0.0; x++->re = *v++;); } R 1;
-  case CVCASE(B01X, INTX): R BfromI(w, yv);
-  case CVCASE(XNUMX, INTX): R XfromI(w, yv);
-  case CVCASE(RATX, INTX): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
-  case CVCASE(FLX, INTX): R jtDfromI(jt, w, yv);
-  case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
-  case CVCASE(B01X, FLX): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-  case CVCASE(INTX, FLX): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-  case CVCASE(XNUMX, FLX): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
-  case CVCASE(RATX, FLX): R QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
-  case CVCASE(CMPXX, FLX): R ZfromD(w, yv);
-  case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R BfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-  case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R IfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
-  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
-  case CVCASE(FLX, CMPXX): R DfromZ(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-  case CVCASE(B01X, XNUMX): R BfromX(w, yv);
-  case CVCASE(INTX, XNUMX): R IfromX(w, yv);
-  case CVCASE(RATX, XNUMX): R QfromX(w, yv);
-  case CVCASE(FLX, XNUMX): R DfromX(w, yv);
-  case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ZfromD(d, yv);
-  case CVCASE(B01X, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R BfromX(d, yv);
-  case CVCASE(INTX, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R IfromX(d, yv);
-  case CVCASE(XNUMX, RATX): R XfromQ(w, yv);
-  case CVCASE(FLX, RATX): R DfromQ(w, yv);
-  case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ZfromD(d, yv);
-  default:                ASSERT(0, EVDOMAIN);
+ // types here must both be among B01 INT FL CMPX XNUM RAT QP SP
+ #define CVNUMTYPE(a) (((a)&LEN2-1)+((a)&INT+FL+CMPX)+(((a)>>LEN2X-LITX)&(LEN2+LEN4>>LEN2X-LITX)))
+// obsolete  #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 8 9 ->2 5  01010001100
+ #define CVCASE(a,b)     (CTTZ(CVNUMTYPE(a))*8+CTTZ(CVNUMTYPE(b)))   // 0 2 3 4 6 7 8 9 ->0 8 9 2 3 4 6 7 8 9
+ switch (CVCASE(t,wt)){  // to,from
+ case CVCASE(INT, B01): R jtIfromB(jt, w, yv);
+ case CVCASE(XNUM, B01): R XfromB(w, yv);
+ case CVCASE(RAT, B01): GATV(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
+ case CVCASE(FL, B01): R jtDfromB(jt, w, yv);
+ case CVCASE(CMPX, B01): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x->im=0.0; x++->re = *v++;); } R 1;
+ case CVCASE(B01, INT): R BfromI(w, yv);
+ case CVCASE(XNUM, INT): R XfromI(w, yv);
+ case CVCASE(RAT, INT): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
+ case CVCASE(FL, INT): R jtDfromI(jt, w, yv);
+ case CVCASE(CMPX, INT): {Z*x = (Z*)yv; I*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
+ case CVCASE(B01, FL): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(INT, FL): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(XNUM, FL): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
+ case CVCASE(RAT, FL): R QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
+ case CVCASE(CMPX, FL): R ZfromD(w, yv);
+ case CVCASE(B01, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R BfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(INT, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R IfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(XNUM, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
+ case CVCASE(RAT, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
+ case CVCASE(FL, CMPX): R DfromZ(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(B01, XNUM): R BfromX(w, yv);
+ case CVCASE(INT, XNUM): R IfromX(w, yv);
+ case CVCASE(RAT, XNUM): R QfromX(w, yv);
+ case CVCASE(FL, XNUM): R DfromX(w, yv);
+ case CVCASE(CMPX, XNUM): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ZfromD(d, yv);
+ case CVCASE(B01, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R BfromX(d, yv);
+ case CVCASE(INT, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R IfromX(d, yv);
+ case CVCASE(XNUM, RAT): R XfromQ(w, yv);
+ case CVCASE(FL, RAT): R DfromQ(w, yv);
+ case CVCASE(CMPX, RAT): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ZfromD(d, yv);
+ case CVCASE(QP,B01): R jtEfromB(jt, w, yv);
+ case CVCASE(QP,INT): R jtEfromI(jt, w, yv);
+ case CVCASE(QP,FL): R jtEfromD(jt, w, yv);
+ case CVCASE(QP,CMPX): R jtEfromZ(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(QP,XNUM): R jtEfromX(jt, w, yv);
+ case CVCASE(QP,RAT): R jtEfromQ(jt, w, yv);
+ case CVCASE(QP,SP): R jtEfromDS(jt, w, yv);
+ case CVCASE(B01,QP): R jtBfromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(INT,QP): R jtIfromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(FL,QP): R jtDfromE(jt, w, yv);
+ case CVCASE(CMPX,QP): R jtZfromE(jt, w, yv);
+ case CVCASE(XNUM,QP): R jtXfromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+ case CVCASE(RAT,QP): R jtQfromE(jt, w, yv);
+ case CVCASE(SP,QP): R jtDSfromE(jt, w, yv);
+ case CVCASE(SP,B01): R jtDSfromB(jt, w, yv);
+ case CVCASE(SP,INT): R jtDSfromI(jt, w, yv);
+ case CVCASE(SP,FL): R jtDSfromD(jt, w, yv);
+ case CVCASE(SP,CMPX): R jtDSfromZ(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
+ case CVCASE(SP,XNUM): R jtDSfromX(jt, w, yv);
+ case CVCASE(SP,RAT): R jtDSfromQ(jt, w, yv);
+ case CVCASE(B01,SP): R jtBfromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
+ case CVCASE(INT,SP): R jtIfromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
+ case CVCASE(FL,SP): R jtDfromDS(jt, w, yv);
+ case CVCASE(CMPX,SP): R jtZfromDS(jt, w, yv);
+ case CVCASE(XNUM,SP): R jtXfromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
+ case CVCASE(RAT,SP): R jtQfromDS(jt, w, yv);
+ default:                ASSERT(0, EVDOMAIN);
  }
 }
 

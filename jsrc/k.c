@@ -159,7 +159,7 @@ static KF1F(jtIfromE){D p,q; E*v;I i,k=0,n,*x;
  q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
  DO(n, p=v[i].hi; if(p<q||r<p)R 0;);
  for(i=0;i<n;++i){
-  p=v[i]; q=jfloor(p);
+  p=v[i].hi; q=jfloor(p);
   if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
  }
 #endif
@@ -268,7 +268,7 @@ static KF1F(jtIfromDS){D p,q; DS*v;I i,k=0,n,*x;
  }
 #else  // treat like D
  q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
- DO(n, p=v[i].hi; if(p<q||r<p)R 0;);
+ DO(n, p=v[i]; if(p<q||r<p)R 0;);
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
   if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;

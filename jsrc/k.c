@@ -175,8 +175,7 @@ static KF1(jtQfromE){
  Q*x= yv; E*wv=EAV(w);
  DO(AN(w), 
    mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
- // ???? *x=z;
-  ++x;
+   *x++= z.n; *x++= z.d; 
  ); 
  R 1;
 }

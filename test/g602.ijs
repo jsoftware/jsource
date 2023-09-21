@@ -144,7 +144,7 @@ x=:7^_4+i.14
 
 'rank error'   -: pp etx 5 6
 
-'limit error'  -: pp etx 25
+'limit error'  -: pp etx 41
 
 
 NB. ":y on boxed array y ------------------------------------------------

@@ -172,7 +172,7 @@ a12 -: ":!.12 o.1
 
 'rank error'   -: pps etx 7 8
 
-'limit error'  -: pps etx 30
+'limit error'  -: pps etx 41
 
 
 NB. 9!:12 and 9!:14 -----------------------------------------------------

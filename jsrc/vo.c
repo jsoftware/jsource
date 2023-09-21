@@ -50,7 +50,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    AFLAGINIT(z,(-(wt&DIRECT))&((aband)<<AFPRISTINEX)&~(waf<<(AFPRISTINEX-AFVIRTUALX)))
    INCORPNCUI(w); ACIPNO(w);  // realize unincorpable (but not virtual); w must be protected while it is in the box from argument deletion
   }
-  AAV0(z)[0]=HIPIFARTIF(w,AFLAG(z));  // install the address of the (possibly realized) input
+  AAV0(z)[0]=w;  // install the address of the (possibly realized) input
  } else {
   // <"r
 #ifdef BOXEDSPARSE
@@ -186,7 +186,7 @@ F2PREFIP;ARGCHK2(a,w);
    if(likely((AFLAG(w)|~optype)&BOX))realizeifvirtual(a)
    AFLAGPRISTNO(a)   // since a is incorporated, it can't be PRISTINE
    if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0)}else{ACIPNO(a)} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
-   a=HIPIFARTIF(a,AFLAG(w));
+// obsolete    a=HIPIFARTIF(a,AFLAG(w));
   }
   // a has the new value to add at the front of the list
   AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; AAV(w)[0]=a;  // install a at front, add to counts

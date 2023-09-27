@@ -175,7 +175,7 @@ static KF1(jtQfromE){
  Q*x= yv; E*wv=EAV(w);
  DO(AN(w), 
    mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
-   *x++= z.n; *x++= z.d; 
+   x->n= z.n; x->d= z.d; ++x;
  ); 
  R 1;
 }
@@ -638,7 +638,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
    // one of the types is literal.
    // we must account for all NOUN types.  If there is a non-char, that's an error
   ASSERT(!((t|wt)&(SBT+XD+XZ+NUMERIC+BOX)),EVDOMAIN);  // No conversions for these types
-#define CVCASECHAR(a,b) ((3*(0x40000>>(a))+(0x40000>>(b)))&07)  // distinguish character cases - note last case is impossible (equal types)
+#define CVCASECHAR(a,b) ((2*(C2T>>(a))+(C2T>>(b))))  // distinguish character cases - note last case is impossible (equal types)
   switch (CVCASECHAR(CTTZ(t),CTTZ(wt))){
    case CVCASECHAR(LITX, C2TX): R C1fromC2(w, yv);
    case CVCASECHAR(LITX, C4TX): R C1fromC4(w, yv);
@@ -650,7 +650,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
   }
  }
  // types here must both be among B01 INT FL CMPX XNUM RAT QP SP
- #define CVNUMTYPE(a) (((a)&LEN2-1)+((a)&INT+FL+CMPX)+(((a)>>LEN2X-LITX)&(LEN2+LEN4>>LEN2X-LITX)))
+ #define CVNUMTYPE(a) (((a)&INT1-1)+((a)&INT+FL+CMPX)+(((a)>>SPX-LITX)&(SP+QP>>SPX-LITX)))
 // obsolete  #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 8 9 ->2 5  01010001100
  #define CVCASE(a,b)     (CTTZ(CVNUMTYPE(a))*8+CTTZ(CVNUMTYPE(b)))   // 0 2 3 4 6 7 8 9 ->0 8 9 2 3 4 6 7 8 9
  switch (CVCASE(t,wt)){  // to,from

@@ -102,8 +102,8 @@ I Iimax=IMAX;
 #define TPSZ(name) [name##X] = name##SIZE
 const __attribute__((aligned(32))) UC typesizes[32] = {
 TPSZ(B01), TPSZ(LIT), TPSZ(INT), TPSZ(FL), TPSZ(CMPX), TPSZ(BOX), TPSZ(XNUM), TPSZ(RAT), 
-sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P), TPSZ(SBT), TPSZ(C2T), 
-TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR), TPSZ(RPAR), 
+TPSZ(INT1), TPSZ(INT2), TPSZ(INT4), TPSZ(HP), TPSZ(SP), TPSZ(QP), TPSZ(C2T), TPSZ(C4T), 
+ TPSZ(SBT),  TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR), TPSZ(RPAR), 
 [ADVX] = INTSIZE, [CONJX] = INTSIZE, [VERBX] = INTSIZE  // note ACV sizes are in INTs
 };
 

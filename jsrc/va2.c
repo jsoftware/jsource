@@ -1305,7 +1305,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    // The index into va is atype*3 + wtype, calculated sneakily
    R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else if(!(t&(NOUN&~NUMERIC))) {
-   // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
+   // Here one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
    // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
    // the type to use
    I  prix=(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15; // routine index, FL/CMPX/XNUM/RAT   bits: RAT CMPX FL
@@ -1318,10 +1318,11 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   }else{
    // Normal case, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
    VA2 retva2;  retva2.cv=VB; // where we build the return value   cv indicates no input conversion, boolean result
-    if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
+   if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
     if(likely(HOMO(at,wt))){
-     opcode=((at>>(C2TX-2))+(wt>>C2TX))|(3*(5&(((t>>(SBTX-(BOXX+2)))+t)>>BOXX))); // bits are a4 a2 w4 w2 if char, 1100 if symbol, 0011 if box.  symbol is 1110, coming from a and symb shift
+     opcode=((at>>(C2TX-2))&0b1100)+((wt>>C2TX)&0b0011); opcode=at&SBT?0b1110:opcode; opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 1110 if symbol, 0011 if box.
+// obsolete |(3*(5&(((t>>(SBTX-(BOXX+2)))+t)>>BOXX)));
     }else opcode=15;  // inhomogeneous line
     retva2.f=eqnetbl[(UC)FAV(self)->id&1][opcode];  // return the comparison
     R retva2;

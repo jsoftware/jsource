@@ -86,7 +86,7 @@ static FMTF(jtfmtE,Z){B q;C buf[1+WD],c,*t;Z x=*v;I k=0;
 
 // return default field size and function to use.  We know we have a numeric type
 static void thcase(I t,I*wd,FMTFUN *fmt){
- I w=WI; FMTFUN f=jtfmtI; w=t&CMPX?WZ:w; f=t&CMPX?jtfmtZ:f; w=t&FL+LEN2?WD:w; f=t&FL+LEN2?jtfmtD:f; f=t&LEN2?jtfmtE:f;  *wd=w; *fmt=f;
+ I w=WI; FMTFUN f=jtfmtI; w=t&CMPX+QP?WZ:w; f=t&CMPX?jtfmtZ:f; w=t&FL+SP?WD:w; f=t&FL+SP?jtfmtD:f; f=t&QP?jtfmtE:f;  *wd=w; *fmt=f;
 // obsolete  switch(CTTZ(t)){
 // obsolete   case FLX:   *wd=WD; *fmt=jtfmtD; break;
 // obsolete   case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;

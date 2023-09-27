@@ -361,30 +361,46 @@ typedef I SI;
                                     // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
                                     // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
                                     // a being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
-#define LEN2X 8
-#define LEN2          ((I)1L<<LEN2X)  // As the lowest set bit, this indicates that the data length is 2 bytes.  VCHAR,VINT 10=char, 01=int, 00=float
-#define QP            (CMPX+LEN2)  // E QP floating-point
-#define QPSIZE sizeof(Z)  // E QP floating-point
-#define LEN4X 9
-#define LEN4          ((I)1L<<LEN4X)  // As the lowest set bit, this indicates that the data length is 4 bytes.  VCHAR,VINT 10=char, 01=int, 00=float
-#define SP            (LEN4)   // G SP floating point
-#define SPSIZE sizeof(float)
-#define LEN1X 10
-#define LEN1          ((I)1L<<LEN1X)  // As the lowest set bit, this indicates that the data length is 1 byte, which must be 1-byte int
-#define VINTX 10
-#define VINT          ((I)1L<<VINTX)  // When LEN? set, this is set if the type is integer (future extension)
-#define VCHARX 11
-#define VCHAR          ((I)1L<<VCHARX)  // When LEN? set, this is set if the type is character.  To be used in future to replace C2T, C4T
-// 12-15 free
+// new types.  We could encode these as length+attributes, saving several bits, but since one-hot is good enough for now, we stay with it.
+// The best encoded form I found is
+// LEN1 LEN2 LEN4 CHAR LEN16/FL x SBT x   x C2T C4T     with the option of deleting C2T/C4T and turning on CHAR
+// this allows clever encoding/decoding by keeping the length repetitive over byte-shifts
+#define INT1X 8
+#define INT1          ((I)1L<<INT1X)  // As the lowest set bit, 1-byte INT
+#define INT1SIZE sizeof(B)
+#define INT1EXTTYPE 5
+#define INT2X 9
+#define INT2          ((I)1L<<INT2X)  // As the lowest set bit, 2-byte INT
+#define INT2SIZE sizeof(S)
+#define INT2EXTTYPE 6
+#define INT4X 10
+#define INT4          ((I)1L<<INT4X)  // As the lowest set bit, 4-byte INT
+#define INT4SIZE sizeof(I4)
+#define INT4EXTTYPE 7
+#define HPX 11
+#define HP          ((I)1L<<HPX)  // As the lowest set bit, half-precision floating-point
+#define HPSIZE sizeof(US)
+#define HPEXTTYPE 9
+#define SPX 12
+#define SP          ((I)1L<<SPX)  // As the lowest set bit, single-precision floating-point
+#define SPSIZE sizeof(DS)
+#define SPEXTTYPE 10
+#define QPX 13
+#define QP          ((I)1L<<QPX)  // As the lowest set bit, quad-precision floating-point
+#define QPSIZE sizeof(E)
+#define QPEXTTYPE 11
+// 14-15 free
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       // SB symbol
 #define SBTSIZE sizeof(SB)
 #define C2TX 17
 #define C2T             ((I)1L<<C2TX)       // C2 unicode (2-byte characters)
 #define C2TSIZE sizeof(US)
+#define C2TEXTTYPEX  17
 #define C4TX 18
 #define C4T             ((I)1L<<C4TX)       // C4 unicode (4-byte characters)
 #define C4TSIZE sizeof(C4)
+#define C4TEXTTYPEX  18
 #define XDX 19
 #define XD              ((I)1L<<XDX)        // DX extended floating point   used to represent intolerant compare in jtiosc
 #define XDSIZE sizeof(DX)

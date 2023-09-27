@@ -31,9 +31,33 @@ extern size_t Stringrchr4(unsigned int *str, unsigned int ch, size_t stride,size
 #pragma warning(disable: 4101)
 #endif
 
+// table converting internal values to external
+static I4 type3x0[][2]={  // 1st arg is bit#, 2nd is 1 iff sparse type
+#define T3X0SP(t) [t##X]={(I)1<<(t##X),(I)1<<(10+(t##X))}  // when there is a sparse option
+#define T3X0(t) [t##X]={(I)1<<(t##X),0}   // when sparse not supported
+#define T3X0A(t)  [t##X]={t##EXTTYPE,0}   // when bit must be represented as a different value
+T3X0SP(B01), T3X0SP(LIT), T3X0SP(INT), T3X0SP(FL), T3X0SP(CMPX), T3X0SP(BOX), T3X0(XNUM), T3X0(RAT),
+T3X0A(INT1), T3X0A(INT2), T3X0A(INT4), T3X0A(HP), T3X0A(SP), T3X0A(QP), 
+T3X0(SBT), T3X0(C2T), T3X0(C4T), 
+T3X0(NAME), T3X0(MARK), T3X0(ADV), T3X0(ASGN), T3X0(SYMB), T3X0(CONW), T3X0(VERB), T3X0(LPAR), T3X0(CONJ), T3X0(RPAR), 
+
+};
+static S f3x0new[]={
+[B01]=B01, [LIT]=LIT,  [INT]=INT,  [FL]=FL, [INT1EXTTYPE]=INT1, [INT2EXTTYPE]=INT2, [INT4EXTTYPE]=INT4, [HPEXTTYPE]=HP, [SPEXTTYPE]=SP, [QPEXTTYPE]=QP,
+};
+#define F3X0(t) [t##X-CMPXX]=t
+static I4 f3x0bit[]={F3X0(CMPX), F3X0(BOX), F3X0(XNUM), F3X0(RAT), F3X0(SBT), F3X0(C2T), F3X0(C4T), 
+F3X0(NAME), F3X0(MARK), F3X0(ADV), F3X0(ASGN), F3X0(SYMB), F3X0(CONW), F3X0(VERB), F3X0(LPAR), F3X0(CONJ), F3X0(RPAR), 
+};
 // conversion from internal type to the result in 3!:x, which matches the published types
-static I toonehottype(I t){t<<=REPSGN(t)&10; R t&-t;}  // if sparse, shift type to sparse output position.  Return only the one bit
-static I fromonehottype(I t){t&=-t; I issp=REPSGN(-(t&0xfc00)); R (t>>(issp&10))|(issp&SPARSE);}
+static I toonehottype(I t){R type3x0[CTTZ(t)][SGNTO0(t)];}  // take value from table
+// obsolete  t<<=REPSGN(t)&10; R t&-t;
+static I fromonehottype(I t){
+ t &=-t; if(t&0xfc00)R SPARSE|(t>>10);
+ if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type
+ else R f3x0bit[CTTZ(t)-CMPXX];
+}
+// obsolete t&=-t; I issp=REPSGN(-(t&0xfc00)); R (t>>(issp&10))|(issp&SPARSE);}
 
 F1(jtstype){ARGCHK1(w); R sc(toonehottype(AT(w)));}
      /* 3!:0 w */

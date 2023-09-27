@@ -1823,25 +1823,45 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PARSERVALUE(p) ((A)((I)(p)&-2))   // the value part of the parser return, pointer to the A block
 #define PARSERASGN(p) ((I)(p)&1)   // the assignment part of the parser return, 1 if assignment
 #define PARSERASGNX 0  // bit# of asgn bit
+
+
+// bp(type) returns the number of bytes in an atom of the type
+#define bp(i) (typesizes[CTTZ(i)+(REPSGN(i)&8)])  // the 8 is for sparse args
+// bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
+#if BW==64
+// obsolete #define bplg(i) (((I)0x008bb6db408dc6c0>>3*CTTZ(i))&(I)7)  // 010 001 011   101 101 101 101 101 101 000 000   100 011 011 100 011 011 000 000 = 0 1000 1011 1011 0110 1101 1011   0100 0000 1000 1101 1100 0110 1100 0000
+#define bplg(i) (((I)0x08b0223118dc6c0>>3*CTTZ(i))&(I)7)  //  010 001 011   000 000 100 010 001 100 010 001   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0011   0001 0001 1000 1101 1100 0110 1100 0000
+// bplgnonnoun is like bplg but we know that the value is not a noun
+#define bpnonnoun(i) ((((RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+(INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+(INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+(LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+(CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
+ (SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+(ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+(INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+(MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+(NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
+ >>(5*(CTTZ(i)-(LASTNOUNX+1))))&31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   8 8 8 8 12 4 8 8 8 (1) 
+// bpnoun is like bp but for NOUN types, and not sparse
+#define bpnoun(i) ((I)1<<bplg(i))
+#else
+#define bpnoun(i) (I)bp(i)
+#define bplg(i) CTTZ(bpnoun(i))
+#define bpnonnoun(i) (I)bp(i)
+#endif
+
 // conversion from priority index to bit# in a type with that priority
 // static const UC prioritytype[] = {  // Convert priority to type bit
-// B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
+// B01X, LITX, C2TX, C4TX, INT1X, INT2X, INT4X, INTX, BOXX, XNUMX, RATX, HPX, SPX, FLX, QPX, CMPXX, SBTX};
 #if SY_64
-#define PRIORITYTYPE(p) (((((((((((((((((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)<<5)+BOXX)<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+// obsolete #define PRIORITYTYPE(p) (((((((((((((((((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)<<5)+BOXX)<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(((((((((((((((((((((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))
 #else
-#define PRIORITYTYPE(p) (((p)>=6?(((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)>>(((p)-6)*5):(((((((((((I)BOXX<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+// obsolete #define PRIORITYTYPE(p) (((p)>=6?(((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)>>(((p)-6)*5):(((((((((((I)BOXX<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):((p)>=8?(((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)>>(((p)-6)*4):(((((((((((((((I)INTX<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf)
 #endif
 // Conversion from type to priority
-// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
-// For sparse types, we encode here the corresponding dense type
-// static const UC typepriority[] = {   // convert type bit to priority
-// 0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
-// 0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
-// 8, 2, 3};  // SBT C2T C4T
+//  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10
+// B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
 #if SY_64
-#define TYPEPRIORITY(t) (((((t)&0xffff)?0x5a941000765a9410:0x328)>>((CTTZ(t)&0xf)*4))&0xf)
+// obsolete #define TYPEPRIORITY(t) (((((t)&0xffff)?0x5a941000765a9410:0x328)>>((CTTZ(t)&0xf)*4))&0xf)
+#define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):(0x32ecb654a98fd710>>(CTTZ(t)*4)&0xf))
 #else
-#define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
+// obsolete #define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
+#define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):(((((t)&0xff)?0xa98fd710:0x32ecb654)>>((CTTZ(t)&0x7)*4))&0xf))
 #endif
 
 // same but destroy w

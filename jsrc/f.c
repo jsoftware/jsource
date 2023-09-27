@@ -54,26 +54,41 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
 // x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
  x=*v; x=x==(-1)*0.0?0.0:x;  /* -0 to 0*/
  sprintf(buf,"%0.*g",jt->ppn,x);
- c=*buf; if(q=c=='-')*s++=CSIGN; q=q|(c=='+');
- if('.'==buf[q])*s++='0';
+ c=*buf; if(q=c=='-')*s++=CSIGN; q=q|(c=='+');  // set q if sign shown
+ if('.'==buf[q])*s++='0';  // add leading 0 to .ddd
  MC(s,buf+q,WD+1-q);
- if(t=strchr(s,'e')){
-  if('-'==*++t)*t++=CSIGN;
-  NOUNROLL while(c=t[k],c=='0'||c=='+')k++;
-  if(k)NOUNROLL while(t[0]=t[k])t++;
+ if(t=strchr(s,'e')){   // t=address of 'e' in exponent.  If there is an exponent...
+  if('-'==*++t)*t++=CSIGN;  // change sign character of exponent
+  NOUNROLL while(c=t[k],c=='0'||c=='+')k++;   // find index of first nonskipped char
+  if(k)NOUNROLL while(t[0]=t[k])t++;  // close up the skipped chars of exponent, ending with the NUL
 }}
 
 static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s[k+1],&v->im);}}
 
-static FMTF(jtfmtE,Z){B q;C buf[1+WD],c,*t;Z x=*v;I k=0;
- if(jt->ppn<17)jtfmtD(jt,s,&v->re);  // if only 1 float needed, display it
+static FMTF(jtfmtE,E){B q;C buf0[1+WZ],buf1[1+WZ],c,*t;E x=*v;I k=0;
+ if(jt->ppn<17)jtfmtD(jt,s,&v->hi);  // if only 1 float needed, display it
  // for more digits we need more precision
- if(!memcmpne(v,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
- if(!memcmpne(v,&infm,SZD)){strcpy(s,"__"); R;}
- if(_isnan(v->re)          ){strcpy(s,"_."); R;}
-// x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
- x=*v; x.re=x.re==(-1)*0.0?0.0:x.re;  /* -0 to 0*/
- sprintf(buf,"%0.*g",jt->ppn,x.re);
+ if(!memcmpne(&v->hi,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
+ if(!memcmpne(&v->hi,&infm,SZD)){strcpy(s,"__"); R;}
+ if(_isnan(v->hi)          ){strcpy(s,"_."); R;}
+// obsolete x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
+// obsolete  x=*v; x.re=x.re==(-1)*0.0?0.0:x.re;  /* -0 to 0*/
+ if(v->hi==0.){strcpy(s,"0" ); R;}
+ // convert each half to scientific form
+ sprintf(buf0,"%+0.*e",jt->ppn,x.hi); sprintf(buf1,"%+0.*e",jt->ppn,x.lo);
+ // remove decimal point and exponent; remember decimal point location
+ I sgn0=buf0[0]='-', sgn1=buf1[0]='-';  // sign of values - should be equal
+ buf0[2]=buf0[1]; buf1[2]=buf1[1];  // remove '+' from value
+ C *eol; I4 exp0; sscanf(eol=strchr(&buf0[2],'e')+1,"%d",&exp0); I endx0=eol-buf0;  // exp0=hi exponent, endx0=index of last+1 char of hi
+ I4 exp1; sscanf(eol=strchr(&buf1[2],'e')+1,"%d",&exp1); I endx1=eol-buf1;  // exp0=lo exponent, endx0=index of last+1 char of lo
+ // add the two parts
+ buf0[1]='0';  // extend hi one place in case there is carry out
+
+ // if decimal point is within significance, report as decimal
+ // otherwise report as scientific
+
+#if 0 // obsolete 
+ sprintf(buf,"%0.*g",jt->ppn,x.hi);
  c=*buf; if(q=c=='-')*s++=CSIGN; q=q|(c=='+');
  if('.'==buf[q])*s++='0';
  MC(s,buf+q,WD+1-q);
@@ -81,7 +96,8 @@ static FMTF(jtfmtE,Z){B q;C buf[1+WD],c,*t;Z x=*v;I k=0;
   if('-'==*++t)*t++=CSIGN;
   NOUNROLL while(c=t[k],c=='0'||c=='+')k++;
   if(k)NOUNROLL while(t[0]=t[k])t++;
-}}
+#endif
+}
 
 
 // return default field size and function to use.  We know we have a numeric type
@@ -119,7 +135,7 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I
   break;
  case B01X:
   if(ov=n<2*wn)p=n4>>1; else p=wn; DQ(p, *y++=*x++?'1':'0'; *y++=' ';); break;
- default:  // FL or CMPX
+ default:  // FL/CMPX/QP
   k=bpnoun(wt);
   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
@@ -518,7 +534,7 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
  else if(ISSPARSE(AT(w)))z=ths(w);
  else switch(CTTZ(AT(w))){
-  case INTX:  case FLX: case CMPXX:
+  case INTX:  case FLX: case CMPXX:  case QPX:
              z=thn(w);                    break;
 #ifdef UNDER_CE
   default:   if(AT(w)&XD+XZ)z=thxqe(w); else R 0; break;

@@ -1851,7 +1851,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(((((((((((((((((((((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))
 #else
 // obsolete #define PRIORITYTYPE(p) (((p)>=6?(((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)>>(((p)-6)*5):(((((((((((I)BOXX<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
-#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):((p)>=8?(((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)>>(((p)-6)*4):(((((((((((((((I)INTX<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf)
+#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):((p)>=8?(((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)>>(((p)-8)*4):(((((((((((((((I)INTX<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf)
 #endif
 // Conversion from type to priority
 //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10

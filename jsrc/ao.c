@@ -193,7 +193,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
   GASPARSE0(q,B01,1,1); AS(q)[0]=n;  /* q=: 0 by}1$.n;0;1 */
   p=PAV(q); SPB(p,a,iv0); SPB(p,e,num(1)); SPB(p,i,by); SPB(p,x,reshape(tally(by),num(0)));  // q is a mask: all 1s, but 0 on the non-sparse elements of w
   RZ(z=over(df1(b,repeat(q,w),VAV(self)->fgh[0]),z));  // (u q#(fill ele for w)) , (result on non-sparse)  ?? bug if u result has rank too high, the call to C. will fail with agreement
-  z=j?cdot2(box(IX(1+j)),z):z;  // Use C. to rotate the sparse result into proper position
+  z=j?ccapdot2(box(IX(1+j)),z):z;  // Use C. to rotate the sparse result into proper position
  }
  EPILOG(z);
 }  // a f/. w  for sparse a

@@ -443,12 +443,14 @@ A jtcvz(J jt,I cv,A w){I t;
 }    /* convert result */
 
 
+#if 0 // obsolete
 // Table converting operand types to slot numbers in a va[] entry
 // Employed when one arg is known to be CMPX/XNUM/RAT.  Indexed by
 // bitmask of RAT,CMPX,FL.  Entry 9=CMPX; otherwise entry 8=some FL, otherwise
 // entry 10 for XNUM, 11 for some RAT 
 // static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
 #define xnumpri 0x998B998AU   // we use shift to select 4-bit sections
+#endif
 
 #if 0 // for debug, to display info about a sparse block
 if(ISSPARSE(AT(a))){
@@ -658,12 +660,13 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    // might fail because the type in t is incompatible with the actual type in a.  t is rare.
    //
    // Because of the priority of errors we mustn't check the type until we have verified agreement above
-   if(unlikely(((I)jtinplace&VARGMSK)!=0))if(likely(zn>0)){I t=atype((I)jtinplace);  // input conversion required (rare), and the result is not empty
+   if(unlikely(((I)jtinplace&VARGMSK)!=0))if(likely(zn>0)){  // input conversion required (rare), and the result is not empty
+    I at=AT(a), wt=AT(w), t=atype((I)jtinplace); t=(I)jtinplace&VCOPYA?at:t; t=(I)jtinplace&VCOPYW?wt:t;  // get shared input type, which might be from one of the inputs
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-    if(TYPESNE(t,AT(a))){aawwzk[0]=(aawwzk[0]>>bplg(AT(a)))<<bplg(t); aawwzk[1]=(aawwzk[1]>>bplg(AT(a)))<<bplg(t); RZ(a=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
-    if(TYPESNE(t,AT(w))){aawwzk[2]=(aawwzk[2]>>bplg(AT(w)))<<bplg(t); aawwzk[3]=(aawwzk[3]>>bplg(AT(w)))<<bplg(t); RZ(w=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
+    if(TYPESNE(t,at)){aawwzk[0]=(aawwzk[0]>>bplg(at))<<bplg(t); aawwzk[1]=(aawwzk[1]>>bplg(AT(a)))<<bplg(t); RZ(a=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
+    if(TYPESNE(t,wt)){aawwzk[2]=(aawwzk[2]>>bplg(wt))<<bplg(t); aawwzk[3]=(aawwzk[3]>>bplg(AT(w)))<<bplg(t); RZ(w=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
    }  // It might be better to do the conversion earlier, and defer the error
       // until here.  We will have to look at the generated code when we can use all the registers
 
@@ -692,12 +695,15 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
   // The ordering here assumes that jtinplace will usually be set
-  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(w),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-  }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(a),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; if(unlikely(TYPESNE(wt,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+  }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I at=AT(a), zt=rtype((I)jtinplace); zt=zt?zt:at; if(unlikely(TYPESNE(at,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
-  }else{GA00(z,rtype((I)jtinplace),zn,(RANKT)fr); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));} 
-//                                                 frame loc     shape of long frame             len of long frame           cellshape loc              cellshape     longer cellen 
+  }else{
+   I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area
+   MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape
+  } 
+//                                     frame loc     shape of long frame             len of long frame  cellshape       longer cellen 
   // fr free
   if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
@@ -1305,15 +1311,23 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    // The index into va is atype*3 + wtype, calculated sneakily
    R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else if(!(t&(NOUN&~NUMERIC))) {
-   // Here one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
+   // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
    // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
    // the type to use
-   I  prix=(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15; // routine index, FL/CMPX/XNUM/RAT   bits: RAT CMPX FL
-   VA2 selva2 = vainfo->p2[prix];  // 
-   // Entries specify no input conversion in the (DD,DD) slot, if they can accept FL arguments directly.  But if we select the FL line,
-   // one input is FL and the other must be RAT or XNUM, 
-   // we'd better specify an input conversion of VDD, unless the verb is one like +. or bitwise that forces conversion to integer/boolean
-   if((prix==8)&&!(selva2.cv&(VBB|VII|VDD|VZZ))){selva2.cv = (selva2.cv&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
+// obsolete    I  prix=(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15; // routine index, FL/CMPX/XNUM/RAT   bits: RAT CMPX FL
+   I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
+   // Until we support short INTs, the smallest priority we can have here is XNUM
+   //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10
+   // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
+   pri=(0x9e8d0ba0>>((pri&7)<<2))&0xf;  // convert max pri to routine# for handling it
+   VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
+// obsolete    // Entries specify no input conversion in the (DD,DD) slot, if they can accept FL arguments directly.  But if we select the FL line in this path,
+// obsolete    // one input is FL and the other must be RAT or XNUM, 
+// obsolete    // we'd better specify an input conversion of VDD, unless the verb is one like +. or bitwise that forces conversion to integer/boolean
+   I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions
+   cvtflgs=selva2.cv&(VBB|VII|VDD|VZZ)?0:cvtflgs;  //  If the routine already forces a conversion, don't override.  Most DD, SP, QP specify no conversion, but +. or bitwise require bool or integer 
+   selva2.cv|=cvtflgs;
+// obsolete    if((prix==8)&&!(selva2.cv&(VBB|VII|VDD|VZZ))){selva2.cv = (selva2.cv&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
    R selva2;
   }else{
    // Normal case, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations

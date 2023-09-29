@@ -1858,11 +1858,12 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
 #if SY_64
 // obsolete #define TYPEPRIORITY(t) (((((t)&0xffff)?0x5a941000765a9410:0x328)>>((CTTZ(t)&0xf)*4))&0xf)
-#define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):(0x32ecb654a98fd710>>(CTTZ(t)*4)&0xf))
+#define TYPEPRIORITYNUM(t) (0x32ecb654a98fd710>>(CTTZ(t)*4)&0xf)
 #else
 // obsolete #define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
-#define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):(((((t)&0xff)?0xa98fd710:0x32ecb654)>>((CTTZ(t)&0x7)*4))&0xf))
+#define TYPEPRIORITYNUM(t) (((((t)&0xff)?0xa98fd710:0x32ecb654)>>((CTTZ(t)&0x7)*4))&0xf)
 #endif
+#define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):TYPEPRIORITYNUM(t))
 
 // same but destroy w
 #define PRISTCLRF(w) {if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGPRISTNO(w)}   // used only at end, when w can be destroyed

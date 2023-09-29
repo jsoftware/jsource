@@ -150,7 +150,7 @@
 #define cdlookup(x)                 jtcdlookup(jt,(x))   
 #define cdlookupl(x)                jtcdlookupl(jt,(x))   
 #define cdot1(x)                    jtcdot1(jt,(x),ds(CCYCLE))   
-#define cdot2(x,y)                  jtcdot2(jt,(x),(y),ds(CCYCLE))  
+#define ccapdot2(x,y)                  jtccapdot2(jt,(x),(y),ds(CCYCLE))  
 #define cdparse(x,y)                jtcdparse(jt,(x),(y))
 #define ceil1(x)                    jtatomic1(jt,(x),ds(CCEIL))
 #define celloffset(x,y,z)             jtcelloffset(jt,(x),(y),(z))

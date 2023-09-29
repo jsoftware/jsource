@@ -412,6 +412,7 @@ void jgmpinit(C*libpath) {
  jgmpfn(mpq_mul);          // https://gmplib.org/manual/Rational-Arithmetic
  jgmpfn(mpq_out_str);      // https://gmplib.org/manual/I_002fO-of-Rationals
  jgmpfn(mpq_set);          // https://gmplib.org/manual/Initializing-Rationals
+ jgmpfn(mpq_set_d);          // https://gmplib.org/manual/Initializing-Rationals
  jgmpfn(mpq_sub);          // https://gmplib.org/manual/Rational-Arithmetic
  jgmpfn(mpz_abs);          // https://gmplib.org/manual/Integer-Arithmetic
  jgmpfn(mpz_add);          // https://gmplib.org/manual/Integer-Arithmetic
@@ -450,6 +451,7 @@ void jgmpinit(C*libpath) {
  jgmpfn(mpz_ui_pow_ui);    // https://gmplib.org/manual/Integer-Exponentiation
  jgmpfn(mpz_root);         // https://gmplib.org/manual/Integer-Roots
  jgmpfn(mpz_set);          // https://gmplib.org/manual/Assigning-Integers
+ jgmpfn(mpz_set_d);          // https://gmplib.org/manual/Assigning-Integers
 // not used jgmpfn(mpz_set_si);       // https://gmplib.org/manual/Assigning-Integers
  jgmpfn(mpz_sizeinbase);   // https://gmplib.org/manual/Miscellaneous-Integer-Functions
  jgmpfn(mpz_sub);          // https://gmplib.org/manual/Integer-Arithmetic

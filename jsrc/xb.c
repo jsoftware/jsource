@@ -52,15 +52,25 @@ F3X0(NAME), F3X0(MARK), F3X0(ADV), F3X0(ASGN), F3X0(SYMB), F3X0(CONW), F3X0(VERB
 // conversion from internal type to the result in 3!:x, which matches the published types
 static I toonehottype(I t){R type3x0[CTTZ(t)][SGNTO0(t)];}  // take value from table
 // obsolete  t<<=REPSGN(t)&10; R t&-t;
+// Convert from 3!:x form to internal type, 0 if invalid
 static I fromonehottype(I t){
- t &=-t; if(t&0xfc00)R SPARSE|(t>>10);
+ if((UI)t>RPAR)R 0;  // error if 
  if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type
+ t &=-t; if(t&0xfc00)R SPARSE|(t>>10);
  else R f3x0bit[CTTZ(t)-CMPXX];
 }
 // obsolete t&=-t; I issp=REPSGN(-(t&0xfc00)); R (t>>(issp&10))|(issp&SPARSE);}
 
 F1(jtstype){ARGCHK1(w); R sc(toonehottype(AT(w)));}
      /* 3!:0 w */
+
+// (3!:0-type) c. w - convert
+F2(jtcdot2){A z;
+ ARGCHK2(a,w);
+ I t; RE(t=i0(a)); // convert to integer atom, error if can't
+ ASSERT(t=fromonehottype(t),EVDOMAIN)  // convert from 3!:0 form to internal type
+ R cvt(t,w);
+}
 
 // a is integer atom or list, values indicating the desired result
 // atom values in x: 0=NJA, others reserved

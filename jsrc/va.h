@@ -8,7 +8,7 @@
 // bits 2-3 should be forced to 1 jtflags;
 #define VCVTIP          0xc  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
 #define VARGX           4           // bit position for arg flags
-#define VBB             (B01<<VARGX)         /* convert arguments to B 4             */
+#define VBB             (B01<<VARGX)         // convert arguments to B 4   could put VARGMSK into 3 bits
 #define VII             (INT<<VARGX)         /* convert arguments to I 5             */
 #define VDD             (FL<<VARGX)          /* convert arguments to D 6             */
 #define VZZ             (CMPX<<VARGX)        /* convert arguments to Z 7             */
@@ -16,19 +16,22 @@
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
 #define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM 10           */
 #define VQQ             (RAT<<VARGX)         /* convert arguments to RAT  11          */
-#define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ)  // mask for argument requested type
+#define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ|VCOPYW|VCOPYA)  // mask for argument requested type
 #define VRESX           12           // bit position for result flags
-#define VB              (B01<<VRESX)/* result type B  bit 12                     */
+#define VB              (B01<<VRESX)  // result type B  bit 12   could put VRESMSK into 3 bits
 #define VI              (INT<<VRESX)/* result type I  bit 14                     */
 #define VD              (FL<<VRESX) /* result type D  bit 15                     */
 #define VZ              (CMPX<<VRESX)/* result type Z bit 16                      */
 #define VX              (XNUM<<VRESX)/* result type XNUM  bit 18                  */
 #define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
 #define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */
-#define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
+#define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type - if all 0, take result type from the args
 #define VRD             (0x800<<VRESX)// convert result to D if possible 23
 #define VRI             (0x8000<<VRESX)// convert result to I if possible  27
-// bits VRESX+ 1 10 12 16 are free 13 22 24 29-30
+#define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
+#define VCOPYW          ((I)1<<VCOPYWX)
+#define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
+#define VCOPYA          ((I)1<<VCOPYAX)
 #define VIPWFLONGX     17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX
 #define VIPWFLONG      ((I)1<<VIPWFLONGX)
 #define VIPOKWX         20      // This routine can put its result over W
@@ -39,13 +42,13 @@
 #define VCANHALT        ((I)1<<VCANHALTX)
 #define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM =CONW
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
+// the conversion info is in bits 22 and 24:
 #define VXX             (Vxx|XMODETOCVT((I)XMEXACT))  // exact conversion
 #define VXEQ            (Vxx|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
 // bit 31 must not be used - it may be a sign bit, which has a meaning
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
-// upper bits for 64-bit va2
 #define VIPOKRNKWX         28      // filled by va2 if the ranks allow inplacing w
 #define VIPOKRNKW          ((I)1<<VIPOKRNKWX)
 #define VIPOKRNKAX         30      // filled by va2 if the ranks allow inplacing a

@@ -66,7 +66,7 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
 static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s[k+1],&v->im);}}
 
 static FMTF(jtfmtE,E){B q;C buf0[1+WZ],buf1[1+WZ],c,*t;E x=*v;I k=0;
- if(jt->ppn<17)jtfmtD(jt,s,&v->hi);  // if only 1 float needed, display it
+ if(jt->ppn<17)R jtfmtD(jt,s,&v->hi);  // if only 1 float needed, display it
  // for more digits we need more precision
  if(!memcmpne(&v->hi,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
  if(!memcmpne(&v->hi,&infm,SZD)){strcpy(s,"__"); R;}
@@ -74,29 +74,35 @@ static FMTF(jtfmtE,E){B q;C buf0[1+WZ],buf1[1+WZ],c,*t;E x=*v;I k=0;
 // obsolete x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
 // obsolete  x=*v; x.re=x.re==(-1)*0.0?0.0:x.re;  /* -0 to 0*/
  if(v->hi==0.){strcpy(s,"0" ); R;}
- // convert each half to scientific form
+ // convert each half to scientific form.  This seems to give only 30 places of accuracy :(
  sprintf(buf0,"%+0.*e",jt->ppn,x.hi); sprintf(buf1,"%+0.*e",jt->ppn,x.lo);
  // remove decimal point and exponent; remember decimal point location
- I sgn0=buf0[0]='-', sgn1=buf1[0]='-';  // sign of values - should be equal
+ I sgn0=buf0[0]=='-', sgn1=buf1[0]=='-';  // sign of values - should be equal
+ buf0[0]='_';   // in case neg result, set sign to _
  buf0[2]=buf0[1]; buf1[2]=buf1[1];  // remove '+' from value
- C *eol; I4 exp0; sscanf(eol=strchr(&buf0[2],'e')+1,"%d",&exp0); I endx0=eol-buf0;  // exp0=hi exponent, endx0=index of last+1 char of hi
- I4 exp1; sscanf(eol=strchr(&buf1[2],'e')+1,"%d",&exp1); I endx1=eol-buf1;  // exp0=lo exponent, endx0=index of last+1 char of lo
+ C *eol; I4 exp0; sscanf(eol=strchr(&buf0[2],'e')+1,"%d",&exp0); I endx0=eol-buf0-1;  // exp0=hi exponent, endx0=index of last char of hi
+ I4 exp1; sscanf(eol=strchr(&buf1[2],'e')+1,"%d",&exp1); I endx1=eol-buf1-1;  // exp0=lo exponent, endx0=index of last char of lo
  // add the two parts
  buf0[1]='0';  // extend hi one place in case there is carry out
-
- // if decimal point is within significance, report as decimal
- // otherwise report as scientific
-
-#if 0 // obsolete 
- sprintf(buf,"%0.*g",jt->ppn,x.hi);
- c=*buf; if(q=c=='-')*s++=CSIGN; q=q|(c=='+');
- if('.'==buf[q])*s++='0';
- MC(s,buf+q,WD+1-q);
- if(t=strchr(s,'e')){
-  if('-'==*++t)*t++=CSIGN;
-  NOUNROLL while(c=t[k],c=='0'||c=='+')k++;
-  if(k)NOUNROLL while(t[0]=t[k])t++;
-#endif
+ I curx0=endx1+exp0-exp1;  // position in hi of the lowest digit of lo
+ if(curx0>endx0){endx1-=curx0-endx0; curx0=endx0;}  // discard low digits of lo that extend past hi
+// obsolete ASSERTSYS(endx1<=curx0,"noncanonical qp");  // lo must not have significance beyond hi
+ endx0=curx0;  // remember last digit pos
+ I carry=0, i; for(i=endx1;i>1;--i, --curx0){buf0[curx0]=buf0[curx0]+buf1[i]+carry-'0'; carry=buf0[curx0]>'9'; buf0[curx0]-=10&-carry;}  // add hi+lo, propagating carry
+ for(;curx0>0;--curx0){buf0[curx0]=buf0[curx0]+carry; carry=buf0[curx0]>'9'; buf0[curx0]-=10&-carry;}  // continue propagating through hi
+ C *dig0; if(unlikely(buf0[1]=='1')){dig0=&buf0[1]; ++exp0;}else{dig0=&buf0[2]; buf0[1]=buf0[0];}  // point to first digit, correcting; if carry propagated, leave sign before digit
+ // copy result to output area
+ endx0=MIN(endx0,jt->ppn-1);  // discard excess significance
+ if(BETWEENC(exp0,0,endx0)){
+  // decimal point within significance: report as decimal
+  ++exp0;  // exponent of 0 means 1 digit before the decimal point; make 1 mean 1
+  MC(s,dig0-sgn0,exp0+sgn0); s[exp0+sgn0]='.'; MC(s+exp0+sgn0+1,dig0+exp0,endx0+1-exp0);  // sign+int, . , decimal part
+  endx0+=sgn0+1; while(s[endx0]=='0')--endx0; if(s[endx0]=='.')--endx0; s[endx0+1]=0;  // remove trailing 0, and '.' if result is exact integer; append NUL
+ }else{
+  // report as scientific
+  MC(s,dig0-sgn0,1+sgn0); s[1+sgn0]='.'; MC(s+1+sgn0+1,dig0+1,endx0+1-1);  // sign+int, . , decimal part
+  endx0+=sgn0+1; while(s[endx0]=='0')--endx0; s[endx0++ +1]='e'; s[endx0+1]='_'; sprintf(&s[endx0+1+(exp0<0)],"%d",ABS(exp0));  // install exponent and trailing NUL
+ }
 }
 
 
@@ -112,6 +118,7 @@ static void thcase(I t,I*wd,FMTFUN *fmt){
 
 // copy numeric string to error line or result buffer.  Values in w, n/s = len/addr of output buffer
 // If n is negative, we decorate the line to show precision, but we have to do it without GA() in case we are out of memory
+// Result  is # chars copied
 I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I k,n4=n-4,p,wd,wn,wt;FMTFUN fmt;
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
@@ -140,14 +147,13 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I
   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
   p=y-s;  // total length
-  if(dec&&!ov&&p&&!memchr(s,'.',p)&&!memchr(s,'e',p)&&!memchr(s,'j',p)){
-   // we also need to to check for _ not followed by numeric: that doesn't need decorating
-   DO(y-s-1, if(s[i]=='_'&&!BETWEENC(s[i+1],'0','9')){p=0; break;})
-   if(p)if(!(ov=n4<(y+2)-s)){if(wt&FL){y[-1]='.';}else{y[-1]='j'; *y++='0';}}
+  if(dec&&!ov&&p&&!memchr(s,'.',p)&&!memchr(s,'e',p)&&!memchr(s,'j',p)){  // decoration called for, line not too long, not empty, and doesn't already have telltale ./e/j
+   DO(y-s-1, if(s[i]=='_'&&!BETWEENC(s[i+1],'0','9')){p=0; break;})   // _ not followed by numeric also doesn't need decorating
+   if(p)if(!(ov=n4<(y+2)-s)){if(wt&FL){y[-1]='.';}else{y[-1]='j'; *y++='0';}}  // append . to FL, j0 to CMPX
   }
   break;
  }
- if(ov){if(' '!=y[-1])*y++=' '; mvc(3L,y,1,iotavec-IOTAVECBEGIN+'.'); y+=3;}
+ if(ov){if(' '!=y[-1])*y++=' '; mvc(3L,y,1,iotavec-IOTAVECBEGIN+'.'); y+=3;}  // if line too long, truncate with SP...
  else if(' '==y[-1])--y; 
  *y=0; R y-s;
 }

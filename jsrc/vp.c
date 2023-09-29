@@ -117,8 +117,8 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
 DF1(jtcdot1){F1RANK(1,jtcdot1,self); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
 
 // x C. y
-DF2(jtcdot2){A p;I k;
- F2RANK(1,RMAX,jtcdot2,self);
+DF2(jtccapdot2){A p;I k;
+ F2RANK(1,RMAX,jtccapdot2,self);
  SETIC(w,k);
  RZ(p=BOX&AT(a)?dfc(k,a):pfill(k,a));
  R AR(w)?fromA(p,w):w;

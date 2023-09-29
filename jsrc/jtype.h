@@ -418,6 +418,7 @@ typedef I SI;
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
 #define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
 // NOTE: SYMB and MARK are used as flags in names, see below, and CONW in some type args
+// MASK and ASGN are used in Vxxx flags
 #define MARKX 22  // don't try to move this! it ripples through and breaks JTflags
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
@@ -488,8 +489,8 @@ typedef I SI;
 
 
 #define ANY             -1L
-#define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT)
-#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)|SPARSE)  // AND must be >0
+#define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+SP+QP)
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+SP+QP)|SPARSE)  // AND must be >0
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBT)
 #define FUNC            (VERB+ADV+CONJ)
@@ -1030,8 +1031,8 @@ typedef struct {VA1F f;I cv;} VA1;  // for monads
 typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 
 typedef struct {I nprec; VARPS actrtns[];} VARPSA;
-typedef struct {VA2 p2[13];VARPSA *rps;} VA;
-typedef struct {VA1 p1[6];} UA;
+typedef struct {VA2 p2[15];VARPSA *rps;} VA;  // 9 main types, CMPX, XNUM, RAT, SBT, SP, QP
+typedef struct {VA1 p1[8];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP
 
 typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.

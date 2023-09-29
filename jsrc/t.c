@@ -169,7 +169,8 @@ PRIM primtab[256] = {
  /*  a: */       /* see above */
  /*  A. */  PRIMACV(CATOMIC, VERB, jtadot1,   jtadot2,  1,   0,   RMAX,VASGSAFE,VF2NONE|VF2PRIM),
  /*  b. */  PRIMACV(CBDOT,   ADV,  jtbdot,    jtvalenceerr, 0,   0,   0   ,VASGSAFE,VF2NONE|VF2PRIM|VF2NAMELESS),
- /*  C. */  PRIMACV(CCYCLE,  VERB, jtcdot1,   jtcdot2,  1,   1,   RMAX,VASGSAFE,VF2NONE|VF2PRIM),
+ /*  c. */  PRIMACV(CCDOT,   VERB, jtvalenceerr,jtcdot2,   RMAX,RMAX,RMAX,VFLAGNONE,VF2PRIM),
+ /*  C. */  PRIMACV(CCYCLE,  VERB, jtcdot1,   jtccapdot2,  1,   1,   RMAX,VASGSAFE,VF2NONE|VF2PRIM),
  /*  e. */  PRIMACV(CEPS,    VERB, jtrazein,  jteps,    RMAX,RMAX,RMAX,VASGSAFE|VIRS2|(7+(((IEPS-II0EPS)&0xf)<<3)),VF2WILLOPEN2A|VF2WILLOPEN2W|VF2PRIM),
  /*  E. */  PRIMACV(CEBAR,   VERB, jtvalenceerr, jtebar,   0,   RMAX,RMAX,VASGSAFE,VF2WILLOPEN2A|VF2WILLOPEN2W|VF2PRIM),
  /*  f. */  PRIMACV(CFIX,    ADV,  jtfix,     jtvalenceerr, 0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),

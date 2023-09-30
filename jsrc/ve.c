@@ -36,6 +36,7 @@ APFX(maxDD, D,D,D, MAX,,R EVOK;)
 APFX(tymesDD, D,D,D, TYMESDD,,R EVOK;)
 APFX(  divDD, D,D,D, DIV,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
+APFX( plusEE, E,E,E, PLUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 
 #if C_AVX2 || EMU_AVX2
 primop256(plusDI,16,,zz=_mm256_add_pd(xx,yy),R EVOK;)

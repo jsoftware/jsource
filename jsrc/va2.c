@@ -378,7 +378,7 @@ VA va[]={
  {{(VF)plusBB,VCVTIP+VI    }, {(VF)plusBI,VCVTIP+VI+VIPOKW}, {(VF)plusBD,VCVTIP+VD+VIPOKW}, 
   {(VF)plusIB,VCVTIP+VI+VIPOKA}, {(VF)plusII,VCVTIP+VI+VIP}, {(VF)plusID,VCVTIP+VD+VIPID}, 
   {(VF)plusDB,VCVTIP+VD+VIPOKA    }, {(VF)plusDI,VCVTIP+VD+VIPDI    }, {(VF)plusDD,VCVTIP+VD+VIP+VCANHALT}, 
-  {(VF)plusZZ,VCVTIP+VZ+VZZ+VIP}, {(VF)plusXX,VCVTIP+VX+VXX}, {(VF)plusQQ,VCVTIP+VQ+VQQ}, {0,0}},
+  {(VF)plusZZ,VCVTIP+VZ+VZZ+VIP}, {(VF)plusXX,VCVTIP+VX+VXX}, {(VF)plusQQ,VCVTIP+VQ+VQQ}, {0,0}, {0,0}, {(VF)plusEE,VCVTIP+VIP}},
   &rpsplus},
 
 /* 2a *  */ {
@@ -1129,7 +1129,7 @@ DF2(jtsumattymes1){
      while(1){
       // do one dot-product, av*wv, length dplen;
       D p=0.0, s=0.0;
-      DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) TWOSUM(p,h,p,q) s=q+r+s; ++av; ++wv;)
+      DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD1(*av,*wv,h,r) TWOSUM1(p,h,p,q) s=q+r+s; ++av; ++wv;)
       *zv++=p+s; // store the single result
       if(!--j)break; av=av0;  // repeat a if needed
      }
@@ -1312,8 +1312,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else if(!(t&(NOUN&~NUMERIC))) {
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
-   // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
-   // the type to use
 // obsolete    I  prix=(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15; // routine index, FL/CMPX/XNUM/RAT   bits: RAT CMPX FL
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
    // Until we support short INTs, the smallest priority we can have here is XNUM

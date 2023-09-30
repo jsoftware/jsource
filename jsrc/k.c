@@ -113,10 +113,8 @@ static KF1F(jtEfromZ){D d;I n;Z*v; E*x;
 static KF1(jtEfromX){
  E*y=yv; X*wv=XAV(w);
  DQ(AN(w), X W=*wv++; mpX(W); mpX0(z); D h=jmpz_get_d(mpW); jmpz_set_d(mpz,h); jmpz_sub(mpz,mpW,mpz); D l=jmpz_get_d(mpz);  // high & low parts as D
-   // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
-   D th=h+l; D tl=h-th; h=th; l+=tl; 
-   I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*2.22044604925031308e-16; h-=ulp; l+=ulp;
-   y->hi=h; y->lo=l;  // store canonical result
+   D th=h+l; D tl=h-th; h=th; l+=tl;    // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
+   *y=CANONE1(h,l);   // convert to canonical form
    ++y; );
  R 1;
 }
@@ -129,10 +127,7 @@ static KF1(jtEfromQ){
    mpQ(W); mpQ0(z); D h=jmpq_get_d(mpW); jmpq_set_d(mpz,h); jmpq_sub(mpz,mpW,mpz); D l=jmpq_get_d(mpz);  // high & low parts as D
    // if jmpq_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
    D th=h+l; D tl=h-th; h=th; l+=tl; 
-   // convert to canonical form: high & low have same signs
-   // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
-   I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*2.22044604925031308e-16; h-=ulp; l+=ulp;
-   x->hi=h; x->lo=l;  // store canonical result
+   *x=CANONE1(h,l);   // convert to canonical form
   }
   ++x;
  ); 

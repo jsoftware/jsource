@@ -109,11 +109,15 @@ extern ADECLP(bw1111pfxI,UI,UI);  extern ADECLR(bw1111insI,UI,UI);  extern ADECL
 #define PVB void
 #define PVI void
 #define PVD void
+#define PVDS void
+#define PVE void
 #else
 #define BID UI
 #define PVB B
 #define PVI I
 #define PVD D
+#define PVDS DS
+#define PVE E
 #endif
 extern ADECL2(bw0000II,BID,BID,BID);
 extern ADECL2(bw0001II,BID,BID,BID);
@@ -299,6 +303,7 @@ extern ADECL2( plusBIO,D,B,I);
 extern ADECL2( plusBD,PVD,PVB,PVD);
 extern ADECL2( plusDB,PVD,PVD,PVB);
 extern ADECL2( plusDD,PVD,PVD,PVD);
+extern ADECL2( plusEE,E,E,E);
 extern ADECL2( plusDI,PVD,PVD,PVI);
 extern ADECL2( plusDX,DX,DX,DX);
 extern ADECL2( plusIB,PVI,PVI,PVB);

@@ -126,6 +126,9 @@
 #define TYMESO(u,v)     ((u)&&(v)?dmul2(u,(D)v):0)
 #define DIV(u,v)        ((u)||(v)?ddiv2(u,v):0)
 
+// Routines for QP operations
+#define PLUSE(u,v) ({D h,l,t; TWOSUM1(u.hi,v.hi,h,l); l=u.lo+v.lo+l; TWOSUMBS1(h,l,t,h); CANONE1(t,h); })
+
 #define SBORDER(v)      (SBUV(v)->order)
 
 #define SBNE(u,v)       (SBORDER(u)!=SBORDER(v))

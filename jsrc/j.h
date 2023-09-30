@@ -2099,10 +2099,15 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
 #else
 #define TWOSPLIT(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
-#define TWOSUM(in0,in1,outhi,outlo) t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;
-#define TWOPROD(in0,in1,outhi,outlo) TWOSPLIT(in0,i00,i01) TWOSPLIT(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);  // must avoid compiler tuning   needs t, i00, i01, i10, i11
-#define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;
 #endif
+#define TWOPROD1(in0,in1,outhi,outlo) TWOSPLIT(in0,i00,i01) TWOSPLIT(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);  // must avoid compiler tuning   needs t, i00, i01, i10, i11
+#define TWOSUM1(in0,in1,outhi,outlo) t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;  //  in0 and outhi might be identical
+#define TWOSUMBS1(inbig,insmall,outhi,outlo) outhi=inbig+insmall; outlo=inbig-outhi; outlo=outlo+insmall; //  outhi cannot be an input; outlo can be the same as inbig
+#define DPADD1(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;
+   // convert to canonical form: high & low have same signs.  Result is E type
+   // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
+#define CANONE1(h,l) ({I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*2.22044604925031308e-16; (E){h-ulp,l+ulp}; })
+
 #define VAL1            '\001'
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy

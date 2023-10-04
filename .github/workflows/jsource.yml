@@ -190,7 +190,6 @@ jobs:
       strip -S libjavx512.dylib || true
       strip -S libtsdll.dylib
       strip -S jamalgam || true
-      strip -S libgmp.dylib
       cd -
       ls -l j64
       zip -r m64.zip j64

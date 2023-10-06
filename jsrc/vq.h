@@ -26,3 +26,4 @@ extern QF2(jtqdiv);
 extern QF2(jtqminus);
 extern QF2(jtqplus);
 extern QF2(jtqtymes);
+extern B jtqquad(J jt,E *z,Q w);

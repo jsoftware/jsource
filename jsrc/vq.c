@@ -158,6 +158,17 @@ I jtqcompare(J jt,Q a,Q w){R QCOMP(a,w);}
 #undef FAIL
 #include "jr0.h"
 
+B jtqquad(J jt,E *z,Q W){
+  if (ISQinf(W)){*z=(E){.hi=0<QSGN(W) ?inf :infm};}
+  else{
+   mpQ(W); mpQ0(z); D h=jmpq_get_d(mpW); jmpq_set_d(mpz,h); jmpq_sub(mpz,mpW,mpz); D l=jmpq_get_d(mpz);  // high & low parts as D
+   // if jmpq_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
+   D th=h+l; D tl=h-th; h=th; l+=tl;
+   *z=CANONE1(h,l);   // convert to canonical form
+  }
+  R 1;
+}
+
 static X jtqbin(J jt,Q a,Q w){ASSERT(ISX1(a.d)&&ISX1(w.d),EWIRR); R rifvsdebug(xbin(a.n,w.n));}
 
 static D jtqlogd1(J jt,Q w){ASSERT(0<=XSGN(w.n),EWIMAG); R xlogabs(w.n)-xlogabs(w.d);}

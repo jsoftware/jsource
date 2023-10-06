@@ -596,3 +596,10 @@ F2(jtmdot){F2PREFIP;A z=0;
  fdeffillall(z,VF2NAMELESS,CMDOT,VERB, fn1,fn2, a,w,h,VASGSAFE, 0,0,0,fffv->localuse.lu0.modatomfn=modoptbl[fnx][nrecip==0],FAV(z)->localuse.lu1.mrecip=nrecip);
  R z;
 }
+
+B jtxquad(J jt,E *z,X W){
+ mpX(W); mpX0(z); D h=jmpz_get_d(mpW); jmpz_set_d(mpz,h); jmpz_sub(mpz,mpW,mpz); D l=jmpz_get_d(mpz);  // high & low parts as D
+ D th=h+l; D tl=h-th; h=th; l+=tl;    // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
+ *z=CANONE1(h,l);   // convert to canonical form
+ R 1;
+}

@@ -6,29 +6,29 @@
 #include "j.h"
 #include "w.h"
 
-#define SS              0    /* space                           */
+#define SS              0    // space
 #define SS9             1    // space, previous field was numeric
-#define SX              2    /* other                           */
-#define SA              3    /* alphanumeric                    */
-#define SN              4    /* N                               */
-#define SNB             5    /* NB                              */
-#define SQQ             6    /* even quotes                     */
-#define S9              7    /* numeric                         */
+#define SX              2    // other
+#define SA              3    // alphanumeric
+#define SN              4    // N
+#define SNB             5    // NB
+#define SQQ             6    // even quotes
+#define S9              7    // numeric
 #define S99             8    // numeric, previous field was numeric i. e. followon numeric
-#define SQ              9    /* quote                           */
-#define SNZ             10    // NB.
-#define SZ              11    // trailing comment
+#define SQ              9    // quote
+#define SNZ             10   // NB.
+#define SZ              11   // trailing comment
 #define SU              12   // prev char was uninflectable (i. e. LF).
 #define SDD             13   // { seen
 #define SDDZ            14   // } seen
 #define SDDD            15   // doubled {} seen
 
-#define E0              0  // no action
-#define EI              1    // end of previous word - emit
-#define EN              1    // start of next word - save position
+#define E0              0   // no action
+#define EI              1   // end of previous word - emit
+#define EN              1   // start of next word - save position
 #define EZ              2   // end and start together - +$ eg
 
-#define UNDD            4  // inflection found on {{ }} - abort the DD state, revert to individual primitives
+#define UNDD            4   // inflection found on {{ }} - abort the DD state, revert to individual primitives
 
 typedef C ST;
 #define SE(s,e) (((s)<<4)|((((s)==S99))<<3)|(e))  // set bit 3 inside followon numeric

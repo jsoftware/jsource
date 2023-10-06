@@ -267,12 +267,15 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
   // if it contains 'b' or 'p', that becomes the type regardless of others
   // (types incompatible with that raise errors later)
   ret=(memchr(s,'j',n)||memchr(s,'a',n)?CMPX:0) + (memchr(s,'b',n)||memchr(s,'p',n)?LIT:0);
+  // if has 'fX', may be alternate float format
+  {C*t=memchr(s,'f',n);
+   if(t&&t<s+n-1){
+    ret|=t[1]=='h'?HP:t[1]=='s'?SP:t[1]=='q'?QP:0;
+    if(memchr(s,'x',n))ret|=LIT;}}
   if(ret==0){
 #if SY_64
    ret|=INT;  // default to 'nothing seen except integers'
 #endif
-   // if has 'fX', may be alternate float format
-   {C*t=memchr(s,'f',n);if(t&&t<s+n-1){ret|=t[1]=='h'?HP:t[1]=='s'?SP:t[1]=='q'?QP:0;}}
    // if not j or b type, scan again. x indicates 1x2 or 23x.  Set both
    if(memchr(s,'x',n)){ret|=LIT+XNUM; ret&=~INT;}
    // if string contains r, it's rational (since not ar)

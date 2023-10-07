@@ -2083,6 +2083,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #if C_AVX2 || EMU_AVX2
 // create quad-precision product of double-precision inputs.  outhi must not be an input; outlo can
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
+#define TWOPROD1(in0,in1,outhi,outlo) {__m256d hhh=_mm256_set1_pd(in0); __m256d lll=_mm256_set1_pd(in1); __m256d ohhh,olll; TWOPROD(hhh,lll,ohhh,olll) outlo=_mm256_cvtsd_f64(olll); outhi=_mm256_cvtsd_f64(ohhh);} 
 // create quad-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Needs sgnbit.
 #define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_sub_pd(t,outlo); \
                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); /* outlo=val with larger abs t=val with smaller abs */ \
@@ -2098,15 +2099,17 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define TWOPRODQD(qp0,qp1,dp,outhi,outlo) TWOPROD(qp0,dp,outhi,outlo) outlo=_mm256_fmadd_pd(qp1,dp,outlo);
 #define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
 #else
-#define TWOSPLIT(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
+#define TWOSPLIT1(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
+#define TWOPROD1(in0,in1,outhi,outlo) {D i00, i01, i10, i11; TWOSPLIT1(in0,i00,i01) TWOSPLIT1(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);}  // must avoid compiler tuning   needs i00, i01, i10, i11
 #endif
-#define TWOPROD1(in0,in1,outhi,outlo) TWOSPLIT(in0,i00,i01) TWOSPLIT(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);  // must avoid compiler tuning   needs t, i00, i01, i10, i11
-#define TWOSUM1(in0,in1,outhi,outlo) t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;  //  in0 and outhi might be identical
+#define TWOSUM1(in0,in1,outhi,outlo) {D t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;}  //  in0 and outhi might be identical
 #define TWOSUMBS1(inbig,insmall,outhi,outlo) outhi=inbig+insmall; outlo=inbig-outhi; outlo=outlo+insmall; //  outhi cannot be an input; outlo can be the same as inbig
 #define DPADD1(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;
-   // convert to canonical form: high & low have same signs.  Result is E type
-   // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
-#define CANONE1(h,l) ({I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*2.22044604925031308e-16; (E){h-ulp,l+ulp}; })
+// obsolete    // convert to canonical form: high & low have same signs.  Result is E type
+// obsolete    // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
+// obsolete #define CANONE1(h,l) ({I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*1.110223024625157e_16; (E){h-ulp,l+ulp}; })
+// convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<lo<=1/2ULP (with only same-sign allowed if abs=1/2ULP), and any zero positive
+#define CANONE1(h,l) ({if(unlikely((*(I*)&l&0x000fffffffffffff)!=0)){if(l==0)l=0.; else if(((*(I*)&h&0x000fffffffffffff)-0x8350000000000000)==l){h+=2*l; l=-l;}} (E){h,l}; })
 
 #define VAL1            '\001'
 #define VAL2            '\002'

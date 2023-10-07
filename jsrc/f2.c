@@ -174,12 +174,58 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){
  R 1;
 }    /* format one rational number */
 
-// Format a single number
-// e,m,d describe the field as given below
+// Format a single quad-precision number
+//  e is 1 if exponential, 0 if decimal
+//  m is defined width of field, or 0 to use as much as needed
+//  d is number of decimal places requested
 // s->printf format string
 // t is the type of the data
 // wv->the data
-// CAV1(*cellbuf)->output area
+// CAV1(*cellbuf)->output area.  If too small, reallocate it.  Result is NUL-terminated
+// Result is 1 if good, 0 if error
+static B jtfmte(J jt,B e,I m,I d,C*s,I t,E*wv,A*cellbuf){
+ // handle special cases
+ if(!memcmpne(&wv->hi,&inf, SZD)){strcpy(s,"_" ); R 1;}  // require exact bitmatch
+ if(!memcmpne(&wv->hi,&infm,SZD)){strcpy(s,"__"); R 1;}
+ if(_isnan(wv->hi)          ){strcpy(s,"_."); R 1;}
+ // get total # integral places needed not including sign and decimal point/exp.  The estimate might be high
+ I intplaces;  // upper bound of # integral digits we will need to create
+ if(m==0){
+  D absh=ABS(wv->hi); I ndig=1; if((absh)<9.49)intplaces=1; else intplaces=jfloor(log10(absh))+1;  // avoid log(0)
+ }else{
+  intplaces=m-d-(e?2:0)-(d!=0); // max # integer is field width - frac width, - len of "e0' if any, - len of '.' if any
+ }
+ // get total # significant digits needed, may be high
+ I nsig=intplaces+d+3;  // leave a couple of guard digits
+ // position the digit buffers in *cellbuf, reallocating if needed
+ if(AN(*cellbuf)<2*nsig+10){GATV0(*cellbuf,LIT,2*nsig+10,1)}  // get new buffer if old one is too small
+ // convert to decimal with the requested amount of significance
+ struct fmtbuf fmt=fmtlong((struct fmtbuf){CAV(*cellbuf)+nsig+8,CAV(*cellbuf),nsig,0},*wv);
+
+ // verify total field width (leading space, sign, exponent if any) allows all significance
+ I wsgn=(s[0]==' ')+(wv->hi<0), wint, wdec=d>0, wfrac=d, wexp;  // len of each component of field
+ I exp=fmt.dp-1;  // we take 1 digit above dp, giving exponent 0; adjust to make 1 mean 1
+ if(e){  // if exponential format
+  wint=1; I absexp=ABS(exp); wexp=absexp<10?1:absexp<100?2:3; wexp+=exp<0;   // component sizes
+ }else{
+  wint=MAX(1,fmt.dp); wexp=0;
+ }
+ if(m!=0&&m<wsgn+wint+wdec+wfrac+wexp){mvc(m,CAV1(*cellbuf),1,"*"); R 1;}  // explicit length inadequate to the significance: blacken it
+ // move the digits
+ C *z=CAV(*cellbuf);  // place to build result, which is known to fit
+ z[0]=' '; z+=s[0]==' '; z[0]='_'; z+=wv->hi<0;   // advance s past optional leading space and sign 
+ if(e){  // %e field, scientific
+  *z++=fmt.buf[0]; if(wdec){*z++='.'; I nfrac=MIN(fmt.ndig-1,wfrac); MC(z,&fmt.buf[1],nfrac); if(unlikely(nfrac<wfrac))mvc(wfrac-nfrac,&z[nfrac],1,"0"); z+=wfrac;}  // move sig digits
+  *z++='e'; z[0]='_'; z+=(exp<0); sprintf(z,"%d",ABS((int)exp));  // move exponent incl trailing NUL
+ }else{  // decimal point
+  if(fmt.dp>0){MC(z,&fmt.buf[0],fmt.dp); z+=fmt.dp;}else *z++='0';  // if there are integer digits, move them; if not lead with 0.  Advance z to frac
+  if(wdec)*z++='.';  // install decimal point
+  if(fmt.dp<0){I k=MIN(wfrac,-fmt.dp); mvc(k,z,1,"0"); z+=k; fmt.dp+=k; wfrac-=k;}  // move in leading zeros after decimal point, if any
+  I nfrac=MIN(fmt.ndig-fmt.dp,wfrac); MC(z,&fmt.buf[fmt.dp],wfrac); if(unlikely(nfrac<wfrac))mvc(wfrac-nfrac,&z[nfrac],1,"0"); z[wfrac]=0;  // copy fraction digits, if any; NUL-terminate
+ }
+ R 1;  // return good even if we *** the field.  Error is for ws full
+}
+
 static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv,A*cellbuf){D y;
  switch(CTTZNOFLAG(t)){
  case INTX:;
@@ -195,6 +241,7 @@ static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv,A*cellbuf){D y;
  case B01X:  sprintf(CAV1(*cellbuf),s,(D)*wv);     break;
  case XNUMX: fmtx(e,m,d,s,t,(X*)wv,cellbuf);          break;
  case RATX:  fmtq(e,m,d,s,t,(Q*)wv,cellbuf);          break;
+ case QPX:  jtfmte(jt,e,m,d,s,t,(E*)wv,cellbuf);          break;
  default:
   y=*(D*)wv; y=y?y:0.0;  /* -0 to 0 */
   if     (!memcmpne(wv,&inf, SZD))strcpy(CAV1(*cellbuf),e?"  _" :' '==s[0]?" _" :"_" );

@@ -1281,6 +1281,14 @@ typedef struct {
   US   filler[2];
  } PFRAME;  // these are stacked en bloc
 
+// input/result for fmtlong
+struct fmtbuf {
+ C *buf;   // location of the MSD
+ C *fbuf;   // workarea, ndig long, to hold decimal rep of fractional exponent
+ I ndig;  // number of formatted digits (on input, max# allowed)
+ I dp;  // (result) location of decimal point: to the left of digit dp
+};
+
 typedef struct {
   C*   sev;          /* comparison: sparse element value ptr            */
   I    si;           /* comparison: sparse current cell index           */

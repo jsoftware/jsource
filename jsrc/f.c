@@ -65,7 +65,70 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
 
 static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s[k+1],&v->im);}}
 
-static FMTF(jtfmtE,E){B q;C buf0[1+WZ],buf1[1+WZ],c,*t;E x=*v;I k=0;
+// Routine to convert qp values to base-10 characters.  Returns significant digits of absolute value
+// Input and result are a fmtbuf structure.  On input, ndig is the max # places to keep valid
+// On return, fbuf is garbage; buf may be different from the input; ndig is the # valid digits; dp is the # valid digits before the decimal point
+// (examples: buf="1234", dp=3 means 123.4; buf="1234", dp=_3 means 0.0001234) 
+struct fmtbuf fmtlong(struct fmtbuf fb, E v){
+ I bsz=fb.ndig;  // size of buffer
+ C *buf=fb.buf, *fbuf=fb.fbuf;  // pointer to MSD result loc, and frac workarea
+ mvc(bsz,buf,1,MEMSET00); buf[0]=5;  // clear field to 0.5
+ C ndig=0;  //  # valid digits
+ I dp=0;  // initial location of decimal point
+ I fbufdp=0, fbuflen=1; fbuf[0]=5;  // init fraction to 0.5
+ if(v.hi<0){v.hi=-v.hi; v.lo=-v.lo;}  // take absolute value
+ // our canonical form for qp values has the low part with its own sign bit.  For comp ease here we convert the low part to have the same sign as the high part,
+ // by transferring 1 ULP from high to low if the signs differ.  This loses 1 ULP of the low part.
+ I iulp=*(I*)&v.hi&0xfff0000000000000&REPSGN(*(I*)&v.hi^*(I*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
+ D val[2]={v.hi-ulp,v.lo+ulp};
+ I i; I nextexp;   // loop counter, sequential exponent tracker
+ for(i=0;i<2;++i){
+  // fetch descriptor of the bits we will format from this D
+  UIL dbits=*(UIL*)&val[i];  // the bits of the float
+  I exp=(dbits&0x7ff0000000000000)>>52;  // exponent, excess-3ff
+  I bits=(dbits&0xfffffffffffff)+((I)(exp!=0)<<52);  // bits to format including hidden bit
+  I currbit=52, currexp=exp-0x3ff;  // bit# we are working on, and its exponent
+  if(i==0)nextexp=MAX(currexp,-1);  // the next exponent needed in sequence, never skipping a fraction.  If val[1] skips exponents, we must process the intermediates
+  while((currbit>=0||i==1)&&nextexp>=0){  // carry on till integer part finished.  Break at end of valid bits, but only if there are no more coming later
+   // The next bit is integer.  Double the incumbent value and add the bit.
+   I ext=buf[0]>=5;  // set if this doubling will overflow into the next digit.
+   I nadd=ndig;  // number of places to add: all valid digits
+   I cry=nextexp>currexp?0:(bits>>currbit)&1;  // carry-in to lowest position: the bit we are working on (0 if a skipped exp)
+   if(nadd+ext>bsz){cry=buf[ndig-1]>=5; --nadd;}  // if we are trying to extend a full field, forget the new bit and round up the exiting digit
+   DQ(nadd, I dig=2*buf[i]+cry; cry=dig>9; dig-=10&-cry; buf[i+ext]=dig;)  // double the digit string
+   if(ext)buf[0]=1;  // extend with final carry out
+   dp+=ext; ndig=nadd+ext;  // if result was shifted down, move the decimal point; set the #valid digits in buf
+   if(nextexp==currexp){--currbit, --currexp;} --nextexp;  // move to next exponent, and to next bit if it wasn't a skipped exponent
+  }
+  // if the integer part is non0, the fraction will simply continue on, with no possibility of its overflowing into the integer part.
+  // If the integer is 0, we will skip over 0 digits but we are liable to find the first significance with a fraction >0.5, which
+  // might then overflow.  To allow for this we start a value<0 with an empty leading digit
+  if(unlikely(ndig==0)){++dp; buf[0]=0;}  // make an empty numeric have an overflow location - and clear it from 5 to 0
+  while(currbit>=0){
+   // The next bit is fractional.  If it is nonzero, add its fractional rep
+   if(nextexp==currexp&&((bits>>currbit)&1)){  // non-skipped 1 bit
+    I nadd=MIN(fbuflen,bsz-(dp-fbufdp));  // dp-fbufdp is MSD of where the significance of fbuf will be added in.  Truncate the add to buffer size
+    if(nadd<=0)goto finish;  //  if the significance of the fraction is too small, stop
+    I cry=0;  // init no carry in
+    DQ(nadd, I dig=fbuf[i]+buf[dp-fbufdp+i]+cry; cry=dig>9; dig-=10&-cry; buf[dp-fbufdp+i]=dig;)  // add the fraction to the result
+    C *prop=&buf[dp-fbufdp-1]; while(cry){I dig=*prop+cry; cry=dig>9; dig-=10&-cry; *prop--=dig;}  // propagate carry
+    ndig=dp-fbufdp+nadd;  // include all places in the # valid digits
+   }
+   // Advance to next exponent, halving the fraction
+   I ext=fbuf[0]>1;  // set if the fraction will grow by 1 place of significance
+   I nmul=MIN(fbuflen,bsz-dp+fbufdp-ext);  // number of places to compute: no overflow, and no needless precision
+   I cry=nmul<fbuflen?fbuf[nmul]>4:0; DQ(nmul, I dig=fbuf[i]*5+cry; cry=fbuf[i]>>1; dig-=10*cry; fbuf[i+ext]=dig;)   // halve fbuf
+   if(ext){fbuf[0]=cry; }else{--fbufdp; dp-=ndig==0;} fbuflen=MIN(nmul+ext,bsz);  // if frac gets longer, the dp doesn't move; otherwise it has a lead 0 and we move its dp.  If no sig in result, result dp moves too
+   if(nextexp==currexp){--currbit, --currexp;} --nextexp;  // move to next exponent, and to next bit if it wasn't a skipped exponent
+  }
+ }
+ finish:;
+ if(ndig!=0&&buf[0]==0){++buf; --dp; --ndig;}  // if we added a lead 0 and it is still there, remove it
+ DO(ndig, buf[i]+='0';)  // convert the digits to chars
+ R (struct fmtbuf){buf,fbuf,ndig,dp};
+}
+
+static FMTF(jtfmtE,E){UI i;
  if(jt->ppn<17)R jtfmtD(jt,s,&v->hi);  // if only 1 float needed, display it
  // for more digits we need more precision
  if(!memcmpne(&v->hi,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
@@ -74,34 +137,21 @@ static FMTF(jtfmtE,E){B q;C buf0[1+WZ],buf1[1+WZ],c,*t;E x=*v;I k=0;
 // obsolete x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
 // obsolete  x=*v; x.re=x.re==(-1)*0.0?0.0:x.re;  /* -0 to 0*/
  if(v->hi==0.){strcpy(s,"0" ); R;}
- // convert each half to scientific form.  This seems to give only 30 places of accuracy :(
- sprintf(buf0,"%+0.*e",jt->ppn,x.hi); sprintf(buf1,"%+0.*e",jt->ppn,x.lo);
- // remove decimal point and exponent; remember decimal point location
- I sgn0=buf0[0]=='-', sgn1=buf1[0]=='-';  // sign of values - should be equal
- buf0[0]='_';   // in case neg result, set sign to _
- buf0[2]=buf0[1]; buf1[2]=buf1[1];  // remove '+' from value
- C *eol; I4 exp0; sscanf(eol=strchr(&buf0[2],'e')+1,"%d",&exp0); I endx0=eol-buf0-1;  // exp0=hi exponent, endx0=index of last char of hi
- I4 exp1; sscanf(eol=strchr(&buf1[2],'e')+1,"%d",&exp1); I endx1=eol-buf1-1;  // exp0=lo exponent, endx0=index of last char of lo
- // add the two parts
- buf0[1]='0';  // extend hi one place in case there is carry out
- I curx0=endx1+exp0-exp1;  // position in hi of the lowest digit of lo
- if(curx0>endx0){endx1-=curx0-endx0; curx0=endx0;}  // discard low digits of lo that extend past hi
-// obsolete ASSERTSYS(endx1<=curx0,"noncanonical qp");  // lo must not have significance beyond hi
- endx0=curx0;  // remember last digit pos
- I carry=0, i; for(i=endx1;i>1;--i, --curx0){buf0[curx0]=buf0[curx0]+buf1[i]+carry-'0'; carry=buf0[curx0]>'9'; buf0[curx0]-=10&-carry;}  // add hi+lo, propagating carry
- for(;curx0>0;--curx0){buf0[curx0]=buf0[curx0]+carry; carry=buf0[curx0]>'9'; buf0[curx0]-=10&-carry;}  // continue propagating through hi
- C *dig0; if(unlikely(buf0[1]=='1')){dig0=&buf0[1]; ++exp0;}else{dig0=&buf0[2]; buf0[1]=buf0[0];}  // point to first digit, correcting; if carry propagated, leave sign before digit
+ C buf0[1+WZ],buf1[1+WZ]; struct fmtbuf r=fmtlong((struct fmtbuf){buf0,buf1,jt->ppn,0},*v);
  // copy result to output area
- endx0=MIN(endx0,jt->ppn-1);  // discard excess significance
+ I endx0=MIN(r.ndig,jt->ppn);  // discard excess significance
+ I exp0=r.dp;  // number of digits of sig before decimal point.  Can be neg
+ s[0]='-'; I sgn0=v->hi<0;  // install - sign just in case; set sgn0 to be # chars of sign needed
  if(BETWEENC(exp0,0,endx0)){
   // decimal point within significance: report as decimal
-  ++exp0;  // exponent of 0 means 1 digit before the decimal point; make 1 mean 1
-  MC(s,dig0-sgn0,exp0+sgn0); s[exp0+sgn0]='.'; MC(s+exp0+sgn0+1,dig0+exp0,endx0+1-exp0);  // sign+int, . , decimal part
-  endx0+=sgn0+1; while(s[endx0]=='0')--endx0; if(s[endx0]=='.')--endx0; s[endx0+1]=0;  // remove trailing 0, and '.' if result is exact integer; append NUL
+  if(exp0==0)s[sgn0++]='0';  // if no digits before decimal point, add one and add it to count of sign chars
+  MC(s+sgn0,r.buf,exp0); s[exp0+sgn0]='.'; MC(s+exp0+sgn0+1,r.buf+exp0,endx0-exp0);  // sign+int, . , decimal part
+  endx0+=sgn0; while(s[endx0]=='0')--endx0; if(s[endx0]=='.')--endx0; s[endx0+1]=0;  // remove trailing 0, and '.' if result is exact integer; append NUL
  }else{
   // report as scientific
-  MC(s,dig0-sgn0,1+sgn0); s[1+sgn0]='.'; MC(s+1+sgn0+1,dig0+1,endx0+1-1);  // sign+int, . , decimal part
-  endx0+=sgn0+1; while(s[endx0]=='0')--endx0; s[endx0++ +1]='e'; s[endx0+1]='_'; sprintf(&s[endx0+1+(exp0<0)],"%d",ABS(exp0));  // install exponent and trailing NUL
+  exp0-=1;  // since we are reporting 1 digit above dp, we must adjust the exponent to match
+  s[sgn0]=r.buf[0]; s[1+sgn0]='.'; MC(s+1+sgn0+1,r.buf+1,endx0-1);  // sign+int, . , decimal part
+  endx0+=sgn0; while(s[endx0]=='0')--endx0; s[endx0++ +1]='e'; s[endx0+1]='_'; sprintf(&s[endx0+1+(exp0<0)],"%lld",ABS(exp0));  // install exponent and trailing NUL
  }
 }
 

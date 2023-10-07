@@ -25,6 +25,7 @@
 #define VX              (XNUM<<VRESX)/* result type XNUM  bit 18                  */
 #define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
 #define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */
+#define VUNCH           (0<<VRESX)  // leave result unchanged
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type - if all 0, take result type from the args
 #define VRD             (0x800<<VRESX)// convert result to D if possible 23
 #define VRI             (0x8000<<VRESX)// convert result to I if possible  27
@@ -128,6 +129,11 @@
 
 // Routines for QP operations
 #define PLUSE(u,v) ({D h,l,t; TWOSUM1(u.hi,v.hi,h,l); l=u.lo+v.lo+l; TWOSUMBS1(h,l,t,h); CANONE1(t,h); })
+#define MINUSE(u,v) ({D h,l,t; TWOSUM1(u.hi,-v.hi,h,l); l=u.lo-v.lo+l; TWOSUMBS1(h,l,t,h); CANONE1(t,h); })
+#define TYMESE(u,v) ({D h,l,t,x; if(u.hi!=0. && v.hi!=0.){TWOPROD1(u.hi,v.hi,h,l); TWOPROD1(u.hi,v.lo,t,x); l+=t; TWOPROD1(u.lo,v.hi,t,x); l+=t; TWOSUMBS1(h,l,t,h);}else t=h=0.; CANONE1(t,h); })
+#define DIVE(u,v) ({D hr=1.0/v.hi, lr=-v.lo*hr*hr, t; TWOSUMBS1(hr,lr,t,hr); E vr={t,hr}; TYMESE(u,vr); })
+#define MAXE(u,v) ({E vr; if(u.hi>v.hi)vr=u; else if(u.hi<v.hi)vr=v; else{vr.hi=u.hi; vr.lo=MAX(u.lo,v.lo);} vr;})
+#define MINE(u,v) ({E vr; if(u.hi<v.hi)vr=u; else if(u.hi>v.hi)vr=v; else{vr.hi=u.hi; vr.lo=MIN(u.lo,v.lo);} vr;})
 
 #define SBORDER(v)      (SBUV(v)->order)
 
@@ -403,6 +409,19 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
   R EVOK; \
  }
 #endif
+#define ACMP0T(f,Tz,Tx,Ty,Txy,pfx,pfx0)   \
+ AHDR2(f,B,Tx,Ty){Txy u; Txy v;                                             \
+  if(jt->cct!=1.0){ \
+   if(n-1==0)  DQ(m, u=*x++;       v=*y++; *z=pfx(u,v); z++; )    \
+   else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y++; *z=pfx(u,v); z++;))    \
+   else      DQ(m, v=*y++; DQ(n, u=*x++; *z=pfx(u,v); z++;));   \
+  }else{ \
+   if(n-1==0)  DQ(m, u=*x++;       v=*y++; *z=pfx0(u,v); z++; )    \
+   else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y++; *z=pfx0(u,v); z++;))    \
+   else      DQ(m, v=*y++; DQ(n, u=*x++; *z=pfx0(u,v); z++;));   \
+  } \
+  R EVOK; \
+ }
 // support intolerant comparisons explicitly
 #define ACMP0(f,Tz,Tx,Ty,pfx,pfx0)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \

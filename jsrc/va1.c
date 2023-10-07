@@ -22,6 +22,7 @@ static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTWR(d==*z,EWOV);})
 #endif
 static AMON(floorD, D,D, *z=tfloor(*x);)
 static AMON(floorZ, Z,Z, *z=zfloor(*x);)
+static AMON(floorE, E,E, {D t=tfloor(x->hi); if(t==x->hi){z->lo=tfloor(x->lo);}else{z->lo=0.;} z->hi=t;})
 
 #if BW==64
 static AMONPS(ceilDI,I,D,
@@ -37,12 +38,14 @@ static AMON(ceilDI, I,D, {D d=tceil(*x);  *z=(I)d; ASSERTWR(d==*z,EWOV);})
 #endif
 static AMON(ceilD,  D,D, *z=tceil(*x);)
 static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
+static AMON(ceilE, E,E, {D t=tceil(x->hi); if(t==x->hi){z->lo=tceil(x->lo);}else{z->lo=0.;} z->hi=t;})
 
 static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
 static AMON(sgnI,   I,I, I xx=*x; *z=REPSGN(xx)|SGNTO0(-xx);)
 static AMON(sgnD,   I,D, *z=((1.0-jt->cct)<=*x) - (-(1.0-jt->cct)>=*x);)
 static AMONPS(sgnZ,   Z,Z, , if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x); , HDR1JERR)
+static AMON(sgnE,   I,E, *z=((1.0-jt->cct)<=x->hi) - (-(1.0-jt->cct)>=x->hi);)
 
 static AMON(sqrtI,  D,I, ASSERTWR(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 
@@ -77,7 +80,7 @@ AHDR1(absI,D,D){
  __m256d zero=_mm256_setzero_pd();
  __m256d uneg; __m256d anyneg=zero;
 
-,
+ ,
   uneg=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(zero),_mm256_castpd_si256(u))); u=_mm256_blendv_pd(u,uneg,u); // take abs
   anyneg=_mm256_or_pd(anyneg,u);  // remember if any overflow
 
@@ -91,13 +94,15 @@ AHDR1(absI,D,D){
 static AMONPS(sqrtD,  D,D, I ret=EVOK; , if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
 static AMONPS(absI,   I,I, UI vtot=0; , UI val=*(UI*)x; I nval=(I)((0U-val)); val=nval>0?nval:val; vtot |= val; *z=(I)val; , R (I)vtot<0?EWOV:EVOK;)
 #if BW==64
-static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)
+static AMON(absD,   I,I, *z= *x&IMAX;)
 #else
 static AMON(absD,   D,D, *z= ABS(*x);)
 #endif
 #endif
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
-
+static AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&IMIN); *(UIL*)&h=*(UIL*)&x->hi&IMAX; \
+   rh=sqrt(h); if(rh<1e-100)rl=0; else{TWOPROD1(rh,rh,dh,dl) dl-=l; TWOSUMBS1(dh,-h,th,tl) tl+=dl; TWOSUM1(th,tl,h,l) h/=-2*rh; TWOSUMBS1(rh,h,th,tl) E r; r=CANONE1(th,tl); rh=r.hi; rl=r.lo;} \
+   if(x->hi>=0){z->hi=rh; z->lo=rl;} else{z->hi=-rh; ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
 static AMON(expB,   D,B, *z=*x?2.71828182845904523536:1;)
 static AMONPS(expZ, Z,Z, , *z=zexp(*x); , HDR1JERR)
 
@@ -105,22 +110,23 @@ static AMON(logB,   D,B, *z=*x?0:infm;)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
 static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
+static AMONPS(absE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^(*(UIL*)&x->hi&IMAX); *(UIL*)&z->hi=*(UIL*)&x->hi&~IMAX; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 
 static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
 
 extern AHDR1FN expI, expD, logI, logD;
 
 UA va1tab[]={
- /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}}},
- /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}}},
- /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}}},
- /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}}},
- /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}}},
- /* |  */ {{{ 0,VB}, { absI,VI+VIPW}, {   absD,VD+VIPW}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}}},
- /* !  */ {{{oneB,VB}, {factI,VD}, {  factD,VD}, { factZ,VZ}, {factX,VX}, { factQ,VQ}}},
- /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {    0L,0L}}}, // others handled as dyads
- /* %: */ {{{ 0,VB}, {sqrtI,VD}, {  sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}}},
- /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}}},
+ /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorE,VUNCH+VIPW}}},
+ /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilE,VUNCH+VIPW}}},
+ /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}, {  0, VUNCH}, {0, VUNCH}}},
+ /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}, {0,VI}, {sgnE,VI}}},
+ /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}, {0,0}, {expD,VD+VDD}}},
+ /* |  */ {{{ 0,VB}, { absI,VI+VIPW}, {   absD,VD+VIPW}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}, {0,0}, {absE,VUNCH+VIPW}}},
+ /* !  */ {{{oneB,VB}, {factI,VD}, {  factD,VD}, { factZ,VZ}, {factX,VX}, {factQ,VQ}, {0,0}, {factD,VD+VDD}}},
+ /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {0L,0L}, {0L,0L}, {0L,0L}}}, // others handled as dyads
+ /* %: */ {{{ 0,VB}, {sqrtI,VD}, {sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}, {0,0}, {sqrtE,VUNCH}}},  // most cannot inplace lest CMPX
+ /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}, {0,0}, {logD,VD+VDD}}},
 };
 
 
@@ -155,7 +161,12 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  F1PREFIP;ARGCHK1(w);
  wt=AT(w); n=AN(w);
  if(unlikely(!(wt&NUMERIC))){ASSERT(AN(w)==0,EVDOMAIN) wt=B01;}  // arg must be numeric.  If it is, keep its type even if empty; if not, fail unless empty, for which treat as boolean
- VA1 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
+#if SY_64
+ VA1 *p=&u->p1[(0x76000054032100>>(CTTZ(wt)<<2))&0xf];  // convert numeric type to 4-bit fn#
+#else
+ VA1 *p=&u->p1[((wt&0xff?0x054032100:0x760000)>>((CTTZ(wt)&7)<<2))&0xf];    // convert numeric type to 4-bit fn#
+#endif
+
  if(likely(!((I)jtinplace&JTRETRY))){
   ado=p->f; cv=p->cv;
  }else{
@@ -177,10 +188,10 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   }
   RESETERR;
  }
- zt=rtype(cv);
+ zt=rtype(cv); zt=zt==0?wt:zt;  // Extract output type; if none given, means 'keep same type'
  if(ado==0){  // the function is an identity function
   if(((zt^AT(w))&NUMERIC)==0)RCA(w);  // if the argument has the correct type, return the argument
-  GA(z,zt,n,AR(w),AS(w)); RETF(z);  // if not, make an appropriate empty and return it
+  GA(z,zt,n,AR(w),AS(w)); RETF(z);  // if not, must be empty, make an appropriate empty and return it
  }
  if(unlikely((SGNIFSPARSE(AT(w))&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
@@ -197,6 +208,8 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   if(ado==absI){A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(unlikely(*zv<0))*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
   // float sqrt: reallocate as complex, scan to make positive results real and negative ones imaginary
   if(ado==sqrtD){A zz; GATV(zz,CMPX,n,AR(z),AS(z)); D *zv=DAV(z); Z *zzv=ZAV(zz); DQ(n, if(*zv>=0){zzv->re=*zv;zzv->im=0.0;}else{zzv->im=-*zv;zzv->re=0.0;} ++zv; ++zzv;) RETF(zz);}
+  // QP sqrt: like D but no need to reallocate, just change the result type.  This puns on the fact that E and Z types overlap perfectly
+  if(ado==sqrtE){AT(z)=CMPX; E *zv=EAV(z); DQ(n, if(zv->hi>=0){zv->lo=0.0;}else{zv->lo=-zv->hi;zv->hi=0.0;} ++zv;) RETF(z);}
   // float floor: unconvertable cases are stored with bit 63 and bit 62 unlike; restore the float value by setting bit 62.
   // if bit 0 of oprc is 1, values must be converted to float; if 0, they can be left as int
   if(VIP64&&ado==floorDI){A zz=z;

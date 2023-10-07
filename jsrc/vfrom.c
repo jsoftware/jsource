@@ -1728,7 +1728,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      }
      // scatter the results (high part)
 //   _mm256_mask_i64scatter_pd(qkvrow,endmask,prn0x,qkvh,SZI);
-     qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);
+     qkvrow[_mm256_extract_epi64(prn0x,0)]=_mm256_cvtsd_f64(qkvh);   // this is extract_pd
      if(likely(okmsk&0b1000))goto storeh1111; if(okmsk&0b100)goto storeh111; if(okmsk&0b10)goto storeh11; goto storeh1;
      storeh1111: qkvrow[_mm256_extract_epi64(prn0x,3)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100111));
      storeh111: qkvrow[_mm256_extract_epi64(prn0x,2)]=_mm256_cvtsd_f64(_mm256_permute4x64_pd(qkvh,0b11100110));

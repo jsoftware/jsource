@@ -330,9 +330,12 @@ do{
   AFLAGORLOCAL(zz,(zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1))  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
   // Install result frame by running user's routine.  zzs must be left pointing to the cell-shape
   ZZINSTALLFRAME(zzs)
-  // Install the result shape.  If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
-  // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
-  is = AS(z); zzt=zzt&SPARSE; DQ(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
+  // Install the result shape.
+// obsolete   is = AS(z); NOUNROLL DQ(zzr, *zzs++=zzt|*is++;);
+// obsolete  zzt=zzt&SPARSE;
+  MCISH(zzs,AS(z),zzr)    // copy result shape
+  if(unlikely(zzt&SPARSE)){zzs[zzr-1]=SPARSE>>1;}  // If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
+         // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zzs to make that happen.  Sparse cannot be an atom!
   // Set up the pointers/sizes for the rest of the operation
   zzboxp=AAV(zz); zzboxp=ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
 #if !ZZSTARTATEND  // going forwards

@@ -39,3 +39,4 @@ extern X   jtxev2(J,A,A,C*);
 extern I   jtxint(J,X);
 extern D   jtxlogabs(J,X);
 extern X   jtxrem(J,X,X);
+extern B   jtxquad(J,E*,X);

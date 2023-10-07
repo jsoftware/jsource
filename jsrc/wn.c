@@ -12,23 +12,27 @@
 
 #define NUMH(f)  B f(J jt,I n,C*s,void*vv)
 
-/* numd    floating point number (double)                      */
-/* numj    complex number                                      */
-/* numx    extended precision integer                          */
-/* nume    extended precision floating point number (not used) */
-/* numr    rational number                                     */
-/* numq    nume or numr                                        */
-/* numbpx  3b12 or 3p12 or 3x12 number                         */
-/*                                                             */
-/* numb    subfunction of numbpx                               */
-/*                                                             */
-/* converts a single number and assigns into result pointer    */
-/* returns 0 if error, 1 if ok                                 */
+// numfd    floating point number (double)
+// numfq    floating point number (quad)
+// numj     complex number
+// numx     extended precision integer
+// nume     extended precision floating point number (not used)
+// numr     rational number
+// numq     nume or numr
+// numbpx   3b12 or 3p12 or 3x12 number
+//
+// numb     subfunction of numbpx
+//
+// converts a single number and assigns into result pointer
+// returns 0 if error, 1 if ok
 
-static NUMH(jtnumd){C c,*t;D*v,x,y;
- if(!(n))R 0;
+static NUMH(jtnumx);
+static NUMH(jtnumi);
+
+static NUMH(jtnumfd){C c,*t;D*v,x,y;
+ if(!n)R 0;
  v=(D*)vv;
- if(((((I)s[0]^'-')-1)&(n-3))<0){   // '-' and n<3
+ if((s[0]=='-')&&n<3){   // '-' and n<3
   if(1==n){*v=inf; R 1;}
   else{
    c=s[1];
@@ -38,15 +42,64 @@ static NUMH(jtnumd){C c,*t;D*v,x,y;
  }
  x=strtod(s,(char**)&t);
  if(t>=s+n){*v=x; R 1;}  // normal return when field consumed
- if(t<s+n-1&&'r'==*t){y=strtod(1+t,(char**)&t); x=y?x/y:0<x?inf:0>x?infm:0;}  // if r in float value, handle the denominator
+ if(t<s+n-1&&'r'==*t){
+  y=strtod(1+t,(char**)&t);
+  if(likely(y)){x=x/y;}  // usual case: nonzero denominator
+  else{ // zero denominator; special case
+   D sign=*(double*)&(IL){(*(IL*)&x)^(*(IL*)&y)}; // sign of result is xor of signs of inputs.  all this faffery for a simple 'xorpd'; oh well
+   if(!x){x=sign;} // produce a zero of the correct sign--since x and y were both 0, the sign bit is the only sig. bit, so 'sign' already has a magnitude of zero
+   else{x=copysign(inf,sign);}}} // produce an infinity of the correct sign
  R t>=s+n?(*v=x,1):0;
 }
+
+static NUMH(jtnumfq){E *v;D sgn=1.0;
+ if(n>=2&&!memcmp(s+n-2,"fq",2))n-=2; // chop 'fq' suffix if present.  compiler open-codes the memcmp
+ if(!n)R 0;
+ v=vv;
+ v->lo=0;
+ if((s[0]=='-')&&n<3){   // '-' and n<3 (_ __ _.)
+  if(1==n){v->hi=inf; R 1;}
+  else{
+   if('-'==s[1]){v->hi=infm; R 1;}
+   else if('.'==s[1]){v->hi=jnan; R 1;}}}
+ if(*s=='-'){sgn=-1.0;s++;n--;}
+ // there is almost certainly a better way to do this.  For now, parse as RAT and then convert to E
+ X r;I ex=0; // result; exponent of 10
+ I i=0;for(;i<n&&BETWEENC(s[i],'0','9');i++); // end of whole part
+ if(!i||!numx(i,s,&r))R 0;
+ if(i<n&&s[i]=='.'){ // skip past .
+  i++;
+  if(i<n&&BETWEENC(s[i],'0','9')){ // fractional part?
+   I fd=0;X fp;
+   I j=i;for(;j<n&&BETWEENC(s[j],'0','9');j++,fd++);
+   if(!numx(j-i,s+i,&fp))R 0;
+   ex=-fd;
+   r=xplus(fp,xtymes(r,xpow(xc(10),xc(fd))));
+   i=j;}}
+ if(i+1<n&&s[i]=='e'){
+  i++;
+  if(s[i]=='+')i++;
+  I tex; if(!numi(n-i,s+i,&tex))R 0;
+  ex+=tex;}
+ else if(i<n){R 0;}
+ // negative exponent; need to make a rational
+ if(ex<0){
+  // underflow
+  if(unlikely(ex<-400)){v->hi=v->lo=0*sgn;R 1;}
+  RZ(qquad(v,qtymes(((Q){.n=r,.d=X1}),((Q){.n=X1,.d=xpow(xc(10),xc(-ex))}))));}
+ else{
+  if(ex){
+   // overflow
+   if(unlikely(ex>400)){v->hi=inf*sgn;R 1;}
+   r=xtymes(r,xpow(xc(10),xc(ex)));}
+  RZ(xquad(v,r));}
+ R 1;}
 
 static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
  v=(Z*)vv;
  if(t=memchr(s,'j',n))ta=0; else t=ta=memchr(s,'a',n);
- if(!(numd(t?t-s:n,s,&x)))R 0;
- if(t){t+=ta?2:1; if(!(numd(n+s-t,t,&y)))R 0;} else y=0;
+ if(!(numfd(t?t-s:n,s,&x)))R 0;
+ if(t){t+=ta?2:1; if(!(numfd(n+s-t,t,&y)))R 0;} else y=0;
  if(ta){C c;
   c=ta[1];
   if(!(0<=x&&(c=='d'||c=='r')))R 0;
@@ -133,6 +186,7 @@ static NUMH(jtnumq){B b=0;C c,*t;
 
 static const Z zpi={PI,0};
 static const C dig[]="0123456789abcdefghijklmnopqrstuvwxyz";
+// set *v to s (of length n) in base b
 static B jtnumb(J jt,I n,C*s,Z*v,Z b){A c,d,y;I k;
  I m=strlen(dig);
  if(!n){*v=zeroZ; R 1;}
@@ -190,13 +244,14 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
 // If x is not set here, numbers ending in x are ill-formed
 // Example: '1j1 1x' sets j but not x, so 1x is ill-formed
 // Example:  '16b4 1x' similarly, and '4.0 1x' similarly
-/* (n,s) string containing the vector constant                */
+// (n,s) string containing the vector constant
 // returns type bits set in a mask
-/* CMPX:  1 iff contains 1j2 or 1ad2 or 1ar2                     */
-/* LIT:  1 iff has 1b1a or 1p2 or 1x2 (note: must handle 1j3b4) */
-/* XNUM:  1 iff contains 123x                                    */
-/* RAT:  1 iff contains 3r4                                     */
-/* INT: 1 iff integer (but not x)                              */
+// CMPX:  1 iff contains 1j2 or 1ad2 or 1ar2
+// LIT:  1 iff has 1b1a or 1p2 or 1x2 (note: must handle 1j3b4)
+// XNUM:  1 iff contains 123x
+// RAT:  1 iff contains 3r4
+// INT: 1 iff integer (but not x)
+// HP/SP/QP: 1 iff alternate float format (fh/fs/fq)
 
 #define WDDOT (I)0x2e2e2e2e2e2e2e2e  // a word of '.'
 static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
@@ -212,6 +267,13 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
   // if it contains 'b' or 'p', that becomes the type regardless of others
   // (types incompatible with that raise errors later)
   ret=(memchr(s,'j',n)||memchr(s,'a',n)?CMPX:0) + (memchr(s,'b',n)||memchr(s,'p',n)?LIT:0);
+#if 0 //todo
+  // if has 'fX', may be alternate float format
+  {C*t=memchr(s,'f',n);
+   if(t&&t<s+n-1){
+    ret|=t[1]=='h'?HP:t[1]=='s'?SP:t[1]=='q'?QP:0;
+    if(memchr(s,'x',n))ret|=LIT;}}
+#endif
   if(ret==0){
 #if SY_64
    ret|=INT;  // default to 'nothing seen except integers'
@@ -244,16 +306,18 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
    // if we encounter '.', make sure the result is at least FL; if we encounter two non-whitespace in a row, make sure result is at least INT
  yv[d++]=n; m=d>>1;  // append end for last field in case it is missing; m=#fields.  If end was not missing the extra store is harmless
  I tt=numcase(n,s);   // analyze contents of values; returns type flags for chars, as expected except LIT for b
+ ASSERT(!(tt&HP+SP),EVNONCE); // no support for half precision or single precision yet
+ ASSERT(!((tt&QP)&&(tt&LIT)),EVNONCE); // no support for fancy quad-precision yet
  bcvtmask|=(tt&CMPX+LIT)==CMPX?8:0; // flag to force complex if we have j but not b
- f=jtnumd; t=FL;  f=tt&INT?jtnumi:f; t=tt&INT?INT:t;  f=tt&CMPX+LIT?jtnumbpx:f; t=tt&CMPX+LIT?CMPX:t;  f=tt&XNUM?jtnumx:f; t=tt&XNUM?XNUM:t;  f=tt&RAT?jtnumq:f; t=tt&RAT?RAT:t;  // routine to use, and type of result
+ f=jtnumfd; t=FL;  f=tt&QP?jtnumfq:f; t=tt&QP?QP:t;  f=tt&INT?jtnumi:f; t=tt&INT?INT:t;  f=tt&CMPX+LIT?jtnumbpx:f; t=tt&CMPX+LIT?CMPX:t;  f=tt&XNUM?jtnumx:f; t=tt&XNUM?XNUM:t;  f=tt&RAT?jtnumq:f; t=tt&RAT?RAT:t;  // routine to use, and type of result
  k=bpnoun(t);   // size in bytes of 1 result value
  GA0(z,t,m,1!=m); v=CAV(z);
  if(t==INT){  // if we think the values are ints, see if they really are
   DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){t=FL; break;} v+=k;);  // read all values, stopping if a value overflows
-  if(t!=INT){f=jtnumd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
+  if(t!=INT){f=jtnumfd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
  }
  if(t!=INT)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);  // read the values as larger-than-int
- z=bcvt(bcvtmask,z);
+ if(t!=QP)z=bcvt(bcvtmask,z); // never squish QP
  EPILOG(z);
 }
 

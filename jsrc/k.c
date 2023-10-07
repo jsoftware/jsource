@@ -110,27 +110,15 @@ static KF1F(jtEfromZ){D d;I n;Z*v; E*x;
  R 1;
 }
 
-static KF1(jtEfromX){
+KF1(jtEfromX){
  E*y=yv; X*wv=XAV(w);
- DQ(AN(w), X W=*wv++; mpX(W); mpX0(z); D h=jmpz_get_d(mpW); jmpz_set_d(mpz,h); jmpz_sub(mpz,mpW,mpz); D l=jmpz_get_d(mpz);  // high & low parts as D
-   D th=h+l; D tl=h-th; h=th; l+=tl;    // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
-   *y=CANONE1(h,l);   // convert to canonical form
-   ++y; );
+ DO(AN(w), RZ(xquad(y+i,wv[i]));)
  R 1;
 }
 
-static KF1(jtEfromQ){
+KF1(jtEfromQ){
  E*x= yv; Q*wv=QAV(w);
- DQ(AN(w), Q W= *wv++;
-  if (ISQinf(W)){ x->hi= 0<QSGN(W) ?inf :infm; x->lo=0.;
-  }else{
-   mpQ(W); mpQ0(z); D h=jmpq_get_d(mpW); jmpq_set_d(mpz,h); jmpq_sub(mpz,mpW,mpz); D l=jmpq_get_d(mpz);  // high & low parts as D
-   // if jmpq_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
-   D th=h+l; D tl=h-th; h=th; l+=tl; 
-   *x=CANONE1(h,l);   // convert to canonical form
-  }
-  ++x;
- ); 
+ DO(AN(w), RZ(qquad(x+i,wv[i]));)
  R 1;
 }
 

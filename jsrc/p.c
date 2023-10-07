@@ -85,13 +85,13 @@ end.
 PT cases[] = {
  EDGE,      VERB,      NOUN, ANY,       0,  jtvmonad, 1,2,1,
  EDGE+AVN,  VERB,      VERB, NOUN,      0,  jtvmonad, 2,3,2,
- EDGE+AVN,  NOUN,      VERB, NOUN,      0,    jtvdyad,  1,3,2,
- EDGE+AVN,  VERB+NOUN, ADV,  ANY,       0,     jtvadv,   1,2,1,
- EDGE+AVN,  VERB+NOUN, CONJ, VERB+NOUN, 0,    jtvconj,  1,3,1,
- EDGE+AVN,  VERB+NOUN, VERB, VERB,      0, jtvfolk,  1,3,1,
+ EDGE+AVN,  NOUN,      VERB, NOUN,      0,  jtvdyad,  1,3,2,
+ EDGE+AVN,  VERB+NOUN, ADV,  ANY,       0,  jtvadv,   1,2,1,
+ EDGE+AVN,  VERB+NOUN, CONJ, VERB+NOUN, 0,  jtvconj,  1,3,1,
+ EDGE+AVN,  VERB+NOUN, VERB, VERB,      0,  jtvfolk,  1,3,1,
  EDGE,      CAVN,      CAVN, ANY,       0,  jtvhook,  1,2,1,
- NAME+NOUN, ASGN,      CAVN, ANY,       0,      jtvis,    0,2,1,
- LPAR,      CAVN,      RPAR, ANY,       0,    jtvpunc,  0,2,0,
+ NAME+NOUN, ASGN,      CAVN, ANY,       0,  jtvis,    0,2,1,
+ LPAR,      CAVN,      RPAR, ANY,       0,  jtvpunc,  0,2,0,
 };
 #define PN 0
 #define PA 1

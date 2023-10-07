@@ -782,7 +782,8 @@ extern void jfree4gmp(void*,size_t);
 #define numb(x0,x1,x2,x3)           jtnumb(jt,(x0),(x1),(x2),(x3))
 #define numbpx(x,y,z)               jtnumbpx(jt,(x),(y),(z))
 #define numcase(x0,x1)              jtnumcase(jt,(x0),(x1))
-#define numd(x,y,z)                 jtnumd(jt,(x),(y),(z))
+#define numfd(x,y,z)                jtnumfd(jt,(x),(y),(z))
+#define numfq(x,y,z)                jtnumfq(jt,(x),(y),(z))
 #define nume(x,y,z)                 jtnume(jt,(x),(y),(z))
 #define numi(x,y,z)                 jtnumi(jt,(x),(y),(z))
 #define numj(x,y,z)                 jtnumj(jt,(x),(y),(z))
@@ -898,6 +899,7 @@ extern void jfree4gmp(void*,size_t);
 #define qrr(x)                      jtqrr(jt,(x))  
 #define qstd(x)                     jtqstd(jt,(x))
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
+#define qquad(z,w)                  jtqquad(jt,(z),(w))
 // If this block is recursible and not recursive, execute prolog and then raise the descendants.  Since sharing a block with another thread requires going recursive, the flag operations can be local
 #define radescend(x)         {I tt=AT(x); {if(unlikely(((tt^AFLAG(x))&TRAVERSIBLE)!=0)){AFLAGORLOCAL((x),(tt)&RECURSIBLE); jtra((x),(tt),0);}}}
 // Make a block recursive if it is recursible and not already recursive.  Virtuals are already recursive.  We use this in a place where we know the result can't be unincorpable.  x might not be a noun
@@ -1391,6 +1393,7 @@ extern void jfree4gmp(void*,size_t);
 #define xsqrt(x)                    jtxsqrt(jt,(x))
 #define xstd(x)                     jtxstd(jt,(x))
 #define xtymes(x,y)                 jtxtymes(jt,(x),(y))
+#define xquad(z,w)                  jtxquad(jt,(z),(w))
 #define zacos(x)                    jtzacos(jt,(x))
 #define zacosh(x)                   jtzacosh(jt,(x))
 #define zarc(x)                     jtzarc(jt,(x))

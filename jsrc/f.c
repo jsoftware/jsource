@@ -151,7 +151,7 @@ static FMTF(jtfmtE,E){UI i;
   // report as scientific
   exp0-=1;  // since we are reporting 1 digit above dp, we must adjust the exponent to match
   s[sgn0]=r.buf[0]; s[1+sgn0]='.'; MC(s+1+sgn0+1,r.buf+1,endx0-1);  // sign+int, . , decimal part
-  endx0+=sgn0; while(s[endx0]=='0')--endx0; s[endx0++ +1]='e'; s[endx0+1]='_'; sprintf(&s[endx0+1+(exp0<0)],"%lld",ABS(exp0));  // install exponent and trailing NUL
+  endx0+=sgn0; while(s[endx0]=='0')--endx0; s[endx0++ +1]='e'; s[endx0+1]='_'; sprintf(&s[endx0+1+(exp0<0)],"%d",(int)ABS(exp0));  // install exponent and trailing NUL
  }
 }
 

@@ -155,6 +155,7 @@ A jtdinsert(J jt,A w,A ic,I ix){A l=sc4(INT,ix); R over(over(take(l,w),ic),drop(
 A jtdcapp(J jt,A w,C c,A ap){R (memchr(CAV(w),c,AN(w)))?w:over(w,ap);}  /* conditionally append ap to w if it doesn't contain c */
 
 // Apply decoration as needed to a numeric character string w to give it the correct type t
+// We know the string is a generated number, so it doesn't contain suffixes in the middle of the string
 // Result is A block for decorated string
 A jtdecorate(J jt,A w,I t){
  if(AN(w)==0)R w;  // if empty string, don't decorate
@@ -167,9 +168,11 @@ A jtdecorate(J jt,A w,I t){
  // integer: if the string contains nothing but one-digit 0/1 values, insert '0' before last number
   I l=AN(w); C *s=CAV(w); NOUNROLL do{if((*s&-2)!='0')break; ++s; if(--l==0)break; if(*s!=' ')break; ++s;}while(--l);
   if(l==0){I ls=0; DQ(AN(w), if(CAV(w)[i]==' ') ls=i;); w=ls?jtdinsert(jt,w,scc('0'),ls+1):over(scc('0'),w);}
- }else if(t&XNUM) w=jtdcapp(jt, w,'x',scc('x')); // extended: make sure there is an x somewhere in the string, else put 'x' at end
- else if(t&RAT) w=jtdcapp(jt, w,'r',cstr("r1")); // rational: make sure there is an r somewhere in the string, else put 'r1' at end
- else if(t&CMPX) w=jtdcapp(jt, w,'j',cstr("j0")); // complex: make sure there is a j somewhere in the string, else put "j0" at end
+ }else if(t&XNUM+RAT+CMPX+QP+SP){
+  C srch='x'; srch=t&RAT?'r':srch; srch=t&CMPX?'j':srch; srch=t&QP+SP?'f':srch;
+  char *rep="x"; rep=t&RAT?"r1":rep; rep=t&CMPX?"j0":rep; rep=t&QP?"fq":rep; rep=t&SP?"fs":rep;
+  w=jtdcapp(jt, w,srch,cstr(rep)); // if the character is not found, append the string
+ }
  R w;
 }
 
@@ -177,7 +180,7 @@ A jtdecorate(J jt,A w,I t){
 static F1X(jtlnum1){F1PREFIP;A z,z0;I t;
  ARGCHK1(w);
  t=AT(w);
- RZ(z=t&FL+CMPX?df1(z0,w,fit(ds(CTHORN),sc((I)18))):thorn1(w));
+ RZ(z=t&FL+CMPX+QP?df1(z0,w,fit(ds(CTHORN),sc((I)(t&QP?35:18)))):thorn1(w));
  R decorate(z,t);
 }    /* dense non-empty numeric vector */
 

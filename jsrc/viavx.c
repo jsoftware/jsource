@@ -285,7 +285,7 @@ static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
 
 // *************************** seventh class: small-range processing of w ***********************
 // used when w is shorter than a and thus more likely to fit into cache.  Also allows early exit when all results found.
-//  Intolerant comparisons only.   Used for i./i:/e. only, and never reflexive
+//  Integer only, various lengths.   Used for i./i:/e. only, and never reflexive
 
 
 // Get the next value (j) from position i, and look at the hash (hv[j], called hj) to see if this is a new class.  It is, if the hashtable still contains
@@ -657,26 +657,26 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 // jtioz  tolerant CMPX
 // jtioz1 tolerant CMPX atom
 // Table to look up routine from index
-// 0-11, 16-19 are hashes for various types, calculated by bit-twisting
+// 0-11, 16-23 are hashes for various types, calculated by bit-twisting
 // 32-51 are reverse hashes (i. e hash w, look up items of a)
 #define FNTABLEPREFIX 2  // number of leading entries used for special types
-#define FNTBLSMALL1 12  // small-range, 1-byte items
-#define FNTBLSMALL2 13  // small-range, 2-byte items
-#define FNTBLSMALL4 14  // small-range, 4-byte items
-#define FNTBLSMALLI 15  // small-range, SZI-byte items
-#define FNTBLBOXARRAY 20  // array of boxes, tolerant or not (we just hash on shape)
-#define FNTBLBOXINTOLERANT 21  // single box but intolerant
-#define FNTBLBOXUNIFORM 22  // single box, but a and w have uniform contents
-#define FNTBLBOXUNKNOWN 23  // single box, but we can't do much with it.  Try hashing the first atom of contents
-#define FNTBLXNUM 24   // hashed xnum
-#define FNTBLRAT 25   // hashed rat
-#define FNTBLBOXSSORT 26  // boxes, handled by sorting and binary search
-#define FNTBL2 27 // 2-byte (probably characters)
-#define FNTBL4 28 // 4-byte (probably characters)
-#define FNTBL8 29  // 8-byte
-#define FNTBL16 30 // 16-byte
-#define FNTBLREVERSE 31  // where the reversed hashes start
-#define FNTBLSIZE 62  // number of functions - before the second half
+#define FNTBLSMALL1 20  // small-range, 1-byte items
+#define FNTBLSMALL2 21  // small-range, 2-byte items
+#define FNTBLSMALL4 22  // small-range, 4-byte items
+#define FNTBLSMALLI 23  // small-range, SZI-byte items
+#define FNTBLBOXARRAY 24  // array of boxes, tolerant or not (we just hash on shape)
+#define FNTBLBOXINTOLERANT 25  // single box but intolerant
+#define FNTBLBOXUNIFORM 26  // single box, but a and w have uniform contents
+#define FNTBLBOXUNKNOWN 27  // single box, but we can't do much with it.  Try hashing the first atom of contents
+#define FNTBLXNUM 28   // hashed xnum
+#define FNTBLRAT 29   // hashed rat
+#define FNTBLBOXSSORT 30  // boxes, handled by sorting and binary search
+#define FNTBL2 31 // 2-byte (probably characters)
+#define FNTBL4 32 // 4-byte (probably characters)
+#define FNTBL8 33  // 8-byte
+#define FNTBL16 34 // 16-byte
+#define FNTBLREVERSE 35  // where the reversed hashes start
+#define FNTBLSIZE 68  // number of functions - before the second half
 // fntbl[i][0] - 16-bit hashes;
 // fntbl[i][1] - 32-bit hashes
 static const AF fntbl[][2]={
@@ -685,15 +685,17 @@ static const AF fntbl[][2]={
  {jtiosfu,jtiosfu},   // i.!.1 - sequential file update (-1)
 
  //hashing a
+ // leading rows are for the datatypes that support fast search.  They have hashes, and routines for short/long table, tolerant/intolerant, and n==1/>1
  {jtioc, jtioc2},{jtioc, jtioc2}, {jtioc, jtioc2}, {jtioc,  jtioc2},     //bool/char/.. table
  {jtioi, jtioi2},{jtioi, jtioi2}, {jtioi, jtioi2}, {jtioi,  jtioi2},     //INT table
  {jtiod, jtiod2},{jtioc0,jtioc02},{jtiod1,jtiod12},{jtioc01,jtioc012},   //FL
- {jtio12,jtio14},{jtio22,jtio24}, {jtio42,jtio44}, {jtio82, jtio84},     //small-range
  {jtioz, jtioz2},{jtioz0,jtioz02},{jtioz1,jtioz12},{jtioz01,jtioz012},   //CMPX
+ {jtioz, jtioz2},{jtioz0,jtioz02},{jtioz1,jtioz12},{jtioz01,jtioz012},   //E
 
- {jtioa,jtioa2}, {jtioax1,jtioax12}, {jtioau,jtioau2}, {jtioa1,jtioa12}, //atomic types
+ {jtio12,jtio14},{jtio22,jtio24}, {jtio42,jtio44}, {jtio82, jtio84},     //small-range
+ {jtioa,jtioa2}, {jtioax1,jtioax12}, {jtioau,jtioau2}, {jtioa1,jtioa12}, //boxed types
 
- {jtiox,jtiox2}, {jtioq,jtioq2},                                         //X
+ {jtiox,jtiox2}, {jtioq,jtioq2},                                         //XNUM, RAT
 
  {jtiobs,jtiobs},                                                        //binary search
  {jtioC2,jtioC22}, {jtioC4,jtioC42}, {jtioi1,jtioi12}, {jtio16,jtio162},//int list
@@ -702,10 +704,11 @@ static const AF fntbl[][2]={
  {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, //bool/char/.. table
  {jtiowi,jtiowi2}, {jtiowi,jtiowi2}, {jtiowi,jtiowi2}, {jtiowi,jtiowi2}, //INT table
  {0,0}, {jtiowc0,jtiowc02}, {0,0}, {jtiowc01,jtiowc012}, {0,0},          //FL
- {0,0}, {jtio42w,jtio44w}, {jtio82w,jtio84w},                            //small-range
  {0,0}, {jtiowz0,jtiowz02}, {0,0}, {jtiowz01,jtiowz012},                 //CMPX
- {0,0}, {0,0}, {0,0}, {0,0},                                             //atomic
- {0,0}, {0,0},                                                           //X
+ {0,0}, {jtiowz0,jtiowz02}, {0,0}, {jtiowz01,jtiowz012},                 //E
+ {0,0}, {jtio42w,jtio44w}, {jtio82w,jtio84w},                            //small-range
+ {0,0}, {0,0}, {0,0}, {0,0},                                             //boxed
+ {0,0}, {0,0},                                                           //XNUM, RAT
  {0,0},                                                                  //binary search
  {jtiow21,jtiow212}, {jtiow41,jtiow412}, {jtiowi1,jtiowi12}, {jtiow161,jtiow1612},//int list
 };
@@ -713,10 +716,11 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //bool/char/.. table
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //INT table
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //FL
- 0,0,0,0,                                  //small-range
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //CMPX
- IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //atomic types
- IIMODFULL,IIMODFULL,                      //X
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //E
+ 0,0,0,0,                                  //small-range
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //boxed types
+ IIMODFULL,IIMODFULL,                      //XNUM, RAT
  -2,                                       //'no hashing' (for box search)
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //int list
  
@@ -724,10 +728,11 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
  IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL, //bool/char table
  IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL, //INT table
            IIMODFULL,IREVERSED|IIMODFULL,          IIMODFULL,IREVERSED|IIMODFULL, //FL
- IREVERSED,          IREVERSED,          IREVERSED,          IREVERSED,           //small-range
            IIMODFULL,IREVERSED|IIMODFULL,          IIMODFULL,IREVERSED|IIMODFULL, //CMPX
- 0,0,0,0,                                                                         //atomic
- 0,0,                                                                             //X
+           IIMODFULL,IREVERSED|IIMODFULL,          IIMODFULL,IREVERSED|IIMODFULL, //E
+ IREVERSED,          IREVERSED,          IREVERSED,          IREVERSED,           //small-range
+ 0,0,0,0,                                                                         //boxed
+ 0,0,                                                                             //XNUM, RAT
  0,                                                                               //BS
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,                                         //int list
 };
@@ -869,20 +874,6 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   fnx-=2;  // now fnx is -4 for inhomo, -3 for empty, -1 for SFU, -2 for sequential.  This is ready for lookup.
 //  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
  }else{
-// jtioa* BOX
-// jtiox  XNUM
-// jtioq  RAT
-// jtioi1  k=SZI, INT/SBT/char/bool not small-range
-// jtioi  INT array
-// jtioc  k=any, bool (must be list of em)/char/INT/SBT
-// jtioc01 intolerant FL atom
-// jtioc0 intolerant FL array
-// jtioz01 intolerant CMPX atom
-// jtioz0 intolerant CMPX array
-// jtiod  tolerant FL
-// jtiod1 tolerant FL atom
-// jtioz  tolerant CMPX
-// jtoiz1 tolerant CMPX atom
 
 #define SMALLHASHCACHE L2CACHESIZE/sizeof(US)  // number of US entries that fit in L2
 #define SMALLHASHMAX (131072-2-(2*SZI/sizeof(US))-((NORMAH*SZI+sizeof(IH))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion.
@@ -929,7 +920,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
    }
    if(likely(fnx<0)){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
     if(((k&~(t&FL))==SZI)|(4==k)){  // non-float (relies on FL==8), might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
-     if(likely((t&INT+SBT+(4==k?C4T:0))!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
+     if(likely((t&INT+SBT+(4==k?C4T:0))!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I/SBT/4-byte-char types
       // small-range processing is a possibility, but we need to decide whether we are going to do a reversed hash, so we will
       // know which range to check.  For i./i:, we reverse if c is much shorter than m; for e., we have to consider whether
       // the forward hash will benefit from bits mode, so we have to estimate the size of each hash table
@@ -953,10 +944,12 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
       if(crres.range){datamin=crres.min; p=crres.range; fnx=fnprov;  // use the selected orientation
       }else{fnx=FNTBL4+(k==SZI);}  // select integer hashing if range too big...
      }else{ fnx=FNTBL4+(k==SZI);}  // ... or some other 4/8-byte length (not float, though)
-    }else if(k==16&&!(t&FL+CMPX)){ // 16-byte (not float).  Don't bother with small-range checking
+    }else if(k==16&&!(t&FL+CMPX+QP)){ // 16-byte (not float).  Don't bother with small-range checking
      fnx=FNTBL16;
-    }else{  // it's a hash
-     fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+fnx+2;  // index: CMPX/FL/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
+    }else{  // it's a hash.  Type must be QP/CMPX/FL/INT/chars
+     I rtnno=unlikely(((t)&0xffff)==0)?((0x000000<<2)>>((CTTZ(t)&0x3)<<3)&0b1111100) : ((0x004000000032100<<2)>>(CTTZ(t)*4))&0b111100;
+// obsolete      fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
+     fnx=rtnno+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
     }
    }
   }

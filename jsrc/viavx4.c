@@ -91,7 +91,7 @@ name##out: \
 }
 
 
-#define IOSCCASE(bit,multi,mode) ((8*(multi)+(bit))*4+((mode)&3))
+#define IOSCCASE(bit,multi,mode) ((18*(multi)+((bit)-((bit)>=16?2:0)))*4+((mode)&3))
 
 // xe is the expression for reading one comparand, exp is the expression for 'no match between x and av[j]')
 // loop through storing the index at which a match was found
@@ -113,14 +113,18 @@ name##out: \
 A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*v,*zv;
  p=ac>1?asct:0; q=REPSGN(1-(wc|wsct)); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats p=*atoms of a to move between repeats
  zv=voidAV(z); u=voidAV(a); v=voidAV(w);
- // Create a pseudotype 19 (=XDX) for intolerant comparison.  This puns on XDX-FLX==16
- I bit=CTTZ(AT(a)); bit+=((AT(a)>>FLX)&(jt->cct==1.0))<<4;
+ // Create a pseudotype 19 (=XDX) for intolerant comparison.
+// obsolete   This puns on XDX-FLX==16
+// obsolete _Static_assert(XDX-FLX==16,"XD and FL must be aligned");
+ I bit=CTTZ(AT(a)); bit=(AT(a)&(jt->cct==1.0?FL:0))?XDX:bit;
+// obsolete  bit+=((AT(a)>>FLX)&(jt->cct==1.0))<<4;
  switch(IOSCCASE(bit,n>1,mode)){
   SCDO(B01X,C,x!=av[j]      );
   SCDO(LITX,C,x!=av[j]      );
   SCDO(C2TX,S,x!=av[j]      );
   SCDO(C4TX,C4,x!=av[j]      );
   SCDO(CMPXX,Z,!zeq(x, av[j]));
+  SCDO(QPX,E,TNEE(x, av[j]));
   SCDO(XNUMX,A,!equx(x, av[j]));
   SCDO(RATX,Q,!QEQ(x, av[j]));
   SCDO(SBTX,SB,x!=av[j]      );

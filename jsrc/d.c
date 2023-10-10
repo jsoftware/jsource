@@ -111,7 +111,7 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  case B01X:
  case INTX:
  case FLX:
- case CMPXX: 
+ case CMPXX: case QPX:
  case XNUMX: 
  case RATX:  eputv(w);                break;
  case BOXX:

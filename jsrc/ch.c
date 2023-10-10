@@ -46,7 +46,7 @@ static A jthgd(J jt,B b,I n,A w,A p,A q){A c,d,e,z;D r,s,t,*u,*v,x,*zv;I j,pn,qn
 static DF2(jthgeom2){PROLOG(0036);A h,*hv,t,z;B b;I an,*av,j,n;V*sv=FAV(self);
  ARGCHK2(a,w);
  if(AR(w))R rank2ex0(a,w,self,jthgeom2);
- RZ(a=AT(a)&FL+CMPX?vib(a):vi(a));  // kludge just call vib?
+ RZ(a=AT(a)&FL+CMPX+QP?vib(a):vi(a));  // kludge just call vib?
  an=AN(a); av=AV(a); n=0; DO(an, j=av[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
  if(!n)R tymes(zeroionei(0),a);
  h=sv->fgh[2]; hv=AAV(h);

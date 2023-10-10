@@ -943,7 +943,7 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
   n = sizeof(double);
   break;
   
- case CMPXX:
+ case CMPXX: case QPX:
   n = 2 * sizeof(double);
   break;
   

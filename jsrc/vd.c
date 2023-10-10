@@ -27,7 +27,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
   // Don't bother marking so small a matrix as uppertri
  }
  // fall through for other types & shapes
- if(1>=n)R recip(w);  // if an atom, inverse = reciprocal.  Must be CMPX or RAT
+ if(1>=n)R recip(w);  // if an atom, inverse = reciprocal.  Must be CMPX/RAT/QP
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
  ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp);  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
@@ -188,7 +188,7 @@ ARGCHK1(w);
 DF1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,self);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
- ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
+ ASSERT(AT(w)&B01+INT+FL+CMPX+QP,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
  RZ(z=qrr(w)); r=C(AAV(z)[1]); n=AS(r)[0]; n1=1+n;
@@ -203,7 +203,7 @@ RETF(z);
 static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,DUMMYSELF);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
- ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
+ ASSERT(AT(w)&B01+INT+FL+CMPX+QP,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
  if(ISDENSETYPE(AT(w),B01+INT))RZ(w=cvt(FL,w));  // convert boolean/integer to real

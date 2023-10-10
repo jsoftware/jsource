@@ -98,7 +98,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
 // large values unsuitable for a branch table, and also took advantage of the fact that
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
-#define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
+#define CVCASE(a,b)     (6*((0xc28c>>(a))&7)+((0xc28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 13->4 3 1 0 2 5 6  1100001010001100
 #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
 
 // parallel implementations of I. in assembly
@@ -201,6 +201,7 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
   case B01X:  COMPVLOOP(B, c);           break;
   case LITX:  COMPVLOOP(UC,c);           break;
   case FLX:   COMPVLOOP(D, c);           break;
+  case QPX:
   case CMPXX: COMPVLOOP(D, c+c);         break;
   case C2TX:  COMPVLOOP(US,c);           break;
   case C4TX:  COMPVLOOP(C4,c);           break;
@@ -246,6 +247,7 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
   case CVCASE(INTX, INTX ): BSLOOP(I, I); break;
   case CVCASE(INTX, FLX  ): BSLOOP(I, D); break;
   case CVCASE(FLX,  INTX ): BSLOOP(D, I); break;
+  case CVCASE(QPX,QPX):
   case CVCASE(CMPXX,CMPXX): c+=c;  /* fall thru */
   case CVCASE(FLX,  FLX  ): BSLOOP(D, D); break;
 #else
@@ -255,7 +257,7 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
   case CVCASE(FLX,  FLX  ):
   if(c==1){jtiixf(zv,DAV(a),DAV(w),n,m,c,ge);}
   else{
-   if(0)case CVCASE(CMPXX,CMPXX):c+=c;  // fallthru.  Lovely spaghetti
+   if(0)case CVCASE(QPX,QPX): case CVCASE(CMPXX,CMPXX):c+=c;  // fallthru.  Lovely spaghetti
    BSLOOP(D, D);}
   break;
 #endif
@@ -267,6 +269,7 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
    if(TYPESNE(t,at))RZ(a=cvt(t,a));
    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
    switch(t){
+   case QPX:
    case CMPX: c+=c;  /* fall thru */ 
    case FL:   BSLOOP(D,D);           break;
    case XNUM: BSLOOF(X,X, xcompare); break;

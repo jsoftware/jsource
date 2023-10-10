@@ -270,7 +270,7 @@ static F1(jtprimetest){A x;I t;
   case INTX:           R iprimetest(w);
   default:             ASSERT(0,EVDOMAIN);
   case RATX: case XNUMX: R xprimetest(w);
-  case FLX:  case CMPXX:
+  case FLX:  case CMPXX: case QPX:
    {PUSHCCT(1.0-FUZZ) x=eq(t&FL?w:conjug(w),floor1(w)); POPCCT}
    R xprimetest(cvt(XNUM,tymes(w,x))); 
 }}   /* primality test */
@@ -289,7 +289,7 @@ static F1(jtnextprime){
   if(b)R rank1ex0(x,fs,FAV(fs)->valencefns[0]); // while not prime add 2
   RZ(w=cvt(XNUM,w));
  }
- if(ISDENSETYPE(AT(w),FL+RAT))RZ(w=cvt(XNUM,floor1(maximum(num(0),w))));
+ if(ISDENSETYPE(AT(w),FL+RAT+QP))RZ(w=cvt(XNUM,floor1(maximum(num(0),w))));
  if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,floor1(maximum(num(0),cvt(FL,w)))));
  A x;GATV(x,XNUM,n,AR(w),AS(w)); X*xv=XAV(x);X*wv=XAV(w);
 #define oddnext(Y) 1>XSGN(Y) ?X2 :XaddXX(y,(1&XLIMB0(Y))&&(2<XSGN(Y)||2<XLIMB0(Y)) ?X2 :X1)
@@ -306,7 +306,7 @@ static F1(jtprevprime){
   DQ(n, I k=*wv++; ASSERT(2<k,EVDOMAIN); *xv++=3==k?2:(k-2)|1;);
   R rank1ex0(x,fs,FAV(fs)->valencefns[0]);
  }
- if(ISDENSETYPE(AT(w),FL+RAT))RZ(w=cvt(XNUM,ceil1(w)));
+ if(ISDENSETYPE(AT(w),FL+RAT+QP))RZ(w=cvt(XNUM,ceil1(w)));
  if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,ceil1(cvt(FL,w))));
  A x;GATV(x,XNUM,n,AR(w),AS(w));X*xv=XAV(x);X*wv=XAV(w);
  DQ(n,
@@ -443,7 +443,7 @@ F1(jtfactor){PROLOG(0063);A y,z;
  if(unlikely(AN(w)==0)){R df1(z,w,qq(mtv,zeroionei(0)));}  // if w empty return an empty list for each value
  RZ(init4792(jt));
  if(AT(w)&XNUM+RAT)R xfactor(w);  // if XNUM, use elliptic routines
- if(ISDENSETYPE(AT(w),FL+CMPX)){  //  only integers can be factored
+ if(ISDENSETYPE(AT(w),FL+CMPX+QP)){  //  only integers can be factored
   RZ(y=pcvt(INT,w)); 
   if(INT&AT(y))w=y; 
   else{RZ(y=pcvt(XNUM,xco1(w))); ASSERT(XNUM&AT(y),EVDOMAIN); R pcvt(INT,xfactor(y));}

@@ -112,17 +112,18 @@ static struct {
 } sortroutines[][2] = {  // index is [bitx][up]
 [B01X]={{compcd,jmsort},{compcu,jmsort}}, [LITX]={{compcd,jmsort},{compcu,jmsort}}, [INTX]={{0,(void *(*)())jmsortid},{0,(void *(*)())jmsortiu}}, [FLX]={{0,(void *(*)())jmsortdd},{0,(void *(*)())jmsortdu}},
 [CMPXX]={{0,(void *(*)())jmsortdd},{0,(void *(*)())jmsortdu}},
+[QPX]={{0,(void *(*)())jmsortdd},{0,(void *(*)())jmsortdu}},
 [C2TX]={{compud,jmsort},{compuu,jmsort}}, [C4TX]={{comptd,jmsort},{comptu,jmsort}}
 };
 
 // sort for direct types, without pointers.  When the operand overflows cache the pointer method is very slow
-// We support B01/LIT/C2T/C4T/INT/FL/CMPX
+// We support B01/LIT/C2T/C4T/INT/FL/CMPX/QP
 // jt has the JTDESCEND flag
 static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
  t=AT(w);
  // Create putative output area, same size as input.  If there is more than one cell in result, this will always be the result.
  GA(z,AT(w),AN(w),AR(w),AS(w));
- I cpi=api<<((t>>CMPXX)&1);  // compares per item on a sort
+ I cpi=api+(t&CMPX+QP?api:0);  // compares per item on a sort
  I bpi=api<<bplg(t);  // bytes per item of a sort
  I bps=bpi*n;  // bytes per sort
  void * RESTRICT wv=voidAV(w); void * RESTRICT zv=voidAV(z);
@@ -452,7 +453,7 @@ F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
  acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
  wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; t=AT(w);
  // Handle special reflexive cases, when the arguments are identical and the cells are also.  Only if cells have rank>0 and have atoms
- if(a==w&&acr==wcr&&wcr>0&&AN(a)&&t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){  // tests after the first almost always succeed
+ if(a==w&&acr==wcr&&wcr>0&&AN(a)&&t&(B01+LIT+C2T+C4T+INT+FL+CMPX+QP)){  // tests after the first almost always succeed
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w
   f=AR(w)-wcr; s=AS(w); PROD(m,f,s); SETICFR(w,f,AR(w),n);  PROD(api,wcr-1,1+f+s);

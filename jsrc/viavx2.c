@@ -185,34 +185,39 @@
  }
 
 // Verbs for the types of inputs
-// jtiod  tolerant FL
-// jtiod1 tolerant FL atom
-// jtioz  tolerant CMPX
-// jtoiz1 tolerant CMPX atom
+// jtio[dzea FL/CMPX/QP/BOX][1 if atom][2 if long table] all tolerant
 
 // hashes using the 2-byte hashtable
-// CMPLX array
-IOFT(Z,US,jtioz, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x)
-// CMPLX atom
-IOFT(Z,US,jtioz1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // FL array
 IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl),INITTLTR INITXNEW INITXROT D x)
 // FL atom
 IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
+// CMPLX array
+IOFT(Z,US,jtioz, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x)
+// CMPLX atom
+IOFT(Z,US,jtioz1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
+// QP array
+IOFT(E,US,jtioe, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !jteqe(jt,n,v,&av[n*hj]),INITTLTR INITXNEW INITXROT D x)
+// QP atom
+IOFT(E,US,jtioe1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !jteqe(jt,1,v,&av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // boxed array with more than 1 box
 IOFT(A,US,jtioa, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj),)
 // singleton box
 IOFT(A,US,jtioa1,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])),)
 
 // hashes using the 4-byte hashtable
-// CMPLX array
-IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x)
-// CMPLX atom
-IOFT(Z,UI4,jtioz12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // FL array
 IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl),INITTLTR INITXNEW INITXROT D x)
 // FL atom
 IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
+// CMPLX array
+IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x)
+// CMPLX atom
+IOFT(Z,UI4,jtioz12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x)
+// QP array
+IOFT(E,UI4,jtioe2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !jteqe(jt,n,v,&av[n*hj]),INITTLTR INITXNEW INITXROT D x)
+// QP atom
+IOFT(E,UI4,jtioe12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !jteqe(jt,1,v,&av[hj] ),INITTLTR INITXNEW INITXROT D x)
 // boxed array with more than 1 box
 IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj), D x)
 // singleton box

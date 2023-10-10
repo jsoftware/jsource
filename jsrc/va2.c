@@ -1303,9 +1303,9 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
   // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
-  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
-  // then [13-19] are for verb/, with precisions B I D Z X Q Symb
-  // [20-26] for verb\, and [27-33] for verb\.
+  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol) [13] SP [14] QP
+  // then [15-21] are for verb/, with precisions B I D Z X Q Symb
+  // [22-28] for verb\, and [29-35] for verb\.
   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
   if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL

@@ -490,12 +490,12 @@ docase:
    //  Start by assuming condition is true; set to move to the next line then
    ++i;
    // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types and BOX cause it's free (they are always true)
-   if(likely(AN(tt)))if((-(AT(tt)&(B01|LIT|INT|FL|CMPX|C2T|C4T|BOX))&-((I)CAV(tt)[0]))>=0){I nexti=cw[i-1].go;  // C cond is false if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
+   if(likely(AN(tt)))if((-(AT(tt)&(B01|LIT|INT|FL|CMPX|QP|C2T|C4T|BOX))&-((I)CAV(tt)[0]))>=0){I nexti=cw[i-1].go;  // C cond is false if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
     // here the type is indirect or the low byte is 0.  We must compare more
     while(1){  // 2 loops if sparse
      if(likely(AT(tt)&INT+B01)){i=BIV0(tt)?i:nexti; break;} // INT and B01 are most common
      if(AT(tt)&FL){i=DAV(tt)[0]?i:nexti; break;}
-     if(AT(tt)&CMPX){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
+     if(AT(tt)&CMPX+QP){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
      if(AT(tt)&(RAT|XNUM)){i=!ISX0(XAV(tt)[0])?i:nexti; break;}
      if(!(AT(tt)&NOUN)){CHECKNOUN}  // will take error
      // other nonnumeric types (BOX, char) test true: i is set for that

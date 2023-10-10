@@ -438,10 +438,10 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
    if(1.0!=jt->cct)INNERT(D,TEQ)else INNERT(D,DEQCT0)
 #endif
   break;
+ case QPX: INNERT(E,EQE); break;
  case XNUMX: INNERT(X,equx); break;
  case RATX:  INNERT(Q,EQQ); break;
- case BOXX:
-   INNERT(A,EQA); break;
+ case BOXX:  INNERT(A,EQA); break;
  }
  R 0;  // Return value matters only for single compare (x=0); we have returned already in that case
 }

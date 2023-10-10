@@ -705,10 +705,6 @@ extern void jfree4gmp(void*,size_t);
 #define matth1(x,y)                 jtmatth1(jt,(x),(y))
 #define maxdenom(x,y)               jtmaxdenom(jt,(x),(y))
 #define maximum(x,y)                jtatomic2(jt,(x),(y),ds(CMAX))
-// typepriority is 0, 1, 4, 9, 10, 5, 6, 7, 8, 2, 3
-// prioritytype is B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX
-//                 00000 00001 10001 10010 00010 00101 00110  00111 10000 00011 00100
-// reversed        001 0000 0111 0000 0011 1001 1000 1010 0010 1001 0100 0100 0010 0000
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
 #define maxtypedne(x,y)             (TYPEPRIORITY(x)>TYPEPRIORITY(y)?(x):(y))  // d means 'dense'

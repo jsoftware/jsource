@@ -84,7 +84,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
    break;
  }
  if(wt&FL+CMPX)NAN1; RE(0);
- R b?z:oblique(w,self);
+ R b?z:oblique(w,self);  // handle cases not treated specially above
 }    /* f//.y for atomic f */
 
 

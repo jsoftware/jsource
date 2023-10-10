@@ -124,6 +124,7 @@ static struct {
 } sortroutines[][2] = {  // index is [bitx][up]
 [B01X]={{compcd,jmsort},{compcu,jmsort}}, [LITX]={{compcd,jmsort},{compcu,jmsort}}, [INTX]={{0,jmsortid},{0,jmsortiu}}, [FLX]={{0,jmsortdd},{0,jmsortdu}},
 [CMPXX]={{0,jmsortdd},{0,jmsortdu}},[BOXX]={{compr,jmsortmincomp},{compr,jmsortmincomp}}, [XNUMX]={{compxd,jmsortmincomp},{compxu,jmsortmincomp}}, [RATX]={{compqd,jmsortmincomp},{compqu,jmsortmincomp}},
+[QPX]={{0,jmsortdd},{0,jmsortdu}},
 [C2TX]={{compud,jmsort},{compuu,jmsort}}, [C4TX]={{comptd,jmsort},{comptu,jmsort}}, [SBTX]={{compcd,jmsort},{compcu,jmsort}}
 };
 
@@ -134,7 +135,7 @@ static GF(jtgrx){F1PREFJT;A x;I ck,t,*xv;I c=ai*n;
  void **(*sortfunc)() = sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].sortfunc;  // the major routine to use (normal merge or minimum comparisons)
  sortblok.f=sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].comproutine;  // comparison function
  sortblok.jt=jtinplace;  // jt including direction bit
- I natoms=ai<<((t>>CMPXX)&1);   // number of atoms to compare in loop
+ I natoms=ai+(t&CMPX+QP?ai:0);   // number of atoms to compare in loop
  sortblok.n=natoms;  // pass in as parm
  natoms=(t&BOX+XNUM+RAT)?(I)&sortblok:natoms;  // for simple compares, pass in #atoms.  For more complex ones, the whole sort block
  sortblok.k=ai<<bplg(t); ck=sortblok.k*n;  // item size in bytes, for copying
@@ -707,7 +708,7 @@ F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
 /* zv - result values                       */
 
 static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
-[B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [C2TX]=jtgrc, [C4TX]=jtgru, [SBTX]=jtgrs};
+[B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [QPX]=jtgrx,[C2TX]=jtgrc, [C4TX]=jtgru, [SBTX]=jtgrs};
 
 // /: and \: with IRS support
 A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I f,ai,m,n,r,*s,t,wn,wr,zn;

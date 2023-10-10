@@ -58,6 +58,7 @@ static F1(jtcfr){A c,r,*wv;I t;
  ASSERT(((AR(c)-1)&(AR(r)-2))<0,EVRANK);
  ASSERT((-(NUMERIC&AT(c))&((AN(r)-1)|-(NUMERIC&AT(r))))<0,EVDOMAIN);
  t=AT(r); t=AN(r)?t:B01; if(t&B01+INT)t=XNUM; t=maxtyped(t,AT(c));
+ ASSERT(!(t&QP),EVNONCE)  // no qp support
  if(TYPESNE(t,AT(c)))RZ(c=cvt(t,c));
  if(TYPESNE(t,AT(r)))RZ(r=cvt(t,r));
  AF tf; tf=(AF)jtcfrd; tf=t&CMPX?(AF)jtcfrz:tf; tf=t&XNUM?(AF)jtcfrx:tf; tf=t&RAT?(AF)jtcfrq:tf;
@@ -225,6 +226,7 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  n=AN(w); t=AT(w);  // n=#coeffs, t=type
  if(n){
   ASSERT(ISDENSETYPE(t,NUMERIC),EVDOMAIN);  // coeffs must be dense numeric
+  ASSERT(!(t&QP),EVNONCE);  // No qp support yet
   RZ(r=jico2(ne(w,num(0)),num(1))); RZ(r=mkwris(r)) m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
   ASSERT(m||equ(num(0),head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
  }
@@ -296,6 +298,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  an=AN(a); at=AT(a); b=BOX&at;   // b if mplr/roots form or multinomial; otherwise coeff
  n=AN(w); wt=AT(w);
  ASSERT(!ISSPARSE(at),EVNONCE);  // sparse polynomial not supported
+ ASSERT(!((at|wt)&QP),EVNONCE);  // we don't have high-precision support
  ASSERT((-an&((at&NUMERIC+BOX)-1))>=0,EVDOMAIN);  // error if nonnumeric unless degree __ 
  // if we are applying f@:p, revert if not sum-of-powers form
  I postfn=FAV(self)->flag&VFATOPPOLY;  //  index of function to apply after p. 0=none 1=^

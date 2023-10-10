@@ -124,7 +124,7 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
   SCDO(C2TX,S,x!=av[j]      );
   SCDO(C4TX,C4,x!=av[j]      );
   SCDO(CMPXX,Z,!zeq(x, av[j]));
-  SCDO(QPX,E,TNEE(x, av[j]));
+  SCDO(QPX,E,NEE(x, av[j]));
   SCDO(XNUMX,A,!equx(x, av[j]));
   SCDO(RATX,Q,!QEQ(x, av[j]));
   SCDO(SBTX,SB,x!=av[j]      );

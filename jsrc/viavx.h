@@ -167,6 +167,7 @@ static UI hiq(Q*v){A y=v->n; R hici(XLIMBLEN(y),UIAV(y));}
 static UI cthid(UIL ctmask,D d){R likely(*(UIL*)&d!=(UIL)NEGATIVE0)?CRC32LL(-1L,*(UIL*)&d&ctmask):CRC32LL(-1L,0);}
 
 // compare floats, not distinguishing -0 from +0.  Return 0 if equal, 1 if not equal
+// This is exact equality, used for inserting into the hashtable
 static INLINE I fcmp0(D* a, D* w, I n){
  DQ(n, if(a[i]!=w[i])R 1;);
  R 0;
@@ -219,8 +220,10 @@ static INLINE I icmpeq(I *a, I *w, I n) {
 #define cmpi2(x,y) ({ __m128i _cmpres=_mm_cmpeq_epi32(_mm_loadu_si128((__m128i*)(x)),_mm_loadu_si128((__m128i*)(y))); !_mm_testc_si128(_cmpres,_mm_setone_si128()); })
 #endif
 
+// tolerant comparisons, used for comparing when reading from the hashtable
 static inline B jeqd(I n,D*u,D*v,D cct){DQ(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
 static inline B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
+static inline B jteqe(J jt,I n,E*u,E*v){DQ(n, if(!EQE(*u,*v))R 0; ++u; ++v;); R 1;}   // Must check tolerance, since no special case for it
 
 
 // create a mask of bits in which a difference is considered significant for floating-point purposes.
@@ -245,8 +248,11 @@ static UIL calcctmask(D cct){
 // prototypes for implementations in viavx?.c
 IOF(jtioax1);  IOF(jtioau);  IOF(jtiox);  IOF(jtioq);  IOF(jtioc);  IOF(jtioi);  IOF(jtioC2);  IOF(jtioC4);  IOF(jtioi1);  IOF(jtio16); IOF(jtioc01);  IOF(jtioz01);  IOF(jtioc0);  IOF(jtioz0);
 IOF(jtioax12); IOF(jtioau2); IOF(jtiox2); IOF(jtioq2); IOF(jtioc2); IOF(jtioi2); IOF(jtioC22); IOF(jtioC42); IOF(jtioi12); IOF(jtio162); IOF(jtioc012); IOF(jtioz012); IOF(jtioc02); IOF(jtioz02);
-IOF(jtioz);  IOF(jtioz1);  IOF(jtiod);  IOF(jtiod1);  IOF(jtioa);  IOF(jtioa1);
-IOF(jtioz2); IOF(jtioz12); IOF(jtiod2); IOF(jtiod12); IOF(jtioa2); IOF(jtioa12);
+IOF(jtioz);  IOF(jtioz1); IOF(jtioz2); IOF(jtioz12);
+IOF(jtioe);  IOF(jtioe1); IOF(jtioe2); IOF(jtioe12);
+IOF(jtiod);  IOF(jtiod1); IOF(jtiod2); IOF(jtiod12);
+IOF(jtioa);  IOF(jtioa1); IOF(jtioa2); IOF(jtioa12);
+
 IOF(jtio12); IOF(jtio22); IOF(jtio42); IOF(jtio82);
 IOF(jtio14); IOF(jtio24); IOF(jtio44); IOF(jtio84);
 A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z);

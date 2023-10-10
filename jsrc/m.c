@@ -381,7 +381,7 @@ static D jtspfor1(J jt, A w){D tot=0.0;
     }
     break;
    }
-  case B01X: case INTX: case FLX: case CMPXX: case LITX:
+  case B01X: case INTX: case FLX: case CMPXX: case QPX: case LITX:
    if(ISSPARSE(AT(w))){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
   case VERBX: case ADVX:  case CONJX: 
    {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;

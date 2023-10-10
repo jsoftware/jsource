@@ -263,7 +263,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
    {V*v=VAV(w); auditblock(jt,C(v->fgh[0]),nonrecur,0);
     auditblock(jt,C(v->fgh[1]),nonrecur,0);
     auditblock(jt,C(v->fgh[2]),nonrecur,0);} break;
-  case B01X: case INTX: case FLX: case CMPXX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX:
+  case B01X: case INTX: case FLX: case CMPXX: case QPX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX:  // direct forms
    if(ISSPARSE(AT(w))){P*v=PAV(w);  A x;
     if(!scheck(w))SEGFAULT;
     x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,e); if(!((AT(x)&DIRECT)>0))SEGFAULT; x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT;

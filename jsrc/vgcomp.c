@@ -51,8 +51,8 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
   RZ(w=take(s,w));
  }
  m=MIN(an,wn); 
- if(unlikely((-(t&XNUM+RAT)&-((at|wt)&FL+CMPX))<0)){A p,q;B*u,*v;
-  // indirect numeric type vs flt/complex: create boolean vector for each value in turn
+ if(unlikely((-(t&XNUM+RAT)&-((at|wt)&FL+CMPX+QP))<0)){A p,q;B*u,*v;
+  // indirect numeric type vs flt/complex: create boolean vector for each value in turn   this does extra work
   RZ(p=lt(a,w)); u=BAV(p);
   RZ(q=gt(a,w)); v=BAV(q);
   DO(m, if(u[i]|v[i])R RETGT(!u[i]););
@@ -67,6 +67,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
    case C4TX:  COMPLOOQ (C4,m  );         break;
    case SBTX:  COMPLOOS (SB,m  );         break;
    case FLX:   COMPLOOQ (D, m  );         break;
+   case QPX:
    case CMPXX: COMPLOOQ (D, m+m);         break;
    case XNUMX: COMPLOOQG(X, m, xcompare); break;
    case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;

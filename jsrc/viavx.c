@@ -641,21 +641,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 
 
 // This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
-// jtioa* BOX
-// jtiox  XNUM
-// jtioq  RAT
-// jtioi1 k==SZI, INT/SBT/char/bool not small-range
-// jtioi  list of >1 INT
-// jtioCk k-sized character
-// jtioc  k!=SZI, bool (must be list of em)/char/INT/SBT
-// jtioc01 intolerant FL atom
-// jtioc0 intolerant FL array
-// jtioz01 intolerant CMPX atom
-// jtioz0 intolerant CMPX array
-// jtiod  tolerant FL
-// jtiod1 tolerant FL atom
-// jtioz  tolerant CMPX
-// jtioz1 tolerant CMPX atom
+
 // Table to look up routine from index
 // 0-11, 16-23 are hashes for various types, calculated by bit-twisting
 // 32-51 are reverse hashes (i. e hash w, look up items of a)
@@ -685,12 +671,12 @@ static const AF fntbl[][2]={
  {jtiosfu,jtiosfu},   // i.!.1 - sequential file update (-1)
 
  //hashing a
- // leading rows are for the datatypes that support fast search.  They have hashes, and routines for short/long table, tolerant/intolerant, and n==1/>1
+ // leading rows are for the datatypes that support fast search.  They have hashes.  Index is [n>1][intolerant][long table]
  {jtioc, jtioc2},{jtioc, jtioc2}, {jtioc, jtioc2}, {jtioc,  jtioc2},     //bool/char/.. table
  {jtioi, jtioi2},{jtioi, jtioi2}, {jtioi, jtioi2}, {jtioi,  jtioi2},     //INT table
  {jtiod, jtiod2},{jtioc0,jtioc02},{jtiod1,jtiod12},{jtioc01,jtioc012},   //FL
  {jtioz, jtioz2},{jtioz0,jtioz02},{jtioz1,jtioz12},{jtioz01,jtioz012},   //CMPX
- {jtioz, jtioz2},{jtioz0,jtioz02},{jtioz1,jtioz12},{jtioz01,jtioz012},   //E
+ {jtioe, jtioe2},{jtioz0,jtioz02},{jtioe1,jtioe12},{jtioz01,jtioz012},   //E
 
  {jtio12,jtio14},{jtio22,jtio24}, {jtio42,jtio44}, {jtio82, jtio84},     //small-range
  {jtioa,jtioa2}, {jtioax1,jtioax12}, {jtioau,jtioau2}, {jtioa1,jtioa12}, //boxed types

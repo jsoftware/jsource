@@ -248,6 +248,7 @@ static F1X(jtlnoun0){F1PREFIP;A s,x;B r1;
   case B01X:  R apip(s,cstr("$0"     ));
   case FLX:   R apip(s,cstr("$0."    ));
   case CMPXX: R apip(s,cstr("$0j0"   ));
+  case QPX:   R apip(s,cstr("$0fq"   ));
   case XNUMX: R apip(s,cstr("$0x"    ));
   case RATX:  R apip(s,cstr("$0r0"   ));
   case SBTX:  R apip(s,cstr("$s: ' '"));

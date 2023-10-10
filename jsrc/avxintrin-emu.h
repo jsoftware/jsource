@@ -1658,6 +1658,11 @@ static __emu_inline __emu__m256i __emu_mm256_mask_i64gather_epi64( __emu__m256i 
 __emu_maskload_impl( __emu_mm256_maskload_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
 __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
 
+static __emu_inline double __emu_mm256_cvtsd_f64( __emu__m256d a )
+{
+    return _mm_cvtsd_f64(a.__emu_m128[0]);
+}
+
 /** \SSE4_1{SSE2,_mm_cvtepu8_epi64} */
 static __emu_inline __m128i _mm_cvtepu8_epi64_SSE2 ( __m128i a)
 {
@@ -1985,6 +1990,7 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_permute4x64_epi64 __emu_mm256_permute4x64_epi64
 #define _mm256_permute4x64_pd __emu_mm256_permute4x64_pd
 
+#define _mm256_cvtsd_f64 __emu_mm256_cvtsd_f64
 #define _mm256_cvtepu8_epi64 __emu_mm256_cvtepu8_epi64
 #define _mm256_sllv_epi64 __emu_mm256_sllv_epi64
 

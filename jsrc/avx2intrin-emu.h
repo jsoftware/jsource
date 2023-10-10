@@ -429,9 +429,14 @@ static INLINE __emu__m256i __emu_mm256_maskload_epi64(int64_t const *b , __emu__
 }
 
 
-static void __emu_mm256_maskstore_epi64(int64_t *b , __emu__m256i m, __emu__m256i a)
+static INLINE void __emu_mm256_maskstore_epi64(int64_t *b , __emu__m256i m, __emu__m256i a)
 {
  _mm256_maskstore_pd((double*)b, m, _mm256_castsi256_pd(a));
+}
+
+static INLINE double __emu_mm256_cvtsd_f64( __emu__m256d a )
+{
+    return _mm_cvtsd_f64(a.__emu_m128[0]);
 }
 
 static INLINE __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
@@ -513,6 +518,7 @@ static INLINE __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #define _mm256_cmpgt_epi32 __emu_mm256_cmpgt_epi32
 #define _mm256_cmpgt_epi64 __emu_mm256_cmpgt_epi64
 #define _mm256_cmpgt_epi8 __emu_mm256_cmpgt_epi8
+#define _mm256_cvtsd_f64 __emu_mm256_cvtsd_f64
 #define _mm256_cvtepu8_epi64 __emu_mm256_cvtepu8_epi64
 #define _mm256_fnmadd_pd __emu_mm256_fnmadd_pd
 #define _mm256_fmadd_pd __emu_mm256_fmadd_pd

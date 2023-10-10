@@ -1368,6 +1368,15 @@ FORCE_INLINE __m256i _mm256_cvtepu8_epi64(__m128i a)
     return ret;
 }
 
+FORCE_INLINE double _mm256_cvtsd_f64(__m256d a)
+{
+#if defined(__aarch64__)
+    return (double) vgetq_lane_f64(vreinterpretq_f64_m128d(a.vect_f64[0]), 0);
+#else
+    return ((double *) &a.vect_f64[0])[0];
+#endif
+}
+
 FORCE_INLINE  __m256i _mm256_sllv_epi64(__m256i a, __m256i count)
 {
  __m256i res;

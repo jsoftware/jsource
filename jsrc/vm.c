@@ -9,6 +9,7 @@
 static int64_t m7f = 0x7fffffffffffffffLL;
 #define COMMA ,
 #endif
+// #include <sleefquad.h>
 
 D jtintpow(J jt,D x,I n){D r=1;
  if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;
@@ -326,6 +327,85 @@ NAN0;
  R EVOK;
 }
 
+#if 0
+Sleef_quad etof128(E w);
+E f128toE(Sleef_quad w);
+
+static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
+ NAN0;
+ switch(k){
+ default: ASSERTWR(0,EWIMAG);
+ case  0: {DQ(n, t=*x++; E tsq; tsq=TWOPRODE1(t,t) );} break;
+ case  1: ;
+   DQ(n, t=*x++; ASSERTWR(ABS(t.hi)<THMAX,EVLIMIT); *z++=f128toe(Sleef_sinq1_u10purecfma(etof128(t))););   break;
+ case  2:  ;
+#if SLEEF
+TRIGSYMM(lbl2,thmaxx,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4)
+IGNORENAN
+#else
+ DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=cos(t););
+#endif
+ break;
+ case  3:  ;
+#if SLEEF
+ TRIGSYMM(lbl3,thmaxx,_CMP_GT_OQ,EVLIMIT,Sleef_tand4)
+#else
+ DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=tan(t););       
+#endif
+ break;
+ case  4: DQ(n, t=*x++;                                     *z++=t<-1e8?-t:1e8<t?t:sqrt(t*t+1.0););       break;
+ case  5: DQ(n, t=*x++;                                     *z++=t<-EMAX2?infm:EMAX2<t?inf:sinh(t););     break;
+ case  6: DQ(n, t=*x++;                                     *z++=t<-EMAX2||    EMAX2<t?inf:cosh(t););     break;
+ case  7: ;
+#if SLEEF
+ TRIGUNLIM(lbl7,Sleef_tanhd4)
+ NAN0;  // SLEEF gives the correct answer but may raise a NaN flag
+#else
+// math library tanh is slooooow  case  7: DQ(n, t=*x++;                                     *z++=t<-TMAX?-1:TMAX<t?1:tanh(t););           break;
+ DQ(n, t=*x++;                                     *z++=t<-TMAX?-1:TMAX<t?1:(1.0-exp(-2*t))/(1.0+exp(-2*t)););
+#endif
+ break;
+ case -1: ;
+#if SLEEF
+  TRIGSYMM(lblm1,zone.real,_CMP_GT_OQ,EWIMAG,Sleef_asind4)
+#else
+  DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););
+#if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
+// NaN bug in android asin()  _1 o. _1
+NAN0;
+#endif
+#endif
+ break;
+ case -2: ;
+#if SLEEF
+  TRIGSYMM(lblm2,zone.real,_CMP_GT_OQ,EWIMAG,Sleef_acosd4)
+#else
+  DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););
+#endif
+  break;
+ case -3: ;
+#if SLEEF
+  TRIGUNLIM(lblm3,Sleef_atand4)
+#else
+  DQ(n,                                             *z++=atan(*x++););
+#endif
+  break;
+ case -4: DQ(n, t=*x++; ASSERTWR(t<=-1.0||1.0<=t,  EWIMAG ); *z++=t<-1e8||1e8<t?t:t==-1?0:(t+1)*sqrt((t-1)/(t+1));); break;
+ case -5: p=log(2.0); 
+           DQ(n, t=*x++; *z++=1.0e8<t?p+log(t):-7.8e3>t?-(p+log(-t)):log(t+sqrt(t*t+1.0)););               break;
+ case -6: p=log(2.0); 
+           DQ(n, t=*x++; ASSERTWR(          1.0<=t, EWIMAG ); *z++=1.0e8<t?p+log(t):log(t+sqrt(t*t-1.0));); break;
+ case -7: DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=0.5*log((1.0+t)/(1.0-t)););              break;
+ case  9: DQ(n,         *z++=*x++;);           break;    
+ case 10: DQ(n, t=*x++; *z++=ABS(t););         break;
+ case 11: DQ(n,         *z++=0.0;);            break;
+ case 12: DQ(n,         *z++=0<=*x++?0.0:PI;); break;
+ }
+ ASSERTWR(!NANTEST,EVNAN);
+ R EVOK;
+}
+#endif
+
 AHDR2(cirBD,D,B,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   (I)*x,z,y);}
 AHDR2(cirID,D,I,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   *x,z,y);}
 
@@ -335,6 +415,15 @@ AHDR2(cirDD,D,D,D){I k=(I)jround(*x);
  n^=REPSGN(n);   // convert complementary n to nonneg
  R cirx(n,k,z,y);
 }
+
+#if 0
+AHDR2(cirEE,D,D,D){I k=(I)jround(*x);
+ ASSERTWR(k==*x,EVDOMAIN); 
+ ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
+ n^=REPSGN(n);   // convert complementary n to nonneg
+ R jtcire(jt,n,k,z,y);
+}
+#endif
 
 
 F2(jtlogar2){A z;I t;

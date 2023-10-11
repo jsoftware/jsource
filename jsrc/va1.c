@@ -100,7 +100,7 @@ static AMON(absD,   D,D, *z= ABS(*x);)
 #endif
 #endif
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
-static AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&IMIN); *(UIL*)&h=*(UIL*)&x->hi&IMAX; \
+AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&IMIN); *(UIL*)&h=*(UIL*)&x->hi&IMAX; \
    rh=sqrt(h); if(rh<1e-100)rl=0; else{TWOPROD1(rh,rh,dh,dl) dl-=l; TWOSUMBS1(dh,-h,th,tl) tl+=dl; TWOSUM1(th,tl,h,l) h/=-2*rh; TWOSUMBS1(rh,h,th,tl) E r; r=CANONE1(th,tl); rh=r.hi; rl=r.lo;} \
    if(x->hi>=0){z->hi=rh; z->lo=rl;} else{z->hi=-rh; ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
 static AMON(expB,   D,B, *z=*x?2.71828182845904523536:1;)

@@ -328,8 +328,29 @@ NAN0;
 }
 
 #if 0
-Sleef_quad etof128(E w);
-E f128toE(Sleef_quad w);
+Sleef_quad etof128(E w){
+ IL ehi=*(IL*)&w.hi; UIL elo=*(UIL*)&w.lo;  // IEEE bits of w
+ UIL loneg=(IL)(ehi^elo)>>63;  // -1 if bottom part has a different sign from the top part
+ IL ihi=ehi+loneg;   // if the bottom part has a different sign from the top, its significance must be subtracted from the upper.  That will occasion a borrow, which we handle here.
+                                       // it is possible that the decrement will flow through to the exponent; that's OK.  bottom can never be 0 of opposite sign.  52 bits of sig
+ I eexpxs=52-((ehi>>52)&0x7ff)+((elo>>52)&0x7ff);  // excess exponent of elo, i. e. gap between ehi and elo.  Must be >=0.  If 0, the bits of elo are right next to ehi
+ eexpxs=MIN(eexpxs,63);  // clamp shift count to within range
+ elo=(elo&0x0007ffffffffffffll)|(likely((elo&0x7ff0000000000000)!=0)?0x001000000000000ll);  // remove sign of elo, add hidden bit
+ elo=(((elo<<11)>>eexpxs)^loneg)+loneg;  // shift sig to adj to hi, then add gap (all unsigned); then make the lo bits neg if needed
+ elo=(elo>>4)|ehi<<60);  // take contiguous lower bits, possibly with some low-order 0s
+ ehi=((UIL)((ehi<<1)>>4)>>1)+(ehi&0x8000000000000000ll);  // shift exponent (& mantissa) down 4, extending; preserve sign
+ R *(Sleef_quad*)&(IL[2]){ehi,elo};  // return the value
+}
+E f128toE(Sleef_quad w){
+ IL exp=((*(IL*)&w)[0]<<1)>>49;  // extract 15-bit SLEEF exponent, sign-extended
+ if(unlikely((exp>>15)!=(exp>>63))){  // exponent too big or too small
+  R (E){exp<0?0.:inf,0.};   // clamp at limit
+ }
+ IL ihi=((((*(IL*)&w)[0]<<4)|((*(UIL*)&w)[1]>>(64-4)))&0x7fffffffffffffffLL)|((*(IL*)&w)[0]&0x8000000000000000ll);  // shorten sign, replace with 4 LSBs, giving top 52 bits + hidden bit
+ D dlo=(*(D*)&(IL){ihi&0x7ff000000000000ll})*2.22044604925031308e-16* *(D*)&(IL){*(IL*)&w)[1]&0x0fffffffffffffffffffll};  // this is (1.0 with the exponent of ihi) * (2^_52) * (low bits of input)
+ D hi,lo; TWOSUMBS1(*(D*)&ihi,dlo,hi,lo)  // remove any overlap
+ R CANONE(hi,lo);  // return canonical form
+}
 
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
  NAN0;

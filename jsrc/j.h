@@ -2109,8 +2109,8 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // obsolete    // convert to canonical form: high & low have same signs.  Result is E type
 // obsolete    // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
 // obsolete #define CANONE1(h,l) ({I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*1.110223024625157e_16; (E){h-ulp,l+ulp}; })
-// convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<lo<=1/2ULP (with only same-sign allowed if abs=1/2ULP), and any zero positive
-#define CANONE1(h,l) ({if(unlikely((*(I*)&l&0x000fffffffffffff)!=0)){if(l==0)l=0.; else if(((*(I*)&h&0x000fffffffffffff)-0x8350000000000000)==l){h+=2*l; l=-l;}} (E){h,l}; })
+// convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<lo<=1/2ULP (with only same-sign allowed if abs=1/2ULP or 0)
+#define CANONE1(h,l) ({if(unlikely((*(IL*)&l&0x000fffffffffffff)!=0)){if(l==0)*(IL*)&l=*(IL*)&h&0x8000000000000000; else if(((*(IL*)&h&0x000fffffffffffff)-0x8350000000000000)==l){h+=2*l; l=-l;}} (E){h,l}; })
 
 #define VAL1            '\001'
 #define VAL2            '\002'

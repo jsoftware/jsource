@@ -72,6 +72,7 @@ D   jnan=NAN;               /* _.                                   */
 D   pf=0;                 /* performance frequency                */
 DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
+E   epi={3.14,0};  // scaf
 I   iotavec[IOTAVECLEN];  // return values for i. small
 uint64_t g_cpuFeatures;   // blis
 uint64_t g_cpuFeatures2;  // fsgsbase

@@ -1073,6 +1073,7 @@ extern struct Bd1 Bonehalf;
 #define onehalf ((A)&Bonehalf)
 extern D        pf;
 extern struct Bd1 Bpie;
+extern E epi;   // scaf could combine these
 #define pie ((A)&Bpie)
 extern PRIM     primtab[];
 extern Z        zeroZ;

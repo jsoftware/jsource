@@ -2105,7 +2105,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define TWOSUM1(in0,in1,outhi,outlo) {D t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;}  //  in0 and outhi might be identical
 #define TWOSUMBS1(inbig,insmall,outhi,outlo) outhi=inbig+insmall; outlo=inbig-outhi; outlo=outlo+insmall; //  outhi cannot be an input; outlo can be the same as inbig
 #define DPADD1(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;
-#define TWOPRODE1(ein0,ein1) ({D dh0,dh1,dl0,dl1; E t0,t1,t2; TWOPROD1(ein0.hi,ein1.hi,dh0,dl0) dl0+=ein0.hi*ein1.lo; dl0+=ein0.lo*ein1.hi; TWOSUMBS1(dh0,dl0,dh1,dl1) CANONE(dh1,dl1) })  // return E product
+#define TWOPRODE1(ein0,ein1) ({D dh0,dh1,dl0,dl1; E t0,t1,t2; TWOPROD1(ein0.hi,ein1.hi,dh0,dl0) dl0+=ein0.hi*ein1.lo; dl0+=ein0.lo*ein1.hi; TWOSUMBS1(dh0,dl0,dh1,dl1) CANONE1(dh1,dl1) })  // return E product
 // obsolete    // convert to canonical form: high & low have same signs.  Result is E type
 // obsolete    // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
 // obsolete #define CANONE1(h,l) ({I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*1.110223024625157e_16; (E){h-ulp,l+ulp}; })

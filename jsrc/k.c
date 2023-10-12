@@ -94,19 +94,19 @@ static KF1(jtEfromB){E *zv=yv; B *wv=BAV(w);
 }
 
 static KF1(jtEfromD){E *zv=yv; D *wv=DAV(w);
- I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=0.; ++zv;)
+ I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=zv->hi*0.; ++zv;)  // frac 0 must have same sign as upper
  R 1;
 }
 
 static KF1(jtEfromDS){E *zv=yv; DS *wv=DSAV(w);
- I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=0.; ++zv;)
+ I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=zv->hi*0.; ++zv;)
  R 1;
 }
 
 static KF1F(jtEfromZ){D d;I n;Z*v; E*x;
  n=AN(w); v=ZAV(w); x=(E*)yv;
- if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){x->hi=v->re; x->lo=0.; ++x; v++;} else R 0;)
- else        DQ(n, d=    v->im ; if(!d                            ){x->hi=v->re; x->lo=0.; ++x; v++;} else R 0;);
+ if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){x->hi=v->re; x->lo=x->hi*0.; ++x; v++;} else R 0;)
+ else        DQ(n, d=    v->im ; if(!d                            ){x->hi=v->re; x->lo=x->hi*0.; ++x; v++;} else R 0;);
  R 1;
 }
 

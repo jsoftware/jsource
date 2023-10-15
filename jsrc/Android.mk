@@ -69,7 +69,9 @@ LOCAL_SRC_FILES += \
   ../sleef/src/common/arraymap.c \
   ../sleef/src/common/common.c \
   ../sleef/src/libm/rempitab.c \
-  ../sleef/src/libm/sleefsimddp.c
+  ../sleef/src/libm/sleefsimddp.c \
+  ../sleef/src/quad/rempitabqp.c \
+  ../sleef/src/quad/sleefsimdqp.c
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 LOCAL_ASMFLAGS += -f elf32 -X gnu -D LINUX
@@ -99,7 +101,9 @@ LOCAL_SRC_FILES += \
   ../sleef/src/common/arraymap.c \
   ../sleef/src/common/common.c \
   ../sleef/src/libm/rempitab.c \
-  ../sleef/src/libm/sleefsimddp.c
+  ../sleef/src/libm/sleefsimddp.c \
+  ../sleef/src/quad/rempitabqp.c \
+  ../sleef/src/quad/sleefsimdqp.c
 endif
 ifeq ($(TARGET_ARCH),x86)
 LOCAL_ASMFLAGS += -f elf32 -X gnu -D LINUX
@@ -112,7 +116,9 @@ LOCAL_SRC_FILES += \
   ../sleef/src/common/arraymap.c \
   ../sleef/src/common/common.c \
   ../sleef/src/libm/rempitab.c \
-  ../sleef/src/libm/sleefsimddp.c
+  ../sleef/src/libm/sleefsimddp.c \
+  ../sleef/src/quad/rempitabqp.c \
+  ../sleef/src/quad/sleefsimdqp.c
 endif
 
 include $(BUILD_SHARED_LIBRARY)

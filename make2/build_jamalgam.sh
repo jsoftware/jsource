@@ -731,6 +731,8 @@ if [ $USE_SLEEF -eq 1 ] ; then
    ../../../../sleef/src/common/common.o \
    ../../../../sleef/src/libm/rempitab.o \
    ../../../../sleef/src/libm/sleefsimddp.o \
+   ../../../../sleef/src/quad/rempitabqp.o \
+   ../../../../sleef/src/quad/sleefsimdqp.o \
   "
  fi
 fi

@@ -218,6 +218,7 @@ _mm512_storeu_epi64 (void *__P, __m512i __A)
 
 #if SLEEF
 #include "../sleef/include/sleef.h"
+#include "../sleef/include/sleefquad.h"
 #endif
 
 #if defined(_OPENMP)

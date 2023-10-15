@@ -976,6 +976,8 @@
     <ClCompile Include="..\..\sleef\src\common\common.c" />
     <ClCompile Include="..\..\sleef\src\libm\rempitab.c" />
     <ClCompile Include="..\..\sleef\src\libm\sleefsimddp.c" />
+    <ClCompile Include="..\..\sleef\src\quad\rempitabqp.c" />
+    <ClCompile Include="..\..\sleef\src\quad\sleefsimdqp.c" />
     <ClCompile Include="..\..\base64\lib\arch\avx2\codec-avx2.c" />
     <ClCompile Include="..\..\base64\lib\arch\avx512\codec-avx512.c" />
     <ClCompile Include="..\..\base64\lib\arch\generic\codec-generic.c" />

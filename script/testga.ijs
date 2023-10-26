@@ -35,10 +35,7 @@ echo 'avx512bw: ',":9!:56'avx512bw'
 echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
-echo 'RUN4 ddall'
-RES=: RUN4 ddall
-
-3 : 0''
+FINISH=: 3 : 0
 msg=. 9!:14''
 if. 0=#RES do.
   msg=. msg,LF,'all tests correct'
@@ -47,7 +44,13 @@ else.
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
 msg fappends testres
+echo^:(*@#RES) RES
+exit *@#RES
 )
+
+echo 'RUN4 ddall'
+9!:27'FINISH RES=: RUN4 ddall'
+9!:29]1
 
 1: 0 : 0
 if. (os -: 'win') *. 1 e. 'avx/' E. 9!:14'' do.
@@ -55,5 +58,3 @@ if. (os -: 'win') *. 1 e. 'avx/' E. 9!:14'' do.
 end.
 )
 
-echo^:(*@#RES) RES
-exit *@#RES

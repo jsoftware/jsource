@@ -68,9 +68,22 @@ _ _ -: % +. 0 j. 0
 1 = # ~. , % +. a j. 3 # a
 2 = # ~. , % +. a j. 3 # 0.
 
+f =: (j./"1@:(+"1) -: +&:(j./"1))  NB. test cmplx add.  Last axis must be length 2
+f2 =: {{  NB. x iterations, max axis length y
+ for. i. x do.
+  rs =. 1 >. ? y  NB. max shape
+  xs =. (- 0.2 0.5 0.2 _ I. ?0) }. rs [ ys =. (- 0.2 0.5 0.2 _ I. ?0) }. rs
+  xd =: (xs,2) ?@$ 0 [ yd =: (ys,2) ?@$ 0
+  assert. xd u yd
+ end.
+1
+}}
+1000 (f f2) 5 5 5 20
+f =: (j./"1@:(-"1) -: -&:(j./"1))  NB. test cmplx add.  Last axis must be length 2
+1000 (f f2) 5 5 5 20
 
 
-4!:55 ;:'a b jdot t'
+4!:55 ;:'a b f f2 jdot t xd yd'
 
 
 

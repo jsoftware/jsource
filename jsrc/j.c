@@ -50,11 +50,16 @@ A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 long long __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
 #elif C_AVX2 || EMU_AVX2
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
-#else
+// maskec creates masks for fetching 16-byte float entities.  There are 4 choices, each giving 2 2-bit values for
+// lanes 01/23, for the 2 successive fetches.  Each value is the top 2 bits of a 4-byte value.  The I values are broadcast
+// into each 64-byte lane, and then the UPPER (second) value is selected for lanes 0-1, and the LOWER (first)
+// for lanes 2-3
+I __attribute__((aligned(CACHELINESIZE))) maskec4123[4]={0xc0000000c0000000, 0x8000000000000000, 0x8000000080000000, 0xc000000080000000,};  // 4, 1, 2, 3
+#else 
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 
-__attribute__((aligned(CACHELINESIZE))) I Bnum[22][8*(2-SY_64)] = {  // the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
+__attribute__((aligned(CACHELINESIZE))) I Bnum[22][8*(2-SY_64)] = {   // the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
 CBAIVAL(INT,0), CBAIVAL(INT,1),
 CBAIVAL(INT,-10), CBAIVAL(INT,-9), CBAIVAL(INT,-8), CBAIVAL(INT,-7), CBAIVAL(INT,-6), CBAIVAL(INT,-5), CBAIVAL(INT,-4), CBAIVAL(INT,-3), CBAIVAL(INT,-2), CBAIVAL(INT,-1), 
 CBAIVAL(B01,0), CBAIVAL(B01,1),  // these values must be padded with 0 so they can be used as an INT

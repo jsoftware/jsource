@@ -607,7 +607,10 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
  // If NOUNCVTVALIDCT is set, w is modified: the caller must restore AN(w) and AK(w) if it needs it
  // TODO: same-length conversion could be done in place
- GA(d,t,n,r,s); yv=voidAV(d);  // allocate the same # atoms, even if we will convert fewer
+ GA(d,t,n,r,s);  // allocate the same # atoms, even if we will convert fewer
+ if(unlikely(t&CMPX+QP))AK(d)=(AK(d)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
+ yv=voidAV(d);   // address of target area
+
  if(unlikely(tflagged&NOUNCVTVALIDCT)){
   I inputn=*(I*)y;  // fetch input, in case it is called for
   if(inputn>0){  // if converting the leading values, just update the counts

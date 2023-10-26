@@ -326,7 +326,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  A f(J jt,A a,A w,I n,I m,I c){A z;B b;C d,*u,*uu,*x,*y;I i,j,k,mc,r;T a0,*zv;  \
   i=0; mc=m*c; u=CAV(w); y=u+n; j=c; uu=u+AN(w); if(mc)*(uu-1)=' ';         \
   r=AR(w)-(I )(1==c); r=MAX(0,r);                                               \
-  GA(z,t,mc,r,AS(w)); if(0<r&&1!=c)AS(z)[r-1]=c; zv=(T*)AV(z);            \
+  GA(z,t,mc,r,AS(w)); if(unlikely(t&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD; if(0<r&&1!=c)AS(z)[r-1]=c; zv=(T*)AV(z);            \
   RZ(a=cvt(t,a)); a0=*(T*)AV(a);                                            \
   while(i<mc){                                                              \
    NOUNROLL while(u<uu&&C0==*u)++u;                                                  \

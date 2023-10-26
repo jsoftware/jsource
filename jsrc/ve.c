@@ -290,11 +290,117 @@ APFX( plusIO, D,I,I,  PLUSO,,R EVOK;)
 APFX(minusIO, D,I,I, MINUSO,,R EVOK;)
 APFX(tymesIO, D,I,I, TYMESO,,R EVOK;)
 
+#if C_AVX2 || EMU_AVX2
+#define PREFNEG(lo,hi) lo=_mm256_xor_pd(lo,sgnbit); hi=_mm256_xor_pd(hi,sgnbit); 
+#define ceprefL PREFNULL
+#define ceprefR PREFNEG
+#define fz 1
+#define cepref __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); NAN0;
+#define cesuff ASSERTWR(!NANTEST,EVNAN);
+#define zzop {z0=_mm256_add_pd(x0,y0); z1=_mm256_add_pd(x1,y1);}
+
+#define CET Z
+AHDR2(minusZZ,CET,CET,CET){
+ __m256d z0, z1, x0, x1, y0, y1, in0, in1;
+ cepref
+ /* convert vector args, which are the same size as z, to offsets from z; flag atom args */
+ if(likely(n-1==0)){x=(CET*)((C*)x-(C*)z); y=(CET*)((C*)y-(C*)z);  /* vector op vector, both args offset */
+ }else{  /* one arg is atom - flag addr and fetch repeated value.  m is #atom-vec loops, n is length of each and switch flag */
+  {I taddr=(I)x^(I)y; x=n-1>0?y:x; y=(CET*)((I)x^taddr);}  /* if repeated vector op atom, exchange to be atom op vector for ease of fetch */
+  y=(CET*)((C*)y-(C*)z);  /* convert the full-sized y arg to offset form */
+  x=(CET*)((I)x+1); if(fz&1){x=(CET*)((I)x+(~REPSGN(n)&2));}  /* flag x: atom in bit 0, swapped in bit 1 */
+  I t=m; m=n^REPSGN(n); n=t; /* convert vec len to positive, move to m; move outer loop count to n */
+atomveclp: ;  /* come back here to do next atom op vector loop, with z running */
+  /* read the repeated value and convert to internal form */
+  x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1);
+  if(fz&1){if((I)x&2){ceprefR(x0,x1)}else{ceprefL(x0,x1)}}  /* do LR processing for noncommut */
+ }
+ /* loop n times - usually once, but may be repeated for each atom.  The loop is by branch back to atomveclp */
+
+ /* The loop is split into 3 parts: prefix/body/suffix.  The prefix gets z onto a cacheline boundary; the */
+ /* body processes full cachelines; the suffix finishes.  Prefix/suffix use masked stores. */
+ /* Here we calculate length of prefix and body+suffix.  We then encode them into one value. */
+ /* We keep a mask for the current part */
+ I len0=-(I)z>>(LGSZI+1);  /* ...aa amt to proc to get to 2cacheline bdy */ 
+ len0=m<8?m:len0;  /* if short, switch len0 to full length to reduce passes through op */
+ len0&=NPAR-1;  /* prefix len: if long, to get to bdy; if short, to leave last block exactly NPAR or 0 */
+ /* get mask for first read/write: same 2-bit values in lanes 01, and the other 2 bits in 23 */
+ __m256i wrmask=_mm256_castpd_si256(_mm256_permutevar_ps(_mm256_broadcast_sd((D*)&maskec4123[len0]),_mm256_loadu_si256((__m256i*)&validitymask[2])));
+ I len1=m+((4|-len0)<<(BW-3));    /* make len1 negative so we set new masks for the body.  We can recover len0 from len1.  We do this even if len0=0 to avoid misbranches */
+
+ /* loop m times, for each operation */
+rdmasklp:  /* here when we must read the new args under mask */
+
+ /* read any nonrepeated argument, shuffle */
+ I totallen=len1&((1LL<<(BW-3))-1);  /* total remaining length */
+ I zinc=(totallen>2)<<(LGNPAR+LGSZI);  /* offset to second half of input, if it is valid */
+ if(likely(!((I)x&1))){  /* if x is not repeated... */
+  in0=_mm256_maskload_pd((D*)((C*)z+(I)x),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)x+zinc),_mm256_slli_epi64(wrmask,1));
+  SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */
+  if(fz&1){if((I)x&2){ceprefR(x0,x1)}else{ceprefL(x0,x1)}}  /* do LR processing for noncommut */
+ }
+ /* always read the y arg */
+ in0=_mm256_maskload_pd((D*)((C*)z+(I)y),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)y+zinc),_mm256_slli_epi64(wrmask,1));
+
+mainlp:  /* here when args have already been read.  x has been converted & prefixed; y not */
+ SHUFIN(in0,in1,y0,y1);  /* convert y, which is always read, to llll hhhh form */
+ if(fz&1){if((I)x&2){ceprefL(y0,y1)}else{ceprefR(y0,y1)}}  /* do LR processing for noncommut */
+ zzop;  /* do the main processing */
+
+ SHUFOUT(z0,z1,y0,y1);  /* put result into interleaved form for writing */
+ /* write out the result and loop */
+ if(len1>=2*NPAR){
+  /* the NEXT batch can be written out in full (and so can this one).  Write the result, read new args and shuffle, and loop quickly */
+  _mm256_storeu_pd((D*)z,y0); _mm256_storeu_pd((D*)z+NPAR,y1);   /* write out */
+  z=(CET*)((I)z+2*NPAR*SZI); len1-=NPAR;  /* advance to next batch */
+rdlp: ;  /* come here to fetch next batch & store it without masking */
+  if(likely(!((I)x&1))){  /* if x is not repeated... */
+   in0=_mm256_loadu_pd((D*)((C*)z+(I)x)), in1=_mm256_loadu_pd((D*)((C*)z+(I)x)+NPAR);
+   SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */
+   if(fz&1){if((I)x&2){ceprefR(x0,x1)}else{ceprefL(x0,x1)}}  /* do LR processing for noncommut */
+  }
+  /* always read the y arg */
+  in0=_mm256_loadu_pd((D*)((C*)z+(I)y)), in1=_mm256_loadu_pd((D*)((C*)z+(I)y)+NPAR);
+  goto mainlp;
+ }else if(len1>=NPAR){  /* next-to-last, or possibly last, batch */
+  /* the next batch must be masked.  This one is OK; write the result, set the new mask, go back to read under mask */
+  _mm256_storeu_pd((D*)z,y0); _mm256_storeu_pd((D*)z+NPAR,y1);   /* write out */
+  z=(CET*)((I)z+2*NPAR*SZI); len1-=NPAR;  /* advance to next batch */
+  if(len1!=0)goto rdmasklp;  /* process nonempty last batch, under mask, which has already been set */
+  /* if len is 0, fall through to loop exit */
+ }else{
+  /* The current batch must write under mask.  Do so, and continue as called for, to body, suffix, or exit */
+  /* The length of this batch comes from len0 or len1 */
+  len0=-(len1>>(BW-3));   /* extract len0 from combined len0/len1, range 1 to 4, or 0 if not first batch */
+  len0=len1<0?len0:len1;  /* len0=length of batch: len0 (first batch) or len1 (others) */
+  len1&=((1LL<<(BW-3))-1); /* discard len0 from le ngth remaining */
+  I zinc=(len0>2)<<(LGNPAR+LGSZI);  /* offset to second half of result, if it can be written */
+  _mm256_maskstore_pd((D*)((C*)z+zinc),_mm256_slli_epi64(wrmask,1),y1);
+  _mm256_maskstore_pd((D*)(z),wrmask,y0);
+  z=(CET*)((I)z+(len0<<(LGSZI+1))); len1-=len0;  /* advance to next batch */
+  if(len1!=0){  /* z is advanced.  Continue if there is more to do */
+   /* set the mask for the last batch.  Unless m is 5-8, this will not hold anything up */
+   wrmask=_mm256_castpd_si256(_mm256_permutevar_ps(_mm256_broadcast_sd((D*)&maskec4123[len1&(NPAR-1)]),_mm256_loadu_si256((__m256i*)&validitymask[2])));
+   if(likely(len1>=NPAR))goto rdlp; else goto rdmasklp;  /* process nonempty next batch, under mask if it is the last one */
+  }
+  /* fall through to loop exit if len hit 0 */ 
+ }
+ /* this is the exit from the loop, possibly reached by fallthrough */
+
+// endlp: ;  /* end of one vector operation.  If there are multiple atom*vector, loop */
+ if(unlikely(--n!=0)){++x; goto atomveclp;}  /* if multiple atom*vec, move to next atom.  z/y stay in step */
+ cesuff
+ R EVOK;
+}
+
+
+#else
    /* plusIB */                 /* plusII */                
+APFX(minusZZ, Z,Z,Z, zminus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
+#endif
 APFX( plusZZ, Z,Z,Z, zplus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )
 
   /* minusIB */                 /* minusII */               
-APFX(minusZZ, Z,Z,Z, zminus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
     /* andBB */                 /* tymesBI */                   /* tymesBD */            
     /* tymesIB */               /* tymesII */                
     /* tymesDB */                /* tymesDD */ 

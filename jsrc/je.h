@@ -1051,6 +1051,7 @@ extern I Bchrspace[];
 extern long long validitymask[];
 #else
 extern I validitymask[];
+extern I maskec4123[];
 #endif
 extern C  ctype[];
 extern const double dzero;

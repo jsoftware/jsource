@@ -344,22 +344,21 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz);
 
-
 #define primop256(name,fz,pref,zzop,suff) \
-I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
+AHDR2(name,void,void,void){ \
  __m256d xx,yy,zz; \
  __m256i endmask; /* length mask for the last word */ \
    /* will be removed except for divide */ \
  CVTEPI64DECLS pref \
  if(n-1==0){ \
-  /* vector-to-vector, no repetitions */ \
+  /* vector-to-vector of length m, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
   PRMALIGN(zzop,3,fz,m)  /* this changes m */ \
   PRMDUFF(zzop,3,fz,m,32+16+8) \
   PRMMASK(zzop,3,fz) /* runout, using mask */ \
  }else{ \
   if(!((fz)&1)&&n-1<0){n=~n; \
-   /* atom+vector */ \
+   /* m applications of atom+vector of length ~n (never used if commutative) */ \
    DQNOUNROLL(m, \
     if(unlikely((fz)&0x140 && (((fz)&0x400 && z==y && *(C*)x!=0) || ((fz)&0x800 && z==y && *(C*)x==0)))){ \
      INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(y,n,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
@@ -373,7 +372,7 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
     } \
    ) \
   }else{ \
-   /* vector+atom */ \
+   /* m applications of vector of length n+atom */ \
    if((fz)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
    DQNOUNROLL(m, \
     if(unlikely((fz)&0x280 && (((fz)&0x400 && z==x && *(C*)y!=0) || ((fz)&0x800 && z==x && *(C*)y==0)))){ \
@@ -392,15 +391,21 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
  suff \
 }
 
+// convert from 4 16-byte atoms to 2 AVX registers
+#define SHUFIN(v0,v1,out0,out1) out0=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b0000),0b11011000); \
+  out1=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b1111),0b11011000);
+#define SHUFOUT(out0,out1,v0,v1) out0=_mm256_permute4x64_pd(out0,0b11011000); out1=_mm256_permute4x64_pd(out1,0b11011000); \
+  v0=_mm256_shuffle_pd(out0,out1,0b0000); v1=_mm256_shuffle_pd(out0,out1,0b1111);
+#define PREFNULL(lo,hi)  // modify lo and hi as needed
+// loop for types that use 2 D values: CMPX and QP.  The inner loop is lengthy, so to save
+// instruction cache we do it only once, building all the other loops around the core.
+// prefL and prefR are macros, used for noncommutative operations
+// fz: 1 set if NONcommutative operator
+// n=1 vec+vec n<0 atom+vec  n>1 vec+atom
+
+#define primop256CE(name,fz,cepref,ceprefL,ceprefR,zzop,cesuff)
+
 /* Embedded visual tools v3.0 fails perform the z++ on all wince platforms. -KBI */
-#if SY_WINCE
-#define ACMP(f,Tz,Tx,Ty,pfx)   \
- AHDR2(f,B,Tx,Ty){D u,v;                                          \
-  if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; *z++=pfx(u,v); )    \
-  else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; *z++=pfx(u,v);))    \
-  else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z++=pfx(u,v);));   \
- }
-#else
 #define ACMP(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
@@ -408,7 +413,7 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
   else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
   R EVOK; \
  }
-#endif
+
 #define ACMP0T(f,Tz,Tx,Ty,Txy,pfx,pfx0)   \
  AHDR2(f,B,Tx,Ty){Txy u; Txy v;                                             \
   if(jt->cct!=1.0){ \

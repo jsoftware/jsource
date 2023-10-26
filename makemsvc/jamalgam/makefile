@@ -274,7 +274,9 @@ OBJS_SLEEF= \
  ../../sleef/src/common/arraymap.o \
  ../../sleef/src/common/common.o \
  ../../sleef/src/libm/rempitab.o \
- ../../sleef/src/libm/sleefsimddp.o
+ ../../sleef/src/libm/sleefsimddp.o \
+ ../../sleef/src/quad/rempitabqp.o \
+ ../../sleef/src/quad/sleefsimdqp.o
 endif
 
 ifdef READLINE

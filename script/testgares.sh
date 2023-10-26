@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# read any test results into tests.txt
+# read any test results into tests.txt on github actions
 
 T=tests.txt
 > $T

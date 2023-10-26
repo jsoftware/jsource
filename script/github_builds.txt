@@ -1,23 +1,28 @@
 github builds
 
-Whenever the JE repo is updated, the linux/macos/windows binaries are built and standard tests are run.
+Whenever the jsource repo is updated, the JE binaries are built and standard tests are run.
 
-The process is defined in the repo file:
+The process is defined in the repo workflow:
 
   .github/workflows/jsource.yml
 
-This workflow references files in the repo script folder, e.g.
+This workflow calls files in the repo script:
 
-  buildga.cmd  - runs the windows builds
-  testga.cmd   - runs the windows tests
+  buildga.cmd   - windows builds
+  testga.cmd    - windows tests
 
-The tests start J and call testga.ijs to run the test suite.
+  buildga.sh    - non-windows builds
+  testga.sh     - non-windows tests
 
-Builds take place on runners which are machines created dynamically for each OS. Elapsed time is around 25 minutes for a successful run.
+  testgares.sh  - combines test results from each build
 
-If there is any failure, the entire workflow run is halted for that run.
+The tests start J and load testga.ijs to run the test suite.
 
-To see the status of a run, login to github and visit
+Builds take place on runners which are machines created dynamically for each OS. Elapsed time is around 1-2 hours for a successful run.
+
+If there is any failure, the entire workflow is halted.
+
+To see the status of a run, login to github and visit:
 
   https://github.com/jsoftware/jsource/actions
 
@@ -25,15 +30,10 @@ Recent runs are shown with a status mark. Drill down into a run name for the com
 
 If a run completes successfully, the JE binaries and test results are written to github area:
 
-  jsource/releases/tag/build
+  https://github.com/jsoftware/jsource/releases/tag/build
 
-If the latest commit has any change to the repo version.txt file, then the JE binaries are copied over to a staging area on the J webserver, at
+If the version is updated in the repo version.txt file, then after the first successful build the JE binaries are copied to the corresponding download area on the J webserver, e.g.
 
-  download/jengine/staged
-
-From there, they can be copied to a distribution folder, e.g. in jengine run:
-
-  cp -r staged/* j9.5
+  https://www.jsoftware.com/download/jengine/j9.5
 
 Github actions are documented at https://docs.github.com/en/actions
-

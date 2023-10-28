@@ -98,7 +98,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions \
  -Werror -Wextra -Wno-unknown-warning-option \
- -Wno-error=attributes \
+ -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \
  -Wno-empty-body \

@@ -1031,7 +1031,7 @@ __emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
 
 #endif
 
-#if defined(_WIN32) || ( !defined(__clang__) && defined( __GNUC__ ) && ( __GNUC__ == 4 ) && (__GNUC_MINOR__ < 4 ) )
+#if defined(_WIN32) || ( !defined(__clang__) && defined( __GNUC__ ) && ( __GNUC__ == 4 ) && (__GNUC_MINOR__ < 4 ) ) || defined(OPTMO0)
 /* use macro implementation instead of inline functions to allow -O0 for GCC pre 4.4 */
 
 // #pragma message ("Using macro for GCC <4.4" )

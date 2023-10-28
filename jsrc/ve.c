@@ -294,6 +294,53 @@ APFX(tymesIO, D,I,I, TYMESO,,R EVOK;)
 #define PREFZNEG(lo,hi) lo=_mm256_xor_pd(lo,sgnbit); hi=_mm256_xor_pd(hi,sgnbit); 
 primop256CE(plusZZ,0,Z,NAN0;,PREFNULL,PREFNULL,{z0=_mm256_add_pd(x0,y0); z1=_mm256_add_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(minusZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); NAN0;,PREFNULL,PREFZNEG,{z0=_mm256_add_pd(x0,y0); z1=_mm256_add_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
+// multiplication
+#define PREFCMPTO0Z(in0,in1) in0##non0=_mm256_cmp_pd(in0,_mm256_setzero_pd(),_CMP_NEQ_OQ); \
+in1##non0=_mm256_cmp_pd(in1,_mm256_setzero_pd(),_CMP_NEQ_OQ);
+
+#define MULZ { \
+ z0=_mm256_fmsub_pd(_mm256_and_pd(x0,y0non0),_mm256_and_pd(y0,x0non0),_mm256_mul_pd(_mm256_and_pd(x1,y1non0),_mm256_and_pd(y1,x1non0)));  /* real */ \
+ z1=_mm256_fmadd_pd(_mm256_and_pd(x1,y0non0),_mm256_and_pd(y0,x1non0),_mm256_mul_pd(_mm256_and_pd(x0,y1non0),_mm256_and_pd(y1,x0non0)));  /* imag */ \
+}
+
+primop256CE(tymesZZ,1,Z,__m256d x0non0; __m256d x1non0; __m256d y0non0; __m256d y1non0; NAN0;,PREFCMPTO0Z,PREFCMPTO0Z,MULZ,ASSERTWR(!NANTEST,EVNAN);)
+
+// division
+// the tricky part of taking the reciprocal of a complex number is avoiding overflow on the magnitude.
+// we create a power-of-2 multiplier that will move the value towards 1, and scale both parts by that amount; then
+// we take the magnitude^2 without overflow, scale the parts again, and divide to get the reciprocal
+#define RECIPZ(re,im) { \
+__m256d max=_mm256_castsi256_pd(__mm256_max_epu32(_mm256_castpd_si256(_mm256_andnot_pd(sgnbit,re)),_mm256_castpd_si256(_mm256_andnot_pd(sgnbit,im))));  /* max absolute value */ \
+/* exponent range [0,1]*fullscale is mapped into multiplier of [7/8,1/8]*fullscale which leaves the multiplied exponent  */ \
+/* in the range [3/8,5/8]  which will not overflow when squared or corrected again.  mplr = 7/8+1/4*exp-exp */ \
+/* we use multiply to modify the exponent so that 0 and inf will not change */ \
+__m256d mplr=_mm256_and_pd(_mm256_broadcast_sd((D*)&(I){0x7ff0000000000000}),_mm256_add_pd(_mm256_broadcast_sd((D*)&(I){0x6ee0000000000000}),_mm256_sub_pd(_mm256_srli_pd(max,2),max))); \
+/* we use multiply to modify the exponent so that 0 and inf will not change */ \
+re=_mm256_mul_pd(mplr,re); im=_mm256_mul_pd(mplr,im);  /* apply first correction */ \
+__m256d denom=_mm256_mul_pd(re,re); denom=_mm256_fmadd_pd(im,im,denom);  /* mag^2 of corrected cmplx */ \
+re=_mm256_mul_pd(mplr,re); im=_mm256_mul_pd(mplr,im);  /* apply second correction */ \
+re=_mm256_div_pd(re,denom); im=_mm256_div_pd(im,denom);  /* CONJUGATE of reciprocal */ \
+}
+
+#if 0
+#endifZF2(jtztymes){
+    D a,b,c,d;Z z;
+    a=u.re; b=u.im; c=v.re; d=v.im;)I
+ z.re=TYMES(a,c)-TYMES(b,d);
+ z.im=TYMES(a,d)+TYMES(b,c);
+ R z;
+}
+
+ZF2(jtzdiv){ZF2DECL;D t;
+ if(ZNZ(v)){
+  if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
+  a/=c; b/=c; d/=c; t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
+ }else if(ZNZ(u)){  // division by 0
+  if(ABS(a)>ABS(b))zr=a/0.0;else zi=b/0.0;  // set the larger axis to infibity
+ }
+ ZEPILOG;
+}
+#endif
 
 #else
    /* plusIB */                 /* plusII */                
@@ -301,12 +348,12 @@ APFX( plusZZ, Z,Z,Z, zplus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )
 
   /* minusIB */                 /* minusII */               
 APFX(minusZZ, Z,Z,Z, zminus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
- #endif
-   /* andBB */                 /* tymesBI */                   /* tymesBD */            
     /* tymesIB */               /* tymesII */                
     /* tymesDB */                /* tymesDD */ 
 APFX(tymesZZ, Z,Z,Z, ztymes,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )
 
+ #endif
+   /* andBB */                 /* tymesBI */                   /* tymesBD */            
 APFX(  divZZ, Z,Z,Z, zdiv,NAN0;,HDR1JERRNAN  )
 
      /* orBB */

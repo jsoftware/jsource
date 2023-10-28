@@ -429,7 +429,7 @@ atomveclp: ;  /* come back here to do next atom op vector loop, with z running *
  len0=m<8?m:len0;  /* if short, switch len0 to full length to reduce passes through op */ \
  len0&=NPAR-1;  /* prefix len: if long, to get to bdy; if short, to leave last block exactly NPAR or 0 */ \
  /* get mask for first read/write: same 2-bit values in lanes 01, and the other 2 bits in 23 */ \
- __m256i wrmask=_mm256_castpd_si256(_mm256_permutevar_ps(_mm256_broadcast_sd((D*)&maskec4123[len0]),_mm256_loadu_si256((__m256i*)&validitymask[2]))); \
+ __m256i wrmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[len0])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); \
  I len1=m+((4|-len0)<<(BW-3));    /* make len1 negative so we set new masks for the body.  We can recover len0 from len1.  We do this even if len0=0 to avoid misbranches */ \
  \
  /* loop m times, for each operation */ \
@@ -461,7 +461,7 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   if(likely(!((I)x&1))){  /* if x is not repeated... */ \
    in0=_mm256_loadu_pd((D*)((C*)z+(I)x)), in1=_mm256_loadu_pd((D*)((C*)z+(I)x)+NPAR); \
    SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */ \
-   if(fz&1){if((I)x&2){ceprefR(x0,x1)}else{ceprefL(x0,x1)}}  /* do LR processing for noncommut */ \
+   if(fz&1){ceprefL(x0,x1)}  /* do L processing for noncommut - value was not swapped */ \
   } \
   /* always read the y arg */ \
   in0=_mm256_loadu_pd((D*)((C*)z+(I)y)), in1=_mm256_loadu_pd((D*)((C*)z+(I)y)+NPAR); \
@@ -484,7 +484,7 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   z=(CET*)((I)z+(len0<<(LGSZI+1))); len1-=len0;  /* advance to next batch */ \
   if(len1!=0){  /* z is advanced.  Continue if there is more to do */ \
    /* set the mask for the last batch.  Unless m is 5-8, this will not hold anything up */ \
-   wrmask=_mm256_castpd_si256(_mm256_permutevar_ps(_mm256_broadcast_sd((D*)&maskec4123[len1&(NPAR-1)]),_mm256_loadu_si256((__m256i*)&validitymask[2]))); \
+   wrmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[len1&(NPAR-1)])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); \
    if(likely(len1>=NPAR))goto rdlp; else goto rdmasklp;  /* process nonempty next batch, under mask if it is the last one */ \
   } \
   /* fall through to loop exit if len hit 0 */  \

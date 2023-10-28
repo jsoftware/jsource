@@ -14,14 +14,15 @@ if [ "" = "$CFLAGS" ]; then
  case "$_DEBUG" in
   3) OPTLEVEL=" -O2 -g "
    NASM_FLAGS="-g";;
-  2) OPTLEVEL=" -O0 -ggdb "
+  2) OPTLEVEL=" -O0 -ggdb -DOPTMO0 "
    NASM_FLAGS="-g";;
   1) OPTLEVEL=" -O2 -g "
    NASM_FLAGS="-g"
    jplatform64=$(./jplatform64.sh)-debug;;
   *) OPTLEVEL=" -O2 ";;
  esac
-
+else
+ case "$CFLAGS" in *-O0*) OPTLEVEL=" -DOPTMO0 ";; *) ;; esac
 fi
 echo "jplatform64=$jplatform64"
 
@@ -98,6 +99,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions \
  -Werror -Wextra -Wno-unknown-warning-option \
+ -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \
  -Wno-empty-body \

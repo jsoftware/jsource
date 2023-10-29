@@ -86,7 +86,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
   // fetch descriptor of the bits we will format from this D
   UIL dbits=*(UIL*)&val[i];  // the bits of the float
   I exp=(dbits&0x7ff0000000000000)>>52;  // exponent, excess-3ff
-  I bits=(dbits&0xfffffffffffff)+((I)(exp!=0)<<52);  // bits to format including hidden bit
+  I bits=(dbits&0xfffffffffffff)+((IL)(exp!=0)<<52);  // bits to format including hidden bit
   I currbit=52, currexp=exp-0x3ff;  // bit# we are working on, and its exponent
   if(i==0)nextexp=MAX(currexp,-1);  // the next exponent needed in sequence, never skipping a fraction.  If val[1] skips exponents, we must process the intermediates
   while((currbit>=0||i==1)&&nextexp>=0){  // carry on till integer part finished.  Break at end of valid bits, but only if there are no more coming later

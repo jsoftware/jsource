@@ -672,7 +672,7 @@ jobs:
      uses: nttld/setup-ndk@v1
      with:
       ndk-version: r26b
-      local-cache: true
+      local-cache: false
 
    - name: Build JE (android)
      env:

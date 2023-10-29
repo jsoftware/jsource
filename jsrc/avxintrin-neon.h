@@ -3027,6 +3027,49 @@ FORCE_INLINE __m256 _mm256_fmsub_ps(__m256 a, __m256 b, __m256 c)
     return _mm256_sub_ps(_mm256_mul_ps(a,b),c);
 }
 
+#define _M256_IMPL2_M2T( type, type_2, func ) \
+FORCE_INLINE type _mm256_##func( type m256_param1, type_2 m256_param2 ) \
+{   type res; \
+    res.vect_i128.val[0] = _mm_##func( m256_param1.vect_i128.val[0], m256_param2.vect_i128.val[0] ); \
+    res.vect_i128.val[1] = _mm_##func( m256_param1.vect_i128.val[1], m256_param2.vect_i128.val[1] ); \
+    return ( res ); \
+}
+
+#define _M256_IMPL2_M1I_DUP( type, func ) \
+FORCE_INLINE type _mm256_##func( type m256_param1, const int param2 ) \
+{   type res; \
+    res.vect_i128.val[0] = _mm_##func( m256_param1.vect_i128.val[0], param2 ); \
+    res.vect_i128.val[1] = _mm_##func( m256_param1.vect_i128.val[1], param2 ); \
+    return ( res ); \
+}
+
+FORCE_INLINE __m128 _mm_permutevar_ps(__m128 a, __m128i control)
+{
+    int const* sel = (int const*)&control;
+    float const* src = (float const*)&a;
+    ALIGN_STRUCT(16) float dest[4];
+    int i=0;
+
+    for (; i<4; ++i)
+        dest[i] = src[ 3 & sel[i] ];
+
+    return ( *(__m128*)dest );
+}
+_M256_IMPL2_M2T( __m256, __m256i, permutevar_ps );
+
+FORCE_INLINE __m128d _mm_permutevar_pd(__m128d a, __m128i control)
+{
+    int64_t const* sel = (int64_t const*)&control;
+    double const* src = (double const*)&a;
+    ALIGN_STRUCT(16) double dest[2];
+    int i=0;
+
+    for (; i<2; ++i)
+        dest[i] = src[ (2 & sel[i]) >> 1 ];
+
+    return ( *(__m128d*)dest );
+}
+_M256_IMPL2_M2T( __m256d, __m256i, permutevar_pd );
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma pop_macro("ALIGN_STRUCT")

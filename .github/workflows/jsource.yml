@@ -671,7 +671,7 @@ jobs:
    - name: Setup Environment (android)
      uses: nttld/setup-ndk@v1
      with:
-      ndk-version: r26b
+      ndk-version: r25c
       local-cache: false
 
    - name: Build JE (android)

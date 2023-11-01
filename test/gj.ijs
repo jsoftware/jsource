@@ -82,6 +82,8 @@ f2 =: {{  NB. x iterations, max axis length y
 f =: (j./"1@:(-"1) -: -&:(j./"1))  NB. test cmplx add.  Last axis must be length 2
 1000 (f f2) 5 5 5 20
 
+0j0 = 1j0 % _j_
+
 
 4!:55 ;:'a b f f2 jdot t xd yd'
 

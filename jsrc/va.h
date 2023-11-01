@@ -392,10 +392,10 @@ AHDR2(name,void,void,void){ \
 }
 
 // convert from 4 16-byte atoms to 2 AVX registers
-#define SHUFIN(v0,v1,out0,out1) out0=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b0000),0b11011000); \
-  out1=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b1111),0b11011000);
-#define SHUFOUT(out0,out1,v0,v1) out0=_mm256_permute4x64_pd(out0,0b11011000); out1=_mm256_permute4x64_pd(out1,0b11011000); \
-  v0=_mm256_shuffle_pd(out0,out1,0b0000); v1=_mm256_shuffle_pd(out0,out1,0b1111);
+#define SHUFIN(v0,v1,out0,out1) {out0=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b0000),0b11011000); \
+  out1=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b1111),0b11011000);}
+#define SHUFOUT(out0,out1) {__m256d t0,t1; t0=_mm256_permute4x64_pd(out0,0b11011000); t1=_mm256_permute4x64_pd(out1,0b11011000); \
+  out0=_mm256_shuffle_pd(t0,t1,0b0000); out1=_mm256_shuffle_pd(t0,t1,0b1111);}
 #define PREFNULL(lo,hi)  // modify lo and hi as needed
 // loop for types that use 2 D values: CMPX and QP.  The inner loop is lengthy, so to save
 // instruction cache we do it only once, building all the other loops around the core.
@@ -416,8 +416,8 @@ AHDR2(name,CET,CET,CET){ \
   I t=m; m=n^REPSGN(n); n=t; /* convert vec len to positive, move to m; move outer loop count to n */ \
 atomveclp: ;  /* come back here to do next atom op vector loop, with z running */ \
   /* read the repeated value and convert to internal form */ \
-  x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); \
-  if(fz&1){if((I)x&2){ceprefR(x0,x1)}else{ceprefL(x0,x1)}}  /* do LR processing for noncommut */ \
+  if(!(fz&1)){x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); \
+  }else{if((I)x&2){y0=_mm256_broadcast_sd((D*)((I)x&-4)), y1=_mm256_broadcast_sd((D*)((I)x&-4)+1); ceprefR(y0,y1)}else{x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); ceprefL(x0,x1)}}  /* do LR processing for noncommut */ \
  } \
  /* loop n times - usually once, but may be repeated for each atom.  The loop is by branch back to atomveclp */ \
  \
@@ -441,21 +441,21 @@ rdmasklp: ;  /* here when we must read the new args under mask */ \
  if(likely(!((I)x&1))){  /* if x is not repeated... */ \
   in0=_mm256_maskload_pd((D*)((C*)z+(I)x),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)x+zinc),_mm256_slli_epi64(wrmask,1)); \
   SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */ \
-  if(fz&1){if((I)x&2){ceprefR(x0,x1)}else{ceprefL(x0,x1)}}  /* do LR processing for noncommut */ \
+  if(fz&1){ceprefL(x0,x1)}  /* do LR processing for noncommut */ \
  } \
  /* always read the y arg */ \
  in0=_mm256_maskload_pd((D*)((C*)z+(I)y),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)y+zinc),_mm256_slli_epi64(wrmask,1)); \
  \
 mainlp:  /* here when args have already been read.  x has been converted & prefixed; y not */ \
- SHUFIN(in0,in1,y0,y1);  /* convert y, which is always read, to llll hhhh form */ \
- if(fz&1){if((I)x&2){ceprefL(y0,y1)}else{ceprefR(y0,y1)}}  /* do LR processing for noncommut */ \
+ if(!(fz&1)){SHUFIN(in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */ \
+ else{if((I)x&2){SHUFIN(in0,in1,x0,x1) ceprefL(x0,x1)}else{ SHUFIN(in0,in1,y0,y1) ceprefR(y0,y1)}} \
  zzop;  /* do the main processing */ \
  \
- SHUFOUT(z0,z1,y0,y1);  /* put result into interleaved form for writing */ \
+ SHUFOUT(z0,z1);  /* put result into interleaved form for writing */ \
  /* write out the result and loop */ \
  if(len1>=2*NPAR){ \
   /* the NEXT batch can be written out in full (and so can this one).  Write the result, read new args and shuffle, and loop quickly */ \
-  _mm256_storeu_pd((D*)z,y0); _mm256_storeu_pd((D*)z+NPAR,y1);   /* write out */ \
+  _mm256_storeu_pd((D*)z,z0); _mm256_storeu_pd((D*)z+NPAR,z1);   /* write out */ \
   z=(CET*)((I)z+2*NPAR*SZI); len1-=NPAR;  /* advance to next batch */ \
 rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   if(likely(!((I)x&1))){  /* if x is not repeated... */ \
@@ -468,7 +468,7 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   goto mainlp; \
  }else if(len1>=NPAR){  /* next-to-last, or possibly last, batch */ \
   /* the next batch must be masked.  This one is OK; write the result, set the new mask, go back to read under mask */ \
-  _mm256_storeu_pd((D*)z,y0); _mm256_storeu_pd((D*)z+NPAR,y1);   /* write out */ \
+  _mm256_storeu_pd((D*)z,z0); _mm256_storeu_pd((D*)z+NPAR,z1);   /* write out */ \
   z=(CET*)((I)z+2*NPAR*SZI); len1-=NPAR;  /* advance to next batch */ \
   if(len1!=0)goto rdmasklp;  /* process nonempty last batch, under mask, which has already been set */ \
   /* if len is 0, fall through to loop exit */ \
@@ -479,8 +479,8 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   len0=len1<0?len0:len1;  /* len0=length of batch: len0 (first batch) or len1 (others) */ \
   len1&=((1LL<<(BW-3))-1); /* discard len0 from le ngth remaining */ \
   I zinc=(len0>2)<<(LGNPAR+LGSZI);  /* offset to second half of result, if it can be written */ \
-  _mm256_maskstore_pd((D*)((C*)z+zinc),_mm256_slli_epi64(wrmask,1),y1); \
-  _mm256_maskstore_pd((D*)(z),wrmask,y0); \
+  _mm256_maskstore_pd((D*)((C*)z+zinc),_mm256_slli_epi64(wrmask,1),z1); \
+  _mm256_maskstore_pd((D*)(z),wrmask,z0); \
   z=(CET*)((I)z+(len0<<(LGSZI+1))); len1-=len0;  /* advance to next batch */ \
   if(len1!=0){  /* z is advanced.  Continue if there is more to do */ \
    /* set the mask for the last batch.  Unless m is 5-8, this will not hold anything up */ \

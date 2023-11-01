@@ -347,7 +347,7 @@ if(likely(_mm256_testz_pd(denomis0,denomis0))){ /* no 0 divisors */ \
 } \
 }
 
-#if 0
+#if 1
 primop256CE(divZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d y0non0; __m256d y1non0; NAN0; __m256d denomis0;,PREFNULL,RECIPZ,DIVZ,ASSERTWR(!NANTEST,EVNAN);)
 #else  // this template used to debug
 #define fz 1

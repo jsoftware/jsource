@@ -942,7 +942,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   // look for 'names' =./=: .  If found (and the names do not begin with `), replace the string with a special form: a list of boxes where each box contains a name.
   // This form can appear only in compiled definitions
   if(AT(QCWORD(lv[j]))&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
-   A neww=words(t);
+   A neww; RZ(neww=words(t));  // find names; if string ill-formed, we might as well catch it now
    if(AN(neww)){  // ignore blank string
     A newt=every(neww,(A)&onmself);  // convert every word to a NAME block
     if(newt){lv[j-1]=QCINSTALLTYPE(t=incorp(newt),QCNOUN); AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later

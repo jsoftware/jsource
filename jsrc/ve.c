@@ -35,9 +35,9 @@ APFX(minDD, D,D,D, MIN,,R EVOK;)
 APFX(maxDD, D,D,D, MAX,,R EVOK;)
 APFX(tymesDD, D,D,D, TYMESDD,,R EVOK;)
 APFX(  divDD, D,D,D, DIV,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
-#endif
 APFX( plusEE, E,E,E, PLUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minusEE, E,E,E, MINUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
+#endif
 APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( divEE, E,E,E, DIVE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minEE, E,E,E, MINE,,R EVOK;)
@@ -291,9 +291,11 @@ APFX(minusIO, D,I,I, MINUSO,,R EVOK;)
 APFX(tymesIO, D,I,I, TYMESO,,R EVOK;)
 
 #if C_AVX2 || EMU_AVX2
+// complex arithmetic
+
 #define PREFZNEG(lo,hi) lo=_mm256_xor_pd(lo,sgnbit); hi=_mm256_xor_pd(hi,sgnbit); 
 primop256CE(plusZZ,0,Z,NAN0;,PREFNULL,PREFNULL,{z0=_mm256_add_pd(x0,y0); z1=_mm256_add_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
-primop256CE(minusZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); NAN0;,PREFNULL,PREFZNEG,{z0=_mm256_add_pd(x0,y0); z1=_mm256_add_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(minusZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); NAN0;,PREFNULL,PREFNULL,{z0=_mm256_sub_pd(x0,y0); z1=_mm256_sub_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
 // multiplication
 #define PREFCMPTO0Z(in0,in1) in0##non0=_mm256_cmp_pd(in0,_mm256_setzero_pd(),_CMP_NEQ_OQ); \
 in1##non0=_mm256_cmp_pd(in1,_mm256_setzero_pd(),_CMP_NEQ_OQ);
@@ -483,6 +485,25 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */
  R EVOK;
 }
 #endif
+
+// QP arithmetic
+#define PLUSEE {__m256d t,t0,t1;\
+t1=_mm256_add_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
+t0=_mm256_add_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_sub_pd(y1,t0)); /* t1/t0 = x1+y1, QP */ \
+t0=_mm256_add_pd(t0,_mm256_add_pd(x0,y0));  /* accumulate lower significance */ \
+z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
+CANONE(z1,z0) \
+}
+#define MINUSEE {__m256d t,t0,t1;\
+t1=_mm256_sub_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
+t0=_mm256_sub_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_add_pd(y1,t0)); /* t1/t0 = x1-y1, QP */ \
+t0=_mm256_add_pd(t0,_mm256_sub_pd(x0,y0));  /* accumulate lower significance */ \
+z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
+CANONE(z1,z0) \
+}
+
+primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
 
 
 

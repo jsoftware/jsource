@@ -112,6 +112,8 @@ static AMON(logZ,   Z,Z, *z=zlog(*x);)
 static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 static AMONPS(absE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^(*(UIL*)&x->hi&IMAX); *(UIL*)&z->hi=*(UIL*)&x->hi&~IMAX; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 
+static AMONPS(negE,   E,E, , {*(UIL*)&z->lo^=0x8000000000000000; *(UIL*)&z->hi^=0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
+
 static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
 
 extern AHDR1FN expI, expD, logI, logD;
@@ -127,6 +129,7 @@ UA va1tab[]={
  /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {0L,0L}, {0L,0L}, {0L,0L}}}, // others handled as dyads
  /* %: */ {{{ 0,VB}, {sqrtI,VD}, {sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}, {0,0}, {sqrtE,VUNCH}}},  // most cannot inplace lest CMPX
  /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}, {0,0}, {logD,VD+VDD}}},
+ /* 10 - (QP only) */ {{{}, {}, {}, {}, {}, {}, {}, {negE,VUNCH+VIPW}}},
 };
 
 
@@ -243,7 +246,7 @@ DF1(jtatomic1){A z;
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
- // Run the full dyad, retrying if a retryable error is returned
+ // Run the full op, retrying if a retryable error is returned
  NOUNROLL while(1){  // run until we get no error
   z=jtva1(jtinplace,w,self);  // execute the verb
   if(z||jt->jerr<=NEVM){RETF(z);}   // return if no error or error not retryable
@@ -251,6 +254,8 @@ DF1(jtatomic1){A z;
  }
 }
 
+#define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
+DF1(jtnegate){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R minus(conptr,w);}
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
 
 // special code for x ((<[!.0] |) * ]) y, implemented as if !.0

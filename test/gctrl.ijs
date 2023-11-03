@@ -67,6 +67,9 @@ test 'whilst. 1 do. 2 else. 3 end.'
 
 
 NB. Direct definition {{ }} ----------------------------------------------------------------------
+
+'open quote' -: ". etx '{{ a. =. }}'  NB. used to crash
+
 NB. Note SP added after {{ and }}
 f0=. 3 : 0
 NB.

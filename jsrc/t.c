@@ -50,6 +50,9 @@ static __attribute__((aligned(CACHELINESIZE))) const C alp[256]={
  VA2##vaid+0x80*(vaid==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 #define PRIMATOMIC2g(id,t,f0,f1,rm,rl,rr,vflg,vflg2,g) PRIMALL(id,id,t,f0,f1,0,g,0,.lu1.uavandx=0,VA2##id*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
+// used for -QP to avoid the subtract
+#define PRIMATOMIC2UV(vaid,id,uvid,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=uvid*sizeof(UA),VA2##vaid*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
+ VA2##vaid+0x80*(vaid==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 #define PRIMATOMIC1(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=(VA1##id-VA1ORIGIN)*sizeof(UA),0,rm,rl,rr,vflg,vflg2,0,0, \
  VA1##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 #define PRIMATOMIC12(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=(VA1##id-VA1ORIGIN)*sizeof(UA),VA2##id*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
@@ -94,7 +97,7 @@ PRIM primtab[256] = {
  /*  *  */  PRIMATOMIC12(CSTAR,   VERB, jtatomic1,  jtatomic2,  0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),
  /*  *. */  PRIMATOMIC2(CSTARDOT,CSTARDOT,VERB, jtpolar,   jtatomic2,    0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK2,VF2NONE|VF2PRIM),
  /*  *: */  PRIMATOMIC2(CSTARCO,CSTARCO, VERB, jtsquare,  jtatomic2,   0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),
- /*  -  */  PRIMATOMIC2(CMINUS,CMINUS,  VERB, jtnegate,  jtatomic2,  0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),
+ /*  -  */  PRIMATOMIC2UV(CMINUS,CMINUS,10,  VERB, jtnegate,  jtatomic2,  0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),  // 10 is function# inside va1
  /*  -. */  PRIMACV(CNOT,    VERB, jtnot,     jtless,   0,   RMAX,RMAX,VISATOMIC1|VASGSAFE|VJTFLGOK1|((7+(((ILESS-II0EPS)&0xf)<<3))&-SY_64),VF2NONE|VF2PRIM),  // native compound allowing &n - 64-bit only
  /*  -: */  PRIMACV(CHALVE,  VERB, jthalve,   jtmatch,  0,   RMAX,RMAX,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1,VF2NONE|VF2PRIM),  // alias CMATCH
  /*  %  */  PRIMATOMIC2(CDIV,CDIV,    VERB, jtrecip,   jtatomic2, 0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),

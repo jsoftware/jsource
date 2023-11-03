@@ -1267,11 +1267,11 @@ DF2(jtresidue){F2PREFIP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARS
 #define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
 // We use the right type of singleton so that we engage AVX loops
-#define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); A conptr3=numvr(n); conptr=AT(w)&INT?conptr2:conptr; conptr=AT(w)&FL?conptr3:conptr;  // for 0 or 1 only
+#define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
 #define SETCONPTR2(n) A conptr=num(n); A conptr3=numvr(n); conptr=AT(w)&FL?conptr3:conptr;   // used for 2, when the only options are INT/FL
 
 F1(jtnot   ){ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):minus(conptr,w);}
-F1(jtnegate){ARGCHK1(w); SETCONPTR(0) R minus(conptr,w);}
+// negate moved to va1
 F1(jtdecrem){ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R minus(w,conptr);}
 F1(jtincrem){ARGCHK1(w); SETCONPTR(1) R plus(conptr,w);}
 F1(jtduble ){ARGCHK1(w); SETCONPTR2(2) R tymes(conptr,w);}

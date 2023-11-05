@@ -194,6 +194,10 @@ if [ "${USE_GMP_H:=1}" -eq 1 ] ; then
  common="$common -I../../../../mpir/include"
 fi
 
+if [ "" != "$_MEMAUDIT" ]; then
+ common="$common -DMEMAUDIT=$_MEMAUDIT"
+fi
+
 case "$jplatform64" in
  *32*) USE_EMU_AVX=0;;
  wasm*) USE_EMU_AVX=0;;

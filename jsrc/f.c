@@ -72,28 +72,35 @@ static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s
 struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  I bsz=fb.ndig;  // size of buffer
  C *buf=fb.buf, *fbuf=fb.fbuf;  // pointer to MSD result loc, and frac workarea
- mvc(bsz,buf,1,MEMSET00); buf[0]=5;  // clear field to 0.5
+ mvc(bsz,buf,1,MEMSET00);  // clear field to 0.5
  C ndig=0;  //  # valid digits
  I dp=0;  // initial location of decimal point
- I fbufdp=0, fbuflen=1; fbuf[0]=5;  // init fraction to 0.5
+ I fbufdp=0, fbuflen=1; fbuf[0]=5;  // init fraction to 0.0
  if(v.hi<0){v.hi=-v.hi; v.lo=-v.lo;}  // take absolute value
  // our canonical form for qp values has the low part with its own sign bit.  For comp ease here we convert the low part to have the same sign as the high part,
  // by transferring 1 ULP from high to low if the signs differ.  This loses 1 ULP of the low part.
+ // This is complicated by the fact that the transfer is done in floating-point it might reduce the exponent of the high
+ // part, leading to overlap between the high and low.  So, we transfer the ULP from the high in fixed point, after
+ // we have restored the hidden bit, below.  Because the canonical form is [-1/2,1/2) in low part, adding 1 ULP cannot
+ // move the binary point of the low by enough to overlap the high
  I iulp=*(I*)&v.hi&0xfff0000000000000&REPSGN(*(I*)&v.hi^*(I*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
- D val[2]={v.hi-ulp,v.lo+ulp};
+ D val[2]={v.hi,v.lo+ulp};  // decrement of v.hi deferred
  I i; I nextexp;   // loop counter, sequential exponent tracker
- for(i=0;i<2;++i){
+ for(i=0;i<2;++i){  // scaf we could exit these loops when bits==0 rather than processing every bit
   // fetch descriptor of the bits we will format from this D
-  UIL dbits=*(UIL*)&val[i];  // the bits of the float
+  UIL dbits=*(UIL*)&val[i];  // the bits of the float, high part first
   I exp=(dbits&0x7ff0000000000000)>>52;  // exponent, excess-3ff
   I bits=(dbits&0xfffffffffffff)+((I)(exp!=0)<<52);  // bits to format including hidden bit
   I currbit=52, currexp=exp-0x3ff;  // bit# we are working on, and its exponent
-  if(i==0)nextexp=MAX(currexp,-1);  // the next exponent needed in sequence, never skipping a fraction.  If val[1] skips exponents, we must process the intermediates
+  if(i==0){  // code for high value only
+   bits-=ulp!=0.;  // remove ulp from high part without changing exponent
+   nextexp=MAX(currexp,-1);  // the next exponent needed in sequence, never skipping a fraction.  If val[1] skips exponents, we must process the intermediates
+  }
   while((currbit>=0||i==1)&&nextexp>=0){  // carry on till integer part finished.  Break at end of valid bits, but only if there are no more coming later
    // The next bit is integer.  Double the incumbent value and add the bit.
-   I ext=buf[0]>=5;  // set if this doubling will overflow into the next digit.
    I nadd=ndig;  // number of places to add: all valid digits
    I cry=nextexp>currexp?0:(bits>>currbit)&1;  // carry-in to lowest position: the bit we are working on (0 if a skipped exp)
+   I ext=(buf[0]>=5)|((ndig==0)&cry);  // set if this doubling will overflow into the next digit.
    if(nadd+ext>bsz){cry=buf[ndig-1]>=5; --nadd;}  // if we are trying to extend a full field, forget the new bit and round up the exiting digit
    DQ(nadd, I dig=2*buf[i]+cry; cry=dig>9; dig-=10&-cry; buf[i+ext]=dig;)  // double the digit string
    if(ext)buf[0]=1;  // extend with final carry out

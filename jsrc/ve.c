@@ -37,8 +37,8 @@ APFX(tymesDD, D,D,D, TYMESDD,,R EVOK;)
 APFX(  divDD, D,D,D, DIV,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( plusEE, E,E,E, PLUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minusEE, E,E,E, MINUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
-#endif
 APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
+#endif
 APFX( divEE, E,E,E, DIVE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minEE, E,E,E, MINE,,R EVOK;)
 APFX( maxEE, E,E,E, MAXE,,R EVOK;)
@@ -349,16 +349,58 @@ if(likely(_mm256_testz_pd(denomis0,denomis0))){ /* no 0 divisors */ \
 } \
 }
 
-#if 1
 primop256CE(divZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d y0non0; __m256d y1non0; NAN0; __m256d denomis0;,PREFNULL,RECIPZ,DIVZ,ASSERTWR(!NANTEST,EVNAN);)
-#else  // this template used to debug
+// QP arithmetic.  We do not support infinities.  If you multiply one, it might give NaN
+#define PLUSEE {__m256d t,t0,t1;\
+t1=_mm256_add_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
+t0=_mm256_add_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_sub_pd(y1,t0)); /* t1/t0 = x1+y1, QP */ \
+t0=_mm256_add_pd(t0,_mm256_add_pd(x0,y0));  /* accumulate lower significance */ \
+z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
+CANONE(z1,z0) \
+}
+#define MINUSEE {__m256d t,t0,t1;\
+t1=_mm256_sub_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
+t0=_mm256_sub_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_add_pd(y1,t0)); /* t1/t0 = x1-y1, QP */ \
+t0=_mm256_add_pd(t0,_mm256_sub_pd(x0,y0));  /* accumulate lower significance */ \
+z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
+CANONE(z1,z0) \
+}
+
+// This version is good to 103 bits: lower pps might have 4x the weight of the upper
+#if 1  // 103 bits
+#define MULTEE {__m256d t0,t1; \
+TWOPROD(x1,y1,t1,t0)  /* pp0 in qp */ \
+t0=_mm256_fmadd_pd(x1,y0,t0); t0=_mm256_fmadd_pd(x0,y1,t0); /* add in pp1 & 2 */ \
+TWOSUMBS(t1,t0,z1,z0)  /* remove overlap */ \
+CANONE(z1,z0)  /* canonicalize the extension */ \
+}
+
+#else  // 106 bits
+// We keep this valid to the last bit, which might be overkill
+#define MULTEE {__m256d pp00, pp01, pp10, pp11; \
+TWOPROD(x1,y1,pp00h,pp00l)  /* partial product 0 */ \
+pp11=_mm256_mul_pd(x1,y1);  /* partial product 3 */ \
+TWOPROD(x1,y0,pp01,t2) pp11=_mm256_add_pd(pp11,t2); /* pp1 */ \
+TWOPROD(x0,y1,pp10,t2) pp11=_mm256_add_pd(pp11,t2); /* pp2 */ \
+TWOSUM(pp00l,pp01,t1,t2) pp11=_mm256_add_pd(pp11,t2); /* pp0+pp1 */ \
+TWOSUM(t1,pp10,pp01,t2) pp11=_mm256_add_pd(pp11,t2); /* pp0+pp1+pp2 */ \
+TWOSUMBS(pp00,pp01,t1,t2) t2=_mm256_add_pd(pp11,t2);  /* create result 0 & 1, and propagate res2 into 1 */ \
+TWOSUMBS(t1,t2,z1,z0) /* remove overlap */ \
+CANONE(z1,z0)  /* canonicalize the extension */ \
+}
+#endif
+// primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEE,ASSERTWR(!NANTEST,EVNAN);)
+
+#if 1  // this template used to debug
 #define fz 1
-#define CET Z
-#define cepref __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); NAN0; __m256d denomis0; __m256d y0non0; __m256d y1non0; 
+#define CET E
+#define cepref __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0; 
 #define ceprefL PREFNULL
-#define ceprefR RECIPZ  // replaced in main line
+#define ceprefR PREFNULL  // replaced in main line
 #define cesuff ASSERTWR(!NANTEST,EVNAN);
-AHDR2(divZZ,CET,CET,CET){
+AHDR2(plusEE,CET,CET,CET){
  __m256d z0, z1, x0, x1, y0, y1, in0, in1;
  cepref
  /* convert vector args, which are the same size as z, to offsets from z; flag atom args */
@@ -404,40 +446,20 @@ mainlp:  /* here when args have already been read.  x has been converted & prefi
  if(!(fz&1)){SHUFIN(in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */
  else{if((I)x&2){SHUFIN(in0,in1,x0,x1) ceprefL(x0,x1)}else{
  SHUFIN(in0,in1,y0,y1)
-__m256i max=_mm256_max_epu32(_mm256_castpd_si256(_mm256_andnot_pd(sgnbit,y0)),_mm256_castpd_si256(_mm256_andnot_pd(sgnbit,y1)));  /* max absolute value */
-/* exponent range [0,1]*fullscale is mapped into multiplier of [7/8,1/8]*fullscale which leaves the multiplied exponent  */
-/* in the range [3/8,5/8]  which will not overflow when squared or corrected again.  mplr = 7/8+1/4*exp-exp */
-/* we use multiply to modify the exponent so that 0 and inf will not change */
-__m256d temp7ffd=_mm256_broadcast_sd((D*)&(I){0x7ff0000000000000});
-__m256i temp6ffi=_mm256_castpd_si256(_mm256_broadcast_sd((D*)&(I){0x6ff0000000000000}));
-__m256d mplr=_mm256_and_pd(temp7ffd,_mm256_castsi256_pd(_mm256_add_epi64(temp6ffi,_mm256_sub_epi64(_mm256_srli_epi64(max,2),max))));
-/* we use multiply to modify the exponent so that 0 and inf will not change */
-y0=_mm256_mul_pd(mplr,y0); y1=_mm256_mul_pd(mplr,y1);  /* apply first correction */
-__m256d denom=_mm256_mul_pd(y0,y0); denom=_mm256_fmadd_pd(y1,y1,denom);  /* mag^2 of corrected cmplx */
-denomis0=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(denom),_mm256_setzero_si256()));  /* is denom 0? */
-denom=_mm256_blendv_pd(denom,temp7ffd,denomis0); /* if denom=0, set to non0 so that result 0/denom is 0 with no NaN error */
-y0=_mm256_mul_pd(mplr,y0); y1=_mm256_mul_pd(mplr,y1);  /* apply second correction */
-__m256d denomisinf=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(denom),_mm256_castpd_si256(temp7ffd)));  /* is denom +inf? */
-y0=_mm256_blendv_pd(y0,_mm256_setzero_pd(),denomisinf); /* if denom inf, clear numerator in case it is _ also.  denom is inf^2 */
-y1=_mm256_blendv_pd(y1,_mm256_setzero_pd(),denomisinf);
-y0=_mm256_div_pd(y0,denom); y1=_mm256_div_pd(y1,denom);  /* CONJUGATE of reciprocal */
-y0non0=_mm256_or_pd(_mm256_cmp_pd(y0,_mm256_setzero_pd(),_CMP_NEQ_OQ),denomisinf); /* if non0, allow NaN on _*0; always if denom is _ */
-y1non0=_mm256_or_pd(_mm256_cmp_pd(y1,_mm256_setzero_pd(),_CMP_NEQ_OQ),denomisinf);
-
+// ceprefR here
+// end ceprefR
 }  /* do LR processing for noncommut */
 }
 
-if(likely(_mm256_testz_pd(denomis0,denomis0))){ /* no 0 divisors; y? may be 0 but not inf */
- z0=_mm256_fmadd_pd(_mm256_and_pd(x0,y0non0),y0,_mm256_mul_pd(_mm256_and_pd(x1,y1non0),y1));  /* real */ \
- z1=_mm256_fmsub_pd(_mm256_and_pd(x1,y0non0),y0,_mm256_mul_pd(_mm256_and_pd(x0,y1non0),y1));  /* imag */ \
-}else{__m256d num0,num1;  /* there is a zero divisor - do the paths separately and combine */
- num0=_mm256_andnot_pd(denomis0,x0); num1=_mm256_andnot_pd(denomis0,x1); /* convert nums at 0 to 0 */
- z0=_mm256_fmadd_pd(_mm256_and_pd(x0,y0non0),y0,_mm256_mul_pd(_mm256_and_pd(x1,y1non0),y1));  /* real */ \
- z1=_mm256_fmsub_pd(_mm256_and_pd(x1,y0non0),y0,_mm256_mul_pd(_mm256_and_pd(x0,y1non0),y1));  /* imag */ \
- __m256d temp=_mm256_broadcast_sd((D*)&inf); 
- z0=_mm256_blendv_pd(z0,_mm256_and_pd(_mm256_cmp_pd(x0,_mm256_setzero_pd(),_CMP_NEQ_OQ),_mm256_or_pd(temp,_mm256_and_pd(sgnbit,x0))),denomis0); /* if not 0, set to innf with sign */
- z1=_mm256_blendv_pd(z1,_mm256_and_pd(_mm256_cmp_pd(x1,_mm256_setzero_pd(),_CMP_NEQ_OQ),_mm256_or_pd(temp,_mm256_and_pd(sgnbit,x1))),denomis0); /* if not 0, set to innf with sign */
+// zzop here
+{__m256d t,t0,t1;
+t1=_mm256_add_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); 
+t0=_mm256_add_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_sub_pd(y1,t0)); /* t1/t0 = x1+y1, QP */ 
+t0=_mm256_add_pd(t0,_mm256_add_pd(x0,y0));  /* accumulate lower significance */ 
+z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ 
+CANONE(z1,z0) 
 }
+// end zzop
 
  SHUFOUT(z0,z1);  /* put result into interleaved form for writing */
  /* write out the result and loop */
@@ -485,25 +507,6 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */
  R EVOK;
 }
 #endif
-
-// QP arithmetic
-#define PLUSEE {__m256d t,t0,t1;\
-t1=_mm256_add_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
-t0=_mm256_add_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_sub_pd(y1,t0)); /* t1/t0 = x1+y1, QP */ \
-t0=_mm256_add_pd(t0,_mm256_add_pd(x0,y0));  /* accumulate lower significance */ \
-z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
-CANONE(z1,z0) \
-}
-#define MINUSEE {__m256d t,t0,t1;\
-t1=_mm256_sub_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
-t0=_mm256_sub_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_add_pd(y1,t0)); /* t1/t0 = x1-y1, QP */ \
-t0=_mm256_add_pd(t0,_mm256_sub_pd(x0,y0));  /* accumulate lower significance */ \
-z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
-CANONE(z1,z0) \
-}
-
-primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
-primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
 
 
 

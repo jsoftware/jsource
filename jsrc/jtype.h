@@ -205,7 +205,7 @@ typedef B                (*CMP)();    /* comparison function in sort     */
 typedef A                  X;
 typedef struct {X n,d;}    Q;
 typedef struct {D re,im;}  Z;
-typedef struct {D hi,lo;}  E;
+typedef struct {D lo,hi;}  E;
 typedef union {D d;UINT i[2];UI ui;} DI;
 
 #if (SYS & SYS_PC+SYS_MACINTOSH)        /* for use by the session manager  */

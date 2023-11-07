@@ -2974,7 +2974,7 @@ FORCE_INLINE __m256i _mm256_broadcastb_epi8 ( __m128i a )
 #define _mm256_shuffle_pd( m256_param1, m256_param2, param3 ) \
 ({   __m256d res; \
     res.vect_i128.val[0] = _mm_shuffle_pd( m256_param1.vect_i128.val[0], m256_param2.vect_i128.val[0], (param3) & ((1<<2)-1) ); \
-    res.vect_i128.val[1] = _mm_shuffle_pd( m256_param1.vect_i128.val[1], m256_param2.vect_i128.val[1], ( (param3) >> 2 ) & (1<<2) ); \
+    res.vect_i128.val[1] = _mm_shuffle_pd( m256_param1.vect_i128.val[1], m256_param2.vect_i128.val[1], ( (param3) >> 2 ) & ((1<<2)-1) ); \
     res; \
 })
 #define _mm256_shuffle_ps( m256_param1, m256_param2, param3 ) \

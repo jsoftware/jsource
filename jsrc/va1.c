@@ -110,9 +110,9 @@ static AMON(logB,   D,B, *z=*x?0:infm;)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
 static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
-static AMONPS(absE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^(*(UIL*)&x->hi&IMAX); *(UIL*)&z->hi=*(UIL*)&x->hi&~IMAX; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
+static AMONPS(absE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^(*(UIL*)&x->hi&0x7fffffffffffffffLL); *(UIL*)&z->hi=*(UIL*)&x->hi&0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 
-static AMONPS(negE,   E,E, , {*(UIL*)&z->lo^=0x8000000000000000; *(UIL*)&z->hi^=0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
+static AMONPS(negE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^0x8000000000000000; *(UIL*)&z->hi=*(UIL*)&x->hi^0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 
 static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
 

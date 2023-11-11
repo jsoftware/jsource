@@ -737,13 +737,8 @@ FORCE_INLINE void _mm256_zeroupper(void)
 #define  _mm256_slli_epi64( a, imm8) \
 ({ \
     __m256i result_m256i; \
-    if (likely(imm8 >= 0 && imm8 < 64)) { \
-        result_m256i.vect_s64[0] = vshlq_n_s64(a.vect_s64[0], imm8); \
-        result_m256i.vect_s64[1] = vshlq_n_s64(a.vect_s64[1], imm8); \
-    } else { \
-        result_m256i.vect_s64[0] = vdupq_n_s64(0); \
-        result_m256i.vect_s64[1] = vdupq_n_s64(0); \
-    }  \
+    result_m256i.vect_s64[0] = _mm_slli_epi64(a.vect_s64[0], imm8); \
+    result_m256i.vect_s64[1] = _mm_slli_epi64(a.vect_s64[1], imm8); \
     result_m256i; \
 })
 
@@ -784,14 +779,8 @@ FORCE_INLINE void _mm256_zeroupper(void)
 ({ \
     __m256i result_m256i; \
      \
-    if (likely(imm8 >= 0 && imm8 < 64)) { \
-        int64x2_t vect_imm = vdupq_n_s64(-imm8); \
-        result_m256i.vect_u64[0] = vshlq_u64(a.vect_u64[0], vect_imm); \
-        result_m256i.vect_u64[1] = vshlq_u64(a.vect_u64[1], vect_imm); \
-    } else { \
-        result_m256i.vect_u64[0] = vdupq_n_u64(0); \
-        result_m256i.vect_u64[1] = vdupq_n_u64(0); \
-    }  \
+    result_m256i.vect_s64[0] = _mm_srli_epi64(a.vect_s64[0], imm8); \
+    result_m256i.vect_s64[1] = _mm_srli_epi64(a.vect_s64[1], imm8); \
     result_m256i; \
 })
 
@@ -2790,15 +2779,16 @@ FORCE_INLINE __m256d _mm256_maskload_pd(double const* mem_addr, __m256i mask)
 {
     __m256d ret;
    int i;
+   int64_t sign_bit = 1L << (8*sizeof( int64_t ) - 1);
 
     for (i=0; i<2; i++){
-      if (mask.vect_s64[0][i])
+      if (sign_bit & mask.vect_s64[0][i])
         ret.vect_f64[0][i] = mem_addr[i];
       else
         ret.vect_f64[0][i] = 0.0;
     }
     for (i=0; i<2; i++){
-      if (mask.vect_s64[1][i])
+      if (sign_bit & mask.vect_s64[1][i])
         ret.vect_f64[1][i] = mem_addr[i + 2];
       else
         ret.vect_f64[1][i] = 0.0;
@@ -2810,12 +2800,13 @@ FORCE_INLINE __m256d _mm256_maskload_pd(double const* mem_addr, __m256i mask)
 FORCE_INLINE void _mm256_maskstore_pd(double * mem_addr, __m256i mask, __m256d a)
 {
    int i;
+   int64_t sign_bit = 1L << (8*sizeof( int64_t ) - 1);
     for (i=0; i<2; i++){
-      if (mask.vect_s64[0][i])
+      if (sign_bit & mask.vect_s64[0][i])
          mem_addr[i] = a.vect_f64[0][i];
     }
     for (i=0; i<2; i++){
-      if (mask.vect_s64[1][i])
+      if (sign_bit & mask.vect_s64[1][i])
          mem_addr[i + 2] = a.vect_f64[1][i];
     }
 }
@@ -2983,7 +2974,7 @@ FORCE_INLINE __m256i _mm256_broadcastb_epi8 ( __m128i a )
 #define _mm256_shuffle_pd( m256_param1, m256_param2, param3 ) \
 ({   __m256d res; \
     res.vect_i128.val[0] = _mm_shuffle_pd( m256_param1.vect_i128.val[0], m256_param2.vect_i128.val[0], (param3) & ((1<<2)-1) ); \
-    res.vect_i128.val[1] = _mm_shuffle_pd( m256_param1.vect_i128.val[1], m256_param2.vect_i128.val[1], (param3) >> 2 ); \
+    res.vect_i128.val[1] = _mm_shuffle_pd( m256_param1.vect_i128.val[1], m256_param2.vect_i128.val[1], ( (param3) >> 2 ) & ((1<<2)-1) ); \
     res; \
 })
 #define _mm256_shuffle_ps( m256_param1, m256_param2, param3 ) \
@@ -3017,8 +3008,8 @@ FORCE_INLINE __m256 _mm256_fmadd_ps(__m256 a, __m256 b, __m256 c)
 FORCE_INLINE __m256d _mm256_fmsub_pd(__m256d a, __m256d b, __m256d c)
 {
     __m256d res;
-    res.vect_f64[0] = vfmsq_f64(c.vect_f64[0], a.vect_f64[0], b.vect_f64[0]);  // *NOTE* argument swap
-    res.vect_f64[1] = vfmsq_f64(c.vect_f64[1], a.vect_f64[1], b.vect_f64[1]);  // *NOTE* argument swap
+    res.vect_f64[0] = vnegq_f64(vfmsq_f64(c.vect_f64[0], a.vect_f64[0], b.vect_f64[0]));  // *NOTE* argument swap
+    res.vect_f64[1] = vnegq_f64(vfmsq_f64(c.vect_f64[1], a.vect_f64[1], b.vect_f64[1]));  // *NOTE* argument swap
     return res;
 }
 
@@ -3027,6 +3018,49 @@ FORCE_INLINE __m256 _mm256_fmsub_ps(__m256 a, __m256 b, __m256 c)
     return _mm256_sub_ps(_mm256_mul_ps(a,b),c);
 }
 
+#define _M256_IMPL2_M2T( type, type_2, func ) \
+FORCE_INLINE type _mm256_##func( type m256_param1, type_2 m256_param2 ) \
+{   type res; \
+    res.vect_i128.val[0] = _mm_##func( m256_param1.vect_i128.val[0], m256_param2.vect_i128.val[0] ); \
+    res.vect_i128.val[1] = _mm_##func( m256_param1.vect_i128.val[1], m256_param2.vect_i128.val[1] ); \
+    return ( res ); \
+}
+
+#define _M256_IMPL2_M1I_DUP( type, func ) \
+FORCE_INLINE type _mm256_##func( type m256_param1, const int param2 ) \
+{   type res; \
+    res.vect_i128.val[0] = _mm_##func( m256_param1.vect_i128.val[0], param2 ); \
+    res.vect_i128.val[1] = _mm_##func( m256_param1.vect_i128.val[1], param2 ); \
+    return ( res ); \
+}
+
+FORCE_INLINE __m128 _mm_permutevar_ps(__m128 a, __m128i control)
+{
+    int const* sel = (int const*)&control;
+    float const* src = (float const*)&a;
+    ALIGN_STRUCT(16) float dest[4];
+    int i=0;
+
+    for (; i<4; ++i)
+        dest[i] = src[ 3 & sel[i] ];
+
+    return ( *(__m128*)dest );
+}
+_M256_IMPL2_M2T( __m256, __m256i, permutevar_ps );
+
+FORCE_INLINE __m128d _mm_permutevar_pd(__m128d a, __m128i control)
+{
+    int64_t const* sel = (int64_t const*)&control;
+    double const* src = (double const*)&a;
+    ALIGN_STRUCT(16) double dest[2];
+    int i=0;
+
+    for (; i<2; ++i)
+        dest[i] = src[ (2 & sel[i]) >> 1 ];
+
+    return ( *(__m128d*)dest );
+}
+_M256_IMPL2_M2T( __m256d, __m256i, permutevar_pd );
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma pop_macro("ALIGN_STRUCT")

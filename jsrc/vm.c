@@ -327,7 +327,6 @@ NAN0;
  R EVOK;
 }
 
-#if 0
 // typedef struct {IL hi; IL lo; } Sleef_quad;
 // in sleefquad.h
 // typedef struct { uint64_t x, y; } Sleef_quad;
@@ -355,15 +354,15 @@ E f128toe(Sleef_quad w){
  R CANONE1(hi,lo);  // return canonical form
 }
 
-Sleef_quad sleefq1=1.0;
-Sleef_quad sleefq0=0.0;
-Sleef_quad sleefq05=0.5;
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
+ Sleef_quad sleefq1=sleef_q(1LL,0LL,0);
+ Sleef_quad sleefq0=sleef_q(0LL,0LL,0);
+ Sleef_quad sleefq05=sleef_q(1LL,0LL,-1);
  NAN0;
  switch(k){
  default: ASSERTWR(0,EWIMAG);
- case  0: {DQ(n, t=*x++; Sleef_quad ts=etof128(t); Sleef_quad tsqm1=Sleef_subq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1)
-    ASSERTWR(Sleef_icmplge1_purecfma(tsqm1,sleefq0), EWIMAG ) *z++=f128toe(Sleef_sqrtq1_u05purecfma(tsqm1));); } break;
+ case  0: {DQ(n, t=*x++; Sleef_quad ts=etof128(t); Sleef_quad tsqm1=Sleef_subq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1);
+    ASSERTWR(Sleef_icmpgeq1_purecfma(tsqm1,sleefq0), EWIMAG ) *z++=f128toe(Sleef_sqrtq1_u05purecfma(tsqm1));); } break;
  case  1: ;
    DQ(n, t=*x++; ASSERTWR(ABS(t.hi)<THMAX,EVLIMIT); *z++=f128toe(Sleef_sinq1_u10purecfma(etof128(t))););   break;
  case  2:  ;
@@ -371,46 +370,46 @@ static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
  case  3:  ;
    DQ(n, t=*x++; ASSERTWR(ABS(t.hi)<THMAX,EVLIMIT); *z++=f128toe(Sleef_tanq1_u10purecfma(etof128(t)));); break;
  break;
- case  4: {DQ(n, t=*x++; if(ABS(t.hi)>1e-17)*z++=t; else {Sleef_quad ts=etof128(t); Sleef_quad tsqp1=Sleef_addq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1)
-    *z++=f128toe(Sleef_sqrtq1_u05purecfma(tsqp1));); } break;
- case  5:   DQ(n, t=*x++; if(ABS(t.hi)>EMAX2){*z++=(E){t.hi<0?infm:inf,copysign(0.,t.hi)} else *z++=f128toe(Sleef_sinhq1_u10purecfma(etof128(t)));});   break;
- case  6:   DQ(n, t=*x++; if(ABS(t.hi)>EMAX2){*z++=(E){inf,0} else *z++=f128toe(Sleef_coshq1_u10purecfma(etof128(t)));});   break;
- case  7:   DQ(n, t=*x++; if(ABS(t.hi)>TMAX){*z++=(E){t.hi<0?-1.:1.,copysign(0.,t.hi)} else *z++=f128toe(Sleef_tanhq1_u10purecfma(etof128(t)));});   break;
+ case  4: {DQ(n, t=*x++; if(ABS(t.hi)>1e17){if(t.hi>0)*z++=t; else{z->hi=-t.hi; z->lo=-t.lo;}} else {Sleef_quad ts=etof128(t); Sleef_quad tsqp1=Sleef_addq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1);
+    *z=f128toe(Sleef_sqrtq1_u05purecfma(tsqp1));} ++z;) } break;
+ case  5:   DQ(n, t=*x++; if(ABS(t.hi)>EMAX2){*z++=(E){t.hi<0?infm:inf,copysign(0.,t.hi)};} else {*z++=f128toe(Sleef_sinhq1_u10purecfma(etof128(t)));});   break;
+ case  6:   DQ(n, t=*x++; if(ABS(t.hi)>EMAX2){*z++=(E){inf,0};} else {*z++=f128toe(Sleef_coshq1_u10purecfma(etof128(t)));});   break;
+ case  7:   DQ(n, t=*x++; if(ABS(t.hi)>TMAX){*z++=(E){t.hi<0?-1.:1.,copysign(0.,t.hi)};} else {*z++=f128toe(Sleef_tanhq1_u10purecfma(etof128(t)));});   break;
  case -1: ;
-   DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmplle1_purecfma(ts,sleefq1), EWIMAG); *z++=f128toe(Sleef_asinq1_u10purecfma(ts)););   break;
+   DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmpleq1_purecfma(ts,sleefq1), EWIMAG); *z++=f128toe(Sleef_asinq1_u10purecfma(ts)););   break;
  case -2: ;
-   DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmplle1_purecfma(ts,sleefq1), EWIMAG); *z++=f128toe(Sleef_acosq1_u10purecfma(ts)););   break;
+   DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmpleq1_purecfma(ts,sleefq1), EWIMAG); *z++=f128toe(Sleef_acosq1_u10purecfma(ts)););   break;
  case -3: ;
    DQ(n, t=*x++; *z++=f128toe(Sleef_atanq1_u10purecfma(etof128(t))););   break;
   break;
- case -4: DQ(n, t=*x++; Sleef_quad ts=etof128(t);  ASSERTWR(Sleef_icmplle1_purecfma(Sleef_absq1_u5purecfma(ts),sleefq0),  EWIMAG );
-          if(ABS(t.hi)>1e17)*z++=t; else { Sleef_quad tsp1=Sleef_addq1_u05purecfma(ts,sleefq1); if(Sleef_icmpeq1_purecfma(tsp1,sleefq0)*z++=(E){-1,-0};
-          else{*z++=Sleef_mulq1_u05purecfma(tsp1,Sleef_sqrtq1_u05purecfma(Sleef_divq1_u05purecfma(tsm1,tsp1)));}
+ case -4: DQ(n, t=*x++; Sleef_quad ts=etof128(t);  ASSERTWR(Sleef_icmpleq1_purecfma(Sleef_fabsq1_purecfma(ts),sleefq0),  EWIMAG );
+          if(ABS(t.hi)>1e17)*z++=t; else {Sleef_quad tsp1=Sleef_addq1_u05purecfma(ts,sleefq1); if(Sleef_icmpeqq1_purecfma(tsp1,sleefq0))*z++=(E){-1,-0};
+          else{Sleef_quad tsm1=Sleef_subq1_u05purecfma(ts,sleefq1); *z++=f128toe(Sleef_mulq1_u05purecfma(tsp1,Sleef_sqrtq1_u05purecfma(Sleef_divq1_u05purecfma(tsm1,tsp1))));}
           }
+            );   break;
  case -5: DQ(n, t=*x++; Sleef_quad ts=etof128(t);
                 if(t.hi>1e17){*z++=f128toe(Sleef_addq1_u05purecfma(Sleef_logq1_u10purecfma(ts),SLEEF_M_LN2q));
-                }else{*z++=Sleef_addq1_u05purecfma(ts,Sleef_sqrtq1_u05purecfma(Sleef_subq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1)))
+                }else{*z++=f128toe(Sleef_addq1_u05purecfma(ts,Sleef_sqrtq1_u05purecfma(Sleef_subq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1))));
                 }
             );   break;
- case -6: DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmplge1_purecfma(ts,sleefq1), EWIMAG);
+ case -6: DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmpgeq1_purecfma(ts,sleefq1), EWIMAG);
                 if(t.hi>1e17){*z++=f128toe(Sleef_addq1_u05purecfma(Sleef_logq1_u10purecfma(ts),SLEEF_M_LN2q));
-               }else if(t<-8e6){*z++=f128toe(Sleef_addq1_u05purecfma(Sleef_logq1_u10purecfma(Sleef_negq1_purec(ts))),SLEEF_M_LN2q);
-               }else{*z++=Sleef_addq1_u05purecfma(ts,Sleef_sqrtq1_u05purecfma(Sleef_addq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1)))
+               }else if(t.hi<-8e6){*z++=f128toe(Sleef_addq1_u05purecfma(Sleef_logq1_u10purecfma(Sleef_negq1_purec(ts)),SLEEF_M_LN2q));
+               }else{*z++=f128toe(Sleef_addq1_u05purecfma(ts,Sleef_sqrtq1_u05purecfma(Sleef_addq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1))));
                }
             );   break;
- case -7: DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmplge1_purecfma(Sleef_absq1_u5purecfma(ts),sleefq1), EWIMAG);
-                *z++=Sleef_mulq1_u05purecfma(sleefq05,Sleef_logq1_u10purecfma(Sleef_divq1_u05purecfma(Sleef_addq1_u05purecfma(sleefq1,ts),Sleef_subq1_u05purecfma(sleefq1,ts))));
+ case -7: DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmpgeq1_purecfma(Sleef_fabsq1_purecfma(ts),sleefq1), EWIMAG);
+                *z++=f128toe(Sleef_mulq1_u05purecfma(sleefq05,Sleef_logq1_u10purecfma(Sleef_divq1_u05purecfma(Sleef_addq1_u05purecfma(sleefq1,ts),Sleef_subq1_u05purecfma(sleefq1,ts)))));
             );   break;
        
  case  9: DQ(n,         *z++=*x++;);           break;    
  case 10: DQ(n, t=*x++; D oldsgn=t.hi; z->hi=ABS(t.hi); *(IL*)&z->lo=*(IL*)&t.lo^(*(IL*)&oldsgn&0x8000000000000000);    z++;);         break;
- case 11: DQ(n,         z->hi=z.lo=0.0; ++z);            break;
- case 12: DQ(n,         *z++=*(0<=*x++?(E*)&zeroZ:&epi);); break;
+ case 11: DQ(n,         z->hi=z->lo=0.0; ++z;)            break;
+ case 12: DQ(n,         *z++=*(0<=x->hi?(E*)&zeroZ:&epi); ++x;); break;
  }
  ASSERTWR(!NANTEST,EVNAN);
  R EVOK;
 }
-#endif
 
 AHDR2(cirBD,D,B,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   (I)*x,z,y);}
 AHDR2(cirID,D,I,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   *x,z,y);}
@@ -422,14 +421,12 @@ AHDR2(cirDD,D,D,D){I k=(I)jround(*x);
  R cirx(n,k,z,y);
 }
 
-#if 0
-AHDR2(cirEE,D,D,D){I k=(I)jround(*x);
- ASSERTWR(k==*x,EVDOMAIN); 
+AHDR2(cirEE,E,E,E){I k=(I)jround(x->hi);
+ ASSERTWR(k==x->hi,EVDOMAIN); 
  ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
  n^=REPSGN(n);   // convert complementary n to nonneg
  R jtcire(jt,n,k,z,y);
 }
-#endif
 
 
 F2(jtlogar2){A z;I t;

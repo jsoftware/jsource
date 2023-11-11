@@ -294,8 +294,8 @@ APFX(tymesIO, D,I,I, TYMESO,,R EVOK;)
 // complex arithmetic
 
 #define PREFZNEG(lo,hi) lo=_mm256_xor_pd(lo,sgnbit); hi=_mm256_xor_pd(hi,sgnbit); 
-primop256CE(plusZZ,0,Z,NAN0;,PREFNULL,PREFNULL,{z0=_mm256_add_pd(x0,y0); z1=_mm256_add_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
-primop256CE(minusZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); NAN0;,PREFNULL,PREFNULL,{z0=_mm256_sub_pd(x0,y0); z1=_mm256_sub_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(plusZZ,2,Z,NAN0;,PREFNULL,PREFNULL,{z0=_mm256_add_pd(x0,y0); z1=_mm256_add_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(minusZZ,3,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); NAN0;,PREFNULL,PREFNULL,{z0=_mm256_sub_pd(x0,y0); z1=_mm256_sub_pd(x1,y1);},ASSERTWR(!NANTEST,EVNAN);)
 // multiplication
 #define PREFCMPTO0Z(in0,in1) in0##non0=_mm256_cmp_pd(in0,_mm256_setzero_pd(),_CMP_NEQ_OQ); \
 in1##non0=_mm256_cmp_pd(in1,_mm256_setzero_pd(),_CMP_NEQ_OQ);
@@ -389,15 +389,15 @@ TWOSUMBS(t1,t2,z1,z0) /* remove overlap */ \
 CANONE(z1,z0)  /* canonicalize the extension */ \
 }
 #endif
-// primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEE,ASSERTWR(!NANTEST,EVNAN);)
 
-#if 1  // this template used to debug
+#if 0  // this template used to debug
 #define fz 1
 #define CET E
 #define cepref __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0; 
-#define ceprefL PREFNULL
+#define ceprefL PREFNULL  // replaced in main line
 #define ceprefR PREFNULL  // replaced in main line
 #define cesuff ASSERTWR(!NANTEST,EVNAN);
 AHDR2(plusEE,CET,CET,CET){
@@ -436,16 +436,16 @@ rdmasklp: ;  /* here when we must read the new args under mask */
  I zinc=(totallen>2)<<(LGNPAR+LGSZI);  /* offset to second half of input, if it is valid */
  if(likely(!((I)x&1))){  /* if x is not repeated... */
   in0=_mm256_maskload_pd((D*)((C*)z+(I)x),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)x+zinc),_mm256_slli_epi64(wrmask,1));
-  SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */
+  SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */
   if(fz&1){ceprefL(x0,x1)}  /* do LR processing for noncommut */
  }
  /* always read the y arg */
  in0=_mm256_maskload_pd((D*)((C*)z+(I)y),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)y+zinc),_mm256_slli_epi64(wrmask,1));
 
 mainlp:  /* here when args have already been read.  x has been converted & prefixed; y not, it is in in0/1 */
- if(!(fz&1)){SHUFIN(in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */
- else{if((I)x&2){SHUFIN(in0,in1,x0,x1) ceprefL(x0,x1)}else{
- SHUFIN(in0,in1,y0,y1)
+ if(!(fz&1)){SHUFIN(fz,in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */
+ else{if((I)x&2){SHUFIN(fz,in0,in1,x0,x1) ceprefL(x0,x1)}else{
+ SHUFIN(fz,in0,in1,y0,y1)
 // ceprefR here
 // end ceprefR
 }  /* do LR processing for noncommut */
@@ -461,7 +461,7 @@ CANONE(z1,z0)
 }
 // end zzop
 
- SHUFOUT(z0,z1);  /* put result into interleaved form for writing */
+ SHUFOUT(fz,z0,z1);  /* put result into interleaved form for writing */
  /* write out the result and loop */
  if(len1>=2*NPAR){
   /* the NEXT batch can be written out in full (and so can this one).  Write the result, read new args and shuffle, and loop quickly */
@@ -470,7 +470,7 @@ CANONE(z1,z0)
 rdlp: ;  /* come here to fetch next batch & store it without masking */
   if(likely(!((I)x&1))){  /* if x is not repeated... */
    in0=_mm256_loadu_pd((D*)((C*)z+(I)x)), in1=_mm256_loadu_pd((D*)((C*)z+(I)x)+NPAR);
-   SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */
+   SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */
    if(fz&1){ceprefL(x0,x1)}  /* do L processing for noncommut - value was not swapped */
   }
   /* always read the y arg */

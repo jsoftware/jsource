@@ -391,16 +391,14 @@ AHDR2(name,void,void,void){ \
  suff \
 }
 
-// convert from 4 16-byte atoms to 2 AVX registers
-#define SHUFIN(v0,v1,out0,out1) {out0=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b0000),0b11011000); \
-  out1=_mm256_permute4x64_pd(_mm256_shuffle_pd(v0,v1,0b1111),0b11011000);}
-#define SHUFOUT(out0,out1) {__m256d t0,t1; t0=_mm256_permute4x64_pd(out0,0b11011000); t1=_mm256_permute4x64_pd(out1,0b11011000); \
-  out0=_mm256_shuffle_pd(t0,t1,0b0000); out1=_mm256_shuffle_pd(t0,t1,0b1111);}
+// convert from 4 16-byte atoms to 2 AVX registers in order 0 2 1 3
+#define SHUFIN(fz,v0,v1,out0,out1) if(fz&2){out0=v0;out1=v1;}else{out0=_mm256_unpacklo_pd(v0,v1); out1=_mm256_unpackhi_pd(v0,v1);}
+#define SHUFOUT(fz,out0,out1) if(!(fz&2)){__m256d t0=out0; out0=_mm256_shuffle_pd(out0,out1,0b0000); out1=_mm256_shuffle_pd(t0,out1,0b1111);}
 #define PREFNULL(lo,hi)  // modify lo and hi as needed
 // loop for types that use 2 D values: CMPX and QP.  The inner loop is lengthy, so to save
 // instruction cache we do it only once, building all the other loops around the core.
 // prefL and prefR are macros, used for noncommutative operations
-// fz: 1 set if NONcommutative operator
+// fz: 1 set if NONcommutative operator  2 set if shuffle suppressed
 // n=1 vec+vec n<0 atom+vec  n>1 vec+atom
 
 #define primop256CE(name,fz,CET,cepref,ceprefL,ceprefR,zzop,cesuff) \
@@ -416,8 +414,20 @@ AHDR2(name,CET,CET,CET){ \
   I t=m; m=n^REPSGN(n); n=t; /* convert vec len to positive, move to m; move outer loop count to n */ \
 atomveclp: ;  /* come back here to do next atom op vector loop, with z running */ \
   /* read the repeated value and convert to internal form */ \
-  if(!(fz&1)){x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); \
-  }else{if((I)x&2){y0=_mm256_broadcast_sd((D*)((I)x&-4)), y1=_mm256_broadcast_sd((D*)((I)x&-4)+1); ceprefR(y0,y1)}else{x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); ceprefL(x0,x1)}}  /* do LR processing for noncommut */ \
+  if(!(fz&1)){  /* commutative value */ \
+   if(!(fz&2)){x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); /* read and shuffle=broadcast */ \
+   }else{x0=_mm256_broadcast_pd((__m128d*)((I)x&-4)), x1=x0;}  /* broadcast pairs, no shuffle */ \
+  }else{ \
+   if((I)x&2){ \
+    if(!(fz&2)){y0=_mm256_broadcast_sd((D*)((I)x&-4)), y1=_mm256_broadcast_sd((D*)((I)x&-4)+1); \
+    }else{y0=_mm256_broadcast_pd((__m128d*)((I)x&-4)), y1=y0;}  /* broadcast pairs, no shuffle */ \
+    ceprefR(y0,y1) \
+   }else{ \
+    if(!(fz&2)){x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); \
+    }else{x0=_mm256_broadcast_pd((__m128d*)((I)x&-4)), x1=x0;}  /* broadcast pairs, no shuffle */ \
+    ceprefL(x0,x1) \
+   } \
+  }  /* do LR processing for noncommut */ \
  } \
  /* loop n times - usually once, but may be repeated for each atom.  The loop is by branch back to atomveclp */ \
  \
@@ -440,18 +450,18 @@ rdmasklp: ;  /* here when we must read the new args under mask */ \
  I zinc=(totallen>2)<<(LGNPAR+LGSZI);  /* offset to second half of input, if it is valid */ \
  if(likely(!((I)x&1))){  /* if x is not repeated... */ \
   in0=_mm256_maskload_pd((D*)((C*)z+(I)x),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)x+zinc),_mm256_slli_epi64(wrmask,1)); \
-  SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */ \
+  SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */ \
   if(fz&1){ceprefL(x0,x1)}  /* do LR processing for noncommut */ \
  } \
  /* always read the y arg */ \
  in0=_mm256_maskload_pd((D*)((C*)z+(I)y),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)y+zinc),_mm256_slli_epi64(wrmask,1)); \
  \
 mainlp:  /* here when args have already been read.  x has been converted & prefixed; y not */ \
- if(!(fz&1)){SHUFIN(in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */ \
- else{if((I)x&2){SHUFIN(in0,in1,x0,x1) ceprefL(x0,x1)}else{ SHUFIN(in0,in1,y0,y1) ceprefR(y0,y1)}} \
+ if(!(fz&1)){SHUFIN(fz,in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */ \
+ else{if((I)x&2){SHUFIN(fz,in0,in1,x0,x1) ceprefL(x0,x1)}else{SHUFIN(fz,in0,in1,y0,y1) ceprefR(y0,y1)}} \
  zzop;  /* do the main processing */ \
  \
- SHUFOUT(z0,z1);  /* put result into interleaved form for writing */ \
+ SHUFOUT(fz,z0,z1);  /* put result into interleaved form for writing */ \
  /* write out the result and loop */ \
  if(len1>=2*NPAR){ \
   /* the NEXT batch can be written out in full (and so can this one).  Write the result, read new args and shuffle, and loop quickly */ \
@@ -460,7 +470,7 @@ mainlp:  /* here when args have already been read.  x has been converted & prefi
 rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   if(likely(!((I)x&1))){  /* if x is not repeated... */ \
    in0=_mm256_loadu_pd((D*)((C*)z+(I)x)), in1=_mm256_loadu_pd((D*)((C*)z+(I)x)+NPAR); \
-   SHUFIN(in0,in1,x0,x1);  /* convert to llll hhhh form */ \
+   SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */ \
    if(fz&1){ceprefL(x0,x1)}  /* do L processing for noncommut - value was not swapped */ \
   } \
   /* always read the y arg */ \

@@ -116,8 +116,8 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CLOG:     R nf?amp(x,ds(CEXP)):amp(ds(CROOT),x);
   case CJDOT:    R nf?atop(invrecur(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));
   case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
-  case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));  // scaf
-// obsolete   case CLBRACE:  if(!nf)R amp(x,ds(CIOTA)); break;
+// obsolete   case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));
+  case CLBRACE:  if(!nf)R amp(x,ds(CIOTA)); break;
   case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);
   case CPDERIV:  if(nf&&!AR(x))R ds(CPDERIV); break;  // only atom&p.. is invertible
 xco:

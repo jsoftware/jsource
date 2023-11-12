@@ -346,7 +346,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
      JMCSETMASK(endmask,cellsize<<lgk,mvbytelen)   // prepare for repeated move
     }
    }else if(unlikely(acatoms<0)){  // AN<0 is a flag indicating -@:{`[`]}.  Type must be CMPX/FL/QP.  There is no a
-// scaf     cellsize<<=lgk-LGSZD;  // lgk is 3 for FL, 4 for QP/CMPX.  Convert cellsize to count of D atoms
+    cellsize<<=lgk-LGSZD; lgk=LGSZD;  // lgk is 3 for FL, 4 for QP/CMPX.  Convert cellsize to count of D atoms, and switch atom size to SZD
     if(cellsize==1){  // just 1 word per cell, use duff loop
      I backupct=(-n0)&3;  //  duff backup
      n0=(n0+3)>>2;  // convert n0 into # turns through duff loop, giving 4 cells per turn
@@ -358,7 +358,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
     acatoms<<=lgk;  // repurpose atom count to byte count for this loop
     avnreset+=acatoms;  // compensate for not incrementing in the loop
    }
-   cellsize<<=LGSZD;  // convert cellsize to bytes for the rest of the processing
+   cellsize<<=lgk;  // convert cellsize to bytes for the rest of the processing
   }else{
    // replacing recursive indirect blocks
    // cases: multiple cells of a; single cell of a, repeated; single cell of a, duped; single atom of a, repeated

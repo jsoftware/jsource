@@ -166,7 +166,9 @@ m&^  testx (m&^.)            [ m=:o.?10000
 ^&m  testx (m&%:)            [ m=:o.?10000
 m&%: testx (^&m)             [ m=:o.?10000
 %:&m testx (^.&m)            [ m=:o.?10000
-p&{  testx ((/:p)&{ )        [ p=:?~13
+NB. removed for Structural Under p&{  testx ((/:p)&{ )        [ p=:?~13
+p&C.  testx ((/:@(p&C.)@(i.@#) {  ]) :.(p&C.))        [ p=:?~13
+
 
 ([: *: [: +: [: -:    |.  ) testx ([: |. [: +: [: -: %:)
 ([: *: [: +: [: -: [: |. ]) testx ([: |. [: +: [: -: %:)

@@ -652,7 +652,7 @@ DF2(jtrollk){A g,z;V*sv;
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
 static X jtxrand(J jt,X x){PROLOG(0090);
- if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
+ // CONSTRAINT NO LONGER VALID: if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
  if (unlikely(1>(XSGN(x)))) SEGFAULT; // x must be positive -- anything else is a coding error
  I n=XLIMBLEN(x), *xv=AV(x);  // number of Digits in x, &first digit
  X q= GAGMP(q, n*SZI); UI*qv= UIAV1(q); // result goes here
@@ -898,7 +898,7 @@ DF2(jtrollkdot){A g,z;V*sv;
 #define xrand(w) jtxranddot(jt,(w))
 #define XBASE 10000 /* flash from the past */
 static X jtxranddot(J jt,X x){PROLOG(0090); // A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
- if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
+ // CONSTRAINT NO LONGER VALID: if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
  if (unlikely(1>(XSGN(x)))) SEGFAULT; // x must be positive -- anything else is a coding error
  I n= oldsize(x); // number of "old big digits" to represent x
  A q; GATV0(q,INT,n,1); I*qv= AV(q); // range of values which might appear at each digit position

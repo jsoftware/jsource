@@ -139,6 +139,7 @@ extern B nogmp(void);
 #define GMP ASSERT(!nogmp(), EVMISSINGGMP); GEMP0 // interface error if libgmp is not available
 extern void*jmalloc4gmp(size_t);
 #define GAGMP(z,n) (z=({n ?({GEMP0; mpz_t mpd= {n/SZI, n/SZI, jmalloc4gmp(n)}; Xmp(d);}) :X0;}))
+#define GAX(z, n) GA10(z, LIT, SZI*n)   // like GAGMP but native J alloc
 extern X jtXmpzcommon(J, mpz_t, B);
 extern Q jtQmpq(J, mpq_t);
 
@@ -271,6 +272,19 @@ EXTERN Q Q0;             // 0r1 internal form
 EXTERN Q Q_1;            // _1r1 internal form
 EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 
+// workalike for mpn_neg (could be better optimized)
+// see: https://gmplib.org/manual/Low_002dlevel-Functions
+#if !defined(jmpn_neg)
+#define jmpn_neg(z, w, wn) ({mp_ptr Z=z, W=w; mp_size_t N=wn; B r;\
+  while (0 == *W) {                /* find lowest non-zero limb */\
+   *Z= 0;                                            /* -0 is 0 */\
+   if (!--N) {r= 0; goto done;}                   /* all zeros? */\
+   ++Z; ++W;                                         /* next... */\
+  } *Z= GMP_NUMB_MASK&-*W;        /* C's - works on lowest limb */\
+  if (--N) jmpn_com(++Z, ++W, N);   /* complement any remaining */\
+  r= 1; done: r;})
+#endif /* jmpn_neg is now defined */
+
 /*
  * referenced gmp routines are declared twice.
  * Here, for for static declaration.
@@ -278,6 +292,9 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
  */
 #ifdef IMPORTGMPLIB
 #define jmp_set_memory_functions __gmp_set_memory_functions
+#define jmpn_add __gmpn_add                  // https://gmplib.org/manual/Low_002dlevel-Functions
+#define jmpn_com __gmpn_com                  // https://gmplib.org/manual/Low_002dlevel-Functions
+#define jmpn_sub __gmpn_sub                  // https://gmplib.org/manual/Low_002dlevel-Functions
 #define jmpq_add __gmpq_add                  // https://gmplib.org/manual/Rational-Arithmetic
 #define jmpq_clear __gmpq_clear              // https://gmplib.org/manual/Initializing-Rationals
 #define jmpq_cmp __gmpq_cmp                  // https://gmplib.org/manual/Comparing-Rationals
@@ -334,6 +351,9 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_sizeinbase __gmpz_sizeinbase    // https://gmplib.org/manual/Miscellaneous-Integer-Functions
 #define jmpz_sub __gmpz_sub                  // https://gmplib.org/manual/Integer-Arithmetic
 #else
+EXTERN mp_limb_t (*jmpn_add)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
+EXTERN mp_limb_t (*jmpn_com)(mp_limb_t *, const mp_limb_t *, mp_size_t);
+EXTERN mp_limb_t (*jmpn_sub)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
 EXTERN void (*jmpq_add)(mpq_t, const mpq_t, const mpq_t);
 EXTERN void (*jmpq_clear)(mpq_t);
 EXTERN int  (*jmpq_cmp)(const mpq_t, const mpq_t);

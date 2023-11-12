@@ -34,7 +34,28 @@ XF1(jtxsgn){ // *w NB. X w, X result
 }
 XF2(jtxplus){ // a+w  
  ARGCHK2(a,w);
- X z= XaddXX(a,w);
+ if (unlikely(ISX0(a))) R w;
+ if (unlikely(ISX0(w))) R a;
+ // X z= XaddXX(a,w); // XaddXX could become [temporary] syntactic sugar for jtxplus
+ mp_size_t an= XLIMBLEN(a), wn= XLIMBLEN(w); // arg sizes
+ mp_size_t m= MIN(an, wn), n= MAX(an, wn); // result sizes
+ X z; GAX(z, n+1); const mp_ptr zd= voidAV1(z), ad= voidAV1(a), wd= voidAV1(w); // data locations
+ B ap= XSGN(a)>0; B wp= XSGN(w)>0; // positive or negative?
+ B ax= an>= wn; // when w and a have different lengths, larger should be first arg to mpn_add/mpn_sub
+ if (ap==wp) { // work with unsigned magnitudes:
+  if (jmpn_add(zd, ax?ad:wd, n, ax?wd:ad, m)) zd[n++]= 1;
+  XSGN(z)= ap ?n :-n; // signs matched, result has sign of both args
+ } else {
+  B zp= ax ?ap :wp;
+  if (jmpn_sub(zd, ax?ad:wd, n, ax?wd:ad, m)) {
+   zp= 1-zp; // borrow means need to negate result
+   if(unlikely(!jmpn_neg(zd, zd, n))) {fr(z); R X0; /* this X0 presumably never happens */}
+  }
+  while (likely(n) && unlikely(!zd[n-1])) n--; /* trim leading zeros */
+  if (unlikely(!n)) {fr(z); R X0;} /* this X0 is presumably the one that happens */
+  XSGN(z)= zp ?n :-n;
+ }
+ if (XLIMBLEN(z)>100000) SEGFAULT; // try to catch a bug...
  R z;
 }
 XF2(jtxminus){ // a-w  NB. X a, w

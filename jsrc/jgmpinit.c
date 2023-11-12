@@ -236,6 +236,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  // assert(1==AC(x));
  // assert(FHRHISGMP=AT(x))
  X x= UNvoidAV1(ptr);
+ if(!ISGMP(x)) SEGFAULT; // do not free J managed memory here
  if (ACPERMANENT&AC(x)) SEGFAULT;
  C* m= (C*)x-GUARDSIZE;
 #if MEMAUDIT&0x40
@@ -274,7 +275,7 @@ X jtXmpzcommon(J jt, mpz_t mpz, B numeric) {
  }
  X x=UNvoidAV1(mpz->_mp_d);         // we gave libgmp AV1(x) for this block of memory
 #if MEMAUDIT&1
- if(FHRHISGMP!=AFHRH(x)) SEGFAULT;
+ // if(FHRHISGMP!=AFHRH(x)) SEGFAULT; // CONSTRAINT NOT VALID NOW
  if(1!=AC(x)) SEGFAULT;             // should be pristine from libgmp
  if(ACISPERM(AC(x))) SEGFAULT;      // should never happen
 #endif
@@ -398,6 +399,9 @@ void jgmpinit(C*libpath) {
  gemptr= gempool;          // silly hack to avert silly libgmp failure case
  gempwsfull= 0;
  GMPLOCKINIT;
+ jgmpfn(mpn_add);          // https://gmplib.org/manual/Low_002dlevel-Functions
+ jgmpfn(mpn_com);          // https://gmplib.org/manual/Low_002dlevel-Functions
+ jgmpfn(mpn_sub);          // https://gmplib.org/manual/Low_002dlevel-Functions
  jgmpfn(mpq_add);          // https://gmplib.org/manual/Rational-Arithmetic
  // DO NOT USE //          jgmpfn(mpq_canonicalize); // https://gmplib.org/manual/Rational-Number-Functions
  jgmpfn(mpq_clear);        // https://gmplib.org/manual/Initializing-Rationals

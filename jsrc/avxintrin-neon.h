@@ -2569,6 +2569,14 @@ FORCE_INLINE __m256i _mm256_mul_epi32(__m256i a, __m256i b)
  return res;
 }
 
+FORCE_INLINE __m256i _mm256_max_epu32(__m256i a, __m256i b)
+{
+ __m256i res;
+ res.vect_i128.val[0] =  _mm_max_epu32(a.vect_i128.val[0], b.vect_i128.val[0]);
+ res.vect_i128.val[1] =  _mm_max_epu32(a.vect_i128.val[1], b.vect_i128.val[1]);
+ return res;
+}
+
 FORCE_INLINE __m256i _mm256_mul_epu32(__m256i a, __m256i b)
 {
  __m256i res;

@@ -294,7 +294,7 @@ extern F1(jtrazeh);
 extern F1(jtrazein);
 extern F1(jtrca);
 extern F1(jtrdot1);
-extern F1(jtrecip);
+extern DF1(jtrecip);
 extern DF1(jtrect);
 extern F2(jtredefg);
 extern F1(jtretcommq);
@@ -1043,8 +1043,8 @@ extern I Bmark[];
 #define mark ((A)&Bmark)
 extern I Bchrcolon[];
 #define chrcolon ((A)&Bchrcolon)
-extern struct Bd1 Bmarkd;
-#define markd ((A)&Bmarkd)
+extern struct Bd1 Bmarkd[];
+#define markd(n) ((A)&Bmarkd[n])  // QP,FL,CMPX
 extern I Bchrspace[];
 #define chrspace ((A)&Bchrspace)
 #if !SY_64

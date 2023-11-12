@@ -103,9 +103,9 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
 static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  ARGCHK1(w);
  v=FAV(w);
- f=v->fgh[0]; nf=!!(NOUN&AT(f));
- g=v->fgh[1]; ng=!!(NOUN&AT(g));
- h=nf?g:f; x=nf?f:g; c=ID(h); u=VAV(h);   // h=verb arg, x=noun arg
+ f=v->fgh[0]; nf=!!(NOUN&AT(f));  // nf  is 1 if m&v
+ g=v->fgh[1]; ng=!!(NOUN&AT(g));  // ng is 1 if u&n
+ h=nf?g:f; x=nf?f:g; c=ID(h); u=VAV(h);   // h=verb arg, x=noun arg. c is ID of the verb.  u is VB struct for the verb
  switch(c){
   case CPLUS:    R amp(negate(x),h);
   case CSTAR:    R amp(recip(x), h);
@@ -116,7 +116,8 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CLOG:     R nf?amp(x,ds(CEXP)):amp(ds(CROOT),x);
   case CJDOT:    R nf?atop(invrecur(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));
   case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
-  case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));
+  case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));  // scaf
+// obsolete   case CLBRACE:  if(!nf)R amp(x,ds(CIOTA)); break;
   case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);
   case CPDERIV:  if(nf&&!AR(x))R ds(CPDERIV); break;  // only atom&p.. is invertible
 xco:

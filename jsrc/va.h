@@ -246,9 +246,12 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define VA1CSTILE 34
 #define VA1CBANG 35
 #define VA1CCIRCLE 36
-// last part: verbs atomic only on the monad
+// verbs atomic only on the monad
 #define VA1CROOT 37
 #define VA1CLOG 38
+// extension: verbs that are implemented by calls to the dyad for some precisions, but not all
+#define VA1CNEG 39  // -, which is 0-y except for E
+#define VA1CRECIP 40  // %, which is 1/y except for E
 
 
 /*

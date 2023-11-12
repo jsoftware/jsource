@@ -964,7 +964,7 @@ extern void jfree4gmp(void*,size_t);
 #define rifvsdebug(x)               (x)
 #endif
 #define reaxis(x,y)                 jtreaxis(jt,(x),(y))
-#define recip(x)                    jtrecip(jt,(x))   
+#define recip(x)                    jtrecip(jt,(x),ds(CDIV))   
 #define rect(x)                     jtrect(jt,(x),ds(CPLUSDOT))
 #define red0(x,y)                   jtred0(jt,(x),(y))
 #define redcat(x,y)                 jtredcat(jt,(x),(y))

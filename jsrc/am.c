@@ -345,7 +345,8 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
      avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
      JMCSETMASK(endmask,cellsize<<lgk,mvbytelen)   // prepare for repeated move
     }
-   }else if(unlikely(acatoms<0)){  // AN<0 is a flag indicating -@:{`[`]}.  Type must be FL.  There is no a
+   }else if(unlikely(acatoms<0)){  // AN<0 is a flag indicating -@:{`[`]}.  Type must be CMPX/FL/QP.  There is no a
+// scaf     cellsize<<=lgk-LGSZD;  // lgk is 3 for FL, 4 for QP/CMPX.  Convert cellsize to count of D atoms
     if(cellsize==1){  // just 1 word per cell, use duff loop
      I backupct=(-n0)&3;  //  duff backup
      n0=(n0+3)>>2;  // convert n0 into # turns through duff loop, giving 4 cells per turn
@@ -357,7 +358,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
     acatoms<<=lgk;  // repurpose atom count to byte count for this loop
     avnreset+=acatoms;  // compensate for not incrementing in the loop
    }
-   cellsize<<=lgk;  // convert cellsize to bytes for the rest of the processing
+   cellsize<<=LGSZD;  // convert cellsize to bytes for the rest of the processing
   }else{
    // replacing recursive indirect blocks
    // cases: multiple cells of a; single cell of a, repeated; single cell of a, duped; single atom of a, repeated
@@ -379,7 +380,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  }
 
 // macros for negating axis -1
-// cases 1111..  negate FL atoms.  We use 0.-value so as to set all 0 values to +0
+// cases 1111..  negate FL atoms (possibly in a QP).  We use 0.-value so as to set all 0 values to +0
 #define CP11neg  /* each index copies a different cell to the result */ \
 do{ \
  case 0b111100+0: ((D*)base)[scan0[0]]=0.0-((D*)base)[scan0[0]]; case 0b111100+1: ((D*)base)[scan0[1]]=0.0-((D*)base)[scan0[1]];   /* negate cells */ \
@@ -768,8 +769,8 @@ static A jtamendn2c(J jt,A a,A w,A self){R jtamendn2(jt,a,w,VAV(self)->fgh[0],se
 // Execution of x -@:{`[`]}"r y
 static DF2(jtamnegate){F2PREFIP;
  ARGCHK2(a,w); 
- // if y is FL, execute markd x} y which means negate
- if(AT(w)&FL)R jtamendn2(jtinplace,markd,w,a,self);
+ // if y is CMPX/FL/QP, execute markd x} y which means negate
+ if(AT(w)&FL+CMPX+QP)R jtamendn2(jtinplace,markd((AT(w)>>FLX)&(FL+CMPX>>FLX)),w,a,self);
  // otherwise, revert to x -@:{`[`]}"r y, processed by jtgav2
  US ranks=jt->ranks; RESETRANK;
  R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);

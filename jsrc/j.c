@@ -36,7 +36,8 @@ CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special val
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
-struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bmarkd={{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}};  // weird double mark: atomic FL with VERB set in flags.  Used to indicate a special case
+struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bmarkd[3]={{{AKXR(0),QP&TRAVERSIBLE,0,QP,ACPERMANENT,-1,0},{0.}},{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}},{{AKXR(0),CMPX&TRAVERSIBLE,0,CMPX,ACPERMANENT,-1,0},{0.}}};  // weird double mark: atomic FL with AN<0.  Used to indicate a special case
+    // order is QP,FL,CMPX
 #define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
 CREBLOCKVEC1I(iv0,INT,0)    /* ,0                                                          */
 CREBLOCKVEC1I(iv1,INT,1)     /* ,1                                                          */

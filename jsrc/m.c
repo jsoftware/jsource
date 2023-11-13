@@ -1302,7 +1302,7 @@ frompool:
    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
 #endif
   }else{
-   if(lda(&jt->repatq)&&(jtrepatrecv(jt),z=jt->mfree[-PMINL+1+blockx].pool))goto frompool; // didn't have any blocks of the right size, but managed to repatriate one
+   if(unlikely(lda(&jt->repatq)))if(jtrepatrecv(jt),z=jt->mfree[-PMINL+1+blockx].pool)goto frompool; // didn't have any blocks of the right size, but managed to repatriate one
    // chain is empty, couldn't repatriate anything; alloc PSIZE and split it into blocks
    RZ(z=jtgafallopool(jt,blockx,n));
   }

@@ -331,18 +331,18 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VJTFLGOK1|VJTFLGOK2);
- // If v is WILLOPEN, so will the compound be - for all valences
+ // Look for special cases of v.  If v is WILLOPEN, so will the compound be - for all valences
  switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
- case COPE:
+ case COPE:   // u&.>
   fdeffill(z,VF2WILLOPEN1|VF2WILLOPEN2A|VF2WILLOPEN2W,CUNDER,VERB,jteveryself,jtevery2self,a,w,0,flag|VIRS1,0,0,0) R z;   // this is the commonest case.  Return fast, avoiding analysis below
    // We do not expose BOXATOP or ATOPOPEN flags, because we want all u&.> to go through this path & thus we don't want to allow other loops to break in
    // We set VIRS1 just in case a user writes u&.>"n which we can ignore
    // The flags are ignored during u&.>, but they can forward through to affect previous verbs.
  case CFORK: c=((ID(v->fgh[2]))&~1)!=CLEFT;  // ``` set c to 0 if non-capped fork with h ][; fall through
  case CAMP:  
-  u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
-  if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
-  b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. where m is atomic int 16<=m<=32
+  u=FAV(a);  // point to u in u&.v.  v is f1&g1 or (f1 g1 h1)
+  if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // uid=id of u; b1=u is f/, then uid=id of f      cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
+  b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<=32
   if(CIOTA==ID(v->fgh[1])&&(!c)&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
    f1=b&b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
    f2=((uid==CMAX)|(uid==CMIN))>b1?(AF)jtcharfn2:f2; f2=b>b1?(AF)jtbitwisechar:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}

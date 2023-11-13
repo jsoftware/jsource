@@ -509,27 +509,6 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */
 #endif
 
 
-
-#if 0  // obsolete 
-#endifZF2(jtztymes){
-    D a,b,c,d;Z z;
-    a=u.re; b=u.im; c=v.re; d=v.im;)I
- z.re=TYMES(a,c)-TYMES(b,d);
- z.im=TYMES(a,d)+TYMES(b,c);
- R z;
-}
-
-ZF2(jtzdiv){ZF2DECL;D t;
- if(ZNZ(v)){
-  if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
-  a/=c; b/=c; d/=c; t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
- }else if(ZNZ(u)){  // division by 0
-  if(ABS(a)>ABS(b))zr=a/0.0;else zi=b/0.0;  // set the larger axis to infibity
- }
- ZEPILOG;
-}
-#endif
-
 #else
    /* plusIB */                 /* plusII */                
 APFX( plusZZ, Z,Z,Z, zplus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )

@@ -315,6 +315,39 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RETF(z);
 }    /* f&.(a.&i.) w */
 
+// structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only , and m&{ are recognized
+static DF1(jtsunder){F1PREFIP;PROLOG(777);
+ I origacw=AC(w);  // preserve original inplaceability of y
+ I negifipw=ASGNINPLACENEG(SGNIF((I)jtinplace,JTINPLACEWX),w);   // get inplaceability of y
+ A v=FAV(self)->fgh[1]; A vz; RZ(vz=(FAV(v)->valencefns[0])(jt,w,v));  // execute v y, not allowing inplaceing since we have to store back
+ I vzn, vzr, negifip;  // will hold info on value returned from v; and inplaceability of final result
+ if((negifip=negifipw&SGNIF(AFLAG(vz),AFVIRTUALX))<0){
+  // v returned a virtual block (which must be backed by y or its backer), and y was inplaceable: mark the result as virtual inplaceable nonincorpable
+  AFLAG(vz)|=AFUNINCORPABLE; ACSETLOCAL(vz,ACINPLACE+ACUC1);
+  vzn=AN(vz); vzr=AR(vz);  // remember size/shape info for the result of v
+ }
+ negifipw=vz!=w?negifipw:0;  // if we pass y into  u, clear flag that allows us to restore usecount of y
+ A u=FAV(self)->fgh[0]; A uz; RZ(uz=(FAV(u)->valencefns[0])((J)((I)jt+(vz!=w?JTINPLACEW:0)),vz,u)); negifip=uz==vz?negifip:0;     // execute u rv; rv is inplaceable unless it was passthrough
+ if(negifip<0&&AN(vz)==vzn&&AR(vz)==vzr){  // u inplaced and didn't change the rank or item count
+  // if u returned the block backed by originally-inplaceable y, it must have run inplace, and we can return the original y, restored to inplaceability.  tpop the virtual result of v first
+  tpop(_ttop);  // free up whatever we allocated here
+  RETF(RETARG(w));
+ }else{A z;
+  // otherwise return u-result v^:_1 y
+  // we want to inplace into y if possible.  To do this, we restore the original usecount of y (provided y was not passed in to u - we know v doesn't change it); but before
+  // we do that we have to remove any virtual blocks created here so that they don't raise y
+  rifv(uz);  // in case uz is a virtual, realize it in case it is backed by y
+  RZ(uz=EPILOGNORET(uz));
+  if(negifipw<0)ACRESET(w,origacw)  // usecount of y has been restored; restore inplaceability
+  // do the inverse
+  if(FAV(v)->id==CCOMMA){RZ(z=reshape(shape(w),w));  // inv for , is ($w)&($,)
+  }else{RZ(z=jtamendn2(jtinplace,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w
+  }
+  EPILOG(z);
+ }
+}
+
+
 // u&.v
 F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  ARGCHK2(a,w);
@@ -338,17 +371,24 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
    // We do not expose BOXATOP or ATOPOPEN flags, because we want all u&.> to go through this path & thus we don't want to allow other loops to break in
    // We set VIRS1 just in case a user writes u&.>"n which we can ignore
    // The flags are ignored during u&.>, but they can forward through to affect previous verbs.
- case CFORK: c=((ID(v->fgh[2]))&~1)!=CLEFT;  // ``` set c to 0 if non-capped fork with h ][; fall through
- case CAMP:  
-  u=FAV(a);  // point to u in u&.v.  v is f1&g1 or (f1 g1 h1)
-  if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // uid=id of u; b1=u is f/, then uid=id of f      cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
-  b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<=32
-  if(CIOTA==ID(v->fgh[1])&&(!c)&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
-   f1=b&b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
-   f2=((uid==CMAX)|(uid==CMIN))>b1?(AF)jtcharfn2:f2; f2=b>b1?(AF)jtbitwisechar:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
-   flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
+ case CFORK: c=((ID(v->fgh[2]))&~1)!=CLEFT;  // set c to 0 if non-capped fork with h ][; fall through
+ case CAMP: {
+   u=FAV(a);  // point to u in u&.v.  v is f1&g1 or (f1 g1 h1)
+   if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // uid=id of u; b1=u is x/, then uid=id of x      cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
+   b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<=32
+   C vv=ID(v->fgh[1]);  // 
+   if(CIOTA==vv&&(!c)&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
+    f1=b&b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
+// obsolete    f2=((uid==CMAX)|(uid==CMIN))>b1?(AF)jtcharfn2:f2; f2=b>b1?(AF)jtbitwisechar:f2;   // >. &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
+    f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
+    flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
+   }
+   if(vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)), structural under
+   break;
   }
-  break;
+ case CCOMMA:  // u&., structural under
+sunder:  // come here for all structural under
+  fdeffill(z,VF2NONE,CUNDER,VERB,jtsunder,jtvalenceerr,a,w,0,flag,RMAX,RMAX,RMAX) R z;  // process the structural under when the argument arrives
  }
  I flag2=(FAV(wvb)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1))*((VF2WILLOPEN1+VF2WILLOPEN2A+VF2WILLOPEN2W)>>VF2WILLOPEN1X);
  I r=mr(wvb);

@@ -672,6 +672,7 @@ extern A        jtaindex(J,A,A,I);
 extern A        jtam1a(J,A,A,A,B);
 extern A        jtam1e(J,A,A,A,B);
 extern A        jtam1sp(J,A,A,A,B);
+extern A        jtamendn2(J,A,A,AD * RESTRICT,A);
 extern A        jtamna(J,A,A,A,B);
 extern A        jtamne(J,A,A,A,B);
 extern A        jtamnsp(J,A,A,A,B);

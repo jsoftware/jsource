@@ -540,7 +540,7 @@ static A jtcompidx(J jt,I axislen,A ind){
 }
 
 // Execution of x m}"r y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
-static A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
+A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
   // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 

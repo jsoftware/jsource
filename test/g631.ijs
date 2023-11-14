@@ -49,6 +49,29 @@ NB. unaligned memory access
 (,:'bbbbb') -: (,3) }.&> ,<'aa bbbbb'
 11111 22222 33333 555555 -: ". 36 37 38 31 }.&> 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 11111'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 22222'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 33333'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 555555'
 
+NB. structural under
+(|."1 |. i. 3 3) -: |.&., i. 3 3
+(|."1 |. >: i. 3 3) -: |.&., >: i. 3 3
+(3 3 $ }. i. 9) -: }.&., i. 3 3
+(3 3 $ }. >: i. 9) -: }.&., >: i. 3 3
+(3 3 4 ($,) 2 5 $ }. i. 36) -: 2 5&$@}.&., i. 3 3 4
+(3 3 4 ($,) 2 5 $ }. >: i. 36) -: 2 5&$@}.&., >: i. 3 3 4
+
+1: 0 : 0 NB. scaf for one beta
+a =: i. 3 4
+((>: b { a) b} a) -: >:&.(b&{) a [ b =: 1
+((>: b { a) b} a) -: >:&.(b&{) a [ b =: 1 2
+((>: b { a) b} a) -: >:&.(b&{) a [ b =: <1
+((>: b { a) b} a) -: >:&.(b&{) a [ b =: <2 0 ,: 1 3
+((>: b { a) b} a) -: >:&.(b&{) a [ b =: <1;2 0
+a =: i. 3 1e6
+3000 > 7!:2 'a =: >:&.(b&{) a' [ b =: 1
+3000 > 7!:2 'a =: >:&.(b&{) a' [ b =: 1 2
+1 = 15e6 18e6 I. 7!:2 'a =: >:&.(b&{) a' [ b =: 2 1
+1 = 31e6 34e6 I. 7!:2 'a =: >:&.(b&{) a' [ b =: 2 1 0
+3000 > 7!:2 'a =: >:&.(b&{) a' [ b =: <2 0 ,: 1 3
+)
+
 
 NB. semiduals x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------------------------
 
@@ -434,6 +457,6 @@ isip 13!:_4 {{ i. y }} 1e6
 1: 00 * {{ i. y }} 7
 0 1 2 3 4 5 6 7 8 9 -: i.10
 
-4!:55 ;:'a ckprist countis e exx_z_ gname isip isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '
+4!:55 ;:'a b ckprist countis e exx_z_ gname isip isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '
 
 epilog''

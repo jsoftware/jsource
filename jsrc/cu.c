@@ -320,27 +320,27 @@ static DF1(jtsunder){F1PREFIP;PROLOG(777);
  I origacw=AC(w);  // preserve original inplaceability of y
  I negifipw=ASGNINPLACENEG(SGNIF((I)jtinplace,JTINPLACEWX),w);   // get inplaceability of y
  A v=FAV(self)->fgh[1]; A vz; RZ(vz=(FAV(v)->valencefns[0])(jt,w,v));  // execute v y, not allowing inplaceing since we have to store back
- I vzn, vzr, negifip;  // will hold info on value returned from v; and inplaceability of final result
+ I negifip;  // inplaceability of final result
  if((negifip=negifipw&SGNIF(AFLAG(vz),AFVIRTUALX))<0){
   // v returned a virtual block (which must be backed by y or its backer), and y was inplaceable: mark the result as virtual inplaceable nonincorpable
   AFLAG(vz)|=AFUNINCORPABLE; ACSETLOCAL(vz,ACINPLACE+ACUC1);
-  vzn=AN(vz); vzr=AR(vz);  // remember size/shape info for the result of v
  }
  negifipw=vz!=w?negifipw:0;  // if we pass y into  u, clear flag that allows us to restore usecount of y
  A u=FAV(self)->fgh[0]; A uz; RZ(uz=(FAV(u)->valencefns[0])((J)((I)jt+(vz!=w?JTINPLACEW:0)),vz,u)); negifip=uz==vz?negifip:0;     // execute u rv; rv is inplaceable unless it was passthrough
- if(negifip<0&&AN(vz)==vzn&&AR(vz)==vzr){  // u inplaced and didn't change the rank or item count
+ if(negifip<0){  // u inplaced and didn't change the rank or item count
   // if u returned the block backed by originally-inplaceable y, it must have run inplace, and we can return the original y, restored to inplaceability.  tpop the virtual result of v first
+  // NOTE that jtvirtual will not virtual-in-place an UNINCORPABLE block, which vz must be; so we can be sure the shape didn't change
   tpop(_ttop);  // free up whatever we allocated here
   RETF(RETARG(w));
  }else{A z;
   // otherwise return u-result v^:_1 y
   // we want to inplace into y if possible.  To do this, we restore the original usecount of y (provided y was not passed in to u - we know v doesn't change it); but before
   // we do that we have to remove any virtual blocks created here so that they don't raise y
-  rifv(uz);  // in case uz is a virtual, realize it in case it is backed by y
-  RZ(uz=EPILOGNORET(uz));
+  rifv(uz);  // if uz is a virtual, realize it in case it is backed by y
+  RZ(uz=EPILOGNORET(uz));  // free any virtual blocks we created
   if(negifipw<0)ACRESET(w,origacw)  // usecount of y has been restored; restore inplaceability
   // do the inverse
-  if(FAV(v)->id==CCOMMA){RZ(z=reshape(shape(w),w));  // inv for , is ($w)&($,)
+  if(FAV(v)->id==CCOMMA){RZ(z=reshape(shape(w),uz));  // inv for , is ($w)&($,)
   }else{RZ(z=jtamendn2(jtinplace,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w
   }
   EPILOG(z);
@@ -383,7 +383,7 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
     flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
    }
-   if(vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)), structural under
+   if(0&&vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)), structural under  scaf remove for first beta
    break;
   }
  case CCOMMA:  // u&., structural under

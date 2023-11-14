@@ -350,29 +350,31 @@ if(likely(_mm256_testz_pd(denomis0,denomis0))){ /* no 0 divisors */ \
 }
 
 primop256CE(divZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d y0non0; __m256d y1non0; NAN0; __m256d denomis0;,PREFNULL,RECIPZ,DIVZ,ASSERTWR(!NANTEST,EVNAN);)
+
+
 // QP arithmetic.  We do not support infinities.  If you multiply one, it might give NaN
 #define PLUSEE {__m256d t,t0,t1;\
-t1=_mm256_add_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
-t0=_mm256_add_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_sub_pd(y1,t0)); /* t1/t0 = x1+y1, QP */ \
-t0=_mm256_add_pd(t0,_mm256_add_pd(x0,y0));  /* accumulate lower significance */ \
-z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
-CANONE(z1,z0) \
+t0=_mm256_add_pd(x0,y0); t1=_mm256_sub_pd(t0,x0); \
+t1=_mm256_add_pd(_mm256_sub_pd(x0,_mm256_sub_pd(t0,t1)),_mm256_sub_pd(y0,t1)); /* t1/t0 = x0+y0, QP */ \
+t1=_mm256_add_pd(t1,_mm256_add_pd(x1,y1));  /* accumulate lower significance */ \
+z0=_mm256_add_pd(t1,t0); z1=_mm256_add_pd(t1,_mm256_sub_pd(t0,z0));  /* remove any overlap */ \
+CANONE(z0,z1) \
 }
 #define MINUSEE {__m256d t,t0,t1;\
-t1=_mm256_sub_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); \
-t0=_mm256_sub_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_add_pd(y1,t0)); /* t1/t0 = x1-y1, QP */ \
-t0=_mm256_add_pd(t0,_mm256_sub_pd(x0,y0));  /* accumulate lower significance */ \
-z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ \
-CANONE(z1,z0) \
+t0=_mm256_sub_pd(x0,y0); t1=_mm256_sub_pd(t0,x0); \
+t1=_mm256_sub_pd(_mm256_sub_pd(x0,_mm256_sub_pd(t0,t1)),_mm256_add_pd(y0,t1)); /* t1/t0 = x1-y1, QP */ \
+t1=_mm256_add_pd(t1,_mm256_sub_pd(x1,y1));  /* accumulate lower significance */ \
+z0=_mm256_add_pd(t1,t0); z1=_mm256_add_pd(t1,_mm256_sub_pd(t0,z0));  /* remove any overlap */ \
+CANONE(z0,z1) \
 }
 
 // This version is good to 103 bits: lower pps might have 4x the weight of the upper
 #if 1  // 103 bits
 #define MULTEE {__m256d t0,t1; \
-TWOPROD(x1,y1,t1,t0)  /* pp0 in qp */ \
-t0=_mm256_fmadd_pd(x1,y0,t0); t0=_mm256_fmadd_pd(x0,y1,t0); /* add in pp1 & 2 */ \
-TWOSUMBS(t1,t0,z1,z0)  /* remove overlap */ \
-CANONE(z1,z0)  /* canonicalize the extension */ \
+TWOPROD(x0,y0,t0,t1)  /* pp0 in qp */ \
+t1=_mm256_fmadd_pd(x0,y1,t1); t1=_mm256_fmadd_pd(x1,y0,t1); /* add in pp1 & 2 */ \
+TWOSUMBS(t0,t1,z0,z1)  /* remove overlap */ \
+CANONE(z0,z1)  /* canonicalize the extension */ \
 }
 
 #else  // 106 bits

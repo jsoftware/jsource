@@ -118,6 +118,7 @@
 #define _mm_insert_epi32 _mm_insert_epi32_REF
 #define _mm_insert_epi64 _mm_insert_epi64_REF
 #define _mm_insert_epi8 _mm_insert_epi8_REF
+#define _mm_max_epu32 _mm_max_epu32_REF
 #define _mm_testc_si128 _mm_testc_si128_REF
 #define _mm_testnzc_si128 _mm_testnzc_si128_REF
 #define _mm_testz_si128 _mm_testz_si128_REF
@@ -481,6 +482,23 @@ static __emu_inline __m128i _mm_cmpeq_epi64_REF( __m128i a, __m128i b )
         A[1] = 0xFFFFFFFFFFFFFFFFll;
     else
         A[1] = 0x0ll;
+    return A;
+}
+
+#define SSP_SET_MIN( sd, s) sd=(sd<s)?sd:s;
+#define SSP_SET_MAX( sd, s) sd=(sd>s)?sd:s;
+
+/** \SSE4_1{Reference,_mm_max_epu32} */
+static __emu_inline __m128i _mm_max_epu32_REF ( __m128i a, __m128i b )
+{
+    __m128i A,B;
+    A = a;
+    B = b;
+
+    SSP_SET_MAX( A[ 0], B[ 0] );
+    SSP_SET_MAX( A[ 1], B[ 1] );
+    SSP_SET_MAX( A[ 2], B[ 2] );
+    SSP_SET_MAX( A[ 3], B[ 3] );
     return A;
 }
 
@@ -1167,6 +1185,7 @@ __EMU_M256_IMPL_M2( __m256i, cmpeq_epi16 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
+__EMU_M256_IMPL_M2( __m256i, max_epu32 );
 __EMU_M256_IMPL_M2( __m256i, mul_epu32 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi8 );
 __EMU_M256_128_IMPL_M2( __m256i, and_si  );
@@ -1948,6 +1967,7 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_xor_si256 __emu_mm256_xor_si256
 #define _mm256_sub_epi8 __emu_mm256_sub_epi8
 
+#define _mm256_max_epu32 __emu_mm256_max_epu32
 #define _mm256_mul_epu32 __emu_mm256_mul_epu32
 #define _mm256_blendv_epi8 __emu_mm256_blendv_epi8
 #define _mm256_slli_epi64 __emu_mm256_slli_epi64

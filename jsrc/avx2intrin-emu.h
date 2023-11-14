@@ -246,6 +246,7 @@ __EMU_M256_IMPL_M2( __m256i, cmpeq_epi16 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
+__EMU_M256_IMPL_M2( __m256i, max_epu32 );
 __EMU_M256_IMPL_M2( __m256i, mul_epu32 );
 __EMU_M256_IMPL_M2( __m256i, add_epi8 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi8 );
@@ -484,6 +485,7 @@ static INLINE __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #undef _mm256_maskload_epi64
 #undef _mm256_maskstore_epi64
 #undef _mm256_movemask_epi8
+#undef _mm256_max_epu32
 #undef _mm256_mul_epu32
 #undef _mm256_or_si256
 #undef _mm256_permute2x128_si256
@@ -531,6 +533,7 @@ static INLINE __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #define _mm256_maskload_epi64 __emu_mm256_maskload_epi64
 #define _mm256_maskstore_epi64 __emu_mm256_maskstore_epi64
 #define _mm256_movemask_epi8 __emu_mm256_movemask_epi8
+#define _mm256_max_epu32 __emu_mm256_max_epu32
 #define _mm256_mul_epu32 __emu_mm256_mul_epu32
 #define _mm256_or_si256 __emu_mm256_or_si256
 #define _mm256_permute2x128_si256 __emu_mm256_permute2x128_si256

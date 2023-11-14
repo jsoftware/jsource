@@ -491,7 +491,7 @@ static __emu_inline __m128i _mm_cmpeq_epi64_REF( __m128i a, __m128i b )
 /** \SSE4_1{Reference,_mm_max_epu32} */
 static __emu_inline __m128i _mm_max_epu32_REF ( __m128i a, __m128i b )
 {
-    __m128 A,B;
+    __m128i A,B;
     A = a;
     B = b;
 

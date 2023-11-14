@@ -834,6 +834,22 @@ FORCE_INLINE __m256i _mm256_unpacklo_epi8(__m256i a, __m256i b)
     return result_m256i;
 }
 
+FORCE_INLINE __m256d _mm256_unpackhi_pd(__m256d a, __m256d b)
+{
+    __m256d result_m256d;
+    result_m256d.vect_f64[0] = vzip2q_f64(a.vect_f64[0], b.vect_f64[0]);
+    result_m256d.vect_f64[1] = vzip2q_f64(a.vect_f64[1], b.vect_f64[1]);
+    return result_m256d;
+}
+
+FORCE_INLINE __m256d _mm256_unpacklo_pd(__m256d a, __m256d b)
+{
+    __m256d result_m256d;
+    result_m256d.vect_f64[0] = vzip1q_f64(a.vect_f64[0], b.vect_f64[0]);
+    result_m256d.vect_f64[1] = vzip1q_f64(a.vect_f64[1], b.vect_f64[1]);
+    return result_m256d;
+}
+
 FORCE_INLINE __m256i _mm256_and_si256(__m256i a, __m256i b)
 {
     __m256i res_m256i;

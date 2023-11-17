@@ -6,6 +6,7 @@
 #include "j.h"
 #include "ve.h"
 #include "vcomp.h"
+#include "va.h"
 
 
 #if BW==64
@@ -22,7 +23,7 @@ static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTWR(d==*z,EWOV);})
 #endif
 static AMON(floorD, D,D, *z=tfloor(*x);)
 static AMON(floorZ, Z,Z, *z=zfloor(*x);)
-static AMON(floorE, E,E, {D t=tfloor(x->hi); if(t==x->hi){z->lo=tfloor(x->lo);}else{z->lo=0.;} z->hi=t;})
+static AMON(floorE, E,E, *z=efloor(*x);)
 
 #if BW==64
 static AMONPS(ceilDI,I,D,
@@ -38,7 +39,7 @@ static AMON(ceilDI, I,D, {D d=tceil(*x);  *z=(I)d; ASSERTWR(d==*z,EWOV);})
 #endif
 static AMON(ceilD,  D,D, *z=tceil(*x);)
 static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
-static AMON(ceilE, E,E, {D t=tceil(x->hi); if(t==x->hi){z->lo=tceil(x->lo);}else{z->lo=0.;} z->hi=t;})
+static AMON(ceilE,  E,E, *z=eceil(*x);)
 
 static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
@@ -113,7 +114,42 @@ static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 static AMONPS(absE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^(*(UIL*)&x->hi&0x7fffffffffffffffLL); *(UIL*)&z->hi=*(UIL*)&x->hi&0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 
 static AMONPS(negE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^0x8000000000000000; *(UIL*)&z->hi=*(UIL*)&x->hi^0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
-static AMONPS(recipE,   E,E, , {D hr=1.0/x->hi; D lr=-x->lo*hr*hr; D t; TWOSUMBS1(hr,lr,t,hr); E r; r=CANONE1(t,hr); z->hi=r.hi; z->lo=r.lo; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
+static AMONPS(recipE,   E,E, , {E r; r=RECIPE(*x); r=CANONE1(r.hi,r.lo); z->hi=r.hi; z->lo=r.lo; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
+#if 0  // used for debugging
+#define f recipE
+#define Tz E
+#define Tx E
+#define debprefix
+#define debsuffix HDR1JERR
+static I f(J RESTRICT jt,I n,Tz* z,Tx* x){I i;
+debprefix
+for(i=0;i<n;++i){
+// stmt here
+E r;E v=*x;
+D zh,one,d,H=1.0/(v).hi;
+TWOPROD1(H,(v).hi,one,d);
+one-=1.0;
+d+=one;
+d*=(v).hi;
+d+=(v).lo;
+d*=H;
+d*=-H;
+TWOSUMBS1(H,d,zh,H);
+r=(E){.hi=zh,.lo=H};
+r=CANONE1(r.hi,r.lo);
+z->hi=r.hi;
+z->lo=r.lo;
+// end stmt
+++z; ++x;
+}
+debsuffix
+}
+#undef f
+#undef Tz
+#undef Tx
+#undef prefix
+#undef suffix
+#endif
 
 static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
 

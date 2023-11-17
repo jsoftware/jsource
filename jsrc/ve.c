@@ -391,12 +391,12 @@ TWOSUMBS(t1,t2,z1,z0) /* remove overlap */ \
 CANONE(z1,z0)  /* canonicalize the extension */ \
 }
 #endif
-primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
+// scaf primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEE,ASSERTWR(!NANTEST,EVNAN);)
 
-#if 0  // this template used to debug
-#define fz 1
+#if 1  // this template used to debug
+#define fz 0
 #define CET E
 #define cepref __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0; 
 #define ceprefL PREFNULL  // replaced in main line
@@ -455,13 +455,12 @@ mainlp:  /* here when args have already been read.  x has been converted & prefi
 
 // zzop here
 {__m256d t,t0,t1;
-t1=_mm256_add_pd(x1,y1); t0=_mm256_sub_pd(t1,x1); 
-t0=_mm256_add_pd(_mm256_sub_pd(x1,_mm256_sub_pd(t1,t0)),_mm256_sub_pd(y1,t0)); /* t1/t0 = x1+y1, QP */ 
-t0=_mm256_add_pd(t0,_mm256_add_pd(x0,y0));  /* accumulate lower significance */ 
-z1=_mm256_add_pd(t0,t1); z0=_mm256_add_pd(t0,_mm256_sub_pd(t1,z1));  /* remove any overlap */ 
-CANONE(z1,z0) 
-}
-// end zzop
+t0=_mm256_add_pd(x0,y0); t1=_mm256_sub_pd(t0,x0); 
+t1=_mm256_add_pd(_mm256_sub_pd(x0,_mm256_sub_pd(t0,t1)),_mm256_sub_pd(y0,t1)); /* t1/t0 = x0+y0, QP */ 
+t1=_mm256_add_pd(t1,_mm256_add_pd(x1,y1));  /* accumulate lower significance */ 
+z0=_mm256_add_pd(t1,t0); z1=_mm256_add_pd(t1,_mm256_sub_pd(t0,z0));  /* remove any overlap */ 
+CANONE(z0,z1) 
+}// end zzop
 
  SHUFOUT(fz,z0,z1);  /* put result into interleaved form for writing */
  /* write out the result and loop */

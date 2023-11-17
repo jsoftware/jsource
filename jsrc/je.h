@@ -926,6 +926,8 @@ extern I        jtsystemlockaccept(J,I);
 extern A        jttaker(J,I,A);
 extern D        jttceil(J,D);
 extern D        jttfloor(J,D);
+extern E        jteceil(J,E);
+extern E        jtefloor(J,E);
 extern I        jtthv(J,A,I,C*);
 extern A        jttoc1(J,B,A);
 extern void     jttoutf8w(J,C*,I,US*);

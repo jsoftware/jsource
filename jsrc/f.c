@@ -82,9 +82,11 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  // This is complicated by the fact that the transfer is done in floating-point it might reduce the exponent of the high
  // part, leading to overlap between the high and low.  So, we transfer the ULP from the high in fixed point, after
  // we have restored the hidden bit, below.  Because the canonical form is [-1/2,1/2) in low part, adding 1 ULP cannot
- // move the binary point of the low by enough to overlap the high
+ // move the binary point of the low by enough to overlap the high  WRONG! if the lower part is small enough, it may be rounded away,
+ // leaving the binary points with a fatal overlap.  If that happens, clear both the low and the ulp to 0
  I iulp=*(I*)&v.hi&0xfff0000000000000&REPSGN(*(I*)&v.hi^*(I*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
  D val[2]={v.hi,v.lo+ulp};  // decrement of v.hi deferred
+ if(unlikely(val[1]==ulp&&ulp!=0))val[1]=ulp=0.0;  // Handle case of exponent operlap
  I i; I nextexp;   // loop counter, sequential exponent tracker
  for(i=0;i<2;++i){  // scaf we could exit these loops when bits==0 rather than processing every bit
   // fetch descriptor of the bits we will format from this D

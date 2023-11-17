@@ -18,6 +18,10 @@
 
 D jttfloor(J jt,D v){D x; R (x=jround(v), x-TGT(x,v));}
 D jttceil (J jt,D v){D x; R (x=jround(v), x+TLT(x,v));}
+// for E, if the high part has no fractional significance, the whole must be tolerantly equal to an integer, and we round off the fraction.
+// otherwise the low part must be tiny and we zero it, floor/ceiling the upper the upper
+E jtefloor(J jt,E v){D h,l,r; if(unlikely(ABS(v.hi)>=4503599627370496.)){r=jround(v.lo); TWOSUMBS1(v.hi,r,h,l) E z; z=CANONE1(h,l); R z; } else{r=tfloor(v.hi); if(r==v.hi)r+=tfloor(v.lo); R (E){r,0*r};}  }
+E jteceil(J jt,E v){D h,l,r; if(unlikely(ABS(v.hi)>=4503599627370496.)){r=jround(v.lo); TWOSUMBS1(v.hi,r,h,l) E z; z=CANONE1(h,l); R z; } else{r=tceil(v.hi); if(r==v.hi)r+=tceil(v.lo); R (E){r,0*r};}  }
 
 BPFX(eqBB, EQ,BEQ,EQ,BEQ, _mm256_xor_pd(bool256,_mm256_xor_pd(u256,v256)) , ,__m256d bool256=_mm256_broadcast_sd((D*)&Ivalidboolean);)
 BPFX(neBB, NE,BNE,NE,BNE, _mm256_xor_pd(u256,v256) , ,)
@@ -302,5 +306,5 @@ ACMP0T( eqEE, B,E,E,E, TEQE,EQE0)
 ACMP0T( neEE, B,E,E,E, TNEE,NEE0)
 ACMP0T( ltEE, B,E,E,E, TLTE,LTE0)
 ACMP0T( leEE, B,E,E,E, TLEE,LEE0)
-ACMP0T( gtEE, B,E,E,E, TGTE,GEE0)
-ACMP0T( geEE, B,E,E,E, TGEE,GTE0)
+ACMP0T( gtEE, B,E,E,E, TGTE,GTE0)
+ACMP0T( geEE, B,E,E,E, TGEE,GEE0)

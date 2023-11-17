@@ -159,7 +159,7 @@ I jtqcompare(J jt,Q a,Q w){R QCOMP(a,w);}
 #include "jr0.h"
 
 B jtqquad(J jt,E *z,Q W){
-  if (ISQinf(W)){*z=(E){.hi=0<QSGN(W) ?inf :infm};}
+  if (ISQinf(W)){*z=(E){.hi=0<QSGN(W) ?inf :infm,.lo=0.};}
   else{
    mpQ(W); mpQ0(z); D h=jmpq_get_d(mpW); jmpq_set_d(mpz,h); jmpq_sub(mpz,mpW,mpz); D l=jmpq_get_d(mpz);  // high & low parts as D
    // if jmpq_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do

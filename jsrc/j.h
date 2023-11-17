@@ -2106,7 +2106,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
  l=_mm256_blendv_pd(l,_mm256_and_pd(h,sgnbit),_mm256_cmp_pd(l,_mm256_setzero_pd(),_CMP_EQ_OQ));  /* if 0, make signs match */ \
  __m256d xferval=_mm256_and_pd(_mm256_add_pd(l,l),_mm256_cmp_pd(_mm256_fmsub_pd(_mm256_set1_pd(*(D*)&(I){0x3ca0000000000000}),_mm256_andnot_pd(mantmask,h),l),_mm256_setzero_pd(),_CMP_EQ_OQ)); \
    /* transfer 2*l if exponent of h is 53 more than l, and signs are identical */ \
- h=_mm256_sub_pd(h,xferval); l=_mm256_sub_pd(l,xferval);  /* transfer significance */ \
+ h=_mm256_add_pd(h,xferval); l=_mm256_sub_pd(l,xferval);  /* transfer significance */ \
 }}
 
 #else
@@ -2121,7 +2121,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 // obsolete    // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
 // obsolete #define CANONE1(h,l) ({I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*1.110223024625157e_16; (E){h-ulp,l+ulp}; })
 // convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<=lo<1/2ULP (with only same-sign allowed if abs=0, opposite if abs=1/2ULP)
-#define CANONE1(h,l) ({if(unlikely((*(IL*)&l&0x000fffffffffffff)!=0)){if(l==0)*(IL*)&l=*(IL*)&h&0x8000000000000000; else if(((*(IL*)&h&~0x000fffffffffffff)-0x0350000000000000)==l){h-=2*l; l=-l;}} (E){h,l}; })
+#define CANONE1(h,l) ({if(unlikely((*(IL*)&l&0x000fffffffffffff)==0)){if(l==0)*(IL*)&l=*(IL*)&h&0x8000000000000000; else if(((*(IL*)&h&~0x000fffffffffffff)-0x0350000000000000)==*(IL*)&l){h+=2*l; l=-l;}} (E){.hi=h,.lo=l}; })
 
 #define VAL1            '\001'
 #define VAL2            '\002'

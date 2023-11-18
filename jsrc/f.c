@@ -84,15 +84,15 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  // we have restored the hidden bit, below.  Because the canonical form is [-1/2,1/2) in low part, adding 1 ULP cannot
  // move the binary point of the low by enough to overlap the high  WRONG! if the lower part is small enough, it may be rounded away,
  // leaving the binary points with a fatal overlap.  If that happens, clear both the low and the ulp to 0
- I iulp=*(I*)&v.hi&0xfff0000000000000&REPSGN(*(I*)&v.hi^*(I*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
+ IL iulp=*(IL*)&v.hi&0xfff0000000000000&REPSGN(*(IL*)&v.hi^*(IL*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
  D val[2]={v.hi,v.lo+ulp};  // decrement of v.hi deferred
  if(unlikely(val[1]==ulp&&ulp!=0))val[1]=ulp=0.0;  // Handle case of exponent operlap
  I i; I nextexp;   // loop counter, sequential exponent tracker
  for(i=0;i<2;++i){  // scaf we could exit these loops when bits==0 rather than processing every bit
   // fetch descriptor of the bits we will format from this D
   UIL dbits=*(UIL*)&val[i];  // the bits of the float, high part first
-  I exp=(dbits&0x7ff0000000000000)>>52;  // exponent, excess-3ff
-  I bits=(dbits&0xfffffffffffff)+((IL)(exp!=0)<<52);  // bits to format including hidden bit
+  IL exp=(dbits&0x7ff0000000000000)>>52;  // exponent, excess-3ff
+  IL bits=(dbits&0xfffffffffffff)+((IL)(exp!=0)<<52);  // bits to format including hidden bit
   I currbit=52, currexp=exp-0x3ff;  // bit# we are working on, and its exponent
   if(i==0){  // code for high value only
    bits-=ulp!=0.;  // remove ulp from high part without changing exponent

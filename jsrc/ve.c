@@ -344,8 +344,8 @@ if(likely(_mm256_testz_pd(denomis0,denomis0))){ /* no 0 divisors */ \
  z0=_mm256_fmadd_pd(_mm256_and_pd(x0,y0non0),y0,_mm256_mul_pd(_mm256_and_pd(x1,y1non0),y1));  /* real */ \
  z1=_mm256_fmsub_pd(_mm256_and_pd(x1,y0non0),y0,_mm256_mul_pd(_mm256_and_pd(x0,y1non0),y1));  /* imag */ \
  __m256d temp=_mm256_broadcast_sd((D*)&inf);  \
- z0=_mm256_blendv_pd(z0,_mm256_and_pd(_mm256_cmp_pd(x0,_mm256_setzero_pd(),_CMP_NEQ_OQ),_mm256_or_pd(temp,_mm256_and_pd(sgnbit,x0))),denomis0); /* if not 0, set to innf with sign */ \
- z1=_mm256_blendv_pd(z1,_mm256_and_pd(_mm256_cmp_pd(x1,_mm256_setzero_pd(),_CMP_NEQ_OQ),_mm256_or_pd(temp,_mm256_and_pd(sgnbit,x1))),denomis0); /* if not 0, set to innf with sign */ \
+ z0=_mm256_blendv_pd(z0,_mm256_and_pd(_mm256_cmp_pd(x0,_mm256_setzero_pd(),_CMP_NEQ_OQ),_mm256_or_pd(temp,_mm256_and_pd(sgnbit,x0))),denomis0); /* if not 0, set to inf with sign */ \
+ z1=_mm256_blendv_pd(z1,_mm256_and_pd(_mm256_cmp_pd(x1,_mm256_setzero_pd(),_CMP_NEQ_OQ),_mm256_or_pd(temp,_mm256_and_pd(sgnbit,x1))),denomis0); /* if not 0, set to inf with sign */ \
 } \
 }
 

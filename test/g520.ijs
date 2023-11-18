@@ -97,7 +97,6 @@ NB. obsolete   parms =. nrows 0} parms  NB. restore Fk flag to new length
   y =. (15!:18&.> 3 { y) 3} y  NB. cache-align the blocks that need it
   savy =: y
   savres   =: 128!:9 y
-  savcut =: memu 7 {:: y
   if. #x do.  NB. if SPR result known, check it
     'res cut' =. x
     if. 0=nthr do.

@@ -2514,11 +2514,10 @@ static INLINE void aligned_free(void *ptr) {
 #define CRC32(crc,value)  ({ uint32_t crci=crc; CRC32CW(crci, value); crci; })
 #define CRC32L(crc,value) ({ uint64_t crci=crc; CRC32CX(crci, value); crci; })
 #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
-#endif
 
 // The following definitions are used only in builds for the AVX instruction set
 // 64-bit Atom cpu in android has hardware crc32c but not AVX
-#if C_CRC32C && (defined(_M_X64) || defined(__x86_64__))
+#elif C_CRC32C && (defined(_M_X64) || defined(__x86_64__))
 #if C_AVX2 || defined(ANDROID)
 #if defined(MMSC_VER)  // SY_WIN32
 // Visual Studio definitions
@@ -2529,7 +2528,7 @@ static INLINE void aligned_free(void *ptr) {
 #define CRC32(x,y) __builtin_ia32_crc32si(x,y)  // returns UI4
 #define CRC32L(x,y) __builtin_ia32_crc32di(x,y)  // returns UI
 #endif
-#elif EMU_AVX2
+#else
 extern uint64_t crc32csb8(uint64_t crc, uint64_t value);
 extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
 #define CRC32(x,y)  crc32csb4(x,y) // returns UI4

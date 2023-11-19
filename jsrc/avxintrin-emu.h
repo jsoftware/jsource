@@ -485,8 +485,8 @@ static __emu_inline __m128i _mm_cmpeq_epi64_REF( __m128i a, __m128i b )
     return A;
 }
 
-#define SSP_SET_MIN( sd, s) sd=(sd<s)?sd:s;
-#define SSP_SET_MAX( sd, s) sd=(sd>s)?sd:s;
+#define SSP_SET_MIN( sd, s) sd=((sd)<(s))?(sd):(s);
+#define SSP_SET_MAX( sd, s) sd=((sd)>(s))?(sd):(s);
 
 /** \SSE4_1{Reference,_mm_max_epu32} */
 static __emu_inline __m128i _mm_max_epu32_REF ( __m128i a, __m128i b )
@@ -495,10 +495,10 @@ static __emu_inline __m128i _mm_max_epu32_REF ( __m128i a, __m128i b )
     A = a;
     B = b;
 
-    SSP_SET_MAX( A[ 0], B[ 0] );
-    SSP_SET_MAX( A[ 1], B[ 1] );
-    SSP_SET_MAX( A[ 2], B[ 2] );
-    SSP_SET_MAX( A[ 3], B[ 3] );
+    SSP_SET_MAX( ((unsigned int*)(&A))[0] , ((unsigned int*)(&B))[0] );
+    SSP_SET_MAX( ((unsigned int*)(&A))[1] , ((unsigned int*)(&B))[1] );
+    SSP_SET_MAX( ((unsigned int*)(&A))[2] , ((unsigned int*)(&B))[2] );
+    SSP_SET_MAX( ((unsigned int*)(&A))[3] , ((unsigned int*)(&B))[3] );
     return A;
 }
 

@@ -2086,7 +2086,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 #define TWOPROD1(in0,in1,outhi,outlo) {__m256d hhh=_mm256_set1_pd(in0); __m256d lll=_mm256_set1_pd(in1); __m256d ohhh,olll; TWOPROD(hhh,lll,ohhh,olll) outlo=_mm256_cvtsd_f64(olll); outhi=_mm256_cvtsd_f64(ohhh);} 
 // create quad-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Needs sgnbit.
-#define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_sub_pd(t,outlo); \
+#define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(t),_mm256_castpd_si256(outlo))); \
                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); /* outlo=val with larger abs t=val with smaller abs */ \
                                     outhi=_mm256_add_pd(in0,in1); /* single-prec sum */ \
                                     outlo=_mm256_sub_pd(outlo,outhi); /* big-(big+small): implied val of -small after rounding */ \
@@ -2110,7 +2110,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 }}
 
 #else
-#define TWOSPLIT1(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
+#define TWOSPLIT1(a,x,y) y=(a)*134217729.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
 #define TWOPROD1(in0,in1,outhi,outlo) {D i00, i01, i10, i11; TWOSPLIT1(in0,i00,i01) TWOSPLIT1(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);}  // must avoid compiler tuning   needs i00, i01, i10, i11
 #endif
 #define TWOSUM1(in0,in1,outhi,outlo) {D t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;}  //  in0 and outhi might be identical

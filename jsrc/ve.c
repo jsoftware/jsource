@@ -39,7 +39,7 @@ APFX( plusEE, E,E,E, PLUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minusEE, E,E,E, MINUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
-APFX( divEE, E,E,E, DIVE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
+// scaf APFX( divEE, E,E,E, DIVE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minEE, E,E,E, MINE,,R EVOK;)
 APFX( maxEE, E,E,E, MAXE,,R EVOK;)
 
@@ -391,11 +391,17 @@ TWOSUMBS(t1,t2,z1,z0) /* remove overlap */ \
 CANONE(z1,z0)  /* canonicalize the extension */ \
 }
 #endif
-// scaf primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEE,ASSERTWR(!NANTEST,EVNAN);)
+// obsolete #define TYMESE(u,v) ({D h,l,t,x; if(u.hi!=0. && v.hi!=0.){TWOPROD1(u.hi,v.hi,h,l); TWOPROD1(u.hi,v.lo,t,x); l+=t; TWOPROD1(u.lo,v.hi,t,x); l+=t; TWOSUMBS1(h,l,t,h);}else t=h=0.; CANONE1(t,h); })
+// obsolete // reciprocal of v: 1.0/h gives H, which is a truncated version of 1/h.  To find out what H is the true reciprocal of, we take hH=1+d where d is small.  Then we see
+// obsolete // that H is the reciprocal of h/(1+d) which we approximate as h(1-d)=h-hd (error is h*d^2 which is below the ULP).  The full reciprocal we want is that of (h+l)=(h-hd)+(l+hd), which is
+// obsolete // 1/((h-hd)+(l+hd)) = H - (l+hd)/((h-hd)(h+l)) which we approximate as H - (l+hd)*H*H
+// obsolete #define RECIPE(v) ({D zh,one,d,H=1.0/(v).hi; TWOPROD1(H,(v).hi,one,d); one-=1.0; d+=one; d*=(v).hi; d+=(v).lo; d*=H; d*=-H; TWOSUMBS1(H,d,zh,H); (E){.hi=zh,.lo=H}; })  // noncanonical result, in {zh,H}
+// obsolete #define DIVE(u,v) ({E vr=RECIPE(v); TYMESE(u,vr); })
 
-#if 1  // this template used to debug
+#if 0  // this template used to debug primop256CE
 #define fz 0
 #define CET E
 #define cepref __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0; 
@@ -507,6 +513,34 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */
  cesuff
  R EVOK;
 }
+#endif
+
+#if 1  // scaf // This template used to debug APFX
+ I divEE(I n,I m,E* RESTRICTI x,E* RESTRICTI y,E* RESTRICTI z,J jt){E u;E v;
+  NAN0;
+  // this supports only scalar op scalar
+  u = *x; v=*y;
+  D zh,one,d,H=1.0/(v).hi;
+  TWOPROD1(H,(v).hi,one,d);
+  one-=1.0; d+=one;
+  d*=(v).hi;
+  d+=(v).lo;
+  d*=H; d*=-H;
+  TWOSUMBS1(H,d,zh,H);
+  v=(E){.hi=zh,.lo=H}; 
+
+  D h,l,t,xx;
+  if(u.hi!=0. && v.hi!=0.){
+   TWOPROD1(u.hi,v.hi,h,l);
+   TWOPROD1(u.hi,v.lo,t,xx);
+   l+=t; TWOPROD1(u.lo,v.hi,t,xx);
+   l+=t; TWOSUMBS1(h,l,t,h);}
+  else t=h=0.;
+  *z=CANONE1(t,h);
+
+  ASSERTWR(!NANTEST,EVNAN); R EVOK;
+ }
+
 #endif
 
 

@@ -395,7 +395,7 @@ static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
             );   break;
  case -6: DQ(n, t=*x++; Sleef_quad ts=etof128(t); ASSERTWR(Sleef_icmpgeq1_purecfma(ts,sleefq1), EWIMAG);
                 if(t.hi>1e17){*z++=f128toe(Sleef_addq1_u05purecfma(Sleef_logq1_u10purecfma(ts),SLEEF_M_LN2q));
-               }else if(t.hi<-8e6){*z++=f128toe(Sleef_addq1_u05purecfma(Sleef_logq1_u10purecfma(Sleef_negq1_purec(ts)),SLEEF_M_LN2q));
+               }else if(t.hi<-8e6){*z++=f128toe(Sleef_addq1_u05purecfma(Sleef_logq1_u10purecfma(Sleef_negq1_purecfma(ts)),SLEEF_M_LN2q));
                }else{*z++=f128toe(Sleef_addq1_u05purecfma(ts,Sleef_sqrtq1_u05purecfma(Sleef_addq1_u05purecfma(Sleef_mulq1_u05purecfma(ts,ts),sleefq1))));
                }
             );   break;

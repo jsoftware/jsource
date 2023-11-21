@@ -5,6 +5,26 @@
 
 // Always use -ffp-contract=off option to compile SLEEF.
 
+#undef ENABLE_CUDA
+#undef ENABLE_PUREC_SCALAR
+#undef ENABLE_PURECFMA_SCALAR
+#undef ENABLE_CUDA
+#undef ENABLE_SSE2
+#undef ENABLE_AVX2128
+#undef ENABLE_AVX2
+#undef ENABLE_AVX512F
+#undef ENABLE_ADVSIMD
+#undef ENABLE_SVE
+#undef ENABLE_VSX
+#undef ENABLE_VSX3
+#undef ENABLE_VXE
+#undef ENABLE_VXE2
+#undef ENABLE_FMA_DP
+#undef ENABLE_CUDA
+#undef ENABLE_SVE
+#undef ENABLE_CUDA
+#define ENABLE_PURECFMA_SCALAR
+
 #if !defined(SLEEF_GENHEADER)
 #include <stdint.h>
 #include <assert.h>

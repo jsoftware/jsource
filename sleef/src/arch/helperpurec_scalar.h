@@ -70,7 +70,7 @@
 #endif
 
 #if (!defined(FP_FAST_FMA) || !defined(FP_FAST_FMAF)) && !defined(SLEEF_GENHEADER)
-#error FP_FAST_FMA or FP_FAST_FMAF not defined
+// #error FP_FAST_FMA or FP_FAST_FMAF not defined
 #endif
 
 #define ISANAME "Pure C scalar with FMA"

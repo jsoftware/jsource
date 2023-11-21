@@ -40,6 +40,15 @@ static DF1(jthdrinfo){A z;
  R z;
 }
 
+// 0!:_1 set skip character for scripts (13!:7 c makes scripts discard lines till one starts with NB.c
+// Behavior undefined if a script is not being read
+static DF1(jtskipinscript){
+ ARGCHK1(w);
+ ASSERT(AR(w)==0, EVRANK) ASSERT(AT(w)&LIT,EVDOMAIN)
+ jt->scriptskipbyte=CAV(w)[0];  // save the skip byte
+ R mtm;
+}
+
 F2(jtforeign){F2PREFIP;I p,q;
  ARGCHK2(a,w);
  ASSERT(AT(a)&NOUN&&AT(w)&NOUN,EVDOMAIN)
@@ -61,6 +70,7 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(0,2):   R CDERIV(CIBEAM, jtsct1,       jtsct2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,3):   R CDERIV(CIBEAM, jtscz1,       jtscz2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(0,4):   R CDERIV(CIBEAM, jtscy1,       jtscy2,       VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(0,-1): R CDERIV(CIBEAM, jtskipinscript,            0, VFLAGNONE,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 1:

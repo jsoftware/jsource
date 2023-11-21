@@ -84,6 +84,11 @@ f =: (j./"1@:(-"1) -: -&:(j./"1))  NB. test cmplx asub.  Last axis must be lengt
 
 0j0 = 1j0 % _j_
 
+0!:_1 '?'  NB. discard sentences till NB.?
+0
+13!:5 ] 8
+NB.?
+
 NB. Tests for qp
 
 NB. tests requiring conforming arguments, qp vs xnum

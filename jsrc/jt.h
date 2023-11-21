@@ -163,7 +163,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATEFUTEXWAKE (1LL<<TASKSTATEFUTEXWAKEX)
  C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
-// 1 bytes free
+ C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts NB. followed by skipbyte
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackinit;       // C stack pointer at beginning of execution

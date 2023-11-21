@@ -292,11 +292,15 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
-  ++d->dcn; j=d->dcix; // increment line# and fetch current start index
-  y=d->dcy; n=AN(y); s=UAV(y);
-  if(!(j<n))R 0;  // return 0 for EOF
-  d->dcj=k=j;  // k=start index
-  d->dcix=j=advl(j,n,s);  // j=end+1 index
+  while(1){
+   ++d->dcn; j=d->dcix; // increment line# and fetch current start index
+   y=d->dcy; n=AN(y); s=UAV(y);
+   if(!(j<n)){jt->scriptskipbyte=0; R 0;}  // return 0 for EOF
+   d->dcj=k=j;  // k=start index
+   d->dcix=j=advl(j,n,s);  // j=end+1 index
+   if(unlikely(jt->scriptskipbyte!=0)){if(j-k>=4&&s[k]=='N'&&s[k+1]=='B'&&s[k+2]=='.'&&s[k+3]==jt->scriptskipbyte)jt->scriptskipbyte=0; else continue;}  // if skipping in script, skip if not end marker
+   break;
+  }
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
   jtwri((JS)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(b,m,k+s);  // process & return the line

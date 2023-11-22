@@ -39,7 +39,7 @@ APFX( plusEE, E,E,E, PLUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minusEE, E,E,E, MINUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
-// scaf APFX( divEE, E,E,E, DIVE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
+APFX( divEE, E,E,E, DIVE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minEE, E,E,E, MINE,,R EVOK;)
 APFX( maxEE, E,E,E, MAXE,,R EVOK;)
 
@@ -515,7 +515,7 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */
 }
 #endif
 
-#if 1  // scaf // This template used to debug APFX
+#if 0 // This template used to debug APFX
  I divEE(I n,I m,E* RESTRICTI x,E* RESTRICTI y,E* RESTRICTI z,J jt){E u;E v;
   NAN0;
   // this supports only scalar op scalar

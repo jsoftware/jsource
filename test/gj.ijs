@@ -90,7 +90,7 @@ f =: (j./"1@:(-"1) -: -&:(j./"1))  NB. test cmplx asub.  Last axis must be lengt
 NB.?
 
 NB. Tests for qp
-'?' 0!:_1@[^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1  NB. skip if not AVX2
+'?' 0!:_1@[^:(-. +./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1  NB. skip if not AVX2
 
 NB. tests requiring conforming arguments, qp vs xnum
 argrand =: {{  NB. x is max value (extended).  y is (max sizes),:(cumulative freq for probability of each rank)  args are large random integers

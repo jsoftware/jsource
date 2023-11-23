@@ -327,10 +327,11 @@ NAN0;
  R EVOK;
 }
 
+#if 0  // SLEEF quad required
 // typedef struct {IL hi; IL lo; } Sleef_quad;
 // in sleefquad.h
 // typedef struct { uint64_t x, y; } Sleef_quad;
-Sleef_quad etof128(E w){
+static Sleef_quad etof128(E w){
  IL ehi=*(IL*)&w.hi; UIL elo=*(UIL*)&w.lo;  // IEEE bits of w
  UIL loneg=(IL)(ehi^elo)>>63;  // -1 if bottom part has a different sign from the top part
  IL ihi=ehi+loneg;   // if the bottom part has a different sign from the top, its significance must be subtracted from the upper.  That will occasion a borrow, which we handle here.
@@ -353,6 +354,7 @@ E f128toe(Sleef_quad w){
  D hi,lo; TWOSUMBS1(*(D*)&ihi,dlo,hi,lo)  // remove any overlap
  R CANONE1(hi,lo);  // return canonical form
 }
+#endif
 
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
 #if 0

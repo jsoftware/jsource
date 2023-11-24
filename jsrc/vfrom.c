@@ -959,17 +959,17 @@ endpipem2: ;  // come here in runout where pipe input is invalid
 
   // end of initialization pipeline. start the next column, pointed to by ppp
 
+  I an=ppp->an;  // # weights-1 (-1 if Slack col, -2 if column finished already, -3 if aborted already)
   I rowx=ppp->initrowct;  // the row number of Qk we are working on.  We stop when rowx=rown.  Always on a 32-row boundary
   D accumsumsq=ppp->initsumsq;  // total column norm so far
   rowx=rowx>=nqkrows?nqkrows:rowx;  // prevent rows from incrementing too many times
-  ndotprods-=rowx;  // treat (0,start] as a gap
+  ndotprods-=rowx*(an+1-REPSGN(an));  // treat (0,start] as a gap.  Count #fetches: an+1 if an>=0, an+2 if an=-1, immaterial if an<-1 (will be undone at end)
 
   // We calculated a cutoff point in pipe stage -1, using it to decide whether to load the Am/Av values.  sharedmin has since been updated, and might give a stricter cutoff.
   D cutoffsumsq=sharedmin*sharedminslack*ppp->frowsq;   // Frow^2 * best sumsq / best Frow^2, which is cutoff point for sumsq in new column (Frow^2)/sumsq > bestFrow^2/bestsumsq)
   // We do not use the new cutoff right away to set colx, because it has latency and the chance it has changed enough to cut off this column at the start is quite small
 
   D **mv0, *vv0;  // pointer to first column pointer, pointer to first weight
-  I an=ppp->an;  // # weights-1 (-1 if Slack col, -2 if column finished already, -3 if aborted already)
   // convert the column#s to Qkt row addresses, in place
   if(an>=0){I avx;
    if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE);  // fetch sharedmin, which we will use AFTER we process this column.  Do it early
@@ -981,7 +981,7 @@ endpipem2: ;  // come here in runout where pipe input is invalid
    if(unlikely(an==0)){mv0[1]=mv0[0]; vv0[1]=0.0; an=1;}  // if only 1 weight (should not occur), add a weight of 0 to save testing in the loop
   }else if(an==-1){  // Slack variable.  Set flag length and repurpose nextmv to point to the sole row of Qkt.  Also refetch sharedmin
     if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE); vv0=&qkt0[qktrowstride*ppp->colx];  // leave an=-1
-  }else{if(an==-2)goto usefullrowtotal; goto abortcol;  // immediate termination.  DO NOT fetch sharedmin, as we will be checking it presently.  rowx, accumsumsq needed
+  }else{if(an==-2)goto usefullrowtotal; goto abortcol;  // immediate termination/abort.  DO NOT fetch sharedmin, as we will be checking it presently.  rowx, accumsumsq needed
   }
 if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it must leave us on a bndrowmask bdy
 
@@ -1103,7 +1103,7 @@ usefullrowtotal:;  // come here when we started knowing the row total, in accums
   I impcolincr;  // value we will add to the col-stats field
   //  ***** jump to here on aborted column *****   rowx must point to the batch after the last one we processed and must be on a BNDROW bdy
   if(1)impcolincr=0x100000001; else abortcol: impcolincr=1; // jump here if column aborted early, possibly on insufficient gain.  This is the normal path if abort, don't incr # completed columns
-  ndotprods+=rowx; nimpandcols+=impcolincr; // accumulate # products performed, including the one we aborted out of; and 1 column, 0/1 improvements
+  ndotprods+=rowx*(an+1-REPSGN(an)); nimpandcols+=impcolincr; // accumulate # products performed, including the one we aborted out of; and 1 column, 0/1 improvements
   // save the total we accumulated.
 if(rowx<nqkrows && (rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf
   rowx=rowx>nqkrows?nqkrows:rowx;  // If rowx>nrows, back it up so accounting of reused products is accurate

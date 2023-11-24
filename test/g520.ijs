@@ -348,7 +348,7 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 0 1 512 0.44721359549995792770; _2 ]\ 512 5 0 0 0 0 0 0 0 0 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;(,00);(parms);Frow
   cutoffinfo =. (2 ,~ #rvt) $ 0.
-  assert. (0 4 1 512 0.64715022892943396826; _2 ]\ 0 0 0 0 0 0 0 0 512 117 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;(,4);(parms);Frow
+  assert. (0 4 1 1024 0.64715022892943396826; _2 ]\ 0 0 0 0 0 0 0 0 512 117 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;(,4);(parms);Frow
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 3 4 1856 1.788854381999831; _2 ]\ 512 5 512 5 320 30 512 5 0 0 ) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
   Frow =.  _4.     _3   _2   _1 _1

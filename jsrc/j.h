@@ -2082,9 +2082,15 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define LGSZS   1  // lg (bytes in an S)
 
 #if C_AVX2 || EMU_AVX2
+#if !(EMU_AVX2 && defined(__x86_64__))  // x86 emulator doesn't do fmsub right.  ARM is OK
 // create quad-precision product of double-precision inputs.  outhi must not be an input; outlo can
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 #define TWOPROD1(in0,in1,outhi,outlo) {__m256d hhh=_mm256_set1_pd(in0); __m256d lll=_mm256_set1_pd(in1); __m256d ohhh,olll; TWOPROD(hhh,lll,ohhh,olll) outlo=_mm256_cvtsd_f64(olll); outhi=_mm256_cvtsd_f64(ohhh);} 
+// create quad-precision product of quad x double.  outlo can be qp0
+// This result is not in canonical form: outlo may have magnitude more than 1 ULP of outhi, but not more than 2 ULP
+#define TWOPRODQD(qp0,qp1,dp,outhi,outlo) TWOPROD(qp0,dp,outhi,outlo) outlo=_mm256_fmadd_pd(qp1,dp,outlo);
+#endif
+
 // create quad-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Needs sgnbit.
 #define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(t),_mm256_castpd_si256(outlo))); \
                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); /* outlo=val with larger abs t=val with smaller abs */ \
@@ -2095,9 +2101,6 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define TWOSUMBS(inbig,insmall,outhi,outlo) {outhi=_mm256_add_pd(inbig,insmall); /* single-prec sum */ \
                                     outlo=_mm256_sub_pd(inbig,outhi); /* big-(big+small): implied val of -small after rounding */ \
                                     outlo=_mm256_add_pd(outlo,insmall);}  // amt by which actual value exceeds implied: this is the lost low precision
-// create quad-precision product of quad x double.  outlo can be qp0
-// This result is not in canonical form: outlo may have magnitude more than 1 ULP of outhi, but not more than 2 ULP
-#define TWOPRODQD(qp0,qp1,dp,outhi,outlo) TWOPROD(qp0,dp,outhi,outlo) outlo=_mm256_fmadd_pd(qp1,dp,outlo);
 #define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
 // convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<=lo<1/2ULP (with only same-sign allowed if abs=0, opposite if abs=1/2ULP)
 // mantmask is 0x000ff..f
@@ -2108,11 +2111,13 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
    /* transfer 2*l if exponent of h is 53 more than l, and signs are identical */ \
  h=_mm256_add_pd(h,xferval); l=_mm256_sub_pd(l,xferval);  /* transfer significance */ \
 }}
-
-#else
-#define TWOSPLIT1(a,x,y) y=(a)*134217729.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
-#define TWOPROD1(in0,in1,outhi,outlo) {D i00, i01, i10, i11; TWOSPLIT1(in0,i00,i01) TWOSPLIT1(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);}  // must avoid compiler tuning   needs i00, i01, i10, i11
 #endif
+
+#ifndef TWOPROD1  // if FMA version not available for TWOPROD1, use slow way
+#define TWOSPLIT1(a,x,y) y=(a)*134217729.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
+#define TWOPROD1(in0,in1,outhi,outlo) {D i00, i01, i10, i11; TWOSPLIT1(in0,i00,i01) TWOSPLIT1(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);}  // must avoid compiler tuning 
+#endif
+
 #define TWOSUM1(in0,in1,outhi,outlo) {D t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;}  //  in0 and outhi might be identical
 #define TWOSUMBS1(inbig,insmall,outhi,outlo) outhi=inbig+insmall; outlo=inbig-outhi; outlo=outlo+insmall; //  outhi cannot be an input; outlo can be the same as inbig
 #define DPADD1(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;

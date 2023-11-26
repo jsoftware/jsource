@@ -37,7 +37,6 @@ APFX(tymesDD, D,D,D, TYMESDD,,R EVOK;)
 APFX(  divDD, D,D,D, DIV,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( plusEE, E,E,E, PLUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minusEE, E,E,E, MINUSE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
-APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
 APFX( divEE, E,E,E, DIVE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 APFX( minEE, E,E,E, MINE,,R EVOK;)
@@ -393,7 +392,11 @@ CANONE(z1,z0)  /* canonicalize the extension */ \
 #endif
 primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
+#if !(EMU_AVX2 && defined(__x86_64__))  // x86 emulator doesn't do fmsub right.  ARM is OK
 primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEE,ASSERTWR(!NANTEST,EVNAN);)
+#else
+APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
+#endif
 // obsolete #define TYMESE(u,v) ({D h,l,t,x; if(u.hi!=0. && v.hi!=0.){TWOPROD1(u.hi,v.hi,h,l); TWOPROD1(u.hi,v.lo,t,x); l+=t; TWOPROD1(u.lo,v.hi,t,x); l+=t; TWOSUMBS1(h,l,t,h);}else t=h=0.; CANONE1(t,h); })
 // obsolete // reciprocal of v: 1.0/h gives H, which is a truncated version of 1/h.  To find out what H is the true reciprocal of, we take hH=1+d where d is small.  Then we see
 // obsolete // that H is the reciprocal of h/(1+d) which we approximate as h(1-d)=h-hd (error is h*d^2 which is below the ULP).  The full reciprocal we want is that of (h+l)=(h-hd)+(l+hd), which is

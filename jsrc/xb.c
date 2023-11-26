@@ -54,8 +54,8 @@ static I toonehottype(I t){R type3x0[CTTZ(t)][SGNTO0(t)];}  // take value from t
 // obsolete  t<<=REPSGN(t)&10; R t&-t;
 // Convert from 3!:x form to internal type, 0 if invalid
 static I fromonehottype(I t){
- if((UI)t>RPAR)R 0;  // error if 
- if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type
+ if((UI)t>RPAR)R 0;  // error if value too high
+ if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type, or an old one < 11 (sc. B01 LIT INT FL)
  t &=-t; if(t&0xfc00)R SPARSE|(t>>10);
  else R f3x0bit[CTTZ(t)-CMPXX];
 }
@@ -415,8 +415,8 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));         // n: quantity
  I r; RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d));         // r: rank
  C*v=BV(d,w,r);                                        // v[]: n values come from here
- ASSERT(t==LOWESTBIT(t),EVDOMAIN);
- t=fromonehottype(t);
+// obsolete  ASSERT(t==LOWESTBIT(t),EVDOMAIN);
+ RZ(t=fromonehottype(t))
  ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);

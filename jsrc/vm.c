@@ -9,7 +9,6 @@
 static int64_t m7f = 0x7fffffffffffffffLL;
 #define COMMA ,
 #endif
-// #include <sleefquad.h>
 
 D jtintpow(J jt,D x,I n){D r=1;
  if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;
@@ -327,7 +326,7 @@ NAN0;
  R EVOK;
 }
 
-#if 0  // SLEEF quad required
+#if 1  // scaf SLEEF quad required
 // typedef struct {IL hi; IL lo; } Sleef_quad;
 // in sleefquad.h
 // typedef struct { uint64_t x, y; } Sleef_quad;
@@ -357,7 +356,7 @@ E f128toe(Sleef_quad w){
 #endif
 
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
-#if 0
+#if 1  // scaf
  Sleef_quad sleefq1=sleef_q(1LL,0LL,0);
  Sleef_quad sleefq0=sleef_q(0LL,0LL,0);
  Sleef_quad sleefq05=sleef_q(1LL,0LL,-1);

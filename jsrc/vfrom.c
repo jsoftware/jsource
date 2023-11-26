@@ -1016,7 +1016,7 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
      // there will be 40 FMAs, 40 LOAD, 25 overhead per batch, plus the batch processing of 40 inst.  These would run in 38 cycles and would be limited by the instruction launch.
      // By unrolling the loop we can cut the non-FMA to 2.5 inst/loop, total 13/batch, at the cost of 1 misbranch (~60 inst).
      // BUT: data will usually be coming from D2$ and will not be available at max rate.  If the actual rate is 200/320 of max rate, the 40 LOAD will limit to 32 cycles/batch, which is not limiting for the workload described.
-     // However, if bound-row processing can be eliminated, the batch processing will fall to 16 inst, which will launch faster than the LOADs can run.
+     // However, if bound-row processing can be eliminated (by storing a version premultiplied by sqrt(2)), the batch processing will fall to 16 inst, which will launch faster than the LOADs can run.
      // Summary: it's a close question (in 2023) and we go for simplicity, because that will be best if bound-row is removed.
      do{mv=mv0[mx-1]; avweight=_mm256_set1_pd(vv0[mx-1]); GRLFMA(0) GRLFMA(1) GRLFMA(2) GRLFMA(3) GRLFMA(4) GRLFMA(5) GRLFMA(6) GRLFMA(7)}while(--mx);
     }else{  // slack vbl

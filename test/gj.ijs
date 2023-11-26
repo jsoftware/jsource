@@ -90,7 +90,8 @@ f =: (j./"1@:(-"1) -: -&:(j./"1))  NB. test cmplx asub.  Last axis must be lengt
 NB.?
 
 NB. Tests for qp
-'?' 0!:_1@[^:(-. ('arm64'-:9!:56'cpu') +. +./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1  NB. skip if not AVX2
+NB. '?' 0!:_1@[^:(-. ('arm64'-:9!:56'cpu') +. +./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1  NB. skip if not AVX2
+'?' 0!:_1@[^:(-. 'SLEEF' +./@:E. 9!:14'') 1  NB. skip if not SLEEF
 
 NB. tests requiring conforming arguments, qp vs xnum
 argrand =: {{  NB. x is max value (extended).  y is (max sizes),:(cumulative freq for probability of each rank)  args are large random integers
@@ -112,8 +113,9 @@ assert. qx -:!.0 xx
 assert. xy -:!.0 qy
 assert. (>:qy) -:!.0 >: xy
 assert. (<:qy) -:!.0 <: xy
-assert. (0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)
-assert. (0&<: *. qx&>:) qy -~ qx * (>.!.0 qy%qx)
+NB. assert. (0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)
+NB. assert. (0&<: *. qx&>:) qy -~ qx * (>.!.0 qy%qx)
+assert. ((0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)) +. ((0&<: *. qx&>:) qy -~ qx * (>.!.0 qy%qx))
 assert. (+:qy) -:!.0 +: xy
 assert. (-:qy) -:!.0 -: xy
 assert. 2 > | (*:%:qy) - xy

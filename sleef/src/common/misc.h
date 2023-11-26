@@ -285,7 +285,7 @@ typedef struct {
 
 #endif // #elif defined(MMSC_VER) // #if (defined (__GNUC__) || defined (__clang__) || defined(__INTEL_COMPILER)) && !defined(MMSC_VER)
 
-#if !defined(__linux__)
+#if !defined(__linux__) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
 #define isinff(x) ((x) == SLEEF_INFINITYf || (x) == -SLEEF_INFINITYf)
 #define isinfl(x) ((x) == SLEEF_INFINITYl || (x) == -SLEEF_INFINITYl)
 #define isnanf(x) ((x) != (x))

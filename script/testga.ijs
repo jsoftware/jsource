@@ -31,6 +31,22 @@ echo '1: (128!:10)@(1000x ?@$~ ,~)"0 i. 15'
 NB. this crash on arm64
 echo '1: (i:12) (+/\.)"0 _ [ 9 3 $ 827j680 814j974 277j598 972j450 216j339 190j482 511j174'
 1: (i:12) (+/\.)"0 _ [ 9 3 $ 827j680 814j974 277j598 972j450 216j339 190j482 511j174
+NB. quad smoke test
+(3 : 0)^:IF64 1
+qy=: 11 c. 908369405021512549064347521868x 124728191957521209584321916969x 482085479151563058090262812451x
+qx=: 11 c. 126882215325529964525414860630x 349998661747587625084463370981x 987584805052977528510920359828x
+echo qx*(qy%qx)
+echo qx*(qy%qx)
+echo qx*(qy%qx)
+echo qx*(qy%qx)
+echo qx*(qy%qx)
+assert. (qx*(qy%qx)) = qx*(qy%qx)
+assert. (qx*(qy%qx)) = qx*(qy%qx)
+assert. (qx*(qy%qx)) = qx*(qy%qx)
+assert. (qx*(qy%qx)) = qx*(qy%qx)
+assert. (qx*(qy%qx)) = qx*(qy%qx)
+1
+)
 
 echo 'avx512f: ',":9!:56'avx512f'
 echo 'avx512vl: ',":9!:56'avx512vl'

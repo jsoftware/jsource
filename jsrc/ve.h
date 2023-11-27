@@ -144,6 +144,7 @@ extern ADECL2(  binZZ,Z,Z,Z);
 extern ADECL2(  cirBD,D,B,D);
 extern ADECL2(  cirID,D,I,D);
 extern ADECL2(  cirDD,D,D,D);
+extern ADECL2(  cirEE,E,E,E);
 extern ADECL2(  cirZZ,Z,Z,Z);
 extern ADECL2(  divBB,PVD,PVB,PVB);
 extern ADECL2(  divBD,PVD,PVB,PVD);

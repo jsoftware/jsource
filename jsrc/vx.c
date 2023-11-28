@@ -599,7 +599,7 @@ F2(jtmdot){F2PREFIP;A z=0;
 
 B jtxquad(J jt,E *z,X W){
  mpX(W); mpX0(z); D h=jmpz_get_d(mpW); jmpz_set_d(mpz,h); jmpz_sub(mpz,mpW,mpz); D l=jmpz_get_d(mpz);  // high & low parts as D
- D th=h+l; D tl=h-th; h=th; l+=tl;    // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
- *z=CANONE1(h,l);   // convert to canonical form
+// obsolete D th=h+l; D tl=h-th; h=th; l+=tl;    // 
+ D th,tl; TWOSUMBS1(h,l,th,tl) *z=CANONE1(th,tl);   // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do.  convert to canonical form
  R 1;
 }

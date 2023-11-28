@@ -1323,6 +1323,16 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
                         } }
 
 #define EXPLICITRUNNING (!((I)jt->locsyms&SZI))  // the null locale is put on an odd I boundary
+
+// Memory-allocation macros
+// NOTE: J's memory allocation is unlike C/C++ allocation in that you do not have to match each allocation with a free.
+// In fact, you must not.  When a block is allocated by a GAxxx macro, it is automatically put on a stack of blocks-to-be-freed.
+// If you free the block yourself, the block will be double-freed.  Rather than freeing expired blocks, you must take explicit
+// action if you DO NOT want a block to be freed: (1) if you store the address of the block in persistent memory,
+// you must first issue ra() to protect the block; this ra() must be matched with fa() when the block is no longer needed;
+// (2) to protect the result of a function from being freed immediately, you must protect it by issuing EPILOG(result)
+// at the end of the function.  This frees blocks that were locally allocated, EXCEPT for the result, but it leaves the result on the stack of blocks-to-be-freed.
+
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
 // SHAPER is used when shape is given and rank is SDT.  Usually 0/1 use COPYSHAPE0 but they can use this; it always copies from the shaape.  This works only up to rank 2 (but could be extended if needed)

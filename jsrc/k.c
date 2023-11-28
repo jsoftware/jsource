@@ -125,11 +125,11 @@ KF1(jtEfromQ){
 static KF1(jtEfromI){
  E*y=yv; I*wv=IAV(w);
  DO(AN(w), I W=wv[i]; D h=W; D l=W-(I)h;  // high & low parts as D
-    y->hi=h+l; y->lo=h-y->hi; y->lo+=l; ++y; );  // convert to canonical
+    TWOSUMBS1(h,l,y->hi,y->lo) *y=CANONE1(y->hi,y->lo);   // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do.  convert to canonical form
+// obsolete     y->hi=h+l; y->lo=h-y->hi; y->lo+=l;
+    ++y; );  // convert to canonical
  R 1;
 }
-
-
 
 static KF1F(jtBfromE){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;

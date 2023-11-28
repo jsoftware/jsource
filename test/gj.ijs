@@ -156,6 +156,35 @@ f (2^55x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 f (2^55x) argnear 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 fsmall (2^40x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 
+NB. circle functions
+carg =. _2. _1. _0.5 _0.001 0 0.01 0.5 1 2
+0&(o. = (o. 11&c.))"0 carg
+1&(o. = (o. 11&c.))"0 carg
+2&(o. = (o. 11&c.))"0 carg
+3&(o. = (o. 11&c.))"0 carg
+4&(o. = (o. 11&c.))"0 carg
+5&(o. = (o. 11&c.))"0 carg
+6&(o. = (o. 11&c.))"0 carg
+7&(o. = (o. 11&c.))"0 carg
+8&(o. = (o. 11&c.))"0 carg
+9&(o. = (o. 11&c.))"0 carg
+10&(o. = (o. 11&c.))"0 carg
+11&(o. = (o. 11&c.))"0 carg
+12&(o. = (o. 11&c.))"0 carg
+_1&(o. = (o. 11&c.))"0 carg
+_2&(o. = (o. 11&c.))"0 carg
+_3&(o. = (o. 11&c.))"0 carg
+_4&(o. = (o. 11&c.))"0 carg
+_5&(o. = (o. 11&c.))"0 carg
+_6&(o. = (o. 11&c.))"0 carg
+_7&(o. = (o. 11&c.))"0 carg
+_8&(o. = (o. 11&c.))"0 carg
+_9&(o. = (o. 11&c.))"0 carg
+_10&(o. = (o. 11&c.))"0 carg
+_11&(o. = (o. 11&c.))"0 carg
+_12&(o. = (o. 11&c.))"0 carg
+
+
 NB. ($ #: I.@,)@:~:
 '1.000000000000000000000000000000' -: 0j30 ": (*%) 11 c. 665142606648569600281099799288x
 
@@ -169,7 +198,7 @@ NB. 9!:11 t
 NB.? end of skip
 
 
-4!:55 ;:'a argrand argnear b f f2 fsmall jdot t xd yd dx dy xx xy qx qy s xs ys'
+4!:55 ;:'a argrand argnear b carg f f2 fsmall jdot t xd yd dx dy xx xy qx qy s xs ys'
 
 
 

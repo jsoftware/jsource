@@ -91,7 +91,7 @@ true
 > pilo;
 0x1.1a62633145c07p-53
 */
-E   epi={0x1.1a62633145c07p-53,0x1.921fb54442d18p1};  // 1p1
+E   epi={0x1.921fb54442d18p1,0x1.1a62633145c07p-53};  // 1p1
 I   iotavec[IOTAVECLEN];  // return values for i. small
 uint64_t g_cpuFeatures;   // blis
 uint64_t g_cpuFeatures2;  // fsgsbase

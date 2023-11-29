@@ -326,7 +326,7 @@ NAN0;
  R EVOK;
 }
 
-#if SLEEF  // SLEEF quad required
+#if SLEEFQUAD  // SLEEF quad required
 // typedef struct {IL hi; IL lo; } Sleef_quad;
 // in sleefquad.h
 // typedef struct { uint64_t x, y; } Sleef_quad;
@@ -357,7 +357,7 @@ E f128toe(Sleef_quad w){
 #endif
 
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
-#if SLEEF
+#if SLEEFQUAD
  Sleef_quad sleefq1=sleef_q(+0x1000000000000LL, 0x0000000000000000ULL, 0);
  Sleef_quad sleefq0=sleef_q(+0x0000000000000LL, 0x0000000000000000ULL, -16383);
  Sleef_quad sleefq05=sleef_q(+0x1000000000000LL, 0x0000000000000000ULL, -1);

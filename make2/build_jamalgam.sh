@@ -178,7 +178,7 @@ else
  common="$common -DPYXES=0"
 fi
 
-USE_SLEEF_SRC="${USE_SLEEF_SRC:=1}"
+USE_SLEEFQUAD="${USE_SLEEFQUAD:=1}"
 case "$jplatform64" in 
  raspberry/j32*) USE_SLEEF=0;;
  wasm*) USE_SLEEF=0;;
@@ -186,8 +186,9 @@ case "$jplatform64" in
 esac
 if [ $USE_SLEEF -eq 1 ] ; then
  common="$common -DSLEEF=1"
-else
- USE_SLEEF_SRC=0
+fi
+if [ $USE_SLEEFQUAD -eq 1 ] ; then
+ common="$common -DSLEEFQUAD=1"
 fi
 
 if [ "${USE_GMP_H:=1}" -eq 1 ] ; then
@@ -731,16 +732,21 @@ case $jplatform64 in
 esac
 
 if [ $USE_SLEEF -eq 1 ] ; then
- if [ $USE_SLEEF_SRC -eq 1 ] ; then
-  OBJS_SLEEF=" \
-   ../../../../sleef/src/common/arraymap.o \
-   ../../../../sleef/src/common/common.o \
-   ../../../../sleef/src/libm/rempitab.o \
-   ../../../../sleef/src/libm/sleefsimddp.o \
-   ../../../../sleef/src/quad/rempitabqp.o \
-   ../../../../sleef/src/quad/sleefsimdqp.o \
-  "
- fi
+ OBJS_SLEEF=" \
+  ../../../../sleef/src/common/arraymap.o \
+  ../../../../sleef/src/common/common.o \
+  ../../../../sleef/src/libm/rempitab.o \
+  ../../../../sleef/src/libm/sleefsimddp.o \
+  ../../../../sleef/src/quad/rempitabqp.o \
+  ../../../../sleef/src/quad/sleefsimdqp.o \
+ "
+elif [ $USE_SLEEFQUAD -eq 1 ] ; then
+ OBJS_SLEEF=" \
+  ../../../../sleef/src/common/arraymap.o \
+  ../../../../sleef/src/common/common.o \
+  ../../../../sleef/src/quad/rempitabqp.o \
+  ../../../../sleef/src/quad/sleefsimdqp.o \
+ "
 fi
 
 echo "CFLAGS=$CFLAGS"

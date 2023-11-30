@@ -185,9 +185,8 @@ case "$jplatform64" in
  *) USE_SLEEF="${USE_SLEEF:=1}";;
 esac
 if [ $USE_SLEEF -eq 1 ] ; then
- common="$common -DSLEEF=1"
-fi
-if [ $USE_SLEEFQUAD -eq 1 ] ; then
+ common="$common -DSLEEF=1 -DSLEEFQUAD=1"
+elif [ $USE_SLEEFQUAD -eq 1 ] ; then
  common="$common -DSLEEFQUAD=1"
 fi
 

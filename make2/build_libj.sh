@@ -182,13 +182,11 @@ USE_SLEEFQUAD="${USE_SLEEFQUAD:=1}"
 case "$jplatform64" in 
  raspberry/j32*) USE_SLEEF=0;;
  wasm*) USE_SLEEF=0;;
- darwin*) USE_SLEEF=0;;
  *) USE_SLEEF="${USE_SLEEF:=1}";;
 esac
 if [ $USE_SLEEF -eq 1 ] ; then
- common="$common -DSLEEF=1"
-fi
-if [ $USE_SLEEFQUAD -eq 1 ] ; then
+ common="$common -DSLEEF=1 -DSLEEFQUAD=1"
+elif [ $USE_SLEEFQUAD -eq 1 ] ; then
  common="$common -DSLEEFQUAD=1"
 fi
 

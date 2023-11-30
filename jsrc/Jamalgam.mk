@@ -96,7 +96,11 @@ LOCAL_SRC_FILES += \
   openssl/sha/asm/keccak1600-armv4-elf.S \
   openssl/sha/asm/sha1-armv4-elf.S \
   openssl/sha/asm/sha256-armv4-elf.S \
-  openssl/sha/asm/sha512-armv4-elf.S
+  openssl/sha/asm/sha512-armv4-elf.S \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/quad/rempitabqp.c \
+  ../sleef/src/quad/sleefsimdqp.c
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
 LOCAL_ASMFLAGS += -f elf32 -X gnu -D LINUX
@@ -104,7 +108,11 @@ LOCAL_SRC_FILES += \
   openssl/sha/asm/keccak1600-armv4-elf.S \
   openssl/sha/asm/sha1-armv4-elf.S \
   openssl/sha/asm/sha256-armv4-elf.S \
-  openssl/sha/asm/sha512-armv4-elf.S
+  openssl/sha/asm/sha512-armv4-elf.S \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/quad/rempitabqp.c \
+  ../sleef/src/quad/sleefsimdqp.c
 endif
 
 ifeq ($(TARGET_ARCH),x86_64)

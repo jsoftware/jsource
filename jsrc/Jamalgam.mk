@@ -13,14 +13,14 @@ ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_CFLAGS := -DARMEABI_V7A -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-unknown-warning-option -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -Wno-shift-count-overflow -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare -Wno-deprecated-non-prototype -I../mpir/include
+  LOCAL_CFLAGS := -DARMEABI_V7A -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-unknown-warning-option -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -Wno-shift-count-overflow -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare -Wno-deprecated-non-prototype -DSLEEFQUAD=1 -DDORENAME -I../sleef/src/arch -I../sleef/src/common -I../mpir/include
   LOCAL_ARM_MODE := arm
   LOCAL_ARM_NEON := true
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
-  LOCAL_CFLAGS := -std=gnu99 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-unknown-warning-option -Wno-overflow -Wno-string-plus-int -Wno-empty-body -Wno-int-to-pointer-cast -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-return-local-addr -Wno-shift-count-overflow -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare -Wno-deprecated-non-prototype -I../mpir/include
+  LOCAL_CFLAGS := -std=gnu99 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-unknown-warning-option -Wno-overflow -Wno-string-plus-int -Wno-empty-body -Wno-int-to-pointer-cast -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-return-local-addr -Wno-shift-count-overflow -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare -Wno-deprecated-non-prototype -DSLEEFQUAD=1 -DDORENAME -I../sleef/src/arch -I../sleef/src/common -I../mpir/include
   LOCAL_ARM_MODE := arm
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp
@@ -96,7 +96,11 @@ LOCAL_SRC_FILES += \
   openssl/sha/asm/keccak1600-armv4-elf.S \
   openssl/sha/asm/sha1-armv4-elf.S \
   openssl/sha/asm/sha256-armv4-elf.S \
-  openssl/sha/asm/sha512-armv4-elf.S
+  openssl/sha/asm/sha512-armv4-elf.S \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/quad/rempitabqp.c \
+  ../sleef/src/quad/sleefsimdqp.c
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
 LOCAL_ASMFLAGS += -f elf32 -X gnu -D LINUX
@@ -104,7 +108,11 @@ LOCAL_SRC_FILES += \
   openssl/sha/asm/keccak1600-armv4-elf.S \
   openssl/sha/asm/sha1-armv4-elf.S \
   openssl/sha/asm/sha256-armv4-elf.S \
-  openssl/sha/asm/sha512-armv4-elf.S
+  openssl/sha/asm/sha512-armv4-elf.S \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/quad/rempitabqp.c \
+  ../sleef/src/quad/sleefsimdqp.c
 endif
 
 ifeq ($(TARGET_ARCH),x86_64)

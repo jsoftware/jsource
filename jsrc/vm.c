@@ -379,7 +379,7 @@ NAN0;
  R EVOK;
 }
 
-#if SLEEF  // SLEEF quad required
+#if SLEEFQUAD  // SLEEF quad required
 #define sleefq0 *(Sleef_quad*)&zeroZ   // Sleef QP 0
 #define zeroE *(E*)&zeroZ  // E 0
 static Sleef_quad etof128(E w){
@@ -417,7 +417,7 @@ AMON(logE,   E,E, ASSERTWR(0<=x->hi,EWIMAG); *z=f128toe(Sleef_logq1_u10(etof128(
 #endif
 
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
-#if SLEEF
+#if SLEEFQUAD
  Sleef_quad sleefq1=sleef_q(+0x1000000000000LL, 0x0000000000000000ULL, 0);
  Sleef_quad sleefq05=sleef_q(+0x1000000000000LL, 0x0000000000000000ULL, -1);
  NAN0;  // Note some of the SLEEF function raise NaN errors that we must clear: sqrt(0), log(0)

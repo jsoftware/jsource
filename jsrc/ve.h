@@ -329,6 +329,7 @@ extern ADECL2(  powBD,D,B,D);
 extern ADECL2(  powBI,D,B,I);
 extern ADECL2(  powDB,D,D,B);
 extern ADECL2(  powDD,D,D,D);
+extern ADECL2(  powEE,E,E,E);
 extern ADECL2(  powDI,D,D,I);
 extern ADECL2(  powIB,I,I,B);
 extern ADECL2(  powID,D,I,D);

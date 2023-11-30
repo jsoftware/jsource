@@ -17,11 +17,11 @@ D jtintpow(J jt,D x,I n){D r=1;
 }    /* x^n where x is real and n is integral */
 
 D jtpospow(J jt,D x,D y){
- if(0==y)R 1.0;
- if(0==x)R 0<y?0.0:inf;
+ if(unlikely(0==y))R 1.0;
+ if(unlikely(0==x))R 0<y?0.0:inf;
  if(0<x){
-  if(y== inf)R 1<x?inf:1>x?0.0:1.0;
-  if(y==-inf)R 1<x?0.0:1>x?inf:1.0;
+  if(unlikely(y== inf))R 1<x?inf:1>x?0.0:1.0;
+  if(unlikely(y==-inf))R 1<x?0.0:1>x?inf:1.0;
   R exp(y*log(x));
  }
  if(y==-inf){ASSERT(-1>x,EVDOMAIN); R 0.0;}
@@ -113,6 +113,7 @@ AHDR1(expD,D,D) {  AVXATOMLOOP(1,
  R EVOK;
  )
 }
+
 
 #if C_AVX2 || EMU_AVX2
 AHDR1(logD,D,D) {  AVXATOMLOOP(1,
@@ -232,8 +233,8 @@ AHDR2(powDD,D,D,D) {D v;
  }      
  HDR1JERR
 }
-#endif
 
+#endif
 
 #else
 AMON(expD,   D,D, *z=*x<EMIN?0.0:EMAX<*x?inf:exp(   *x);)
@@ -327,21 +328,20 @@ NAN0;
 }
 
 #if SLEEF  // SLEEF quad required
-// typedef struct {IL hi; IL lo; } Sleef_quad;
-// in sleefquad.h
-// typedef struct { uint64_t x, y; } Sleef_quad;
+#define sleefq0 *(Sleef_quad*)&zeroZ   // Sleef QP 0
+#define zeroE *(E*)&zeroZ  // E 0
 static Sleef_quad etof128(E w){
- if(w.hi==0)R sleef_q(+0x0000000000000LL, 0x0000000000000000ULL, -16383);  // true 0 must have exactly 0 exponent
+ if(w.hi==0)R sleefq0;  // true 0 must have exactly 0 exponent
  IL ehi=*(IL*)&w.hi; UIL elo=*(UIL*)&w.lo;  // IEEE bits of w
  UIL loneg=(IL)(ehi^elo)>>63;  // -1 if bottom part has a different sign from the top part
  IL ihi=ehi+loneg;   // if the bottom part has a different sign from the top, its significance must be subtracted from the upper.  That will occasion a borrow, which we handle here.
                                        // it is possible that the decrement will flow through to the exponent; that's OK.  bottom can never be 0 of opposite sign.  52 bits of sig
- I eexpxs=52-((ehi>>52)&0x7ff)+((elo>>52)&0x7ff);  // excess exponent of elo, i. e. gap between ehi and elo.  Must be >=0.  If 0, the bits of elo are right next to ehi
+ I eexpxs=((ehi>>52)&0x7ff)-52-((elo>>52)&0x7ff);  // excess exponent of elo, i. e. gap between ehi and elo.  Must be >=0.  If 0, the bits of elo are right next to ehi
  eexpxs=MIN(eexpxs,63);  // clamp shift count to within range
- elo=(elo&0x000fffffffffffffll)|(likely((elo&0x7ff0000000000000)!=0)?0x001000000000000ll:0);  // remove sign of elo, add hidden bit
- elo=(((elo<<11)>>eexpxs)^loneg)+loneg;  // shift sig to adj to hi, then add gap (all unsigned); then make the lo bits neg if needed
+ elo=(elo&0x000fffffffffffffll)|(likely((elo&0x7ff0000000000000)!=0)?0x0010000000000000ll:0);  // remove sign of elo, add hidden bit
+ elo=(((elo<<11)>>eexpxs)^loneg)-loneg;  // shift sig to adj to hi, then add gap (all unsigned); then make the lo bits neg if needed
  elo=(elo>>4)|(ehi<<60);  // take contiguous lower bits, possibly with some low-order 0s
- ehi=((ehi&0x7fffffffffffffffll)>>4)+0x3c00000000000000+(ehi&0x8000000000000000ll);  // shift exponent (& mantissa) down 4; rebias exponent; preserve sign
+ ehi=((ehi&0x7fffffffffffffffll)>>4)+0x3c00000000000000ll+(ehi&0x8000000000000000ll);  // shift exponent (& mantissa) down 4; rebias exponent; preserve sign
  R *(Sleef_quad*)&(IL[2]){elo,ehi};  // return the value
 }
 E f128toe(Sleef_quad w){
@@ -349,17 +349,21 @@ E f128toe(Sleef_quad w){
  if(unlikely(!BETWEENO(exp,0x3c00,0x4400))){  // exponent too big or too small
   R (E){.hi=exp<0x4000?0.:copysign(inf,((D*)&w)[1]),.lo=0.};   // clamp at limit
  }
- IL ihi=((((((IL*)&w)[1]<<4)|(((UIL*)&w)[0]>>(64-4)))+0x4000000000000000)&0x7fffffffffffffffLL)|(((IL*)&w)[1]&0x8000000000000000ll);  // shorten sign, replace with 4 LSBs, giving top 52 bits + hidden bit
- D dlo=(*(D*)&(IL){ihi&0x7ff000000000000ll})*2.22044604925031308e-16* *(D*)&(IL){((IL*)&w)[0]&0x0fffffffffffffffll};  // this is (1.0 with the exponent of ihi) * (2^_52) * (low bits of input)
+ IL ihi=((((((IL*)&w)[1]<<4)|(((UIL*)&w)[0]>>(64-4)))+0x4000000000000000ll)&0x7fffffffffffffffLL)|(((IL*)&w)[1]&0x8000000000000000ll);  // shorten exp, replace with 4 LSBs, giving top 52 bits + hidden bit, keep sign
+ D dlo=(*(D*)&(IL){ihi&0x7ff0000000000000ll})*9.8607613152626475e-32* ((((IL*)&w)[0]>>8)&0x00000fffffffffffll);  // this is (1.0 with the exponent of ihi) * (2^_103) * (low bits of input)
  D hi,lo; TWOSUMBS1(*(D*)&ihi,dlo,hi,lo)  // remove any overlap
  R CANONE1(hi,lo);  // return canonical form
 }
+
+
+AMON(expE,   E,E, *z=x->hi<(2*EMIN)?zeroE:f128toe(Sleef_expq1_u10purecfma(etof128(*x)));)
+AMON(logE,   E,E, ASSERTWR(0<=x->hi,EWIMAG); *z=f128toe(Sleef_logq1_u10purecfma(etof128(*x)));)
+
 #endif
 
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
 #if SLEEF
  Sleef_quad sleefq1=sleef_q(+0x1000000000000LL, 0x0000000000000000ULL, 0);
- Sleef_quad sleefq0=sleef_q(+0x0000000000000LL, 0x0000000000000000ULL, -16383);
  Sleef_quad sleefq05=sleef_q(+0x1000000000000LL, 0x0000000000000000ULL, -1);
  NAN0;  // Note some of the SLEEF function raise NaN errors that we must clear: sqrt(0), log(0)
  switch(k){
@@ -411,7 +415,7 @@ static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
  case  9: DQ(n,         *z++=*x++;);           break;    
  case 10: DQ(n, t=*x++; D oldsgn=t.hi; z->hi=ABS(t.hi); *(IL*)&z->lo=*(IL*)&t.lo^(*(IL*)&oldsgn&0x8000000000000000);    z++;);         break;
  case 11: DQ(n,         z->hi=z->lo=0.0; ++z;)            break;
- case 12: DQ(n,         *z++=*(0<=x->hi?(E*)&zeroZ:&epi); ++x;); break;
+ case 12: DQ(n,         *z++=0<=x->hi?zeroE:epi; ++x;); break;
  }
  ASSERTWR(!NANTEST,EVNAN);
 #endif
@@ -434,6 +438,19 @@ AHDR2(cirEE,E,E,E){I k=(I)jround(x->hi);
  n^=REPSGN(n);   // convert complementary n to nonneg
  R jtcire(jt,n,k,z,y);
 }
+
+static E jtpospowE(J jt,E x,E y){
+ if(unlikely(0==y.hi))R (E){.hi=1.0,.lo=0.};
+ if(unlikely(0==y.hi))R (E){.hi=0<y.hi?0.0:inf,.lo=0.};
+ if(0<x.hi){
+  R f128toe(Sleef_expq1_u10purecfma(Sleef_mulq1_u05purecfma(etof128(y),Sleef_logq1_u10purecfma(etof128(x)))));
+ }
+ jt->jerr=EWIMAG;
+ R (E){.hi=0.0,.lo=0.};
+}    /* x^y where x and y are qp */
+
+#define pospowE(x,y) jtpospowE(jt,(x),(y))
+APFX(powEE, E,E,E, pospowE,,HDR1JERR)
 
 
 F2(jtlogar2){A z;I t;

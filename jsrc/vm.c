@@ -107,7 +107,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 #if SLEEFQUAD
 // the Sleef QP functions are called in the purecfma version, except for platforms that don't support fma
-#if defined(__AVX2__) || defined(__aarch64__)
+#if HASFMA
 #define Sleef_expq1_u10 Sleef_expq1_u10purecfma
 #define Sleef_logq1_u10 Sleef_logq1_u10purecfma
 #define Sleef_subq1_u05 Sleef_subq1_u05purecfma

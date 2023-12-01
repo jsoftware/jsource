@@ -23,7 +23,7 @@
 #undef ENABLE_CUDA
 #undef ENABLE_SVE
 #undef ENABLE_CUDA
-#if defined(__AVX2__) || defined(__aarch64__)
+#if defined(__AVX2__) || defined(__aarch64__)  // if arch supports FMA instruction
 #define ENABLE_PURECFMA_SCALAR
 #else
 #define ENABLE_PUREC_SCALAR

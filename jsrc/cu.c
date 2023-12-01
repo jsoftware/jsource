@@ -383,7 +383,7 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
     flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
    }
-   if(0&&vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)), structural under
+   if(vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)), structural under
    break;
   }
  case CCOMMA:  // u&., structural under

@@ -218,8 +218,10 @@ _mm512_storeu_epi64 (void *__P, __m512i __A)
 
 #if SLEEF
 #include "../sleef/include/sleef.h"
-#endif
-#if SLEEFQUAD
+#undef SLEEFQUAD
+#define SLEEFQUAD 1
+#include "../sleef/include/sleefquad.h"
+#elif SLEEFQUAD
 #include "../sleef/include/sleefquad.h"
 #endif
 

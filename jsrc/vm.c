@@ -156,7 +156,9 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 #define Sleef_logq1_u10 Sleef_logq1_u10purec
 #define Sleef_expq1_u10 Sleef_expq1_u10purec
 #endif
+#endif
 
+#if SLEEF
 
 AHDR1(expD,D,D) {  AVXATOMLOOP(1,
  ,

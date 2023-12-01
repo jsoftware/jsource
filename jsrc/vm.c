@@ -105,9 +105,9 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  )}
 #endif
 
-#if SLEEF
+#if SLEEFQUAD
 // the Sleef QP functions are called in the purecfma version, except for platforms that don't support fma
-#if 1  // Bill change this as needed
+#if defined(__AVX2__) || defined(__aarch64__)
 #define Sleef_expq1_u10 Sleef_expq1_u10purecfma
 #define Sleef_logq1_u10 Sleef_logq1_u10purecfma
 #define Sleef_subq1_u05 Sleef_subq1_u05purecfma
@@ -152,7 +152,9 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 #define Sleef_icmpeqq1 Sleef_icmpeqq1_purec
 #define Sleef_divq1_u05 Sleef_divq1_u05purec
 #endif
+#endif
 
+#if SLEEF
 
 AHDR1(expD,D,D) {  AVXATOMLOOP(1,
  ,

@@ -23,7 +23,11 @@
 #undef ENABLE_CUDA
 #undef ENABLE_SVE
 #undef ENABLE_CUDA
+#if defined(__AVX2__) || defined(__aarch64__)
 #define ENABLE_PURECFMA_SCALAR
+#else
+#define ENABLE_PUREC_SCALAR
+#endif
 
 #if !defined(SLEEF_GENHEADER)
 #include <stdint.h>
@@ -3553,7 +3557,7 @@ EXPORT vargquad Sleef_strtoq(const char *str, const char **endptr) {
 #define FLAG_UPPER    (1 << 5)
 
 static int snprintquad(char *buf, size_t bufsize, vargquad argvalue, int typespec, int width, int precision, int flags) {
-  if (width > bufsize) width = bufsize;
+  if (width > (int)bufsize) width = (int)bufsize;
 
   vquad c128 = cast_vq_aq(argvalue);
 
@@ -3584,7 +3588,7 @@ static int snprintquad(char *buf, size_t bufsize, vargquad argvalue, int typespe
     flags &= ~FLAG_ZERO;
   } else {
     if (precision < 0) precision = 6;
-    if (precision > bufsize/2 - 10) precision = bufsize/2 - 10;
+    if (precision > (int)bufsize/2 - 10) precision = (int)bufsize/2 - 10;
     if (typespec == 'g' && precision > 0) precision--;
 
     tdx rounder = mul_tdx_tdx_tdx(cast_tdx_d(0.5), exp10i(-precision));
@@ -3711,7 +3715,7 @@ static int snprintquad(char *buf, size_t bufsize, vargquad argvalue, int typespe
 }
 
 static int snprintquadhex(char *buf, size_t bufsize, vargquad argvalue, int width, int precision, int flags) {
-  if (width > bufsize) width = bufsize;
+  if (width > (int)bufsize) width = (int)bufsize;
   char *bufend = buf + bufsize, *ptr = buf;
 
   vquad c128 = cast_vq_aq(argvalue);

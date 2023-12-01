@@ -4,6 +4,9 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <stdio.h>
+#ifndef __USE_XOPEN2K
+#define __USE_XOPEN2K  // for posix_memalign
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>

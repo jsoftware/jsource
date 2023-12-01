@@ -2094,7 +2094,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define LGSZS   1  // lg (bytes in an S)
 
 #if C_AVX2 || EMU_AVX2
-#if !(EMU_AVX2 && defined(__x86_64__))  // x86 emulator doesn't do fmsub right.  ARM is OK
+#if defined(__AVX2__) || defined(__aarch64__)  // have hardware FMA capacity
 // create quad-precision product of double-precision inputs.  outhi must not be an input; outlo can
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 #define TWOPROD1(in0,in1,outhi,outlo) {__m256d hhh=_mm256_set1_pd(in0); __m256d lll=_mm256_set1_pd(in1); __m256d ohhh,olll; TWOPROD(hhh,lll,ohhh,olll) outlo=_mm256_cvtsd_f64(olll); outhi=_mm256_cvtsd_f64(ohhh);} 

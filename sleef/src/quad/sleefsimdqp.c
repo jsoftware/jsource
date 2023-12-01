@@ -23,7 +23,11 @@
 #undef ENABLE_CUDA
 #undef ENABLE_SVE
 #undef ENABLE_CUDA
+#if defined(__AVX2__) || defined(__aarch64__)
 #define ENABLE_PURECFMA_SCALAR
+#else
+#define ENABLE_PUREC_SCALAR
+#endif
 
 #if !defined(SLEEF_GENHEADER)
 #include <stdint.h>

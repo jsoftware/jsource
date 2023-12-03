@@ -267,13 +267,13 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
   // if it contains 'b' or 'p', that becomes the type regardless of others
   // (types incompatible with that raise errors later)
   ret=(memchr(s,'j',n)||memchr(s,'a',n)?CMPX:0) + (memchr(s,'b',n)||memchr(s,'p',n)?LIT:0);
-#if 0 //todo
   // if has 'fX', may be alternate float format
-  {C*t=memchr(s,'f',n);
-   if(t&&t<s+n-1){
-    ret|=t[1]=='h'?HP:t[1]=='s'?SP:t[1]=='q'?QP:0;
-    if(memchr(s,'x',n))ret|=LIT;}}
-#endif
+  // consider all instances of f; for example: 2fs 2fq should be HP|QP, and for xfq 2fq, the first one will be an error, but the second should correctly set QP (for x ". y)
+  for(C*t=s;t=memchr(t,'f',n);t++){
+   if(t>s&&t<s+n-1 // match in range (at least one char before and after)
+      &&(BETWEENC(t[-1],'0','9')||unlikely(t>s+1&&t[-1]=='.'&&BETWEENC(t[-2],'0','9')))){ // preceded by digit or digit period (5.fq ok)
+    ret|=t[1]=='h'?HP:t[1]=='s'?SP:t[1]=='q'?QP:0;}}
+  if((ret&(HP|SP|QP))&&memchr(s,'x',n))ret|=LIT;
   if(ret==0){
 #if SY_64
    ret|=INT;  // default to 'nothing seen except integers'

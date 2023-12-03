@@ -49,13 +49,12 @@ XF2(jtxplus){ // a+w
   B zp= ax ?ap :wp;
   if (jmpn_sub(zd, ax?ad:wd, n, ax?wd:ad, m)) {
    zp= 1-zp; // borrow means need to negate result
-   if(unlikely(!jmpn_neg(zd, zd, n))) {fr(z); R X0; /* this X0 presumably never happens */}
+   if(unlikely(!jmpn_neg(zd, zd, n))) R X0; /* this X0 presumably never happens */
   }
   while (likely(n) && unlikely(!zd[n-1])) n--; /* trim leading zeros */
-  if (unlikely(!n)) {fr(z); R X0;} /* this X0 is presumably the one that happens */
+  if (unlikely(!n)) R X0;
   XSGN(z)= zp ?n :-n;
  }
- if (XLIMBLEN(z)>100000) SEGFAULT; // try to catch a bug...
  R z;
 }
 XF2(jtxminus){ // a-w  NB. X a, w

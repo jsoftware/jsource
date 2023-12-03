@@ -400,7 +400,7 @@ void jgmpinit(C*libpath) {
  gempwsfull= 0;
  GMPLOCKINIT;
  jgmpfn(mpn_add);          // https://gmplib.org/manual/Low_002dlevel-Functions
- jgmpfn(mpn_com);          // https://gmplib.org/manual/Low_002dlevel-Functions
+ // mpir never implemented mpn_com // jgmpfn(mpn_com);          // https://gmplib.org/manual/Low_002dlevel-Functions
  jgmpfn(mpn_sub);          // https://gmplib.org/manual/Low_002dlevel-Functions
  jgmpfn(mpq_add);          // https://gmplib.org/manual/Rational-Arithmetic
  // DO NOT USE //          jgmpfn(mpq_canonicalize); // https://gmplib.org/manual/Rational-Number-Functions

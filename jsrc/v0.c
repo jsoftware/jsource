@@ -298,20 +298,19 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  an=AN(a); at=AT(a); b=BOX&at;   // b if mplr/roots form or multinomial; otherwise coeff
  n=AN(w); wt=AT(w);
  ASSERT(!ISSPARSE(at),EVNONCE);  // sparse polynomial not supported
- ASSERT(!((at|wt)&QP),EVNONCE);  // we don't have high-precision support
  ASSERT((-an&((at&NUMERIC+BOX)-1))>=0,EVDOMAIN);  // error if nonnumeric unless degree __ 
  // if we are applying f@:p, revert if not sum-of-powers form
  I postfn=FAV(self)->flag&VFATOPPOLY;  //  index of function to apply after p. 0=none 1=^
- if(b){A*av=AAV(a); 
+ if(b){A*av=AAV(a); // mplr/roots or multinomial
   if(postfn)R jtupon2cell(jt,a,w,self);  // revert if ^@:p.   must do before a is modified
   ASSERT(2>=an,EVLENGTH);
   c=1==an?num(1):C(av[0]); a=C(av[1!=an]); // c=mplr, a=roots
-  if((an^1)+(AR(a)^2)==0)R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial
+  if((an^1)+(AR(a)^2)==0)R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial and return
   an=AN(a); at=AT(a);
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);
   ASSERT(!AR(c),EVRANK);
   ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));  // treat atomic a as list
- }
+ }  // if mplr/roots form, a has been replace by the roots and c is the coeff
  t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);  // promote B01/INT to FL
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
  if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} x=DAV(w); wz=ZAV(w);
@@ -328,20 +327,21 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  }
  if((-postfn&((-b)|(1-(an^2))|((t&FL)-1)))<0)R jtupon2cell(jt,a,w,self);  // revert if ^@:p. but not powers (postfn not 0, and a boxed or degree not 1 or 2 or type not FL).  an is final here
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
- b=b?3:b;
- if(likely(((j-1)&SGNIFDENSE(t)&((t&XNUM+RAT)-1))<0)){  // j==0 & not sparse and not XNUM or RAT
+ b=b?3:b;  // now b=3 means BOX i. e. mplr/roots form
+// obsolete  if(likely(((j-1)&SGNIFDENSE(t)&((t&XNUM+RAT)-1))<0)){  // j==0 & not sparse and not XNUM or RAT
+ if(likely(((j-1)&SGNIFDENSE(t)&-(t&FL+CMPX))<0)){  // j==0 (=no inf) & not sparse and FL/CMPX
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
   if(n==0){RETF(za);}  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
   b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2
  }else{if(postfn)R jtupon2cell(jt,a,w,self);  // revert if there is a postfn, and we are using the eval path.  type must be FL
  }
- switch(b){
+ switch(b){  // 1=FL, coeffs 2=CMPX, coeffs 0=other, coeffs 4=FL, mplr/roots  5=CMPX, mplr/roots 3=other, mplr/roots
  // coeffs: d/e are not set
  case 1: NAN0;  // FL
 #if C_AVX2 || EMU_AVX2
 // loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
-  switch(an){
+  switch(an){  // switch on degree of polynomial
 
   case 0: ad=&zeroZ.re;  // fall through to propagate the 0
   case 1: mvc(n*sizeof(D),z,sizeof(D),ad); break;
@@ -426,12 +426,12 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
   }
 #endif
   NAN1; break;  // Horner's rule.  First multiply is never 0*_
- case 0: R df2(za,w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE
- case 2: NAN0; DQ(n, q=zeroZ; y=*wz++; j=an; DQ(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX
+ case 0: R df2(za,w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE/QP coeffs
+ case 2: NAN0; DQ(n, q=zeroZ; y=*wz++; j=an; DQ(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX coeffs
  // mult/roots: d/e are set
- case 3: R tymes(c,df2(za,negate(a),w,eval("*/@(+/)")));
- case 4: NAN0; DO(n, p=d; u=*x++; DO(an,p*=u-ad[i];); *z++=p;); NAN1;                  break;
- case 5: NAN0; DO(n, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;
+ case 3: R tymes(c,df2(za,negate(a),w,eval("*/@(+/)")));  // XNUM/RAT/SPARSE/QP mplr/roots
+ case 4: NAN0; DO(n, p=d; u=*x++; DO(an,p*=u-ad[i];); *z++=p;); NAN1; break;  // FL mplr/roots
+ case 5: NAN0; DO(n, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;   // CMPX mplr/roots
  }
  RETF(za);
 }    /* a p."r w */

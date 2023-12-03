@@ -495,8 +495,9 @@ docase:
     while(1){  // 2 loops if sparse
      if(likely(AT(tt)&INT+B01)){i=BIV0(tt)?i:nexti; break;} // INT and B01 are most common
      if(AT(tt)&FL){i=DAV(tt)[0]?i:nexti; break;}
-     if(AT(tt)&CMPX+QP){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
+     if(AT(tt)&CMPX){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
      if(AT(tt)&(RAT|XNUM)){i=!ISX0(XAV(tt)[0])?i:nexti; break;}
+     if(AT(tt)&QP){i=EAV(tt)[0].hi?i:nexti; break;}
      if(!(AT(tt)&NOUN)){CHECKNOUN}  // will take error
      // other nonnumeric types (BOX, char) test true: i is set for that
      if(!ISSPARSE(AT(tt)))break;

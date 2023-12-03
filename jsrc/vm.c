@@ -385,13 +385,16 @@ static Sleef_quad etof128(E w){
  IL ehi=*(IL*)&w.hi; UIL elo=*(UIL*)&w.lo;  // IEEE bits of w
  UIL loneg=(IL)(ehi^elo)>>63;  // -1 if bottom part has a different sign from the top part
  IL ihi=ehi+loneg;   // if the bottom part has a different sign from the top, its significance must be subtracted from the upper.  That will occasion a borrow, which we handle here.
-                                       // it is possible that the decrement will flow through to the exponent; that's OK.  bottom can never be 0 of opposite sign.  52 bits of sig
- I eexpxs=((ehi>>52)&0x7ff)-53-((elo>>52)&0x7ff);  // excess exponent of elo, i. e. gap between ehi and elo.  Must be >=0.  If 0, the bits of elo are right next to ehi
- eexpxs=MIN(eexpxs,63);  // clamp shift count to within range
+ I eexpxs=((ihi>>52)&0x7ff)-53-((elo>>52)&0x7ff);  // excess exponent of elo, i. e. gap between ehi and elo.  Range is [-1,any].  If 0, the bits of elo are right next to ehi.  -1 is possible if exponent changed
+ eexpxs=MIN(eexpxs,62);  // clamp shift count to within range
  elo=(elo&0x000fffffffffffffll)|(likely((elo&0x7ff0000000000000)!=0)?0x0010000000000000ll:0);  // remove sign of elo, add hidden bit
- elo=(((elo<<11)>>eexpxs)^loneg)-loneg;  // shift sig to adj to hi, then add gap (all unsigned); then make the lo bits neg if needed
- elo=(elo>>4)|(ehi<<60);  // take contiguous lower bits, possibly with some low-order 0s
- ehi=((ehi&0x7fffffffffffffffll)>>4)+0x3c00000000000000ll+(ehi&0x8000000000000000ll);  // shift exponent (& mantissa) down 4; rebias exponent; preserve sign
+ elo=((((elo<<8)>>(eexpxs+1))^loneg)-loneg);  // shift sig to adj to hi, then add gap (all unsigned); then make the lo bits neg if needed.  If eexpxs is 0 this leaves no gap
+ // The low bits are in the right position, leaving room for 4 upper bits normally, but only 3 if the exponent was decremented.  Clear bits above the valid ones
+ if(likely(((ehi^ihi)&0x0010000000000000)==0)){elo&=0x0fffffffffffffff;}
+ else{ihi&=~1; elo&=0x1fffffffffffffff;}   // if the decrement flowed through to the exponent, we have to shift the bits of ihi left to raise their significance to match
+                                        // the lower exponent.  All the bits of ihi are 1, so we just turn off the low 1 bit.  low bits were shifted because we used the updated exponent for eexpxs
+ elo|=ihi<<60;  // take contiguous lower bits, possibly with some low-order 0s
+ ehi=((ihi&0x7fffffffffffffffll)>>4)+0x3c00000000000000ll+(ihi&0x8000000000000000ll);  // shift exponent (& mantissa) down 4; rebias exponent; preserve sign
  R *(Sleef_quad*)&(IL[2]){elo,ehi};  // return the value
 }
 E f128toe(Sleef_quad w){

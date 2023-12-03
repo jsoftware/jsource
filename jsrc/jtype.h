@@ -289,6 +289,7 @@ typedef I SI;
 #define XAV0(x)         ( (X*)((C*)(x)+AKXR(0)))  /* extended                */
 #define QAV(x)          ( (Q*)((C*)(x)+AK(x)))  /* rational                */
 #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed                   */
+#define EAV(x)          ( (E*)((C*)(x)+AK(x)))  /* QP                 */
 #define AAV0(x)         ((A*)((C*)(x)+AKXR(0)))  // A block in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define AAV1(x)         ((A*)((C*)(x)+AKXR(1)))  // A block in a stack- or heap-allocated list (rank 1)
 #define AAV2(x)         ((A*)((C*)(x)+AKXR(2)))  // A block in a stack- or heap-allocated list (rank 2)

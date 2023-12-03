@@ -46,7 +46,11 @@ EXPORT uint64_t Sleef_currentTimeMicros() {
 #include <malloc.h>
 #endif
 
+#if !defined(ANDROID) || (__ANDROID_API__ >= 16)
 EXPORT void *Sleef_malloc(size_t z) { int err; void *ptr = NULL; if(!(err=posix_memalign(&ptr, 4096, z))) return ptr; else {errno = err; return NULL; }}
+#else
+EXPORT void *Sleef_malloc(size_t z) { int err; void *ptr = NULL; if(ptr=malloc(z)) return ptr; else {errno = err; return NULL; }}
+#endif
 EXPORT void Sleef_free(void *ptr) { free(ptr); }
 
 EXPORT uint64_t Sleef_currentTimeMicros() {

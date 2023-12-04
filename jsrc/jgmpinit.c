@@ -13,6 +13,17 @@
 #endif
 #include "j.h"      // includes jgmp.h
 
+#ifdef _WIN32
+void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
+{
+  mp_limb_t ul;
+  do {
+      ul = *up++;
+      *rp++ = ~ul & GMP_NUMB_MASK;
+  } while (--n != 0);
+}
+#endif
+
 ///////////////////////////////////////////////////////////////
 // Constants
 // see jgmp.h for some notes on type X
@@ -400,7 +411,9 @@ void jgmpinit(C*libpath) {
  gempwsfull= 0;
  GMPLOCKINIT;
  jgmpfn(mpn_add);          // https://gmplib.org/manual/Low_002dlevel-Functions
- // mpir never implemented mpn_com // jgmpfn(mpn_com);          // https://gmplib.org/manual/Low_002dlevel-Functions
+#ifndef _WIN32
+ jgmpfn(mpn_com);          // https://gmplib.org/manual/Low_002dlevel-Functions
+#endif
  jgmpfn(mpn_sub);          // https://gmplib.org/manual/Low_002dlevel-Functions
  jgmpfn(mpq_add);          // https://gmplib.org/manual/Rational-Arithmetic
  // DO NOT USE //          jgmpfn(mpq_canonicalize); // https://gmplib.org/manual/Rational-Number-Functions

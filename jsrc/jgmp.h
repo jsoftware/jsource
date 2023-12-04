@@ -283,12 +283,15 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
   if (--N) jmpn_com(++Z, ++W, N);   /* complement any remaining */\
   r= 1; done: r;})
 
+#ifdef _WIN32
 // workalike for mpn_com which mpir does not support
-#define jmpn_com(RP, SP, N) {UI*rp= (UI*)RP, *sp= (UI*)SP, n= N, j; \
-  for (j= 0; j<n && !sp[j]; j++) rp[j]= 0; \
-  if (likely(j<n)) rp[j]= -sp[j]; j++; \
-  for (; j<n; j++) rp[j]= ~sp[j]; \
-}
+extern void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n);
+#endif
+// #define jmpn_com(RP, SP, N) {UI*rp= (UI*)RP, *sp= (UI*)SP, n= N, j; \
+//  for (j= 0; j<n && !sp[j]; j++) rp[j]= 0; \
+//  if (likely(j<n)) rp[j]= -sp[j]; j++; \
+//  for (; j<n; j++) rp[j]= ~sp[j]; \
+//}
 
 /*
  * referenced gmp routines are declared twice.
@@ -298,7 +301,9 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #ifdef IMPORTGMPLIB
 #define jmp_set_memory_functions __gmp_set_memory_functions
 #define jmpn_add __gmpn_add                  // https://gmplib.org/manual/Low_002dlevel-Functions
-// mpir never implemented mpn_com // #define jmpn_com __gmpn_com                  // https://gmplib.org/manual/Low_002dlevel-Functions
+#ifndef _WIN32
+#define jmpn_com __gmpn_com                  // https://gmplib.org/manual/Low_002dlevel-Functions
+#endif
 #define jmpn_sub __gmpn_sub                  // https://gmplib.org/manual/Low_002dlevel-Functions
 #define jmpq_add __gmpq_add                  // https://gmplib.org/manual/Rational-Arithmetic
 #define jmpq_clear __gmpq_clear              // https://gmplib.org/manual/Initializing-Rationals
@@ -357,7 +362,9 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 #define jmpz_sub __gmpz_sub                  // https://gmplib.org/manual/Integer-Arithmetic
 #else
 EXTERN mp_limb_t (*jmpn_add)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
-// mpir never implemented mpn_com // EXTERN mp_limb_t (*jmpn_com)(mp_limb_t *, const mp_limb_t *, mp_size_t);
+#ifndef _WIN32
+EXTERN mp_limb_t (*jmpn_com)(mp_limb_t *, const mp_limb_t *, mp_size_t);
+#endif
 EXTERN mp_limb_t (*jmpn_sub)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
 EXTERN void (*jmpq_add)(mpq_t, const mpq_t, const mpq_t);
 EXTERN void (*jmpq_clear)(mpq_t);

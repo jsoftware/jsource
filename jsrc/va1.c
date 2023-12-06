@@ -101,7 +101,7 @@ static AMON(absD,   D,D, *z= ABS(*x);)
 #endif
 #endif
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
-AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&IMIN); *(UIL*)&h=*(UIL*)&x->hi&IMAX; \
+AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&*(UIL*)&minus0); *(UIL*)&h=*(UIL*)&x->hi&~*(UIL*)&minus0; \
    rh=sqrt(h); if(rh<1e-100)rl=0; else{TWOPROD1(rh,rh,dh,dl) dl-=l; TWOSUMBS1(dh,-h,th,tl) tl+=dl; TWOSUM1(th,tl,h,l) h/=-2*rh; TWOSUMBS1(rh,h,th,tl) E r; r=CANONE1(th,tl); rh=r.hi; rl=r.lo;} \
    if(x->hi>=0){z->hi=rh; z->lo=rl;} else{z->hi=-rh; ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
 static AMON(expB,   D,B, *z=*x?2.71828182845904523536:1;)
@@ -295,7 +295,7 @@ DF1(jtatomic1){A z;
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
 DF1(jtnegate){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R minus(conptr,w);}
 DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(1) R divide(conptr,w);}
-DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
+DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,AT(w)&QP?pieE:pie,w,ds(CSTAR));}
 
 // special code for x ((<[!.0] |) * ]) y, implemented as if !.0
 #if C_AVX2 || EMU_AVX2

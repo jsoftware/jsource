@@ -1021,7 +1021,7 @@ extern I        memcmpne(void*, void*, I);
 #endif
 
 struct Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};
-struct Bd2;
+struct Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};
 extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
 extern struct Bd1 Bainf;
@@ -1075,9 +1075,12 @@ extern struct Bd1 Bnumvr[];
 #define numvr(n) ((A)(Bnumvr+(n)))
 extern struct Bd1 Bonehalf;
 #define onehalf ((A)&Bonehalf)
+#define minus0 Bnumvr[0].v[0]  // float -0
+extern struct Bd2 BpieE;
+#define pieE ((A)&BpieE)
+#define epi (*(E*)&BpieE.v)
 extern D        pf;
 extern struct Bd1 Bpie;
-extern E epi;   // scaf could combine these
 #define pie ((A)&Bpie)
 extern PRIM     primtab[];
 extern Z        zeroZ;

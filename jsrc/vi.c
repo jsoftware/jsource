@@ -716,7 +716,7 @@ static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,*z
   default:                SCDO(C, *wv,x!=av[j]      ); break;
   case C2TX:               SCDO(S, *wv,x!=av[j]      ); break;
   case C4TX:               SCDO(C4,*wv,x!=av[j]      ); break;
-  case CMPXX:              SCDO(Z, *wv,!zeq(x, av[j])); break;
+  case CMPXX: case QPX:              SCDO(Z, *wv,!zeq(x, av[j])); break;
   case XNUMX:              SCDO(A, *wv,icmpXX(x, av[j])); break;
   case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;

@@ -118,8 +118,9 @@ assert. ((0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)) +. ((0&<: *. qx&>:) qy -~ qx *
 assert. (+:qy) -:!.0 +: xy
 assert. (-:qy) -:!.0 -: xy
 assert. 2 > | (*:%:qy) - xy
+assert. (>:qy) -:!.0 >: xy
 assert. (<:qy) -:!.0 <: xy
-assert. (<:qy) -:!.0 <: xy
+assert. (%:qy) -: %:xy
 assert. (qx + qy) -:!.0 xx+xy
 assert. (qx - qy) -:!.0 xx-xy
 assert. (qx * qy) -: xx*xy
@@ -156,6 +157,7 @@ f (2^55x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 f (2^55x) argnear 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 fsmall (2^40x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 
+
 NB. non-atomic arithmetic
 
 (%. -: %.&(11&c.)) a =: 2 2 $ 3. 1 1 3
@@ -186,11 +188,27 @@ a (I. -: (1 i.~ >!.0)"1 0) b
 a -:!.0 /:~ ({~ ?~@#) a
 0 < 2 -~/\ /:~ ({~ ?~@#) a
 
-
-
 NB. i.-family
 
+a =: +/ |: ,/ 11 c. ((] ,"0"0 1 *)   (2e15 + 1e9 ?@$~ #)) (2^_53) * _0.5 + 100 100 ?@$ 0  NB. 100 rows, each row close together
+b =: ((] ,"0&:(8&c.) -)   ([: 11&c. 8&c.)) a
+a -:!.0 +/ |: (11) c. b  NB. verify perfect split
+c =: +/ |: ,/ 11 c. ((] ,"0"0 1 *)   ([: - 2e15 + 1e9 ?@$~ #)) (2^_53) * _0.5 + 10 10 ?@$ 0  NB. 100 rows, each row close together  NB. some misses
+d =: ((] ,"0 (8) c. -)   ([: 11&c. 8&c.)) c
 
+(i.~ a) -: i.~ {."1 b
+(i.!.0~ a) -: i.!.0~ b
+
+p =: ?~ a +&# c  NB. perm of a,c
+(b i.&:({."1) p { b,d) -: a i. p { a,c
+(b i.!.0 p { b,d) -: a i.!.0 p { a,c
+
+((+//. i.@#) {."1 p { b,d) -: (+//. i.@#) p { a,c
+((+/(/.!.0) i.@#) p { b,d) -: (+/(/.!.0) i.@#) p { a,c
+
+p =: ?~ #a
+((p{b) i.&:({."1) 100{b) -: (p{a) i. 100 { a
+((p{b) i.!.0 (100){b) -: (p{a) i.!.0 (100) { a
 
 NB. circle functions
 carg =. _2. _1. _0.5 _0.001 0 0.01 0.5 1 2
@@ -240,7 +258,7 @@ NB. 9!:11 t
 NB.? end of skip
 
 
-4!:55 ;:'a argrand argnear b carg f f2 fsmall jdot t xd yd dx dy xx xy qx qy s xs ys'
+4!:55 ;:'a argrand argnear b c carg d f f2 fsmall jdot p t xd yd dx dy xx xy qx qy s xs ys'
 
 
 

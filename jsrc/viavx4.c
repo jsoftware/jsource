@@ -160,6 +160,7 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
   SCDON(C2TX,S, wvv[jj]!=avv[jj]      );
   SCDON(C4TX,C4,wvv[jj]!=avv[jj]      );
   SCDON(CMPXX,Z, !zeq(wvv[jj], avv[jj]));
+  SCDON(QPX,E, !NEE(wvv[jj], avv[jj]));
   SCDON(XNUMX,A, !equ(wvv[jj], avv[jj]));
   SCDON(RATX,Q, !QEQ(wvv[jj], avv[jj]));
   SCDON(INTX,I, wvv[jj]!=avv[jj]      );
@@ -169,6 +170,7 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
   SCDON(FLX,D, !TCMPEQ(jt->cct,wvv[jj],avv[jj]));
   default:  jsignal(EVSYSTEM);
  }
+
  R z;  // return non-error indic, but also where the partition count for IFORKEY is stored
 }    /* right argument cell is scalar or list; only for modes IIDOT IICO IEPS, and intolerant IFORKEY */
 #endif

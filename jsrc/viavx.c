@@ -930,10 +930,12 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
       if(crres.range){datamin=crres.min; p=crres.range; fnx=fnprov;  // use the selected orientation
       }else{fnx=FNTBL4+(k==SZI);}  // select integer hashing if range too big...
      }else{ fnx=FNTBL4+(k==SZI);}  // ... or some other 4/8-byte length (not float, though)
-    }else if(k==16&&!(t&FL+CMPX+QP)){ // 16-byte (not float).  Don't bother with small-range checking
+// obsolete     }else if(k==16&&!(t&FL+CMPX+QP)){ // 16-byte (not any inexact type).  Don't bother with small-range checking
+    }else if(((k^16)|(t&FL+CMPX+QP))==0){ // 16-byte (not any inexact type).  Don't bother with small-range checking
      fnx=FNTBL16;
     }else{  // it's a hash.  Type must be QP/CMPX/FL/INT/chars
-     I rtnno=unlikely(((t)&0xffff)==0)?((0x000000<<2)>>((CTTZ(t)&0x3)<<3)&0b1111100) : ((0x004000000032100<<2)>>(CTTZ(t)*4))&0b111100;
+#define RTNLINE ((1LL<<INTX*4)+(2LL<<FLX*4)+(3LL<<CMPXX*4)+(4LL<<QPX*4))   // line# for each type (0 for chars)
+     I rtnno=unlikely(((t)&0xffff)==0)?((0x000000<<2)>>((CTTZ(t)&0x3)<<3)&0b1111100) : ((RTNLINE<<2)>>(CTTZ(t)*4))&0b111100;  // type: 0..4=chars/INT/FL/CMPX/QP
 // obsolete      fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
      fnx=rtnno+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
     }

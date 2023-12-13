@@ -117,6 +117,8 @@ typedef AD *A;
 #define JTTHORNY    (((I)3)<<JTTHORNYX)
 #define JTTHORNXX       4  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: vert
 #define JTTHORNX    (((I)3)<<JTTHORNXX)
+// Flags in hook/fork:
+// Bit 3 in JT is unused, to allow for carry from PROP to WILLOPEN
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
@@ -1190,7 +1192,7 @@ typedef struct {
                            // Setting this warrants that this verb will not raise the usecount of y or any of its contents even if they are passed through to the result.
 #define VF2WILLOPEN1PROP       ((I)(((I)1)<<VF2WILLOPEN1PROPX))
 // next flag must be same as JTWILLBEOPENED
-#define VF2WILLOPEN1X      4   // This verb will open y as its first act, or will discard y.  No boxed value iin y can appear in the result.  Monad case only.  This becomes the WILLBEOPENED flag in jt
+#define VF2WILLOPEN1X      4   // This verb will open y as its first act, or will discard y.  No boxed contents in y can appear in the result (they may be virtual).  Monad case only.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
 // 6 free

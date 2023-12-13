@@ -1115,7 +1115,7 @@ w = PTROP(w,+,(I)jtinplace&JTINPLACEW); /* if w inplaceable, change the pointer 
 A hx; \
 if(opt&0x1){hx=w; \
 }else{J jtf; \
- I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
+ I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all g willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
  RZEFCALL(hx,(fghfn)(jtf,PTR(w),hs,hs),hs,PTR(w),0); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
@@ -1128,7 +1128,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
  }else if(opt&0x10){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
  }else{J jtf; \
   fghfn=FAVV(fs)->valencefns[0]; \
-  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
+  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all g willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
   RZEFCALL(fx,(fghfn)(jtf,PTR(w),fs,fs),fs,PTR(w),0); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \

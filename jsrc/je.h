@@ -1021,7 +1021,7 @@ extern I        memcmpne(void*, void*, I);
 #endif
 
 struct Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};
-struct Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};
+struct Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline
 extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
 extern struct Bd1 Bainf;

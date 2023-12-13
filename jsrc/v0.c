@@ -65,6 +65,7 @@ static F1(jtcfr){A c,r,*wv;I t;
  R (*tf)(jt,c,r);
 }    /* coefficients from roots */
 
+// TODO: replace this solver with one based on EISCOR: "Fast and Backward Stable Computation of Roots", Aurentz et al.
 
 static D jtsummag(J jt,A w){A t=aslash(CPLUS,mag(w)); R t?DAV(t)[0]:0.0;}
 

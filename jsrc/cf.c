@@ -329,8 +329,9 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VJTFLGOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VJTFLGOK2;}
     }
    }
+// scaf should inherit WILLOPEN/PROP from u and v
    // Return the derived verb
-   fdeffillall(z,0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype); R z;
+   fdeffillall(z,0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype)
    R z;
   // All other cases produce a modifier unless they are immediately executable (V N or N/V A)
   }else{

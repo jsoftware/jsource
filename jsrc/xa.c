@@ -698,7 +698,7 @@ F1(jtaudittdisab){
 #endif
 }
 
-// 9!:66 check compiler genberated code for feature level
+// 9!:66 check compiler generated code for feature level
 F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
  RZ(w=vib(w));  // inputs must be integer
  I ttype=IAV(w)[0];  // test type

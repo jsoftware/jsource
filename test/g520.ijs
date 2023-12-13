@@ -1765,6 +1765,9 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 (,40) -: $ _2 { memu a. {~ i. 5 40
 
 
+(,<0) -: ([ 0:&.> (_1+{:"1)&.>   ({&.><) zb"_) z =. ,00 [ zb=. ,<,00  NB. formerly corrupted memory
+(,<0) -: ([ 0:&.> (_1+{:"1)&.>   ({&.><) zb"_) z =. ,00 [ zb=. ,<,00
+
  
 4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom res run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y '

@@ -549,28 +549,31 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
  RETF(jtaxisfrom((J)((I)jtinplace&~JTINPLACEA),w,axes,(wncr<<24)+(wf<<16)+(zr<<8)+(hasr<<7)+r))  // move the values and return the result
 }    /* a{"r w for boxed index a */
 
-DF2(jtfrom){I at;A z;
+DF2(jtfrom){A z;
  F2PREFIP;
  ARGCHK2(a,w);
- at=AT(a);
- if(likely(!ISSPARSE(AT(a)|AT(w)))){
-  // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
-  // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
+ I at=AT(a), wt=AT(w);
+ if(likely(!ISSPARSE(at|wt))){
+  // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable, incorpable, and DIRECT, use it
   // We allow FL only if it is the same size as INT
   // We don't process NJA through here because it might create a virtual block & we don't want NJAs rendered unmodifiable by virtual blocks
-  if(!((AT(a)&(NOUN&~(B01|INT|(SY_64*FL))))+(AT(w)&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){
+  if(!((at&(NOUN&~(B01|INT|(SY_64*FL))))+(wt&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){
    I av;  // selector value
-   if(likely(!SY_64||AT(a)&(B01|INT))){av=BIV0(a);  // INT index
+   if(likely(!SY_64||at&(B01|INT))){av=BIV0(a);  // INT index
    }else{  // FL index
     D af=DAV(a)[0], f=jround(af); av=(I)f;
     ASSERT(ISFTOIOK(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
    }
    I wr1=AR(w)-1;
    if(wr1<=0){  // w is atom or list, result is atom
-    // Get the area to use for the result: the a input if possible, else an INT atom. a=w OK!
-    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
+    // Get the area to use for the result: the a input if possible (inplaceable, incorpable, DIRECT), else an INT atom. a=w OK!
+    // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it will have
+    // been made to appear inplaceable.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
+    // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
+// obsolete     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
+    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&((AFLAG(a)+wt&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
-    I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=AT(w);   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
+    I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=wt;   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
     // Here we transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
     PRISTXFERF(z,w)  // this destroys w
    }else{
@@ -593,8 +596,8 @@ DF2(jtfrom){I at;A z;
    // Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
    if(!(AFLAG(z)&AFVIRTUAL))PRISTCLRF(w)
   }
- }else if(ISSPARSE(AT(a)&AT(w))){z=fromss(a,w);}  // sparse cases
- else if(ISSPARSE(AT(w))){z=at&BOX?frombs(a,w) : fromis(a,w);}
+ }else if(ISSPARSE(at&wt)){z=fromss(a,w);}  // sparse cases
+ else if(ISSPARSE(wt)){z=at&BOX?frombs(a,w) : fromis(a,w);}
  else{z=fromsd(a,w);}
  RETF(z);
 }   /* a{"r w main control */

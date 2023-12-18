@@ -12,7 +12,7 @@
 static DF1(jtlev1){
  ARGCHK1(w);  // self is never 0
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[0];  // fetch verb and routine for leaf nodes.  Do it early
- if(levelle(jt,w,AT(self))){R CALL1(fsf,w,fs);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack
+ if(levelle(jt,w,AT(self))){R CALL1(fsf,w,fs);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack  scaf if inplaceable, could have a version of every that replaces boxes in place
 }
 
 // Like monad, but AT(self) is left trigger level, AC(self) is the right trigger level 
@@ -35,7 +35,7 @@ static I jtefflev(J jt,I j,A h,A x){I n,t; n=AV(h)[j]; R n>=0?n:(t=level(jt,x),M
 // execution of u L: n y.  Create the self to send to the recursion routine
 // L: and S: will be rarely used on pristine blocks, which be definition have all DIRECT contents & would thus be
 // better served by &.> .  Thus, we just mark the inputs as non-pristinable.
-static DF1(jtlcapco1){A z;V*v=FAV(self); 
+static DF1(jtlcapco1){A z;V*v=FAV(self);    // scaf should make bivalent
  ARGCHK1(w);
  PRISTCLR(w)
 
@@ -67,7 +67,7 @@ static DF1(jtscfn){
  R num(0);  // harmless good return
 }
 
-// u S: n - like L: except for calling the logger
+// u S: n - like L: except for calling the logger  scaf should combine, using id from  self
 static DF1(jtlevs1){
  ARGCHK1(w);  // self is never 0
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[0];  // fetch verb and routine for leaf nodes.  Do it early
@@ -83,13 +83,13 @@ static DF2(jtlevs2){
  // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
  // be achieved by altering the left/right levels, but Roger did it this way.
  if(aready&wready){RZ(scfn(CALL2(fsf,a,w,fs),self));
- }else{STACKCHKOFL RZ(every2(aready?box(a):a,wready?box(w):w,self));}  // since this recurs, check stack
+ }else{STACKCHKOFL RZ(every2(aready?box(a):a,wready?box(w):w,self));}  // since this recurs, check stack  scaf use faux block for the boxing
  // We do this with the if statement rather than a computed branch in the hope that the CPU can detect patterns in the conditions.
  // There may be a structure in the user's data that could be detected for branch prediction.
-  R num(0);
+ R num(0);
 }
 
-static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
+static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);  // scaf should combine w/ L:, using id from self
  ARGCHK1(w);
  PRISTCLR(w)
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
@@ -98,15 +98,15 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
  AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
- // jt->sca will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
+ // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
- // things is to ra() the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
+ // things is to zap the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
  x=levs1(w,recurself);
- if(x){
+ if(likely(x!=0)){
   x=AKASA(recurself); AT(x)=BOX; AN(x)=AS(x)[0]; z=jtopenforassembly(jt,x); AT(x)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
   // if the open failed with domain error, convert it to assembly error after localizing the error.  As with all assembly errors, the caller will eformat
  }
- fa(AKASA(recurself));  // match the ra(), but not necessarily on the same block
+ fa(AKASA(recurself));  // match the zap, but not necessarily on the same block
  // always returns non-pristine
  EPILOG(z);
 }
@@ -120,14 +120,14 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
- // jt->sca will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
+ // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
- // things is to ra() the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
+ // things is to zap the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
  x=levs2(a,w,recurself);
- if(x){
+ if(likely(x!=0)){
   x=AKASA(recurself); AT(x)=BOX; AN(x)=AS(x)[0]; z=jtopenforassembly(jt,x); AT(x)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
  }
- fa(AKASA(recurself));  // match the ra(), but not necessarily on the same block
+ fa(AKASA(recurself));  // match the zap, but not necessarily on the same block
  // always returns non-pristine
  EPILOG(z);
 }
@@ -140,7 +140,7 @@ static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(BETWEENO(n,1,4),EVLENGTH);
  RZ(t=vib(w)); v=AV(t);
- GAT0(h,INT,3,1); hv=AV(h);  // save levels in h
+ GAT0(h,INT,3,1); hv=AV(h);  // save levels in h scaf should use private fields in verb
  hv[0]=v[2==n]; hv[1]=v[3==n]; hv[2]=v[n-1];  // monad, left, right
  R fdef(0,id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
 }

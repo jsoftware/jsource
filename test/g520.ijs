@@ -1770,7 +1770,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 
  
 4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom res run128_9 savx savy savref savres savspr'
-4!:55 ;:'jot k l n p prod q r s v x y '
+4!:55 ;:'jot k l n p prod q r s v x y z zb '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'
 4!:55 <'abcdefghijabcdefghijabcdefghij00'

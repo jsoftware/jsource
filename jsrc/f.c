@@ -21,8 +21,10 @@ extern I stringdisplaywidth(J jt, I c2, void*src, I nsrc); // display width of a
 #if SY_64
 #define WI          21L
 #else
-#define WI          12L
+#define WI          12L // 10 digits+sign+space
 #endif
+#define WI2 7L
+#define WI4 12L
 
 typedef void ((*FMTFUN)());
 
@@ -41,6 +43,16 @@ typedef void ((*FMTFUN)());
 
 static F1(jtthxqe);
 static A jtthorn1main(J,A,A);
+
+static FMTF(jtfmtI2,I2){I x=*v;
+ sprintf(s,FMTI,x);
+ if('-'==s[0])s[0]=CSIGN;
+}
+
+static FMTF(jtfmtI4,I4){I x=*v;
+ sprintf(s,FMTI,x);
+ if('-'==s[0])s[0]=CSIGN;
+}
 
 static FMTF(jtfmtI,I){I x=*v;
  sprintf(s,FMTI,x);
@@ -167,7 +179,8 @@ static FMTF(jtfmtE,E){UI i;
 
 // return default field size and function to use.  We know we have a numeric type
 static void thcase(I t,I*wd,FMTFUN *fmt){
- I w=WI; FMTFUN f=jtfmtI; w=t&CMPX+QP?WZ:w; f=t&CMPX?jtfmtZ:f; w=t&FL+SP?WD:w; f=t&FL+SP?jtfmtD:f; f=t&QP?jtfmtE:f;  *wd=w; *fmt=f;
+ I w=WI; FMTFUN f=jtfmtI; w=t&INT2?WI2:w; f=t&INT2?jtfmtI2:f; w=t&INT4?WI4:w; f=t&INT4?jtfmtI4:f; w=t&CMPX+QP?WZ:w; f=t&CMPX?jtfmtZ:f;
+      w=t&FL+SP?WD:w; f=t&FL+SP?jtfmtD:f; f=t&QP?jtfmtE:f;  *wd=w; *fmt=f;
 // obsolete  switch(CTTZ(t)){
 // obsolete   case FLX:   *wd=WD; *fmt=jtfmtD; break;
 // obsolete   case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
@@ -181,17 +194,23 @@ static void thcase(I t,I*wd,FMTFUN *fmt){
 I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I k,n4=n-4,p,wd,wn,wt;FMTFUN fmt;
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
+ I isiz=2;  // will be size of integer in bytes
  switch(CTTZNOFLAG(wt)){
  case INTX:
+#if SY_64
+ isiz<<=1;  // 8-byte int
+#endif
+ case INT4X: isiz<<=1;  // 4-byte int
+ case INT2X:
   {C*t;I i,*v,orv=0,x;
-   v=AV(w);
+   v=IAV(w);
    for(i=0;i<wn;++i){
-    t=buf; x=*v++; orv|=x;
+    t=buf; x=*v; v=(I*)((I)v+isiz); x=(x<<((SZI-isiz)<<3))>>((SZI-isiz)<<3); orv|=x;
     sprintf(t,FMTI" ",x);
     if('-'==*t)*t=CSIGN;
     p=strlen(t); if(ov=n4<p+y-s)break; strcpy(y,t); y+=p;
    }
-   // if all the values were boolean, prepend a 0 to the last
+   // if all the values were boolean, prepend a 0 to the last (if there is room and list not empty)
    if(dec&&!ov&&i&&!(orv&~1)){if(!(ov=n4<y-s)){y[-1]=y[-2]; y[-2]='0';}}
   }
   break;
@@ -233,7 +252,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
  GATV0(t,LIT,wd*(1+n),1); tv=CAV(t);
  if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=AS(t)[0]=p; z=t;}   // rank<2, just format one string of characters, separated by 1 space
  else{ 
-  c=s[r-1]; m=n/c; k=bpnoun(AT(w));  // c=length of row, m=#rows
+  c=s[r-1]; m=n/c; k=bpnoun(AT(w));  // c=length of row, m=#rows, k=size in bytes of atom
   y=tv-wd; x=CAV(w)-k; 
   RZ(d=apvwr(c,1L,0L)); dv=AV(d);
   DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););  // convert each number, remember max len in each column
@@ -599,7 +618,7 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
  else if(ISSPARSE(AT(w)))z=ths(w);
  else switch(CTTZ(AT(w))){
-  case INTX:  case FLX: case CMPXX:  case QPX:
+  case INT2X: case INT4X: case INTX:  case FLX: case CMPXX:  case QPX:
              z=thn(w);                    break;
 #ifdef UNDER_CE
   default:   if(AT(w)&XD+XZ)z=thxqe(w); else R 0; break;

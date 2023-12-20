@@ -52,6 +52,7 @@ typedef unsigned char      UC;
 typedef unsigned short     US;
 typedef unsigned short     U2;
 typedef unsigned int       UINT;
+typedef short              I2;
 typedef int                I4;
 typedef unsigned int       UI4;
 typedef double             D;
@@ -276,6 +277,9 @@ typedef I SI;
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define NAVV(x)         ((volatile NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
+#define I1AV(x)         ( (I1*)((C*)(x)+AK(x)))  /* pointer to ravel        */
+#define I2AV(x)         ( (I2*)((C*)(x)+AK(x)))  /* pointer to ravel        */
+#define I4AV(x)         ( (I4*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define UIAV1(x)         ((UI*)((C*)(x)+AKXR(1)))  // unsigned integer "limb" in an X (or Q) value
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1 - used for internal tables that need alignment or need AS[0])
@@ -369,27 +373,27 @@ typedef I SI;
 // LEN1 LEN2 LEN4 CHAR LEN16/FL x SBT x   x C2T C4T     with the option of deleting C2T/C4T and turning on CHAR
 // this allows clever encoding/decoding by keeping the length repetitive over byte-shifts
 #define INT1X 8
-#define INT1          ((I)1L<<INT1X)  // As the lowest set bit, 1-byte INT
+#define INT1          ((I)1L<<INT1X)  // As the lowest set bit, 1-byte INT precision 5
 #define INT1SIZE sizeof(B)
 #define INT1EXTTYPE 5
 #define INT2X 9
-#define INT2          ((I)1L<<INT2X)  // As the lowest set bit, 2-byte INT
+#define INT2          ((I)1L<<INT2X)  // As the lowest set bit, 2-byte INT precision 6
 #define INT2SIZE sizeof(S)
 #define INT2EXTTYPE 6
 #define INT4X 10
-#define INT4          ((I)1L<<INT4X)  // As the lowest set bit, 4-byte INT
+#define INT4          ((I)1L<<INT4X)  // As the lowest set bit, 4-byte INT precision 7
 #define INT4SIZE sizeof(I4)
 #define INT4EXTTYPE 7
 #define HPX 11
-#define HP          ((I)1L<<HPX)  // As the lowest set bit, half-precision floating-point
+#define HP          ((I)1L<<HPX)  // As the lowest set bit, half-precision floating-point  precision 9
 #define HPSIZE sizeof(US)
 #define HPEXTTYPE 9
 #define SPX 12
-#define SP          ((I)1L<<SPX)  // As the lowest set bit, single-precision floating-point
+#define SP          ((I)1L<<SPX)  // As the lowest set bit, single-precision floating-point precision 10
 #define SPSIZE sizeof(DS)
 #define SPEXTTYPE 10
 #define QPX 13
-#define QP          ((I)1L<<QPX)  // As the lowest set bit, quad-precision floating-point
+#define QP          ((I)1L<<QPX)  // As the lowest set bit, quad-precision floating-point precision 11
 #define QPSIZE sizeof(E)
 #define QPEXTTYPE 11
 // 14-15 free
@@ -492,8 +496,8 @@ typedef I SI;
 
 
 #define ANY             -1L
-#define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+SP+QP)
-#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+SP+QP)|SPARSE)  // AND must be >0
+#define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+INT2+INT4+SP+QP)
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+INT2+INT4+SP+QP)|SPARSE)  // AND must be >0
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBT)
 #define FUNC            (VERB+ADV+CONJ)
@@ -1035,8 +1039,8 @@ typedef struct {VA1F f;I cv;} VA1;  // for monads
 typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 
 typedef struct {I nprec; VARPS actrtns[];} VARPSA;
-typedef struct {VA2 p2[15];VARPSA *rps;} VA;  // 9 main types, CMPX, XNUM, RAT, SBT, SP, QP
-typedef struct {VA1 p1[8];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP
+typedef struct {VA2 p2[17];VARPSA *rps;} VA;  // 9 main types, CMPX, XNUM, RAT, SBT, SP, QP, INT2, INT4
+typedef struct {VA1 p1[10];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP, INT2, INT4
 
 typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.

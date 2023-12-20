@@ -643,10 +643,12 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
    default:                ASSERT(0, EVDOMAIN);
   }
  }
- // types here must both be among B01 INT FL CMPX XNUM RAT QP SP
- #define CVNUMTYPE(a) (((a)&INT1-1)+((a)&INT+FL+CMPX)+(((a)>>SPX-LITX)&(SP+QP>>SPX-LITX)))
+ // types here must both be among B01 INT FL CMPX XNUM RAT INT2 INT4 SP QP  0 2 3 4 6 7 9 10 12 13
+// obsolete  #define CVNUMTYPE(a) (((a)&INT1-1)+((a)&INT+FL+CMPX)+(((a)>>SPX-LITX)&(SP+QP>>SPX-LITX)))
+#define CVNUMTYPE(a) ((0xff98f76f54f321f0LL>>(CTTZ(a)<<2))&0xf)
 // obsolete  #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 8 9 ->2 5  01010001100
- #define CVCASE(a,b)     (CTTZ(CVNUMTYPE(a))*8+CTTZ(CVNUMTYPE(b)))   // 0 2 3 4 6 7 8 9 ->0 8 9 2 3 4 6 7 8 9
+// obsolete  #define CVCASE(a,b)     (CTTZ(CVNUMTYPE(a))*8+CTTZ(CVNUMTYPE(b)))   // 0 2 3 4 6 7 8 9 ->0 8 9 2 3 4 6 7 8 9
+ #define CVCASE(a,b)     (CVNUMTYPE(a)*10+CVNUMTYPE(b))
  switch (CVCASE(t,wt)){  // to,from
  case CVCASE(INT, B01): R jtIfromB(jt, w, yv);
  case CVCASE(XNUM, B01): R XfromB(w, yv);

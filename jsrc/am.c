@@ -84,13 +84,13 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
     // then look up the symbol entry for word[0]
  }
  if(p)z=u[c]; else GA(z,t,n,r,s);   // z = output area, which may be in-place
-// switch((!q?12:!p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){   // choose a comparison based on data
-//  case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
-//  case  4: CASE2X(C);  case  5: CASE2X(I);  case  6: CASE2X(D);  case  7: CASE2X(Z);
-//  case  8: CASE2Y(C);  case  9: CASE2Y(I);  case 10: CASE2Y(D);  case 11: CASE2Y(Z);
-//  case 12: CASENZ(C);  case 13: CASENZ(I);  case 14: CASENZ(D);  case 15: CASENZ(Z);
-// 0 B01+LIT 1 INT 2 FL 3 CMPX/QP 4 C2T 5 C4T 6 SBT 7 unused
- r=6; r=t&C4T?5:r;  r=t&C2T?4:r;  r=t&CMPX+QP?3:r;  r=t&FL?2:r;  r=t&INT?1:r;  r=t&B01+LIT?0:r; 
+// obsolete switch((!q?12:!p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){   // choose a comparison based on data
+// obsolete  case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
+// obsolete  case  4: CASE2X(C);  case  5: CASE2X(I);  case  6: CASE2X(D);  case  7: CASE2X(Z);
+// obsolete  case  8: CASE2Y(C);  case  9: CASE2Y(I);  case 10: CASE2Y(D);  case 11: CASE2Y(Z);
+// obsolete  case 12: CASENZ(C);  case 13: CASENZ(I);  case 14: CASENZ(D);  case 15: CASENZ(Z);
+// 0 B01+LIT 1 INT 2 FL 3 CMPX/QP 4 C2T/INT2 5 C4T/INT4 6 SBT 7 unused
+ r=6; r=t&C4T+INT4?5:r;  r=t&C2T+INT2?4:r;  r=t&CMPX+QP?3:r;  r=t&FL?2:r;  r=t&INT?1:r;  r=t&B01+LIT?0:r; 
  switch((!q?24:!p?0:c==0?8:16)+r){   // choose a comparison based on data
   case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
   case  4: CASE2Z(US); case  5: CASE2Z(C4); case  6: CASE2Z(I);

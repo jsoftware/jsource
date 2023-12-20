@@ -930,11 +930,11 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
   n = sizeof(char);
   break;
 
- case C2TX:
+ case C2TX: case INT2X:
   n = sizeof(unsigned short);
   break;
 
- case C4TX:
+ case C4TX: case INT4X:
   n = sizeof(unsigned int);
   break;
 

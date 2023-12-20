@@ -109,7 +109,7 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  if(b&&(nflag&1))eputc(' ');
  switch(CTTZ(AT(w))){
  case B01X:
- case INTX:
+ case INTX: case INT2X: case INT4X: 
  case FLX:
  case CMPXX: case QPX:
  case XNUMX: 

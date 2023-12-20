@@ -238,6 +238,8 @@ static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv,A*cellbuf){D y;
 #endif
   sprintf(CAV1(*cellbuf),s,(D)*(I*)wv);
   break;
+ case INT2X: sprintf(CAV1(*cellbuf),s,(D)*(I2*)wv); break;
+ case INT4X: sprintf(CAV1(*cellbuf),s,(D)*(I4*)wv); break;
  case B01X:  sprintf(CAV1(*cellbuf),s,(D)*wv);     break;
  case XNUMX: fmtx(e,m,d,s,t,(X*)wv,cellbuf);          break;
  case RATX:  fmtq(e,m,d,s,t,(Q*)wv,cellbuf);          break;

@@ -81,11 +81,24 @@ CBAIVAL(B01,0), CBAIVAL(B01,1),  // these values must be padded with 0 so they c
 CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), CBAIVAL(INT,7), CBAIVAL(INT,8), CBAIVAL(INT,9)
 };
 
-struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[3] = {  // floating-point -0, 1, 2, 0.5 used for constants
+struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[] = {  // floating-point -0, 1, 2, 0.5 used for constants
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},-0.0}, //used for -y; -y is _0.0 - y.  Data value also used as a mask
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
-{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0}
+{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0},
 };
+
+struct Bi1 __attribute__((aligned(CACHELINESIZE))) Bnumi2[] = {  // I2 0, 1, 2 used for constants
+{{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},0}, //used for -y
+{{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},1}, //
+{{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},2}, //
+};
+
+struct Bi1 __attribute__((aligned(CACHELINESIZE))) Bnumi4[] = {  // I4 0, 1, 2 used for constants
+{{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},0}, //used for -y
+{{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},1}, //
+{{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},2}, //
+};
+
 D   inf=INFINITY;                // _
 D   infm=-INFINITY;              // __
 D   jnan=NAN;                    // _.

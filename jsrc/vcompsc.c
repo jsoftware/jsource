@@ -525,6 +525,19 @@ SUMF0(sumgeDB,D,B,TGEDX,GEDX0)  SUMF0(sumgeDI,D,I,TGEDX,GEDX0)  SUMF0(sumgeDD,D,
 SUMF(sumgtIB,I,B,AGT  )  SUMF(sumgtII,I,I,AGT  )  SUMF0(sumgtID,I,D,TGTXD,GTXD0)
 SUMF0(sumgtDB,D,B,TGTDX,GTDX0)  SUMF0(sumgtDI,D,I,TGTDX,GTDX0)  SUMF0(sumgtDD,D,D,TGT,GT0  )
 #endif
+INDF( i0eqI2,I2,I2,ANE  ) JNDF( j0eqI2,I2,I2,ANE  ) INDF( i0neI2,I2,I2,AEQ  )JNDF( j0neI2,I2,I2,AEQ  ) 
+INDF( i0ltI2,I2,I2,AGE  ) JNDF( j0ltI2,I2,I2,AGE  ) INDF( i0leI2,I2,I2,AGT  ) JNDF( j0leI2,I2,I2,AGT  ) 
+INDF( i0geI2,I2,I2,ALT  ) JNDF( j0geI2,I2,I2,ALT  ) INDF( i0gtI2,I2,I2,ALE  )JNDF( j0gtI2,I2,I2,ALE  )  
+SUMF(sumeqI2,I2,I2,AEQ  ) SUMF(sumneI2,I2,I2,ANE  ) SUMF(sumltI2,I2,I2,ALT  ) SUMF(sumleI2,I2,I2,ALE  )
+SUMF(sumgeI2,I2,I2,AGE  ) SUMF(sumgtI2,I2,I2,AGT  ) 
+INDF( i0eqI4,I4,I4,ANE  ) JNDF( j0eqI4,I4,I4,ANE  ) INDF( i0neI4,I4,I4,AEQ  )JNDF( j0neI4,I4,I4,AEQ  ) 
+INDF( i0ltI4,I4,I4,AGE  ) JNDF( j0ltI4,I4,I4,AGE  ) INDF( i0leI4,I4,I4,AGT  ) JNDF( j0leI4,I4,I4,AGT  ) 
+INDF( i0geI4,I4,I4,ALT  ) JNDF( j0geI4,I4,I4,ALT  ) INDF( i0gtI4,I4,I4,ALE  )JNDF( j0gtI4,I4,I4,ALE  )  
+SUMF(sumeqI4,I4,I4,AEQ  ) SUMF(sumneI4,I4,I4,ANE  ) SUMF(sumltI4,I4,I4,ALT  ) SUMF(sumleI4,I4,I4,ALE  )
+SUMF(sumgeI4,I4,I4,AGE  ) SUMF(sumgtI4,I4,I4,AGT  ) 
+
+
+
 
 INDB( i0eqBB,B,B,NE   )  
 
@@ -578,9 +591,12 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  sumgtBB,sumgtBI,sumgtBD,  sumgtIB,sumgtII,sumgtID,  sumgtDB,sumgtDI,sumgtDD,
 };
 
+// parallel byte comparisons
 INDB( i0eqC,C,C,ACNE)  INDB( i0neC,C,C,ACEQ)
 JNDB( j0eqC,C,C,ACNE)  JNDB( j0neC,C,C,ACEQ)
 SUMB(sumeqC,C,C,ACEQB)  SUMB(sumneC,C,C,ACNEB)
+
+#if 0  // obsolete
 
 static AF atcompC[]={   /* table for LIT vs. LIT */
   i0eqC,  i0neC, 0L,0L,0L,0L,
@@ -608,6 +624,14 @@ static AF atcompC4[]={   /* table for C4T vs. C4T */
  sumeqC4, sumneC4, 0L,0L,0L,0L,
 };
 
+
+static AF atcompSB[]={  /* table for SBT vs. SBT */
+  i0eqS, i0neS, i0ltS, i0leS, i0geS, i0gtS,
+  j0eqS, j0neS, j0ltS, j0leS, j0geS, j0gtS,
+ sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS,
+};
+
+#endif
 INDF( i0eqS,SB,SB,ANE) INDF( i0neS,SB,SB,AEQ) 
 JNDF( j0eqS,SB,SB,ANE) JNDF( j0neS,SB,SB,AEQ) 
 SUMF(sumeqS,SB,SB,AEQ) SUMF(sumneS,SB,SB,ANE)
@@ -616,12 +640,29 @@ INDF( i0ltS,SB,SB,SBGE) INDF( i0leS,SB,SB,SBGT) INDF( i0geS,SB,SB,SBLT) INDF( i0
 JNDF( j0ltS,SB,SB,SBGE) JNDF( j0leS,SB,SB,SBGT) JNDF( j0geS,SB,SB,SBLT) JNDF( j0gtS,SB,SB,SBLE)
 SUMF(sumltS,SB,SB,SBLT) SUMF(sumleS,SB,SB,SBLE) SUMF(sumgeS,SB,SB,SBGE) SUMF(sumgtS,SB,SB,SBGT)
 
-
-static AF atcompSB[]={  /* table for SBT vs. SBT */
-  i0eqS, i0neS, i0ltS, i0leS, i0geS, i0gtS,
-  j0eqS, j0neS, j0ltS, j0leS, j0geS, j0gtS,
- sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS,
+static AF atcomp124S[][3][6]={   // tables for different byte lengths.  Character are allowed only = ~:
+{  // parallel character comparisons
+ {i0eqC,  i0neC, 0L,0L,0L,0L},
+ {j0eqC,  j0neC, 0L,0L,0L,0L},
+ {sumeqC, sumneC, 0L,0L,0L,0L},
+},
+{  // 2-byte
+ {i0eqI2, i0neI2, i0ltI2, i0leI2, i0geI2, i0gtI2},
+ {j0eqI2, j0neI2, j0ltI2, j0leI2, j0geI2, j0gtI2},
+ {sumeqI2, sumneI2, sumltI2, sumleI2, sumgeI2, sumgtI2},
+},
+{  // 4-byte
+ {i0eqI4, i0neI4, i0ltI4, i0leI4, i0geI4, i0gtI4},
+ {j0eqI4, j0neI4, j0ltI4, j0leI4, j0geI4, j0gtI4},
+ {sumeqI4, sumneI4, sumltI4, sumleI4, sumgeI4, sumgtI4},
+},
+{  // symbol
+ {i0eqS, i0neS, i0ltS, i0leS, i0geS, i0gtS},
+ {j0eqS, j0neS, j0ltS, j0leS, j0geS, j0gtS},
+ {sumeqS, sumneS, sumltS, sumleS, sumgeS, sumgtS},
+},
 };
+
 
 // This table is indexed by m bits 5-3 but only a few combinations are generated
 static AF atcompX[]={0L, jti1ebar, 0L, 0L, jtsumebar, jtanyebar};
@@ -671,12 +712,21 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
 #endif
   }
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
-  if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+SBT)){
+  if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+INT2+INT4+SBT)){
+   I tableno=(AT(a)&C2T+INT2+SBT?1:0)+(AT(a)&C4T+INT4+SBT?2:0);    // select table based on length: 1, 2, 4, symbol
+   tableno=(UI)(AT(a)&C2T+C4T)>(UI)(1-comp)?0:tableno;   // if comparison is ordered and operands are character, it's illegal: we move multibyte chars to first line to return no function so that we fail eventually
+   AF actrtn=atcomp124S[tableno][search][comp];  //  processing routine
+// obsolete #if !defined(__wasm__)
+// obsolete   R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);
+// obsolete #else
+// obsolete   R (AF)((((UI)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp])<<2)+postflags);
+// obsolete #endif
 #if !defined(__wasm__)
-  R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);
+  R (AF)((I)actrtn+postflags);  // insert flags for return
 #else
-  R (AF)((((UI)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp])<<2)+postflags);
+  R (AF)(((UI)actrtn<<2)+postflags);
 #endif
+
   }
   R 0;
  }else{  // E. (6) or e. (7)

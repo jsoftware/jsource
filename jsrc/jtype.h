@@ -50,7 +50,7 @@ typedef short              C2;
 typedef unsigned int       C4;
 typedef unsigned char      UC;
 typedef unsigned short     US;
-typedef unsigned short     U2;
+typedef unsigned short     UI2;
 typedef unsigned int       UINT;
 typedef short              I2;
 typedef int                I4;

@@ -9,9 +9,9 @@
 #define VCVTIP          0xc  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
 #define VARGX           4           // bit position for arg flags
 #define VBB             (B01<<VARGX)         // convert arguments to B 4   could put VARGMSK into 3 bits
-#define VII             (INT<<VARGX)         /* convert arguments to I 5             */
-#define VDD             (FL<<VARGX)          /* convert arguments to D 6             */
-#define VZZ             (CMPX<<VARGX)        /* convert arguments to Z 7             */
+#define VII             (INT<<VARGX)         /* convert arguments to I 6             */
+#define VDD             (FL<<VARGX)          /* convert arguments to D 7             */
+#define VZZ             (CMPX<<VARGX)        /* convert arguments to Z 8             */
 #define VIPWCRLONGX     9  // internal use in va2, overlaps BOX 9
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
 #define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM 10           */

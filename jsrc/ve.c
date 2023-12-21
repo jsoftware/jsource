@@ -229,6 +229,17 @@ APFX(  divIB, D,I,B, DIVI ,,R EVOK;)
    APFX(  divII, D,I,I, DIVI,,R EVOK;)    
 AIFX( plusBB, I,B,B, +     )    /* plusBI */
 #endif
+APFX(minI2I2, I2,I2,I2, MIN,,R EVOK;)
+APFX(minI4I4, I4,I4,I4, MIN,,R EVOK;)
+APFX(maxI2I2, I2,I2,I2, MIN,,R EVOK;)
+APFX(maxI4I4, I4,I4,I4, MIN,,R EVOK;)
+AIFX(plusI2I2, I2,I2,I2, +   )
+AIFX(plusI4I4, I4,I4,I4, +   )
+AIFX(minusI2I2, I2,I2,I2, -   )
+AIFX(minusI4I4, I4,I4,I4, -   )
+AIFX(tymesI2I2, I2,I2,I2, *   )
+AIFX(tymesI4I4, I4,I4,I4, *   )
+
 
 // II multiply, in double precision.  Always return error code so we can clean up
 AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;I *zi=z;   // could use a side channel to avoid having main loop look at rc
@@ -627,6 +638,61 @@ AHDR2(remII,I,I,I){I u,v;
  }else      DQ(m, v=*y++; DQ(n, *z++=remii(*x, v); x++;     ));  // repeated y
  R EVOK;
 }
+
+AHDR2(remI2I2,I2,I2,I2){I u,v;
+ if(n-1==0){DQ(m,*z++=remii(*x,*y); x++; y++; )
+ }else if(n-1<0){   // repeated x.  Handle special cases and avoid integer divide
+#if SY_64 && C_USEMULTINTRINSIC
+  DQ(m, u=*x++;
+   UI ua=-u>=0?-u:u;  // abs(x)
+   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II(n,1,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
+   }else{
+    UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
+    I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
+    UI himul; DPUMULH(uarecip,(UI)deficitprec,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
+    DQC(n, I yv=*y;
+      DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+     y++;)
+   }
+   if(u<-1){I2 *zt=z; DQC(n, I2 t=*--zt; t=t>0?t-ua:t; *zt=t;)}
+  )
+#else
+  DQ(m, u=*x++;
+   if(0<=u&&!(u&(u-1))){--u; DQC(n, *z++=u&*y++;);}
+   else DQC(n, *z++=remii( u,*y);      y++;)
+  )
+#endif
+ }else      DQ(m, v=*y++; DQ(n, *z++=remii(*x, v); x++;     ));  // repeated y
+ R EVOK;
+}
+
+AHDR2(remI4I4,I4,I4,I4){I u,v;
+ if(n-1==0){DQ(m,*z++=remii(*x,*y); x++; y++; )
+ }else if(n-1<0){   // repeated x.  Handle special cases and avoid integer divide
+#if SY_64 && C_USEMULTINTRINSIC
+  DQ(m, u=*x++;
+   UI ua=-u>=0?-u:u;  // abs(x)
+   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II(n,1,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
+   }else{
+    UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
+    I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
+    UI himul; DPUMULH(uarecip,(UI)deficitprec,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
+    DQC(n, I yv=*y;
+      DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+     y++;)
+   }
+   if(u<-1){I4 *zt=z; DQC(n, I4 t=*--zt; t=t>0?t-ua:t; *zt=t;)}
+  )
+#else
+  DQ(m, u=*x++;
+   if(0<=u&&!(u&(u-1))){--u; DQC(n, *z++=u&*y++;);}
+   else DQC(n, *z++=remii( u,*y);      y++;)
+  )
+#endif
+ }else      DQ(m, v=*y++; DQ(n, *z++=remii(*x, v); x++;     ));  // repeated y
+ R EVOK;
+}
+
 
 // 'binary gcd' algorithm, per Lemire https://lemire.me/blog/2013/12/26/fastest-way-to-compute-the-greatest-common-divisor/
 // can be vectorised, annoying without hardware ctz (avx512 has clz which works)

@@ -164,7 +164,7 @@ A jtdecorate(J jt,A w,I t){
   B needdot = !memchr(CAV(w),'.',AN(w));  // check for decimal point
   if(needdot){DO(AN(w), if(CAV(w)[i]=='_' && (i==AN(w)-1 || CAV(w)[i+1]==' ')){needdot=0; break;} )}  // check for infinity
   if(needdot){w=over(w,scc('.')); RZ(w=mkwris(w)); DQ(AN(w) , if(CAV(w)[i]==' ')R w;  if(CAV(w)[i]=='e'){C f='.'; C *s=&CAV(w)[i]; DO(AN(w)-i, C ff=s[i]; s[i]=f; f=ff;)}) }
- }else if(t&INT){
+ }else if(t&INT+INT2+INT4){
  // integer: if the string contains nothing but one-digit 0/1 values, insert '0' before last number
   I l=AN(w); C *s=CAV(w); NOUNROLL do{if((*s&-2)!='0')break; ++s; if(--l==0)break; if(*s!=' ')break; ++s;}while(--l);
   if(l==0){I ls=0; DQ(AN(w), if(CAV(w)[i]==' ') ls=i;); w=ls?jtdinsert(jt,w,scc('0'),ls+1):over(scc('0'),w);}

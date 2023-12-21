@@ -267,6 +267,7 @@ static F1(jtprimetest){A x;I t;
  t=AT(w);
  if((UI)SGNIF(t,B01X)>=(UI)AN(w))R reshape(shape(w),num(0));  // AN is 0, or t is boolean
  switch(CTTZ(t)){
+  case INT2X: case INT4X: RZ(w=cvt(INT,w))  // convert I2, I4 to long int & fall through to I
   case INTX:           R iprimetest(w);
   default:             ASSERT(0,EVDOMAIN);
   case RATX: case XNUMX: R xprimetest(w);
@@ -279,9 +280,10 @@ static F1(jtprimetest){A x;I t;
 static F1(jtnextprime){
  ARGCHK1(w);
  I n=AN(w);
- if((UI)SGNIF(AT(w),B01X)>=(UI)AN(w))R reshape(shape(w),num(2));
+ if(unlikely((UI)SGNIF(AT(w),B01X)>=(UI)AN(w)))R reshape(shape(w),num(2));
  ASSERT(NUMERIC&AT(w),EVDOMAIN);
- A fs;RZ(fs=eval("2&+^:(0&p:)^:_"));
+ A fs;RZ(fs=eval("2&+^:(0&p:)^:_"));   // create verb to test for primes, adding 2 each time
+ if(unlikely(AT(w)&INT2+INT4))RZ(w=cvt(INT,w))
  if(INT&AT(w)){
   A x;GATV(x,INT,n,AR(w),AS(w)); I*xv=AV(x);
   B b=1;I*wv=AV(w); // clear b if we would overflow int representation
@@ -301,6 +303,7 @@ static F1(jtnextprime){
 static F1(jtprevprime){
  ARGCHK1(w); I n=AN(w); if(!n)R w; ASSERT(NUMERIC&AT(w)&&!(B01&AT(w)),EVDOMAIN);
  A fs;RZ(fs=eval("_2&+^:(0&p:)^:_"));
+ if(unlikely(AT(w)&INT2+INT4))RZ(w=cvt(INT,w))
  if(INT&AT(w)){
   A x;GATV(x,INT,n,AR(w),AS(w));I*xv=AV(x);I*wv=AV(w);
   DQ(n, I k=*wv++; ASSERT(2<k,EVDOMAIN); *xv++=3==k?2:(k-2)|1;);
@@ -448,6 +451,7 @@ F1(jtfactor){PROLOG(0063);A y,z;
   if(INT&AT(y))w=y; 
   else{RZ(y=pcvt(XNUM,xco1(w))); ASSERT(XNUM&AT(y),EVDOMAIN); R pcvt(INT,xfactor(y));}
  }
+ if(unlikely(AT(w)&INT2+INT4))RZ(w=cvt(INT,w))
  F1RANK(0,jtfactor,DUMMYSELF);
  // from here on we are operating on a single atom in w
  RZ(w=vi(w));

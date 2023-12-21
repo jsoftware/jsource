@@ -44,6 +44,8 @@ static AMON(ceilE,  E,E, *z=eceil(*x);)
 static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
 static AMON(sgnI,   I,I, I xx=*x; *z=REPSGN(xx)|SGNTO0(-xx);)
+static AMON(sgnI2,   I,I2, I xx=*x; *z=(I2)(REPSGN(xx)|SGNTO0(-xx));)
+static AMON(sgnI4,   I,I4, I xx=*x; *z=(I4)(REPSGN(xx)|SGNTO0(-xx));)
 static AMON(sgnD,   I,D, *z=((1.0-jt->cct)<=*x) - (-(1.0-jt->cct)>=*x);)
 static AMONPS(sgnZ,   Z,Z, , if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x); , HDR1JERR)
 static AMON(sgnE,   I,E, *z=((1.0-jt->cct)<=x->hi) - (-(1.0-jt->cct)>=x->hi);)
@@ -100,6 +102,9 @@ static AMON(absD,   I,I, *z= *x&IMAX;)
 static AMON(absD,   D,D, *z= ABS(*x);)
 #endif
 #endif
+static AMONPS(absI2,   I2,I2, US vtot=0; , US val=*(US*)x; S nval=(S)((0U-val)); val=nval>0?nval:val; *z=(I2)val; , R EVOK;)
+static AMONPS(absI4,   I4,I4, UI4 vtot=0; , UI4 val=*(UI4*)x; I4 nval=(I4)((0U-val)); val=nval>0?nval:val; *z=(I4)val; , R EVOK;)
+
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&*(UIL*)&minus0); *(UIL*)&h=*(UIL*)&x->hi&~*(UIL*)&minus0; \
    rh=sqrt(h); if(rh<1e-100)rl=0; else{TWOPROD1(rh,rh,dh,dl) dl-=l; TWOSUMBS1(dh,-h,th,tl) tl+=dl; TWOSUM1(th,tl,h,l) h/=-2*rh; TWOSUMBS1(rh,h,th,tl) E r; r=CANONE1(th,tl); rh=r.hi; rl=r.lo;} \
@@ -156,16 +161,16 @@ static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
 extern AHDR1FN expI, expD, expE, logI, logD, logE;
 
 UA va1tab[]={
- /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorE,VUNCH+VIPW}}},
- /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilE,VUNCH+VIPW}}},
- /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}, {  0, VUNCH}, {0, VUNCH}}},
- /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}, {0,VI}, {sgnE,VI}}},
- /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}, {0,0}, {expE,VUNCH}}},
- /* |  */ {{{ 0,VB}, { absI,VI+VIPW}, {   absD,VD+VIPW}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}, {0,0}, {absE,VUNCH+VIPW}}},
- /* !  */ {{{oneB,VB}, {factI,VD}, {  factD,VD}, { factZ,VZ}, {factX,VX}, {factQ,VQ}, {0,0}, {factD,VD+VDD}}},
- /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {0L,0L}, {0L,0L}, {0L,0L}}}, // others handled as dyads
- /* %: */ {{{ 0,VB}, {sqrtI,VD}, {sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}, {0,0}, {sqrtE,VUNCH}}},  // most cannot inplace lest CMPX
- /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}, {0,0}, {logE,VUNCH}}},
+ /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorE,VUNCH+VIPW}, {  0, VUNCH}, {0, VUNCH}}},
+ /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilE,VUNCH+VIPW}, {  0, VUNCH}, {0, VUNCH}}},
+ /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}, {  0, VUNCH}, {0, VUNCH}, {  0, VUNCH}, {0, VUNCH}}},
+ /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}, {0,VI}, {sgnE,VI}, {sgnI2,VI}, {sgnI4,VI}}},
+ /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}, {0,0}, {expE,VUNCH}, { expD,VDD+VD}, { expD,VDD+VD}}},
+ /* |  */ {{{ 0,VB}, { absI,VI+VIPW}, {   absD,VD+VIPW}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}, {0,0}, {absE,VUNCH+VIPW}, { absI2,VUNCH+VIPW}, { absI4,VUNCH+VIPW}}},
+ /* !  */ {{{oneB,VB}, {factI,VD}, {  factD,VD}, { factZ,VZ}, {factX,VX}, {factQ,VQ}, {0,0}, {factD,VD+VDD}, {factD,VD+VDD}, {factD,VD+VDD}}},
+ /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {0L,0L}, {0L,0L}, {0L,0L}, {0L,0L}, {0L,0L}}}, // others handled as dyads
+ /* %: */ {{{ 0,VB}, {sqrtI,VD}, {sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}, {0,0}, {sqrtE,VUNCH}, {sqrtD,VD+VDD+VIPW}, {sqrtD,VD+VDD+VIPW}}},  // most cannot inplace lest CMPX
+ /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}, {0,0}, {logE,VUNCH}, {logD,VD+VDD}, {logD,VD+VDD}}},
  /* 10 - (QP only) */ {{{}, {}, {}, {}, {}, {}, {}, {negE,VUNCH+VIPW}}},
  /* 11 % (QP only) */ {{{}, {}, {}, {}, {}, {}, {}, {recipE,VUNCH+VIPW}}},
 };
@@ -202,11 +207,11 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  F1PREFIP;ARGCHK1(w);
  wt=AT(w); n=AN(w);
  if(unlikely(!(wt&NUMERIC))){ASSERT(AN(w)==0,EVDOMAIN) wt=B01;}  // arg must be numeric.  If it is, keep its type even if empty; if not, fail unless empty, for which treat as boolean
-#if SY_64
- VA1 *p=&u->p1[(0x76000054032100>>(CTTZ(wt)<<2))&0xf];  // convert numeric type to 4-bit fn#
-#else
- VA1 *p=&u->p1[((wt&0xff?0x054032100:0x760000)>>((CTTZ(wt)&7)<<2))&0xf];    // convert numeric type to 4-bit fn#
-#endif
+// obsolete #if SY_64
+ VA1 *p=&u->p1[(0x76098054032100>>(CTTZ(wt)<<2))&0xf];  // convert numeric type to 4-bit fn#
+// obsolete #else
+// obsolete  VA1 *p=&u->p1[((wt&0xff?0x054032100:0x760000)>>((CTTZ(wt)&7)<<2))&0xf];    // convert numeric type to 4-bit fn#
+// obsolete #endif
 
  if(likely(!((I)jtinplace&JTRETRY))){
   ado=p->f; cv=p->cv;
@@ -294,7 +299,8 @@ DF1(jtatomic1){A z;
 
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
 DF1(jtnegate){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R minus(conptr,w);}
-DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(1) R divide(conptr,w);}
+// obsolete DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(1) R divide(conptr,w);}
+DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); R divide(numvr(1),w);}
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,AT(w)&QP?pieE:pie,w,ds(CSTAR));}
 
 // special code for x ((<[!.0] |) * ]) y, implemented as if !.0

@@ -408,7 +408,7 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  // do the comparison, leaving the last result in b
  switch(CTTZ(t)){
   // Take the case of no frame quickly, because it happens on each recursion and also in much user code
- default:
+ default:   // all direct exact types
   c <<= bplg(t);
   if(!x){
 #if C_AVX2 || EMU_AVX2

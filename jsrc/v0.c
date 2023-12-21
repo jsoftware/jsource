@@ -427,10 +427,10 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
   }
 #endif
   NAN1; break;  // Horner's rule.  First multiply is never 0*_
- case 0: R df2(za,w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE/QP coeffs
+ case 0: R df2(za,w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE/QP/INT2/INT4 coeffs
  case 2: NAN0; DQ(n, q=zeroZ; y=*wz++; j=an; DQ(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX coeffs
  // mult/roots: d/e are set
- case 3: R tymes(c,df2(za,negate(a),w,eval("*/@(+/)")));  // XNUM/RAT/SPARSE/QP mplr/roots
+ case 3: R tymes(c,df2(za,negate(a),w,eval("*/@(+/)")));  // XNUM/RAT/SPARSE/QP/INT2/INT4 mplr/roots
  case 4: NAN0; DO(n, p=d; u=*x++; DO(an,p*=u-ad[i];); *z++=p;); NAN1; break;  // FL mplr/roots
  case 5: NAN0; DO(n, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;   // CMPX mplr/roots
  }

@@ -1305,9 +1305,9 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
   // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
-  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol) [13] SP [14] QP
-  // then [15-21] are for verb/, with precisions B I D Z X Q Symb
-  // [22-28] for verb\, and [29-35] for verb\.
+  // B,I,D; then [9] CMPX [10] XNUM (but not RAT) [11] RAT [12] SBT (symbol) [13] SP [14] QP [15] INT2 [16] INT4
+  // then [17-25] are for verb/, with precisions B I D Z X Q Symb INT2 INT4
+  // [26-34] for verb\, and [35-43] for verb\.
   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
   if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
@@ -1317,10 +1317,11 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
 // obsolete    I  prix=(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15; // routine index, FL/CMPX/XNUM/RAT   bits: RAT CMPX FL
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
-   // Until we support short INTs, the smallest priority we can have here is XNUM
+// obsolete    // Until we support short INTs, the smallest priority we can have here is XNUM
    //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10
    // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
-   pri=(0x9e8d0ba0>>((pri&7)<<2))&0xf;  // convert max pri to routine# for handling it
+// obsolete    pri=(0x9e8d0ba0>>((pri&7)<<2))&0xf;  // convert max pri to routine# for handling it
+   pri=4+((0x5a4007603cb00000LL>>(pri<<2))&0xf);  // 4 is II, the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
 // obsolete    // Entries specify no input conversion in the (DD,DD) slot, if they can accept FL arguments directly.  But if we select the FL line in this path,
 // obsolete    // one input is FL and the other must be RAT or XNUM, 

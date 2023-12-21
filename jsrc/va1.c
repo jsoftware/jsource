@@ -300,7 +300,7 @@ DF1(jtatomic1){A z;
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
 DF1(jtnegate){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R minus(conptr,w);}
 // obsolete DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(1) R divide(conptr,w);}
-DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); R divide(numvr(1),w);}
+DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); A conptr=num(1); A conptr2=numvr(1); R divide(AT(w)&XNUM+RAT?conptr:conptr2,w);}
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,AT(w)&QP?pieE:pie,w,ds(CSTAR));}
 
 // special code for x ((<[!.0] |) * ]) y, implemented as if !.0

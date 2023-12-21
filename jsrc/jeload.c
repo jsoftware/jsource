@@ -301,12 +301,15 @@ void jepath(char* arg,char* lib)
   if (jv1=strchr(jversion,'.')) if (jv1=strchr(jv1+1,'.')){ memcpy(jdllver,jversion,jv1-(jversion));jdllver[jv1-jversion]=0; }
   if (!jv1) strcpy(jdllver,"9.5");
   if (5<strlen(jdllver)) strcpy(jdllver,"9.5");
-  strcpy(pathdll,JDLLNAME);
 #if defined(__APPLE__)
+  strcpy(pathdll,pathetcpx);
+  strcat(pathdll,"/lib/");
+  strcat(pathdll,JDLLNAME);
   strcat(pathdll,".");
   strcat(pathdll,jdllver);
   strcat(pathdll,JDLLEXT);
 #else
+  strcpy(pathdll,JDLLNAME);
   strcat(pathdll,JDLLEXT);
   strcat(pathdll,".");
   strcat(pathdll,jdllver);

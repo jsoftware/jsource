@@ -117,7 +117,7 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
 // obsolete   This puns on XDX-FLX==16
 // obsolete _Static_assert(XDX-FLX==16,"XD and FL must be aligned");
  I at=AT(a); at|=(at&C2T+C4T)>>(C2TX-INT2X); // shift C2T/C4T (17/18) down to INT2/INT4 (9/10)
- I bit=CTTZ(AT(a)); bit=(AT(a)&(jt->cct==1.0?FL:0))?XDX:bit;
+ I bit=CTTZ(at); bit=(at&(jt->cct==1.0?FL:0))?XDX:bit;
 // obsolete  bit+=((AT(a)>>FLX)&(jt->cct==1.0))<<4;
  switch(IOSCCASE(bit,n>1,mode)){
   SCDO(B01X,C,x!=av[j]      );

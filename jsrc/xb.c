@@ -67,7 +67,7 @@ F1(jtstype){ARGCHK1(w); R sc(toonehottype(AT(w)));}
 // (3!:0-type) c. w - convert
 F2(jtcdot2){A z;
  ARGCHK2(a,w);
- I t; RE(t=i0(a)); // convert to integer atom, error if can't
+ I t; RE(t=i0(a)); // convert type to integer atom, error if can't
  ASSERT(t=fromonehottype(t),EVDOMAIN)  // convert from 3!:0 form to internal type
  R cvt(t,w);
 }

@@ -205,6 +205,8 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
   case CMPXX: COMPVLOOP(D, c+c);         break;
   case C2TX:  COMPVLOOP(US,c);           break;
   case C4TX:  COMPVLOOP(C4,c);           break;
+  case INT2X: COMPVLOOP(I2,c);           break;
+  case INT4X: COMPVLOOP(I4,c);           break;
   case SBTX:  COMPVLOOF(SB,c, SBCOMP  ); break;
   case XNUMX: COMPVLOOF(X, c, xcompare); break;
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
@@ -238,6 +240,7 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
     *zv++=1+q;
    }
  }else{
+  // loop on the argument types.  We handle the plausible combinations without requiring a conversion
   switch(CVCASE(CTTZ(at),CTTZ(wt))){
   case CVCASE(B01X, B01X ): BSLOOP(C, C); break;
   case CVCASE(B01X, INTX ): BSLOOP(C, I); break;
@@ -265,15 +268,18 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
   case CVCASE(XNUMX,XNUMX): BSLOOF(X, X, xcompare); break;
   case CVCASE(RATX, RATX ): BSLOOF(Q, Q, qcompare); break;
   default:
-   ASSERT(TYPESNE(at,wt),EVNONCE);
+   // the combination was not handled.  Convert if necessary.  INT2,INT2 and INT4,INT4 come through here
+// obsolete    ASSERT(TYPESNE(at,wt),EVNONCE);
    if(TYPESNE(t,at))RZ(a=cvt(t,a));
    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
-   switch(t){
+   switch(CTTZ(t)){
    case QPX:
-   case CMPX: c+=c;  /* fall thru */ 
-   case FL:   BSLOOP(D,D);           break;
-   case XNUM: BSLOOF(X,X, xcompare); break;
-   case RAT:  BSLOOF(Q,Q, qcompare); break;
+   case CMPXX: c+=c;  /* fall thru */ 
+   case FLX:   BSLOOP(D,D);           break;
+   case XNUMX: BSLOOF(X,X, xcompare); break;
+   case RATX:  BSLOOF(Q,Q, qcompare); break;
+   case INT2X:  BSLOOP(I2,I2); break;
+   case INT4X:  BSLOOP(I4,I4); break;
    default:   ASSERT(0,EVNONCE);
    }
   }

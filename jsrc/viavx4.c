@@ -116,13 +116,14 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  // Create a pseudotype 19 (=XDX) for intolerant comparison.
 // obsolete   This puns on XDX-FLX==16
 // obsolete _Static_assert(XDX-FLX==16,"XD and FL must be aligned");
+ I at=AT(a); at|=(at&C2T+C4T)>>(C2TX-INT2X); // shift C2T/C4T (17/18) down to INT2/INT4 (9/10)
  I bit=CTTZ(AT(a)); bit=(AT(a)&(jt->cct==1.0?FL:0))?XDX:bit;
 // obsolete  bit+=((AT(a)>>FLX)&(jt->cct==1.0))<<4;
  switch(IOSCCASE(bit,n>1,mode)){
   SCDO(B01X,C,x!=av[j]      );
   SCDO(LITX,C,x!=av[j]      );
-  SCDO(C2TX,S,x!=av[j]      );
-  SCDO(C4TX,C4,x!=av[j]      );
+  SCDO(INT2X,S,x!=av[j]      );
+  SCDO(INT4X,C4,x!=av[j]      );
   SCDO(CMPXX,Z,!zeq(x, av[j]));
   SCDO(QPX,E,NEE(x, av[j]));
   SCDO(XNUMX,A,!equx(x, av[j]));
@@ -157,8 +158,8 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
 
   SCDON(B01X,C,wvv[jj]!=avv[jj]      );
   SCDON(LITX,C,wvv[jj]!=avv[jj]      );
-  SCDON(C2TX,S, wvv[jj]!=avv[jj]      );
-  SCDON(C4TX,C4,wvv[jj]!=avv[jj]      );
+  SCDON(INT2X,S, wvv[jj]!=avv[jj]      );
+  SCDON(INT4X,C4,wvv[jj]!=avv[jj]      );
   SCDON(CMPXX,Z, !zeq(wvv[jj], avv[jj]));
   SCDON(QPX,E, !NEE(wvv[jj], avv[jj]));
   SCDON(XNUMX,A, !equ(wvv[jj], avv[jj]));

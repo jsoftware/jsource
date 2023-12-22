@@ -82,10 +82,10 @@ IOFX(A, jtioax1,,cthia(~0LL,1.0,C(*v)),!equ(C(*v),C(av[hj])),1) // boxed exact 1
 IOFX(A, jtioau,, hiau(C(*v)),      !equ(C(*v),C(av[hj])),    1) // boxed uniform type
 IOFX(X, jtiox,,  hix(v),           !eqnx(n,v,av+n*hj),      cn) // extended integer
 IOFX(Q, jtioq,,  hiq(v),           !eqnq(n,v,av+n*hj),      cn) // rational number
-IOFX(C, jtioc,,  hic(k,(UC*)v),    memcmpne(v,av+k*hj,k),   cn) // boolean, char, or integer
+IOFX(C, jtioc,,  hic(k,(UC*)v),    memcmpne(v,av+k*hj,k),   cn) // boolean, char, or integer*
 IOFX(I, jtioi,COMPSETUP,hici(n,v),COMPCALL(av),             cn) // INT array, not float
-IOFX(C2,jtioC2,, hici1((C2*)v),    *v!=av[hj],               1) // 2-byte (char)
-IOFX(C4,jtioC4,, hici1((C4*)v),    *v!=av[hj],               1) // 4-byte (char)
+IOFX(C2,jtioC2,, hici1((C2*)v),    *v!=av[hj],               1) // 2-byte (char/INT2)
+IOFX(C4,jtioC4,, hici1((C4*)v),    *v!=av[hj],               1) // 4-byte (char/INT4)
 IOFX(I, jtioi1,, hici1(v),         *v!=av[hj],               1) // len=8, not float
 IOFX(I, jtio16,,hici2(v[0],v[1]), cmpi2(v,av+2*hj),         2) // len=16, not float
 IOFX(D, jtioc01,,hic01((UIL*)v),   *v!=av[hj],               1) // float atom

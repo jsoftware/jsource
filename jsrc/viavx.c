@@ -684,7 +684,7 @@ static const AF fntbl[][2]={
  {jtiox,jtiox2}, {jtioq,jtioq2},                                         //XNUM, RAT
 
  {jtiobs,jtiobs},                                                        //binary search
- {jtioC2,jtioC22}, {jtioC4,jtioC42}, {jtioi1,jtioi12}, {jtio16,jtio162},//int list
+ {jtioC2,jtioC22}, {jtioC4,jtioC42}, {jtioi1,jtioi12}, {jtio16,jtio162}, //int list
 
  //hashing w
  {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, {jtiowc,jtiowc2}, //bool/char/.. table
@@ -907,7 +907,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
    }
    if(likely(fnx<0)){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
     if(((k&~(t&FL))==SZI)|(4==k)){  // non-float (relies on FL==8), might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
-     if(likely((t&INT+SBT+(4==k?C4T:0))!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I/SBT/4-byte-char types
+     if(likely((t&INT+SBT+(4==k?C4T+INT4:0))!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I/SBT/4-byte-char types
       // small-range processing is a possibility, but we need to decide whether we are going to do a reversed hash, so we will
       // know which range to check.  For i./i:, we reverse if c is much shorter than m; for e., we have to consider whether
       // the forward hash will benefit from bits mode, so we have to estimate the size of each hash table
@@ -934,8 +934,8 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
 // obsolete     }else if(k==16&&!(t&FL+CMPX+QP)){ // 16-byte (not any inexact type).  Don't bother with small-range checking
     }else if(((k^16)|(t&FL+CMPX+QP))==0){ // 16-byte (not any inexact type).  Don't bother with small-range checking
      fnx=FNTBL16;
-    }else{  // it's a hash.  Type must be QP/CMPX/FL/INT/chars
-#define RTNLINE ((1LL<<INTX*4)+(2LL<<FLX*4)+(3LL<<CMPXX*4)+(4LL<<QPX*4))   // line# for each type (0 for chars)
+    }else{  // it's a hash.  Type must be QP/CMPX/FL/INT*/chars.  The case of 2/4/8-byte atoms was handled above
+#define RTNLINE ((1LL<<INTX*4)+(1LL<<INT2X*4)+(1LL<<INT4X*4)+(2LL<<FLX*4)+(3LL<<CMPXX*4)+(4LL<<QPX*4))   // line# for each type (0 for chars or INT[24])
      I rtnno=unlikely(((t)&0xffff)==0)?((0x000000<<2)>>((CTTZ(t)&0x3)<<3)&0b1111100) : ((RTNLINE<<2)>>(CTTZ(t)*4))&0b111100;  // type: 0..4=chars/INT/FL/CMPX/QP
 // obsolete      fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
      fnx=rtnno+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)

@@ -143,6 +143,7 @@ I disttosign[4]={C_AVX2?63-0:0x1,C_AVX2?63-8:0x100,C_AVX2?63-16:0x10000,C_AVX2?6
 I Ivalidboolean=VALIDBOOLEAN;  // masks 
 I Iimin=IMIN;
 I Iimax=IMAX;
+#if !SY_64
 // For each Type, the length of a data-item of that type.  The order
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
 // Example: LITX is 1, so location 1 contains sizeof(C)
@@ -153,6 +154,7 @@ TPSZ(INT1), TPSZ(INT2), TPSZ(INT4), TPSZ(HP), TPSZ(SP), TPSZ(QP), TPSZ(C2T), TPS
  TPSZ(SBT),  TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR), TPSZ(RPAR), 
 [ADVX] = INTSIZE, [CONJX] = INTSIZE, [VERBX] = INTSIZE  // note ACV sizes are in INTs
 };
+#endif
 
 // global const end 
 

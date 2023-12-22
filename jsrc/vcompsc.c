@@ -714,7 +714,7 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
   if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+INT2+INT4+SBT)){
    I tableno=(AT(a)&C2T+INT2+SBT?1:0)+(AT(a)&C4T+INT4+SBT?2:0);    // select table based on length: 1, 2, 4, symbol
-   tableno=(UI)(AT(a)&C2T+C4T)>(UI)(1-comp)?0:tableno;   // if comparison is ordered and operands are character, it's illegal: we move multibyte chars to first line to return no function so that we fail eventually
+   tableno=(UI)(AT(a)&C2T+C4T)>(UI)(comp-2)?0:tableno;   // if comparison is ordered (comp>1) and operands are character, it's illegal: we move multibyte chars to first line to return no function so that we fail eventually
    AF actrtn=atcomp124S[tableno][search][comp];  //  processing routine
 // obsolete #if !defined(__wasm__)
 // obsolete   R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);

@@ -210,7 +210,7 @@ static I rescellrarg(I *zs, I zr, I *s, I r){
 
 // copy *w into memory area z, which is known to be big enough to hold it (like povtake, but recursive implementation that doesn't require pre-fill)
 // the types of w and z are the same
-// sizes is +/\. (shape of z),bp(t(z)), i. e. the number of bytes in a result cell of each possible rank
+// sizes is +/\. (shape of z),bpnoun(t(z)), i. e. the number of bytes in a result cell of each possible rank
 // rf (bits 16 up) is the negative of number of leading axes of rank 1 to be appended to w
 // rf (bits 1-15) is the number of axes of w requiring fill (lower axes are taken in full)
 // rf (bit 0) is set if what is being moved is boxed pointers that need ra()

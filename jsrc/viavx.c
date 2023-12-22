@@ -692,6 +692,7 @@ static const AF fntbl[][2]={
  {0,0}, {jtiowc0,jtiowc02}, {0,0}, {jtiowc01,jtiowc012}, {0,0},          //FL
  {0,0}, {jtiowz0,jtiowz02}, {0,0}, {jtiowz01,jtiowz012},                 //CMPX
  {0,0}, {jtiowz0,jtiowz02}, {0,0}, {jtiowz01,jtiowz012},                 //E
+
  {0,0}, {jtio42w,jtio44w}, {jtio82w,jtio84w},                            //small-range
  {0,0}, {0,0}, {0,0}, {0,0},                                             //boxed
  {0,0}, {0,0},                                                           //XNUM, RAT

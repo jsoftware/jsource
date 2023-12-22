@@ -37,7 +37,7 @@ F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA00(z,wt,1,0);
 // Put at least 1 default fill of type t into jt->fillv0, and put its size into jt->fillv0len
 void jtfillv0(J jt,I t){I fillvalue0;
  jt->fillv0len=bpnoun(t);  // save the minimum fill-cell size
- if(likely(t&B01+LIT+INT+FL+CMPX+QP+SBT+BOX)){  // normal case - direct num or LIT, or BOX
+ if(likely(t&B01+LIT+INT+INT2+INT4+FL+CMPX+QP+SBT+BOX)){  // normal case - direct num or LIT, or BOX
   fillvalue0=t&LIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX?(I)mtv:fillvalue0;  // get SP or 0, of mtv for box
   *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output
 #if !SY_64

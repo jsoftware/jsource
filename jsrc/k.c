@@ -1099,7 +1099,7 @@ F2(jtindaudit){PROLOG(365);
  I indt=AT(ind); I indn=AN(ind); if(indn==0)R jlink(zeroionei(0),mtv);  if(!(indt&NUMERIC))R jlink(zeroionei(1),mtv);  // get type & number of indexes; fast return if empty; failure if nonintegral
  if((indt&CMPX)&&type==1){indt=FL|C2T; indn<<=1;}  // for x # y, allow treating a complex as two reals.  C2T is a flag that we did this
  A vind; RZ(vind=jtvirtual(jt,ind,0,0)) AN(vind)=1; // in case conversions are needed, we will step through with a virtual block
- I vstride=bp(indt);  // size of an atom
+ I vstride=bpnoun(indt);  // size of an atom
  I findex;  // failing index if any, total # atoms to check
  A zwk, xwk; if(indt&CMPX)GAT0(zwk,FL,1,0) if(indt&RAT)GAT0(xwk,XNUM,1,0)  // intermediates for the 2-stwp conversions
  I errtype=2;  // the type of audit failure: 2=noninteger, 3=out of bounds

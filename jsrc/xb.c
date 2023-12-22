@@ -135,7 +135,7 @@ static A jthrep(J jt,B b,B d,A w);
 static I bsize(J jt,B d,B tb,I t,I n,I r){
  I w=WS(d);                                 // SZI for target architecture
  I z=BH(d)+w*r;                             // bytes in header (1 each: f,t,n,r and r shape words)
- I k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t);  // bytes occupied by one atom in w
+ I k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bpnoun(t);  // bytes occupied by one atom in w (in target arch, for the pointers)
  I maxpad= ((t&LAST0)&&tb)+w-1;             // largest null terminator and alignment padding for strings
  I totalsize= z+(n*k+maxpad)&(-w);          // roll sum back to word boundary
  R totalsize;

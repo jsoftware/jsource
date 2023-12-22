@@ -714,14 +714,14 @@ static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,*z
  zv=AV(z); zb=(B*)zv; u=AV(a); v=AV(w); 
  switch(CTTZ(AT(a))){
   default:                SCDO(C, *wv,x!=av[j]      ); break;
-  case C2TX:               SCDO(S, *wv,x!=av[j]      ); break;
-  case C4TX:               SCDO(C4,*wv,x!=av[j]      ); break;
-  case CMPXX: case QPX:              SCDO(Z, *wv,!zeq(x, av[j])); break;
-  case XNUMX:              SCDO(A, *wv,icmpXX(x, av[j])); break;
-  case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
-  case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
-  case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
-  case BOXX:  {RDECL;      SCDO(A, *wv,!equ(C(x),C(av[j])));} break;
+  case C2TX: case INT2X:  SCDO(S, *wv,x!=av[j]      ); break;
+  case C4TX: case INT4X:  SCDO(C4,*wv,x!=av[j]      ); break;
+  case CMPXX: case QPX:   SCDO(Z, *wv,!zeq(x, av[j])); break;
+  case XNUMX:             SCDO(A, *wv,icmpXX(x, av[j])); break;
+  case RATX:              SCDO(Q, *wv,!QEQ(x, av[j])); break;
+  case INTX:              SCDO(I, *wv,x!=av[j]      ); break;
+  case SBTX:              SCDO(SB,*wv,x!=av[j]      ); break;
+  case BOXX:  {RDECL;     SCDO(A, *wv,!equ(C(x),C(av[j])));} break;
   case FLX:   if(1.0==jt->cct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=jt->cct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
@@ -1210,10 +1210,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
     // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
     if(k==2){
      allowrange=MIN(MAX(L2CACHESIZE/(LGSZUS),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange2(USAV(w),(AN(w)*bp(AT(w)))>>LGSZS,datamin,datamin+p-1,allowrange);
+     crres = condrange2(USAV(w),(AN(w)*bpnoun(AT(w)))>>LGSZS,datamin,datamin+p-1,allowrange);
     }else{
      allowrange=MIN(MAX(L2CACHESIZE/(LGSZUI4),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange(AV(w),(AN(w)*bp(AT(w)))>>LGSZI,datamin,datamin+p-1,allowrange);
+     crres = condrange(AV(w),(AN(w)*bpnoun(AT(w)))>>LGSZI,datamin,datamin+p-1,allowrange);
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  

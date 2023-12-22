@@ -42,7 +42,7 @@
  } 
 
  // yt=type, yr=rank, ys->shape, yn=#atoms k=#bytes of first-cell result
- yt=AT(y); yr=AR(y); ys=AS(y); yn=AN(y); k=yn*bp(yt);
+ yt=AT(y); yr=AR(y); ys=AS(y); yn=AN(y); k=yn*bpnoun(yt);
  // First shot: zip through the cells, laying the results into the output area
  // one by one.  We can do this if the results are direct (i. e. not pointers),
  // or if there are no results at all; and we can continue until we hit an incompatible result-type.

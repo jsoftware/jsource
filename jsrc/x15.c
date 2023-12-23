@@ -966,14 +966,16 @@ strcpy(proc,"x15lseek32");
  R cc;
 }
 
-#define CDT(x,y) (6*((0x160004>>(x))&7)+((0x160004>>(y))&0x7))  // encode 0 1 2 3 17 18-> 4 2 1 0 3 5  1011. .... .... .... 0100
+#define CDT(x,y) (8*((0x160E04>>(x))&7)+((0x160E04>>(y))&0x7))  // encode 0 1 2 3 9 10 17 18-> 4 2 1 0 6 7 3 5  1011. .... .... .... 0100
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
- if(unlikely((zt|wt)&((NOUN|SPARSE)&~(B01+LIT+INT+FL+C2T+C4T))))R 0;  // if unallowed type, abort
+ if(unlikely((zt|wt)&((NOUN|SPARSE)&~(B01+LIT+INT+INT2+INT4+FL+C2T+C4T))))R 0;  // if unallowed type, abort
  switch(CDT(CTTZ(zt),CTTZ(wt))){
   default:           R 0;
   case CDT(FLX, B01X): *(D*)v=*(B*)u; break;
   case CDT(FLX, INTX): *(D*)v=(D)*(I*)u; break;
+  case CDT(FLX,INT2X): *(D*)v=*(I2*)u; break;
+  case CDT(FLX,INT4X): *(D*)v=*(I4*)u; break;
   case CDT(FLX, FLX ): *(D*)v=*(D*)u; break;
   case CDT(C2TX,LITX): *(US*)v=*(UC*)u; break;
   case CDT(C2TX,C2TX): *(US*)v=*(US*)u; break;
@@ -986,6 +988,8 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   case CDT(C2TX,C4TX): s4=*(C4*)u; if(65536<=(C4)s4)R 0; *(US*)v=(US)s4; break;
   case CDT(INTX,B01X): *    v=*(B*)u; break;
   case CDT(INTX,INTX): *    v=*(I*)u; break;
+  case CDT(INTX,INT2X): *    v=*(I2*)u; break;
+  case CDT(INTX,INT4X): *    v=*(I4*)u; break;
   case CDT(INTX,FLX ):
 #if SY_64
   p=*(D*)u; q=jround(p); I rq=(I)q;
@@ -1077,14 +1081,15 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #else
    *dv++=(I)xv;                     /* pointer to J array memory     */
 #endif
+   // scaf should allow INT2 & INT4 on types that are no larger
    CDASSERT(ISDENSETYPE(xt,LIT+C2T+C4T+INT+FL+CMPX),per);  // verify J type is DIRECT why not B01?
    if(unlikely((litsgn | ((cbit&(((I)1<<('b'-'a'))|((I)1<<('f'-'a'))|((I)1<<('s'-'a'))|((I)1<<('z'-'a'))|((I)SY_64<<('i'-'a'))))-1))>=0)){
-    cipv[cipcount]=xv;              /* convert in place arguments */
+    cipv[cipcount]=xv;              /* convert in place arguments scaf should use struct for all 3 */
     cipn[cipcount]=xn;
     cipt[cipcount]=c;
     ++cipcount;
    }
-  }else{
+  }else{  // boxed atom
 #if defined(C_CD_ARMHF) || defined(C_CD_ARMEL)
 #define ARMARGS 1
 #else

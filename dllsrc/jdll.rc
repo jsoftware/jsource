@@ -13,8 +13,8 @@
 1 typelib jdll.tlb
 
 VS_VERSION_INFO     VERSIONINFO
-  FILEVERSION       905
-  PRODUCTVERSION    905
+  FILEVERSION       906
+  PRODUCTVERSION    906
   FILEFLAGSMASK     VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
   FILEFLAGS         VS_FF_DEBUG|VS_FF_PRIVATEBUILD|VS_FF_PRERELEASE
@@ -31,13 +31,13 @@ BEGIN
 		BEGIN
 			VALUE "CompanyName",     "Jsoftware Inc.\0"
 			VALUE "FileDescription", "J\0"
-			VALUE "FileVersion",     "905\0"
+			VALUE "FileVersion",     "906\0"
 			VALUE "InternalName",    "J\0"
 			VALUE "LegalCopyright",  "Copyright Jsoftware Inc. 2023\0"
 			VALUE "LegalTrademarks", "J\0"
 			VALUE "OriginalFilename","J\0"
 			VALUE "ProductName",     "J\0"
-			VALUE "ProductVersion",  "905\0"
+			VALUE "ProductVersion",  "906\0"
 			VALUE "OLESelfRegister", "\0"
 		END
 	END

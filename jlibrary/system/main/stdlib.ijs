@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.5.2'
+JLIB=: '9.6.1'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -1386,13 +1386,13 @@ delstring=: 4 : ';(x E.r) <@((#x)&}.) ;.1 r=. x,y'
 detab=: ' ' I.@(=&TAB@])} ]
 3 : 0''
 try.
-dlb=: 1&(128!:11)
-dltb=: 2&(128!:11)
-dtb=: 0&(128!:11)
+  dlb=: 1&(128!:11)
+  dltb=: 2&(128!:11)
+  dtb=: 0&(128!:11)
 catch.
-dlb=: }.~ =&' ' i. 0:
-dltb=: #~ [: (+./\ *. +./\.) ' '&~:
-dtb=: #~ [: +./\. ' '&~:
+  dlb=: }.~ =&' ' i. 0:
+  dltb=: #~ [: (+./\ *. +./\.) ' '&~:
+  dtb=: #~ [: +./\. ' '&~:
 end.
 ''
 )
@@ -1664,7 +1664,7 @@ NB.%break.ijs - break utilities
 NB.-This script defines break utilities and is included in the J standard library.
 NB.-Definitions are loaded into the z locale.
 NB.-
-NB.-`setbreak 'default'` is done by profile for Jqt. JHS and jconsole can use ctrl+c. 
+NB.-`setbreak 'default'` is done by profile for Jqt. JHS and jconsole can use ctrl+c.
 NB.-
 NB.-setbreak creates file `~break/Pid.Class` and writes 0 to the first byte.
 NB.-

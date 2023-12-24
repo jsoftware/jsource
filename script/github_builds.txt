@@ -34,6 +34,6 @@ If a run completes successfully, the JE binaries and test results are written to
 
 If the version is updated in the repo version.txt file, then after the first successful build the JE binaries are copied to the corresponding download area on the J webserver, e.g.
 
-  https://www.jsoftware.com/download/jengine/j9.5
+  https://www.jsoftware.com/download/jengine/j9.6
 
 Github actions are documented at https://docs.github.com/en/actions

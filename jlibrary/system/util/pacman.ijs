@@ -85,7 +85,17 @@ if. IFUNIX do.
   end.
 else.
   bbx=. '"','"',~jpath '~tools/ftp/busybox.exe'
-  HTTPCMD=: bbx,' wget -q -O %O %U'
+  IFCURL=. 0
+  if. 1=ftype f=. (2!:5'SystemRoot'),'\System32\curl.exe' do.
+    IFCURL=. 1
+  elseif. 1=ftype f=. jpath '~addons/web/gethttp/bin/curl.exe' do.
+    IFCURL=. 1
+  end.
+  if. IFCURL do.
+    HTTPCMD=: (dquote winpathsep f),' -L -o %O --stderr %L -f -s -S %U'
+  else.
+    HTTPCMD=: bbx,' wget -q -O %O %U'
+  end.
   UNZIP=: bbx,' unzip -q -o '
 end.
 )
@@ -303,7 +313,7 @@ case. 'Darwin' do.
   zps=. (~: 3 {."1 zps) # zps
 end.
 
-bit=. IF64 pick '64';'32'
+bit=. IF64 pick '32';'64'
 pfm=. 3 {"1 zps
 exc=. (1 e. bit&E.) &> pfm
 zps=. zps \: exc
@@ -1711,11 +1721,10 @@ tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt6Core.dll'
 y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
-arch=. IF64{::'x86';'x64'
 if. IFWIN do.
-  z=. 'qt62-win-',((y-:'slim')#'slim-'),arch,'.zip'
+  z=. 'qt65-win',((y-:'slim')#'-slim'),'.zip'
 else.
-  z=. 'qt62-mac-',((y-:'slim')#'slim-'),arch,'.zip'
+  z=. 'qt65-mac',((y-:'slim')#'-slim'),'.zip'
 end.
 'rc p'=. httpget_jpacman_ www,'/qtlib/',z
 if. rc do.

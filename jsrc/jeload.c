@@ -297,10 +297,10 @@ void jepath(char* arg,char* lib)
  }
  if (FHS) {
   char *jv1;
-// jversion   "9.5.1" "9.5.0-betaX"
+// jversion   "9.6.1" "9.6.0-betaX"
   if (jv1=strchr(jversion,'.')) if (jv1=strchr(jv1+1,'.')){ memcpy(jdllver,jversion,jv1-(jversion));jdllver[jv1-jversion]=0; }
-  if (!jv1) strcpy(jdllver,"9.5");
-  if (5<strlen(jdllver)) strcpy(jdllver,"9.5");
+  if (!jv1) strcpy(jdllver,"9.6");
+  if (5<strlen(jdllver)) strcpy(jdllver,"9.6");
 #if defined(__APPLE__)
   strcpy(pathdll,pathetcpx);
   strcat(pathdll,"/lib/");

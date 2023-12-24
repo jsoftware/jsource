@@ -359,7 +359,10 @@ case. 'if.' do.
   b=. 0 = +/ dat e. CONTROLM -. ;: 'else. elseif. do.'
   e0=. +/ dat = <'else.'
   e1=. +/ dat = <'elseif.'
-  b=. b *. (2 > e0) *. 0 = e0 *. e1
+  b=. b *. e0 <: 1
+  if. e0 *. e1 do.
+    b=. b *. *./ (dat i. <'else.') > I. dat = <'elseif.'
+  end.
   b=. b *. (+/ dat = <'do.') = 1 + e1
   if. e1 do.
     ix=. I. dat = <'elseif.'

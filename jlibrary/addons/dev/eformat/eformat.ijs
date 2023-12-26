@@ -426,7 +426,7 @@ case. EVFACCESS do. emsg =. 'nonexistent file or missing permissions'
 case. EVFNAME do. emsg =. 'nonexistent file or invalid filename '
 case. EVFNUM do. emsg =. 'the specified file number is not open'
 case. EVTIME do. emsg =. 'the execution time limit was exceeded'
-case. EVRO do. emsg =. 'attempt to modify a read-only mapped file'
+case. EVRO do. emsg =. 'attempt to modify a read-only mapped file, or the xyz_index created by for_xyz.'
 case. EVCTRL do. emsg =. 'the line, with its number in its definition shown in brackets, has a mismatched control structure'
 case. EVEMPTYT do. emsg =. 'no sentences following for. or select.'
 case. EVEMPTYDD do. emsg =. 'unmatched {{ or }}'
@@ -573,7 +573,11 @@ case. 3 do.
     case. ;:'/./..' do.
       if. e=EVLENGTH do. emsg =. 'shapes ' , (":$a) , ' and ' , (":$w) , ' have different numbers of items' end.
     case. ;:'{' do.
-      if. e e. EVINDEX,EVLENGTH,EVDOMAIN do. if. 0 (<L.) rc=. a efindexaudit $w do. emsg=. ($w) ('x';'y') effrommsg rc end. end.
+      if. e e. EVINDEX,EVLENGTH,EVDOMAIN do.
+        wcs=. ($w) {.~ -(0{ovr) <. #$w NB. w cell shape
+        if. 0 (<L.) rc=. a efindexaudit wcs do.
+          rc=. rc 1}~ < (0}~ (($w) -&# wcs) + 0&{) 1{::rc NB. add frame rank to y-axis#.  No }::; annoying
+          emsg=. ($w) ('x';'y') effrommsg rc end. end.
     fcase. ;:'{.{:' do.
       if. e=EVINHOMO do. hdr ,  'y argument and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill return. end.
     case. ;:'}.}:' do.

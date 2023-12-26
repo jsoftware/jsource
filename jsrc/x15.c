@@ -39,6 +39,12 @@ double_trick call must be immediately before SWITCHCALL
 otherwise the regs may be used and the parameter lost.
 */
 
+#if defined(C_CD_ARMHF) || defined(C_CD_ARMEL)
+#define ARMARGS 1
+#else
+#define ARMARGS 0
+#endif
+
 #if _WIN32
 #include <windows.h>
 #include <windowsx.h>
@@ -187,7 +193,10 @@ typedef struct {
  B hloaded;                    // set if the h entry of this block was loaded
  struct {
   C star;               // arguments star or not: 0=not 1=* 2=&
-  C tletter;            /* arguments type letters, cwusi etc.   */
+  C type;               // type of arg: 0=char 1=int 2=fl 3=complex 4=no type given (* bare)
+  C lgsz;            // lg(atom size) - for complex, half an atom
+  C flags;            // 1:set if this type is a short type (b s i f) that allows LIT as a data source 2: set if type that can be sign-extended if unboxed
+  I4 jtype;           // j type for the cd rg type letter
  } starlett[NCDARGS];   // flag/letter per arg
 } CCT;
 
@@ -658,14 +667,78 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
 #endif
 }
 
-static void convertdown(I*pi,I n,C t){
+// convert down/up.  n is #atoms, t is type 0123, sizes is bits 0-1: source lgsz, 2-3: target lgsz
+// we come here only if target size < source size: 3 ways for char, 6 ways for int,3 for float, 1 for complex
+
+static void convertdown(void *pi,I n,C t,C sizes){
+ if(unlikely(n==0))R;
+// possible values of sizes are
+// char: 6 2 (C4T), 1 (C2T)  -1 -> 5 1 0
+// int: 11 7 3 (INT), 6 2 (INT4), 1 (INT2) +1 -> 12 8 7 4 3 2
+// fl: 11 7 (FL), 6 (SP) +3 -> 14 10 9
+// complex: 11 +4= 15
+ I ssz=sizes&3; I tsz=sizes>>2;  // extract sizes
+ I adj=0x431f>>(t<<2);  // 0 1 2 3 -> -1 1 3 4
+ switch((sizes+adj)&0xf){
+ // fl cases:
+ case 3+0b1011: {float*pt=(float*)pi; D*ps=(D*)pi; DO(n, pt[i]=(float)ps[i];);} break;
+ // int cases:
+ case 1+0b1011: {I4*pt=(I4*)pi; I*ps=(I*)pi; DO(n, pt[i]=(I4)ps[i];);} break;
+ case 1+0b0111: {I2*pt=(I2*)pi; I*ps=(I*)pi; DO(n, pt[i]=(I2)ps[i];);} break;
+ case 1+0b0011: {I1*pt=(I1*)pi; I*ps=(I*)pi; DO(n, pt[i]=(I1)ps[i];);} break;
+ case 1+0b0110: {I2*pt=(I2*)pi; I4*ps=(I4*)pi; DO(n, pt[i]=(I2)ps[i];);} break;
+ case 1+0b0010: {I1*pt=(I1*)pi; I4*ps=(I4*)pi; DO(n, pt[i]=(I1)ps[i];);} break;
+ case 1+0b0001: {I1*pt=(I1*)pi; I2*ps=(I2*)pi; DO(n, pt[i]=(I1)ps[i];);} break;
+ // char cases:
+ case -1+0b0110:{C2*pt=(C2*)pi; C4*ps=(C4*)pi; DO(n, pt[i]=(C2)ps[i];);} break;
+ case -1+0b0010:{C2*pt=(C2*)pi; C4*ps=(C4*)pi; DO(n, pt[i]=(C2)ps[i];);} break;
+ case -1+0b0001:{C*pt=(C*)pi; C2*ps=(C2*)pi; DO(n, pt[i]=(C)ps[i];);} break;
+ // complex case
+ case 4+0b1011:
+#ifdef _WIN32
+  {float_complex*pt=(float_complex*)pi;D*ps=(D*)pi; DO(n, pt[i]=_FCOMPLEX_((float)ps[2*i],(float)ps[1+2*i]););} break;
+#else
+ {float_complex*pt=(float_complex*)pi;D*ps=(D*)pi; DO(n, pt[i]=(float)ps[2*i]+_Complex_I*(float)ps[1+2*i];);} break;
+#endif
+ }
+}
+
+// convert up, similarly
+static void convertup(void *pi,I n,C t,C sizes){
+ if(unlikely(n==0))R;
+// possible values of sizes are
+// char: 6 2 (C4T), 1 (C2T)  -1 -> 5 1 0
+// int: 11 7 3 (INT), 6 2 (INT4), 1 (INT2) +1 -> 12 8 7 4 3 2
+// fl: 11 7 (FL), 6 (SP) +3 -> 14 10 9
+// complex: 11 +4= 15
+ I ssz=sizes&3; I tsz=sizes>>2;  // extract sizes
+ I adj=0x431f>>(t<<2);  // 0 1 2 3 -> -1 1 3 4
+ switch((sizes+adj)&0xf){
+ // fl cases:
+ case 3+0b1011: {float*ps=(float*)pi; D*pt=(D*)pi; DQ(n, pt[i]=(D)ps[i];);} break;
+ // int cases:
+ case 1+0b1011: {I4*ps=(I4*)pi; I*pt=(I*)pi; DQ(n, pt[i]=(I)ps[i];);} break;
+ case 1+0b0111: {I2*ps=(I2*)pi; I*pt=(I*)pi; DQ(n, pt[i]=(I)ps[i];);} break;
+ case 1+0b0011: {I1*ps=(I1*)pi; I*pt=(I*)pi; DQ(n, pt[i]=(I)ps[i];);} break;
+ case 1+0b0110: {I2*ps=(I2*)pi; I4*pt=(I4*)pi; DQ(n, pt[i]=(I4)ps[i];);} break;
+ case 1+0b0010: {I1*ps=(I1*)pi; I4*pt=(I4*)pi; DQ(n, pt[i]=(I4)ps[i];);} break;
+ case 1+0b0001: {I1*ps=(I1*)pi; I2*pt=(I2*)pi; DQ(n, pt[i]=(I2)ps[i];);} break;
+ // char cases:
+ case -1+0b0110:{C2*ps=(C2*)pi; C4*pt=(C4*)pi; DQ(n, pt[i]=(C4)ps[i];);} break;
+ case -1+0b0010:{C*ps=(C*)pi; C4*pt=(C4*)pi; DQ(n, pt[i]=(C4)ps[i];);} break;
+ case -1+0b0001:{C*ps=(C*)pi; C2*pt=(C2*)pi; DQ(n, pt[i]=(C2)ps[i];);} break;
+ // complex case
+ case 4+0b1011: {float_complex*ps=(float_complex*)pi;D*pt=(D*)pi; DQ(n, pt[1+2*i]=(D)cimagf(ps[i]); pt[2*i]=(D)crealf(ps[i]););} break;
+ }
+}
+#if 0  // obsolete 
  if(n)switch(t){
   case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[i];);} break;
   case 'b': {BYTE*pt=(BYTE*)pi;               DO(n, pt[i]=(BYTE)pi[i];);} break;
   case 's': {short*pt=(short*)pi;             DO(n, pt[i]=(short)pi[i];);} break;
   case 'i': {int  *pt=(int  *)pi;             DO(n, pt[i]=(int)  pi[i];);} break;
 #ifdef _WIN32
-  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=_FCOMPLEX_((float)pd[2*i],(float)pd[1+2*i]););} break;
+  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]);} break;
 #else
   case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[2*i]+_Complex_I*(float)pd[1+2*i];);} break;
 #endif
@@ -679,7 +752,7 @@ static void convertup(I*pi,I n,C t){I j=n;
   case 'i': {int  *pt=(int  *)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
   case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DQ(n, --j; pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]););} break;
 }}   /* convert s or int to I and f to d and z to j */
-
+#endif
 
 /* cache of 15!:0 parsed left arguments                                 */
 /*                                                                      */
@@ -850,7 +923,10 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
 }
 
      /* J type from type letter */
-static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r=(c&(C)~('j'^'z'))=='j'?CMPX:r; r=(c&(C)~('d'^'f'))=='d'?FL:r; r=c==0?0:r; R r;}  // d/f and j/z differ by only 1 bit
+static C letttotypex[32]={['c'-'a']=LITX, ['w'-'a']=C2TX, ['u'-'a']=C4TX, ['j'-'a']=CMPXX, ['z'-'a']=CMPXX, ['d'-'a']=FLX, ['f'-'a']=FLX, ['s'-'a']=INT2X, ['i'-'a']=INT4X,
+  ['b'-'a']=INTX, ['l'-'a']=SY_64?INTX:0, ['x'-'a']=INTX, ['n'-'a']=INTX, };
+// obsolete static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r=(c&(C)~('j'^'z'))=='j'?CMPX:r; r=(c&(C)~('d'^'f'))=='d'?FL:r; r=c=='s'?INT2:r; r=c=='i'?INT4:r; r=c==0?0:r; R r;}  // d/f and j/z differ by only 1 bit
+static I cdjtype(C c){I i=c-'a'; I x=letttotypex[i&0x1f]; I t=1LL<<x; x=i&-0x20?0:x; t=x==0?0:t; R t;} // fetch bit#, convert to onehot; clear to 0 if char out of range or fetched value 0
 
 /* See "Calling DLLs" chapter in J User Manual                  */
 /* format of left argument to 15!:0                             */
@@ -885,7 +961,7 @@ static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r
 /*  &         pointer NOT requiring memu                        */
 /*  n   INT   no result (integer 0)                             */
 
-static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,pi;
+static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,pi;
  ASSERT(LIT&AT(a),EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(NLEFTARG>=AN(a),EVLIMIT);
@@ -907,44 +983,60 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
  cc->alternate=0; NOUNROLL while(*s==' ')++s; if('+'==*s){cc->alternate=1; ++s;}
  cc->fpreset  =0; NOUNROLL while(*s==' ')++s; if('%'==*s){cc->fpreset  =1; ++s;}
  /* result type declaration */
- NOUNROLL while(*s==' ')++s;
- if(empty&&!*s){
-  cc->zl=c='x'; cc->zt=cdjtype(c);
- }else{
-  CDASSERT(*s,DEDEC);
-  cc->zl=c=*s++; cc->zt=cdjtype(c);
- }
+ NOUNROLL while(*s==' ')++s;   // skip to first char
+// obsolete  if(empty&&!*s){
+// obsolete   cc->zl=c='x'; cc->zt=cdjtype(c);  // use x if omitted and no args to call
+// obsolete  }else{
+ CDASSERT(*s,DEDEC);   // result type is required
+ cc->zl=c=*s++;  // fetch type char or *, save as result type
+// obsolete  }
  // verify that result is a valid type
 #define vresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'f')+CCM(w,'d')+CCM(w,'*')+CCM(w,'n')
  CCMWDS(vres) CCMCAND(vres,cand,c)  // see if zl is one of the allowed types
  CDASSERT(CCMTST(cand,c),DEDEC);
  CDASSERT(SY_64||'l'!=c,DEDEC);
- // if result is * followed by valid arg type, ratify it by advancing the pointer over the type (otherwise fail in next test)
 #define vargtvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'f')+CCM(w,'d')+CCM(w,'z')+CCM(w,'j')
  CCMWDS(vargt)  // set up for comparisons against list of bytes
- if(c=='*' && *s){
-  CCMCAND(vargt,cand,*s) s+=SGNTO0(CCMSGN(cand,*s)); // if *s is valid, skip over it
- }
- CDASSERT((*s&~' ')==0,DEDEC);  // 0 or SP
+ // if result is * followed by valid arg type, ratify it by advancing the pointer over the type (otherwise fail in next test)
+ if(c=='*'){
+  cc->zt=INT;  // '*' overrides to INT type
+  if(*s){CCMCAND(vargt,cand,*s) s+=SGNTO0(CCMSGN(cand,*s));} // if *s is valid, skip over it
+ }else{cc->zt=cdjtype(c);}  // not *, decode type letter
+ CDASSERT((*s&~' ')==0,DEDEC);  // we should have skipped over type to reach 0 or SP   * at end is treated as valid?
 #ifdef C_CD_NODF // platform does not support f result
  CDASSERT(cc->zl!='f',DEDEC)
 #endif
+
  /* argument type declarations */
  i=-1;
  while(c=*s++){
   if(' '==c)continue;
   ++i; der=DEDEC+256*(1+i);
   CDASSERT(i<NCDARGS,DECOUNT);
-  cc->starlett[i].tletter=0; cc->starlett[i].star=0;
-  CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // verify result type is allowed
-  if('*'==c||'&'==c){cc->starlett[i].star=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
-  cc->starlett[i].tletter=c;
-  CCMCAND(vargt,cand,c) CDASSERT(CCMTST(cand,c),der);  // vrgt defined above,list of valid arg bytes
-  CDASSERT((c!='z'&&c!='j')||cc->starlett[i].star,der);
-  if('l'==c){CDASSERT(SY_64,der); cc->starlett[i].tletter='x';}
+// obsolete   cc->starlett[i].tletter=0; cc->starlett[i].star=0;
+  cc->starlett[i].star=0; cc->starlett[i].lgsz=0x10; cc->starlett[i].jtype=0;  // no star, and 'no type given' and 'very big field' (in case of * bare)
+  CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // if calltype is '1', 1st arg must be x or * with no letter
+  if('*'==c||'&'==c){cc->starlett[i].star=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}  // indicate if * or &; advance to type if any, load it into c, and fall through to process it
+// obsolete   cc->starlett[i].tletter=c;
+  CCMCAND(vargt,cand,c) CDASSERT(CCMTST(cand,c),der);  // vrgt defined above,list of valid arg bytes.  Verify validity, which narrows range to 'a'-'z'
+  CDASSERT((c!='z'&&c!='j')||cc->starlett[i].star,der);  // j and z require *
+  CDASSERT(SY_64||c!='l',der); c=c=='l'?'x':c;  // l is x, but error on 32-bit
+  c=!SY_64&&c=='x'?'i':c;  // replace x with i in 32-bit
+#define F2C(c,n) ((UI8)(n)<<(2*(c-'a')))
+  cc->starlett[i].jtype=(UI4)cdjtype(c);  // get the desired result type
+  cc->starlett[i].type=((F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3))>>(2*(c-'a')))&3;  //0=char 1=int 2=fl 3=cmpx
+  cc->starlett[i].lgsz=((F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3))>>(2*(c-'a')))&3;  // lg(atom len needed)
+// obsolete   cc->starlett[i].tletter=c;
+#define F1C(c) ((UI8)1<<(c-'a'))
+#define F1CN(c,n) ((UI8)(n)<<(c-'a'))
+  cc->starlett[i].flags=((F1C('b')|F1C('s')|F1C('f')|F1C('i'))>>(c-'a'))&1;  // integer/float type that can be sourced from a LIT
 #ifdef C_CD_NODF // platform does not support f or d args
- CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].tletter!='f' && cc->starlett[i].tletter!='d'),der);
+// obsolete  CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].tletter!='f' && cc->starlett[i].tletter!='d'),der);
+ CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].type!=2),der);
 #endif
+// obsolete    if(likely((cbit&(((I)1<<('b'-'a'))|((I)1<<('c'-'a'))|((I)1<<('w'-'a'))|((I)1<<('u'-'a'))|((I)1<<('s'-'a'))|((I)1<<('i'-'a'))|((I)1<<('x'-'a'))|((I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)<<('d'-'a'))))!=0)){
+  cc->starlett[i].flags|=2*(((F1C('b')|F1C('c')|F1C('w')|F1C('u')|F1C('s')|F1C('i')|F1C('x')|F1CN('d',(I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)))>>(c-'a'))&1);
+
  }
  CDASSERT(0<=i||'1'!=cc->cc,DEDEC+256);
  MC(lib, s0+cc->li,cc->ln); lib [cc->ln]=0;  // create lib string for fn lookup
@@ -966,40 +1058,71 @@ strcpy(proc,"x15lseek32");
  R cc;
 }
 
-#define CDT(x,y) (8*((0x160E04>>(x))&7)+((0x160E04>>(y))&0x7))  // encode 0 1 2 3 9 10 17 18-> 4 2 1 0 6 7 3 5  1011. .... .... .... 0100
+#define CDT(x,y) (8*((0x161C04>>(x))&7)+((0x161C04>>(y))&0x7))  // encode 0 1 2 3 9 10 17 18-> 4 2 1 0 6 7 3 5  1011. .... .... .... 0100
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
  if(unlikely((zt|wt)&((NOUN|SPARSE)&~(B01+LIT+INT+INT2+INT4+FL+C2T+C4T))))R 0;  // if unallowed type, abort
  switch(CDT(CTTZ(zt),CTTZ(wt))){
-  default:           R 0;
-  case CDT(FLX, B01X): *(D*)v=*(B*)u; break;
-  case CDT(FLX, INTX): *(D*)v=(D)*(I*)u; break;
-  case CDT(FLX,INT2X): *(D*)v=*(I2*)u; break;
-  case CDT(FLX,INT4X): *(D*)v=*(I4*)u; break;
-  case CDT(FLX, FLX ): *(D*)v=*(D*)u; break;
-  case CDT(C2TX,LITX): *(US*)v=*(UC*)u; break;
-  case CDT(C2TX,C2TX): *(US*)v=*(US*)u; break;
-  case CDT(LITX,LITX): *(UC*)v=*(UC*)u; break;
-  case CDT(LITX,C2TX): s=*(US*)u; if(256<=(US)s)R 0; *(UC*)v=(UC)s; break;
-  case CDT(C4TX,LITX): *(C4*)v=*(UC*)u; break;
-  case CDT(C4TX,C2TX): *(C4*)v=*(US*)u; break;
-  case CDT(C4TX,C4TX): *(C4*)v=*(C4*)u; break;
-  case CDT(LITX,C4TX): s4=*(C4*)u; if(256<=(C4)s4)R 0; *(UC*)v=(UC)s4; break;
-  case CDT(C2TX,C4TX): s4=*(C4*)u; if(65536<=(C4)s4)R 0; *(US*)v=(US)s4; break;
-  case CDT(INTX,B01X): *    v=*(B*)u; break;
-  case CDT(INTX,INTX): *    v=*(I*)u; break;
-  case CDT(INTX,INT2X): *    v=*(I2*)u; break;
-  case CDT(INTX,INT4X): *    v=*(I4*)u; break;
-  case CDT(INTX,FLX ):
+ default:           R 0;
+ case CDT(FLX, B01X): *(D*)v=(D)*(B*)u; break;
+ case CDT(FLX, INTX): *(D*)v=(D)*(I*)u; break;
+ case CDT(FLX,INT2X): *(D*)v=(D)*(I2*)u; break;
+ case CDT(FLX,INT4X): *(D*)v=(D)*(I4*)u; break;
+ case CDT(FLX, FLX ): *(D*)v=*(D*)u; break;
+ case CDT(C2TX,LITX): *(US*)v=*(UC*)u; break;
+ case CDT(C2TX,C2TX): *(US*)v=*(US*)u; break;
+ case CDT(LITX,LITX): *(UC*)v=*(UC*)u; break;
+ case CDT(LITX,C2TX): s=*(US*)u; if(256<=(US)s)R 0; *(UC*)v=(UC)s; break;
+ case CDT(C4TX,LITX): *(C4*)v=*(UC*)u; break;
+ case CDT(C4TX,C2TX): *(C4*)v=*(US*)u; break;
+ case CDT(C4TX,C4TX): *(C4*)v=*(C4*)u; break;
+ case CDT(LITX,C4TX): s4=*(C4*)u; if(256<=(C4)s4)R 0; *(UC*)v=(UC)s4; break;
+ case CDT(C2TX,C4TX): s4=*(C4*)u; if(65536<=(C4)s4)R 0; *(US*)v=(US)s4; break;
+ case CDT(INTX,B01X): *(I*)v=*(B*)u; break;
+ case CDT(INTX,INTX): *(I*)v=*(I*)u; break;
+ case CDT(INTX,INT2X): *(I*)v=*(I2*)u; break;
+ case CDT(INTX,INT4X): *(I*)v=*(I4*)u; break;
+ case CDT(INTX,FLX ):
 #if SY_64
-  p=*(D*)u; q=jround(p); I rq=(I)q;
+  p=*(D*)u; q=jround(p);
   if(!ISFTOIOK(p,q))R 0;  // must equal int, possibly out of range.  Exact equality is common enough to test for
-  *v=rq;
+  *v=(I)q;
 #else
-   p=*(D*)u; q=jfloor(p);
-   if(p<IMIN*(1+FUZZ)||IMAX*(1+FUZZ)<p)R 0;
-   if(FFEQ(p,q))*v=(I)q; else if(FFEQ(p,1+q))*v=(I)(1+q); else R 0;
+  p=*(D*)u; q=jfloor(p);
+  if(p<IMIN*(1+FUZZ)||IMAX*(1+FUZZ)<p)R 0;
+  if(FFEQ(p,q))*v=(I)q; else if(FFEQ(p,1+q))*v=(I)(1+q); else R 0;
 #endif
+  break;
+ case CDT(INT2X,B01X): *(I2*)v=*(B*)u; break;
+ case CDT(INT2X,INTX): *(I2*)v=*(I*)u; break;
+ case CDT(INT2X,INT2X): *(I2*)v=*(I4*)u; break;
+ case CDT(INT2X,INT4X): *(I2*)v=*(I4*)u; break;
+ case CDT(INT2X,FLX ):
+#if SY_64
+  p=*(D*)u; q=jround(p);
+  if(!ISFTOIOK(p,q))R 0;  // must equal int, possibly out of range.  Exact equality is common enough to test for
+  *(I2*)v=(I2)q;
+#else
+  p=*(D*)u; q=jfloor(p);
+  if(p<IMIN*(1+FUZZ)||IMAX*(1+FUZZ)<p)R 0;
+  if(FFEQ(p,q))*(I2*)v=(I)q; else if(FFEQ(p,1+q))*(I2*)v=(I)(1+q); else R 0;
+#endif
+  break;
+ case CDT(INT4X,B01X): *(I4*)v=*(B*)u; break;
+ case CDT(INT4X,INTX): *(I4*)v=*(I*)u; break;
+ case CDT(INT4X,INT2X): *(I4*)v=*(I4*)u; break;
+ case CDT(INT4X,INT4X): *(I4*)v=*(I4*)u; break;
+ case CDT(INT4X,FLX ):
+#if SY_64
+  p=*(D*)u; q=jround(p);
+  if(!ISFTOIOK(p,q))R 0;  // must equal int, possibly out of range.  Exact equality is common enough to test for
+  *(I4*)v=(I4)q;
+#else
+  p=*(D*)u; q=jfloor(p);
+  if(p<IMIN*(1+FUZZ)||IMAX*(1+FUZZ)<p)R 0;
+  if(FFEQ(p,q))*(I4*)v=(I)q; else if(FFEQ(p,1+q))*(I4*)v=(I)(1+q); else R 0;
+#endif
+  break;
  }
  R v;
 }    /* convert a single atom. I from D code adapted from IfromD() in k.c */
@@ -1008,8 +1131,15 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
 // if cc->zbx is true, zv0 points to AAV(z) where z is the block that will hold the list of boxes that
 // will be the result of 15!:0.  z is always nonrecursive
 static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B zbx;
-    C c,cipt[NCDARGS],*u;FARPROC fp;float f;I cipcount=0,cipn[NCDARGS],*cipv[NCDARGS],cv0[2],
-    data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,xn,xr,xt,*xv; DoF dd[NCDARGS]; I t;
+    C *u;FARPROC fp;float f;I cipcount=0,cv0[2],
+    data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,xn,xr,xt,*xv; DoF dd[NCDARGS];
+    // conversion-in-place info.  For types that convert in place, we remember the addr/length/type/source length/target length
+    struct {
+     void *v;  // pointer to data
+     I n;  // number of atoms of data
+     C t;  // type of data, 0=char 1=int 2=fl 3=complex
+     C cxlgsz;  // lg of atom size (in complex, half an atom), then target - 2 bits each, source=0-1 targ=2-3
+    }cip[NCDARGS];
 #if defined(__aarch64__)
 // parameter in stack is not fixed size
  char *dvc;        // character pointer to data[]
@@ -1032,8 +1162,11 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #elif defined(C_CD_ARMHF)
   if((fcnt>16||dcnt>16)&&dv-data==4)dv=data+MAX(fcnt,dcnt)-12;  /* v0 to v15 fully filled before x0 to x3 */
 #endif
-  per=DEPARM+i*256; I star=cc->starlett[i].star; c=cc->starlett[i].tletter; t=cdjtype(c);  // c is type in the call, t is the J type for that.  star is the *& qualifier
-  I cbit=(I)1<<(c-'a');  // one-hot encoding of c
+  per=DEPARM+i*256; I star=cc->starlett[i].star;
+  I ctype=cc->starlett[i].type, clgsz=cc->starlett[i].lgsz, t=cc->starlett[i].jtype; I xlgsz=0;  // desired type 0123, desired size (high if no type, to suppress inplace conv), J type for non-in-place conversions (0 if type unknown)
+// obsolete  c=cc->starlett[i].tletter; t=cdjtype(c);
+  // c is type in the call, t is the J type for that.  star is the *& qualifier
+// obsolete   I cbit=(I)1<<(c-'a');  // one-hot encoding of c
   I litsgn;  // will be neg if lit array that can be used as pointer
   I boxatomsgn;  // neg if boxed atom used as pointer
   if(likely(wt&BOX)){  // inputs are boxes, pointed to by wv
@@ -1041,20 +1174,29 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    boxatomsgn=-star&(xr-1)&SGNIF(xt,BOXX);  // neg if boxed atom used as pointer
    CDASSERT((-xr&(star-1))>=0,per);         /* non-pointers must be scalars   !xr||star */
 // long way   lit=star&&xt&LIT&&(c=='b'||c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
-   // litsgn means x is a character area whose address can be used as a source for numeric data
-   litsgn=-star & SGNIF(xt,LITX) & -(cbit&(((I)1<<('b'-'a'))|((I)1<<('f'-'a'))|((I)1<<('s'-'a')))) & (((0x3040>>((c&7)<<1))&3&xn)-1);  // neg if lit
+   // litsgn means x is a LIT area whose address can be used as a source for numeric data
+// obsolete    litsgn=-star & SGNIF(xt,LITX) & -cc->starlett[i].litok & (((0x3040>>((c&7)<<1))&3&xn)-1);  // neg if lit   // LIT array can source short numerics, if integral # atoms
+   litsgn=-star & SGNIF(xt,LITX) & SGNIF(cc->starlett[i].flags,0) & ((((1LL<<clgsz)-1)&xn)-1);   // LIT array can source short numerics, if integral # atoms.  Suppress converting it then
 // long way    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x!=0,per);}
-   if(unlikely(((t-1)|(TYPESXOR(t,xt)-1)|litsgn|boxatomsgn)>=0)){x=cvt(xt=t,x); CDASSERT(x!=0,per);}
+   // perform non-in-place conversions.  These are conversions to larger atoms, or to different formats.
+#define F2T(t,n) ((I)n<<(2*CTTZ(t)))
+   I xtype=(((F2T(LIT,0)|F2T(C2T,0)|F2T(C4T,0)|F2T(B01,1)|F2T(INT,1)|F2T(INT1,1)|F2T(INT2,1)|F2T(INT4,1)|F2T(HP,2)|F2T(SP,2)|F2T(FL,2)|F2T(QP,2)|F2T(CMPX,3)))>>(2*CTTZ(xt)))&3;  // type 0123
+   xtype|=xt&XNUM+RAT;  // indirect types are in a class by themselves & must always be converted
+   xlgsz=bplg(xt);  // lg(actual atom len)
+   if(unlikely(((t-1)|litsgn|boxatomsgn|(((ctype^xtype)-1)&(clgsz-xlgsz-1)))>=0)){ x=cvt(xt=t,x); xlgsz=bplg(xt); CDASSERT(x!=0,per); }  // convert if result type known & (not what we have, or bigger than what we have)
    // We know that x originated in a box, so it can't be PRISTINE.  But it may have been converted, so we have to
    // make sure that what we install into *zv is not inplaceable.  *zv is never recursive.
    xv=AV(x); if(zbx)*zv=incorp(x);
   }else{   // non-boxed input.  Must be atom
-   xv=convert0(t,cv0,wt,u); xt=t; u+=wk;  // convert to required type ???
+   xv=convert0(t,cv0,wt,u); xt=t; u+=wk;  // this seems to install an atom on the stack, of the desired type?
+   xlgsz=bplg(xt);  // lg(actual atom len)
    boxatomsgn=-star&(xr-1)&SGNIF(xt,BOXX);  // neg if boxed atom used as pointer
    CDASSERT(xv!=0,per);   // abort if conversion failed
    if(zbx){GA00(y,t,1,0); MC(AV(y),xv,bpnoun(t)); *zv=incorp(y);}  // must never install inplaceable block; move value into a box
   }
-  // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
+  xlgsz=xt&CMPX?3:xlgsz;  // the length for CMPX is the length of an atom
+
+  // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv.  Set *dv (the parm, either a pointer or a value)
   // if wt&BOX only, x is an A-block for arg i
   if(unlikely(boxatomsgn<0)){           // scalar boxed integer/boolean scalar is a pointer - NOT memu'd.  If xt is a box, wt must have been a box
    y=C(AAV(x)[0]);   // fetch the address of the A-block for the pointer
@@ -1081,23 +1223,22 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #else
    *dv++=(I)xv;                     /* pointer to J array memory     */
 #endif
-   // scaf should allow INT2 & INT4 on types that are no larger
-   CDASSERT(ISDENSETYPE(xt,LIT+C2T+C4T+INT+FL+CMPX),per);  // verify J type is DIRECT why not B01?
-   if(unlikely((litsgn | ((cbit&(((I)1<<('b'-'a'))|((I)1<<('f'-'a'))|((I)1<<('s'-'a'))|((I)1<<('z'-'a'))|((I)SY_64<<('i'-'a'))))-1))>=0)){
-    cipv[cipcount]=xv;              /* convert in place arguments scaf should use struct for all 3 */
-    cipn[cipcount]=xn;
-    cipt[cipcount]=c;
+   // remember inplace-conversions (i. e. conversions to smaller precisions, which can be handled in place).  Conversions to larger precisions, or to other types, were handled above.
+   // Here we see if a conversion will be needed and add it to the list of inplace conversions
+   CDASSERT(ISDENSETYPE(xt,B01+LIT+C2T+C4T+INT+INT2+INT4+FL+CMPX),per);  // verify J type is DIRECT  scaf not needed, impossible
+// obsolete    if(unlikely((litsgn | ((cbit&(((I)1<<('b'-'a'))|((I)1<<('f'-'a'))|((I)1<<('s'-'a'))|((I)1<<('z'-'a'))|((I)SY_64<<('i'-'a'))))-1))>=0)){
+   if(unlikely(xlgsz>clgsz)){  // x is bigger than needed (ignoring cases of LIT buffers)
+// obsolete    cipv[cipcount]=xv;              /* convert in place arguments */
+// obsolete    cipn[cipcount]=xn;
+// obsolete    cipt[cipcount]=c;
+    cip[cipcount].v=xv; cip[cipcount].n=xn; cip[cipcount].t=ctype; cip[cipcount].cxlgsz=4*clgsz+xlgsz;   // save conversion info
     ++cipcount;
    }
   }else{  // boxed atom
-#if defined(C_CD_ARMHF) || defined(C_CD_ARMEL)
-#define ARMARGS 1
-#else
-#define ARMARGS 0
-#endif
    // coded to avoid switch, which mispredicts
-   if(likely((cbit&(((I)1<<('b'-'a'))|((I)1<<('c'-'a'))|((I)1<<('w'-'a'))|((I)1<<('u'-'a'))|((I)1<<('s'-'a'))|((I)1<<('i'-'a'))|((I)1<<('x'-'a'))|((I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)<<('d'-'a'))))!=0)){
-    // integers.  Most singletons are integers.  d on SY_64 and no weird calling convention is handled like an 8-byte integer
+// obsolete    if(likely((cbit&(((I)1<<('b'-'a'))|((I)1<<('c'-'a'))|((I)1<<('w'-'a'))|((I)1<<('u'-'a'))|((I)1<<('s'-'a'))|((I)1<<('i'-'a'))|((I)1<<('x'-'a'))|((I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)<<('d'-'a'))))!=0)){
+   if(likely(cc->starlett[i].flags&2)){  // the type is sign-extendable (short INT or INT-sized INT/FL)
+    // integer.  Most singletons are integers.  d on SY_64 and no weird calling convention is handled like an 8-byte integer
     // general plan for integers is: fetch 8 bytes (overfetch OK); get length; sign-extend at that length; mask off if not sign-extended
     // code: b  c  w  u  s  i  x  d
     // ASC:  62 63 77 75 73 69 78 64
@@ -1106,12 +1247,13 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     // len   0  0  1  2  1  2  3/2 3
     // sign  x  0  0  0  1  1  x   x
     I iwd=*xv;  // fetch 8 bytes, possibly overfetching
-#if SY_64
-    I lglen=(0x03640230 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0011 0000
-#else
-    I lglen=(0x02640200 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0000 0000
-#endif
-    I sxt=(0x00080200 >>(c&0x1e))&2;   // 2 if sign-extend required   0000 00x0 0000 1000 0000 0010 00x0 x000
+// obsolete #if SY_64
+// obsolete     I lglen=(0x03640230 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0011 0000
+// obsolete #else
+// obsolete     I lglen=(0x02640200 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0000 0000
+// obsolete #endif
+    I lglen=clgsz; I sxt=ctype==1?2:0;  // lg2(len of data in bytes)  2 if sign-extend required
+// obsolete     I sxt=(0x00080200 >>(c&0x1e))&2;   // 2 if sign-extend required   0000 00x0 0000 1000 0000 0010 00x0 x000
     I nsig=(I)1<<(lglen+3);  // # significant bits in iwd
     I sxtwd=(iwd<<(BW-nsig))>>(BW-nsig);  // install sign extend over ignored bits
     iwd&=~((sxt-2)<<(nsig-1));  // if not sign-extend, clear upper bits.  Can't shift by BW.  If nsig is 8, sxt=1 ANDs with ~0, sxt=0 ANDs with ~0xFF..FF00
@@ -1130,17 +1272,18 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #else
     *dv++=iwd;  // write extended result
 #endif
-    // long way    switch(c) /(  // not a pointer.  Must be a data atom.  If fixed-point convert to I; if float convert to D
-// long way   case 'b': *dv++=(BYTE)*xv;break;
-// long way   case 'c': *dv++=*(C*)xv;  break;
-// long way   case 'w': *dv++=*(US*)xv; break;
-// long way   case 'u': *dv++=*(C4*)xv; break;
-// long way   case 's': *dv++=(S)*xv;   break;
-// long way   case 'i': *dv++=(int)*xv; break;
-// long way   case 'x': *dv++=*xv;      break;
-// long way   case 'f':
-   }else if(likely((SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)&&c=='d')){  // double-precision arg with a weird calling sequence
-// long way    case 'd':
+// obsolete    switch(c) /(  // not a pointer.  Must be a data atom.  If fixed-point convert to I; if float convert to D
+// obsolete   case 'b': *dv++=(BYTE)*xv;break;
+// obsolete   case 'c': *dv++=*(C*)xv;  break;
+// obsolete   case 'w': *dv++=*(US*)xv; break;
+// obsolete   case 'u': *dv++=*(C4*)xv; break;
+// obsolete   case 's': *dv++=(S)*xv;   break;
+// obsolete   case 'i': *dv++=(int)*xv; break;
+// obsolete   case 'x': *dv++=*xv;      break;
+// obsolete   case 'f':
+// obsolete    }else if(likely((SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)&&c=='d')){  // double-precision arg with a weird calling sequence
+   }else if(likely((SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)&&ctype==2&&clgsz==3)){  // double-precision arg with a weird calling sequence
+// obsolete    case 'd':
 #if SY_MACPPC
              dd[dcnt++]=*(D*)xv;
 #endif
@@ -1182,7 +1325,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
 #endif
 #endif
-   }else if(likely(c=='f')){   // single-precision arg
+// obsolete    }else if(likely(c=='f')){   // single-precision arg
+   }else if(likely(ctype==2&&clgsz==2)){   // single-precision arg
 #if SY_MACPPC
           dd[dcnt++]=(float)*(D*)xv;
 #endif
@@ -1243,7 +1387,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  CDASSERT(dv-data<=NCDARGS,DECOUNT); /* D needs 2 I args in 32bit system, check it again. */
 #endif
 
- DO(cipcount, convertdown(cipv[i],cipn[i],cipt[i]););  /* convert I to s and int and d to f as required */
+ DO(cipcount, convertdown(cip[i].v,cip[i].n,cip[i].t,cip[i].cxlgsz););  /* convert I to s and int and d to f as required */
  // allocate the result area and point to it
  if(zbx){GA00(x,cc->zt,1,0); xv=AV(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable.  xv points to where the function will store its result: in zv or in a fresh box
  // get the address of the function
@@ -1254,15 +1398,15 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);  // call the function, set the result
  jt->recurstate|=RECSTATEBUSY;  // cd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
 
- DO(cipcount, convertup(cipv[i],cipn[i],cipt[i]);); /* convert s and int to I and f to d as required */
+ DO(cipcount, convertup(cip[i].v,cip[i].n,cip[i].t,cip[i].cxlgsz);); /* convert s and int to I and f to d as required */
 #if SY_WIN32
- t= GetLastError();
+ I en= GetLastError();
  if(cc->fpreset)_fpreset();         /* delphi dll (and others) damage fp state */
 #endif
 #if SYS&SYS_UNIX
- t=errno;
+ I en=errno;
 #endif
- if(unlikely(t!=0))jt->getlasterror=t;
+ if(unlikely(en!=0))jt->getlasterror=en;
  R 1;
 }
 
@@ -1274,14 +1418,15 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);   // m = # 1-cells of w
  ASSERT(!ISSPARSE(wt),EVDOMAIN);
  ASSERT(LIT&AT(a),EVDOMAIN);
- C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?
+ C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=jtcdparse(jt,a); *enda=endc; RZ(cc); // should do outside rank2 loop?
  n=cc->n;  // n=# arguments
  I nn; CDASSERT(n==SHAPEN(w,wr-1,nn),DECOUNT);
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}  // allocate n boxes for each result arg, plus 1 for the result
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}  // if fast form, just allocate the return value
  // z is always nonrecursive
  if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){   // if w is NOT boxed, and a and w arenot both empty
-  t=0; DQ(n, k=cdjtype(cc->starlett[i].tletter); t=MAX(t,k););
+// obsolete   t=0; DQ(n, k=cdjtype(cc->starlett[i].tletter); t=MAX(t,k););
+  t=0; DQ(n, k=cc->starlett[i].jtype; t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!ISDENSETYPE(wt,B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));  // if w sparse or not DIRECT, convert it
  }

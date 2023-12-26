@@ -885,7 +885,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(CMPX, B01): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x->im=0.0; x++->re = *v++;); } R 1;
  case CVCASE(INT2,B01): R jtI2fromB(jt, w, yv);
  case CVCASE(INT4,B01): R jtI4fromB(jt, w, yv);
- case CVCASE(SP,B01): R jtDSfromB(jt, w, yv);
+// case CVCASE(SP,B01): R jtDSfromB(jt, w, yv);
  case CVCASE(QP,B01): R jtEfromB(jt, w, yv);
  case CVCASE(B01, INT): R BfromI(w, yv);
  case CVCASE(XNUM, INT): R XfromI(w, yv);
@@ -894,7 +894,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(CMPX, INT): {Z*x = (Z*)yv; I*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
  case CVCASE(INT2,INT): R jtI2fromI(jt, w, yv);
  case CVCASE(INT4,INT): R jtI4fromI(jt, w, yv);
- case CVCASE(SP,INT): R jtDSfromI(jt, w, yv);
+// case CVCASE(SP,INT): R jtDSfromI(jt, w, yv);
  case CVCASE(QP,INT): R jtEfromI(jt, w, yv);
  case CVCASE(B01, FL): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
  case CVCASE(INT, FL): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
@@ -903,7 +903,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(CMPX, FL): R ZfromD(w, yv);
  case CVCASE(INT2, FL): R jtI2fromD(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
  case CVCASE(INT4, FL): R jtI4fromD(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(SP,FL): R jtDSfromD(jt, w, yv);
+// case CVCASE(SP,FL): R jtDSfromD(jt, w, yv);
  case CVCASE(QP,FL): R jtEfromD(jt, w, yv);
  case CVCASE(B01, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R BfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
  case CVCASE(INT, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R IfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
@@ -912,7 +912,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(FL, CMPX): R DfromZ(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
  case CVCASE(INT2, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R jtI2fromD(jt, d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
  case CVCASE(INT4, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R jtI4fromD(jt, d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(SP,CMPX): R jtDSfromZ(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
+// case CVCASE(SP,CMPX): R jtDSfromZ(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
  case CVCASE(QP,CMPX): R jtEfromZ(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
  case CVCASE(B01, XNUM): R BfromX(w, yv);
  case CVCASE(INT, XNUM): R IfromX(w, yv);
@@ -921,7 +921,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(CMPX, XNUM): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ZfromD(d, yv);
  case CVCASE(INT2, XNUM): R jtI2fromX(jt, w, yv);
  case CVCASE(INT4, XNUM): R jtI4fromX(jt, w, yv);
- case CVCASE(SP,XNUM): R jtDSfromX(jt, w, yv);
+// case CVCASE(SP,XNUM): R jtDSfromX(jt, w, yv);
  case CVCASE(QP,XNUM): R jtEfromX(jt, w, yv);
  case CVCASE(B01, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R BfromX(d, yv);
  case CVCASE(INT, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R IfromX(d, yv);
@@ -930,7 +930,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(CMPX, RAT): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ZfromD(d, yv);
  case CVCASE(INT2, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R jtI2fromX(jt, d, yv);
  case CVCASE(INT4, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R jtI4fromX(jt, d, yv);
- case CVCASE(SP,RAT): R jtDSfromQ(jt, w, yv);
+// case CVCASE(SP,RAT): R jtDSfromQ(jt, w, yv);
  case CVCASE(QP,RAT): R jtEfromQ(jt, w, yv);
  case CVCASE(B01, INT2): R jtBfromI2(jt, w, yv);
  case CVCASE(INT,INT2): R jtIfromI2(jt, w, yv);
@@ -939,7 +939,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(RAT, INT2): GATV(d, XNUM, n, r, s); R jtXfromI2(jt, w, AV(d)) && QfromX(d, yv);
  case CVCASE(CMPX, INT2): {Z*x = (Z*)yv; I2*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
  case CVCASE(INT4,INT2): R jtI4fromI2(jt, w, yv);
- case CVCASE(SP,INT2): R jtDSfromI2(jt, w, yv);
+// case CVCASE(SP,INT2): R jtDSfromI2(jt, w, yv);
  case CVCASE(QP,INT2): R jtEfromI2(jt, w, yv);
  case CVCASE(B01, INT4): R jtBfromI4(jt, w, yv);
  case CVCASE(INT,INT4): R jtIfromI4(jt, w, yv);
@@ -948,7 +948,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  case CVCASE(RAT, INT4): GATV(d, XNUM, n, r, s); R jtXfromI4(jt, w, AV(d)) && QfromX(d, yv);
  case CVCASE(CMPX, INT4): {Z*x = (Z*)yv; I4*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
  case CVCASE(INT2,INT4): R jtI2fromI4(jt, w, yv);
- case CVCASE(SP,INT4): R jtDSfromI4(jt, w, yv);
+// case CVCASE(SP,INT4): R jtDSfromI4(jt, w, yv);
  case CVCASE(QP,INT4): R jtEfromI4(jt, w, yv);
  case CVCASE(B01,SP): R jtBfromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
  case CVCASE(INT,SP): R jtIfromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);

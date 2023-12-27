@@ -49,7 +49,8 @@
 #define EVSIDAMAGE      43    // reload of running function - converted to stack error
 #define EVDEADLOCK      44    // action would deadlock the system
 #define EVASSEMBLY      45    // inhomogeneous results during assembly (i. e. result.h) - converted to EVDOMAIN after eformat
-#define NEVM            45      /* number of event codes       */
+#define EVOFLO          46    // overflow of a fixed-size type (INT[124])
+#define NEVM            46      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */

@@ -233,12 +233,13 @@ APFX(minI2I2, I2,I2,I2, MIN,,R EVOK;)
 APFX(minI4I4, I4,I4,I4, MIN,,R EVOK;)
 APFX(maxI2I2, I2,I2,I2, MIN,,R EVOK;)
 APFX(maxI4I4, I4,I4,I4, MIN,,R EVOK;)
-AIFX(plusI2I2, I2,I2,I2, +   )
-AIFX(plusI4I4, I4,I4,I4, +   )
-AIFX(minusI2I2, I2,I2,I2, -   )
-AIFX(minusI4I4, I4,I4,I4, -   )
-AIFX(tymesI2I2, I2,I2,I2, *   )
-AIFX(tymesI4I4, I4,I4,I4, *   )
+#define OFOPTEST(op) if(unlikely(__builtin_##op##_overflow(u,v,&zz)))R EVOFLO;
+AEXP(plusI2I2, I2,I2,I2,OFOPTEST(add))
+AEXP(plusI4I4, I4,I4,I4,OFOPTEST(add))
+AEXP(minusI2I2, I2,I2,I2,OFOPTEST(sub))
+AEXP(minusI4I4, I4,I4,I4,OFOPTEST(sub))
+AEXP(tymesI2I2, I2,I2,I2,OFOPTEST(mul))
+AEXP(tymesI4I4, I4,I4,I4,OFOPTEST(mul))
 
 
 // II multiply, in double precision.  Always return error code so we can clean up

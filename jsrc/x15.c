@@ -1027,8 +1027,8 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
   cc->starlett[i].type=((F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3))>>(2*(c-'a')))&3;  //0=char 1=int 2=fl 3=cmpx
   cc->starlett[i].lgsz=((F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3))>>(2*(c-'a')))&3;  // lg(atom len needed)
 // obsolete   cc->starlett[i].tletter=c;
-#define F1C(c) ((UI8)1<<(c-'a'))
-#define F1CN(c,n) ((UI8)(n)<<(c-'a'))
+#define F1C(c) ((I)1<<(c-'a'))
+#define F1CN(c,n) ((I)(n)<<(c-'a'))
   cc->starlett[i].flags=((F1C('b')|F1C('s')|F1C('f')|F1C('i'))>>(c-'a'))&1;  // integer/float type that can be sourced from a LIT
 #ifdef C_CD_NODF // platform does not support f or d args
 // obsolete  CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].tletter!='f' && cc->starlett[i].tletter!='d'),der);

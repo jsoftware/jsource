@@ -102,8 +102,8 @@ static AMON(absD,   I,I, *z= *x&IMAX;)
 static AMON(absD,   D,D, *z= ABS(*x);)
 #endif
 #endif
-static AMONPS(absI2,   I2,I2, US vtot=0; , US val=*(US*)x; S nval=(S)((0U-val)); val=nval>0?nval:val; *z=(I2)val; , R EVOK;)
-static AMONPS(absI4,   I4,I4, UI4 vtot=0; , UI4 val=*(UI4*)x; I4 nval=(I4)((0U-val)); val=nval>0?nval:val; *z=(I4)val; , R EVOK;)
+static AMONPS(absI2,   I2,I2, I ret=EVOK;  , I2 val=*x; I2 nval; if(unlikely(__builtin_sub_overflow((I2)0,val,&nval)))ret=EVOFLO; val=nval>0?nval:val; *z=val; , R ret;)
+static AMONPS(absI4,   I4,I4, I ret=EVOK;  , I4 val=*x; I4 nval; if(unlikely(__builtin_sub_overflow((I4)0,val,&nval)))ret=EVOFLO; val=nval>0?nval:val; *z=val; , R ret;)
 
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&*(UIL*)&minus0); *(UIL*)&h=*(UIL*)&x->hi&~*(UIL*)&minus0; \
@@ -272,7 +272,9 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
 
   // not recoverable in place.  If recoverable with a retry, do the retry; otherwise fail.  Caller will decide; we return error indic
   // we set the error code from the value given by the routine, except that if it involves a restart it must have been ceil/floor that we couldn't restart - that's a EWOV
-  oprc=oprc<0?EWOV:oprc; if(oprc>NEVM)RESETERR; jt->jerr=(UC)oprc;  // if this is going to retry, clear the old error text; but leave the error value
+  oprc=oprc<0?EWOV:oprc;
+  if(oprc<=NEVM){RESETERR; jsignal(oprc);}else jt->jerr=(UC)oprc;  // if real error, set error text; otherwise save error code for analysis
+// obsolete   if(oprc>NEVM)RESETERR; jt->jerr=(UC)oprc;  // if this is going to retry, clear the old error text; but leave the error value
   R 0;
  }
 }
@@ -292,9 +294,14 @@ DF1(jtatomic1){A z;
  // Run the full op, retrying if a retryable error is returned
  NOUNROLL while(1){  // run until we get no error
   z=jtva1(jtinplace,w,self);  // execute the verb
-  if(z||jt->jerr<=NEVM){RETF(z);}   // return if no error or error not retryable
+  if(likely(z!=0)){RETF(z);}  // normal case is good return
+  if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
+// obsolete   if(z||jt->jerr<=NEVM){RETF(z);}   // return if no error or error not retryable
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
+ // There was an error. format it now
+ jteformat(jt,self,w,0,0);
+ RETF(z);
 }
 
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only

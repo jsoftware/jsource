@@ -260,6 +260,27 @@ NB. 9!:11 t
 NB.? end of skip
 
 
+
+NB. int2 and int4
+40000 = 10000 + 6 c. 30000
+'fixed-precision overflow' -: +~ etx 6 c. 30000
+_40000 = _10000 - 6 c. 30000
+'fixed-precision overflow' -: (6 c. _30000) - etx 6 c. 30000
+40000 = 4 * 6 c. 10000
+'fixed-precision overflow' -: (6 c. 4) * etx 6 c. 10000
+'fixed-precision overflow' -: | etx 6 c. _32768
+
+3e9 = 1e9 + 7 c. 2e9
+'fixed-precision overflow' -: +~ etx 7 c. 2e9
+_3e9 = _1e9 - 7 c. 2e9
+'fixed-precision overflow' -: (7 c. _2e9) - etx 7 c. 2e9
+4e9 = 4 * 7 c. 1e9
+'fixed-precision overflow' -: (7 c. 4) * etx 7 c. 1e9
+'fixed-precision overflow' -: | etx 7 c. _2147483648
+
+
+
+
 4!:55 ;:'a argrand argnear b c carg d f f2 fsmall jdot p t xd yd dx dy xx xy qx qy s xs ys'
 
 

@@ -267,14 +267,26 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
  y    pointer to w      atoms
 */
 
+// exp takes u and v, sets zz
+#define AEXP(f,Tz,Tx,Ty,exp)  \
+ AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;Tz zz;                            \
+  if(n-1==0)  DQ(m, u=*x++; v=*y++; exp  *z++=zz; )   \
+  else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y++; exp  *z++=zz;))   \
+  else      DQ(m, v=*y++; DQ(n, u=*x++; exp  *z++=zz;   ));  \
+  R EVOK; \
+ }
 
-#define AIFX(f,Tz,Tx,Ty,symb)  \
+
+#define AIFX(f,Tz,Tx,Ty,symb) AEXP(f,Tz,Tx,Ty,zz=u symb v;) 
+
+#if 0   // obsolete 
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                            \
   if(n-1==0)  DQ(m,               *z++=*x++ symb *y++; )   \
   else if(n-1<0)DQ(m, u=*x++; DQC(n, *z++=u    symb *y++;))   \
   else      DQ(m, v=*y++; DQ(n, *z++=*x++ symb v;   ));  \
   R EVOK; \
  }
+#endif
 
 // suff must return the correct result
 #define APFXL(f,Tz,Tx,Ty,ldfn,pfx,pref,suff)   \

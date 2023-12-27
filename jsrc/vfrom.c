@@ -571,7 +571,7 @@ DF2(jtfrom){A z;
     // been made to appear inplaceable.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
     // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
 // obsolete     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
-    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&((AFLAG(a)+wt&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
+    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
     I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=wt;   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
     // Here we transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use

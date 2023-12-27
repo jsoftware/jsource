@@ -116,7 +116,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-pointer-sign \
  -Wno-pointer-to-int-cast \
  -Wno-return-local-addr \
- -Wno-shift-count-overflow \
+ \
  -Wno-shift-negative-value \
  -Wno-sign-compare \
  -Wno-string-plus-int \
@@ -151,7 +151,7 @@ else
  -Wno-pass-failed \
  -Wno-pointer-sign \
  -Wno-pointer-to-int-cast \
- -Wno-shift-count-overflow \
+ \
  -Wno-sometimes-uninitialized \
  -Wno-string-plus-int \
  -Wno-unknown-pragmas \

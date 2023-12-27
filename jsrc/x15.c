@@ -1179,7 +1179,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    litsgn=-star & SGNIF(xt,LITX) & SGNIF(cc->starlett[i].flags,0) & ((((1LL<<clgsz)-1)&xn)-1);   // LIT array can source short numerics, if integral # atoms.  Suppress converting it then
 // long way    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x!=0,per);}
    // perform non-in-place conversions.  These are conversions to larger atoms, or to different formats.
-#define F2T(t,n) ((I)n<<(2*CTTZ(t)))
+#define F2T(t,n) ((UI8)n<<(2*CTTZ(t)))
    I xtype=(((F2T(LIT,0)|F2T(C2T,0)|F2T(C4T,0)|F2T(B01,1)|F2T(INT,1)|F2T(INT1,1)|F2T(INT2,1)|F2T(INT4,1)|F2T(HP,2)|F2T(SP,2)|F2T(FL,2)|F2T(QP,2)|F2T(CMPX,3)))>>(2*CTTZ(xt)))&3;  // type 0123
    xtype|=xt&XNUM+RAT;  // indirect types are in a class by themselves & must always be converted
    xlgsz=bplg(xt);  // lg(actual atom len)

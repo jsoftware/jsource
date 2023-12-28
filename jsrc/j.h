@@ -1109,7 +1109,7 @@ if(opt&0x100){ \
  gs=FAV(self)->fgh[1]; \
  if(!(opt&0x70)){fs=FAV(self)->fgh[0];} \
 } \
-A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
+A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF((I)jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
 w = PTROP(w,+,(I)jtinplace&JTINPLACEW); /* if w inplaceable, change the pointer to fail compares below */ \
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT (from the apropriate valence of g).  Inplace h if f is x@] */ \
 A hx; \
@@ -1178,8 +1178,8 @@ if(opt&0x100){ \
  gs=FAV(self)->fgh[1]; \
  if(opt&0x1000)fghfn=FAVV(hs)->valencefns[1]; \
 } \
-A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
-A *tpopa=AZAPLOC(a); tpopa=(A*)((I)tpopa&REPSGN(SGNIF(jtinplace,JTINPLACEAX)&AC(a)&((AFLAG(a)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0;  /* point to pointer to a (if it is inplace) */ \
+A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF((I)jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
+A *tpopa=AZAPLOC(a); tpopa=(A*)((I)tpopa&REPSGN(SGNIF((I)jtinplace,JTINPLACEAX)&AC(a)&((AFLAG(a)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0;  /* point to pointer to a (if it is inplace) */ \
 w = PTROP(w,+,(I)jtinplace&JTINPLACEW); a = PTROP(a,+,(I)jtinplace&JTINPLACEA);  /* if arg inplaceable, change the pointer to fail compares below */\
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; \

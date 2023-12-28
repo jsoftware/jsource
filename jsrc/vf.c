@@ -164,7 +164,7 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  wt=AT(w); wv=CAV(w);  // wv->source data
  PROD(m,f,ws); PROD(k,r-1,ws+f+1);  // m=# argument cells k=#atoms in one subitem
  k<<=bplg(wt); nk=n*k;  // k=#bytes in subitem  nk=#bytes in cell
- if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))<0){z=w;}  // inplace: leave pristinity of w alone
+ if((AC(w)&SGNIF((I)jtinplace,JTINPLACEWX))<0){z=w;}  // inplace: leave pristinity of w alone
  else{GA(z,wt,AN(w),wr,ws); PRISTCLRF(w)}  // new copy: allocate new area, make w non-pristine since it escapes
  // w has been destroyed
  zv=CAV(z);  // zv->target data

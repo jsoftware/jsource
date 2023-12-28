@@ -40,7 +40,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  // Get input pointer
  fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
-  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
+  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(wt);  // note if w has gerunds, it is always boxed & doesn't go through here

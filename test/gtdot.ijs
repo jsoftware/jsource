@@ -4,6 +4,8 @@ NB. T. t. ------------------------------------------------------------------
 NB. **************************************** threads & tasks **********************************
 NB. 64-bit only
 
+chk=: (<UNAME) e. 'FreeBSD';'OpenBSD'
+
 3 : 0''
 if. IFWIN do.
  sleep=: usleep@>.@(1e6&*)
@@ -38,16 +40,16 @@ NB. no more thread can be created
 ('|ill-formed name'&([ -: #@[ {. ]) *. '(from pyx)'&([ -: -@#@[ {. ])) LF taketo  (>@[ 9!:59@0) :: ((13!:12)@(0$0) )  13!:8 t. '' 4  NB. pyx error is so flagged
 
 NB. delay
-pyx=. (6!:3) t. (<'worker';0) "0 [ 1#~('FreeBSD'-:UNAME){(3*N), 8
+pyx=: (6!:3) t. (<'worker';0) "0 [ 1#~chk{(3*N), 8
 1:&> pyx
 
-pyx=. (6!:3) t. (<'worker';0) "0 [ 0.1#~('FreeBSD'-:UNAME){(30*N), 8
+pyx=: (6!:3) t. (<'worker';0) "0 [ 0.1#~chk{(30*N), 8
 1:&> pyx
 
-pyx=. (6!:3) t. (<'worker';1) "0 [ 1#~('FreeBSD'-:UNAME){(3*N), 8
+pyx=: (6!:3) t. (<'worker';1) "0 [ 1#~chk{(3*N), 8
 1:&> pyx
 
-pyx=. (6!:3) t. (<'worker';1) "0 [ 0.1#~('FreeBSD'-:UNAME){(30*N), 8
+pyx=: (6!:3) t. (<'worker';1) "0 [ 0.1#~chk{(30*N), 8
 1:&> pyx
 
 f=: 4 : 0
@@ -215,7 +217,7 @@ N = 1 T.''
 wthr N
 
 NB. AMV
-amv =. 16 T. 0  NB. AMV with value 0
+amv =: 16 T. 0  NB. AMV with value 0
 0 = 17 T. amv,<1
 1 = 17 T. amv,<2
 3 = 17 T. amv,<1  NB. Now set to 4
@@ -246,11 +248,11 @@ amv =. 16 T. 0  NB. AMV with value 0
 
 f =: {{ vec =. 0$0 for. i. y do. vec =. vec , 17 T. x,<1 end. vec }}  NB. x is amv, y is # times to reserve 1
 wthr N
-amv =. 16 T. 0  NB. AMV with value 0
+amv =: 16 T. 0  NB. AMV with value 0
 (i. 30000) -: /:~ ; amv f t. ''"0 ] 3 $ 10000
 f =: {{ vec =. 0$0  for. i. y do. exp =. 0 while. $exp do. exp =. 18 T. x,des;exp [ des =. >:exp end. vec =. vec,des end. vec }}  NB. x is amv, y is # times to reserve 1
 wthr N
-amv =. 16 T. 0  NB. AMV with value 0
+amv =: 16 T. 0  NB. AMV with value 0
 (>: i. 3000) -: /:~ ; amv f t. ''"0 ] 3 $ 1000
 
 'domain error' -: ". etx '0 t. ($0)'
@@ -267,7 +269,7 @@ amv =. 16 T. 0  NB. AMV with value 0
 'limit error' -: 2 T. etx 8
 'limit error' -: ". etx '] t. 8'
 
-4!:55 ;:'allowlongjobs amv delth N N1 N2 f f1 f2 g g1 sleep wthr'
+4!:55 ;:'allowlongjobs amv chk delth N N1 N2 f f1 f2 g g1 pyx sleep wthr'
 
 epilog''
 

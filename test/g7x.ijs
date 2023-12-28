@@ -13,7 +13,7 @@ space=:7!:2
 pr =: [             NB. for silent iteration
 NB. pr =: 1!:2&2    NB. to see each iteration
 
-chk=: ('FreeBSD'-:UNAME)
+chk=: (<UNAME) e. 'FreeBSD';'OpenBSD'
 
 f =: 3 : 0
  old=.sp ''

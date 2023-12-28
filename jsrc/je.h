@@ -1074,6 +1074,10 @@ extern I Bnum[][8*(2-SY_64)];
 #define I1mem (iotavec-IOTAVECBEGIN+1)  // 1 stored in memory
 extern struct Bd1 Bnumvr[];
 #define numvr(n) ((A)(Bnumvr+(n)))
+extern struct Bi1 Bnumi2[];
+#define numi2(n) ((A)(Bnumi2+(n)))
+extern struct Bi1 Bnumi4[];
+#define numi4(n) ((A)(Bnumi4+(n)))
 extern struct Bd1 Bonehalf;
 #define onehalf ((A)&Bonehalf)
 #define minus0 Bnumvr[0].v[0]  // float -0

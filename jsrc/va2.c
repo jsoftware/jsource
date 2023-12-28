@@ -1267,15 +1267,16 @@ DF2(jtresidue){F2PREFIP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARS
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
 #define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
-// We use the right type of singleton so that we engage AVX loops
-#define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
-#define SETCONPTR2(n) A conptr=num(n); A conptr3=numvr(n); conptr=AT(w)&FL?conptr3:conptr;   // used for 2, when the only options are INT/FL
-
+// We use the right type of singleton so that we engage AVX loops and avoid promotion of INT[124]
+#define SETCONPTR(n) A conptr=num(n); \
+  if(unlikely(!(AT(w)&B01+INT+FL))){A conptr2=numi2(n); conptr=AT(w)&INT2?conptr2:conptr; conptr2=numi4(n); conptr=AT(w)&INT4?conptr2:conptr;  \
+  }else{A conptr2; if(n<2){conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr;} conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;}
+// obsolete #define SETCONPTR2(n) A conptr=num(n); A conptr3=numvr(n); conptr=AT(w)&FL?conptr3:conptr;   // used for 2, when B01 is not an option
 F1(jtnot   ){ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):minus(conptr,w);}
 // negate moved to va1
 F1(jtdecrem){ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R minus(w,conptr);}
 F1(jtincrem){ARGCHK1(w); SETCONPTR(1) R plus(conptr,w);}
-F1(jtduble ){ARGCHK1(w); SETCONPTR2(2) R tymes(conptr,w);}
+F1(jtduble ){ARGCHK1(w); SETCONPTR(2) R tymes(conptr,w);}
 F1(jtsquare){ARGCHK1(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
 // recip moved to va1
 F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 

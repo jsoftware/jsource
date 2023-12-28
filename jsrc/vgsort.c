@@ -241,6 +241,7 @@ static SF(jtsortc){F1PREFJT;A z;B up;I i,ii,yv[256];UC*v,*wv;
 #endif
 }    /* w grade"1 w on boolean or character */
 
+#if 0
 static SF(jtsortc2){F1PREFJT;A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
  wv=USAV(w); p=65536; up=(~(I)jtinplace>>JTDESCENDX)&1;
@@ -256,6 +257,19 @@ static SF(jtsortc2){F1PREFJT;A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
    else  {k=(US)(p-1); DQ(256, j=k; DQ(256, DQ(yv[j], *v++=j;); yv[j]=0; j-=256;); --k;);}
  }}
  R z;
+#else
+static SF(jtsortc2){F1PREFJT;A z;B up;I i,yv[65536];US*v,*wv;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
+ wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+ I startfill=0; I sct=AT(w)&C2T?0:8;  // C2T is littleendian, 2 chars are bigendian
+ for(i=0;i<m;++i){
+  mvc(65536*SZI,yv,1,MEMSET00);
+  DQ(n, ++yv[*wv++];);
+  DO(65536, US ii=i^((up-1)&(65536-1)); ii=(ii<<sct)|(ii>>sct); mvc(yv[ii]*2,v+startfill,2,&ii); startfill+=yv[ii];)  // scaf could exit early when startfill goes to end
+ }
+ R z;
+
+#endif
 }    /* w grade"1 w on 2-byte character or unicode items */
 
 

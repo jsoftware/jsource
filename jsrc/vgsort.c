@@ -169,19 +169,23 @@ static SF(jtsortb){F1PREFJT;A z;B up,*u,*v;I i,s;
  R z;
 }    /* w grade"1 w on boolean */
 
-static SF(jtsortb2){F1PREFJT;A z;B up;I i,ii,j,p,yv[4];US*v,*wv,x,zz[4];
+static SF(jtsortb2){F1PREFJT;A z;B up;I i,ii,yv[4];US*v,*wv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
- wv=USAV(w); p=4; up=(~(I)jtinplace>>JTDESCENDX)&1;
- DO(p, yv[i]=0;); 
- zz[0]=BS00; zz[1]=BS01; zz[2]=BS10; zz[3]=BS11;
+ wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+// obsolete  zz[0]=BS00; zz[1]=BS01; zz[2]=BS10; zz[3]=BS11;
+ I startfill=0;
  for(i=0;i<m;++i){
+  mvc(sizeof(yv),yv,1,MEMSET00);
+// obsolete   DO(p, yv[i]=0;); 
   DQ(n, IND2(*wv++); ++yv[ii];);
-  if(up){j=0;   DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; ++j;);}
-  else  {j=p-1; DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; --j;);}
+  DO(4, ii=i^((up-1)&3); US b2=(ii+(ii<<9)); b2=(b2>>1)&0x0101; mvc(yv[ii]*2,v+startfill,2,&b2); startfill+=yv[ii];)
+// obsolete   if(up){j=0;   DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; ++j;);}
+// obsolete   else  {j=p-1; DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; --j;);}
  }
  R z;
 }    /* w grade"r w on 2-byte boolean items */
 
+#if 0  // obsolete
 static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,j,p,yv[16];UINT*v,*wv,x,zz[16];
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AV(z);
  wv=(UINT*)AV(w); p=16; up=(~(I)jtinplace>>JTDESCENDX)&1;
@@ -196,8 +200,22 @@ static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,j,p,yv[16];UINT*v,*wv,x,zz[16];
   else  {j=p-1; DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; --j;);}
  }
  R z;
+#else
+static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AV(z);
+ wv=(UINT*)AV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+ I startfill=0;
+ for(i=0;i<m;++i){
+  mvc(sizeof(yv),yv,1,MEMSET00);
+  DQ(n, IND4(*wv++); ++yv[ii];);
+  DO(16, ii=i^((up-1)&15); UINT b4=(ii+(ii<<9)); b4=(b4+(b4<<18)); b4=(b4>>3)&0x01010101; mvc(yv[ii]*4,v+startfill,4,&b4); startfill+=yv[ii];)
+ }
+ R z;
+
+#endif
 }    /* w grade"r w on 4-byte boolean items */
 
+#if 0   // obsolete 
 static SF(jtsortc){F1PREFJT;A z;B up;I i,p,yv[256];UC j,*wv,*v;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAV(z);
  wv=UAV(w); p=LIT&AT(w)?256:2; up=(~(I)jtinplace>>JTDESCENDX)&1;
@@ -208,6 +226,19 @@ static SF(jtsortc){F1PREFJT;A z;B up;I i,p,yv[256];UC j,*wv,*v;
   else  {j=(UC)(p-1); DQ(p, DQ(yv[j], *v++=j;); yv[j]=0; --j;);}
  }
  R z;
+#else
+static SF(jtsortc){F1PREFJT;A z;B up;I i,ii,yv[256];UC*v,*wv;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAV(z);
+ wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1; I p=LIT&AT(w)?256:2; 
+ I startfill=0;
+ for(i=0;i<m;++i){
+  mvc(p*SZI,yv,1,MEMSET00);
+  DQ(n, ++yv[*wv++];);
+  DO(p, ii=i^((up-1)&(p-1)); mvc(yv[ii],v+startfill,1,&ii); startfill+=yv[ii];)
+ }
+ R z;
+
+#endif
 }    /* w grade"1 w on boolean or character */
 
 static SF(jtsortc2){F1PREFJT;A y,z;B up;I i,p,*yv;US j,k,*wv,*v;

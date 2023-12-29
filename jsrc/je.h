@@ -691,7 +691,7 @@ extern D        jtbindd(J,D,D);
 extern B        jtbitwisecharamp(J,UC*,I,UC*,UC*);
 extern B        jtboxatop(J,A);
 extern B        jtcdinit(JS);
-extern A        jtcharmap(J,A,A,A);
+extern DF1(jtcharmap);
 extern B        jtchecksi(J);
 extern A        jtclonelocalsyms(J,A);
 extern A        jtclonevirtual(J,A);

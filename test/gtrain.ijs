@@ -111,6 +111,13 @@ g=: 4 : 'x e. , y'
 
 NB. N {~ N i. ]
 'cbacbb' -: ('bac' {~ 'ab' i. ]) 'cabcaa'
+'index error' -: ('ba' {~ 'abc' i. ]) etx 'cabcaa'
+'index error' -: ('ba' {~ 'ab' i. ]) etx 'cabcaa'
+c =: memu b =: 1e6 ((?@$ #) { ]) a.
+8000 > 7!:2 'b =: (''bac'' {~ ''ab'' i. ]) b'
+b -: ('bac' {~ 'ab' i. ]) c
+50000 < 7!:2 '(''bac'' {~ ''ab'' i. ]) c'
+
 
 NB. adverb adverb trains ------------------------------------------------
 

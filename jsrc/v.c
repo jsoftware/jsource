@@ -163,15 +163,20 @@ DF1(jticap){A a,e;I n;P*p;
  R likely((B01&AT(w))!=0) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }
 
-A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
+DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];  // scaf should inplace w
+ A x=FAV(FAV(self)->fgh[2])->fgh[0], y=FAV(self)->fgh[0];  // extract translation tables
  RZ(w&&x&&y);
  if(!(LIT&AT(w)))R from(indexof(x,w),y);
- wn=AN(w); n=MIN(AN(x),AN(y)); u=n+UAV(x); v=n+UAV(y);
- k=256; mvc(256,bb,1,MEMSET00); if(n<AN(y)) mvc(256,zz,1,iotavec-IOTAVECBEGIN+UAV(y)[n]);   // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
- DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each
- GATV(z,LIT,wn,AR(w),AS(w)); v=UAV(z); u=UAV(w);
- if(k&&n>=AN(y)){   // not all codes mapped AND #x>=#y, meaning index error possible on {
-  B ok=1;DQ(wn, c=*u++; ok&=bb[c]; *v++=zz[c];)if(!ok)R from(indexof(x,w),y);} // go through the { path to generate the right error message--don't bother trying to make this fast
- else if(!bitwisecharamp(zz,wn,u,v))DQ(wn, *v++=zz[*u++];);  // no index error possible, and special case not handled
+ I yn=AN(y); wn=AN(w); n=MIN(AN(x),yn); u=n+UAV(x); v=n+UAV(y);
+ k=256; mvc(256,bb,1,MEMSET00); if(n<yn) mvc(256,zz,1,iotavec-IOTAVECBEGIN+UAV(y)[n]);   // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
+ DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each.  Surplus chars of x ignored
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else{GATV(z,LIT,wn,AR(w),AS(w));} v=UAV(z); u=UAV(w);  // alloc block unless inplace and no possible error; point to input & output strings
+// obsolete  if(k&&n>=yn){   // not all codes mapped AND #x>=#y, meaning index error possible on {
+ if(unlikely(((k-1)|(n-yn))>=0)){   // NOT(all codes mapped OR #x<#y, meaning no error possible): index error possible on {
+  DQ(wn, if(!bb[*u++])R from(indexof(x,w),y);)} // Check for index error.  If error, abort through the { path to generate the right error message--don't bother trying to make this fast
+ DQ(wn, *v++=zz[*u++];)  // no index error, do the translate, possibly inplace
+  // Roger's code first checked to see if the translation exactly represented a bitwise op.  That seems like a lot of work for an unlikely case.  If the user wants a bitwise op, he can use
+  // m b. &.(a.&i.) where we catch the case
+// obsolete  if(!bitwisecharamp(zz,wn,u,v))
  RETF(z);
-}    /* y {~ x i. w */
+}    /* (y {~ x i. ]) w */

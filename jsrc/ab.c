@@ -192,7 +192,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
 /* http://www.jsoftware.com/jwiki/Essays/Bitwise_Functions_on_Characters */
 
 B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* ado;
- i=t[0]; j=t[255];
+ i=t[0]; j=t[255];  // by spot-checking a few spots, see if the table might represent AND, ], OR, XOR, NAND
  if     (i==0    ){c=j; ado=(AHDR2FN*)bw0001II;}
  else if(j==i    ){c=i; ado=(AHDR2FN*)bw0011II;}
  else if(j==255  ){c=i; ado=(AHDR2FN*)bw0111II;}
@@ -201,8 +201,8 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* a
  else if(i==255  ){c=j; ado=(AHDR2FN*)bw1011II;}
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
- ado((I)(256/SZI),(I)1,AV(ds(CALP)),pv,s,jt); if(memcmpne(s,t,256L))R 0;
- ado((n+SZI-1)>>LGSZI,(I)1,wv,pv,zv,jt); zv[n]=0;
+ ado((I)(256/SZI),(I)1,AV(ds(CALP)),pv,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
+ ado((n+SZI-1)>>LGSZI,(I)1,wv,pv,zv,jt); zv[n]=0;  // if we found the function, apply it wordwise
  R 1;
 }  // kludge this should be scrapped in favor of wordlong ops
 

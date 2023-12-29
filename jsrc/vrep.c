@@ -62,7 +62,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #if C_AVX2 || EMU_AVX2
  I exactlen;  // will be 1 if overstore is not allowed on copy
 #endif
- if(!ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
+ if(!ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
   GA00(z,AT(w),zn,AR(w)); MCISH(AS(z),AS(w),AR(w)) // allocate result

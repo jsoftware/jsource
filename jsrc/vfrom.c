@@ -570,7 +570,7 @@ DF2(jtfrom){A z;
     // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it will have
     // been made to appear inplaceable.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
     // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
-    if((SGNIF((I)jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
+    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
     I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=wt;   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
     // Here we transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
@@ -1826,7 +1826,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 F2(jtekupdate){F2PREFIP;
  ARGCHK2(a,w);
  // extract the inputs
- A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w),EVNONCE)
+ A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w),EVNONCE)
  ASSERT(AT(a)&BOX,EVDOMAIN) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==5,EVLENGTH)  // a is 5 boxes
  A box0=C(AAV(a)[0]), box1=C(AAV(a)[1]), box2=C(AAV(a)[2]), box3=C(AAV(a)[3]), box4=C(AAV(a)[4]);
  A prx=box0; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)<=1,EVRANK)  // prx is integer list or atom

@@ -791,7 +791,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  I t=AT(w);  // type of input
  offset<<=bplg(t);  // length of an atom of t
  I wf=AFLAG(w);  // flags in input
- I wip=SGNIF((I)jtip,JTINPLACEWX)&AC(w);   // sgn if w is abandoned
+ I wip=SGNIF(jtip,JTINPLACEWX)&AC(w);   // sgn if w is abandoned
  // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
  // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
  // We could check for zombieval etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes

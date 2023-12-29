@@ -270,7 +270,7 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
 // We interpret the input as integer form so that we can hide the item number in an infinity without turning it into a NaN
 static GF(jtgrdq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
- I sortdown63=SGNIF((I)jtinplace,JTDESCENDX)&IMIN;  // sign bit set if sorting down; other bits 0
+ I sortdown63=SGNIF(jtinplace,JTDESCENDX)&IMIN;  // sign bit set if sorting down; other bits 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
  unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
  // Loop over each grade
@@ -420,7 +420,7 @@ static GF(jtgru1){F1PREFJT;A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
 // grade INTs by hiding the item number in the value and sorting.  Requires ai==1.
 static GF(jtgriq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
- I gradedown=REPSGN(SGNIF((I)jtinplace,JTDESCENDX));  // ~0 if sorting down, else 0
+ I gradedown=REPSGN(SGNIF(jtinplace,JTDESCENDX));  // ~0 if sorting down, else 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
  unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
  I itemmsb=(I)1<<(BW-1-hbit); I itemsigmsk=2*-itemmsb;  // get bit at place we will shift into sign bit, and a mask for all higher bits

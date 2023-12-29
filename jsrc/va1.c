@@ -239,7 +239,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  // from here on is dense va1
  t=atype(cv);  // extract required type of input and result
  if(t&~wt){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
- if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w)); if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;}  // move 16-byte values to 16-byte bdy
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w)); if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;}  // move 16-byte values to 16-byte bdy
  if(!n){RETF(z);}
  I oprc = ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms, save result status.  If an error was signaled it will be reported here, but not necessarily vice versa
  if(!(oprc&(255&~EVNOCONV))){RETF(cv&VRI+VRD&&oprc!=EVNOCONV?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
@@ -311,7 +311,7 @@ DF2(jtdeadband){A zz;
   // revert if not the special case we handle: both args FL, not sparse, a is an atom, w is nonempty
  if(unlikely((((AT(a)|AT(w))&(NOUN+SPARSE))&(REPSGN(((I)AR(a)-1)&-n)))!=FL))R jtfolk2(jtinplace,a,w,self);
  // allocate the result area, inplacing w if possible
- if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w)){zz=w;}else{GATV(zz,FL,AN(w),AR(w),AS(w));}
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){zz=w;}else{GATV(zz,FL,AN(w),AR(w),AS(w));}
  // perform the operation
  D *x=DAV(w), *z=DAV(zz);  // input and output pointers
  AVXATOMLOOP(0,  // unroll loop

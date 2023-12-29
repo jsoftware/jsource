@@ -504,7 +504,8 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   if(f1==on1){flag2|=VF2RANKATOP1; f1=r==RMAX?on1cell:f1; f1=r==0?jton10:f1;}
   if(f2==on2){flag2|=VF2RANKATOP2; f2=r==RMAX?on2cell:f2; f2=r==0?on20:f2;}
   fdeffillall(z,flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype);
-  FAV(z)->localuse.lu1.linkvb=linktype; R z;
+// obsolete   FAV(z)->localuse.lu1.linkvb=linktype;
+  R z;
  default: ASSERTSYS(0,"amp");
  case NN: ASSERT(0,EVDOMAIN);
  }

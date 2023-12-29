@@ -40,7 +40,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  // Get input pointer
  fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(wt);  // note if w has gerunds, it is always boxed & doesn't go through here
@@ -318,7 +318,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 // structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only , and m&{ are recognized
 static DF1(jtsunder){F1PREFIP;PROLOG(777);
  I origacw=AC(w);  // preserve original inplaceability of y
- I negifipw=ASGNINPLACENEG(SGNIF((I)jtinplace,JTINPLACEWX),w);   // get inplaceability of y
+ I negifipw=ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w);   // get inplaceability of y
  A v=FAV(self)->fgh[1]; A vz; RZ(vz=(FAV(v)->valencefns[0])(jt,w,v));  // execute v y, not allowing inplaceing since we have to store back
  I negifip;  // inplaceability of final result
  if((negifip=negifipw&SGNIF(AFLAG(vz),AFVIRTUALX))<0){

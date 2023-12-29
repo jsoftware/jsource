@@ -269,7 +269,6 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
   case CVCASE(RATX, RATX ): BSLOOF(Q, Q, qcompare); break;
   default:
    // the combination was not handled.  Convert if necessary.  INT2,INT2 and INT4,INT4 come through here
-// obsolete    ASSERT(TYPESNE(at,wt),EVNONCE);
    if(TYPESNE(t,at))RZ(a=cvt(t,a));
    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
    switch(CTTZ(t)){

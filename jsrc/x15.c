@@ -731,28 +731,6 @@ static void convertup(void *pi,I n,C t,C sizes){
  case 4+0b1011: {float_complex*ps=(float_complex*)pi;D*pt=(D*)pi; DQ(n, pt[1+2*i]=(D)cimagf(ps[i]); pt[2*i]=(D)crealf(ps[i]););} break;
  }
 }
-#if 0  // obsolete 
- if(n)switch(t){
-  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[i];);} break;
-  case 'b': {BYTE*pt=(BYTE*)pi;               DO(n, pt[i]=(BYTE)pi[i];);} break;
-  case 's': {short*pt=(short*)pi;             DO(n, pt[i]=(short)pi[i];);} break;
-  case 'i': {int  *pt=(int  *)pi;             DO(n, pt[i]=(int)  pi[i];);} break;
-#ifdef _WIN32
-  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]);} break;
-#else
-  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[2*i]+_Complex_I*(float)pd[1+2*i];);} break;
-#endif
-}}   /* convert I in place to s or int and d to f and j to z */
-
-static void convertup(I*pi,I n,C t){I j=n;
- if(n)switch(t){
-  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DQ(n, --j; pd[j]=(D)pt[j];);} break;
-  case 'b': {BYTE*pt=(BYTE*)pi;               DQ(n, --j; pi[j]=(I)pt[j];);} break;
-  case 's': {short*pt=(short*)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
-  case 'i': {int  *pt=(int  *)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
-  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DQ(n, --j; pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]););} break;
-}}   /* convert s or int to I and f to d and z to j */
-#endif
 
 /* cache of 15!:0 parsed left arguments                                 */
 /*                                                                      */
@@ -925,7 +903,6 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
      /* J type from type letter */
 static C letttotypex[32]={['c'-'a']=LITX, ['w'-'a']=C2TX, ['u'-'a']=C4TX, ['j'-'a']=CMPXX, ['z'-'a']=CMPXX, ['d'-'a']=FLX, ['f'-'a']=FLX, ['s'-'a']=INT2X, ['i'-'a']=INT4X,
   ['b'-'a']=INTX, ['l'-'a']=SY_64?INTX:0, ['x'-'a']=INTX, ['n'-'a']=INTX, };
-// obsolete static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r=(c&(C)~('j'^'z'))=='j'?CMPX:r; r=(c&(C)~('d'^'f'))=='d'?FL:r; r=c=='s'?INT2:r; r=c=='i'?INT4:r; r=c==0?0:r; R r;}  // d/f and j/z differ by only 1 bit
 static I cdjtype(C c){I i=c-'a'; I x=letttotypex[i&0x1f]; I t=1LL<<x; x=i&-0x20?0:x; t=x==0?0:t; R t;} // fetch bit#, convert to onehot; clear to 0 if char out of range or fetched value 0
 
 /* See "Calling DLLs" chapter in J User Manual                  */
@@ -984,12 +961,8 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
  cc->fpreset  =0; NOUNROLL while(*s==' ')++s; if('%'==*s){cc->fpreset  =1; ++s;}
  /* result type declaration */
  NOUNROLL while(*s==' ')++s;   // skip to first char
-// obsolete  if(empty&&!*s){
-// obsolete   cc->zl=c='x'; cc->zt=cdjtype(c);  // use x if omitted and no args to call
-// obsolete  }else{
  CDASSERT(*s,DEDEC);   // result type is required
  cc->zl=c=*s++;  // fetch type char or *, save as result type
-// obsolete  }
  // verify that result is a valid type
 #define vresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'f')+CCM(w,'d')+CCM(w,'*')+CCM(w,'n')
  CCMWDS(vres) CCMCAND(vres,cand,c)  // see if zl is one of the allowed types
@@ -1013,11 +986,9 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
   if(' '==c)continue;
   ++i; der=DEDEC+256*(1+i);
   CDASSERT(i<NCDARGS,DECOUNT);
-// obsolete   cc->starlett[i].tletter=0; cc->starlett[i].star=0;
   cc->starlett[i].star=0; cc->starlett[i].lgsz=0x10; cc->starlett[i].jtype=0;  // no star, and 'no type given' and 'very big field' (in case of * bare)
   CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // if calltype is '1', 1st arg must be x or * with no letter
   if('*'==c||'&'==c){cc->starlett[i].star=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}  // indicate if * or &; advance to type if any, load it into c, and fall through to process it
-// obsolete   cc->starlett[i].tletter=c;
   CCMCAND(vargt,cand,c) CDASSERT(CCMTST(cand,c),der);  // vrgt defined above,list of valid arg bytes.  Verify validity, which narrows range to 'a'-'z'
   CDASSERT((c!='z'&&c!='j')||cc->starlett[i].star,der);  // j and z require *
   CDASSERT(SY_64||c!='l',der); c=c=='l'?'x':c;  // l is x, but error on 32-bit
@@ -1026,15 +997,12 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
   cc->starlett[i].jtype=(UI4)cdjtype(c);  // get the desired result type
   cc->starlett[i].type=((F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3))>>(2*(c-'a')))&3;  //0=char 1=int 2=fl 3=cmpx
   cc->starlett[i].lgsz=((F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3))>>(2*(c-'a')))&3;  // lg(atom len needed)
-// obsolete   cc->starlett[i].tletter=c;
 #define F1C(c) ((I)1<<(c-'a'))
 #define F1CN(c,n) ((I)(n)<<(c-'a'))
   cc->starlett[i].flags=((F1C('b')|F1C('s')|F1C('f')|F1C('i'))>>(c-'a'))&1;  // integer/float type that can be sourced from a LIT
 #ifdef C_CD_NODF // platform does not support f or d args
-// obsolete  CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].tletter!='f' && cc->starlett[i].tletter!='d'),der);
  CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].type!=2),der);
 #endif
-// obsolete    if(likely((cbit&(((I)1<<('b'-'a'))|((I)1<<('c'-'a'))|((I)1<<('w'-'a'))|((I)1<<('u'-'a'))|((I)1<<('s'-'a'))|((I)1<<('i'-'a'))|((I)1<<('x'-'a'))|((I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)<<('d'-'a'))))!=0)){
   cc->starlett[i].flags|=2*(((F1C('b')|F1C('c')|F1C('w')|F1C('u')|F1C('s')|F1C('i')|F1C('x')|F1CN('d',(I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)))>>(c-'a'))&1);
 
  }
@@ -1164,9 +1132,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
   per=DEPARM+i*256; I star=cc->starlett[i].star;
   I ctype=cc->starlett[i].type, clgsz=cc->starlett[i].lgsz, t=cc->starlett[i].jtype; I xlgsz=0;  // desired type 0123, desired size (high if no type, to suppress inplace conv), J type for non-in-place conversions (0 if type unknown)
-// obsolete  c=cc->starlett[i].tletter; t=cdjtype(c);
   // c is type in the call, t is the J type for that.  star is the *& qualifier
-// obsolete   I cbit=(I)1<<(c-'a');  // one-hot encoding of c
   I litsgn;  // will be neg if lit array that can be used as pointer
   I boxatomsgn;  // neg if boxed atom used as pointer
   if(likely(wt&BOX)){  // inputs are boxes, pointed to by wv
@@ -1175,7 +1141,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    CDASSERT((-xr&(star-1))>=0,per);         /* non-pointers must be scalars   !xr||star */
 // long way   lit=star&&xt&LIT&&(c=='b'||c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
    // litsgn means x is a LIT area whose address can be used as a source for numeric data
-// obsolete    litsgn=-star & SGNIF(xt,LITX) & -cc->starlett[i].litok & (((0x3040>>((c&7)<<1))&3&xn)-1);  // neg if lit   // LIT array can source short numerics, if integral # atoms
    litsgn=-star & SGNIF(xt,LITX) & SGNIF(cc->starlett[i].flags,0) & ((((1LL<<clgsz)-1)&xn)-1);   // LIT array can source short numerics, if integral # atoms.  Suppress converting it then
 // long way    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x!=0,per);}
    // perform non-in-place conversions.  These are conversions to larger atoms, or to different formats.
@@ -1226,17 +1191,12 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    // remember inplace-conversions (i. e. conversions to smaller precisions, which can be handled in place).  Conversions to larger precisions, or to other types, were handled above.
    // Here we see if a conversion will be needed and add it to the list of inplace conversions
    CDASSERT(ISDENSETYPE(xt,B01+LIT+C2T+C4T+INT+INT2+INT4+FL+CMPX),per);  // verify J type is DIRECT  scaf not needed, impossible
-// obsolete    if(unlikely((litsgn | ((cbit&(((I)1<<('b'-'a'))|((I)1<<('f'-'a'))|((I)1<<('s'-'a'))|((I)1<<('z'-'a'))|((I)SY_64<<('i'-'a'))))-1))>=0)){
    if(unlikely(xlgsz>clgsz)){  // x is bigger than needed (ignoring cases of LIT buffers)
-// obsolete    cipv[cipcount]=xv;              /* convert in place arguments */
-// obsolete    cipn[cipcount]=xn;
-// obsolete    cipt[cipcount]=c;
     cip[cipcount].v=xv; cip[cipcount].n=xn; cip[cipcount].t=ctype; cip[cipcount].cxlgsz=4*clgsz+xlgsz;   // save conversion info
     ++cipcount;
    }
   }else{  // boxed atom
    // coded to avoid switch, which mispredicts
-// obsolete    if(likely((cbit&(((I)1<<('b'-'a'))|((I)1<<('c'-'a'))|((I)1<<('w'-'a'))|((I)1<<('u'-'a'))|((I)1<<('s'-'a'))|((I)1<<('i'-'a'))|((I)1<<('x'-'a'))|((I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)<<('d'-'a'))))!=0)){
    if(likely(cc->starlett[i].flags&2)){  // the type is sign-extendable (short INT or INT-sized INT/FL)
     // integer.  Most singletons are integers.  d on SY_64 and no weird calling convention is handled like an 8-byte integer
     // general plan for integers is: fetch 8 bytes (overfetch OK); get length; sign-extend at that length; mask off if not sign-extended
@@ -1247,13 +1207,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     // len   0  0  1  2  1  2  3/2 3
     // sign  x  0  0  0  1  1  x   x
     I iwd=*xv;  // fetch 8 bytes, possibly overfetching
-// obsolete #if SY_64
-// obsolete     I lglen=(0x03640230 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0011 0000
-// obsolete #else
-// obsolete     I lglen=(0x02640200 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0000 0000
-// obsolete #endif
     I lglen=clgsz; I sxt=ctype==1?2:0;  // lg2(len of data in bytes)  2 if sign-extend required
-// obsolete     I sxt=(0x00080200 >>(c&0x1e))&2;   // 2 if sign-extend required   0000 00x0 0000 1000 0000 0010 00x0 x000
     I nsig=(I)1<<(lglen+3);  // # significant bits in iwd
     I sxtwd=(iwd<<(BW-nsig))>>(BW-nsig);  // install sign extend over ignored bits
     iwd&=~((sxt-2)<<(nsig-1));  // if not sign-extend, clear upper bits.  Can't shift by BW.  If nsig is 8, sxt=1 ANDs with ~0, sxt=0 ANDs with ~0xFF..FF00
@@ -1272,18 +1226,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #else
     *dv++=iwd;  // write extended result
 #endif
-// obsolete    switch(c) /(  // not a pointer.  Must be a data atom.  If fixed-point convert to I; if float convert to D
-// obsolete   case 'b': *dv++=(BYTE)*xv;break;
-// obsolete   case 'c': *dv++=*(C*)xv;  break;
-// obsolete   case 'w': *dv++=*(US*)xv; break;
-// obsolete   case 'u': *dv++=*(C4*)xv; break;
-// obsolete   case 's': *dv++=(S)*xv;   break;
-// obsolete   case 'i': *dv++=(int)*xv; break;
-// obsolete   case 'x': *dv++=*xv;      break;
-// obsolete   case 'f':
-// obsolete    }else if(likely((SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)&&c=='d')){  // double-precision arg with a weird calling sequence
    }else if(likely((SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)&&ctype==2&&clgsz==3)){  // double-precision arg with a weird calling sequence
-// obsolete    case 'd':
 #if SY_MACPPC
              dd[dcnt++]=*(D*)xv;
 #endif
@@ -1325,7 +1268,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
 #endif
 #endif
-// obsolete    }else if(likely(c=='f')){   // single-precision arg
    }else if(likely(ctype==2&&clgsz==2)){   // single-precision arg
 #if SY_MACPPC
           dd[dcnt++]=(float)*(D*)xv;
@@ -1425,7 +1367,6 @@ F2(jtcd){A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}  // if fast form, just allocate the return value
  // z is always nonrecursive
  if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){   // if w is NOT boxed, and a and w arenot both empty
-// obsolete   t=0; DQ(n, k=cdjtype(cc->starlett[i].tletter); t=MAX(t,k););
   t=0; DQ(n, k=cc->starlett[i].jtype; t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!ISDENSETYPE(wt,B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));  // if w sparse or not DIRECT, convert it

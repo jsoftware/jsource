@@ -152,7 +152,6 @@ static F1X(jtlbox){F1PREFIP;A p,*v,*vv,*wv,x,y;B b=0;I n;
 }    /* non-empty boxed array */
 
 A jtdinsert(J jt,A w,A ic,I ix){A l=sc4(INT,ix); R over(over(take(l,w),ic),drop(l,w));}   /* insert ic before position ix in w */
-// obsolete static A jtdcapp(J jt,A w,C c,A ap){R (memchr(CAV(w),c,AN(w)))?w:over(w,ap);}  /* conditionally append ap to w if it doesn't contain c */
 
 // Apply decoration as needed to a numeric character string w to give it the correct type t
 // We know the string is a generated number, so it doesn't contain suffixes in the middle of the string
@@ -172,7 +171,6 @@ A jtdecorate(J jt,A w,I t){
   C srch='x'; srch=t&RAT?'r':srch; srch=t&CMPX?'j':srch; srch=t&QP+SP?'f':srch;
   char *rep="x"; rep=t&RAT?"r1":rep; rep=t&CMPX?"j0":rep; rep=t&QP?"fq":rep; rep=t&SP?"fs":rep;
   if(!memchr(CAV(w),srch,AN(w)))w=over(w,cstr(rep));
-// obsolete   w=jtdcapp(jt, w,srch,); // if the character is not found, append the string
  }
  R w;
 }

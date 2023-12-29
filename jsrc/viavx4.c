@@ -114,11 +114,8 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  p=ac>1?asct:0; q=REPSGN(1-(wc|wsct)); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats p=*atoms of a to move between repeats
  zv=voidAV(z); u=voidAV(a); v=voidAV(w);
  // Create a pseudotype 19 (=XDX) for intolerant comparison.
-// obsolete   This puns on XDX-FLX==16
-// obsolete _Static_assert(XDX-FLX==16,"XD and FL must be aligned");
  I at=AT(a); at|=(at&C2T+C4T)>>(C2TX-INT2X); // shift C2T/C4T (17/18) down to INT2/INT4 (9/10)
  I bit=CTTZ(at); bit=(at&(jt->cct==1.0?FL:0))?XDX:bit;
-// obsolete  bit+=((AT(a)>>FLX)&(jt->cct==1.0))<<4;
  switch(IOSCCASE(bit,n>1,mode)){
   SCDO(B01X,C,x!=av[j]      );
   SCDO(LITX,C,x!=av[j]      );

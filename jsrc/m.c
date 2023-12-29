@@ -1538,7 +1538,6 @@ F1(jtca){A z;I t;P*wp,*zp;
    GA(z,t,n,AR(w),AS(w));
    AN(z)=AN(w);  // copy AN, which has its own meaning in FUNC
   }
-// obsolete   I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t);  // bp needed for non-noun
   I bpt=bp(t);  // bp needed for non-noun
   MC(AV(z),AV(w),(n*bpt)+(t&NAME?sizeof(NM):0));
  }
@@ -1563,7 +1562,6 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }  // see if 1000 bytes 
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
  m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1);
-// obsolete  t=AT(w); I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t); k=c*bpt;
  t=AT(w); I bpt=bp(t); k=c*bpt;
  GA00(z,t,2*AN(w)+(AN(w)?0:c),AR(w));  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy
@@ -1577,8 +1575,6 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
 
 A jtexta(J jt,I t,I r,I c,I m){A z;I m1; 
  GA00(z,t,m*c,r); 
-// obsolete  I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
-// obsolete  I k; if(likely(CTTZ(t)<=C4TX))k=bpnoun(t);else k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
  I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
  if(!((t&DIRECT)>0))mvc(k*AN(z),AV(z),1,MEMSET00);

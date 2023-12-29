@@ -596,42 +596,6 @@ INDB( i0eqC,C,C,ACNE)  INDB( i0neC,C,C,ACEQ)
 JNDB( j0eqC,C,C,ACNE)  JNDB( j0neC,C,C,ACEQ)
 SUMB(sumeqC,C,C,ACEQB)  SUMB(sumneC,C,C,ACNEB)
 
-#if 0  // obsolete
-
-static AF atcompC[]={   /* table for LIT vs. LIT */
-  i0eqC,  i0neC, 0L,0L,0L,0L,
-  j0eqC,  j0neC, 0L,0L,0L,0L,
- sumeqC, sumneC, 0L,0L,0L,0L,
-};
-
-INDF( i0eqUS,US,US,ANE)  INDF( i0neUS,US,US,AEQ)
-JNDF( j0eqUS,US,US,ANE)  JNDF( j0neUS,US,US,AEQ)
-SUMF(sumeqUS,US,US,AEQ)  SUMF(sumneUS,US,US,ANE)
-
-static AF atcompUS[]={   /* table for C2T vs. C2T */
-  i0eqUS,  i0neUS, 0L,0L,0L,0L,
-  j0eqUS,  j0neUS, 0L,0L,0L,0L,
- sumeqUS, sumneUS, 0L,0L,0L,0L,
-};
-
-INDF( i0eqC4,C4,C4,ANE)  INDF( i0neC4,C4,C4,AEQ)
-JNDF( j0eqC4,C4,C4,ANE)  JNDF( j0neC4,C4,C4,AEQ)
-SUMF(sumeqC4,C4,C4,AEQ)  SUMF(sumneC4,C4,C4,ANE)
-
-static AF atcompC4[]={   /* table for C4T vs. C4T */
-  i0eqC4,  i0neC4, 0L,0L,0L,0L,
-  j0eqC4,  j0neC4, 0L,0L,0L,0L,
- sumeqC4, sumneC4, 0L,0L,0L,0L,
-};
-
-
-static AF atcompSB[]={  /* table for SBT vs. SBT */
-  i0eqS, i0neS, i0ltS, i0leS, i0geS, i0gtS,
-  j0eqS, j0neS, j0ltS, j0leS, j0geS, j0gtS,
- sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS,
-};
-
-#endif
 INDF( i0eqS,SB,SB,ANE) INDF( i0neS,SB,SB,AEQ) 
 JNDF( j0eqS,SB,SB,ANE) JNDF( j0neS,SB,SB,AEQ) 
 SUMF(sumeqS,SB,SB,AEQ) SUMF(sumneS,SB,SB,ANE)
@@ -716,11 +680,6 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
    I tableno=(AT(a)&C2T+INT2+SBT?1:0)+(AT(a)&C4T+INT4+SBT?2:0);    // select table based on length: 1, 2, 4, symbol
    tableno=(UI)(AT(a)&C2T+C4T)>(UI)(comp-2)?0:tableno;   // if comparison is ordered (comp>1) and operands are character, it's illegal: we move multibyte chars to first line to return no function so that we fail eventually
    AF actrtn=atcomp124S[tableno][search][comp];  //  processing routine
-// obsolete #if !defined(__wasm__)
-// obsolete   R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);
-// obsolete #else
-// obsolete   R (AF)((((UI)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp])<<2)+postflags);
-// obsolete #endif
 #if !defined(__wasm__)
   R (AF)((I)actrtn+postflags);  // insert flags for return
 #else

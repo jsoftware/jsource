@@ -207,11 +207,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  F1PREFIP;ARGCHK1(w);
  wt=AT(w); n=AN(w);
  if(unlikely(!(wt&NUMERIC))){ASSERT(AN(w)==0,EVDOMAIN) wt=B01;}  // arg must be numeric.  If it is, keep its type even if empty; if not, fail unless empty, for which treat as boolean
-// obsolete #if SY_64
  VA1 *p=&u->p1[(0x76098054032100>>(CTTZ(wt)<<2))&0xf];  // convert numeric type to 4-bit fn#
-// obsolete #else
-// obsolete  VA1 *p=&u->p1[((wt&0xff?0x054032100:0x760000)>>((CTTZ(wt)&7)<<2))&0xf];    // convert numeric type to 4-bit fn#
-// obsolete #endif
 
  if(likely(!((I)jtinplace&JTRETRY))){
   ado=p->f; cv=p->cv;
@@ -274,7 +270,6 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   // we set the error code from the value given by the routine, except that if it involves a restart it must have been ceil/floor that we couldn't restart - that's a EWOV
   oprc=oprc<0?EWOV:oprc;
   if(oprc<=NEVM){RESETERR; jsignal(oprc);}else jt->jerr=(UC)oprc;  // if real error, set error text; otherwise save error code for analysis
-// obsolete   if(oprc>NEVM)RESETERR; jt->jerr=(UC)oprc;  // if this is going to retry, clear the old error text; but leave the error value
   R 0;
  }
 }
@@ -296,7 +291,6 @@ DF1(jtatomic1){A z;
   z=jtva1(jtinplace,w,self);  // execute the verb
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
-// obsolete   if(z||jt->jerr<=NEVM){RETF(z);}   // return if no error or error not retryable
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
  // There was an error. format it now
@@ -306,7 +300,6 @@ DF1(jtatomic1){A z;
 
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
 DF1(jtnegate){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R minus(conptr,w);}
-// obsolete DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(1) R divide(conptr,w);}
 DF1(jtrecip ){ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); A conptr=num(1); A conptr2=numvr(1); R divide(AT(w)&XNUM+RAT?conptr:conptr2,w);}
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,AT(w)&QP?pieE:pie,w,ds(CSTAR));}
 

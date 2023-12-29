@@ -331,8 +331,6 @@ do{
   // Install result frame by running user's routine.  zzs must be left pointing to the cell-shape
   ZZINSTALLFRAME(zzs)
   // Install the result shape.
-// obsolete   is = AS(z); NOUNROLL DQ(zzr, *zzs++=zzt|*is++;);
-// obsolete  zzt=zzt&SPARSE;
   MCISH(zzs,AS(z),zzr)    // copy result shape
   if(unlikely(zzt&SPARSE)){zzs[zzr-1]=SPARSE>>1;}  // If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
          // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zzs to make that happen.  Sparse cannot be an atom!

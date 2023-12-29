@@ -186,7 +186,6 @@ F2PREFIP;ARGCHK2(a,w);
    if(likely((AFLAG(w)|~optype)&BOX))realizeifvirtual(a)
    AFLAGPRISTNO(a)   // since a is incorporated, it can't be PRISTINE
    if(likely(AFLAG(w)&BOX)){raczap(a,aband!=0)}else{ACIPNO(a)} // INCORPNC+this=INCORPRA, but using zap when abandoned; mark a incorped
-// obsolete    a=HIPIFARTIF(a,AFLAG(w));
   }
   // a has the new value to add at the front of the list
   AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; AAV(w)[0]=a;  // install a at front, add to counts

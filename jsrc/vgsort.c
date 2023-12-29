@@ -172,35 +172,15 @@ static SF(jtsortb){F1PREFJT;A z;B up,*u,*v;I i,s;
 static SF(jtsortb2){F1PREFJT;A z;B up;I i,ii,yv[4];US*v,*wv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
  wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
-// obsolete  zz[0]=BS00; zz[1]=BS01; zz[2]=BS10; zz[3]=BS11;
  I startfill=0;
  for(i=0;i<m;++i){
   mvc(sizeof(yv),yv,1,MEMSET00);
-// obsolete   DO(p, yv[i]=0;); 
   DQ(n, IND2(*wv++); ++yv[ii];);
   DO(4, ii=i^((up-1)&3); US b2=(ii+(ii<<9)); b2=(b2>>1)&0x0101; mvc(yv[ii]*2,v+startfill,2,&b2); startfill+=yv[ii];)
-// obsolete   if(up){j=0;   DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; ++j;);}
-// obsolete   else  {j=p-1; DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; --j;);}
  }
  R z;
 }    /* w grade"r w on 2-byte boolean items */
 
-#if 0  // obsolete
-static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,j,p,yv[16];UINT*v,*wv,x,zz[16];
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AV(z);
- wv=(UINT*)AV(w); p=16; up=(~(I)jtinplace>>JTDESCENDX)&1;
- DO(p, yv[i]=0;); 
- zz[ 0]=B0000; zz[ 1]=B0001; zz[ 2]=B0010; zz[ 3]=B0011;
- zz[ 4]=B0100; zz[ 5]=B0101; zz[ 6]=B0110; zz[ 7]=B0111;
- zz[ 8]=B1000; zz[ 9]=B1001; zz[10]=B1010; zz[11]=B1011;
- zz[12]=B1100; zz[13]=B1101; zz[14]=B1110; zz[15]=B1111;
- for(i=0;i<m;++i){
-  DQ(n, IND4(*wv++); ++yv[ii];);
-  if(up){j=0;   DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; ++j;);}
-  else  {j=p-1; DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; --j;);}
- }
- R z;
-#else
 static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AV(z);
  wv=(UINT*)AV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
@@ -211,22 +191,8 @@ static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
   DO(16, ii=i^((up-1)&15); UINT b4=(ii+(ii<<9)); b4=(b4+(b4<<18)); b4=(b4>>3)&0x01010101; mvc(yv[ii]*4,v+startfill,4,&b4); startfill+=yv[ii];)
  }
  R z;
-
-#endif
 }    /* w grade"r w on 4-byte boolean items */
 
-#if 0   // obsolete 
-static SF(jtsortc){F1PREFJT;A z;B up;I i,p,yv[256];UC j,*wv,*v;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAV(z);
- wv=UAV(w); p=LIT&AT(w)?256:2; up=(~(I)jtinplace>>JTDESCENDX)&1;
- DO(p, yv[i]=0;);
- for(i=0;i<m;++i){
-  DQ(n, ++yv[*wv++];);
-  if(up){j=0;         DQ(p, DQ(yv[j], *v++=j;); yv[j]=0; ++j;);}
-  else  {j=(UC)(p-1); DQ(p, DQ(yv[j], *v++=j;); yv[j]=0; --j;);}
- }
- R z;
-#else
 static SF(jtsortc){F1PREFJT;A z;B up;I i,ii,yv[256];UC*v,*wv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAV(z);
  wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1; I p=LIT&AT(w)?256:2; 
@@ -237,27 +203,8 @@ static SF(jtsortc){F1PREFJT;A z;B up;I i,ii,yv[256];UC*v,*wv;
   DO(p, ii=i^((up-1)&(p-1)); mvc(yv[ii],v+startfill,1,&ii); startfill+=yv[ii];)
  }
  R z;
-
-#endif
 }    /* w grade"1 w on boolean or character */
 
-#if 0
-static SF(jtsortc2){F1PREFJT;A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
- wv=USAV(w); p=65536; up=(~(I)jtinplace>>JTDESCENDX)&1;
- GATV0(y,INT,p,1); yv=AV(y);
- DO(p, yv[i]=0;);
- for(i=0;i<m;++i){
-  DQ(n, ++yv[*wv++];);
-  if(C2T&AT(w)||!C_LE){
-   if(up){j=0;         DQ(p,                DQ(yv[j], *v++=j;); yv[j]=0;           ++j;);}
-   else  {j=(US)(p-1); DQ(p,                DQ(yv[j], *v++=j;); yv[j]=0;           --j;);}
-  }else{
-   if(up){k=0;         DQ(256, j=k; DQ(256, DQ(yv[j], *v++=j;); yv[j]=0; j+=256;); ++k;);}
-   else  {k=(US)(p-1); DQ(256, j=k; DQ(256, DQ(yv[j], *v++=j;); yv[j]=0; j-=256;); --k;);}
- }}
- R z;
-#else
 static SF(jtsortc2){F1PREFJT;A z;B up;I i,yv[65536];US*v,*wv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
  wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
@@ -268,8 +215,6 @@ static SF(jtsortc2){F1PREFJT;A z;B up;I i,yv[65536];US*v,*wv;
   DO(65536, US ii=i^((up-1)&(65536-1)); ii=(ii<<sct)|(ii>>sct); mvc(yv[ii]*2,v+startfill,2,&ii); startfill+=yv[ii];)  // scaf could exit early when startfill goes to end
  }
  R z;
-
-#endif
 }    /* w grade"1 w on 2-byte character or unicode items */
 
 
@@ -513,7 +458,6 @@ F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
    }else if(((d^2)+(t&INT2))==0){
     // 2-byte types (not INT2), which must be B01/LIT/C2T.  Use special code, unless strings too short
     if(t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long
-// obsolete     if(t&LIT+C2T&&n>4600)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long   TUNE
     else if(n>4600)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long   TUNE
    }else if(d<2){RZ(z=(t&B01&&(m==1||0==(n&(SZI-1)))?jtsortb:jtsortc)(jtinplace,m,n,w))  // Lists of B01/LIT
    }else if(d==4&&t&B01) RZ(z=sortb4(m,n,w))  // Booleans with cell-items 4 bytes long

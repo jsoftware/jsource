@@ -155,8 +155,6 @@ static FMTF(jtfmtE,E){UI i;
  if(!memcmpne(&v->hi,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
  if(!memcmpne(&v->hi,&infm,SZD)){strcpy(s,"__"); R;}
  if(_isnan(v->hi)          ){strcpy(s,"_."); R;}
-// obsolete x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
-// obsolete  x=*v; x.re=x.re==(-1)*0.0?0.0:x.re;  /* -0 to 0*/
  if(v->hi==0.){strcpy(s,"0" ); R;}
  C buf0[1+WZ],buf1[1+WZ]; struct fmtbuf r=fmtlong((struct fmtbuf){buf0,buf1,jt->ppn,0},*v);
  // copy result to output area
@@ -181,11 +179,6 @@ static FMTF(jtfmtE,E){UI i;
 static void thcase(I t,I*wd,FMTFUN *fmt){
  I w=WI; FMTFUN f=jtfmtI; w=t&INT2?WI2:w; f=t&INT2?jtfmtI2:f; w=t&INT4?WI4:w; f=t&INT4?jtfmtI4:f; w=t&CMPX+QP?WZ:w; f=t&CMPX?jtfmtZ:f;
       w=t&FL+SP?WD:w; f=t&FL+SP?jtfmtD:f; f=t&QP?jtfmtE:f;  *wd=w; *fmt=f;
-// obsolete  switch(CTTZ(t)){
-// obsolete   case FLX:   *wd=WD; *fmt=jtfmtD; break;
-// obsolete   case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
-// obsolete   default:   *wd=WI; *fmt=jtfmtI;
-// obsolete  }
 }
 
 // copy numeric string to error line or result buffer.  Values in w, n/s = len/addr of output buffer

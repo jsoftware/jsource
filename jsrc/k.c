@@ -137,7 +137,6 @@ static KF1(jtEfromI){
  E*y=yv; I*wv=IAV(w);
  DO(AN(w), I W=wv[i]; D h=W; D l=W-(I)h;  // high & low parts as D
     TWOSUMBS1(h,l,y->hi,y->lo) *y=CANONE1(y->hi,y->lo);   // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do.  convert to canonical form
-// obsolete     y->hi=h+l; y->lo=h-y->hi; y->lo+=l;
     ++y; );  // convert to canonical
  R 1;
 }
@@ -640,15 +639,6 @@ static KF1(jtIfromX){
   }
   *y++=(I)val;  // store the values
  )
-// obsolete   if (1==XSGN(W)) // w[i] is positive with only 1 limb
-// obsolete    if (IMAX<XLIMB0(W)) R 0; else *y++= XLIMB0(W);
-// obsolete   else if (-1==XSGN(W)) // w[i] is negative with only 1 limb
-// obsolete    if ((UI)IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
-// obsolete // -IMIN = IMIN for 2's complement
-// obsolete // if ((UI)-IMIN<XLIMB0(W)) R 0; else *y++= -XLIMB0(W);
-// obsolete   else if (0==XSGN(W)) *y++= 0; // w[i] is 0
-// obsolete   else R0; // w[i] is too big
-// obsolete  )
  R 1;
 }
 
@@ -872,10 +862,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
   }
  }
  // types here must both be among B01 INT FL CMPX XNUM RAT INT2 INT4 SP QP  0 2 3 4 6 7 9 10 12 13
-// obsolete  #define CVNUMTYPE(a) (((a)&INT1-1)+((a)&INT+FL+CMPX)+(((a)>>SPX-LITX)&(SP+QP>>SPX-LITX)))
 #define CVNUMTYPE(a) ((0xff98f76f54f321f0LL>>(CTTZ(a)<<2))&0xf)
-// obsolete  #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 8 9 ->2 5  01010001100
-// obsolete  #define CVCASE(a,b)     (CTTZ(CVNUMTYPE(a))*8+CTTZ(CVNUMTYPE(b)))   // 0 2 3 4 6 7 8 9 ->0 8 9 2 3 4 6 7 8 9
  #define CVCASE(a,b)     (CVNUMTYPE(a)*10+CVNUMTYPE(b))
  switch (CVCASE(t,wt)){  // to,from
  case CVCASE(INT, B01): R jtIfromB(jt, w, yv);

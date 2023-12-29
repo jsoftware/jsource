@@ -443,16 +443,6 @@ A jtcvz(J jt,I cv,A w){I t;
  R w;
 }    /* convert result */
 
-
-#if 0 // obsolete
-// Table converting operand types to slot numbers in a va[] entry
-// Employed when one arg is known to be CMPX/XNUM/RAT.  Indexed by
-// bitmask of RAT,CMPX,FL.  Entry 9=CMPX; otherwise entry 8=some FL, otherwise
-// entry 10 for XNUM, 11 for some RAT 
-// static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
-#define xnumpri 0x998B998AU   // we use shift to select 4-bit sections
-#endif
-
 #if 0 // for debug, to display info about a sparse block
 if(ISSPARSE(AT(a))){
 printf("va2a: shape="); A spt=a; DO(AR(spt), printf(" %d",AS(spt)[i]);) printf("\n");
@@ -1271,7 +1261,6 @@ DF2(jtresidue){F2PREFIP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARS
 #define SETCONPTR(n) A conptr=num(n); \
   if(unlikely(!(AT(w)&B01+INT+FL))){A conptr2=numi2(n); conptr=AT(w)&INT2?conptr2:conptr; conptr2=numi4(n); conptr=AT(w)&INT4?conptr2:conptr;  \
   }else{A conptr2; if(n<2){conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr;} conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;}
-// obsolete #define SETCONPTR2(n) A conptr=num(n); A conptr3=numvr(n); conptr=AT(w)&FL?conptr3:conptr;   // used for 2, when B01 is not an option
 F1(jtnot   ){ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):minus(conptr,w);}
 // negate moved to va1
 F1(jtdecrem){ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R minus(w,conptr);}
@@ -1316,24 +1305,17 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else if(!(t&(NOUN&~NUMERIC))) {
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
-// obsolete    I  prix=(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15; // routine index, FL/CMPX/XNUM/RAT   bits: RAT CMPX FL
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
-// obsolete    // Until we support short INTs, the smallest priority we can have here is XNUM
    //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10   priorities
    // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
-// obsolete    pri=(0x9e8d0ba0>>((pri&7)<<2))&0xf;  // convert max pri to routine# for handling it
    // 0 4 8 9 10 11   12 13 14 15 16 routine indexes for homogeneous args
    //   0 4 5  6  7    8  9 10 11 12 biased by 4, the smallest we use here
    // B I D Z  X  Q Symb DS  E I2 I4 
    pri=4+((0x5a4ff76f0cbfffffLL>>(pri<<2))&0xf);  // 4 is II, the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
-// obsolete    // Entries specify no input conversion in the (DD,DD) slot, if they can accept FL arguments directly.  But if we select the FL line in this path,
-// obsolete    // one input is FL and the other must be RAT or XNUM, 
-// obsolete    // we'd better specify an input conversion of VDD, unless the verb is one like +. or bitwise that forces conversion to integer/boolean
    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions  scaf would be nice to avoid conversion of left arg of o.
    cvtflgs=selva2.cv&(VBB|VII|VDD|VZZ)?0:cvtflgs;  //  If the routine already forces a conversion, don't override.  Most DD, SP, QP specify no conversion, but +. or bitwise require bool or integer 
    selva2.cv|=cvtflgs;
-// obsolete    if((prix==8)&&!(selva2.cv&(VBB|VII|VDD|VZZ))){selva2.cv = (selva2.cv&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
    R selva2;
   }else{
    // Normal case, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
@@ -1342,7 +1324,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
     // = or ~:, possibly inhomogeneous
     if(likely(HOMO(at,wt))){
      opcode=((at>>(C2TX-2))&0b1100)+((wt>>C2TX)&0b0011); opcode=at&SBT?0b1110:opcode; opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 1110 if symbol, 0011 if box.
-// obsolete |(3*(5&(((t>>(SBTX-(BOXX+2)))+t)>>BOXX)));
     }else opcode=15;  // inhomogeneous line
     retva2.f=eqnetbl[(UC)FAV(self)->id&1][opcode];  // return the comparison
     R retva2;

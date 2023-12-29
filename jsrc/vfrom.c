@@ -570,7 +570,6 @@ DF2(jtfrom){A z;
     // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it will have
     // been made to appear inplaceable.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
     // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
-// obsolete     if((SGNIF((I)jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
     if((SGNIF((I)jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
     I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=wt;   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
@@ -869,7 +868,6 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
    ppp->frowsq=frowm1*frowm1;
    ppp->colx=colxm1;  // save col# before we flag it
    D cutoffsumsq=sharedmin*sharedminslack*ppp->frowsq;   // Frow^2 * best sumsq / best Frow^2, which is cutoff point for sumsq in new column (Frow^2)/sumsq > bestFrow^2/bestsumsq)
-// obsolete     cutrowm1=zv&ZVPIPEm1?cutrowm1:nqkrows;  // process an invalid col like a finished col
    if(cutrowm1!=0){
     // we have partial results for the column.  Install them into ppp.  If they are enough to avoid processing the column, set the column number invalid (-1) which will prevent
     // us from wasting time fetching the column; we will skip it when it reaches the end of the pipe.  The sharedmin was read at the beginning of the column that just finished
@@ -954,8 +952,6 @@ endpipem2: ;  // come here in runout where pipe input is invalid
    zv+=ZVNDAXINCR+ZVCOLCTDECR;  // advance colx index, decr valid col count, whose MSB is ZVCOLCTVALID, input to the pipe
    // end pipe input stage
 
-// obsolete    if(unlikely(!(zv&(ZVPIPE0|ZVPIPEm1)))){currcolproxy=__atomic_load_n(&ctx->nextresv,__ATOMIC_ACQUIRE);}  // before last column, refresh col# for next reservation.  Pipe is empty after advance
-// obsolete       // we could avoid the bus cycle if we know that our resv goes to the last column; but in that case normally we will own nextresv & this is short anyway
   }while(!(zv&ZVPIPE1));  // loop till there is a full column's info to process
   // the pipe status after the advance indicates validity AFTER the next execution of a column; that is, PIPE0 is set if we
   // have started the loads in -1 that will advance to 0 during the next execution.  PIPE1 is set if ppp is ready to execute right now, i. e. PIPE0 was set before the pipe advanced.  We wait until we can execute right now.
@@ -1168,10 +1164,8 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
 #undef YCU
 #undef YCUT
  // perform the operation
-// obsolete  I colx=ndx0[0];  // get next column# to work on  scaf pass in directly
  I ndotprods=0;  // number of dot-products we perform here
  I frowbatchx;  // rowx of batch containing Fk, if any
-// obsolete  D sharedmin;  // minimum value fetched from other threads
  I qkstride=qktrowstride*nqkbcols;  // distance between planes of Qk
  __m256i bndmskshift=_mm256_set_epi64x(0,16,32,48);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
  __m256d store0thresh=_mm256_set1_pd(parms[3]);  // In one-column mode, this holds the Store0Threshold: column values less than this are set to 0 when written out
@@ -1751,7 +1745,6 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
      __m256d magqh=qkvh;   // save high part of one addend
      if(!(dpflag&16)){ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);}  // accumulate middle pps - can skip for b0 when both mpcands are dp
-// obsolete      iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
      // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
      qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow+qksizesq,prn0x,endmask,SZI);  // gather the low parts of Qk
      // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
@@ -1801,7 +1794,6 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
     __m256d magqh;   // will hold combined relative+absolute zero tolerance
     ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);  // accumulate middle pps - can skip for b0 when both mpcands are dp
-// obsolete     iph=_mm256_xor_pd(sgnbit,iph); ipl=_mm256_xor_pd(sgnbit,ipl);  // change sign for subtract
     // Because we added 3 low-order values (with the same shift), we are limiting precision to 104 bits
     // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
     // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient

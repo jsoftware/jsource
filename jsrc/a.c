@@ -83,8 +83,6 @@ F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
  }
 }
 
-#if 0
-
 /* The h parameter in self for u M.                 */
 /* 3 element boxed list                             */
 /* 0 - integer atom of # of entries in hash table   */
@@ -94,7 +92,6 @@ F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
 /*     column 0 is IMIN for monad                   */
 /* 2 - box list of results corresp. to arguments    */
 /*     unused entries are set to 0                  */
-#endif
 
 #if SY_64
 #define INITHASH(tbl,x,y) ((((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UI)AN(tbl))>>32)  // starting hash index for a given x,y

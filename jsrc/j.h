@@ -1849,10 +1849,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 
 
 // bp(type) returns the number of bytes in an atom of the type - not used for sparse args
-// obsolete #define bp(i) (typesizes[CTTZ(i)+(REPSGN(i)&8)])  // the 8 is for sparse args
 // bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
 #if BW==64
-// obsolete #define bplg(i) (((I)0x008bb6db408dc6c0>>3*CTTZ(i))&(I)7)  // 010 001 011   101 101 101 101 101 101 000 000   100 011 011 100 011 011 000 000 = 0 1000 1011 1011 0110 1101 1011   0100 0000 1000 1101 1100 0110 1100 0000
 #define bplg(i) (((I)0x08b0222888dc6c0>>3*CTTZ(i))&(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
 // bpnonnoun is like 1<<bplg but we know that the value is not a noun
 #define bpnonnoun(i) ((((RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+(INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+(INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+(LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+(CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
@@ -1872,20 +1870,16 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // static const UC prioritytype[] = {  // Convert priority to type bit
 // B01X, LITX, C2TX, C4TX, INT1X, INT2X, INT4X, INTX, BOXX, XNUMX, RATX, HPX, SPX, FLX, QPX, CMPXX, SBTX};
 #if SY_64
-// obsolete #define PRIORITYTYPE(p) (((((((((((((((((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)<<5)+BOXX)<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
 #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(((((((((((((((((((((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))
 #else
-// obsolete #define PRIORITYTYPE(p) (((p)>=6?(((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)>>(((p)-6)*5):(((((((((((I)BOXX<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
 #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):((p)>=8?(((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)>>(((p)-8)*4):(((((((((((((((I)INTX<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf)
 #endif
 // Conversion from type to priority
 //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10
 // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
 #if SY_64
-// obsolete #define TYPEPRIORITY(t) (((((t)&0xffff)?0x5a941000765a9410:0x328)>>((CTTZ(t)&0xf)*4))&0xf)
 #define TYPEPRIORITYNUM(t) (0x00ecb654a98fd710>>(CTTZ(t)*4)&0xf)
 #else
-// obsolete #define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
 #define TYPEPRIORITYNUM(t) (((((t)&0xff)?0xa98fd710:0x00ecb654)>>((CTTZ(t)&0x7)*4))&0xf)
 #endif
 #define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):TYPEPRIORITYNUM(t))
@@ -2146,9 +2140,6 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define TWOSUMBS1(inbig,insmall,outhi,outlo) outhi=inbig+insmall; outlo=inbig-outhi; outlo=outlo+insmall; //  outhi cannot be an input; outlo can be the same as inbig
 #define DPADD1(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;
 #define TWOPRODE1(ein0,ein1) ({D dh0,dh1,dl0,dl1; E t0,t1,t2; TWOPROD1(ein0.hi,ein1.hi,dh0,dl0) dl0+=ein0.hi*ein1.lo; dl0+=ein0.lo*ein1.hi; TWOSUMBS1(dh0,dl0,dh1,dl1) CANONE1(dh1,dl1) })  // return E product
-// obsolete    // convert to canonical form: high & low have same signs.  Result is E type
-// obsolete    // We calculate 1 ULP (with the same sign as the value) in the larger part and transfer that from the larger to the smaller if the signs differ
-// obsolete #define CANONE1(h,l) ({I iulp=*(I*)&h&0xfff0000000000000&REPSGN(*(I*)&h^*(I*)&l); D ulp=*(D*)&iulp*1.110223024625157e_16; (E){h-ulp,l+ulp}; })
 // convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<=lo<1/2ULP (with only same-sign allowed if abs=0, opposite if abs=1/2ULP)
 #define CANONE1(h,l) ({if(unlikely((*(IL*)&l&0x000fffffffffffff)==0)){if(l==0)*(IL*)&l=*(IL*)&h&0x8000000000000000; else if(((*(IL*)&h&~0x000fffffffffffff)-0x0350000000000000)==*(IL*)&l){h+=2*l; l=-l;}} (E){.hi=h,.lo=l}; })
 

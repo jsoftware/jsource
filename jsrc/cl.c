@@ -29,8 +29,9 @@ static A jtlev2(J jt,A a,A w,A self){
  // There may be a structure in the user's data that could be detected for branch prediction.
 }
 
-//  convert negative level to level relative to bottom of h.  j is 0 for monad, 1/2 for dyad
-static I jtefflev(J jt,I j,A h,A x){I n,t; n=AV(h)[j]; R n>=0?n:(t=level(jt,x),MAX(0,n+t));}
+//  convert negative level to level relative to bottom of h.  n is specified level
+static I jtefflev(J jt,I n,A x){I t; R n>=0?n:(t=level(jt,x),MAX(0,n+t));}
+// obsolete  n=AV(h)[j]
 
 // execution of u L: n y.  Create the self to send to the recursion routine
 // L: and S: will be rarely used on pristine blocks, which be definition have all DIRECT contents & would thus be
@@ -42,7 +43,8 @@ static DF1(jtlcapco1){A z;V*v=FAV(self);    // scaf should make bivalent
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[0]=jtlev1;  // fill in function pointer
- AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
+// obsolete  AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
+ AT(recurself)=efflev(FAV(self)->localuse.lu1.levelmonad,w);  // fill in the trigger level
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  RETF(lev1(w,recurself));
 }
@@ -53,7 +55,8 @@ static DF2(jtlcapco2){A z;V*v=FAV(self);
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlev2;  // fill in function pointer
- AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
+// obsolete  AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
+ AT(recurself)=efflev(FAV(self)->localuse.lu0.leveldyad[0],a); ACFAUX(recurself,efflev(FAV(self)->localuse.lu0.leveldyad[1],w))  // fill in the trigger levels
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  RETF(lev2(a,w,recurself));
 }
@@ -95,7 +98,8 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);  // scaf should com
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[0]=jtlevs1;  // fill in function pointer
- AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
+// obsolete  AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
+ AT(recurself)=efflev(FAV(self)->localuse.lu1.levelmonad,w);  // fill in the trigger level
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
@@ -117,7 +121,8 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlevs2;  // fill in function pointer
- AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
+// obsolete  AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
+ AT(recurself)=efflev(FAV(self)->localuse.lu0.leveldyad[0],a); ACFAUX(recurself,efflev(FAV(self)->localuse.lu0.leveldyad[1],w))  // fill in the trigger levels
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
@@ -137,12 +142,18 @@ static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
  ARGCHK2(a,w);
  ASSERT((SGNIF(AT(a),VERBX)&-(AT(w)&NOUN))<0,EVDOMAIN);
  n=AN(w); 
- ASSERT(1>=AR(w),EVRANK);
- ASSERT(BETWEENO(n,1,4),EVLENGTH);
- RZ(t=vib(w)); v=AV(t);
- GAT0(h,INT,3,1); hv=AV(h);  // save levels in h scaf should use private fields in verb
- hv[0]=v[2==n]; hv[1]=v[3==n]; hv[2]=v[n-1];  // monad, left, right
- R fdef(0,id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
+ ASSERT(1>=AR(w),EVRANK);  // atom or list
+ ASSERT(BETWEENO(n,1,4),EVLENGTH);  // 1-3 items
+ RZ(t=vib(w)); v=AV(t);  // must be integral.  Overwhemlingly, boolean atom
+// obsolete  GAT0(h,INT,3,1); hv=AV(h);  // save levels in h scaf should use private fields in verb
+// obsolete  hv[0]=v[2==n]; hv[1]=v[3==n]; hv[2]=v[n-1];  // monad, left, right
+// obsolete  R fdef(0,id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
+ I4 d0=v[3==n]; d0=d0!=v[3==n]?0x7fffffff+SGNTO0(v[3==n]):d0;  // left dyad; if there is upper significance, use I4 IMIN/IMAX
+ I4 d1=v[n-1]; d1=d1!=v[n-1]?0x7fffffff+SGNTO0(v[n-1]):d1;  // right dyad; if there is upper significance, use I4 IMIN/IMAX
+ I4 m=v[2==n]; m=m!=v[2==n]?0x7fffffff+SGNTO0(v[2==n]):m;  // monad; if there is upper significance, use I4 IMIN/IMAX
+ A z; fdefallo(z); fdeffillall(z,0,id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,0, VFLAGNONE, RMAX,RMAX,RMAX,fffv->localuse.lu0.leveldyad[0]=d0;fffv->localuse.lu0.leveldyad[1]=d1,fffv->localuse.lu1.levelmonad=m);
+ R z;
+
 }
 
 F2(jtlcapco){F2PREFIP;R lsub(CLCAPCO,a,w);}

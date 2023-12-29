@@ -1048,15 +1048,16 @@ typedef struct {
  union {
   // start with the larger localuse, which requires a second cacheline.  This is 16 bytes, the first 8 of which are in the excess (first) cacheline
   struct {AF func; I parm;} boxcut0;  // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, .parm is ~0 for first, 0 for second, and .func points to failover routine (seldom used).  func in first cacheline
-  // the rest do not require both cachelines in 64-bit
   struct {
    union {
     I filler;  // pad to cacheline
     A cachedloc;   //  for namerefs ('name'~), the locale address if the name is a direct named lookup (after the first reference)
     A gerundself;  // in gerund iterators, the address of the self block for m@.v, for diagnostic purposes
     AF modatomfn;  // in u m. n, the verb to process atoms of u
+    I4 leveldyad[2];  // dyad levels in [LS]: m
    } lu0;
    // end of first cacheline, which is not used much during execution
+   // the rest do not require both cachelines in 64-bit
    union {  // 8 bytes in the second (main) cacheline.  Aligned to 8-byte bdy even on 32-bit system
     D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e. i. ([-.-.)]&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
     struct {
@@ -1074,6 +1075,7 @@ typedef struct {
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
+    I4 levelmonad;  // monad level in [LS]: m
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

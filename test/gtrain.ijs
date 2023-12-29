@@ -109,6 +109,8 @@ g=: 4 : 'x e. , y'
 (adot2{~?2 3$#adot2) (f -: g) adot2{~?10 10 10$#adot2
 (?2 3$9)       (f -: g) adot2{~?10 10 10$#adot2
 
+NB. N {~ N i. ]
+'cbacbb' -: ('bac' {~ 'ab' i. ]) 'cabcaa'
 
 NB. adverb adverb trains ------------------------------------------------
 

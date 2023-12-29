@@ -974,7 +974,7 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
  if(c=='*'){
   cc->zt=INT;  // '*' overrides to INT type
   if(*s){CCMCAND(vargt,cand,*s) s+=SGNTO0(CCMSGN(cand,*s));} // if *s is valid, skip over it
- }else{cc->zt=cdjtype(c);}  // not *, decode type letter
+ }else{I rt=cdjtype(c); rt=rt&INT1+INT2+INT4?INT:rt; cc->zt=rt;}  // not *, decode type letter.  For compatibility, don't allow result type INT[124], push them to INT
  CDASSERT((*s&~' ')==0,DEDEC);  // we should have skipped over type to reach 0 or SP   * at end is treated as valid?
 #ifdef C_CD_NODF // platform does not support f result
  CDASSERT(cc->zl!='f',DEDEC)

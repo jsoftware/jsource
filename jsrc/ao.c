@@ -529,7 +529,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // wperm pristine so it can be used, but it's pristine only is w is zombie.  We sacrifice pristinity to inplaceability
  // the AM field of wperm is destroyed but that's OK because it never becomes a result
  I wprist=AFLAG(w)&AFPRISTINE;
- I wpprist=wprist&REPSGN(AC(w)&SGNIF((I)jtinplace,JTINPLACEWX));  // original pristinity of wperm
+ I wpprist=wprist&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX));  // original pristinity of wperm
  AFLAGINIT(wperm,AFLAG(wperm)|wpprist)
  // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);

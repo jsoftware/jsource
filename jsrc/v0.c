@@ -330,7 +330,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  b=b?3:b;  // now b=3 means BOX i. e. mplr/roots form
  if(likely(((j-1)&SGNIFDENSE(t)&-(t&FL+CMPX))<0)){  // j==0 (=no inf) & not sparse and FL/CMPX
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
   if(n==0){RETF(za);}  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
   b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2

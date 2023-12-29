@@ -277,7 +277,7 @@ void vvsortqs4ao(I4 *z,I4 *w,I n){ memcpy(z,w,4*n); vvsortqs4ai(z,n); }
 
 // JTDESCEND set in jt
 static SF(jtsortiq){F1PREFIP;  // m=#sorts, n=#items in each sort, w is block
- A z;I inplace=ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w); //inplace sort?
+ A z;I inplace=ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w); //inplace sort?
  if(inplace)z=w;
  else GA(z,AT(w),AN(w),AR(w),AS(w));
  I *zv=IAV(z),*wv=IAV(w);
@@ -325,7 +325,7 @@ static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
 #endif
  // allocate area for the data, and result area
  GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;  // yv->totals area
- if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
  zv=AV(z);
  // clear all totals to 0, then bias address of area so the data fits
  for(i=0;i<m;++i){  // for each list...
@@ -396,7 +396,7 @@ static SF(jtsortu1){F1PREFJT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 
 static SF(jtsortdq){F1PREFIP;  // m=#sorts, n=#items in each sort, w is block
  A z; 
- if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
  D *zv=DAV(z); DQ(m, sortdq1(zv,n); if((I)jtinplace&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
  RETF(z);
 }

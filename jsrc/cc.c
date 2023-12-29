@@ -900,7 +900,7 @@ skipspecial:;
    // Set the offset to the first data
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
    // Make virtw inplaceable if w is.  If &.>, we could perhaps inplace always except if ]&.>
-   state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+   state |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags

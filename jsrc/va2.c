@@ -598,7 +598,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
-    n^=REPSGN((1-n)&SGNIF((I)jtinplace,VIPWCRLONGX));  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
+    n^=REPSGN((1-n)&SGNIF(jtinplace,VIPWCRLONGX));  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
 #ifdef PEXT
     nf=((I)jtinplace>>VIPOKWX)&PEXT(allranks,(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)));  // extract inplaceability from ranks   allranks free
 #else
@@ -621,7 +621,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     // 3: m=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 0 (shape 5)
     if(unlikely(((nf==1)+(n==1)+(m==1))>1)){  // 2 values=1, can lose a loop
      // migration is possible
-     n=(n*nf)^REPSGN(SGNIF((I)jtinplace,VIPWFLONGX)&(1-nf)); m*=mf;   // propagate mf and nf down; if n is not 1, complement if af<wf
+     n=(n*nf)^REPSGN(SGNIF(jtinplace,VIPWFLONGX)&(1-nf)); m*=mf;   // propagate mf and nf down; if n is not 1, complement if af<wf
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      DPMULDE(zn,mf,zn)  // total # atoms in result
      mf=1;  // no outer loops.  nf immaterial.  zk does not need to change since it will not be used
@@ -687,8 +687,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
   // The ordering here assumes that jtinplace will usually be set
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w)){z=w; I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; if(unlikely(TYPESNE(wt,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-  }else if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEAX),a)){z=a; I at=AT(a), zt=rtype((I)jtinplace); zt=zt?zt:at; if(unlikely(TYPESNE(at,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; if(unlikely(TYPESNE(wt,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+  }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I at=AT(a), zt=rtype((I)jtinplace); zt=zt?zt:at; if(unlikely(TYPESNE(at,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
   }else{

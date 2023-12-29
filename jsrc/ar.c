@@ -872,7 +872,7 @@ A jtredcatcell(J jt,A w,I r){A z;
  F1PREFIP;ARGCHK1(w);
  I wr=AR(w);  // get original rank, which may change if we inplace into the same block
  if(r>=wr-1)R RETARG(w);  // if only 1 axis left to run together, return the input
- if((ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
+ if((ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
   // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
   // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
   // the number of atoms

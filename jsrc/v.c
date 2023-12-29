@@ -22,7 +22,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  if(likely(!ISSPARSE(AT(w)))){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
   CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
    // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
    // the number of atoms
@@ -129,7 +129,7 @@ DF1(jtnum1){F1PREFIP;A z=0;
  I k=bplg(AT(a));  // lg2 of size of atoms moved
  if(rank==0){
   natoms=AN(w);  // result has same # atoms as input
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&-(AT(w)&B01+INT+FL)&~((AT(w)&B01+INT+FL)-(AT(a)&B01+INT+FL)),w)){  // inplaceable, and direct numeric and type of a is not bigger than that of w
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&-(AT(w)&B01+INT+FL)&~((AT(w)&B01+INT+FL)-(AT(a)&B01+INT+FL)),w)){  // inplaceable, and direct numeric and type of a is not bigger than that of w
    // inplace: we will cast the atom of a to the (never smaller) size of w.  This is OK because a is never a bigger type
    // 0 can be used for any w; boolean 1 can be used as is for boolean/INT w; other values must be converted in FL.  So, if result is FL, nonzero values must be converted
    if((AT(w)>>FLX)&(IAV0(a)[0]!=0))RZ(a=cvt(FL,a));  // make value conform to existing type

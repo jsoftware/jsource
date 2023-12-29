@@ -6,13 +6,25 @@
 #include "j.h"
 
 
-// execution of L:n .  self is suitable to pass to every, i. e. describes the u L: v node and has valencefns[0] pointing to here.  It is on the C stack.
+
+// Result logger for S:   w is the result; we add it (boxed) to AK(self), reallocating as needed
+// result is 0 for error or a harmless small result (0) which will be collected at higher levels and discarded
+static DF1(jtscfn){
+ ARGCHK1(w);
+ if(AS(AKASA(self))[0]==AN(AKASA(self))){I n=AN(AKASA(self)); RZ(AKASA(self)=ext(1,AKASA(self))); AS(AKASA(self))[0]=n;}  // if current buffer is full, reallocate.  ext resets AS
+ AAV(AKASA(self))[AS(AKASA(self))[0]++]=incorp(w);  // copy in new result pointer
+ R mtv;  // harmless good return, with no atoms to save copying in every
+}
+
+
+// execution of L:n/S:n .  self is suitable to pass to every, i. e. describes the u L: v node and has valencefns[0] pointing to here.  It is on the C stack.
+// id in self distinguishes L: from S: 
 // AT(self) is the trigger level (the original n)
 // AM(self) is the block for u
 static DF1(jtlev1){
  ARGCHK1(w);  // self is never 0
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[0];  // fetch verb and routine for leaf nodes.  Do it early
- if(levelle(jt,w,AT(self))){R CALL1(fsf,w,fs);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack  scaf if inplaceable, could have a version of every that replaces boxes in place
+ if(levelle(jt,w,AT(self))){A z; RZ(z=CALL1(fsf,w,fs)); if(!FAV(self)->flag&VFISSCO)RETF(z); R scfn(z,self);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack  scaf if inplaceable, could have a version of every that replaces boxes in place
 }
 
 // Like monad, but AT(self) is left trigger level, AC(self) is the right trigger level 
@@ -21,10 +33,20 @@ static A jtlev2(J jt,A a,A w,A self){
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[1];  // fetch verb and routine for leaf nodes.  Do it early
  I aready=levelle(jt,a,AT(self)); I wready=levelle(jt,w,AC(self));  // see if args are at the needed level
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,
- // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
- // be achieved by altering the left/right levels, but Roger did it this way.
- if(aready&wready){R CALL2(fsf,a,w,fs);
- }else{STACKCHKOFL R every2(aready?box(a):a,wready?box(w):w,self);}  // since this recurs, check stack
+ // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  To avoid 
+ if(aready&wready){A z; RZ(z=CALL2(fsf,a,w,fs)); if(!FAV(self)->flag&VFISSCO)RETF(z); R scfn(z,self);  // call fn; if L: use the result; if S: call the logger
+ }else{
+  STACKCHKOFL  // since this recurs, check stack
+  // if an argument is at level, we will box it to protect it through the recursion.  Since the only thing that will be done with this
+  // box is immediate opening, we do it in place with a faux block to avoid repeatedly allocating single boxes
+  fauxblockINT(bfaux,1,0);  // atomic box location
+  if(aready|wready){  // exactly one arg is ready
+   A bx;
+   fauxBOX(bx,bfaux,1,0) AAV0(bx)[0]=aready?a:w; a=aready?bx:a; w=aready?w:bx;  // box the ready arg and change its pointer
+  }
+// obsolete   R every2(aready?box(a):a,wready?box(w):w,self);}
+  R every2(a,w,self);
+ }
  // We do this with the if statement rather than a computed branch in the hope that the CPU can detect patterns in the conditions.
  // There may be a structure in the user's data that could be detected for branch prediction.
 }
@@ -45,7 +67,7 @@ static DF1(jtlcapco1){A z;V*v=FAV(self);    // scaf should make bivalent
  FAV(recurself)->valencefns[0]=jtlev1;  // fill in function pointer
 // obsolete  AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
  AT(recurself)=efflev(FAV(self)->localuse.lu1.levelmonad,w);  // fill in the trigger level
- FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
+ FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags, indicate L:
  RETF(lev1(w,recurself));
 }
 
@@ -57,19 +79,11 @@ static DF2(jtlcapco2){A z;V*v=FAV(self);
  FAV(recurself)->valencefns[1]=jtlev2;  // fill in function pointer
 // obsolete  AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
  AT(recurself)=efflev(FAV(self)->localuse.lu0.leveldyad[0],a); ACFAUX(recurself,efflev(FAV(self)->localuse.lu0.leveldyad[1],w))  // fill in the trigger levels
- FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
+ FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags, indicate L:
  RETF(lev2(a,w,recurself));
 }
 
-// Result logger for S:   w is the result; we add it to AK(self), reallocating as needed
-// result is 0 for error or a harmless small result (0) which will be collected at higher levels and discarded
-static DF1(jtscfn){
- ARGCHK1(w);
- if(AS(AKASA(self))[0]==AN(AKASA(self))){I n=AN(AKASA(self)); RZ(AKASA(self)=ext(1,AKASA(self))); AS(AKASA(self))[0]=n;}  // if current buffer is full, reallocate.  ext resets AS
- AAV(AKASA(self))[AS(AKASA(self))[0]++]=incorp(w);  // copy in new result pointer
- R num(0);  // harmless good return
-}
-
+#if 0  // obsolete
 // u S: n - like L: except for calling the logger  scaf should combine, using id from  self
 static DF1(jtlevs1){
  ARGCHK1(w);  // self is never 0
@@ -91,21 +105,22 @@ static DF2(jtlevs2){
  // There may be a structure in the user's data that could be detected for branch prediction.
  R num(0);
 }
+#endif
 
 static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);  // scaf should combine w/ L:, using id from self
  ARGCHK1(w);
  PRISTCLR(w)
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
- FAV(recurself)->valencefns[0]=jtlevs1;  // fill in function pointer
+ FAV(recurself)->valencefns[0]=jtlev1;  // fill in function pointer
 // obsolete  AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
  AT(recurself)=efflev(FAV(self)->localuse.lu1.levelmonad,w);  // fill in the trigger level
- FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
+ FAV(recurself)->flag=VFISSCO;  // fill in the inplaceability flags, indicate S:
  GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to zap the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
- x=levs1(w,recurself);
+ x=lev1(w,recurself);
  if(likely(x!=0)){
   x=AKASA(recurself); AT(x)=BOX; AN(x)=AS(x)[0]; z=jtopenforassembly(jt,x); AT(x)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
   // if the open failed with domain error, convert it to assembly error after localizing the error.  As with all assembly errors, the caller will eformat
@@ -120,15 +135,15 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  PRISTCLR(w) PRISTCLRNODCL(a)
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
- FAV(recurself)->valencefns[1]=jtlevs2;  // fill in function pointer
+ FAV(recurself)->valencefns[1]=jtlev2;  // fill in function pointer
 // obsolete  AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
  AT(recurself)=efflev(FAV(self)->localuse.lu0.leveldyad[0],a); ACFAUX(recurself,efflev(FAV(self)->localuse.lu0.leveldyad[1],w))  // fill in the trigger levels
- FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
+ FAV(recurself)->flag=VFISSCO;  // fill in the inplaceability flags, indicate S:
  GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to zap the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
- x=levs2(a,w,recurself);
+ x=lev2(a,w,recurself);
  if(likely(x!=0)){
   x=AKASA(recurself); AT(x)=BOX; AN(x)=AS(x)[0]; z=jtopenforassembly(jt,x); AT(x)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
  }

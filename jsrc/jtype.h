@@ -1152,6 +1152,8 @@ typedef struct {
 #define VFKEYSLASHT      (((I)(2*FL-1))<<VFKEYSLASHTX)
 #define VFKEYSLASHFX  (FLX+1)  // (in f/.) function coded for, 0=<. 1=>. 2=+
 #define VFKEYSLASHF      (((I)3)<<VFKEYSLASHFX)
+#define VFISSCOX     0   // (in L: and S:) set for S:
+#define VFISSCO      (((I)1)<<VFISSCOX)
 // leave bit 2 open
 
 // bits 8 and above are available for all verbs:

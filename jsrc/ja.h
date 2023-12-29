@@ -375,7 +375,7 @@
 #define fact(x)                     jtatomic1(jt,(x),ds(CBANG))
 #define factor(x)                   jtfactor(jt,(x))
 #define fauxblock(z) I __attribute__((aligned(CACHELINESIZE))) z[NORMAH+4]  // define a block that can be passed in to fauxvirtual.  The 4 is the max rank, and must match fauxvirtual and fauxplain
-#define fauxblockINT(z,n,r) I __attribute__((aligned(CACHELINESIZE))) z[(AKXR(r)>>LGSZI)+(n)]   // define a block, big enough to hold n atoms at rank r, for use in fauxINT
+#define fauxblockINT(z,n,r) I __attribute__((aligned(CACHELINESIZE))) z[(AKXR(r)>>LGSZI)+(n)]   // define a block, big enough to hold n atoms at rank r, for use in fauxINT/fauxBOX
 // Allocate an INT block. z is the zvalue to hold the result; v is the fauxblock to use if n INTs will fit in the fauxblock, which has rank r
 // shape is not filled in, except when rank is 1
 #define fauxINT(z,v,n,r) {if(likely(AKXR(r)+(n)*SZI<=(I)sizeof(v))){z=(A)(v); AK(z)=AKXR(r); AFLAGFAUX(z,0) AT(z)=INT; ACFAUX(z,ACUC1); AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}

@@ -475,6 +475,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
    A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;  // get self, positioned after the last noun arg
    jt->parserstackframe.sf=self;  // each thread starts a new recursion point
+   // ***** this is where the task is executed *******
    A z=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
    if(likely(startloc!=0))DECREXECCT(startloc);  // remove exec-protection from executed locale.  This may result in its deletion
    jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
@@ -525,20 +526,21 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
  RZ(pyx=jtcreatepyx(jt,-2,inf));
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // protect the job till it is finished
- I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.
+ I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.  dyad is 0 or 1
  // extract parms given to t.: threadpool number, worker-only flag
  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
  JOBQ *jobq=&(*JT(jt,jobqueue))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
  if((((I)(forcetask&lda(&jobq->nuunfin))-jobq->nthreads)&(lda(&JT(jt,systemlock))-3))<0){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
     // in suspension (systemlock state>2) we do not start any task anywhere
-  // realize virtual arguments; raise the usecount of the arguments including self scaf
-  // clone an UNINCORPABLE argument (a utility block used in a loop); then ra() the arguments to protect them until the task completes.  It would be
-  // nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we
+  // we would like to avoid realizing virtual arguments, so that the copy will be done into the core that needs the data.  However, if we leave the block as virtual,
+  // we will fa() it at end-of-job and that will fail if it is recursive.  We meanly want to avoid checking VIRTUAL on every fa.  So, we realize a virtual only if it is recursive,
+  // or if it is UNINCORPABLE (in which case we only need to clone the nonrecursive block).  After that, ra() the arguments to protect them until the task completes.
+  // It would be nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
-// 9.05  if(dyad){if(AFLAG(arg3&AFUNINCORPABLE){RZ(arg3=clonevirtual(arg3)) ACINITZAP(arg3)}else{ra(arg3);}} rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);
-// 9.05  if(AFLAG(arg1&AFUNINCORPABLE){RZ(arg1=clonevirtual(arg1)) ACINITZAP(arg1)}else{ra(arg1);}
-// 9.05  if(AFLAG(arg2&AFUNINCORPABLE){RZ(arg2=clonevirtual(arg2)) ACINITZAP(arg2)}else{ra(arg2);}
-  if(dyad){rifv(arg3);ra(arg3);} rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);
+  if(dyad){ra(arg3);}   // arg3 is x/self, so never virtual; just ra
+  if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);
+  if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
+// obsolete   if(dyad){rifv(arg3);ra(arg3);} rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
   job->n=0;  // indicate this is a user job.  ns is immaterial since it will always trigger a deq
   job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK

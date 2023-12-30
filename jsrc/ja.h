@@ -355,6 +355,7 @@
 // fa() audits the tstack, for use outside the tpop system.
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 // fa() usually results in a free, coming mostly from freeing named values where the usecount is 1, and the RFO cycle is unnecessary
+// fa() is not allowed on a recursive virtual block, because the recursion would be invalid and we don't check for it in famftrav (to save a cycle)
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, and it will usually do the RFO cycle.  The block must be recursive if it is recursible

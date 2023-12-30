@@ -283,15 +283,17 @@ NB. run & open the futures results
 ; s1''
 
 
-NB. test parallel file indexed read/write
+NB. Repeat, but with y virtual
 NB. x is number of iteration in each task
-NB. y is a task number
+NB. y is a task number - a list of identical repeated values, virtual.  The y arg is big enough to notice if we leak it
 NB. result is always 1
 NB. each file with name f([0..x-1]+STRIDE*y)dat written with around 1MB and then read
-t1=: 4 : 0"_ 0
+t1=: 4 : 0"_ 1
 NB. write file
 assert. x<STRIDE NB. check for overlapping file names between tasks
-y=. STRIDE * y                 NB. offset of file name
+assert. (= {.) y  NB. all y identical 
+assert. 1e6 = #y
+y=. STRIDE * {. y                 NB. offset of file name
 z=. 1                          NB. initialize result
 fs=. ''                        NB. file name list
 fns=. 0$0                      NB. file number list
@@ -314,7 +316,7 @@ z
 NB. test file indexed read/write on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK1  NB. start task, too many files limit error if x it too large
+]&.> NX (t1 t.''  {&(1e6 #"0 i. TASK1))"0 [ i.TASK1  NB. start task, too many files limit error if x is too large
 )
 
 NB. run & open the futures results

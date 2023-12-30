@@ -17,7 +17,7 @@ static DF1(jtscfn){
 }
 
 
-// execution of L:n/S:n .  self is suitable to pass to every, i. e. describes the u L: v node and has valencefns[0] pointing to here.  It is on the C stack.
+// recursive execution of L:n/S:n .  self is suitable to pass to every, i. e. describes the u L: v node and has valencefns[0] pointing to here.  It is on the C stack.
 // id in self distinguishes L: from S: 
 // AT(self) is the trigger level (the original n)
 // AM(self) is the block for u
@@ -100,7 +100,7 @@ static DF2(jtlevs2){
  // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
  // be achieved by altering the left/right levels, but Roger did it this way.
  if(aready&wready){RZ(scfn(CALL2(fsf,a,w,fs),self));
- }else{STACKCHKOFL RZ(every2(aready?box(a):a,wready?box(w):w,self));}  // since this recurs, check stack  scaf use faux block for the boxing
+ }else{STACKCHKOFL RZ(every2(aready?box(a):a,wready?box(w):w,self));}  // since this recurs, check stack
  // We do this with the if statement rather than a computed branch in the hope that the CPU can detect patterns in the conditions.
  // There may be a structure in the user's data that could be detected for branch prediction.
  R num(0);
@@ -160,7 +160,7 @@ static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
  ASSERT(1>=AR(w),EVRANK);  // atom or list
  ASSERT(BETWEENO(n,1,4),EVLENGTH);  // 1-3 items
  RZ(t=vib(w)); v=AV(t);  // must be integral.  Overwhemlingly, boolean atom
-// obsolete  GAT0(h,INT,3,1); hv=AV(h);  // save levels in h scaf should use private fields in verb
+// obsolete  GAT0(h,INT,3,1); hv=AV(h);  // save levels in h should use private fields in verb
 // obsolete  hv[0]=v[2==n]; hv[1]=v[3==n]; hv[2]=v[n-1];  // monad, left, right
 // obsolete  R fdef(0,id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
  I4 d0=v[3==n]; d0=d0!=v[3==n]?0x7fffffff+SGNTO0(v[3==n]):d0;  // left dyad; if there is upper significance, use I4 IMIN/IMAX

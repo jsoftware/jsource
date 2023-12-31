@@ -40,10 +40,7 @@ static A jtlev2(J jt,A a,A w,A self){
   // if an argument is at level, we will box it to protect it through the recursion.  Since the only thing that will be done with this
   // box is immediate opening, we do it in place with a faux block to avoid repeatedly allocating single boxes
   fauxblockINT(bfaux,1,0);  // atomic box location
-  if(aready|wready){  // exactly one arg is ready
-   A bx;
-   fauxBOX(bx,bfaux,1,0) AAV0(bx)[0]=aready?a:w; a=aready?bx:a; w=aready?w:bx;  // box the ready arg and change its pointer
-  }
+  if(aready|wready){A bx; fauxBOX(bx,bfaux,1,0) AAV0(bx)[0]=aready?a:w; a=aready?bx:a; w=aready?w:bx;}  // Exactly one arg is ready; box the ready arg and change its pointer
 // obsolete   R every2(aready?box(a):a,wready?box(w):w,self);}
   R every2(a,w,self);
  }
@@ -152,12 +149,13 @@ static DF2(jtlscapco12){PROLOG(556);A z;
   AT(recurself)=efflev(FAV(self)->localuse.lslevels[0],a); ACFAUX(recurself,efflev(FAV(self)->localuse.lslevels[1],w))  // fill in the trigger levels
   FAV(recurself)->valencefns[1]=jtlev2; PRISTCLR(w) PRISTCLRNODCL(a) z=lev2(a,w,recurself);  // set recursion pointer and pristinity and start recursion
  }
-
  if(type!=CSCAPCO)R z;  // return if L:, fall through for S:
+
  if(likely(z!=0)){
-  z=AKASA(recurself); AT(z)=BOX; AN(z)=AS(z)[0]; z=jtopenforassembly(jt,z); AT(z)=INT; // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
+  // S: succeeded.  Assemble the results.  First make the result array look boxed, open it, then change to INT to avoid frees
+  A x=AKASA(recurself); AT(x)=BOX; AN(x)=AS(x)[0]; z=jtopenforassembly(jt,x); AT(x)=INT;
  }
- fa(AKASA(recurself));  // match the zap, but not necessarily on the same block
+ fa(AKASA(recurself));  // match the initial zap, but not necessarily on the same block
  EPILOG(z); // always returns non-pristine
 }
 

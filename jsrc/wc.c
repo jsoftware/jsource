@@ -383,13 +383,13 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
  ARGCHK1(w);
  p=AN(w); wv=AAV(w);  // p=#lines, wv->line 0 (a line is a boxed string)
  ASSERT(p<SMAX,EVLIMIT);
- RZ(c=exta(CONW,1L,1L,3*p)); cv=(CW*)AV(c); n=0;  // allocate result area, cv->start of block of CWs, n=#cws encountered
- RZ(l=exta(BOX, 1L,1L,5*p)); lv=    AAV(l); m=0;  // allocate list of boxed words, lv->&A for first word; m=#words
+ RZ(c=exta(CONW,1L,1L,3*p)); cv=(CW*)AAV1(c); n=0;  // allocate result control-word area (estimate 3 per line), cv->start of block of CWs, n=#cws encountered.  Always rank 1
+ RZ(l=exta(INT, 1L,1L,5*p)); lv=    AAV1(l); m=0;  // allocate list of boxed words (estimate 5 per line), lv->&A for first word; m=#words.  Always rank 1.  INT to avoid clear
  for(i=0;i<p;++i){   // loop for each line
   // split the line into a sequence of sentences, splitting on each control word.  Result is a list of boxed strings, each one sentence
   RZ(y=getsen(wv[i])); yn=AN(y); v=AAV(y);  // split string into sentences; yn=#sentences on line, v->block for first sentence
   for(j=0;j<yn;++j){   // for each sentence on the line...
-   if(n==AN(c)){RZ(c=ext(0,c)); cv=(CW*)AV(c);}  // if result buffer is full, reallocate it, reset pointer to first CW
+   if(n==AN(c)){RZ(c=ext(0,c)); cv=(CW*)AAV1(c);}  // if result buffer is full, reallocate it, reset pointer to first CW
    w0=v[j];                             // w0 is A block for sentence j
    RZ(w1=wordil(w0)); ASSERT(AM(w1)>=0,EVOPENQ)  // w1 is A block for (# words), (index,end+1) pairs
    s=CAV(str0(w0));                           // s->start of sentence after appending final NUL,  why?
@@ -409,7 +409,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    ASSERT(q<SMAX,EVLIMIT);
    // append the words (which are a queue or a cw) to the list of words
    if(x){                               // set unless the control word is not needed (it usually isn't)
-    NOUNROLL while(AN(l)<m+q){RZ(l=ext(0,l)); lv=AAV(l);}  // if word buffer filled, extend it & refresh data pointer
+    NOUNROLL while(AN(l)<m+q){RZ(l=ext(0,l)); lv=AAV1(l);}  // if word buffer filled, extend it & refresh data pointer
     if(k)lv[m]=incorp(x); else ICPY(m+lv,AAV(x),q);   // install word(s): the cw, or the words of the queue
    }
    // Now that the words have been moved, install the index to them, and their number, into the cw info; step word pointer over the words added (even if empty spaces)
@@ -421,7 +421,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
  ASSERTCW(!as,p-1);
  ASSERTCW(!b||0>(i=congoto(n,cv,lv)),(i+cv)->source); // Audit control structures and point the go line correctly
  ASSERTCW(    0>(i= conall(n,cv   )),(i+cv)->source); // Install the number of words and cws into the return blocks, and return those blocks
- AN(l)=AS(l)[0]=m; *zl=incorp(l);
+ AN(l)=AS(l)[0]=m; AT(l)=BOX; *zl=incorp(l);
  AN(c)=AS(c)[0]=n; *zc=incorp(c);
  R try;
 }

@@ -1556,9 +1556,12 @@ F1(jtclonevirtual){
 B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }  // see if 1000 bytes are available before we embark on error display
 
 // Double the allocation of w (twice as many atoms), then round up # items to max allowed in allocation
-// if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer
+// if b=0 it is up to the user to manage freecounts
+// if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer.
+// if b=2, the old allocation is an initial stack allocation: increment new buffer but don't free w
 // the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
 // NOTE: w is not recursive, and its usecount must always be 1
+// We leave AM of the block to be available to the user
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
  m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1);

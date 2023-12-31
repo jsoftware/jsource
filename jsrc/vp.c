@@ -85,12 +85,12 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  bv=BAV(b); mvc(1+n,bv,1,MEMSET00); ++bv;
  i=0; j=n-1; zn=(I)(log((D)n)+1.6); 
  GATV0(q,INT,n, 1); qv= AV(q);
- GATV0(z,BOX,zn,1); zv=AAV(z);
+ GATV0(z,BOX,zn,1); zv=AAV1(z);  // always rank 1
  while(1){
   while(bv[j])--j; if(0>j)break;
   u=qv; c=j;
   do{bv[c]=1; *u++=c; c=v[c];}while(c!=j);
-  if(i==zn){RZ(z=ext(0,z)); zv=AAV(z); zn=AN(z);}
+  if(i==zn){RZ(z=ext(0,z)); zv=AAV1(z); zn=AN(z);}
   RZ(zv[i++]=incorp(vec(INT,u-qv,qv)));
  }
  AN(z)=AS(z)[0]=zn=i; j=zn-1; DO(zn>>1, x=zv[i]; zv[i]=zv[j]; zv[j]=x; --j;);

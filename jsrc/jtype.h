@@ -498,7 +498,7 @@ typedef I SI;
 
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+INT2+INT4+SP+QP)
-#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+INT2+INT4+SP+QP)|SPARSE)  // AND must be >0
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBT)
 #define FUNC            (VERB+ADV+CONJ)

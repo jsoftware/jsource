@@ -773,10 +773,11 @@ static I jtxop(J jt,A w){I i,k;
 // Stop when we hit ) line, or EOF
 static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
  n=0;
- I isboxed=BETWEENC(deftype,1,9);  // do we return boxes?
+ I isboxed=BETWEENC(deftype,1,9);  // do we return boxes? yes for 1-8; no for 0 (noun), 9 ({{ }}), and 13 :
  // Allocate the return area, which we extend as needed
- if(isboxed){RZ(z=exta(BOX,1L,1L,20L)); sb=AAV(z);}
- else{RZ(z=exta(LIT,1L,1L,300L)); s=CAV(z);}
+ RZ(z=exta(isboxed?INT:LIT,1,1,isboxed?24:300));  sb=AAV1(z); s=CAV1(z);
+// obsolete  if(isboxed){RZ(z=exta(BOX,1L,1L,20L)); sb=AAV(z);}
+// obsolete  else{RZ(z=exta(LIT,1L,1L,300L)); s=CAV(z);}
  while(1){
   RE(l=jgets("\001"));   // abort if error on input
   if(!l)break;  // exit loop if EOF.  The incomplete definition will be processed
@@ -786,17 +787,20 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
   NOUNROLL while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){NOUNROLL while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
   // There is a new line.  Append it to the growing result.
   if(isboxed){
-   if((C2T+C4T)&AT(l))RZ(l=cvt(LIT,l));  // each line must be LIT
-   NOUNROLL while(AN(z)<=n+1){RZ(z=ext(0,z)); sb=AAV(z);}  // extend the result if necessary
+   if(unlikely((C2T+C4T)&AT(l)))RZ(l=cvt(LIT,l));  // each line must be LIT
+   NOUNROLL while(AN(z)<=n+1){RZ(z=ext(0,z)); sb=AAV1(z);}  // extend the result if necessary
    sb[n]=incorp(l); ++n; // append the line, increment line number
   }else{
-   NOUNROLL while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}  // extend the result if necessary
-   MC(s+n,q,m); n+=m; s[n]=CLF; ++n;  // append LF at end of each line
+   NOUNROLL while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV1(z);}  // extend the result if necessary
+   MC(s+n,q,m); n+=m; s[n]=CLF; ++n;  // append LF at end of each line, increment 
   }
  }
- // Return the string.  No need to trim down the list of boxes, as it's transitory
- if(isboxed){AN(z)=AS(z)[0]=n; R z;}
- R str(n,s);
+ AT(z)=isboxed?BOX:LIT;  // If boxed, set that type (suppressed till now to avoid needless clears, since all is nonrecursive)
+ AN(z)=AS(z)[0]=n;  // set final count of boxes or characters
+ R z;  // return boxes or string
+// obsolete  // Return the string.  No need to trim down the list of boxes, as it's transitory
+// obsolete  if(isboxed){ R z;}  // boxed: return the valid boxes, one per line
+// obsolete  R str(n,s);  // string: null-terminate it (there must be room)
 }    /* enter nl terminated lines; ) on a line by itself to exit */
 
 // w is character array or list

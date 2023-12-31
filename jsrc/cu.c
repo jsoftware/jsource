@@ -147,6 +147,7 @@ DF2(jtevery2self){
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 // This routine is called internally from many places without agreement checks
 // We could use a flag in jt to indicate agreement already checked
+ // This is called with skeletal fs sometimes.  This routine refers to valencefns[1] and flag, and passes fs into execution
 A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  F2PREFIP;ARGCHK2(a,w);
  AF f2=FAV(fs)->valencefns[1];

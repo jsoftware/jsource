@@ -334,6 +334,7 @@ typedef struct jobstruct {
  JOB *next; // points to the block containing the next job
  UI4 n;  // number of tasks in this job.  If 0, this is a user job
  UI4 ns;  // number of tasks already started for this job
+ US initthread;  // thread# of the thread that started this job
  union {
   struct {
    A args[3];  // w,u,u if monad; a,w,u if dyad
@@ -392,7 +393,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
   if(unlikely(job==0)){  // not really unlikely, but if there's not one we can be as slow as we like
    // No job to run.  Wait for one.  While we're waiting, do a garbage-collection if one is needed.  It could be signaled by a different thread
    JOBUNLOCK(jobq,0);
-   jtrepatsend(jt); // Relinquish others' memory
+// obsolete    jtrepatsend(jt); // Relinquish others' memory
    jtrepatrecv(jt); // Reclaim any of our own memory from others; unconditionally because there's nothing better to do
    if(jt->uflags.spfreeneeded)spfree();  // Collect garbage if there is enough to check
    job=JOBLOCK(jobq);
@@ -417,7 +418,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
      // still have the lock
      if(unlikely(jt->taskstate&TASKSTATETERMINATE)){--jobq->waiters; goto terminate;}  // if central has requested this thread to terminate, do so when the queue goes empty.   This counts as work
      JOBUNLOCK(jobq,job);
-     jtrepatsend(jt); // since we have nothing to better to do, release memory now
+// obsolete      jtrepatsend(jt); // since we have nothing to better to do, release memory now
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
      // we could check to see if there is a job before doing the RFO; that would reduce contention after a kick but it would increase delay
@@ -459,6 +460,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // user job.  There is no thundering herd, so we can read from the job block undisturbed.  We know it has been dequeued
    A pyx=(UNvoidAV1(job))->mback.jobpyx;  // extract the pyx from the job
    ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
+   I initthread=job->initthread;  // extract thread# of thread that created the job
    // set up jt state here only; for internal tasks, such setup is not needed
    A *old=jt->tnextpushp;  // we leave a clear stack when we go
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
@@ -475,20 +477,27 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
    A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;  // get self, positioned after the last noun arg
    jt->parserstackframe.sf=self;  // each thread starts a new recursion point
-   // ***** this is where the task is executed *******
+   // ***** this is where the user task is executed *******
    A z=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
+   // ***** return from user task and look for next one *****
    if(likely(startloc!=0))DECREXECCT(startloc);  // remove exec-protection from executed locale.  This may result in its deletion
    jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
    // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
    C errcode=0;
    if(unlikely(z==0)){fail:errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it
    jtsetpyxval(jt,pyx,z,errcode);  // report the value and wake up waiting tasks.  Cannot fail.  This protects the arguments in the pyx and frees the pyx from the owner's point of view
-   fa(arg1); fa(arg2); if(arg3)fa(arg3);  // unprotect args only after they have been safely installed
+   // remove the ra() for the args that was issued to protect the args over the lifetime of this thread.  If the fa() results in freeing a virtual block,
+   // we must also fa the backer.  This is different from the case of virtual args to explicit defns: there we know that the virtual arg is on the stack in the caller,
+   // and will be freed from the stack, and thus that there is no chance that a virtual will be freed.  Here the caller has continued, and there may be nothing but this
+   // virtual to hold the backer.  So, unlike in all other fa()s, we fa the backer if the virtual is freed.
+   faafterrav(arg1); faafterrav(arg2); if(arg3)fa(arg3);  // unprotect args only after they have been safely installed
+   jtrepatsend(jt); // send our freed blocks back to where they were allocated.  That will include the args just freed
+   __atomic_store_n(&JTFORTHREAD(jt,initthread)->uflags.sprepatneeded,1,__ATOMIC_RELEASE);  // signal the originator to repat the freed blocks.  We force this now in case some were virtual and have large backers.  The repat may be delayed a while.
    jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)
    jttpop(jt,old); // clear anything left on the stack after execution, including z
    RESETERR  // we had to keep the error till now; remove it for next task
    job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
-   --jobq->nuunfin; // mark that we have finished the job we were working on
+   --jobq->nuunfin; // mark in the jobq that we have finished the job we were working on
    if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
    goto nexttasklocked;  // loop for next task
   }
@@ -537,12 +546,12 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   // or if it is UNINCORPABLE (in which case we only need to clone the nonrecursive block).  After that, ra() the arguments to protect them until the task completes.
   // It would be nice to be able to free the virtual before the task completes, but we don't have a way to.  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
-// causes memory leak  if(dyad){ra(arg3);}   // arg3 is x/self, so never virtual; just ra
-// causes memory leak   if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);
-// causes memory leak   if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
-  if(dyad){ra(arg3);} rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);  // the code above leaks, probably because the virtual is not gc'd in the master.  This code realizes in the master
+  if(dyad){ra(arg3);}   // arg3 is x/self, so never virtual; just ra
+  if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);
+  if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
+// obsolete   rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);  // the code above leaks, probably because the virtual is not gc'd in the master.  This code realizes in the master
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
-  job->n=0;  // indicate this is a user job.  ns is immaterial since it will always trigger a deq
+  job->n=0; job->initthread=THREADID(jt);  // indicate this is a user job.  ns is immaterial since it will always trigger a deq.  Install initing thread# for repatriation
   job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK
   (UNvoidAV1(job))->mback.jobpyx=pyx;  // pyx is secreted in header
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
@@ -575,7 +584,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 // poolno is the threadpool to use.  Tasks are run on this thread and the worker threads
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
- JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1; job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
+ JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1;  job->initthread=THREADID(jt); job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
  I lastqueuedtask=-1;  // if nonneg, the task# of the last task (i. e. n-1).  If this task is taken here we have to leave it in the queue
  if(likely(((lda(&JT(jt,systemlock))-3)&-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
       // we don't start tasks during suspension (lock state>2), because if the user changed the debug thread to a running task's there would be chaos

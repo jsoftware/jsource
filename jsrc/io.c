@@ -424,8 +424,12 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
  RESETERRT(jm)
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);  // IEP does not display its errors
- if(likely(wasidle))jtclrtaskrunning(jm);  //  when we finally return to FE, clear running state in case other tasks are running and need system lock - but not if recursion
- jtspfree(jm);
+ if(likely(wasidle)){  // returning to immex in the FE
+  jtclrtaskrunning(jm);  //  clear running state in case other tasks are running and need system lock - but not if recursion
+  // since we are returning to user-prompt level, we might as well take user think time to trim up memory
+  jtrepatrecv(jm);  // receive any repatriated sentences
+  jtspfree(jm);  // check for garbage collection
+ }
  jttpop(jm,old);
  R e;
 }

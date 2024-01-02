@@ -355,7 +355,7 @@
 // fa() audits the tstack, for use outside the tpop system.
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 // fa() usually results in a free, coming mostly from freeing named values where the usecount is 1, and the RFO cycle is unnecessary
-// fa() is not allowed on a recursive virtual block, because the recursion would be invalid and we don't check for it in famftrav (to save a cycle)
+// fa() is not allowed on a recursive block, because we don't check for freeing the backer in famftrav
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, and it will usually do the RFO cycle.  The block must be recursive if it is recursible
@@ -371,6 +371,8 @@
 #define fana(x)                     {if(likely((x)!=0))faaction(jt,(x),;)}
 // Within tpop, no need to check ACISPERM; usecount has gone to 0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              jtfamf(jt,(x),(flg)&RECURSIBLE);
+// At end of task, we FA() blocks that were known to have been ra()d.  Their usecount cannot be negative, but they may be virtual or sparse.  If virtual when usecount goes to 0, fa the backer and suppress traversal
+#define faafterrav(x)  {I Zc=AC(x); I tt=AT(x); if(likely(!ACISPERM(Zc))){if(unlikely((tt|(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)-2)))){if(unlikely(AFLAG(x)&AFVIRTUAL)){fa(ABACK(x)); tt=0;} jtfamf(jt,x,tt);}} }
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtatomic1(jt,(x),ds(CBANG))

@@ -313,7 +313,7 @@ z=. z *. *./ 0= ((<"0 fns),.fs) e. 1!:20'' NB. file name and list should not be 
 z
 )
 
-NB. test file indexed read/write on multiple threads
+NB. test file indexed read/write on multiple threads, with virtual y
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 ]&.> NX (t1 t.''  {&(1e6 #"0 i. TASK1))"0 [ i.TASK1  NB. start task, too many files limit error if x is too large

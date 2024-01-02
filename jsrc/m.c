@@ -290,10 +290,10 @@ F1(jtspcount){A z;I c=0,i,j,*v;A x;
  RETF(z);
 }    /* 7!:3 count of unused blocks */
 
-// Garbage collector.  Called when free has decided a call is needed
+// Garbage collector.  Called when free has decided a call is needed.
 B jtspfree(J jt){I i;A p;
- jtrepatrecv(jt);
- for(i = 0;i<=PLIML-PMINL;++i) {
+  // We don't check the repatq, because we always test it before coming here
+  for(i = 0;i<=PLIML-PMINL;++i) {
   // Check each chain to see if it is ready to coalesce
   if(jt->mfree[i].ballo<=0) {
    // garbage collector: coalesce blocks in chain i
@@ -791,7 +791,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  I t=AT(w);  // type of input
  offset<<=bplg(t);  // length of an atom of t
  I wf=AFLAG(w);  // flags in input
- I wip=SGNIF(jtip,JTINPLACEWX)&AC(w);   // sgn if w is abandoned
+ I wip=SGNIF(jtip,JTINPLACEWX)&AC(w);   // sgn if w is abandoned - this clears all but the sign bit
  // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
  // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
  // We could check for zombieval etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
@@ -1287,7 +1287,6 @@ if((I)jt&3)SEGFAULT;
  if(likely(blockx<PLIML)){
   // small block: allocate from pool
   if(likely(z!=0)){         // allocate from a chain of free blocks
-frompool:
    jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
    if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
@@ -1302,8 +1301,8 @@ frompool:
    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
 #endif
   }else{
-   if(unlikely(lda(&jt->repatq)))if(jtrepatrecv(jt),z=jt->mfree[-PMINL+1+blockx].pool)goto frompool; // didn't have any blocks of the right size, but managed to repatriate one
-   // chain is empty, couldn't repatriate anything; alloc PSIZE and split it into blocks
+// not worth checking   if(unlikely(lda(&jt->repatq)))if(jtrepatrecv(jt),z=jt->mfree[-PMINL+1+blockx].pool)goto frompool; // didn't have any blocks of the right size, but managed to repatriate one
+   // chain is empty, alloc PSIZE and split it into blocks
    RZ(z=jtgafallopool(jt,blockx,n));
   }
  } else {      // here for non-pool allocs...
@@ -1372,37 +1371,47 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 }
 #endif
 
-// send expatriot blocks back home
-// There is a subtlety to these two routines.  Originally, repatsend set sprepatneeded and repatrecv cleared it.
-// But there was an obvious opportunity to race there.
-// Now, repatsend xors the flag with 1 every time it bumps the total number of repatriated bytes to REPATGCLIM or greater, and repatrecv xors it with 1 every time it reduces the total number of repatriated bytes by at least that number all at once.
-// (If recv repatriates fewer bytes, it does nothing to the flag.)
-// Clearly, every bump over will be paired with a bump under, so the steady state of the flag will be 0; it _is_ possible to observe an 'inconsistent' intermediate state, but the flag will eventually become consistent, so there is no danger of repat chains getting lost.
+// send expatriate blocks back home
+// obsolete bug // There is a subtlety to these two routines.  Originally, repatsend set sprepatneeded and repatrecv cleared it.
+// obsolete bug // But there was an obvious opportunity to race there.
+// obsolete bug // Now, repatsend xors the flag with 1 every time it bumps the total number of repatriated bytes to REPATGCLIM or greater, and repatrecv xors it with 1 every time it reduces the total number of repatriated bytes by at least that number all at once.
+// obsolete bug // (If recv repatriates fewer bytes, it does nothing to the flag.)
+// obsolete bug // Clearly, every bump over will be paired with a bump under, so the steady state of the flag will be 0; it _is_ possible to observe an 'inconsistent' intermediate state, but the flag will eventually become consistent, so there is no danger of repat chains getting lost.
+// obsolete bug: two consecutive sends will XOR the flag back to 0 and the repatneeded might be missed.  Not that that's the end of the world.
+
+// move the repato list (whose blocks are known to be from a single jt) to the repatq for that jt, and signal repat in that jt if there is enough to process
+// We simply set sprepatneeded when we add to the repatq, with no interlock.  It is not vital to repat blocks immediately, and impossible anyway because they are
+// held in repato for a while.  What IS vital is to flush repato and repatq when a task ends.  The task will call repatsend in its own jt and then set repatneeded
+// in the jt that started the job.
 void jtrepatsend(J jt){
 #if PYXES
  A repato=jt->repato, tail;
- if(!repato)R; //nothing to repatriate
- tail=*AAV0(repato);
+ if(!repato)R; // nothing to repatriate
+ tail=AAV0(repato)[0];  // extract tail
  I origthread=repato->origin;
- I allocsize=AC(repato);
- jt->repato=0;
+ I allocsize=AC(repato);  // extract total length in repato
+ jt->repato=0;  // clear repato to empty
  jt=JTFORTHREAD(jt,origthread); // switch to the thread the chain must return to
  I zero=0,exsize;
+ // Add chain of new blocks to repatq.  AC(repatq) has total alloc size in repatq
  A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=*(expval?&AC(expval):&zero)); } while(!casa(&jt->repatq, &expval, repato));   // atomic install at head of chain
- if(common(((exsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_fetch_xor(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt freed crosses boundary, request reclamation in the home thread
+ if(common(((exsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_store_n(&jt->uflags.sprepatneeded,1,__ATOMIC_RELEASE); // if amt freed crosses boundary, request reclamation in the home thread
 #endif
 }
 
+// free all the blocks on this jt's repatq, including requesting spfree if needed.
 void jtrepatrecv(J jt){
 #if PYXES
- A p=xchga(&jt->repatq,0);
- if(likely(p)){
+ A p=xchga(&jt->repatq,0);   // dequeue the current repatq
+ if(likely(p)){  // if anything to repat here...
+  // this duplicates mf() and perhaps should just call there instead
   I count=AC(p);
-  if (common(count>=REPATGCLIM)) __atomic_fetch_xor(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt crosses boundary, 'clear' flag
+// obsolete bug: if count not high enough, repatneeded could stay set forever  if (common(count>=REPATGCLIM)) __atomic_fetch_sub(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt crosses boundary, 'clear' flag
+  __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
   jt->bytes-=count;
   for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):p){
    I blockx=FHRHPOOLBIN(AFHRH(p));
-   if ((jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0) jt->uflags.spfreeneeded=1;
+   if ((jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0) __atomic_store_n(&jt->uflags.spfreeneeded,1,__ATOMIC_RELEASE);
    AFCHAIN(p)=jt->mfree[blockx].pool;
    jt->mfree[blockx].pool=p;}}
 #endif
@@ -1469,15 +1478,15 @@ printf("%p-\n",w);
    // if this kicks the list into garbage-collection mode, indicate that
 #if PYXES
   }else{
-   // repatriate a block allocated in another thread
+   // repatriate a block allocated in another thread.  AC(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no next pointer
    A repato=jt->repato;
    if(common(repato&&repato->origin==origthread)){      // adding to existing repatriation queue
     allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
-    AFCHAIN(*AAV0(repato))=w; *AAV0(repato)=w;          // add block to chain
+    AFCHAIN(*AAV0(repato))=w; AAV0(repato)[0]=w;          // add block to chain
     if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);}    // if size of chain exceeded limit, flush
    else{
     if(repato)jtrepatsend(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
-    jt->repato=w; AC(w)=allocsize; *AAV0(w)=w;             // queue now empty regardless; install w
+    jt->repato=w; AC(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w
     if(unlikely(allocsize>=REPATOLIM))jtrepatsend(jt);}    // maybe this block alone is large enough to deserve immediate repatriation
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
   }

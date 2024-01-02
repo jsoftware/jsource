@@ -569,7 +569,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 
  // No thread for the job.  Run it here
   } else JOBUNLOCK(jobq,oldjob);  // return lock if there is no task to take the job
-  fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now to match ra before test
+  fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now to match ra before test.  We don't need faafterrav because any virtual cannot have usecount=1 since we ra()'d it
  }
  fa(jobA); ACINITZAP(pyx); fa(pyx); // better to allocate then conditionally free than to perform the allocation under lock.  The pyx has 2 owners: the job and the tpop stack.  We remove both
  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;

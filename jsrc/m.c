@@ -1383,6 +1383,7 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 // We simply set sprepatneeded when we add to the repatq, with no interlock.  It is not vital to repat blocks immediately, and impossible anyway because they are
 // held in repato for a while.  What IS vital is to flush repato and repatq when a task ends.  The task will call repatsend in its own jt and then set repatneeded
 // in the jt that started the job.
+// this is called only from the owning thread.  This thread owns repato but must arbitrate for repatq
 void jtrepatsend(J jt){
 #if PYXES
  A repato=jt->repato, tail;
@@ -1394,28 +1395,30 @@ void jtrepatsend(J jt){
  jt=JTFORTHREAD(jt,origthread); // switch to the thread the chain must return to
  I zero=0,exsize;
  // Add chain of new blocks to repatq.  AC(repatq) has total alloc size in repatq
- A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=*(expval?&AC(expval):&zero)); } while(!casa(&jt->repatq, &expval, repato));   // atomic install at head of chain
+ A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=*(expval?&AC(expval):&zero)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
  if(common(((exsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_store_n(&jt->uflags.sprepatneeded,1,__ATOMIC_RELEASE); // if amt freed crosses boundary, request reclamation in the home thread
 #endif
 }
 
-// free all the blocks on this jt's repatq, including requesting spfree if needed.
+// free all the blocks on this jt's repatq, including requesting spfree if needed.  This is called only from this jt, which owns jt->mfree but must arbitrate for repatq
 void jtrepatrecv(J jt){
 #if PYXES
- A p=xchga(&jt->repatq,0);   // dequeue the current repatq
+ A p=xchga(&jt->repatq,0);   // dequeue the current repatq; remember head pointer (p) and set repatq empty
  if(likely(p)){  // if anything to repat here...
   // this duplicates mf() and perhaps should just call there instead
   I count=AC(p);
 // obsolete bug: if count not high enough, repatneeded could stay set forever  if (common(count>=REPATGCLIM)) __atomic_fetch_sub(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt crosses boundary, 'clear' flag
   __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
   jt->bytes-=count;
-  for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):p){
-   I blockx=FHRHPOOLBIN(AFHRH(p));
-   if ((jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0) __atomic_store_n(&jt->uflags.spfreeneeded,1,__ATOMIC_RELEASE);
-   AFCHAIN(p)=jt->mfree[blockx].pool;
+  for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):nextp){  // send the blocks to their various queues
+   I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
+   if (unlikely((jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0)) __atomic_store_n(&jt->uflags.spfreeneeded,1,__ATOMIC_RELEASE);  // if we have freed enough to call for garbage collection, do
+   AFCHAIN(p)=jt->mfree[blockx].pool;  // chain new block at head of queue
    jt->mfree[blockx].pool=p;}}
 #endif
 }
+
+
 
 #if MEMAUDIT&0x40
 extern void jgmpguard(X);
@@ -1470,25 +1473,27 @@ printf("%p-\n",w);
 #if PYXES
  if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
 #endif
+  AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->bytes-=allocsize;  // keep track of total allocation
   I mfreeb = jt->mfree[blockx].ballo -= allocsize;   // number of bytes allocated at this size (biased zero point)
-  AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
-  jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
   if(unlikely(mfreeb<0))jt->uflags.spfreeneeded=1;  // Indicate we have one more free buffer;
+  jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
    // if this kicks the list into garbage-collection mode, indicate that
 #if PYXES
-  }else{
-   // repatriate a block allocated in another thread.  AC(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no next pointer
+ }else{
+  // repatriate a block allocated in another thread.  AC(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no AFCHAIN pointer
    A repato=jt->repato;
    if(common(repato&&repato->origin==origthread)){      // adding to existing repatriation queue
     allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
-    AFCHAIN(*AAV0(repato))=w; AAV0(repato)[0]=w;          // add block to chain
-    if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);}    // if size of chain exceeded limit, flush
-   else{
+    AFCHAIN(AAV0(repato)[0])=w; AAV0(repato)[0]=w;          // add block to chain
+// obsolete     if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);    // if size of chain exceeded limit, flush
+   }else{
     if(repato)jtrepatsend(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
-    jt->repato=w; AC(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w
-    if(unlikely(allocsize>=REPATOLIM))jtrepatsend(jt);}    // maybe this block alone is large enough to deserve immediate repatriation
-   jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
+    jt->repato=w; AC(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w as both head and tail
+// obsolete     if(unlikely(allocsize>=REPATOLIM))jtrepatsend(jt);}    // maybe this block alone is large enough to deserve immediate repatriation
+// obsolete    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
+   }
+   if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);    // allocsize now has total size of repato.  if size of chain exceeded limit, flush
   }
 #endif
  }else if(unlikely(hrh==FHRHISGMP)){mfgmp(w);  // if GMP allocation, free it through GMP

@@ -372,7 +372,7 @@
 // Within tpop, no need to check ACISPERM; usecount has gone to 0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              jtfamf(jt,(x),(flg)&RECURSIBLE);
 // At end of task, we FA() blocks that were known to have been ra()d.  Their usecount cannot be negative, but they may be virtual or sparse.  If virtual when usecount goes to 0, fa the backer and suppress traversal
-#define faafterrav(x)  {I Zc=AC(x); I tt=AT(x); if(likely(!ACISPERM(Zc))){if(unlikely((tt|(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)-2)))){if(unlikely(AFLAG(x)&AFVIRTUAL)){fa(ABACK(x)); tt=0;} jtfamf(jt,x,tt);}} }
+#define faafterrav(x)  {I Zc=AC(x); I tt=AT(x); if(likely(!ACISPERM(Zc))){if(unlikely((tt|(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)-2))<0)){if(unlikely(AFLAG(x)&AFVIRTUAL)){fa(ABACK(x)); tt=0;} jtfamf(jt,x,tt);}} }
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtatomic1(jt,(x),ds(CBANG))

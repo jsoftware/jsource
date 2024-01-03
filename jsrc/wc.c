@@ -69,32 +69,31 @@ static I jtcongoto(J jt,I n,CW*con,A*lv){A x,z;C*s;CW*d=con,*e;I i,j,k,m;
 static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r,CW*con){I e,m,t;
  e=1+i;    // set e to Next Sequential Instruction after end.
  CWASSERT(c);
- switch(CWCASE(r,q)){    // look at the stack-types of the antepenultimate and penultimate entries
- default:                   CWASSERT(0);  // if not known combination, give control error
- case CWCASE(CDO,CELSE):                  // ... do. else. end.
-  k=j;  // start the chain at the else. in this case.  Fall through to ...
- case CWCASE(CELSEIF,CDO):  // elseif. do. end.
-  CWASSERT(d);
-  // elseif. and else. are backchained.  Chase the chain, replacing the chain with the NSI after the end.
-  do{I nextk=con[k].go; con[k].go=e; k=nextk;}while(k);  // end-of-chain is the first elseif./else., end AFTER filling it in
-  break;
- case CWCASE(CIF,CDO):      break;
- case CWCASE(CWHILST,CDO):  CWASSERT(d); d->go=(US)(1+j);   // set whilst. to start at end, and fall through to...
- case CWCASE(CWHILE,CDO):                                    // ...while. ... do.
+ US bothcw=BOTHASUS(r,q);  // 2-byte value to check against
+
+ // check the valid combinations that end with end.
+ if(BOTHEQUS(CIF,CDO,bothcw));  // if. do. end. - nothing
+ else if(BOTHEQUS(CDO,CELSE,bothcw)){k=j; goto doelse;}  // start the chain at the else. in this case.  
+ else if(BOTHEQUS(CELSEIF,CDO,bothcw)){
+  doelse:      // do. else. end.   or     elseif. do. end.
+   CWASSERT(d);
+   // elseif. and else. are backchained.  Chase the chain, replacing the chain with the NSI after the end.
+   do{I nextk=con[k].go; con[k].go=e; k=nextk;}while(k);  // end-of-chain is the first elseif./else., end AFTER filling it in
+ }else if(BETWEENC(bothcw,BOTHASUS(CWHILE,CDO),BOTHASUS(CWHILST,CDO))){     // while[st]. do. end.
+  if(unlikely(BOTHEQUS(CWHILST,CDO,bothcw))){ CWASSERT(d); d->go=(US)(1+j);}   // set whilst. to start at end
   // Set the end. to point back to the post-while., and then scan the loop looking for break./continue.
   // that has not been processed before (we detect these by d->go==SMAX; so when there are nested loops
   // we will skip over break. for inner loops, which have already been processed). 
   CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
   // fill in break. to go after end., or continue. to go after while.; leave others unchanged
   DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)(1+k):(US)SMAX;);
-  break;
- case CWCASE(CFOR,CDOF):
+ }else if(BOTHEQUS(CFOR,CDOF,bothcw)){    // for. do. end.
   // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
   // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
   // was previously marked as in select.
   CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
   DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->ig.indiv.type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);
- }
+ }else CWASSERT(0);
  c->go=(US)e;   // Set previous control to come to NSI.  This could be the do. of if./do. or loop/do., or the else. of else./do.
  R -1;
 }
@@ -319,6 +318,7 @@ A jtspellcon(J jt,I c){
   case CWHILST: R cstr("whilst.");
 }}
 
+#if 0   // obsolete 
 static I jtconword(J jt,I n,C*s){
  if(2<n&&'.'==s[n-1])switch(*s){
   case 'a': if(!strncmp(s,"assert.",  n))R CASSERT;  break;
@@ -347,8 +347,44 @@ static I jtconword(J jt,I n,C*s){
  }
  R 0;
 }
+#else
+static I jtconword(J jt,I n,C*s){
+ I c1=s[n-1]; c1=n<3?0:c1; if(c1!='.')R 0;  // if not 3+ chars ending with '.', it's not a control word
+ // here it should be a control word.  Check one by one to avoid search and misprediction overhead.  The top cases are dominant.
+ UI8 c8=*(UI8*)s;  // overfetch leading chars of name
+ I cw=0;  // init to no match
+#define MATCHNAME8(nn,s0,s1,s2,s3,s4,s5,s6,s7) (((c8^(((((((((((((((UI8)s7<<8)+(UI8)s6)<<8)+(UI8)s5)<<8)+(UI8)s4)<<8)+(UI8)s3)<<8)+(UI8)s2)<<8)+(UI8)s1)<<8)+(UI8)s0))&(~(UI8)0>>(8*(8-nn))))==0)
+#define MATCHNAME8N(nn,s0,s1,s2,s3,s4,s5,s6,s7) ((((c8^(((((((((((((((UI8)s7<<8)+(UI8)s6)<<8)+(UI8)s5)<<8)+(UI8)s4)<<8)+(UI8)s3)<<8)+(UI8)s2)<<8)+(UI8)s1)<<8)+(UI8)s0))&(~(UI8)0>>(8*(8-MIN(nn,8)))))|(nn^n))==0)
+ cw=MATCHNAME8N(3,'d','o','.',' ',' ',' ',' ',' ')?CDO:cw;  // match in expected order of frequency
+ cw=MATCHNAME8N(4,'e','n','d','.',' ',' ',' ',' ')?CEND:cw; 
+ cw=MATCHNAME8N(3,'i','f','.',' ',' ',' ',' ',' ')?CIF:cw;
+ cw=MATCHNAME8N(5,'e','l','s','e','.',' ',' ',' ')?CELSE:cw;
+ cw=MATCHNAME8N(6,'w','h','i','l','e','.',' ',' ')?CWHILE:cw;
+ cw=MATCHNAME8N(7,'e','l','s','e','i','f','.',' ')?CELSEIF:cw;
+ cw=MATCHNAME8N(4,'f','o','r','.',' ',' ',' ',' ')?CFOR:cw;
+ if(cw)R cw;      // cut off the search after dominant cases
+ if(MATCHNAME8(4,'f','o','r','_',' ',' ',' ',' ')){ASSERTN(vnm(n-5,4+s),EVILNAME,nfs(n-5,4+s)) R CFOR;}
+ cw=MATCHNAME8N(7,'r','e','t','u','r','n','.',' ')?CRETURN:cw;  // match in expected order of frequency
+ cw=MATCHNAME8N(6,'b','r','e','a','k','.',' ',' ')?CBREAK:cw;
+ cw=MATCHNAME8N(9,'c','o','n','t','i','n','u','e')?CCONT:cw;
+ cw=MATCHNAME8N(7,'s','e','l','e','c','t','.',' ')?CSELECT:cw;
+ cw=MATCHNAME8N(5,'c','a','s','e','.',' ',' ',' ')?CCASE:cw;
+ cw=MATCHNAME8N(6,'f','c','a','s','e','.',' ',' ')?CFCASE:cw;
+ cw=MATCHNAME8N(7,'w','h','i','l','s','t','.',' ')?CWHILST:cw;
+ if(cw)R cw;      // cut off the search after dominant cases
+ cw=MATCHNAME8N(7,'a','s','s','e','r','t','.',' ')?CASSERT:cw;
+ cw=MATCHNAME8N(6,'t','h','r','o','w','.',' ',' ')?CTHROW:cw;
+ cw=MATCHNAME8N(4,'t','r','y','.',' ',' ',' ',' ')?CTRY:cw;
+ cw=MATCHNAME8N(6,'c','a','t','c','h','.',' ',' ')?CCATCH:cw;
+ cw=MATCHNAME8N(7,'c','a','t','c','h','d','.',' ')?CCATCHD:cw;
+ cw=MATCHNAME8N(7,'c','a','t','c','h','t','.',' ')?CCATCHT:cw;
+ cw=MATCHNAME8(5,'g','o','t','o','_',' ',' ',' ')?CGOTO:cw;
+ cw=MATCHNAME8(6,'l','a','b','e','l','_',' ',' ')?CLABEL:cw;
+ R cw;
+}
+#endif
 
-// w is string, result is list of boxed strings, one per sentence in string (delimited by control words)
+// w is string, result is list of boxed strings, for each line (sentence text, [ending control word except on last line])
 static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  RZ(y=wordil(w)); ASSERT(AM(y)>=0,EVOPENQ) // split string into words - result block has special format
  v=AV(y);   // v-> (index,end+1) for each word; #words neg if last is NB.

@@ -969,7 +969,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
-#define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
+#define BOTHASUS(x,y) (((US)(C)(x)<<8)+(US)(C)(y))
+#define BOTHEQ8(x,y,X,Y) ( BOTHASUS(x,y) == BOTHASUS(X,Y) )
+#define BOTHEQUS(x,y,us) ( BOTHASUS(x,y) == us )
 #if PYXES
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely((AT(res)&BOX+PYX)==BOX+PYX))if(unlikely((res=jtpyxval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #define READLOCK(lock) {S prev; if(unlikely(((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))&(S)-WLOCKBIT)!=0))readlock(&lock,prev);}

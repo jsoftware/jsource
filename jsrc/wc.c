@@ -351,36 +351,35 @@ static I jtconword(J jt,I n,C*s){
 static I jtconword(J jt,I n,C*s){
  I c1=s[n-1]; c1=n<3?0:c1; if(c1!='.')R 0;  // if not 3+ chars ending with '.', it's not a control word
  // here it should be a control word.  Check one by one to avoid search and misprediction overhead.  The top cases are dominant.
- UI8 c8=*(UI8*)s;  // overfetch leading chars of name
- I cw=0;  // init to no match
-#define MATCHNAME8(nn,s0,s1,s2,s3,s4,s5,s6,s7) (((c8^(((((((((((((((UI8)s7<<8)+(UI8)s6)<<8)+(UI8)s5)<<8)+(UI8)s4)<<8)+(UI8)s3)<<8)+(UI8)s2)<<8)+(UI8)s1)<<8)+(UI8)s0))&(~(UI8)0>>(8*(8-nn))))==0)
-#define MATCHNAME8N(nn,s0,s1,s2,s3,s4,s5,s6,s7) ((((c8^(((((((((((((((UI8)s7<<8)+(UI8)s6)<<8)+(UI8)s5)<<8)+(UI8)s4)<<8)+(UI8)s3)<<8)+(UI8)s2)<<8)+(UI8)s1)<<8)+(UI8)s0))&(~(UI8)0>>(8*(8-MIN(nn,8)))))|(nn^n))==0)
- cw=MATCHNAME8N(3,'d','o','.',' ',' ',' ',' ',' ')?CDO:cw;  // match in expected order of frequency
- cw=MATCHNAME8N(4,'e','n','d','.',' ',' ',' ',' ')?CEND:cw; 
- cw=MATCHNAME8N(3,'i','f','.',' ',' ',' ',' ',' ')?CIF:cw;
- cw=MATCHNAME8N(5,'e','l','s','e','.',' ',' ',' ')?CELSE:cw;
- cw=MATCHNAME8N(6,'w','h','i','l','e','.',' ',' ')?CWHILE:cw;
- cw=MATCHNAME8N(7,'e','l','s','e','i','f','.',' ')?CELSEIF:cw;
- cw=MATCHNAME8N(4,'f','o','r','.',' ',' ',' ',' ')?CFOR:cw;
- if(cw)R cw;      // cut off the search after dominant cases
- if(MATCHNAME8(4,'f','o','r','_',' ',' ',' ',' ')){ASSERTN(vnm(n-5,4+s),EVILNAME,nfs(n-5,4+s)) R CFOR;}
- cw=MATCHNAME8N(7,'r','e','t','u','r','n','.',' ')?CRETURN:cw;  // match in expected order of frequency
- cw=MATCHNAME8N(6,'b','r','e','a','k','.',' ',' ')?CBREAK:cw;
- cw=MATCHNAME8N(9,'c','o','n','t','i','n','u','e')?CCONT:cw;
- cw=MATCHNAME8N(7,'s','e','l','e','c','t','.',' ')?CSELECT:cw;
- cw=MATCHNAME8N(5,'c','a','s','e','.',' ',' ',' ')?CCASE:cw;
- cw=MATCHNAME8N(6,'f','c','a','s','e','.',' ',' ')?CFCASE:cw;
- cw=MATCHNAME8N(7,'w','h','i','l','s','t','.',' ')?CWHILST:cw;
- if(cw)R cw;      // cut off the search after dominant cases
- cw=MATCHNAME8N(7,'a','s','s','e','r','t','.',' ')?CASSERT:cw;
- cw=MATCHNAME8N(6,'t','h','r','o','w','.',' ',' ')?CTHROW:cw;
- cw=MATCHNAME8N(4,'t','r','y','.',' ',' ',' ',' ')?CTRY:cw;
- cw=MATCHNAME8N(6,'c','a','t','c','h','.',' ',' ')?CCATCH:cw;
- cw=MATCHNAME8N(7,'c','a','t','c','h','d','.',' ')?CCATCHD:cw;
- cw=MATCHNAME8N(7,'c','a','t','c','h','t','.',' ')?CCATCHT:cw;
- cw=MATCHNAME8(5,'g','o','t','o','_',' ',' ',' ')?CGOTO:cw;
- cw=MATCHNAME8(6,'l','a','b','e','l','_',' ',' ')?CLABEL:cw;
- R cw;
+ I8 c8=*(I8*)s;  // overfetch leading chars of name
+ I cwtlen;  // will be result code\required length
+#define MATCHNAME8(nn,s0,s1,s2,s3,s4,s5,s6,s7) ((c8<<(64-8*nn))==((((((((((((((((UI8)s7<<8)+(UI8)s6)<<8)+(UI8)s5)<<8)+(UI8)s4)<<8)+(UI8)s3)<<8)+(UI8)s2)<<8)+(UI8)s1)<<8)+(UI8)s0)<<(64-8*nn)))
+ if((MATCHNAME8(3,'d','o','.',' ',' ',' ',' ',' ')))cwtlen=(CDO<<8)+3;  // match in expected order of frequency
+ else if((MATCHNAME8(3,'i','f','.',' ',' ',' ',' ',' ')))cwtlen=(CIF<<8)+3;
+ else if((MATCHNAME8(4,'e','n','d','.',' ',' ',' ',' ')))cwtlen=(CEND<<8)+4; 
+ else if((MATCHNAME8(5,'e','l','s','e','.',' ',' ',' ')))cwtlen=(CELSE<<8)+5;
+ else if((MATCHNAME8(6,'w','h','i','l','e','.',' ',' ')))cwtlen=(CWHILE<<8)+6;
+ else if((MATCHNAME8(7,'e','l','s','e','i','f','.',' ')))cwtlen=(CELSEIF<<8)+7;
+ else if((MATCHNAME8(4,'f','o','r','.',' ',' ',' ',' ')))cwtlen=(CFOR<<8)+4;
+ else if((MATCHNAME8(4,'f','o','r','_',' ',' ',' ',' '))){ASSERTN(vnm(n-5,4+s),EVILNAME,nfs(n-5,4+s)) R CFOR;}
+ else if((MATCHNAME8(7,'r','e','t','u','r','n','.',' ')))cwtlen=(CRETURN<<8)+7;
+ else if((MATCHNAME8(6,'b','r','e','a','k','.',' ',' ')))cwtlen=(CBREAK<<8)+6;
+ else if((MATCHNAME8(8,'c','o','n','t','i','n','u','e')))cwtlen=(CCONT<<8)+9;
+ else if((MATCHNAME8(7,'s','e','l','e','c','t','.',' ')))cwtlen=(CSELECT<<8)+7;
+ else if((MATCHNAME8(5,'c','a','s','e','.',' ',' ',' ')))cwtlen=(CCASE<<8)+5;
+ else if((MATCHNAME8(6,'f','c','a','s','e','.',' ',' ')))cwtlen=(CFCASE<<8)+6;
+ else if((MATCHNAME8(7,'w','h','i','l','s','t','.',' ')))cwtlen=(CWHILST<<8)+7;
+ else if((MATCHNAME8(7,'a','s','s','e','r','t','.',' ')))cwtlen=(CASSERT<<8)+7;
+ else if((MATCHNAME8(6,'t','h','r','o','w','.',' ',' ')))cwtlen=(CTHROW<<8)+6;
+ else if((MATCHNAME8(4,'t','r','y','.',' ',' ',' ',' ')))cwtlen=(CTRY<<8)+4;
+ else if((MATCHNAME8(6,'c','a','t','c','h','.',' ',' ')))cwtlen=(CCATCH<<8)+6;
+ else if((MATCHNAME8(7,'c','a','t','c','h','d','.',' ')))cwtlen=(CCATCHD<<8)+7;
+ else if((MATCHNAME8(7,'c','a','t','c','h','t','.',' ')))cwtlen=(CCATCHT<<8)+7;
+ else if((MATCHNAME8(5,'g','o','t','o','_',' ',' ',' ')))R CGOTO;
+ else if((MATCHNAME8(6,'l','a','b','e','l','_',' ',' ')))R CLABEL;
+ else cwtlen=0;
+ if(unlikely(n!=(cwtlen&0xff)))R 0;  // error if wrong length
+ R cwtlen>>8;  // return the cw number
 }
 #endif
 

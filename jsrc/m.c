@@ -500,7 +500,7 @@ F1(jtspallthreads){A z;
 }
 
 
-// Start tracking jt->bytes and jt->bytesmax.  We indicate this by setting the LSB of EVERY entry of mfreeb
+// Start tracking jt->bytesmax (and jt->bytes which we need to update it).  We indicate this by setting the LSB of EVERY entry of mfreeb
 // Also count current space, and set that into jt->bytes and the result of this function
 I jtspstarttracking(J jt){I i;
  for(i=PMINL;i<=PLIML;++i){jt->mfree[-PMINL+i].ballo |= MFREEBCOUNTING;}
@@ -1235,7 +1235,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
  jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
  if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
- I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
+  I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
  }
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  R z;
@@ -1409,7 +1409,7 @@ void jtrepatrecv(J jt){
   I count=AC(p);
 // obsolete bug: if count not high enough, repatneeded could stay set forever  if (common(count>=REPATGCLIM)) __atomic_fetch_sub(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt crosses boundary, 'clear' flag
   __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
-  jt->bytes-=count;
+  jt->bytes-=count;  // remove repats from byte count.  Not worth testing whether couting enabled
   for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):nextp){  // send the blocks to their various queues
    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
    if (unlikely((jt->mfree[blockx].ballo -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0)) __atomic_store_n(&jt->uflags.spfreeneeded,1,__ATOMIC_RELEASE);  // if we have freed enough to call for garbage collection, do
@@ -1474,8 +1474,8 @@ printf("%p-\n",w);
  if(likely(origthread==THREADID(jt))){  // if block was allocated from this thread
 #endif
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
-  jt->bytes-=allocsize;  // keep track of total allocation
   I mfreeb = jt->mfree[blockx].ballo -= allocsize;   // number of bytes allocated at this size (biased zero point)
+  if(unlikely(mfreeb&MFREEBCOUNTING))jt->bytes-=allocsize;  // keep track of total allocation, needed only if enabled
   if(unlikely(mfreeb<0))jt->uflags.spfreeneeded=1;  // Indicate we have one more free buffer;
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
    // if this kicks the list into garbage-collection mode, indicate that
@@ -1508,9 +1508,9 @@ printf("%p-\n",w);
 #if PYXES
    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block came from
 #endif
-   jt->bytes-=allocsize;  // keep track of total allocation
    jt->malloctotal-=allocsize;
    jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
+   if(unlikely(jt->mfreegenallo&MFREEBCOUNTING))jt->bytes-=allocsize;  // keep track of total allocation, needed only if enabled
 #if ALIGNTOCACHE
    FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else

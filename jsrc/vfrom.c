@@ -173,7 +173,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
  I celllen=axes[r].lencell;  // length of cell of last axis, in atoms
  I zn=celllen;  // number of atoms in result
  A z;  // result
- I nunitsels=r;  // number of leading axes containing exctly one selector.  When the axis below this prefix rolls over, we can stop, knowing that there are no higher selectors
+ I nunitsels=r;  // number of leading axes containing exactly one selector.  When the axis below this prefix rolls over, we can stop, knowing that there are no higher selectors
  if(likely(AN(w)!=0)){  // normal case, w has atoms
   for(i=r-1;i>=0;--i){  // for axes BEFORE the last
    I absnsel=axes[i].nsel^REPSGN(axes[i].nsel);  // adjust for complementary indexing

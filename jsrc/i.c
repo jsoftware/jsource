@@ -168,7 +168,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  INITJT(jjt,igemm_thres)=FLOATTOFLOAT16(IGEMM_THRES);   // tuning parameters for cip.c
  INITJT(jjt,dgemm_thres)=FLOATTOFLOAT16(DGEMM_THRES);
  INITJT(jjt,zgemm_thres)=FLOATTOFLOAT16(ZGEMM_THRES);
- INITJT(jjt,deprecex)=num(7);  // scaf suppress msg 7 for the nonce
+ // INITJT(jjt,deprecex)=num(7);  // scaf suppress msg 7 for the nonce
  jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
  MTHREAD(jjt)->threadpoolno=-1; // the master thread is in no pool, ever

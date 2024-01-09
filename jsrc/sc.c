@@ -261,6 +261,7 @@ exitpop: ;
      // if TOS is POPLOCALEFIRST/CHANGELOCALE, the execution of this name included a change of locale.  We know this name will be popping, because CHANGELOCALE is created only when we are pushing on every call.
      // Therefore we must terminate the execution of the global locale.
      // EXCEPTION for boot kludge: if this stack frame also includes POPFROM, the execution of the implied locale will be inherited by the caller.  Don't terminate.  Cannot occur if cover used for 18!:4
+     // as a result of this, the execct of base is large, preventing its deletion.
      if(!(jt->callstacknext-1>callstackx&&jt->callstack[jt->callstacknext-2].type&CALLSTACKPOPFROM))DECREXECCT(jt->global);  // end execution of the last switched locale - unless it persists (kludge)
      if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){SYMSETGLOBAL(jt->locsyms,jt->callstack[jt->callstacknext-1].value); jt->uflags.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
     }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){

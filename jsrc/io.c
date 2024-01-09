@@ -256,7 +256,7 @@ static A jtinpl(JJ jt,B b,I n,C*s){C c;I k=0;
 #endif
  ASSERT(!__atomic_load_n(IJT(jt,adbreakr),__ATOMIC_ACQUIRE),EVINPRUPT);
  if(!b){ /* 1==b means literal input */
-  if(n&&COFF==s[n-1])joff(num(0));
+  if(n&&COFF==s[n-1])joff(num(0));  // exit J on XOFF
   c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});  // discard stuff that looks like error typeout
  }
  R str(n-k,s+k);
@@ -292,6 +292,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
+  // read next line from script
   while(1){
    ++d->dcn; j=d->dcix; // increment line# and fetch current start index
    y=d->dcy; n=AN(y); s=UAV(y);
@@ -305,7 +306,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   jtwri((JS)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(b,m,k+s);  // process & return the line
  }
-
+ // read from keyboard
  /* J calls for input in 3 cases:
     debug suspension for normal input
     n : 0 input lines up to terminating ), or {{ reading for trailing }}

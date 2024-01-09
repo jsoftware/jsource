@@ -748,6 +748,13 @@ assert. s1 > 7!:0''
 }}
 f ''
 
+1: 0 : 0 NB. Can't test deleting the running locale because it requires dropping back to immex
+4!:55 <'a_base_'
+18!:55 <'a' [ cocurrent 'a'
+'locale error' -: 18!:5 etx__ ''  NB. no current locale
+a__ =: 5   NB. assignments OK
+a__ = 5
+)
 
 
 

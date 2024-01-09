@@ -315,7 +315,9 @@ fb 5
 
 
 NB. lookups of nonassigned names skip local lookup if there have been no assignments
+9!:55 ]0;7 [ a =. 9!:54''
 'noun result was required' -: 3 : '(y) =. 1 [ one =. 1 if. do. end. two' etx 'one'
+9!:55 a
 1 -: 3 : '(y) =. 1 [ one =. 1 if. do. end. two' 'two'
 2 -: 3 : '(y) =. 2 [ one =. 1 if. do. end. one' 'one'
 1 -: 3 : '(y) =. 2 [ one =. 1 if. do. end. one' 'two'

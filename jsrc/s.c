@@ -668,7 +668,7 @@ A jtprobequiet(J jt,A a){A g;
 // if g is marked as having local symbols, we assume that it is equal to jt->locsyms (especially in subroutines)
 I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  ARGCHK2(a,w);
- I anmf=NAV(a)->flag; RZ(g)  // fetch flags for the name
+ I anmf=NAV(a)->flag; // fetch flags for the name
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
  // name is NJA or is a reassignment, but since NJAs cannot be non-DIRECT little is lost.  We will be doing an unneeded realize if a virtual [x]y from
  // xdefn is reassigned to itself.  Too bad: we need to make sure we don't hold the lock through an expensive operation.
@@ -680,22 +680,22 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  rifv(w); // must realize any virtual
  if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE)jtra(w,wt,0);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
- I arloc=AR(jt->locsyms);  //
+ I arloc=AR(jt->locsyms);  // rank of local symbols is a flag
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table
-  C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
- }else{  // no locative: if g is a flag for zombieval, set it to the correct symbol table
-  // not locative assignment
-  if(unlikely(g==jt->global)){
-   // non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
-   // this will usually have a positive bucketx and will not call the subroutine.  Unlikely that symx is present
+  C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);
+ }else{  // not locative assignment
+
+  if(g==jt->global){  // global assignment.  They might both be 0 but that's OK, searches will fail
+   // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
+   // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
    I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(arloc,ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
-   localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists; now non0 if valid & known to have no assignment
+   localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def); now non0 if valid & known to have no assignment
    ASSERTSUFF(localnexist||!probelocal(a,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
  }
- // g has the locale we are writing to
+ RZ(g)  // g has the locale we are writing to
 
  if(unlikely((valtype&QCNOUN)==0)){
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS

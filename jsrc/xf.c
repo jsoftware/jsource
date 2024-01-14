@@ -160,6 +160,9 @@ DF2(jtjfwrite){B b;F f;
  if(2==(I)f){jtjpr((J)((I)jt|MTYOFILE),a); R a;}  // this forces typeout, with NOSTDOUT off
  if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}
  if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}
+#ifdef ANDROID
+ if(6==(I)f){A z=tocesu8(w); __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",CAV(z)); R a;}
+#endif
  if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f)); 
  wa(f,0L,a); 
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark

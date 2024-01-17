@@ -116,9 +116,9 @@ static AMON(logB,   D,B, *z=*x?0:infm;)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
 static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
-static AMONPS(absE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^(*(UIL*)&x->hi&0x7fffffffffffffffLL); *(UIL*)&z->hi=*(UIL*)&x->hi&0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
+static AMONPS(absE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^(*(UIL*)&x->hi&0x8000000000000000LL); *(UIL*)&z->hi=*(UIL*)&x->hi&0x7fffffffffffffffLL; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 
-static AMONPS(negE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^0x8000000000000000; *(UIL*)&z->hi=*(UIL*)&x->hi^0x8000000000000000; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
+static AMONPS(negE,   E,E, , {*(UIL*)&z->lo=*(UIL*)&x->lo^0x8000000000000000LL; *(UIL*)&z->hi=*(UIL*)&x->hi^0x8000000000000000LL; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 static AMONPS(recipE,   E,E, , {E r; r=RECIPE(*x); r=CANONE1(r.hi,r.lo); z->hi=r.hi; z->lo=r.lo; } , HDR1JERR)  // ABS of high part, & flip low part if hi changed
 #if 0  // used for debugging
 #define f recipE

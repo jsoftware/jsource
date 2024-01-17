@@ -112,6 +112,8 @@ assert. qx -:!.0 xx
 assert. xy -:!.0 qy
 assert. (>:qy) -:!.0 >: xy
 assert. (<:qy) -:!.0 <: xy
+assert. (|qy) -:!.0 | xy
+assert. (^.qy) -: ^.xy
 NB. assert. (0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)
 NB. assert. (0&<: *. qx&>:) qy -~ qx * (>.!.0 qy%qx)
 assert. ((0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)) +. ((0&<: *. qx&>:) qy -~ qx * (>.!.0 qy%qx))

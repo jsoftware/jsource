@@ -474,7 +474,7 @@ tblockcase:
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // exit if end of defn
     if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)|jt->uflags.trace)!=0))break;  // break if next line not do.; T block extended to more than 1 line
     goto docase;  // avoid indirect-branch overhead on the likely case, if. T do.
-   }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND)))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+   }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
    }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it

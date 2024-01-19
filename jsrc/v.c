@@ -173,8 +173,8 @@ DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];  // scaf sho
  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else{GATV(z,LIT,wn,AR(w),AS(w));} v=UAV(z); u=UAV(w);  // alloc block unless inplace and no possible error; point to input & output strings
 // obsolete  if(k&&n>=yn){   // not all codes mapped AND #x>=#y, meaning index error possible on {
  if(unlikely(((k-1)|(n-yn))>=0)){   // NOT(all codes mapped OR #x<#y, meaning no error possible): index error possible on {
-  DQ(wn, if(!bb[*u++])R from(indexof(x,w),y);)} // Check for index error.  If error, abort through the { path to generate the right error message--don't bother trying to make this fast
- DQ(wn, *v++=zz[*u++];)  // no index error, do the translate, possibly inplace
+  DO(wn, if(!bb[u[i]])R from(indexof(x,w),y);)} // Check for index error.  If error, abort through the { path to generate the right error message--don't bother trying to make this fast
+ DO(wn, *v++=zz[u[i]];)  // no index error, do the translate, possibly inplace
   // Roger's code first checked to see if the translation exactly represented a bitwise op.  That seems like a lot of work for an unlikely case.  If the user wants a bitwise op, he can use
   // m b. &.(a.&i.) where we catch the case
 // obsolete  if(!bitwisecharamp(zz,wn,u,v))

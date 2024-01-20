@@ -616,6 +616,16 @@ xx =. | xx
 (,0) -: i. 1
 )
 
+NB. empty append returns other argument
+xx =. i. 1e6
+10000 > 7!:2 ''''' , xx'
+10000 > 7!:2 '(i.0) , xx'
+10000 > 7!:2 '(0$0.) , xx'
+10000 > 7!:2 'xx , '''''
+10000 > 7!:2 'xx , (i.0)'
+10000 > 7!:2 'xx , (0$0.)'
+
+
 
 4!:55 ;:'adot1 adot2 sdot0 cat f n l r t test x xx y yy'
 randfini''

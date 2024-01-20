@@ -923,6 +923,13 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    r=!!_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
+// set r nonzero if a value in x shape is bigger than corresponding one in y shape
+#define TESTXITEMSMALL(r,x,y,l) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
+   r=!!_mm256_cmpgt_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
+  }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
+ }
 #elif C_AVX2 || EMU_AVX2
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {I *aaa=(I*)(x), *aab=(I*)(y); I aai=(l); \
@@ -935,6 +942,13 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
    endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
+   r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
+  }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
+ }
+#define TESTXITEMSMALL(r,x,y,l) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
+   endmask=_mm256_cmpgt_epi64(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
    r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
  }
@@ -953,6 +967,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
    r=((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))!=0;  \
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
+ }
+
+#define TESTXITEMSMALL(r,x,y,l) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  DO(l, if(unlikely(aaa[i]>aab[i]))R 1) \
+  R 0;
  }
 #endif
 #define ASSERTAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERT)

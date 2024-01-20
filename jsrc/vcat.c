@@ -224,9 +224,18 @@ DF2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
  // no RESETRANK - not required by ovv or main line here
-// should look for no frame, identical item shape after rank extension, copying en bloc
  as=AS(a); ws=AS(w);
  if(af+wf==0){
+#if 0  // we don't use ALLOWRETARG anywhere yet
+ // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
+ // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
+ // because some of the sparse code writes over the result from here, we enable this only if the call enables it
+  I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
+  if(unlikely(((ai==0)^(wi==0))>((ar^wr)|((I)jtinplace&JTALLOWRETARG)))){  // appending empty to nonempty, no frame, equal rank (not 0)
+   A ea=ai?w:a, nea=ai?a:w;  // empty & nonempty args
+   I emptybig; TESTXITEMSMALL(emptybig,AS(ea),AS(nea),ar) if(!emptybig)R RETARG(nea);  // if item not changing, return nonempty argument unchanged
+  }
+#endif
   // No frame.  See if ranks are equal or different by 1, and if the items have the same shape
   I lr=ar;  // rank of arg with long shape
   A l=a; l=wr>ar?w:l; lr=wr>ar?wr:lr;  // arg with long shape.  Not needed till later but we usually go through the fast path
@@ -323,6 +332,17 @@ DF2(jtlamin2){A z;I ar,p,q,wr;
 // Append, including tests for append-in-place
 A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  ARGCHK2(a,w);
+ // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
+ // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
+ // here we require no frame as well
+ I at=AT(a), ar=AR(a), wr=AR(w), aflag=AFLAG(a), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
+ I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
+ if(unlikely(((ai==0)^(wi==0))>((ar^wr)-jtrm))){  // appending empty to nonempty, no frame, equal rank (not 0), no rank given
+  if(likely(!ISSPARSE(at|AT(w)))){
+   A ea=ai?w:a, nea=ai?a:w;  // empty & nonempty args
+   I emptybig; TESTXITEMSMALL(emptybig,AS(ea),AS(nea),ar) if(!emptybig)R RETARG(nea);  // if item not changing, return nonempty argument unchanged
+  }
+ }
  // Allow inplacing if we have detected an assignment to a name on the last execution, and the address
  // being assigned is the same as a, and the usecount of a allows inplacing; or
  // the argument a is marked inplaceable.  Usecount of <1 is inplaceable, and for memory-mapped nouns, 2 is also OK since
@@ -331,7 +351,6 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  // Allow only DIRECT and BOX types, to simplify usecounting
  if((I)jtinplace&JTINPLACEA){
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
-  I at=AT(a), ar=AR(a), wr=AR(w), aflag=AFLAG(a), ac=AC(a), an=AN(a);  // unchanging values
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
   // would push a over a power-of-2 boundary, skip  the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
    if(EXTENDINPLACENJA(a,w) && ((at&(DIRECT|BOX))|(AT(w)&SPARSE))>0) {
@@ -355,7 +374,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // OK to use type as proxy for size, since indirect types are excluded
 #if BW==64
-   if((((an-1)|(ar-1)|(ar-wr)|(at-AT(w))|((I)jt->ranks-(I)R2MAX))>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
+   if((((an-1)|(ar-1)|(ar-wr)|(at-AT(w))|jtrm)>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
 #else
    if(((an-1)|(ar-1)|(ar-wr)|(at-AT(w)))>=0&&(jt->ranks==R2MAX)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
 #endif

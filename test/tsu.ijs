@@ -97,6 +97,9 @@ NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0
 10 s: GLOBALSYMBOL
 empty 0&T.^:(0=1&T.) ::1:''
+if. 'Linux'-:UNAME do.
+ 'libc.so.6 malloc_trim > i x'&cd <.64*1024
+end.
 1: techo^:ECHOFILENAME RUNFILE,'  time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
 )
 

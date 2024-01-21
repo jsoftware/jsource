@@ -617,7 +617,7 @@ xx =. | xx
 )
 
 NB. empty append returns other argument
-xx =. i. 1e6
+xx =: i. 1e6
 10000 > 7!:2 ''''' , xx'
 10000 > 7!:2 '(i.0) , xx'
 10000 > 7!:2 '(0$0.) , xx'

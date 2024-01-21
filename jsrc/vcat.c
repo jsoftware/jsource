@@ -231,7 +231,7 @@ DF2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
  // because some of the sparse code writes over the result from here, we enable this only if the call enables it
   I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
-  if(unlikely(((ai==0)^(wi==0))>((ar^wr)|((I)jtinplace&JTALLOWRETARG)))){  // appending empty to nonempty, no frame, equal rank (not 0)
+  if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)|((I)jtinplace&JTALLOWRETARG)))){  // appending empty to nonempty, no frame, equal rank (not 0)
    A ea=ai?w:a, nea=ai?a:w;  // empty & nonempty args
    I emptybig; TESTXITEMSMALL(emptybig,AS(ea),AS(nea),ar) if(!emptybig)R RETARG(nea);  // if item not changing, return nonempty argument unchanged
   }
@@ -337,8 +337,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  // here we require no frame as well
  I at=AT(a), ar=AR(a), wr=AR(w), aflag=AFLAG(a), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
  I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
- if(unlikely(((ai==0)^(wi==0))>((ar^wr)-jtrm))){  // appending empty to nonempty, no frame, equal rank (not 0), no rank given
-  if(likely(!ISSPARSE(at|AT(w)))){
+ if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)-jtrm))){  // appending empty to nonempty, no frame, equal rank (not 0), no rank given
+  if(likely(!ISSPARSE(at|AT(w)))){   // sparse blocks have weird shape - we can't handle them
    A ea=ai?w:a, nea=ai?a:w;  // empty & nonempty args
    I emptybig; TESTXITEMSMALL(emptybig,AS(ea),AS(nea),ar) if(!emptybig)R RETARG(nea);  // if item not changing, return nonempty argument unchanged
   }
@@ -349,11 +349,12 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting
- if((I)jtinplace&JTINPLACEA){
+// obsolete  if((I)jtinplace&JTINPLACEA|(ar-1)|(ar-wr)|jtrm){
+ if((SGNIF((I)jtinplace,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
   // would push a over a power-of-2 boundary, skip  the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
-   if(EXTENDINPLACENJA(a,w) && ((at&(DIRECT|BOX))|(AT(w)&SPARSE))>0) {
+  if(EXTENDINPLACENJA(a,w) && ((at&(DIRECT|BOX))|(AT(w)&SPARSE))>0) {
    // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
    // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
    // crawl through w looking for a.
@@ -373,11 +374,13 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // OK to use type as proxy for size, since indirect types are excluded
-#if BW==64
-   if((((an-1)|(ar-1)|(ar-wr)|(at-AT(w))|jtrm)>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
-#else
-   if(((an-1)|(ar-1)|(ar-wr)|(at-AT(w)))>=0&&(jt->ranks==R2MAX)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
-#endif
+   I zt=maxtyped(at,AT(w));  // the type of the result
+// obsolete #if BW==64
+// obsolete    if((((an-1)|(ar-1)|(ar-wr)|(at-AT(w))|jtrm)>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
+   if((((an-1)|(at-zt))>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
+// obsolete #else
+// obsolete    if(((an-1)|(ar-1)|(ar-wr)|(at-AT(w)))>=0&&(jt->ranks==R2MAX)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
+// obsolete #endif
     //  Check the item sizes.  Set p<0 if the
     // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
     // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis
@@ -396,7 +399,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((aflag&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
       // We have passed all the tests.  Inplacing is OK.
       // If w must change precision, do.  This is where we catch domain errors.
-      if(unlikely(TYPESGT(at,AT(w))))RZ(w=cvt(at,w));
+      if(unlikely(TYPESNE(at,AT(w))))RZ(w=cvt(at,w));
       // result is pristine if a and w both are, and they are not the same block, and there is no fill, and w is inplaceable (of course we know a is)
       I wprist = (((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
       // If the items of w must be padded to the result item-size, do so.

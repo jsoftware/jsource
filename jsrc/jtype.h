@@ -95,8 +95,11 @@ typedef AD *A;
 #define JTFOLKNOHFNX    2   // set to get the generic fork that does not expect the hfn in localuse
 #define JTFOLKNOHFN      (((I)1)<<JTFOLKNOHFNX)
 // following bit used as arg to jtope
-#define JTNOFILLX    0   // says raise an error if fill was used when opening the argument
+#define JTNOFILLX    2   // says raise an error if fill was used when opening the argument
 #define JTNOFILL      (((I)1)<<JTNOFILLX)
+// following bit used as arg to jtover
+#define JTALLOWRETARGX    2   // allow jtover to return an argument if empty appended to it
+#define JTALLOWRETARG      (((I)1)<<JTALLOWRETARGX)
 // following bit is used on input to jtcvt only
 #define JTNOFUZZX       1   // comparison on legal float conversion should be exact
 #define JTNOFUZZ        (((I)1)<<JTNOFUZZX)

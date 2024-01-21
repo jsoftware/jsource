@@ -971,7 +971,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
-  DO(l, if(unlikely(aaa[i]>aab[i]))R 1) \
+  DO(l, if(unlikely(aaa[i]>aab[i]))R 1;) \
   R 0; \
  }
 #endif

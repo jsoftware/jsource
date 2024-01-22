@@ -1891,19 +1891,21 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // obsolete // static const UC prioritytype[] = {  // Convert priority to type bit
 // obsolete // B01X, LITX, C2TX, C4TX, INT1X, INT2X, INT4X, INTX, BOXX, XNUMX, RATX, HPX, SPX, FLX, QPX, CMPXX, SBTX};
 // obsolete #if SY_64
-#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))
+// obsolete #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))
+#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+SPX)<<4)+HPX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+FLX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+0)<<4)+0)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))  // 0 for C2TX/C4Tx to avoid field overflow
 // obsolete #else
 // obsolete #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):((p)>=8?(((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)>>(((p)-8)*4):(((((((((((((((I)INTX<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf)
 // obsolete #endif
 // Conversion from type to priority
-//  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10
-// B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
-//
-// new proposed order:
+// obsolete //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10
+// obsolete // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
+// obsolete //
+// obsolete // new proposed order:
 //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    10
 // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX SBT
 // obsolete #if SY_64
-#define TYPEPRIORITYNUM(t) ((I)(((UI8)0x00ecb654a98fd710>>(CTTZ(t)*4))&0xf))
+// obsolete #define TYPEPRIORITYNUM(t) ((I)(((UI8)0x00ecb654a98fd710>>(CTTZ(t)*4))&0xf))  // used for types below 0x10000, which includes all numerics
+#define TYPEPRIORITYNUM(t) ((I)(((UI8)0x00edcba9765f8410>>(CTTZ(t)*4))&0xf))  // used for types below 0x10000, which includes all numerics
 // obsolete #else
 // obsolete #define TYPEPRIORITYNUM(t) (((((t)&0xff)?0xa98fd710:0x00ecb654)>>((CTTZ(t)&0x7)*4))&0xf)
 // obsolete #endif

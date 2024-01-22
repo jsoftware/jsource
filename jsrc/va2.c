@@ -1306,14 +1306,15 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   }else if(!(t&(NOUN&~NUMERIC))) {
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
-   //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10   priorities
-   // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
+// obsolete    //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10   priorities
+// obsolete    // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
+   //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    10   // priorities
+   // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX SBT
    // 0 4 8 9 10 11   12 13 14 15 16 routine indexes for homogeneous args
    //   0 4 5  6  7    8  9 10 11 12 biased by 4, the smallest we use here
    // B I D Z  X  Q Symb DS  E I2 I4 
-   //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    10
-   // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX SBT
-   pri=4+((0x5a4ff76f0cbfffffLL>>(pri<<2))&0xf);  // 4 is II, lower than the lowest routine# we can call for here
+// obsolete     pri=4+((0x5a4ff76f0cbfffffLL>>(pri<<2))&0xf);  // 4 is II, lower than the lowest routine# we can call for here
+   pri=4+((0x5affcbf476ffffffLL>>(pri<<2))&0xf);  // 4 is II, lower than the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions  scaf would be nice to avoid conversion of left arg of o.
    cvtflgs=selva2.cv&(VBB|VII|VDD|VZZ)?0:cvtflgs;  //  If the routine already forces a conversion, don't override.  Most DD, SP, QP specify no conversion, but +. or bitwise require bool or integer 

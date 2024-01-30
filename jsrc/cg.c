@@ -382,8 +382,8 @@ F2(jtagendai){F2PREFIP;I flag;
 
 
 static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,df1(z0,w,C(hv[1])),gs,ds(sv->id)); FDEPDEC(d);
- R df1(z0,df1(z1,w,C(hv[2])),ff);
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df1(z0,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id)); FDEPDEC(d);
+ RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
 }
 
 // this is u^:gerund y
@@ -395,18 +395,18 @@ static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
 static DF1(jtgcr1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,fs,df1(z0,w,C(hv[1])),ds(sv->id)); FDEPDEC(d);
- R df1(z0,df1(z1,w,C(hv[2])),ff);
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df1(z0,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id)); FDEPDEC(d);
+ RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
 }
 
 static DF2(jtgcl2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,df2(z0,a,w,C(hv[1])),gs,ds(sv->id)); FDEPDEC(d);
- R df2(z0,df2(z1,a,w,C(hv[0])),df2(z2,a,w,C(hv[2])),ff);
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df2(z0,a,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id)); FDEPDEC(d);
+ RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
 }
 
 static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); df2(ff,fs,df2(z0,a,w,C(hv[1])),ds(sv->id)); FDEPDEC(d);
- R df2(z0,df2(z1,a,w,C(hv[0])),df2(z2,a,w,C(hv[2])),ff);
+ STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df2(z0,a,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id)); FDEPDEC(d);
+ RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
 }
 
 // called for gerund} or ^:gerund forms.  id is the pseudocharacter for the modifier (} or ^:)

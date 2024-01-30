@@ -306,6 +306,40 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
 REDUCENAN( plusinsZ, Z, Z, zplus, plusZZ )
 REDUCEPFX( plusinsX, X, X, xplus, plusXX, plusXX )
 
+// version for QP with AVX2.  Bandwidth is not an issue, so we accumulate into memory for rank > 1
+I plusinsE(I d,I n,I m,E* RESTRICTI x,E* RESTRICTI z,J jt){I i;  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
+  if(d==1){x += m*n; z+=m;
+   __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff});  /* needed masks: sign, mantissa */
+   /* we will read twice, masking.  We may read the first half twice to avoid overfetch */
+   __m256i rdmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[n&(NPAR-1)])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); /* masks for the 2 reads */
+   for(i=m;i;--i){   /* for each accumulated row */
+    I rematom;  /* # atoms to accumulate */
+    __m256d x0,x1,y0,y1,z0,z1;
+    x -= ((n-1)&(NPAR-1))+1;  /* back up to beginning of last NPAR-atom section */
+    x0=_mm256_maskload_pd((D*)(x),rdmask);
+    x1=_mm256_maskload_pd((D*)(x+((n-1)&(NPAR/2))),_mm256_slli_epi64(rdmask,1));
+    SHUFIN(0,x0,x1,z0,z1);
+    for(rematom=(n-1)&-NPAR;rematom;rematom-=NPAR){  /* for each full batch */
+     x-=NPAR; x0=_mm256_loadu_pd((D*)x); x1=_mm256_loadu_pd((D*)(x+NPAR/2)); SHUFIN(0,x0,x1,y0,y1);  /* read 4 values, put into lanes */ 
+     PLUSEE(y0,y1,z0,z1,z0,z1);  /* add to total */
+    }
+    y0=_mm256_permute_pd(z0,0b1111); y1=_mm256_permute_pd(z1,0b1111);  /* atoms 0+1, 2+3 */
+    PLUSEE(y0,y1,z0,z1,z0,z1);
+    y0=_mm256_permute4x64_pd(z0,0b10101010); y1=_mm256_permute4x64_pd(z1,0b10101010);  /* atoms 0+2 */
+    PLUSEE(y0,y1,z0,z1,z0,z1);
+    CANONE(z0,z1)
+    --z; *(I*)&z->hi=_mm256_extract_epi64(_mm256_castpd_si256(z0),0x0); *(I*)&z->lo=_mm256_extract_epi64(_mm256_castpd_si256(z1),0x0);
+   }
+  }else{z+=(m-1)*d; x+=(m*n-1)*d;                                       
+   for(i=0;i<m;++i,z-=d){I rc;                                   
+    E* RESTRICT y=x; x-=d; if(255&(rc=plusEE(1,d,x,y,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;       
+    DQ(n-2,    if(255&(rc=plusEE(1,d,x,z,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);       
+  }
+ }
+ R EVOK;
+}
+
+
 REDUCEPFX(minusinsB, I, B, MINUS, minusBB, minusBI ) 
 REDUCENAN(minusinsD, D, D, MINUS, minusDD ) 
 REDUCENAN(minusinsZ, Z, Z, zminus, minusZZ) 
@@ -821,7 +855,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  PROD(m,f,ws);
  RESETRANK;   // clear rank now that we've used it - not really required here?
  // Allocate the result area
- zt=rtype(adocv.cv);
+ zt=rtype(adocv.cv); zt=(adocv.cv&VRESMSK)==0?wt:zt;  // Use specified type if given, otherwise use type of argument
  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
  if(m*d==0){RETF(z);}  // mustn't call the function on an empty argument!
  // Convert inputs if needed 

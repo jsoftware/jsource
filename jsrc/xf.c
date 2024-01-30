@@ -157,7 +157,7 @@ DF2(jtjfwrite){B b;F f;
  F2RANK(RMAX,0,jtjfwrite,self);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
  RE(f=stdf(w));
- if(2==(I)f){jtjpr((J)((I)jt|MTYOFILE),a); R a;}  // this forces typeout, with NOSTDOUT off
+ if(2==(I)f){jtjpr((J)((I)jt|MTYOFILE),a); R a;}  // for write to stdout, convert to printable string and type out, with NOSTDOUT off
  if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}
  if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}
 #ifdef ANDROID

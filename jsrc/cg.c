@@ -469,14 +469,14 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  ASSERT(BOX&AT(w),EVDOMAIN);
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);
- ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
+ ASSERT(BETWEENC(n,1,3),EVLENGTH);  // verify 1-3 gerunds
+// obsolete  ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
  ASSERT(BOX&AT(w),EVDOMAIN);
  RZ(hs=fxeach(3==n?w:behead(reshape(num(4),w)),(A)(&jtfxself[0])));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
  // hs is a BOX array, but its elements are ARs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
- // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  ASSERT(AT(C(AAV(hs)[0]))&AT(C(AAV(hs)[1]))&AT(C(AAV(hs)[2]))&VERB,EVDOMAIN);
- I alr=atoplr(C(AAV(hs)[0]));
+ I alr=atoplr(C(AAV(hs)[0]));   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  I flag=(FAV(C(AAV(hs)[0]))->flag&FAV(C(AAV(hs)[1]))->flag&FAV(C(AAV(hs)[2]))->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+(alr-2>0?alr-2:alr);
  R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }

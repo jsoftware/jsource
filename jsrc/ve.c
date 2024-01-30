@@ -364,13 +364,8 @@ primop256CE(divZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d y0
 
 
 // QP arithmetic.  We do not support infinities.  If you multiply one, it might give NaN
-#define PLUSEE {__m256d t,t0,t1;\
-t0=_mm256_add_pd(x0,y0); t1=_mm256_sub_pd(t0,x0); \
-t1=_mm256_add_pd(_mm256_sub_pd(x0,_mm256_sub_pd(t0,t1)),_mm256_sub_pd(y0,t1)); /* t1/t0 = x0+y0, QP */ \
-t1=_mm256_add_pd(t1,_mm256_add_pd(x1,y1));  /* accumulate lower significance */ \
-z0=_mm256_add_pd(t1,t0); z1=_mm256_add_pd(t1,_mm256_sub_pd(t0,z0));  /* remove any overlap */ \
-CANONE(z0,z1) \
-}
+#define PLUSEEF {PLUSEE(x0,x1,y0,y1,z0,z1) CANONE(z0,z1)}
+
 #define MINUSEE {__m256d t,t0,t1;\
 t0=_mm256_sub_pd(x0,y0); t1=_mm256_sub_pd(t0,x0); \
 t1=_mm256_sub_pd(_mm256_sub_pd(x0,_mm256_sub_pd(t0,t1)),_mm256_add_pd(y0,t1)); /* t1/t0 = x1-y1, QP */ \
@@ -402,7 +397,7 @@ TWOSUMBS(t1,t2,z1,z0) /* remove overlap */ \
 CANONE(z1,z0)  /* canonicalize the extension */ \
 }
 #endif
-primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEE,ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEEF,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
 #if !(EMU_AVX2 && defined(__x86_64__))  // x86 emulator doesn't do fmsub right.  ARM is OK
 primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEE,ASSERTWR(!NANTEST,EVNAN);)

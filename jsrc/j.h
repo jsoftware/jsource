@@ -2127,6 +2127,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define LGSZS   1  // lg (bytes in an S)
 
 #if C_AVX2 || EMU_AVX2
+
 #if HASFMA
 // create quad-precision product of double-precision inputs.  outhi must not be an input; outlo can
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
@@ -2142,6 +2143,13 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
                                     outhi=_mm256_add_pd(in0,in1); /* single-prec sum */ \
                                     outlo=_mm256_sub_pd(outlo,outhi); /* big-(big+small): implied val of -small after rounding */ \
                                     outlo=_mm256_add_pd(outlo,t);}  // amt by which actual value exceeds implied: this is the lost low precision
+// 3-address version.  scaf should rewrite like TWOSUM
+#define PLUSEE(x0,x1,y0,y1,z0,z1) {__m256d t,t0,t1;\
+t0=_mm256_add_pd(x0,y0); t1=_mm256_sub_pd(t0,x0); \
+t1=_mm256_add_pd(_mm256_sub_pd(x0,_mm256_sub_pd(t0,t1)),_mm256_sub_pd(y0,t1)); /* t1/t0 = x0+y0, QP */ \
+t1=_mm256_add_pd(t1,_mm256_add_pd(x1,y1));  /* accumulate lower significance */ \
+z0=_mm256_add_pd(t1,t0); z1=_mm256_add_pd(t1,_mm256_sub_pd(t0,z0));  /* remove any overlap */ \
+}
 // Same, but we know first argument has bigger absval.  outhi cannot be an input; outlo can be the same as inbig
 #define TWOSUMBS(inbig,insmall,outhi,outlo) {outhi=_mm256_add_pd(inbig,insmall); /* single-prec sum */ \
                                     outlo=_mm256_sub_pd(inbig,outhi); /* big-(big+small): implied val of -small after rounding */ \

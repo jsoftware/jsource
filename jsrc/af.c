@@ -118,11 +118,13 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
   RZ(g=REFIXA(na,g));
   R df2(z,f,g,wf);
- case CIBEAM:
+ case CIBEAM: {
   if(f)RZ(f=REFIXA(na,f));
   if(g)RZ(g=REFIXA(na,g));
-  R f&&g ? (VDDOP&v->flag?df2(z,f,g,df2(x,head(h),tail(h),wf)):df2(z,f,g,wf)) : 
-           (VDDOP&v->flag?df1(z,f,  df2(x,head(h),tail(h),wf)):df1(z,f,  wf)) ;
+  A zz; RZ(zz=VDDOP&v->flag?df2(x,head(h),tail(h),wf):f&&g?df2(z,f,g,wf):df1(z,f,  wf));
+  R f&&g ? (VDDOP&v->flag?df2(z,f,g,zz):zz) : 
+           (VDDOP&v->flag?df1(z,f,  zz):zz) ;
+  }
  case CUDOT:
   R REFIXA(ai,JT(jt,implocref)[0]);  // u. is equivalent to 'u.'~ for fix purposes
  case CVDOT:

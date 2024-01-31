@@ -95,6 +95,8 @@ NB. Tests for qp
 NB. tests requiring conforming arguments, qp vs xnum
 argrand =: {{  NB. x is max value (extended).  y is (max sizes),:(cumulative freq for probability of each rank)  args are large random integers
 xs =: (({: y) I. ?0) {. s [ys =: (({: y) I. ?0) {. s [ s =: ? {.y  NB. conforming shapes
+sf =. 0 i.&1@:~: {: y
+xs =: (sf {. ys) , sf }. xs
 dx =: 8 c. qx =: 11 c. xx =: xs ?@$ x [ dy =: 8 c. qy =: 11 c. xy =: ys ?@$ x  NB. exactly representable integers
 dx;xx;qx;dy;xy;qy
 }}
@@ -114,6 +116,9 @@ assert. (>:qy) -:!.0 >: xy
 assert. (<:qy) -:!.0 <: xy
 assert. (|qy) -:!.0 | xy
 assert. (^.qy) -: ^.xy
+assert. (+/"1 qy) -: +/"1 xy 
+assert. (+/"2 qy) -: +/"2 xy 
+assert. (+/"3 qy) -: +/"3 xy 
 NB. assert. (0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)
 NB. assert. (0&<: *. qx&>:) qy -~ qx * (>.!.0 qy%qx)
 assert. ((0&<: *. qx&>:) qy - qx * (<.!.0 qy%qx)) +. ((0&<: *. qx&>:) qy -~ qx * (>.!.0 qy%qx))
@@ -159,6 +164,9 @@ f (2^55x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 f (2^55x) argnear 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 fsmall (2^40x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 
+{{ (-:!.0&(+/))&>/ 4 5 { (2^90x) argrand y ,: 0 }}"0 (100) $ 200
+
+{{ 1e_28 >  |@(-/"1 % >./) (+/@:*"1)&>/"1&((1 4,:2 5)&{) (2^90x) argrand y ,: 0 }}"0 (20) $ 40
 
 NB. non-atomic arithmetic
 

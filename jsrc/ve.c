@@ -376,12 +376,7 @@ CANONE(z0,z1) \
 
 // This version is good to 103 bits: lower pps might have 4x the weight of the upper
 #if 1  // 103 bits
-#define MULTEE {__m256d t0,t1; \
-TWOPROD(x0,y0,t0,t1)  /* pp0 in qp */ \
-t1=_mm256_fmadd_pd(x0,y1,t1); t1=_mm256_fmadd_pd(x1,y0,t1); /* add in pp1 & 2 */ \
-TWOSUMBS(t0,t1,z0,z1)  /* remove overlap */ \
-CANONE(z0,z1)  /* canonicalize the extension */ \
-}
+#define MULTEEF {MULTEE(x0,x1,y0,y1,z0,z1) CANONE(z0,z1)}
 
 #else  // 106 bits
 // We keep this valid to the last bit, which might be overkill
@@ -400,7 +395,7 @@ CANONE(z1,z0)  /* canonicalize the extension */ \
 primop256CE(plusEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,PLUSEEF,ASSERTWR(!NANTEST,EVNAN);)
 primop256CE(minusEE,1,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MINUSEE,ASSERTWR(!NANTEST,EVNAN);)
 #if !(EMU_AVX2 && defined(__x86_64__))  // x86 emulator doesn't do fmsub right.  ARM is OK
-primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEE,ASSERTWR(!NANTEST,EVNAN);)
+primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0;,PREFNULL,PREFNULL,MULTEEF,ASSERTWR(!NANTEST,EVNAN);)
 #else
 APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif

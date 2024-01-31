@@ -2143,18 +2143,24 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
                                     outhi=_mm256_add_pd(in0,in1); /* single-prec sum */ \
                                     outlo=_mm256_sub_pd(outlo,outhi); /* big-(big+small): implied val of -small after rounding */ \
                                     outlo=_mm256_add_pd(outlo,t);}  // amt by which actual value exceeds implied: this is the lost low precision
-// 3-address version.  scaf should rewrite like TWOSUM
+// Same, but we know first argument has bigger absval.  outhi cannot be an input; outlo can be the same as inbig
+#define TWOSUMBS(inbig,insmall,outhi,outlo) {outhi=_mm256_add_pd(inbig,insmall); /* single-prec sum */ \
+                                    outlo=_mm256_sub_pd(inbig,outhi); /* big-(big+small): implied val of -small after rounding */ \
+                                    outlo=_mm256_add_pd(outlo,insmall);}  // amt by which actual value exceeds implied: this is the lost low precision
+#define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
+// 3-address QP add
 #define PLUSEE(x0,x1,y0,y1,z0,z1) {__m256d t,t0,t1;\
 t0=_mm256_add_pd(x0,y0); t1=_mm256_sub_pd(t0,x0); \
 t1=_mm256_add_pd(_mm256_sub_pd(x0,_mm256_sub_pd(t0,t1)),_mm256_sub_pd(y0,t1)); /* t1/t0 = x0+y0, QP */ \
 t1=_mm256_add_pd(t1,_mm256_add_pd(x1,y1));  /* accumulate lower significance */ \
 z0=_mm256_add_pd(t1,t0); z1=_mm256_add_pd(t1,_mm256_sub_pd(t0,z0));  /* remove any overlap */ \
 }
-// Same, but we know first argument has bigger absval.  outhi cannot be an input; outlo can be the same as inbig
-#define TWOSUMBS(inbig,insmall,outhi,outlo) {outhi=_mm256_add_pd(inbig,insmall); /* single-prec sum */ \
-                                    outlo=_mm256_sub_pd(inbig,outhi); /* big-(big+small): implied val of -small after rounding */ \
-                                    outlo=_mm256_add_pd(outlo,insmall);}  // amt by which actual value exceeds implied: this is the lost low precision
-#define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
+// 3-address QP multiply
+#define MULTEE(x0,x1,y0,y1,z0,z1) {__m256d t0,t1; \
+TWOPROD(x0,y0,t0,t1)  /* pp0 in qp */ \
+t1=_mm256_fmadd_pd(x0,y1,t1); t1=_mm256_fmadd_pd(x1,y0,t1); /* add in pp1 & 2 */ \
+TWOSUMBS(t0,t1,z0,z1)  /* remove overlap */ \
+}
 // convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<=lo<1/2ULP (with only same-sign allowed if abs=0, opposite if abs=1/2ULP)
 // mantmask is 0x000ff..f
 #define CANONE(h,l) {__m256d mantis0=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(_mm256_and_pd(mantmask,l)),_mm256_setzero_si256())); /* 1s if mantissa is 0 */ \

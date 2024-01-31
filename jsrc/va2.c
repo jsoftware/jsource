@@ -976,6 +976,38 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
  R 1;
 }
 
+// +/@:*"1 for QP, without IRS
+static DF2(jtsumattymes1E){
+ if(unlikely((I)((1-AR(a))|(1-AR(w)))<0)){I lr=MIN((RANKT)jt->ranks,AR(a)); I rr=MIN(jt->ranks>>RANKTX,AR(w)); R rank2ex(a,w,(A)self,1,1,lr,rr,jtsumattymes1E);}  // if multiple results needed, do rank loop
+ I i; I n=AS(a)[AR(a)-1]; ASSERT(AS(w)[AR(w)-1]==n,EVLENGTH);  // length of vector; verify agreement
+ E *x=EAV(a)+n, *y=EAV(w)+n;  // input pointers, advanced past end
+ __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff});  /* needed masks: sign, mantissa */
+ /* we will read twice, masking.  We may read the first half twice to avoid overfetch */
+ __m256i rdmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[n&(NPAR-1)])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); /* masks for the 2 reads */
+ I rematom;  /* # atoms to accumulate */
+ __m256d in0,in1,x0,x1,y0,y1,z0,z1;
+ x -= ((n-1)&(NPAR-1))+1;  /* back up to beginning of last NPAR-atom section */
+ in0=_mm256_maskload_pd((D*)(x),rdmask);
+ in1=_mm256_maskload_pd((D*)(x+((n-1)&(NPAR/2))),_mm256_slli_epi64(rdmask,1));
+ SHUFIN(0,in0,in1,x0,x1);
+ y -= ((n-1)&(NPAR-1))+1; in0=_mm256_maskload_pd((D*)(y),rdmask); in1=_mm256_maskload_pd((D*)(y+((n-1)&(NPAR/2))),_mm256_slli_epi64(rdmask,1)); SHUFIN(0,in0,in1,y0,y1);
+ MULTEE(x0,x1,y0,y1,z0,z1)
+ for(rematom=(n-1)&-NPAR;rematom;rematom-=NPAR){  /* for each full batch */
+  x-=NPAR; in0=_mm256_loadu_pd((D*)x); in1=_mm256_loadu_pd((D*)(x+NPAR/2)); SHUFIN(0,in0,in1,x0,x1);  /* read 4 values, put into lanes */ 
+  y-=NPAR; in0=_mm256_loadu_pd((D*)y); in1=_mm256_loadu_pd((D*)(y+NPAR/2)); SHUFIN(0,in0,in1,y0,y1);  /* read 4 values, put into lanes */ 
+  MULTEE(x0,x1,y0,y1,x0,x1)
+  PLUSEE(x0,x1,z0,z1,z0,z1);  /* add to total */
+ }
+ y0=_mm256_permute_pd(z0,0b1111); y1=_mm256_permute_pd(z1,0b1111);  /* atoms 0+1, 2+3 */
+ PLUSEE(y0,y1,z0,z1,z0,z1);
+ y0=_mm256_permute4x64_pd(z0,0b10101010); y1=_mm256_permute4x64_pd(z1,0b10101010);  /* atoms 0+2 */
+ PLUSEE(y0,y1,z0,z1,z0,z1);
+ CANONE(z0,z1)
+ A zz; GAT0(zz,QP,1,0); E *z=EAV(zz);  // result area
+ *(I*)&z->hi=_mm256_extract_epi64(_mm256_castpd_si256(z0),0x0); *(I*)&z->lo=_mm256_extract_epi64(_mm256_castpd_si256(z1),0x0);
+ RETF(zz);
+}
+
 
 
 // +/@:*"1 with IRS, also +/@:*"1!.0 on float args and +/@:*"1!.1 producing a float extended-precision result, a length-2 list per product
@@ -993,6 +1025,11 @@ DF2(jtsumattymes1){
 
  // if an argument is empty, sparse, or not a fast arithmetic type, or only one arg has rank 0, revert to the code for f/@:g atomic
  if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|((acr-1)^(wcr-1)))<0) { // test for all unusual cases
+  if(ISDENSETYPE(AT(a)|AT(w),QP)&&((AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))>=0){
+   // QP dot-product.  Transfer to that code with rank still set
+   if(unlikely(!(AT(a)&QP)))RZ(a=cvt(QP,a)) else if(unlikely(!(AT(w)&QP)))RZ(w=cvt(QP,w))  // convert lower arg to qp
+   RETF(jtsumattymes1E(jt,a,w,self));
+  }
   ASSERT(fit!=2,EVNONCE)  // user expected 2 atoms per result, but we don't support that for repeated atomic arg
   if(fit!=0)self=FAV(self)->fgh[0];  // lose the !.[01] if we revert
   RESETRANK;  // This is required if we go to slower code

@@ -986,6 +986,8 @@ extern I        level(J,A);
 extern I        levelle(J,A,I);
 extern void     mvc(I,void*,I,void*);
 extern B        nameless(A);
+extern I        plus1I2II(I,I,I2*,I*,I*,J);
+extern I        plus1I4II(I,I,I4*,I*,I*,J);
 extern D        qpf(void);
 extern A        relocate(I,A);
 extern I        remii(I,I);

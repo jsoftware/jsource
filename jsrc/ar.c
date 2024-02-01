@@ -262,7 +262,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   NAN0;
-  // latency of add is 4, so use 8 accumulators for 2 reads per cycle
+  // latency of add is 2, so use 4 accumulators for 2 reads per cycle
   if(d==1){
 #if C_AVX2 || EMU_AVX2
    redprim256rk1(_mm256_add_pd,dzero)
@@ -305,6 +305,14 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
 
 REDUCENAN( plusinsZ, Z, Z, zplus, plusZZ )
 REDUCEPFX( plusinsX, X, X, xplus, plusXX, plusXX )
+
+static OP1XYZ(plus,I,I2,I2,pfxplus)
+OP1XYZ(plus,I,I2,I,pfxplus)
+REDUCEPFX( plusinsI2, I, I2, pfxplus, plus1I2I2I, plus1I2II )
+static OP1XYZ(plus,I,I4,I4,pfxplus)
+OP1XYZ(plus,I,I4,I,pfxplus)
+REDUCEPFX( plusinsI4, I, I4, pfxplus, plus1I4I4I, plus1I4II )
+
 
 #if C_AVX2 || EMU_AVX2
 // version for QP with AVX2.  Bandwidth is not an issue, so we accumulate into memory for rank > 1

@@ -1647,6 +1647,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define NAN1            {if(unlikely(_SW_INVALID&_clearfp())){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(unlikely(_SW_INVALID&_clearfp())){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
+#define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz(I one, I d, Tx *x, Ty *y, Tz *z, J jt){DO(d, z[i]=pfx(x[i],y[i]);) R EVOK;}
+
 // for debug only
 // #define NAN1            {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R 0;}}
 // #define NAN1V           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R  ;}}

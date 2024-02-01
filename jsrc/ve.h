@@ -80,7 +80,9 @@ extern ADECLP(  pluspfxO,D, I );  extern ADECLR(  plusinsO,D, I );  extern ADECL
 extern ADECLP(  pluspfxQ,Q, Q );                                    extern ADECLS(  plussfxQ,Q, Q );
 extern ADECLP(  pluspfxX,X, X );                                    extern ADECLS(  plussfxX,X, X );
 extern ADECLP(  pluspfxZ,Z, Z );  extern ADECLR(  plusinsZ,Z, Z );  extern ADECLS(  plussfxZ,Z, Z ); 
-extern ADECLR(  plusinsE,E, E );  
+extern ADECLR(  plusinsE,E, E );  extern ADECLR(  plusinsI2,I, I2 );   extern ADECLR(  plusinsI4,I, I4 );  
+extern ADECLR(  pluspfxI2,I, I2 );   extern ADECLR(  pluspfxI4,I, I4 );  
+extern ADECLR(  plussfxI2,I, I2 );   extern ADECLR(  plussfxI4,I, I4 );  
 extern ADECLP( tymespfxD,D, D );  extern ADECLR( tymesinsD,D, D );  extern ADECLS( tymessfxD,D, D );
 extern ADECLP( tymespfxI,I, I );  extern ADECLR( tymesinsI,I, I );  extern ADECLS( tymessfxI,I, I );
 extern ADECLP( tymespfxO,D, I );  extern ADECLR( tymesinsO,D, I );  extern ADECLS( tymessfxO,D, I );

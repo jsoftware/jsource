@@ -9,6 +9,7 @@
 
 // reduce/prefix/suffix routines
 // first word is the maximum valid precision bit index, followed by that many+1 routines for reduce, and then for prefix and suffix.
+// routines are in bit-index order
 // the last routine is always 0 to indicate invalid
 // if there are integer-overflow routine, they comes after the others, in the order rps
 VARPSA rpsnull = {0, {0}};
@@ -131,9 +132,9 @@ static VARPSA rpsminus = {RATX+1 , {
 {(VARPSF)minusinsO,VCVTIP+VD},{(VARPSF)minuspfxO,VCVTIP+VD},{(VARPSF)minussfxO,VCVTIP+VD},  // integer-overflow routines
 }};
 static VARPSA rpsplus = {QPX+1 , {
-{(VARPSF)plusinsB,VCVTIP+VI}, {0}, {(VARPSF)plusinsI,VCVTIP+VI}, {(VARPSF)plusinsD,VCVTIP+VD}, {(VARPSF)plusinsZ,VCVTIP+VZ},        {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {SY_64?(VARPSF)plusinsE:0,VCVTIP+VUNCH},
-{(VARPSF)pluspfxB,VCVTIP+VI}, {0}, {(VARPSF)pluspfxI,VCVTIP+VI}, {(VARPSF)pluspfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)pluspfxZ,VCVTIP+VZ}, {0}, {(VARPSF)pluspfxX,VCVTIP+VX}, {(VARPSF)pluspfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0},
-{(VARPSF)plussfxB,VCVTIP+VI}, {0}, {(VARPSF)plussfxI,VCVTIP+VI}, {(VARPSF)plussfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)plussfxZ,VCVTIP+VZ}, {0}, {(VARPSF)plussfxX,VCVTIP+VX}, {(VARPSF)plussfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0},
+{(VARPSF)plusinsB,VCVTIP+VI}, {0}, {(VARPSF)plusinsI,VCVTIP+VI}, {(VARPSF)plusinsD,VCVTIP+VD}, {(VARPSF)plusinsZ,VCVTIP+VZ},        {0}, {0}, {0}, {0}, {(VARPSF)plusinsI2,VCVTIP+VI}, {(VARPSF)plusinsI4,VCVTIP+VI}, {0}, {0}, {SY_64?(VARPSF)plusinsE:0,VCVTIP+VUNCH},
+{(VARPSF)pluspfxB,VCVTIP+VI}, {0}, {(VARPSF)pluspfxI,VCVTIP+VI}, {(VARPSF)pluspfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)pluspfxZ,VCVTIP+VZ}, {0}, {(VARPSF)pluspfxX,VCVTIP+VX}, {(VARPSF)pluspfxQ,VCVTIP+VQ}, {0}, {(VARPSF)pluspfxI2,VCVTIP+VI}, {(VARPSF)pluspfxI4,VCVTIP+VI}, {0}, {0}, {0},
+{(VARPSF)plussfxB,VCVTIP+VI}, {0}, {(VARPSF)plussfxI,VCVTIP+VI}, {(VARPSF)plussfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)plussfxZ,VCVTIP+VZ}, {0}, {(VARPSF)plussfxX,VCVTIP+VX}, {(VARPSF)plussfxQ,VCVTIP+VQ}, {0}, {(VARPSF)plussfxI2,VCVTIP+VI}, {(VARPSF)plussfxI4,VCVTIP+VI}, {0}, {0}, {0},
 {(VARPSF)plusinsO,VCVTIP+VD},{(VARPSF)pluspfxO,VCVTIP+VD},{(VARPSF)plussfxO,VCVTIP+VD},  // integer-overflow routines
 }};
 static VARPSA rpstymes = {RATX+1 , {
@@ -976,7 +977,7 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
  R 1;
 }
 
-#if C_AVX2 || EMU_AVX2
+#if (C_AVX2 || EMU_AVX2) & HASFMA
 // +/@:*"1 for QP, with IRS by hand
 static DF2(jtsumattymes1E){
  if(unlikely((I)((1-AR(a))|(1-AR(w)))<0)){I lr=MIN((RANKT)jt->ranks,AR(a)); I rr=MIN(jt->ranks>>RANKTX,AR(w)); R rank2ex(a,w,(A)self,1,1,lr,rr,jtsumattymes1E);}  // if multiple results needed, do rank loop
@@ -1027,7 +1028,7 @@ DF2(jtsumattymes1){
  // if an argument is empty, sparse, or not a fast arithmetic type, or only one arg has rank 0, revert to the code for f/@:g atomic
  if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|((acr-1)^(wcr-1)))<0) { // test for all unusual cases
   ASSERT(fit!=2,EVNONCE)  // user expected 2 atoms per result, but we don't support that for repeated atomic arg
-#if C_AVX2 || EMU_AVX2   // high-perf QP only on 64-bit
+#if (C_AVX2 || EMU_AVX2) & HASFMA   // high-perf QP only on 64-bit
   if(ISDENSETYPE(AT(a)|AT(w),QP)&&((AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))>=0){
    // QP dot-product.  Transfer to that code with rank still set
    if(unlikely(!(AT(a)&QP)))RZ(a=cvt(QP,a)) else if(unlikely(!(AT(w)&QP)))RZ(w=cvt(QP,w))  // convert lower arg to qp

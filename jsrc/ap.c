@@ -347,6 +347,10 @@ AHDRP(fn,D,D){I i; \
 PREFIXNAN( pluspfxZ, Z, Z,  zplus, plusZZ  )
 PREFIXPFX( pluspfxX, X, X,  xplus, plusXX ,HDR1JERR; )
 PREFIXPFX( pluspfxQ, Q, Q,  qplus, plusQQ ,HDR1JERR; )
+static OP1XYZ(plus,I,I,I2,pfxplus)
+PREFIXPFX( pluspfxI2, I, I2,  pfxplus, plus1II2I , R EVOK; )
+static OP1XYZ(plus,I,I,I4,pfxplus)
+PREFIXPFX( pluspfxI4, I, I4,  pfxplus, plus1II4I , R EVOK; )
 
 PREFIXPFX(tymespfxD, D, D,  TYMES, tymesDD ,R EVOK;  )
 PREFIXPFX(tymespfxZ, Z, Z,  ztymes, tymesZZ ,R EVOK;)

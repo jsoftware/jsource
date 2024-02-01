@@ -1,4 +1,4 @@
-/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Copyright (c) 1990-2024, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Adverbs: a ind}z for sparse z & ind is box a0;a1;a2;... or integer      */

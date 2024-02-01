@@ -326,6 +326,8 @@ Q jtQmpq(J jt, mpq_t mpq) {
   #define LIBEXT ".so"
   #ifdef __OpenBSD__
   #define LIBEXT10 ".so.11.0"    /* symlink of .so only available when devel package installed */
+  #elif defined(ANDROID)
+  #define LIBEXT10 ".so"
   #else
   #define LIBEXT10 ".so.10"    /* symlink of .so only available when devel package installed */
   #endif

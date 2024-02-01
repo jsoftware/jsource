@@ -1,4 +1,4 @@
-/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Copyright (c) 1990-2024, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* J Windows dll and com interface (old jcom.c, jdll.c, jwin32.c)          */

@@ -1,4 +1,4 @@
-/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Copyright (c) 1990-2024, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* j init libgmp support                                                   */
@@ -326,6 +326,8 @@ Q jtQmpq(J jt, mpq_t mpq) {
   #define LIBEXT ".so"
   #ifdef __OpenBSD__
   #define LIBEXT10 ".so.11.0"    /* symlink of .so only available when devel package installed */
+  #elif defined(ANDROID)
+  #define LIBEXT10 ".so"
   #else
   #define LIBEXT10 ".so.10"    /* symlink of .so only available when devel package installed */
   #endif

@@ -1,4 +1,4 @@
-/* Copyright (c) 1990-2023, Jsoftware Inc.  All rights reserved.           */
+/* Copyright (c) 1990-2024, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Character Functions  u&(a.&i.) and u&.(a.&i.)                    */

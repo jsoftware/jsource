@@ -306,6 +306,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
 REDUCENAN( plusinsZ, Z, Z, zplus, plusZZ )
 REDUCEPFX( plusinsX, X, X, xplus, plusXX, plusXX )
 
+#if C_AVX2 || EMU_AVX2
 // version for QP with AVX2.  Bandwidth is not an issue, so we accumulate into memory for rank > 1
 I plusinsE(I d,I n,I m,E* RESTRICTI x,E* RESTRICTI z,J jt){I i;  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
   if(d==1){x += m*n; z+=m;
@@ -338,6 +339,7 @@ I plusinsE(I d,I n,I m,E* RESTRICTI x,E* RESTRICTI z,J jt){I i;  // m is # cells
  }
  R EVOK;
 }
+#endif
 
 
 REDUCEPFX(minusinsB, I, B, MINUS, minusBB, minusBI ) 

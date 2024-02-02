@@ -49,7 +49,9 @@ jobs:
      uses: actions/checkout@v3
 
    - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2
+     uses: petarpetrovt/setup-sde@v2.3
+     with:
+       sdeVersion: 9.27.0 # possible values: 9.27.0 (default), 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
 
    - name: Setup Environment (Linux)
      run: script/install-lnx.sh
@@ -107,7 +109,9 @@ jobs:
      uses: actions/checkout@v3
 
    - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2
+     uses: petarpetrovt/setup-sde@v2.3
+     with:
+       sdeVersion: 9.27.0 # possible values: 9.27.0 (default), 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
 
    - name: Setup Environment (Linux gcc)
      run: script/install-lnx.sh
@@ -833,14 +837,3 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
- #webhook:
-  #name: Run Webhook
-  #runs-on: ubuntu-22.04
-  #needs: tests
-  #steps:
-   #- name: update server
-     #uses: distributhor/workflow-webhook@v2
-     #env:
-      #webhook_url: ${{ secrets.WEBHOOK_URL }}
-      #webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
-      #data: '{ "id": "jebuild" }'

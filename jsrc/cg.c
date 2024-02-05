@@ -161,7 +161,8 @@ F2(jtevger){F2PREFIP;A hs;I k;
    ASSERT(0,EVDOMAIN);
 }}
 
-F2(jttie){F2PREFIP;ARGCHK2(a,w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
+// u`v.  Allow append-in-place to m
+F2(jttie){F2PREFIP;ARGCHK2(a,w); R jtapip(jtinplace,VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large

@@ -858,7 +858,7 @@ RECURSIVERESULTSCHECK
        }
        // If EDGE on line 1, we must rescan for EDGE V V N
       }else{
-       // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
+       // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about recursion
        pmask>>=3; // 1 for adj, 2 for conj
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
@@ -866,7 +866,8 @@ RECURSIVERESULTSCHECK
        A arg3=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED); arg3=pmask&2?arg3:(A)jt;  // fs, if this is a conjunction, for FAOWED testing.  If not conj, set to jt which has FAOWED clear but allows reads.  Atomic to avoid branch
        UI4 restok=stack[1].t;  // save token # to use for result
        // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
-       A yy=(*actionfn)((J)((I)jt|JTXDEFMODIFIER),QCWORD(arg1),QCWORD(arg2),fs);
+       // We mark the inputs inplaceable (the first modifier to support that is u`v) - both always, even for adverbs
+       A yy=(*actionfn)((J)((I)jt|JTXDEFMODIFIER+JTINPLACEA+JTINPLACEW),QCWORD(arg1),QCWORD(arg2),fs);
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine

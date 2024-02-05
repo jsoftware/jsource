@@ -1,6 +1,30 @@
 #ifndef SSE2NEON_H
 #define SSE2NEON_H
 
+/*
+ * sse2neon is freely redistributable under the MIT License.
+ *
+ * Copyright (c) 2015-2024 SSE2NEON Contributors.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 // This header file provides a simple API translation layer
 // between SSE intrinsics to their corresponding Arm/Aarch64 NEON versions
 //
@@ -27,28 +51,6 @@
 //   Cuda Chen <clh960524@gmail.com>
 //   Aymen Qader <aymen.qader@arm.com>
 //   Anthony Roberts <anthony.roberts@linaro.org>
-
-/*
- * sse2neon is freely redistributable under the MIT License.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
 
 /* Tunable configurations */
 
@@ -104,6 +106,10 @@
 #pragma message("Macro name collisions may happen with unsupported compilers.")
 #endif
 
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 10
+#warning "GCC versions earlier than 10 are not supported."
+#endif
+
 /* C language does not allow initializing a variable with a function call. */
 #ifdef __cplusplus
 #define _sse2neon_const static const
@@ -130,7 +136,7 @@
 #endif
 
 #if !defined(__cplusplus)
-#error sse2neon only supports C++ compilation with this compiler
+#error SSE2NEON only supports C++ compilation with this compiler
 #endif
 
 #ifdef SSE2NEON_ALLOC_DEFINED
@@ -1716,7 +1722,7 @@ FORCE_INLINE int64_t _mm_cvttss_si64(__m128 a)
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_div_ps
 FORCE_INLINE __m128 _mm_div_ps(__m128 a, __m128 b)
 {
-#if defined(__aarch64__) || defined(_M_ARM64)
+#if (defined(__aarch64__) || defined(_M_ARM64)) && !SSE2NEON_PRECISE_DIV
     return vreinterpretq_m128_f32(
         vdivq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
 #else
@@ -2293,6 +2299,10 @@ FORCE_INLINE __m128 _mm_rcp_ps(__m128 in)
 {
     float32x4_t recip = vrecpeq_f32(vreinterpretq_f32_m128(in));
     recip = vmulq_f32(recip, vrecpsq_f32(recip, vreinterpretq_f32_m128(in)));
+#if SSE2NEON_PRECISE_DIV
+    // Additional Netwon-Raphson iteration for accuracy
+    recip = vmulq_f32(recip, vrecpsq_f32(recip, vreinterpretq_f32_m128(in)));
+#endif
     return vreinterpretq_m128_f32(recip);
 }
 
@@ -2325,6 +2335,11 @@ FORCE_INLINE __m128 _mm_rsqrt_ps(__m128 in)
 
     out = vmulq_f32(
         out, vrsqrtsq_f32(vmulq_f32(vreinterpretq_f32_m128(in), out), out));
+#if SSE2NEON_PRECISE_SQRT
+    // Additional Netwon-Raphson iteration for accuracy
+    out = vmulq_f32(
+        out, vrsqrtsq_f32(vmulq_f32(vreinterpretq_f32_m128(in), out), out));
+#endif
 
     // Set output vector element to infinity/negative-infinity if
     // the corresponding input vector element is 0.0f/-0.0f.
@@ -2640,7 +2655,7 @@ FORCE_INLINE void _mm_lfence(void)
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sqrt_ps
 FORCE_INLINE __m128 _mm_sqrt_ps(__m128 in)
 {
-#if defined(__aarch64__) || defined(_M_ARM64)
+#if (defined(__aarch64__) || defined(_M_ARM64)) && !SSE2NEON_PRECISE_SQRT
     return vreinterpretq_m128_f32(vsqrtq_f32(vreinterpretq_f32_m128(in)));
 #else
     float32x4_t recip = vrsqrteq_f32(vreinterpretq_f32_m128(in));
@@ -7592,14 +7607,22 @@ FORCE_INLINE int _mm_test_all_zeros(__m128i a, __m128i mask)
 // zero, otherwise set CF to 0. Return 1 if both the ZF and CF values are zero,
 // otherwise return 0.
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=mm_test_mix_ones_zero
+// Note: Argument names may be wrong in the Intel intrinsics guide.
 FORCE_INLINE int _mm_test_mix_ones_zeros(__m128i a, __m128i mask)
 {
-    uint64x2_t zf =
-        vandq_u64(vreinterpretq_u64_m128i(mask), vreinterpretq_u64_m128i(a));
-    uint64x2_t cf =
-        vbicq_u64(vreinterpretq_u64_m128i(mask), vreinterpretq_u64_m128i(a));
-    uint64x2_t result = vandq_u64(zf, cf);
-    return !(vgetq_lane_u64(result, 0) | vgetq_lane_u64(result, 1));
+    uint64x2_t v = vreinterpretq_u64_m128i(a);
+    uint64x2_t m = vreinterpretq_u64_m128i(mask);
+
+    // find ones (set-bits) and zeros (clear-bits) under clip mask
+    uint64x2_t ones = vandq_u64(m, v);
+    uint64x2_t zeros = vbicq_u64(m, v);
+
+    // If both 128-bit variables are populated (non-zero) then return 1.
+    // For comparision purposes, first compact each var down to 32-bits.
+    uint32x2_t reduced = vpmax_u32(vqmovn_u64(ones), vqmovn_u64(zeros));
+
+    // if folding minimum is non-zero then both vars must be non-zero
+    return (vget_lane_u32(vpmin_u32(reduced, reduced), 0) != 0);
 }
 
 // Compute the bitwise AND of 128 bits (representing integer data) in a and b,
@@ -8477,12 +8500,47 @@ FORCE_INLINE uint32_t _mm_crc32_u8(uint32_t crc, uint8_t v)
     crc = __crc32cb(crc, v);
 #else
     crc ^= v;
-    for (int bit = 0; bit < 8; bit++) {
-        if (crc & 1)
-            crc = (crc >> 1) ^ UINT32_C(0x82f63b78);
-        else
-            crc = (crc >> 1);
-    }
+#if defined(__ARM_FEATURE_CRYPTO)
+    // Adapted from: https://mary.rs/lab/crc32/
+    // Barrent reduction
+    uint64x2_t orig =
+        vcombine_u64(vcreate_u64((uint64_t) (crc) << 24), vcreate_u64(0x0));
+    uint64x2_t tmp = orig;
+
+    // Polynomial P(x) of CRC32C
+    uint64_t p = 0x105EC76F1;
+    // Barrett Reduction (in bit-reflected form) constant mu_{64} = \lfloor
+    // 2^{64} / P(x) \rfloor = 0x11f91caf6
+    uint64_t mu = 0x1dea713f1;
+
+    // Multiply by mu_{64}
+    tmp = _sse2neon_vmull_p64(vget_low_u64(tmp), vcreate_u64(mu));
+    // Divide by 2^{64} (mask away the unnecessary bits)
+    tmp =
+        vandq_u64(tmp, vcombine_u64(vcreate_u64(0xFFFFFFFF), vcreate_u64(0x0)));
+    // Multiply by P(x) (shifted left by 1 for alignment reasons)
+    tmp = _sse2neon_vmull_p64(vget_low_u64(tmp), vcreate_u64(p));
+    // Subtract original from result
+    tmp = veorq_u64(tmp, orig);
+
+    // Extract the 'lower' (in bit-reflected sense) 32 bits
+    crc = vgetq_lane_u32(vreinterpretq_u32_u64(tmp), 1);
+#else  // Fall back to the generic table lookup approach
+    // Adapted from: https://create.stephan-brumme.com/crc32/
+    // Apply half-byte comparision algorithm for the best ratio between
+    // performance and lookup table.
+
+    // The lookup table just needs to store every 16th entry
+    // of the standard look-up table.
+    static const uint32_t crc32_half_byte_tbl[] = {
+        0x00000000, 0x105ec76f, 0x20bd8ede, 0x30e349b1, 0x417b1dbc, 0x5125dad3,
+        0x61c69362, 0x7198540d, 0x82f63b78, 0x92a8fc17, 0xa24bb5a6, 0xb21572c9,
+        0xc38d26c4, 0xd3d3e1ab, 0xe330a81a, 0xf36e6f75,
+    };
+
+    crc = (crc >> 4) ^ crc32_half_byte_tbl[crc & 0x0F];
+    crc = (crc >> 4) ^ crc32_half_byte_tbl[crc & 0x0F];
+#endif
 #endif
     return crc;
 }

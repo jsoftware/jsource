@@ -2,8 +2,7 @@ name: JE
 
 on:
  push:
-  branches:
-   - '**'
+  branches: [ master ]
 
 # trigger workflow on file change
 #on:

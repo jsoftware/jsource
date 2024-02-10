@@ -261,6 +261,7 @@ noparse: ;
   // set up to restart on the same line, so all we have to do is clear the error and return 0 so that debugnewi restarts the line
    RESETERR parsez=0;  // set to branch to the selected line in this frame
   }else{
+   // go into suspension
    DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0; //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
   }
  }

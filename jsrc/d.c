@@ -44,6 +44,7 @@ static void jtefmt(J jt,C*s,I i){
 }
 
 // jt has the typeout flags.  Display error text if any, then reset errors
+// If the sentence fails, there should always be an error message EXCEPT for when debug exits: that fails quietly
 void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
  if(jt->etxn&&!((I)jtinplace&JTPRNOSTDOUT)){  // if there is a message and it is not suppressed...
   p=b; q=jt->etxinfo->etx; r=q+jt->etxn;
@@ -328,7 +329,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
       if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such
       eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
       if(!jt->glock){  // suppress detail if locked
-       if((line!=0) && !(eflg&EMSGLINEISTERSE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
+       if((line!=0) && !(eflg&EMSGLINEISTERSE+EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
         // display the message in line, according to its mode
         C *text; I textlen;
         if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type

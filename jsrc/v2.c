@@ -713,10 +713,12 @@ static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,m;X a,b,g,q[3];
  R X1;
 }
 
+// q: on extended numbers
 static F1(jtxfactor){PROLOG(0064);
  F1RANK(0,jtxfactor,DUMMYSELF);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
- X x=XAV(w)[0]; UI m=XLIMBn(x)%10000;
+ X x=XAV(w)[0];
+// obsolete  UI m=XLIMBn(x)%10000;
  // ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);
  if(1>xcompare(x,xc(MAXIFACTOR)))  // if factorable as I, do that
 	 R xco1(factor(sc(xint(x))));
@@ -729,9 +731,10 @@ static F1(jtxfactor){PROLOG(0064);
   if(xprimeq(100L,x)){RZ(z=apip(z,scx(x))); continue;}
   X g;RZ(g=pollard_p_1(x)); if(!ISX1(g)){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   RZ(g=pollard_rho(x)); if(!ISX1(g)){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
-  if(!b){b=1; RZ(rngseeds(sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS))); RZ(roll(v2(m,m*m)));} 
-  RZ(g=fac_ecm(x)); if(!ISX1(g)){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
+// obsolete   if(!b){b=1; RZ(rngseeds(sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS))); RZ(roll(v2(m,m*m)));} 
+  DO(jt->ecmtries, RZ(g=fac_ecm(x)); if(!ISX1(g)){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); goto found;})
   ASSERT(0,EVNONCE);
+found:;
  }
  z=grade2(z,z);
  EPILOG(z);

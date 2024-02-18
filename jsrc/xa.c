@@ -19,8 +19,12 @@ extern int numberOfCores;
 
 #include <signal.h>
 
-F1(jtassertq){ASSERTMTV(w); R scb(JT(jt,assert));}
+// 9!:32-33 #tries for elliptic-curve factoring
+F1(jtecmtriesq){ASSERTMTV(w); R sc(jt->ecmtries);}
+F1(jtecmtriess){I i; RE(i=i0(w)); ASSERT(BETWEENC(i,1,255),EVLIMIT) jt->ecmtries=i; R mtm;}
 
+// 9!:34-35 assertion enable
+F1(jtassertq){ASSERTMTV(w); R scb(JT(jt,assert));}
 F1(jtasserts){B b; RE(b=b0(w)); JT(jt,assert)=b; R mtm;}
 
 F1(jtboxq){ASSERTMTV(w); R str(sizeof(JT(jt,bx)),JT(jt,bx));}

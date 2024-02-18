@@ -635,7 +635,7 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
   // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicit character
   f=d->dcf;
-  ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSIDAMAGE,d->dca);
+  ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSIDAMAGE,d->dca);  // the executing value MUST have a name, otherwise we couldn't modify it
   d->dcf=w;
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.

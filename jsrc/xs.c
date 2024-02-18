@@ -77,14 +77,14 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  A *old=jt->tnextpushp;
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
- case 0: NOUNROLL while(x&&!jt->jerr){RESETERR x=jgets("   "); if(x==0)break; SETTRACK jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); tpop(old);} break;  // lgets returns 0 for error or EOF
- case 1: NOUNROLL while(x           ){if(!JT(jt,seclev))jtshowerr(jtinplace); RESETERR x=jgets("   ");  SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); tpop(old);} break;
+ case 0: NOUNROLL while(x){RESETERR x=jgets("   "); if(x==0)break; SETTRACK jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); if(jt->jerr)break; tpop(old);} break;  // lgets returns 0 for error or EOF
+ case 1: C se=jt->emsgstate; jt->emsgstate|=EMSGSTATETRAPPING; NOUNROLL while(x){if(!JT(jt,seclev))jtshowerr(jtinplace); RESETERR x=jgets("   ");  SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); tpop(old);} jt->emsgstate=se; break;
  case 2:
  case 3: {
 #if SEEKLEAK
   I stbytes = spbytesinuse();
 #endif
-  NOUNROLL while(x&&!jt->jerr){RESETERR x=jgets("   "); if(x==0)break; SETTRACK jtimmea(jtinplace,x); tpop(old);}
+  NOUNROLL while(x){RESETERR x=jgets("   "); if(x==0)break; SETTRACK jtimmea(jtinplace,x); if(jt->jerr)break; tpop(old);}   // no tpop on untrapped error
 #if SEEKLEAK
   I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif
@@ -165,13 +165,13 @@ F1(jtscriptnum){
 }
 
 // entry points for 0!:0-0!:112
-DF1(jtscm00 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm00, self); R r?line(w,-1L,0,0):linf(mark,w,0,0);}
-DF1(jtscm01 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm01, self); R r?line(w,-1L,0,1):linf(mark,w,0,1);}
-DF1(jtscm10 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm10, self); R r?line(w,-1L,1,0):linf(mark,w,1,0);}
-DF1(jtscm11 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm11, self); R r?line(w,-1L,1,1):linf(mark,w,1,1);}
-DF1(jtsct1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtsct1,  self); R r?line(w,-1L,2,1):linf(mark,w,2,1);}
-DF1(jtscz1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscz1,  self); R r?line(w,-1L,3,0):linf(mark,w,3,0);}
-DF1(jtscy1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscy1,  self); R r?line(w,-1L,3,1):linf(mark,w,3,1);}
+DF1(jtscm00 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm00, self); R r?line(w,-1L,0,0):linf(mark,w,0,0);}  // 0!:[01]00
+DF1(jtscm01 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm01, self); R r?line(w,-1L,0,1):linf(mark,w,0,1);}  // 0!:[01]01
+DF1(jtscm10 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm10, self); R r?line(w,-1L,1,0):linf(mark,w,1,0);}  // 0!:[01]10
+DF1(jtscm11 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm11, self); R r?line(w,-1L,1,1):linf(mark,w,1,1);}  // 0!:[01]11
+DF1(jtsct1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtsct1,  self); R r?line(w,-1L,2,1):linf(mark,w,2,1);}  // 0!:2
+DF1(jtscz1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscz1,  self); R r?line(w,-1L,3,0):linf(mark,w,3,0);}  // 0!:3
+DF1(jtscy1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscy1,  self); R r?line(w,-1L,3,1):linf(mark,w,3,1);}  // 0!:4
 
 DF2(jtscm002){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm002,self); R r?line(w,-1L,0,0):linf(a,   w,0,0);}
 DF2(jtscm012){I r; ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE) r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm012,self); R r?line(w,-1L,0,1):linf(a,   w,0,1);}

@@ -403,6 +403,21 @@ static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
 
 static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread struct we are executing in (the master/debug thread)
  jm->jerr=0; jm->etxn=0; /* clear old errors */
+ // if the previous console sentence ended with error, and the user replies with ENTER (i. e. empty string), treat that as a request to debug.
+ // on any other reply, free up the values and allocations made by the failing sentence
+ if(unlikely(jm->pmstacktop!=0&&jm->recurstate<RECSTATEPROMPT)){  // last sentence failed, and ran to completion to get a full error stack
+  if(lp[0]!='\n'&&lp[0]!=0){  // nonnull string
+   // user responded to error with a new sentence.  Clear the error stack
+   DC s=jm->pmstacktop; while(s){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->pmstacktop=0;  // purge symbols & clear stack
+   jttpop(jm,jm->pmttop);  // free all memory allocated in the previous sentence
+   jm->pmttop=0;  // clear to avoid another reset
+  }else{
+   // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order
+   DC s=jm->pmstacktop, sp=0; while(s){DC sn=s->dclnk; s->dclnk=sp; sp=s; s=sn;} jm->sitop=sp; jm->pmstacktop=0;  // reverse pmstack, move it to debug stack
+   lp="'dbstk'''' to see stack; dbr 0 to exit debug; dbr 1 to clear stack' [ 13!:0 (513)";  // change the sentence to one that types a greeting after entering pm debug
+  }
+ }
+
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
  // To prevent the stack from growing indefinitely, we reset it here.  We reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
@@ -420,7 +435,16 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
- x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE)); if(!jm->jerr)jtimmexexecct(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
+ x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE));  // allow reads from jgets() if not recursive; return enqueue() result
+ if(!jm->jerr)jtimmexexecct(jm,x);  //  ****** here is where we execute the user's sentence ******
+ // if the result is an exit from suspension (which must be from dbr because we aren't now actually in a suspension), and there is a stack, purge symbols from the private symbs and free memory back to the error
+ if(unlikely(JT(jt,dbuser)&TRACEDBSUSCLEAR)){  // if user executed dbr...
+  if(jm->pmttop&&jm->sitop&&jm->sitop->dctype==DCCALL&&jm->sitop->dcpflags==1){   // if there is a pm debug session going, and top-of-stack is from pm, end the session
+   DC s=jm->sitop; while(s){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->sitop=0;
+   old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
+  }
+  JT(jt,dbuser)&=~(TRACEDBSUSCLEAR);  // always turn off flag
+ }
  e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm)  // save error on sentence to be our return code
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
  RESETERRT(jm)
@@ -431,7 +455,8 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   jtrepatrecv(jm);  // receive any repatriated sentences
   jtspfree(jm);  // check for garbage collection
  }
- jttpop(jm,old);
+ // free any memory left at the end of the sentence.  BUT if the sentence failed and created a pm stack, defer the free and offer pm debugging
+ if(likely(((I)jm->pmstacktop|(I)jm->pmttop)==0))jttpop(jm,old); else{if(jm->pmttop==0)jsto(jt,MTYOER,"Press ENTER to debug\n"); jm->pmttop=old;}  // free if not new or continuing pm session; message first time through
  R e;
 }
 

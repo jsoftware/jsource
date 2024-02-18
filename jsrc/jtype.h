@@ -149,7 +149,7 @@ struct AD {
  union {
   I k;
   A chain;   // used when block is on free chain
-  A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table when the current sentence started parsing
+  A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table, i. e. jt->global, when that table is active
   A *locpath;  // for non-local SYMB (named and numeric), AK points to the path, which is the end of a list of addresses of SYMBs
              // LOCPATH is tricky because it is used during name lookup but can be modified all over, and can be assigned even when no thread is executing the
              // locale, which means that the locale can be deleted while the path is being changed.  We make these rules: (1) use atomic_exchange to modify LOCPATH;
@@ -736,26 +736,27 @@ typedef struct {  // we could consider align(4) to save space - would require ch
 #define DCSCRIPT 2      /* script              -- line()                                */
 #define DCCALL   3      /* verb/adv/conj call  -- dbunquote()                           */
 #define DCJUNK   4      /* stack entry is stale                                      */
+#define DCPM     5      // postmortem entry
 
-typedef struct DS{      /* 1 2 3                                                        */
- struct DS*dclnk;       /* x x x  link to next stack entry                              */
- A dcy;                 /* x x x  &tokens; text       ; right argument                  */
- I dcn;                 /* x x x  #tokens; line #     ; ptr to executing value               */
- I dcix;                // x x x  index ; next index  ; line# in exp def being executed, or to be exec next
- I dcj;                 /* x x x  error#; prev index  ; error #                         */
- C dctype;              /* x x x  type of entry (see #define DC*)                       */
- B dcsusp;              /* x   x  1 iff begins a debug suspension                       */
- C dcss;                //   x x  1 if script is supplying sentences (0 if interrupted by prompt) ;single step code
- C dcnewlineno;         //     x  set when debug has installed a new line number into dcix
- C dcpflags;            //   x    prompt flags, see JTPRTYO
- C dcredef;             //     x  set if this definition has been reassigned while running on top of stack
- A dca;                 /*     x  fn/op name                                            */
- A dcf;                 /*     x  fn/op                                                 */
- A dcx;                 /*     x  left argument                                         */
- A dcloc;               /*     x  local symb table (0 if not explicit)                  */
- A dcc;                 /*     x  control matrix   (0 if not explicit)                  */
- I dcm;                 /*   x x        ; script index; # of non-locale part of name    */
- I dcstop;              /*     x  the last stop in this function                        */
+typedef struct DS{      /* 1 2 3 5                                                       */
+ struct DS*dclnk;       /* x x x x   link to next stack entry                              */
+ A dcy;                 /* x x x    &tokens; text       ; right argument                  */
+ I dcn;                 /* x x x    #tokens; line #     ; ptr to executing value               */
+ I dcix;                // x x x x  index ; next index  ; cw# in exp def being executed, or to be exec next
+ I dcj;                 /* x x x x  error#; prev index  ; error #                         */
+ C dctype;              /* x x x x  type of entry (see #define DC*)                       */
+ B dcsusp;              /* x   x    1 iff begins a debug suspension                       */
+ C dcss;                //   x x    1 if script is supplying sentences (0 if interrupted by prompt) ;single step code
+ C dcnewlineno;         //     x    set when debug has installed a new line number into dcix
+ C dcpflags;            //   x x x      ;prompt flags, see JTPRTYO  ; 1 if DCPM, which requires symfreeha on the symbol table when freed
+ C dcredef;             //     x    set if this definition has been reassigned while running on top of stack
+ A dca;                 /*     x x  fn/op name                                            */
+ A dcf;                 /*     x x  fn/op                                                 */
+ A dcx;                 /*     x    left argument                                         */
+ A dcloc;               /*     x x  local symb table (0 if not explicit)                  */
+ A dcc;                 /*     x x  control matrix   (0 if not explicit)                  */
+ I dcm;                 /*   x             ; script index   */
+ I dcstop;              /*     x    the last stop in this function                        */
 } DST;
 
 typedef DST* DC;

@@ -19,25 +19,43 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkb
 /*    d=deba(...);                                       */
 /*    ASSERT(blah,EVDOMAIN);                             */
 /*    debz()                                             */
-
-DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
+// t is the type of stack entry.  The entry is allocated and filled in
+// the type DCPM is for powt-mortem debugging.  It is like DCCALL but chained on jt->pmstacktop rather than jt->sitop, and chained
+// in bottom-to-top order that must be reversed when transferred to the debug stack
+// meanings of the args:
+// DCPARSE: x=&tokens  y=#tokens
+// DCSCRIPT: y=script text  fs=script index in script list
+// DCCALL: x=left arg if any  y=right arg if any  f=self
+// DCJUNK: N/A
+// DCPM: t=(line#<<8)+type  x=&local symbols   y=&control words  fs=self
+DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
  {A q; GAT0(q,LIT,sizeof(DST),1); d=(DC)AV(q);}
  mvc(sizeof(DST),d,1,MEMSET00);
- if(jt->sitop&&t!=DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
- d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
- switch(t){
+ C tt=t;  // type is low bits
+ if(jt->sitop&&t<DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
+ DC *root=tt==DCPM?&jt->pmstacktop:&jt->sitop;  // choose chain to add to
+ d->dclnk=*root; *root=d;  // chain new block at head (oldest for normal blocks, youngest for DCPM)
+ switch(tt){
  case DCPARSE:  d->dcy=(A)x; d->dcn=(I)y; break;
  case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
  case DCCALL:   
   d->dcx=x; d->dcy=y; d->dcf=fs; 
-  d->dca=jt->curname; d->dcm=NAV(d->dca)->m;
+  d->dca=jt->curname;
   d->dcstop=-2;
   // dcn fill in in caller
   // if we were waiting to step into a function, this is it: mark this function as stoppable
   // and remove the stop in the caller
   DC e=d->dclnk; NOUNROLL while(e&&DCCALL!=e->dctype)e=e->dclnk;  // find previous call
   if(e&&e->dcss==SSSTEPINTOs){d->dcss=SSSTEPINTOs; e->dcss=0;}
+  break;
+ case DCPM:
+  d->dcix=t>>8; d->dcf=fs; d->dcloc=x; d->dcc=y;  // save input parms
+  d->dca=jt->curname;  // save executing name, if any
+  d->dcstop=-2;  // ??
+  d->dcj=jt->jerr;  // save error# - not really needed
+  tt=DCCALL; d->dcpflags=1;  // turn DCPM into DCCALL with pflags set
  }
+ d->dctype=tt;  // install type, which might have been modified
  R d;
 }    /* create new top of si stack */
 
@@ -56,7 +74,7 @@ F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
   RZ(zv[3]=d->dctype==DCCALL?sc(lnumsi(d)):mtv);
   switch(d->dctype){
    case DCPARSE:  RZ(zv[4]=unparse(d->dcy)); break;
-   case DCCALL:   RZ(zv[4]=sfn(0,d->dca));   break;
+   case DCCALL:   RZ(zv[4]=d->dca?sfn(0,d->dca):mtv);   break;
    case DCSCRIPT: zv[4]=d->dcy;              break;
    case DCJUNK:   zv[4]=mtv;                 break; 
   }
@@ -312,17 +330,17 @@ F2(jtdberr2){
 
 // Suspension-ending commands.  These commands return a list of boxes flagged with the AFDEBUGRESULT flag.  The first box is always an integer atom and gives the type
 // of exit (run, step, clear, etc).  Other boxes give values for the run and ret types.  EXCEPTION: 13!:0 returns i. 0 0 for compatibility, but still flagged as AFDEBUGRESULT
-F1(jtdbc){UC k;
+F1(jtdbc){I k;
  ARGCHK1(w);
- RE(k=(UC)i0(w));
- ASSERT(!(k&~(TRACEDBSUSFROMSCRIPT|TRACEDB1)),EVDOMAIN);
+ RE(k=i0(w));
+ ASSERT(!(k&~(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT|TRACEDB1)),EVDOMAIN);
  ASSERT(!k||!jt->glock,EVDOMAIN);
  // turn debugging on/off in all threads
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the stack to allow suspension commands room to run
  jt->fcalln=NFCALL>>(k&TRACEDB1);  // similarly reduce max fn-call depth
- JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1
+ if(likely(!(k&TRACEDBDEBUGENTRY)))JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into debug, suppress this so we don't immediately come out of debug
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

@@ -235,6 +235,8 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(9,28):  R CDERIV(CIBEAM, jtiepdoq,     0,            VASGSAFE,RMAX,RMAX,RMAX); 
   case XC(9,29):  R CDERIV(CIBEAM, jtiepdos,     0,            VASGSAFE,RMAX,RMAX,RMAX); 
   case XC(9,30):  R CDERIV(CIBEAM, jtcurnameq,   0,            VASGSAFE,RMAX,RMAX,RMAX); 
+  case XC(9,32):  R CDERIV(CIBEAM, jtecmtriesq,    0,            VASGSAFE,RMAX,RMAX,RMAX); 
+  case XC(9,33):  R CDERIV(CIBEAM, jtecmtriess,    0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,34):  R CDERIV(CIBEAM, jtassertq,    0,            VASGSAFE,RMAX,RMAX,RMAX); 
   case XC(9,35):  R CDERIV(CIBEAM, jtasserts,    0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,36):  R CDERIV(CIBEAM, jtoutparmq,   0,            VASGSAFE,RMAX,RMAX,RMAX);
@@ -295,7 +297,6 @@ F2(jtforeign){F2PREFIP;I p,q;
   case XC(13,20): R CDERIV(CIBEAM, jtdbstepover1,jtdbstepover2,VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,21): R CDERIV(CIBEAM, jtdbstepinto1,jtdbstepinto2,VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,22): R CDERIV(CIBEAM, jtdbstepout1, jtdbstepout2, VFLAGNONE,RMAX,RMAX,RMAX);
-  case XC(13,23): R CDERIV(CIBEAM, jtcheckfreepool, 0,         VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,-1): R CDERIV(CIBEAM, 0,            jtfindrange,  VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,-2): R CDERIV(CIBEAM, 0,            jtfindrange4, VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,-3): R CDERIV(CIBEAM, 0,            jtfindrange2, VFLAGNONE,RMAX,RMAX,RMAX);
@@ -305,6 +306,7 @@ F2(jtforeign){F2PREFIP;I p,q;
 #if PYXES
   case XC(13,-7): R CDERIV(CIBEAM, jtnulljob,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 #endif
+  case XC(13,-8): R CDERIV(CIBEAM, jtcheckfreepool, 0,         VFLAGNONE,RMAX,RMAX,RMAX);
   default: ASSERT(0,EVDOMAIN); break;
   } break;
  case 15:

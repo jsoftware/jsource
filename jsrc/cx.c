@@ -50,8 +50,10 @@
 #define SETTRACK
 #endif
 
-#define POPTRYSTK if(!--tdi){jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|(UC)(nGpysfctdl>>8); nGpysfctdl^=4;}
-#define POPIFTRYSTK if(unlikely(nGpysfctdl&4))POPTRYSTK
+#define PUSHTRYSTK ((jt->uflags.trace&TRACEDB)|((jt->emsgstate&EMSGSTATETRAPPING)>>(EMSGSTATETRAPPINGX-TRACEPMX)))  // value to save before a push
+#define POPTRYSTK(v) {jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|((v)&TRACEDB); jt->emsgstate=(jt->emsgstate&~EMSGSTATETRAPPING)|(((v)<<(EMSGSTATETRAPPINGX-TRACEPMX))&EMSGSTATETRAPPING);}   // restore value saved before push
+// obsolete #define POPORIGTRYSTK {jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|((UC)(nGpysfctdl>>8)&TRACEDB); jt->emsgstate=(jt->emsgstate&~EMSGSTATETRAPPING)|((UC)(nGpysfctdl>>(8+TRACEPMX-EMSGSTATETRAPPINGX))&EMSGSTATETRAPPING); nGpysfctdl^=4;}
+#define POPIFTRYSTK if(unlikely(nGpysfctdl&4)){--tdi; POPTRYSTK((tdv+tdi)->trap) if(likely(tdi==0))nGpysfctdl&=~4;}  // pop within try. stack; if pop to empty, clear flag
 #define NOUNERR(t,ti) \
     /* Signal post-exec error*/ \
     {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
@@ -85,7 +87,7 @@ typedef struct CDATA {
  LX indexsym;  // symbol unmber of xyz_index, 0 for for.
 } CDATA;
 
-typedef struct{I4 d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and try.
+typedef struct{I4 d,t,e,b;C trap;} TD;  // line numbers of catchd., catcht., end. and try.; emssstate flag for trapping
 #define WTD            (sizeof(TD)/sizeof(I))
 #define NTD            17     /* maximum nesting for try/catch */
 
@@ -176,8 +178,9 @@ static A swapitervbl(J jt,A old,A *valloc){
  R old;
 }
 
+// When try. in encountered, scan forward to find the other components
 static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
- v->b=(I4)i;v->d=v->t=0;
+ v->b=(I4)i; v->d=v->t=0;
  while(t!=CEND){
   j=(j+cw)->go;  // skip through just the control words for this try. structure
   switch(t=(j+cw)->ig.indiv.type){
@@ -192,8 +195,8 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
 // if there is a try stack, pop its stack frames if they don't include the line number of the goto
 // result is new value for tdi
 // This is called only if tdi is nonzero & therefore we have a stack
-static I trypopgoto(TD* tdv, I tdi, I dest){
- NOUNROLL while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e))--tdi;  // discard stack frame if structure does not include dest
+static I trypopgoto(J jt, TD* tdv, I tdi, I dest){
+ NOUNROLL while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e)){--tdi; POPTRYSTK((tdv+tdi)->trap)}  // discard stack frame if structure does not include dest
  R tdi;
 }
 
@@ -216,8 +219,8 @@ static I debugnewi(I i, DC thisframe, A self){
  R i;  // return the current line, possibly modified
 }
 
-// Processing of explicit definitions, line by line.  Bivalent, called as y vb or x y vb.  If JTXDEFMODIFIER is set,
-// it's a modifier, called as u adv or u v conj
+// Processing of explicit definitions, line by line.  Bivalent, called as y vb vb or x y vb.  If JTXDEFMODIFIER is set,
+// it's a modifier, called as u adv adv or u v conj
 DF2(jtxdefn){
  V *sv=FAV(self); I sflg=sv->flag;   // pointer to definition, and flags therefrom
  F2PREFIP;PROLOG(0048);
@@ -225,7 +228,7 @@ DF2(jtxdefn){
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8 unused 16=thisframe!=0 (i. e. debug allowed) 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
-             // 64=call is dyadic 128=pm is running    0xff00=original debug flag byte   0xffff0000=#cws in the definition
+             // 64=call is dyadic 128=pm is running    0xff00=(flags byte: mostly debug, but bit 1 from trapping)   0xffff0000=#cws in the definition
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging/pm'ing
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
@@ -234,7 +237,6 @@ DF2(jtxdefn){
  UI wx=0, wlen; A trackstg;   // index/len we will write to; unparsed line
  forcetomemory(&trackinfo);
 #endif
-
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
  CDATA cdata,*cv=0;  // pointer to the current entry in the for./select. stack
@@ -244,8 +246,8 @@ DF2(jtxdefn){
 
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
- {A *hv;  // will hold pointer to the precompiled parts
-  A u,v;  // pointers to args
+ A *hv;  // will hold pointer to the precompiled parts
+ {  A u,v;  // pointers to args
  nGpysfctdl=w!=self?64:0;  // set if dyad
  if(((I)jtinplace&JTXDEFMODIFIER)==0){
   // we are executing a verb.  It may be an operator
@@ -287,8 +289,8 @@ DF2(jtxdefn){
     // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
    }
 
-   // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sflg&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl |= (jt->uflags.trace&TRACEDB)<<8;}
+   // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
+   if(sflg&VTRY1+VTRY2){A td; GAT0E(td,INT,NTD*WTD,1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); nGpysfctdl|=PUSHTRYSTK<<8;}
   }
   // End of unusual processing
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -427,26 +429,26 @@ dobblock:
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bi=i; i+=((cwgroup>>5)&1)+1;  // go to next sentence, or to the one after that if it's harmless end. 
     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // end of definition
-    if(unlikely((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace))break;  // not another B block
+    if((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)break;  // not another B block
     goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
-   }else if((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
-   }else if((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1)){  // if we get an error return from debug, the user must be branching to a new line.  Do it
+   }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+   }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-   }else if(jt->jerr==EVTHROW){
+   }else if(unlikely(jt->jerr==EVTHROW)){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
+    if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
    // for other error, go to the error location; if that's out of range, keep the error; if not,
    // it must be a try. block, so clear the error (and if the error is ATTN/BREAK, clear the source of the error).
-   //  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
+   //  Pop the try. stack, and restore debug\trapping status
    // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
    // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
    // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
    // was when the try. was encountered
-   }else{i=cw[i].go; if(i<SMAX){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; POPIFTRYSTK}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+   }else{bi=i; i=cw[i].go; if(i<SMAX){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; POPIFTRYSTK}  // Nondebug error.  If caught, we continue: make z valid then.  This is B1 try. error catch. return. end.
    }
    break;
 
@@ -478,8 +480,8 @@ tblockcase:
    }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-   }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
-   else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+   }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // if throw., and there is a catch., do so
+   }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
    break;
 
@@ -520,13 +522,16 @@ docase:
    tryinit(tdv+tdi,i,cw);
    // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
    // if debugging is already off, it stays off
+   (tdv+tdi)->trap=PUSHTRYSTK;
    if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((nGpysfctdl&16)&&(UC)(tdv+tdi)->d)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}
+   // debugging is now off if we are trapping.  In that case, indicate that we are trapping errors, to prevent holding them for debug
+   jt->emsgstate|=(~jt->uflags.trace&TRACEDB1)<<EMSGSTATETRAPPINGX;  // turn on trapping if not now debug
    // We allow verbose messages in case the catch. wants to display them.  This is different from u :: v
    ++tdi; ++i; nGpysfctdl|=4;  // bump tdi pointer, set flag
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
-   // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-   if(likely(nGpysfctdl&4)){POPTRYSTK i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
+   // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here.  Restore trapping status
+   if(likely(nGpysfctdl&4)){POPIFTRYSTK i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
   case CTHROW:
    // throw.  Create a throw error
    BASSERT(0,EVTHROW);
@@ -596,7 +601,7 @@ docase:
   case CCONT:  // break./continue. in while., outside of select.
    i=cw[i].go;   // After popping any select. off the stack, continue at new address
    // It must also pop the try. stack, if the destination is outside the try.-end. range
-   if(nGpysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
+   if(nGpysfctdl&4){tdi=trypopgoto(jt,tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
    break;
   case CBREAKF:
    // break. in a for. must first pop any active select., and then pop the for.
@@ -606,12 +611,12 @@ docase:
    NOUNROLL do{I fin=cv->w; cv=unstackcv(cv,1); if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
-   if(nGpysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
+   if(nGpysfctdl&4){tdi=trypopgoto(jt,tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
    break;
   case CRETURN:
    // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
    i=cw[i].go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
-   if(nGpysfctdl&4)jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|(UC)(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
+   if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
    break;
   case CCASE:
   case CFCASE:
@@ -654,6 +659,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
 
  FDEPDEC(1);
+ // check for pee
  if(likely(z!=0)){
   // There was a result (normal case)
   // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
@@ -671,38 +677,47 @@ bodyend: ;  // we branch to here on fatal error, with z=0
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
   }else {pee(line,&cw[bi],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
  }else{
-  // No result.  Must be an error
-  if(nGpysfctdl&4)jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|(UC)(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
-  // Since we initialized z to i. 0 0, there's nothing more to do
+  // No result.  Must be an error, or final exit from suspension
+  if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
  }
 
  if(unlikely(nGpysfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
+
+ // clear for/select stack, protecting any result found thereon
  if(likely(cv==0)){  // the for/select stack has been popped back to initial state
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
-  if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
-   // We have to make sure that we clear all atored values, because they may point to virtual blocks, even unincorpable ones, in callers.
-   // tpop will do the trick for cloned symbol tables, and EPILOG calls tpop - EXCEPT when z is 0.  Probably the best solution is to have gc() do the
-   // tpop whenever z is 0, but out of timidity we do it here instead, making sure tpop runs one way or another.  This frees any cloned symbol tables,
+  if(likely(z!=0))z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
+// obsolete  else tpop(_ttop);
+   // We have to make sure that we clear all stored values, because they may point to virtual blocks, even unincorpable ones, in callers.
+   // tpop will do the trick for cloned symbol tables, and EPILOG calls tpop.  This frees any cloned symbol tables,
    // and below we free the values from an original local table
  }else{
   // Unusual path with an unclosed contruct (e. g. return. from inside for. loop).  We have to free up the for. stack, but the return value might be one of the names
   // to be deleted on the for. stack, so we must protect the result before we pop the stack.  BUT, EPILOG frees all locally-allocated blocks, which might include the symbol
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
-  if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  See sbove for tpop
+  if(likely(z!=0))z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  See sbove for tpop
+// obsolete  else tpop(_ttop);
   NOUNROLL while(cv){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
- A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain, which was freed & zapped
- // locsym may have been freed now
+ A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been freed & zapped
+ // locsym may have been freed now, if it was cloned
+
+ // Pop the stack of private symbol tables
+ SYMSETLOCAL(prevlocsyms);
+
+ // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
+ // We don't do this if jt->jerr is set: that's the special result for comming out of debug; or when WSFULL, since there may be no memory
+ if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING)){
+   deba(DCPM+(bi<<8),locsym,hv[1],self); RETF(0);  // push a debug frame for this error
+ }
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
- // We detect original symbol table by rank ARLSYMINUSE - other symbol tables are assigned rank 0.
- // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
- if(likely(nGpysfctdl&32)){symfreeha(locsym); AR(locsym)=ARLOCALTABLE;}
- // Pop the private-area stack
- SYMSETLOCAL(prevlocsyms);
+ // We detect original symbol table by rank flag ARLSYMINUSE - other symbol tables are assigned rank 0.
+ // Tables are born with ARNAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear ARNAMEADDED
+ if(likely(nGpysfctdl&32)){symfreeha(locsym); __atomic_store_n(&AR(locsym),ARLOCALTABLE,__ATOMIC_RELEASE);}
  // Now that we have deleted all the local symbols, we can see if we were returning one.
  // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
  // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  If the usecount is inplaceable 1,

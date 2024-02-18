@@ -31,7 +31,7 @@ static B stopsub(C*p,C*nw,I md){C*q,*s;I n;
 // return 1 if we should stop before executing the line
 B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  if(!d)R 0;  // if there is no debug stack, there is no stop
- if(!strcmp(NAV(d->dca)->s,"output_jfe_"))R 0; // JHS - ignore stepinto output_jfe
+ if(d->dca&&!strcmp(NAV(d->dca)->s,"output_jfe_"))R 0; // JHS - ignore stepinto output_jfe
  // Handle stop owing to single-step
  switch(d->dcss){
  case SSSTEPINTO:  d->dcss=SSSTEPINTOs; break;  // first time is executing the stop line.  Then wait for any next line
@@ -43,9 +43,9 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  // if no single-step stop, try looking the line up in the stops table
  if(i==d->dcstop){d->dcstop=-2; R 0;}     /* not stopping if already stopped at the same place */
  READLOCK(JT(jt,dblock));  // lock the stops table while we inspect it
- if((JT(jt,dbstops))){  // if there are stops...
+ if((d->dca&&JT(jt,dbstops))){  // if the name is given and there are stops...
   s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);  // s->stop strings, nw=character form of line#
-  a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1;   // t->name we are looking for, n=its length, md=valence of call
+  a=d->dca; n=NAV(a)->m; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1;   // t->name we are looking for, n=its length, md=valence of call
   NOUNROLL while(s){
    NOUNROLL while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
    u=strchr(s,'*'); v=strchr(s,' '); if(!v)break; 

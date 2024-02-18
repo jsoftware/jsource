@@ -16,23 +16,27 @@ F2(jtobverse){F2PREFIP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,
 
 // Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun)
 static DF1(ad1){DECLFG;A z;
- ARGCHK1(w); 
+ ARGCHK1(w); A *old=jt->tnextpushp;
  WITHDEBUGOFF(z=CALL1(f1,  w,fs);)
  if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
  if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught
  if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN  // if the error was ATTN/BREAK, clear the source of the error
  RESETERR;
- R z?z:AT(gs)&NOUN?gs:CALL1(g1,  w,gs);
+ if(likely(z))RETF(z);  // normal return
+ tpop(old);  // the error exit leaves the stack unpopped
+ R AT(gs)&NOUN?gs:CALL1(g1,  w,gs);
 }
 
 static DF2(ad2){DECLFG;A z;
- ARGCHK2(a,w); 
+ ARGCHK2(a,w); A *old=jt->tnextpushp;
  WITHDEBUGOFF(z=CALL2(f2,a,w,fs);)
  if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
  if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught
  if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN  // if the error was ATTN/BREAK, clear the source of the error
  RESETERR;
- R z?z:AT(gs)&NOUN?gs:CALL2(g2,a,w,gs);
+ if(likely(z))RETF(z);  // normal return
+ tpop(old);  // the error exit leaves the stack unpopped
+ R AT(gs)&NOUN?gs:CALL2(g2,a,w,gs);
 }
 
 // Set ASGSAFE from operands.  Noun operand is always safe

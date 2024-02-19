@@ -19,17 +19,19 @@ B jtvnm(J jt,I n,C *s){C c,t;I j;
   j=-1;  // Init no indirect locative found
   DQU(n-2, prevcu0=cu0; t|=ctype[(UC)(c=s[i+1])]; cu0=c^'_'; j=(cu0|prevcu0)?j:i;)
  }
- // Now t is the mask of invalidity, and j is the index one before the first __ (-1 if no __)
+ // Now t is the mask of invalidity, and j is the index of the first __ (-1 if no __)
  if((t&1)+((cn!='_')&SGNTO0(j)))R 1^(t&1);   // Return if accumulated error, or if not trailing '_' and no __ (normal return)
  // If the last char is _, any ind loc is invalid (but not trailing __); scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
  if(cn=='_'){if(j>=0)R j==n-3; j=n-3; NOUNROLL do{if(s[j]=='_')R((ctype[(UC)s[j+1]]&CA)||vlocnm(n-j-2,s+j+1));}while(--j>0); R 0;}  // return if any __, including at end; find last '_', which cannot be in the last 2 chars; see if valid locale name; if no '_', error
  // Here last char was not _, and j is still pointed after __ if any
  // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
  // Also verify that any _ is preceded or followed by _
+ // First handle the special case of trailing numeric indirect locative, which refers to the debug stack.
+ I q; for(q=n-1;q;--q){if(s[q]=='_'||ctype[s[q]]==CA)break;} if(s[q]=='_'&&s[q-1]=='_'){n=q-1; if(s[n-1]=='_')if(s[--n-1]=='_')R 0;}  // Skip trailing numerics up to the last _; remove up to 3 _; verify no more _.  If that pattern was matched, remove those chars from the scan
  // We do this with a state machine that scans 3 characters at a time, creating 3 bits: [0]='_' [1]='_' [2]=digit (including _).  We always start pointing to the first '_'.  State result tells
  // how many characters to advance, 0 meaning error.  We stop when there are <2 characters left.  The word cannot end with '_'.  If it ends xx9_9 we will go to 9_9 and then _9?, i. e. overfetch the buffer by 1.  But that's OK on literal data.
  // advance counts are: xxa=3, xx9=2, x_a=0, x_9=1, _xa=0, _x9=0, __a=3, __9=0 
- ++j; do{I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=(0x03001023L>>(state<<2))&3; if(state==0)R 0; j+=state;}while(j<n-1);
+ ++j; while(j<n-1){I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=(0x03001023L>>(state<<2))&3; if(state==0)R 0; j+=state;};
  R 1;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
 
@@ -60,7 +62,6 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  // The name may not be valid, but we will allocate a NAME block for it anyway
  GATV0(z,NAME,n,1); zv=NAV(z);   // the block is cleared to 0
  MC(zv->s,s,n); zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
-// no because sources may be short  MCISH(zv->s,s,(n+SZI-1)>>LGSZI); *(n+zv->s)=0;  // copy in the name in fullwords (OK because NAMEs are passed, null-terminate it
  f=0; m=n; p=0;
  // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
  if('_'==*t){
@@ -69,12 +70,15 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
    // install hash/number for the direct locale
    zv->bucketx=BUCKETXLOC(p,t+1);  // number if numeric, hash otherwise
  }else{
-   // otherwise either simple name or indirect locative.  Look for the __; if present, find & hash the last indirect name
-   DO(n, if('_'==s[i]&&'_'==s[1+i]){ f=NMILOC; p=n-2-i; for(m=n; s[m-1]!='_'||s[m-2]!='_';--m); zv->bucketx=(I)nmhash(n-m,s+m); m=n-(2+p); break;});  // p=#locales, m=#simplename, hash last indirect if there is one
+   // otherwise either simple name or indirect locative.  Look for the __; if present, find & hash the last indirect name into bucketx
+   DO(n, if('_'==s[i]&&'_'==s[1+i]){ f=NMILOC; p=n-2-i; for(m=n; s[m-1]!='_'||s[m-2]!='_';--m);   // p=length of locative string, m=offset to after last __
+    if(unlikely(m>2&&ctype[s[m]]==C9)){I val=0; DO(n-m, ASSERT(ctype[s[m+i]]==C9,EVILNAME) val=val*10+s[m+i]-'0';) zv->bucketx=s[m-3]=='_'?-val:val;  // if last name numeric, convert & save in bucketx - could be signed
+    }else{zv->bucketx=(I)nmhash(n-m,s+m);}  // otherwise save the hash
+   m=n-(2+p); break;});  // m=#simplename, hash last indirect if there is one
  }
  ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2
  zv->flag=f;  // Install locative flag
- zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length, and calculate hash of simple name
+ zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length of simple name, and calculate hash of simple name
  // the bucket and symbol-id fields are left at 0
  RETF(z);
 }    /* name from string */

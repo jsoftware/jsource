@@ -406,7 +406,8 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  // if the previous console sentence ended with error, and the user replies with ENTER (i. e. empty string), treat that as a request to debug.
  // on any other reply, free up the values and allocations made by the failing sentence
  if(unlikely(jm->pmstacktop!=0&&jm->recurstate<RECSTATEPROMPT)){  // last sentence failed, and ran to completion to get a full error stack
-  if(lp[0]!='\n'&&lp[0]!=0){  // nonnull string
+  C *lp2; for(lp2=lp;*lp2;++lp2)if(*lp2!=' '&&*lp2!='\t'&&*lp2!='\n')break;   // stop on non-whitespace or end-of-string
+  if(*lp2){  // nonnull string
    // user responded to error with a new sentence.  Clear the error stack
    DC s=jm->pmstacktop; while(s){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->pmstacktop=0;  // purge symbols & clear stack
    jttpop(jm,jm->pmttop);  // free all memory allocated in the previous sentence
@@ -414,7 +415,8 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   }else{
    // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order
    DC s=jm->pmstacktop, sp=0; while(s){DC sn=s->dclnk; s->dclnk=sp; sp=s; s=sn;} jm->sitop=sp; jm->pmstacktop=0;  // reverse pmstack, move it to debug stack
-   lp="'dbstk'''' to see stack; dbr 0 to exit debug; dbr 1 to clear stack' [ 13!:0 (513)";  // change the sentence to one that types a greeting after entering pm debug
+   if(sp)sp->dcsusp=1;   // debug discards lines before the suspension, so we have to mark the stack-top as starting suspension
+   lp="dbg_z_ 513";  // change the sentence to one that starts the debug window with no TRACEDBSUSCLEAR flag
   }
  }
 

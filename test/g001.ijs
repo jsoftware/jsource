@@ -94,9 +94,11 @@ a=:12
 'ill-formed name'   -: ". etx '''p__a_b_c_d'' =. 9'
 'ill-formed name'   -: ". etx '''p__a_b_c_d_e'' =. 9'
 'ill-formed name'   -: ". etx '''p__9ab'' =. 9'
-'ill-formed name'   -: ". etx '''p__9'' =. 9'
+'locale error'   -: ". etx '''p__900'' =. 9'
+'locale error'   -: ". etx '''p___900'' =. 9'
+'ill-formed name'   -: ". etx '''p____900'' =. 9'
 'ill-formed name'   -: ". etx '''p__ab_'' =. 9'
-'ill-formed name'   -: ". etx '''p__ab__9'' =. 9'
+'locale error'   -: ". etx '''p__ab__900'' =. 9'
 
 
 'domain error'      -: ". etx '(''p'';2 3  ) =. 9'

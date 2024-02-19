@@ -1127,7 +1127,8 @@ void jttpop(J jt,A *old){A *endingtpushp;
  // if jttg failed to allocate a new block, we will have left pushp pointing to the cell after the last valid cell.  This may be in unmapped memory, but
  // that's OK, because we start by decrementing it to point to the last valid push
  A *pushp=jt->tnextpushp;
- if(unlikely(jt->pmstacktop!=0)){jsto(JJTOJ(jt),MTYOER,"Invalid tpop - please report this to the J Forum\n"); R;}  // scaf if blocks have been added for pm debugging, we shouldn't be popping at all until we get to top level.  give a warning
+ if(unlikely(jt->pmstacktop!=0))
+  {jsto(JJTOJ(jt),MTYOER,"Invalid tpop - please report this to the J Forum\n"); R;}  // scaf if blocks have been added for pm debugging, we shouldn't be popping at all until we get to top level.  give a warning
  jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping
  --pushp; --old;
  while(1) {A np;  // loop till end.  Return is at bottom of loop

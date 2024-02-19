@@ -442,38 +442,48 @@ A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
 }
 
 
-// u is address of indirect locative: in a__b__c, it points to the b
+// u is address of indirect locative: in a__b__c, it points to the b (the direct part of the name is not used)
 // n is the length of the entire locative (4 in this example)
 // result is address of symbol table to use for name lookup (if not found, it is created)
 static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x;C*s,*v,*xv;I k,xn;
- A g;  // the locale we are looking in, as we go right to left through the a__b__c... chain. 
- s=n+u;   // s->end+1 of name
- A y=0;  //  resolved A block for __x.  This is the name of a locale which will be found & put into g.  0 first time to include local symbols
+ A g=0;  // the locale we are looking in, as we go right to left through the a__b__c... chain. 0 means 'locals then globals', otherwise exact locale to search in
+ A y;  //  resolved A block for __x.  This is the name of a locale which will be found & put into g
+ s=n+u;   // s->end+1 of name, past the last locative
  while(u<s){
   v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of last indirect locative
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   ASSERT(k<256,EVLIMIT);
-  if(likely(y==0)){  // first time through
-   y=QCWORD(jtprobe((J)((I)jt+k),v,hash,jt->locsyms));  // look up local first.
-   if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,hash,jt->global));else{rapos(y);}  // if not local, start in implied locale.  ra to match syrd
-  }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
-  ASSERTN(y,EVVALUE,nfs(k,v));  // verify found.  If y was found, it has been ra()d
-  ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v),exitfa);   // verify atomic
-  if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // if atomic integer, look it up
-  }else{
-   ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v),exitfa);  // verify box
-   x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
-    // Boxed integer - use that as bucketx, the locale number
-    g=findnl(BIV0(x)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // boxed integer, look it up
+  if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
+   if(likely(g==0)){  // first time through
+    y=QCWORD(jtprobe((J)((I)jt+k),v,hash,jt->locsyms));  // look up local first.
+    if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,hash,jt->global));else{rapos(y);}  // if not local, start in implied locale.  ra to match syrd
+   }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
+   ASSERTN(y,EVVALUE,nfs(k,v));  // verify found.  If y was found, it has been ra()d
+   ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v),exitfa);   // verify atomic
+   if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // if atomic integer, look it up
    }else{
-    xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
-    ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v),exitfa);   // verify list (or atom)
-    ASSERTNGOTO(xn,EVLENGTH,nfs(k,v),exitfa);   // verify not empty
-    ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v),exitfa);  // verify string
-    ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v),exitfa);  // verify legal name
-    I bucketx=BUCKETXLOC(xn,xv);
-    RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
+    ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v),exitfa);  // verify box
+    x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
+     // Boxed integer - use that as bucketx, the locale number
+     g=findnl(BIV0(x)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // boxed integer, look it up
+    }else{
+     xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
+     ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v),exitfa);   // verify list (or atom)
+     ASSERTNGOTO(xn,EVLENGTH,nfs(k,v),exitfa);   // verify not empty
+     ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v),exitfa);  // verify string
+     ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v),exitfa);  // verify legal name
+     I bucketx=BUCKETXLOC(xn,xv);
+     RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
+    }
    }
+  }else{DC s; 
+   // the 'name' is a number (it must be the last name).  It refers to debug stack frames, the last of which is numbered 0.  hash has the value of the number
+   // To avoid undertainty as new frames are created, frames before the top suspended frame are ignored
+   I4 stkno=hash; I issusp;  // convert stackframe# to signed.  _1 is the first stack value, 0 is the last (i. e. numbered from bottom up).  issusp='we have hit a suspension frame'
+   if(stkno>=0){for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; stkno-=issusp&&s->dctype==DCCALL;}}  // convert positive index to negative
+   ASSERT(stkno<0,EVLOCALE)    // if index not now negative, it was too high
+   for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; if(issusp&&s->dctype==DCCALL&&stkno==-1)break; stkno+=issusp&&s->dctype==DCCALL;} ASSERT(s,EVLOCALE); // step to requested stack frame; error if # too low
+   g=s->dcloc;  // fetch locale to use for the lookup
   }
  }
  R g;
@@ -500,7 +510,10 @@ A jtsyrd(J jt,A a,A locsyms){A g;
   // If there is a local symbol table, search it first
   if(val=probelocal(a,locsyms)){rapos(QCWORD(val)); R val;}  // return flagging the result if local.  Value pointers in symbols have QCGLOBAL semantics
   g=jt->global;  // Continue with the current locale
- } else RZ(g=sybaseloc(a));
+ }else{A val;  // locative
+  RZ(g=sybaseloc(a));  // find the starting locale for the name lookup
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=probelocal(a,g)){rapos(QCWORD(val)); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
+ }
  A res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
  if(likely(res!=0))res=SETGLOBAL(res);  // mark found in global, if found
  R res;

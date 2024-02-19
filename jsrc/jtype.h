@@ -745,7 +745,7 @@ typedef struct DS{      /* 1 2 3 5                                              
  I dcix;                // x x x x  index ; next index  ; cw# in exp def being executed, or to be exec next
  I dcj;                 /* x x x x  error#; prev index  ; error #                         */
  C dctype;              /* x x x x  type of entry (see #define DC*)                       */
- B dcsusp;              /* x   x    1 iff begins a debug suspension                       */
+ B dcsusp;              /* x   x x  1 iff begins a debug suspension or pm session                      */
  C dcss;                //   x x    1 if script is supplying sentences (0 if interrupted by prompt) ;single step code
  C dcnewlineno;         //     x    set when debug has installed a new line number into dcix
  C dcpflags;            //   x x x      ;prompt flags, see JTPRTYO  ; 1 if DCPM, which requires symfreeha on the symbol table when freed

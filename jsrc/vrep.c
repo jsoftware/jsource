@@ -324,27 +324,31 @@ static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
 static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp;
  F2PREFIP;ARGCHK2(a,w);
  if((AT(a)&(SPARSE+CMPX))==(SPARSE+CMPX))R rep1d(denseit(a),w,wf,wcr);
- RE(rep1sa(a,&c,&d)); cd=c+d;
+ RE(rep1sa(a,&c,&d)); cd=c+d;   // c=#repeats, d=#skips, cd=stride between repeats
  if(!ISSPARSE(AT(w)))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
  wr=AR(w); ws=AS(w); n=wcr?ws[wf]:1; DPMULDE(n,cd,m)
- wp=PAV(w); e=SPA(wp,e); ax=SPA(wp,a); y=SPA(wp,i); x=SPA(wp,x);
+ wp=PAV(w); e=SPA(wp,e); ax=SPA(wp,a); y=SPA(wp,i); x=SPA(wp,x);  // y is nonsparse indexes, x is values, a is axes, e sparse element 
  GASPARSE(z,AT(w),1,wr+!wcr,ws); AS(z)[wf]=m; zp=PAV(z);
  RE(b=bfi(wr,ax,1));
  if(wcr&&b[wf]){    /* along sparse axis */
-  u=AS(y); p=u[0]; q=u[1]; u=AV(y);
+  u=AS(y); p=u[0]; q=u[1]; u=AV(y);  // p=# nonsparse rows, q=#axes  u->start of indexes
   RZ(x=repeat(sc(c),x));
-  RZ(y=mkwris(repeat(sc(c),y)));
-  if(p&&1<c){
-   j=0; DO(wf, j+=b[i];); v=j+AV(y);
-   if(AN(ax)==1+j){u+=j; DO(p, m=cd**u; u+=q; DO(c, *v=m+i; v+=q;););}
-   else{A xx;I h,i,j1=1+j,*uu;
-    GATV0(xx,INT,j1,1); uu=AV(xx);
-    k=0; DO(j1, uu[i]=u[i];);
-    for(i=0;i<p;++i,u+=q)
-     if(ICMP(uu,u,j1)||i==p-1){
-      h=(I )(i==p-1)+i-k; k=i; m=cd*uu[j]; 
-      DO(j1, uu[i]=u[i];);
-      DO(h, DO(c, *v=m+i; v+=q;););
+  RZ(y=mkwris(repeat(sc(c),y)));   // repeat the rows of x and y
+  if(p&&1<c){   // if there is something to do
+   j=0; DO(wf, j+=b[i];); v=j+AV(y);  // j=# sparse axes in frame, v -> first index in cell
+   if(AN(ax)==1+j){u+=j; DO(p, m=cd**u; u+=q; DO(c, *v=m+i; v+=q;););}  // if replicating the last sparse axis, simply turn each index into an interval of indexes
+   else{A xx;I h,i,j1=1+j,*uu;   // replicating interior axis.  For each replicated index, we must count the number of nonsparse values that share the prefix.  j1 is index of the first sparse axis in the replicated cell
+    // v has replicated index lists
+    GATV0(xx,INT,j1,1); uu=AV(xx);  // allocate vector that will hold the prefix, i. e. the sparse axes
+    k=0; DO(j1, uu[i]=u[i];);   // initialize uu to the sparse indexes in the first row of input indexes.  k is start of matching area
+    for(i=0;;++i,u+=q)   // for each input row...
+     if(i==p||ICMP(uu,u,j1)){   // if we hit end-of-input or there is a change in the prefix...
+      // when there is a change in index or we run off the end of the indexes, we have found the end+1 of the region of indexes that share a prefix.
+      // The region starts at k and runs to i-1.  I don't think this region-finding is necessary.
+      h=i-k; k=i; m=cd*uu[j];   // m is the remapped start of the indexes for he replicated area
+      DO(h, DO(c, *v=m+i; v+=q;););  // remap the area
+      if(i==p)break;  // stop after end-of-input
+      DO(j1, uu[i]=u[i];);  // reinit with the nonmatching next prefix
      } 
     RZ(xx=grade1(y));
     RZ(x=from(xx,x));

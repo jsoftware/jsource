@@ -413,8 +413,8 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
    jttpop(jm,jm->pmttop);  // free all memory allocated in the previous sentence
    jm->pmttop=0;  // clear to avoid another reset
   }else{
-   // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order
-   DC s=jm->pmstacktop, sp=0; while(s){DC sn=s->dclnk; s->dclnk=sp; sp=s; s=sn;} jm->sitop=sp; jm->pmstacktop=0;  // reverse pmstack, move it to debug stack
+   // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order.  ra() the self for each block - necessary in case they are reassigned while on the stack
+   DC s=jm->pmstacktop, sp=0; while(s){DC sn=s->dclnk; s->dclnk=sp; if(s->dctype==DCCALL&&s->dcpflags==1)ra(s->dcf) sp=s; s=sn;} jm->sitop=sp; jm->pmstacktop=0;  // reverse pmstack, move it to debug stack
    if(sp)sp->dcsusp=1;   // debug discards lines before the suspension, so we have to mark the stack-top as starting suspension
    lp="dbg_z_ 513";  // change the sentence to one that starts the debug window with no TRACEDBSUSCLEAR flag
   }
@@ -442,7 +442,8 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  // if the result is an exit from suspension (which must be from dbr because we aren't now actually in a suspension), and there is a stack, purge symbols from the private symbs and free memory back to the error
  if(unlikely(JT(jt,dbuser)&TRACEDBSUSCLEAR)){  // if user executed dbr...
   if(jm->pmttop&&jm->sitop&&jm->sitop->dctype==DCCALL&&jm->sitop->dcpflags==1){   // if there is a pm debug session going, and top-of-stack is from pm, end the session
-   DC s=jm->sitop; while(s){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->sitop=0;
+   // go through the stack, which must all have come from post-mortem.  Free the symbols and the block itself (to match the ra when we moved the pm stack to the debug stack)
+   {JJ jt=jm; DC s=jm->sitop; while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} fa(s->dcf);} s=s->dclnk;} jm->sitop=0;}
    old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
   }
   JT(jt,dbuser)&=~(TRACEDBSUSCLEAR);  // always turn off flag

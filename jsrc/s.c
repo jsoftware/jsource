@@ -445,7 +445,7 @@ A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
 // u is address of indirect locative: in a__b__c, it points to the b (the direct part of the name is not used)
 // n is the length of the entire locative (4 in this example)
 // result is address of symbol table to use for name lookup (if not found, it is created)
-static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x;C*s,*v,*xv;I k,xn;
+static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
  A g=0;  // the locale we are looking in, as we go right to left through the a__b__c... chain. 0 means 'locals then globals', otherwise exact locale to search in
  A y;  //  resolved A block for __x.  This is the name of a locale which will be found & put into g
  s=n+u;   // s->end+1 of name, past the last locative
@@ -455,12 +455,15 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x;C*s,*v,*xv;I k,xn;
   ASSERT(k<256,EVLIMIT);
   if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
    if(likely(g==0)){  // first time through
-    y=QCWORD(jtprobe((J)((I)jt+k),v,hash,jt->locsyms));  // look up local first.
-    if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,hash,jt->global));else{rapos(y);}  // if not local, start in implied locale.  ra to match syrd
+    y=QCWORD(jtprobe((J)((I)jt+k),v,(UI4)hash,jt->locsyms));  // look up local first.
+    if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y);}  // if not local, start in implied locale.  ra to match syrd
    }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
    ASSERTN(y,EVVALUE,nfs(k,v));  // verify found.  If y was found, it has been ra()d
    ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v),exitfa);   // verify atomic
-   if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // if atomic integer, look it up
+   if(AT(y)&(INT|B01)){  // atomic integer, numbered or debug locale
+    hash=BIV0(y);   // fetch locale number, overwriting the input parameter as needed below
+    if(hash<0){ASSERT(g==0,EVLOCALE) goto neglocnum;}   // negative locale number (debug frame) is valid only as last locale.  Transfer to the code to handle it
+    g=findnl(hash); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // nonnegative locale#, use it for the numbered locale
    }else{
     ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v),exitfa);  // verify box
     x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
@@ -477,12 +480,13 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x;C*s,*v,*xv;I k,xn;
     }
    }
   }else{DC s; 
-   // the 'name' is a number (it must be the last name).  It refers to debug stack frames, the last of which is numbered 0.  hash has the value of the number
-   // To avoid undertainty as new frames are created, frames before the top suspended frame are ignored
-   I4 stkno=hash; I issusp;  // convert stackframe# to signed.  _1 is the first stack value, 0 is the last (i. e. numbered from bottom up).  issusp='we have hit a suspension frame'
-   if(stkno>=0){for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; stkno-=issusp&&s->dctype==DCCALL;}}  // convert positive index to negative
-   ASSERT(stkno<0,EVLOCALE)    // if index not now negative, it was too high
-   for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; if(issusp&&s->dctype==DCCALL&&stkno==-1)break; stkno+=issusp&&s->dctype==DCCALL;} ASSERT(s,EVLOCALE); // step to requested stack frame; error if # too low
+   // the 'name' is a number (it must be the last name).  It refers to debug stack frames, the first of which is numbered _1.  hash has the value of the number
+   // To avoid uncertainty as new frames are created, frames before the top suspended frame are ignored
+// obsolete   if(stkno>=0){for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; stkno-=issusp&&s->dctype==DCCALL;}}  // convert positive index to negative
+   ASSERT(hash<0,EVLOCALE)    // if index not now negative, it was too high
+neglocnum:;
+   I issusp;  //   issusp='we have hit a suspension frame'
+   for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; if(issusp&&s->dctype==DCCALL&&hash==-1)break; hash+=issusp&&s->dctype==DCCALL;} ASSERT(s,EVLOCALE); // step to requested stack frame; error if # too low
    g=s->dcloc;  // fetch locale to use for the lookup
   }
  }
@@ -498,7 +502,7 @@ A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  n=AN(a); v=NAV(a); m=v->m;
  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
  if(likely(!(NMILOC&v->flag)))R stfindcre(n-m-2,1+m+v->s,v->bucketx);
- R locindirect(n-m-2,2+m+v->s,(UI4)v->bucketx);
+ R locindirect(n-m-2,2+m+v->s,v->bucketx);
 }
 
 // look up a name (either simple or locative) using the full name resolution
@@ -670,7 +674,7 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
 A jtprobequiet(J jt,A a){A g;
  I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
- else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
+ else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
  READLOCK(g->lock) A res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g); READUNLOCK(g->lock)   // return pointer to value, if found
  R res;
 }
@@ -697,7 +701,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table
-  C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);
+  C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);
  }else{  // not locative assignment
 
   if(g==jt->global){  // global assignment.  They might both be 0 but that's OK, searches will fail

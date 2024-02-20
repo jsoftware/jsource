@@ -193,7 +193,7 @@ static B jtdebsi1(J jt,DC d){I t;
  d=d->dclnk;
  RZ(d&&t==DCPARSE);
  t=d->dctype;
- RZ(t==DCSCRIPT||t==DCCALL&&d->dcloc);
+ RZ(t==DCSCRIPT||t==DCCALL&&d->dcc);
  debdisp(d);
  R 1;
 }

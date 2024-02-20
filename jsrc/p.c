@@ -669,6 +669,7 @@ endname: ;
 
   // Now execute fragments as long as there is one to execute.
    while(1) {
+
     // This is where we execute the action routine.  We give it the stack frame; it is responsible
     // for finding its arguments on the stack, storing the result (if no error) over the last
     // stack entry, then closing up any gap between the front-of-stack and the executed fragment,

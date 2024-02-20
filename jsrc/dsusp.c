@@ -25,7 +25,7 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkb
 // meanings of the args:
 // DCPARSE: x=&tokens  y=#tokens
 // DCSCRIPT: y=script text  fs=script index in script list
-// DCCALL: x=left arg if any  y=right arg if any  f=self
+// DCCALL: x=left arg if any  y=right arg if any  fs=self
 // DCJUNK: N/A
 // DCPM: t=(line#<<8)+type  x=&local symbols   y=&control words  fs=self
 DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;

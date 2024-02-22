@@ -459,7 +459,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   jtspfree(jm);  // check for garbage collection
  }
  // free any memory left at the end of the sentence.  BUT if the sentence failed and created a pm stack, defer the free and offer pm debugging
- if(likely(((I)jm->pmstacktop|(I)jm->pmttop)==0))jttpop(jm,old); else{if(jm->pmttop==0)jsto(jt,MTYOER,"Press ENTER to debug\n"); jm->pmttop=old;}  // free if not new or continuing pm session; message first time through
+ if(likely(((I)jm->pmstacktop|(I)jm->pmttop)==0))jttpop(jm,old); else{if(jm->pmttop==0)jsto(jt,MTYOER,"Press ENTER to inspect\n"); jm->pmttop=old;}  // free if not new or continuing pm session; message first time through
  R e;
 }
 

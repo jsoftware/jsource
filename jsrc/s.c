@@ -600,8 +600,12 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
  NOUNROLL for(i=0;i<n;++i){
   x=C(wv[i]);
-  RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); RESETERR; 
-  I val=jtsyrdinternal(jt,y,component);
+  I val;  // value of requested component
+  if(unlikely((AR(x)&~1)+(component^3)+AN(x)==0))val=0;  // special case of script lookup with empty name: could be unnamed stack entry in 13!:13, so give not found rather than name error
+  else{
+   RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); RESETERR; 
+   val=jtsyrdinternal(jt,y,component);
+  }
   if(component==3)RESETERR; RE(0);  // if the name lookup failed, exit; but 4!:4 never fails, because used in 13!:13
   ASSERT(component==3||val!=0,EVVALUE);  // error if name not found, for symbol or data address
   zv[i]=val-(component==3);  // undo the increment of script number.  Could use >>1
@@ -612,7 +616,7 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
 F1(jtdllsymget){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,0);}  // 15!:6
 F1(jtdllsymdat){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,1);}  // 15!:14
 F1(jtdllsymhdr){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,2);}  // 15!:12
-F1(jtscind){R dllsymaddr(w,3);}  // 4!:4
+F1(jtscind){R dllsymaddr(w,3);}  // 4!:4 script index
 F1(jtdllvaladdr){ASSERT(!JT(jt,seclev),EVSECURE) R sc((I)w);}  // 15!:19, return address of value
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found or invalid name

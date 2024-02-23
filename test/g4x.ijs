@@ -296,7 +296,8 @@ _2 -: jnc    <''
 
 'ill-formed name' -: scind etx <'+*abc'
 'ill-formed name' -: scind etx <'abc\def'
-'ill-formed name'    -: scind etx <''
+'rank error'    -: scind etx <2 0$''
+_1    -: scind etx <''
 
 'rank error'      -: scind etx <3 4$'xab'
 'rank error'      -: scind etx <,:'xab'

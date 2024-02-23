@@ -73,7 +73,7 @@
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
 
-/* for_xyz. t do. control data   */
+// for./select. control structure
 typedef struct CDATA {
  A fchn;  // pointer to next allocated block in stack, 0 if end of stack
  struct CDATA *bchn;  // pointer to previous allocated block, possibly the local block.  0 in the local block itself
@@ -84,7 +84,9 @@ typedef struct CDATA {
  I itemsiz;  // size of an item of xyz, in bytes
  I4 w; // cw code for the structure
  LX itemsym;  // symbol number of xyz, 0 for for.
- LX indexsym;  // symbol unmber of xyz_index, 0 for for.
+ LX indexsym;  // symbol number of xyz_index, 0 for for.
+ US i;  // cw index of the start of the structure
+ US go;  // cw index of the end. of the structure
 } CDATA;
 
 typedef struct{I4 d,t,e,b;C trap;} TD;  // line numbers of catchd., catcht., end. and try.; emssstate flag for trapping
@@ -199,6 +201,11 @@ static I trypopgoto(J jt, TD* tdv, I tdi, I dest){
  NOUNROLL while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e)){--tdi; POPTRYSTK((tdv+tdi)->trap)}  // discard stack frame if structure does not include dest
  R tdi;
 }
+static CDATA* forpopgoto(J jt, CDATA *cv, I i){
+ while(cv){if(BETWEENC(i,cv->i,cv->go))break; cv=unstackcv(cv,1);}  // process the for/select stack.  If we branch out of a structure, pop it
+ R cv;
+}
+
 
 // Return next line to execute, in case debug changed it
 // If debug is running we have to check for a new line to run, after any execution with error or on any line in case the debugger interrupted something
@@ -648,6 +655,13 @@ docase:
    }
    if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
+#if 0
+  case CGOTO:  // goto_label.
+   i=cw[i].go;  // get # of next sentence
+   cv=forpopgoto(jt,cv,i);   // if the branch takes us outside a control structure, pop the for/select stack
+   // It must also pop the try. stack, if the destination is outside the try.-end. range
+   if(nGpysfctdl&4){tdi=trypopgoto(jt,tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
+#endif
   default:   //   CELSE CWHILST CGOTO CEND
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block

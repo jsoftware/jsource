@@ -93,8 +93,8 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r,CW*con){I e,m,t;
   // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
   // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
   // was previously marked as in select.
-  CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
-  DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->ig.indiv.type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);
+  CWASSERT(b&&d); b->go=(US)j;    d->go=i;   m=i-k-1;  // point for. to end. to allow detecting branchouts
+  DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->ig.indiv.type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);  // replace 'goto SMAX' with actual end value
  }else CWASSERT(0);
  c->go=(US)e;   // Set previous control to come to NSI.  This could be the do. of if./do. or loop/do., or the else. of else./do.
  R -1;
@@ -128,21 +128,22 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  R top;  //return stack pointer with the try. ... end. removed
 }    /* result is new value of top */
 
-// Fix up the stack after encountering the end, for a select.  i=address of end.
+// Fix up the stack after encountering the end, for a select.  endline=address of end.
 static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,t;
  // Go through the stack in reverse order till we hit the select.
  // c will hold the cw one before the one to go to if the previous test fails (init to one before end.)
  while(1){
-  j=stack[--top]; t=(j+con)->ig.indiv.type;    // back up to next cw
+  j=stack[--top]; t=con[j].ig.indiv.type;    // back up to next cw
   if((t^CSELECT)<=(CSELECT^CSELECTN))break;                //when we hit select., we're done
-  if(t==CDOSEL){d=j; (j+con)->go=(US)(1+c);}  // on do., remember line# of do. in d; point that do. to the failure position
+  if(t==CDOSEL){d=j; con[j].go=(US)(1+c);}  // on do., remember line# of do. in d; point that do. to the failure position
   else{                            // must be case./fcase.
-   c=j; (j+con)->go=(US)endline;          // set failed-compare point to be the case. test; point case. to the end. (end-of-case goes to end.)
-   if(d==1+j)(d+con)->go=(US)(1+d);    // if empty case., set do. to fall through to next inst
-   if(t==CFCASE&&top<ot-2)(stack[2+top]+con)->go=(US)(1+stack[3+top]);  // if fcase. (and not last case), point case. AFTER fcase. to go to the do. for that following case.
+   c=j; con[j].go=(US)endline;          // set failed-compare point to be the case. test; point case. to the end. (end-of-case goes to end.)
+   if(d==1+j)con[d].go=(US)(1+d);    // if empty case., set do. to fall through to next inst
+   if(t==CFCASE&&top<ot-2)con[stack[2+top]].go=(US)(1+stack[3+top]);  // if fcase. (and not last case), point case. AFTER fcase. to go to the do. for that following case.
   }
  }
  (c+con)->go=(US)(1+c);  // set first case. to fall through to the first test
+ con[j].go=endline;  // point select. to the end. so we can detect branchouts
  // j points to the select. for this end.  Replace any hitherto unfilled break./continue. with BREAKS/CONTS
  DQ(endline-j-2, ++j; if(SMAX==con[j].go){if(CBREAK==con[j].ig.indiv.type)con[j].ig.indiv.type=CBREAKS;else if(CCONT==con[j].ig.indiv.type)con[j].ig.indiv.type=CCONTS;});
  R top;     // return stack with select. ... end. removed

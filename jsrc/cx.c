@@ -94,10 +94,11 @@ typedef struct{I4 d,t,e,b;C trap;} TD;  // line numbers of catchd., catcht., end
 #define NTD            17     /* maximum nesting for try/catch */
 
 // called from for. or select. to start filling in the entry
-static B forinitnames(J jt,CDATA*cv,I cwtype,A line){
+static B forinitnames(J jt,CDATA*cv,I cwtype,A line,I i, I go){
  cv->j=-1;                               /* iteration index     */
  cv->t=0;  // init no selector value/iterator list
  cv->w=cwtype;  // remember type of control struct
+ cv->i=i, cv->go=go;  // remember start/end line#s of control struct
  if(cwtype==CFOR){
   // for for_xyz., get the symbol indexes for xyz & xyz_index
   I k=AN(line)-5;  /* length of item name; -1 if omitted (for.; for_. not allowed) */
@@ -554,7 +555,7 @@ docase:
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
    } 
-   BZ(forinitnames(jt,cv,cwgroup&0xff,line[CWSENTX]));  // setup the names, before we see the iteration value
+   BZ(forinitnames(jt,cv,cwgroup&0xff,line[CWSENTX],i,cw[i].go));  // setup the names and start/end line#s, before we see the iteration value
    ++i;
    break;
   case CDOF:   // do. after for.
@@ -655,13 +656,10 @@ docase:
    }
    if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
-#if 0
   case CGOTO:  // goto_label.
-   i=cw[i].go;  // get # of next sentence
-   cv=forpopgoto(jt,cv,i);   // if the branch takes us outside a control structure, pop the for/select stack
+   cv=forpopgoto(jt,cv,cw[i].go);   // if the branch takes us outside a control structure, pop the for/select stack
    // It must also pop the try. stack, if the destination is outside the try.-end. range
-   if(nGpysfctdl&4){tdi=trypopgoto(jt,tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
-#endif
+   if(nGpysfctdl&4){tdi=trypopgoto(jt,tdv,tdi,cw[i].go); nGpysfctdl^=tdi?0:4;}
   default:   //   CELSE CWHILST CGOTO CEND
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block

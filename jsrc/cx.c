@@ -146,8 +146,8 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  R 1;
 }    /* for. do. end. initializations */
 
-// A for/select. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again)
-// if assignvirt is set (normal), the xyz value is realized and reassigned if it is still the svb.  Otherwise it is freed and the value expunged.
+// A for/select. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again).
+// If assignvirt is set (normal), the xyz value is realized and reassigned if it is still the svb.  Otherwise it is freed and the value expunged.
 // result is address of cv after stack popped
 static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
  if(cv->w==CFOR){
@@ -586,7 +586,7 @@ docase:
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-   // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used; but the result case is rare)
+   // (scaf this is no longer needed since names are not deleted but the result case is rare)
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1);
    i=cw[i].go;    // continue at new location
    break;

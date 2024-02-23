@@ -928,7 +928,7 @@ F2(jtoutstr){I*v;
  R jprx(v[0],v[1],v[2],v[3],w);
 }
 
-// w is a noun.  Convert it to a UTF-8 string and write it to the console
+// w is a character noun.  Convert it to a UTF-8 string and write it to the console
 static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
  // extract the output type buried in jt
  I mtyo=(I)jtinplace&JTPRTYO;
@@ -947,7 +947,7 @@ static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
 }
 
 // w is anything; convert it to character and write it to the display
-// flag bits in jt indicate output class and print-enable
+// flag bits in jt indicate output class, print-enable, and screen destination
 // Result is 0 if error, otherwise a harmless constant
 F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
  ARGCHK1(w);
@@ -965,7 +965,7 @@ F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
     case 1: RZ(jpr1(arep(y))); break;
     case 2: RZ(jpr1(drep(y))); break;
     case 4: RZ(jpr1(trep(y))); break;
-    case 5: RZ(jpr1(lrep(y))); break;
+    case 5: RZ(jpr1(jtlrep(jtinplace,y))); break;
     case 6: RZ(jpr1(prep(y))); break;
  }}}
  R mtm;

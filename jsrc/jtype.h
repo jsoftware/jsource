@@ -108,10 +108,12 @@ typedef AD *A;
 #define JTNORESETERR        (((I)1)<<JTNORESETERRX)
 #define JTPARENSX       1   // create fully parenthesized output
 #define JTPARENS        (((I)1)<<JTPARENSX)
-// following bits are passed into jpr/jpr1/immex/immea/showerr/wri
-#define JTPRTYO         7  // output class, see MTYO*
+// following bits are passed into jpr/jpr1/immex/immea/showerr/wri; bit 4 also to jtlrep
+#define JTPRTYO         7  // mask for output class, see MTYO*
 #define JTPRNOSTDOUTX   3   // set to suppress typing sentence result on stdout (as in scripts)
 #define JTPRNOSTDOUT    (((I)1)<<JTPRNOSTDOUTX)
+#define JTPRFORSCREENX  4   // set if the typeout is going to screen (rather than to 5!:5)
+#define JTPRFORSCREEN    (((I)1)<<JTPRFORSCREENX)
 // following bit is used in sort/grade to indicate sort direction
 #define JTDESCENDX      2   // direction of sort
 #define JTDESCEND       (((I)1)<<JTDESCENDX)

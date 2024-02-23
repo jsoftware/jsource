@@ -52,7 +52,7 @@ F1(jtimmex){F1PREFJT;A z;
  // to its previous state, including locales
  AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL FDEPINC(1); z=parse(AT(w)&BOX?w:tokens(w,1+!!EXPLICITRUNNING)); FDEPDEC(1);
- if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr(jtinplace,z);   // z not 0 && LSB of z is 0 && Result is not for debug
+ if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr((J)((I)jtinplace|JTPRFORSCREEN),z);   // z not 0 && LSB of z is 0 && Result is not for debug
  RETF(z);
 }
 

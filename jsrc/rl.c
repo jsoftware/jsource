@@ -179,7 +179,8 @@ A jtdecorate(J jt,A w,I t){
 static F1X(jtlnum1){F1PREFIP;A z,z0;I t;
  ARGCHK1(w);
  t=AT(w);
- RZ(z=t&FL+CMPX+QP?df1(z0,w,fit(ds(CTHORN),sc((I)(t&QP?35:18)))):thorn1(w));
+ // use full for float values not going to screen; otherwise the default 
+ RZ(z=(t&FL+CMPX+QP)&&!((I)jtinplace&JTPRFORSCREEN)?df1(z0,w,fit(ds(CTHORN),sc((I)(t&QP?35:18)))):thorn1(w));
  R decorate(z,t);
 }    /* dense non-empty numeric vector */
 
@@ -371,10 +372,11 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
 }
 
 // Create linear representation of w.  Call lrr, which creates an A for the text plus ltext which is appended to it.
-// jt flags indicate the handling of adding enclosing () and handling `
+// jt flags in subroutines indicate the handling of adding enclosing () and handling `
+// JTPRFORSCREEN indicates that the result is for the user, not 5!:5
 // This routine MUST NOT be called with normal inplacing bits
-F1(jtlrep){PROLOG(0056);A z;A ltextb=0, *ltext=&ltextb;
- RE(z=jtlrr(jt,w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Exit if error
+F1(jtlrep){F1PREFIP;PROLOG(0056);A z;A ltextb=0, *ltext=&ltextb;
+ RE(z=jtlrr((J)((I)jtinplace&~(JTPRTYO|JTPRNOSTDOUT)),w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Clear paren flags to start.  Exit if error
  if(*ltext)z=apip(z,*ltext);
  EPILOG(z);
 }

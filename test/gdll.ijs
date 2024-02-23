@@ -40,6 +40,9 @@ a-:,2 NB. automatic memu protected a
 a-:,2 NB. automatic memu protected a
 (9;(,9);2;3 4)=          'ibasic i &i i *i' dcd a      ;2;3 4
 a-:,9 NB. & avoided the protection
+(9;(,9);2;3 4)=          'ibasic i *i i *i' dcd a      ;2.0;3 4  NB. converts float
+(9;(,9);2;3 4)=          'ibasic i *i i *i' dcd a      ;2;3. 4  NB. converts float
+(9;(,9);2;3 4)=        'ibasic i *i i *i' dcd (, 1 >. _1 + 3 * 5);2;3. 4  NB. converts float
 
 NB. byte and *b results and *b arg - convert in place
 (6;3;1 2 3;,6)= 'bipbpb b i *b *b' dcd 3;1 2 3;,_1
@@ -70,6 +73,8 @@ NB. declaration (left argument) and parameter (right argument) checking
 
 (6 0 -: cder '') *. 'domain error' -: 'ibasic i *i i *i' dcd etx ('abc');2  ;3 4
 (6 1 -: cder '') *. 'domain error' -: 'ibasic i *i i *i' dcd etx (,2)   ;4.5;3 4
+(11;(,11);4;3 4) = 'ibasic i *i i *i' dcd etx (,2)   ;4.;3 4
+(11;(,11);4;3 4) = 'ibasic i *i i *i' dcd etx (,2)   ;4j0;3 4
 (6 2 -: cder '') *. 'domain error' -: 'ibasic i *i i *i' dcd etx (,2)   ;2  ;3j4 5
 
 NB. 'rank error' -: 'ibasic i *i i *i' dcd etx ,:(,2);2;3 4

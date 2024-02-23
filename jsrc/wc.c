@@ -10,7 +10,7 @@
 #define CWCASE(x,y)    (x+256*y)
 #define CWASSERT(b)    if(!(b))R i
 
-
+// create v[n][2], the start/end of control structures that must not be crossed by goto
 static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
  GATV0(z,INT,2*n,2); v=AS(z); v[0]=n; v[1]=2;
  u=v=AV(z);
@@ -27,6 +27,7 @@ static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
  R z;
 }    /* compute blocks for goto checking */
 
+// i is goto line, j is label line.  i (error line#) if label is inside a structure that goto isn't, -1 (OK) otherwise
 static I jtcongotochk(J jt,I i,I j,A x){I k,n,*v;
  n=AS(x)[0]; v=AV(x);
  for(k=0;k<n;++k,v+=2)if(BETWEENO(j,v[0],v[1])&&!BETWEENO(i,v[0],v[1]))R i;
@@ -35,6 +36,7 @@ static I jtcongotochk(J jt,I i,I j,A x){I k,n,*v;
 
 #define LABELEQU(m,s,e)    (CLABEL==e->ig.indiv.type&&(x=lv[e->ig.indiv.sentx],!memcmpne(s,6+CAV(x),m)))
 
+// check all lines fro invalid goto
 static I jtcongoto(J jt,I n,CW*con,A*lv){A x,z;C*s;CW*d=con,*e;I i,j,k,m;
  RZ(z=congotoblk(n,con));
  for(i=0;i<n;++i,++d)

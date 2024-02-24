@@ -1283,17 +1283,17 @@ if((I)jt&3)SEGFAULT;
 #if MEMHISTO
  jt->memhisto[blockx+1]++;  // record the request, at its size
 #endif
- z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
- I n=(I)2<<blockx;  // n=size of allocated block
+// obsolete  I n=(I)2<<blockx;  // n=size of allocated block
  ASSERT(2>*JT(jt,adbreakr),EVBREAK)  // this is JBREAK0.  Fails if break pressed twice
 
  if(likely(blockx<PLIML)){
   // small block: allocate from pool
+  z=jt->mfree[-PMINL+1+blockx].pool;   // head of free list.  We wait till blockx is valid because an allo of 2^29 bytes could fetch out of JTT.  Rearranging could get to 2^33, not enough
   if(likely(z!=0)){         // allocate from a chain of free blocks
    jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
-   if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=n)&MFREEBCOUNTING)!=0))){
-    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+   if(unlikely((((jt->mfree[-PMINL+1+blockx].ballo+=(I)2<<blockx)&MFREEBCOUNTING)!=0))){
+    jt->bytes += (I)2<<blockx; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
    }
    // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
    // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
@@ -1306,11 +1306,11 @@ if((I)jt&3)SEGFAULT;
   }else{
 // not worth checking   if(unlikely(lda(&jt->repatq)))if(jtrepatrecv(jt),z=jt->mfree[-PMINL+1+blockx].pool)goto frompool; // didn't have any blocks of the right size, but managed to repatriate one
    // chain is empty, alloc PSIZE and split it into blocks
-   RZ(z=jtgafallopool(jt,blockx,n));
+   RZ(z=jtgafallopool(jt,blockx,(I)2<<blockx));
   }
  } else {      // here for non-pool allocs...
-  n+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
-  RZ(z=jtgafalloos(jt,blockx,n));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
+  // add to the allocation for the fixed tail and the alignment area
+  RZ(z=jtgafalloos(jt,blockx,((I)2<<blockx)+TAILPAD+ALIGNTOCACHE*CACHELINESIZE));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
  }
 #if MEMAUDIT&8
  DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=2&&i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word or zaploc

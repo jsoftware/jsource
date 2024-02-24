@@ -58,7 +58,7 @@
     /* Signal post-exec error*/ \
     {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i=cw[ti].go; if(unlikely(i<SMAX)){ RESETERR; z=mtm; POPIFTRYSTK}else z=0; \
+    i=cw[ti].go; if(unlikely(i<SMAX)){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0; \
     break;}
 
 #define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
@@ -83,13 +83,13 @@ typedef struct CDATA {
  I niter;  // for for. and for_xyz., number of iterations (number of items in T block)
  I itemsiz;  // size of an item of xyz, in bytes
  I4 w; // cw code for the structure
- LX itemsym;  // symbol number of xyz, 0 for for.
- LX indexsym;  // symbol number of xyz_index, 0 for for.
+ LX itemsym;  // symbol number of xyz, 0 for for. or select.
+ LX indexsym;  // symbol number of xyz_index, 0 for for. or select.
  US i;  // cw index of the start of the structure
  US go;  // cw index of the end. of the structure
 } CDATA;
 
-typedef struct{I4 d,t,e,b;C trap;} TD;  // line numbers of catchd., catcht., end. and try.; emssstate flag for trapping
+typedef struct{I4 d,t,e,b;C trap;} TD;  // line numbers of catchd., catcht., end. and try.; emsgstate flag for trapping
 #define WTD            (sizeof(TD)/sizeof(I))
 #define NTD            17     /* maximum nesting for try/catch */
 
@@ -202,8 +202,10 @@ static I trypopgoto(J jt, TD* tdv, I tdi, I dest){
  NOUNROLL while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e)){--tdi; POPTRYSTK((tdv+tdi)->trap)}  // discard stack frame if structure does not include dest
  R tdi;
 }
-static CDATA* forpopgoto(J jt, CDATA *cv, I i){
- while(cv){if(BETWEENC(i,cv->i,cv->go))break; cv=unstackcv(cv,1);}  // process the for/select stack.  If we branch out of a structure, pop it
+
+// pop for/select frames that don't include i.  assignvirt is passed on to unstackcv
+static CDATA* forpopgoto(J jt, CDATA *cv, I i, I assignvirt){
+ while(cv){if(BETWEENC(i,cv->i,cv->go))break; cv=unstackcv(cv,assignvirt);}  // process the for/select stack.  If we branch out of a structure, pop it
  R cv;
 }
 
@@ -452,11 +454,11 @@ dobblock:
    // for other error, go to the error location; if that's out of range, keep the error; if not,
    // it must be a try. block, so clear the error (and if the error is ATTN/BREAK, clear the source of the error).
    //  Pop the try. stack, and restore debug\trapping status
-   // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
-   // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
-   // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
+// obsolete    // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
+// obsolete    // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
+// obsolete    // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
    // was when the try. was encountered
-   }else{bi=i; i=cw[i].go; if(i<SMAX){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; POPIFTRYSTK}  // Nondebug error.  If caught, we continue: make z valid then.  This is B1 try. error catch. return. end.
+   }else{bi=i; i=cw[i].go; if(i<SMAX){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}  // Nondebug error.  If caught, we continue: make z valid then.  Pop try. stack always, for. stack if needed
    }
    break;
 
@@ -489,7 +491,7 @@ tblockcase:
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // if throw., and there is a catch., do so
-   }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+   }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
    break;
 
@@ -538,20 +540,21 @@ docase:
    ++tdi; ++i; nGpysfctdl|=4;  // bump tdi pointer, set flag
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
-   // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here.  Restore trapping status
-   if(likely(nGpysfctdl&4)){POPIFTRYSTK i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
+   // Falling through to catch*., which ends the trapping if any.  pop the try-stack, go to after end., reset debug state, restore trapping status.  If there are both catch.
+   // and catchd., we could take an error to the catch. and then fall through to catchd., so we have to make sure we got here from try.  We pop only if we are on the first
+   // catch*.
+   if(likely(nGpysfctdl&4)&&i==cw[(tdv+tdi-1)->b].go){POPIFTRYSTK i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
   case CTHROW:
    // throw.  Create a throw error
    BASSERT(0,EVTHROW);
-  case CFOR:
-  case CSELECT: case CSELECTN:
-   // for./select. push the stack.  Use the C stack for the first one, after that allocate as needed.
+  case CFOR: case CSELECT: case CSELECTN:
+   // for./select. push the stack.  Use the C stack for the first one, after that allocate as needed, keeping blocks around
    if(cv==0){cv=&cdata; cv->bchn=0;  // for first block, use the canned area.  Indicate no previous blocks; there may be successors that we can reuse
    }else if(cv->fchn){cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
    }else{A cd;
     // we have to allocate an element.  cv points to end of current chain
-    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,{z=0; goto bodyend;}); ACINITZAP(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent calls; we will delete by hand
-    cv->fchn=cd;  // forward-chain chain allocated A block to durrent CDATA block
+    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,{z=0; goto bodyend;}); ACINITZAP(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent tpops; we will delete by hand
+    cv->fchn=cd;  // forward-chain chain allocated A block to current CDATA block
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
    } 
@@ -598,6 +601,7 @@ docase:
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1);
    i=cw[i].go;    // continue at new location
    break;
+#if 0   // obsolete 
   case CBREAKS:
   case CCONTS:
    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
@@ -626,9 +630,10 @@ docase:
    i=cw[i].go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
    if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
    break;
+#endif
   case CCASE:
   case CFCASE:
-   // case. and fcase. are used to start a selection.  t has the result of the T block; we check to
+   // case. and fcase. start a selection.  t has the result of the T block; we check to
    // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
    if(!cv->t){
     // This is the first case.  That means the t block has the select. value.  Save it.
@@ -656,19 +661,26 @@ docase:
    }
    if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
-  case CGOTO:  // goto_label.
-   cv=forpopgoto(jt,cv,cw[i].go);   // if the branch takes us outside a control structure, pop the for/select stack
+    
+  case CGOTO: case CBREAKS: case CCONTS: case CBREAK: case CCONT: case CBREAKF: case CRETURN: // goto_label. or any break/continue/return.  Close any structures we branch out of
+   i=cw[i].go;  // Go to the next sentence, whatever it is
+   // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
+   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
+   cv=forpopgoto(jt,cv,i,1);   // if the branch takes us outside a control structure, pop the for/select stack
    // It must also pop the try. stack, if the destination is outside the try.-end. range
-   if(nGpysfctdl&4){tdi=trypopgoto(jt,tdv,tdi,cw[i].go); nGpysfctdl^=tdi?0:4;}
-  default:   //   CELSE CWHILST CGOTO CEND
+   if(unlikely(nGpysfctdl&4)){tdi=trypopgoto(jt,tdv,tdi,i); nGpysfctdl^=tdi?0:4;}
+   goto checkbreak;   // finish up through BREAK check
+  default:   //   CELSE CWHILST CEND
+   i=cw[i].go;  // Go to the next sentence, whatever it is
+checkbreak:;
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
-   i=cw[i].go;  // Go to the next sentence, whatever it is
-  }
+  }  // end of giant select
  }  // end of main loop
 bodyend: ;  // we branch to here on fatal error, with z=0
  //  z may be 0 here and may become 0 before we exit
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
+ // if we did not get an error, the try. and for./select. stacks must be clear
 
  FDEPDEC(1);
  // check for pee
@@ -688,14 +700,18 @@ bodyend: ;  // we branch to here on fatal error, with z=0
    // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
   }else {pee(line,&cw[bi],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
+  if(likely(z!=0))z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
  }else{
   // No result.  Must be an error, or final exit from suspension
-  if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
+  cv=forpopgoto(jt,cv,-1,1);   // clear the for/select stack
+  if(unlikely(nGpysfctdl&4)){tdi=trypopgoto(jt,tdv,tdi,-1);}  // pop all try structs, restore original debug state
+// obsolete   if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct
  }
 
  if(unlikely(nGpysfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
 
+#if 0  // obsolete 
  // clear for/select stack, protecting any result found thereon
  if(likely(cv==0)){  // the for/select stack has been popped back to initial state
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
@@ -714,9 +730,11 @@ bodyend: ;  // we branch to here on fatal error, with z=0
   NOUNROLL while(cv){cv=unstackcv(cv,0);}  // clean up any remnants left on the for/select stack
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
- A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been freed & zapped
+#endif
  // locsym may have been freed now, if it was cloned
 
+ // blocks in the for./select. stack are zapped and reused as needed; must be freed en bloc.
+ A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been unstacked
  // Pop the stack of private symbol tables
  SYMSETLOCAL(prevlocsyms);
 
@@ -741,8 +759,8 @@ bodyend: ;  // we branch to here on fatal error, with z=0
 }
 
 // execution of u : v, selecting the version of self to use based on  valence
-static DF1(xv1){A z; R df1(z,  w,FAV(self)->fgh[0]);}
-static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
+static DF1(xv1){A z; R dfv1(z,  w,FAV(self)->fgh[0]);}
+static DF2(xv2){A z; R dfv2(z,a,w,FAV(self)->fgh[1]);}
 
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the

@@ -267,6 +267,13 @@ NB. 9!:11 ] 30
 NB. qy%qx
 NB. 9!:11 t
 
+'domain error' -: 12 c. etx 1
+'domain error' -: 5 c. etx 1
+'domain error' -: 17 c. etx 1
+'rank error' -: 4 8 c. etx 1
+'domain error' -: 4.5 c. etx 1
+'rank error' -: (,4) c. etx 1
+
 NB.? end of skip
 
 

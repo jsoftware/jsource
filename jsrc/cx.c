@@ -53,7 +53,7 @@
 #define PUSHTRYSTK ((jt->uflags.trace&TRACEDB)|((jt->emsgstate&EMSGSTATETRAPPING)>>(EMSGSTATETRAPPINGX-TRACEPMX)))  // value to save before a push
 #define POPTRYSTK(v) {jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|((v)&TRACEDB); jt->emsgstate=(jt->emsgstate&~EMSGSTATETRAPPING)|(((v)<<(EMSGSTATETRAPPINGX-TRACEPMX))&EMSGSTATETRAPPING);}   // restore value saved before push
 // obsolete #define POPORIGTRYSTK {jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|((UC)(nGpysfctdl>>8)&TRACEDB); jt->emsgstate=(jt->emsgstate&~EMSGSTATETRAPPING)|((UC)(nGpysfctdl>>(8+TRACEPMX-EMSGSTATETRAPPINGX))&EMSGSTATETRAPPING); nGpysfctdl^=4;}
-#define POPIFTRYSTK if(unlikely(nGpysfctdl&4)){--tdi; POPTRYSTK((tdv+tdi)->trap) if(likely(tdi==0))nGpysfctdl&=~4;}  // pop within try. stack; if pop to empty, clear flag
+#define POPIFTRYSTK if(unlikely(nGpysfctdl&4)){--tdi; POPTRYSTK(tdv[tdi].trap) if(likely(tdi==0))nGpysfctdl&=~4;}  // pop within try. stack; if pop to empty, clear flag
 #define NOUNERR(t,ti) \
     /* Signal post-exec error*/ \
     {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
@@ -89,7 +89,7 @@ typedef struct CDATA {
  US go;  // cw index of the end. of the structure
 } CDATA;
 
-typedef struct{I4 d,t,e,b;C trap;} TD;  // line numbers of catchd., catcht., end. and try.; emsgstate flag for trapping
+typedef struct{I4 d,t,e,b;C trap;} TD;  // cw#s of catchd., catcht., end. and try.; emsgstate flag for trapping
 #define WTD            (sizeof(TD)/sizeof(I))
 #define NTD            17     /* maximum nesting for try/catch */
 
@@ -199,7 +199,7 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
 // result is new value for tdi
 // This is called only if tdi is nonzero & therefore we have a stack
 static I trypopgoto(J jt, TD* tdv, I tdi, I dest){
- NOUNROLL while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e)){--tdi; POPTRYSTK((tdv+tdi)->trap)}  // discard stack frame if structure does not include dest
+ NOUNROLL while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e)){--tdi; POPTRYSTK(tdv[tdi].trap)}  // discard stack frame if structure does not include dest
  R tdi;
 }
 
@@ -450,7 +450,7 @@ dobblock:
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(unlikely(jt->jerr==EVTHROW)){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
+    if(nGpysfctdl&4&&tdv[tdi-1].t){i=tdv[tdi-1].t+1; RESETERR; z=mtm; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
    // for other error, go to the error location; if that's out of range, keep the error; if not,
    // it must be a try. block, so clear the error (and if the error is ATTN/BREAK, clear the source of the error).
    //  Pop the try. stack, and restore debug\trapping status
@@ -490,7 +490,7 @@ tblockcase:
    }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-   }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // if throw., and there is a catch., do so
+   }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4&&tdv[tdi-1].t){i=tdv[tdi-1].t+1; RESETERR; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // if throw., and there is a catch., do so
    }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
    break;
@@ -532,8 +532,8 @@ docase:
    tryinit(tdv+tdi,i,cw);
    // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
    // if debugging is already off, it stays off
-   (tdv+tdi)->trap=PUSHTRYSTK;
-   if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((nGpysfctdl&16)&&(UC)(tdv+tdi)->d)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}
+   tdv[tdi].trap=PUSHTRYSTK;
+   if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((nGpysfctdl&16)&&(UC)tdv[tdi].d)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}
    // debugging is now off if we are trapping.  In that case, indicate that we are trapping errors, to prevent holding them for debug
    jt->emsgstate|=(~jt->uflags.trace&TRACEDB1)<<EMSGSTATETRAPPINGX;  // turn on trapping if not now debug
    // We allow verbose messages in case the catch. wants to display them.  This is different from u :: v
@@ -541,9 +541,12 @@ docase:
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
    // Falling through to catch*., which ends the trapping if any.  pop the try-stack, go to after end., reset debug state, restore trapping status.  If there are both catch.
-   // and catchd., we could take an error to the catch. and then fall through to catchd., so we have to make sure we got here from try.  We pop only if we are on the first
-   // catch*.
-   if(likely(nGpysfctdl&4)&&i==cw[(tdv+tdi-1)->b].go){POPIFTRYSTK i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
+   // and catchd., we could take an error to the catch. and then fall through to catchd., or we could branch from the catch. back to the try., so we have to make sure that the
+   // block on the try. stack is for the structure we are in.  Go through the control words of the current try. looking for a match; if found, pop the try block and goto its end+1;
+   // otherwise just go to the next catch* in this structure - we'll hit end presently
+   {I ni=cw[i].go; if(likely(nGpysfctdl&4)){I j; for(j=cw[tdv[tdi-1].b].go;cw[j].ig.indiv.type!=CEND;j=cw[j].go)if(j==i){POPIFTRYSTK ni=tdv[tdi].e+1; break;}} i=ni;}
+   break;
+// obsolete &&i==cw[tdv[tdi-1].b].go){POPIFTRYSTK i=1+tdv[tdi].e;}else i=cw[i].go; break;
   case CTHROW:
    // throw.  Create a throw error
    BASSERT(0,EVTHROW);

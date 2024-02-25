@@ -55,7 +55,8 @@ static I toonehottype(I t){R type3x0[CTTZ(t)][SGNTO0(t)];}  // take value from t
 static I fromonehottype(I t){
  if((UI)t>RPAR)R 0;  // error if value too high
  if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type, or an old one < 11 (sc. B01 LIT INT FL)
- t &=-t; if(t&0xfc00)R SPARSE|(t>>10);
+ if((t&-t)!=t)R 0;  // if more than one upper bit set, error
+ if(t&0xfc00)R SPARSE|(t>>10);
  else R f3x0bit[CTTZ(t)-CMPXX];
 }
 

@@ -68,7 +68,7 @@
 #define NOT(v)          ((v)^0x01010101)
 #endif
 #else
-#define NOT(v) ((v)&VALIDBOOLEAN)
+#define NOT(v) ((v)^VALIDBOOLEAN)
 #endif
 
 #define SNOT(v)         ((v)^0x0101)

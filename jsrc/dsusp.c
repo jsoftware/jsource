@@ -136,13 +136,13 @@ static A jtsusp(J jt){A z;
  J jtold=jt;  // save the thread that we started in
  UI savcstackmin=0;  // when we switch threads, we keep our stack; so we must use our stack-end.  If this is not zero, we must reset the stack on exit/change
  JT(jt,promptthread)=THREADID(jt);  // set that the debug thread is the one allowed to prompt
- while(1){A  inp;
+ while(1){A  inp;   // this is the loop that repeatedly executes user commands from keyboard
   jt->jerr=0;   // not needed
   A iep=0;
   // if there is an immex phrase, protect it during its execution
   if(jt->iepdo){READLOCK(JT(jt,felock)) if((iep=JT(jt,iep))!=0)ra(iep); READUNLOCK(JT(jt,felock))}
   if(iep){
-   // if there is an immex latent expression (9!:27), execute it before prompting
+   // if there is an immex expression (9!:27), execute it before prompting
    jt->iepdo=0; z=immex(iep); fa(iep);  // reset request flag; run sentence & force typeout; undo the ra() that protected the immex sentence
    if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS)break;  // dbr 0/1 forces end of suspension, as does single-step request
    if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep

@@ -65,10 +65,12 @@ I jtprod(J jt,I n,I*v){D z=1; DO(n, z*=(D)v[i];); ASSERT(z<=IMAX,EVLIMIT); R(I)z
 #endif
 
 // w is a boolean array, result is 1 iff all values are 0
-B all0(A w){if(!w)R 0; R !memchr(AV(w),C1,AN(w));}
+// obsolete B all0(A w){if(!w)R 0; R !memchr(AV(w),C1,AN(w));}
+B all0(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=0)R 0; R ((*c8<<BB)<<((~n)<<LGBB)==0);}
 
 // w is a boolean array, result is 1 iff all values are 1
-B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
+// obsolete B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
+B all1(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=VALIDBOOLEAN)R 0; R (((*c8^VALIDBOOLEAN)<<BB)<<((~n)<<LGBB)==0);}
 
 // Number of atoms in an item.
 I jtaii(J jt,A w){I m; PROD(m,AR(w)-1,1+AS(w)); R m;}

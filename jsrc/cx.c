@@ -467,7 +467,7 @@ dobblock:
    break;
 
   case CIF: case CWHILE: case CELSEIF:
-     // in a long run of only if. and B blocks, the only switches executed will go to the if. processor, predictably
+     // in a long run of only if./while. and B blocks, the only switches executed will go to the if. processor, predictably
    i=cw[i].go;  // Go to the next sentence, whatever it is
    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // no fallthrough if line exits
    if(unlikely((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)|jt->uflags.trace))break;  // avoid indirect-branch overhead on the likely case
@@ -550,8 +550,8 @@ docase:
    }
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
-   // Falling through to catch*., which ends the trapping if any.  pop the try-stack, go to after end., reset debug state, restore trapping status.  If there are both catch.
-   // and catchd., we could take an error to the catch. and then fall through to catchd., or we could branch from the catch. back to the try., so we have to make sure that the
+   // Falling through to catch*., which ends the trapping if any.  Pop the try-stack, go to after end., reset debug state, restore trapping status.  If there are both catch.
+   // and catchd., we could take an error to the catch. and then fall through to catchd., or we could branch from the catch. back to the try.; so we have to make sure that the
    // block on the try. stack is for the structure we are in.  Go through the control words of the current try. looking for a match; if found, pop the try block and goto its end+1;
    // otherwise just go to the next catch* in this structure - we'll hit end presently
    {I ni=cw[i].go; if(likely(nGpysfctdl&4)){I j; for(j=cw[tdv[-1].b].go;cw[j].ig.indiv.type!=CEND;j=cw[j].go)if(j==i){POPIFTRYSTK ni=tdv->e+1; break;}} i=ni;}

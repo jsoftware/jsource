@@ -65,12 +65,12 @@ I jtprod(J jt,I n,I*v){D z=1; DO(n, z*=(D)v[i];); ASSERT(z<=IMAX,EVLIMIT); R(I)z
 #endif
 
 // w is a boolean array, result is 1 iff all values are 0
-// obsolete B all0(A w){if(!w)R 0; R !memchr(AV(w),C1,AN(w));}
-B all0(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=0)R 0; R ((*c8<<BB)<<((~n)<<LGBB)==0);}
+B all0(A w){if(!w)R 0; R !memchr(AV(w),C1,AN(w));}
+// obsolete B all0(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=0)R 0; R ((*c8<<BB)<<((~n)<<LGBB))==0;}
 
 // w is a boolean array, result is 1 iff all values are 1
-// obsolete B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
-B all1(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=VALIDBOOLEAN)R 0; R (((*c8^VALIDBOOLEAN)<<BB)<<((~n)<<LGBB)==0);}
+B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
+// obsolete B all1(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=VALIDBOOLEAN)R 0; R (((*c8^VALIDBOOLEAN)<<BB)<<((~n)<<LGBB))==0;}
 
 // Number of atoms in an item.
 I jtaii(J jt,A w){I m; PROD(m,AR(w)-1,1+AS(w)); R m;}
@@ -211,9 +211,11 @@ I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
  R z;
 }    /* sum of boolean vector b */
 
+#if 0 // obsolete 
 C cf(A w){if(!w)R 0; R CAV(w)[0];}  // first character in a character array
 
 C cl(A w){if(!w)R 0; R CAV(w)[AN(w)-1];}  // last character in a character array
+#endif
 
 // A block for null-terminated C string, with a trailing NUL (which is not included in the AN of the string)
 A jtcstr(J jt,C*s){A z; RZ(z=mkwris(str((I)strlen(s),s))); CAV(z)[AN(z)]=0; R z;}  // ensure writable string returned, since we modify it here.  The string has only the non-NUL, but add a trailing NUL.  There's always room.
@@ -287,7 +289,7 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
  n=(n-1)&(2*SZI*NPAR-1);  // get n-1 of remnant
  I n1=(n>>LGSZI)+1; n1=n1>=NPAR?NPAR:n1; bor=_mm256_loadu_si256((__m256i*)(validitymask+((-n1)&(NPAR-1))));
  b64=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_maskload_epi64((I*)bx,bor),zero));
- // read the second batch.  If n<32, this must be NOPd by repeateing the address
+ // read the second batch.  If n<32, this must be NOPd by repeating the address
  zbase=bx-b; bx+=n&(SZI*NPAR);  // advance bx only if there is something to read
 
  n1=(n>>LGSZI)-3; n1=n1<0?0:n1; bor=_mm256_loadu_si256((__m256i*)(validitymask+(4-n1)));

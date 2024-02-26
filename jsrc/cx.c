@@ -865,7 +865,7 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
 // w is character array or list
 // if table, take , w ,. LF    if list take ,&LF^:(LF~:{:) w)
 static F1(jtlineit){
- R 1<AR(w)?ravel(stitch(w,scc(CLF))):AN(w)&&CLF==cl(w)?w:over(w,scc(CLF));
+ R 1<AR(w)?ravel(stitch(w,scc(CLF))):AN(w)&&CLF==CAV(w)[AN(w)-1]?w:over(w,scc(CLF));
 }
 
 // w is a rank-1 string.  We scan it for {{ }} and return the boxed result.  self is invalid
@@ -886,7 +886,7 @@ static A jtsent12c(J jt,A w,I userm){C*p,*q,*r,*s,*x;A z;
  // otherwise we have a single string.  Could be from 9 : string.  If not, scan it for {{ }}
  if(userm!=9){RZ(w=ddtokens(w,0b1110))}  // scan for {{ }}.  Don't allow calling for another line, and return result as string
  // 9 : string, perhaps.  scan it for LF
- if(!(AN(w)&&DDSEP==cl(w)))RZ(w=over(w,scc(DDSEP)));  // add LF if missing
+ if(!(AN(w)&&DDSEP==CAV(w)[AN(w)-1]))RZ(w=over(w,scc(DDSEP)));  // add LF if missing
  // Lines are separated by DDSEP, and there may be DDSEP embedded in strings.  Convert the whole thing to words, which will
  // leave the embedded DDSEP embedded; then split on the individual DDSEP tokens
  // tokenize the lines.  Each LF is its own token.

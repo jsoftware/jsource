@@ -966,8 +966,9 @@ extern I        allosize(A);
 extern I        atype(I);
 extern I        boxat(A,I,I,I);
 extern I        bsum(I,B*);
-extern C        cf(A);
-extern C        cl(A);
+
+// obsolete extern C        cf(A);
+// obsolete extern C        cl(A);
 extern CR       condrange(I *,I,I,I,I);
 extern CR       condrange2(US *,I,I,I,I);
 extern CR       condrange4(C4 *,I,I,I,I);

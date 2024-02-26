@@ -643,10 +643,14 @@ static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){
  R 1;
 }    /* elliptic curve add (mod proj coord) */
 
+#if 0  // obsolete
 #if SY_64
 #define BIT0 0x8000000000000000
 #else
 #define BIT0 0x80000000
+#endif
+#else
+#define BIT0 ((I)1<<(BW-1))
 #endif
 
 static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){

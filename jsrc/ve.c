@@ -972,7 +972,7 @@ DF2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
     // We want to end up with a reciprocal with binary point at 62, and a corresponding shift count.  We will normalize the value to MSB in bit 62 (i. e. in (.5,1)) and divide it into 1.0.
     // Because d is not a power of 2, this divide will not overflow & will yield a 63-bit unsigned fraction.
     I norm=CTLZI(d); norm=62-norm; I normd=d<<norm;
-    // The following is a 128-bit/64-bit divide, which clang doesn't do right.  We end with a positive remainder. meaning the quotient is always biased <= the true quotient
+    // The following is a 128-bit/64-bit divide, which clang doesn't do right.  We end with a positive remainder, meaning the quotient is always biased <= the true quotient
     D quo=42535295865117307932921825928971026432./(D)normd; UI quo63=(I)quo; quo63=quo>=9223372036854773760.?IMAX:quo63; I corr=(((unsigned __int128)0x2000000000000000<<64)-(unsigned __int128)normd*quo63)>>32;
     quo63+=(I)((corr*4294967296.)/(D)normd); corr=(((unsigned __int128)0x2000000000000000<<64)-(unsigned __int128)normd*quo63);
     while(corr<0){corr+=normd; --quo63;} while(corr>=normd){corr-=normd; ++quo63;}  // correct quotient to have small positive remainder

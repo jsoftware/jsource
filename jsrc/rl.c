@@ -276,18 +276,18 @@ static A jtlsymb(J jt,C c,A w,A *ltext){F1PREFIP;A t;C buf[20],d,*s;I*u;V*v=FAV(
   *s++=' '; *s++='('; s+=sprintf(s,FMTI,*u); spellit(CIBEAM,s); s+=2; s+=sprintf(s,FMTI,u[1]); *s++=')';
   RZ(t=str(s-buf,buf)); 
  }else{RZ(t=spella(w)); if(AN(t)==1&&(CAV(t)[0]=='{'||CAV(t)[0]=='}')){RZ(t=mkwris(t)); AS(t)[0]=AN(t)=2; CAV(t)[1]=' '; }}  // add trailing space to { } to avoid DD codes
- d=cf(t);
+ d=CAV(t)[0];
  R d==CESC1||d==CESC2?over(chrspace,t):t;
 }
 
 static B laa(A a,A w){C c,d;
  if(!(a&&w))R 0;
- c=ctype[(UC)cl(a)]; d=ctype[(UC)cf(w)];
+ c=ctype[(UC)CAV(a)[AN(a)-1]]; d=ctype[(UC)CAV(w)[0]];
  R ((c|d)&(0xf&~(CA|C9)))^1;  // 1 if c,d both alphameric
 }
 
 // Is a string a number?  Must start with a digit and end with digit, x, or .
-static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=cl(a); R ('x'==c||'.'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
+static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=CAV(a)[AN(a)-1]; R ('x'==c||'.'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)CAV(w)[0]];}
 
 // ? insert spacing between components of trains
 static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
@@ -307,13 +307,13 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
    GAT0(y,BOX,3,1); u=AAV(y);
    u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
    u[2]=g=parfn(jtinplace,gt||b,       g);
-   u[1]=str(' '==cf(g)||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
+   u[1]=str(' '==CAV(g)[0]||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
    RE(0); R raze(y);
   case CFORK:
    GAT0(y,BOX,5,1); u=AAV(y);
    RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
-   RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==cf(g)?0L:1L," "));
-   RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
+   RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==CAV(g)[0]?0L:1L," "));
+   RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==CAV(h)[0]?0L:1L," "));
    R raze(y);
   default:
    t0=parfn(jtinplace,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&(lp(f)>0),f);

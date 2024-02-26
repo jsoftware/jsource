@@ -1874,11 +1874,11 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 
 // bp(type) returns the number of bytes in an atom of the type - not used for sparse args
 // bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
-#if BW==64
-#define bplg(i) (((I)0x08b0222888dc6c0>>3*CTTZ(i))&(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
+#if 1  // obsolete
+#define bplg(i) (I)(((I8)0x08b0222888dc6c0>>3*CTTZ(i))&(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
 // bpnonnoun is like 1<<bplg but we know that the value is not a noun
-#define bpnonnoun(i) ((((RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+(INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+(INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+(LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+(CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
- (SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+(ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+(INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+(MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+(NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
+#define bpnonnoun(i) (I)(((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
+ ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
  >>(5*(CTTZ(i)-(LASTNOUNX+1))))&31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   8 8 8 8 12 4 8 8 8 (1) 
 // bpnoun is like bp but for NOUN types, and not sparse
 #define bpnoun(i) ((I)1<<bplg(i))

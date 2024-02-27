@@ -249,7 +249,7 @@ DF2(jtxdefn){
  UI wx=0, wlen; A trackstg;   // index/len we will write to; unparsed line
  forcetomemory(&trackinfo);
 #endif
- TD*tdv=0;  // pointer to base of try. stack
+ TD*tdv=0;  // pointer to base of try. stack.  We could keep the try. stack on the C stack but it's a waste of 5 cachelines
 // obsolete I tdi=0;  // index of the next open slot in the try. stack
  CDATA cdata,*cv=0;  // pointer to the current entry in the for./select. stack
  cdata.fchn=0;  // init no blocks allocated
@@ -261,7 +261,7 @@ DF2(jtxdefn){
  A *hv;  // will hold pointer to the precompiled parts
  {  A u,v;  // pointers to args
  nGpysfctdl=w!=self?64:0;  // set if dyad
- if(((I)jtinplace&JTXDEFMODIFIER)==0){
+ if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
   // we are executing a verb.  It may be an operator
    w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
   if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // flags don't change
@@ -487,7 +487,7 @@ tblockcase:
    }else{parseline(t,lbl3);} // no assert: run the line
    // this is return point from running the line
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
-    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // exit if end of defn
+    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // exit if end of defn  scaf impossible!
     if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)|jt->uflags.trace)!=0))break;  // break if next line not do.; T block extended to more than 1 line
     goto docase;  // avoid indirect-branch overhead on the likely case, if. T do.
    }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
@@ -541,7 +541,7 @@ docase:
     // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
     // if debugging is already off, it stays off
 // obsolete     if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((nGpysfctdl&16)&&(UC)tdv[tdi].d)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}
-    if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((nGpysfctdl&16)&&isd)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}
+    if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((nGpysfctdl&16)&&isd)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}  // scaf avoid branches
     // debugging is now off if we are trapping.  In that case, indicate that we are trapping errors, to prevent holding them for debug
     jt->emsgstate|=(~jt->uflags.trace&TRACEDB1)<<EMSGSTATETRAPPINGX;  // turn on trapping if not now debug
     // We allow verbose messages in case the catch. wants to display them.  This is different from u :: v
@@ -746,7 +746,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
 #endif
  // locsym may have been freed now, if it was cloned
 
- // blocks in the for./select. stack are zapped and reused as needed; must be freed en bloc.
+ // blocks in the for./select. stack are zapped and reused as needed; must be freed en bloc on completion
  A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been unstacked
  // Pop the stack of private symbol tables
  SYMSETLOCAL(prevlocsyms);

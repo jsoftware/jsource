@@ -1173,7 +1173,7 @@ DF2(jtsumattymes1){
    }
   }
  #endif
-  NAN1;
+  if(unlikely(NANTEST)){ASSERT(fit=1,EVNAN) RETF(jtsumattymes1(jt,a,w,FAV(self)->fgh[0]))}  // !.1 cannot recover from NaN (which can come from infinities).  Revert !.0 to uncompensated case
  } 
  RETF(z);
 }

@@ -498,7 +498,8 @@ DF1(jtcompsum){
   DQ(m, D *wv0; DQ(d, wv0=wv; D acc=0.0; D c=0.0; DQ(n, y=*wv0-c; t=acc+y; acc=t-acc; c=acc-y; acc=t; wv0+=d;) *zv++=acc; ++wv;) wv=wv0-(d-1); )
  }
 #endif
- NAN1;
+ if(unlikely(NANTEST))R reduce(w,FAV(self)->fgh[0]);  // in NaN error, fail over to normal summation.  Infinities can cause it.  Ranks still set
+
  RETF(z);
 }
 

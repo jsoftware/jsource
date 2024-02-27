@@ -230,7 +230,7 @@ y
 }}^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1
 
 NB. Test for NaN
-'NaN error' -: 0 _ 1 (+/@:*"1!.0) etx _ 0 2   NB. in exact calculation, any infinity causes a NaN
+2 -: 0 _ 1 (+/@:*"1!.0) _ 0 2   NB. in exact calculation, any infinity causes a NaN - failover to normal dotproduct
 'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1
 
 4!:55 ;:'f p q space test testsub x xx y yy x0 y0'

@@ -58,41 +58,38 @@ mkdir -p j32
 cp bin/profile.ijs j32
 fi
 
-if [ "$1" != "linux" ]; then
-rm -f tools/regex/libjpcre2.so  # openbsd freebsd
-fi
-if [ "$1" = "raspberry" ]; then
-if [ $m64 -eq 1 ]; then
-cp tools/regex/raspberry/j64/libjpcre2.so tools/regex/.
-else
-cp tools/regex/raspberry/j32/libjpcre2.so tools/regex/.
-fi
-fi
-
 if [ "$1" = "linux" ]; then
 # cp mpir/linux/x86_64/libgmp.so j64
 cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so
+cp pcre2/linux/x86_64/libjpcre2.so tools/regex/.
 elif [ "$1" = "raspberry" ]; then
 if [ $m64 -eq 1 ]; then
 cp mpir/linux/aarch64/libgmp.so j64
+cp pcre2/linux/aarch64/libjpcre2.so tools/regex/.
 else
 cp mpir/linux/arm/libgmp.so j32
+cp pcre2/linux/arm/libjpcre2.so tools/regex/.
 fi
 elif [ "$1" = "darwin" ]; then
 cp mpir/apple/macos/libgmp.dylib j64
+cp pcre2/apple/macos/libjpcre2.dylib tools/regex/.
 elif [ "$1" = "openbsd" ]; then
 # cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
 if [ "`uname -m`" = "amd64" ] ; then
 cp mpir/openbsd/x86_64/libgmp.so j64
+cp pcre2/openbsd/x86_64/libjpcre2.so tools/regex/.
 else
 cp mpir/openbsd/aarch64/libgmp.so j64
+cp pcre2/openbsd/aarch64/libjpcre2.so tools/regex/.
 fi
 elif [ "$1" = "freebsd" ]; then
 # cp /usr/local/lib/libgmp.so.10 j64/libgmp.so
 if [ "`uname -m`" = "amd64" ] ; then
 cp mpir/freebsd/x86_64/libgmp.so j64
+cp pcre2/freebsd/x86_64/libjpcre2.so tools/regex/.
 else
 cp mpir/freebsd/aarch64/libgmp.so j64
+cp pcre2/freebsd/aarch64/libjpcre2.so tools/regex/.
 fi
 fi
 
@@ -259,6 +256,7 @@ cp bin/profile.ijs j32
 cp bin/$1/j32/* j32
 # cp mpir/linux/i386/libgmp.so j32
 cp mpir/linux/i386/libgmpd.so j32/libgmp.so
+cp pcre2/linux/i386/libjpcre2.so tools/regex/.
 fi
 
 if [ "$1" = "darwin" ] && [ -d j64 ] ; then

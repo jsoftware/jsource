@@ -687,6 +687,7 @@ q=. jpath '~temp/httpget.log'
 t=. ":{.t,3
 ferase p;q
 retry=. fail=. 0
+if. ('https:' -: 6 {. f) *. 1 e. 'busybox' E. HTTPCMD do. f=. (<<<4) { f end.
 cmd=. HTTPCMD rplc '%O';(dquote p);'%L';(dquote q);'%t';t;'%T';(":TIMEOUT);'%U';f
 if. IFJA do.
   try.

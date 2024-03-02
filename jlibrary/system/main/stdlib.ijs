@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.6.1'
+JLIB=: '9.6.3'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -783,8 +783,8 @@ if. y do.
   if. _1 = 4!:0 <'jdb_open_jdebug_' do.
     0!:0 <jpath '~addons/ide/qt/debugs.ijs'
   end.
-  jdb_open_jdebug_''
-  13!:0 [ 1
+  jdb_open_jdebug_ y
+  13!:0 y
 else.
   jdb_close_jdebug_ :: ] ''
   13!:15 ''

@@ -6,8 +6,8 @@ systype=. 9!:12''
 jpathsep_z_=: '/'&(('\' I.@:= ])})
 BINPATH_z_=: jpathsep BINPATH_z_
 ifios=. (IFIOS"_)^:(0=4!:0<'IFIOS') 0
-ifwasm=. 'Wasm' -: 0:`(UNAME"_)@.(0=4!:0<'UNAME_z_')''
-omitversion=. ifios +. ifwasm +. 'Android' -: 0:`(UNAME"_)@.(0=4!:0<'UNAME_z_')''
+ifwasm=. 'Wasm' -: (UNAME"_)^:(0=4!:0<'UNAME_z_')''
+omitversion=. ifios +. ifwasm +. 'Android' -: (UNAME"_)^:(0=4!:0<'UNAME_z_')''
 
 NB. create SystemFolders
 bin=. BINPATH

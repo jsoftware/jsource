@@ -9,12 +9,14 @@ mkdir j64
 copy bin\profile.ijs j64
 copy pthreads4w\bin\pthreadVC3.dll j64
 copy mpir\windows\x64\mpir.dll j64
+copy pcre2\windows\x64\jpcre2.dll tools/regex/.
 GOTO L01B
 :L01A
 mkdir j32
 copy bin\profile.ijs j32
 copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3.dll
 copy mpir\windows\win32\mpir.dll j32
+copy pcre2\windows\win32\jpcre2.dll tools/regex/.
 :L01B
 
 copy version.txt jsrc\jversion.h

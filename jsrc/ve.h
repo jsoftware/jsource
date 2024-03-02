@@ -375,7 +375,7 @@ extern ADECL2( plusDB,PVD,PVD,PVB);
 extern ADECL2( plusDD,PVD,PVD,PVD);
 extern ADECL2( plusEE,E,E,E);
 extern ADECL2( plusDI,PVD,PVD,PVI);
-extern ADECL2( plusDX,DX,DX,DX);
+// obsolete extern ADECL2( plusDX,DX,DX,DX);
 extern ADECL2( plusIB,PVI,PVI,PVB);
 extern ADECL2( plusID,PVD,PVI,PVD);
 extern ADECL2( plusII,PVI,PVI,PVI);

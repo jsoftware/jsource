@@ -259,7 +259,7 @@ void jtauditmemchains(J jt){
 }
 #endif
 }
-// 13!:23  check the memory free list, a la auditmemchains()
+// 13!:_8  check the memory free list, a la auditmemchains()
 // return error info, a 2-atom list where
 //  atom 0 is return code 0=OK 1=pool number corrupted 2=header corrupted 3=usecount corrupted (valid only if MEMAUDIT&0x4) 4=loop in chain 
 //  atom 1 is lg of failing blocksize
@@ -385,8 +385,8 @@ static D jtspfor1(J jt, A w){D tot=0.0;
    if(ISSPARSE(AT(w))){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
   case VERBX: case ADVX:  case CONJX: 
    {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;
-  case XDX:
-   {DX*v=(DX*)AV(w); DQ(AN(w), if(v->x)tot+=spfor1(v->x); ++v;);} break;
+// obsolete  case XDX:
+// obsolete    {DX*v=(DX*)AV(w); DQ(AN(w), if(v->x)tot+=spfor1(v->x); ++v;);} break;
   case RATX: case XNUMX:
    {A*v=AAV(w); DQ(AN(w)<<(!!(AT(w)&RAT)), if(*v)tot+=spfor1((*v)); ++v;);} break;  // no QCWORD on XNUM/RAT
  }

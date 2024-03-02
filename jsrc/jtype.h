@@ -763,7 +763,7 @@ typedef struct DS{      /* 1 2 3 5                                              
 
 typedef DST* DC;
 
-
+#if 0  // obsolete
 typedef struct {I e,p;X x;} DX;
                                 /* for the p field in DX */
 #define DXIPREC         ((I)-1) /* infinite precision    */
@@ -780,6 +780,18 @@ typedef struct {I e,p;X x;} DX;
 /* x - mantissa                                                            */
 /*        least significant digit first                                    */
 /*        decimal point after last digit                                   */
+
+
+
+typedef struct {DX re;DX im;} ZX;
+
+/* extended complex                                                        */
+/* re - real part                                                          */
+/* im - imaginary part                                                     */
+
+
+
+#endif
 
 // LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
 // type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
@@ -1082,6 +1094,7 @@ typedef struct {
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
+    US foreignmn[2];  // in m!:n, the arguments
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s
@@ -1190,7 +1203,8 @@ typedef struct {
 #define VXOPCALL       (I)0x2000000      // 25 : defn derived fn call overlaps SYMB/ASGNLOCAL
 #define VASGSAFEX     26
 #define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path.  Must be > VJTFLGOK2 for parser comparisons
-#define VDDOP           ((I)(1L<<27))     /* derived from a derived operator */
+// obsolete #define VDDOP           ((I)(1L<<27))     /* derived from a derived operator */
+// 27 free   it appears that u !: n forms were envisaged
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb
 #define VFUSEDOK2  ((I)(1L<<30))    // this block can be executed by passing in another block (containing rank) whose fgh[0] points to the native block for this primitive
@@ -1269,14 +1283,6 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 #define MEMSET00 ((C*)(iotavec-IOTAVECBEGIN+0))  // 8 bytes of 0, for memset
 #define MEMSETFF ((C*)(iotavec-IOTAVECBEGIN+0xff))  // 1 byte of 0xff, for memset
 #define MEMSET01 ((C*)(iotavec-IOTAVECBEGIN+1))  // 1 byte of 0x01, for memset
-
-
-
-typedef struct {DX re;DX im;} ZX;
-
-/* extended complex                                                        */
-/* re - real part                                                          */
-/* im - imaginary part                                                     */
 
 
 // parser stack - should be a qword for fast copying

@@ -734,7 +734,7 @@ endname: ;
        A arg2=stack[(pmask>>=1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)    pmask shifted right 1
        // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away on return
        // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  Those can be freed right away, returning them to the
-//     // pool and allowing their cache space gto be reused.  But there is a problem:
+//     // pool and allowing their cache space to be reused.  But there is a problem:
        // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
        // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
        // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
@@ -838,7 +838,7 @@ RECURSIVERESULTSCHECK
        stack[pmask>>1]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
        stack+=(pmask>>2)+1;   // finish relocating stack   1 1 2 (1 2)
 
-       // Most of the executed fragements are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
+       // Most of the executed fragments are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
        // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
        // 2. pline=0 or 2, token 0 not LPAR (might be EDGE): similarly can't execute with noun now in slot 1 (if LPAR and line 0/2, the only possible exec is () )
        // Since if pline is 0 token 0 must be EDGE, this is equivalent to pline!=1 and word 0 not LPAR
@@ -1053,7 +1053,7 @@ failparse:
    // overhead, because it happens enough to notice.
    // No ASSERT - must get to the end to pop stack
    I at=AT(y = QCWORD(queue[0]));  // fetch the word
-   if((at&NAME)!=0) {
+   if(likely((at&NAME)!=0)) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
      if(likely((sv=s->val)!=0)){raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics

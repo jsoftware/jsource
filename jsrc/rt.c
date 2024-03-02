@@ -130,6 +130,7 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R trr(gs);  // if <@:t. discard the <@:
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);} 
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL){RETF(trr(hs));}
  xop=id==CCOLON&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
@@ -141,7 +142,8 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
  if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(fxeach(BETWEENC(id,CFDOT,CFCODOT)?hs:gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));
  if(2<m)RZ(x[2]=incorp(trr(hs)));
- s=xop?spellout('0'):fl&VDDOP?(hv=AV(hs),over(thorn1(sc(hv[0])),over(spellout(id),thorn1(sc(hv[1]))))):spellout(id);
+// obsolete  s=xop?spellout('0'):fl&VDDOP?(hv=AV(hs),over(thorn1(sc(hv[0])),over(spellout(id),thorn1(sc(hv[1]))))):spellout(id);
+ s=xop?spellout('0'):spellout(id);
  z=troot(s,graft(ope(t)));
  EPILOG(z);
 }

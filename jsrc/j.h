@@ -2300,7 +2300,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #include "vq.h" 
 #include "vx.h" 
 #include "vz.h"
-#include "vdx.h"  
+// obsolete #include "vdx.h"  
 #include "a.h"
 #include "s.h"
 #include "jgmp.h"

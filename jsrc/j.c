@@ -73,11 +73,13 @@ I __attribute__((aligned(CACHELINESIZE))) maskec4123[4]={0xc0000000c0000000, 0x8
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 
-__attribute__((aligned(CACHELINESIZE))) I Bnum[22][8*(2-SY_64)] = {   // the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
+__attribute__((aligned(CACHELINESIZE))) I Bnum[NUMMAX-NUMMIN+1+2][8*(2-SY_64)] = {   // the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
 CBAIVAL(INT,0), CBAIVAL(INT,1),
+// minimal CBAIVAL(INT,-20), CBAIVAL(INT,-19), CBAIVAL(INT,-18), CBAIVAL(INT,-17), CBAIVAL(INT,-16), CBAIVAL(INT,-15), CBAIVAL(INT,-14), CBAIVAL(INT,-13), CBAIVAL(INT,-12), CBAIVAL(INT,-11), 
 CBAIVAL(INT,-10), CBAIVAL(INT,-9), CBAIVAL(INT,-8), CBAIVAL(INT,-7), CBAIVAL(INT,-6), CBAIVAL(INT,-5), CBAIVAL(INT,-4), CBAIVAL(INT,-3), CBAIVAL(INT,-2), CBAIVAL(INT,-1), 
 CBAIVAL(B01,0), CBAIVAL(B01,1),  // these values must be padded with 0 so they can be used as an INT
-CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), CBAIVAL(INT,7), CBAIVAL(INT,8), CBAIVAL(INT,9)
+CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), CBAIVAL(INT,7), CBAIVAL(INT,8), CBAIVAL(INT,9),
+// minimal CBAIVAL(INT,10), CBAIVAL(INT,11), CBAIVAL(INT,12), CBAIVAL(INT,13), CBAIVAL(INT,14), CBAIVAL(INT,15), CBAIVAL(INT,16), CBAIVAL(INT,17), CBAIVAL(INT,18), CBAIVAL(INT,19)
 };
 
 struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[] = {  // floating-point -0, 1, 2, 0.5 used for constants

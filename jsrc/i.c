@@ -77,6 +77,7 @@ B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
  DO(IOTAVECLEN, iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
  // We have no more use for the jt block.  The values allocated from it will never be freed.  We leave them extant,
  // but we can free the tpop stack that we allocated
+ jtforeigninit(jt);  // init m!:n blocks, master thread only
  FREE(jt->tstackcurr);
  R 1;
 }

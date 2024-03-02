@@ -326,7 +326,8 @@ F2(jtdberr2){
  R mtm;  // i. 0 0
 }
 
-
+// x 13!:23 y  return y if it is a suspension result, otherwise x (which defaults to i. 0 0).  Bivalent 
+F2(jtdbpasss){I t=AT(w); w=t&NOUN?w:a; a=t&NOUN?a:mtm; RETF(AFLAG(w)&AFDEBUGRESULT?w:a); }
 
 // Suspension-ending commands.  These commands return a list of boxes flagged with the AFDEBUGRESULT flag.  The first box is always an integer atom and gives the type
 // of exit (run, step, clear, etc).  Other boxes give values for the run and ret types.  EXCEPTION: 13!:0 returns i. 0 0 for compatibility, but still flagged as AFDEBUGRESULT

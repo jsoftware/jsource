@@ -453,6 +453,7 @@ extern F2(jtdbsig2);
 extern F2(jtdbstepinto2);
 extern F2(jtdbstepout2);
 extern F2(jtdbstepover2);
+extern F2(jtdbpasss);
 extern DF2(jtdeal);
 extern DF2(jtdealx);
 extern F2(jtdex);
@@ -748,6 +749,7 @@ extern void     jtfillv0(J,I);        /* "fill" name conflict on Mac            
 extern A        jtfindnl(J,I);
 extern I        jtfnum(J,A);
 extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
+extern void     jtforeigninit(J);
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtpyxval(J,A);

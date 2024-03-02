@@ -118,13 +118,14 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
   RZ(g=REFIXA(na,g));
   R df2(z,f,g,wf);
- case CIBEAM: {
-  if(f)RZ(f=REFIXA(na,f));
-  if(g)RZ(g=REFIXA(na,g));
-  A zz; RZ(zz=VDDOP&v->flag?df2(x,head(h),tail(h),wf):f&&g?df2(z,f,g,wf):df1(z,f,  wf));
-  R f&&g ? (VDDOP&v->flag?df2(z,f,g,zz):zz) : 
-           (VDDOP&v->flag?df1(z,f,  zz):zz) ;
-  }
+ case CIBEAM: R w;  // m, n carried in localuse
+// obsolete {
+// obsolete   if(f)RZ(f=REFIXA(na,f));
+// obsolete   if(g)RZ(g=REFIXA(na,g));
+// obsolete   A zz; RZ(zz=VDDOP&v->flag?df2(x,head(h),tail(h),wf):f&&g?df2(z,f,g,wf):df1(z,f,  wf));
+// obsolete   R f&&g ? (VDDOP&v->flag?df2(z,f,g,zz):zz) : 
+// obsolete            (VDDOP&v->flag?df1(z,f,  zz):zz) ;
+// obsolete   }
  case CUDOT:
   R REFIXA(ai,JT(jt,implocref)[0]);  // u. is equivalent to 'u.'~ for fix purposes
  case CVDOT:

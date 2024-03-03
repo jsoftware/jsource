@@ -29,7 +29,7 @@ static C spellintab2[128-0x20][3] = {
 static C spellintab3[][4] = {
 /* err */ {0, 0, 0, 0},
 /* { */ {0, 0, 0, CFETCH},
-/* } */ {0, 0, 0, CEMEND},
+/* } */ {0, 0, 0, 0},
 /* p */ {CPDERIV, 0, 0, 0},
 /* & */ {0, CUNDCO, 0, 0},
 /* F */ {CFDOTDOT, CFDOTCO, CFCODOT, CFCOCO},
@@ -87,7 +87,8 @@ static US spellouttab[256] = {
 [CUDOT   ]=(UC)'u'+DOT0,      [CVDOT   ]=(UC)'v'+DOT0,       
 [CUCO    ]=(UC)'u'+CO0,       [CXCO    ]=(UC)'x'+CO0,
 [CFCONS  ]=(UC)'0'+CO0,       [CAMIP   ]=(UC)'}',           [CCASEV  ]=(UC)'}',           [CFETCH  ]=(UC)'{'+CO0+CO1,
-[CMAP    ]=(UC)'{'+CO0+CO1,   [CEMEND  ]=(UC)'}'+CO0+CO1,   [CUNDCO  ]=(UC)'&'+DOT0+CO1,  [CPDERIV ]=(UC)'p'+DOT0+DOT1,
+[CMAP    ]=(UC)'{'+CO0+CO1,   [CUNDCO  ]=(UC)'&'+DOT0+CO1,  [CPDERIV ]=(UC)'p'+DOT0+DOT1,
+// unsupported   [CEMEND  ]=(UC)'}'+CO0+CO1,
 [CFDOT   ]=(UC)'F'+DOT0,      [CFDOTCO ]=(UC)'F'+DOT0+CO1,  [CFDOTDOT]=(UC)'F'+DOT0+DOT1, [CZCO    ]=(UC)'Z'+CO0,       
 [CFCO    ]=(UC)'F'+CO0,       [CFCOCO  ]=(UC)'F'+CO0+CO1,   [CFCODOT ]=(UC)'F'+CO0+DOT1,  [CSLDOTDOT]=(UC)'/'+DOT0+DOT1,  
    };

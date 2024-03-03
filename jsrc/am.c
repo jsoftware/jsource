@@ -856,11 +856,11 @@ F1(jtamend){F1PREFIP;
   R z;
  }else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2c,w,0L,0L,VASGSAFE|VJTFLGOK2|VIRS2, RMAX,RMAX,RMAX);   // m}"r with IRS
 }
-
-static DF2(jtamen2){ASSERT(0,EVNONCE);}
-
-// the future }::
-F1(jtemend){F1PREFIP;
- ASSERT(NOUN&AT(w),EVDOMAIN);
- R fdef(0,CEMEND,VERB,jtvalenceerr,(AF)jtamen2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
-}
+// obsolete 
+// obsolete static DF2(jtamen2){ASSERT(0,EVNONCE);}
+// obsolete 
+// obsolete // the future }::
+// obsolete F1(jtemend){F1PREFIP;
+// obsolete  ASSERT(NOUN&AT(w),EVDOMAIN);
+// obsolete  R fdef(0,CEMEND,VERB,jtvalenceerr,(AF)jtamen2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);
+// obsolete }

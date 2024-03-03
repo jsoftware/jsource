@@ -167,7 +167,7 @@ PRIM primtab[256] = {
  /*  ?. */  PRIMACV(CQRYDOT, VERB, jtrollx,   jtdealx,  RMAX,0,   0   ,VASGSAFE,VF2NONE|VF2PRIM),
  /*  ?: */       /* undefined */
  /* {:: */  PRIMACV(CFETCH,  VERB, jtmap,     jtfetch,  RMAX,1,   RMAX,VASGSAFE|VJTFLGOK2,VF2NONE|VF2PRIM),
- /* }:: */  PRIMACV(CEMEND,  ADV,  jtemend,   jtvalenceerr,  0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),
+// unsupported /* }:: */  PRIMACV(CEMEND,  ADV,  jtemend,   jtvalenceerr,  0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),
  /* &.: */  PRIMACV(CUNDCO,  CONJ, jtvalenceerr, jtundco,  0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),
  /*  a. */       /* see above */
  /*  a: */       /* see above */

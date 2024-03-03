@@ -639,7 +639,7 @@ jobs:
 
 # freebsdarm64  --------------------------------------------------------------
  jefreebsdarm64:
-  name: JE (FreeBSD cross-platform-actions)
+  name: JE (FreeBSD arm64)
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository

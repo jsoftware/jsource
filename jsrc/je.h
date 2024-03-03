@@ -786,6 +786,7 @@ extern A        jtifb(J,I,B* RESTRICT);
 extern I        jtigcd(J,I,I);
 extern I        jtilcm(J,I,I);
 extern A        jtincorp(J,A);
+extern A        jtincorpra(J,A);
 extern A        jtindexnl(J,I);
 extern A        jtindexofprehashed(J,A,A,A,A);
 extern A        jtindexofss(J,I,A,A);

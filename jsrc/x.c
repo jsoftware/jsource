@@ -51,27 +51,27 @@ static DF1(jtskipinscript){
 // TUNE static I totprobes=0, totslots=0;  // umber of probes/slots
 
 // the table of A blocks for each foreign.  m and n are in localuse.
-static PRIM foreignA[320] = { {{AKXR(0),VERB&TRAVERSIBLE,0,VERB,ACPERMANENT,0,0},{{.valencefns={jtvalenceerr,jtvalenceerr},.fgh={0,0,0},.localuse.lu1.foreignmn={~0,~0},.flag=VASGSAFE,.flag2=0,.lrr=(RANK2T)((RMAX<<RANKTX)+RMAX),.mr=(RANKT)RMAX,.id=CIBEAM,}}} };
+static PRIM foreignA[320] = { {{AKXR(0),VERB&TRAVERSIBLE,0,VERB,ACPERMANENT,0,0},{{.valencefns={jtvalenceerr,jtvalenceerr},.fgh={0,0,0},.localuse.lu1.foreignmn={0xfff,0xfff},.flag=VASGSAFE,.flag2=0,.lrr=(RANK2T)((RMAX<<RANKTX)+RMAX),.mr=(RANKT)RMAX,.id=CIBEAM,}}} };
 
 #ifndef CRC32
 #define CRC32(m,n) (2401*(m))
 #endif
 
 // probe at location given by (m,n), return index of empty slot
-static NOINLINE I emptyslot(UI m, UI n){
+static NOINLINE I emptyslot(I m, I n){
  I probe=((CRC32((m<<16)+n,~0)&0xffff)*(sizeof(foreignA)/sizeof(foreignA[0])))>>16;  // create initial probe
 // TUNE I nprobes=1;
- while((FAV((A)&foreignA[probe])->localuse.lu1.foreignmn[0]&FAV(((A)&foreignA[probe]))->localuse.lu1.foreignmn[1])!=(US)~0){if(unlikely(--probe<0))probe=(sizeof(foreignA)/sizeof(foreignA[0]))-1;}  // search for empty
+ while((FAV((A)&foreignA[probe])->localuse.lu1.foreignmn[0]&FAV(((A)&foreignA[probe]))->localuse.lu1.foreignmn[1])!=0xfff){if(unlikely(--probe<0))probe=(sizeof(foreignA)/sizeof(foreignA[0]))-1;}  // search for empty
 // TUNE  if(nprobes>1)printf("mn=%d %d, nprobes=%lld\n",m,n,nprobes);
 // TUNE totprobes+=nprobes; ++totslots; // TUNE
  R probe;  // return index of empty
 }
 
 // return addr of prim block for m!:n, or 0 if not found
-static A findslot(UI m,UI n){
+static A findslot(I m,I n){
  I probe=((CRC32((m<<16)+n,~0)&0xffff)*(sizeof(foreignA)/sizeof(foreignA[0])))>>16;  // create initial probe
  while((FAV((A)&foreignA[probe])->localuse.lu1.foreignmn[0]^m)|(FAV((A)&foreignA[probe])->localuse.lu1.foreignmn[1]^n)){
-  if(((FAV((A)&foreignA[probe]))->localuse.lu1.foreignmn[0]&FAV(((A)&foreignA[probe]))->localuse.lu1.foreignmn[1])==(US)~0)R 0;  // not found
+  if(((FAV((A)&foreignA[probe]))->localuse.lu1.foreignmn[0]&FAV(((A)&foreignA[probe]))->localuse.lu1.foreignmn[1])==0xfff)R 0;  // not found
   if(unlikely(--probe<0))probe=(sizeof(foreignA)/sizeof(foreignA[0]))-1; // advance probe
  }  // search for match
  R (A)&foreignA[probe];  // return address of match

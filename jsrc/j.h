@@ -1473,7 +1473,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // same, but for nonassignable argument.  Must remember to check the result for 0
 #define INCORPNA(z) incorp(z)
 // use to incorporate into a known-recursive box.  We raise the usecount of z
-#define INCORPRA(z) {INCORPNC(z) ra(z); }
+#define INCORPRA(z) RZ(z=jtincorpra(jt,z)); // {INCORPNC(z) ra(z);}  but with exit on error
 // use to incorporate a newly-created zapped block of type t into a known-recursive box.  If t is recursible, raise the contents of z
 #define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if((t)&RECURSIBLE){AFLAGINIT(z,t); jtra(z,(t),0);}}
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,

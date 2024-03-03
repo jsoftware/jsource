@@ -1,7 +1,6 @@
 prolog './g000.ijs'
 
 NB. Early in the testing, verify that local assignments relocate the symbol table correctly
-
 3 : 0 ''
 st =. 0
 st =. 15!:6 <'st'

@@ -53,8 +53,12 @@ static DF1(jtskipinscript){
 // the table of A blocks for each foreign.  m and n are in localuse.
 static PRIM foreignA[320] = { {{AKXR(0),VERB&TRAVERSIBLE,0,VERB,ACPERMANENT,0,0},{{.valencefns={jtvalenceerr,jtvalenceerr},.fgh={0,0,0},.localuse.lu1.foreignmn={~0,~0},.flag=VASGSAFE,.flag2=0,.lrr=(RANK2T)((RMAX<<RANKTX)+RMAX),.mr=(RANKT)RMAX,.id=CIBEAM,}}} };
 
+#ifndef CRC32
+#define CRC32(m,n) (2401*(m))
+#endif
+
 // probe at location given by (m,n), return index of empty slot
-static I emptyslot(US m, US n){
+static NOINLINE I emptyslot(UI m, UI n){
  I probe=((CRC32((m<<16)+n,~0)&0xffff)*(sizeof(foreignA)/sizeof(foreignA[0])))>>16;  // create initial probe
 // TUNE I nprobes=1;
  while((FAV((A)&foreignA[probe])->localuse.lu1.foreignmn[0]&FAV(((A)&foreignA[probe]))->localuse.lu1.foreignmn[1])!=(US)~0){if(unlikely(--probe<0))probe=(sizeof(foreignA)/sizeof(foreignA[0]))-1;}  // search for empty
@@ -64,7 +68,7 @@ static I emptyslot(US m, US n){
 }
 
 // return addr of prim block for m!:n, or 0 if not found
-static A findslot(US m,US n){
+static A findslot(UI m,UI n){
  I probe=((CRC32((m<<16)+n,~0)&0xffff)*(sizeof(foreignA)/sizeof(foreignA[0])))>>16;  // create initial probe
  while((FAV((A)&foreignA[probe])->localuse.lu1.foreignmn[0]^m)|(FAV((A)&foreignA[probe])->localuse.lu1.foreignmn[1]^n)){
   if(((FAV((A)&foreignA[probe]))->localuse.lu1.foreignmn[0]&FAV(((A)&foreignA[probe]))->localuse.lu1.foreignmn[1])==(US)~0)R 0;  // not found

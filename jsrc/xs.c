@@ -75,12 +75,14 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  J jtinplace=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
  d->dcss=1;  // indicate this script is not overridden by suspension
  A *old=jt->tnextpushp;
+ C se=jt->emsgstate;   // save init TRAPPING status, which we will restore
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
  case 0: NOUNROLL while(x){RESETERR x=jgets("   "); if(x==0)break; SETTRACK jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); if(jt->jerr)break; tpop(old);} break;  // lgets returns 0 for error or EOF
- case 1: {C se=jt->emsgstate; jt->emsgstate|=EMSGSTATETRAPPING; NOUNROLL while(x){if(!JT(jt,seclev))jtshowerr(jtinplace); RESETERR x=jgets("   "); jtdl(jt,scf(0.3)); SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); tpop(old);} jt->emsgstate=se;} break;
- case 2:
- case 3: {
+ case 1: {jt->emsgstate|=EMSGSTATETRAPPING; NOUNROLL while(x){if(!JT(jt,seclev))jtshowerr(jtinplace); RESETERR x=jgets("   "); jtdl(jt,scf(0.3)); SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); tpop(old);}} break;
+ case 3:jt->emsgstate|=EMSGSTATETRAPPING;  // here we are ignoring errors
+  // fall through to...
+ case 2: {
 #if SEEKLEAK
   I stbytes = spbytesinuse();
 #endif
@@ -92,6 +94,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  }
   debz();
  FDEPDEC(1);  // ASSERT OK now
+ jt->emsgstate&=se|~EMSGSTATETRAPPING;  // retore original TRAPPING status.  We only set it higher here
  jt->namecaching&=~1; jt->namecaching|=oldnmcachescript;  // pop the per-script part
  jt->glock=oldk; // pop lock status
  if(3==ce){z=num(jt->jerr==0); RESETERR; R z;}else RNE(mtm);

@@ -59,7 +59,7 @@
     {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
     i=cw[ti].go; if(unlikely(i<SMAX)){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0; \
-    break;}
+    goto nextline;}
 
 #define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
 
@@ -441,8 +441,8 @@ dobblock:
    tpop(old); parseline(z,lbl1);
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bi=i; i+=((cwgroup>>5)&1)+1;  // go to next sentence, or to the one after that if it's harmless end. 
-    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // end of definition
-    if((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)break;  // not another B block
+    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))goto nextline;  // end of definition
+    if((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)goto nextline;  // not another B block
     goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
@@ -464,13 +464,13 @@ dobblock:
    // was when the try. was encountered
    }else{bi=i; i=cw[i].go; if(i<SMAX){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}  // Nondebug error.  If caught, we continue: make z valid then.  Pop try. stack always, for. stack if needed
    }
-   break;
+   goto nextline;
 
   case CIF: case CWHILE: case CELSEIF:
      // in a long run of only if./while. and B blocks, the only switches executed will go to the if. processor, predictably
    i=cw[i].go;  // Go to the next sentence, whatever it is
-   if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // no fallthrough if line exits
-   if(unlikely((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)|jt->uflags.trace))break;  // avoid indirect-branch overhead on the likely case
+   if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))goto nextline;  // no fallthrough if line exits
+   if(unlikely((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)|jt->uflags.trace))goto nextline;  // avoid indirect-branch overhead on the likely case
    // fall through to...
   case CASSERT:
   case CTBLOCK:
@@ -483,12 +483,12 @@ tblockcase:
    if(unlikely((cwgroup&0xff)==CASSERT)){
     if(JT(jt,assert)){parseline(t,lbl2); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nGpysfctdl<<(BW-2),callframe); t=t!=0?mtv:t; // if assert., signal post-execution error if result not all 1s.
        // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while. .  But we can't set t=0 without looking like an error.  So we use a safe permanent value, mtv.  
-    }else{++i; break;}  // if ignored assert, go to NSI
+    }else{++i; goto nextline;}  // if ignored assert, go to NSI
    }else{parseline(t,lbl3);} // no assert: run the line
    // this is return point from running the line
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
-    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;  // exit if end of defn  scaf impossible!
-    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)|jt->uflags.trace)!=0))break;  // break if next line not do.; T block extended to more than 1 line
+    if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))goto nextline;  // exit if end of defn  scaf impossible!
+    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)|jt->uflags.trace)!=0))goto nextline;  // if next line not do.; T block extended to more than 1 line
     goto docase;  // avoid indirect-branch overhead on the likely case, if. T do.
    }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
    }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
@@ -498,7 +498,7 @@ tblockcase:
    }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4){I j; for(j=cw[tdv[-1].b].go;cw[j].ig.indiv.type!=CEND;j=cw[j].go)if(cw[j].ig.indiv.type==CCATCHT){i=j+1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
    }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.
-   break;
+   goto nextline;
 
   case CDO:
 docase:
@@ -526,8 +526,8 @@ docase:
    }
    }
    t=0;  // Indicate no T block, now that we have processed it
-   if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))break;
-   if(unlikely((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace))break;  // check for end of definition of special types
+   if(unlikely((UI)i>=(UI)(nGpysfctdl>>16)))goto nextline;
+   if(unlikely((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace))goto nextline;  // check for end of definition of special types
    goto dobblock;   // normal case, continue with B processing, without switch overhead
 
   // ************* The rest of the cases are accessed only by indirect branch or fixed fallthrough ********************
@@ -548,14 +548,14 @@ docase:
     ++tdv; nGpysfctdl|=4;  // bump tdv pointer, install index of next entry, set flag
     ++i;  // continue with NSI
    }
-   break;
+   goto nextline;
   case CCATCH: case CCATCHD: case CCATCHT:
    // Falling through to catch*., which ends the trapping if any.  Pop the try-stack, go to after end., reset debug state, restore trapping status.  If there are both catch.
    // and catchd., we could take an error to the catch. and then fall through to catchd., or we could branch from the catch. back to the try.; so we have to make sure that the
    // block on the try. stack is for the structure we are in.  Go through the control words of the current try. looking for a match; if found, pop the try block and goto its end+1;
    // otherwise just go to the next catch* in this structure - we'll hit end presently
    {I ni=cw[i].go; if(likely(nGpysfctdl&4)){I j; for(j=cw[tdv[-1].b].go;cw[j].ig.indiv.type!=CEND;j=cw[j].go)if(j==i){POPIFTRYSTK ni=tdv->e+1; break;}} i=ni;}
-   break;
+   goto nextline;
 // obsolete &&i==cw[tdv[tdi-1].b].go){POPIFTRYSTK i=1+tdv[tdi].e;}else i=cw[i].go; break;
   case CTHROW:
    // throw.  Create a throw error
@@ -573,7 +573,7 @@ docase:
    } 
    BZ(forinitnames(jt,cv,cwgroup&0xff,line[CWSENTX],i,cw[i].go));  // setup the names and start/end line#s, before we see the iteration value
    ++i;
-   break;
+   goto nextline;
   case CDOF:   // do. after for.
    // do. after for. .  If this is first time, initialize the iterator
    if(unlikely(cv->j<0)){
@@ -613,7 +613,7 @@ docase:
    // (scaf this is no longer needed since names are not deleted but the result case is rare)
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); cv=unstackcv(cv,1);
    i=cw[i].go;    // continue at new location
-   break;
+   goto nextline;
 #if 0   // obsolete 
   case CBREAKS:
   case CCONTS:
@@ -627,7 +627,7 @@ docase:
    i=cw[i].go;   // After popping any select. off the stack, continue at new address
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(unlikely(nGpysfctdl&4)){tdv=trypopgoto(jt,tdv,i); nGpysfctdl^=tdv->ndx?0:4;}
-   break;
+   goto nextline;
   case CBREAKF:
    // break. in a for. must first pop any active select., and then pop the for.
    // We just pop till we have popped a non-select.
@@ -637,12 +637,12 @@ docase:
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(unlikely(nGpysfctdl&4)){tdv=trypopgoto(jt,tdv,i); nGpysfctdl^=tdv->ndx?0:4;}
-   break;
+   goto nextline;
   case CRETURN:
    // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
    i=cw[i].go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
    if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
-   break;
+   goto nextline;
 #endif
   case CCASE:
   case CFCASE:
@@ -656,7 +656,7 @@ docase:
    }
    i=cw[i].go;  // Go to next sentence, which might be in the default case (if T block is empty)
    if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)|jt->uflags.trace)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
-   break;  // if it's not a t-block, take the indirect branch
+   goto nextline;  // if it's not a t-block, take the indirect branch
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
    // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
@@ -673,7 +673,7 @@ docase:
     t=0;
    }
    if(likely((UI)i<(UI)(nGpysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
-   break;
+   goto nextline;
     
   case CGOTO: case CBREAKS: case CCONTS: case CBREAK: case CCONT: case CBREAKF: case CRETURN: // goto_label. or any break/continue/return.  Close any structures we branch out of
    i=cw[i].go;  // Go to the next sentence, whatever it is
@@ -689,6 +689,7 @@ checkbreak:;
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
   }  // end of giant select
+ nextline:;  // here to look at next line.  Line number is i
  }  // end of main loop
 bodyend: ;  // we branch to here on fatal error, with z=0
  //  z may be 0 here and may become 0 before we exit

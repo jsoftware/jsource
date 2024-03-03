@@ -2606,4 +2606,10 @@ extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
 #define CRC32L(x,y) crc32csb8(x,y) // returns UI
 #endif
 #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
+#else
+extern uint64_t crc32csb8(uint64_t crc, uint64_t value);
+extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
+#define CRC32(x,y)  crc32csb4(x,y) // returns UI4
+#define CRC32L(x,y) crc32csb8(x,y) // returns UI
+#define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
 #endif

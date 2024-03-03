@@ -20,7 +20,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Setup SDE binaries
      uses: petarpetrovt/setup-sde@v2.3
@@ -80,7 +80,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Setup SDE binaries
      uses: petarpetrovt/setup-sde@v2.3
@@ -138,7 +138,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
 #   - name: Setup Environment (macOS)
 
@@ -192,7 +192,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Build, Test JE (Raspberry)
      uses: pguyot/arm-runner-action@v2
@@ -252,7 +252,7 @@ jobs:
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Build, Test JE (Raspberry 32)
      uses: pguyot/arm-runner-action@v2
@@ -315,7 +315,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD)
      uses: vmactions/openbsd-vm@v0
@@ -380,14 +380,14 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD)
-     uses: cross-platform-actions/action@v0.10.0
+     uses: cross-platform-actions/action@v0.23.0
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.2'
+      version: '7.4'
       shell: bash
 
       run: |
@@ -447,14 +447,14 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.10.0
+     uses: cross-platform-actions/action@v0.23.0
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.2'
+      version: '7.4'
       shell: bash
 
       run: |
@@ -511,7 +511,7 @@ jobs:
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD)
      uses: vmactions/freebsd-vm@v0
@@ -576,14 +576,14 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.10.0
+     uses: cross-platform-actions/action@v0.23.0
      with:
       operating_system: freebsd
       architecture: x86-64
-      version: '13.1'
+      version: '14.0'
       shell: bash
 
       run: |
@@ -637,13 +637,80 @@ jobs:
       name: dist
       path: testfreebsd.txt
 
+# freebsdarm64  --------------------------------------------------------------
+ jefreebsdarm64:
+  name: JE (FreeBSD arm64)
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Build, Test JE (FreeBSD arm64)
+     uses: cross-platform-actions/action@v0.23.0
+     with:
+      operating_system: freebsd
+      architecture: arm64
+      version: '14.0'
+      shell: bash
+
+      run: |
+       rm -f jobdone
+       export IGNORE_OSVERSION=yes
+       sudo rdate time.cloudflare.com || true
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit
+       /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
+       export CC=clang
+       export USE_SLEEF=1
+       script/buildga.sh freebsd || exit 1
+       script/testga.sh freebsd || exit 1
+       ls -l j64
+       zip -r fbsdarm64d.zip j64
+       cd j64
+       strip -S jconsole
+       strip -S libj.so
+       strip -S libjavx2.so || true
+       strip -S libjavx512.so || true
+       strip -S libtsdll.so
+       strip -S jamalgam || true
+       strip -S libgmp.so
+       cd -
+       ls -l j64
+       zip -r fbsdarm64.zip j64
+       touch jobdone
+
+   - name: Check Status (FreeBSD arm64)
+     run: |
+      test -f jobdone || exit 1
+
+   - name: Release JE (FreeBSD arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "fbsdarm64.zip,fbsdarm64d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (FreeBSD arm64)
+     uses: actions/upload-artifact@v2
+     with:
+      name: dist
+      path: testfreebsdarm64.txt
+
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Setup Environment (android)
      uses: nttld/setup-ndk@v1
@@ -675,7 +742,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Setup Environment (wasm)
      uses: mymindstorm/setup-emsdk@v14
@@ -707,7 +774,7 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Setup Environment (Windows)
      uses: ilammy/msvc-dev-cmd@v1
@@ -749,7 +816,7 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Setup Environment (Windows 32)
      uses: ilammy/msvc-dev-cmd@v1
@@ -792,7 +859,7 @@ jobs:
   needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jeopenbsd2]
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v3
+     uses: actions/checkout@v4
 
    - name: Get Test Results
      uses: actions/download-artifact@v2

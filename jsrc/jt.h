@@ -116,7 +116,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C emsgstate;   // disposition of error messages, which determines how detailed we make the message
 #define EMSGSTATENOTEXT 1  // Set to suppress message text
 #define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
-#define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis
+#define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis.  bits 0-2 are pushed/popped en bloc by u :: v (but not try.).  Otherwise under user control
 #define EMSGSTATEPARENX 3  // set if there are mismatched parens
 #define EMSGSTATEPAREN (7<<EMSGSTATEPARENX)  // mask for the field
 #define EMSGSTATEPARENTYPE (1<<EMSGSTATEPARENX)  // type of extra paren: 0=L 1=R

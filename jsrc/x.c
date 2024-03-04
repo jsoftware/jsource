@@ -138,7 +138,7 @@ void jtforeigninit(J jt){UI i;
  MN(128,12) XPRIM(VERB, 0,           jtekupdate,     VASGSAFE|VJTFLGOK2,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
  MN(128,13) XPRIM(VERB, jtfindspr, 0,                VASGSAFE|VJTFLGOK2,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
 
-// little-used fns follow
+// infrequently-used fns follow
 
  MN(0,  0) XPRIM(VERB, jtscm00,      jtscm002,     VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(0,  1) XPRIM(VERB, jtscm01,      jtscm012,     VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);

@@ -895,6 +895,7 @@ RECURSIVERESULTSCHECK
        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
        freep=arg3; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2

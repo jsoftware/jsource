@@ -60,7 +60,7 @@ t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
 'a' -: (0;0) {:: <"0 'abc'
 'a' -: (0;0) {:: <@,"0 'abc'
 
-'spelling error' -: ". etx'}::'
+     'spelling error' -: ". etx'}::'
 
 4!:55 ;:'boxed cat map mapp pick S sc spread_temp si sz t'
 

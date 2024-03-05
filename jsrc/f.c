@@ -958,8 +958,8 @@ F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
   // if w is a noun, format it and output it
  if(t&NOUN&&!((I)jtinplace&JTPRNOSTDOUT))RZ(jpr1(w))
  else if(t&VERB+ADV+CONJ){
-  // function result.  If it is the evocation of a name, evaluate the name (unless it is locked - then
-  // just use the name)
+  // result is ACV, including undefnames.  If it is the evocation of a name, evaluate the name (unless it is locked - then
+  // just use the name).  If the name is undefined, this will give error; the failing sentence has been popped, but we will ignore it because the init stack has 0 words
   RZ(y=evoke(w)?symbrdlock(FAV(w)->fgh[0]):w);
   if(!((I)jtinplace&JTPRNOSTDOUT)){
    // for each representation selected by the user, create the representation and type it

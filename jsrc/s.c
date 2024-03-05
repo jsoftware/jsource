@@ -506,7 +506,7 @@ A jtsybaseloc(J jt,A a) {I m,n;NM*v;
 }
 
 // look up a name (either simple or locative) using the full name resolution
-// result is addr/global/flags for name (i. e. QCGLOBAL semantics), or 0 if not found
+// result is addr/global/flags for name (i. e. QCGLOBAL semantics), or 0 if not found (no error on undefname)
 // If the block is found, the value has been ra()d
 A jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);

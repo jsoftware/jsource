@@ -416,8 +416,9 @@ I statafaowed=0, statafainh=0, statafafa=0, statapop=0, statapopfa=0, statapopnu
 // There may be 2 numbers: the location of a mismatched parenthesis and the location of the error itself.
 I infererrtok(J jt){I errtok;
  jt->emsgstate&=~EMSGSTATEPAREN;  // set no mismatched () found   (cannot have one for pee, and not really needed for a single word)
- // if the sentence had only one token, that token is the error token
- if(jt->parserstackframe.parserstkbgn[-1].t==1)R 1;  // just one token, return it
+ // if the sentence had only one token, that token is the error token.  This also picks up undefined names that are being signaled to console after the last sentence has finished.  The
+ // stack will have popped to the initial value, which has 0 words: this could never fail on its own, so we say the failing token is 1.
+ if(jt->parserstackframe.parserstkbgn[-1].t<=1)R 1;  // just one token, return it
  // if the error was pee or preexecution error, use the error set then
  if(jt->parserstackframe.parseroridetok!=0xffff){errtok=jt->parserstackframe.parseroridetok;  // Will always be 0 if not -1
  }else{
@@ -1059,7 +1060,7 @@ failparse:
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
      if(likely((sv=s->val)!=0)){raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics
     }
-    if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it
+    if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname guives 0 without error
 got1val:;
      // sv has QCGLOBAL semantics
      if(likely(((AT(QCWORD(sv))|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
@@ -1069,8 +1070,10 @@ got1val:;
       }else y=QCWORD(sv);  // not name_:, just use the value
      } else {y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
     } else {
-     // undefined name.
-     if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
+     // undefined name.  This is very subtle.  We will return a reference to [: as required by the rules (User might execute ".'undefname' which should return empty with no error).
+     // This will be formatted for error, if ever, only when returning the value to console level - but at that point the failing sentence has been lost.  That will be OK because ASSERTN
+     // suppresses display of the failing line.
+     if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error right away if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
      else y=unlikely(jt->jerr)?0:QCWORD(namerefacv(y, 0));    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error; if error already, just keep it
     }
    }

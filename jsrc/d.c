@@ -315,45 +315,45 @@ A jtjsignale(J jt,I eflg,A line,I info){
      if(e!=EVSTOP)moveparseinfotosi(jt);  // before we display, move error info from parse variables to si; but if STOP, it's already installed
      // if debug is set, turn it off, with message, if there is not enough memory to run it
      if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}  // spc sees that you can malloc 1000 bytes
-      // format the message lines according to the various types of call
-      dhead(0,0L);  // display suspension/error prefix: *      or |     
-      // start with terse message [: name]
-      A msg=eflg&EMSGLINEISTERSE?line:AAV(JT(jt,evm))[e];  // jsignal/jsignal3/13!:8 dyad.  Use the terse string except for 13!:8
-      jteputlnolf(jt,msg);  // header of first line: terse string
-      A nameblok=jt->curname;
-      // if the top CALL block on the debug stack is suspended, don't show the name (we are failing in a sentence typed into suspension)
-      DC d,expd; NOUNROLL for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk){expd=d;}  // find topmost call, e=following ele
-      d=d&&d->dcc?expd:d; if(d&&d->dcsusp)nameblok=0;  // if explicit, look for dcsusp in explicit block.  If suspension already set,  don't show the old name again
-      nameblok=eflg&EMSGLINEISNAME?line:nameblok;  // if caller overrides the name, use the caller's name
-      if(nameblok){if(!jt->glock){eputs(": "); ep(AN(nameblok),NAV(nameblok)->s);}}  // ...followed by name of running entity
-      if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such
-      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
-      if(!jt->glock){  // suppress detail if locked
-       if((line!=0) && !(eflg&EMSGLINEISTERSE+EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
-        // display the message in line, according to its mode
-        C *text; I textlen;
-        if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type
-        if(eflg&EMSGINVCHAR){eputs("(invalid character in sentence, code unit "); efmt("%d)\n",(I)text[info]);}  // if invalid character, show the value
-        if(eflg&EMSGINVINFL){eputs("(invalid inflection)\n");}  // if invalid inflection, say so
-        if(eflg&EMSGCXINFO){ // if line has decoration from tokenizing
-         dhead(3,0L);  // start with error header
-         if(e==EVCTRL)efmt("["FMTI"]",info);  // control error during explicit definition: prefix with line#
-        }
-        ep(textlen,text); eputc(CLF); // out the message text terminated by LF
-        if((eflg&EMSGCXINFO) && !(e==EVCTRL)){
-         dhead(3,0L); DQ(info, eputc(' ');); eputc('^'); eputc(CLF);  // third line is ^ indicating error location
-        }
+     // format the message lines according to the various types of call
+     dhead(0,0L);  // display suspension/error prefix: *      or |     
+     // start with terse message [: name]
+     A msg=eflg&EMSGLINEISTERSE?line:AAV(JT(jt,evm))[e];  // jsignal/jsignal3/13!:8 dyad.  Use the terse string except for 13!:8
+     jteputlnolf(jt,msg);  // header of first line: terse string
+     A nameblok=jt->curname;
+     // if the top CALL block on the debug stack is suspended, don't show the name (we are failing in a sentence typed into suspension)
+     DC d,expd; NOUNROLL for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk){expd=d;}  // find topmost call, e=following ele
+     d=d&&d->dcc?expd:d; if(d&&d->dcsusp)nameblok=0;  // if explicit, look for dcsusp in explicit block.  If suspension already set,  don't show the old name again
+     nameblok=eflg&EMSGLINEISNAME?line:nameblok;  // if caller overrides the name, use the caller's name
+     if(nameblok){if(!jt->glock){eputs(": "); ep(AN(nameblok),NAV(nameblok)->s);}}  // ...followed by name of running entity
+     if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such
+     eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
+     if(!jt->glock){  // suppress detail if locked
+      if((line!=0) && !(eflg&EMSGLINEISTERSE+EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
+       // display the message in line, according to its mode
+       C *text; I textlen;
+       if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type
+       if(eflg&EMSGINVCHAR){eputs("(invalid character in sentence, code unit "); efmt("%d)\n",(I)text[info]);}  // if invalid character, show the value
+       if(eflg&EMSGINVINFL){eputs("(invalid inflection)\n");}  // if invalid inflection, say so
+       if(eflg&EMSGCXINFO){ // if line has decoration from tokenizing
+        dhead(3,0L);  // start with error header
+        if(e==EVCTRL)efmt("["FMTI"]",info);  // control error during explicit definition: prefix with line#
        }
-       // last line is the failing line, with spaces before the error point
-       debsi1(jt->sitop);
+       ep(textlen,text); eputc(CLF); // out the message text terminated by LF
+       if((eflg&EMSGCXINFO) && !(e==EVCTRL)){
+        dhead(3,0L); DQ(info, eputc(' ');); eputc('^'); eputc(CLF);  // third line is ^ indicating error location
+       }
       }
+      // last line is the failing line, with spaces before the error point
+      debsi1(jt->sitop);
      }
-     jt->etxn1=jt->etxn;  // save length of finished message
     }
+    jt->etxn1=jt->etxn;  // save length of finished message
    }
   }
-  // if this error was forwarded from a pyx or 13!:8, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
-  if(eflg&EMSGNOEFORMAT)jt->emsgstate|=EMSGSTATEFORMATTED;
+ }
+ // if this error was forwarded from a pyx or 13!:8, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
+ if(eflg&EMSGNOEFORMAT)jt->emsgstate|=EMSGSTATEFORMATTED;
  R 0;
 }
 

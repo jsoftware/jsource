@@ -256,7 +256,7 @@ cp bin/profile.ijs j32
 cp bin/$1/j32/* j32
 # cp mpir/linux/i386/libgmp.so j32
 cp mpir/linux/i386/libgmpd.so j32/libgmp.so
-cp pcre2/linux/i386/libjpcre2.so tools/regex/.
+cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
 fi
 
 if [ "$1" = "darwin" ] && [ -d j64 ] ; then

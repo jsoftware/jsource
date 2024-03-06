@@ -911,12 +911,14 @@ static A jtsent12c(J jt,A w,I userm){C*p,*q,*r,*s,*x;A z;
  R jtboxcut0(jt,wil,w,ds(CWORDS));
 }    /* literal fret-terminated or matrix sentences into monad/dyad */
 
-// Audit w to make sure it contains all strings; convert to LIT if needed
+// Audit w to make sure it contains all strings; convert to LIT if needed.  Also translate LF to VT
 static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
  GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
- DO(AN(w), RZ(yv[i]=incorp(vs(C(wv[i])))););
+ DO(AN(w), RZ(yv[i]=incorp(mkwris(vs(C(wv[i]))))); C *s=CAV(yv[i]); DO(AN(yv[i]), if(unlikely(s[i]==0xa))s[i]=0xb;) )
+ // We honor LF as end-of-line even in the middle of a sentence.  This is new, & some old code expects LF to be swallowed by a comment.
+ // For compatibility we transfer the LF to VT, which is swallowed by a comment, and convert VT to LF during display
  R y;
 }    /* boxed sentences into monad/dyad */
 
@@ -1206,10 +1208,11 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
   if(CCOLON==FAV(w)->id&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0])&&VERB&AT(FAV(w)->fgh[1]))w=FAV(w)->fgh[1];
   fdeffill(z,0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) R z; // derived verb is ASGSAFE if both parents are 
  }
+ ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error
  RE(n=i0(a));  // m : n; set n=value of a argument
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(n)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
- if(n==0){ra0(w); RCA(w);}  // noun - return it.  Give it recursive usecount
+ if(n==0){ra0(w); RCA(w);}  // noun - it's a string, return it.  Give it recursive usecount
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
  if(10<n){ASSERT(AT(w)&LIT,EVDOMAIN) s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
@@ -1353,7 +1356,7 @@ A jtddtokens(J jt,A w,I env){
    // Here the current line ended with no end DD or noun DD.  We have to continue onto the next line
    ASSERT(AM(wil)>=0,EVOPENQ);  // if the line didn't contain noun DD, we have to give error if open quote
    ASSERT(!(env&4),EVEMPTYDD);   // Abort if we are not allowed to continue (as for an event or ". y)
-   scanstart=AM(wil);  // Get # words, not including final NB.  We have looked at em all, so start next look after all of them
+   scanstart=AM(wil);  // Get # words, not including NB.  We have looked at em all, so start next look after all of them
    A neww=jgets("\001");  // fetch next line, in raw mode
    RE(0); ASSERT(neww!=0,EVEMPTYDD); // fail if jgets failed, or if it returned EOF - problem either way
    // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it

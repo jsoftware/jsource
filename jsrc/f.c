@@ -839,9 +839,10 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
    // Loop for each character of the line.  Convert CR, LF, or CRLF to EOL; discard NUL bytes
    switch(t){
    case 1:
-    // Here for LIT characters.  Move em, handling EOL and box-drawing; discard NUL
+    // Here for LIT characters.  Move em, handling EOL and box-drawing; convert VT to LF; discard NUL
     for(j=k=x=0;j<c;++j){  // k counts # chars output since last EOL
      e=x; x=*v++;  // prev char, next char
+     if(x==0xb)x=CLF;  // convert VT back to LF for display
      if     (x==CCR){          EOLC(zv); k=0;}  // if CR, turn into EOL
      else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;}  // if LF not after CR, turn into EOL
      else if(x)     {if(k<c1){BDC(zv,x);} else if(k==c1)DDD(zv); ++k;}  // Otherwise copy the character if not NUL; if it's a boxing character,
@@ -854,6 +855,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
     // Discard NUL characters (including ones added after CJK chars)
     for(j=k=0;j<c;++j){
      e=x; x=*u++;
+     if(x==0xb)x=CLF;  // convert VT back to LF for display
      if     (x==CCR){          EOLC(zv); k=0;}
      else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;} 
      else if(x)     {if(k<c1){UUC(zv,x);} else if(k==c1)DDD(zv); ++k;}
@@ -865,6 +867,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
     // Here for C4T input.  Like C2T
     for(j=k=0;j<c;++j){
      e=x; x=*u++;
+     if(x==0xb)x=CLF;  // convert VT back to LF for display
      if     (x==CCR){          EOLC(zv); k=0;}
      else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;} 
      else if(x)     {if(k<c1){UUC4(zv,x);} else if(k==c1)DDD(zv); ++k;}

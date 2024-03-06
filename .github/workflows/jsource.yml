@@ -311,6 +311,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd:
   name: JE (OpenBSD vmactions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -376,7 +377,6 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
-  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -387,7 +387,7 @@ jobs:
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.4'
+      version: '7.3'
       shell: bash
 
       run: |
@@ -454,7 +454,7 @@ jobs:
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.4'
+      version: '7.3'
       shell: bash
 
       run: |
@@ -507,6 +507,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD vmactions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -572,7 +573,6 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -583,7 +583,7 @@ jobs:
      with:
       operating_system: freebsd
       architecture: x86-64
-      version: '14.0'
+      version: '13.3'
       shell: bash
 
       run: |
@@ -650,7 +650,7 @@ jobs:
      with:
       operating_system: freebsd
       architecture: arm64
-      version: '14.0'
+      version: '13.3'
       shell: bash
 
       run: |
@@ -856,7 +856,7 @@ jobs:
  tests:
   name: Test Results
   runs-on: ubuntu-20.04
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd, jeopenbsd]
+  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jeopenbsd2]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

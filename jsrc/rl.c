@@ -328,23 +328,26 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
 }
 
 // create linear rep for m : n
+// JT has valence-suppression flags
 static F1X(jtlcolon){F1PREFIP;A*v,x,y;C*s,*s0;I m,n;
- RZ(y=unparsem(num(1),w));
- n=AN(y); v=AAV(y); RZ(x=lrr(C(VAV(w)->fgh[0])));
- if(2>n||2==n&&1==AN(v[0])&&':'==CAV(C(v[0]))[0]){
-  if(!n)R over(x,str(5L," : \'\'"));
-  y=lrr(C(v[2==n]));
-  if(2==n)y=over(str(5L,"\':\'; "),y);
-  R over(over(x,str(3L," : ")),lcpx(y));
+ RZ(y=jtunparsem(jtinplace,num(1),w));   // extract the valences of w, run together: a list of boxes
+ n=AN(y); v=AAV(y); RZ(x=lrr(C(VAV(w)->fgh[0])));  // n=#lines, v->line 0, get x=linear rep for m (string form of a digit)
+ if(!((I)jtinplace&JTEXPVALENCEOFF)&&(2>n||2==n&&1==AN(v[0])&&':'==CAV(C(v[0]))[0])){  // if all valences requested, and only one line, or monadic valence empty (i. e. first line is ':')
+  // return one-line definition m : 'string'.  m will come from x
+  if(!n)R over(x,str(5L," : \'\'"));  // empty string, return m : ''
+  y=lrr(C(v[2==n]));   // convert n to string form, with quotes
+  if(2==n)y=over(str(5L,"\':\'; "),y);  // If the line was from the dyad, prepend  ':'; (which will get parenthesized) (could be adv/conj)
+  R over(over(x,str(3L," : ")),lcpx(y));  // m : 'string'
  }
- m=0; DO(n, m+=AN(v[i]););
- GATV0(y,LIT,2+n+m,1);
- s=s0=CAV(y);
- DO(n, *s++=CLF; y=C(v[i]); m=AN(y); MC(s,CAV(y),m); s+=m;);
- *s++=CLF; *s++=')'; 
- RZ(y=str(s-s0,s0));
+ // multiline definition (or single valence requested).  Append the body to ltext, return the (m : 0) as the main result
+ m=0; DO(n, m+=AN(v[i]););   // add up string lengths
+ GATV0(y,LIT,2+n+m,1);    // allocate
+ s=s0=CAV(y);   // point to start of result area
+ DO(n, *s++=CLF; y=C(v[i]); m=AN(y); MC(s,CAV(y),m); s+=m;);  // copy each line as a new line starting with LF
+ *s++=CLF; *s++=')';   // append ) line to end definition
+ RZ(y=str(s-s0,s0));   // append new lines to ltext
  *ltext=*ltext?over(*ltext,y):y;
- R over(x,str(4L," : 0"));
+ R over(x,str(4L," : 0"));   // result is m : 0
 }
 
 // Main routine for () and linear rep.  w is to be represented
@@ -364,7 +367,7 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
  if(!m)R lsymb(id,w);  // if none, it's a primitive, out it
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
- if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);  // x : boxed - must be explicit defn
+ if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R jtlcolon(jtinplace,w,ltext);  // x : with boxed h - must be explicit defn
  GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
@@ -376,10 +379,11 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
 
 // Create linear representation of w.  Call lrr, which creates an A for the text plus ltext which is appended to it.
 // jt flags in subroutines indicate the handling of adding enclosing () and handling `
+// JTEXPVALENCEOFF (bits 2-3) indicate explicit valences that are suppressed
 // JTPRFORSCREEN indicates that the result is for the user, not 5!:5
 // This routine MUST NOT be called with normal inplacing bits
 F1(jtlrep){F1PREFIP;PROLOG(0056);A z;A ltextb=0, *ltext=&ltextb;
- RE(z=jtlrr((J)((I)jtinplace&~(JTPRTYO|JTPRNOSTDOUT)),w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Clear paren flags to start.  Exit if error
+ RE(z=jtlrr((J)((I)jtinplace&~(JTNORESETERR|JTPARENS)),w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Clear paren flags to start.  Exit if error
  if(*ltext)z=apip(z,*ltext);
  EPILOG(z);
 }

@@ -340,10 +340,8 @@ x f__u y
 f =: -
 2 -: 7 (<'base') c [: 5
 
-NB. Embedded LF converted to VT
+NB. Embedded VT converted to LF
 'domain error' -: ". etx '3 : >'
-f =: 3 : (('y + 1 NB. ',LF,'NB. a::');'y')
-(51 32 58 32 48 10 121 32 43 32 49 32 78 66 46 32 11 78 66 46 32 97 58 58 10 121 10 41{a.) -: 5!:5 <'f'
 
 NB. obsolete svxy =: 9!:48''
 NB. obsolete 9!:49 (1)

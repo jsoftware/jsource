@@ -83,6 +83,20 @@ typedef I4                LX;  // index of an L block in SYMORIGIN
 typedef struct AD AD;
 typedef AD *A;
 
+// Flags in hook/fork and rank loops, therefore destroyed for any verb using F?RANK
+// Bit 3 in JT is unused, to allow for carry from PROP to WILLOPEN
+// Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
+#define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
+     // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
+#define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
+#define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
+#define JTRETRY         (((I)1)<<JTRETRYX)
+
+// Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
+#define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
+#define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)
+
+
 // Flag bits in the low-order part of jt - used only if the function being called understands inplacing
 #define JTINPLACEWX     0   // turn this on in jt to indicate that w can be inplaced
 #define JTINPLACEW      (((I)1)<<JTINPLACEWX)
@@ -104,10 +118,16 @@ typedef AD *A;
 #define JTNOFUZZX       1   // comparison on legal float conversion should be exact
 #define JTNOFUZZ        (((I)1)<<JTNOFUZZX)
 // following bits is used inside/input to jtlrep only
-#define JTNORESETERRX   0   // create fully parenthesized output
+#define JTNORESETERRX   0   // 
 #define JTNORESETERR        (((I)1)<<JTNORESETERRX)
 #define JTPARENSX       1   // create fully parenthesized output
 #define JTPARENS        (((I)1)<<JTPARENSX)
+// following are input to jtlrep and jtunparsem
+#define JTEXPVALENCEOFFX 2   // bits 2-3, bit turn on to suppress display of valence
+#define JTEXPVALENCEOFF  (((I)3)<<JTEXPVALENCEOFFX)
+#define JTEXPVALENCEOFFM  (((I)1)<<JTEXPVALENCEOFFX)  // monad flag
+#define JTEXPVALENCEOFFD  (((I)2)<<JTEXPVALENCEOFFX)  // dyad flag
+// bit 4 also used as FORSCREEN
 // following bits are passed into jpr/jpr1/immex/immea/showerr/wri; bit 4 also to jtlrep
 #define JTPRTYO         7  // mask for output class, see MTYO*
 #define JTPRNOSTDOUTX   3   // set to suppress typing sentence result on stdout (as in scripts)
@@ -125,18 +145,6 @@ typedef AD *A;
 #define JTTHORNY    (((I)3)<<JTTHORNYX)
 #define JTTHORNXX       4  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: vert
 #define JTTHORNX    (((I)3)<<JTTHORNXX)
-// Flags in hook/fork:
-// Bit 3 in JT is unused, to allow for carry from PROP to WILLOPEN
-// Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
-#define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
-     // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
-#define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
-#define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
-#define JTRETRY         (((I)1)<<JTRETRYX)
-
-// Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
-#define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
-#define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)
 
 // following bit is used in the call to jtxdefn/unquote to indicate the execution is of a modifier
 // This bit is set in ALL calls to modifiers, in case they are named

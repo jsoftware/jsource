@@ -971,7 +971,7 @@ F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
     case 1: RZ(jpr1(arep(y))); break;
     case 2: RZ(jpr1(drep(y))); break;
     case 4: RZ(jpr1(trep(y))); break;
-    case 5: RZ(jpr1(jtlrep(jtinplace,y))); break;
+    case 5: RZ(jpr1(jtlrep((J)((I)jtinplace&~JTEXPVALENCEOFF),y))); break;  // set parm bits, leaving FORSCREEN
     case 6: RZ(jpr1(prep(y))); break;
  }}}
  R mtm;

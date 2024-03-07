@@ -916,9 +916,8 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
  GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
- DO(AN(w), RZ(yv[i]=incorp(mkwris(vs(C(wv[i]))))); C *s=CAV(yv[i]); DO(AN(yv[i]), if(unlikely(s[i]==0xa))s[i]=0xb;) )
- // We honor LF as end-of-line even in the middle of a sentence.  This is new, & some old code expects LF to be swallowed by a comment.
- // For compatibility we transfer the LF to VT, which is swallowed by a comment, and convert VT to LF during display
+ DO(AN(w), RZ(yv[i]=incorp(vs(C(wv[i])))); )
+ // We honor LF as end-of-line even in the middle of a sentence.
  R y;
 }    /* boxed sentences into monad/dyad */
 
@@ -1234,7 +1233,7 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
    n=newn;  // accept the type the user specified
    // discard the control line
    RZ(w=beheadW(w));
-   // Noun DD
+   // Noun DD was converted to a string, possibly containing LF, and doesn't come through here
   }
   // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier

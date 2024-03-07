@@ -301,24 +301,25 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
  R zv;
 }
 
-// w is a def.  Return unparsed form
-F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
+// w is a def.  Return unparsed form (list of boxed character strings)
+// JT flags indicate valences to suppress.  If we suppress one, we also suppress the :
+F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  ARGCHK2(a,w);
  wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
  mc=hv[1];    ms=hv[2];    m=mn=AN(mc);  // mc->control words ms->commented text
  dc=hv[1+HN]; ds=hv[2+HN]; n=dn=AN(dc);
- p=n&&(m||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: dyad given, and  it's a verb or an operator referring to x 
+ p=!((I)jtinplace&JTEXPVALENCEOFF)&&n&&(m||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
   // no comments: recover the original by unparsing
-  if(m)mn=1+((CW*)AV(mc)+m-1)->source;
-  if(n)dn=1+((CW*)AV(dc)+n-1)->source;
+  if(m)mn=1+((CW*)AV(mc))[m-1].source; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
+  if(n)dn=1+((CW*)AV(dc))[n-1].source; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
   GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV(z);
   RZ(zv=unparse1a(m,hv,   zv)); if(p)RZ(*zv++=chrcolon);
   RZ(zv=unparse1a(n,hv+HN,zv));
   ASSERTSYS(AN(z)==zv-zu,"unparsem zn");
  }else{
   // commented text found.  Use it
-  mn=AN(ms); dn=AN(ds);
+  mn=AN(ms); dn=AN(ds); mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;  // length of text; clear suppressed valence
   GATV0(z,BOX,p+mn+dn,1); zv=AAV(z);
   DO(mn, *zv++=jtunDD(jt,AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
   DO(dn, *zv++=jtunDD(jt,AAV(ds)[i]););
@@ -350,7 +351,8 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
 DF1(jtarx){F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!:1
 DF1(jtdrx){F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
 DF1(jttrx){F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
-DF1(jtlrx){F1RANK(0,  jtlrx,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5
+DF1(jtlrx1){F1RANK(0,  jtlrx1,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5 monad
+DF2(jtlrx2){F2RANK(0, 0, jtlrx2,self); I mask; RE(mask=i0(a)); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) R jtlrep((J)((I)jt|((~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF)),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt
 DF1(jtprx){F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
 
 DF2(jtxrx){F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7

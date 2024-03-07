@@ -54,9 +54,6 @@ node jamalgam.js
 exit 0
 fi
 
-ls -lR pcre2
-ls -l tools/regex/*
-
 if [ $m64 -eq 1 ]; then
 ls -l j64
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs

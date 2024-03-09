@@ -181,7 +181,7 @@ select. UNAME
 case. 'Win' do. t=. 'jpcre2.dll'
 case. 'Android' do. t=. 'libjpcre2.so'
 case. 'Darwin' do. t=. 'libjpcre2.dylib'
-case. 'Linux';'OpenBSD';'FreeBSD' do. t=. IF64{::'libjpcre2_32.so';'libjpcre2.so'
+case. 'Linux';'OpenBSD';'FreeBSD' do. t=. (IF64+.IFRASPI){::'libjpcre2_32.so';'libjpcre2.so'
 case. do. t=. 'libjpcre2.so'
 end.
 

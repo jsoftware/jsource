@@ -224,8 +224,8 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZGOTO(q=sympoola(jt->locsyms),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  // box 3: # free symbols for each thread
- GATV0E(x,INT,JT(jt,nwthreads)+1,1,goto exit;); xv=AV(x); zv[3]=incorp(x);  // box 0: sym info
- DO(JT(jt,nwthreads)+1, J jt0=JTFORTHREAD(jt,i); I nfreesym=0; DO(2, for(j=jt0->symfreehead[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next)++nfreesym;) xv[i]=nfreesym;)
+ GATV0E(x,INT,JT(jt,wthreadhwmk)+1,1,goto exit;); xv=AV(x); zv[3]=incorp(x);  // box 0: sym info
+ DO(JT(jt,wthreadhwmk)+1, J jt0=JTFORTHREAD(jt,i); I nfreesym=0; DO(2, for(j=jt0->symfreehead[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next)++nfreesym;) xv[i]=nfreesym;)
  zz=z;
 exit: ;
  READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock))

@@ -827,9 +827,12 @@ ASSERT(0,EVNONCE)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   RZ(z=sc(THREADID(jt)))
   break;}
- case 1: { // return number of threads created
+ case 1: { // return net number of threads created, not counting terminated & inactive; i. e. #active threads in the long run
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  RZ(z=sc(JT(jt,nwthreads)))
+  WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
+  I nact=0; DONOUNROLL(JT(jt,wthreadhwmk), nact+=(__atomic_load_n(&(JTFORTHREAD(jt,THREADIDFORWORKER(i)))->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE+TASKSTATEACTIVE)==TASKSTATEACTIVE;)
+  WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
+  RZ(z=sc(nact))
   break;}
  case 0:  { // create a thread and start it.  Optional arg is threadpool number
 #if PYXES
@@ -849,7 +852,9 @@ ASSERT(0,EVNONCE)
   while(1){
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
    if(unlikely(lda(&JT(jt,systemlock))>0)){WRITEUNLOCK(JT(jt,flock)) jtsystemlockaccept(jt,LOCKALL); continue;}  // allow syslock if requested
-   resthread=THREADIDFORWORKER(JT(jt,nwthreads));  // number of current worker threads.  Next worker is nwthreads; convert worker# to thread#
+   // Scan threads backwards to find an empty slot (i. e. !ACTIVE, or terminating); convert worker# to thread#
+   for(resthread=0;resthread<JT(jt,wthreadhwmk);++resthread)if((__atomic_load_n(&(JTFORTHREAD(jt,THREADIDFORWORKER(resthread)))->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE+TASKSTATEACTIVE)!=TASKSTATEACTIVE)break;
+   resthread=THREADIDFORWORKER(resthread); // If no empty slot, use next slot; convert worker# to thread#
    ASSERTSUFF(resthread<MAXTHREADS,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if new 0-origin thread# exceeds limit
    if(!jvmcommit(JTFORTHREAD(jt,resthread),sizeof(JTT))){ // attempt to commit thread data (in case it's not already committed); if failed, then bail
     WRITEUNLOCK(JT(jt,flock));
@@ -869,7 +874,7 @@ ASSERT(0,EVNONCE)
   JTFORTHREAD(jt,resthread)->ndxinthreadpool=jobq->nthreads;  // install ndx within pool.  Always ascending in the threads, since we delete only from the end
   // Try to allocate a thread in the OS and start it running.  We hold locks while this is happening, so thread startup must be lock-free
   if(jtthreadcreate(jt,resthread)){   // start thread.  thread started normally?
-   ++JT(jt,nwthreads);   // increment # worker threads
+   if(WORKERIDFORTHREAD(resthread)>=JT(jt,wthreadhwmk))JT(jt,wthreadhwmk)=WORKERIDFORTHREAD(resthread+1);   // if adding a new thread, increment hwmk
    ++jobq->nthreads;  // incr # threads in pool
   }else resthread=0;  // if error, mark invalid thread#; error signaled earlier
   JOBUNLOCK(jobq,job);  // We don't add a job - just unlock
@@ -978,7 +983,8 @@ ASSERT(0,EVNONCE)
   // ***** start of lock
   while(1){
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
-   resthread=THREADIDFORWORKER(JT(jt,nwthreads)-1);  // number of thread to stop.  It will always be ACTIVE
+   for(resthread=JT(jt,wthreadhwmk)-1;resthread>=0;--resthread)if((__atomic_load_n(&(JTFORTHREAD(jt,THREADIDFORWORKER(resthread)))->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE+TASKSTATEACTIVE)==TASKSTATEACTIVE)break;  // look for active & !terminating
+   resthread=THREADIDFORWORKER(resthread);  // convert worker# to thread#
    ASSERTSUFF(resthread>=1,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if no thread to delete
    jobq=&(*JT(jt,jobqueue))[JTFORTHREAD(jt,resthread)->threadpoolno];
    job=JOBLOCK(jobq);  // must change status under lock for the threadpool
@@ -989,9 +995,10 @@ ASSERT(0,EVNONCE)
   }
   // Now we have locks on the flock and the JOBQ
   // Mark the thread for deletion, wake up all the threads
-  --JT(jt,nwthreads);   // set new # threads - prematurely calling this thread stopped
+// obsolete   --JT(jt,nwthreads);   // set new # threads - prematurely calling this thread stopped
+  C oldstate=__atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
+  if((oldstate&TASKSTATETERMINATE+TASKSTATEACTIVE)!=TASKSTATEACTIVE)goto notermlocks;  // if thread no longer active, abort releasing locks
   --jobq->nthreads;  // remove thread from count in threadpool
-  __atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work: not a job, but the thread
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))
@@ -999,7 +1006,8 @@ ASSERT(0,EVNONCE)
   jfutex_wakea(&jobq->futex);  // wake em all up
   z=num(1);  // indicate we terminated a thread
   break;
-// notermflock:
+ notermlocks:
+  JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
   WRITEUNLOCK(JT(jt,flock))
   z=num(0);  // indicate we didn't terminate
   break;

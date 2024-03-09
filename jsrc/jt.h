@@ -347,7 +347,7 @@ typedef struct JSTstruct {
  A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
  S flock;            // r/w lock for flkd/fopa/fopf, also used for thread creation/deletion
  // rest of cacheline used only in exceptional paths
- US nwthreads;    // number of worker threads allocated so far - changes protected by flock.  Terminating threads are NOT included in the count
+ US wthreadhwmk;    // total #number of worker threads allocated so far - changes protected by flock.  Terminating and inactive threads are included in the count
  UC sm;               /* sm options set by JSM()                         */
  C smoption;         // wd options, see comment in jtwd
  UC int64rflag;       /* com flag for returning 64-bit integers          */
@@ -441,8 +441,9 @@ typedef JST* JS;  // shared part of struct
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
-#define NALLTHREADS(jt) (1+JT(jt,nwthreads))   // total number of threads that have been activated
 #define THREADIDFORWORKER(n) ((n)+1)  // convert worker# to thread#
+#define WORKERIDFORTHREAD(n) ((n)-1)  // convert thread# to worker#
+#define NALLTHREADS(jt) (THREADIDFORWORKER(JT(jt,wthreadhwmk)))   // total number of threads that have been activated
 // given a pointer which might be a JST* or JTT*, set pointers to use for the shared and thread regions.
 // If we were given JST*, keep it as shared & use master thread; if JTT*, keep it as thread & use shared region
 #define SETJTJM(injstout,jttout) \

@@ -320,7 +320,7 @@ F2(jtdberr2){
  ARGCHK2(a,w);
  ASSERT(AR(a)<2,EVRANK); ASSERT(AN(a)>0,EVDOMAIN); if(AT(a)!=INT)RZ(a=cvt(INT,a));  // verify #threads OK
  ASSERT(AR(w)<2,EVRANK); ASSERT(AN(w)==1||AN(w)==AN(a),EVDOMAIN); if(AT(w)!=INT)RZ(w=cvt(INT,w));  // verify #err#s OK
- DONOUNROLL(AN(a), ASSERT(BETWEENC(IAV(a)[i],0,JT(jt,nwthreads)),EVDOMAIN))  // verify threads exist
+ DONOUNROLL(AN(a), ASSERT(BETWEENO(IAV(a)[i],0,THREADIDFORWORKER(JT(jt,wthreadhwmk))),EVDOMAIN))  // verify threads exist
  JTT *jjbase=JTTHREAD0(jt); I winc=AN(a)!=1;  //  base of thread blocks  1 if we are not repeating w
  DONOUNROLL(AN(a), jjbase[IAV(a)[i]].jerr=IAV(w)[i*winc]>=0?IAV(w)[i*winc]:EVDEBUGEND;)  // install the requested error number
  R mtm;  // i. 0 0
@@ -371,7 +371,7 @@ F2(jtdbrr2 ){R dbrr(a, w);}
 
 // T. y - set debugging thread #
 // This is a suspension command, but not suspension-ending
-F1(jttcapdot1){I thno; RE(thno=i0(w)); ASSERT(BETWEENC(thno,0,JT(jt,nwthreads)),EVDOMAIN) A z; RZ(z=mkwris(jlink(sc(SUSTHREAD),sc(thno)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jttcapdot1){I thno; RE(thno=i0(w)); ASSERT(BETWEENO(thno,0,THREADIDFORWORKER(JT(jt,wthreadhwmk))),EVDOMAIN) A z; RZ(z=mkwris(jlink(sc(SUSTHREAD),sc(thno)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
 
 // 13!:14, query suspension trap sentence
 F1(jtdbtrapq){

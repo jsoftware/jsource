@@ -957,15 +957,17 @@ ASSERT(0,EVNONCE)
   ASSERT(0,EVNONCE)
 #endif
   break;}
- case 55: {  // destroy thread.  w is thread# to destroy, or '' for last thread
+ case 55: {  // destroy thread.  w is threadpool to destroy from, or '' for highest-numbered thread
   // A thread is set to ACTIVE state when it is created.  It sets itself !ACTIVE when it returns.
   // ACTIVE is changed only under the job lock.
   // To kill a thread, we set TERMINATE which causes the thread to return when it notices.
   // JT(jt,nwthreads) is the number of threads we have in the long run.  Terminated threads that are
   // still running are not counted in nwthreads.
-  // If we create a thread and the next thread is still ACTIVE, we simply remove TERMINATE.  Thus,
+  // If we create a thread and the new thread is still ACTIVE, we simply remove TERMINATE.  Thus,
   // TERMINATE is changed only under the job lock.
   // We return from the terminate request with the thread possibly still running a task.  After all, we could be terminating ourselves!
+  // If we are told to kill a thread that is not ACTIVE or is already terminating, we take no action
+  // Result is # of terminated thread, 0 if none
 #if PYXES
   ASSERTMTV(w);  // only the last thread is supported for now
   I resthread;  //  the thread# we will delete
@@ -986,20 +988,25 @@ ASSERT(0,EVNONCE)
    if(unlikely(lda(&JT(jt,adbreak)[1]))!=0){jtsystemlockaccept(jt,LOCKALL);}else{YIELD}  // allow syslock if requested; otherwise let other threads run
   }
   // Now we have locks on the flock and the JOBQ
-  // Mark the last thread for deletion, wake up all the threads
+  // Mark the thread for deletion, wake up all the threads
   --JT(jt,nwthreads);   // set new # threads - prematurely calling this thread stopped
   --jobq->nthreads;  // remove thread from count in threadpool
   __atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work: not a job, but the thread
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
-  WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
+  WRITEUNLOCK(JT(jt,flock))
   // ***** end of lock
   jfutex_wakea(&jobq->futex);  // wake em all up
-  z=mtm;
+  z=num(1);  // indicate we terminated a thread
+  break;
+// notermflock:
+  WRITEUNLOCK(JT(jt,flock))
+  z=num(0);  // indicate we didn't terminate
+  break;
 #else
   ASSERT(0,EVNONCE)
 #endif
-  break;}
+ }
  default: ASSERT(0,EVDOMAIN) break;
  }
  RETF(z);  // return thread#

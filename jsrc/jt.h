@@ -57,7 +57,7 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {
  UI4 futex;  // futex used by all threads in this JOBQ
  UI4 nuunfin;   // Number of unfinished user jobs, queued and running.  Modified only when the job lock is held
  UI4 keepwarmns;  // time in ns to spin-poll this jobq before going into wait state
- US nthreads;  // number of threads in this pool.  Arguably should be in another cacheline, since it is referenced often outside of lock
+ US nthreads;  // number of threads in this pool.  Arguably should be in another cacheline, since it is referenced often outside of lock.  Terminating threads are NOT included
  US waiters;  // Number of waiting threads.  Modified only when job lock is held, and may be higher than the actual number of threads waiting
 } JOBQ;
 #endif
@@ -347,7 +347,7 @@ typedef struct JSTstruct {
  A fopafl;         // table of open filenames; in each one AM is the file handle and the lock is used
  S flock;            // r/w lock for flkd/fopa/fopf, also used for thread creation/deletion
  // rest of cacheline used only in exceptional paths
- US nwthreads;    // number of worker threads allocated so far - changes protected by flock
+ US nwthreads;    // number of worker threads allocated so far - changes protected by flock.  Terminating threads are NOT included in the count
  UC sm;               /* sm options set by JSM()                         */
  C smoption;         // wd options, see comment in jtwd
  UC int64rflag;       /* com flag for returning 64-bit integers          */

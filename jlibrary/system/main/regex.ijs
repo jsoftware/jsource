@@ -179,9 +179,7 @@ NB. pcre2 library is in bin or tools/regex
 3 : 0''
 select. UNAME
 case. 'Win' do. t=. 'jpcre2.dll'
-case. 'Android' do. t=. 'libjpcre2.so'
 case. 'Darwin' do. t=. 'libjpcre2.dylib'
-case. 'Linux';'OpenBSD';'FreeBSD' do. t=. (IF64+.IFRASPI){::'libjpcre2_32.so';'libjpcre2.so'
 case. do. t=. 'libjpcre2.so'
 end.
 
@@ -191,9 +189,7 @@ if. 0 = 1!:4 :: 0: <f do.
 end.
 
 NB. fall back one more time
-if. ('Android'-:UNAME) *. 0 = 1!:4 :: 0: <f do.
-  f=. (({.~i:&'/')LIBFILE),'/',t
-elseif. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD';'Darwin') *. 0 = 1!:4 :: 0: <f do.
+if. IFUNIX *. 0 = 1!:4 :: 0: <f do.
   f=. unxlib 'pcre2'
 elseif. 0 = 1!:4 :: 0: <f do.
   f=. t

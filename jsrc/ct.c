@@ -974,7 +974,9 @@ ASSERT(0,EVNONCE)
   // If we are told to kill a thread that is not ACTIVE or is already terminating, we take no action
   // Result is # of terminated thread, 0 if none
 #if PYXES
-  ASSERTMTV(w);  // only the last thread is supported for now
+// obsolete   ASSERTMTV(w);  // only the last thread is supported for now
+  I threadpool;   // the threadpool to look in, if any
+  if(AR(w)!=0){ASSERTMTV(w); threadpool=-1;}else{RE(threadpool=i0(w)); ASSERT(BETWEENO(threadpool,0,MAXTHREADPOOLS),EVLIMIT) }
   I resthread;  //  the thread# we will delete
   JOBQ *jobq;  // JOBQ for the thread
   JOB *job;  // the first job on the JOBQ
@@ -983,7 +985,11 @@ ASSERT(0,EVNONCE)
   // ***** start of lock
   while(1){
    WRITELOCK(JT(jt,flock))  // nwthreads is protected by flock
-   for(resthread=JT(jt,wthreadhwmk)-1;resthread>=0;--resthread)if((__atomic_load_n(&(JTFORTHREAD(jt,THREADIDFORWORKER(resthread)))->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE+TASKSTATEACTIVE)==TASKSTATEACTIVE)break;  // look for active & !terminating
+   for(resthread=JT(jt,wthreadhwmk)-1;resthread>=0;--resthread){
+    if((__atomic_load_n(&JTFORTHREAD(jt,THREADIDFORWORKER(resthread))->taskstate,__ATOMIC_ACQUIRE)&TASKSTATETERMINATE+TASKSTATEACTIVE)==TASKSTATEACTIVE){  // look for active & !terminating
+     if(threadpool<0||JTFORTHREAD(jt,THREADIDFORWORKER(resthread))->threadpoolno==threadpool)break;  // if no threadpool given, or pool of thread matches the one requested 
+    }
+   }
    resthread=THREADIDFORWORKER(resthread);  // convert worker# to thread#
    ASSERTSUFF(resthread>=1,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if no thread to delete
    jobq=&(*JT(jt,jobqueue))[JTFORTHREAD(jt,resthread)->threadpoolno];

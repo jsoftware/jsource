@@ -66,7 +66,7 @@ static void err_error(void *data, const char *msg, int errnum) {
 }
 static void sigsegv(int k){
  //todo should say to report to the beta forums for beta builds
- const char msg[] = "JE has crashed, likely due to an internal bug.  Please report the code which caused the crash, as well as the following printout, to the J programming forum.\n";
+ const char msg[] = "JE has crashed, likely due to an internal bug.  Please report the code which caused the crash, as well as the following printout, to the J forum.\n";
  // write is async-signal safe; fwrite&co are not, but still do this, just to be safe
  // similarly, can't fflush(stderr) first; too bad
  (void)!write(STDERR_FILENO, msg, sizeof(msg)-1);

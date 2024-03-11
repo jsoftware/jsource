@@ -27,11 +27,11 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkb
 // DCSCRIPT: y=script text  fs=script index in script list
 // DCCALL: x=left arg if any  y=right arg if any  fs=self
 // DCJUNK: N/A
-// DCPM: t=(line#<<8)+type  x=&local symbols   y=&control words  fs=self
+// DCPM: t=(line#<<8)+(dyadic<<7)+type  x=&local symbols   y=&control words  fs=self
 DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
  {A q; GAT0(q,LIT,sizeof(DST),1); d=(DC)AV(q);}
  mvc(sizeof(DST),d,1,MEMSET00);
- C tt=t;  // type is low bits
+ I tt=t&0xf;  // type is low bits
  if(jt->sitop&&t<DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
  DC *root=tt==DCPM?&jt->pmstacktop:&jt->sitop;  // choose chain to add to
  d->dclnk=*root; *root=d;  // chain new block at head (oldest for normal blocks, youngest for DCPM)
@@ -40,6 +40,7 @@ DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
  case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
  case DCCALL:   
   d->dcx=x; d->dcy=y; d->dcf=fs; 
+  d->dcdyad=AT(fs)&VERB&&x&&y;  // remember if dyadic verb execution
   d->dca=jt->curname;
   d->dcstop=-2;
   // dcn fill in in caller
@@ -50,6 +51,7 @@ DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
   break;
  case DCPM:
   d->dcix=t>>8; d->dcf=fs; d->dcloc=x; d->dcc=y;  // save input parms
+  d->dcdyad=(tt>>7)&1;  // remember if dyadic verb execution
   d->dca=jt->curname;  // save executing name, if any
   d->dcstop=-2;  // ??
   d->dcj=jt->jerr;  // save error# - not really needed

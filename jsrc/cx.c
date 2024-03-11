@@ -260,11 +260,11 @@ DF2(jtxdefn){
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  A *hv;  // will hold pointer to the precompiled parts
  {  A u,v;  // pointers to args
- nGpysfctdl=w!=self?64:0;  // set if dyad
+ nGpysfctdl=w!=self?64:0;  // set if dyad, i. e. dyadic verb or any conjunction
  if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
   // we are executing a verb.  It may be an operator
    w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
-  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // flags don't change
+  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v.  flags don't change
  }else{
   // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
   v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
@@ -755,7 +755,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
  // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
  // We don't do this if jt->jerr is set: that's the special result for comming out of debug; or when WSFULL, since there may be no memory
  if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING)){
-   deba(DCPM+(bi<<8),locsym,hv[1],self); RETF(0);  // push a debug frame for this error
+   deba(DCPM+(bi<<8)+(nGpysfctdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,hv[1],self); RETF(0);  // push a debug frame for this error
  }
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet

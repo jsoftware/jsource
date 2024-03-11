@@ -760,8 +760,9 @@ typedef struct DS{      /* 1 2 3 5                                              
  C dcnewlineno;         //     x    set when debug has installed a new line number into dcix
  C dcpflags;            //   x x x      ;prompt flags, see JTPRTYO  ; 1 if DCPM, which requires symfreeha on the symbol table when freed
  C dcredef;             //     x    set if this definition has been reassigned while running on top of stack
+ C dcdyad;              //     x x  set if this is a dyadic verb execution
  A dca;                 /*     x x  fn/op name                                            */
- A dcf;                 /*     x x  fn/op                                                 */
+ A dcf;                 /*     x x  self                                                 */
  A dcx;                 /*     x    left argument                                         */
  A dcloc;               /*     x x  local symb table                  */
  A dcc;                 /*     x x  control matrix   (0 if not explicit)                  */

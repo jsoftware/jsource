@@ -20,7 +20,8 @@ static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y,z;C c;
  RZ(*zv++=incorp(sc(si->dcj)));                        /* 1 error number             */
  RZ(*zv++=incorp(sc(lnumsi(si))));                     /* 2 line number              */
  *zv++=num(ADV&AT(fs)?1:CONJ&AT(fs)?2:3);  /* 3 name class               */
- RZ(*zv++=incorp(lrep(fs)));                           /* 4 linear rep.              */
+// obsolete  RZ(*zv++=incorp(lrep(fs)));                           /* 4 linear rep.              */
+ RZ(*zv++=incorp(jtlrep((J)((I)jt|(JTEXPVALENCEOFFD>>si->dcdyad)),fs)));  // linear rep, but only the correct valence
  *zv++=0;                                  /* 5 script name, filled in later              */
  RZ(*zv++=incorp(q));                                  /* 6 argument list            */
  if(si->dcloc&&si->dcc){RZ(y=dloc(si->dcloc)); RZ(*zv++=incorp(grade2(y,ope(IRS1(y,0L,1L,jthead,z)))));}  // local symbols only if explicit defn
@@ -28,7 +29,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y,z;C c;
  c=si->dcsusp||s0&&DCPARSE==s0->dctype&&s0->dcsusp?'*':' ';
  RZ(*zv++=incorp(scc(c)));                         /* 8 * if begins a suspension */
  R 1;
-}    /* construct one row of function call matrix - called only for DCCALL type */
+}    /* construct one row of function stack- called only for DCCALL type */
 
 F1(jtdbcall){A y,*yv,z,zz,*zv;DC si,s0=0;I c=9,m=0,*s;
  ASSERTMTV(w);
@@ -41,4 +42,4 @@ F1(jtdbcall){A y,*yv,z,zz,*zv;DC si,s0=0;I c=9,m=0,*s;
  yv=AAV(y); zv=5+AAV(z);
  DQ(m, *zv=incorp(*yv); yv++; zv+=c;);  // copy the script names into column 5
  RETF(z);
-}    /* 13!:13 function call matrix */
+}    /* 13!:13 function stack */

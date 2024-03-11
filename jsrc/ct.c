@@ -503,9 +503,9 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
   }
  // end of loop forever
 terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
+ __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
  JOBUNLOCK(jobq,job); 
  jtrepatsend(jt); // release any memory belonging to other threads
- __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
  R 0;  // return to OS, closing the thread
 }
 
@@ -1003,7 +1003,7 @@ ASSERT(0,EVNONCE)
   // Mark the thread for deletion, wake up all the threads
 // obsolete   --JT(jt,nwthreads);   // set new # threads - prematurely calling this thread stopped
   C oldstate=__atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
-  if((oldstate&TASKSTATETERMINATE+TASKSTATEACTIVE)!=TASKSTATEACTIVE)goto notermlocks;  // if thread no longer active, abort releasing locks
+  if(unlikely(!(oldstate&TASKSTATEACTIVE))){__atomic_fetch_and(&JTFORTHREAD(jt,resthread)->taskstate,~TASKSTATETERMINATE,__ATOMIC_ACQ_REL); goto notermlocks;}  // if thread no longer active, abort releasing locks.  should not occur
   --jobq->nthreads;  // remove thread from count in threadpool
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work: not a job, but the thread
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads

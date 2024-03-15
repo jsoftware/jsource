@@ -563,10 +563,11 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, sav
   // return from recursive call.  Restore stackpointers
   jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion
  }
+ A *old=jm->tnextpushp;  // For JHS we call nfeinput, which comes back with a string address, perhaps after considerable processing.  We need to clean up the stack
+  // after nfeinput, but we dare not until the sentence has been executed, lest we deallocate the unexecuted sentence.  Also we have to suppress the pops while there is a
+  // pm debug stack.  We take advantage of the fact that the popto point doesn't change, save that here, and suppress the pop during pm
  while(JT(jt,nfe)){  // nfe normally loops here forever
-  // we call nfeinput, which comes back with a string address, perhaps after considerable processing.  We need to clean up the stack
-  // after nfeinput, but we dare not until the sentence has been executed, lest we deallocate the unexecuted sentence.
-  A *old=jm->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));  // use jt to force output in nfeinput
+  r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));  // use jt to force output in nfeinput
   // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
   if(likely(jm->pmttop==0))jttpop(jm,old);  // when the stack has been tpopped it is safe for us to resume
  }

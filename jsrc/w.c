@@ -54,7 +54,7 @@ static const ST state[SDDD+1][16]={
 
 // w points to a string A-block
 // result is word index & length; z is (i0,end0+1),(i1,end1+1),...
-// AM(z) gives # of words not counting a final comment, ({.$z) - hascomment
+// AM(z) gives # of words before the first comment
 // If there are mismatched quotes, AM(z) is set to -1 and the number of valid tokens is in AS(z)[0]
 F1(jtwordil){A z;I s,i,m,n,*x;UC*v;
  ARGCHK1(w);  // if no string, could be empty line from keyboard; return null A in that case

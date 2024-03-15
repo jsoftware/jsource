@@ -280,6 +280,7 @@ static C* nfeinput(JS jt,C* s){A y;
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
+ // the value y is still on the tpop stack
 }
 
 // type NUL-terminated prompt string p, read 1 line, & return
@@ -563,7 +564,11 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, sav
   jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion
  }
  while(JT(jt,nfe)){  // nfe normally loops here forever
-  A *old=jm->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); jttpop(jm,old);  // use jt to force output in nfeinput
+  // we call nfeinput, which comes back with a string address, perhaps after considerable processing.  We need to clean up the stack
+  // after nfeinput, but we dare not until the sentence has been executed, lest we deallocate the unexecuted sentence.
+  A *old=jm->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));  // use jt to force output in nfeinput
+  // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
+  if(likely(jm->pmttop==0))jttpop(jm,old);  // when the stack has been tpopped it is safe for us to resume
  }
  R r;
 } 

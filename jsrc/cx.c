@@ -279,11 +279,13 @@ DF2(jtxdefn){
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){nGpysfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
+
   if(unlikely((jt->uflags.trace|(sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.
    // special processing required
-   // if we are in debug/pm mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
-   // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
-   if(!(nGpysfctdl&1)&&jt->uflags.trace){
+   // if we are in debug/pm mode, we want to have a stack frame to report errors in.  If the top stack frame is a named CALL, keep it  - we were called by name.
+   // Otherwise we are being entered anonymously and we create an anonymous CALL for this execution.
+   // Bit 1 of nGpysfctdl indicates we have a debug frame
+   if(!(nGpysfctdl&1)&&jt->uflags.trace){    //  If the function is locked we ignore debug mode
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
      callframe=jt->sitop;  // remember the caller's frame
      if(jt->uflags.trace&TRACEDB){  // if debug
@@ -384,7 +386,6 @@ DF2(jtxdefn){
      // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging/pm'ing.  Don't do it if locked.
      // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
      // We check before every sentence in case the user turns on debug in the middle of this definition
-     // NOTE: this stack frame could be put on the C stack, but that would reduce the recursion limit because the frame is pretty big
      // If there is no calling stack frame we can't turn on debug mode because we can't suspend
      // If we are executing a recursive call to JDo we can't go into debug because we can't prompt
      DC d; for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk);  /* find bottommost call                 */

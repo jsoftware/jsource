@@ -51,7 +51,7 @@ DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
   break;
  case DCPM:
   d->dcix=t>>8; d->dcf=fs; d->dcloc=x; d->dcc=y;  // save input parms
-  d->dcdyad=(tt>>7)&1;  // remember if dyadic verb execution
+  d->dcdyad=(t>>7)&1;  // remember if dyadic verb execution
   d->dca=jt->curname;  // save executing name, if any
   d->dcstop=-2;  // ??
   d->dcj=jt->jerr;  // save error# - not really needed

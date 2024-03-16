@@ -56,7 +56,7 @@
 #define POPIFTRYSTK if(unlikely(nGpysfctdl&4)){--tdv; POPTRYSTK(tdv->trap) if(likely(tdv->ndx==0))nGpysfctdl&=~4;}  // pop within try. stack; if pop to empty, clear flag
 #define NOUNERR(t,ti) \
     /* Signal post-exec error*/ \
-    {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); \
+    {t=pee(line,&cw[ti],EVNONNOUN,nGpysfctdl<<(BW-2),jt->sitop->dclnk); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
     i=cw[ti].go; if(unlikely(i<SMAX)){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0; \
     goto nextline;}
@@ -64,10 +64,10 @@
 #define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
 
 // run one line.  If we see break request, accept it as ATTN but promote it to BREAK in other cores if debug off
-// if debug mode/perfmon, call parsex which will check for stops and go into suspension on error
+// if debug mode/perfmon, call parsex which will check for stops and go into suspension on error; turn off debug mode if user clears it
 #define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
  SETTRACK \
- if(likely(!(attnval+(nGpysfctdl&128+16))))z=parsea(queue,m);else {if(thisframe)thisframe->dclnk->dcix=i; z=parsex(queue,m,cw+i,(nGpysfctdl&128+16)?callframe:0);} \
+ if(likely(!(attnval+(nGpysfctdl&128+16))))z=parsea(queue,m);else {if(jt->sitop)jt->sitop->dclnk->dcix=i; z=parsex(queue,m,cw+i,(nGpysfctdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))nGpysfctdl&=~2;} \
  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfctdl>>16)&&cw[i+1].ig.group[0]&0x200)) \
    if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
@@ -239,9 +239,9 @@ DF2(jtxdefn){
  ARGCHK2(a,w);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
- UI nGpysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdv->ndx!=0 8 unused 16=thisframe!=0 (i. e. debug allowed) 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
+ UI nGpysfctdl;  // flags: 1=locked 2=debug set(& not locked) 4=tdv->ndx!=0 8 unused 16=(parser frame allocated) 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
              // 64=call is dyadic 128=pm is running    0xff00=(flags byte: mostly debug, but bit 1 from trapping)   0xffff0000=#cws in the definition
- DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging/pm'ing
+// obsolete  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging/pm'ing
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale
@@ -256,10 +256,11 @@ DF2(jtxdefn){
 
  A locsym;  // local symbol table to use
 
- DC thisframe=0;   // if we allocate a parser-stack frame, this is it
+// obsolete  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  A *hv;  // will hold pointer to the precompiled parts
- {  A u,v;  // pointers to args
+ A u,v;  // pointers to args
+ {
  nGpysfctdl=w!=self?64:0;  // set if dyad, i. e. dyadic verb or any conjunction
  if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
   // we are executing a verb.  It may be an operator
@@ -280,6 +281,7 @@ DF2(jtxdefn){
   else{RZ(locsym=clonelocalsyms(locsym));}
   // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
 
+#if 0 //  obsolete 
   if(unlikely((jt->uflags.trace|(sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.
    // special processing required
    // if we are in debug/pm mode, we want to have a stack frame to report errors in.  If the top stack frame is a named CALL, keep it  - we were called by name.
@@ -303,10 +305,11 @@ DF2(jtxdefn){
 
     // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
    }
+#endif
 
-   // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
-   if(sflg&VTRY1+VTRY2){A td; GAT0E(td,LIT,(NTD+1)*sizeof(TD),1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); tdv[0].ndx=0; nGpysfctdl|=PUSHTRYSTK<<8;}
-  }
+  // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
+  if(sflg&VTRY1+VTRY2){A td; GAT0E(td,LIT,(NTD+1)*sizeof(TD),1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); tdv[0].ndx=0; nGpysfctdl|=PUSHTRYSTK<<8;}
+// obsolete   }
   // End of unusual processing
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
 
@@ -381,7 +384,39 @@ DF2(jtxdefn){
   // Check for debug and other modes
   if(unlikely(jt->uflags.trace)){  // fast check to see if we have overhead functions to perform
    // here to handle debug jump, perf monitor, or any other unusual cases
-   if(!(nGpysfctdl&(1))){  // only if not locked
+   if(!(nGpysfctdl&(1))&&jt->recurstate<RECSTATEPROMPT){  // only if not locked and not recursive
+#if 1
+    if(unlikely(!(nGpysfctdl&16))){  // if we have never allocated debug stack
+     // if debug/perfmon is set, or has ever been set while this defn is running, there are 2 stack frames available: top of stack is a PARSE frame used for requesting line changes & ? else, and the
+     // frame below the top is a DCCALL type which will hold debug info.  If the caller was unquote, it will have opened a CALL for the name, which can reuse (once)
+     I lvl; DC callframe;   // level of name: 0=bare 1=> 2=>>
+     if((callframe=jt->sitop)&&callframe->dctype==DCCALL&&self==callframe->dcf&&callframe->dcc==0){  // TOS is an empty call to us
+      // The usual case of a named explicit.  We reuse the name's stack frame
+      lvl=0;  // share the name
+     }else{  // can't use caller's frame, we will allocate one here
+      if(callframe&&callframe->dctype==DCCALL&&callframe->dcc==0){  // TOS is empty call, not to us
+       // call indirect to us, with no intervening explicit.  Probably something like name"0 or name&.>, but it could be (name1 , name2)"0.
+       // we will create a new block, to be name>
+       lvl=1;  // indicate name>
+      }else if(callframe&&callframe->dctype==DCCALL){   // TOS is nonempty call
+       // indirect call to us with an intervening explicit.  We don't count how many, just call this name>>
+       lvl=2;  // indicate name>>
+      }else{   // TOS is not a call
+       // We were called from the parser (or from 0!:n), not from a name.  This is an anonymous defn executed on its own line or through ". .  That is truly anonymous.
+       lvl=3;  // indicate no name
+       forcetomemory(&tdv); forcetomemory(&cv); forcetomemory(&bi); forcetomemory(&ti);  // urge the compiler to leave these values in memory
+      }
+      BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;  // allocate frame, remember 
+     }
+     callframe->dcloc=locsym; callframe->dcc=hv[1];  // install info about the exec for use in debug
+
+     // always allocate the parse frame
+     DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame
+     if(unlikely(thisframe==0)){debz(); BZ(thisframe);}  // if failure, remove first deba by hand scaf
+     nGpysfctdl|=16;  // indicate we have a debug frame
+     old=jt->tnextpushp;  // protect the stack frame against free
+    }
+#else
     if(!(nGpysfctdl&(16))){
      // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging/pm'ing.  Don't do it if locked.
      // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
@@ -396,10 +431,11 @@ DF2(jtxdefn){
       forcetomemory(&bi); forcetomemory(&ti);  // urge the compiler to leave these values in memory
      }
     }
+#endif
 
     if(jt->uflags.trace&TRACEDB){   // if debug is on, or coming on
      nGpysfctdl|=2;  // if this is coming from debug, indicate debug mode
-     i=debugnewi(i,thisframe,self);  // get possibly-changed execution line
+     i=debugnewi(i,jt->sitop,self);  // get possibly-changed execution line
     }
     if((UI)i>=(UI)(nGpysfctdl>>16))break;  // if defn is exiting, avoid a PM record for an invalid line
 
@@ -409,20 +445,20 @@ DF2(jtxdefn){
      // If the most recent stack entry before this entity started is a CALL, that is the name to use (it may have been extracted from an anonymous operator).
      // Otherwise, the call is truly anonymous and we use a name of ''
      nGpysfctdl|=128;  // indicate pm running so we flag calls to parser
-     pmrecord(callframe&&callframe->dctype==DCCALL?jt->curname:mtv,jt->global?LOCNAME(jt->global):0,i,nGpysfctdl&64?VAL2:VAL1);
+     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,jt->global?LOCNAME(jt->global):0,i,nGpysfctdl&64?VAL2:VAL1);  // scaf should use lev to add >>
     }
 
     // If the executing verb was reloaded during debug, switch over to the modified definition
     DC siparent;
     if(nGpysfctdl&16){
-      if(thisframe->dcredef&&(siparent=thisframe->dclnk)&&siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){A *hv;
+      if(jt->sitop->dcredef&&(siparent=jt->sitop->dclnk)&&siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){A *hv;
        self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];  // LINE sets pointers for subsequent line lookups
        // Clear all local bucket info in the definition, since it doesn't match the symbol table now
        // This will affect the current definition and all pyx executions of this definition.  We allow it because
        // it's for debug only.  The symbol table itself persists
        DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
       }
-     thisframe->dcredef=0;
+     jt->sitop->dcredef=0;
     }
    }
   }
@@ -451,7 +487,7 @@ dobblock:
    }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
    }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-    z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+    z=mtm,bi=i,i=debugnewi(i+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(unlikely(jt->jerr==EVTHROW)){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
 // obsolete     if(nGpysfctdl&4&&tdv[tdi-1].t){i=tdv[tdi-1].t+1; RESETERR; z=mtm; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
@@ -482,7 +518,7 @@ tblockcase:
    if(likely(cwgroup&0x200))tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely((cwgroup&0xff)==CASSERT)){
-    if(JT(jt,assert)){parseline(t,lbl2); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nGpysfctdl<<(BW-2),callframe); t=t!=0?mtv:t; // if assert., signal post-execution error if result not all 1s.
+    if(JT(jt,assert)){parseline(t,lbl2); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nGpysfctdl<<(BW-2),jt->sitop->dclnk); t=t!=0?mtv:t; // if assert., signal post-execution error if result not all 1s.
        // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while. .  But we can't set t=0 without looking like an error.  So we use a safe permanent value, mtv.  
     }else{++i; goto nextline;}  // if ignored assert, go to NSI
    }else{parseline(t,lbl3);} // no assert: run the line
@@ -494,7 +530,7 @@ tblockcase:
    }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; continue;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
    }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-    z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+    z=mtm,bi=i,i=debugnewi(i+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
 // obsolete    }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4&&tdv[tdi-1].t){i=tdv[tdi-1].t+1; RESETERR; POPIFTRYSTK}else BASSERT(0,EVTHROW);  // if throw., and there is a catch., do so
    }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4){I j; for(j=cw[tdv[-1].b].go;cw[j].ig.indiv.type!=CEND;j=cw[j].go)if(cw[j].ig.indiv.type==CCATCHT){i=j+1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
    }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
@@ -699,6 +735,9 @@ bodyend: ;  // we branch to here on fatal error, with z=0
 
  FDEPDEC(1);
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
+
+ if(unlikely(nGpysfctdl&16)){debz(); if(jt->sitop->dcnmlev!=0)debz();}   // pair with the deba(s) if we did any.  Unstack debug frames before the call to tpop which would free them
+
  // check for pee
  if(likely(z!=0)){
   // There was a result (normal case)
@@ -715,7 +754,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
    // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
    // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
-  }else {pee(line,&cw[bi],EVNONNOUN,nGpysfctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
+  }else {pee(line,&cw[bi],EVNONNOUN,nGpysfctdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
   if(likely(z!=0))z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
  }else{
   // No result.  Must be an error, or final exit from suspension
@@ -723,8 +762,6 @@ bodyend: ;  // we branch to here on fatal error, with z=0
   if(unlikely(nGpysfctdl&4)){trypopgoto(jt,tdv,-1);}  // pop all try structs, restore original debug state
 // obsolete   if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct
  }
-
- if(unlikely(nGpysfctdl&16)){debz();}   // pair with the deba if we did one
 
 #if 0  // obsolete 
  // clear for/select stack, protecting any result found thereon

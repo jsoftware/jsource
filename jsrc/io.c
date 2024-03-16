@@ -417,7 +417,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
    // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order.  ra() the self for each block - necessary in case they are reassigned while on the stack
    DC s=jm->pmstacktop, sp=0; while(s){DC sn=s->dclnk; s->dclnk=sp; if(s->dctype==DCCALL&&s->dcpflags==1)ra(s->dcf) sp=s; s=sn;} jm->sitop=sp; jm->pmstacktop=0;  // reverse pmstack, move it to debug stack
    if(sp)sp->dcsusp=1;   // debug discards lines before the suspension, so we have to mark the stack-top as starting suspension
-   lp="dbg_z_ 513";  // change the sentence to one that starts the debug window with no TRACEDBSUSCLEAR flag
+   lp="'Use y___1 to look inside top stack frame; see code.jsoftware.com/wiki/Debug/Stack#irefs' [ dbg_z_ 513";  // change the sentence to one that starts the debug window with no TRACEDBSUSCLEAR flag
   }
  }
 

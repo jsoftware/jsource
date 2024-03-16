@@ -601,9 +601,11 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
  NOUNROLL for(i=0;i<n;++i){
   x=C(wv[i]);
   I val;  // value of requested component
-  if(unlikely((AR(x)&~1)+(component^3)+AN(x)==0))val=0;  // special case of script lookup with empty name: could be unnamed stack entry in 13!:13, so give not found rather than name error
+  I nmlen=AN(x);  // length of valid part of name
+  if(unlikely((AR(x)&~1)+(component^3)+nmlen==0))val=0;  // special case of script lookup with empty name: could be unnamed stack entry in 13!:13, so give not found rather than name error
   else{
-   RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); RESETERR; 
+   if(unlikely((AR(x)&~1)+(component^3)))RZ(x=take(indexof(x,scc('>')),x));  // script lookup: name =. (name i. '>') {. name
+   RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(nmlen,CAV(x))); RESETERR; 
    val=jtsyrdinternal(jt,y,component);
   }
   if(component==3)RESETERR; RE(0);  // if the name lookup failed, exit; but 4!:4 never fails, because used in 13!:13

@@ -761,6 +761,7 @@ typedef struct DS{      /* 1 2 3 5                                              
  C dcpflags;            //   x x x      ;prompt flags, see JTPRTYO  ; 1 if DCPM, which requires symfreeha on the symbol table when freed
  C dcredef;             //     x    set if this definition has been reassigned while running on top of stack
  C dcdyad;              //     x x  set if this is a dyadic verb execution
+ C dcnmlev;             //     x    decoration for name: none > >> clear name
  A dca;                 /*     x x  fn/op name                                            */
  A dcf;                 /*     x x  self                                                 */
  A dcx;                 /*     x    left argument                                         */

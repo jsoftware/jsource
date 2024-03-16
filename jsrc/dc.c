@@ -16,7 +16,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y,z;C c;
  GATV0(q,BOX,!!si->dcx+!!si->dcy,1); qv=AAV(q);  // allo place to store arg list
  if(si->dcx)RZ(*qv++=incorp(dfrep(si->dcx)));   // fill in x if any
  if(si->dcy)RZ(*qv++=incorp(dfrep(si->dcy)));  // fill in y if any
- RZ(*zv++=incorp(si->dca?sfn(0,si->dca):mtv));                     /* 0 name                     */
+ RZ(*zv++=incorp(si->dca&&si->dcnmlev!=3?over(sfn(0,si->dca),str(si->dcnmlev,">>")):mtv));    // 0 name - decorated
  RZ(*zv++=incorp(sc(si->dcj)));                        /* 1 error number             */
  RZ(*zv++=incorp(sc(lnumsi(si))));                     /* 2 line number              */
  *zv++=num(ADV&AT(fs)?1:CONJ&AT(fs)?2:3);  /* 3 name class               */

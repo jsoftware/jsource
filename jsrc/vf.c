@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-// a and w (which may be the same) are 2 nouns.  We pick the fill based  on the types of a/w (a first, then w, skipping a if empty)
+// a and w (which may be the same) are 2 nouns.  We pick the fill based on the types of a/w (a first, then w, skipping a if empty)
 // if jt->fill is set, we use that value instead
 // we put one atom of fill into jt->fillv0 and point jt->fillv to that atom
 // if w is not the same type as the fill, convert it.  The user has to handle a.
@@ -15,7 +15,8 @@ F2(jtsetfv){A q=jt->fill;I t;
  I t2=REPSGN(-AN(w))&AT(w); t=REPSGN(-AN(a))&AT(a); t=t?t:t2;  // ignoring empties, use type of a then w
  if(unlikely(AN(q)!=0)){ // fill specified
   RE(t=t?maxtype(t,AT(q)):AT(q)); // get type needed for fill
-  if(TYPESNE(t,AT(q))){if((q=cvt(t,q))==0&&jt->jerr==EVDOMAIN){jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
+// obsolete   if(TYPESNE(t,AT(q))){if((q=cvt(t,q))==0&&jt->jerr==EVDOMAIN){jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
+  if(TYPESNE(t,AT(q))){if((q=cvt(t,q))==0){if(jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
  }else{if(!t)t=AT(w); fillv0(t); jt->fillv=jt->fillv0;}    // empty fill.  create std fill in fillv0 and point jt->fillv at it
  w=TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it

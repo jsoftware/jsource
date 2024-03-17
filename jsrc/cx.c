@@ -385,13 +385,25 @@ DF2(jtxdefn){
   if(unlikely(jt->uflags.trace)){  // fast check to see if we have overhead functions to perform
    // here to handle debug jump, perf monitor, or any other unusual cases
    if(!(nGpysfctdl&(1))&&jt->recurstate<RECSTATEPROMPT){  // only if not locked and not recursive
-#if 1
+#if 1  // obsolete 
     if(unlikely(!(nGpysfctdl&16))){  // if we have never allocated debug stack
      // if debug/perfmon is set, or has ever been set while this defn is running, there are 2 stack frames available: top of stack is a PARSE frame used for requesting line changes & ? else, and the
      // frame below the top is a DCCALL type which will hold debug info.  If the caller was unquote, it will have opened a CALL for the name, which can reuse (once)
-     I lvl; DC callframe;   // level of name: 0=bare 1=> 2=>>
+     I lvl; DC callframe;   // level of name: 0=bare 1=> 2=>> 3=anionymous
+#if 1  // obsolete 
+     if(unlikely(!((callframe=jt->sitop)&&callframe->dctype==DCCALL)))lvl=3;     // If the TOS is not a call, we were called from the parser or 0!:n (or "".) and are truly anonymous.
+     else{  // TOS is a call
+      // self==callframe->dcf    callframe->dcc!=0  lvl example
+      //        0                       0            1  name"0    first call to anon value
+      //        0                       1            2  ({{ a }} , {{ b }})   second call to anon value
+      //        1                       0            0  name      direct call to name
+      //        1                       1            2  impossible   the same value is both named and anonymous
+      lvl=self!=callframe->dcf; lvl=callframe->dcc!=0?2:lvl;  // calculate name decoration according to table above
+     }
+     if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember
+#else
      if((callframe=jt->sitop)&&callframe->dctype==DCCALL&&self==callframe->dcf&&callframe->dcc==0){  // TOS is an empty call to us
-      // The usual case of a named explicit.  We reuse the name's stack frame
+      // The usual case of a named explicit, called directly from unquote.  We reuse the name's stack frame
       lvl=0;  // share the name
      }else{  // can't use caller's frame, we will allocate one here
       if(callframe&&callframe->dctype==DCCALL&&callframe->dcc==0){  // TOS is empty call, not to us
@@ -408,13 +420,15 @@ DF2(jtxdefn){
       }
       BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;  // allocate frame, remember 
      }
+#endif
      callframe->dcloc=locsym; callframe->dcc=hv[1];  // install info about the exec for use in debug
 
      // always allocate the parse frame
      DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame
-     if(unlikely(thisframe==0)){debz(); BZ(thisframe);}  // if failure, remove first deba by hand scaf
+     if(unlikely(thisframe==0)){if(lvl!=0)debz(); BZ(0);}  // if failure, remove first deba by hand
      nGpysfctdl|=16;  // indicate we have a debug frame
      old=jt->tnextpushp;  // protect the stack frame against free
+     if(iotavec[-IOTAVECBEGIN]){forcetomemory(&tdv); forcetomemory(&cv); forcetomemory(&bi); forcetomemory(&ti);}  // force little-used names to memory
     }
 #else
     if(!(nGpysfctdl&(16))){
@@ -734,9 +748,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
  // if we did not get an error, the try. and for./select. stacks must be clear
 
  FDEPDEC(1);
- A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
 
- if(unlikely(nGpysfctdl&16)){debz(); if(jt->sitop->dcnmlev!=0)debz();}   // pair with the deba(s) if we did any.  Unstack debug frames before the call to tpop which would free them
 
  // check for pee
  if(likely(z!=0)){
@@ -755,13 +767,19 @@ bodyend: ;  // we branch to here on fatal error, with z=0
    // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
   }else {pee(line,&cw[bi],EVNONNOUN,nGpysfctdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
-  if(likely(z!=0))z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
  }else{
   // No result.  Must be an error, or final exit from suspension
   cv=forpopgoto(jt,cv,-1,1);   // clear the for/select stack
   if(unlikely(nGpysfctdl&4)){trypopgoto(jt,tdv,-1);}  // pop all try structs, restore original debug state
 // obsolete   if(unlikely(nGpysfctdl&4))POPTRYSTK(nGpysfctdl>>8);  // if we had an unfinished try. struct
  }
+
+ if(unlikely(nGpysfctdl&16)){debz(); if(jt->sitop->dcnmlev!=0)debz();}   // pair with the deba(s) if we did any.  Unstack debug frames before the call to tpop which would free them, but after pee so we show error in this defn
+// obsolete  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
+// obsolete  SYMSETLOCAL(prevlocsyms);
+
+ SYMSETLOCAL((A)AM(locsym));    // Pop the stack of private symbol tables, before the old one is freed
+ if(likely(z!=0))z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
 
 #if 0  // obsolete 
  // clear for/select stack, protecting any result found thereon
@@ -787,8 +805,6 @@ bodyend: ;  // we branch to here on fatal error, with z=0
 
  // blocks in the for./select. stack are zapped and reused as needed; must be freed en bloc on completion
  A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been unstacked
- // Pop the stack of private symbol tables
- SYMSETLOCAL(prevlocsyms);
 
  // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
  // We don't do this if jt->jerr is set: that's the special result for comming out of debug; or when WSFULL, since there may be no memory

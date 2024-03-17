@@ -28,7 +28,7 @@ foo =: 0$0  NB. will accumulate results executed during suspension
 13!:0 ] 0
 13!:3 'goo 0'
 13!:0 ] 129   NB. Take suspension input from script
-h =: # 13!:13 ''  NB. in case we are in debug, get initial stack size to ignore later
+h =: - # 13!:13 ''  NB. in case we are in debug, get initial stack size to ignore later
 10 = goo 6   NB. suspends
 13!:4 ''  NB. leaves suspension, finishes suspended sentence, tests result
 9 = goo 6
@@ -335,7 +335,7 @@ f=: 3 : 0
 NB. 13!:13  -------------------------------------------------------------
 
 mean=: sum % #
-sum =: [: +/ ".@('t=:13!:13 $0'&[) ] ]
+sum =: [: +/ ".@('t=:2 {. 13!:13 $0'&[) ] ]
 
 13!:0 ]1
 1: mean x=: ?4 5$100
@@ -367,7 +367,7 @@ sum =: [: +/ ".@('t=:13!:13 $0'&[) ] ]
 (7{"1 t) -: 2$<0 2$a:             NB. locals
 (8{"1 t) e. ' ';'*'               NB. * if begins suspension
 
-sum=: 3 : ('z=.+/y';'t=: 13!:13 $0';'z')
+sum=: 3 : ('z=.+/y';'t=: 2 {. 13!:13 $0';'z')
 
 13!:0 ]1
 1: mean"1 x

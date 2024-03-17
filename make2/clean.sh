@@ -2,6 +2,10 @@
 # rm all *.o for clean builds - makefile dependencies are not set
 set -e
 
+if [ "$1" = "noclean" ] ; then
+ exit 0
+fi
+
 realpath()
 {
  oldpath=`pwd`

@@ -260,26 +260,29 @@ DF2(jtxdefn){
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  A *hv;  // will hold pointer to the precompiled parts
  A u,v;  // pointers to args
- {
- nGpysfctdl=w!=self?64:0;  // set if dyad, i. e. dyadic verb or any conjunction
- if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
-  // we are executing a verb.  It may be an operator
-   w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
-  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v.  flags don't change
- }else{
-  // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
-  v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
- }
+ {  // for name scope only
+  nGpysfctdl=w!=self?64:0;  // set if dyad, i. e. dyadic verb or any conjunction
+  if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
+   // we are executing a verb.  It may be an operator
+    w=nGpysfctdl&64?w:a; a=nGpysfctdl&64?a:0;  // a w self = [x] y verb
+   if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v.  flags don't change
+  }else{
+   // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
+   v=nGpysfctdl&64?w:0; u=a; a=w=0;  // a w self = u [v] mod
+  }
   nGpysfctdl|=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
-  // Read the info for the parsed definition, including control table and number of lines
-  LINE(sv);
+  LINE(sv);  // Read the info for the parsed definition, including control table and number of lines
+  // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
+  if(unlikely(sflg&VTRY1+VTRY2)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV(td); tdv[0].ndx=0; nGpysfctdl|=PUSHTRYSTK<<8;}
+
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
   locsym=hv[3];  // fetch pointer to preallocated symbol table
   ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){nGpysfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
-  // Symbols may have been allocated.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
+  SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
+  // Symbols may have been allocated, and we have pushed the symbol table.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
 
 #if 0 //  obsolete 
   if(unlikely((jt->uflags.trace|(sflg&(VTRY1|VTRY2))))){  // debug/pm, or try.
@@ -307,11 +310,8 @@ DF2(jtxdefn){
    }
 #endif
 
-  // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
-  if(sflg&VTRY1+VTRY2){A td; GAT0E(td,LIT,(NTD+1)*sizeof(TD),1,{z=0; goto bodyend;}); tdv=(TD*)AV(td); tdv[0].ndx=0; nGpysfctdl|=PUSHTRYSTK<<8;}
 // obsolete   }
-  // End of unusual processing
-  SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
+// obsolete   // End of unusual processing
 
   // zombieval should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
   // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest
@@ -365,10 +365,10 @@ DF2(jtxdefn){
    if(u){(symbis(mnuvxynam[2],u,locsym)); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym); }  // assign u, and m if u is a noun
    if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // bug errors here must be detected
   }
- }
+ }  // for name scope only
  FDEPINC(1);
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
- // allocation that has to remain throughout this routine.
+ // allocation that has to remain throughout this routine (and be ready to move the pointer if there is an allocation in the loop)
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
  A *old=jt->tnextpushp;
 
@@ -400,7 +400,7 @@ DF2(jtxdefn){
       //        1                       1            2  impossible   the same value is both named and anonymous
       lvl=self!=callframe->dcf; lvl=callframe->dcc!=0?2:lvl;  // calculate name decoration according to table above
      }
-     if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember
+     if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember.  lvl init to 0 for other cases
 #else
      if((callframe=jt->sitop)&&callframe->dctype==DCCALL&&self==callframe->dcf&&callframe->dcc==0){  // TOS is an empty call to us
       // The usual case of a named explicit, called directly from unquote.  We reuse the name's stack frame
@@ -465,7 +465,9 @@ DF2(jtxdefn){
     // If the executing verb was reloaded during debug, switch over to the modified definition
     DC siparent;
     if(nGpysfctdl&16){
-      if(jt->sitop->dcredef&&(siparent=jt->sitop->dclnk)&&siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){A *hv;
+// obsolete       if(jt->sitop->dcredef&&(siparent=jt->sitop->dclnk)&&siparent->dcn&&siparent->dctype==DCCALL&&self!=siparent->dcf){A *hv;  // must be DCCALL
+      if(jt->sitop->dcredef&&(siparent=jt->sitop->dclnk)&&siparent->dctype==DCCALL&&siparent->dcc!=0&&siparent->dcnmlev==0&&self!=siparent->dcf){A *hv;  // must be DCCALL; dcc not0 and lvl 0 means direct call
+       // the top-of-stack (a PARSE entry) indicates redefined, and it is a direct named call to here
        self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];  // LINE sets pointers for subsequent line lookups
        // Clear all local bucket info in the definition, since it doesn't match the symbol table now
        // This will affect the current definition and all pyx executions of this definition.  We allow it because
@@ -570,7 +572,7 @@ docase:
      if(AT(tt)&(RAT|XNUM)){i=!ISX0(XAV(tt)[0])?i:nexti; break;}
      if(AT(tt)&QP){i=EAV(tt)[0].hi?i:nexti; break;}
      if(!(AT(tt)&NOUN)){CHECKNOUN}  // will take error
-     // other nonnumeric types (BOX, char) test true: i is set for that
+     // nonnumeric types (BOX, char) test true: i is set for that
      if(!ISSPARSE(AT(tt)))break;
      BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
     }
@@ -801,7 +803,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
 #endif
- // locsym may have been freed now, if it was cloned
+ // locsym may have been freed now, if it was cloned and there was no error
 
  // blocks in the for./select. stack are zapped and reused as needed; must be freed en bloc on completion
  A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been unstacked
@@ -809,7 +811,7 @@ bodyend: ;  // we branch to here on fatal error, with z=0
  // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
  // We don't do this if jt->jerr is set: that's the special result for comming out of debug; or when WSFULL, since there may be no memory
  if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING)){
-   deba(DCPM+(bi<<8)+(nGpysfctdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,hv[1],self); RETF(0);  // push a debug frame for this error
+   deba(DCPM+(bi<<8)+(nGpysfctdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,hv[1],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
  }
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet

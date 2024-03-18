@@ -12,3 +12,5 @@ A [J9.6 beta](https://code.jsoftware.com/wiki/System/ReleaseNotes/J9.6) is avail
 Documentation can be found in the [J wiki](https://code.jsoftware.com/wiki).
 
 To download and install see [Installation](https://code.jsoftware.com/wiki/System/Installation).
+
+To build the J engine on your platform, see overview.txt. The various distributions for supported platforms are built with github actions.

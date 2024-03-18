@@ -1838,7 +1838,6 @@ F2(jtcallback2){I k1;
  cbjt=jt; /* callbacks don't work with multiple instances of j */
  ARGCHK2(a,w);
  RE(k1=i0(a));
-// obsolete  ASSERT(k1>=0&&k1<10,EVDOMAIN);
  ASSERT(BETWEENC(k1,0,9),EVDOMAIN);
  if(LIT&AT(w))
  {

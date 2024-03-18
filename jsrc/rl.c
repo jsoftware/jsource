@@ -271,11 +271,6 @@ static F1X(jtlnoun){F1PREFIP;I t;
 }
 
 static A jtlsymb(J jt,C c,A w,A *ltext){F1PREFIP;A t;C buf[20],d,*s;I*u;V*v=FAV(w);
-// obsolete  if(VDDOP&v->flag){
-// obsolete   u=AV(v->fgh[2]); s=buf; 
-// obsolete   *s++=' '; *s++='('; s+=sprintf(s,FMTI,*u); spellit(CIBEAM,s); s+=2; s+=sprintf(s,FMTI,u[1]); *s++=')';
-// obsolete   RZ(t=str(s-buf,buf)); 
-// obsolete  }else
  {RZ(t=spella(w)); if(AN(t)==1&&(CAV(t)[0]=='{'||CAV(t)[0]=='}')){RZ(t=mkwris(t)); AS(t)[0]=AN(t)=2; CAV(t)[1]=' '; }}  // add trailing space to { } to avoid DD codes
  d=CAV(t)[0];
  R d==CESC1||d==CESC2?over(chrspace,t):t;

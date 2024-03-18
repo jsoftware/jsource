@@ -643,15 +643,7 @@ static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){
  R 1;
 }    /* elliptic curve add (mod proj coord) */
 
-#if 0  // obsolete
-#if SY_64
-#define BIT0 0x8000000000000000
-#else
-#define BIT0 0x80000000
-#endif
-#else
 #define BIT0 ((I)1<<(BW-1))
-#endif
 
 static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){
  A *old=jt->tnextpushp;
@@ -722,7 +714,6 @@ static F1(jtxfactor){PROLOG(0064);
  F1RANK(0,jtxfactor,DUMMYSELF);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  X x=XAV(w)[0];
-// obsolete  UI m=XLIMBn(x)%10000;
  // ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);
  if(1>xcompare(x,xc(MAXIFACTOR)))  // if factorable as I, do that
 	 R xco1(factor(sc(xint(x))));
@@ -735,7 +726,6 @@ static F1(jtxfactor){PROLOG(0064);
   if(xprimeq(100L,x)){RZ(z=apip(z,scx(x))); continue;}
   X g;RZ(g=pollard_p_1(x)); if(!ISX1(g)){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   RZ(g=pollard_rho(x)); if(!ISX1(g)){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
-// obsolete   if(!b){b=1; RZ(rngseeds(sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS))); RZ(roll(v2(m,m*m)));} 
   DO(jt->ecmtries, RZ(g=fac_ecm(x)); if(!ISX1(g)){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); goto found;})
   ASSERT(0,EVNONCE);
 found:;

@@ -65,11 +65,9 @@ I jtprod(J jt,I n,I*v){D z=1; DO(n, z*=(D)v[i];); ASSERT(z<=IMAX,EVLIMIT); R(I)z
 #endif
 
 // w is a boolean array, result is 1 iff all values are 0
-// obsolete B all0(A w){if(!w)R 0; R !memchr(AV(w),C1,AN(w));}
 B all0(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=0)R 0; R ((*c8<<BB)<<((~n)<<LGBB))==0;}
 
 // w is a boolean array, result is 1 iff all values are 1
-// obsolete B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
 B all1(A w){if(!w)R 0; I *c8=IAV(w); I n=AN(w); while((n-=SZI)>=0)if(*c8++!=VALIDBOOLEAN)R 0; R (((*c8^VALIDBOOLEAN)<<BB)<<((~n)<<LGBB))==0;}
 
 // Number of atoms in an item.
@@ -210,12 +208,6 @@ I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
 #endif
  R z;
 }    /* sum of boolean vector b */
-
-#if 0 // obsolete 
-C cf(A w){if(!w)R 0; R CAV(w)[0];}  // first character in a character array
-
-C cl(A w){if(!w)R 0; R CAV(w)[AN(w)-1];}  // last character in a character array
-#endif
 
 // A block for null-terminated C string, with a trailing NUL (which is not included in the AN of the string)
 A jtcstr(J jt,C*s){A z; RZ(z=mkwris(str((I)strlen(s),s))); CAV(z)[AN(z)]=0; R z;}  // ensure writable string returned, since we modify it here.  The string has only the non-NUL, but add a trailing NUL.  There's always room.
@@ -490,7 +482,6 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-// obsolete A jtsc(J jt,I k)     {A z; if((k^REPSGN(k))<=NUMMAX){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // always return I
 A jtsc(J jt,I k)     {A z; if(BETWEENC(k,NUMMIN,NUMMAX)){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // always return I
 A jtscib(J jt,I k)   {A z; if(BETWEENC(k,NUMMIN,NUMMAX))R num(k); GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // return b if 0 or 1, else I
 A jtsc4(J jt,I t,I v){A z; GA00(z,t,1,0); IAV(z)[0]=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)

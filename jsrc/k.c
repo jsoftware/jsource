@@ -1054,22 +1054,8 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
    GATV0(z,XNUM,2*n,r+1); MCISH(AS(z),AS(w),r) AS(z)[r]=2;  // don't overfetch from AS(w)
    MC(AV(z),AV(w),2*n*SZI);
    R z;
-#if 0  // obsolete
-  case  3:
-   ASSERT(t&XD+XZ,EVDOMAIN);
-   b=(~t>>XDX)&1;   // b=NOT XD
-   GATV0(z,INT,n<<b,r+b); s=AS(z); if(b)*s++ =2; MCISH(s,AS(w),r);
-   zv=AV(z); zu=n+zv; wv=AV(w);
-   if(t&XD){DX*v=(DX*)wv;   DQ(n,         *zv++=v->p;);}
-   else    {ZX*v=(ZX*)wv,y; DQ(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}
-   R z;
-#endif
   default:
    ASSERT(20<=j,EVDOMAIN);
-#if 0  // obsolete
-   GA(z,t&CMPX?XZ:XD,n,r,AS(w));
-   if(t&INT){fprintf(stderr,"jtco2 would call DxfI\n"); R 0;}
-#endif
    ASSERT(0,EVNONCE);
 }}
 

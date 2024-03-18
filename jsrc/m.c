@@ -385,8 +385,6 @@ static D jtspfor1(J jt, A w){D tot=0.0;
    if(ISSPARSE(AT(w))){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
   case VERBX: case ADVX:  case CONJX: 
    {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;
-// obsolete  case XDX:
-// obsolete    {DX*v=(DX*)AV(w); DQ(AN(w), if(v->x)tot+=spfor1(v->x); ++v;);} break;
   case RATX: case XNUMX:
    {A*v=AAV(w); DQ(AN(w)<<(!!(AT(w)&RAT)), if(*v)tot+=spfor1((*v)); ++v;);} break;  // no QCWORD on XNUM/RAT
  }
@@ -1132,7 +1130,6 @@ void jttpop(J jt,A *old){A *endingtpushp;
  A *pushp=jt->tnextpushp;
  // errors that could not be eformatted at once might do tpop on the way out.  We ignore these if there is a pmstack.
  if(unlikely(jt->pmstacktop!=0))R;
-// obsolete   {jsto(JJTOJ(jt),MTYOER,"Invalid tpop - please report this to the J Forum\n"); R;}  // scaf if blocks have been added for pm debugging, we shouldn't be popping at all until we get to top level.  give a warning
  jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping
  --pushp; --old;
  while(1) {A np;  // loop till end.  Return is at bottom of loop
@@ -1286,7 +1283,6 @@ if((I)jt&3)SEGFAULT;
 #if MEMHISTO
  jt->memhisto[blockx+1]++;  // record the request, at its size
 #endif
-// obsolete  I n=(I)2<<blockx;  // n=size of allocated block
  ASSERT(2>*JT(jt,adbreakr),EVBREAK)  // this is JBREAK0.  Fails if break pressed twice
 
  if(likely(blockx<PLIML)){
@@ -1378,12 +1374,6 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 #endif
 
 // send expatriate blocks back home
-// obsolete bug // There is a subtlety to these two routines.  Originally, repatsend set sprepatneeded and repatrecv cleared it.
-// obsolete bug // But there was an obvious opportunity to race there.
-// obsolete bug // Now, repatsend xors the flag with 1 every time it bumps the total number of repatriated bytes to REPATGCLIM or greater, and repatrecv xors it with 1 every time it reduces the total number of repatriated bytes by at least that number all at once.
-// obsolete bug // (If recv repatriates fewer bytes, it does nothing to the flag.)
-// obsolete bug // Clearly, every bump over will be paired with a bump under, so the steady state of the flag will be 0; it _is_ possible to observe an 'inconsistent' intermediate state, but the flag will eventually become consistent, so there is no danger of repat chains getting lost.
-// obsolete bug: two consecutive sends will XOR the flag back to 0 and the repatneeded might be missed.  Not that that's the end of the world.
 
 // move the repato list (whose blocks are known to be from a single jt) to the repatq for that jt, and signal repat in that jt if there is enough to process
 // We simply set sprepatneeded when we add to the repatq, with no interlock.  It is not vital to repat blocks immediately, and impossible anyway because they are
@@ -1413,7 +1403,6 @@ void jtrepatrecv(J jt){
  if(likely(p)){  // if anything to repat here...
   // this duplicates mf() and perhaps should just call there instead
   I count=AC(p);
-// obsolete bug: if count not high enough, repatneeded could stay set forever  if (common(count>=REPATGCLIM)) __atomic_fetch_sub(&jt->uflags.sprepatneeded,1,__ATOMIC_ACQ_REL); // if amt crosses boundary, 'clear' flag
   __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
   jt->bytes-=count;  // remove repats from byte count.  Not worth testing whether couting enabled
   for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):nextp){  // send the blocks to their various queues
@@ -1492,12 +1481,9 @@ printf("%p-\n",w);
    if(common(repato&&repato->origin==origthread)){      // adding to existing repatriation queue
     allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
     AFCHAIN(AAV0(repato)[0])=w; AAV0(repato)[0]=w;          // add block to chain
-// obsolete     if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);    // if size of chain exceeded limit, flush
    }else{
     if(repato)jtrepatsend(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
     jt->repato=w; AC(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w as both head and tail
-// obsolete     if(unlikely(allocsize>=REPATOLIM))jtrepatsend(jt);}    // maybe this block alone is large enough to deserve immediate repatriation
-// obsolete    jt=JTFORTHREAD(jt,origthread);  // switch to the thread the block must return to
    }
    if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);    // allocsize now has total size of repato.  if size of chain exceeded limit, flush
   }

@@ -321,36 +321,6 @@ A jtspellcon(J jt,I c){
   case CWHILST: R cstr("whilst.");
 }}
 
-#if 0   // obsolete 
-static I jtconword(J jt,I n,C*s){
- if(2<n&&'.'==s[n-1])switch(*s){
-  case 'a': if(!strncmp(s,"assert.",  n))R CASSERT;  break;
-  case 'b': if(!strncmp(s,"break.",   n))R CBREAK;   break;
-  case 'c': if(!strncmp(s,"case.",    n))R CCASE;    
-            if(!strncmp(s,"continue.",n))R CCONT;
-            if(!strncmp(s,"catch.",   n))R CCATCH;
-            if(!strncmp(s,"catchd.",  n))R CCATCHD;
-            if(!strncmp(s,"catcht.",  n))R CCATCHT;  break;
-  case 'd': if(!strncmp(s,"do.",      n))R CDO;      break;
-  case 'e': if(!strncmp(s,"end.",     n))R CEND;
-            if(!strncmp(s,"else.",    n))R CELSE;
-            if(!strncmp(s,"elseif.",  n))R CELSEIF;  break;
-  case 'f': if(!strncmp(s,"for.",     n))R CFOR;
-            if(!strncmp(s,"for_",    4L)){ASSERTN(vnm(n-5,4+s),EVILNAME,nfs(n-5,4+s)); R CFOR;}
-            if(!strncmp(s,"fcase.",   n))R CFCASE;   break;
-  case 'g': if(!strncmp(s,"goto_",   5L))R CGOTO;    break;
-  case 'i': if(!strncmp(s,"if.",      n))R CIF;      break;
-  case 'l': if(!strncmp(s,"label_",  6L))R CLABEL;   break;
-  case 'r': if(!strncmp(s,"return.",  n))R CRETURN;  break;
-  case 's': if(!strncmp(s,"select.",  n))R CSELECT;  break;
-  case 't': if(!strncmp(s,"throw.",   n))R CTHROW;
-            if(!strncmp(s,"try.",     n))R CTRY;     break;
-  case 'w': if(!strncmp(s,"while.",   n))R CWHILE;
-            if(!strncmp(s,"whilst.",  n))R CWHILST;  break;
- }
- R 0;
-}
-#else
 static I jtconword(J jt,I n,C*s){
  I c1=s[n-1]; c1=n<3?0:c1; if(c1!='.')R 0;  // if not 3+ chars ending with '.', it's not a control word
  // here it should be a control word.  Check one by one to avoid search and misprediction overhead.  The top cases are dominant.
@@ -384,7 +354,6 @@ static I jtconword(J jt,I n,C*s){
  if(unlikely(n!=(cwtlen&0xff)))R 0;  // error if wrong length
  R cwtlen>>8;  // return the cw number
 }
-#endif
 
 // w is string, result is list of boxed strings, for each line (sentence text, [ending control word except on last line])
 static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;

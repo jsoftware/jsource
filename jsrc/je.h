@@ -971,8 +971,6 @@ extern I        atype(I);
 extern I        boxat(A,I,I,I);
 extern I        bsum(I,B*);
 
-// obsolete extern C        cf(A);
-// obsolete extern C        cl(A);
 extern CR       condrange(I *,I,I,I,I);
 extern CR       condrange2(US *,I,I,I,I);
 extern CR       condrange4(C4 *,I,I,I,I);
@@ -1103,7 +1101,6 @@ extern const dcomplex zzero;
 extern I oneone[2];
 // extern A        zpath;
 extern I iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
-// obsolete extern const UC typesizes[32];
 /* cpu feature */
 extern UC       hwaes;
 extern UC       hwfma;

@@ -61,15 +61,7 @@
 // Extract the result type from cv coming from the table
 #define rtype(x) (((x)>>VRESX)&(VRESMSK>>VRESX))
 
-#if 0  // obsolete
-#if SY_64
-#define NOT(v)          ((v)^0x0101010101010101)
-#else
-#define NOT(v)          ((v)^0x01010101)
-#endif
-#else
 #define NOT(v) ((v)^VALIDBOOLEAN)
-#endif
 
 #define SNOT(v)         ((v)^0x0101)
 #define INOT(v)         ((v)^0x01010101)

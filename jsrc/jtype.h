@@ -773,36 +773,6 @@ typedef struct DS{      /* 1 2 3 5                                              
 
 typedef DST* DC;
 
-#if 0  // obsolete
-typedef struct {I e,p;X x;} DX;
-                                /* for the p field in DX */
-#define DXIPREC         ((I)-1) /* infinite precision    */
-#define DXINF           ((I)-2) /* _  infinity           */
-#define DXMINF          ((I)-3) /* __ negative infinity  */
-
-/* extended floating point                                                 */
-/* e - exponent                                                            */
-/* p - precision & other codes                                             */
-/*        +ve   # of significant digits                                    */
-/*        _1    infinite precision (with trailing 0s)                      */
-/*        _2    infinity _                                                 */
-/*        _3    negative infinity __                                       */
-/* x - mantissa                                                            */
-/*        least significant digit first                                    */
-/*        decimal point after last digit                                   */
-
-
-
-typedef struct {DX re;DX im;} ZX;
-
-/* extended complex                                                        */
-/* re - real part                                                          */
-/* im - imaginary part                                                     */
-
-
-
-#endif
-
 // LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
 // type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
 #define QCMASK 0x1fLL   // all the LSB flags
@@ -1181,8 +1151,6 @@ typedef struct {
 #define VFKEYSLASHT      (((I)(2*FL-1))<<VFKEYSLASHTX)
 #define VFKEYSLASHFX  (FLX+1)  // (in f/.) function coded for, 0=<. 1=>. 2=+
 #define VFKEYSLASHF      (((I)3)<<VFKEYSLASHFX)
-// obsolete #define VFISSCOX     0   // (in L: and S:) set for S:
-// obsolete #define VFISSCO      (((I)1)<<VFISSCOX)
 // leave bit 2 open
 
 // bits 8 and above are available for all verbs:
@@ -1213,7 +1181,6 @@ typedef struct {
 #define VXOPCALL       (I)0x2000000      // 25 : defn derived fn call overlaps SYMB/ASGNLOCAL
 #define VASGSAFEX     26
 #define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path.  Must be > VJTFLGOK2 for parser comparisons
-// obsolete #define VDDOP           ((I)(1L<<27))     /* derived from a derived operator */
 // 27 free   it appears that u !: n forms were envisaged
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb

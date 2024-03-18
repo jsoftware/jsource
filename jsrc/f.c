@@ -368,7 +368,6 @@ static F1(jtthxqe){
   case XNUMX:{X*u=(X*)wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
   case RATX: {Q*u=(Q*)wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
   default: {ASSERT(0,EVNONCE);}
-// obsolete ZX*u=(ZX*)wv; 
  }
  --dv[c-1];
  I p=0; DO(c, p+=++dv[i];);
@@ -615,14 +614,13 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
   case INT2X: case INT4X: case INTX:  case FLX: case CMPXX:  case QPX:
              z=thn(w);                    break;
 #ifdef UNDER_CE
-  default: // obsolete   if(AT(w)&XD+XZ)z=thxqe(w); else 
+  default:
    R 0; break;
   case XNUMX: case RATX:
              z=thxqe(w);                  break;
 #else
   default:   R 0;
   case XNUMX: case RATX:
-// obsolete  case XDX: case XZX:
              z=thxqe(w);                  break;
 #endif
   case B01X:  z=thb(w);                    break;

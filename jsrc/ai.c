@@ -208,12 +208,8 @@ xco:
    break;
   case CIBEAM:  // h is x!:y
    if(likely(nf!=0)){   // n&(x!:y)
-// obsolete     x=FAV(h)->fgh[0]; y=FAV(h)->fgh[1];
-// obsolete     if(NOUN&AT(x)&&equ(x,num(3))&&NOUN&AT(y)){  // 3!:y
     if(FAV(h)->localuse.lu1.foreignmn[0]==3){  // 3!:y
      RE(n=i0(f));
-// obsolete      if(all1(eps(y,v2(4L,5L)))){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(sc(-n),g);}  // inverse of _2..2&(3!:(4..5)) is (-n)&(3!:(4..5))
-// obsolete      if(all1(eps(y,v2(1L,3L)))){ASSERT(0==n||1==n||10==n||11==n,EVDOMAIN); R foreign(FAV(h)->localuse.lu1.foreignmn[0],num(2));}  // inverse of [0/1/10/11]&(3!:[1/3]) is 3!:2
      if(BETWEENC(FAV(h)->localuse.lu1.foreignmn[1],4,5)){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(num(-n),g);}  // inverse of _2..2&(3!:(4..5)) is (-n)&(3!:(4..5))
      if((FAV(h)->localuse.lu1.foreignmn[1]&~2)==1){ASSERT(0==n||1==n||10==n||11==n,EVDOMAIN); R foreign(num(3),num(2));}  // inverse of [0/1/10/11]&(3!:[1/3]) is 3!:2
     }
@@ -317,10 +313,6 @@ xco:
    if(CBOX==ID(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,VFLAGNONE, RMAX,RMAX,RMAX);
    break;   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1
   case CIBEAM:
-// obsolete    p=i0(f); q=i0(g);
-// obsolete    if(3==p&&1==q)R foreign(f,num(2));
-// obsolete    if(3==p&&2==q)R foreign(f,num(1)   );
-// obsolete    if(3==p&&3==q)R foreign(f,num(2));
    if(FAV(w)->localuse.lu1.foreignmn[0]==3 && BETWEENC(FAV(w)->localuse.lu1.foreignmn[1],1,3))R foreign(num(3),num((FAV(w)->localuse.lu1.foreignmn[1]&1)+1));  // 1 2 3 -> 2 1 2
    break;
   case CHOOK:

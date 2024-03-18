@@ -1886,39 +1886,13 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // bpnoun is like bp but for NOUN types, and not sparse
 #define bpnoun(i) ((I)1<<bplg(i))
 #define bp(i) (likely(CTTZ(i)<=LASTNOUNX)?bpnoun(i):bpnonnoun(i))
-#if 0  // obsolete
-#define bp(i) (typesizes[CTTZ(i)]) 
-#define bpnoun(i) (I)bp(i)
-// bpnonnoun is like 1<<bplg but we know that the value is not a noun
-// obsolete #define bplg(i) CTTZ(bpnoun(i))
-#define bpnonnoun(i) (I)(((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
- ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
- >>(5*(CTTZ(i)-(LASTNOUNX+1))))&31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   8 8 8 8 12 4 8 8 8 (1) 
-// obsolete #define bpnonnoun(i) (I)bp(i)
-#endif
 
 // conversion from priority index to bit# in a type with that priority
-// obsolete // static const UC prioritytype[] = {  // Convert priority to type bit
-// obsolete // B01X, LITX, C2TX, C4TX, INT1X, INT2X, INT4X, INTX, BOXX, XNUMX, RATX, HPX, SPX, FLX, QPX, CMPXX, SBTX};
-// obsolete #if SY_64
-// obsolete #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))
 #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+SPX)<<4)+HPX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+FLX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+0)<<4)+0)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))  // 0 for C2TX/C4Tx to avoid field overflow
-// obsolete #else
-// obsolete #define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):((p)>=8?(((((((((((((((I)CMPXX<<4)+QPX)<<4)+FLX)<<4)+SPX)<<4)+HPX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)>>(((p)-8)*4):(((((((((((((((I)INTX<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+C4TX)<<4)+C2TX)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf)
-// obsolete #endif
 // Conversion from type to priority
-// obsolete //  0   1   2   3   4  5  6  7   8    9   A   B  C  D  E  F    10
-// obsolete // B01 LIT C2T C4T I1 I2 I4 INT BOX XNUM RAT HP SP FL QP CMPX SBT
-// obsolete //
-// obsolete // new proposed order:
 //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    10
 // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX SBT
-// obsolete #if SY_64
-// obsolete #define TYPEPRIORITYNUM(t) ((I)(((UI8)0x00ecb654a98fd710>>(CTTZ(t)*4))&0xf))  // used for types below 0x10000, which includes all numerics
 #define TYPEPRIORITYNUM(t) ((I)(((UI8)0x00edcba9765f8410>>(CTTZ(t)*4))&0xf))  // used for types below 0x10000, which includes all numerics
-// obsolete #else
-// obsolete #define TYPEPRIORITYNUM(t) (((((t)&0xff)?0xa98fd710:0x00ecb654)>>((CTTZ(t)&0x7)*4))&0xf)
-// obsolete #endif
 #define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):TYPEPRIORITYNUM(t))
 
 // same but destroy w
@@ -2300,7 +2274,6 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #include "vq.h" 
 #include "vx.h" 
 #include "vz.h"
-// obsolete #include "vdx.h"  
 #include "a.h"
 #include "s.h"
 #include "jgmp.h"

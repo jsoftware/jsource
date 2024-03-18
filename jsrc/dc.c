@@ -20,7 +20,6 @@ static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y,z;C c;
  RZ(*zv++=incorp(sc(si->dcj)));                        /* 1 error number             */
  RZ(*zv++=incorp(sc(lnumsi(si))));                     /* 2 line number              */
  *zv++=num(ADV&AT(fs)?1:CONJ&AT(fs)?2:3);  /* 3 name class               */
-// obsolete  RZ(*zv++=incorp(lrep(fs)));                           /* 4 linear rep.              */
  RZ(*zv++=incorp(jtlrep((J)((I)jt|(JTEXPVALENCEOFFD>>si->dcdyad)),fs)));  // linear rep, but only the correct valence
  *zv++=0;                                  /* 5 script name, filled in later              */
  RZ(*zv++=incorp(q));                                  /* 6 argument list            */

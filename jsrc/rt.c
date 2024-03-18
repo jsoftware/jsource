@@ -142,7 +142,6 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
  if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(fxeach(BETWEENC(id,CFDOT,CFCODOT)?hs:gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));
  if(2<m)RZ(x[2]=incorp(trr(hs)));
-// obsolete  s=xop?spellout('0'):fl&VDDOP?(hv=AV(hs),over(thorn1(sc(hv[0])),over(spellout(id),thorn1(sc(hv[1]))))):spellout(id);
  s=xop?spellout('0'):spellout(id);
  z=troot(s,graft(ope(t)));
  EPILOG(z);

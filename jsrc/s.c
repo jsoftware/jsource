@@ -482,7 +482,6 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
   }else{DC s; 
    // the 'name' is a number (it must be the last name).  It refers to debug stack frames, the first of which is numbered _1.  hash has the value of the number
    // To avoid uncertainty as new frames are created, frames before the top suspended frame are ignored
-// obsolete   if(stkno>=0){for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; stkno-=issusp&&s->dctype==DCCALL;}}  // convert positive index to negative
    ASSERT(hash<0,EVLOCALE)    // if index not now negative, it was too high
 neglocnum:;
    I issusp;  //   issusp='we have hit a suspension frame'

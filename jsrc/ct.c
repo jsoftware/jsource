@@ -393,7 +393,6 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
   if(unlikely(job==0)){  // not really unlikely, but if there's not one we can be as slow as we like
    // No job to run.  Wait for one.  While we're waiting, do a garbage-collection if one is needed.  It could be signaled by a different thread
    JOBUNLOCK(jobq,0);
-// obsolete    jtrepatsend(jt); // Relinquish others' memory
    jtrepatrecv(jt); // Reclaim any of our own memory from others; unconditionally because there's nothing better to do
    if(jt->uflags.spfreeneeded)spfree();  // Collect garbage if there is enough to check
    job=JOBLOCK(jobq);
@@ -418,7 +417,6 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
      // still have the lock
      if(unlikely(jt->taskstate&TASKSTATETERMINATE)){--jobq->waiters; goto terminate;}  // if central has requested this thread to terminate, do so when the queue goes empty.   This counts as work
      JOBUNLOCK(jobq,job);
-// obsolete      jtrepatsend(jt); // since we have nothing to better to do, release memory now
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
      // we could check to see if there is a job before doing the RFO; that would reduce contention after a kick but it would increase delay
@@ -549,7 +547,6 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   if(dyad){ra(arg3);}   // arg3 is x/self, so never virtual; just ra
   if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);
   if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
-// obsolete   rifv(arg1); ra(arg1); rifv(arg2); ra(arg2);  // the code above leaks, probably because the virtual is not gc'd in the master.  This code realizes in the master
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
   job->n=0; job->initthread=THREADID(jt);  // indicate this is a user job.  ns is immaterial since it will always trigger a deq.  Install initing thread# for repatriation
   job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK
@@ -974,7 +971,6 @@ ASSERT(0,EVNONCE)
   // If we are told to kill a thread that is not ACTIVE or is already terminating, we take no action
   // Result is # of terminated thread, 0 if none
 #if PYXES
-// obsolete   ASSERTMTV(w);  // only the last thread is supported for now
   I threadpool;   // the threadpool to look in, if any
   if(AR(w)!=0){ASSERTMTV(w); threadpool=-1;}else{RE(threadpool=i0(w)); ASSERT(BETWEENO(threadpool,0,MAXTHREADPOOLS),EVLIMIT) }
   I resthread;  //  the thread# we will delete
@@ -1001,7 +997,6 @@ ASSERT(0,EVNONCE)
   }
   // Now we have locks on the flock and the JOBQ
   // Mark the thread for deletion, wake up all the threads
-// obsolete   --JT(jt,nwthreads);   // set new # threads - prematurely calling this thread stopped
   C oldstate=__atomic_fetch_or(&JTFORTHREAD(jt,resthread)->taskstate,TASKSTATETERMINATE,__ATOMIC_ACQ_REL);  // request term.  Low bits of flag are used outside of lock
   if(unlikely(!(oldstate&TASKSTATEACTIVE))){__atomic_fetch_and(&JTFORTHREAD(jt,resthread)->taskstate,~TASKSTATETERMINATE,__ATOMIC_ACQ_REL); goto notermlocks;}  // if thread no longer active, abort releasing locks.  should not occur
   --jobq->nthreads;  // remove thread from count in threadpool

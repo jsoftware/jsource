@@ -478,7 +478,6 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(BETWEENC(n,1,3),EVLENGTH);  // verify 1-3 gerunds
-// obsolete  ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
  ASSERT(BOX&AT(w),EVDOMAIN);
  RZ(hs=fxeach(3==n?w:behead(reshape(num(4),w)),(A)(&jtfxself[0])));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
  // hs is a BOX array, but its elements are ARs

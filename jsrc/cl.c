@@ -60,7 +60,6 @@ static DF2(jtlscapco12){PROLOG(556);A z;
  FAV(recurself)->flag=VFLAGNONE;  // inplacing not allowed by jtlev[12]
 
  C type=FAV(self)->id; FAV(recurself)->id=type; // type of call, L: or S:
- // obsolete FAV(recurself)->flag=VFISSCO;  // fill in the inplaceability flags, indicate S:
  if(type==CSCAPCO){A x; GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;}    // for S:, allocate place to save results & fill into self.  This will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
 // scaf could we allo first block on stack (shorter) and not free it?
  // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended

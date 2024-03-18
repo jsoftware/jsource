@@ -349,7 +349,6 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting
-// obsolete  if((I)jtinplace&JTINPLACEA|(ar-1)|(ar-wr)|jtrm){
  if((SGNIF((I)jtinplace,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
@@ -375,12 +374,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // OK to use type as proxy for size, since indirect types are excluded
    I zt=maxtyped(at,AT(w));  // the type of the result
-// obsolete #if BW==64
-// obsolete    if((((an-1)|(ar-1)|(ar-wr)|(at-AT(w))|jtrm)>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
    if((((an-1)|(at-zt))>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
-// obsolete #else
-// obsolete    if(((an-1)|(ar-1)|(ar-wr)|(at-AT(w)))>=0&&(jt->ranks==R2MAX)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
-// obsolete #endif
     //  Check the item sizes.  Set p<0 if the
     // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
     // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis

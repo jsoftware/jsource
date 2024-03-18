@@ -41,8 +41,6 @@ static B jtcap(J jt,A x){V*v;
 }
 
 
-// obsolete static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->fgh[2])->fgh[0],v->fgh[0]);}
-// obsolete static DF1(jtcharmapb){V*v=FAV(self); R charmap(w,FAV(v->fgh[0])->fgh[0],FAV(v->fgh[2])->fgh[0]);}
 
 FORK2(jthook2cell,0x118)
 FORK1(jthook1cell,0x110)
@@ -94,11 +92,6 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
    if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
                break; /* [: g h */
   case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
-// obsolete   case CAMP:   /* x&i.     { y"_ */
-// obsolete   case CFORK:  /* (x i. ]) { y"_ */
-// obsolete    if(hi==CQQ&&(y=hv->fgh[0],LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->fgh[1])&&
-// obsolete        (x=fv->fgh[0],LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->fgh[1])&&
-// obsolete        (fi==CAMP||CRIGHT==ID(fv->fgh[2]))){f1=jtcharmapb; flag &=~(VJTFLGOK1);} break;
   case CAT:    /* <"1@[ { ] */
    if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
     p=fv->fgh[0]; q=fv->fgh[1]; 

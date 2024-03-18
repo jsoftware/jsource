@@ -35,7 +35,6 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
  GATV0(z,BOX,m,1); x=AAV(z);
  RZ(x[0]=incorp(df));  // always out f first
-// obsolete  RZ(x[1]=incorp(b||c||xop?dg:fl&VDDOP?(hv=AV(hs),jlink(sc(hv[0]),jlink(spellout(id),sc(hv[1])))):spellout(id)));  // if invisible or operator, out dg, which is g or the explicit body; otherwise out the primitive w
  RZ(x[1]=incorp(b||c||xop?dg:spellout(id)));  // if invisible or operator, out dg, which is g or the explicit body; otherwise out the primitive w
  if(2<m)RZ(x[2]=incorp(c||xop?drr(hs):dg));  // if there is a 3d box, out it from h if operator or trident; otherwise from g
  EPILOG(z);
@@ -66,7 +65,6 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  if(0<m)RZ(u[0]=incorp(aro(fs)));
  if(1<m)RZ(u[1]=incorp(aro(ex?unparsem(num(0),w):xop?hs:BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));
  if(2<m)RZ(u[2]=incorp(aro(hs)));
-// obsolete  s=xop?aro(gs):VDDOP&v->flag?(hv=AV(hs),aro(foreign(sc(hv[0]),sc(hv[1])))):spellout(id);
  s=xop?aro(gs):spellout(id);
  RZ(x[0]=incorp(s)); RZ(x[1]=INCORPNA(y));
  R z;

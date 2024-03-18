@@ -163,7 +163,6 @@
 #define cfrq(x,y)                   jtcfrq(jt,(x),(y))
 #define cfrx(x,y)                   jtcfrx(jt,(x),(y))
 #define cfrz(x,y)                   jtcfrz(jt,(x),(y))
-// obsolete #define charmap(x,y,z)              jtcharmap(jt,(x),(y),(z))
 #define checksi()                   jtchecksi(jt)
 #define cirx(x0,x1,x2,x3)           jtcirx(jt,(x0),(x1),(x2),(x3)) 
 #define clonelocalsyms(x)           jtclonelocalsyms(jt,(x))

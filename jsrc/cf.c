@@ -149,7 +149,7 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
     flag|=(7+(((IINTER-II0EPS)&0xf)<<3));  // flag it like -.
     // if tolerance given on second -., it is now in cct
    }
- }
+  }
 #endif
 
   // comparison combinations II0EPS-IIFBEPS.  If the comparison is e. these go through indexofsub, but first the ranks have to be tested in compsc

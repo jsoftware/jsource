@@ -443,7 +443,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
 #define SPECAND (IDBIT(CCOMMA)|IDBIT(CBOX)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE))  // mask for all special cases
   if(unlikely((I)(SPECAND>>(c&0x3f))&BETWEENC(c,CCOMMA,CPOUND))){
    if(unlikely(BOTHEQ8(FAV(a)->id,c,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
-   else switch(FAV(a)->id&0x3f){ // 19 1a 28 2e 2f 31 42
+   else switch(FAV(a)->id&0x3f){
 // obsolete    case CCOMMA: if(c==CBOX){f2=jtjlink; linktype=ACINPLACE;} break;  // x ,&< y   supports IP 
    case CBOX&0x3f:   flag |= VF2BOXATOP1; break;  // <&u mark this as <@f for the monad
    case CGRADE&0x3f: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y

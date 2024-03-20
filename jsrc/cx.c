@@ -455,22 +455,21 @@ tblockcase:
    // this is return point from running the line
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on.  ++i must be in bounds for a non-assert T block (there must be another control word)
 // obsolete     if(unlikely((UI)i>=(UI)(nGpysfctdl>>16))){ i=i&0xffff; goto nextline;} // scaf  // exit if end of defn  scaf impossible! tblock cannot end fn
-    if(likely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)|jt->uflags.trace)==0))goto docase;   // avoid indirect-branch overhead on the likely case, if. T do.
-    goto nextline;   // next line not do.; T block extended to more than 1 line (rare)
-   // *** the rest is error cases
-   }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; goto nextline;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
-   }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
-    if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-    z=mtm,bi=i,i=debugnewi(i+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-   }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4){I j; for(j=cw[tdv[-1].b].go;cw[j].ig.indiv.type!=CEND;j=cw[j].go)if(cw[j].ig.indiv.type==CCATCHT){i=j+1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
-   }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
-     // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.
-   goto nextline;
-
-  case CELSEIF: i=cw[i].go; goto elseifasdo;  // elseif is like a failing do - skips past end., probably to B
+    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)|jt->uflags.trace)!=0))goto nextline;   // next line not do.; T block extended to more than 1 line (rare)
+   }else{
+    // *** the rest is error cases
+    if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; goto nextline;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+    }else if(unlikely((nGpysfctdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
+     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
+     z=mtm,bi=i,i=debugnewi(i+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+    }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfctdl&4){I j; for(j=cw[tdv[-1].b].go;cw[j].ig.indiv.type!=CEND;j=cw[j].go)if(cw[j].ig.indiv.type==CCATCHT){i=j+1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
+    }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
+      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.
+    goto nextline;
+   }
+   // normal case falls through to do. ...
 
   case CDO:
-docase:
    // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
    // following B block if the condition is false.
   {A tt=t; tt=t?t:mtv; t=0;  // missing t looks like '' which is true; clear t to start NEXT tblock empty
@@ -498,6 +497,8 @@ docase:
    if(likely(((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)|jt->uflags.trace)==0))goto dobblock;  // normal case, continue with B processing
    goto nextline;   // redispatch next line
   }
+
+  case CELSEIF: i=cw[i].go; goto elseifasdo;  // elseif is like a failing do - skips past end., probably to B
 
   // ************* The rest of the cases are accessed only by indirect branch or fixed fallthrough ********************
   case CTRY:

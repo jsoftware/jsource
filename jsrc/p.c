@@ -454,29 +454,29 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragement; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
 
- // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
- PFRAME oframe=jt->parserstackframe;   // save all the stack status
-
- // allocate the stack.  No need to initialize it, except for the marks at the end, because we
- // never look at a stack location until we have moved from the queue to that position.
- // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
- // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each sentence
- // The stack grows down
- PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current stack entry
- if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
-  ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
-  I allo = MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-  GATV0(y,B01,allo,1);
-  currstk=(PSTK*)CAV(y);   // save start of data area, leaving space for all the marks
-  // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
-  jt->parserstackframe.parserstkend1=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation
- }  // We could worry about hysteresis to avoid reallocation of every call
-
- // the first element of the parser stack is where we save unchanging error info for the sentence
- currstk->a=(A)queue; currstk->t=(US)nwds;  // addr & length of words being parsed
- jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
-
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
+  // Save info for error typeout.  We save pointers to the sentence, and the executing parser-stack frame for each execution, from which we infer error position
+  PFRAME oframe=jt->parserstackframe;   // save all the stack status
+
+  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
+  // never look at a stack location until we have moved from the queue to that position.
+  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
+  // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each sentence
+  // The stack grows down
+  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current stack entry
+  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
+   ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
+   I allo = MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+   GATV0(y,B01,allo,1);
+   currstk=(PSTK*)CAV(y);   // save start of data area, leaving space for all the marks
+   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
+   jt->parserstackframe.parserstkend1=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation
+  }  // We could worry about hysteresis to avoid reallocation of every call
+
+  // the first element of the parser stack is where we save unchanging error info for the sentence
+  currstk->a=(A)queue; currstk->t=(US)nwds;  // addr & length of words being parsed
+  jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
+
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
   //  (exec) 23-24,26 VJTFLGOK1+VJTFLGOK2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (
   //         25 set if first stack word AFTER the executing fragment is NOT MARK (i. e. there are executions remaining on the stack) 
@@ -528,7 +528,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
 
   // We have the initial stack pointer.  Grow the stack down from there
-  stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
+  stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused  // scaf store with 32-byte store
   while(1){  // till no more matches possible...
 
     // no executable fragment, pull from the queue.  Bits 31-29 of pt0ecam indicate how many we can safely pull before we
@@ -689,7 +689,7 @@ endname: ;
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
-      jt->parserstackframe.parserstkend1=stack;    // Save the stackpointer in case there are calls to parse in the names we execute
+     jt->parserstackframe.parserstkend1=stack;    // Save the stackpointer in case there are calls to parse in the names we execute
      if(pmask&0x1F){  // if lines 0-4
       I fs1flag=FAV(fs1=pmask&2?fs1:fs)->flag;  // if line 1, fetch V0 flags; otherwise harmless refetch of fs flags.  If line 1 matches, line 0 cannot
       I fsflag=FAV(fs)->flag;  // fetch flags early - we always need them in lines 0-2
@@ -1051,16 +1051,22 @@ failparse:
 
  }else{A y;A sv=0;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it
+   // 1-word sentence:
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
-   // overhead, because it happens enough to notice.
+   // overhead, because it happens enough to notice.  Since we know that a single word can never execute, we don't
+   // need to push the stack: we simply switch to using a stack for this word that points to the sentence
+   PSTK* ostk=jt->parserstackframe.parserstkbgn;  // save caller's stack - rest of parserstackframe is untouched and unused
+   PSTK localstack[1]={{.a=(A)queue, .t=1}};  // stack to use, containing pointer to the sentence
+   jt->parserstackframe.parserstkbgn=&localstack[1];  // point to originfo to use, +1
+
    // No ASSERT - must get to the end to pop stack
-   I at=AT(y = QCWORD(queue[0]));  // fetch the word
+   I at=AT(y=QCWORD(queue[0]));  // fetch the word
    if(likely((at&NAME)!=0)) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
      if(likely((sv=s->val)!=0)){raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics
     }
-    if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname guives 0 without error
+    if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname gives 0 without error
 got1val:;
      // sv has QCGLOBAL semantics
      if(likely(((AT(QCWORD(sv))|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
@@ -1080,8 +1086,9 @@ got1val:;
    if(likely(y!=0))if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error
    // If sv!=0, we found the value and ra()d it.  Match the ra with a tpush so that the value stays protected during further execution
    if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed
+   jt->parserstackframe.parserstkbgn=ostk;  // restore pointer to caller's stack frame
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence
-  jt->parserstackframe = oframe;
+// obsolete   jt->parserstackframe = oframe;
   R y;  // indicate not a final assignment - and may be 0
  }
 

@@ -1052,6 +1052,7 @@ failparse:
  }else{A y;A sv=0;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // 1-word sentence:
+   I yflags=(I)queue[0];  // fetch the word, with QCGLOBAL semantics
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
    // overhead, because it happens enough to notice.  Since we know that a single word can never execute, we don't
    // need to push the stack: we simply switch to using a stack for this word that points to the sentence
@@ -1060,8 +1061,10 @@ failparse:
    jt->parserstackframe.parserstkbgn=&localstack[1];  // point to originfo to use, +1
 
    // No ASSERT - must get to the end to pop stack
-   I at=AT(y=QCWORD(queue[0]));  // fetch the word
-   if(likely((at&NAME)!=0)) {
+   y=QCWORD(yflags);  // point y to the start of block
+   if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
+// obsolete    I at=AT(y=QCWORD(queue[0]));  // fetch the word
+// obsolete    if(likely((at&NAME)!=0)) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
      if(likely((sv=s->val)!=0)){raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics
@@ -1069,17 +1072,18 @@ failparse:
     if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname gives 0 without error
 got1val:;
      // sv has QCGLOBAL semantics
-     if(likely(((AT(QCWORD(sv))|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
-      if(unlikely(at&NAMEABANDON)){
+ // obsolete     if(likely(((AT(QCWORD(sv))|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
+     if(likely((yflags&QCNAMEBYVALUE)|((I)sv&QCNOUN))){   // if noun or special name, use value
+      if(unlikely(yflags&QCNAMEABANDON)){
        sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // coco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else y=QCWORD(sv);  // not name_:, just use the value
-     } else {y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
-    } else {
+     }else{y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
+    }else{
      // undefined name.  This is very subtle.  We will return a reference to [: as required by the rules (User might execute ".'undefname' which should return empty with no error).
      // This will be formatted for error, if ever, only when returning the value to console level - but at that point the failing sentence has been lost.  That will be OK because ASSERTN
      // suppresses display of the failing line.
-     if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error right away if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
+     if(yflags&QCNAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error right away if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
      else y=unlikely(jt->jerr)?0:QCWORD(namerefacv(y, 0));    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error; if error already, just keep it
     }
    }

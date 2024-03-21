@@ -557,7 +557,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       // otherwise resolve nouns to values, and others to 'name~' references
       // The important performance case is local names with symbol numbers.  Pull that out & do it without the call overhead
       // Registers are very tight here.  Nothing survives over a subroutine call - refetch y if necessary  If we have anything to
-      // pass over a subroutine call, we have to store it in pt0ecam or some other saved name
+      // keep over a subroutine call, we have to store it in pt0ecam or some other saved name
       I4 symx, buck;
       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
       L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier
@@ -1057,8 +1057,8 @@ failparse:
    // overhead, because it happens enough to notice.  Since we know that a single word can never execute, we don't
    // need to push the stack: we simply switch to using a stack for this word that points to the sentence
    PSTK* ostk=jt->parserstackframe.parserstkbgn;  // save caller's stack - rest of parserstackframe is untouched and unused
-   PSTK localstack[1]={{.a=(A)queue, .t=1}};  // stack to use, containing pointer to the sentence
-   jt->parserstackframe.parserstkbgn=&localstack[1];  // point to originfo to use, +1
+   PSTK localstack[PSTACKRSV]={{.a=(A)queue, .t=1}};  // stack to use, containing pointer to the sentence
+   jt->parserstackframe.parserstkbgn=&localstack[PSTACKRSV];  // point to originfo to use, +1
 
    // No ASSERT - must get to the end to pop stack
    y=QCWORD(yflags);  // point y to the start of block
@@ -1067,7 +1067,7 @@ failparse:
 // obsolete    if(likely((at&NAME)!=0)) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
-     if(likely((sv=s->val)!=0)){raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics
+     if(likely((sv=s->val)!=0)){raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics  scaf could avoid ra on local
     }
     if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname gives 0 without error
 got1val:;

@@ -1067,14 +1067,23 @@ failparse:
 // obsolete    if(likely((at&NAME)!=0)) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
-     if(likely((sv=s->val)!=0)){raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics  scaf could avoid ra on local
+     if(likely((sv=s->val)!=0)){  // value has been assigned
+      // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
+      I svt=s->valtype;  // type of stored value
+      if(likely((yflags&QCNAMEBYVALUE)|(svt&QCNOUN))){   // if noun or special name, use value
+       if(unlikely(yflags&QCNAMEABANDON)){raposlocal(sv); sv=(A)((I)sv+svt); goto abandname;}  // if abandoned, it loses the symbol-table protection and we have to protect it with ra
+       y=sv; // we will use the value we read
+      }else{raposlocal(sv); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=0 to ensure flags=0 in return value
+      goto gotlocalval;   // y has the unprotected value read.  We can use that.
+     }
+// obsolete       raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics  scaf could avoid ra on local
     }
     if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname gives 0 without error
-got1val:;
-     // sv has QCGLOBAL semantics
+     // The name was found, not in a static local table.  sv has QCGLOBAL semantics
  // obsolete     if(likely(((AT(QCWORD(sv))|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
      if(likely((yflags&QCNAMEBYVALUE)|((I)sv&QCNOUN))){   // if noun or special name, use value
       if(unlikely(yflags&QCNAMEABANDON)){
+abandname:;
        sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // coco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else y=QCWORD(sv);  // not name_:, just use the value
@@ -1090,6 +1099,7 @@ got1val:;
    if(likely(y!=0))if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error
    // If sv!=0, we found the value and ra()d it.  Match the ra with a tpush so that the value stays protected during further execution
    if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed
+gotlocalval:;  // local fetches can skip the tpush.  Value in y
    jt->parserstackframe.parserstkbgn=ostk;  // restore pointer to caller's stack frame
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence
 // obsolete   jt->parserstackframe = oframe;

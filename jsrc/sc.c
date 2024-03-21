@@ -332,17 +332,18 @@ void jtstackepilog(J jt, I4 initcurrstack){
 }
 
 
-// return ref to adv/conj/verb whose name is a and whose value/type is val (with QCGLOBAL semantics)
+// return ref to adv/conj/verb whose name is a and whose value/type is val (with QCGLOBAL semantics if it is not 0; but typeflags may be 0 in a NONzero value if the result should be value/0)
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
-// and return that; the name will be resolved when the name~ is executed.
+// and return that with the part of speech of the value; the name will be resolved when the name~ is executed.
 // If the name is undefined, return a reference to [: (a verb that always fails)
 // This verb also does some processing designed to reduce register usage in the parser:
 //  * if val is not 0, it is freed
 //  * the flags from val are transferred to the result (with QCFAOWED semantics)
 // The value is used only for flags and rank
 A jtnamerefacv(J jt, A a, A val){A y;V*v;
- y=val?QCWORD(val):ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)
- if(unlikely((NOUN&AT(y))!=0))R (A)((I)val|QCFAOWED);  // if noun, keep the flags, and indicate we didn't fa() it
+ y=likely(val!=0)?QCWORD(val):ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)
+// obsolete  if(unlikely((NOUN&AT(y))!=0))R (A)((I)val|QCFAOWED);  // if noun, keep the flags, and indicate we didn't fa() it
+ if(unlikely(((I)val&QCNOUN)!=0))R (A)((I)val|QCFAOWED);  // if noun, keep the flags, and indicate we didn't fa() it
  // This reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference
  v=FAV(y);
@@ -358,7 +359,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, mark it cacheable
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
  FAV(z)->flag2|=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
- R (A)((I)z|QCPTYPE(val));  // no FAOWED since we freed val
+ R (A)((I)z|QCPTYPE(val));  // Give the result the part of speech of the input.  no FAOWED since we freed val
 }
 
 // return reference to the name given in w, used when moving from queue to stack

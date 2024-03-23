@@ -719,16 +719,23 @@ typedef I SI;
 #define AFHRH(a) ((a)->h)    // the workarea
 
 
-typedef struct {  // we could consider align(4) to save space - would require change to bpnonnoun 
- union{
-  struct {
-   C type;  // control-word number from w.h
-   C canend;  // Indicates that the most-recent B-block result can (1) or can't (2) become the result of the running definition.  0 means we don't know yet.
-   US sentn;    // number of tokens in the sentence
-   I4 sentx;   // index of the start of the sentence in the sequential list of tokens for the definition
-  } indiv;  // individual fields
-  UI group[2-SY_64];  // fields all in one or two words
- } ig;
+typedef struct {
+UI4 tcesx;  // cw type/canend/number of first word in the line
+#define TCESXTYPEX 26  // top field, 6 bits, is control-word type
+#define TCESXTYPE ((UI4)0x3f<<TCESXTYPEX)  // mask for field
+#define TCESXCEX 24  // canend bits 24-25
+#define TCESXCECAN ((UI4)1<<TCESXCEX)  // set if this result can become the result of the defn
+#define TCESXCECANT ((UI4)2<<TCESXCEX)  // set if this result cannot become the result of the defn
+#define TCESXSXMSK 0xffffff  // mask of line-number bits
+// obsolete  union{
+// obsolete   struct {
+// obsolete    C type;  // control-word number from w.h (bits 0-5)
+// obsolete    C canend;  // Indicates that the most-recent B-block result can (1) or can't (2) become the result of the running definition.  0 means we don't know yet.
+// obsolete    US obsolete;    // number of tokens in the sentence
+// obsolete    I4 sentx;   // index of the start of the sentence in the sequential list of tokens for the definition
+// obsolete   } indiv;  // individual fields
+// obsolete   UI group[2-SY_64];  // fields all in one or two words
+// obsolete  } ig;
  US go;  // line number.  Depends on type; can be loop-to point, failing-branch point, or error handler
  US source;  // source line number
 } CW;

@@ -244,7 +244,7 @@ static A jtdebugmux(J jt){A z;
 A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  ASSERT(lk<=0,err);  //  locked fn is totally opaque, with no stack.  Exit with 0 result, indicating error
  // create a parser-stack frame for the old sentence and switch to it
- PFRAME oframe=jt->parserstackframe; PSTK newparseinfo[1]={{.a=(A)(queue+ci->ig.indiv.sentx),.t=ci->ig.indiv.sentn}};
+ PFRAME oframe=jt->parserstackframe; PSTK newparseinfo[1]={{.a=(A)(&queue[ci[0].tcesx&TCESXSXMSK]),.t=(ci[1].tcesx-ci[0].tcesx)&TCESXSXMSK}};
  jt->parserstackframe.parserstkbgn=&newparseinfo[1]; jt->parserstackframe.parseroridetok=0; // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  jt->parserstackframe=oframe;  // restore to the executing sentence

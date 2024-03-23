@@ -719,6 +719,20 @@ typedef I SI;
 #define AFHRH(a) ((a)->h)    // the workarea
 
 
+// the compiled form of an explicit definition is an A block with rank 0 with AK pointing into the middle so that only the As are freed.
+// The number of words is AN, while the number of control words+1 (NC) is AK-s (counting 4-byte values)
+// the sequence is
+// sentence numbers (NC US values, accessed from the end)
+// go values (NC US values, accessed from the end)
+// tcesx values (NC UI4 values, accessed from the end)
+// words of the sentence, counting up  <-- data pointer is at the beginning of this part
+//
+// macros to access the parts:
+#define CWBASE(x) AAV(x) // pointer to start of the sentence words
+#define CWNC(x) (AAV(x)-(A*)((I)x+AKXR(0)))  // number of CWs
+#define CWTCESX2(base,ci) *(UI8 *)((UI4*)base+ci-1) // UI8 value containing low half=tcesx for ~i+1, high half=tcesx for ~i
+#define CWGO(base,nc,ci) ((US*)((UI4*)base-nc))[i] // US value containing go value for ~i
+#define CWSENT(base,nc,ci) ((US*)((UI4*)base-nc))[i-nc] // US value containing original sentence number for ~i
 typedef struct {
 UI4 tcesx;  // cw type/canend/number of first word in the line
 #define TCESXTYPEX 26  // top field, 6 bits, is control-word type

@@ -1087,8 +1087,21 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
   // copy the result to the end of the previous sentence, adjust pointer
   I sent1=cwv[j].tcesx&TCESXSXMSK; cwv[j].tcesx=(cwv[j].tcesx&~TCESXSXMSK)|outsent; DQ(endx, lv[outsent++]=lv[sent1++];)  // pack sentences together
  }
- cwv[cn].tcesx=TCESXCECAN|outsent;   // add on length in final cw block, and mark that end+1 line as using its input
+ cwv[cn].tcesx=TCESXCECAN|outsent;   // add on length in final cw block, and mark that end+1 line as using its input.  This sentinel is NOT included in AN(c)
+ AN(l)=outsent;  // update the number of sentence words to discard any that we joined into a pppp
  R 1;
+}
+
+// cw is control words, sw is sentence words for one valence.  Result is in compiled form, one A block with the data preceded by index info
+static A compileddefn(J jt, A cw, A sw){A z;
+ I nsw=AN(sw); I ncw=AN(cw)+1;  // number of sentence words and control words including the extra word with total len
+ I alloamtA=nsw+ncw*(8/sizeof(A));  // number of As needed to hold the sentences plus 8 bytes per cw 
+ GATV0(z,BOX,alloamtA,0) AK(z)+= 8*ncw; AN(z)=nsw;  // allo block; point AK past the cw data; AN=# sentence words (for when we free them)
+ A * RESTRICT base=CWBASE(z);  // point to start of sent/end+1 of tcesx
+ JMC(base,AAV(sw),nsw*sizeof(A),0)  // copy in the sentence words
+ CW * RESTRICT cwv=(CW *)voidAV(cw);  // point to control words
+ DO(ncw, CWTCESX2(base,~i)=cwv[i].tcesx; CWGO(base,ncw,~i)=cwv[i].go; CWSENT(base,ncw,~i)=cwv[i].source;)  // create the output block
+ R z;
 }
 
 // a is a local symbol table, possibly in use
@@ -1194,12 +1207,12 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
  if(4>=n) {
-  // explicit definitions.  Create local symbol table and pppp
+  // explicit definitions.  Create local symbol table, pppp, and compile into internal form
   I hnofst=0; do{  // for each valence
    // Don't bother to create a symbol table for an empty definition, since it is a domain error
    if(AN(hv[hnofst+1])){
     RZ(hv[hnofst+3] = incorp(crelocalsyms(hv[hnofst+0], hv[hnofst+1],n,!!hnofst,flag)));  // words,cws,type,dyad,flag
-    pppp(jt, hv[hnofst+0], hv[hnofst+1]);  // words,cws,type,dyad,flag
+    pppp(jt, hv[hnofst+0], hv[hnofst+1]);  // words,cws
    }
   }while((hnofst+=HN)<=HN);
  }

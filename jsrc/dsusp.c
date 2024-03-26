@@ -85,16 +85,19 @@ F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
  R z;
 }    /* 13!:32 si info */
 
-I lnumcw(I j,A w){CW*u;
+// w is the compiled cw/sentence table
+I lnumcw(I j,A w){
  if(0>j)R -2; 
  else if(!w)R j; 
- else{u=(CW*)AV(w); DO(AN(w), if(j<=u[i].source)R i;) R IMAX/2;}
+// obsolete  else{u=(CW*)AV(w); DO(AN(w), if(j<=u[i].source)R i;) R IMAX/2;}
+ else{A *u=CWBASE(w); I n=CWNC(w);  DO(n-1, if(j<=CWSOURCE(u,-n,~i))R i;) R IMAX/2;}  // n-1 to stop before sentinel
 }    /* line number in CW corresp. to j */
 
 I lnumsi(DC d){A c;I i;
- if(c=d->dcc){i=d->dcix; R(MIN(i,AN(c)-1)+(CW*)AV(c))->source;}else R 0;
-}    /* source line number from DCCALL-type stack entry */
+// obsolete  if(c=d->dcc){i=d->dcix; R(MIN(i,AN(c)-1)+(CW*)AV(c))->source;}else R 0;
+ if(c=d->dcc){i=d->dcix; A *u=CWBASE(c); I n=CWNC(c); R(CWSOURCE(u,-n,~MIN(i,n-2)));}else R 0;
 
+}    /* source line number from DCCALL-type stack entry */
 
 
 static DC suspset(DC d){DC e=0;
@@ -241,10 +244,10 @@ static A jtdebugmux(J jt){A z;
 
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
-A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
+A jtpee(J jt,A *queue,UI8 tcesx2,I err,I lk,DC c){A z=0;
  ASSERT(lk<=0,err);  //  locked fn is totally opaque, with no stack.  Exit with 0 result, indicating error
  // create a parser-stack frame for the old sentence and switch to it
- PFRAME oframe=jt->parserstackframe; PSTK newparseinfo[1]={{.a=(A)(&queue[ci[0].tcesx&TCESXSXMSK]),.t=(ci[1].tcesx-ci[0].tcesx)&TCESXSXMSK}};
+ PFRAME oframe=jt->parserstackframe; PSTK newparseinfo[1]={{.a=(A)(&queue[(tcesx2>>32)&TCESXSXMSK]),.t=(tcesx2-(tcesx2>>32))&TCESXSXMSK}};
  jt->parserstackframe.parserstkbgn=&newparseinfo[1]; jt->parserstackframe.parseroridetok=0; // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  jt->parserstackframe=oframe;  // restore to the executing sentence
@@ -255,9 +258,9 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
 
 // parsex: parse an explicit defn line when the debugger/pm/ATTN is running
 // queue is words of sentence, length m
-/* ci - current row of control matrix               */
+// source - source line#
 /* c  - stack entry for dbunquote for this function */
-A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
+A jtparsex(J jt,A* queue,I m,I source,DC c){A z,parsez;
  movesentencetosi(jt,queue,m,0);  // install sentence-to-be-executed for stop purposes
  // if there is a system lock to take, take it and continue
  S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE);
@@ -269,7 +272,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z,parsez;
  }
  // we can stop before the sentence, or after it if it fails.  Stopping before is better because then we know we can restart safely
  // if there is a stop, enter debug suspension
- if(c&&dbstop(c,ci->source)){z=parsez=0; jsignal(EVSTOP); goto noparse;}
+ if(c&&dbstop(c,source)){z=parsez=0; jsignal(EVSTOP); goto noparse;}
  // xdefn adds a stack entry for PARSE, needed to get anonymous operators right
  z=PARSERVALUE(parsez=parsea(queue,m));  // make sure we preserve ASGN flag in parsez
 noparse: ;

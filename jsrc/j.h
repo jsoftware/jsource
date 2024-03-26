@@ -767,6 +767,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
+#define CWMAX 32766  // max # control words in an explicit defn.  Must fit in signed 15-bit value because we complement it in storage
+#define SWMAX 32767   // max # words in a sentence
+#define EXPWMAX 16777215  // max # words in an explicit defn
+
 // flags for jteformat
 #define EMSGE 0xff  // the error-code part
 #define EMSGNOEVM 0x200  // set to suppress moving the terse message

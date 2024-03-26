@@ -185,7 +185,7 @@ void jtdebdisp(J jt,DC d){A*x,y;I e,t;
                  eputc(CLF); break;
 }}
 
-// display the current stack frame; if it is PARSE, also display the previous frame if it is SCRIPT or CALL
+// display the current stack frame; if it is PARSE, also display the previous frame if it is SCRIPT or CALL with explicit definition
 static B jtdebsi1(J jt,DC d){I t;
  RZ(d);
  t=d->dctype;

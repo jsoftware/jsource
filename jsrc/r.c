@@ -268,7 +268,7 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
   case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
                               MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
   case CLABEL:  case CGOTO:   RZ(z=ca(AAV(x)[0])); break;
-  case CFOR:                  RZ(z=(c[1].tcesx-c[1].tcesx)&TCESXSXMSK?AAV(x)[0]:spellcon(t)); break;
+  case CFOR:                  RZ(z=(c[1].tcesx-c[0].tcesx)&TCESXSXMSK?AAV(x)[0]:spellcon(t)); break;
   default:                    RZ(z=spellcon(t)); break;
  }
  // if the CW we processed comes from the same source line, append it and return the combination; otherwise return the new
@@ -281,14 +281,16 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
 }    /* unparse a single line */
 
 // unparse a definition, by going through the control words
-// hv[0]->packed words, hv[1]->control words zv->pointer in array of boxes, indicating where to store the lines
+// *hv is the compile cw/sentence data
 // m is #CWs to process
 // result points after the last line stored into zv
-static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
- y=hv[0]; v=AAV(y);  // v->word 0
- y=hv[1]; u=(CW*)AV(y);  // u is running pointer through control words
+static A*jtunparse1a(J jt,I m,A*hv,A*zv){A x,y;A *v;I i,j,k;
+ y=hv[0]; v=CWBASE(y); I n=CWNC(y);
+// obsolete  y=hv[0]; v=AAV(y);  // v->word 0
+// obsolete  y=hv[1]; u=(CW*)AV(y);  // u is running pointer through control words
  y=0; j=k=-1;
- for(i=0;i<m;++i,++u){  // for each word
+ for(i=0;i<m;++i){  // for each word
+  CW u[2]; u[0].tcesx=CWTCESX(v,~i); u[0].go=~CWGO(v,-n,~i);  u[0].source=CWSOURCE(v,-n,~i); u[1].tcesx=CWTCESX(v,~(i+1));   // create CW to use
   RZ(x=unparse1(u,vec(BOX,(u[1].tcesx-u[0].tcesx)&TCESXSXMSK,&v[u[0].tcesx&TCESXSXMSK]),j,y)); // append new line to y or else return it as x if it is on a new line.
   k=u->source;
   if(j<k){if(y)*zv++=jtunDD(jt,y); DQ(k-j-1, *zv++=mtv;);}  // if we are about to move to a new line, save y and zap the surplus control words on the line to empties
@@ -304,16 +306,20 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
 F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  ARGCHK2(a,w);
  wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
- mc=hv[1];    ms=hv[2];    m=mn=AN(mc);  // mc->control words ms->commented text
- dc=hv[1+HN]; ds=hv[2+HN]; n=dn=AN(dc);
- p=!((I)jtinplace&JTEXPVALENCEOFF)&&n&&(m||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
+ mc=hv[0];    ms=hv[2];    m=mn=CWNC(mc)-1;  // mc->control words ms->commented text  m,mn = #control words
+ dc=hv[0+HN]; ds=hv[2+HN]; n=dn=CWNC(dc)-1;
+ m=AR(mc)==1?-1:m; n=AR(dc)==1?-1:n;  // mc is normally a compiled defn, but it can also be an empty list of boxes if the valence is not defined.  Make mc=-1 in that case.
+ p=!((I)jtinplace&JTEXPVALENCEOFF)&&(n>=0)&&((m>=0)||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
   // no comments: recover the original by unparsing
-  if(m)mn=1+((CW*)AV(mc))[m-1].source; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
-  if(n)dn=1+((CW*)AV(dc))[n-1].source; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
-  GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV(z);
-  RZ(zv=unparse1a(m,hv,   zv)); if(p)RZ(*zv++=chrcolon);
-  RZ(zv=unparse1a(n,hv+HN,zv));
+// obsolete   if(m>=0)mn=1+((CW*)AV(mc))[m-1].source; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
+// obsolete   if(n>=0)dn=1+((CW*)AV(dc))[n-1].source; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
+  // if there is a definition (even if there are no control words), set mn to the inferred #source lines
+  if(m>=0)mn=1+CWSOURCE(CWBASE(mc),-CWNC(mc),~(CWNC(mc)-2)); mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
+  if(n>=0)dn=1+CWSOURCE(CWBASE(dc),-CWNC(dc),~(CWNC(dc)-2)); dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
+  GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV(z);   // allocate the inferred #lines
+  RZ(zv=unparse1a(MAX(m,0),hv,   zv)); if(p)RZ(*zv++=chrcolon);
+  RZ(zv=unparse1a(MAX(n,0),hv+HN,zv));
   ASSERTSYS(AN(z)==zv-zu,"unparsem zn");
  }else{
   // commented text found.  Use it
@@ -326,6 +332,7 @@ F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  R z;
 }    /* convert h parameter for : definitions; open if a is 0 */
 
+// 5!:7
 static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
  ARGCHK2(a,w);
  RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
@@ -333,13 +340,15 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  wv=FAV(w); h=wv->fgh[2];
  if(!(h&&CCOLON==wv->id))R reshape(v2(0L,3L),ds(CACE)); 
  hv=AAV(h);
- x=hv[  j]; v=    AAV(x); 
- x=hv[1+j]; u=(CW*)AV(x); n=AN(x);
+// obsolete  x=hv[  j]; v=    AAV(x); 
+ x=hv[j]; v=CWBASE(x); n=CWNC(x)-1;
+// obsolete  x=hv[1+j]; u=(CW*)AV(x); n=AN(x);
  GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;
  zv=AAV(z);
- for(i=0;i<n;++i,++u){
+ for(i=0;i<n;++i){
+  CW u[2]; u[0].tcesx=CWTCESX(v,~i); u[0].go=~CWGO(v,-(n+1),~i);  u[0].source=CWSOURCE(v,-(n+1),~i); u[1].tcesx=CWTCESX(v,~(i+1));   // create CW to use
   RZ(*zv++=incorp(sc(i)));
-  q[0]=u->tcesx>>TCESXTYPEX; q[1]=u->go; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));
+  q[0]=u->tcesx>>TCESXTYPEX; q[1]=u->go; q[1]=q[1]>=CWMAX?65535:q[1]; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));  // 65535 for testcases
   RZ(*zv++=incorp(unparse1(u,vec(BOX,(u[1].tcesx-u[0].tcesx)&TCESXSXMSK,&v[u[0].tcesx&TCESXSXMSK]),-1L,0L)));
  }
  R z;

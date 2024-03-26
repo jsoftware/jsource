@@ -26,23 +26,27 @@
 #define BZ(e)          {if(unlikely(!(e))){z=0; goto bodyend;}}
 
 // obsolete #if SY_64
-// obsolete #define CWSENTX (cwgroup>>32)  // .sentx
+// obsolete #define CWSOURCEX (cwgroup>>32)  // .sentx
 // obsolete #else
-// obsolete #define CWSENTX (cw[i].ig.indiv.sentx)
+// obsolete #define CWSOURCEX (cw[i].ig.indiv.sentx)
 // obsolete #endif
+
+#define OBCW (nGpysfmtdl>>16)   // out-of-bounds value, ~(#stored cw-1) = -(#stored cw-1)-1 = -#storedcw
+#define CNSTOREDCW (nGpysfmtdl>>16)  // negative of # stored CWs, used for indexing components
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
 // line-> box 0 - tokens; x->box 1 - A block for control words; n (in flag word)=#control words; cw->array of control-word data, a CW struct for each
-#define LINE(sv)       {A x; \
-                        hv=AAV(sv->fgh[2])+4*((nGpysfmtdl>>6)&1);  \
-                        line=AAV(hv[0]); x=hv[1]; nGpysfmtdl&=65535; nGpysfmtdl|=(AN(x)<<16); cw=(CW*)AV(x);}
+// obsolete #define LINE(sv)       {A x; \
+// obsolete                         hv=AAV(sv->fgh[2])+4*((nGpysfmtdl>>6)&1);  \
+// obsolete                         line=AAV(hv[0]); x=hv[1]; nGpysfmtdl&=65535; nGpysfmtdl|=(AN(x)<<16); cw=(CW*)AV(x);}
+#define LINE(sv) {A x=AAV(sv->fgh[2])[HN*((nGpysfmtdl>>6)&1)+0]; cwsent=CWBASE(x);  nGpysfmtdl&=65535; nGpysfmtdl|=-(CWNC(x)<<16);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 // If the sentence fails, we go into debug mode and don't return until the user releases us
 #if NAMETRACK
 #define SETTRACK mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN+' '); wx=0; \
- wlen=sprintf(trackinfo,"%d: ",cw[i].source); wx+=wlen; trackinfo[wx++]=' '; \
+ wlen=sprintf(trackinfo,"%d: ",CWSOURCE(cwsent,CNSTOREDCW,ic)); wx+=wlen; trackinfo[wx++]=' '; \
  AK(trackbox)=(C*)queue-(C*)trackbox; AN(trackbox)=AS(trackbox)[0]=m; trackstg=unparse(trackbox); \
  wlen=AN(trackstg); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(trackstg),wlen); wx+=wlen; \
  trackinfo[wx]=0;  // null-terminate the info
@@ -53,28 +57,28 @@
 #define PUSHTRYSTK ((jt->uflags.trace&TRACEDB)|((jt->emsgstate&EMSGSTATETRAPPING)>>(EMSGSTATETRAPPINGX-TRACEPMX)))  // value to save before a push
 #define POPTRYSTK(v) {jt->uflags.trace=(jt->uflags.trace&~TRACEDB)|((v)&TRACEDB); jt->emsgstate=(jt->emsgstate&~EMSGSTATETRAPPING)|(((v)<<(EMSGSTATETRAPPINGX-TRACEPMX))&EMSGSTATETRAPPING);}   // restore value saved before push
 #define POPIFTRYSTK if(unlikely(nGpysfmtdl&4)){--tdv; POPTRYSTK(tdv->trap) if(likely(tdv->ndx==0))nGpysfmtdl&=~4;}  // pop within try. stack; if pop to empty, clear flag
-#define NOUNERR(t,ti) \
+#define NOUNERR(t,tic,ob)  /* if ob set, check out of bounds & change ic */ \
     /* Signal post-exec error*/ \
-    {t=pee(line,&cw[ti],EVNONNOUN,nGpysfmtdl<<(BW-2),jt->sitop->dclnk); \
+    {t=pee(cwsent,CWTCESX2(cwsent,tic),EVNONNOUN,nGpysfmtdl<<(BW-2),jt->sitop->dclnk); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i=cw[ti].go; if(unlikely(i<SMAX)){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0; \
+    if(ob){ic=CWGO(cwsent,CNSTOREDCW,tic); IFNOTOB(unlikely){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;} \
     goto nextline;}
-
-#define CHECKNOUN if (unlikely(!(NOUN&AT(t))))NOUNERR(t,ti)   /* error, T block not creating noun */ \
+#define CHECKNOUN(ob) if (unlikely(!(NOUN&AT(t))))NOUNERR(t,tic,ob)   /* error, T block not creating noun */ \
 
 // obsolete  I m=(cwgroup>>16)&0xffff;
 
 // run one line.  If we see break request, accept it as ATTN but promote it to BREAK in other cores if debug off
 // if debug mode/perfmon, call parsex which will check for stops and go into suspension on error; turn off debug mode if user clears it
 // Check for non-noun, but not if this is a modifier and the input to the next sentence (=this result) may make it to the function result
-#define parseline(z,lbl) {S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&line[cwgroup&TCESXSXMSK]; I m=(cw[i+1].tcesx-cwgroup)&TCESXSXMSK; \
+// We refetch cwgroup to have this cw and the next
+#define parseline(z,lbl) {cwgroup=CWTCESX2(cwsent,ic); S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(cwgroup>>32)&TCESXSXMSK]; I m=(cwgroup-(cwgroup>>32))&TCESXSXMSK; \
  SETTRACK \
- if(likely(!(attnval+(nGpysfmtdl&128+16))))z=parsea(queue,m);else {if(jt->sitop)jt->sitop->dclnk->dcix=i; z=parsex(queue,m,cw+i,(nGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))nGpysfmtdl&=~2;} \
- if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(nGpysfmtdl&8)||(cw[i+1].tcesx&TCESXCECANT)) \
-   if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,i); \
+ if(likely(!(attnval+(nGpysfmtdl&128+16))))z=parsea(queue,m);else {if(jt->sitop)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(nGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))nGpysfmtdl&=~2;} \
+ if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(nGpysfmtdl&8)||(cwgroup&TCESXCECANT)) \
+   if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,ic,0); \
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
-// obsolete  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(nGpysfmtdl>>16)&&cw[i+1].tcesx&TCESXCECANT))
+// obsolete  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(CNSTOREDCW)&&cw[i+1].tcesx&TCESXCECANT))
 
 // for./select. control structure
 typedef struct CDATA {
@@ -88,15 +92,15 @@ typedef struct CDATA {
  I4 w; // cw code for the structure
  LX itemsym;  // symbol number of xyz, 0 for for. or select.
  LX indexsym;  // symbol number of xyz_index, 0 for for. or select.
- US i;  // cw index of the start of the structure
- US go;  // cw index of the end. of the structure
+ S i;  // ~cw index of the start of the structure
+ S go;  // ~cw index of the end. of the structure
 } CDATA;
 
-typedef struct{I4 b,e;C ndx; C trap;} TD;  // cw#s of try., end.; index of entry; emsgstate flag for trapping
+typedef struct{I4 b,e;C ndx; C trap;} TD;  // ~cw#s of try., end.; index of entry; emsgstate flag for trapping
 #define NTD            17     /* maximum nesting for try/catch */
 
 // called from for. or select. to start filling in the entry
-static B forinitnames(J jt,CDATA*cv,I cwtype,A line,I i, I go){
+static B forinitnames(J jt,CDATA*cv,I cwtype,A line,I i, I go){  // i and go are ~cw#s
  cv->j=-1;                               /* iteration index     */
  cv->t=0;  // init no selector value/iterator list
  cv->w=cwtype;  // remember type of control struct
@@ -186,15 +190,15 @@ static A swapitervbl(J jt,A old,A *valloc){
 // tdv points to the try stack or 0 if none; tdv is NEXT try. slot to fill; i is goto line number
 // if there is a try stack, pop its stack frames if they don't include the line number of the goto
 // result is new value for tdv
-// This is called only if we have a stack
+// This is called only if we have a stack  All line numbers are complements.
 static TD *trypopgoto(J jt, TD* tdv, I dest){
- NOUNROLL while(tdv->ndx&&!BETWEENC(dest,tdv[-1].b,tdv[-1].e)){--tdv; POPTRYSTK(tdv[0].trap)}  // discard stack frame if structure does not include dest
+ NOUNROLL while(tdv->ndx&&!BETWEENC(~dest,~tdv[-1].b,~tdv[-1].e)){--tdv; POPTRYSTK(tdv[0].trap)}  // discard stack frame if structure does not include dest
  R tdv;
 }
 
-// pop for/select frames that don't include i.  assignvirt is passed on to unstackcv
+// pop for/select frames that don't include i.  assignvirt is passed on to unstackcv.  All line numbers are complements.
 static CDATA* forpopgoto(J jt, CDATA *cv, I i, I assignvirt){
- while(cv){if(BETWEENC(i,cv->i,cv->go))break; cv=unstackcv(cv,assignvirt);}  // process the for/select stack.  If we branch out of a structure, pop it
+ while(cv){if(BETWEENC(~i,~cv->i,~cv->go))break; cv=unstackcv(cv,assignvirt);}  // process the for/select stack.  If we branch out of a structure, pop it
  R cv;
 }
 
@@ -215,19 +219,23 @@ static I debugnewi(I i, DC thisframe, A self){
    siparent->dcix=i;  // notify the debugger of the line we are on, in case we stop  
   }
  }
+ if(i<0)i=CWMAX;  // convert out-of-bounds to positive ob
  R i;  // return the current line, possibly modified
 }
 
+#define IFOB(likelihood) if(likelihood(ic<=OBCW))  // true if i has gone off the end of the defn)
+#define IFNOTOB(likelihood) if(likelihood(ic>OBCW))  // true if i has not gone off the end of the defn)
 // Processing of explicit definitions, line by line.  Bivalent, called as y vb vb or x y vb.  If JTXDEFMODIFIER is set,
 // it's a modifier, called as u adv adv or u v conj
 DF2(jtxdefn){
  V *sv=FAV(self); I sflg=sv->flag;   // pointer to definition, and flags therefrom
  F2PREFIP;PROLOG(0048);
  ARGCHK2(a,w);
- A *line;   // pointer to the words of the definition.  Filled in by LINE
- CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
- UI nGpysfmtdl;  // flags: 1=locked 2=debug set(& not locked) 4=tdv->ndx!=0 8 unused 16=(parser frame allocated) 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
-             // 64=call is dyadic 128=pm is running    0xff00=(flags byte: mostly debug, but bit 1 from trapping)   0xffff0000=#cws in the definition
+ A *cwsent;   // Base pointer, to both the cw data (going down) and the sentence words (going up)  Filled in by LINE
+// obsolete  A *line;   // pointer to the words of the definition.  Filled in by LINE
+// obsolete CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
+ I nGpysfmtdl;  // flags: 1=locked 2=debug set(& not locked) 4=tdv->ndx!=0 8 unused 16=(parser frame allocated) 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
+             // 64=call is dyadic 128=pm is running    0xff00=(flags byte: mostly debug, but bit 1 from trapping)   >>16=-(#cws in the definition including sentinel)=~#cws
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale
@@ -242,7 +250,7 @@ DF2(jtxdefn){
  A locsym;  // local symbol table to use
 
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
- A *hv;  // will hold pointer to the precompiled parts
+// obsolete  A *hv;  // will hold pointer to the precompiled parts
  A u,v;  // pointers to args
  {  // for name scope only
   nGpysfmtdl=w!=self?64:0;  // set if dyad, i. e. dyadic verb or any conjunction
@@ -261,7 +269,7 @@ DF2(jtxdefn){
 
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
-  locsym=hv[3];  // fetch pointer to preallocated symbol table
+  locsym=AAV(sv->fgh[2])[HN*((nGpysfmtdl>>6)&1)+3];  // fetch pointer to preallocated symbol table
   ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){nGpysfmtdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
@@ -328,18 +336,25 @@ DF2(jtxdefn){
  A *old=jt->tnextpushp;
 
  // loop over each sentence
- I i=0;  // control-word number of the executing line
+ I ic=~0;  // one's comp of control-word number of the executing line
  A t=0;  // last T-block result
- I4 bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error - can force to memory
- I4 ti;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
- while(1){
+ I4 bic;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error - can force to memory
+ I4 tic;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
+ UI8 cwgroup;  // combined line#/flags/type for cw being executed - sometimes with the next line's too
+
+ while(1){  // we NEVER loop back; we always branch to one of the start points
   // **************** top of main dispatch loop ********************
   // Inside the loop we must use BZ and BASSERT or continue for errors; these will break out of the loop and run the ending code
   // i holds the control-word number of the current control word
+nextlinecond:;  // here to suppress the fetch of cwgroup if out of bounds
+  IFOB()goto nextlinecwgroup;
+nextline:;  // here to look at next line, whose cw number is ic (which must be valid)
+  cwgroup=CWTCESX(cwsent,ic);  // fetch info for the next line
+nextlinecwgroup:;   // here when we have the next cwgroup already loaded, possibly with high-order garbage; OR if ic is out of bounds
   // Check for debug and other modes
   if(unlikely(jt->uflags.trace)){  // fast check to see if we have overhead functions to perform
    // here to handle debug jump, perf monitor, or any other unusual cases
-   if(!(nGpysfmtdl&(1))&&jt->recurstate<RECSTATEPROMPT){  // only if not locked and not recursive
+   if(!(nGpysfmtdl&1)&&jt->recurstate<RECSTATEPROMPT){  // only if not locked and not recursive
     if(unlikely(!(nGpysfmtdl&16))){  // if we have never allocated debug stack
      // if debug/perfmon is set, or has ever been set while this defn is running, there are 2 stack frames available: top of stack is a PARSE frame used for requesting line changes & ? else, and the
      // frame below the top is a DCCALL type which will hold debug info.  If the caller was unquote, it will have opened a CALL for the name, which can reuse (once)
@@ -354,21 +369,21 @@ DF2(jtxdefn){
       lvl=self!=callframe->dcf; lvl=callframe->dcc!=0?2:lvl;  // calculate name decoration according to table above
      }
      if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember.  lvl init to 0 for other cases
-     callframe->dcloc=locsym; callframe->dcc=hv[1];  // install info about the exec for use in debug
+     callframe->dcloc=locsym; callframe->dcc=AAV(sv->fgh[2])[HN*((nGpysfmtdl>>6)&1)];  // install info about the exec for use in debug
 
      // always allocate the parse frame
      DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame
      if(unlikely(thisframe==0)){if(lvl!=0)debz(); BZ(0);}  // if failure, remove first deba by hand
      nGpysfmtdl|=16;  // indicate we have a debug frame
      old=jt->tnextpushp;  // protect the stack frame against free
-     if(iotavec[-IOTAVECBEGIN]){forcetomemory(&tdv); forcetomemory(&cv); forcetomemory(&bi); forcetomemory(&ti);}  // force little-used names to memory
+     if(iotavec[-IOTAVECBEGIN]){forcetomemory(&tdv); forcetomemory(&cv); forcetomemory(&bic); forcetomemory(&tic);}  // force little-used names to memory
     }
 
     if(jt->uflags.trace&TRACEDB){   // if debug is on, or coming on
      nGpysfmtdl|=2;  // if this is coming from debug, indicate debug mode
-     i=debugnewi(i,jt->sitop,self);  // get possibly-changed execution line
+     ic=~debugnewi(~ic,jt->sitop,self);  // get possibly-changed execution line#
     }
-    if((UI)i>=(UI)(nGpysfmtdl>>16))goto bodyend;  // if defn is exiting, avoid a PM record for an invalid line
+    IFOB() goto bodyend;  // if defn is exiting, avoid a PM record for an invalid line
 
     // if performance monitor is on, collect data for it
     if((jt->uflags.trace&TRACEPM)&&C1==((PM0*)CAV1(JT(jt,pma)))->rec){
@@ -376,7 +391,7 @@ DF2(jtxdefn){
      // If the most recent stack entry before this entity started is a CALL, that is the name to use (it may have been extracted from an anonymous operator).
      // Otherwise, the call is truly anonymous and we use a name of ''
      nGpysfmtdl|=128;  // indicate pm running so we flag calls to parser
-     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,jt->global?LOCNAME(jt->global):0,i,nGpysfmtdl&64?VAL2:VAL1);  // scaf should use lev to add >>
+     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,jt->global?LOCNAME(jt->global):0,~ic,nGpysfmtdl&64?VAL2:VAL1);  // scaf should use lev to add >>
     }
 
     // If the executing verb was reloaded during debug, switch over to the modified definition
@@ -384,92 +399,99 @@ DF2(jtxdefn){
     if(nGpysfmtdl&16){
       if(jt->sitop->dcredef&&(siparent=jt->sitop->dclnk)&&siparent->dctype==DCCALL&&siparent->dcc!=0&&siparent->dcnmlev==0&&self!=siparent->dcf){A *hv;  // must be DCCALL; dcc not0 and lvl 0 means direct call
        // the top-of-stack (a PARSE entry) indicates redefined, and it is a direct named call to here
-       self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];  // LINE sets pointers for subsequent line lookups
+       self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=AAV(sv->fgh[2])[4*((nGpysfmtdl>>6)&1)];  // LINE sets pointers for subsequent line lookups
        // Clear all local bucket info in the definition, since it doesn't match the symbol table now
        // This will affect the current definition and all pyx executions of this definition.  We allow it because
        // it's for debug only.  The symbol table itself persists
-       DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
+       A *base=CWBASE(AAV(sv->fgh[2])[HN*((nGpysfmtdl>>6)&1)]);
+// obsolete        DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
+       DO(AN(AAV(sv->fgh[2])[HN*((nGpysfmtdl>>6)&1)]),A l=CWTCESX(base,~i); if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
       }
      jt->sitop->dcredef=0;
     }
    }
+   cwgroup=CWTCESX(cwsent,ic);  // since i may have been updated - not to mention the defn - refetch the line info
   }  // end of overhead for debug/pm
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
-  if(unlikely((UI)i>=(UI)(nGpysfmtdl>>16)))goto bodyend;  // normal exit at end of definition
+  IFOB(unlikely)goto bodyend;  // normal exit at end of definition
   // process the control word according to its type
-  I cwgroup;  // combined line#/flags/type for cw being executed
   // **************** switch by line type ********************
-  switch((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
+  switch((((cwgroup)>>TCESXTYPEX)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
 
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
+  // if there is nothing but if./while/end. the switch will predict to the BBLOCK
   case CBBLOCK: case CBBLOCKEND:  // placed first because likely case for unpredicted first line of definition
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
-   tpop(old); parseline(z,lbl1);
+   tpop(old); parseline(z,lbl1);  // sets cwgroup to thisline/nextline
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
-   if(likely(z!=0)){bi=i; i+=(cwgroup>>(TCESXTYPEX+5))+1;  // go to next sentence, or to the one after that if it's harmless end. 
-    if(unlikely((UI)i>=(UI)(nGpysfmtdl>>16)))goto nextline;  // end of definition.  Would be nice to go straight to bodyend but we have to check for ss stop after this line
-    if(!(((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace))goto dobblock;  // avoid indirect-branch overhead on the likely case of another B block
-    goto nextline;  // not another B block, redispatch
+   if(likely(z!=0)){bic=ic; ic-=(cwgroup>>(32+TCESXTYPEX+5))+1;  // go to next sentence, or to the one after that if it's harmless end. 
+    IFOB(unlikely)goto nextlinecwgroup;  // end of definition.  Would be nice to go straight to bodyend but we have to check for ss stop after this line
+// obsolete     if(!(((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace))goto dobblock;  // avoid indirect-branch overhead on the likely case of another B block
+// obsolete (((cwgroup>>TCESXTYPEX)^CBBLOCK)&0x1f
+    if(!(((cwgroup&(0x1f<<TCESXTYPEX))^((CBBLOCK&0x1f)<<TCESXTYPEX))|jt->uflags.trace))goto dobblock;  // if NSI is BBLOCK[END] (likely), process fast.  If this is BBLOCKEND, NSI will be END and we will fetch at the next BBLOCK
+    goto nextline;  // not another B block, redispatch.  If we are on BBLOCKEND this will skip the end. but will redispatch when we could refetch & branch.
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
    // *** the rest is error cases
-   }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; goto nextline;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+   }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){ic=-65536; goto nextlinecwgroup;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
    }else if(unlikely((nGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-    z=mtm,bi=i,i=debugnewi(i+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+    z=mtm,bic=ic,ic=~debugnewi(~ic+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    }else if(unlikely(jt->jerr==EVTHROW)){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    if(nGpysfmtdl&4){I j; for(j=cw[tdv[-1].b].go;(cw[j].tcesx>>TCESXTYPEX)!=CEND;j=cw[j].go)if((cw[j].tcesx>>TCESXTYPEX)==CCATCHT){i=j+1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // z might not be protected if we hit error
+    if(nGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);(CWTCESX(cwsent,j)>>TCESXTYPEX)!=CEND;j=CWGO(cwsent,CNSTOREDCW,j))if((CWTCESX(cwsent,j)>>TCESXTYPEX)==CCATCHT){ic=j-1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // z might not be protected if we hit error
    // for other error, go to the error location; if that's out of range, keep the error; if not,
    // it must be a try. block, so clear the error (and if the error is ATTN/BREAK, clear the source of the error).
    //  Pop the try. stack, and restore debug\trapping status
    // was when the try. was encountered
-   }else{bi=i; i=cw[i].go; if(i<SMAX){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}  // Nondebug error.  If caught, we continue: make z valid then.  Pop try. stack always, for. stack if needed
+   }else{bic=ic; ic=CWGO(cwsent,CNSTOREDCW,ic); IFNOTOB(){if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}  // Nondebug error.  If caught, we continue: make z valid then.  Pop try. stack always, for. stack if needed
    }
-   goto nextline;
+   goto nextlinecond;
 
   case CIF: case CWHILE:
      // in a long run of only if./while. and B blocks, the only switches executed will go to the if. processor, predictably
-   ++i;  // always step to first line of tblock, which must be in range
+   --ic;  // always step to first line of tblock, which must be in range
 // obsolete    i=cw[i].go;  // Point to the next sentence, whatever it is
-// obsolete    if(unlikely((UI)i>=(UI)(nGpysfmtdl>>16)))goto nextline;  // no fallthrough if line exits
-   if(unlikely((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)^CTBLOCK)|jt->uflags.trace))goto nextline;  // redispatch if next is not tblock
+// obsolete    if(unlikely((UI)i>=(UI)(CNSTOREDCW)))goto nextline;  // no fallthrough if line exits
+expecttblock:;  // here after select./for. which expect to see a tblock and must not be out of bounds
+   if(unlikely((((cwgroup=CWTCESX(cwsent,ic))&(0x1f<<TCESXTYPEX))^((CTBLOCK&0x1f)<<TCESXTYPEX))|jt->uflags.trace))goto nextlinecwgroup;  // redispatch if next is not tblock
    // fall through to...
 
   case CASSERT: case CTBLOCK:
-tblockcase:
+// obsolete tblockcase:
    // execute and parse line as if for B block, except save the result in t
    // If there is a possibility that the previous B result may become the result of this definition,
    // protect it during the frees during the T block.  Otherwise, just free memory
    if(likely(cwgroup&TCESXCECANT))tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-   if(unlikely((cwgroup>>TCESXTYPEX)==CASSERT)){
+   if(unlikely((cwgroup&(0x1f<<TCESXTYPEX))==((CASSERT&0x1f)<<TCESXTYPEX))){
     if(JT(jt,assert)){
-     parseline(t,lbl2); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
+     parseline(t,lbl2); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,nGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
      if(likely(t!=0)){  // assert without error
       t=mtv;  // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while.  So we use a safe permanent value, mtv.  
-      if(unlikely((UI)i+1>=(UI)(nGpysfmtdl>>16))){++i; goto nextline;}  // The only way a T-block can run off the end is from an assert
+      --ic; IFOB(unlikely)goto nextlinecwgroup; ++ic;  //  // The only way a T-block can run off the end is from an assert.  Check for that
      }
-    }else{++i; goto nextline;}  // if ignored assert, go to NSI
-   }else{parseline(t,lbl3);} // no assert: run the line
+    }else{--ic; goto nextlinecond;}  // if ignored assert, go to NSI
+   }else{parseline(t,lbl3);} // no assert: run the line  // resets cwgroup to thisline/nextline
    // this is return point from running the line
-   if(likely(t!=0)){ti=i,++i;  // if no error, continue on.  ++i must be in bounds for a non-assert T block (there must be another control word)
-// obsolete     if(unlikely((UI)i>=(UI)(nGpysfmtdl>>16))){ i=i&0xffff; goto nextline;} // scaf  // exit if end of defn  scaf impossible! tblock cannot end fn
-    if(unlikely((((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)^CDO))|jt->uflags.trace)!=0))goto nextline;   // next line not do.; T block extended to more than 1 line (rare)
+   if(likely(t!=0)){tic=ic,--ic;  // if no error, continue on.  ++i must be in bounds for a non-assert T block (there must be another control word)
+// obsolete     if(unlikely((UI)i>=(UI)(CNSTOREDCW))){ i=i&0xffff; goto nextline;} // scaf  // exit if end of defn  scaf impossible! tblock cannot end fn
+// obsolete     if(unlikely((((((cwgroup=CWTCESX(cwsent,i))>>TCESXTYPEX)^CDO))|jt->uflags.trace)!=0))goto nextline;   // next line not do.; T block extended to more than 1 line (rare)
+    if(unlikely(((cwgroup&(0x1f<<TCESXTYPEX))^((CDO&0x1f)<<TCESXTYPEX))|jt->uflags.trace))goto nextlinecwgroup;   // next line not do.; T block extended to more than 1 line (rare).
    }else{
     // *** the rest is error cases
-    if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){i=-1; goto nextline;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
+    if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){ic=-65536; goto nextlinecwgroup;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
     }else if(unlikely((nGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
      if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-     z=mtm,bi=i,i=debugnewi(i+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-    }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfmtdl&4){I j; for(j=cw[tdv[-1].b].go;(cw[j].tcesx>>TCESXTYPEX)!=CEND;j=cw[j].go)if((cw[j].tcesx>>TCESXTYPEX)==CCATCHT){i=j+1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
-    }else{bi=i; i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; cv=forpopgoto(jt,cv,i,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
+     z=mtm,bic=ic,ic=~debugnewi(~ic,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+    }else if(unlikely(EVTHROW==jt->jerr)){if(nGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);(CWTCESX(cwsent,j)>>TCESXTYPEX)!=CEND;j=CWGO(cwsent,CNSTOREDCW,j))if((CWTCESX(cwsent,j)>>TCESXTYPEX)==CCATCHT){ic=j-1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
+    }else{bic=ic; ic=CWGO(cwsent,CNSTOREDCW,ic); IFNOTOB(){RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.
-    goto nextline;
+    goto nextlinecond;
    }
    // normal case falls through to do. ...
 
@@ -477,39 +499,39 @@ tblockcase:
    // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
    // following B block if the condition is false.
   {A tt=t; tt=t?t:mtv; t=0;  // missing t looks like '' which is true; clear t to start NEXT tblock empty
-   ++i;   //  Start by assuming condition is true; set to move to the next line then
+   --ic;   //  Start by assuming condition is true; set to move to the next line then
    // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types and BOX cause it's free (they are always true)
    if(unlikely(AN(tt)==0))goto safedo;  // nonexistent or empty t can fall through without checking for end
    if((-(AT(tt)&(B01|LIT|INT|INT2|INT4|FL|CMPX|QP|C2T|C4T|BOX))&-((I)CAV(tt)[0]))<0)goto safedo;  // C cond is true if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
     // here the type is indirect or the low byte is 0.  We must compare more
-   I nexti=cw[i-1].go;  // next inst if false
+   I nextic=CWGO(cwsent,CNSTOREDCW,ic+1);  // next inst if false
    while(1){  // 2 loops if sparse
-    if(likely(AT(tt)&INT+B01)){i=BIV0(tt)?i:nexti; break;} // INT and B01 are most common
-    if(AT(tt)&FL){i=DAV(tt)[0]?i:nexti; break;}
-    if(AT(tt)&INT2){i=I2AV(tt)[0]?i:nexti; break;}
-    if(AT(tt)&INT4){i=I4AV(tt)[0]?i:nexti; break;}
-    if(AT(tt)&CMPX){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
-    if(AT(tt)&(RAT|XNUM)){i=!ISX0(XAV(tt)[0])?i:nexti; break;}
-    if(AT(tt)&QP){i=EAV(tt)[0].hi?i:nexti; break;}
-    if(!(AT(tt)&NOUN)){NOUNERR(tt,ti)}  // will take error exit
+    if(likely(AT(tt)&INT+B01)){ic=BIV0(tt)?ic:nextic; break;} // INT and B01 are most common
+    if(AT(tt)&FL){ic=DAV(tt)[0]?ic:nextic; break;}
+    if(AT(tt)&INT2){ic=I2AV(tt)[0]?ic:nextic; break;}
+    if(AT(tt)&INT4){ic=I4AV(tt)[0]?ic:nextic; break;}
+    if(AT(tt)&CMPX){ic=DAV(tt)[0]||DAV(tt)[1]?ic:nextic; break;}
+    if(AT(tt)&(RAT|XNUM)){ic=!ISX0(XAV(tt)[0])?ic:nextic; break;}
+    if(AT(tt)&QP){ic=EAV(tt)[0].hi?ic:nextic; break;}
+    if(!(AT(tt)&NOUN)){NOUNERR(tt,tic,1)}  // will take error exit
     if(!ISSPARSE(AT(tt)))break;     // nonnumeric types (BOX, char) test true: i is set for that
     BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
    }
- elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  i is set
-   if(unlikely((UI)i>=(UI)(nGpysfmtdl>>16)))goto bodyend;
+ elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  i is set  case./fcase after the first also come here, to branch to end.
+   IFOB(unlikely)goto bodyend;
  safedo:;  // here when we have advanced i but know we didn't go off the end
-   if(likely((((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace)==0))goto dobblock;  // normal case, continue with B processing
-   goto nextline;   // redispatch next line
+   if(unlikely(!((((cwgroup=CWTCESX(cwsent,ic))&(0x1f<<TCESXTYPEX))^((CBBLOCK&0x1f)<<TCESXTYPEX))|jt->uflags.trace)))goto dobblock;  // normal case, continue with B processing
+   goto nextlinecwgroup;   // redispatch next line
   }
 
-  case CELSEIF: i=cw[i].go; goto elseifasdo;  // elseif is like a failing do - skips past end., probably to B
+  case CELSEIF: ic=CWGO(cwsent,CNSTOREDCW,ic); goto elseifasdo;  // elseif is like a failing do - skips past end., probably to B
 
   // ************* The rest of the cases are accessed only by indirect branch or fixed fallthrough ********************
   case CTRY:
    {
     // try.  create a try-stack entry, step to next line
     BASSERT(tdv->ndx<NTD,EVLIMIT); tdv[1].ndx=tdv[0].ndx+1;   // verify not too many frames, and init next frame index
-    I j, isd=0; tdv->b=i; for(j=cw[i].go;(cw[j].tcesx>>TCESXTYPEX)!=CEND;j=cw[j].go)isd|=(cw[j].tcesx>>TCESXTYPEX)==CCATCHD; tdv->e=j;  // fill in begin/end lines, remember if catchd. seen
+    I j, isd=0; tdv->b=ic; for(j=CWGO(cwsent,CNSTOREDCW,ic);(CWTCESX(cwsent,j)>>TCESXTYPEX)!=CEND;j=CWGO(cwsent,CNSTOREDCW,j))isd|=(CWTCESX(cwsent,j)>>TCESXTYPEX)==CCATCHD; tdv->e=j;  // fill in begin/end lines, remember if catchd. seen
     tdv->trap=PUSHTRYSTK;
     // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
     // if debugging is already off, it stays off
@@ -518,7 +540,7 @@ tblockcase:
     jt->emsgstate|=(~jt->uflags.trace&TRACEDB1)<<EMSGSTATETRAPPINGX;  // turn on trapping if not now debug
     // We allow verbose messages in case the catch. wants to display them.  This is different from u :: v
     ++tdv; nGpysfmtdl|=4;  // bump tdv pointer, install index of next entry, set flag
-    ++i;  // continue with NSI
+    --ic;  // continue with NSI
    }
    goto nextline;
   case CCATCH: case CCATCHD: case CCATCHT:
@@ -526,8 +548,8 @@ tblockcase:
    // and catchd., we could take an error to the catch. and then fall through to catchd., or we could branch from the catch. back to the try.; so we have to make sure that the
    // block on the try. stack is for the structure we are in.  Go through the control words of the current try. looking for a match; if found, pop the try block and goto its end+1;
    // otherwise just go to the next catch* in this structure - we'll hit end presently
-   {I ni=cw[i].go; if(likely(nGpysfmtdl&4)){I j; for(j=cw[tdv[-1].b].go;(cw[j].tcesx>>TCESXTYPEX)!=CEND;j=cw[j].go)if(j==i){POPIFTRYSTK ni=tdv->e+1; break;}} i=ni;}
-   goto nextline;
+   {I nic=CWGO(cwsent,CNSTOREDCW,ic); if(likely(nGpysfmtdl&4)){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);(CWTCESX(cwsent,j)>>TCESXTYPEX)!=CEND;j=CWGO(cwsent,CNSTOREDCW,j))if(j==ic){POPIFTRYSTK nic=tdv->e-1; break;}} ic=nic;}
+   goto nextlinecond;
   case CTHROW:
    // throw.  Create a throw error
    BASSERT(0,EVTHROW);
@@ -542,14 +564,14 @@ tblockcase:
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
    } 
-   BZ(forinitnames(jt,cv,cwgroup>>TCESXTYPEX,line[cwgroup&TCESXSXMSK],i,cw[i].go));  // setup the names and start/end line#s, before we see the iteration value
-   ++i;
-   goto nextline;
+   BZ(forinitnames(jt,cv,(cwgroup>>TCESXTYPEX)&0x3f,cwsent[cwgroup&TCESXSXMSK],ic,CWGO(cwsent,CNSTOREDCW,ic)));  // setup the names and start/end line#s, before we see the iteration value
+   --ic;
+   goto expecttblock;
   case CDOF:   // do. after for.
    // do. after for. .  If this is first time, initialize the iterator
    if(unlikely(cv->j<0)){
     BASSERT(t!=0,EVEMPTYT);   // Error if no sentences in T-block
-    CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
+    CHECKNOUN(1)    // if t is not a noun, signal error on the last line executed in the T block
     BZ(forinit(cv,t)); t=0;
    }
    ++cv->j;  // step to first (or next) iteration
@@ -570,67 +592,70 @@ tblockcase:
       A val=itemsym->val; fa(val) val=cv->item; ra(val) itemsym->val=val;
       itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
      }
-     ++i; goto nextline;   // advance to next line and process it
+     --ic; goto nextline;   // advance to next line and process it could predict bblock
     }
     // ending the iteration.  set xyz to i.0
     {A val=itemsym->val; fa(val)}  // discard & free incumbent, probably the virtual block.  If the virtual block, this is never the final free, which comes in unstackcv
     itemsym->val=mtv;  // after last iteration, set xyz to mtv, which is permanent
     itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
-   }else if(likely(cv->j<cv->niter)){++i; goto nextline;}  // advance to next line and process it
+   }else if(likely(cv->j<cv->niter)){--ic; goto nextline;}  // (no for_xyz.) advance to next line and process it could predict bblock
    // if there are no more iterations, fall through...
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    // (scaf this is no longer needed since names are not deleted but the result case is rare)
    if(unlikely(!(cwgroup&TCESXCECANT)))BZ(z=rat(z)); cv=unstackcv(cv,1);
-   i=cw[i].go;    // continue at new location
-   goto nextline;
+   ic=CWGO(cwsent,CNSTOREDCW,ic);    // continue at new location
+   goto nextlinecond;
   case CCASE:
   case CFCASE:
-   // case. and fcase. start a selection.  t has the result of the T block; we check to
-   // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
+   // The first case./fcase. start a selection; subsequent ones are executed only to end the selected case.
+   ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to next sentence, which might be after end., or (for the first case.), the test
    if(!cv->t){
-    // This is the first case.  That means the t block has the select. value.  Save it.
+    // This is the first case.  That means the t block has the select. value.  Save it in cv->t
     BASSERT(t!=0,EVEMPTYT);  // error if select. case.
-    CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
+    CHECKNOUN(1)    // if t is not a noun, signal error on the last line executed in the select T block
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
+    goto expecttblock;  // expect tblock after first case.
    }
-   i=cw[i].go;  // Go to next sentence, which might be in the default case (if T block is empty)
-   if(likely((UI)i<(UI)(nGpysfmtdl>>16)))if(likely(!((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)^CTBLOCK)|jt->uflags.trace)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
-   goto nextline;  // if it's not a t-block, take the indirect branch
+   goto elseifasdo;  // case. after the first marks the end of a do. block and is like elseif
+// obsolete    IFNOTOB(likely)if(likely(!((((cwgroup=CWTCESX(cwsent,ic))>>TCESXTYPEX)^CTBLOCK)|jt->uflags.trace)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
    // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
-   ++i;  // go to NSI if case tests true
+   --ic;  // go to NSI if case tests true
    if(t){    // if t is not a noun, signal error on the last line executed in the T block
-    CHECKNOUN
+    CHECKNOUN(1)
     if(!((AT(t)|AT(cv->t))&BOX)){
      // if neither t nor cv is boxed, just compare for equality.  Boxed empty goes through the other path
-     if(!equ(t,cv->t))i=cw[i-1].go;  // should perhaps take the scalar case specially & send it through singleton code
+     if(!equ(t,cv->t))ic=CWGO(cwsent,CNSTOREDCW,ic+1);  // should perhaps take the scalar case specially & send it through singleton code
     }else{
-     if(all0(eps(boxopen(cv->t),boxopen(t))))i=cw[i-1].go;  // if case tests false, jump around bblock   test is cv +./@:,@:e. boxopen t
+     if(all0(eps(boxopen(cv->t),boxopen(t))))ic=CWGO(cwsent,CNSTOREDCW,ic+1);  // if case tests false, jump around bblock   test is cv +./@:,@:e. boxopen t
     }
     // Clear t to ensure that the next case./fcase. does not reuse this value
     t=0;
    }
-   if(likely((UI)i<(UI)(nGpysfmtdl>>16)))if(likely(!(((((cwgroup=cw[i].tcesx)>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
-   goto nextline;
+   // the probable next instruction is the bblock if the test was true or the next tblock if the test was false.  No prediction
+// obsolete    IFNOTOB(likely)
+// obsolete    if(likely(!(((((cwgroup=CWTCESX(cwsent,ic))>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
+   goto nextlinecond;
     
   case CGOTO: case CBREAKS: case CCONTS: case CBREAK: case CCONT: case CBREAKF: case CRETURN: // goto_label. or any break/continue/return.  Close any structures we branch out of
-   i=cw[i].go;  // Go to the next sentence, whatever it is
+   ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to the next sentence, whatever it is
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(cwgroup&TCESXCECANT)))BZ(z=rat(z));   // protect possible result from pop
-   cv=forpopgoto(jt,cv,i,1);   // if the branch takes us outside a control structure, pop the for/select stack
+   cv=forpopgoto(jt,cv,ic,1);   // if the branch takes us outside a control structure, pop the for/select stack
    // It must also pop the try. stack, if the destination is outside the try.-end. range
-   if(unlikely(nGpysfmtdl&4)){tdv=trypopgoto(jt,tdv,i); nGpysfmtdl^=tdv->ndx?0:4;}
+   if(unlikely(nGpysfmtdl&4)){tdv=trypopgoto(jt,tdv,ic); nGpysfmtdl^=tdv->ndx?0:4;}
    goto checkbreak;   // finish up through BREAK check
   default:   //   CELSE CWHILST CEND
-   i=cw[i].go;  // Go to the next sentence, whatever it is
+   ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to the next sentence, whatever it is
 checkbreak:;
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
+   goto nextlinecond;
+
   }  // end of giant select
- nextline:;  // here to look at next line, whose cw number is i
  }  // end of main loop
 bodyend: ;  // we branch to here to exit with z set to result
  //  z may be 0 here and may become 0 before we exit
@@ -654,10 +679,10 @@ bodyend: ;  // we branch to here to exit with z set to result
    // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
    // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
-  }else {pee(line,&cw[bi],EVNONNOUN,nGpysfmtdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
+  }else {pee(cwsent,CWTCESX2(cwsent,bic),EVNONNOUN,nGpysfmtdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error, or final exit from suspension
-  cv=forpopgoto(jt,cv,-1,1);   // clear the for/select stack
+  cv=forpopgoto(jt,cv,~-1,1);   // clear the for/select stack
   if(unlikely(nGpysfmtdl&4)){trypopgoto(jt,tdv,-1);}  // pop all try structs, restore original debug state
  }
 
@@ -673,7 +698,7 @@ bodyend: ;  // we branch to here to exit with z set to result
  // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
  // We don't do this if jt->jerr is set: that's the special result for comming out of debug; or when WSFULL, since there may be no memory
  if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING)){
-   deba(DCPM+(bi<<8)+(nGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,hv[1],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
+   deba(DCPM+(~bic<<8)+(nGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((nGpysfmtdl>>6)&1)],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
  }
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
@@ -1093,14 +1118,14 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
 }
 
 // cw is control words, sw is sentence words for one valence.  Result is in compiled form, one A block with the data preceded by index info
-static A compileddefn(J jt, A cw, A sw){A z;
+static A compiledefn(J jt, A sw, A cw){A z;
  I nsw=AN(sw); I ncw=AN(cw)+1;  // number of sentence words and control words including the extra word with total len
  I alloamtA=nsw+ncw*(8/sizeof(A));  // number of As needed to hold the sentences plus 8 bytes per cw 
  GATV0(z,BOX,alloamtA,0) AK(z)+= 8*ncw; AN(z)=nsw;  // allo block; point AK past the cw data; AN=# sentence words (for when we free them)
  A * RESTRICT base=CWBASE(z);  // point to start of sent/end+1 of tcesx
  JMC(base,AAV(sw),nsw*sizeof(A),0)  // copy in the sentence words
  CW * RESTRICT cwv=(CW *)voidAV(cw);  // point to control words
- DO(ncw, CWTCESX2(base,~i)=cwv[i].tcesx; CWGO(base,ncw,~i)=cwv[i].go; CWSENT(base,ncw,~i)=cwv[i].source;)  // create the output block
+ DO(ncw, CWTCESX(base,~i)=cwv[i].tcesx; CWGO(base,-ncw,~i)=~cwv[i].go; CWSOURCE(base,-ncw,~i)=cwv[i].source;)  // create the output block
  R z;
 }
 
@@ -1212,7 +1237,8 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
    // Don't bother to create a symbol table for an empty definition, since it is a domain error
    if(AN(hv[hnofst+1])){
     RZ(hv[hnofst+3] = incorp(crelocalsyms(hv[hnofst+0], hv[hnofst+1],n,!!hnofst,flag)));  // words,cws,type,dyad,flag
-    pppp(jt, hv[hnofst+0], hv[hnofst+1]);  // words,cws
+    RZ(pppp(jt, hv[hnofst+0], hv[hnofst+1]));  // words,cws
+    RZ(hv[hnofst+0]=incorp(compiledefn(jt, hv[hnofst+0], hv[hnofst+1]))) hv[hnofst+1]=0;  // join cw and sent together, lose sent
    }
   }while((hnofst+=HN)<=HN);
  }

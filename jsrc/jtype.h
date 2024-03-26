@@ -727,12 +727,13 @@ typedef I SI;
 // tcesx values (NC UI4 values, accessed from the end)
 // words of the sentence, counting up  <-- data pointer is at the beginning of this part
 //
-// macros to access the parts:
+// macros to access the parts: nc is -(#cw+1) = ~#cw
 #define CWBASE(x) AAV(x) // pointer to start of the sentence words
-#define CWNC(x) (AAV(x)-(A*)((I)x+AKXR(0)))  // number of CWs
+#define CWNC(x) (AAV(x)-(A*)((I)x+AKXR(0)))  // number of CWs including the sentinel at the end
+#define CWTCESX(base,ci) (((UI4*)base)[ci]) // UI4 value containing tcesx
 #define CWTCESX2(base,ci) *(UI8 *)((UI4*)base+ci-1) // UI8 value containing low half=tcesx for ~i+1, high half=tcesx for ~i
-#define CWGO(base,nc,ci) ((US*)((UI4*)base-nc))[i] // US value containing go value for ~i
-#define CWSENT(base,nc,ci) ((US*)((UI4*)base-nc))[i-nc] // US value containing original sentence number for ~i
+#define CWGO(base,nc,ci) ((S*)((UI4*)base+(nc)))[ci] // S value containing ~go value for ~i
+#define CWSOURCE(base,nc,ci) ((US*)((UI4*)base+(nc)))[ci+(nc)] // US value containing original sentence number for ~i
 typedef struct {
 UI4 tcesx;  // cw type/canend/number of first word in the line
 #define TCESXTYPEX 26  // top field, 6 bits, is control-word type
@@ -756,7 +757,7 @@ UI4 tcesx;  // cw type/canend/number of first word in the line
 
 /* control word (always has corresponding token string)                             */
 /* type   - as specified in w.h                                            */
-/* go     - line number to go to                                           */
+// go     - line number to go to on error, or the next component of try. or select. struct
 /* source - source line number                                             */
 /* i      - beginning index of token string                                */
 /* n      - length          of token string                                */

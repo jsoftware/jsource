@@ -1262,7 +1262,7 @@ extern void jfree4gmp(void*,size_t);
 #define toutf16x(x)                 jttoutf16x(jt,(x))
 #define tparse(x)                   jttparse(jt,(x))
 #define tpoly(x)                    jttpoly(jt,(x))
-#define tpop(x)                     jttpop(jt,(x))
+#define tpop(x)                     jttpop(jt,(x),jt->tnextpushp)
 // if tg() fails, tpush leaves nextpushx unchanged
 // Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount BUT NOTE: we have ensured that EPILOG always does ra() on z,
 //  which means that the only nonrecursive blocks that are tpush()ed are nonrecursiblw; and those are all sparse.  Thus, we recur on sparse arguments only

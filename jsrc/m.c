@@ -1123,11 +1123,11 @@ void freetstackallo(J jt){
 // return value is pushp
 // If the block has recursive usecount, decrement usecount in children if we free it
 // stats I totalpops=0, nonnullpops=0, frees=0;
-void jttpop(J jt,A *old){A *endingtpushp;
+void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
  // pushp points to an empty cell.  old points to the last cell to be freed.  decrement pushp to point to the cell to free (or to the chain).  decr old to match
  // if jttg failed to allocate a new block, we will have left pushp pointing to the cell after the last valid cell.  This may be in unmapped memory, but
  // that's OK, because we start by decrementing it to point to the last valid push
- A *pushp=jt->tnextpushp;
+// obsolete  A *pushp=jt->tnextpushp;
  // errors that could not be eformatted at once might do tpop on the way out.  We ignore these if there is a pmstack.
  if(unlikely(jt->pmstacktop!=0))R;
  jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping

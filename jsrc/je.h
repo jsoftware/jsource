@@ -937,7 +937,7 @@ extern E        jtefloor(J,E);
 extern I        jtthv(J,A,I,C*);
 extern A        jttoc1(J,B,A);
 extern void     jttoutf8w(J,C*,I,US*);
-extern void       jttpop(J,A*);
+extern void       jttpop(J,A*,A*);
 extern A*       jttpush(J,AD* RESTRICT,I,A*);
 extern B        jttrd(J jt,A w);
 extern A*       jttg(J,A*);

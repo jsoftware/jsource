@@ -448,7 +448,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
     if(unlikely((err=f(jt,ctx,jobns-1))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
    }
    // This block is done.  Since we will need the lock when we go to look for work, we take it now.
-   jttpop(jt,old);  // release any resources used by internal job
+   tpop(old);  // release any resources used by internal job
    JOB *nextjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
    __atomic_fetch_add(&job->internal.nf,1,__ATOMIC_ACQ_REL);    // account that this task has finished; must do atomic to ensure handshake with end-of-job code
    job=nextjob;  // set up for loop
@@ -492,7 +492,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    jtrepatsend(jt); // send our freed blocks back to where they were allocated.  That will include the args just freed
    __atomic_store_n(&JTFORTHREAD(jt,initthread)->uflags.sprepatneeded,1,__ATOMIC_RELEASE);  // signal the originator to repat the freed blocks.  We force this now in case some were virtual and have large backers.  The repat may be delayed a while.
    jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)
-   jttpop(jt,old); // clear anything left on the stack after execution, including z
+   tpop(old); // clear anything left on the stack after execution, including z
    RESETERR  // we had to keep the error till now; remove it for next task
    job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
    --jobq->nuunfin; // mark in the jobq that we have finished the job we were working on
@@ -611,7 +611,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   if(!err){   //  If an error has been signaled, skip over it and immediately mark it finished
    if(unlikely((err=f(jt,ctx,i))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
   }
-  jttpop(jt,old);  // free anything allocated within the task
+  tpop(old);  // free anything allocated within the task
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   ++job->internal.nf;  // we have finished a block - account for it
   i=job->ns; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status

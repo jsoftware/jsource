@@ -398,7 +398,7 @@ static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
  // if there is an immex phrase, protect it during its execution
   A iep=0; if(jt->iepdo){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
   if(iep==0)break;
-  jt->iepdo=0; jtimmexexecct(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) RESETERR jttpop(jt,old);
+  jt->iepdo=0; jtimmexexecct(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) RESETERR jttpop(jt,old,jt->tnextpushp);
  }
 }
 
@@ -411,7 +411,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   if(*lp2){  // nonnull string
    // user responded to error with a new sentence.  Clear the error stack
    DC s=jm->pmstacktop; while(s){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->pmstacktop=0;  // purge symbols & clear stack
-   jttpop(jm,jm->pmttop);  // free all memory allocated in the previous sentence
+   jttpop(jm,jm->pmttop,jm->tnextpushp);  // free all memory allocated in the previous sentence
    jm->pmttop=0;  // clear to avoid another reset
   }else{
    // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order.  ra() the self for each block - necessary in case they are reassigned while on the stack
@@ -460,7 +460,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   jtspfree(jm);  // check for garbage collection
  }
  // free any memory left at the end of the sentence.  BUT if the sentence failed and created a pm stack, defer the free and offer pm debugging
- if(likely(((I)jm->pmstacktop|(I)jm->pmttop)==0))jttpop(jm,old); else{if(jm->pmttop==0)jsto(jt,MTYOER,"Press ENTER to inspect\n"); jm->pmttop=old;}  // free if not new or continuing pm session; message first time through
+ if(likely(((I)jm->pmstacktop|(I)jm->pmttop)==0))jttpop(jm,old,jm->tnextpushp); else{if(jm->pmttop==0)jsto(jt,MTYOER,"Press ENTER to inspect\n"); jm->pmttop=old;}  // free if not new or continuing pm session; message first time through
  R e;
 }
 
@@ -569,7 +569,7 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, sav
  while(JT(jt,nfe)){  // nfe normally loops here forever
   r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));  // use jt to force output in nfeinput
   // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
-  if(likely(jm->pmttop==0))jttpop(jm,old);  // when the stack has been tpopped it is safe for us to resume
+  if(likely(jm->pmttop==0))jttpop(jm,old,jm->tnextpushp);  // when the stack has been tpopped it is safe for us to resume
  }
  R r;
 } 
@@ -606,7 +606,7 @@ CDPROC A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;
   }
  }
  // z has the result, which is in MALLOC memory if it exists.  Free any J memory we used
- jttpop(jm,old);
+ jttpop(jm,old,jm->tnextpushp);
  R z;   // return the allocated (or reused) area
 }
 
@@ -617,7 +617,7 @@ CDPROC I _stdcall JSetA(JS jt,I n,C* name,I dlen,C* d){
  if(!jtvnm(jm,n,name)){jtjsignal(jm,EVILNAME); R EVILNAME;}
  A *old=jm->tnextpushp;
  jtsymbisdel(jm,jtnfs(jm,n,name),jtunbin(jm,jtstr(jm,dlen,d)),jm->global);
- jttpop(jm,old);
+ jttpop(jm,old,jm->tnextpushp);
  R jm->jerr;
 }
 
@@ -712,7 +712,7 @@ CDPROC C* _stdcall JGetLocale(JS jt){
  if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;}  // free old block if any
  C* z=getlocale(jt);  // get address of string to return
  if(JT(jt,iomalloc)=MALLOC(1+strlen(z))){jm->malloctotal += 1+strlen(z); JT(jt,iomalloclen) = 1+strlen(z); strcpy(JT(jt,iomalloc),z); }  // allocate & copy, and account for its space
- jttpop(jm,old);  // free allocated blocks
+ jttpop(jm,old,jm->tnextpushp);  // free allocated blocks
  R JT(jt,iomalloc);  // return pointer to string
 }
 
@@ -951,7 +951,7 @@ CDPROC int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdat
   *jdata = (I)AV(a);
   z=0;  // good return
  }
- jttpop(jm,old);
+ jttpop(jm,old,jm->tnextpushp);
  ZEROUPPER;
  return z;
 }
@@ -1012,7 +1012,7 @@ CDPROC int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdat
 
  A *old=jm->tnextpushp;
  er = setterm(jt, name, jtype, jrank, jshape, jdata);
- jttpop(jm,old);
+ jttpop(jm,old,jm->tnextpushp);
  ZEROUPPER;
  return er;
 }

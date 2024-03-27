@@ -315,8 +315,8 @@ F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
 // obsolete   if(m>=0)mn=1+((CW*)AV(mc))[m-1].source; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
 // obsolete   if(n>=0)dn=1+((CW*)AV(dc))[n-1].source; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
   // if there is a definition (even if there are no control words), set mn to the inferred #source lines
-  if(m>=0)mn=1+CWSOURCE(CWBASE(mc),-CWNC(mc),~(CWNC(mc)-2)); mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
-  if(n>=0)dn=1+CWSOURCE(CWBASE(dc),-CWNC(dc),~(CWNC(dc)-2)); dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
+  if(m>=0)mn=1+CWSOURCE(CWBASE(mc),-CWNC(mc),~(CWNC(mc)-2));else mn=0; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
+  if(n>=0)dn=1+CWSOURCE(CWBASE(dc),-CWNC(dc),~(CWNC(dc)-2));else dn=0; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
   GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV(z);   // allocate the inferred #lines
   RZ(zv=unparse1a(MAX(m,0),hv,   zv)); if(p)RZ(*zv++=chrcolon);
   RZ(zv=unparse1a(MAX(n,0),hv+HN,zv));

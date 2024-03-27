@@ -405,7 +405,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
        // it's for debug only.  The symbol table itself persists
        A *base=CWBASE(AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]);
 // obsolete        DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
-       DO(AN(AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]),A l=CWTCESX(base,~i); if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
+       DO(AN(AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]),A l=base[i]; if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
       }
      jt->sitop->dcredef=0;
     }

@@ -341,7 +341,7 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  if(!(h&&CCOLON==wv->id))R reshape(v2(0L,3L),ds(CACE)); 
  hv=AAV(h);
 // obsolete  x=hv[  j]; v=    AAV(x); 
- x=hv[j]; v=CWBASE(x); n=CWNC(x)-1;
+ x=hv[j]; v=CWBASE(x); n=AR(x)==1?0:CWNC(x)-1;
 // obsolete  x=hv[1+j]; u=(CW*)AV(x); n=AN(x);
  GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;
  zv=AAV(z);

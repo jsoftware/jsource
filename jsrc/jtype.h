@@ -729,7 +729,7 @@ typedef I SI;
 //
 // macros to access the parts: nc is -(#cw+1) = ~#cw
 #define CWBASE(x) AAV(x) // pointer to start of the sentence words
-#define CWNC(x) (AAV(x)-(A*)((I)x+AKXR(0)))  // number of CWs including the sentinel at the end
+#define CWNC(x) ((CAV(x)-(C*)((I)x+AKXR(0)))>>3)  // number of CWs including the sentinel at the end
 #define CWTCESX(base,ci) (((UI4*)base)[ci]) // UI4 value containing tcesx
 #define CWTCESX2(base,ci) *(UI8 *)((UI4*)base+ci-1) // UI8 value containing low half=tcesx for ~i+1, high half=tcesx for ~i
 #define CWGO(base,nc,ci) ((S*)((UI4*)base+(nc)))[ci] // S value containing ~go value for ~i

@@ -418,6 +418,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
   IFOB(unlikely)goto bodyend;  // normal exit at end of definition
   // process the control word according to its type
   // **************** switch by line type ********************
+
   switch((((tcesx)>>TCESXTYPEX)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
 
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.

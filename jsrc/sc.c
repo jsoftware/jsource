@@ -45,10 +45,16 @@ DF2(jtunquote){A z;
     explocale=0;  // flag no explicit locale
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
+#if 0   // obsolete
     fs=0;if(unlikely(AR(jt->locsyms)&ARHASACV))fs=jtprobe(jtx,sx,hashx,jt->locsyms); if(likely(fs==0)){fs=jtsyrd1(jtx,sx,hashx,jt->global);  // Try local (if local has an ACV), then look up the name starting in jt->global
       // this is a pun - probe returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
     }else{raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does.  
     }
+#else
+    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs)); goto deflocal;}}
+    fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
+   deflocal:;
+#endif
    }else{  // locative or u./v.
     if(likely(!(NAV(thisname)->flag&NMIMPLOC))){  // locative
      // see if the locale is cached.  This will help name"n mainly, but also stored xctls like public_z_ =: entry_loc_ where entry_loc will have the locale pointer

@@ -263,7 +263,7 @@ A jtunDD(J jt, A w){F1PREFIP;
 // y is unparse of previous CWs found on the line
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
- switch(t=c->tcesx>>TCESXTYPEX){
+ switch(t=(c->tcesx>>TCESXTYPEX)&31){
   case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
   case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
                               MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
@@ -289,8 +289,10 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A x,y;A *v;I i,j,k;
 // obsolete  y=hv[0]; v=AAV(y);  // v->word 0
 // obsolete  y=hv[1]; u=(CW*)AV(y);  // u is running pointer through control words
  y=0; j=k=-1;
+ UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]
  for(i=0;i<m;++i){  // for each word
-  CW u[2]; u[0].tcesx=CWTCESX(v,~i); u[0].go=~CWGO(v,-n,~i);  u[0].source=CWSOURCE(v,-n,~i); u[1].tcesx=CWTCESX(v,~(i+1));   // create CW to use
+  UI4 tcesx=CWTCESX(v,~i); I newt=tcesx>>TCESXTYPEX; if(prevorigt==CBBLOCKEND&&newt==CBBLOCKEND){newt=CEND; tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX;} prevorigt=newt;  // undo the BBLOCKEND swap
+  CW u[2]; u[0].tcesx=tcesx; u[0].go=~CWGO(v,-n,~i);  u[0].source=CWSOURCE(v,-n,~i); u[1].tcesx=CWTCESX(v,~(i+1));   // create CW to use
   RZ(x=unparse1(u,vec(BOX,(u[1].tcesx-u[0].tcesx)&TCESXSXMSK,&v[u[0].tcesx&TCESXSXMSK]),j,y)); // append new line to y or else return it as x if it is on a new line.
   k=u->source;
   if(j<k){if(y)*zv++=jtunDD(jt,y); DQ(k-j-1, *zv++=mtv;);}  // if we are about to move to a new line, save y and zap the surplus control words on the line to empties
@@ -345,8 +347,10 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
 // obsolete  x=hv[1+j]; u=(CW*)AV(x); n=AN(x);
  GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;
  zv=AAV(z);
+ UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]
  for(i=0;i<n;++i){
-  CW u[2]; u[0].tcesx=CWTCESX(v,~i); u[0].go=~CWGO(v,-(n+1),~i);  u[0].source=CWSOURCE(v,-(n+1),~i); u[1].tcesx=CWTCESX(v,~(i+1));   // create CW to use
+  UI4 tcesx=CWTCESX(v,~i); I newt=tcesx>>TCESXTYPEX; if(prevorigt==CBBLOCKEND&&newt==CBBLOCKEND){newt=CEND; tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX;} prevorigt=newt;  // undo the BBLOCKEND swap
+  CW u[2]; u[0].tcesx=tcesx; u[0].go=~CWGO(v,-(n+1),~i);  u[0].source=CWSOURCE(v,-(n+1),~i); u[1].tcesx=CWTCESX(v,~(i+1));   // create CW to use
   RZ(*zv++=incorp(sc(i)));
   q[0]=u->tcesx>>TCESXTYPEX; q[1]=u->go; q[1]=q[1]>=CWMAX?65535:q[1]; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));  // 65535 for testcases
   RZ(*zv++=incorp(unparse1(u,vec(BOX,(u[1].tcesx-u[0].tcesx)&TCESXSXMSK,&v[u[0].tcesx&TCESXSXMSK]),-1L,0L)));

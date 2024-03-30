@@ -22,7 +22,7 @@ chk=: 4 : 0
  assert. 2 = type&> t
  assert. 1 = #@$&> t
  i=. {.&>c
- assert. i e. 1+i.#ww
+ assert. i e. i. 63
  p=. ((<'for_')=4{.&.>t) +. ((<'goto_')=5{.&.>t) +. (<'label_')=6{.&.>t
  assert. (i e. 1 2 33) ~: (((1+t i.&> '.'){.&.> t) e. 2}.ww) +. p
  assert. (1{&>c) e. i.1+#c

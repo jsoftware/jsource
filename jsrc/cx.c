@@ -71,10 +71,11 @@
 // if debug mode/perfmon, call parsex which will check for stops and go into suspension on error; turn off debug mode if user clears it
 // Check for non-noun, but not if this is a modifier and the input to the next sentence (=this result) may make it to the function result
 // We refetch tcesx to have this cw and the next
-#define parseline(z,popstmt) {tcesx=CWTCESX2(cwsent,ic); if(old!=jt->tnextpushp){popstmt} S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
+// popstmt is used to call tpop if the tpop stack is not empty; asgstmt is issued after the parse, where a variable can be invalidated to prevent it from being saved over calls
+#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); if(old!=jt->tnextpushp){popstmt} S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
  SETTRACK \
  if(likely(!(attnval+(NPGpysfmtdl&128+16))))z=parsea(queue,m);else {if(jt->sitop)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(NPGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))NPGpysfmtdl&=~2;} \
- if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(NPGpysfmtdl&8)||(tcesx&TCESXCECANT)) \
+ {asgstmt} if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(NPGpysfmtdl&8)||(tcesx&TCESXCECANT)) \
    if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,ic,0); \
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
@@ -428,19 +429,20 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
 
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
   // if there is nothing but if./while/end. most of the branches are internal
-  case CBBLOCK: case CBBLOCKEND:  // placed first because likely case for unpredicted first line of definition
+  case CBBLOCK:  // (also BLOCKEND) placed first because likely case for unpredicted first line of definition
+// obsolete  case CBBLOCKEND:
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
 // obsolete    if(old!=jt->tnextpushp)tpop(old);    // we must tpop before every sentence because parse may end with tpushes that would make a block eligible for inplaced assignment.  Test is 1 cycle to save 30
-   parseline(z,tpop(old););  // *** run user's line *** sets tcesx to thisline/nextline
+   parseline(z,tpop(old);,t=0;);  // *** run user's line *** sets tcesx to thisline/nextline; t=0 so t doesn't have to be preserved over subrt calls
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bic=ic; ic-=(tcesx>>(32+TCESXTYPEX+5))+1;  // advance to next sentence to be executed, which is NSI, or NSI+1 if BBLOCKEND
     // the sequence BBLOCKEND BBLOCKEND indicates that the second BBLOCKEND was originally an END that went to NSI which was BBLOCK, i. e. end. for an if./select. followed by BBLOCK.
 // obsolete     if(!(((tcesx&(0x1f<<TCESXTYPEX))^((CBBLOCK&0x1f)<<TCESXTYPEX))|jt->uflags.trace))goto dobblock;  // if NSI is BBLOCK, run it; if we have BBE BBE BB[E], run BB[E] as bblock 
     if(!(TXOR5(tcesx,CBBLOCK)|jt->uflags.trace))goto dobblock;  // if NSI is BBLOCK, run it; if we have BBE BBE BB[E], skip second BBE (which was an END) - even for debug/pm -  and run BB[E] as bblock 
     if(!(TXORTOP5(tcesx,32+(CIF&CWHILE))|jt->uflags.trace)){--ic; goto knowntblock;}  // if NSI is flagged if./while., skip over it, knowing it is followed by tblock. i was always decremented by 1
-    goto nextline;  // not another B block or if./while., redispatch.
+    goto nextline;  // not another B block or if./while., dispatch the next location (which might not be in tcesx)
 // obsolete     IFOB(unlikely)goto nextlinetcesx;  // end of definition.  Would be nice to go straight to bodyend but we have to check for ss stop after this line
 // obsolete     if(!(((((tcesx=cw[i].tcesx)>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace))goto dobblock;  // avoid indirect-branch overhead on the likely case of another B block
 // obsolete (((tcesx>>TCESXTYPEX)^CBBLOCK)&0x1f
@@ -481,13 +483,13 @@ dobblock:
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely(TEQ5(tcesx,CASSERT))){
     if(JT(jt,assert)){
-     parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);}); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
+     parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
      if(likely(t!=0)){  // assert without error
       t=mtv;  // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while.  So we use a safe permanent value, mtv.  
 // obsolete       --ic; IFOB(unlikely)goto nextlinetcesx; ++ic;  //  // The only way a T-block can run off the end is from an assert.  Check for that
      }
     }else{--ic; goto nextline;}  // if ignored assert, go to NSI
-   }else{parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);});} // no assert: run the line  resets tcesx to thisline/nextline
+   }else{parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);} // no assert: run the line  resets tcesx to thisline/nextline
    // this is return point from running the line
    if(likely(t!=0)){tic=ic,--ic;  // if no error, continue on.  ++i must be in bounds for a non-assert T block (there must be another control word)
 // obsolete     if(unlikely((UI)i>=(UI)(CNSTOREDCW))){ i=i&0xffff; goto nextline;} // scaf  // exit if end of defn  scaf impossible! tblock cannot end fn
@@ -532,7 +534,7 @@ dobblock:
    // false cases come here, and a few true ones
  elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  i is set  case./fcase after the first also come here, to branch to end.
 // obsolete    IFOB(unlikely)goto bodyend;
- safedo:;  // here when we have advanced ic.  If this op is flagged we know the thing at ic is a bblock[end]
+ safedo:;  // here when we have advanced ic.  If this op is flagged we know the thing at ic is a bblock[end].  tcesx still has the value from the previous ic
 // obsolete    if((I4)tcesx&((I)1<<(TCESXTYPEX+5)))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it
    if(FLAGGEDNOTRACE(tcesx))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it
 // obsolete    tcesx=CWTCESX(cwsent,ic);  // 
@@ -705,7 +707,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
    // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
-  }else {pee(cwsent,CWTCESX2(cwsent,bic),EVNONNOUN,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
+  }else{pee(cwsent,CWTCESX2(cwsent,bic),EVNONNOUN,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error, or final exit from suspension
   cv=forpopgoto(jt,cv,~-1,1);   // clear the for/select stack

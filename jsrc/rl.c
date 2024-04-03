@@ -362,7 +362,10 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
  if(!m)R lsymb(id,w);  // if none, it's a primitive, out it
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
- if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R jtlcolon(jtinplace,w,ltext);  // x : with boxed h - must be explicit defn
+ if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R jtlcolon(jtinplace,w,ltext);  // x : with boxed h - must be explicit defn, for which we might suppress a valence
+ // display of a single valence applies only to an explicit definition.  It wouldn't be a bad idea for others, but that would require inspecting the op to see
+ // which valences are active on each side.  For the nonce we display everything
+ jtinplace=(J)((I)jtinplace&~JTEXPVALENCEOFF);  // display both valences of compounds
  GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h

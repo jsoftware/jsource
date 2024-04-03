@@ -343,6 +343,18 @@ y=: (<"0 (1 2 3 2 3 1)) ,. (2 1 3 2 1 3 # i.#2 1 3 2 1 3)</. i. 12
 ((<@:]^:[&>/)"1 -: (<@]"]^:[&>/)"1) y
 ((>:@:]^:[&>/)"1 -: (>:@]"]^:[&>/)"1) y
 
+NB. I.^:_1
+'domain error' -: (I.^:_1) etx 'abc'
+'domain error' -: (I.^:_1) etx 0.5
+'domain error' -: (I.^:_1) etx a:
+'domain error' -: (I.^:_1) etx 2j2
+'domain error' -: (I.^:_1) etx _1 3
+(-:  (I.^:_1)@({~ ?~@#)@I.) 20 ?@$ 100  NB. inverse applies properly to scrambled result
+(-:  (I.^:_1)@({~ ?~@#)@I.) 100 ?@$ 20
+
+
+
+
 
 
 18!:55 ;:'loc'

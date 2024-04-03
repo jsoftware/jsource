@@ -350,7 +350,7 @@ DF2(jtxdefn){
  I4 tic;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
  UI8 tcesx;  // combined line#/flags/type for cw being executed - sometimes with the next line's too
 
- {  // this is a loop, but we NEVER loop back; we always branch to one of the start points
+ {  // this is a loop, but we always branch to one of the start points
   // **************** top of main dispatch loop ********************
   // Inside the loop we must use BZ and BASSERT or continue for errors; these will break out of the loop and run the ending code
   // i holds the control-word number of the current control word
@@ -423,6 +423,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
 // obsolete   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
 // obsolete   IFOB(unlikely)goto bodyend;  // normal exit at end of definition
   // process the control word according to its type
+  // the names cwsent, ic, NPGpysfmtdl, tcesx, t, z, jt, and old fit into the 8 nonvolatile non-SP registers
   // **************** switch by line type ********************
 
   switch((((tcesx)>>TCESXTYPEX)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag

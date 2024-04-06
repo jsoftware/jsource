@@ -21,4 +21,4 @@
 #define ASSERT(b,e) {if(unlikely(!(b))){jsignal(e); R0;}}
 // version for debugging
 // #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R0;}}
-// #define ASSERT(b,e)     {if(unlikely(!(b))){char ermsg[2000];sprintf(ermsg,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__);fprintf(stderr,"%s",ermsg);jsto(JJTOJ(jt),MTYOER,ermsg);jsignal(e); R0;}}
+// #define ASSERT(b,e)     {if(unlikely(!(b))){if(!(jt->emsgstate&EMSGSTATETRAPPING)){char ermsg[2000];sprintf(ermsg,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__);fprintf(stderr,"%s",ermsg);jsto(JJTOJ(jt),MTYOER,ermsg);jsignal(e); R0;}}}

@@ -1085,6 +1085,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // c is the table of control-word info used in the definition
 // type is the m operand to m : n, indicating part of speech to be produced
 // We preparse what we can in the definition
+// Return 0 if error
 static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(fragbuf)/sizeof(fragbuf[0])-1;  // leave 1 pad word before frag to allow for overfetch in parsea
  // Go through the control-word table, looking at each sentence
  I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
@@ -1287,7 +1288,7 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
    // Don't bother to create a symbol table for an empty definition, since it is a domain error
    if(AN(hv[hnofst+1])){
     RZ(hv[hnofst+3] = incorp(crelocalsyms(hv[hnofst+0], hv[hnofst+1],n,!!hnofst,flag)));  // words,cws,type,dyad,flag
-    RZ(pppp(jt, hv[hnofst+0], hv[hnofst+1]));  // words,cws
+    I ppr; WITHDEBUGOFF(ppr=pppp(jt, hv[hnofst+0], hv[hnofst+1]);) RZ(ppr);  // words,cws.  Suppress messages during pppp
     RZ(hv[hnofst+0]=incorp(compiledefn(jt, hv[hnofst+0], hv[hnofst+1]))) hv[hnofst+1]=0;  // join cw and sent together, lose sent
    }
   }while((hnofst+=HN)<=HN);

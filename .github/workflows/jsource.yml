@@ -582,6 +582,7 @@ jobs:
      uses: cross-platform-actions/action@v0.23.0
      with:
       operating_system: freebsd
+      hypervisor: qemu
       architecture: x86-64
       version: '14.0'
       shell: bash
@@ -649,6 +650,7 @@ jobs:
      uses: cross-platform-actions/action@v0.23.0
      with:
       operating_system: freebsd
+      hypervisor: qemu
       architecture: arm64
       version: '14.0'
       shell: bash

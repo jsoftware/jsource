@@ -573,7 +573,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-  runs-on: macos-12
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -582,7 +582,6 @@ jobs:
      uses: cross-platform-actions/action@v0.23.0
      with:
       operating_system: freebsd
-      hypervisor: qemu
       architecture: x86-64
       version: '14.0'
       shell: bash
@@ -641,7 +640,7 @@ jobs:
 # freebsdarm64  --------------------------------------------------------------
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
-  runs-on: macos-12
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -650,7 +649,6 @@ jobs:
      uses: cross-platform-actions/action@v0.23.0
      with:
       operating_system: freebsd
-      hypervisor: qemu
       architecture: arm64
       version: '14.0'
       shell: bash

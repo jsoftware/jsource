@@ -627,15 +627,17 @@ typedef I SI;
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
 
-#define AFRO            (I)1            /* read only; can't change data    */
+#define AFRO            (I)1            /* read only; can't change data  matches B01    */
 #define AFROX           0            /* read only; can't change data    */
-#define AFNJAX          1            /* non-J alloc; i.e. mem mapped    */
+#define AFNJAX          1            /* non-J alloc; i.e. mem mapped matches LIT   */
 #define AFNJA           ((I)1<<AFNJAX)
-#define AFDEBUGRESULTX  2           // special flag for values that alter debug state
+#define AFDEBUGRESULTX  2           // special flag for values that alter debug state matches INT
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
+#define AFHADPARENX     3     // in an explicit-defn word, set if user's original had () around the value  matched FL
+#define AFHADPAREN      ((I)1<<AFHADPARENX)
 // Note: bit 4 is LABANDONED which is merged here
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
-#define AFUNIFORMITEMSX MARKX     // matches MARK
+#define AFUNIFORMITEMSX MARKX     // matches MARK 22
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFUNINCORPABLEX SBTX      // matches SBTX 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
@@ -671,7 +673,7 @@ typedef I SI;
    // block was incorporated.
    // NOTE: if a block becomes shared, the value of PRISTINE becomes immaterial
 #define AFDPARENX CONWX     // matches CONW 26
-#define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) or noun () and must use linear rep for its display
+#define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word replaced the original and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
 #define AFUPPERTRIX RPARX      // matches RPAR 30
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix

@@ -481,7 +481,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
  }else ASSERT((AT(a)|AT(w))&VERB,EVDOMAIN)  // m&n not allowed
   // continuing must be m&v or u&n
   A va=AT(a)&VERB?a:w, na=AT(a)&VERB?w:a;
-  f1=AT(a)&VERB?withr:withl; I visa=AT(a)&VERB?~2:0; c=FAV(va)->id;  // vias is ~2 if a is verb, 0 if w
+  f1=AT(a)&VERB?withr:withl; I visa=AT(a)&VERB?~2:0; c=FAV(va)->id;  // visa is ~2 if a is verb, 0 if w
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
   p=FAV(va)->flag; flag=((p&(VJTFLGOK2|VIRS2))>>1)+(FAV(va)->flag&VASGSAFE);
   // the noun will be INCORPed by fdef
@@ -490,14 +490,14 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   if((-AN(na)&-AR(na))<0){  // noun is not atomic and not empty
    if(unlikely(b=c==CFIT)){c=FAV(FAV(va)->fgh[0])->id; p=FAV(FAV(va)->fgh[0])->flag;}  // if verb is u1!.n1, replace the id and flag with that of u1, and remember cct from n1
    // check the supported cases one by one
-   if(unlikely((c&visa)==CIOTA)){  // m&i,.   m&i:
+   if(unlikely((c&(visa^~2))==CIOTA)){  // m&i.   m&i:
     PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(IIDOT+((c&(CIOTA^CICO))>>1),a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; flag&=~VJTFLGOK1; RZ(h)  // m&i[.:][!.f], and remember cct when we created the table
-   }else if(unlikely(visa==((7^~2)^(p&7)))){  // e.-compound&n
+   }else if(unlikely(visa==((7^~2)^(p&7)))){  // e.-compound&n  p=7 & a is verb
     mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
     {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
-   }else if(unlikely((c^visa)==(CWORDS^~2))){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
-   }else if(unlikely((c^visa)==(CIBEAM^~2))){if(FAV(w)->localuse.lu1.foreignmn[0]==128&&FAV(w)->localuse.lu1.foreignmn[1]==3){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; } // m&128!:3  scaf use rtn addr
+   }else if(unlikely((c^visa)==CWORDS)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
+   }else if(unlikely((c^visa)==CIBEAM)){if(FAV(w)->localuse.lu1.foreignmn[0]==128&&FAV(w)->localuse.lu1.foreignmn[1]==3){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; } // m&128!:3  scaf use rtn addr
    }
   }
   fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);

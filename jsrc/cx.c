@@ -1081,7 +1081,26 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  R actst;
 }
 
-// l is the A block for all the words/queues used in the definition
+// compress PPPs in in, move to ppp.  inarea and outarea are the same.  The input never grows.  Set AFISPPP in any word that replaces multiple words, to signify that the linear rep must be used to create its
+// value in the debug line.  Set AFHADPAREN if () is removed; they will be restored.  isparen is set if the previous token is ).  *fragv/*fragl are a work area.  They may be reallocated, and are
+// wiped out by recursion.  Result is address of next word to fill in ppp, or 0 if error.  On return *in is the addr+1 of the last word of in that we consumed
+static A *jtscanandmoveppp(J jt, I isparen, A *ppp, A **in, I inl, A **fragv, I *fragl){
+ I state=1;   // proc state: 0=waiting for E+AVN; 1=prev token was E+AVN; 2=prev tokens were E+AVN,VN; 3=prev tokens were E+AVN,VN,C
+ I nameseen=0;  // set when we have hit a name and thus cannot parse
+ while(1){A inwd;A *inend=(*in)+inl;I ranoff;  // till we hit end-of-input or )
+  if((ranoff=*in==inend)||(AT(inwd=*(*in)++)&RPAR)){ASSERT(ranoff!=isparen,EVDOMAIN) break;}  // exit if end-of input or ).  ) must end ( exactly
+  // if we are on (, process the ( ) and see if it was replaced by a single word
+  if(AT(inwd)==LPAR){A *lpara=ppp;  // we are at (  ... )
+   if(inend-*in>1&&AT((*in)[2])==RPAR){AFLAG((*in)[1])|=AFHADPAREN; *ppp++=(*in)[1]; in+=3;  // special case of (word) - keep word, marked as (), but not as lrr unless already so marked
+   }else{lpara=ppp; A *pstart=&(*in)[1]; RZ(ppp=jtscanandmoveppp(jt,1,ppp,&pstart,inend-pstart,fragv,fragl))
+   }
+   // ( ... ) processed.  If the result was a single word
+  }
+ }
+ R 0;
+}
+
+// l is the A block for all the words/queues used in the definition (modified in place)
 // c is the table of control-word info used in the definition
 // type is the m operand to m : n, indicating part of speech to be produced
 // We preparse what we can in the definition
@@ -1097,6 +1116,13 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+(cwv[j].tcesx&TCESXSXMSK);  // pointer to sentence words
    I startx=0;   // start and end+1 index of sentence
+#if 0
+   A lv0=lv;
+
+   A *lvi=lv0+(cwv[j].tcesx&TCESXSXMSK);
+   RZ(lv=jtscanandmoveppp(jt,0,&lv,lvi,(cwv[j+1].tcesx-cwv[j].tcesx)&TCESXSXMSK),&fragv,&fragl);  // copy the sentence, compressing PPPs
+#endif
+
    // loop till we have found all the parens
    while(1){
     // Look forward for )

@@ -459,7 +459,8 @@ extern void jfree4gmp(void*, size_t);
 #define ISX_1(x) ({X x1= x; CHECKZAP(x1); -1==XSGN(x1) && 1==XLIMB0(x1);}) // x is -1
 
 // 2|x where is x is type X (may segfault if x is 0)
-#define XODDnz(x) ({X nz= x; CHECKZAP(nz); UI d= *UIAV1(nz); 1&(d+(0>XSGN(x)));})
+// obsolete #define XODDnz(x) ({X nz= x; CHECKZAP(nz); UI d= *UIAV1(nz); 1&(d+(0>XSGN(x)));})
+#define XODDnz(x) ({X nz= x; CHECKZAP(nz); XSGN(nz)==0?0:1&XLIMB0(nz);})
 
 #define QSGN(q) XSGN((q).n)   // sign of type Q
 #define ISQinf(q) ISX0((q).d) // test if type Q is an infinity

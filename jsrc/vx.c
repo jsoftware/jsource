@@ -218,7 +218,7 @@ XF2(jtxroota){ // a %: w (optionally with <. or >.)
 }
 XF1(jtxfact){ // !w
  PROLOG(0116);
- ASSERT(0<=XSGN(w), EVDOMAIN);
+ ASSERT(0<=XSGN(w), EWIRR);
  mpX(w); 
  ASSERT(1>jmpz_cmp_si(mpw, 1000000), EVWSFULL); // somewhat arbitrary threshold, roughly matches GEMP limit for result
  mpz_t mpz; jmpz_init(mpz); jmpz_fac_ui(mpz, jmpz_get_si(mpw));

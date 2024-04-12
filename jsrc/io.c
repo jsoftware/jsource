@@ -396,9 +396,10 @@ static void jtimmexexecct(JJ jt, A x){
 static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
  while(1){
  // if there is an immex phrase, protect it during its execution
-  A iep=0; if(jt->iepdo){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
+  A iep=0; if(jt->iepdo&1){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
   if(iep==0)break;
-  jt->iepdo=0; jtimmexexecct(jt,iep); fa(iep) if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) RESETERR jttpop(jt,old,jt->tnextpushp);
+  // run the IEP and clean up after.  We leave iepdo set to 'running' during the exec to suppress postmortem debugging while IEPs are about
+  jt->iepdo=2; jtimmexexecct(jt,iep); fa(iep) jt->iepdo&=~2; if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) RESETERR jttpop(jt,old,jt->tnextpushp);
  }
 }
 
@@ -432,11 +433,8 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  x=jtinpl(jm,0,(I)strlen(lp),lp);
  I wasidle=jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
       // but if the master task is already running, this is a recursion, and just stay in running state
- // if there is an immex latent expression (9!:27), execute it before prompting
- // All these immexes run with result-display enabled (jt flags=0)
- // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
- // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
- if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
+// obsolete  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
+// obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE));  // allow reads from jgets() if not recursive; return enqueue() result
  if(!jm->jerr)jtimmexexecct(jm,x);  //  ****** here is where we execute the user's sentence ******
@@ -452,6 +450,9 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm)  // save error on sentence to be our return code
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
  RESETERRT(jm)
+ // if there is an immex latent expression (9!:27), execute it before prompting
+ // All these immexes run with result-display enabled (jt flags=0)
+ // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);  // IEP does not display its errors
  if(likely(wasidle)){  // returning to immex in the FE
   jtclrtaskrunning(jm);  //  clear running state in case other tasks are running and need system lock - but not if recursion

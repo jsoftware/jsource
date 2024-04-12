@@ -94,11 +94,11 @@ F1(jtfxx){F1PREFIP;
  R fx(ope(w)); 
 }
 
-// 9!:28, immex flag
-F1(jtiepdoq){ASSERTMTV(w); R scb(jt->iepdo);}
+// 9!:28, immex flag  bit 0 = immex requested, bit 1 = immex running
+F1(jtiepdoq){ASSERTMTV(w); R sc(jt->iepdo);}
 
 // 9!:29, immex flag
-F1(jtiepdos){B b; RE(b=b0(w)); jt->iepdo=b; R mtm;}
+F1(jtiepdos){B b; RE(b=b0(w)); jt->iepdo|=b; R mtm;}
 
 // 9!:26, immex sentence
 F1(jtiepq){

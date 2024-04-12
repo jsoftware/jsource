@@ -111,7 +111,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
   };
  } uflags;   // 4 bytes
  I4 parsercalls;      // # times parser was called
- B iepdo;            // 1 iff do iep on going to immex     should be shared?
+ B iepdo;            // 1 iff do iep on going to immex  bit 0 = requested, bit 1 = running
  C xmode;            // extended integer operating mode
  C emsgstate;   // disposition of error messages, which determines how detailed we make the message
 #define EMSGSTATENOTEXT 1  // Set to suppress message text

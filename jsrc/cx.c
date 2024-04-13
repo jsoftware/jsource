@@ -728,7 +728,10 @@ bodyend: ;  // we branch to here to exit with z set to result
  // We don't do this if jt->jerr is set: that's the special result for comming out of debug; or when WSFULL, since there may be no memory.  Also, suppress pmdebug
  // if an immex phrase is running or has been requested, because those would be confusing and also they call tpop
  if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
-   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
+  // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that are are about to pop over.  Only x and y are possible
+  UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(w!=0){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv=realize(ybuckptr->val); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}}  // y if any
+  if(a!=0){L *ybuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv=realize(ybuckptr->val); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}}  // x if any
+  deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
  }
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet

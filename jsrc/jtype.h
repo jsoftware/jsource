@@ -641,7 +641,8 @@ typedef I SI;
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFUNINCORPABLEX SBTX      // matches SBTX 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
-                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes.  AFVIRTUAL must also be set.  If this block is
+                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes and is probably on the C stack rather than 
+                                // allocated memory.  It must never become part of a named value (except that it can be assigned to the entirety of local x and y).  AFVIRTUAL must also be set.  If this block is
                                 // inplaceable, the data may be overwritten but the header must not be: clonevirtual() in that case to get a modifiable header
 #define AFVIRTUALX      C2TX      // matches C2TX 17
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
